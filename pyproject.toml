@@ -1,0 +1,60 @@
+[build-system]
+requires      = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dashhtmlgrid"
+version = "0.1.0"
+description = "Generic python package for a plotly dash grid"
+readme = "README.md"
+authors = [{ name = "Vamsee Achanta", email = "vamsee.achanta@aceengineer.com" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords=['package', 'library', 'module']
+dependencies = ["pyyaml", "plotly", "webcolors", "flask_wtf", "flask_httpauth", "flask_restful", "urllib3", 'tomli; python_version < "3.11"']
+requires-python = ">=3.7"
+
+    [project.optional-dependencies]
+    build = ["build", "twine"]
+    dev   = ["black", "bumpver", "isort", "pytest"]
+
+    [project.scripts]
+    pressure_pipe = "dashhtmlgrid.pressure_pipe"
+
+    [project.urls]
+    repository    = "https://github.com/vamseeachanta/dashhtmlgrid"
+    documentation = "https://github.com/vamseeachanta/dashhtmlgrid/blob/main/README.md"
+
+
+[tool.bumpver]
+current_version = "0.1.0"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message  = "bump version {old_version} -> {new_version}"
+commit          = true
+tag             = true
+push            = false
+
+    [tool.bumpver.file_patterns]
+    "pyproject.toml" = [
+        'current_version = "{version}"',
+        'version = "{version}"',
+    ]
+    "src/dashhtmlgrid/__init__.py" = ["{version}"]
+    "src/dashhtmlgrid/__main__.py" = ["- dashhtmlgrid v{version}"]
+
+[tool.isort]
+profile                   = "black"
+import_heading_stdlib     = "Standard library imports"
+import_heading_thirdparty = "Third party imports"
+import_heading_firstparty = "Reader imports"
+
+[tool.mypy]
+strict = true
+
+    [[tool.mypy.overrides]]
+    module                 = "feedparser"
+    ignore_missing_imports = true

@@ -1,0 +1,14 @@
+name: dashhtmlgrid
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python
+  - pandas
+  - pip
+  - pip:
+    - plotly
+    - dash
+    - pyyaml
+    - bumpver
+    - webcolors

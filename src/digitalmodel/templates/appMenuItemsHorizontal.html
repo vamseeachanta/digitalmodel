@@ -1,0 +1,7 @@
+<ul class="nav nav-tabs nav-fill justify-content-center">
+{% for menu_item in context.menu_items %}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ menu_item.href }}">{{ menu_item.alias }}</a>
+    </li>
+{% endfor %}
+</ul>

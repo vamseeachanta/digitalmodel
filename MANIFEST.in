@@ -1,0 +1,2 @@
+include tests/*.yaml
+include tests/*.py
