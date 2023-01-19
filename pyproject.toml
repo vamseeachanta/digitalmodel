@@ -3,9 +3,9 @@ requires      = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dashhtmlgrid"
-version = "0.1.0"
-description = "Generic python package for a plotly dash grid"
+name = "digitalmodel"
+version = "0.0.1"
+description = "engineering asset digital model(s) for life cycle analysis"
 readme = "README.md"
 authors = [{ name = "Vamsee Achanta", email = "vamsee.achanta@aceengineer.com" }]
 license = { file = "LICENSE" }
@@ -14,7 +14,7 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-keywords=['package', 'library', 'module']
+keywords=['finite element', 'asset representation', 'structural', 'physical', 'engineering', 'animation', 'lifecycle', 'lifecycle analysis']
 dependencies = ["pyyaml", "plotly", "webcolors", "flask_wtf", "flask_httpauth", "flask_restful", "urllib3", 'tomli; python_version < "3.11"']
 requires-python = ">=3.7"
 
@@ -23,11 +23,11 @@ requires-python = ">=3.7"
     dev   = ["black", "bumpver", "isort", "pytest"]
 
     [project.scripts]
-    pressure_pipe = "dashhtmlgrid.pressure_pipe"
+    pressure_pipe = "digitalmodel.pressure_pipe"
 
     [project.urls]
-    repository    = "https://github.com/vamseeachanta/dashhtmlgrid"
-    documentation = "https://github.com/vamseeachanta/dashhtmlgrid/blob/main/README.md"
+    repository    = "https://github.com/vamseeachanta/digitalmodel"
+    documentation = "https://github.com/vamseeachanta/digitalmodel/blob/main/README.md"
 
 
 [tool.bumpver]
