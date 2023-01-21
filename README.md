@@ -1,15 +1,21 @@
 # Introduction
 
-Digital models for engineering assets
+Digital models for engineering assets. The objective of digital models is to utilize a single source of ascii inputs to generate equivalent analytical models to encompass lifecycle operations of a product. 
+
+These operations include (and not limited to) the following:
+- Analytical calculations
+- Computational analysis
+- Compuational 3D animations
 
 # Summary
+
+- High level vision proposed:
+<img src="docs/digital_model_architecure.svg" width=auto, height=auto/>
 
 
 # Usage
 
 - Prepare data
-- Vision of architecture proposed:
-<img src="docs/digital_model_architecure.svg" width=auto, height=auto/>
 
 
 ## Example Structures

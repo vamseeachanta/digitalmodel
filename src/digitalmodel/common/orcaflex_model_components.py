@@ -813,10 +813,10 @@ class OrcaflexModelComponents():
                         FEAmodel1, FEAmodel2 = orcaflexModel(cfg, FEAType, LoadingIndex)
                         if FEAType == 'Extreme':
                             self.WriteOrcaflexModel(
-                                [FEAmodel1, 'dataManager\\catenary\\VesselTypes_Extreme.yml', FEAmodel2], cfg)
+                                [FEAmodel1, 'src/digitalmodel/tests/test_data/catenary_riser/VesselTypes_Extreme.yml', FEAmodel2], cfg)
                         elif FEAType == 'Fatigue':
                             self.WriteOrcaflexModel(
-                                [FEAmodel1, 'dataManager\\catenary\\VesselTypes_Fatigue.yml', FEAmodel2], cfg)
+                                [FEAmodel1, 'src/digitalmodel/tests/test_data/catenary_riser/VesselTypes_Fatigue.yml', FEAmodel2], cfg)
 
                 save_data.saveDataYaml(cfg, cfg['Analysis']['result_folder'] + cfg['Analysis']['file_name'])
 
@@ -829,10 +829,10 @@ class OrcaflexModelComponents():
                         FEAmodel1, FEAmodel2 = orcaflexModel(cfg, FEAType, LoadingIndex)
                         if FEAType == 'Extreme':
                             self.WriteOrcaflexModel(
-                                [FEAmodel1, 'dataManager\\catenary\\VesselTypes_Extreme.yml', FEAmodel2], cfg)
+                                [FEAmodel1, 'src/digitalmodel/tests/test_data/catenary_riser/VesselTypes_Extreme.yml', FEAmodel2], cfg)
                         elif FEAType == 'Fatigue':
                             self.WriteOrcaflexModel(
-                                [FEAmodel1, 'dataManager\\catenary\\VesselTypes_Fatigue.yml', FEAmodel2], cfg)
+                                [FEAmodel1, 'src/digitalmodel/tests/test_data/catenary_riser/VesselTypes_Fatigue.yml', FEAmodel2], cfg)
 
                 save_data.saveDataYaml(cfg, cfg['Analysis']['result_folder'] + cfg['Analysis']['file_name'], False)
         if self.riser_model.riser_shape == 'vertical':

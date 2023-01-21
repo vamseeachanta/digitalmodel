@@ -1,4 +1,4 @@
-name: dashhtmlgrid
+name: digitalmodel
 channels:
   - defaults
   - conda-forge
@@ -7,8 +7,14 @@ dependencies:
   - pandas
   - pip
   - pip:
-    - plotly
-    - dash
-    - pyyaml
-    - bumpver
-    - webcolors
+      - plotly
+      - dash
+      - pyyaml
+      - bumpver
+      - webcolors
+      - matplotlib
+      - scipy
+      - pandas
+      - xlrd
+      - imgkit
+      - xmltodict
