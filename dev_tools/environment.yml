@@ -16,5 +16,6 @@ dependencies:
       - scipy
       - pandas
       - xlrd
+      - openpyxl
       - imgkit
       - xmltodict

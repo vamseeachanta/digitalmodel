@@ -1,0 +1,123 @@
+{"depth_below_msl": [-0.0, 762.0], "shear7_x_by_L": [0.03505082369435682, 0.9158780231335436], "water_depth": 762.0}
+Shear7 v4.6c app_vertical_riser_vertical_riser, drilling riser model
+*** BLOCK 1. UNIT SYSTEM ***
+0             flag for unit
+***BLOCK 2. structural and hydrodynamic data***
+1		flag for structural model
+869.59		model length
+{0}		number of elements
+1025		volume density of the fluid (kg/m**3)
+1.308E-06		kinematic viscosity of the fluid (m**2/s)
+0.005		structural damping coefficient:
+0		effective tension at origin (N)
+14		no. of zones to define sectional property
+0.00000       0.00526       zone 1   start and end point in x/L, Diverter
+0.53340       0.53340       0.48895       Hydro dia, outer dia and inner strength dia
+1.17E-03	470.86	2709.02			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+0.00526       0.01052       zone 1   start and end point in x/L, 15ft Pup Jt.
+1.29540       0.53340       0.48895       Hydro dia, outer dia and inner strength dia
+1.17E-03	1531.83	10462.71			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+0.01052       0.01402       zone 1   start and end point in x/L, Inner Barrel
+1.14300       0.53340       0.48895       Hydro dia, outer dia and inner strength dia
+1.17E-03	3317.66	26278.44			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+0.01402       0.03505       zone 1   start and end point in x/L, Outer Barrel
+1.14300       0.66040       0.60960       Hydro dia, outer dia and inner strength dia
+2.56E-03	1787.35	12652.58			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+0.03505       0.03856       zone 1   start and end point in x/L, 10ft Pup Jt.
+1.29540       0.53340       0.48895       Hydro dia, outer dia and inner strength dia
+1.17E-03	1829.47	13869.18			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+0.03856       0.04557       zone 1   start and end point in x/L, 20ft Pup Jt.
+1.29540       0.53340       0.48895       Hydro dia, outer dia and inner strength dia
+1.17E-03	1383.01	8759.48			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+0.04557       0.05959       zone 1   start and end point in x/L, 40ft Pup Jt.
+1.29540       0.53340       0.48895       Hydro dia, outer dia and inner strength dia
+1.17E-03	1159.78	6204.63			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+0.05959       0.13845       zone 1   start and end point in x/L, 75ft Bare jt.  - protected
+1.29540       0.53340       0.48895       Hydro dia, outer dia and inner strength dia
+1.17E-03	1025.85	5255.69			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+0.13845       0.82194       zone 1   start and end point in x/L, 75ft Buoyancy Jt. 2500 ft rating
+1.37160       0.53340       0.48895       Hydro dia, outer dia and inner strength dia
+1.17E-03	1164.74	-389.31			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+0.82194       0.90081       zone 1   start and end point in x/L, 75ft Bare jt.  - protected
+1.29540       0.53340       0.48895       Hydro dia, outer dia and inner strength dia
+1.17E-03	1025.85	5255.69			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+0.90081       0.90782       zone 1   start and end point in x/L, LMRP
+5.58800       0.60325       0.47625       Hydro dia, outer dia and inner strength dia
+3.98E-03	22505.43	182489.17			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+0.90782       0.91588       zone 1   start and end point in x/L, BOP
+5.58800       0.60325       0.47625       Hydro dia, outer dia and inner strength dia
+3.98E-03	31240.45	263419.15			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+0.91588       0.94742       zone 1   start and end point in x/L, 30ft Casing Program 1
+0.91440       0.91440       0.81280       Hydro dia, outer dia and inner strength dia
+1.29E-02	1606.89	10481.45			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+0.94742       1.00000       zone 1   start and end point in x/L, 30ft Casing Program 2
+0.91440       0.91440       0.83820       Hydro dia, outer dia and inner strength dia
+1.01E-02	1383.74	7961.21			inertia(m^4), mass in air+fluids (kg/m), sub wt. (N/m)
+2.07E+11	1.0				Youngs Modulus, SN Curve Number
+0.40	0.18	1.00	1		Bandwidth St code Cl reduction factor   ZONE CL TYPE
+1.00	0.20	0.18	0.20		Ca, DampCoeff1, DampCoef2, DampCoef3
+*** BLOCK 3. CURRENT DATA ***
+{0}  1.0   1      no. of profile data pts, probability, profile ID
+{x_by_L}     {current_speed} Replace values 
+0.9159     0.0000
+1.0000     0.0000
+*** BLOCK 4. s-n and scf data ***
+1                                   No of SN Curves Defined - DNV '84 B Seawater CP
+1           1                       SN Curve ID No, No. of S-N curve segments
+0                                   cut-off stress range (N/m**2), endurance limit
+1.000E+06  6.3154E+11               stress range (N/m**2) cycles to failure
+1.000E+09  6.3154E+02               stress range (N/m**2) cycles to failure
+1.3                                 Global stress concentration factor
+0                                  No. of local stress concentration positions
+*** BLOCK 5. computation/output option ***
+2                                   Calculation option
+0           1           0.01        Response location definition (start, stop, increment, in x/L)
+0                                   Gravitational acceleration (m/s**2)
+0.05        0.3                     power cutoff, primary zone amplitude limit 
+1                                   power value exponent (0 - equal probabilities; 1 - power ratio) 
+0                                   flag for importing nodal effective tension and mass, (0=no; 1=yes)
+0                                   flag for writing the *.anm file (0=no, 1=yes)
+1                                   flag for generating *.scr file, (0=no; 1=yes)
+1                                   flag for generating *.dmg file, (0=no; 1=yes)
+0                                   flag for generating *.fat file, (0=no; 1=yes)
+0                                   *.out file selection: 0=*.out, 1=*.out1, 2=*.out1+*.out2
+*** BLOCK 6. supplemental data ***

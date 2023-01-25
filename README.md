@@ -15,7 +15,20 @@ These operations include (and not limited to) the following:
 
 # Usage
 
-- Prepare data
+A quick way to running code is:
+    - Create a virtual environment:
+        - Use [conda yaml file](https://raw.githubusercontent.com/vamseeachanta/digitalmodel/master/dev_tools/environment.yml) to create a new environment
+        - (or) by installing [digitalmodel]((https://github.com/vamseeachanta/digitalmodel)) package in an environment
+- Run the following batch files
+    - Download this [digitalmodel repository](https://github.com/vamseeachanta/digitalmodel)
+    - activate environment
+    - Change command line to "digitalmodel" (outside not in src) folder
+    - Run the following python files in tests:
+        - python src\digitalmodel\tests\ {change_to_relevant}.py
+        - i.e. for catenary riser, python src\digitalmodel\tests\test_catenary_riser.py
+    - (or) Run the following batch files in tests:
+        - python src\digitalmodel\tests\ {change_to_relevant}.bat
+        - i.e. for catenary riser, python src\digitalmodel\tests\test_catenary_riser.bat
 
 
 ## Example Structures
@@ -27,8 +40,13 @@ Intervention vessels
 
 ### Risers
 
+#### Catenary Risers (SCR, SLWR)
+
+SCR - Simple Catenary Riser
+SLWR - Simple Lazy Wave Riser
 
 ### Pipelines
+
 
 
 ### Flexibles

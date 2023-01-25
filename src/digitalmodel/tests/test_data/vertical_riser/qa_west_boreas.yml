@@ -1,0 +1,86 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+files:
+  -
+    file_type: yml
+    io: tests\cfg\results\app_orcaflex_analysis_FE_analysis_west_boreas.yml
+    label: Effective Tension, FE Analysis, Rev2
+    extract_data:
+      - ['Analysis', 'Effective Tension']
+      - ['Analysis', 'X']
+  -
+    file_type: yml
+    io: tests\cfg\results\app_vertical_riser_vertical_riser_py_west_boreas.yml
+    label: Effective Tension, Hand Calculation
+    extract_data:
+      - ['Analysis', 'result', 'component_bottom_effective_tension']
+      - ['Analysis', 'result', 'component_bottom_elevation_from_end_A']
+
+plot:
+  -
+    file_suffix: QA_effective_tension
+    suptitle: Effective Tension Comparison
+    size: default
+    orientation: portrait
+    plt_kind: line
+    title:
+    grid: True
+    legend: True
+    legend_location: outside
+    marker: NULL
+    ylim: NULL
+    xlabel: Effective Tension (kN)
+    ylabel: Elevation above Seabed (m)
+    text_fields:
+      -
+        x : 2000
+        y: 11400
+        text: more records obtained by engine with query of bit_on_bottom = 1
+
+  -
+    file_suffix: QA_effective_tension_top
+    suptitle: Effective Tension Comparison
+    size: default
+    orientation: portrait
+    plt_kind: line
+    title:
+    grid: True
+    legend: True
+    legend_location: outside
+    marker: NULL
+    ylim:
+      - 0
+      - 50
+    xlabel: Effective Tension (kN)
+    ylabel: Elevation above Seabed (m)
+    text_fields:
+      -
+        x : 2000
+        y: 11400
+        text: more records obtained by engine with query of bit_on_bottom = 1
+
+  -
+    file_suffix: QA_effective_tension_bottom
+    suptitle: Effective Tension Comparison
+    size: default
+    orientation: portrait
+    plt_kind: line
+    title:
+    grid: True
+    legend: True
+    legend_location: outside
+    marker: NULL
+    ylim:
+      - 2800
+      - 3000
+    xlabel: Effective Tension (kN)
+    ylabel: Elevation above Seabed (m)
+    text_fields:
+      -
+        x : 2000
+        y: 11400
+        text: more records obtained by engine with query of bit_on_bottom = 1

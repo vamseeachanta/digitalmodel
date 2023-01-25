@@ -1,3 +1,14 @@
+import logging
+import math
+
+from digitalmodel.custom.PipeSizing import PipeSizing
+from digitalmodel.common.data import ReadData
+from digitalmodel.common.typical_riser_stack_up_calculations import \
+    TypicalRiserStackUpCalculations
+from digitalmodel.common.orcaflex_model_components import OrcaflexModelComponents
+from digitalmodel.common.shear7_model_components import Shear7ModelComponents
+from digitalmodel.common.visualizations import Visualization
+
 class VerticalRiser():
     def __init__(self, cfg):
         self.cfg= cfg
@@ -22,7 +33,6 @@ class VerticalRiser():
 
 
     def read_riser_input_data(self):
-        from common.data import ReadData
         read_data = ReadData()
         custom_cfg = {'files': self.cfg['stack_up']}
         for riser_data_index in range(0, len(custom_cfg['files']['from_xlsx'])):
@@ -86,10 +96,6 @@ class VerticalRiser():
 
 
     def get_fea_properties(self, row_index, weight_method=None):
-        import logging
-        import math
-
-        from custom.PipeSizing import PipeSizing
 
         pipe_data = \
             {
@@ -218,8 +224,6 @@ class VerticalRiser():
 
 
     def evaluate_stack_up_properties(self):
-        from common.typical_riser_stack_up_calculations import \
-            TypicalRiserStackUpCalculations
         stack_up_calculations = TypicalRiserStackUpCalculations(self)
         stack_up_calculations.prepare_stack_up_properties_df()
         self.stack_up_properties_df = stack_up_calculations.stack_up_properties_df
@@ -239,7 +243,6 @@ class VerticalRiser():
 
     def prepare_fea_model(self):
         print("Building FEA model ... ")
-        from common.orcaflex_model_components import OrcaflexModelComponents
         self.fea_model_prep = OrcaflexModelComponents()
         self.fea_model_prep.orcaflex_model(self)
 
@@ -256,7 +259,6 @@ class VerticalRiser():
 
     def prepare_shear7_model(self):
         print("Building Shear7 model ... ")
-        from common.shear7_model_components import Shear7ModelComponents
         self.shear7_model_comp = Shear7ModelComponents()
         self.shear7_model_comp.prep_shear7_model(self)
         self.shear7_model_comp.save_model()
@@ -271,7 +273,6 @@ class VerticalRiser():
 
 
     def prepare_plots(self):
-        from common.visualizations import Visualization
 
         for plot_settings_index in range(0, len(self.cfg['plot_settings'])):
             plt_settings = self.cfg['plot_settings'][plot_settings_index].copy()

@@ -1,4 +1,5 @@
 import logging
+from digitalmodel.common.data import SaveData
 
 
 class Shear7ModelComponents():
@@ -7,7 +8,7 @@ class Shear7ModelComponents():
         self.shear7_model = []
 
     def prep_shear7_model(self, riser_model):
-        # from collections import OrderedDict
+
         self.riser_model = riser_model
         self.title()
         self.riser_joints_to_shear7_zones()
@@ -127,7 +128,6 @@ class Shear7ModelComponents():
         self.shear7_model.append("*** BLOCK 6. supplemental data ***")
 
     def save_model(self):
-        from common.data import SaveData
         save_data = SaveData()
         file_name = self.riser_model.cfg['Analysis']['fe_folder'] + self.riser_model.cfg['Analysis']['file_name'] + '_shear7'
         save_data.save_ascii_file_from_array(self.shear7_model, file_name, '.dat')

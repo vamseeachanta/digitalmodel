@@ -1,5 +1,9 @@
 import logging
+import math
+import yaml
+from collections import OrderedDict
 
+from digitalmodel.common.data import SaveData
 
 class OrcaflexModelComponents():
 
@@ -7,7 +11,6 @@ class OrcaflexModelComponents():
         pass
 
     def orcaflex_model(self, riser_model):
-        from collections import OrderedDict
         self.model1 = OrderedDict()
         self.model2 = OrderedDict()
         self.riser_model = riser_model
@@ -615,7 +618,6 @@ class OrcaflexModelComponents():
                 [0, 0, float(self.stack_up_properties_df.elevation_above_MSL.max()) + 30])
 
     def spring_properties(self, type='tensioner'):
-        import math
         self.tensioner_spring_properties = []
 
         if type == 'tensioner':
@@ -787,7 +789,6 @@ class OrcaflexModelComponents():
         pass
 
     def WriteOrcaflexModel(self, Files):
-        import oyaml as yaml
         with open(self.riser_model.cfg['Analysis']['fe_filename'], 'w') as f:
             for file in Files:
                 if isinstance(file, str):
@@ -798,7 +799,6 @@ class OrcaflexModelComponents():
         print('Successfully write file: "{0}"'.format(self.riser_model.cfg['Analysis']['fe_filename']))
 
     def build_model(self, shear7_flag):
-        from common.data import SaveData
         save_data = SaveData()
         cfg = self.riser_model.cfg
         FEAType = self.riser_model.fea_type
