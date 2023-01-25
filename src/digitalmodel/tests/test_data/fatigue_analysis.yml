@@ -27,7 +27,7 @@ default:
       scale: NULL
 
 WaveFatigue_Sets:
-  - io: src\digitalmodel\tests\test_data\orcaflex\app_ETL_fe_fatigue_models_lid002_2500ft_WT0750_064pcf_orcaflex_fatigue_analysis.xlsx
+  - io: src\digitalmodel\tests\test_data\orcaflex\2500ft_WT0750_064pcf_orcaflex_fatigue_analysis.xlsx
     sheet_name: Damage Tables
     start_row:
       key_words: ["Arc Length"]

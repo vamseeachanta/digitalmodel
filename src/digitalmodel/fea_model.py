@@ -1,9 +1,6 @@
-from common.ApplicationManager import applicationTimer, setupApplicationRuns
-from common.FEAComponents import FEAComponents
+from digitalmodel.common.FEAComponents import FEAComponents
 
 
-@setupApplicationRuns
-@applicationTimer
 def fea_model(cfg):
 
     fea = FEAComponents(cfg)
@@ -16,6 +13,3 @@ def fea_model(cfg):
 
     return cfg
 
-
-if __name__ == '__main__':
-    cfg_with_results = fea_model(cfg=None)

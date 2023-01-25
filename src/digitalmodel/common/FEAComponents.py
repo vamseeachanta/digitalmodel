@@ -1,3 +1,22 @@
+import os
+import glob
+import pandas as pd
+from digitalmodel.custom.fea_model.VesselType_components import VesselType
+from digitalmodel.custom.fea_model.Constraint_components import Constraint
+from digitalmodel.custom.fea_model.shape_components import Shape
+from digitalmodel.common.data import SaveData
+from digitalmodel.common.data import SaveData, Transform
+from digitalmodel.custom.fea_model.environment_components import Environment
+from digitalmodel.custom.fea_model.general_components import General
+from digitalmodel.custom.fea_model.environment_components import Environment
+from digitalmodel.custom.fea_model.LineType_components import LineType
+from digitalmodel.custom.fea_model.buoy_components import Buoy
+from digitalmodel.custom.fea_model.line_components import Line
+from digitalmodel.custom.fea_model.Vessel_components import Vessel
+from digitalmodel.custom.fea_model.VariableData_components import VariableData
+from digitalmodel.custom.fea_model.group_components import Group
+from digitalmodel.common.visualization_components import VisualizationComponents
+
 class FEAComponents():
 
     def __init__(self, cfg):
@@ -28,13 +47,11 @@ class FEAComponents():
                     self.AssignAssetProperties(Asset)
 
     def AssignGeneral(self):
-        from custom.fea_model.general_components import General
         general = General(cfg=self.cfg['General'])
         fea_data = general.getGeneralOrcaFlexSetUp()
         self.fea_model.update(fea_data)
 
     def AssignEnvironment(self):
-        from custom.fea_model.environment_components import Environment
         enviornment = Environment(cfg=self.cfg['Environment'])
         fea_data = enviornment.getOrcaFlexEnvironment()
         self.fea_model.update(fea_data)
@@ -120,7 +137,6 @@ class FEAComponents():
         self.fea_model['Groups'] = group
 
     def GetBuoyProperties(self, Asset):
-        from custom.fea_model.buoy_components import Buoy
         cfg = Asset['cfg']
         buoy = Buoy(cfg)
         fea_data = buoy.get_orcaflex_properties()
@@ -128,7 +144,6 @@ class FEAComponents():
         return fea_data
 
     def GetLineTypeProperties(self, Asset):
-        from custom.fea_model.LineType_components import LineType
         cfg = Asset
         line_type = LineType(cfg)
         fea_data = line_type.get_orcaflex_properties()
@@ -136,7 +151,6 @@ class FEAComponents():
         return fea_data
 
     def GetLineProperties(self, Asset):
-        from custom.fea_model.line_components import Line
         cfg = Asset
         line = Line(cfg)
         fea_data = line.get_orcaflex_properties()
@@ -144,7 +158,6 @@ class FEAComponents():
         return fea_data
 
     def GetVesselTypeProperties(self, Asset):
-        from custom.fea_model.VesselType_components import VesselType
         cfg = Asset
         line_type = VesselType(cfg)
         fea_data = line_type.get_orcaflex_properties()
@@ -152,7 +165,6 @@ class FEAComponents():
         return fea_data
 
     def GetVesselProperties(self, Asset):
-        from custom.fea_model.Vessel_components import Vessel
         cfg = Asset
         line = Vessel(cfg)
         fea_data = line.get_orcaflex_properties()
@@ -160,7 +172,6 @@ class FEAComponents():
         return fea_data
 
     def GetConstraintProperties(self, Asset):
-        from custom.fea_model.Constraint_components import Constraint
         cfg = Asset
         constraint = Constraint(cfg)
         fea_data = constraint.get_orcaflex_properties()
@@ -168,7 +179,6 @@ class FEAComponents():
         return fea_data
 
     def GetVariableData(self, Asset):
-        from custom.fea_model.VariableData_components import VariableData
         cfg = Asset
         variable_data = VariableData(cfg)
         fea_data = variable_data.get_orcaflex_properties()
@@ -176,7 +186,6 @@ class FEAComponents():
         return fea_data
 
     def GetShapeProperties(self, Asset):
-        from custom.fea_model.shape_components import Shape
         cfg = Asset
         line = Shape(cfg)
         fea_data = line.get_orcaflex_properties()
@@ -184,7 +193,6 @@ class FEAComponents():
         return fea_data
 
     def GetGroupProperties(self, Asset):
-        from custom.fea_model.group_components import Group
         cfg = Asset
         line = Group(cfg)
         fea_data = line.get_orcaflex_properties()
@@ -192,23 +200,17 @@ class FEAComponents():
         return fea_data
 
     def save_output(self):
-        from common.data import SaveData
         save_data = SaveData()
         self.cfg['Analysis']['fe_filename'] = self.get_fe_filename()
         fea_file_data_list = self.custom_fea_files + [self.fea_model]
         save_data.WriteOrcaFlexYMLFile(fea_file_data_list, self.cfg['Analysis']['fe_filename'])
 
     def prepare_visualizations(self):
-        from common.visualization_components import VisualizationComponents
         vc = VisualizationComponents(self.cfg)
         vc.prepare_visualizations(self)
 
     def load_variations(self):
         if self.cfg['Environment'].__contains__('LoadVariation') and self.cfg['Environment']['LoadVariation']['flag']:
-            import pandas as pd
-
-            from common.data import SaveData, Transform
-            from custom.fea_model.environment_components import Environment
             environment = Environment(self.cfg.Environment)
             save_data = SaveData()
             trans = Transform()
@@ -250,8 +252,6 @@ class FEAComponents():
         return fe_filename
 
     def overwrite_fe_files(self):
-        import glob
-        import os
         yaml_files = glob.glob(self.cfg['Analysis']['fe_folder'] + self.cfg['Analysis']['fe_file_prefix'] + '*.yml')
         for file in yaml_files:
             os.remove(file)

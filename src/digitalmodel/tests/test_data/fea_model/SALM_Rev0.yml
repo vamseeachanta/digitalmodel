@@ -1,0 +1,126 @@
+---
+version: 0.1
+
+ProjectName: SALM Analysis
+
+FEAProgram:
+  name: OrcaFlex
+  version: 10.0e
+
+parameters:
+  plot_title: "JULIA Subsea Wellhead Locations"
+  plot_subtitle: "Development Wells, BOEM Field WR627, Feb 2020"
+  plot_suptitle: "JULIA Production Rate (BOPD) by Completion"
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    CustomInputFile: NULL
+  data_source: db
+
+Assets:
+  - purpose: Host
+    fea_type: buoy
+    cfg:
+      Mass: Calculated
+      Name: SALM
+      BuoyType: Spar Buoy
+      Connection: Free
+      DegreesOfFreedomInStatics: All
+      DampingRelativeTo: Earth
+      DisturbanceVessel: (none)
+      WaveCalculationMethod: Specified by Environment
+      InitialPosition: [0, 0, 0.7]
+      InitialAttitude: [0, 0, 0]
+      MomentsOfInertia: Calculated
+      CentreOfMass: Calculated
+      Cylinders:
+        - CylinderOuterDiameter: 4.6
+          CylinderInnerDiameter": 0
+          CylinderLength: 16.5
+          Mass: 108.046
+          CylinderMassDiameter: 3.7
+          CentreOfMass: [0, 0, -7.5]
+          DragAreaMoment: Calculated
+          MarineGrowthThickness: 0.0254
+      raos:
+        Extreme: data_manager\data\vessels\host_id_1_extreme_disp_raos.yml
+        Fatigue: data_manager\data\vessels\host_id_1_extreme_disp_raos.yml
+  - purpose: AssetProperties
+    fea_type: lineType
+    cfg:
+      Name: topUnijoint
+      OD: 0.75
+      MassPerUnitLength: 50.875
+  - purpose: AssetProperties
+    fea_type: lineType
+    cfg:
+      Name: chainLeg
+      OD: 0.75
+      MassPerUnitLength: 3.21
+      MarineGrowthThickness: 0.02
+  - purpose: AssetProperties
+    fea_type: lineType
+    cfg:
+      Name: bottomUnijoint
+      OD: 0.75
+      MassPerUnitLength: 16.5
+
+  - purpose: Mooring
+    fea_type: line
+    cfg:
+      Name: riserChain
+      connectionData:
+        Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec, ConnectionGamma, ReleaseStage, ConnectionzRelativeTo:
+          - [SALM, 0.0, 0, -14.2, 0, 180, 0, "~"]
+          - [Anchored, 0, 0, 4.0, 0, 0, 0, "~"]
+      sections:
+        LineType, Length, TargetSegmentLength:
+          - [topUnijoint, 1.5, 0.2]
+          - [chainLeg, 9.55, 0.2]
+          - [bottomUnijoint, 1.5, 0.2]
+      statics:
+        LayAzimuth: 0
+
+  - purpose: Foundation
+    fea_type: shape
+    cfg: NULL
+  - purpose: Interface
+    fea_type: group
+    cfg: NULL
+
+Environment:
+  WaterDepth: 28
+  Fatigue:
+      - Wave:
+          SimulationTimeOrigin: 0
+          KinematicStretchingMethod: Vertical Stretching
+          UserSpecifiedRandomWaveSeeds: Yes
+          WaveFrequencySpectrumDiscretisationMethod: Equal energy
+          WaveTrains:
+          - Name: Wave1
+            WaveType: JONSWAP
+            WaveDirection: 0
+            WaveHs: 1
+            WaveOrigin: [0, 0]
+            WaveTimeOrigin: 0
+            WaveNumberOfSpectralDirections: 1
+            WaveJONSWAPParameters: Partially Specified
+            WaveGamma: 2.2
+            WaveTp: 6
+            WaveNumberOfComponents: 300
+            WaveSpectrumMinRelFrequency: 0.5
+            WaveSpectrumMaxRelFrequency: 10
+            WaveSpectrumMaxComponentFrequencyRange: 0.05
+          WaveKinematicsCutoffDepth: 200
+          WaveCalculationMethod: Instantaneous Position (exact)
+          WaveCalculationTimeInterval: 0
+          WaveCalculationSpatialInterval: 0
+
+
+
+
+Analysis:
+  fe_folder: src\digitalmodel\tests\test_data\results\

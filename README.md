@@ -23,15 +23,24 @@ A quick way to running code is:
     - Download this [digitalmodel repository](https://github.com/vamseeachanta/digitalmodel)
     - activate environment
     - Change command line to "digitalmodel" (outside not in src) folder
-    - Run the following python files in tests:
-        - python src\digitalmodel\tests\ {change_to_relevant}.py
-        - i.e. for catenary riser, python src\digitalmodel\tests\test_catenary_riser.py
-    - (or) Run the following batch files in tests:
-        - python src\digitalmodel\tests\ {change_to_relevant}.bat
-        - i.e. for catenary riser, python src\digitalmodel\tests\test_catenary_riser.bat
+        - Run the following python files in tests:
+            - python src\digitalmodel\tests\ {change_to_relevant}.py
+            - i.e. for catenary riser, python src\digitalmodel\tests\test_catenary_riser.py
+        - (or) Run the following batch files in tests:
+            - python src\digitalmodel\tests\ {change_to_relevant}.bat
+            - i.e. for catenary riser, python src\digitalmodel\tests\test_catenary_riser.bat
 
 
 ## Example Structures
+
+
+### SALM
+
+SALM (Single Anchor Line Mooring)
+
+Relevant files:
+- python src\digitalmodel\tests\test_fea_model_salm_buoy_01.py
+- python src\digitalmodel\tests\test_fea_model_salm_buoy_02.py
 
 ### Ships or vessels
 
@@ -45,11 +54,15 @@ Intervention vessels
 SCR - Simple Catenary Riser
 SLWR - Simple Lazy Wave Riser
 
+Relevant files:
+- python src\digitalmodel\tests\test_catenary_riser.py
+- python src\digitalmodel\tests\test_catenary_riser.bat
+
 ### Pipelines
 
 
 
-### Flexibles
+### Flexibles or Umbilicals
 
 ### Umbilicals
 

@@ -1,0 +1,663 @@
+6DBuoys:
+- BulkModulus: Infinity
+  BuoyType: Spar Buoy
+  CentreOfMass:
+  - 0.0
+  - 0.0
+  - 0.0
+  Connection: Free
+  Cylinders:
+  - AddedMassForceCoefficient:
+    - 1.06
+    - 0.9
+    AddedMomentOfInertia:
+    - 20
+    - 0
+    CylinderAxialDragArea: 0
+    CylinderInnerDiameter: 0
+    CylinderLength: 2.5
+    CylinderOuterDiameter: 4.651
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    DragAreaMoment:
+    - 6.056
+    - 0
+    DragForceCoefficient:
+    - 1.14
+    - 0.85
+    DragMomentCoefficient:
+    - 0.7
+    - 0
+    InertiaForceCoefficient:
+    - '~'
+    - '~'
+    UnitDampingForce:
+    - 160
+    - 0
+    UnitDampingMoment:
+    - 2500
+    - 0
+  - AddedMassForceCoefficient:
+    - 1.06
+    - 0.9
+    AddedMomentOfInertia:
+    - 20
+    - 0
+    CylinderAxialDragArea: 0
+    CylinderInnerDiameter: 0
+    CylinderLength: 2
+    CylinderOuterDiameter: 4.651
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    DragAreaMoment:
+    - 3.101
+    - 0
+    DragForceCoefficient:
+    - 1.14
+    - 0.85
+    DragMomentCoefficient:
+    - 0.7
+    - 0
+    InertiaForceCoefficient:
+    - '~'
+    - '~'
+    UnitDampingForce:
+    - 160
+    - 0
+    UnitDampingMoment:
+    - 2500
+    - 0
+  - AddedMassForceCoefficient:
+    - 1.06
+    - 0.9
+    AddedMomentOfInertia:
+    - 20
+    - 0
+    CylinderAxialDragArea: 0
+    CylinderInnerDiameter: 0
+    CylinderLength: 2
+    CylinderOuterDiameter: 4.651
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    DragAreaMoment:
+    - 3.101
+    - 0
+    DragForceCoefficient:
+    - 1.14
+    - 0.85
+    DragMomentCoefficient:
+    - 0.7
+    - 0
+    InertiaForceCoefficient:
+    - '~'
+    - '~'
+    UnitDampingForce:
+    - 160
+    - 0
+    UnitDampingMoment:
+    - 2500
+    - 0
+  - AddedMassForceCoefficient:
+    - 1.06
+    - 0.9
+    AddedMomentOfInertia:
+    - 20
+    - 0
+    CylinderAxialDragArea: 0
+    CylinderInnerDiameter: 0
+    CylinderLength: 2
+    CylinderOuterDiameter: 4.651
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    DragAreaMoment:
+    - 3.101
+    - 0
+    DragForceCoefficient:
+    - 1.14
+    - 0.85
+    DragMomentCoefficient:
+    - 0.7
+    - 0
+    InertiaForceCoefficient:
+    - '~'
+    - '~'
+    UnitDampingForce:
+    - 160
+    - 0
+    UnitDampingMoment:
+    - 2500
+    - 0
+  - AddedMassForceCoefficient:
+    - 1.06
+    - 0.9
+    AddedMomentOfInertia:
+    - 20
+    - 0
+    CylinderAxialDragArea: 0
+    CylinderInnerDiameter: 0
+    CylinderLength: 2
+    CylinderOuterDiameter: 4.651
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    DragAreaMoment:
+    - 3.101
+    - 0
+    DragForceCoefficient:
+    - 1.14
+    - 0.85
+    DragMomentCoefficient:
+    - 0.7
+    - 0
+    InertiaForceCoefficient:
+    - '~'
+    - '~'
+    UnitDampingForce:
+    - 160
+    - 0
+    UnitDampingMoment:
+    - 2500
+    - 0
+  - AddedMassForceCoefficient:
+    - 1.06
+    - 0.9
+    AddedMomentOfInertia:
+    - 20
+    - 0
+    CylinderAxialDragArea: 0
+    CylinderInnerDiameter: 0
+    CylinderLength: 2
+    CylinderOuterDiameter: 4.651
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    DragAreaMoment:
+    - 3.101
+    - 0
+    DragForceCoefficient:
+    - 1.14
+    - 0.85
+    DragMomentCoefficient:
+    - 0.7
+    - 0
+    InertiaForceCoefficient:
+    - '~'
+    - '~'
+    UnitDampingForce:
+    - 160
+    - 0
+    UnitDampingMoment:
+    - 2500
+    - 0
+  - AddedMassForceCoefficient:
+    - 1.06
+    - 0.9
+    AddedMomentOfInertia:
+    - 20
+    - 0
+    CylinderAxialDragArea: 0
+    CylinderInnerDiameter: 0
+    CylinderLength: 2
+    CylinderOuterDiameter: 4.651
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    DragAreaMoment:
+    - 3.101
+    - 0
+    DragForceCoefficient:
+    - 1.14
+    - 0.85
+    DragMomentCoefficient:
+    - 0.7
+    - 0
+    InertiaForceCoefficient:
+    - '~'
+    - '~'
+    UnitDampingForce:
+    - 160
+    - 0
+    UnitDampingMoment:
+    - 2500
+    - 0
+  - AddedMassForceCoefficient:
+    - 1.06
+    - 0.9
+    AddedMomentOfInertia:
+    - 20
+    - 0
+    CylinderAxialDragArea: 0
+    CylinderInnerDiameter: 0
+    CylinderLength: 2
+    CylinderOuterDiameter: 4.651
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    DragAreaMoment:
+    - 3.101
+    - 0
+    DragForceCoefficient:
+    - 1.14
+    - 0.85
+    DragMomentCoefficient:
+    - 0.7
+    - 0
+    InertiaForceCoefficient:
+    - '~'
+    - '~'
+    UnitDampingForce:
+    - 160
+    - 0
+    UnitDampingMoment:
+    - 2500
+    - 0
+  DampingRelativeTo: Earth
+  DegreesOfFreedomInStatics: All
+  DisturbanceVessel: (none)
+  GlobalAppliedLoads:
+  - Origin:
+    - 0
+    - 0
+    - 0
+  - Force:
+    - 0
+    - 0
+    - 0
+  - Moment:
+    - 0
+    - 0
+    - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  InitialPosition:
+  - 0
+  - 0
+  - 0
+  LocalAppliedLoads:
+  - Origin:
+    - 0
+    - 0
+    - 0
+  - Force:
+    - 0
+    - 0
+    - 0
+  - Moment:
+    - 0
+    - 0
+    - 0
+  Mass: 108.042
+  MomentsOfInertia:
+  - 8093.156
+  - 8093.156
+  - 1479.095
+  MunkMomentCoefficient: 0
+  Name: SALM
+  NormalDragAreaCalculatedFromGeometry: 'Yes'
+  Pen:
+  - 1
+  - Solid
+  - $FF80C0
+  SeabedFrictionCoefficient: 0
+  ShadedDrawingCullingMode: Anticlockwise
+  StackBaseCentre:
+  - 0
+  - 0
+  - -13.5
+  StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+  TotalContactArea: '~'
+  WaveCalculationMethod: Specified by Environment
+Environment:
+  AirDensity: 0.00128
+  CurrentDepth, CurrentFactor, CurrentRotation:
+  - - 0
+    - 1
+    - 0
+  - - 28
+    - 0.173
+    - 0
+  CurrentMethod: Interpolated
+  CurrentRamp: 'Yes'
+  Density: 1.025
+  HorizontalCurrentFactor: '~'
+  HorizontalWaterDensityFactor: '~'
+  IncludeBuoyWingWindLoads: 'Yes'
+  IncludeLineWindLoads: 'Yes'
+  IncludeVesselWindLoads: 'Yes'
+  KinematicViscosity: 1.35e-06
+  MultipleCurrentDataCanBeDefined: 'Yes'
+  RefCurrentDirection: 0
+  RefCurrentSpeed: 0.35
+  ReynoldsNumberCalculation: Flow Direction
+  SeaTemperature: 10
+  SeabedModel: Linear
+  SeabedNormalStiffness: 100
+  SeabedOrigin:
+  - 0
+  - 0
+  SeabedShearStiffness: '~'
+  SeabedSlope: 0
+  SeabedSlopeDirection: 0
+  SeabedType: Flat
+  SimulationTimeOrigin: 0
+  VerticalDensityVariation: Constant
+  VerticalWindVariationFactor: '~'
+  WaterDepth: 28
+  WaterSurfaceZ: 0
+  WaveCalculationMethod: Instantaneous Position (exact)
+  WaveCalculationSpatialInterval: 0
+  WaveCalculationTimeInterval: 0
+  WaveKinematicsCutoffDepth: 200
+  WaveTrains:
+  - Name: Wave1
+    WaveDirection: 0
+    WaveGamma: 2.2
+    WaveHs: 0.001
+    WaveJONSWAPParameters: Partially Specified
+    WaveNumberOfComponents: 300
+    WaveNumberOfSpectralDirections: 1
+    WaveOrigin:
+    - 0
+    - 0
+    WaveSpectrumMaxComponentFrequencyRange: 0.05
+    WaveSpectrumMaxRelFrequency: 10
+    WaveSpectrumMinRelFrequency: 0.5
+    WaveTimeOrigin: 0
+    WaveTp: 6
+    WaveType: JONSWAP
+  WindDirection: 0
+  WindSpeed: 8
+  WindType: Constant
+General:
+  BuoysIncludedInStatics: Individually Specified
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitConstantTimeStep: 0.25
+  ImplicitUseVariableTimeStep: 'No'
+  LogPrecision: Single
+  StageDuration:
+  - 10
+  - 600
+  StaticsMaxIterations: 800
+  StaticsMethod: Whole System statics
+  TargetLogSampleInterval: 0.1
+  UnitsSystem: SI
+Groups:
+  State:
+    Collapsed:
+    - Variable Data
+  Structure:
+    Base1: Without Torsion
+    CALM Buoy1: Without Torsion
+    Chain2: Without Torsion
+    Chain3: Without Torsion
+    Chain4: Without Torsion
+    Chain5: Without Torsion
+    Chain6: Without Torsion
+    FloatingBuoy: Model
+    Inner String: Model
+    Outer String: Model
+    With Torsion: Model
+    Without Torsion: Model
+LineTypes:
+- AllowableStress: '~'
+  AllowableTension: '~'
+  AxialDragLiftDiameter: 0.75
+  BendingStressLoadingFactor: 1
+  BulkModulus: Infinity
+  CG:
+  - 0
+  - 0
+  Ca:
+  - 1
+  - '~'
+  - 0.5
+  Category: General
+  Cd:
+  - 2.4
+  - '~'
+  - 1.15
+  Ce: 0
+  Cl: 0
+  ClashStiffness: 0
+  Cm:
+  - '~'
+  - '~'
+  - '~'
+  CompressionIsLimited: 'Yes'
+  ContactDiameter: 0.31825
+  Cs: 0
+  EA: 770735.0
+  EI:
+  - 0
+  - '~'
+  GJ: 10
+  ID: 0
+  MassPerUnitLength: 50.875
+  MinRadius:
+  - '~'
+  - '~'
+  Name: topUnijoint
+  NormalDragLiftDiameter: 0.75
+  OD: 0.75
+  Pen:
+  - 1
+  - Solid
+  - Lime
+  PoissonRatio: 0
+  RayleighDampingCoefficients: (no damping)
+  SeabedAxialFrictionCoefficient: '~'
+  SeabedNormalFrictionCoefficient: 0.5
+  ShearStressLoadingFactor: 1
+  StressID: '~'
+  StressOD: '~'
+  TensileStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+- AllowableStress: '~'
+  AllowableTension: '~'
+  AxialDragLiftDiameter: 0.75
+  BendingStressLoadingFactor: 1
+  BulkModulus: Infinity
+  CG:
+  - 0
+  - 0
+  Ca:
+  - 1
+  - '~'
+  - 0.5
+  Category: General
+  Cd:
+  - 2.4
+  - '~'
+  - 1.15
+  Ce: 0
+  Cl: 0
+  ClashStiffness: 0
+  Cm:
+  - '~'
+  - '~'
+  - '~'
+  CompressionIsLimited: 'Yes'
+  ContactDiameter: 0.31825
+  Cs: 0
+  EA: 770735.0
+  EI:
+  - 0
+  - '~'
+  GJ: 10
+  ID: 0
+  MassPerUnitLength: 3.21
+  MinRadius:
+  - '~'
+  - '~'
+  Name: chainLeg
+  NormalDragLiftDiameter: 0.75
+  OD: 0.75
+  Pen:
+  - 1
+  - Solid
+  - Lime
+  PoissonRatio: 0
+  RayleighDampingCoefficients: (no damping)
+  SeabedAxialFrictionCoefficient: '~'
+  SeabedNormalFrictionCoefficient: 0.5
+  ShearStressLoadingFactor: 1
+  StressID: '~'
+  StressOD: '~'
+  TensileStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+- AllowableStress: '~'
+  AllowableTension: '~'
+  AxialDragLiftDiameter: 0.75
+  BendingStressLoadingFactor: 1
+  BulkModulus: Infinity
+  CG:
+  - 0
+  - 0
+  Ca:
+  - 1
+  - '~'
+  - 0.5
+  Category: General
+  Cd:
+  - 2.4
+  - '~'
+  - 1.15
+  Ce: 0
+  Cl: 0
+  ClashStiffness: 0
+  Cm:
+  - '~'
+  - '~'
+  - '~'
+  CompressionIsLimited: 'Yes'
+  ContactDiameter: 0.31825
+  Cs: 0
+  EA: 770735.0
+  EI:
+  - 0
+  - '~'
+  GJ: 10
+  ID: 0
+  MassPerUnitLength: 16.5
+  MinRadius:
+  - '~'
+  - '~'
+  Name: bottomUnijoint
+  NormalDragLiftDiameter: 0.75
+  OD: 0.75
+  Pen:
+  - 1
+  - Solid
+  - Lime
+  PoissonRatio: 0
+  RayleighDampingCoefficients: (no damping)
+  SeabedAxialFrictionCoefficient: '~'
+  SeabedNormalFrictionCoefficient: 0.5
+  ShearStressLoadingFactor: 1
+  StressID: '~'
+  StressOD: '~'
+  TensileStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+Lines:
+- AsLaidTension: 0
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec,
+    ConnectionGamma, ReleaseStage, ConnectionzRelativeTo
+  : - - SALM
+      - 0.0
+      - 0
+      - -14.2
+      - 0
+      - 180
+      - 0
+      - '~'
+    - - Anchored
+      - 0
+      - 0
+      - 4.0
+      - 0
+      - 0
+      - 0
+      - '~'
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
+    ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - '~'
+      - 0
+      - 0.001
+    - - '~'
+      - 0
+      - 0.001
+  ConnectionStiffnessX, ConnectionStiffnessY:
+  - - 0
+    - '~'
+  - - 0
+    - '~'
+  ContactPen:
+  - 5
+  - Solid
+  - White
+  ContentsDensity: 1
+  ContentsFlowRate: 0
+  ContentsMethod: Uniform
+  ContentsPressure: 0
+  ContentsPressureRefZ: '~'
+  DragFormulation: Standard
+  DrawShadedNodesAsSpheres: 'Yes'
+  DynamicsVIV: None
+  IncludeAxialContentsInertia: 'Yes'
+  IncludeSeabedFrictionInStatics: 'Yes'
+  IncludeTorsion: 'No'
+  IncludedInStatics: 'Yes'
+  LayAzimuth: 0
+  LineType, Length, TargetSegmentLength:
+  - - topUnijoint
+    - 1.5
+    - 0.2
+  - - chainLeg
+    - 9.55
+    - 0.2
+  - - bottomUnijoint
+    - 1.5
+    - 0.2
+  LogAcceleration: 'No'
+  Name: riserChain
+  PreBendSpecifiedBy: Bend angle
+  PyModel: (none)
+  Representation: Finite element
+  SegmentPen:
+  - 1
+  - Solid
+  - Lime
+  SegmentPenMode: Use Segment Pen
+  StaticsStep1: Catenary
+  StaticsStep2: None
+  StaticsVIV: None
+  TopEnd: End A
+  WaveCalculationMethod: Specified by Environment
+Shapes:
+- Connection: Anchored
+  InsidePen:
+  - 1
+  - Solid
+  - Blue
+  Name: Base1
+  NumberOfLines: 2
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Origin:
+  - -3
+  - -3
+  - 0
+  ShadedDrawingCullingMode: Anticlockwise
+  ShadedDrawingDrawSize: 11
+  ShadedDrawingFileName: '! ''%ApplicationFolder%\Shaded Drawing Samples\Subsea Template\Subsea
+    Template.x'''
+  ShadedDrawingOrigin:
+  - 3
+  - 3
+  - 0
+  Shape: Block
+  ShapeType: Drawing
+  Size:
+  - 6
+  - 6
+  - 3.622

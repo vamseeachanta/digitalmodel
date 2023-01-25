@@ -127,7 +127,10 @@ class Line():
             "LogAcceleration": "No"
         }
 
-        update_cfg = self.cfg['cfg']['results'].copy()
+        if 'results' in self.cfg['cfg']:
+            update_cfg = self.cfg['cfg']['results'].copy()
+        else:
+            update_cfg = {}
         calculate_function_prefix = 'get_results_'
         property_group = results
         self.update_property_group(calculate_function_prefix, property_group, update_cfg)

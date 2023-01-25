@@ -1,4 +1,5 @@
 import datetime
+import yaml
 
 
 class ReadFromExcel():
@@ -57,10 +58,11 @@ class ReadData():
         https://stackoverflow.com/questions/38056233/python-search-excel-sheet-for-specific-strings-in-a-column-and-extract-those-ro/38056526
         https://www.tutorialspoint.com/How-to-check-if-multiple-strings-exist-in-another-string-in-Python
         """
-        import xlrd
-        wb = xlrd.open_workbook(cfg['io'])
+        # import xlrd
+        from openpyxl import load_workbook
+        wb = load_workbook(cfg['io'])
 
-        sh = wb.sheet_by_name(cfg['sheet_name'])
+        sh = wb[cfg['sheet_name']]
         keyword_row_number = self.from_xlsx_get_WorkSheetRowNumberWithText(sh, cfg["key_words"])
         return keyword_row_number
 
@@ -610,7 +612,6 @@ class SaveData():
         f.close()
 
     def WriteOrcaFlexYMLFile(self, Files, output_filename):
-        import oyaml as yaml
         print('Write file: "{0}" .... '.format(output_filename))
         with open(output_filename, 'w') as f:
             for file in Files:

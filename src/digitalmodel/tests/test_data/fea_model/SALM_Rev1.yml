@@ -18,10 +18,7 @@ default:
     overwrite:
       output: True
     CustomInputFile: NULL
-  data_source: NULL
-
-General:
-  UnitsSystem: SI
+  data_source: db
 
 Assets:
   - purpose: Host
@@ -40,7 +37,7 @@ Assets:
       MomentsOfInertia: Calculated
       CentreOfMass: Calculated
       StackedBuoy:
-        StackBaseCentre: [0, 0, -13.5]
+        StackBaseCentre: [0, 0, -9]
         BulkModulus: Infinity
         MunkMomentCoefficient: 0
         NormalDragAreaCalculatedFromGeometry: "Yes"
@@ -122,34 +119,68 @@ Assets:
     fea_type: lineType
     cfg:
       Name: topUnijoint
-      OD: 0.75
-      MassPerUnitLength: 50.875
+      OD: 0.10
+      MassPerUnitLength: 5.19
+      Material: steel
   - purpose: AssetProperties
     fea_type: lineType
     cfg:
       Name: chainLeg
-      OD: 0.75
-      MassPerUnitLength: 3.21
+      OD: 0.252
+      ID: 0
+      CG: [0, 0]
+      BulkModulus: Infinity
+      MassPerUnitLength: 0.39004
+      CompressionIsLimited: Yes
+      AllowableTension: ~
+      MinRadius: ['~', '~']
+      EI: [0, '~']
+      EA: 1.6738e6
+      PoissonRatio: 0
+      GJ: 10
+      TensionTorqueCoupling: 0
+      ContactDiameter: 0.469
+      ClashStiffness: 0
+      Ca: [1, '~', 0.5]
+      Cm: ['~', '~', '~']
+      Cs: 0
+      Ce: 0
+      Cd: [2.4, '~', 1.15]
+      Cl: 0
+      NormalDragLiftDiameter: 0.14
+      AxialDragLiftDiameter: 0.04456
+      StressOD: ~
+      StressID: ~
+      AllowableStress: ~
+      TensileStressLoadingFactor: 1
+      BendingStressLoadingFactor: 1
+      ShearStressLoadingFactor: 1
+      TorsionalStressLoadingFactor: 1
+      SeabedNormalFrictionCoefficient: 0.5
+      SeabedAxialFrictionCoefficient: ~
+      RayleighDampingCoefficients: (no damping)
+      Material: steel
       MarineGrowthThickness: 0.02
   - purpose: AssetProperties
     fea_type: lineType
     cfg:
       Name: bottomUnijoint
-      OD: 0.75
-      MassPerUnitLength: 16.5
+      OD: 0.10
+      Material: steel
+      MassPerUnitLength: 1.68
 
   - purpose: Mooring
     fea_type: line
     cfg:
       Name: riserChain
       connectionData:
-        ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec, ConnectionGamma, ReleaseStage, ConnectionzRelativeTo
-        : - [SALM, 0.0, 0, -14.2, 0, 180, 0, "~"]
+        Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec, ConnectionGamma, ReleaseStage, ConnectionzRelativeTo:
+          - [SALM, 0.0, 0, -9.0, 0, 180, 0, "~"]
           - [Anchored, 0, 0, 4.0, 0, 0, 0, "~"]
       sections:
         LineType, Length, TargetSegmentLength:
           - [topUnijoint, 1.5, 0.2]
-          - [chainLeg, 9.55, 0.2]
+          - [chainLeg, 7.8, 0.2]
           - [bottomUnijoint, 1.5, 0.2]
       statics:
         LayAzimuth: 0
@@ -164,35 +195,37 @@ Assets:
 Environment:
   WaterDepth: 28
   Wave:
-    - SimulationTimeOrigin: 0
+    -
+      SimulationTimeOrigin: 0
       KinematicStretchingMethod: Vertical Stretching
       UserSpecifiedRandomWaveSeeds: Yes
       WaveFrequencySpectrumDiscretisationMethod: Equal energy
       WaveTrains:
-        - Name: Wave1
-          WaveType: JONSWAP
-          WaveDirection: 0
-          WaveHs: 0.001
-          WaveOrigin: [0, 0]
-          WaveTimeOrigin: 0
-          WaveNumberOfSpectralDirections: 1
-          WaveJONSWAPParameters: Partially Specified
-          WaveGamma: 2.2
-          WaveTp: 6
-          WaveNumberOfComponents: 300
-          WaveSpectrumMinRelFrequency: 0.5
-          WaveSpectrumMaxRelFrequency: 10
-          WaveSpectrumMaxComponentFrequencyRange: 0.05
+      - Name: Wave1
+        WaveType: JONSWAP
+        WaveDirection: 0
+        WaveHs: 0.001
+        WaveOrigin: [0, 0]
+        WaveTimeOrigin: 0
+        WaveNumberOfSpectralDirections: 1
+        WaveJONSWAPParameters: Partially Specified
+        WaveGamma: 2.2
+        WaveTp: 6
+        WaveNumberOfComponents: 300
+        WaveSpectrumMinRelFrequency: 0.5
+        WaveSpectrumMaxRelFrequency: 10
+        WaveSpectrumMaxComponentFrequencyRange: 0.05
       WaveKinematicsCutoffDepth: 200
       WaveCalculationMethod: Instantaneous Position (exact)
       WaveCalculationTimeInterval: 0
       WaveCalculationSpatialInterval: 0
 
   Current:
-    - MultipleCurrentDataCanBeDefined: "Yes"
+    -
+      MultipleCurrentDataCanBeDefined: "Yes"
       Name: Current1
-      CurrentRamp: "Yes"
-      HorizontalCurrentFactor: "~"
+      CurrentRamp: "No"
+      HorizontalCurrentFactor: '~'
       CurrentMethod: Interpolated
       RefCurrentSpeed: 0.35
       RefCurrentDirection: 0
@@ -201,7 +234,8 @@ Environment:
         - [28, 0.173, 0]
 
   Wind:
-    - IncludeVesselWindLoads: "Yes"
+    -
+      IncludeVesselWindLoads: "Yes"
       IncludeLineWindLoads: "Yes"
       IncludeBuoyWingWindLoads: "Yes"
       VerticalWindVariationFactor: "~"
@@ -211,7 +245,9 @@ Environment:
       WindDirection: 0
 
   LoadVariation:
-    flag: False
+    flag: True
+    source: csv
+    file_name: data_manager\data\metocean\load_variations_test.csv
 
 db:
   server_type: mssql
@@ -221,5 +257,7 @@ db:
   database: master
 
 Analysis:
-  fe_folder: NULL
-
+  fe_folder: C:\Users\achantv\OneDrive\OneDrive - Occidental Petroleum Corporation\Temp\AKS\COD\Static_NoTanker\
+  drop_basename: True
+  fe_file_prefix: LC_
+  fe_batch_file: True

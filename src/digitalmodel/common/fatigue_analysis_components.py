@@ -1,4 +1,13 @@
+import os
+import statistics
 import logging
+import pandas as pd
+import numpy as np
+
+from digitalmodel.common.data import FromString
+from digitalmodel.common.data import ReadData
+from digitalmodel.common.data import SaveData
+from digitalmodel.common.visualizations import Visualization
 
 
 class FatigueAnalysisComponents():
@@ -8,7 +17,6 @@ class FatigueAnalysisComponents():
         self.get_model_state_information()
 
     def get_model_state_information(self):
-        import pandas as pd
         if self.cfg['default'].__contains__('model_state_information'):
             if self.cfg['default']['model_state_information']['flag']:
                 if self.cfg['default']['model_state_information'].__contains__('from_csv'):
@@ -25,13 +33,6 @@ class FatigueAnalysisComponents():
         self.tabulate_overall_viv_results()
 
     def get_viv_modes_excited(self):
-        import os
-
-        import pandas as pd
-
-        from common.data import ReadData
-        read_data = ReadData()
-        from common.data import SaveData
         save_data = SaveData()
 
         SheetNames = []
@@ -76,11 +77,6 @@ class FatigueAnalysisComponents():
             self.viv_modes_excited_summary.to_csv(file_name)
 
     def read_shear7_viv_plt_files(self):
-        import os
-
-        import pandas as pd
-
-        from common.data import ReadData
         read_data = ReadData()
         self.viv_plt_df_array = []
         for file_index in range(0, len(self.cfg['Shear7_sets'])):
@@ -97,7 +93,6 @@ class FatigueAnalysisComponents():
             self.viv_plt_df_array.append(file_df)
 
     def get_total_viv_fatigue(self):
-        import pandas as pd
         self.total_viv_fatigue = pd.DataFrame()
         self.total_viv_fatigue['x/L'] = self.viv_plt_df_array[-1]['x/L']
         self.total_viv_fatigue['total_damage'] = self.viv_plt_df_array[-1]['x/L'] * 0
@@ -112,9 +107,6 @@ class FatigueAnalysisComponents():
         self.total_viv_fatigue = self.add_riser_length_to_shear7_result(self.total_viv_fatigue)
 
     def tabulate_viv_results(self):
-        import pandas as pd
-
-        from common.data import SaveData
         save_data = SaveData()
 
         if self.cfg.__contains__('viv_tables'):
@@ -167,9 +159,6 @@ class FatigueAnalysisComponents():
             save_data.DataFrameArray_To_xlsx_openpyxl(self.viv_tables, cfg_temp)
 
     def tabulate_overall_viv_results(self):
-        import pandas as pd
-
-        from common.data import SaveData
         save_data = SaveData()
 
         if self.cfg.__contains__('viv_tables'):
@@ -205,7 +194,6 @@ class FatigueAnalysisComponents():
 
     def plot_viv_tables(self):
         if self.cfg.__contains__('viv_tables') and self.cfg.viv_tables.__contains__('plot'):
-            from common.visualizations import Visualization
             for table_index in range(0, len(self.cfg.viv_tables['length'])):
                 viz = Visualization()
                 plt_settings = self.cfg.viv_tables['plot'][0]
@@ -249,9 +237,6 @@ class FatigueAnalysisComponents():
                     viz.save_and_close()
 
     def add_riser_length_to_shear7_result(self, df):
-        import logging
-
-        import numpy as np
         x = list(df['x/L'])
         if hasattr(self,'riser_stack_up_properties'):
             logging.info("Utilizing riser stack up properties for Shear7 X calculations")
@@ -268,7 +253,6 @@ class FatigueAnalysisComponents():
         return df
 
     def save_viv_fatigue_life_visualizations(self):
-        from common.visualizations import Visualization
         viz = Visualization()
         for plot_index in range(0, len(self.cfg.viv_plots['combined'])):
             plt_settings = self.cfg.viv_plots['combined'][plot_index]
@@ -300,13 +284,11 @@ class FatigueAnalysisComponents():
 
 
     def read_orcaflex_wave_fatigue(self):
-        from common.data import ReadData
         read_data = ReadData()
         cfg_temp = self.cfg['WaveFatigue_Sets'][0]
         self.total_wave_fatigue = read_data.xlsx_to_df_by_keyword_search(cfg_temp)
 
     def add_riser_length_axis_to_orcaflex_result(self):
-        import numpy as np
         x = list(self.total_wave_fatigue['Arc Length'])
         xp = self.riser_stack_up_properties.component_bottom_elevation_from_end_A.tolist()
         fp = self.riser_stack_up_properties.component_bottom_elevation_above_mudline.tolist()
@@ -314,7 +296,6 @@ class FatigueAnalysisComponents():
         self.total_wave_fatigue['elevation_above_mudline'] = result
 
     def get_combined_fatigue(self):
-        import pandas as pd
         self.combined_fatigue = pd.DataFrame()
         self.combined_fatigue['elevation_above_mudline'] = self.total_viv_fatigue['elevation_above_mudline']
         self.combined_fatigue['total_viv_fatigue_damage'] = self.total_viv_fatigue['total_damage']
@@ -328,7 +309,6 @@ class FatigueAnalysisComponents():
             self.viv_histogram_df_array.append(histogram_file)
 
     def get_viv_cummulative_histograms(self):
-        import pandas as pd
         self.probability_array = []
         self.simulation_duration_array = []
         self.shear7_bins = list(
@@ -372,10 +352,6 @@ class FatigueAnalysisComponents():
 
 
     def get_yearly_histogram_object_from_viv_run(self, file_index):
-        import statistics
-
-        import pandas as pd
-
         self.shear7_bins = list(
             range(self.cfg['histogram']['shear7']['range'][0], self.cfg['histogram']['shear7']['range'][1],
                   self.cfg['histogram']['shear7']['bins']))
@@ -410,7 +386,6 @@ class FatigueAnalysisComponents():
         return histogram_file
 
     def get_histogram_object_at_shear7_x_by_L_from_viv_run(self, file_index, shear7_x_by_L):
-        import numpy as np
         x = shear7_x_by_L
         if not self.viv_plt_df_array[file_index].empty:
             xp =self.viv_plt_df_array[file_index]['x/L'].tolist()
@@ -432,7 +407,6 @@ class FatigueAnalysisComponents():
         return histogram_object
 
     def get_viv_fundamental_natural_frequency(self, file_index):
-        from common.data import FromString, ReadData
         read_data = ReadData()
         cfg_temp = self.cfg['histogram']['shear7']['fundamental_natural_frequency']['from_ascii'].copy()
         io = self.cfg['Shear7_sets'][file_index]['io'][0:len(self.cfg['Shear7_sets'][file_index]['io'])-3] + 'out'
@@ -451,13 +425,11 @@ class FatigueAnalysisComponents():
         return natural_frequency
 
     def get_wave_cummulative_histograms(self):
-        from common.data import ReadData
         read_data = ReadData()
         cfg_temp = {'files': {'from_xlsx': [self.cfg['histogram']['wave']]}}
         self.wave_cummulative_histograms = read_data.from_xlsx(cfg_temp)
 
     def get_combined_histograms(self):
-        import pandas as pd
         self.combined_histograms = pd.DataFrame(columns = self.wave_cummulative_histograms.columns)
         self.combined_histograms['bins'] = self.wave_cummulative_histograms['bins']
         for label_index in range(0, len(self.wave_cummulative_histograms.columns)):
@@ -475,7 +447,6 @@ class FatigueAnalysisComponents():
         save_data.DataFrameArray_To_xlsx_openpyxl(df_array, cfg_temp)
 
     def get_wave_fatigue_converted_to_viv_divisions(self):
-        import numpy as np
         x = self.combined_fatigue.elevation_above_mudline.tolist()
         xp = self.total_wave_fatigue.elevation_above_mudline.tolist()
         xp.reverse()
@@ -491,10 +462,6 @@ class FatigueAnalysisComponents():
         self.save_visualizations()
 
     def save_fatigue_summary_result(self):
-        import numpy as np
-        import pandas as pd
-
-        from common.data import SaveData
         save_data = SaveData()
         basefile_name = self.cfg['Analysis']['result_folder'] + self.cfg['Analysis']['file_name']
         self.combined_fatigue.to_csv(basefile_name + '_combined_fatigue.csv')
@@ -552,7 +519,6 @@ class FatigueAnalysisComponents():
                 self.riser_stack_up_properties.loc[line_item_index, 'elevation_from_end_A_at_max_damage'] = None
 
     def get_shear7_x_by_L_from_elevation_above_mudline(self, x):
-        import numpy as np
         xp = self.riser_stack_up_properties.component_bottom_elevation_above_mudline.tolist()
         xp.reverse()
         fp = self.riser_stack_up_properties.shear7_bottom_x_by_L.tolist()
@@ -562,7 +528,6 @@ class FatigueAnalysisComponents():
         return result
 
     def get_elevation_from_end_A_from_elevation_above_mudline(self, x):
-        import numpy as np
         xp = self.riser_stack_up_properties.component_bottom_elevation_above_mudline.tolist()
         xp.reverse()
         fp = self.riser_stack_up_properties.component_bottom_elevation_from_end_A.tolist()
@@ -572,7 +537,6 @@ class FatigueAnalysisComponents():
         return result
 
     def save_visualizations(self):
-        from common.visualizations import Visualization
         viz = Visualization()
         plt_settings = self.cfg['plot_settings'][0]
         plt_settings.update(
@@ -584,10 +548,6 @@ class FatigueAnalysisComponents():
         viz.save_and_close()
 
     def orcaflex_wave_fatigue_analysis(self):
-        import pandas as pd
-
-        from common.data import ReadData, SaveData
-        from common.visualizations import Visualization
         cfg = self.cfg
 
         viz_data = Visualization()
