@@ -1,0 +1,1052 @@
+default:
+  Analysis:
+    SCR : False
+    Jumper : False
+    SLWR : True
+    Extreme: True
+    Fatigue: False
+  config:
+    overwrite:
+      output: True
+
+Analysis:
+  fe_folder: NULL
+
+simpleCatenaryDefinition:
+  axialLineForce : NULL
+  verticalDistance : 750
+  declinationAngle : 10
+  TDPToAnchor : 500
+  Spacing:
+    20
+  lay_azimuth_to_vessel: 90
+  HangoffBelowMeanSeaLevel : 0
+
+LazyWaveCatenaryDefinition:
+  VerticalDistance : 750
+  TDPToAnchor : 500
+  HangoffBelowMeanSeaLevel : 0
+  Hangoff:
+    above_keel: 11.21
+    from_midship : 80
+    from_centerline: 32
+  SagBendElevationAboveSeabed : 100
+  HogBendAboveSeabed : 225
+  declinationAngle : 12
+  lay_azimuth_to_vessel: 90
+  UniformBuoyancy : 
+    Thickness: NULL
+    BuoyancyFactor: 2
+  DiscreteBuoyancy: 
+    Thickness: NULL
+    BuoyancyFactor: NULL
+    BuoyancyCoverage: 100
+  Spacing:
+    20
+  TaperJoint:
+    L: 3.66
+    ThickendThickness: 2.0
+
+geometry:
+  waterDepth: 750
+  NominalID: NULL
+  NominalOD: 12.75
+  DesignWT : 1.375
+  ExternalCoating:
+    Thickness: 0.039
+  Strakes:
+    BaseThickness: 0.5906
+    Area: NULL
+  MarineGrowth:
+    Thickness: NULL
+
+Material:
+  Steel:
+    Rho: 7850
+    PoissionsRatio: 0.30
+    SMYS: 65300
+    SMUS: 77600
+    E: 30000000.00
+    G: 11538461.54
+  Fluid: 
+    Rho: 1025
+  Reference_Fluid:
+    Rho: 1025
+  SeaWater: 
+    Rho: 1025
+  ExternalCoating:
+    Rho: 1300
+  Buoyancy:
+    Rho: 500
+  Strakes:
+    MassPerUnitLength: 21.5787
+    WeightPerUnitLength: -42.3375
+    Density: NULL
+  MarineGrowth:
+    Density: NULL
+
+FEASettings:
+  AnchorAdjustment:
+    SLWR: -37.54
+    SCR: 0
+  Seabed:
+    FrictionCoefficient:
+      Normal: 0.6
+      Axial: 0.45
+    Stiffness:
+      Extreme: 10000
+      Fatigue: 1000
+  DesignPressure:
+    Surface: 6400
+    TDP: NULL
+  Hydrodynamic:
+    Extreme:
+      MainPipe:
+        Ca: [1.5, '~', 0]
+        Cd: [1.5, '~', 0.008]
+      BuoyPipe:
+        Ca: [1, '~', 0.001]
+        Cd: [1, '~', 0.001]
+      BuoyPipeStartEnd:
+        Ca: [1, '~', 0.17]
+        Cd: [1, '~', 0.080356352]
+    Fatigue:
+      MainPipe:
+        Ca: [1.5, '~', 0]
+        Cd: [1.35, '~', 0.008]
+      BuoyPipe:
+        Ca: [1, '~', 0.001]
+        Cd: [0.9, '~', 0.001]
+      BuoyPipeStartEnd:
+        Ca: [1, '~', 0.17]
+        Cd: [1, '~', 0.080356352]
+  CorrosionAllowance:
+    Extreme: 0.118
+    Fatigue: 0.059
+
+  Damping:
+    Extreme:
+      Name: SteelDamping
+      Mode: Mass and Stiffness Proportional
+      DampingRatio: 0.5
+      Period1: '~'
+      ApplyToGeometricStiffness: No
+    Fatigue:
+      Name: SteelDamping
+      Mode: Mass and Stiffness Proportional
+      DampingRatio: 0.5
+      Period1: '~'
+      ApplyToGeometricStiffness: No
+  Mesh:
+    Top:
+      L: 25
+      Size: 0.25
+    Buoyancy:
+      L: NULL
+      Size: 2
+    BeforeTDP:
+      L: 250
+      Size: 1
+    AfterTDP:
+      L: 250
+      Size: 1
+  Stage:
+    Extreme:
+      Duration:
+        - 8
+        - 120
+      TargetLogSampleInterval: 0.3
+      ImplicitConstantTimeStep: 0.02
+    Fatigue:
+      Duration:
+        - 8
+        - 3600
+      TargetLogSampleInterval: 0.3
+      ImplicitConstantTimeStep: 0.1
+  FlexJointStiffness:
+    ConnectionLabel: FJProfile
+    Extreme:
+      - [0.00, 0.00]
+      - [0.01, 5.89]
+      - [0.02, 9.12]
+      - [0.03, 11.78]
+      - [0.04, 14.12]
+      - [0.05, 16.26]
+      - [0.06, 18.25]
+      - [0.07, 20.11]
+      - [0.08, 21.88]
+      - [0.09, 23.57]
+      - [0.10, 25.19]
+      - [0.20, 39.02]
+      - [0.30, 50.41]
+      - [0.40, 60.45]
+      - [0.50, 69.60]
+      - [0.60, 78.09]
+      - [0.70, 86.07]
+      - [0.80, 93.64]
+      - [0.90, 100.88]
+      - [1.00, 107.81]
+      - [1.50, 139.28]
+      - [2.00, 167.02]
+      - [3.00, 215.73]
+      - [4.00, 258.73]
+      - [6.00, 334.22]
+      - [8.00, 400.81]
+      - [10.00, 461.41]
+      - [12.00, 517.73]
+      - [13.25, 551.17]
+      - [22.00, 915.15]
+    Fatigue:
+      - [0.00, 0.00]
+      - [0.01, 3.42]
+      - [0.02, 5.41]
+      - [0.03, 7.08]
+      - [0.04, 8.56]
+      - [0.05, 9.92]
+      - [0.06, 11.19]
+      - [0.07, 12.39]
+      - [0.08, 13.53]
+      - [0.09, 14.63]
+      - [0.10, 15.68]
+      - [0.20, 24.79]
+      - [0.30, 32.41]
+      - [0.40, 39.19]
+      - [0.50, 45.42]
+      - [0.60, 51.24]
+      - [0.70, 56.73]
+      - [0.80, 61.96]
+      - [0.90, 66.97]
+      - [1.00, 71.80]
+      - [1.50, 93.85]
+      - [2.00, 113.50]
+      - [3.00, 148.39]
+      - [4.00, 179.47]
+      - [6.00, 234.61]
+      - [8.00, 283.63]
+      - [10.00, 328.77]
+      - [11.80, 366.66]
+
+
+EnvironmentLoad:
+  Extreme:
+    -
+      Wave:
+        SimulationTimeOrigin: 6595.1
+        KinematicStretchingMethod: Vertical Stretching
+        UserSpecifiedRandomWaveSeeds: Yes
+        WaveFrequencySpectrumDiscretisationMethod: Equal energy
+        WaveTrains:
+          - Name: Wave1
+            WaveType: Ochi-Hubble
+            WaveDirection: 270
+            WaveOrigin: [0, 0]
+            WaveTimeOrigin: 0
+            WaveNumberOfSpectralDirections: 1
+            WaveOchiHubbleParameters: Specified
+            WaveHs1: 0.0001
+            Wavefm1: 0.05235602
+            WaveLambda1: 8
+            WaveHs2: 0.0001
+            Wavefm2: 0.0892857143
+            WaveLambda2: 2
+            WaveSeed: 848251
+            WaveNumberOfComponents: 500
+            WaveSpectrumMinRelFrequency: 0.5
+            WaveSpectrumMaxRelFrequency: 10
+            WaveSpectrumMaxComponentFrequencyRange: 0.05
+        WaveKinematicsCutoffDepth: 200
+        WaveCalculationMethod: Instantaneous Position (exact)
+        WaveCalculationTimeInterval: 0
+        WaveCalculationSpatialInterval: 0
+      Vessel:
+        Orientation: [0, 0, 0]
+        Draft: Ballast
+        InitialPosition: [0, 0, -11.89]
+        Offset: None
+        OffsetPercentWD: 6
+      # Current
+      MultipleCurrentDataCanBeDefined: Yes
+      Currents:
+        - Name: Current1
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 0
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 1, 0]
+            - [100, 1, 0]
+        - Name: Zero_Current
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 0
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 1, 0]
+            - [100, 1, 0]
+        - Name: Current2
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 0
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 1, 0]
+            - [100, 1, 0]
+        - Name: N10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 90
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: N100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 90
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: NNE10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: NNE100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: NE10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 45
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: NE100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: ENE10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: ENE100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: E10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 360
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: E100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: ESE10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: ESE100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: SE10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 315
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: SE100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: SSE10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: SSE100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: S10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 270
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: S100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: SSW10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: SSW100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: SW10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 225
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: SW100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: WSW10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: WSW100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: W10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: W100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: WNW10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: WNW100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: NW10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 135
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: NW100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+        - Name: NNW10
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: NNW100
+          CurrentRamp: No
+          HorizontalCurrentFactor: '~'
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+      ActiveCurrent: S10
+      CodeChecks:
+        APISTD2RDFd1: 0.8
+        APISTD2RDFd2: 0.8
+        APISTD2RDDelta: 0.01
+        APISTD2RDAlphaFab: 1
+        APISTD2RDk: 0.45
+
+  Fatigue:
+      - Wave:
+          SimulationTimeOrigin: 0
+          KinematicStretchingMethod: Vertical Stretching
+          UserSpecifiedRandomWaveSeeds: Yes
+          WaveFrequencySpectrumDiscretisationMethod: Equal energy
+          WaveTrains:
+          - Name: Wave1
+            WaveType: JONSWAP
+            WaveDirection: 45
+            WaveHs: 0.5
+            WaveOrigin: [0, 0]
+            WaveTimeOrigin: 0
+            WaveNumberOfSpectralDirections: 1
+            WaveJONSWAPParameters: Partially Specified
+            WaveGamma: 2.2
+            WaveTp: 3.0
+            WaveNumberOfComponents: 300
+            WaveSpectrumMinRelFrequency: 0.5
+            WaveSpectrumMaxRelFrequency: 10
+            WaveSpectrumMaxComponentFrequencyRange: 0.05
+          WaveKinematicsCutoffDepth: 200
+          WaveCalculationMethod: Instantaneous Position (exact)
+          WaveCalculationTimeInterval: 0
+          WaveCalculationSpatialInterval: 0
+        Vessel:
+          Orientation: [0, 0, 0]
+          Draft: Ballast
+          InitialPosition: [0, 0, -11.89]
+          Offset: None
+          OffsetPercentWD: 0
+        MultipleCurrentDataCanBeDefined: No
+        Current:
+          RefCurrentSpeed: 0
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+          - [0, 1.0, 0]
+          - [36.5, 1.0, 0]
+          - [64.5, 0.95, 0]
+          - [100, 0.77, -45]
+          - [400, 0.51, -45]
+          - [750, 0.4, -157.5]
+        CodeChecks: {APISTD2RDFd1: 0.8, APISTD2RDFd2: 0.8, APISTD2RDDelta: 0.01, APISTD2RDAlphaFab: 1,
+          APISTD2RDk: 0.45}

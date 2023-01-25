@@ -1,0 +1,10 @@
+﻿// Case  1
+LoadData results\app_vertical_riser_2500ft_WT_0875_64ppg_Wave1_FE.sim
+SHEAR7MdsFile vertical results\2500ft_WT_0875_64ppg_inline.mds 1 10
+SHEAR7DataFile vertical results\2500ft_WT_0875_64ppg.dat
+
+LoadData results\app_vertical_riser_2500ft_WT_0875_64ppg_Wave1_FE.sim
+SHEAR7MdsFile vertical results\2500ft_WT_0875_64ppg_inline.mds 1 10
+SHEAR7DataFile vertical results\2500ft_WT_0875_64ppg.dat
+
+// 

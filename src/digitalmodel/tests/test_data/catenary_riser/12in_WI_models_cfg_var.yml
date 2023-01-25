@@ -1,0 +1,46 @@
+cfg_variations:
+  pre_analysis:
+    -
+      default:
+        Analysis:
+          Extreme: True
+          Fatigue: False
+      Analysis:
+        fe_folder: K:\0182\Rev6\Extreme\
+      Material:
+        Fluid: 
+          Rho: 1025
+      cfg_variations:
+        label: ext_int64ppcf
+      FEASettings:
+        DesignPressure:
+          Surface: 6400
+    -
+      default:
+        Analysis:
+          Extreme: True
+          Fatigue: False
+      Analysis:
+        fe_folder: K:\0182\Rev6\Default\
+      Material:
+        Fluid: 
+          Rho: 1025
+      cfg_variations:
+        label: ext_test_int64ppcf
+      FEASettings:
+        DesignPressure:
+          Surface: 10000
+    -
+      default:
+        Analysis:
+          Extreme: False
+          Fatigue: True
+      Analysis:
+        fe_folder: K:\0182\Rev6\Fatigue\
+      Material:
+        Fluid: 
+          Rho: 1025
+      cfg_variations:
+        label: fat_int64ppcf
+
+  post_analysis:
