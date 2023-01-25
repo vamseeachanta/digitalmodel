@@ -31,7 +31,7 @@ A quick way to running code is:
             - i.e. for catenary riser, python src\digitalmodel\tests\test_catenary_riser.bat
 
 
-## Example Structures
+## Assets
 
 
 ### SALM
@@ -76,6 +76,15 @@ Relevant files:
 Relevant files:
 - python src\digitalmodel\tests\test_orcaflex_analysis.py
 
+## Calculations
+
+### Time Series 
+
+Statics
+- Fast Fourier Transform analysis as follows:
+    - FFT
+    - iFFT
+    - Peak energy frequency
 
 
 ## References
