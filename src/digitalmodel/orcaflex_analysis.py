@@ -1,10 +1,10 @@
 from common.ApplicationManager import applicationTimer, setupApplicationRuns
+from custom.orcaflex_analysis_components import OrcaFlexAnalysis
 
 
 @setupApplicationRuns
 @applicationTimer
 def orcaflex_analysis(cfg):
-    from custom.orcaflex_analysis_components import OrcaFlexAnalysis
     orcaFlex_analysis = OrcaFlexAnalysis(cfg)
 
     orcaFlex_analysis.get_files()

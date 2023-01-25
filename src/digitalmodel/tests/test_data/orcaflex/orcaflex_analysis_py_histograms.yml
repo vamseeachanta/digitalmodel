@@ -1,0 +1,147 @@
+default:
+  Analysis:
+    Analyze :
+      flag: False
+      file_type: yaml
+      simulation: False
+      statics: False
+    Summary:
+      flag: False
+      AddMinimumToSummary: True
+      AddMaximumToSummary: True
+      AddMeanToSummary: True
+    RangeGraph:
+      flag: False
+      add_effective_tension_to_cfg: False
+    time_series:
+      flag: True
+      histogram: True
+      summation: True
+  rain_flow: 
+    bins: 1000
+    range:
+      - 0
+      - 1000000
+
+  log_level: DEBUG
+
+  config:
+    overwrite:
+      output: True
+
+PostProcessUnits:
+    System : US
+    Effective Tension:
+        US: 1
+        SI: 1
+    Bend Moment:
+        US: 1
+        SI: 1
+    API STD 2RD Method 1:
+        US: 1
+        SI: 1
+
+
+Files:
+- Label: Effective Tension
+  Name: M:\0185\WaveFatigue\Rev1\app_vertical_riser_2500ft_WT_0875_64ppg_Wave1_FE.yml
+  ObjectName: vertical
+
+
+PlotSettings:
+  Name: Buoyancy Element Hydrodynamic Coefficients
+  SupTitle: Buoyancy Element Hydrodynamic Coefficients
+  Title: SLWR Configuration Development
+
+RangeGraph:
+-
+  Command: Range Graph
+  AdditionalData:
+    - ArcLength 7.4; Outer; Theta 180
+  SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+  ArcLength:
+    - 0
+    - 7000
+  Variable: Effective Tension
+  xlabel: Arc Length (m)
+  ylabel: Effective Tension (kN)
+  Title: Effective Tension at Top of Riser
+  Subtitle: All Riser
+  FileName: Effective_Tension
+  axhline: NULL
+
+time_series:
+-
+  AdditionalData: NULL
+  SimulationPeriod: SpecifiedPeriod(100.0, 3600.0)
+  ArcLength:
+    - 25
+  RadialPos: Outer
+  Theta: 0
+  Variable: ZZ Stress
+  xlabel: Arc Length (m)
+  ylabel: Effective Tension (kN)
+  Title: Effective Tension at Top of Riser
+  Subtitle: All Riser
+  Label: Histogram, al 255, rp Outer Tehta 0
+  axhline: NULL
+-
+  AdditionalData: NULL
+  SimulationPeriod: SpecifiedPeriod(100.0, 3600.0)
+  ArcLength:
+    - 25
+  RadialPos: Inner
+  Theta: 0
+  Variable: ZZ Stress
+  xlabel: Arc Length (m)
+  ylabel: Effective Tension (kN)
+  Title: Effective Tension at Top of Riser
+  Subtitle: All Riser
+  Label: Histogram, al 255, rp Outer Tehta 22.5
+  axhline: NULL
+-
+  AdditionalData: NULL
+  SimulationPeriod: SpecifiedPeriod(100.0, 3600.0)
+  ArcLength:
+    - 35
+  RadialPos: Outer
+  Theta: 0
+  Variable: ZZ Stress
+  xlabel: Arc Length (m)
+  ylabel: Effective Tension (kN)
+  Title: Effective Tension at Top of Riser
+  Subtitle: All Riser
+  Label: Histogram, al 255, rp Outer Tehta 0
+  axhline: NULL
+-
+  AdditionalData: NULL
+  SimulationPeriod: SpecifiedPeriod(100.0, 3600.0)
+  ArcLength:
+    - 35
+  RadialPos: Inner
+  Theta: 0
+  Variable: ZZ Stress
+  xlabel: Arc Length (m)
+  ylabel: Effective Tension (kN)
+  Title: Effective Tension at Top of Riser
+  Subtitle: All Riser
+  Label: Histogram, al 255, rp Outer Tehta 22.5
+  axhline: NULL
+
+
+Summary:
+-
+  SummaryFileName: Table_Top
+  Columns:
+    -
+      Command: Range Graph
+      ObjectName: SLWR
+      AdditionalData:
+        - Max
+      SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+      ArcLength:
+        - 0
+        - 50
+      Variable: Effective Tension
+      Label: Eff. Tension
+

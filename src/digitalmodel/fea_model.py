@@ -1,11 +1,11 @@
 from common.ApplicationManager import applicationTimer, setupApplicationRuns
+from common.FEAComponents import FEAComponents
 
 
 @setupApplicationRuns
 @applicationTimer
 def fea_model(cfg):
 
-    from common.FEAComponents import FEAComponents
     fea = FEAComponents(cfg)
 
     fea.get_raw_data()

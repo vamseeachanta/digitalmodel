@@ -1,0 +1,2360 @@
+﻿%YAML 1.1
+# Type: Fatigue
+# Program: OrcaFlex 10.0e
+# File: M:\182\Rev7\Fatigue\WI_N_Analysis.yml
+# Created: 4:21 AM on 6/24/2019
+# User: Analysis_Server3
+# Machine: DESKTOP-K82UDB4
+---
+Title: SLWR Fatigue Analysis
+DamageCalculation: Homogeneous pipe stress
+AnalysisType: Rainflow
+# Units
+UnitsSystem: SI
+CriticalDamageFactor: 0.1
+ThetaCount: 16
+# Results
+OutputLoadCaseTables: Yes
+OutputDetailedLoadCaseTables: Yes
+LoadCaseDamageUnits: Damage per year
+SNCurves:
+  - SNcurveName: BS C Curve
+    SNcurveSpecificationMethod: Table
+    SNcurveTableN, SNcurveTableS:
+      - [1337, 1E6]
+      - [12.050942E6, 74.13E3]
+      - [13.365955165E9, 10E3]
+    SNcurveEnduranceLimit: 0
+    SNcurveMeanStressModel: None
+  - SNcurveName: BS D Curve
+    SNcurveSpecificationMethod: Table
+    SNcurveTableN, SNcurveTableS:
+      - [1519, 1E6]
+      - [3.730079E6, 74.13E3]
+      - [1.519497535E9, 10E3]
+    SNcurveEnduranceLimit: 0
+    SNcurveMeanStressModel: None
+  - SNcurveName: BS E Curve
+    SNcurveSpecificationMethod: Table
+    SNcurveTableN, SNcurveTableS:
+      - [1035, 1E6]
+      - [2.541663E6, 74.13E3]
+      - [1.035380544E9, 10E3]
+    SNcurveEnduranceLimit: 0
+    SNcurveMeanStressModel: None
+  - SNcurveName: BS F Curve
+    SNcurveSpecificationMethod: Table
+    SNcurveTableN, SNcurveTableS:
+      - [631.54, 1E6]
+      - [1.550311121E6, 74.1E3]
+      - [631.54E6, 10E3]
+    SNcurveEnduranceLimit: 0
+    SNcurveMeanStressModel: None
+AnalysisData:
+  - ArcLengthInterval: [3.66, 4]
+    RadialPosition: Inner
+    SCF: 1.2
+    ThicknessCorrectionFactor: 1
+    AnalysisDataSNcurve: BS F Curve
+  - ArcLengthInterval: [1561, 1563]
+    RadialPosition: Inner
+    SCF: 1.2
+    ThicknessCorrectionFactor: 1
+    AnalysisDataSNcurve: BS F Curve
+LoadCases:
+  - LoadCaseFileName: Ballast\001_12in_WI_Ballast_Dr210_Hs=0.8m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.940993
+  - LoadCaseFileName: Ballast\002_12in_WI_Ballast_Dr210_Hs=0.8m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.031959
+  - LoadCaseFileName: Ballast\003_12in_WI_Ballast_Dr210_Hs=1.0m_Tp=5s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.053473
+  - LoadCaseFileName: Ballast\004_12in_WI_Ballast_Dr210_Hs=1.0m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.160418
+  - LoadCaseFileName: Ballast\005_12in_WI_Ballast_Dr210_Hs=1.0m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.176397
+  - LoadCaseFileName: Ballast\006_12in_WI_Ballast_Dr210_Hs=1.0m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 92.668016
+  - LoadCaseFileName: Ballast\007_12in_WI_Ballast_Dr210_Hs=1.0m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 69.995633
+  - LoadCaseFileName: Ballast\008_12in_WI_Ballast_Dr210_Hs=1.0m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.154883
+  - LoadCaseFileName: Ballast\009_12in_WI_Ballast_Dr210_Hs=1.0m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.802089
+  - LoadCaseFileName: Ballast\010_12in_WI_Ballast_Dr210_Hs=1.0m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.374308
+  - LoadCaseFileName: Ballast\011_12in_WI_Ballast_Dr210_Hs=1.0m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.267363
+  - LoadCaseFileName: Ballast\012_12in_WI_Ballast_Dr210_Hs=1.0m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.053473
+  - LoadCaseFileName: Ballast\013_12in_WI_Ballast_Dr210_Hs=1.3m_Tp=5s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.176397
+  - LoadCaseFileName: Ballast\014_12in_WI_Ballast_Dr210_Hs=1.3m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 5.988931
+  - LoadCaseFileName: Ballast\015_12in_WI_Ballast_Dr210_Hs=1.3m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 22.191129
+  - LoadCaseFileName: Ballast\016_12in_WI_Ballast_Dr210_Hs=1.3m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 234.370406
+  - LoadCaseFileName: Ballast\017_12in_WI_Ballast_Dr210_Hs=1.3m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 259.502528
+  - LoadCaseFileName: Ballast\018_12in_WI_Ballast_Dr210_Hs=1.3m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 25.934211
+  - LoadCaseFileName: Ballast\019_12in_WI_Ballast_Dr210_Hs=1.3m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 7.218801
+  - LoadCaseFileName: Ballast\020_12in_WI_Ballast_Dr210_Hs=1.3m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.352794
+  - LoadCaseFileName: Ballast\021_12in_WI_Ballast_Dr210_Hs=1.3m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.390288
+  - LoadCaseFileName: Ballast\022_12in_WI_Ballast_Dr210_Hs=1.3m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.802089
+  - LoadCaseFileName: Ballast\023_12in_WI_Ballast_Dr210_Hs=1.3m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.695144
+  - LoadCaseFileName: Ballast\024_12in_WI_Ballast_Dr210_Hs=1.3m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.481253
+  - LoadCaseFileName: Ballast\025_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=5s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.588199
+  - LoadCaseFileName: Ballast\026_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 14.116766
+  - LoadCaseFileName: Ballast\027_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 68.605346
+  - LoadCaseFileName: Ballast\028_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 283.61867
+  - LoadCaseFileName: Ballast\029_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 284.206869
+  - LoadCaseFileName: Ballast\030_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 62.776832
+  - LoadCaseFileName: Ballast\031_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 24.436978
+  - LoadCaseFileName: Ballast\032_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 14.223712
+  - LoadCaseFileName: Ballast\033_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 7.272274
+  - LoadCaseFileName: Ballast\034_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.743082
+  - LoadCaseFileName: Ballast\035_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 4.598644
+  - LoadCaseFileName: Ballast\036_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.154883
+  - LoadCaseFileName: Ballast\037_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.481253
+  - LoadCaseFileName: Ballast\038_12in_WI_Ballast_Dr210_Hs=1.5m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.320836
+  - LoadCaseFileName: Ballast\039_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 8.02089
+  - LoadCaseFileName: Ballast\040_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 90.582584
+  - LoadCaseFileName: Ballast\041_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 330.08636
+  - LoadCaseFileName: Ballast\042_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 314.04458
+  - LoadCaseFileName: Ballast\043_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 118.976535
+  - LoadCaseFileName: Ballast\044_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 46.521162
+  - LoadCaseFileName: Ballast\045_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 30.051601
+  - LoadCaseFileName: Ballast\046_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 16.469561
+  - LoadCaseFileName: Ballast\047_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 10.48063
+  - LoadCaseFileName: Ballast\048_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 5.935459
+  - LoadCaseFileName: Ballast\049_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.047938
+  - LoadCaseFileName: Ballast\050_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.44376
+  - LoadCaseFileName: Ballast\051_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.160418
+  - LoadCaseFileName: Ballast\052_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=19s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.160418
+  - LoadCaseFileName: Ballast\053_12in_WI_Ballast_Dr210_Hs=1.8m_Tp=20s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.106945
+  - LoadCaseFileName: Ballast\054_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.122925
+  - LoadCaseFileName: Ballast\055_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 51.921895
+  - LoadCaseFileName: Ballast\056_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 284.741595
+  - LoadCaseFileName: Ballast\057_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 360.351851
+  - LoadCaseFileName: Ballast\058_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 114.859145
+  - LoadCaseFileName: Ballast\059_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 50.371189
+  - LoadCaseFileName: Ballast\060_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 34.275937
+  - LoadCaseFileName: Ballast\061_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 28.821731
+  - LoadCaseFileName: Ballast\062_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 13.207732
+  - LoadCaseFileName: Ballast\063_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 8.02089
+  - LoadCaseFileName: Ballast\064_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 5.13337
+  - LoadCaseFileName: Ballast\065_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.44376
+  - LoadCaseFileName: Ballast\066_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.695144
+  - LoadCaseFileName: Ballast\067_12in_WI_Ballast_Dr210_Hs=2.0m_Tp=19s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.106945
+  - LoadCaseFileName: Ballast\068_12in_WI_Ballast_Dr210_Hs=2.3m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.106945
+  - LoadCaseFileName: Ballast\069_12in_WI_Ballast_Dr210_Hs=2.3m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 15.025801
+  - LoadCaseFileName: Ballast\070_12in_WI_Ballast_Dr210_Hs=2.3m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 173.465114
+  - LoadCaseFileName: Ballast\071_12in_WI_Ballast_Dr210_Hs=2.3m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 366.608146
+  - LoadCaseFileName: Ballast\072_12in_WI_Ballast_Dr210_Hs=2.3m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 105.127132
+  - LoadCaseFileName: Ballast\073_12in_WI_Ballast_Dr210_Hs=2.3m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 33.420375
+  - LoadCaseFileName: Ballast\074_12in_WI_Ballast_Dr210_Hs=2.3m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 26.575882
+  - LoadCaseFileName: Ballast\075_12in_WI_Ballast_Dr210_Hs=2.3m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 28.714786
+  - LoadCaseFileName: Ballast\076_12in_WI_Ballast_Dr210_Hs=2.3m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 18.50152
+  - LoadCaseFileName: Ballast\077_12in_WI_Ballast_Dr210_Hs=2.3m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 12.352171
+  - LoadCaseFileName: Ballast\078_12in_WI_Ballast_Dr210_Hs=2.3m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 6.309767
+  - LoadCaseFileName: Ballast\079_12in_WI_Ballast_Dr210_Hs=2.3m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.497233
+  - LoadCaseFileName: Ballast\080_12in_WI_Ballast_Dr210_Hs=2.3m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.374308
+  - LoadCaseFileName: Ballast\081_12in_WI_Ballast_Dr210_Hs=2.5m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.550705
+  - LoadCaseFileName: Ballast\082_12in_WI_Ballast_Dr210_Hs=2.5m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 67.482421
+  - LoadCaseFileName: Ballast\083_12in_WI_Ballast_Dr210_Hs=2.5m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 282.923527
+  - LoadCaseFileName: Ballast\084_12in_WI_Ballast_Dr210_Hs=2.5m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 106.891727
+  - LoadCaseFileName: Ballast\085_12in_WI_Ballast_Dr210_Hs=2.5m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 19.677917
+  - LoadCaseFileName: Ballast\086_12in_WI_Ballast_Dr210_Hs=2.5m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 12.619534
+  - LoadCaseFileName: Ballast\087_12in_WI_Ballast_Dr210_Hs=2.5m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 16.736924
+  - LoadCaseFileName: Ballast\088_12in_WI_Ballast_Dr210_Hs=2.5m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 18.982773
+  - LoadCaseFileName: Ballast\089_12in_WI_Ballast_Dr210_Hs=2.5m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 12.619534
+  - LoadCaseFileName: Ballast\090_12in_WI_Ballast_Dr210_Hs=2.5m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 7.539637
+  - LoadCaseFileName: Ballast\091_12in_WI_Ballast_Dr210_Hs=2.5m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.802089
+  - LoadCaseFileName: Ballast\092_12in_WI_Ballast_Dr210_Hs=2.5m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.21389
+  - LoadCaseFileName: Ballast\093_12in_WI_Ballast_Dr210_Hs=2.8m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 14.063294
+  - LoadCaseFileName: Ballast\094_12in_WI_Ballast_Dr210_Hs=2.8m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 159.027512
+  - LoadCaseFileName: Ballast\095_12in_WI_Ballast_Dr210_Hs=2.8m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 88.176317
+  - LoadCaseFileName: Ballast\096_12in_WI_Ballast_Dr210_Hs=2.8m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 13.207732
+  - LoadCaseFileName: Ballast\097_12in_WI_Ballast_Dr210_Hs=2.8m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.727103
+  - LoadCaseFileName: Ballast\098_12in_WI_Ballast_Dr210_Hs=2.8m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 7.646582
+  - LoadCaseFileName: Ballast\099_12in_WI_Ballast_Dr210_Hs=2.8m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 14.758438
+  - LoadCaseFileName: Ballast\100_12in_WI_Ballast_Dr210_Hs=2.8m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 12.13828
+  - LoadCaseFileName: Ballast\101_12in_WI_Ballast_Dr210_Hs=2.8m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 5.240315
+  - LoadCaseFileName: Ballast\102_12in_WI_Ballast_Dr210_Hs=2.8m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.015979
+  - LoadCaseFileName: Ballast\103_12in_WI_Ballast_Dr210_Hs=2.8m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.106945
+  - LoadCaseFileName: Ballast\104_12in_WI_Ballast_Dr210_Hs=3.0m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.176397
+  - LoadCaseFileName: Ballast\105_12in_WI_Ballast_Dr210_Hs=3.0m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 61.974743
+  - LoadCaseFileName: Ballast\106_12in_WI_Ballast_Dr210_Hs=3.0m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 64.38101
+  - LoadCaseFileName: Ballast\107_12in_WI_Ballast_Dr210_Hs=3.0m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 7.486164
+  - LoadCaseFileName: Ballast\108_12in_WI_Ballast_Dr210_Hs=3.0m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.176397
+  - LoadCaseFileName: Ballast\109_12in_WI_Ballast_Dr210_Hs=3.0m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.834048
+  - LoadCaseFileName: Ballast\110_12in_WI_Ballast_Dr210_Hs=3.0m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 4.491698
+  - LoadCaseFileName: Ballast\111_12in_WI_Ballast_Dr210_Hs=3.0m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 6.149349
+  - LoadCaseFileName: Ballast\112_12in_WI_Ballast_Dr210_Hs=3.0m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.047938
+  - LoadCaseFileName: Ballast\113_12in_WI_Ballast_Dr210_Hs=3.0m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.695144
+  - LoadCaseFileName: Ballast\114_12in_WI_Ballast_Dr210_Hs=3.3m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.053473
+  - LoadCaseFileName: Ballast\115_12in_WI_Ballast_Dr210_Hs=3.3m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 13.902876
+  - LoadCaseFileName: Ballast\116_12in_WI_Ballast_Dr210_Hs=3.3m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 34.75719
+  - LoadCaseFileName: Ballast\117_12in_WI_Ballast_Dr210_Hs=3.3m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 5.828513
+  - LoadCaseFileName: Ballast\118_12in_WI_Ballast_Dr210_Hs=3.3m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.053473
+  - LoadCaseFileName: Ballast\119_12in_WI_Ballast_Dr210_Hs=3.3m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.588199
+  - LoadCaseFileName: Ballast\120_12in_WI_Ballast_Dr210_Hs=3.3m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.802089
+  - LoadCaseFileName: Ballast\121_12in_WI_Ballast_Dr210_Hs=3.3m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.604178
+  - LoadCaseFileName: Ballast\122_12in_WI_Ballast_Dr210_Hs=3.3m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.390288
+  - LoadCaseFileName: Ballast\123_12in_WI_Ballast_Dr210_Hs=3.3m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.374308
+  - LoadCaseFileName: Ballast\124_12in_WI_Ballast_Dr210_Hs=3.5m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.67363
+  - LoadCaseFileName: Ballast\125_12in_WI_Ballast_Dr210_Hs=3.5m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 13.956349
+  - LoadCaseFileName: Ballast\126_12in_WI_Ballast_Dr210_Hs=3.5m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 5.079897
+  - LoadCaseFileName: Ballast\127_12in_WI_Ballast_Dr210_Hs=3.5m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.053473
+  - LoadCaseFileName: Ballast\128_12in_WI_Ballast_Dr210_Hs=3.5m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.106945
+  - LoadCaseFileName: Ballast\129_12in_WI_Ballast_Dr210_Hs=3.5m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.015979
+  - LoadCaseFileName: Ballast\130_12in_WI_Ballast_Dr210_Hs=3.5m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.695144
+  - LoadCaseFileName: Ballast\131_12in_WI_Ballast_Dr210_Hs=3.5m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.427781
+  - LoadCaseFileName: Ballast\132_12in_WI_Ballast_Dr210_Hs=3.8m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.320836
+  - LoadCaseFileName: Ballast\133_12in_WI_Ballast_Dr210_Hs=3.8m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 4.812534
+  - LoadCaseFileName: Ballast\134_12in_WI_Ballast_Dr210_Hs=3.8m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.956972
+  - LoadCaseFileName: Ballast\135_12in_WI_Ballast_Dr210_Hs=3.8m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.374308
+  - LoadCaseFileName: Ballast\136_12in_WI_Ballast_Dr210_Hs=3.8m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.106945
+  - LoadCaseFileName: Ballast\137_12in_WI_Ballast_Dr210_Hs=3.8m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.160418
+  - LoadCaseFileName: Ballast\138_12in_WI_Ballast_Dr210_Hs=3.8m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.962507
+  - LoadCaseFileName: Ballast\139_12in_WI_Ballast_Dr210_Hs=3.8m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.21389
+  - LoadCaseFileName: Ballast\140_12in_WI_Ballast_Dr210_Hs=3.8m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.21389
+  - LoadCaseFileName: Ballast\141_12in_WI_Ballast_Dr210_Hs=4.0m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.053473
+  - LoadCaseFileName: Ballast\142_12in_WI_Ballast_Dr210_Hs=4.0m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.069452
+  - LoadCaseFileName: Ballast\143_12in_WI_Ballast_Dr210_Hs=4.0m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.245849
+  - LoadCaseFileName: Ballast\144_12in_WI_Ballast_Dr210_Hs=4.0m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.21389
+  - LoadCaseFileName: Ballast\145_12in_WI_Ballast_Dr210_Hs=4.0m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.053473
+  - LoadCaseFileName: Ballast\146_12in_WI_Ballast_Dr210_Hs=4.0m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.160418
+  - LoadCaseFileName: Ballast\147_12in_WI_Ballast_Dr210_Hs=4.3m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.160418
+  - LoadCaseFileName: Ballast\148_12in_WI_Ballast_Dr210_Hs=4.3m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.22987
+  - LoadCaseFileName: Ballast\149_12in_WI_Ballast_Dr210_Hs=4.3m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.106945
+  - LoadCaseFileName: Ballast\150_12in_WI_Ballast_Dr210_Hs=4.5m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.053473
+  - LoadCaseFileName: Ballast\151_12in_WI_Ballast_Dr210_Hs=4.5m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.481253
+  - LoadCaseFileName: Ballast\152_12in_WI_Ballast_Dr210_Hs=4.5m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.160418
+  - LoadCaseFileName: Ballast\153_12in_WI_Ballast_Dr210_Hs=4.8m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.053473
+  - LoadCaseFileName: Ballast\154_12in_WI_Ballast_Dr225_Hs=0.8m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.431926
+  - LoadCaseFileName: Ballast\155_12in_WI_Ballast_Dr225_Hs=0.8m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.989331
+  - LoadCaseFileName: Ballast\156_12in_WI_Ballast_Dr225_Hs=1.0m_Tp=5s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.026035
+  - LoadCaseFileName: Ballast\157_12in_WI_Ballast_Dr225_Hs=1.0m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.078105
+  - LoadCaseFileName: Ballast\158_12in_WI_Ballast_Dr225_Hs=1.0m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.57277
+  - LoadCaseFileName: Ballast\159_12in_WI_Ballast_Dr225_Hs=1.0m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 45.11869
+  - LoadCaseFileName: Ballast\160_12in_WI_Ballast_Dr225_Hs=1.0m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 34.079841
+  - LoadCaseFileName: Ballast\161_12in_WI_Ballast_Dr225_Hs=1.0m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.536066
+  - LoadCaseFileName: Ballast\162_12in_WI_Ballast_Dr225_Hs=1.0m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.390525
+  - LoadCaseFileName: Ballast\163_12in_WI_Ballast_Dr225_Hs=1.0m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.182245
+  - LoadCaseFileName: Ballast\164_12in_WI_Ballast_Dr225_Hs=1.0m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.130175
+  - LoadCaseFileName: Ballast\165_12in_WI_Ballast_Dr225_Hs=1.0m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.026035
+  - LoadCaseFileName: Ballast\166_12in_WI_Ballast_Dr225_Hs=1.3m_Tp=5s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.57277
+  - LoadCaseFileName: Ballast\167_12in_WI_Ballast_Dr225_Hs=1.3m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.915922
+  - LoadCaseFileName: Ballast\168_12in_WI_Ballast_Dr225_Hs=1.3m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 10.804533
+  - LoadCaseFileName: Ballast\169_12in_WI_Ballast_Dr225_Hs=1.3m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 114.111493
+  - LoadCaseFileName: Ballast\170_12in_WI_Ballast_Dr225_Hs=1.3m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 126.347952
+  - LoadCaseFileName: Ballast\171_12in_WI_Ballast_Dr225_Hs=1.3m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 12.626985
+  - LoadCaseFileName: Ballast\172_12in_WI_Ballast_Dr225_Hs=1.3m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.514728
+  - LoadCaseFileName: Ballast\173_12in_WI_Ballast_Dr225_Hs=1.3m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.145541
+  - LoadCaseFileName: Ballast\174_12in_WI_Ballast_Dr225_Hs=1.3m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.676911
+  - LoadCaseFileName: Ballast\175_12in_WI_Ballast_Dr225_Hs=1.3m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.390525
+  - LoadCaseFileName: Ballast\176_12in_WI_Ballast_Dr225_Hs=1.3m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.338455
+  - LoadCaseFileName: Ballast\177_12in_WI_Ballast_Dr225_Hs=1.3m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.234315
+  - LoadCaseFileName: Ballast\178_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=5s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.286385
+  - LoadCaseFileName: Ballast\179_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 6.873245
+  - LoadCaseFileName: Ballast\180_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 33.402931
+  - LoadCaseFileName: Ballast\181_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 138.089746
+  - LoadCaseFileName: Ballast\182_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 138.376131
+  - LoadCaseFileName: Ballast\183_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 30.565113
+  - LoadCaseFileName: Ballast\184_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 11.898004
+  - LoadCaseFileName: Ballast\185_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 6.925315
+  - LoadCaseFileName: Ballast\186_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.540763
+  - LoadCaseFileName: Ballast\187_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.822451
+  - LoadCaseFileName: Ballast\188_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.239012
+  - LoadCaseFileName: Ballast\189_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.536066
+  - LoadCaseFileName: Ballast\190_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.234315
+  - LoadCaseFileName: Ballast\191_12in_WI_Ballast_Dr225_Hs=1.5m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.15621
+  - LoadCaseFileName: Ballast\192_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.905253
+  - LoadCaseFileName: Ballast\193_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 44.103324
+  - LoadCaseFileName: Ballast\194_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 160.714178
+  - LoadCaseFileName: Ballast\195_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 152.903672
+  - LoadCaseFileName: Ballast\196_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 57.92792
+  - LoadCaseFileName: Ballast\197_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 22.650467
+  - LoadCaseFileName: Ballast\198_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 14.631681
+  - LoadCaseFileName: Ballast\199_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 8.018786
+  - LoadCaseFileName: Ballast\200_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 5.102864
+  - LoadCaseFileName: Ballast\201_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.889887
+  - LoadCaseFileName: Ballast\202_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.483996
+  - LoadCaseFileName: Ballast\203_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.702946
+  - LoadCaseFileName: Ballast\204_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.078105
+  - LoadCaseFileName: Ballast\205_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=19s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.078105
+  - LoadCaseFileName: Ballast\206_12in_WI_Ballast_Dr225_Hs=1.8m_Tp=20s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.05207
+  - LoadCaseFileName: Ballast\207_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.546735
+  - LoadCaseFileName: Ballast\208_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 25.280004
+  - LoadCaseFileName: Ballast\209_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 138.636482
+  - LoadCaseFileName: Ballast\210_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 175.45
+  - LoadCaseFileName: Ballast\211_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 55.923223
+  - LoadCaseFileName: Ballast\212_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 24.524989
+  - LoadCaseFileName: Ballast\213_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 16.688448
+  - LoadCaseFileName: Ballast\214_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 14.032876
+  - LoadCaseFileName: Ballast\215_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 6.43065
+  - LoadCaseFileName: Ballast\216_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.905253
+  - LoadCaseFileName: Ballast\217_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.499362
+  - LoadCaseFileName: Ballast\218_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.702946
+  - LoadCaseFileName: Ballast\219_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.338455
+  - LoadCaseFileName: Ballast\220_12in_WI_Ballast_Dr225_Hs=2.0m_Tp=19s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.05207
+  - LoadCaseFileName: Ballast\221_12in_WI_Ballast_Dr225_Hs=2.3m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.05207
+  - LoadCaseFileName: Ballast\222_12in_WI_Ballast_Dr225_Hs=2.3m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 7.315841
+  - LoadCaseFileName: Ballast\223_12in_WI_Ballast_Dr225_Hs=2.3m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 84.457605
+  - LoadCaseFileName: Ballast\224_12in_WI_Ballast_Dr225_Hs=2.3m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 178.496097
+  - LoadCaseFileName: Ballast\225_12in_WI_Ballast_Dr225_Hs=2.3m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 51.184849
+  - LoadCaseFileName: Ballast\226_12in_WI_Ballast_Dr225_Hs=2.3m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 16.271888
+  - LoadCaseFileName: Ballast\227_12in_WI_Ballast_Dr225_Hs=2.3m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 12.939405
+  - LoadCaseFileName: Ballast\228_12in_WI_Ballast_Dr225_Hs=2.3m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 13.980806
+  - LoadCaseFileName: Ballast\229_12in_WI_Ballast_Dr225_Hs=2.3m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 9.008117
+  - LoadCaseFileName: Ballast\230_12in_WI_Ballast_Dr225_Hs=2.3m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 6.01409
+  - LoadCaseFileName: Ballast\231_12in_WI_Ballast_Dr225_Hs=2.3m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.072132
+  - LoadCaseFileName: Ballast\232_12in_WI_Ballast_Dr225_Hs=2.3m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.728981
+  - LoadCaseFileName: Ballast\233_12in_WI_Ballast_Dr225_Hs=2.3m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.182245
+  - LoadCaseFileName: Ballast\234_12in_WI_Ballast_Dr225_Hs=2.5m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.755016
+  - LoadCaseFileName: Ballast\235_12in_WI_Ballast_Dr225_Hs=2.5m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 32.856195
+  - LoadCaseFileName: Ballast\236_12in_WI_Ballast_Dr225_Hs=2.5m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 137.751291
+  - LoadCaseFileName: Ballast\237_12in_WI_Ballast_Dr225_Hs=2.5m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 52.044005
+  - LoadCaseFileName: Ballast\238_12in_WI_Ballast_Dr225_Hs=2.5m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 9.580887
+  - LoadCaseFileName: Ballast\239_12in_WI_Ballast_Dr225_Hs=2.5m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 6.144265
+  - LoadCaseFileName: Ballast\240_12in_WI_Ballast_Dr225_Hs=2.5m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 8.148961
+  - LoadCaseFileName: Ballast\241_12in_WI_Ballast_Dr225_Hs=2.5m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 9.242432
+  - LoadCaseFileName: Ballast\242_12in_WI_Ballast_Dr225_Hs=2.5m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 6.144265
+  - LoadCaseFileName: Ballast\243_12in_WI_Ballast_Dr225_Hs=2.5m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.670938
+  - LoadCaseFileName: Ballast\244_12in_WI_Ballast_Dr225_Hs=2.5m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.390525
+  - LoadCaseFileName: Ballast\245_12in_WI_Ballast_Dr225_Hs=2.5m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.10414
+  - LoadCaseFileName: Ballast\246_12in_WI_Ballast_Dr225_Hs=2.8m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 6.84721
+  - LoadCaseFileName: Ballast\247_12in_WI_Ballast_Dr225_Hs=2.8m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 77.428149
+  - LoadCaseFileName: Ballast\248_12in_WI_Ballast_Dr225_Hs=2.8m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 42.931748
+  - LoadCaseFileName: Ballast\249_12in_WI_Ballast_Dr225_Hs=2.8m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 6.43065
+  - LoadCaseFileName: Ballast\250_12in_WI_Ballast_Dr225_Hs=2.8m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.327786
+  - LoadCaseFileName: Ballast\251_12in_WI_Ballast_Dr225_Hs=2.8m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.723008
+  - LoadCaseFileName: Ballast\252_12in_WI_Ballast_Dr225_Hs=2.8m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 7.185666
+  - LoadCaseFileName: Ballast\253_12in_WI_Ballast_Dr225_Hs=2.8m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 5.90995
+  - LoadCaseFileName: Ballast\254_12in_WI_Ballast_Dr225_Hs=2.8m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.551432
+  - LoadCaseFileName: Ballast\255_12in_WI_Ballast_Dr225_Hs=2.8m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.494665
+  - LoadCaseFileName: Ballast\256_12in_WI_Ballast_Dr225_Hs=2.8m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.05207
+  - LoadCaseFileName: Ballast\257_12in_WI_Ballast_Dr225_Hs=3.0m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.57277
+  - LoadCaseFileName: Ballast\258_12in_WI_Ballast_Dr225_Hs=3.0m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 30.174588
+  - LoadCaseFileName: Ballast\259_12in_WI_Ballast_Dr225_Hs=3.0m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 31.346164
+  - LoadCaseFileName: Ballast\260_12in_WI_Ballast_Dr225_Hs=3.0m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.644903
+  - LoadCaseFileName: Ballast\261_12in_WI_Ballast_Dr225_Hs=3.0m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.57277
+  - LoadCaseFileName: Ballast\262_12in_WI_Ballast_Dr225_Hs=3.0m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.379856
+  - LoadCaseFileName: Ballast\263_12in_WI_Ballast_Dr225_Hs=3.0m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.186942
+  - LoadCaseFileName: Ballast\264_12in_WI_Ballast_Dr225_Hs=3.0m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.994027
+  - LoadCaseFileName: Ballast\265_12in_WI_Ballast_Dr225_Hs=3.0m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.483996
+  - LoadCaseFileName: Ballast\266_12in_WI_Ballast_Dr225_Hs=3.0m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.338455
+  - LoadCaseFileName: Ballast\267_12in_WI_Ballast_Dr225_Hs=3.3m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.026035
+  - LoadCaseFileName: Ballast\268_12in_WI_Ballast_Dr225_Hs=3.3m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 6.769105
+  - LoadCaseFileName: Ballast\269_12in_WI_Ballast_Dr225_Hs=3.3m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 16.922763
+  - LoadCaseFileName: Ballast\270_12in_WI_Ballast_Dr225_Hs=3.3m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.837817
+  - LoadCaseFileName: Ballast\271_12in_WI_Ballast_Dr225_Hs=3.3m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.026035
+  - LoadCaseFileName: Ballast\272_12in_WI_Ballast_Dr225_Hs=3.3m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.286385
+  - LoadCaseFileName: Ballast\273_12in_WI_Ballast_Dr225_Hs=3.3m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.390525
+  - LoadCaseFileName: Ballast\274_12in_WI_Ballast_Dr225_Hs=3.3m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.781051
+  - LoadCaseFileName: Ballast\275_12in_WI_Ballast_Dr225_Hs=3.3m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.676911
+  - LoadCaseFileName: Ballast\276_12in_WI_Ballast_Dr225_Hs=3.3m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.182245
+  - LoadCaseFileName: Ballast\277_12in_WI_Ballast_Dr225_Hs=3.5m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.301751
+  - LoadCaseFileName: Ballast\278_12in_WI_Ballast_Dr225_Hs=3.5m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 6.79514
+  - LoadCaseFileName: Ballast\279_12in_WI_Ballast_Dr225_Hs=3.5m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.473327
+  - LoadCaseFileName: Ballast\280_12in_WI_Ballast_Dr225_Hs=3.5m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.026035
+  - LoadCaseFileName: Ballast\281_12in_WI_Ballast_Dr225_Hs=3.5m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.05207
+  - LoadCaseFileName: Ballast\282_12in_WI_Ballast_Dr225_Hs=3.5m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.494665
+  - LoadCaseFileName: Ballast\283_12in_WI_Ballast_Dr225_Hs=3.5m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.338455
+  - LoadCaseFileName: Ballast\284_12in_WI_Ballast_Dr225_Hs=3.5m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.20828
+  - LoadCaseFileName: Ballast\285_12in_WI_Ballast_Dr225_Hs=3.8m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.15621
+  - LoadCaseFileName: Ballast\286_12in_WI_Ballast_Dr225_Hs=3.8m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.343152
+  - LoadCaseFileName: Ballast\287_12in_WI_Ballast_Dr225_Hs=3.8m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.926591
+  - LoadCaseFileName: Ballast\288_12in_WI_Ballast_Dr225_Hs=3.8m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.182245
+  - LoadCaseFileName: Ballast\289_12in_WI_Ballast_Dr225_Hs=3.8m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.05207
+  - LoadCaseFileName: Ballast\290_12in_WI_Ballast_Dr225_Hs=3.8m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.078105
+  - LoadCaseFileName: Ballast\291_12in_WI_Ballast_Dr225_Hs=3.8m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.46863
+  - LoadCaseFileName: Ballast\292_12in_WI_Ballast_Dr225_Hs=3.8m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.10414
+  - LoadCaseFileName: Ballast\293_12in_WI_Ballast_Dr225_Hs=3.8m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.10414
+  - LoadCaseFileName: Ballast\294_12in_WI_Ballast_Dr225_Hs=4.0m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.026035
+  - LoadCaseFileName: Ballast\295_12in_WI_Ballast_Dr225_Hs=4.0m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.5207
+  - LoadCaseFileName: Ballast\296_12in_WI_Ballast_Dr225_Hs=4.0m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.093471
+  - LoadCaseFileName: Ballast\297_12in_WI_Ballast_Dr225_Hs=4.0m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.10414
+  - LoadCaseFileName: Ballast\298_12in_WI_Ballast_Dr225_Hs=4.0m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.026035
+  - LoadCaseFileName: Ballast\299_12in_WI_Ballast_Dr225_Hs=4.0m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.078105
+  - LoadCaseFileName: Ballast\300_12in_WI_Ballast_Dr225_Hs=4.3m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.078105
+  - LoadCaseFileName: Ballast\301_12in_WI_Ballast_Dr225_Hs=4.3m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.598805
+  - LoadCaseFileName: Ballast\302_12in_WI_Ballast_Dr225_Hs=4.3m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.05207
+  - LoadCaseFileName: Ballast\303_12in_WI_Ballast_Dr225_Hs=4.5m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.026035
+  - LoadCaseFileName: Ballast\304_12in_WI_Ballast_Dr225_Hs=4.5m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.234315
+  - LoadCaseFileName: Ballast\305_12in_WI_Ballast_Dr225_Hs=4.5m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.078105
+  - LoadCaseFileName: Ballast\306_12in_WI_Ballast_Dr225_Hs=4.8m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.026035
+  - LoadCaseFileName: Ballast\307_12in_WI_Ballast_Dr240_Hs=0.8m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.448381
+  - LoadCaseFileName: Ballast\308_12in_WI_Ballast_Dr240_Hs=0.8m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.30979
+  - LoadCaseFileName: Ballast\309_12in_WI_Ballast_Dr240_Hs=1.0m_Tp=5s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.008152
+  - LoadCaseFileName: Ballast\310_12in_WI_Ballast_Dr240_Hs=1.0m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.024457
+  - LoadCaseFileName: Ballast\311_12in_WI_Ballast_Dr240_Hs=1.0m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.179352
+  - LoadCaseFileName: Ballast\312_12in_WI_Ballast_Dr240_Hs=1.0m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 14.128075
+  - LoadCaseFileName: Ballast\313_12in_WI_Ballast_Dr240_Hs=1.0m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 10.671465
+  - LoadCaseFileName: Ballast\314_12in_WI_Ballast_Dr240_Hs=1.0m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.48099
+  - LoadCaseFileName: Ballast\315_12in_WI_Ballast_Dr240_Hs=1.0m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.122286
+  - LoadCaseFileName: Ballast\316_12in_WI_Ballast_Dr240_Hs=1.0m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.057067
+  - LoadCaseFileName: Ballast\317_12in_WI_Ballast_Dr240_Hs=1.0m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.040762
+  - LoadCaseFileName: Ballast\318_12in_WI_Ballast_Dr240_Hs=1.0m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.008152
+  - LoadCaseFileName: Ballast\319_12in_WI_Ballast_Dr240_Hs=1.3m_Tp=5s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.179352
+  - LoadCaseFileName: Ballast\320_12in_WI_Ballast_Dr240_Hs=1.3m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.913067
+  - LoadCaseFileName: Ballast\321_12in_WI_Ballast_Dr240_Hs=1.3m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.383238
+  - LoadCaseFileName: Ballast\322_12in_WI_Ballast_Dr240_Hs=1.3m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 35.731882
+  - LoadCaseFileName: Ballast\323_12in_WI_Ballast_Dr240_Hs=1.3m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 39.5635
+  - LoadCaseFileName: Ballast\324_12in_WI_Ballast_Dr240_Hs=1.3m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.953904
+  - LoadCaseFileName: Ballast\325_12in_WI_Ballast_Dr240_Hs=1.3m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.100571
+  - LoadCaseFileName: Ballast\326_12in_WI_Ballast_Dr240_Hs=1.3m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.358705
+  - LoadCaseFileName: Ballast\327_12in_WI_Ballast_Dr240_Hs=1.3m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.211962
+  - LoadCaseFileName: Ballast\328_12in_WI_Ballast_Dr240_Hs=1.3m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.122286
+  - LoadCaseFileName: Ballast\329_12in_WI_Ballast_Dr240_Hs=1.3m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.105981
+  - LoadCaseFileName: Ballast\330_12in_WI_Ballast_Dr240_Hs=1.3m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.073371
+  - LoadCaseFileName: Ballast\331_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=5s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.089676
+  - LoadCaseFileName: Ballast\332_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.152228
+  - LoadCaseFileName: Ballast\333_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 10.459504
+  - LoadCaseFileName: Ballast\334_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 43.240224
+  - LoadCaseFileName: Ballast\335_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 43.3299
+  - LoadCaseFileName: Ballast\336_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 9.570894
+  - LoadCaseFileName: Ballast\337_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.725638
+  - LoadCaseFileName: Ballast\338_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.168533
+  - LoadCaseFileName: Ballast\339_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.108724
+  - LoadCaseFileName: Ballast\340_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.570667
+  - LoadCaseFileName: Ballast\341_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.701105
+  - LoadCaseFileName: Ballast\342_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.48099
+  - LoadCaseFileName: Ballast\343_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.073371
+  - LoadCaseFileName: Ballast\344_12in_WI_Ballast_Dr240_Hs=1.5m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.048914
+  - LoadCaseFileName: Ballast\345_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.222857
+  - LoadCaseFileName: Ballast\346_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 13.810132
+  - LoadCaseFileName: Ballast\347_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 50.324642
+  - LoadCaseFileName: Ballast\348_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 47.878928
+  - LoadCaseFileName: Ballast\349_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 18.139046
+  - LoadCaseFileName: Ballast\350_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 7.092571
+  - LoadCaseFileName: Ballast\351_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 4.581638
+  - LoadCaseFileName: Ballast\352_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.510933
+  - LoadCaseFileName: Ballast\353_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.597866
+  - LoadCaseFileName: Ballast\354_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.904914
+  - LoadCaseFileName: Ballast\355_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.464686
+  - LoadCaseFileName: Ballast\356_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.220114
+  - LoadCaseFileName: Ballast\357_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.024457
+  - LoadCaseFileName: Ballast\358_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=19s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.024457
+  - LoadCaseFileName: Ballast\359_12in_WI_Ballast_Dr240_Hs=1.8m_Tp=20s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.016305
+  - LoadCaseFileName: Ballast\360_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.1712
+  - LoadCaseFileName: Ballast\361_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 7.915961
+  - LoadCaseFileName: Ballast\362_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 43.411424
+  - LoadCaseFileName: Ballast\363_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 54.938889
+  - LoadCaseFileName: Ballast\364_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 17.511312
+  - LoadCaseFileName: Ballast\365_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 7.679542
+  - LoadCaseFileName: Ballast\366_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 5.225676
+  - LoadCaseFileName: Ballast\367_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 4.394133
+  - LoadCaseFileName: Ballast\368_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.013638
+  - LoadCaseFileName: Ballast\369_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.222857
+  - LoadCaseFileName: Ballast\370_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.782628
+  - LoadCaseFileName: Ballast\371_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.220114
+  - LoadCaseFileName: Ballast\372_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.105981
+  - LoadCaseFileName: Ballast\373_12in_WI_Ballast_Dr240_Hs=2.0m_Tp=19s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.016305
+  - LoadCaseFileName: Ballast\374_12in_WI_Ballast_Dr240_Hs=2.3m_Tp=6s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.016305
+  - LoadCaseFileName: Ballast\375_12in_WI_Ballast_Dr240_Hs=2.3m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.290819
+  - LoadCaseFileName: Ballast\376_12in_WI_Ballast_Dr240_Hs=2.3m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 26.446321
+  - LoadCaseFileName: Ballast\377_12in_WI_Ballast_Dr240_Hs=2.3m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 55.892717
+  - LoadCaseFileName: Ballast\378_12in_WI_Ballast_Dr240_Hs=2.3m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 16.027579
+  - LoadCaseFileName: Ballast\379_12in_WI_Ballast_Dr240_Hs=2.3m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 5.095238
+  - LoadCaseFileName: Ballast\380_12in_WI_Ballast_Dr240_Hs=2.3m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 4.051733
+  - LoadCaseFileName: Ballast\381_12in_WI_Ballast_Dr240_Hs=2.3m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 4.377828
+  - LoadCaseFileName: Ballast\382_12in_WI_Ballast_Dr240_Hs=2.3m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.820723
+  - LoadCaseFileName: Ballast\383_12in_WI_Ballast_Dr240_Hs=2.3m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.8832
+  - LoadCaseFileName: Ballast\384_12in_WI_Ballast_Dr240_Hs=2.3m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.961981
+  - LoadCaseFileName: Ballast\385_12in_WI_Ballast_Dr240_Hs=2.3m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.228267
+  - LoadCaseFileName: Ballast\386_12in_WI_Ballast_Dr240_Hs=2.3m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.057067
+  - LoadCaseFileName: Ballast\387_12in_WI_Ballast_Dr240_Hs=2.5m_Tp=7s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.236419
+  - LoadCaseFileName: Ballast\388_12in_WI_Ballast_Dr240_Hs=2.5m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 10.288304
+  - LoadCaseFileName: Ballast\389_12in_WI_Ballast_Dr240_Hs=2.5m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 43.134243
+  - LoadCaseFileName: Ballast\390_12in_WI_Ballast_Dr240_Hs=2.5m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 16.296608
+  - LoadCaseFileName: Ballast\391_12in_WI_Ballast_Dr240_Hs=2.5m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 3.000076
+  - LoadCaseFileName: Ballast\392_12in_WI_Ballast_Dr240_Hs=2.5m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.923962
+  - LoadCaseFileName: Ballast\393_12in_WI_Ballast_Dr240_Hs=2.5m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.551695
+  - LoadCaseFileName: Ballast\394_12in_WI_Ballast_Dr240_Hs=2.5m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.894095
+  - LoadCaseFileName: Ballast\395_12in_WI_Ballast_Dr240_Hs=2.5m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.923962
+  - LoadCaseFileName: Ballast\396_12in_WI_Ballast_Dr240_Hs=2.5m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.149486
+  - LoadCaseFileName: Ballast\397_12in_WI_Ballast_Dr240_Hs=2.5m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.122286
+  - LoadCaseFileName: Ballast\398_12in_WI_Ballast_Dr240_Hs=2.5m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.03261
+  - LoadCaseFileName: Ballast\399_12in_WI_Ballast_Dr240_Hs=2.8m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.144076
+  - LoadCaseFileName: Ballast\400_12in_WI_Ballast_Dr240_Hs=2.8m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 24.245178
+  - LoadCaseFileName: Ballast\401_12in_WI_Ballast_Dr240_Hs=2.8m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 13.443275
+  - LoadCaseFileName: Ballast\402_12in_WI_Ballast_Dr240_Hs=2.8m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.013638
+  - LoadCaseFileName: Ballast\403_12in_WI_Ballast_Dr240_Hs=2.8m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.415771
+  - LoadCaseFileName: Ballast\404_12in_WI_Ballast_Dr240_Hs=2.8m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.16579
+  - LoadCaseFileName: Ballast\405_12in_WI_Ballast_Dr240_Hs=2.8m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.250057
+  - LoadCaseFileName: Ballast\406_12in_WI_Ballast_Dr240_Hs=2.8m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.85059
+  - LoadCaseFileName: Ballast\407_12in_WI_Ballast_Dr240_Hs=2.8m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.798933
+  - LoadCaseFileName: Ballast\408_12in_WI_Ballast_Dr240_Hs=2.8m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.154895
+  - LoadCaseFileName: Ballast\409_12in_WI_Ballast_Dr240_Hs=2.8m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.016305
+  - LoadCaseFileName: Ballast\410_12in_WI_Ballast_Dr240_Hs=3.0m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.179352
+  - LoadCaseFileName: Ballast\411_12in_WI_Ballast_Dr240_Hs=3.0m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 9.448608
+  - LoadCaseFileName: Ballast\412_12in_WI_Ballast_Dr240_Hs=3.0m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 9.815466
+  - LoadCaseFileName: Ballast\413_12in_WI_Ballast_Dr240_Hs=3.0m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 1.141333
+  - LoadCaseFileName: Ballast\414_12in_WI_Ballast_Dr240_Hs=3.0m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.179352
+  - LoadCaseFileName: Ballast\415_12in_WI_Ballast_Dr240_Hs=3.0m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.432076
+  - LoadCaseFileName: Ballast\416_12in_WI_Ballast_Dr240_Hs=3.0m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.6848
+  - LoadCaseFileName: Ballast\417_12in_WI_Ballast_Dr240_Hs=3.0m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.937524
+  - LoadCaseFileName: Ballast\418_12in_WI_Ballast_Dr240_Hs=3.0m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.464686
+  - LoadCaseFileName: Ballast\419_12in_WI_Ballast_Dr240_Hs=3.0m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.105981
+  - LoadCaseFileName: Ballast\420_12in_WI_Ballast_Dr240_Hs=3.3m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.008152
+  - LoadCaseFileName: Ballast\421_12in_WI_Ballast_Dr240_Hs=3.3m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.119619
+  - LoadCaseFileName: Ballast\422_12in_WI_Ballast_Dr240_Hs=3.3m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 5.299047
+  - LoadCaseFileName: Ballast\423_12in_WI_Ballast_Dr240_Hs=3.3m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.888609
+  - LoadCaseFileName: Ballast\424_12in_WI_Ballast_Dr240_Hs=3.3m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.008152
+  - LoadCaseFileName: Ballast\425_12in_WI_Ballast_Dr240_Hs=3.3m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.089676
+  - LoadCaseFileName: Ballast\426_12in_WI_Ballast_Dr240_Hs=3.3m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.122286
+  - LoadCaseFileName: Ballast\427_12in_WI_Ballast_Dr240_Hs=3.3m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.244571
+  - LoadCaseFileName: Ballast\428_12in_WI_Ballast_Dr240_Hs=3.3m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.211962
+  - LoadCaseFileName: Ballast\429_12in_WI_Ballast_Dr240_Hs=3.3m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.057067
+  - LoadCaseFileName: Ballast\430_12in_WI_Ballast_Dr240_Hs=3.5m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.407619
+  - LoadCaseFileName: Ballast\431_12in_WI_Ballast_Dr240_Hs=3.5m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.127771
+  - LoadCaseFileName: Ballast\432_12in_WI_Ballast_Dr240_Hs=3.5m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.774476
+  - LoadCaseFileName: Ballast\433_12in_WI_Ballast_Dr240_Hs=3.5m_Tp=13s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.008152
+  - LoadCaseFileName: Ballast\434_12in_WI_Ballast_Dr240_Hs=3.5m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.016305
+  - LoadCaseFileName: Ballast\435_12in_WI_Ballast_Dr240_Hs=3.5m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.154895
+  - LoadCaseFileName: Ballast\436_12in_WI_Ballast_Dr240_Hs=3.5m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.105981
+  - LoadCaseFileName: Ballast\437_12in_WI_Ballast_Dr240_Hs=3.5m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.065219
+  - LoadCaseFileName: Ballast\438_12in_WI_Ballast_Dr240_Hs=3.8m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.048914
+  - LoadCaseFileName: Ballast\439_12in_WI_Ballast_Dr240_Hs=3.8m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.733714
+  - LoadCaseFileName: Ballast\440_12in_WI_Ballast_Dr240_Hs=3.8m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.603276
+  - LoadCaseFileName: Ballast\441_12in_WI_Ballast_Dr240_Hs=3.8m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.057067
+  - LoadCaseFileName: Ballast\442_12in_WI_Ballast_Dr240_Hs=3.8m_Tp=14s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.016305
+  - LoadCaseFileName: Ballast\443_12in_WI_Ballast_Dr240_Hs=3.8m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.024457
+  - LoadCaseFileName: Ballast\444_12in_WI_Ballast_Dr240_Hs=3.8m_Tp=16s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.146743
+  - LoadCaseFileName: Ballast\445_12in_WI_Ballast_Dr240_Hs=3.8m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.03261
+  - LoadCaseFileName: Ballast\446_12in_WI_Ballast_Dr240_Hs=3.8m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.03261
+  - LoadCaseFileName: Ballast\447_12in_WI_Ballast_Dr240_Hs=4.0m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.008152
+  - LoadCaseFileName: Ballast\448_12in_WI_Ballast_Dr240_Hs=4.0m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.163048
+  - LoadCaseFileName: Ballast\449_12in_WI_Ballast_Dr240_Hs=4.0m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.3424
+  - LoadCaseFileName: Ballast\450_12in_WI_Ballast_Dr240_Hs=4.0m_Tp=15s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.03261
+  - LoadCaseFileName: Ballast\451_12in_WI_Ballast_Dr240_Hs=4.0m_Tp=17s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.008152
+  - LoadCaseFileName: Ballast\452_12in_WI_Ballast_Dr240_Hs=4.0m_Tp=18s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.024457
+  - LoadCaseFileName: Ballast\453_12in_WI_Ballast_Dr240_Hs=4.3m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.024457
+  - LoadCaseFileName: Ballast\454_12in_WI_Ballast_Dr240_Hs=4.3m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.187505
+  - LoadCaseFileName: Ballast\455_12in_WI_Ballast_Dr240_Hs=4.3m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.016305
+  - LoadCaseFileName: Ballast\456_12in_WI_Ballast_Dr240_Hs=4.5m_Tp=10s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.008152
+  - LoadCaseFileName: Ballast\457_12in_WI_Ballast_Dr240_Hs=4.5m_Tp=11s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.073371
+  - LoadCaseFileName: Ballast\458_12in_WI_Ballast_Dr240_Hs=4.5m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.024457
+  - LoadCaseFileName: Ballast\459_12in_WI_Ballast_Dr240_Hs=4.8m_Tp=12s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 0.008152
+...

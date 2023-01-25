@@ -1,6 +1,6 @@
 # Introduction
 
-Digital models for engineering assets. The objective of digital models is to utilize a single source of ascii inputs to generate equivalent analytical models to encompass lifecycle operations of a product. 
+Digital models for engineering assets. The objective of digital models is to utilize a single source of ascii inputs (single source of truth) to generate equivalent analytical models to encompass lifecycle operations of a product. 
 
 These operations include (and not limited to) the following:
 - Analytical calculations
