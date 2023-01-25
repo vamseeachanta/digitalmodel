@@ -85,7 +85,7 @@ Statics
     - FFT
     - iFFT
     - Peak energy frequency
-
+    - Perform signal integration
 
 ## References
 
