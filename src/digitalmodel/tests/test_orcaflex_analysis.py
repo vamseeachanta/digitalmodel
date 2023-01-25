@@ -8,7 +8,7 @@ from digitalmodel.common.update_deep import AttributeDict
 from digitalmodel.common.ApplicationManager import ConfigureApplicationInputs
 from digitalmodel.orcaflex_analysis import orcaflex_analysis
 
-ymlfile = 'src/digitalmodel/tests/test_data/orcaflex_analysis/orcaflex_analysis.yml'
+ymlfile = 'src/digitalmodel/tests/test_data/orcaflex_analysis.yml'
 sys.argv.append(ymlfile)
 print(os.path.isfile(ymlfile))
 cfg = ymlInput(ymlfile, updateYml=None)
