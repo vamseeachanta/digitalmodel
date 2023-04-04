@@ -1,3 +1,18 @@
+import os
+import logging
+import pandas as pd
+import numpy as np
+import OrcFxAPI
+import math
+import copy
+
+from digitalmodel.common.visualizations import Visualization
+from digitalmodel.common.data import SaveData
+from digitalmodel.common.data import PandasChainedAssignent
+from digitalmodel.common.data import TransformData
+from digitalmodel.common.time_series_components import TimeSeriesComponents
+from digitalmodel.common.ETL_components import ETL_components
+
 class OrcaFlexAnalysis():
 
     def __init__(self, cfg):
@@ -9,7 +24,6 @@ class OrcaFlexAnalysis():
         self.RAO_df_array = []
 
     def get_model_state_information(self):
-        import pandas as pd
         if self.cfg['default'].__contains__('model_state_information'):
             if self.cfg['default']['model_state_information']['flag']:
                 if self.cfg['default']['model_state_information'].__contains__('from_csv'):
@@ -59,9 +73,6 @@ class OrcaFlexAnalysis():
         self.cfg['Analysis']['input_files']['analysis_type'] = analysis_type
 
     def process_fea(self):
-        import logging
-
-        import OrcFxAPI
         if self.cfg['default']['Analysis']['Analyze']['flag']:
             for fileIndex in range(0, len(self.cfg['Analysis']['input_files']['with_ext'])):
                 filename_with_ext = self.cfg['Analysis']['input_files']['with_ext'][fileIndex]
@@ -97,7 +108,6 @@ class OrcaFlexAnalysis():
         self.save_cfg_files_from_multiple_files()
 
     def save_data(self):
-        from common.data import SaveData
         save_data = SaveData()
         save_data.saveDataYaml(self.cfg, self.cfg['Analysis']['result_folder'] + self.cfg['Analysis']['file_name'],
                                False)
@@ -135,7 +145,6 @@ class OrcaFlexAnalysis():
         return cfg_fft
 
     def get_RAOs_from_time_series_data(self, output_time_series_array, reference_time_series, cfg_raos, rao_set):
-        import pandas as pd
 
         RAO_df_Labels = ['frequency'] + rao_set['time_series']['Output']['Variable_Label']
         RAO_df_columns = self.get_detailed_RAO_df_columns(RAO_df_Labels)
@@ -178,7 +187,6 @@ class OrcaFlexAnalysis():
         return Variable_RAO_df
 
     def get_RAO(self, signal, excitation, cfg_fft):
-        from common.time_series_components import TimeSeriesComponents
         ts_comp = TimeSeriesComponents({'default': {'analysis': {'fft': cfg_fft}}})
         RAO_raw, RAO_filtered = ts_comp.get_RAO(signal=signal, excitation=excitation, cfg_rao=cfg_fft)
 
@@ -228,7 +236,6 @@ class OrcaFlexAnalysis():
         return cfg_time_series_array
 
     def process_range_graphs(self):
-        from common.visualizations import Visualization
         if self.cfg['default']['Analysis']['RangeGraph']['flag']:
             vizualization = Visualization()
             # vizualization.orcaflex_range_plot(RangeAllFiles, self.cfg)
@@ -236,7 +243,6 @@ class OrcaFlexAnalysis():
             print("No postprocessing plots per user request")
 
     def process_summary(self):
-        import pandas as pd
         if self.cfg['default']['Analysis']['Summary']:
             SummaryFileNameArray = []
             for SummaryIndex in range(0, len(self.cfg['Summary'])):
@@ -276,7 +282,6 @@ class OrcaFlexAnalysis():
 
     def saveSummaryToExcel(self, SummaryFileNameArray):
         if len(self.SummaryDFAllFiles) > 0:
-            from common.data import SaveData
             save_data = SaveData()
             customdata = {
                 "FileName": self.cfg['Analysis']['result_folder'] + self.cfg['Analysis']['file_name'] + '.xlsx',
@@ -286,10 +291,6 @@ class OrcaFlexAnalysis():
             save_data.DataFrameArray_To_xlsx_openpyxl(self.SummaryDFAllFiles, customdata)
 
     def postProcess(self):
-        import os
-
-        import pandas as pd
-
         # Intialize output arrays
         RangeAllFiles = []
         histogram_all_files = []
@@ -339,16 +340,12 @@ class OrcaFlexAnalysis():
         self.SummaryDFAllFiles = SummaryDFAllFiles
 
     def get_model_from_filename(self, file_name):
-        import os
-
-        import pandas as pd
         SimulationFileName = self.get_SimulationFileName(file_name)
         model = None
         if os.path.isfile(SimulationFileName):
             try:
                 model = self.loadSimulation(SimulationFileName)
                 RunStatus = str(model.state)
-                from common.data import PandasChainedAssignent
                 with PandasChainedAssignent():
                     self.load_matrix.loc[(self.load_matrix['fe_filename'] == file_name), 'RunStatus'] = RunStatus
                 if RunStatus not in ['Reset', 'InStaticState', 'SimulationStopped']:
@@ -364,15 +361,10 @@ class OrcaFlexAnalysis():
         return SimulationFileName
 
     def loadSimulation(self, FileName):
-        import OrcFxAPI
         model = OrcFxAPI.Model(FileName)
         return model
 
     def postProcessRange(self, model, cfg, FileObjectName):
-        import math
-
-        import OrcFxAPI
-        import pandas as pd
 
         # Range Graphs for a simulation
         RangeFile = []
@@ -438,8 +430,6 @@ class OrcaFlexAnalysis():
         return histogram_array
 
     def get_histogram_object_from_orcaflex_run(self, FileObjectName, cfg_histogram, model):
-        import numpy as np
-        import OrcFxAPI
 
         # Read Object
         OrcFXAPIObject = model[FileObjectName]
@@ -462,8 +452,6 @@ class OrcaFlexAnalysis():
         return histogram_object[0]
 
     def get_time_series_from_orcaflex_run(self, model, cfg_time_series):
-        import numpy as np
-        import OrcFxAPI
 
         time_series = None
         ObjectName = cfg_time_series['ObjectName']
@@ -488,17 +476,11 @@ class OrcaFlexAnalysis():
         return time_series
 
     def add_result_to_cfg(self, RangeDF, VariableName):
-        import copy
         self.cfg['Analysis']['X'] = RangeDF['X'].tolist()
         self.cfg['Analysis'][VariableName] = RangeDF[VariableName].tolist()
         self.cfg_array.append(copy.deepcopy(self.cfg))
 
     def postProcessSummary(self, model, SummaryDF, SummaryIndex, FileDescription, FileObjectName, FileName, fileIndex):
-        import math
-
-        import numpy as np
-        import OrcFxAPI
-        import pandas as pd
         summary_group_cfg = self.cfg['Summary'][SummaryIndex]
         if SummaryDF.empty:
             columns = self.get_summary_df_columns(summary_group_cfg)
@@ -605,7 +587,7 @@ class OrcaFlexAnalysis():
         return output
 
     def get_TimePeriodObject(self, SimulationPeriod):
-        import OrcFxAPI
+
         if len(SimulationPeriod) == 2:
             TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0], SimulationPeriod[1])
         elif len(SimulationPeriod) == 1:
@@ -618,7 +600,7 @@ class OrcaFlexAnalysis():
         return TimePeriodObject
 
     def get_ArcLengthObject(self, ArcLengthArray):
-        import OrcFxAPI
+
         if len(ArcLengthArray) == 2:
             StartArcLength = ArcLengthArray[0]
             EndArcLength = ArcLengthArray[1]
@@ -632,8 +614,6 @@ class OrcaFlexAnalysis():
         return arclengthRange
 
     def prepare_histogram_bins_for_output(self):
-        import numpy as np
-        import pandas as pd
         rain_flow_settings = self.cfg['default']['Analysis']['rain_flow']
         start_range = rain_flow_settings['range'][0]
         end_range = rain_flow_settings['range'][1]
@@ -745,7 +725,6 @@ class OrcaFlexAnalysis():
         return columns
 
     def generate_cummulative_histograms(self):
-        import pandas as pd
 
         self.all_histogram_file_dfs = []
         self.probability_array = []
@@ -782,12 +761,10 @@ class OrcaFlexAnalysis():
         self.all_histogram_file_dfs.append(self.sum_df)
 
     def qa_histograms(self):
-        from common.ETL_components import ETL_components
         etl_components = ETL_components(cfg=None)
         self.sum_df = etl_components.get_sum_df_from_df_array(self.all_histogram_file_dfs)
 
     def save_histograms(self):
-        from common.data import SaveData
         save_data = SaveData()
         customdata = {
             "FileName": self.cfg['Analysis']['result_folder'] + self.cfg['Analysis']['file_name'] + '_histograms.xlsx',
@@ -797,7 +774,6 @@ class OrcaFlexAnalysis():
         save_data.DataFrameArray_To_xlsx_openpyxl(self.all_histogram_file_dfs, customdata)
 
     def LinkedStatistics(self):
-        import OrcFxAPI
 
         # TODO LinkedStatistics using OrcaFlex. Code currently not working.
         VariableName = 'Effective Tension', 'Bend Moment'
@@ -812,7 +788,6 @@ class OrcaFlexAnalysis():
     # Alternatively, use Range graphs for required quantities and obtain them using DFs. (easiest to customize)
 
     def process_scripts(self):
-        import OrcFxAPI
         model = OrcFxAPI.Model()
         for file_index in range(0, len(self.cfg['Analysis']['input_files']['with_ext'])):
             file_name = self.cfg['Analysis']['input_files']['with_ext'][file_index]
@@ -821,7 +796,7 @@ class OrcaFlexAnalysis():
         print("Ran script files successfully")
 
     def save_cfg_files_from_multiple_files(self):
-        from common.data import SaveData
+
         save_data = SaveData()
 
         for file_index in range(0, len(self.cfg_array)):
@@ -831,7 +806,7 @@ class OrcaFlexAnalysis():
 
     def get_files_for_postprocess(self, analysis_type, fileIndex, input_files_with_extension,
                                   input_files_without_extension):
-        import os
+
         filename = self.simulation_filenames[fileIndex]
         filename_components = filename.split('.')
         filename_without_extension = filename.replace('.' + filename_components[-1], "")
@@ -858,7 +833,6 @@ class OrcaFlexAnalysis():
 
     def get_files_for_analysis(self, analysis_type, fileIndex, input_files_with_extension,
                                input_files_without_extension):
-        import os
         filename = self.simulation_filenames[fileIndex]
         filename_components = filename.split('.')
         filename_without_extension = filename.replace('.' + filename_components[-1], "")
@@ -924,7 +898,6 @@ class OrcaFlexAnalysis():
         return filename_without_extension
 
     def transform_output(self, cfg):
-        from common.data import TransformData
         trans_data = TransformData()
         trans_data.get_transformed_data(cfg)
 
@@ -935,7 +908,6 @@ class OrcaFlexAnalysis():
         df_array = [item['RAO_df'] for item in self.RAO_df_array]
         df_label_array = [item['Label'] for item in self.RAO_df_array]
 
-        from common.data import SaveData
         save_data = SaveData()
 
 
