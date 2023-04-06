@@ -12,6 +12,7 @@ title Edit and Save .YML Files\n OrcaFlex
     participant "structure \neg: riser, Mudmat etc" as structure
     participant Environment
     participant "save as \n.dat" as save_dat
+    participant "save as \n.yml" as save_yml
     participant "Parametric \nAnalysis" as parametric_analysis
     participant "run as \nyml" as run_yml
     participant "run as \ndat" as run_dat
@@ -27,8 +28,8 @@ title Edit and Save .YML Files\n OrcaFlex
         vessel_data-> structure:.yml
         structure-> Environment:.yml
         Environment-> run_yml:.yml
-        note over run_yml
-        - modular to great extent
+        note right run_yml
+        - modular to a great extent
         - all .yml files can be modified in NotePad++
         - OrcaFlex license required to edit .dat files
         end note
@@ -40,12 +41,26 @@ title Edit and Save .YML Files\n OrcaFlex
         Environment-> save_dat:.yml
         save_dat-> run_dat:.dat
 
-        note over run_dat
-            - OrcaFlex license required to edit .dat files
-            - Save as .dat in last stage 
-              breaks connections 
-              with all previous input files
+        note right save_dat
+            - Use OrcaFlex to save .yml as .dat files
+            - Save as .dat in last stage breaks connections 
+              with all upstream input files and combined into 1 file
         end note
+
+        note right save_dat
+        <b>Consequence of Editing .dat:</b>
+        - Does not update upstream input (.dat and .yml) files
+        Saving the edited .dat file will contain all data
+        end note
+
+        save_dat-> save_yml:.dat
+        note right save_yml
+        <b>Save as .yml :</b>
+        - will reference the last upstream .yml file
+        - Edits (from all upstream files) are saved with 
+          appropriate keyword-value pairs in this latest .yml file
+        end note
+
 
     end group
 
@@ -57,7 +72,7 @@ title Edit and Save .YML Files\n OrcaFlex
         structure-> Environment:.yml
         Environment-> run_yml:.yml
 
-        note over run_yml
+        note right run_yml
             <b>Advantages:</b> modular design
             - individual files can be modified in NotePad++
             - no OrcaFlex license required
@@ -71,7 +86,7 @@ title Edit and Save .YML Files\n OrcaFlex
         vessel_data-> structure:.yml
         structure-> Environment:.yml
         Environment-> parametric_analysis:.yml
-        note over parametric_analysis
+        note right parametric_analysis
             <b>Advantages:</b>
             - For sensitivity analysis
             - Ability to inject parameters 

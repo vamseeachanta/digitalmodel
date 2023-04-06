@@ -24,7 +24,7 @@ title Run .DAT and/or .YML \n OrcaFlex
     alt one(1) .dat run
 
         analysis_params-> run_dat:all_data.dat
-        note over run_yml
+        note right run_dat
             - typical test runs
             - OrcaFlex license required to edit .dat files
         end note
@@ -36,7 +36,7 @@ title Run .DAT and/or .YML \n OrcaFlex
 
         analysis_params-> Environment:all_data.dat
         Environment-> run_yml:.yml
-        note over run_yml 
+        note right run_yml 
             - typical runs on servers
             - environment data in .yml overrides \n .dat file
         end note
@@ -49,7 +49,7 @@ title Run .DAT and/or .YML \n OrcaFlex
         vessel_data-> structure:.yml
         structure-> Environment:.yml
         Environment-> run_yml:.yml
-        note over run_yml: Run the last .yml file
+        note right run_yml: Run the last .yml file
 
         note over structure: (or)
         analysis_params-> vessel_data:.dat
@@ -58,7 +58,7 @@ title Run .DAT and/or .YML \n OrcaFlex
         Environment-> save_dat:.yml
         save_dat-> run_dat:.dat
 
-        note over run_dat: Save as .dat at final stage to run
+        note right run_dat: Save as .dat at final stage to run
     
     end group
 
@@ -70,7 +70,7 @@ title Run .DAT and/or .YML \n OrcaFlex
         structure-> Environment:.yml
         Environment-> run_yml:.yml
 
-        note over run_yml: Run the last .yml file
+        note right run_yml: Run the last .yml file
 
     end group
 
