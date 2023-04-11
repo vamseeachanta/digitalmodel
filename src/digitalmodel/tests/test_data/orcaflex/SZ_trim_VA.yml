@@ -1,0 +1,30 @@
+﻿%YAML 1.1
+---
+BaseFile: vessel.yml
+General:
+  StaticsTolerance: 1e-6
+  StaticsMaxDamping: 100
+  StageDuration[2]: 300
+Environment:
+  WaterDepth: 2000
+  KinematicStretchingMethod: Vertical stretching
+  UserSpecifiedRandomWaveSeeds: Yes
+  WaveFrequencySpectrumDiscretisationMethod: Equal energy
+  WaveTrains:
+    Deleted: Wave1
+    New: Wave1
+    Wave1:
+      WaveType: JONSWAP
+      WaveDirection: 210
+      WaveOrigin: [0, 0]
+      WaveTimeOrigin: 0
+      WaveNumberOfSpectralDirections: 1
+      WaveJONSWAPParameters: Partially specified
+      WaveHs: 0.5
+      WaveTz: 2.9220012121199237
+      WaveGamma: 1.5
+      WaveSeed: 123456
+      WaveNumberOfComponents: 100
+      WaveSpectrumMinRelFrequency: 0.5
+      WaveSpectrumMaxRelFrequency: 10
+      WaveSpectrumMaxComponentFrequencyRange: 0.05
