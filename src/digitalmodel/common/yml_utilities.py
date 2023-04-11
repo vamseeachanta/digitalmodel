@@ -6,9 +6,13 @@ from deepdiff import DeepDiff
 from pathlib import Path
 from collections.abc import Mapping
 from digitalmodel.common.saveData import saveDataYaml
+from digitalmodel.common.utilities import is_file_valid, get_common_name_from_2_filenames
 
 
 def ymlInput(defaultYml, updateYml=None):
+
+    if not is_file_valid(defaultYml):
+        raise Exception("Not valid file. Please check the file path.")
 
     with open(defaultYml, 'r') as ymlfile:
         try:
@@ -92,11 +96,8 @@ class WorkingWithYAML():
         else:
             # get file root directory
             file_directory = os.path.dirname(file_name1)
-            commonprefix = os.path.commonprefix(
-                [Path(file_name1).stem,
-                 Path(file_name2).stem])
-            uniquebasename = commonprefix + Path(file_name2).stem.replace(
-                commonprefix, "")
+            uniquebasename = get_common_name_from_2_filenames(
+                file_name1, file_name2)
             self.save_diff_files(file_diff, file_directory, uniquebasename)
             print(
                 "Yaml files are different. See wwyaml files saved in the current file directory"

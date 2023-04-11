@@ -1,0 +1,2 @@
+root['General']['StageDuration[2]']: 200
+root['Environment']['WaveTrains']['Wave1']['WaveHs']: 1.25

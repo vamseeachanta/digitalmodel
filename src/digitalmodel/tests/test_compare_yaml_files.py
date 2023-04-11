@@ -2,12 +2,19 @@ import os
 import sys
 import yaml
 import types
+from pathlib import Path
 
+from digitalmodel.common.utilities import is_file_valid, add_cwd_to_filename
 from digitalmodel.common.yml_utilities import WorkingWithYAML
 from digitalmodel.common.yml_utilities import ymlInput
 
-file_name1 = 'github/digitalmodel/src/digitalmodel/tests/test_data/orcaflex/SZ_trim_VA.yml'
-file_name2 = 'github/digitalmodel/src/digitalmodel/tests/test_data/orcaflex/SZ_trim_QA.yml'
+file_name1 = 'test_data/orcaflex/SZ_trim_VA.yml'
+file_name2 = 'test_data/orcaflex/SZ_trim_QA.yml'
+
+if not is_file_valid(file_name1):
+    file_name1 = add_cwd_to_filename(file_name1, cwd=os.path.dirname(__file__))
+if not is_file_valid(file_name2):
+    file_name2 = add_cwd_to_filename(file_name2, cwd=os.path.dirname(__file__))
 
 wwyaml = WorkingWithYAML()
 

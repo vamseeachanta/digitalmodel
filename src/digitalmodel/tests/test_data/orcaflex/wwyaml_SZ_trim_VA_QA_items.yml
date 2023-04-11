@@ -1,0 +1,18 @@
+dictionary_item_added: !!python/object/new:deepdiff.model.PrettyOrderedSet
+  state:
+  - root['General']['StaticsMaxIterations']
+  - root['General']['StaticsMinDamping']
+  - root['General']['ImplicitUseVariableTimeStep']
+  - root['General']['ImplicitVariableMaxTimeStep']
+  - root['General']['ImplicitVariableMaxNumOfIterations']
+  - root['General']['StageDuration[1]']
+dictionary_item_removed: !!python/object/new:deepdiff.model.PrettyOrderedSet
+  state:
+  - root['General']['StaticsMaxDamping']
+values_changed:
+  root['Environment']['WaveTrains']['Wave1']['WaveHs']:
+    new_value: 1.25
+    old_value: 0.5
+  root['General']['StageDuration[2]']:
+    new_value: 200
+    old_value: 300
