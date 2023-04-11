@@ -13,7 +13,9 @@ def is_file_valid(file_name):
 
 
 def add_cwd_to_filename(file_name, cwd=None):
-    file_name = os.path.join(cwd, file_name)
+    if not file_name.startswith(os.path.sep):
+        file_name = os.path.join(cwd, file_name)
+
     return file_name
 
 
