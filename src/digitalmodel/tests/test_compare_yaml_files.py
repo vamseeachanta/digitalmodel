@@ -1,6 +1,6 @@
 import os
 
-from digitalmodel.common.utilities import is_file_valid, add_cwd_to_filename
+from digitalmodel.common.utilities import add_cwd_to_filename
 from digitalmodel.common.yml_utilities import WorkingWithYAML
 
 file_name1 = 'test_data/orcaflex/SZ_trim_VA.yml'
