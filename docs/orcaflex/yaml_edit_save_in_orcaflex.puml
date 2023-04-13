@@ -72,6 +72,12 @@ title Edit and Save .YML Files\n OrcaFlex
         structure-> Environment:.yml
         Environment-> run_yml:.yml
 
+        note right Environment
+            Opening the file in OrcaFlex GUI
+            will display red cells to show 
+            changes from the preceding .yml file
+        end note
+
         note right run_yml
             <b>Advantages:</b> modular design
             - individual files can be modified in NotePad++

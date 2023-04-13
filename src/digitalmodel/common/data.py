@@ -1,5 +1,7 @@
 import datetime
 import yaml
+import operator
+from functools import reduce
 
 from digitalmodel.common.utilities import is_file_valid
 
@@ -159,13 +161,20 @@ class ReadData():
         return data_as_dictionary
 
     def extract_from_dictionary(self, data_dictionary, map_list):
-        import operator
-        from functools import reduce    # forward compatibility for Python 3
         return reduce(operator.getitem, map_list, data_dictionary)
 
-    def getFromDict(dataDict, mapList):
-
-        return reduce(operator.getitem, mapList, dataDict)
+    def key_chain(self, data, *args, default=None):
+        for key in args:
+            if isinstance(data, dict):
+                data = data.get(key, default)
+            elif isinstance(data, (list, tuple)) and isinstance(key, int):
+                try:
+                    data = data[key]
+                except IndexError:
+                    return default
+            else:
+                return default
+        return data
 
     def from_pdf(self, cfg, file_index=0):
         if cfg['files']['from_pdf'][file_index].__contains__('package'):
@@ -1095,5 +1104,3 @@ def transform_df_datetime_to_str(df, date_format='%Y-%m-%d %H:%M:%S'):
                 ]
 
     return df
-
-
