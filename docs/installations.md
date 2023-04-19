@@ -4,6 +4,18 @@ To help perform tasks of installations
 
 # Summary
 
+
+- Design structure
+- Ensure good distribution
+- Locate CoG
+- Organize equipment 
+- Select best lifting locations
+- Design lifting gear (slings, shackles, etc.)
+
+
+
+
+
 - Implement any basic hand calculations
 - 
 
@@ -41,3 +53,10 @@ QA of model:
 ### Resonance analysis
 
 
+### References
+
+https://www.linkedin.com/posts/aymanabdelhadi_bentley-staadpro-dnv-ugcPost-7052217870985961473-Irsr/
+
+20 years ago my lifting guide was the famous the Det Norske Vertas (DNV) VMO written 1996 ,
+in the recent years DNV released a very good and modern H series for lifting. 
+the newly established LEEA (Lifting Equipment Engineers association ) pocket book back in 2005.

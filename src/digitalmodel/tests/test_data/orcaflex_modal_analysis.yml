@@ -1,0 +1,25 @@
+default:
+  log_level: DEBUG
+
+  Analysis:
+    Analyze :
+      flag: True
+      simulation: False
+      statics: False
+      modal: True
+
+  config:
+    overwrite:
+      output: True
+
+Files:
+- Label: Depth - 200 m 
+  Name: S:\IAT\SURF\Chevron_Ballymore\03-Struct_SUT\02-DETAILED\04-RES\SUT_DZ_30deg_200m.yml
+  ObjectName: NULL
+  simulation: False
+  statics: True
+
+PlotSettings:
+  Name: Buoyancy Element Hydrodynamic Coefficients
+  SupTitle: Buoyancy Element Hydrodynamic Coefficients
+  Title: SLWR Configuration Development
