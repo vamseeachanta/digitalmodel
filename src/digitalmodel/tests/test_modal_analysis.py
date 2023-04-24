@@ -8,16 +8,12 @@ from digitalmodel.common.update_deep import AttributeDict
 from digitalmodel.common.ApplicationManager import ConfigureApplicationInputs
 from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 
-ymlfile = 'src/digitalmodel/tests/test_data/orcaflex_modal_analysis.yml'
+ymlfile = 'C:/Users/ss7a2365/Documents/CVX_Ballymore/04-RES/dz_45deg_modal_analysis.yml'
 sys.argv.append(ymlfile)
-print(os.path.isfile(ymlfile))
+# print(os.path.isfile(ymlfile))
 cfg = ymlInput(ymlfile, updateYml=None)
 cfg = AttributeDict(cfg)
 
-basename = 'fea_model'
-application_manager = ConfigureApplicationInputs(basename)
-application_manager.configure(run_dict=None)
-
 oma = OrcModalAnalysis()
 
-cfg_base = oma.run_modal_analysis(application_manager.cfg)
+cfg_base = oma.run_modal_analysis(cfg)

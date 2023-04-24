@@ -57,6 +57,7 @@ class OrcInstallation:
             model_file_updated['Lines'][
                 cfg['intermediate_sling']]['EndBZ'] -= delta_elevation
             model_file_updated['Lines'][
+            #TODO Covert this index into array paramter in yaml input file
                 cfg['crane_wire']]['Sections'][1]['Length'] += delta_elevation
 
             file_name = os.path.join(

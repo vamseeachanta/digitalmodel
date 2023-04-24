@@ -6,7 +6,10 @@ default:
       flag: True
       simulation: False
       statics: False
-      modal: True
+      modal: 
+        flag: True
+        modeCount: 20
+      
 
   config:
     overwrite:
@@ -14,7 +17,7 @@ default:
 
 Files:
 - Label: Depth - 200 m 
-  Name: S:\IAT\SURF\Chevron_Ballymore\03-Struct_SUT\02-DETAILED\04-RES\SUT_DZ_30deg_200m.yml
+  Name: src\digitalmodel\tests\test_data\SUT_DZ_30deg_200m.yml
   ObjectName: NULL
   simulation: False
   statics: True
