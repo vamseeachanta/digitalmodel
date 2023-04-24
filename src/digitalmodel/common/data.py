@@ -1,5 +1,9 @@
 import datetime
 import yaml
+import operator
+from functools import reduce
+
+from digitalmodel.common.utilities import is_file_valid
 
 
 class ReadFromExcel():
@@ -63,25 +67,35 @@ class ReadData():
         wb = load_workbook(cfg['io'])
 
         sh = wb[cfg['sheet_name']]
-        keyword_row_number = self.from_xlsx_get_WorkSheetRowNumberWithText(sh, cfg["key_words"])
+        keyword_row_number = self.from_xlsx_get_WorkSheetRowNumberWithText(
+            sh, cfg["key_words"])
         return keyword_row_number
 
     def xlsx_to_df_by_keyword_search(self, cfg):
         import pandas as pd
         cfg.update(cfg['start_row'])
-        row_number_with_keyword = self.from_xlsx_get_line_number_containing_keyword(cfg)
+        row_number_with_keyword = self.from_xlsx_get_line_number_containing_keyword(
+            cfg)
         start_row = cfg['start_row']['transform']['scale'] * row_number_with_keyword + \
                     cfg['start_row']['transform']['shift']
         cfg.update(cfg['end_row'])
-        row_number_with_keyword = self.from_xlsx_get_line_number_containing_keyword(cfg)
+        row_number_with_keyword = self.from_xlsx_get_line_number_containing_keyword(
+            cfg)
         end_row = cfg['end_row']['transform']['scale'] * row_number_with_keyword + \
                   cfg['end_row']['transform']['shift']
         number_of_rows = end_row - start_row + 1
-        df = pd.read_excel(io=cfg['io'], sheet_name=cfg['sheet_name'], skiprows=start_row - 1, nrows=number_of_rows)
+        df = pd.read_excel(io=cfg['io'],
+                           sheet_name=cfg['sheet_name'],
+                           skiprows=start_row - 1,
+                           nrows=number_of_rows)
         if cfg.__contains__('column'):
             if cfg['column'].__contains__('drop_unwanted_columns'):
-                dropped_column_array = [column for column in range(len(cfg['column']['names']), len(df.columns))]
-                df = self.from_df_delete_unwanted_columns(df, dropped_column_array)
+                dropped_column_array = [
+                    column for column in range(len(cfg['column']['names']),
+                                               len(df.columns))
+                ]
+                df = self.from_df_delete_unwanted_columns(
+                    df, dropped_column_array)
             if cfg['column'].__contains__('names'):
                 df.columns = cfg['column']['names']
 
@@ -98,7 +112,8 @@ class ReadData():
         wb = xlrd.open_workbook(data['FileName'])
 
         sh = wb.sheet_by_name(data['SheetName'])
-        KeyWordRowNumber = self.from_xlsx_get_WorkSheetRowNumberWithText(sh, data["KeyWords"])
+        KeyWordRowNumber = self.from_xlsx_get_WorkSheetRowNumberWithText(
+            sh, data["KeyWords"])
 
         if KeyWordRowNumber == None:
             raise Exception("Error in keyword provided for search criteria")
@@ -119,7 +134,8 @@ class ReadData():
                 df.drop([0], inplace=True)
                 df.reset_index(inplace=True)
             elif len(data['Columns']) <= len(df.columns):
-                AdditionalColumns = list(range(len(data['Columns']), len(df.columns)))
+                AdditionalColumns = list(
+                    range(len(data['Columns']), len(df.columns)))
                 df.columns = data['Columns'] + AdditionalColumns
             else:
                 df.columns = data['Columns'][0:len(df.columns)]
@@ -132,7 +148,8 @@ class ReadData():
         """
         rownum = None
         for rownum in range(0, sh.nrows):
-            if any(keyword in sh.row_values(rownum) for keyword in KeyWordArray):
+            if any(keyword in sh.row_values(rownum)
+                   for keyword in KeyWordArray):
                 return rownum
                 break
 
@@ -144,17 +161,26 @@ class ReadData():
         return data_as_dictionary
 
     def extract_from_dictionary(self, data_dictionary, map_list):
-        import operator
-        from functools import reduce  # forward compatibility for Python 3
         return reduce(operator.getitem, map_list, data_dictionary)
 
-    def getFromDict(dataDict, mapList):
-
-        return reduce(operator.getitem, mapList, dataDict)
+    def key_chain(self, data, *args, default=None):
+        for key in args:
+            if isinstance(data, dict):
+                data = data.get(key, default)
+            elif isinstance(data, (list, tuple)) and isinstance(key, int):
+                try:
+                    data = data[key]
+                except IndexError:
+                    return default
+            else:
+                return default
+        return data
 
     def from_pdf(self, cfg, file_index=0):
         if cfg['files']['from_pdf'][file_index].__contains__('package'):
-            if cfg['files']['from_pdf'][file_index]['package'] in [None, 'tabula']:
+            if cfg['files']['from_pdf'][file_index]['package'] in [
+                    None, 'tabula'
+            ]:
                 df = self.from_pdf_tabula(cfg, file_index)
             elif cfg['files']['from_pdf'][file_index]['package'] == 'camelot':
                 df = self.from_pdf_camelot(cfg, file_index)
@@ -172,9 +198,10 @@ class ReadData():
 
     def from_pdf_camelot(self, cfg, file_index=0):
         import camelot
-        df = camelot.read_pdf(cfg['files']['from_pdf'][file_index]['io'],
-                              pages=cfg['files']['from_pdf'][file_index]['page'],
-                              suppress_stdout=False)
+        df = camelot.read_pdf(
+            cfg['files']['from_pdf'][file_index]['io'],
+            pages=cfg['files']['from_pdf'][file_index]['page'],
+            suppress_stdout=False)
         print(df)
         return df
 
@@ -186,7 +213,8 @@ class ReadData():
 
     def from_ascii_file_get_line_number_containing_keywords(self, cfg):
         sample_data_1 = {
-            'io': 'data_manager\\data\\shear7\\lid_02_cp01_2500ft_WT0750_064pcf.out',
+            'io':
+                'data_manager\\data\\shear7\\lid_02_cp01_2500ft_WT0750_064pcf.out',
             'line': {
                 'key_words': ['5. Fundamental natural frequency'],
                 'transform': {
@@ -196,12 +224,14 @@ class ReadData():
             }
         }
 
-        all_lines_as_strings = self.from_ascii_file_get_lines_as_string_arrays(cfg)
-        keyword_line_number = self.get_array_rows_containing_keywords(all_lines_as_strings, cfg['line']['key_words'])
+        all_lines_as_strings = self.from_ascii_file_get_lines_as_string_arrays(
+            cfg)
+        keyword_line_number = self.get_array_rows_containing_keywords(
+            all_lines_as_strings, cfg['line']['key_words'])
 
         if cfg['line'].__contains__('transform'):
-            keyword_line_number = keyword_line_number * cfg['line']['transform']['scale'] + cfg['line']['transform'][
-                'shift']
+            keyword_line_number = keyword_line_number * cfg['line'][
+                'transform']['scale'] + cfg['line']['transform']['shift']
 
         return keyword_line_number
 
@@ -213,8 +243,16 @@ class ReadData():
 
     def from_ascii_file_get_value(self, cfg):
         sample_cfg_format_1 = {'io': 'data_manager\data\orcaflex\common.mds'}
-        sample_cfg_format_2 = {'io': 'data_manager\data\orcaflex\common.mds', 'start_line': 5, 'end_line': None}
-        sample_cfg_format_3 = {'io': 'data_manager\data\orcaflex\common.mds', 'start_line': 5, 'end_line': 10}
+        sample_cfg_format_2 = {
+            'io': 'data_manager\data\orcaflex\common.mds',
+            'start_line': 5,
+            'end_line': None
+        }
+        sample_cfg_format_3 = {
+            'io': 'data_manager\data\orcaflex\common.mds',
+            'start_line': 5,
+            'end_line': 10
+        }
 
         from_string = FromString()
         line_text = self.from_ascii_file_get_lines_as_string_arrays(cfg)
@@ -228,13 +266,17 @@ class ReadData():
     def from_ascii_file_get_structured_data_delimited_white_space(self, cfg):
         import pandas as pd
         sample_cfg_format_1 = {'io': 'data_manager\data\orcaflex\common.mds'}
-        sample_cfg_format_2 = {'io': 'data_manager\data\orcaflex\common.mds', 'start_line': 5, 'DataFrame': True}
+        sample_cfg_format_2 = {
+            'io': 'data_manager\data\orcaflex\common.mds',
+            'start_line': 5,
+            'DataFrame': True
+        }
         sample_cfg_format_2 = {
             'io': 'data_manager\data\orcaflex\common.mds',
             'start_line': 5,
             'end_line': None,
             'DataFrame': True
-        }  # Get only 1 line
+        }    # Get only 1 line
         sample_cfg_format_3 = {
             'io': 'data_manager\data\orcaflex\common.mds',
             'start_line': 5,
@@ -242,22 +284,28 @@ class ReadData():
             'DataFrame': True
         }
 
-        all_lines_as_strings = self.from_ascii_file_get_lines_as_string_arrays(cfg)
+        all_lines_as_strings = self.from_ascii_file_get_lines_as_string_arrays(
+            cfg)
         all_lines_float_objects = []
         for line_index in range(0, len(all_lines_as_strings)):
             if cfg['delimiter'] == 'space':
                 line_string_objects = all_lines_as_strings[line_index].split()
             else:
                 print("Unknown delimiter")
-            all_lines_float_objects.append([float(item) for item in line_string_objects])
+            all_lines_float_objects.append(
+                [float(item) for item in line_string_objects])
 
         result = []
-        for line_float_object_index in range(0, len(all_lines_float_objects[0])):
+        for line_float_object_index in range(0,
+                                             len(all_lines_float_objects[0])):
             result.append([])
 
         for line_index in range(0, len(all_lines_float_objects)):
-            for line_float_object_index in range(0, len(all_lines_float_objects[0])):
-                result[line_float_object_index].append(all_lines_float_objects[line_index][line_float_object_index])
+            for line_float_object_index in range(
+                    0, len(all_lines_float_objects[0])):
+                result[line_float_object_index].append(
+                    all_lines_float_objects[line_index]
+                    [line_float_object_index])
 
         if cfg['DataFrame']:
             df = pd.DataFrame(columns=cfg['columns'])
@@ -269,16 +317,31 @@ class ReadData():
 
     def from_ascii_file_get_lines_as_string_arrays(self, cfg):
         sample_cfg_format_1 = {'io': 'data_manager\data\orcaflex\common.mds'}
-        sample_cfg_format_2 = {'io': 'data_manager\data\orcaflex\common.mds', 'start_line': 5, 'end_line': None}
-        sample_cfg_format_2 = {'io': 'data_manager\data\orcaflex\common.mds', 'start_line': 5}  # Get till end of lines
-        sample_cfg_format_3 = {'io': 'data_manager\data\orcaflex\common.mds', 'start_line': 5, 'end_line': 10}
-        sample_cfg_format_3 = {'io': 'data_manager\data\orcaflex\common.mds', 'lines_from_end': 2}
+        sample_cfg_format_2 = {
+            'io': 'data_manager\data\orcaflex\common.mds',
+            'start_line': 5,
+            'end_line': None
+        }
+        sample_cfg_format_2 = {
+            'io': 'data_manager\data\orcaflex\common.mds',
+            'start_line': 5
+        }    # Get till end of lines
+        sample_cfg_format_3 = {
+            'io': 'data_manager\data\orcaflex\common.mds',
+            'start_line': 5,
+            'end_line': 10
+        }
+        sample_cfg_format_3 = {
+            'io': 'data_manager\data\orcaflex\common.mds',
+            'lines_from_end': 2
+        }
 
         all_lines = []
         if type(cfg['io']) is list:
             from common.ETL_components import ETL_components
             etl_components = ETL_components(cfg=None)
-            cfg['io'] = etl_components.convert_text_list_to_combined_text(cfg['io'])
+            cfg['io'] = etl_components.convert_text_list_to_combined_text(
+                cfg['io'])
         with open(cfg['io']) as f:
             for line in f:
                 all_lines.append(line)
@@ -304,7 +367,10 @@ class ReadData():
 
         return result
 
-    def get_file_list_from_folder(self, folder_with_file_type, with_path=True, with_extension=True):
+    def get_file_list_from_folder(self,
+                                  folder_with_file_type,
+                                  with_path=True,
+                                  with_extension=True):
         folder_with_file_type_example = 'Q:\projects\Mole\log_files\*.log'
 
         import glob
@@ -323,7 +389,10 @@ class ReadData():
                 file_list = [os.path.basename(file) for file in file_list]
                 return file_list
             else:
-                file_list = [os.path.splitext(os.path.basename(file))[0] for file in file_list]
+                file_list = [
+                    os.path.splitext(os.path.basename(file))[0]
+                    for file in file_list
+                ]
                 return file_list
 
 
@@ -341,7 +410,8 @@ class GetData():
         }
 
         url = cfg['url']
-        filename = os.path.join(cfg['download_to'] + '/' + os.path.basename(url))
+        filename = os.path.join(cfg['download_to'] + '/' +
+                                os.path.basename(url))
 
         if os.path.exists(filename):
             os.remove(filename)
@@ -351,7 +421,8 @@ class GetData():
         wget.download(url, out=filename)
         end_time = time.perf_counter()
         print("Downloading file: {} .... COMPLETE".format(filename))
-        print("Time Taken to download: {} .... COMPLETE".format((end_time - start_time).__round__(3)))
+        print("Time Taken to download: {} .... COMPLETE".format(
+            (end_time - start_time).__round__(3)))
         return {"filename": filename, "result": True}
 
 
@@ -388,8 +459,18 @@ class FromString():
         return new_string
 
     def get_value_by_delimiter(self, cfg):
-        cfg_sample_1 = {'text': '          97        2001', 'delimiter': ' ', 'column': 2, 'data_type': 'float'}
-        cfg_sample_2 = {'text': '0.017300(Hz)', 'delimiter': '(', 'column': 1, 'data_type': 'float'}
+        cfg_sample_1 = {
+            'text': '          97        2001',
+            'delimiter': ' ',
+            'column': 2,
+            'data_type': 'float'
+        }
+        cfg_sample_2 = {
+            'text': '0.017300(Hz)',
+            'delimiter': '(',
+            'column': 1,
+            'data_type': 'float'
+        }
 
         if cfg['delimiter'] == ' ':
             result = cfg['text'].split()[cfg['column'] - 1]
@@ -441,7 +522,9 @@ class SaveData():
                 if type(array[line_index]) is list:
                     from common.ETL_components import ETL_components
                     etl_components = ETL_components(cfg=None)
-                    array[line_index] = etl_components.convert_text_list_to_combined_text(array[line_index])
+                    array[
+                        line_index] = etl_components.convert_text_list_to_combined_text(
+                            array[line_index])
                 f.write(array[line_index])
                 if "\n" not in array[line_index]:
                     f.write('\n')
@@ -546,7 +629,10 @@ class SaveData():
         # writer.save()
 
     def df_to_table_as_image(self, df, cfg):
-        (ax, fig) = self.render_df_table(df, header_columns=0, col_width=2.0, font_size=8)
+        (ax, fig) = self.render_df_table(df,
+                                         header_columns=0,
+                                         col_width=2.0,
+                                         font_size=8)
         fig.savefig(cfg['file_name'])
         self.plt.close()
 
@@ -554,7 +640,9 @@ class SaveData():
         from docx import Document
         document = Document()
         document.add_heading("Heading")
-        table = document.add_table(rows=(df.shape[0] + 1), cols=df.shape[1])  # First row are table headers!
+        table = document.add_table(
+            rows=(df.shape[0] + 1),
+            cols=df.shape[1])    # First row are table headers!
         # Method 1
         # for i, column in enumerate(df):
         #     for row in range(df.shape[0]):
@@ -588,11 +676,15 @@ class SaveData():
         self.plt = plt
 
         if ax is None:
-            size = (np.array(data.shape[::-1]) + np.array([0, 1])) * np.array([col_width, row_height])
+            size = (np.array(data.shape[::-1]) + np.array([0, 1])) * np.array(
+                [col_width, row_height])
             fig, ax = plt.subplots(figsize=size)
             ax.axis('off')
 
-        mpl_table = ax.table(cellText=data.values, bbox=bbox, colLabels=data.columns, **kwargs)
+        mpl_table = ax.table(cellText=data.values,
+                             bbox=bbox,
+                             colLabels=data.columns,
+                             **kwargs)
 
         mpl_table.auto_set_font_size(False)
         mpl_table.set_fontsize(font_size)
@@ -633,7 +725,8 @@ class DefineData():
     def set_value_in_dictionary(self, data_dictionary, value, map_list=None):
         read_data = ReadData()
         # TODO Custom define maplist here
-        read_data.extract_from_dictionary(data_dictionary, map_list[:-1])[map_list[-1]] = value
+        read_data.extract_from_dictionary(data_dictionary,
+                                          map_list[:-1])[map_list[-1]] = value
 
         return data_dictionary
 
@@ -667,7 +760,8 @@ class DateTimeUtility():
 
     def last_day_of_month(self, any_day):
         import datetime
-        next_month = any_day.replace(day=28) + datetime.timedelta(days=4)  # this will never fail
+        next_month = any_day.replace(day=28) + datetime.timedelta(
+            days=4)    # this will never fail
         return next_month - datetime.timedelta(days=next_month.day)
 
 
@@ -678,7 +772,11 @@ class Transform():
         pass
 
     def gis_deg_to_distance(self, df, cfg):
-        cfg_sample = {'Longitude': 'BOT_LONG', 'Latitude': 'BOT_LAT', 'label': 'BOT'}
+        cfg_sample = {
+            'Longitude': 'BOT_LONG',
+            'Latitude': 'BOT_LAT',
+            'label': 'BOT'
+        }
         import utm
         longitude_column = cfg['Longitude']
         latitude_column = cfg['Latitude']
@@ -711,24 +809,35 @@ class Transform():
     def get_gis_converted_df_superseded(self, data_set_cfg, df):
         if data_set_cfg.__contains__('gis'):
             import pyproj
-            p = pyproj.Proj(proj='utm', zone=data_set_cfg['gis']['zone'], ellps='WGS84')
+            p = pyproj.Proj(proj='utm',
+                            zone=data_set_cfg['gis']['zone'],
+                            ellps='WGS84')
             if data_set_cfg['gis']['long_lat_to_northing_easting']['flag']:
-                longitude_column = data_set_cfg['gis']['long_lat_to_northing_easting']['Longitude']
-                latitude_column = data_set_cfg['gis']['long_lat_to_northing_easting']['Latitude']
-                df['Easting'], df['Northing'] = p(df[longitude_column].astype(float).tolist(),
-                                                  df[latitude_column].astype(float).tolist())
+                longitude_column = data_set_cfg['gis'][
+                    'long_lat_to_northing_easting']['Longitude']
+                latitude_column = data_set_cfg['gis'][
+                    'long_lat_to_northing_easting']['Latitude']
+                df['Easting'], df['Northing'] = p(
+                    df[longitude_column].astype(float).tolist(),
+                    df[latitude_column].astype(float).tolist())
             elif data_set_cfg['gis']['long_lat_to_x_y']['flag']:
                 import utm
-                longitude_column = data_set_cfg['gis']['long_lat_to_x_y']['Longitude']
-                latitude_column = data_set_cfg['gis']['long_lat_to_x_y']['Latitude']
-                df['x'], df['y'], zone, ut = utm.from_latlon(df[longitude_column].astype(float).tolist(),
-                                                             df[latitude_column].astype(float).tolist())
+                longitude_column = data_set_cfg['gis']['long_lat_to_x_y'][
+                    'Longitude']
+                latitude_column = data_set_cfg['gis']['long_lat_to_x_y'][
+                    'Latitude']
+                df['x'], df['y'], zone, ut = utm.from_latlon(
+                    df[longitude_column].astype(float).tolist(),
+                    df[latitude_column].astype(float).tolist())
             elif data_set_cfg['gis']['northing_easting_to_long_lat']['flag']:
-                Easting_column = data_set_cfg['gis']['long_lat_to_northing_easting']['Easting']
-                Northing_column = data_set_cfg['gis']['long_lat_to_northing_easting']['Northing']
-                df['Longitude'], df['Latitude'] = p(df[Easting_column].tolist(),
-                                                    df[Northing_column].tolist(),
-                                                    inverse=True)
+                Easting_column = data_set_cfg['gis'][
+                    'long_lat_to_northing_easting']['Easting']
+                Northing_column = data_set_cfg['gis'][
+                    'long_lat_to_northing_easting']['Northing']
+                df['Longitude'], df['Latitude'] = p(
+                    df[Easting_column].tolist(),
+                    df[Northing_column].tolist(),
+                    inverse=True)
 
         return df
 
@@ -772,13 +881,15 @@ class Transform():
                 df.insert(0, column='   ', value=list(df.index))
 
             if len(df.columns.unique()) == len(df.columns):
-                json_string = df.apply(lambda x: pd.Series(x.dropna()), axis=1).to_json(orient=orient)
+                json_string = df.apply(lambda x: pd.Series(x.dropna()),
+                                       axis=1).to_json(orient=orient)
             else:
                 df = self.df_transform_repeat_columns_to_unique_columns(df)
                 json_string = df.to_json(orient=orient)
         return json_string
 
-    def df_transform_repeat_columns_to_unique_columns(self, df, transform_character='trailing_alphabet'):
+    def df_transform_repeat_columns_to_unique_columns(
+            self, df, transform_character='trailing_alphabet'):
         old_columns = list(df.columns)
         cfg = {'list': old_columns, 'transform_character': transform_character}
         new_columns = self.transform_list_to_unique_list(cfg)
@@ -802,20 +913,25 @@ class Transform():
                 pass
             elif repeat_element_count > 1:
                 if transform_character == 'trailing_space':
-                    new_list[list_index] = new_list[list_index] + ' ' * (repeat_element_count - 1)
+                    new_list[list_index] = new_list[list_index] + ' ' * (
+                        repeat_element_count - 1)
                 elif transform_character == 'leading_space':
-                    new_list[list_index] = ' ' * (repeat_element_count - 1) + new_list[list_index]
+                    new_list[list_index] = ' ' * (repeat_element_count -
+                                                  1) + new_list[list_index]
                 elif transform_character == 'leading_alphabet':
-                    new_list[list_index] = 'a' * (repeat_element_count - 1) + new_list[list_index]
+                    new_list[list_index] = 'a' * (repeat_element_count -
+                                                  1) + new_list[list_index]
                 elif transform_character == 'trailing_alphabet':
-                    new_list[list_index] = new_list[list_index] + 'a' * (repeat_element_count - 1)
+                    new_list[list_index] = new_list[list_index] + 'a' * (
+                        repeat_element_count - 1)
 
         new_list.reverse()
         return new_list
 
     def add_column_to_df(self, df, cfg):
         if df is not None:
-            add_column_to_transposed_df = cfg.get('add_column_to_transposed_df', None)
+            add_column_to_transposed_df = cfg.get('add_column_to_transposed_df',
+                                                  None)
             if add_column_to_transposed_df is not None:
                 location = add_column_to_transposed_df['location']
                 header = add_column_to_transposed_df['header']
@@ -827,11 +943,15 @@ class Transform():
     def transpose_df(self, df, cfg):
         df_transposed = df
         if df is not None:
-            transposed_df_column_name = cfg.get('transposed_df_column_name', None)
+            transposed_df_column_name = cfg.get('transposed_df_column_name',
+                                                None)
             if transposed_df_column_name is not None:
-                transpose_df_columns = df[transposed_df_column_name['column']].tolist()
+                transpose_df_columns = df[
+                    transposed_df_column_name['column']].tolist()
                 if transposed_df_column_name['drop']:
-                    df.drop(transposed_df_column_name['column'], axis=1, inplace=True)
+                    df.drop(transposed_df_column_name['column'],
+                            axis=1,
+                            inplace=True)
                 df_transposed = df.T.copy()
                 df_transposed.columns = transpose_df_columns
         return df_transposed
@@ -847,12 +967,18 @@ class Transform():
             })
         index = cfg_settings.get('index', True)
         justify = cfg_settings.get('justify', 'center')
-        classes = cfg_settings.get('classes',
-                                   'table table-bordered table-responsive-sm table-sm table-striped table-condensed')
+        classes = cfg_settings.get(
+            'classes',
+            'table table-bordered table-responsive-sm table-sm table-striped table-condensed'
+        )
         max_cols = cfg_settings.get('max_cols', None)
 
-        if (not cfg_settings.__contains__('json_transformation')) or (cfg_settings['json_transformation'] is None):
-            html = df.to_html(index=index, justify=justify, classes=classes, max_cols=max_cols)
+        if (not cfg_settings.__contains__('json_transformation')) or (
+                cfg_settings['json_transformation'] is None):
+            html = df.to_html(index=index,
+                              justify=justify,
+                              classes=classes,
+                              max_cols=max_cols)
             thead = cfg_settings.get('thead', '<thead class="thead-light">')
             html = html.replace('<thead>', thead)
             return html
@@ -863,9 +989,11 @@ class Transform():
                 for df_row in range(0, len(df)):
                     import pandas as pd
                     try:
-                        temp_df = pd.DataFrame.from_dict(df.iloc[df_row][column], orient='columns')
+                        temp_df = pd.DataFrame.from_dict(
+                            df.iloc[df_row][column], orient='columns')
                     except:
-                        temp_df = pd.DataFrame.from_dict(df.iloc[df_row][column], orient='index')
+                        temp_df = pd.DataFrame.from_dict(
+                            df.iloc[df_row][column], orient='index')
                     html = self.dataframe_to_html(temp_df)
                     json_array.append(html)
                 df[column] = json_array
@@ -893,7 +1021,12 @@ class TransformData():
         calculate_function(cfg)
 
     def linear(self, cfg):
-        cfg_example1 = {'scale': 1, 'shift': 3, 'data': [1, 2, 3, 4], 'type': 'linear'}
+        cfg_example1 = {
+            'scale': 1,
+            'shift': 3,
+            'data': [1, 2, 3, 4],
+            'type': 'linear'
+        }
         cfg_example2 = {'scale': 1, 'shift': 3, 'data': 1, 'type': 'linear'}
 
         scale = cfg['scale']
@@ -909,7 +1042,9 @@ class TransformData():
 if __name__ == '__main__':
     # write better tests
     FileName = 'K:\\0173 KM Extreme\\SLWR\\Fatigue\\Test.xlsx'
-    Columns = ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
+    Columns = [
+        'Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)'
+    ]
     CustomData = {
         "FileName": FileName,
         "SheetName": "Sheet1",
@@ -930,7 +1065,11 @@ if __name__ == '__main__':
         'preTestScore': [4, 24, 31, 2, 3],
         'postTestScore': [25, 94, 57, 62, 70]
     }
-    df = pd.DataFrame(example_data, columns=['first_name', 'last_name', 'age', 'preTestScore', 'postTestScore'])
+    df = pd.DataFrame(example_data,
+                      columns=[
+                          'first_name', 'last_name', 'age', 'preTestScore',
+                          'postTestScore'
+                      ])
     cfg = {'file_name': 'test_file'}
     save_data.df_to_table_as_docx(df, cfg)
 
@@ -958,7 +1097,10 @@ def transform_df_datetime_to_str(df, date_format='%Y-%m-%d %H:%M:%S'):
     if len(df) > 0:
         df_columns = list(df.columns)
         for column in df_columns:
-            if isinstance(df[column].iloc[0], datetime.datetime) or isinstance(df[column].iloc[0], datetime.date):
-                df[column] = [item.strftime(date_format) for item in df[column].to_list()]
+            if isinstance(df[column].iloc[0], datetime.datetime) or isinstance(
+                    df[column].iloc[0], datetime.date):
+                df[column] = [
+                    item.strftime(date_format) for item in df[column].to_list()
+                ]
 
     return df

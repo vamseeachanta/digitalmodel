@@ -5,7 +5,9 @@ Digital models for engineering assets. The objective of digital models is to uti
 These operations include (and not limited to) the following:
 - Analytical calculations
 - Computational analysis
-- Compuational 3D animations
+- 3D CAD models
+- 3D animations
+- Drawing automations
 
 # Summary
 

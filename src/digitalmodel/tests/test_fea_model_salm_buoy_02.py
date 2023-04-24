@@ -3,7 +3,7 @@
 import os
 import sys
 
-from digitalmodel.common.ymlInput import ymlInput
+from digitalmodel.common.yml_utilities import ymlInput
 from digitalmodel.common.update_deep import AttributeDict
 from digitalmodel.common.ApplicationManager import ConfigureApplicationInputs
 from digitalmodel.fea_model import fea_model
