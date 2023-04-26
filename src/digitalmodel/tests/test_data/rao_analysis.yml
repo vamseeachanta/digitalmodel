@@ -1,0 +1,19 @@
+default:
+  log_level: DEBUG
+
+  Analysis:
+    Analyze :
+      flag: True
+      simulation: False
+      statics: False
+      rao: 
+        flag: True
+
+  config:
+    overwrite:
+      output: True
+
+Files:
+- Label: Depth - 300 m 
+  Name: C:\Users\ss7a2365\Documents\CVX_Ballymore\zl\plet_res\300.yml
+  
