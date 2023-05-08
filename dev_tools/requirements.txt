@@ -1,0 +1,16 @@
+- pandas
+- plotly
+- dash
+- pyyaml
+- bumpver
+- webcolors
+- matplotlib
+- scipy
+- pandas
+- xlrd
+- openpyxl
+- imgkit
+- xmltodict
+- OrcFxAPI
+- docx
+- deepdiff

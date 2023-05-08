@@ -71,7 +71,7 @@ geometry:
   NominalID: NULL
   NominalOD: 8.625
   DesignWT: 1.000
-  Material: Steel
+  Material: composite
   ExternalCoating:
     Thickness: 2.953
   Strakes:
