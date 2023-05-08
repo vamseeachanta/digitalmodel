@@ -1,56 +1,78 @@
-&id005 !!python/object/new:digitalmodel.common.data.AttributeDict
+&id001 !!python/object/new:digitalmodel.common.data.AttributeDict
 dictitems:
   Analysis:
     CustomInputFile: src/digitalmodel/tests/test_data/catenary_riser.yml
     DefaultInputFile: null
-    basename: catenary_riser
+    basename: vertical_riser
     cfg_array_file_names: null
-    fe_filename: src/digitalmodel/tests/test_data\results\app_catenary_riser_catenary_riser_SLWR_FE_Wave1.yml
+    fe_filename: src/digitalmodel/tests/test_data\results\app_vertical_riser_catenary_riser_shear7_FE.yml
     fe_folder: src/digitalmodel/tests/test_data\results\
-    file_name: app_catenary_riser_catenary_riser
-    file_name_for_overwrite: app_catenary_riser_catenary_riser
+    file_name: app_vertical_riser_catenary_riser
+    file_name_for_overwrite: app_vertical_riser_catenary_riser
     log_folder: src/digitalmodel/tests/test_data\logs\
+    result:
+      component_bottom_effective_tension:
+      - 0.0
+      - 348001.31662904785
+      - 159.13952327111596
+      - 159.13952327111596
+      - 95.6944845084464
+      - 0.0
+      - 0.0
+      - 2704.596143222941
+      - 2704.596143222941
+      - 2704.596143222941
+      - 2653.399818714495
+      - 2653.399818714495
+      - 2595.291326580409
+      - 2595.291326580409
+      - 2595.291326580409
+      - 2533.6700688226483
+      - 2252.1290529352445
+      - 3167.2681792444123
+      - 3167.2681792444123
+      - 3167.2681792444123
+      - 3167.2681792444123
+      - 2885.7271633570085
+      - 2885.7271633570085
+      - 1779.9264
+      - -59.09601786055964
+      - -59.09601786055964
+      - -59.09601786055964
+      - -8059213.117528392
+      - -18281257.191979557
+      component_bottom_elevation_from_end_A:
+      - 0.0
+      - 0.0
+      - 4.572
+      - 4.572
+      - 9.144
+      - 12.192
+      - 12.192
+      - 30.48
+      - 30.48
+      - 30.48
+      - 33.528
+      - 33.528
+      - 39.623999999999995
+      - 39.623999999999995
+      - 39.623999999999995
+      - 51.815999999999995
+      - 120.39599999999999
+      - 714.756
+      - 714.756
+      - 714.756
+      - 714.756
+      - 783.336
+      - 783.336
+      - 789.432
+      - 796.4424
+      - 796.4424
+      - 796.4424
+      - 823.8744
+      - 869.5944000000001
     result_folder: src/digitalmodel/tests/test_data\results\
-    start_time: 2023-05-08 11:37:50.836421
-  BuoyPipe:
-    BuoyancySection: &id001
-      A: 593.0745192393274
-      Ai: 165.8367915708428
-      Ao: 758.9113108101702
-      I: 43643.82947693826
-      ID: 14.530999999999999
-      OD: 31.08497855669691
-    InsulationSection: &id002
-      A: 107.4105313218545
-      Ai: 58.4262602489883
-      Ao: 165.8367915708428
-      I: 1916.8791285133555
-      ID: 8.625
-      OD: 14.530999999999999
-    SteelSection: &id004
-      A: 23.954643983622173
-      Ai: 34.47161626536613
-      Ao: 58.4262602489883
-      I: 177.08657710548812
-      ID: 6.625
-      OD: 8.625
-    equivalentPipe: &id003
-      WithBuoyancy:
-        buoyancy_due_to_insulation_m_per_l: 109.66604606109107
-        dry_buoyancy_weight: 248.7081719410889
-        insulation_m_per_l: 55.49994999063497
-        internal_fluid_m_per_l: 0.0
-        massPerUnitLength: 425.5265601146423
-        pipe_m_per_l: 121.3184381829184
-        weightPerUnitLength: -748.8281200740997
-      WithoutBuoyancy:
-        buoyancy_due_to_insulation_m_per_l: 109.66604606109107
-        insulation_m_per_l: 55.49994999063497
-        internal_fluid_m_per_l: 0.0
-        massPerUnitLength: 198.39708817355336
-        pipe_m_per_l: 121.3184381829184
-        weightPerUnitLength: 616.4269761232551
-  BuoyancySection: *id001
+    start_time: 2023-05-08 11:38:17.863502
   EnvironmentLoad:
     Extreme:
     - ActiveCurrent: S10
@@ -544,9 +566,23 @@ dictitems:
       Buoyancy:
         L: null
         Size: 2
+      SCR:
+        AfterTDP:
+          L: 250
+          Size: 1
+        BeforeTDP:
+          L: 250
+          Size: 1
+        Buoyancy:
+          L: null
+          Size: 2
+        Top:
+          L: 25
+          Size: 0.5
       Top:
         L: 25
         Size: 0.5
+      Vertical: null
     Seabed:
       FrictionCoefficient:
         Axial: 0.45
@@ -567,13 +603,11 @@ dictitems:
         - 600
         ImplicitConstantTimeStep: 0.2
         TargetLogSampleInterval: 0.3
-  InsulationSection: *id002
   LazyWaveCatenaryDefinition:
     DiscreteBuoyancy:
       BuoyancyCoverage: 100
       BuoyancyFactor: null
-      BuoyancyOD: 31.08497855669691
-      Thickness: 8.276989278348456
+      Thickness: null
     Hangoff:
       above_keel: 11.21
       from_centerline: 32
@@ -588,28 +622,10 @@ dictitems:
       ThickendThickness: 2.5
     UniformBuoyancy:
       BuoyancyFactor: 2
-      BuoyancyOD: 31.08497855669691
-      Thickness: 8.276989278348456
+      Thickness: null
     VerticalDistance: 1874.64
     declinationAngle: 8
     lay_azimuth_to_vessel: 90
-  MainPipe:
-    BuoyancySection: null
-    InsulationSection:
-      A: 107.4105313218545
-      Ai: 58.4262602489883
-      Ao: 165.8367915708428
-      I: 1916.8791285133555
-      ID: 8.625
-      OD: 14.530999999999999
-    SteelSection:
-      A: 23.954643983622173
-      Ai: 34.47161626536613
-      Ao: 58.4262602489883
-      I: 177.08657710548812
-      ID: 6.625
-      OD: 8.625
-    equivalentPipe: *id003
   Material:
     Buoyancy:
       Rho: 650
@@ -626,75 +642,53 @@ dictitems:
     Steel:
       E: 30000000.0
       G: 11538461.54
+      Grades:
+        API 5L X60:
+          Reference: null
+          SMUS: null
+          SMYS: 60000
+        API 5L X65:
+          Reference: null
+          SMUS: 77500
+          SMYS: 65300
+        API 5L X70:
+          Reference: null
+          SMUS: null
+          SMYS: 70300
+        API 5L X80:
+          Reference: Assumed
+          SMUS: 95000
+          SMYS: 80000
+        ASTM A106 Grade A:
+          Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
+          SMUS: 48000
+          SMYS: 30000
+        ASTM A106 Grade B:
+          Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
+          SMUS: 60000
+          SMYS: 35000
+        ASTM A106 Grade C:
+          Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
+          SMUS: 70000
+          SMYS: 40000
+        P110:
+          Reference: Assumed
+          SMUS: 125000
+          SMYS: 110000
+        S125:
+          Reference: Assumed
+          SMUS: 140000
+          SMYS: 125000
       PoissionsRatio: 0.3
+      Poissionsratio: 0.3
       Rho: 7850
       SMUS: 77600
       SMYS: 65300
+      ThermalExpansionCoefficient: 6.5e-06
     Strakes:
       Density: null
       MassPerUnitLength: 21.5787
       WeightPerUnitLength: -42.3375
-  SteelSection: *id004
-  catenaryResult:
-    BendRadius: 303.08005276642007
-    Empty:
-      F: 1342405.3869697799
-      Fh: 186826.72045008093
-      Fv: 1329341.1900228444
-      S: 2156.5266309127933
-      q: 8
-      weightPerUnitLength: 616.4269761232551
-    F: null
-    FluidFilled:
-      F: 1532671.311432263
-      Fh: 213306.6191645583
-      Fv: 1517755.459587637
-      S: 2156.5266309127933
-      q: 8
-      weightPerUnitLength: 703.7962980986775
-    PlotData:
-      X:
-      - 0.0
-      - 80.62857215154044
-      - 161.25714430308088
-      - 241.8857164546213
-      - 322.51428860616176
-      - 403.1428607577022
-      - 483.7714329092426
-      - 564.4000050607831
-      - 645.0285772123235
-      - 725.6571493638639
-      - 806.2857215154044
-      Y:
-      - 0.0
-      - -502.9764519848461
-      - -886.7267918511425
-      - -1178.5704618257944
-      - -1399.2840071072715
-      - -1564.580171952982
-      - -1686.2265004057654
-      - -1772.8830755900792
-      - -1830.719036796208
-      - -1863.8517646142484
-      - -1874.6399999999999
-    Reference_FluidFilled:
-      F: 1532671.311432263
-      Fh: 213306.6191645583
-      Fv: 1517755.459587637
-      S: 2156.5266309127933
-      q: 8
-      weightPerUnitLength: 703.7962980986775
-    S: 2156.5266309127933
-    SeaWaterFilled:
-      F: 1829399.8268213049
-      Fh: 254603.24679452775
-      Fv: 1811596.233462497
-      S: 2156.5266309127933
-      q: 8
-      weightPerUnitLength: 840.0527994851158
-    X: 806.2857215154044
-    d: 1874.64
-    q: 8
   default:
     Analysis:
       Extreme: true
@@ -704,6 +698,25 @@ dictitems:
       SLWR: true
     Constants:
       g: 9.81
+    analysis:
+      host:
+        id: 1
+        raos:
+          Extreme: src\digitalmodel\tests\test_data\vessels\host_id_1_extreme_disp_raos.yml
+          Fatigue: src\digitalmodel\tests\test_data\vessels\host_id_1_extreme_disp_raos.yml
+        type: drilling
+      loading_type:
+        Extreme: true
+        Fatigue: true
+        VIV: true
+      riser:
+        shape: vertical
+        type:
+          drilling: true
+          intervention: false
+          top_tensioned: false
+      well:
+        id: 1
     config:
       cfg_sensitivities: false
       overwrite:
@@ -725,8 +738,10 @@ dictitems:
       WeightPerUnitLength: N/m
       YieldStrength: psi
       declinationAngle: deg with vertical
+      elevations:
+      - Start elevations above Mudline (m)
+      - End elevations above Mudline (m)
       verticalDistance: m
-  equivalentPipe: *id003
   geometry:
     DesignWT: 1.0
     ExternalCoating:
@@ -740,129 +755,6 @@ dictitems:
       Area: null
       BaseThickness: 0.5906
     waterDepth: 1347.2
-  lazyWaveCatenaryResult:
-    BuoyancyToHog:
-      BendRadius: 184.81248128619367
-      S: 317.8712122153219
-      X: 242.27062881070893
-      d: 182.88
-    BuoyancyToTouchDown:
-      BendRadius: 184.81248128619367
-      S: 709.7865094982537
-      X: 379.8457339916737
-      d: 548.64
-    HangOff:
-      BendRadius: 184.81248128619367
-      F: null
-      S: 1315.0091336624803
-      X: 491.65777641503917
-      d: 1143.1200000000001
-      q: 8
-    HogBendAboveSeabed: 1097.28
-    HogToBuoyancy:
-      BendRadius: 184.81248128619367
-      S: 709.7865094982537
-      X: 379.8457339916737
-      d: 548.64
-    SagBendElevationAboveSeabed: 731.52
-    SagToBuoyancy:
-      BendRadius: 184.81248128619367
-      S: 317.8712122153219
-      X: 242.27062881070893
-      d: 182.88
-    Summary:
-      Buoyancy:
-        PlotData:
-          X:
-          - 733.9284052257481
-          - 796.1400415059863
-          - 858.3516777862246
-          - 920.5633140664629
-          - 982.7749503467011
-          - 1044.9865866269392
-          - 1107.1982229071778
-          - 1169.4098591874158
-          - 1231.621495467654
-          - 1293.8331317478924
-          - 1356.0447680281306
-          Y:
-          - -960.24
-          - -872.2354937716711
-          - -816.2237340363603
-          - -785.7976879945022
-          - -777.4770030224255
-          - -790.3098986050585
-          - -825.7642947524109
-          - -887.8957233756081
-          - -983.8112295479318
-          - -1124.482327053933
-          - -1326.0000000000002
-        S: 1027.6577217135757
-        X: 622.1163628023826
-      BuoyancyToTouchDown:
-        PlotData:
-          X:
-          - 1356.0447680281309
-          - 1394.0293414272983
-          - 1432.0139148264657
-          - 1469.998488225633
-          - 1507.9830616248003
-          - 1545.9676350239677
-          - 1583.952208423135
-          - 1621.9367818223025
-          - 1659.9213552214699
-          - 1697.905928620637
-          - 1735.8905020198044
-          Y:
-          - -1326.0000000000005
-          - -1457.3657935859937
-          - -1563.208146841786
-          - -1648.0138903898098
-          - -1715.3780785292624
-          - -1768.1563894730898
-          - -1808.5861822222837
-          - -1838.381341876576
-          - -1858.8049340295113
-          - -1870.722748186642
-          - -1874.64
-        S: 709.7865094982537
-        X: 379.8457339916737
-      Fh: 130070.34017165423
-      Fv: 1055568.9004092568
-      HangOffToBuoyancy:
-        PlotData:
-          X:
-          - 0.0
-          - 73.3928405225748
-          - 146.7856810451496
-          - 220.17852156772443
-          - 293.5713620902992
-          - 366.96420261287403
-          - 440.35704313544886
-          - 513.7498836580237
-          - 587.1427241805984
-          - 660.5355647031732
-          - 733.9284052257481
-          Y:
-          - 0.0
-          - -429.95785459365675
-          - -716.4299149614395
-          - -905.1910503296573
-          - -1026.4030722041039
-          - -1099.4342374501641
-          - -1135.9540681646574
-          - -1141.798004191095
-          - -1117.8998378407887
-          - -1060.4409229322246
-          - -960.24
-        S: 1632.8803458778023
-        X: 733.9284052257481
-      HangoffToTDP:
-        S: 3370.324577089632
-        X: 1735.8905020198044
-    TotalBuoyancy: -1446523.400509071
-    WeightPerUnitLengthWithBuoyancy: -703.7962980986775
-    WeightPerUnitLengthWithOutBuoyancy: 703.7962980986775
   plotSettings:
     label: Design Pressure Limit
     plotFileName: OD_{0}
@@ -873,6 +765,189 @@ dictitems:
     yLim:
     - 0
     - 12500
+  plot_settings:
+  - file_name: effective_tension
+    grid: true
+    label:
+    - effective tension
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Effective Tension along Riser
+    title: ' '
+    x:
+    - component_bottom_effective_tension
+    xlabel: Effective Tension (kN)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim: null
+  - file_name: effective_tension_top
+    grid: true
+    label:
+    - effective tension
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Effective Tension along Riser
+    title: ' '
+    x:
+    - component_bottom_effective_tension
+    xlabel: Effective Tension (kN)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim:
+    - 0
+    - 50
+  - file_name: effective_tension_bottom
+    grid: true
+    label:
+    - effective tension
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Effective Tension along Riser
+    title: ' '
+    x:
+    - component_bottom_effective_tension
+    xlabel: Effective Tension (kN)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim:
+    - 2800
+    - 3000
+  - file_name: diameters
+    grid: true
+    label:
+    - StressOD
+    - StressID
+    - drag_diameter
+    - buoyancy_diameter
+    - internal_fluid_ID
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Diameters along Riser
+    title: ' '
+    x:
+    - StressOD
+    - StressID
+    - drag_diameter
+    - buoyancy_diameter
+    - internal_fluid_ID
+    xlabel: Diameters (m)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim: null
+  - file_name: area_moments
+    grid: true
+    label:
+    - Area
+    - Area Moment of Intertia
+    - Polar Moment
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Area Moments along Riser
+    title: ' '
+    x:
+    - A
+    - I
+    - J
+    xlabel: Area Moments (m4)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim: null
+  - file_name: stiffness
+    grid: true
+    label:
+    - Bending
+    - Axial
+    - Torsional
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Stiffness along Riser
+    title: ' '
+    x:
+    - EI
+    - EA
+    - GJ
+    xlabel: Stiffness (kgm2)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim: null
+  - file_name: weights
+    grid: true
+    label:
+    - stack_in_service_weight
+    - dry_weight_per_unit_length
+    - wet_weight_per_unit_length
+    - internal_fluid_weight_per_unit_length
+    - internal_fluid_weight_in_seawater_per_unit_length
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Weights along Riser
+    title: ' '
+    x:
+    - stack_in_service_weight
+    - dry_weight_per_unit_length
+    - wet_weight_per_unit_length
+    - internal_fluid_weight_per_unit_length
+    - internal_fluid_weight_in_seawater_per_unit_length
+    xlabel: weights (kN)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim: null
   simpleCatenaryDefinition:
     HangoffBelowMeanSeaLevel: 0
     Spacing: 10
@@ -881,4 +956,70 @@ dictitems:
     declinationAngle: 8
     lay_azimuth_to_vessel: 90
     verticalDistance: 1874.64
-state: *id005
+  stack_up:
+    from_xlsx:
+    - columns: null
+      index_col: null
+      io: src\digitalmodel\tests\test_data\vertical_riser\drilling_riser_template.xlsx
+      label: stack_up_table
+      replace: null
+      sheet_name: SU_Configuration 2500ft WD
+      skipfooter: 0
+      skiprows: 0
+    - columns: null
+      index_col: null
+      io: src\digitalmodel\tests\test_data\vertical_riser\drilling_riser_template.xlsx
+      label: riser_joints
+      replace: null
+      sheet_name: Joints
+      skipfooter: 0
+      skiprows: 0
+    - columns: null
+      index_col: null
+      io: src\digitalmodel\tests\test_data\vertical_riser\drilling_riser_template.xlsx
+      label: tensioners
+      replace: null
+      sheet_name: Tensioners
+      skipfooter: 0
+      skiprows: 0
+    - columns: null
+      index_col: null
+      io: src\digitalmodel\tests\test_data\vertical_riser\drilling_riser_template.xlsx
+      label: flexible_joints
+      replace: null
+      sheet_name: Flexible Jts
+      skipfooter: 0
+      skiprows: 0
+    - columns: null
+      index_col: null
+      io: src\digitalmodel\tests\test_data\vertical_riser\drilling_riser_template.xlsx
+      label: geotechnical
+      replace: null
+      sheet_name: geotechnical
+      skipfooter: 0
+      skiprows: 0
+    - columns: null
+      index_col: null
+      io: src\digitalmodel\tests\test_data\vertical_riser\drilling_riser_template.xlsx
+      label: hosts
+      replace: null
+      sheet_name: hosts
+      skipfooter: 0
+      skiprows: 0
+    overpull:
+      drilling:
+        bottom_of_component: LMRP
+        unit: kips
+        value: 400
+      intervention:
+        bottom_of_component: EDP
+        unit: kips
+        value: 125
+      top_tensioned:
+        bottom_of_component: Wellhead
+        unit: kips
+        value: 100
+    stroke_setting:
+      initial_down_stroke: 0.25
+      model_stroke_in_and_out_limits: true
+state: *id001

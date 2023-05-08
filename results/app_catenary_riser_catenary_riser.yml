@@ -1,17 +1,17 @@
 &id005 !!python/object/new:digitalmodel.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: src/digitalmodel/tests/test_data/catenary_riser.yml
+    CustomInputFile: null
     DefaultInputFile: null
     basename: catenary_riser
     cfg_array_file_names: null
-    fe_filename: src/digitalmodel/tests/test_data\results\app_catenary_riser_catenary_riser_SLWR_FE_Wave1.yml
-    fe_folder: src/digitalmodel/tests/test_data\results\
+    fe_filename: C:\Users\ss7a2365\Documents\github\digitalmodel\results\app_catenary_riser_catenary_riser_SLWR_FE_Wave1.yml
+    fe_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\results\
     file_name: app_catenary_riser_catenary_riser
     file_name_for_overwrite: app_catenary_riser_catenary_riser
-    log_folder: src/digitalmodel/tests/test_data\logs\
-    result_folder: src/digitalmodel/tests/test_data\results\
-    start_time: 2023-05-08 11:37:50.836421
+    log_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\logs\
+    result_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\results\
+    start_time: 2023-05-08 11:37:49.344756
   BuoyPipe:
     BuoyancySection: &id001
       A: 593.0745192393274
