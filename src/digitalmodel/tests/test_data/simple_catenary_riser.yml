@@ -20,9 +20,9 @@ default:
     BuoyancyCoverage: Percentage
   log_level: DEBUG
   Analysis:
-    SCR: False
+    SCR: True
     Jumper: False
-    SLWR: True
+    SLWR: False
     Extreme: True
     Fatigue: False
   config:
@@ -37,14 +37,10 @@ simpleCatenaryDefinition:
   axialLineForce: NULL
   verticalDistance: 1874.64
   declinationAngle: 8
-  horizontalDistanceHangofftoTDP: NULL
-
-LazyWaveCatenaryDefinition:
-  VerticalDistance: 1874.64
-  SagBendElevationAboveSeabed: 731.52
-  HogBendAboveSeabed: 1097.28
-  declinationAngle: 8
-  lay_azimuth_to_vessel: 90
+  horizontalDistanceHangofftoTDP: 
+    value: NULL
+    range: [50, 100, 150, 200, 250, 300]
+    rangeresult: {}
 
 commonDefinition:
   UniformBuoyancy:
@@ -67,6 +63,7 @@ commonDefinition:
     SCR: 500
     SLWR: 1500
   lay_azimuth_to_vessel: 90
+  Spacing: 10
 
 geometry:
   waterDepth: 1347.2

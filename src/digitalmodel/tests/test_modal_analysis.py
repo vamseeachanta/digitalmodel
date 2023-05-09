@@ -6,15 +6,13 @@ import sys
 from digitalmodel.common.yml_utilities import ymlInput
 from digitalmodel.common.update_deep import AttributeDict
 from digitalmodel.common.ApplicationManager import ConfigureApplicationInputs
-from digitalmodel.common.orcaflex_model_components import OrcaflexUtilities
+from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 
 ymlfile = 'test_data/modal_analysis.yml'
-sys.argv.append(ymlfile)
 if not os.path.isfile(ymlfile):
     ymlfile = os.path.join(os.path.dirname(__file__), ymlfile)
     print(os.path.isfile(ymlfile))
-print(os.path.isfile(ymlfile))
 
 cfg = ymlInput(ymlfile, updateYml=None)
 cfg = AttributeDict(cfg)

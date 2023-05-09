@@ -11,7 +11,7 @@ dictitems:
     file_name_for_overwrite: app_catenary_riser_catenary_riser
     log_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\logs\
     result_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\results\
-    start_time: 2023-05-08 11:37:49.344756
+    start_time: 2023-05-08 13:31:05.553115
   BuoyPipe:
     BuoyancySection: &id001
       A: 593.0745192393274

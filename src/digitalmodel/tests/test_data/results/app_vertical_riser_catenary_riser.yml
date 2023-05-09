@@ -72,7 +72,7 @@ dictitems:
       - 823.8744
       - 869.5944000000001
     result_folder: src/digitalmodel/tests/test_data\results\
-    start_time: 2023-05-08 11:38:17.863502
+    start_time: 2023-05-08 12:32:18.053578
   EnvironmentLoad:
     Extreme:
     - ActiveCurrent: S10

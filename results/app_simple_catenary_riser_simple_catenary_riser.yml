@@ -1,20 +1,56 @@
-&id001 !!python/object/new:digitalmodel.common.data.AttributeDict
+&id005 !!python/object/new:digitalmodel.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: src/digitalmodel/tests/test_data/catenary_riser.yml
+    CustomInputFile: null
     DefaultInputFile: null
-    basename: orcaflex_analysis
+    basename: simple_catenary_riser
     cfg_array_file_names: null
-    fe_folder: src/digitalmodel/tests/test_data\results\
-    file_name: app_orcaflex_analysis_catenary_riser
-    file_name_for_overwrite: app_orcaflex_analysis_catenary_riser
-    input_files:
-      analysis_type: []
-      no_ext: []
-      with_ext: []
-    log_folder: src/digitalmodel/tests/test_data\logs\
-    result_folder: src/digitalmodel/tests/test_data\results\
-    start_time: 2023-05-08 12:32:15.222760
+    fe_filename: C:\Users\ss7a2365\Documents\github\digitalmodel\results\app_simple_catenary_riser_simple_catenary_riser_SCR_FE_Wave1_FE.yml
+    fe_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\results\
+    file_name: app_simple_catenary_riser_simple_catenary_riser
+    file_name_for_overwrite: app_simple_catenary_riser_simple_catenary_riser
+    log_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\logs\
+    result_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\results\
+    start_time: 2023-05-09 14:19:51.577433
+  BuoyPipe:
+    BuoyancySection: &id001
+      A: 593.0745192393274
+      Ai: 165.8367915708428
+      Ao: 758.9113108101702
+      I: 43643.82947693826
+      ID: 14.530999999999999
+      OD: 31.08497855669691
+    InsulationSection: &id002
+      A: 107.4105313218545
+      Ai: 58.4262602489883
+      Ao: 165.8367915708428
+      I: 1916.8791285133555
+      ID: 8.625
+      OD: 14.530999999999999
+    SteelSection: &id004
+      A: 23.954643983622173
+      Ai: 34.47161626536613
+      Ao: 58.4262602489883
+      I: 177.08657710548812
+      ID: 6.625
+      OD: 8.625
+    equivalentPipe: &id003
+      WithBuoyancy:
+        buoyancy_due_to_insulation_m_per_l: 109.66604606109107
+        dry_buoyancy_weight: 248.7081719410889
+        insulation_m_per_l: 55.49994999063497
+        internal_fluid_m_per_l: 0.0
+        massPerUnitLength: 425.5265601146423
+        pipe_m_per_l: 121.3184381829184
+        weightPerUnitLength: -748.8281200740997
+      WithoutBuoyancy:
+        buoyancy_due_to_insulation_m_per_l: 109.66604606109107
+        insulation_m_per_l: 55.49994999063497
+        internal_fluid_m_per_l: 0.0
+        massPerUnitLength: 198.39708817355336
+        pipe_m_per_l: 121.3184381829184
+        weightPerUnitLength: 616.4269761232551
+  BuoyancySection: *id001
   EnvironmentLoad:
     Extreme:
     - ActiveCurrent: S10
@@ -531,48 +567,24 @@ dictitems:
         - 600
         ImplicitConstantTimeStep: 0.2
         TargetLogSampleInterval: 0.3
-  Files:
-    csv_filename: ''
-    data:
-    - Label: No Load
-      Name: data_manager\data\orcaflex\orcaflex_test1
-      ObjectName: SLWR
-      ProbabilityRatio: 0.1
-      SimulationDuration: 120
-    - Label: No Load
-      Name: data_manager\data\orcaflex\orcaflex_test2
-      ObjectName: SLWR
-      ProbabilityRatio: 0.03
-      SimulationDuration: 120
-    - Label: No File
-      Name: data_manager\data\orcaflex\orcaflex_test3
-      ObjectName: SLWR
-      ProbabilityRatio: 0.02
-      SimulationDuration: 120
-    data_source: yml
-  LazyWaveCatenaryDefinition:
-    DiscreteBuoyancy:
-      BuoyancyCoverage: 100
-      BuoyancyFactor: null
-      Thickness: null
-    Hangoff:
-      above_keel: 11.21
-      from_centerline: 32
-      from_midship: 80
-    HangoffBelowMeanSeaLevel: 0
-    HogBendAboveSeabed: 1097.28
-    SagBendElevationAboveSeabed: 731.52
-    Spacing: 10
-    TDPToAnchor: 1500
-    TaperJoint:
-      L: 3.66
-      ThickendThickness: 2.5
-    UniformBuoyancy:
-      BuoyancyFactor: 2
-      Thickness: null
-    VerticalDistance: 1874.64
-    declinationAngle: 8
-    lay_azimuth_to_vessel: 90
+  InsulationSection: *id002
+  MainPipe:
+    BuoyancySection: null
+    InsulationSection:
+      A: 107.4105313218545
+      Ai: 58.4262602489883
+      Ao: 165.8367915708428
+      I: 1916.8791285133555
+      ID: 8.625
+      OD: 14.530999999999999
+    SteelSection:
+      A: 23.954643983622173
+      Ai: 34.47161626536613
+      Ao: 58.4262602489883
+      I: 177.08657710548812
+      ID: 6.625
+      OD: 8.625
+    equivalentPipe: *id003
   Material:
     Buoyancy:
       Rho: 650
@@ -597,54 +609,97 @@ dictitems:
       Density: null
       MassPerUnitLength: 21.5787
       WeightPerUnitLength: -42.3375
-  PlotSettings:
-    Name: Buoyancy Element Hydrodynamic Coefficients
-    SupTitle: Buoyancy Element Hydrodynamic Coefficients
-    Title: SLWR Configuration Development
-  PostProcessUnits:
-    API STD 2RD Method 1:
-      SI: 1
-      US: 1
-    Bend Moment:
-      SI: 1
-      US: 1
-    Effective Tension:
-      SI: 1
-      US: 1
-    System: US
-  RangeGraph: []
-  Summary: []
+  SteelSection: *id004
+  catenaryResult:
+    BendRadius: 303.08005276642007
+    Empty:
+      F: 1342405.3869697799
+      Fh: 186826.72045008093
+      Fv: 1329341.1900228444
+      S: 2156.5266309127933
+      q: 8
+      weightPerUnitLength: 616.4269761232551
+    F: null
+    FluidFilled:
+      F: 1532671.311432263
+      Fh: 213306.6191645583
+      Fv: 1517755.459587637
+      S: 2156.5266309127933
+      q: 8
+      weightPerUnitLength: 703.7962980986775
+    PlotData:
+      X:
+      - 0.0
+      - 80.62857215154044
+      - 161.25714430308088
+      - 241.8857164546213
+      - 322.51428860616176
+      - 403.1428607577022
+      - 483.7714329092426
+      - 564.4000050607831
+      - 645.0285772123235
+      - 725.6571493638639
+      - 806.2857215154044
+      Y:
+      - 0.0
+      - -502.9764519848461
+      - -886.7267918511425
+      - -1178.5704618257944
+      - -1399.2840071072715
+      - -1564.580171952982
+      - -1686.2265004057654
+      - -1772.8830755900792
+      - -1830.719036796208
+      - -1863.8517646142484
+      - -1874.6399999999999
+    Reference_FluidFilled:
+      F: 1532671.311432263
+      Fh: 213306.6191645583
+      Fv: 1517755.459587637
+      S: 2156.5266309127933
+      q: 8
+      weightPerUnitLength: 703.7962980986775
+    S: 2156.5266309127933
+    SeaWaterFilled:
+      F: 1829399.8268213049
+      Fh: 254603.24679452775
+      Fv: 1811596.233462497
+      S: 2156.5266309127933
+      q: 8
+      weightPerUnitLength: 840.0527994851158
+    X: 806.2857215154044
+    d: 1874.64
+    q: 8
+  commonDefinition:
+    DiscreteBuoyancy:
+      BuoyancyCoverage: 100
+      BuoyancyFactor: null
+      BuoyancyOD: 31.08497855669691
+      Thickness: 8.276989278348456
+    Hangoff:
+      above_keel: 11.21
+      from_centerline: 32
+      from_midship: 80
+    HangoffBelowMeanSeaLevel: 0
+    Spacing: 10
+    TDPToAnchor:
+      SCR: 500
+      SLWR: 1500
+    TaperJoint:
+      L: 3.66
+      ThickendThickness: 2.5
+    UniformBuoyancy:
+      BuoyancyFactor: 2
+      BuoyancyOD: 31.08497855669691
+      Thickness: 8.276989278348456
+    lay_azimuth_to_vessel: 90
   default:
     Analysis:
-      Analyze:
-        file_type: yaml
-        flag: false
-        simulation: false
-        statics: false
       Extreme: true
       Fatigue: false
       Jumper: false
-      RangeGraph:
-        add_effective_tension_to_cfg: false
-        flag: true
-      SCR: false
-      SLWR: true
-      Summary:
-        AddMaximumToSummary: true
-        AddMeanToSummary: true
-        AddMinimumToSummary: true
-        flag: true
-      cummulative_histograms:
-        flag: false
-      rain_flow:
-        bins: 10
-        range:
-        - 0
-        - 10
-      time_series:
-        flag: true
-        histogram: true
-        summation: true
+      SCR: true
+      SLWR: false
     Constants:
       g: 9.81
     config:
@@ -669,6 +724,7 @@ dictitems:
       YieldStrength: psi
       declinationAngle: deg with vertical
       verticalDistance: m
+  equivalentPipe: *id003
   geometry:
     DesignWT: 1.0
     ExternalCoating:
@@ -682,6 +738,9 @@ dictitems:
       Area: null
       BaseThickness: 0.5906
     waterDepth: 1347.2
+  lazyWaveCatenaryResult:
+    WeightPerUnitLengthWithBuoyancy: -703.7962980986775
+    WeightPerUnitLengthWithOutBuoyancy: 703.7962980986775
   plotSettings:
     label: Design Pressure Limit
     plotFileName: OD_{0}
@@ -693,12 +752,42 @@ dictitems:
     - 0
     - 12500
   simpleCatenaryDefinition:
-    HangoffBelowMeanSeaLevel: 0
-    Spacing: 10
-    TDPToAnchor: 500
     axialLineForce: null
     declinationAngle: 8
-    lay_azimuth_to_vessel: 90
+    horizontalDistanceHangofftoTDP:
+      range:
+      - 50
+      - 100
+      - 150
+      - 200
+      - 250
+      - 300
+      rangeresult: {}
+      value: null
+    rangeresult:
+    - BendRadius: 8.215
+      S: 1882.838
+      X: 50.342
+      q: 0.25
+    - BendRadius: 18.837
+      S: 1893.383
+      X: 99.9
+      q: 0.57
+    - BendRadius: 31.267
+      S: 1905.651
+      X: 150.183
+      q: 0.94
+    - BendRadius: 44.889
+      S: 1919.004
+      X: 199.695
+      q: 1.34
+    - BendRadius: 60.097
+      S: 1933.803
+      X: 250.283
+      q: 1.78
+    - BendRadius: 76.251
+      S: 1949.401
+      X: 300.032
+      q: 2.24
     verticalDistance: 1874.64
-  time_series: []
-state: *id001
+state: *id005

@@ -25,7 +25,7 @@ class OrcModalAnalysis:
     def run_modal_analysis(self, cfg=None):
         self.cfg = cfg
         if cfg['default']['Analysis']['Analyze']['modal']:
-            files = cfg['Files']
+            files = self.cfg['Files'] if 'Files' in self.cfg else []
             for file in files:
                 all_modes_summary_df = self.run_by_file(file=file['Name'])
                 self.all_file_summary.update(
@@ -34,7 +34,7 @@ class OrcModalAnalysis:
             self.summarize_all_files()
 
     def summarize_all_files(self):
-        files = self.cfg['Files']
+        files = self.cfg['Files'] if 'Files' in self.cfg else []
         for dof in self.cfg['default']['Analysis']['Analyze']['modal'][
                 'summary_dof_array']:
             all_file_summary_df = pd.DataFrame(

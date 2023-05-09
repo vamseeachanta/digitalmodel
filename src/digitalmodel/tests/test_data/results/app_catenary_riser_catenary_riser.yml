@@ -11,7 +11,7 @@ dictitems:
     file_name_for_overwrite: app_catenary_riser_catenary_riser
     log_folder: src/digitalmodel/tests/test_data\logs\
     result_folder: src/digitalmodel/tests/test_data\results\
-    start_time: 2023-05-08 11:37:50.836421
+    start_time: 2023-05-08 12:31:48.336238
   BuoyPipe:
     BuoyancySection: &id001
       A: 593.0745192393274
