@@ -1,3 +1,5 @@
+basename: catenary_riser
+
 default:
   Constants:
     g: 9.81

@@ -1,44 +1,79 @@
-@startuml digitalmodel_running
+@startuml digital_model_architecure
 skinparam titleBorderRoundCorner 15
 skinparam titleBorderThickness 2
 skinparam titleBorderColor red
 skinparam titleBackgroundColor Tomato
 
-title Digital Model | Quick Start
+title Lifecycle Digital Model
 
 start
 
     note right
-        Objective: Different Ways to Run 
+        Objective: Digital model for lifecycle analysis.
     end note
 
-    partition "Quick Start" {
+    partition "Input Data" {
 
-        :Command line using .yml file;
+        :Prepare yaml Data (yml);
             note right
-                **yaml**
-                In python digitalmodel environment
-                Utilizes __init.py__ to run
-            end note
-
-        :using .py file;
-            note right
-                **yaml**
-                In python digitalmodel environment
-                Utilizes filename or args to run
+                physical dimensions,
+                interface(s), structural system data
+                fabrication or manufacturing steps
+                comissioning steps
+                Operational steps
+                decomissioning steps
             end note
 
     }
 
-    partition "Results" {
+    partition "Analytical model" {
         :Visual model;
             note right
-                input file location
-                Results folder
+                For visual representation
+                i.e. CAD, Blender etc.
+            end note
+
+        :Analytical model;
+            note right
+                Analytical representation
+                i.e. equations etc.
+            end note
+
+        :Strength models;
+            note right
+                Theoretical strength calculations
+            end note
+
+        :Integrity/FFS models;
+            note right
+                fitness for service (FFS) assessments etc.
             end note
 
     }
 
+    partition "Computational models" {
+        :Finite or discrete models;
+            note right
+                Finite element, finite volume etc.
+                i.e. models for open source
+                or proprietary package (ANSYS, Orcaflex etc.)
+            end note
+    }
+
+    partition "Analysis" {
+        :Perform analysis;
+            note right
+                operational analysis
+                i.e. strength, fatigue, dynamic etc.
+            end note
+    }
+
+    partition "Visualizations" {
+        :Generate visuals;
+            note right
+                animations, results etc.
+            end note
+    }
 
 stop
 

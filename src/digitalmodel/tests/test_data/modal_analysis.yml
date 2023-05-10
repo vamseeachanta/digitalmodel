@@ -1,3 +1,5 @@
+basename: modal_analysis
+
 default:
   log_level: DEBUG
 

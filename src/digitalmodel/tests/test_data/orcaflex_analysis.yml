@@ -1,3 +1,5 @@
+basename: orcaflex_analysis
+
 default:
   Analysis:
     Analyze :
