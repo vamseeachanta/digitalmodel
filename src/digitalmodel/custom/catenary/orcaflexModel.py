@@ -1,3 +1,4 @@
+import pkgutil
 import math
 from collections import OrderedDict
 
@@ -614,7 +615,7 @@ def lines(data, FEAType, LoadingIndex):
                                               + data['LazyWaveCatenaryDefinition']['lay_azimuth_to_vessel']
         distance_from_hangoff_to_TDP = data['lazyWaveCatenaryResult']['Summary']['HangoffToTDP']['X'] \
                  + data['LazyWaveCatenaryDefinition']['TDPToAnchor'] + data['FEASettings']['AnchorAdjustment']['SLWR']
-        model.update({"Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec, ConnectionGamma, ReleaseStage":       \
+        model.update({"Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec, ConnectionGamma, ReleaseStage":                    \
                 [["Vessel1", data['LazyWaveCatenaryDefinition']['Hangoff']['from_midship'], data['LazyWaveCatenaryDefinition']['Hangoff']['from_centerline'], data['LazyWaveCatenaryDefinition']['Hangoff']['above_keel'], data['LazyWaveCatenaryDefinition']['lay_azimuth_to_vessel'],
                   180-data['LazyWaveCatenaryDefinition']['declinationAngle'], data['FEASettings']['EndOrientation']['SLWR']['A']['Gamma'], "~"], \
                 ["Anchored", distance_from_hangoff_to_TDP*math.cos(math.radians(absolute_orientation_angle_of_riser)) + data['LazyWaveCatenaryDefinition']['Hangoff']['from_midship']
@@ -627,7 +628,7 @@ def lines(data, FEAType, LoadingIndex):
                                               + data['commonDefinition']['lay_azimuth_to_vessel']
         distance_from_hangoff_to_TDP = data['catenaryResult']['X'] + data['commonDefinition']['TDPToAnchor']['SCR'] \
                  + data['FEASettings']['AnchorAdjustment']['SCR']
-        model.update({"Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec, ConnectionGamma, ReleaseStage":       \
+        model.update({"Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec, ConnectionGamma, ReleaseStage":                    \
                 [["Vessel1", data['commonDefinition']['Hangoff']['from_midship'], data['commonDefinition']['Hangoff']['from_centerline'], data['commonDefinition']['Hangoff']['above_keel'], data['commonDefinition']['lay_azimuth_to_vessel'],
                   180-data['simpleCatenaryDefinition']['declinationAngle'], data['FEASettings']['EndOrientation']['SCR']['A']['Gamma'], "~"], \
                 ["Anchored", (distance_from_hangoff_to_TDP)*math.cos(math.radians(absolute_orientation_angle_of_riser)) + data['commonDefinition']['Hangoff']['from_midship']
@@ -647,7 +648,7 @@ def lines(data, FEAType, LoadingIndex):
         SLWR_L_Before_tdp = data['lazyWaveCatenaryResult']['Summary']['BuoyancyToTouchDown']['S'] - 30 - \
                             data['FEASettings']['Mesh']['BeforeTDP']['L']
         if SLWR_L_Before_tdp > 0:
-            model.update({"LineType, Length, TargetSegmentLength":       \
+            model.update({"LineType, Length, TargetSegmentLength":                    \
                         [["FJExtension1", data['commonDefinition']['TaperJoint']['L'], data['FEASettings']['Mesh']['Top']['Size']], \
                         ["MainPipe", 2, data['FEASettings']['Mesh']['Top']['Size']], \
                         ["MainPipe", 2, data['FEASettings']['Mesh']['Top']['Size']*2], \
@@ -677,7 +678,7 @@ def lines(data, FEAType, LoadingIndex):
                         ["MainPipe", 10, data['FEASettings']['Mesh']['AfterTDP']['Size']*16], \
                         ["MainPipe", data['commonDefinition']['TDPToAnchor'] -30 -data['FEASettings']['Mesh']['AfterTDP']['L'], 20]]})
         else:
-            model.update({"LineType, Length, TargetSegmentLength":       \
+            model.update({"LineType, Length, TargetSegmentLength":                    \
                         [["FJExtension1", data['commonDefinition']['TaperJoint']['L'], data['FEASettings']['Mesh']['Top']['Size']], \
                         ["MainPipe", 2, data['FEASettings']['Mesh']['Top']['Size']], \
                         ["MainPipe", 2, data['FEASettings']['Mesh']['Top']['Size']*2], \
@@ -704,7 +705,7 @@ def lines(data, FEAType, LoadingIndex):
                         ["MainPipe", data['commonDefinition']['TDPToAnchor'] -30 -data['FEASettings']['Mesh']['AfterTDP']['L'], 20]]})
 
     if data['default']['Analysis']['SCR']:
-        model.update({"LineType, Length, TargetSegmentLength":       \
+        model.update({"LineType, Length, TargetSegmentLength":                    \
                     [["FJExtension1", data['commonDefinition']['TaperJoint']['L'], data['FEASettings']['Mesh']['Top']['Size']], \
                      ["MainPipe", 2, data['FEASettings']['Mesh']['Top']['Size']], \
                      ["MainPipe", 2, data['FEASettings']['Mesh']['Top']['Size'] * 2], \
@@ -740,10 +741,8 @@ def lines(data, FEAType, LoadingIndex):
     model.update({"IncludedInStatics": "Yes"})
     model.update({"StaticsStep1": "Catenary"})
     model.update({"IncludeSeabedFrictionInStatics": "Yes"})
-    model.update({
-        "LayAzimuth":
-            data['commonDefinition']['lay_azimuth_to_vessel'] + 180
-    })
+    model.update(
+        {"LayAzimuth": data['commonDefinition']['lay_azimuth_to_vessel'] + 180})
     model.update({"AsLaidTension": 0})
 
     return model
@@ -871,17 +870,18 @@ def build_model(FEAType, cfg):
             if cfg['default']['Analysis'][FEAType] == True:
                 FEAmodel1, FEAmodel2 = orcaflexModel(cfg, FEAType, LoadingIndex)
                 if FEAType == 'Extreme':
-                    WriteOrcaflexModel([
-                        FEAmodel1,
-                        'src/digitalmodel/tests/test_data/catenary_riser/VesselTypes_Extreme.yml',
-                        FEAmodel2
-                    ], cfg)
+                    extreme_data = pkgutil.get_data(
+                        'digitalmodel', 'tests/test_data/catenary_riser/' +
+                        'VesselTypes_Extreme.yml')
+
+                    WriteOrcaflexModel([FEAmodel1, extreme_data, FEAmodel2],
+                                       cfg)
                 elif FEAType == 'Fatigue':
-                    WriteOrcaflexModel([
-                        FEAmodel1,
-                        'src/digitalmodel/tests/test_data/catenary_riser/VesselTypes_Fatigue.yml',
-                        FEAmodel2
-                    ], cfg)
+                    fatigue_data = pkgutil.get_data(
+                        'digitalmodel', 'tests/test_data/catenary_riser/' +
+                        'VesselTypes_Fatigue.yml')
+                    WriteOrcaflexModel([FEAmodel1, fatigue_data, FEAmodel2],
+                                       cfg)
 
         saveDataYaml(
             cfg,
