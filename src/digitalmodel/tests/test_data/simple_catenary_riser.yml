@@ -61,6 +61,7 @@ commonDefinition:
     above_keel: 11.21
     from_midship: 80
     from_centerline: 32
+  LengthBeforeHangoff: 9.8
   TDPToAnchor: 
     SCR: 500
     SLWR: 1500

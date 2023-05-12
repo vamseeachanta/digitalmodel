@@ -353,7 +353,8 @@ def buoyancyProperties(cfg, WeightPerUnitLengthWithOutBuoyancy):
 
 
 def gethorizontalDistanceHangofftoTDPrange(cfg):
-    layback_df = pd.DataFrame(columns=['q', 'X', 'S', 'BendRadius'])
+    layback_df = pd.DataFrame(
+        columns=['q', 'X', 'S', 'BendRadius', 'TotalLength', 'MeshSections'])
     steps_in_degrees = 100
     if 'range' in cfg["simpleCatenaryDefinition"][
             "horizontalDistanceHangofftoTDP"] and len(
@@ -377,9 +378,37 @@ def gethorizontalDistanceHangofftoTDPrange(cfg):
                 "X": None
             }
             catenaryResult = catenaryEquation(catenaryEquation_cfg)
+            total_length = catenaryResult['S'] + cfg['commonDefinition'][
+                'TDPToAnchor']['SCR'] + cfg['commonDefinition'][
+                    'LengthBeforeHangoff']
+            mesh_sections = [{
+                'Length': cfg['commonDefinition']['LengthBeforeHangoff'] + 25,
+                'TargetSegmentLength': 0.2
+            }, {
+                'Length': 5,
+                'TargetSegmentLength': 0.5
+            }, {
+                'Length': 10,
+                'TargetSegmentLength': 1.0
+            }, {
+                'Length': round(catenaryResult['S'] - 40 - 60, 1),
+                'TargetSegmentLength': 2.0
+            }, {
+                'Length': 10,
+                'TargetSegmentLength': 1.0
+            }, {
+                'Length': 180,
+                'TargetSegmentLength': 0.5
+            }, {
+                'Length': 20,
+                'TargetSegmentLength': 1.0
+            }, {
+                'Length': cfg['commonDefinition']['TDPToAnchor']['SCR'] - 150,
+                'TargetSegmentLength': 2.0
+            }]
             layback_df.loc[q_index] = [
                 catenaryResult['q'], catenaryResult['X'], catenaryResult['S'],
-                catenaryResult['BendRadius']
+                catenaryResult['BendRadius'], total_length, mesh_sections
             ]
 
             if catenaryResult['X'] > layback_range[-1]:

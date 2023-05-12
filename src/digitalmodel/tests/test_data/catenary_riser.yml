@@ -39,7 +39,11 @@ simpleCatenaryDefinition:
   axialLineForce: NULL
   verticalDistance: 1874.64
   declinationAngle: 8
-  horizontalDistanceHangofftoTDP: NULL
+  horizontalDistanceHangofftoTDP: 
+    value: NULL
+    range: [50, 100, 150, 200, 250, 300]
+    rangeresult: {}
+   
 
 LazyWaveCatenaryDefinition:
   VerticalDistance: 1874.64
@@ -65,6 +69,7 @@ commonDefinition:
     above_keel: 11.21
     from_midship: 80
     from_centerline: 32
+  LengthBeforeHangoff: 9.8
   TDPToAnchor: 
     SCR: 500
     SLWR: 1500

@@ -5,13 +5,19 @@ import numpy as np
 import OrcFxAPI
 import math
 import copy
+import scipy
+from collections import OrderedDict
 
 from digitalmodel.common.visualizations import Visualization
 from digitalmodel.common.data import SaveData
 from digitalmodel.common.data import PandasChainedAssignent
 from digitalmodel.common.data import TransformData
+from digitalmodel.common.yml_utilities import ymlInput
 from digitalmodel.common.time_series_components import TimeSeriesComponents
 from digitalmodel.common.ETL_components import ETL_components
+from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+
+ou = OrcaflexUtilities()
 
 
 class OrcaFlexAnalysis():
@@ -129,13 +135,70 @@ class OrcaFlexAnalysis():
             print("No FEA performed per user request")
 
     def iterate_to_value(self, model, iterate_cfg):
-        model.RunSimulation()
+        iterations_df = pd.DataFrame(columns=['variable', 'output'])
+        model.CalculateStatics()
         model.SaveSimulation(iterate_cfg['filename_without_ext'] + '.sim')
 
         target_value = iterate_cfg['iterate']['column']['target_value']
         current_iteration = 1
         column_cfg = iterate_cfg['iterate']['column'].copy()
-        current_value = self.process_summary_by_model_and_cfg(model, column_cfg)
+
+        update_cfg = {
+            'model_file':
+                iterate_cfg['filename_without_ext'] + '.' +
+                iterate_cfg['file_type']
+        }
+        model_file = OrderedDict(ymlInput(update_cfg['model_file']))
+        variable_current_value = model_file['Lines']['Umbilical']['Length[7]']
+        output_current_value = self.process_summary_by_model_and_cfg(
+            model, column_cfg)
+        iterations_df.loc[len(iterations_df)] = [
+            variable_current_value, output_current_value
+        ]
+
+        while abs(output_current_value -
+                  target_value) > 0.2 and current_iteration < iterate_cfg[
+                      'iterate']['column']['max_iterations']:
+
+            current_iteration += 1
+
+            variable_current_value = self.get_variable_current_value_for_iteration(
+                iterations_df, variable_current_value, target_value)
+
+            update_cfg.update({'variable_value': variable_current_value})
+
+            model['Umbilical'].Length[6] = variable_current_value
+            # ou.update_model(update_cfg)
+
+            model.SaveData(update_cfg['model_file'])
+            model.RunSimulation()
+            model.SaveSimulation(iterate_cfg['filename_without_ext'] + '.sim')
+            output_current_value = self.process_summary_by_model_and_cfg(
+                model, column_cfg)
+
+            iterations_df.loc[len(iterations_df)] = [
+                variable_current_value, output_current_value
+            ]
+            iterations_df.sort_values(by=['output'], inplace=True)
+
+        print(f"Iterations done in {current_iteration} times")
+        print(f"Current target value is: {output_current_value}")
+        print(f"Variable current value is: {variable_current_value}")
+
+    def get_variable_current_value_for_iteration(self, iterations_df,
+                                                 variable_current_value,
+                                                 target_value):
+
+        if len(iterations_df) > 1:
+            xp = list(iterations_df.output)
+            fp = list(iterations_df.variable)
+            f = scipy.interpolate.interp1d(xp, fp, fill_value="extrapolate")
+            variable_current_value = f(target_value)
+
+        else:
+            variable_current_value += 1
+
+        return variable_current_value
 
     def post_process_files(self):
         self.postProcess()
@@ -342,6 +405,7 @@ class OrcaFlexAnalysis():
         arclengthRange = self.get_ArcLengthObject(ArcLengthArray)
 
         VariableName = cfg['Variable']
+        AdditionalDataArray = cfg['AdditionalData']
 
         if cfg['Command'] == 'Range Graph':
             output = self.get_RangeGraph(OrcFXAPIObject, TimePeriod,
@@ -350,6 +414,8 @@ class OrcaFlexAnalysis():
             AdditionalDataName = 'X'
             RangeDF[AdditionalDataName] = output.X
 
+            output_value = self.get_additional_data(cfg, RangeDF, VariableName,
+                                                    output, AdditionalDataArray)
         elif cfg['Command'] == 'TimeHistory':
             try:
                 output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
@@ -358,7 +424,16 @@ class OrcaFlexAnalysis():
                 arclengthRange = None
                 output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
 
-        AdditionalDataArray = cfg['AdditionalData']
+            output_value = self.get_additional_data(cfg, RangeDF, VariableName,
+                                                    output, AdditionalDataArray)
+        elif cfg['Command'] == 'StaticResult':
+            output_value = self.get_StaticResult(OrcFXAPIObject, VariableName,
+                                                 ArcLengthArray)
+
+        return output_value
+
+    def get_additional_data(self, cfg, RangeDF, VariableName, output,
+                            AdditionalDataArray):
         for AdditionalDataIndex in range(0, len(AdditionalDataArray)):
             AdditionalDataName = AdditionalDataArray[AdditionalDataIndex]
             if cfg['Command'] == 'Range Graph':
@@ -388,6 +463,15 @@ class OrcaFlexAnalysis():
                 output_value = transformed_cfg['data']
 
             return output_value
+
+    def get_StaticResult(self, OrcFXAPIObject, VariableName, ArcLengthArray):
+        # Result at End A
+        output = OrcFXAPIObject.StaticResult(VariableName, OrcFxAPI.oeEndA)
+        # Result at Arc Length X
+        objectExtra = OrcFxAPI.oeLine(ArcLength=ArcLengthArray[0])
+        output = OrcFXAPIObject.StaticResult(VariableName, objectExtra)
+
+        return output
 
     def process_summary(self):
         if self.cfg['default']['Analysis']['Summary']:
@@ -700,68 +784,10 @@ class OrcaFlexAnalysis():
                 0, len(self.cfg['Summary'][SummaryIndex]['Columns'])):
             summary_group_item_cfg = summary_group_cfg['Columns'][
                 SummaryColumnIndex]
-            RangeDF = pd.DataFrame()
-            try:
-                objectName = summary_group_item_cfg['ObjectName']
-                OrcFXAPIObject = model[objectName]
-            except:
-                OrcFXAPIObject = model[FileObjectName]
 
-            SimulationPeriod = summary_group_item_cfg['SimulationPeriod']
-            TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
-
-            ArcLengthArray = summary_group_item_cfg['ArcLength']
-            arclengthRange = self.get_ArcLengthObject(ArcLengthArray)
-
-            VariableName = summary_group_item_cfg['Variable']
-
-            if summary_group_item_cfg['Command'] == 'Range Graph':
-                output = self.get_RangeGraph(OrcFXAPIObject, TimePeriod,
-                                             VariableName, arclengthRange)
-
-                AdditionalDataName = 'X'
-                RangeDF[AdditionalDataName] = output.X
-
-            elif summary_group_item_cfg['Command'] == 'TimeHistory':
-                try:
-                    output = OrcFXAPIObject.TimeHistory(VariableName,
-                                                        TimePeriod,
-                                                        arclengthRange)
-                except:
-                    arclengthRange = None
-                    output = OrcFXAPIObject.TimeHistory(VariableName,
-                                                        TimePeriod)
-
-            AdditionalDataArray = summary_group_item_cfg['AdditionalData']
-            for AdditionalDataIndex in range(0, len(AdditionalDataArray)):
-                AdditionalDataName = AdditionalDataArray[AdditionalDataIndex]
-                if summary_group_item_cfg['Command'] == 'Range Graph':
-                    RangeDF[VariableName] = getattr(output, AdditionalDataName)
-                    if VariableName == "API STD 2RD Method 1":
-                        RangeDF[VariableName] = [
-                            math.sqrt(x) for x in RangeDF[VariableName]
-                        ]
-                    if AdditionalDataName == "Max":
-                        output_value = RangeDF[VariableName].max()
-                    elif AdditionalDataName == "Min":
-                        output_value = RangeDF[VariableName].min()
-                    elif AdditionalDataName == "Mean":
-                        output_value = RangeDF[VariableName].mean()
-                else:
-                    if AdditionalDataName == "Max":
-                        output_value = output.max()
-                    elif AdditionalDataName == "Min":
-                        output_value = output.min()
-                    elif AdditionalDataName == "Mean":
-                        output_value = output.mean()
-
-                if summary_group_item_cfg.__contains__('transform'):
-                    trans_cfg = summary_group_item_cfg['transform']
-                    trans_cfg['data'] = output_value
-                    transformed_cfg = self.transform_output(trans_cfg)
-                    output_value = transformed_cfg['data']
-
-                summary_from_sim_file.append(output_value)
+            output_value = self.process_summary_by_model_and_cfg(
+                model, summary_group_item_cfg)
+            summary_from_sim_file.append(output_value)
 
         loading_condition_array = self.get_loading_condition_array(fileIndex)
 
