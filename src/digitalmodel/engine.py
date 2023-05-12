@@ -6,6 +6,7 @@ from digitalmodel.common.update_deep import AttributeDict
 from digitalmodel.common.ApplicationManager import ConfigureApplicationInputs
 from digitalmodel.catenary_riser import catenary_riser
 from digitalmodel.vertical_riser import vertical_riser
+from digitalmodel.orcaflex_analysis import orcaflex_analysis
 
 
 def engine(inputfile=None):
@@ -39,5 +40,8 @@ def engine(inputfile=None):
         cfg_base = catenary_riser(application_manager.cfg)
     elif basename == 'vertical_riser':
         cfg_base = vertical_riser(application_manager.cfg)
+    elif basename == 'orcaflex_analysis':
+        cfg_base = orcaflex_analysis(application_manager.cfg)
+        
 
     return cfg_base

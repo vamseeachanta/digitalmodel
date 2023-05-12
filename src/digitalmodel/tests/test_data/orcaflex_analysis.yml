@@ -2,11 +2,12 @@ basename: orcaflex_analysis
 
 default:
   Analysis:
-    Analyze :
-      flag: False
+    Analyze:
+      flag: True
       file_type: yaml
       simulation: False
       statics: False
+      iterate: True
     Summary:
       flag: True
       AddMinimumToSummary: True
