@@ -6,7 +6,7 @@ To help automate Orcaflex for a typical analysis
 
 
 
-## Undertanding YAML
+## Understanding YAML
 
 - YAML can be used to support data as "Single source of Truth principle" for typical analysis
     - YAML is a human readable data serialization language

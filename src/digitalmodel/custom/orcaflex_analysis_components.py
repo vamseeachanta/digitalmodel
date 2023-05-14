@@ -111,10 +111,10 @@ class OrcaFlexAnalysis():
                 logging.info("Load input file successful")
 
                 if self.cfg['default']['Analysis']['Analyze']['statics']:
-                    model.RunSimulation()
+                    model.CalculateStatics()
                     model.SaveSimulation(filename_without_ext + '.sim')
                 elif self.cfg['default']['Analysis']['Analyze']['simulation']:
-                    model.CalculateStatics()
+                    model.RunSimulation()
                     model.SaveSimulation(filename_without_ext + '.sim')
                 elif self.cfg['default']['Analysis']['Analyze']['iterate'][
                         'flag']:
@@ -149,9 +149,9 @@ class OrcaFlexAnalysis():
                 iterate_cfg['file_type']
         }
         model_file = OrderedDict(ymlInput(update_cfg['model_file']))
-        variable_current_value = model_file['Lines']['Umbilical']['Length[7]']
-        output_current_value = self.process_summary_by_model_and_cfg(
-            model, column_cfg)
+        variable_current_value = model_file['Lines']['Umbilical']['Length[4]']
+        output_current_value = round(
+            self.process_summary_by_model_and_cfg(model, column_cfg), 3)
         iterations_df.loc[len(iterations_df)] = [
             variable_current_value, output_current_value
         ]
@@ -167,14 +167,14 @@ class OrcaFlexAnalysis():
 
             update_cfg.update({'variable_value': variable_current_value})
 
-            model['Umbilical'].Length[6] = variable_current_value
+            model['Umbilical'].Length[3] = variable_current_value
             # ou.update_model(update_cfg)
 
             model.SaveData(update_cfg['model_file'])
-            model.RunSimulation()
+            model.CalculateStatics()
             model.SaveSimulation(iterate_cfg['filename_without_ext'] + '.sim')
-            output_current_value = self.process_summary_by_model_and_cfg(
-                model, column_cfg)
+            output_current_value = round(
+                self.process_summary_by_model_and_cfg(model, column_cfg), 3)
 
             iterations_df.loc[len(iterations_df)] = [
                 variable_current_value, output_current_value
@@ -193,10 +193,10 @@ class OrcaFlexAnalysis():
             xp = list(iterations_df.output)
             fp = list(iterations_df.variable)
             f = scipy.interpolate.interp1d(xp, fp, fill_value="extrapolate")
-            variable_current_value = f(target_value)
+            variable_current_value = np.round(f(target_value), decimals=3)
 
         else:
-            variable_current_value += 1
+            variable_current_value += 0.25
 
         return variable_current_value
 
