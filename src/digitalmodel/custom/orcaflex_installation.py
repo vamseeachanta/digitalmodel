@@ -40,6 +40,7 @@ class OrcInstallation:
                          default_flow_style='OrderedDumper')
 
     def create_installation_depth_model2(self, cfg=None):
+        # For this function, the entire Line object should be defined to avoid serious redefining errors else Orcaflex will assign default LineType to the undefined parameters
         if cfg is None:
             raise ValueError("cfg is None")
 
@@ -54,10 +55,11 @@ class OrcInstallation:
                 cfg['masterlink']]['InitialZ'] -= delta_elevation
             model_file_updated['Lines'][
                 cfg['crane_wire']]['EndBZ'] -= delta_elevation
+            if cfg['intermediate_sling'] is not None:
+                model_file_updated['Lines'][
+                    cfg['intermediate_sling']]['EndBZ'] -= delta_elevation
             model_file_updated['Lines'][
-                cfg['intermediate_sling']]['EndBZ'] -= delta_elevation
-            model_file_updated['Lines'][
-            #TODO Covert this index into array paramter in yaml input file
+            #TODO Covert this index into array parameter in yaml input file
                 cfg['crane_wire']]['Sections'][1]['Length'] += delta_elevation
 
             file_name = os.path.join(
