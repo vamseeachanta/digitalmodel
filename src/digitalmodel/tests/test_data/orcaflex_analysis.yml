@@ -6,7 +6,11 @@ default:
       flag: True
       file_type: yaml
       simulation: False
-      statics: False
+      statics: 
+        flag: True
+        UseCalculatedPositions: 
+          flag: True
+          overwrite: True
       iterate: True
     Summary:
       flag: True

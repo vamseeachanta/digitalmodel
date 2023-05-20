@@ -7,6 +7,7 @@ from digitalmodel.common.ApplicationManager import ConfigureApplicationInputs
 from digitalmodel.catenary_riser import catenary_riser
 from digitalmodel.vertical_riser import vertical_riser
 from digitalmodel.orcaflex_analysis import orcaflex_analysis
+from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 
 
 def engine(inputfile=None):
@@ -42,6 +43,12 @@ def engine(inputfile=None):
         cfg_base = vertical_riser(application_manager.cfg)
     elif basename == 'orcaflex_analysis':
         cfg_base = orcaflex_analysis(application_manager.cfg)
-        
+    elif basename == 'orcaflex_analysis':
+        cfg_base = orcaflex_analysis(application_manager.cfg)
+    elif basename == 'modal_analysis':
+        oma = OrcModalAnalysis()
+        cfg_base = oma.run_modal_analysis(application_manager.cfg)
+    else:
+        raise (Exception(f'Analysis for base name not found. ... FAIL'))
 
     return cfg_base

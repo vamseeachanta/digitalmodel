@@ -45,7 +45,11 @@ class OrcaFlexAnalysis():
         input_files_without_extension = []
         input_files_with_extension = []
         analysis_type = []
-        self.get_simulation_filenames()
+        try:
+            self.get_simulation_filenames()
+        except:
+            print("No simulation files found or resolved")
+
         if self.cfg['default']['Analysis']['Analyze']['flag']:
             for fileIndex in range(0, len(self.simulation_filenames)):
                 self.get_files_for_analysis(analysis_type, fileIndex,
@@ -110,12 +114,24 @@ class OrcaFlexAnalysis():
                 model.LoadData(filename_with_ext)
                 logging.info("Load input file successful")
 
-                if self.cfg['default']['Analysis']['Analyze']['statics']:
+                if self.cfg['default']['Analysis']['Analyze']['statics'][
+                        'flag']:
                     model.CalculateStatics()
-                    model.SaveSimulation(filename_without_ext + '.sim')
+                    if self.cfg['default']['Analysis']['Analyze']['statics'][
+                            'UseCalculatedPositions']['flag']:
+                        model.UseCalculatedPositions(
+                            SetLinesToUserSpecifiedStartingShape=True)
+                        calculated_positions_filename = filename_with_ext
+                        if not self.cfg['default']['Analysis']['Analyze'][
+                                'statics']['UseCalculatedPositions'][
+                                    'overwrite']:
+                            calculated_positions_filename = os.path.splitext(
+                                filename_with_ext
+                            )[0] + '_calculated_positions' + os.path.splitext(
+                                filename_with_ext)[1]
+                        model.SaveData(calculated_positions_filename)
                 elif self.cfg['default']['Analysis']['Analyze']['simulation']:
                     model.RunSimulation()
-                    model.SaveSimulation(filename_without_ext + '.sim')
                 elif self.cfg['default']['Analysis']['Analyze']['iterate'][
                         'flag']:
                     iterate_cfg = self.cfg['default']['Analysis'][
@@ -125,8 +141,11 @@ class OrcaFlexAnalysis():
                     self.iterate_to_value(model, iterate_cfg)
 
                 logging.info("Run simulation successful")
-                model.SaveSimulation(filename_without_ext + '.sim')
-                logging.info("Save simulation successful")
+                try:
+                    model.SaveSimulation(filename_without_ext + '.sim')
+                    logging.info("Save simulation successful")
+                except:
+                    print("Save simulation.. FAILED")
 
             print(
                 f"Analysis done for {len(self.cfg['Analysis']['input_files']['with_ext'])} input files"
@@ -1135,34 +1154,23 @@ class OrcaFlexAnalysis():
         if len(filename_components) > 1:
             input_files_with_extension.append(filename)
             input_files_without_extension.append(filename_without_extension)
-            if self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg[
-                    'default']['Analysis']['Analyze']['simulation']:
-                analysis_type.append('simulation')
-            elif self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg[
-                    'default']['Analysis']['Analyze']['statics']:
-                analysis_type.append('statics')
         elif os.path.isfile(filename_without_extension + '.yml'):
             input_files_without_extension.append(filename_without_extension)
             input_files_with_extension.append(
                 input_files_without_extension[fileIndex] + '.yml')
-            if self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg[
-                    'default']['Analysis']['Analyze']['simulation']:
-                analysis_type.append('simulation')
-            elif self.cfg['default']['Analysis']['Analyze']['flag'] and \
-                    self.cfg['default']['Analysis']['Analyze']['statics']:
-                analysis_type.append('statics')
         elif os.path.isfile(filename_without_extension + '.dat'):
             input_files_without_extension.append(filename_without_extension)
             input_files_with_extension.append(
                 input_files_without_extension[fileIndex] + '.dat')
-            if self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg[
-                    'default']['Analysis']['Analyze']['simulation']:
-                analysis_type.append('simulation')
-            elif self.cfg['default']['Analysis']['Analyze']['flag'] and \
-                    self.cfg['default']['Analysis']['Analyze']['statics']:
-                analysis_type.append('statics')
         else:
             print('File not found: {0}'.format(filename))
+
+        if self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg[
+                'default']['Analysis']['Analyze']['simulation']:
+            analysis_type.append('simulation')
+        elif self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg[
+                'default']['Analysis']['Analyze']['statics']['flag']:
+            analysis_type.append('statics')
 
     def get_simulation_filenames(self):
         if self.cfg['Files']['data_source'] == 'yml':
