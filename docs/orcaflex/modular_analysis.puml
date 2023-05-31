@@ -5,7 +5,7 @@ skinparam titleBorderThickness 2
 skinparam titleBorderColor red
 skinparam titleBackgroundColor Tomato
 
-title Modular MOdel Building \n OrcaFlex
+title Modular Model Building \n OrcaFlex
 
 start
 
@@ -52,7 +52,7 @@ start
 
     }
 
-    partition "Structure - Vessel Flare" {
+    partition "Structure - Vessel Assets" {
         :Basic Structure;
             note right
                 TBA
@@ -71,8 +71,10 @@ start
     }
 
 
-    partition "Structure - Riser" {
-        :Basic Structure;
+    partition "Structure - Assets" {
+        :Basic Structures:
+        - Risers
+        - Umbilical/UTH/Pots etc.;
             note right
                 TBA
             end note

@@ -1104,3 +1104,32 @@ def transform_df_datetime_to_str(df, date_format='%Y-%m-%d %H:%M:%S'):
                 ]
 
     return df
+
+
+class CopyAndPasteFiles:
+    '''
+    Class to copy and paste files from 1 directory to another.
+    '''
+
+    def __init__(self):
+        pass
+
+    def iterate_all_cfgs(self, cfgs):
+        copy_cfgs = cfgs['copy_cfgs'].copy()
+        for cfg in copy_cfgs:
+            self.copy_files(cfg)
+
+    def copy_files(self, cfg):
+        '''
+        cfg = {
+            'source_dir': 'C:\\Users\\kylem\\Desktop\\Test\\',
+            'destination_dirs': 'C:\\Users\\kylem\\Desktop\\Test2\\',
+            'file_names': ['test1.txt', 'test2.txt']
+        }
+        '''
+        import shutil
+        file_names = cfg['files']
+        for file_name in file_names:
+            for destination_dir in cfg['destination_dirs']:
+                shutil.copy(cfg['source_dir'] + file_name,
+                            destination_dir + file_name)
