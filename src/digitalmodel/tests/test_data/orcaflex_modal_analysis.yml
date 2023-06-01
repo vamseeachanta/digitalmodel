@@ -1,0 +1,28 @@
+default:
+  log_level: DEBUG
+
+  Analysis:
+    Analyze :
+      flag: True
+      simulation: False
+      statics: False
+      modal: 
+        flag: True
+        modeCount: 20
+      
+
+  config:
+    overwrite:
+      output: True
+
+Files:
+- Label: Depth - 200 m 
+  Name: src\digitalmodel\tests\test_data\SUT_DZ_30deg_200m.yml
+  ObjectName: NULL
+  simulation: False
+  statics: True
+
+PlotSettings:
+  Name: Buoyancy Element Hydrodynamic Coefficients
+  SupTitle: Buoyancy Element Hydrodynamic Coefficients
+  Title: SLWR Configuration Development
