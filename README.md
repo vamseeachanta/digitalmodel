@@ -14,6 +14,14 @@ These operations include (and not limited to) the following:
 - High level vision proposed:
 <img src="docs/digital_model_architecure.svg" width=auto, height=auto/>
 
+The library is intended to get traction from stretched engineering teams. Teams using this can take away some good ideas generated from leading/mentoring over 200 SURF engineers over 20 years of hands-on engineering experience. The main objectives of the library are:
+- Single ascii data source of truth: generate fe models, analytical calculations, 3d cad models, 3d animations, drawings using a single source of truth
+- Modularity : engineering assets can be imported into sofware using .yml files
+- Standardize naming conventions: for cross-team/company collaboration
+- Reusability of components: do once, use many times
+- Analytical QA: If certain tasks can be done analytically, verify the outputs from analytical calculations vs. Orcaflex outputs. eg: Weights of components expected vs. model
+- A major impact will be in the QA of the work for the end users as well as the responsible leads. 
+- Avoid excel to eliminate manual steps. Helps in automation of tasks and no/less room for error.
 
 # Usage
 
