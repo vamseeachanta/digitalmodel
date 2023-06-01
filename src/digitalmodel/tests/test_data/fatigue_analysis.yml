@@ -1,3 +1,5 @@
+basename: fatigue_analysis
+
 ---
 parameters:
   plot_suptitle: &plot_suptitle Unfactored Combined VIV Fatigue Damage Along the Length

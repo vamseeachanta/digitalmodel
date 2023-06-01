@@ -52,6 +52,20 @@ QA of model:
 
 ### Resonance analysis
 
+For resonance or modal analysis, the following are the analysis steps:
+- The following are the key inputs:
+    - tba
+    - tba
+- The modal analysis is run according to the matrix and results are obtained
+- Boundary Condition discussion:
+    - If the structure has "All" six dofs to be solved for modal analysis, the axial modes will require higher lastMode to be specified.
+    - If the structure has "X, Y, Z" dofs to be solved for modal analysis, the axial modes will require relatively lower lastMode to be specified.
+- The results are reviewed for the following:
+    - tba
+    - tba
+
+For QA of results, a hand calculation is also performed and overlapped with the charts.
+
 
 ### References
 

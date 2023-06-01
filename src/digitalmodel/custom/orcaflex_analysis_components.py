@@ -5,13 +5,20 @@ import numpy as np
 import OrcFxAPI
 import math
 import copy
+import scipy
+from collections import OrderedDict
 
 from digitalmodel.common.visualizations import Visualization
 from digitalmodel.common.data import SaveData
 from digitalmodel.common.data import PandasChainedAssignent
 from digitalmodel.common.data import TransformData
+from digitalmodel.common.yml_utilities import ymlInput
 from digitalmodel.common.time_series_components import TimeSeriesComponents
 from digitalmodel.common.ETL_components import ETL_components
+from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+
+ou = OrcaflexUtilities()
+
 
 class OrcaFlexAnalysis():
 
@@ -26,77 +33,196 @@ class OrcaFlexAnalysis():
     def get_model_state_information(self):
         if self.cfg['default'].__contains__('model_state_information'):
             if self.cfg['default']['model_state_information']['flag']:
-                if self.cfg['default']['model_state_information'].__contains__('from_csv'):
-                    file_name = self.cfg['default']['model_state_information']['from_csv']['io']
-                    attribute = self.cfg['default']['model_state_information']['from_csv']['label']
+                if self.cfg['default']['model_state_information'].__contains__(
+                        'from_csv'):
+                    file_name = self.cfg['default']['model_state_information'][
+                        'from_csv']['io']
+                    attribute = self.cfg['default']['model_state_information'][
+                        'from_csv']['label']
                     setattr(self, attribute, pd.read_csv(file_name))
 
     def get_files(self):
         input_files_without_extension = []
         input_files_with_extension = []
         analysis_type = []
-        self.get_simulation_filenames()
-        if self.cfg['default']['Analysis']['Analyze']:
+        try:
+            self.get_simulation_filenames()
+        except:
+            print("No simulation files found or resolved")
+
+        if self.cfg['default']['Analysis']['Analyze']['flag']:
             for fileIndex in range(0, len(self.simulation_filenames)):
-                self.get_files_for_analysis(analysis_type, fileIndex, input_files_with_extension,
+                self.get_files_for_analysis(analysis_type, fileIndex,
+                                            input_files_with_extension,
                                             input_files_without_extension)
-        elif (self.cfg['default']['Analysis']['Summary'] or self.cfg['default']['Analysis']['RangeGraph'] or
+        elif (self.cfg['default']['Analysis']['Summary'] or
+              self.cfg['default']['Analysis']['RangeGraph'] or
               self.cfg['default']['Analysis']['time_series']):
             for fileIndex in range(0, len(self.simulation_filenames)):
-                self.get_files_for_postprocess(analysis_type, fileIndex, input_files_with_extension,
+                self.get_files_for_postprocess(analysis_type, fileIndex,
+                                               input_files_with_extension,
                                                input_files_without_extension)
 
-        self.assign_and_summarize_files(analysis_type, input_files_with_extension, input_files_without_extension)
+        self.assign_and_summarize_files(analysis_type,
+                                        input_files_with_extension,
+                                        input_files_without_extension)
 
     def perform_analysis(self):
-        if self.cfg['default']['Analysis']['Analyze']['file_type'] == 'yaml':
+        if self.cfg['default']['Analysis']['Analyze']['file_type'] in [
+                'yaml', 'yml'
+        ]:
             print("Processing orcaflex yaml files")
             self.process_fea()
             self.post_process_files()
             self.save_data()
-        if self.cfg['default']['Analysis']['Analyze']['file_type'] in ['script']:
+        if self.cfg['default']['Analysis']['Analyze']['file_type'] in [
+                'script'
+        ]:
             print("Processing orcaflex script files for orcaflex input files")
             self.process_scripts()
-        if self.cfg['default']['Analysis']['Analyze']['file_type'] in ['batch_script']:
+        if self.cfg['default']['Analysis']['Analyze']['file_type'] in [
+                'batch_script'
+        ]:
             print("Processing orcaflex batch script files to run analysis")
             self.process_scripts()
 
-    def assign_and_summarize_files(self, analysis_type, input_files_with_extension, input_files_without_extension):
-        number_of_files_not_found = len(self.simulation_filenames) - len(input_files_with_extension)
+    def assign_and_summarize_files(self, analysis_type,
+                                   input_files_with_extension,
+                                   input_files_without_extension):
+        number_of_files_not_found = len(
+            self.simulation_filenames) - len(input_files_with_extension)
         if number_of_files_not_found == 0:
             print('Successfully found all input files')
         else:
-            print('Number of input files missing: '.format(number_of_files_not_found))
+            print(f'Number of input files missing: {number_of_files_not_found}')
         self.cfg['Analysis']['input_files'] = {}
-        self.cfg['Analysis']['input_files']['no_ext'] = input_files_without_extension
-        self.cfg['Analysis']['input_files']['with_ext'] = input_files_with_extension
+        self.cfg['Analysis']['input_files'][
+            'no_ext'] = input_files_without_extension
+        self.cfg['Analysis']['input_files'][
+            'with_ext'] = input_files_with_extension
         self.cfg['Analysis']['input_files']['analysis_type'] = analysis_type
 
     def process_fea(self):
         if self.cfg['default']['Analysis']['Analyze']['flag']:
-            for fileIndex in range(0, len(self.cfg['Analysis']['input_files']['with_ext'])):
-                filename_with_ext = self.cfg['Analysis']['input_files']['with_ext'][fileIndex]
-                filename_without_ext = self.cfg['Analysis']['input_files']['no_ext'][fileIndex]
+            for fileIndex in range(
+                    0, len(self.cfg['Analysis']['input_files']['with_ext'])):
+                filename_with_ext = self.cfg['Analysis']['input_files'][
+                    'with_ext'][fileIndex]
+                filename_without_ext = self.cfg['Analysis']['input_files'][
+                    'no_ext'][fileIndex]
                 model = OrcFxAPI.Model()
                 model.LoadData(filename_with_ext)
                 logging.info("Load input file successful")
 
-                if self.cfg['Analysis']['input_files']['analysis_type'][fileIndex] == 'simulation':
-                    model.RunSimulation()
-                elif self.cfg['Analysis']['input_files']['analysis_type'][fileIndex] == 'statics':
+                if self.cfg['default']['Analysis']['Analyze']['statics'][
+                        'flag']:
                     model.CalculateStatics()
+                    if self.cfg['default']['Analysis']['Analyze']['statics'][
+                            'UseCalculatedPositions']['flag']:
+                        model.UseCalculatedPositions(
+                            SetLinesToUserSpecifiedStartingShape=True)
+                        calculated_positions_filename = filename_with_ext
+                        if not self.cfg['default']['Analysis']['Analyze'][
+                                'statics']['UseCalculatedPositions'][
+                                    'overwrite']:
+                            calculated_positions_filename = os.path.splitext(
+                                filename_with_ext
+                            )[0] + '_calculated_positions' + os.path.splitext(
+                                filename_with_ext)[1]
+                        model.SaveData(calculated_positions_filename)
+                elif self.cfg['default']['Analysis']['Analyze']['simulation']:
+                    model.RunSimulation()
+                elif self.cfg['default']['Analysis']['Analyze']['iterate'][
+                        'flag']:
+                    iterate_cfg = self.cfg['default']['Analysis'][
+                        'Analyze'].copy()
+                    iterate_cfg.update(
+                        {'filename_without_ext': filename_without_ext})
+                    self.iterate_to_value(model, iterate_cfg)
+
                 logging.info("Run simulation successful")
+                try:
+                    model.SaveSimulation(filename_without_ext + '.sim')
+                    logging.info("Save simulation successful")
+                except:
+                    print("Save simulation.. FAILED")
 
-                model.SaveSimulation(filename_without_ext + '.sim')
-                logging.info("Save simulation successful")
-
-            print("Analysis done for {0} input files".format(len(self.cfg['Analysis']['input_files']['with_ext'])))
+            print(
+                f"Analysis done for {len(self.cfg['Analysis']['input_files']['with_ext'])} input files"
+            )
         else:
             print("No FEA performed per user request")
 
+    def iterate_to_value(self, model, iterate_cfg):
+        iterations_df = pd.DataFrame(columns=['variable', 'output'])
+        model.CalculateStatics()
+        model.SaveSimulation(iterate_cfg['filename_without_ext'] + '.sim')
+
+        target_value = iterate_cfg['iterate']['column']['target_value']
+        current_iteration = 1
+        column_cfg = iterate_cfg['iterate']['column'].copy()
+
+        update_cfg = {
+            'model_file':
+                iterate_cfg['filename_without_ext'] + '.' +
+                iterate_cfg['file_type']
+        }
+        model_file = OrderedDict(ymlInput(update_cfg['model_file']))
+        variable_current_value = model_file['Lines']['Umbilical']['Length[4]']
+        output_current_value = round(
+            self.process_summary_by_model_and_cfg(model, column_cfg), 3)
+        iterations_df.loc[len(iterations_df)] = [
+            variable_current_value, output_current_value
+        ]
+
+        while abs(output_current_value -
+                  target_value) > 0.2 and current_iteration < iterate_cfg[
+                      'iterate']['column']['max_iterations']:
+
+            current_iteration += 1
+
+            variable_current_value = self.get_variable_current_value_for_iteration(
+                iterations_df, variable_current_value, target_value)
+
+            update_cfg.update({'variable_value': variable_current_value})
+
+            model['Umbilical'].Length[3] = variable_current_value
+            # ou.update_model(update_cfg)
+
+            model.SaveData(update_cfg['model_file'])
+            model.CalculateStatics()
+            model.SaveSimulation(iterate_cfg['filename_without_ext'] + '.sim')
+            output_current_value = round(
+                self.process_summary_by_model_and_cfg(model, column_cfg), 3)
+
+            iterations_df.loc[len(iterations_df)] = [
+                variable_current_value, output_current_value
+            ]
+            iterations_df.sort_values(by=['output'], inplace=True)
+
+        print(f"Iterations done in {current_iteration} times")
+        print(f"Current target value is: {output_current_value}")
+        print(f"Variable current value is: {variable_current_value}")
+
+    def get_variable_current_value_for_iteration(self, iterations_df,
+                                                 variable_current_value,
+                                                 target_value):
+
+        if len(iterations_df) > 1:
+            xp = list(iterations_df.output)
+            fp = list(iterations_df.variable)
+            f = scipy.interpolate.interp1d(xp, fp, fill_value="extrapolate")
+            variable_current_value = np.round(f(target_value), decimals=3)
+
+        else:
+            variable_current_value += 0.25
+
+        return variable_current_value
+
     def post_process_files(self):
         self.postProcess()
-        print("Successful post-process {0} sim files".format(len(self.RangeAllFiles)))
+        print("Successful post-process {0} sim files".format(
+            len(self.RangeAllFiles)))
         if self.cfg.default['Analysis']['time_series']['flag']:
             self.prepare_histogram_bins_for_output()
         if self.cfg.default['Analysis']['cummulative_histograms']['flag']:
@@ -109,34 +235,49 @@ class OrcaFlexAnalysis():
 
     def save_data(self):
         save_data = SaveData()
-        save_data.saveDataYaml(self.cfg, self.cfg['Analysis']['result_folder'] + self.cfg['Analysis']['file_name'],
-                               False)
+        save_data.saveDataYaml(
+            self.cfg, self.cfg['Analysis']['result_folder'] +
+            self.cfg['Analysis']['file_name'], False)
 
         if self.cfg.default['Analysis']['cummulative_histograms']['flag']:
-            histogram_data_array = [item['data'] for item in self.detailed_histograms_array]
-            label_array = [item['label'] for item in self.detailed_histograms_array]
+            histogram_data_array = [
+                item['data'] for item in self.detailed_histograms_array
+            ]
+            label_array = [
+                item['label'] for item in self.detailed_histograms_array
+            ]
             customdata = {
-                "FileName": self.cfg['Analysis']['result_folder'] + self.cfg['Analysis']['file_name'] + '_histograms.xlsx',
-                "SheetNames": label_array,
-                "thin_border": True
+                "FileName":
+                    self.cfg['Analysis']['result_folder'] +
+                    self.cfg['Analysis']['file_name'] + '_histograms.xlsx',
+                "SheetNames":
+                    label_array,
+                "thin_border":
+                    True
             }
             if len(histogram_data_array) > 0:
-                save_data.DataFrameArray_To_xlsx_openpyxl(histogram_data_array, customdata)
+                save_data.DataFrameArray_To_xlsx_openpyxl(
+                    histogram_data_array, customdata)
 
-        if self.cfg.default['Analysis'].__contains__('RAOs') and self.cfg.default['Analysis']['RAOs']['flag']:
+        if self.cfg.default['Analysis'].__contains__(
+                'RAOs') and self.cfg.default['Analysis']['RAOs']['flag']:
             self.save_RAOs()
-
 
     def post_process_RAOs(self, model, FileObjectName):
         cfg_raos = self.cfg['RAOs'].copy()
         for rao_set in cfg_raos['sets']:
 
-            cfg_time_series_reference = self.get_cfg_time_series_reference(cfg_raos, rao_set)
-            reference_time_series = self.get_time_series_from_orcaflex_run(model, cfg_time_series_reference)
+            cfg_time_series_reference = self.get_cfg_time_series_reference(
+                cfg_raos, rao_set)
+            reference_time_series = self.get_time_series_from_orcaflex_run(
+                model, cfg_time_series_reference)
 
-            output_time_series_array = self.get_time_series_output(cfg_raos, rao_set, model)
+            output_time_series_array = self.get_time_series_output(
+                cfg_raos, rao_set, model)
 
-            self.get_RAOs_from_time_series_data(output_time_series_array, reference_time_series, cfg_raos, rao_set)
+            self.get_RAOs_from_time_series_data(output_time_series_array,
+                                                reference_time_series, cfg_raos,
+                                                rao_set)
 
     def get_cfg_fft(self, cfg_fft_common, cfg_fft_custom):
         cfg_fft = cfg_fft_common.copy()
@@ -144,35 +285,49 @@ class OrcaFlexAnalysis():
 
         return cfg_fft
 
-    def get_RAOs_from_time_series_data(self, output_time_series_array, reference_time_series, cfg_raos, rao_set):
+    def get_RAOs_from_time_series_data(self, output_time_series_array,
+                                       reference_time_series, cfg_raos,
+                                       rao_set):
 
-        RAO_df_Labels = ['frequency'] + rao_set['time_series']['Output']['Variable_Label']
+        RAO_df_Labels = ['frequency'
+                        ] + rao_set['time_series']['Output']['Variable_Label']
         RAO_df_columns = self.get_detailed_RAO_df_columns(RAO_df_Labels)
         RAO_ArcLength_df = pd.DataFrame(columns=RAO_df_columns)
 
         for ArcLength_index in range(0, len(output_time_series_array)):
-            ArcLength_Label = rao_set['time_series']['Output']['Label'][ArcLength_index]
+            ArcLength_Label = rao_set['time_series']['Output']['Label'][
+                ArcLength_index]
             RAO_df_array_Labels = [item['Label'] for item in self.RAO_df_array]
             if ArcLength_Label not in RAO_df_array_Labels:
-                self.RAO_df_array.append({'Label' : ArcLength_Label,'RAO_df': RAO_ArcLength_df.copy()})
+                self.RAO_df_array.append({
+                    'Label': ArcLength_Label,
+                    'RAO_df': RAO_ArcLength_df.copy()
+                })
 
         cfg_fft_common = cfg_raos['fft'].copy()
         cfg_fft_custom = rao_set['fft'].copy()
         cfg_fft = self.get_cfg_fft(cfg_fft_common, cfg_fft_custom)
 
         for ArcLength_index in range(0, len(output_time_series_array)):
-            ArcLength_Label = rao_set['time_series']['Output']['Label'][ArcLength_index]
+            ArcLength_Label = rao_set['time_series']['Output']['Label'][
+                ArcLength_index]
             RAO_df_array_Labels = [item['Label'] for item in self.RAO_df_array]
             RAO_df_array_index = RAO_df_array_Labels.index(ArcLength_Label)
             df = self.RAO_df_array[RAO_df_array_index]['RAO_df'].copy()
             Variable_RAO_df = pd.DataFrame(columns=RAO_df_columns)
-            for Variable_index in range(0, len(output_time_series_array[ArcLength_index])):
-                time_series = output_time_series_array[ArcLength_index][Variable_index]
-                RAO_raw, RAO_filtered = self.get_RAO(time_series, reference_time_series, cfg_fft)
+            for Variable_index in range(
+                    0, len(output_time_series_array[ArcLength_index])):
+                time_series = output_time_series_array[ArcLength_index][
+                    Variable_index]
+                RAO_raw, RAO_filtered = self.get_RAO(time_series,
+                                                     reference_time_series,
+                                                     cfg_fft)
                 if Variable_index == 0:
                     Variable_RAO_df['frequency'] = RAO_filtered['frequency']
-                    Variable_RAO_df = self.assign_file_info_to_Variable_df(Variable_RAO_df, self.fileIndex)
-                RAO_df_column_label = rao_set['time_series']['Output']['Variable_Label'][Variable_index]
+                    Variable_RAO_df = self.assign_file_info_to_Variable_df(
+                        Variable_RAO_df, self.fileIndex)
+                RAO_df_column_label = rao_set['time_series']['Output'][
+                    'Variable_Label'][Variable_index]
                 Variable_RAO_df[RAO_df_column_label] = RAO_filtered['complex']
 
             df = pd.concat([df, Variable_RAO_df])
@@ -187,21 +342,32 @@ class OrcaFlexAnalysis():
         return Variable_RAO_df
 
     def get_RAO(self, signal, excitation, cfg_fft):
-        ts_comp = TimeSeriesComponents({'default': {'analysis': {'fft': cfg_fft}}})
-        RAO_raw, RAO_filtered = ts_comp.get_RAO(signal=signal, excitation=excitation, cfg_rao=cfg_fft)
+        ts_comp = TimeSeriesComponents(
+            {'default': {
+                'analysis': {
+                    'fft': cfg_fft
+                }
+            }})
+        RAO_raw, RAO_filtered = ts_comp.get_RAO(signal=signal,
+                                                excitation=excitation,
+                                                cfg_rao=cfg_fft)
 
         return RAO_raw, RAO_filtered
 
     def get_time_series_output(self, cfg_raos, rao_set, model):
         cfg_common = cfg_raos['time_series'].copy()
         cfg_group = rao_set['time_series'].copy()
-        cfg_time_series_array = self.get_cfg_time_series_custom(cfg_group, cfg_common)
+        cfg_time_series_array = self.get_cfg_time_series_custom(
+            cfg_group, cfg_common)
         output_time_series_array = []
         for ArcLength_index in range(0, len(cfg_time_series_array)):
             output_ArcLength_time_series_array = []
-            for Variable_index in range(0, len(cfg_time_series_array[ArcLength_index])):
-                cfg_Variable = cfg_time_series_array[ArcLength_index][Variable_index]
-                Variable_time_series = self.get_time_series_from_orcaflex_run(model, cfg_Variable)
+            for Variable_index in range(
+                    0, len(cfg_time_series_array[ArcLength_index])):
+                cfg_Variable = cfg_time_series_array[ArcLength_index][
+                    Variable_index]
+                Variable_time_series = self.get_time_series_from_orcaflex_run(
+                    model, cfg_Variable)
                 output_ArcLength_time_series_array.append(Variable_time_series)
             output_time_series_array.append(output_ArcLength_time_series_array)
 
@@ -226,7 +392,8 @@ class OrcaFlexAnalysis():
             if ObjectName is not None:
                 cfg_time_series.update({'ObjectName': ObjectName})
 
-            for Variable_index in range(0, len(cfg_group['Output']['Variable'])):
+            for Variable_index in range(0,
+                                        len(cfg_group['Output']['Variable'])):
                 Variable = cfg_group['Output']['Variable'][Variable_index]
                 cfg_time_series.update({'Variable': Variable})
                 cfg_time_series_variable_array.append(cfg_time_series.copy())
@@ -242,41 +409,138 @@ class OrcaFlexAnalysis():
         else:
             print("No postprocessing plots per user request")
 
+    def process_summary_by_model_and_cfg(self, model, cfg):
+        RangeDF = pd.DataFrame()
+        try:
+            objectName = cfg['ObjectName']
+            OrcFXAPIObject = model[objectName]
+        except:
+            OrcFXAPIObject = model[FileObjectName]
+
+        SimulationPeriod = cfg['SimulationPeriod']
+        TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
+
+        ArcLengthArray = cfg['ArcLength']
+        arclengthRange = self.get_ArcLengthObject(ArcLengthArray)
+
+        VariableName = cfg['Variable']
+        AdditionalDataArray = cfg['AdditionalData']
+
+        if cfg['Command'] == 'Range Graph':
+            output = self.get_RangeGraph(OrcFXAPIObject, TimePeriod,
+                                         VariableName, arclengthRange)
+
+            AdditionalDataName = 'X'
+            RangeDF[AdditionalDataName] = output.X
+
+            output_value = self.get_additional_data(cfg, RangeDF, VariableName,
+                                                    output, AdditionalDataArray)
+        elif cfg['Command'] == 'TimeHistory':
+            try:
+                output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
+                                                    arclengthRange)
+            except:
+                arclengthRange = None
+                output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
+
+            output_value = self.get_additional_data(cfg, RangeDF, VariableName,
+                                                    output, AdditionalDataArray)
+        elif cfg['Command'] == 'StaticResult':
+            output_value = self.get_StaticResult(OrcFXAPIObject, VariableName,
+                                                 ArcLengthArray)
+
+        return output_value
+
+    def get_additional_data(self, cfg, RangeDF, VariableName, output,
+                            AdditionalDataArray):
+        for AdditionalDataIndex in range(0, len(AdditionalDataArray)):
+            AdditionalDataName = AdditionalDataArray[AdditionalDataIndex]
+            if cfg['Command'] == 'Range Graph':
+                RangeDF[VariableName] = getattr(output, AdditionalDataName)
+                if VariableName == "API STD 2RD Method 1":
+                    RangeDF[VariableName] = [
+                        math.sqrt(x) for x in RangeDF[VariableName]
+                    ]
+                if AdditionalDataName == "Max":
+                    output_value = RangeDF[VariableName].max()
+                elif AdditionalDataName == "Min":
+                    output_value = RangeDF[VariableName].min()
+                elif AdditionalDataName == "Mean":
+                    output_value = RangeDF[VariableName].mean()
+            else:
+                if AdditionalDataName == "Max":
+                    output_value = output.max()
+                elif AdditionalDataName == "Min":
+                    output_value = output.min()
+                elif AdditionalDataName == "Mean":
+                    output_value = output.mean()
+
+            if cfg.__contains__('transform'):
+                trans_cfg = cfg['transform']
+                trans_cfg['data'] = output_value
+                transformed_cfg = self.transform_output(trans_cfg)
+                output_value = transformed_cfg['data']
+
+            return output_value
+
+    def get_StaticResult(self, OrcFXAPIObject, VariableName, ArcLengthArray):
+        # Result at End A
+        output = OrcFXAPIObject.StaticResult(VariableName, OrcFxAPI.oeEndA)
+        # Result at Arc Length X
+        objectExtra = OrcFxAPI.oeLine(ArcLength=ArcLengthArray[0])
+        output = OrcFXAPIObject.StaticResult(VariableName, objectExtra)
+
+        return output
+
     def process_summary(self):
         if self.cfg['default']['Analysis']['Summary']:
             SummaryFileNameArray = []
             for SummaryIndex in range(0, len(self.cfg['Summary'])):
                 summary_group_cfg = self.cfg['Summary'][SummaryIndex]
                 SummaryFileName = summary_group_cfg['SummaryFileName']
-                summary_value_columns = self.get_summary_value_columns(summary_group_cfg)
+                summary_value_columns = self.get_summary_value_columns(
+                    summary_group_cfg)
                 summary_column_count = len(summary_value_columns)
                 SummaryFileNameArray.append(SummaryFileName)
                 SummaryDF = self.SummaryDFAllFiles[SummaryIndex]
-                summaryDF_temp = SummaryDF.iloc[:,
-                                                (len(SummaryDF.columns) - summary_column_count):len(SummaryDF.columns)]
+                summaryDF_temp = SummaryDF.iloc[:, (
+                    len(SummaryDF.columns) -
+                    summary_column_count):len(SummaryDF.columns)]
 
                 loadng_condition_array = []
                 if self.load_matrix is not None:
-                    loadng_condition_array = [None] * len(self.load_matrix.columns)
-                if self.cfg['default']['Analysis']['Summary']['AddMeanToSummary'] and len(summaryDF_temp) > 0:
-                    result_array = ['Mean', 'Mean'] + summaryDF_temp.mean(axis=0).tolist()
-                    SummaryDF.loc[len(SummaryDF)] = loadng_condition_array + result_array
-                if self.cfg['default']['Analysis']['Summary']['AddMinimumToSummary'] and len(summaryDF_temp) > 0:
-                    result_array = ['Minimum', 'Minimum'] + summaryDF_temp.min(axis=0).tolist()
-                    SummaryDF.loc[len(SummaryDF)] = loadng_condition_array + result_array
-                if self.cfg['default']['Analysis']['Summary']['AddMaximumToSummary'] and len(summaryDF_temp) > 0:
-                    result_array = ['Maximum', 'Maximum'] + summaryDF_temp.max(axis=0).tolist()
-                    SummaryDF.loc[len(SummaryDF)] = loadng_condition_array + result_array
+                    loadng_condition_array = [None] * len(
+                        self.load_matrix.columns)
+                if self.cfg['default']['Analysis']['Summary'][
+                        'AddMeanToSummary'] and len(summaryDF_temp) > 0:
+                    result_array = ['Mean', 'Mean'
+                                   ] + summaryDF_temp.mean(axis=0).tolist()
+                    SummaryDF.loc[len(
+                        SummaryDF)] = loadng_condition_array + result_array
+                if self.cfg['default']['Analysis']['Summary'][
+                        'AddMinimumToSummary'] and len(summaryDF_temp) > 0:
+                    result_array = ['Minimum', 'Minimum'
+                                   ] + summaryDF_temp.min(axis=0).tolist()
+                    SummaryDF.loc[len(
+                        SummaryDF)] = loadng_condition_array + result_array
+                if self.cfg['default']['Analysis']['Summary'][
+                        'AddMaximumToSummary'] and len(summaryDF_temp) > 0:
+                    result_array = ['Maximum', 'Maximum'
+                                   ] + summaryDF_temp.max(axis=0).tolist()
+                    SummaryDF.loc[len(
+                        SummaryDF)] = loadng_condition_array + result_array
 
                 try:
-                    decimalArray = pd.Series([0, 0, 0, 2, 0], index=SummaryDF.columns.values)
+                    decimalArray = pd.Series([0, 0, 0, 2, 0],
+                                             index=SummaryDF.columns.values)
                     SummaryDF = SummaryDF.round(decimalArray)
                 except Exception as e:
                     SummaryDF = SummaryDF.round(2)
 
             self.saveSummaryToExcel(SummaryFileNameArray)
 
-            print("Processed {0} summary files".format(len(self.cfg['Summary'])))
+            print("Processed {0} summary files".format(len(
+                self.cfg['Summary'])))
         else:
             print("No analysis summary per user request")
 
@@ -284,11 +548,16 @@ class OrcaFlexAnalysis():
         if len(self.SummaryDFAllFiles) > 0:
             save_data = SaveData()
             customdata = {
-                "FileName": self.cfg['Analysis']['result_folder'] + self.cfg['Analysis']['file_name'] + '.xlsx',
-                "SheetNames": SummaryFileNameArray,
-                "thin_border": True
+                "FileName":
+                    self.cfg['Analysis']['result_folder'] +
+                    self.cfg['Analysis']['file_name'] + '.xlsx',
+                "SheetNames":
+                    SummaryFileNameArray,
+                "thin_border":
+                    True
             }
-            save_data.DataFrameArray_To_xlsx_openpyxl(self.SummaryDFAllFiles, customdata)
+            save_data.DataFrameArray_To_xlsx_openpyxl(self.SummaryDFAllFiles,
+                                                      customdata)
 
     def postProcess(self):
         # Intialize output arrays
@@ -305,30 +574,35 @@ class OrcaFlexAnalysis():
             histogram_for_file = [[] for item in self.cfg.time_series]
             if model is not None:
                 self.fileIndex = fileIndex
-                print("Post-processing file: {}" .format(file_name))
+                print("Post-processing file: {}".format(file_name))
                 try:
-                    RangeAllFiles.append(self.postProcessRange(model, self.cfg, FileObjectName))
+                    RangeAllFiles.append(
+                        self.postProcessRange(model, self.cfg, FileObjectName))
                 except:
                     RangeAllFiles.append(None)
                 if self.cfg['default']['Analysis']['time_series']['flag']:
                     try:
-                        histogram_for_file = self.post_process_histograms(model, FileObjectName)
+                        histogram_for_file = self.post_process_histograms(
+                            model, FileObjectName)
                     except:
                         pass
                     histogram_all_files.append(histogram_for_file)
 
                 for SummaryIndex in range(0, len(self.cfg['Summary'])):
                     try:
-                        SimulationFileName = self.get_SimulationFileName(file_name)
-                        SummaryDFAllFiles[SummaryIndex] = self.postProcessSummary(model,
-                                                                                  SummaryDFAllFiles[SummaryIndex],
-                                                                                  SummaryIndex, FileDescription,
-                                                                                  FileObjectName, SimulationFileName,
-                                                                                  fileIndex)
+                        SimulationFileName = self.get_SimulationFileName(
+                            file_name)
+                        SummaryDFAllFiles[
+                            SummaryIndex] = self.postProcessSummary(
+                                model, SummaryDFAllFiles[SummaryIndex],
+                                SummaryIndex, FileDescription, FileObjectName,
+                                SimulationFileName, fileIndex)
                     except:
                         pass
 
-                if self.cfg.default['Analysis'].__contains__('RAOs') and self.cfg.default['Analysis']['RAOs']['flag']:
+                if self.cfg.default['Analysis'].__contains__(
+                        'RAOs'
+                ) and self.cfg.default['Analysis']['RAOs']['flag']:
                     self.post_process_RAOs(model, FileObjectName)
 
             else:
@@ -347,8 +621,12 @@ class OrcaFlexAnalysis():
                 model = self.loadSimulation(SimulationFileName)
                 RunStatus = str(model.state)
                 with PandasChainedAssignent():
-                    self.load_matrix.loc[(self.load_matrix['fe_filename'] == file_name), 'RunStatus'] = RunStatus
-                if RunStatus not in ['Reset', 'InStaticState', 'SimulationStopped']:
+                    self.load_matrix.loc[(
+                        self.load_matrix['fe_filename'] == file_name),
+                                         'RunStatus'] = RunStatus
+                if RunStatus not in [
+                        'Reset', 'InStaticState', 'SimulationStopped'
+                ]:
                     model = None
             except Exception as e:
                 pass
@@ -356,7 +634,8 @@ class OrcaFlexAnalysis():
         return model
 
     def get_SimulationFileName(self, file_name):
-        get_filename_without_extension = self.get_filename_without_extension(file_name)
+        get_filename_without_extension = self.get_filename_without_extension(
+            file_name)
         SimulationFileName = get_filename_without_extension + '.sim'
         return SimulationFileName
 
@@ -378,41 +657,55 @@ class OrcaFlexAnalysis():
             except:
                 OrcFXAPIObject = model[FileObjectName]
 
-            SimulationPeriod = cfg['RangeGraph'][RangeGraphIndex]['SimulationPeriod']
+            SimulationPeriod = cfg['RangeGraph'][RangeGraphIndex][
+                'SimulationPeriod']
             TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
             VariableName = cfg['RangeGraph'][RangeGraphIndex]['Variable']
 
             try:
                 if len(cfg['RangeGraph'][RangeGraphIndex]['ArcLength']) > 1:
-                    StartArcLength = cfg['RangeGraph'][RangeGraphIndex]['ArcLength'][0]
-                    EndArcLength = cfg['RangeGraph'][RangeGraphIndex]['ArcLength'][1]
-                    output = OrcFXAPIObject.RangeGraph(VariableName,
-                                                       TimePeriod,
-                                                       arclengthRange=OrcFxAPI.arSpecifiedArclengths(
-                                                           StartArcLength, EndArcLength))
+                    StartArcLength = cfg['RangeGraph'][RangeGraphIndex][
+                        'ArcLength'][0]
+                    EndArcLength = cfg['RangeGraph'][RangeGraphIndex][
+                        'ArcLength'][1]
+                    output = OrcFXAPIObject.RangeGraph(
+                        VariableName,
+                        TimePeriod,
+                        arclengthRange=OrcFxAPI.arSpecifiedArclengths(
+                            StartArcLength, EndArcLength))
                 else:
-                    StartArcLength = cfg['RangeGraph'][RangeGraphIndex]['ArcLength'][0]
-                    output = OrcFXAPIObject.RangeGraph(VariableName,
-                                                       TimePeriod,
-                                                       arclengthRange=OrcFxAPI.arSpecifiedArclengths(StartArcLength))
+                    StartArcLength = cfg['RangeGraph'][RangeGraphIndex][
+                        'ArcLength'][0]
+                    output = OrcFXAPIObject.RangeGraph(
+                        VariableName,
+                        TimePeriod,
+                        arclengthRange=OrcFxAPI.arSpecifiedArclengths(
+                            StartArcLength))
                     # arclengthRange = OrcFxAPI.arSpecifiedArclengths(0, 100)
             except:
                 arclengthRange = None
-                output = OrcFXAPIObject.RangeGraph(VariableName, TimePeriod, arclengthRange=arclengthRange)
+                output = OrcFXAPIObject.RangeGraph(
+                    VariableName, TimePeriod, arclengthRange=arclengthRange)
             # Assign Arc Length
             AdditionalDataName = 'X'
             RangeDF[AdditionalDataName] = output.X
 
-            for AdditionalDataIndex in range(0, len(cfg['RangeGraph'][RangeGraphIndex]['AdditionalData'])):
-                AdditionalDataName = cfg['RangeGraph'][RangeGraphIndex]['AdditionalData'][AdditionalDataIndex]
+            for AdditionalDataIndex in range(
+                    0,
+                    len(cfg['RangeGraph'][RangeGraphIndex]['AdditionalData'])):
+                AdditionalDataName = cfg['RangeGraph'][RangeGraphIndex][
+                    'AdditionalData'][AdditionalDataIndex]
                 RangeDF[VariableName] = getattr(output, AdditionalDataName)
 
                 if VariableName == "API STD 2RD Method 1":
-                    RangeDF[VariableName] = [math.sqrt(x) for x in RangeDF[VariableName]]
+                    RangeDF[VariableName] = [
+                        math.sqrt(x) for x in RangeDF[VariableName]
+                    ]
             RangeFile.append(RangeDF)
 
-        if self.cfg['default']['Analysis']['RangeGraph']['flag'] and self.cfg['default']['Analysis']['RangeGraph'][
-                'add_effective_tension_to_cfg']:
+        if self.cfg['default']['Analysis']['RangeGraph']['flag'] and self.cfg[
+                'default']['Analysis']['RangeGraph'][
+                    'add_effective_tension_to_cfg']:
             self.add_result_to_cfg(RangeDF, VariableName)
 
         return RangeFile
@@ -424,12 +717,14 @@ class OrcaFlexAnalysis():
         for time_series_index in range(0, len(self.cfg['time_series'])):
             cfg_temp = self.cfg['time_series'][time_series_index]
             self.histogram_labels.append(cfg_temp['Label'])
-            histogram_object = self.get_histogram_object_from_orcaflex_run(FileObjectName, cfg_temp, model)
+            histogram_object = self.get_histogram_object_from_orcaflex_run(
+                FileObjectName, cfg_temp, model)
             histogram_array.append(histogram_object)
 
         return histogram_array
 
-    def get_histogram_object_from_orcaflex_run(self, FileObjectName, cfg_histogram, model):
+    def get_histogram_object_from_orcaflex_run(self, FileObjectName,
+                                               cfg_histogram, model):
 
         # Read Object
         OrcFXAPIObject = model[FileObjectName]
@@ -443,11 +738,17 @@ class OrcaFlexAnalysis():
         elif RadialPos_text == 'Inner':
             RadialPos = 0
         Theta = cfg_histogram['Theta']
-        objectExtra = OrcFxAPI.oeLine(ArcLength=ArcLength, RadialPos=RadialPos, Theta=Theta)
-        rain_flow_half_cycles = OrcFXAPIObject.RainflowHalfCycles(VariableName, TimePeriod, objectExtra=objectExtra)
+        objectExtra = OrcFxAPI.oeLine(ArcLength=ArcLength,
+                                      RadialPos=RadialPos,
+                                      Theta=Theta)
+        rain_flow_half_cycles = OrcFXAPIObject.RainflowHalfCycles(
+            VariableName, TimePeriod, objectExtra=objectExtra)
         bins = self.cfg['default']['Analysis']['rain_flow']['bins']
         rainflow_range = self.cfg['default']['Analysis']['rain_flow']['range']
-        histogram_object = np.histogram(rain_flow_half_cycles, bins=bins, range=(rainflow_range[0], rainflow_range[1]))
+        histogram_object = np.histogram(rain_flow_half_cycles,
+                                        bins=bins,
+                                        range=(rainflow_range[0],
+                                               rainflow_range[1]))
 
         return histogram_object[0]
 
@@ -467,12 +768,17 @@ class OrcaFlexAnalysis():
             elif RadialPos_text == 'Inner':
                 RadialPos = 0
             Theta = cfg_time_series['Theta']
-            objectExtra = OrcFxAPI.oeLine(ArcLength=ArcLength, RadialPos=RadialPos, Theta=Theta)
+            objectExtra = OrcFxAPI.oeLine(ArcLength=ArcLength,
+                                          RadialPos=RadialPos,
+                                          Theta=Theta)
         else:
             Location = cfg_time_series['Location']
-            objectExtra = OrcFxAPI.oeEnvironment(Location[0], Location[1], Location[2])
+            objectExtra = OrcFxAPI.oeEnvironment(Location[0], Location[1],
+                                                 Location[2])
 
-        time_series = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod, objectExtra=objectExtra)
+        time_series = OrcFXAPIObject.TimeHistory(VariableName,
+                                                 TimePeriod,
+                                                 objectExtra=objectExtra)
         return time_series
 
     def add_result_to_cfg(self, RangeDF, VariableName):
@@ -480,7 +786,9 @@ class OrcaFlexAnalysis():
         self.cfg['Analysis'][VariableName] = RangeDF[VariableName].tolist()
         self.cfg_array.append(copy.deepcopy(self.cfg))
 
-    def postProcessSummary(self, model, SummaryDF, SummaryIndex, FileDescription, FileObjectName, FileName, fileIndex):
+    def postProcessSummary(self, model, SummaryDF, SummaryIndex,
+                           FileDescription, FileObjectName, FileName,
+                           fileIndex):
         summary_group_cfg = self.cfg['Summary'][SummaryIndex]
         if SummaryDF.empty:
             columns = self.get_summary_df_columns(summary_group_cfg)
@@ -491,76 +799,29 @@ class OrcaFlexAnalysis():
         summary_from_sim_file = []
         summary_from_sim_file.append(FileName)
         summary_from_sim_file.append(FileDescription)
-        for SummaryColumnIndex in range(0, len(self.cfg['Summary'][SummaryIndex]['Columns'])):
-            summary_group_item_cfg = summary_group_cfg['Columns'][SummaryColumnIndex]
-            RangeDF = pd.DataFrame()
-            try:
-                objectName = summary_group_item_cfg['ObjectName']
-                OrcFXAPIObject = model[objectName]
-            except:
-                OrcFXAPIObject = model[FileObjectName]
+        for SummaryColumnIndex in range(
+                0, len(self.cfg['Summary'][SummaryIndex]['Columns'])):
+            summary_group_item_cfg = summary_group_cfg['Columns'][
+                SummaryColumnIndex]
 
-            SimulationPeriod = summary_group_item_cfg['SimulationPeriod']
-            TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
-
-            ArcLengthArray = summary_group_item_cfg['ArcLength']
-            arclengthRange = self.get_ArcLengthObject(ArcLengthArray)
-
-            VariableName = summary_group_item_cfg['Variable']
-
-            if summary_group_item_cfg['Command'] == 'Range Graph':
-                output = self.get_RangeGraph(OrcFXAPIObject, TimePeriod, VariableName, arclengthRange)
-
-                AdditionalDataName = 'X'
-                RangeDF[AdditionalDataName] = output.X
-
-            elif summary_group_item_cfg['Command'] == 'TimeHistory':
-                try:
-                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod, arclengthRange)
-                except:
-                    arclengthRange = None
-                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
-
-            AdditionalDataArray = summary_group_item_cfg['AdditionalData']
-            for AdditionalDataIndex in range(0, len(AdditionalDataArray)):
-                AdditionalDataName = AdditionalDataArray[AdditionalDataIndex]
-                if summary_group_item_cfg['Command'] == 'Range Graph':
-                    RangeDF[VariableName] = getattr(output, AdditionalDataName)
-                    if VariableName == "API STD 2RD Method 1":
-                        RangeDF[VariableName] = [math.sqrt(x) for x in RangeDF[VariableName]]
-                    if AdditionalDataName == "Max":
-                        output_value = RangeDF[VariableName].max()
-                    elif AdditionalDataName == "Min":
-                        output_value = RangeDF[VariableName].min()
-                    elif AdditionalDataName == "Mean":
-                        output_value = RangeDF[VariableName].mean()
-                else:
-                    if AdditionalDataName == "Max":
-                        output_value = output.max()
-                    elif AdditionalDataName == "Min":
-                        output_value = output.min()
-                    elif AdditionalDataName == "Mean":
-                        output_value = output.mean()
-
-                if summary_group_item_cfg.__contains__('transform'):
-                    trans_cfg = summary_group_item_cfg['transform']
-                    trans_cfg['data'] = output_value
-                    transformed_cfg = self.transform_output(trans_cfg)
-                    output_value = transformed_cfg['data']
-
-                summary_from_sim_file.append(output_value)
+            output_value = self.process_summary_by_model_and_cfg(
+                model, summary_group_item_cfg)
+            summary_from_sim_file.append(output_value)
 
         loading_condition_array = self.get_loading_condition_array(fileIndex)
 
         if np.nan in summary_from_sim_file:
-            print("Summary Incomplete for : '{}' in simulation file: '{}'".format(summary_group_cfg['SummaryFileName'],
-                                                                                  FileDescription))
+            print(
+                "Summary Incomplete for : '{}' in simulation file: '{}'".format(
+                    summary_group_cfg['SummaryFileName'], FileDescription))
             if (ArcLengthArray is None):
                 print(
-                    "          Arc length is {}. Define appropriate arc length value or range".format(ArcLengthArray))
+                    "          Arc length is {}. Define appropriate arc length value or range"
+                    .format(ArcLengthArray))
             elif (len(ArcLengthArray) == 0):
                 print(
-                    "          Arc length is {}. Define appropriate arc length value or range".format(ArcLengthArray))
+                    "          Arc length is {}. Define appropriate arc length value or range"
+                    .format(ArcLengthArray))
             elif len(ArcLengthArray) == 1:
                 print(
                     "          Node may not be in arc length exact position for Arc length {}. Provide a range of approx. element length"
@@ -569,33 +830,39 @@ class OrcaFlexAnalysis():
                 print(
                     "          Node may not be in arc length range position for Arc length {}. Check range and fe element length"
                     .format(ArcLengthArray))
-            print("          (or) Simulation failed for : {} before postprocess Time {}".format(
-                FileDescription, SimulationPeriod))
+            print(
+                "          (or) Simulation failed for : {} before postprocess Time {}"
+                .format(FileDescription, SimulationPeriod))
 
         pd.options.mode.chained_assignment = None
-        SummaryDF.loc[len(SummaryDF)] = loading_condition_array + summary_from_sim_file
+        SummaryDF.loc[len(
+            SummaryDF)] = loading_condition_array + summary_from_sim_file
         pd.reset_option('mode.chained_assignment')
 
         return SummaryDF
 
-    def get_RangeGraph(self, OrcFXAPIObject, TimePeriod, VariableName, arclengthRange):
+    def get_RangeGraph(self, OrcFXAPIObject, TimePeriod, VariableName,
+                       arclengthRange):
         try:
-            output = OrcFXAPIObject.RangeGraph(VariableName, TimePeriod, arclengthRange=arclengthRange)
+            output = OrcFXAPIObject.RangeGraph(VariableName,
+                                               TimePeriod,
+                                               arclengthRange=arclengthRange)
         except:
             arclengthRange = None
-            output = OrcFXAPIObject.RangeGraph(VariableName, TimePeriod, arclengthRange=arclengthRange)
+            output = OrcFXAPIObject.RangeGraph(VariableName,
+                                               TimePeriod,
+                                               arclengthRange=arclengthRange)
         return output
 
     def get_TimePeriodObject(self, SimulationPeriod):
 
         if len(SimulationPeriod) == 2:
-            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0], SimulationPeriod[1])
+            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0],
+                                                        SimulationPeriod[1])
         elif len(SimulationPeriod) == 1:
             TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0])
         else:
             TimePeriodObject = OrcFxAPI.SpecifiedPeriod()
-        # Superseded Method
-        # TimePeriod = exec("OrcFxAPI.{0}".format(SimulationPeriod))
 
         return TimePeriodObject
 
@@ -604,10 +871,12 @@ class OrcaFlexAnalysis():
         if len(ArcLengthArray) == 2:
             StartArcLength = ArcLengthArray[0]
             EndArcLength = ArcLengthArray[1]
-            arclengthRange = OrcFxAPI.arSpecifiedArclengths(StartArcLength, EndArcLength)
+            arclengthRange = OrcFxAPI.arSpecifiedArclengths(
+                StartArcLength, EndArcLength)
         elif len(ArcLengthArray) == 1:
             StartArcLength = ArcLengthArray[0]
-            arclengthRange = OrcFxAPI.arSpecifiedArclengths(StartArcLength, StartArcLength)
+            arclengthRange = OrcFxAPI.arSpecifiedArclengths(
+                StartArcLength, StartArcLength)
         else:
             arclengthRange = None
 
@@ -626,39 +895,53 @@ class OrcaFlexAnalysis():
             SummaryDF = None
             AddSummaryColumnsArray = []
             if (len(self.cfg.Summary) > 0) and time_series_cfg.__contains__(
-                    'AddSummaryToHistograms') and time_series_cfg['AddSummaryToHistograms']:
+                    'AddSummaryToHistograms'
+            ) and time_series_cfg['AddSummaryToHistograms']:
                 SummaryDF = self.SummaryDFAllFiles[time_series_index]
                 Summary_cfg = self.cfg.Summary[time_series_index]
-                AddSummaryColumnsArray = [item['Label'] for item in Summary_cfg['Columns']]
-            columns = self.get_detailed_histogram_df_columns(rain_flow_settings, AddSummaryColumnsArray)
+                AddSummaryColumnsArray = [
+                    item['Label'] for item in Summary_cfg['Columns']
+                ]
+            columns = self.get_detailed_histogram_df_columns(
+                rain_flow_settings, AddSummaryColumnsArray)
             detailed_histograms = pd.DataFrame(columns=columns)
             for file_index in range(0, no_of_files):
-                histogram = self.HistogramAllFiles[file_index][time_series_index]
+                histogram = self.HistogramAllFiles[file_index][
+                    time_series_index]
                 SimulationDuration = self.get_SimulationDuration(file_index)
                 seastate_probability = self.get_seastate_probability(file_index)
                 if (len(histogram) > 0) and (seastate_probability > 0):
-                    loading_condition_array = self.get_loading_condition_array(file_index)
-                    AddSummary_array = self.get_AddSummary_array(SummaryDF, file_index, AddSummaryColumnsArray)
+                    loading_condition_array = self.get_loading_condition_array(
+                        file_index)
+                    AddSummary_array = self.get_AddSummary_array(
+                        SummaryDF, file_index, AddSummaryColumnsArray)
                     for bin_index in range(0, no_of_bins):
                         bin_range_array = [bins[bin_index], bins[bin_index + 1]]
                         histogram_cycles = histogram[bin_index]
-                        histogram_cycles_per_year = histogram_cycles * (365.25 * 24 * 3600) / SimulationDuration
+                        histogram_cycles_per_year = histogram_cycles * (
+                            365.25 * 24 * 3600) / SimulationDuration
                         histogram_cycles_per_year_with_probability = histogram_cycles_per_year * seastate_probability
                         histogram_cycle_array = [
-                            histogram_cycles, histogram_cycles_per_year, histogram_cycles_per_year_with_probability
+                            histogram_cycles, histogram_cycles_per_year,
+                            histogram_cycles_per_year_with_probability
                         ]
                         histogram_bin_array = bin_range_array + histogram_cycle_array
                         df_row = loading_condition_array + histogram_bin_array + AddSummary_array
-                        detailed_histograms.loc[len(detailed_histograms)] = df_row
+                        detailed_histograms.loc[len(
+                            detailed_histograms)] = df_row
             Label = time_series_cfg['Label']
 
-            self.detailed_histograms_array.append({'label': Label, 'data': detailed_histograms})
+            self.detailed_histograms_array.append({
+                'label': Label,
+                'data': detailed_histograms
+            })
 
     def get_loading_condition_array(self, file_index):
         if self.load_matrix is None:
             loading_condition_array = []
         else:
-            loading_condition_array = self.load_matrix.iloc[file_index].to_list()
+            loading_condition_array = self.load_matrix.iloc[file_index].to_list(
+            )
         return loading_condition_array
 
     def get_seastate_probability(self, file_index):
@@ -669,15 +952,19 @@ class OrcaFlexAnalysis():
         SimulationDuration = self.simulation_SimulationDuration[file_index]
         return SimulationDuration
 
-    def get_AddSummary_array(self, SummaryDF, file_index, AddSummaryColumnsArray):
+    def get_AddSummary_array(self, SummaryDF, file_index,
+                             AddSummaryColumnsArray):
         filename = self.simulation_filenames[file_index]
-        simulation_filename = self.get_filename_without_extension(filename) + '.sim'
+        simulation_filename = self.get_filename_without_extension(
+            filename) + '.sim'
 
         AddSummary_array = [None] * len(AddSummaryColumnsArray)
         if (SummaryDF is not None) and (not SummaryDF.empty):
-            FileSummary_DF = SummaryDF[SummaryDF['FileName'] == simulation_filename].copy()
+            FileSummary_DF = SummaryDF[SummaryDF['FileName'] ==
+                                       simulation_filename].copy()
             if not FileSummary_DF.empty:
-                AddSummary_array = list(FileSummary_DF[AddSummaryColumnsArray].values[0])
+                AddSummary_array = list(
+                    FileSummary_DF[AddSummaryColumnsArray].values[0])
 
         return AddSummary_array
 
@@ -702,16 +989,21 @@ class OrcaFlexAnalysis():
                 summary_columns.append(item['Label'])
         return summary_columns
 
-    def get_detailed_histogram_df_columns(self, rain_flow_settings, AddSummaryColumnsArray):
+    def get_detailed_histogram_df_columns(self, rain_flow_settings,
+                                          AddSummaryColumnsArray):
         if self.load_matrix is None:
             load_matrix_columns = []
         else:
             load_matrix_columns = self.load_matrix.columns.to_list()
-        if rain_flow_settings.__contains__('BinLabels') and rain_flow_settings['BinLabels'] is not None:
+        if rain_flow_settings.__contains__(
+                'BinLabels') and rain_flow_settings['BinLabels'] is not None:
             BinLabels = rain_flow_settings['BinLabels']
         else:
             BinLabels = ['BinStart', 'BinEnd']
-        cycle_labels = ['Halfcycles_per_simulation', 'Halfcycles_per_yr', 'Halfcycles_per_yr_with_probability']
+        cycle_labels = [
+            'Halfcycles_per_simulation', 'Halfcycles_per_yr',
+            'Halfcycles_per_yr_with_probability'
+        ]
         rainflow_labels = BinLabels + cycle_labels
         columns = load_matrix_columns + rainflow_labels + AddSummaryColumnsArray
         return columns
@@ -731,26 +1023,33 @@ class OrcaFlexAnalysis():
         self.simulation_duration_array = []
         self.file_label_array = []
         bins = list(
-            range(self.cfg['default']['rain_flow']['range'][0], self.cfg['default']['rain_flow']['range'][1],
+            range(self.cfg['default']['rain_flow']['range'][0],
+                  self.cfg['default']['rain_flow']['range'][1],
                   self.cfg['default']['rain_flow']['bins']))
         cummulative_histogram_df = pd.DataFrame(bins, columns=['bins'])
         for time_series_index in range(0, len(self.HistogramAllFiles[0])):
             label = self.histogram_labels[time_series_index]
             cummulative_histogram_df[label] = pd.Series([0] * len(bins))
 
-        for file_index in range(0, len(self.cfg['Analysis']['input_files']['no_ext'])):
+        for file_index in range(
+                0, len(self.cfg['Analysis']['input_files']['no_ext'])):
             file_label = self.simulation_Labels[file_index]['Label']
             self.file_label_array.append(file_label)
-            self.probability_array.append(self.cfg['Files'][file_index]['probability'])
-            self.simulation_duration_array.append(self.cfg['Files'][file_index]['simulation_duration'])
+            self.probability_array.append(
+                self.cfg['Files'][file_index]['probability'])
+            self.simulation_duration_array.append(
+                self.cfg['Files'][file_index]['simulation_duration'])
             histogram_file_df = pd.DataFrame(bins, columns=['bins'])
             for time_series_index in range(0, len(self.HistogramAllFiles[0])):
                 label = self.histogram_labels[time_series_index]
-                histogram_file_df[label] = pd.Series(self.HistogramAllFiles[file_index][time_series_index] *
-                                                     (365.25 * 24 * 3600) / self.simulation_duration_array[file_index],
-                                                     index=histogram_file_df.index)
+                histogram_file_df[label] = pd.Series(
+                    self.HistogramAllFiles[file_index][time_series_index] *
+                    (365.25 * 24 * 3600) /
+                    self.simulation_duration_array[file_index],
+                    index=histogram_file_df.index)
                 cummulative_histogram_df[label] = cummulative_histogram_df[
-                    label] + histogram_file_df[label] * self.probability_array[file_index] / 100
+                    label] + histogram_file_df[label] * self.probability_array[
+                        file_index] / 100
             self.all_histogram_file_dfs.append(histogram_file_df.copy())
 
         self.file_label_array.append('cummulative_histograms')
@@ -762,25 +1061,33 @@ class OrcaFlexAnalysis():
 
     def qa_histograms(self):
         etl_components = ETL_components(cfg=None)
-        self.sum_df = etl_components.get_sum_df_from_df_array(self.all_histogram_file_dfs)
+        self.sum_df = etl_components.get_sum_df_from_df_array(
+            self.all_histogram_file_dfs)
 
     def save_histograms(self):
         save_data = SaveData()
         customdata = {
-            "FileName": self.cfg['Analysis']['result_folder'] + self.cfg['Analysis']['file_name'] + '_histograms.xlsx',
-            "SheetNames": self.file_label_array,
-            "thin_border": True
+            "FileName":
+                self.cfg['Analysis']['result_folder'] +
+                self.cfg['Analysis']['file_name'] + '_histograms.xlsx',
+            "SheetNames":
+                self.file_label_array,
+            "thin_border":
+                True
         }
-        save_data.DataFrameArray_To_xlsx_openpyxl(self.all_histogram_file_dfs, customdata)
+        save_data.DataFrameArray_To_xlsx_openpyxl(self.all_histogram_file_dfs,
+                                                  customdata)
 
     def LinkedStatistics(self):
 
         # TODO LinkedStatistics using OrcaFlex. Code currently not working.
         VariableName = 'Effective Tension', 'Bend Moment'
         arclengthRange = OrcFxAPI.oeArcLength(25.0)
-        SimulationPeriod = cfg["PostProcess"]['Summary'][SummaryIndex]['SimulationPeriod']
+        SimulationPeriod = cfg["PostProcess"]['Summary'][SummaryIndex][
+            'SimulationPeriod']
         TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
-        stats = OrcFXAPIObject.LinkedStatistics(VariableName, TimePeriod, arclengthRange)
+        stats = OrcFXAPIObject.LinkedStatistics(VariableName, TimePeriod,
+                                                arclengthRange)
         query = stats.Query('Effective Tension', 'Bend Moment')
         print(query.ValueAtMax)
         print(query.ValueAtMin)
@@ -789,8 +1096,10 @@ class OrcaFlexAnalysis():
 
     def process_scripts(self):
         model = OrcFxAPI.Model()
-        for file_index in range(0, len(self.cfg['Analysis']['input_files']['with_ext'])):
-            file_name = self.cfg['Analysis']['input_files']['with_ext'][file_index]
+        for file_index in range(
+                0, len(self.cfg['Analysis']['input_files']['with_ext'])):
+            file_name = self.cfg['Analysis']['input_files']['with_ext'][
+                file_index]
             model.ProcessBatchScript(file_name)
 
         print("Ran script files successfully")
@@ -802,28 +1111,32 @@ class OrcaFlexAnalysis():
         for file_index in range(0, len(self.cfg_array)):
             save_data.saveDataYaml(
                 self.cfg_array[file_index],
-                self.cfg['Analysis']['cfg_array_file_names']['with_path']['without_ext'][file_index], False)
+                self.cfg['Analysis']['cfg_array_file_names']['with_path']
+                ['without_ext'][file_index], False)
 
-    def get_files_for_postprocess(self, analysis_type, fileIndex, input_files_with_extension,
+    def get_files_for_postprocess(self, analysis_type, fileIndex,
+                                  input_files_with_extension,
                                   input_files_without_extension):
 
         filename = self.simulation_filenames[fileIndex]
         filename_components = filename.split('.')
-        filename_without_extension = filename.replace('.' + filename_components[-1], "")
+        filename_without_extension = filename.replace(
+            '.' + filename_components[-1], "")
         if len(filename_components) > 1:
             input_files_with_extension.append(filename)
             input_files_without_extension.append(filename_without_extension)
-            if self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg['default']['Analysis']['Analyze'][
-                    'simulation']:
+            if self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg[
+                    'default']['Analysis']['Analyze']['simulation']:
                 analysis_type.append('simulation')
             elif self.cfg['default']['Analysis']['Analyze']['flag'] and \
                     self.cfg['default']['Analysis']['Analyze']['statics']:
                 analysis_type.append('statics')
         elif os.path.isfile(filename_without_extension + '.sim'):
             input_files_without_extension.append(filename_without_extension)
-            input_files_with_extension.append(input_files_without_extension[fileIndex] + '.yml')
-            if self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg['default']['Analysis']['Analyze'][
-                    'simulation']:
+            input_files_with_extension.append(
+                input_files_without_extension[fileIndex] + '.yml')
+            if self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg[
+                    'default']['Analysis']['Analyze']['simulation']:
                 analysis_type.append('simulation')
             elif self.cfg['default']['Analysis']['Analyze']['flag'] and \
                     self.cfg['default']['Analysis']['Analyze']['statics']:
@@ -831,69 +1144,76 @@ class OrcaFlexAnalysis():
         else:
             print('File not found: {0}'.format(filename))
 
-    def get_files_for_analysis(self, analysis_type, fileIndex, input_files_with_extension,
+    def get_files_for_analysis(self, analysis_type, fileIndex,
+                               input_files_with_extension,
                                input_files_without_extension):
         filename = self.simulation_filenames[fileIndex]
         filename_components = filename.split('.')
-        filename_without_extension = filename.replace('.' + filename_components[-1], "")
+        filename_without_extension = filename.replace(
+            '.' + filename_components[-1], "")
         if len(filename_components) > 1:
             input_files_with_extension.append(filename)
             input_files_without_extension.append(filename_without_extension)
-            if self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg['default']['Analysis']['Analyze'][
-                    'simulation']:
-                analysis_type.append('simulation')
-            elif self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg['default']['Analysis']['Analyze'][
-                    'statics']:
-                analysis_type.append('statics')
         elif os.path.isfile(filename_without_extension + '.yml'):
             input_files_without_extension.append(filename_without_extension)
-            input_files_with_extension.append(input_files_without_extension[fileIndex] + '.yml')
-            if self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg['default']['Analysis']['Analyze'][
-                    'simulation']:
-                analysis_type.append('simulation')
-            elif self.cfg['default']['Analysis']['Analyze']['flag'] and \
-                    self.cfg['default']['Analysis']['Analyze']['statics']:
-                analysis_type.append('statics')
+            input_files_with_extension.append(
+                input_files_without_extension[fileIndex] + '.yml')
         elif os.path.isfile(filename_without_extension + '.dat'):
             input_files_without_extension.append(filename_without_extension)
-            input_files_with_extension.append(input_files_without_extension[fileIndex] + '.dat')
-            if self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg['default']['Analysis']['Analyze'][
-                    'simulation']:
-                analysis_type.append('simulation')
-            elif self.cfg['default']['Analysis']['Analyze']['flag'] and \
-                    self.cfg['default']['Analysis']['Analyze']['statics']:
-                analysis_type.append('statics')
+            input_files_with_extension.append(
+                input_files_without_extension[fileIndex] + '.dat')
         else:
             print('File not found: {0}'.format(filename))
 
+        if self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg[
+                'default']['Analysis']['Analyze']['simulation']:
+            analysis_type.append('simulation')
+        elif self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg[
+                'default']['Analysis']['Analyze']['statics']['flag']:
+            analysis_type.append('statics')
+
     def get_simulation_filenames(self):
         if self.cfg['Files']['data_source'] == 'yml':
-            self.simulation_filenames = [file_group['Name'] for file_group in self.cfg['Files']['data']]
-            self.simulation_ObjectNames = [file_group['ObjectName'] for file_group in self.cfg['Files']['data']]
+            self.simulation_filenames = [
+                file_group['Name'] for file_group in self.cfg['Files']['data']
+            ]
+            self.simulation_ObjectNames = [
+                file_group['ObjectName']
+                for file_group in self.cfg['Files']['data']
+            ]
             self.simulation_SimulationDuration = [
-                file_group['SimulationDuration'] for file_group in self.cfg['Files']['data']
+                file_group['SimulationDuration']
+                for file_group in self.cfg['Files']['data']
             ]
             self.simulation_ProbabilityRatio = [
-                file_group['ProbabilityRatio'] for file_group in self.cfg['Files']['data']
+                file_group['ProbabilityRatio']
+                for file_group in self.cfg['Files']['data']
             ]
-            self.simulation_Labels = [file_group['Label'] for file_group in self.cfg['Files']['data']]
+            self.simulation_Labels = [
+                file_group['Label'] for file_group in self.cfg['Files']['data']
+            ]
         elif self.cfg['Files']['data_source'] == 'csv':
             import pandas as pd
             self.load_matrix = pd.read_csv(self.cfg['Files']['csv_filename'])
             self.load_matrix['RunStatus'] = None
             self.simulation_filenames = self.load_matrix['fe_filename']
             self.simulation_ObjectNames = self.load_matrix['ObjectName']
-            self.simulation_SimulationDuration = self.load_matrix['SimulationDuration']
-            self.simulation_ProbabilityRatio = self.load_matrix['ProbabilityRatio']
+            self.simulation_SimulationDuration = self.load_matrix[
+                'SimulationDuration']
+            self.simulation_ProbabilityRatio = self.load_matrix[
+                'ProbabilityRatio']
 
             self.simulation_Labels = self.load_matrix.index.to_list()
-            self.simulation_Labels = [('LC_' + str(item)) for item in self.simulation_Labels]
+            self.simulation_Labels = [
+                ('LC_' + str(item)) for item in self.simulation_Labels
+            ]
         else:
             self.simulation_filenames = []
 
     def get_filename_without_extension(self, filename):
         filename_components = filename.split('.')
-        filename_without_extension = filename.replace('.' + filename_components[-1], "")
+        filename_without_extension = filename.replace(
+            '.' + filename_components[-1], "")
 
         return filename_without_extension
 
@@ -910,10 +1230,13 @@ class OrcaFlexAnalysis():
 
         save_data = SaveData()
 
-
         customdata = {
-            "FileName": self.cfg['Analysis']['result_folder'] + self.cfg['Analysis']['file_name'] + '_RAOs.xlsx',
-            "SheetNames": df_label_array,
-            "thin_border": True
+            "FileName":
+                self.cfg['Analysis']['result_folder'] +
+                self.cfg['Analysis']['file_name'] + '_RAOs.xlsx',
+            "SheetNames":
+                df_label_array,
+            "thin_border":
+                True
         }
         save_data.DataFrameArray_To_xlsx_openpyxl(df_array, customdata)

@@ -1,0 +1,1025 @@
+&id001 !!python/object/new:digitalmodel.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: src/digitalmodel/tests/test_data/catenary_riser.yml
+    DefaultInputFile: null
+    basename: vertical_riser
+    cfg_array_file_names: null
+    fe_filename: src/digitalmodel/tests/test_data\results\app_vertical_riser_catenary_riser_shear7_FE.yml
+    fe_folder: src/digitalmodel/tests/test_data\results\
+    file_name: app_vertical_riser_catenary_riser
+    file_name_for_overwrite: app_vertical_riser_catenary_riser
+    log_folder: src/digitalmodel/tests/test_data\logs\
+    result:
+      component_bottom_effective_tension:
+      - 0.0
+      - 348001.31662904785
+      - 159.13952327111596
+      - 159.13952327111596
+      - 95.6944845084464
+      - 0.0
+      - 0.0
+      - 2704.596143222941
+      - 2704.596143222941
+      - 2704.596143222941
+      - 2653.399818714495
+      - 2653.399818714495
+      - 2595.291326580409
+      - 2595.291326580409
+      - 2595.291326580409
+      - 2533.6700688226483
+      - 2252.1290529352445
+      - 3167.2681792444123
+      - 3167.2681792444123
+      - 3167.2681792444123
+      - 3167.2681792444123
+      - 2885.7271633570085
+      - 2885.7271633570085
+      - 1779.9264
+      - -59.09601786055964
+      - -59.09601786055964
+      - -59.09601786055964
+      - -8059213.117528392
+      - -18281257.191979557
+      component_bottom_elevation_from_end_A:
+      - 0.0
+      - 0.0
+      - 4.572
+      - 4.572
+      - 9.144
+      - 12.192
+      - 12.192
+      - 30.48
+      - 30.48
+      - 30.48
+      - 33.528
+      - 33.528
+      - 39.623999999999995
+      - 39.623999999999995
+      - 39.623999999999995
+      - 51.815999999999995
+      - 120.39599999999999
+      - 714.756
+      - 714.756
+      - 714.756
+      - 714.756
+      - 783.336
+      - 783.336
+      - 789.432
+      - 796.4424
+      - 796.4424
+      - 796.4424
+      - 823.8744
+      - 869.5944000000001
+    result_folder: src/digitalmodel/tests/test_data\results\
+    start_time: 2023-05-08 12:32:18.053578
+  EnvironmentLoad:
+    Extreme:
+    - ActiveCurrent: S10
+      CodeChecks:
+        APISTD2RDAlphaFab: 1
+        APISTD2RDDelta: 0.01
+        APISTD2RDFd1: 0.8
+        APISTD2RDFd2: 0.8
+        APISTD2RDk: 0.45
+      Currents:
+      - CurrentDepth, CurrentFactor, CurrentRotation:
+        - - 0
+          - 1
+          - 0
+        - - 100
+          - 1
+          - 0
+        CurrentMethod: Interpolated
+        CurrentRamp: false
+        HorizontalCurrentFactor: '~'
+        Name: Current1
+        RefCurrentDirection: 180
+        RefCurrentSpeed: 0
+      - CurrentDepth, CurrentFactor, CurrentRotation:
+        - - 0
+          - 1
+          - 0
+        - - 100
+          - 1
+          - 0
+        CurrentMethod: Interpolated
+        CurrentRamp: false
+        HorizontalCurrentFactor: '~'
+        Name: Zero_Current
+        RefCurrentDirection: 180
+        RefCurrentSpeed: 0
+      - CurrentDepth, CurrentFactor, CurrentRotation:
+        - - 0
+          - 1
+          - 0
+        - - 100
+          - 1
+          - 0
+        CurrentMethod: Interpolated
+        CurrentRamp: false
+        HorizontalCurrentFactor: '~'
+        Name: Current2
+        RefCurrentDirection: 180
+        RefCurrentSpeed: 0
+      - CurrentDepth, CurrentFactor, CurrentRotation:
+        - - 0
+          - 0.9
+          - 0
+        - - 10
+          - 0.9
+          - 0
+        - - 20
+          - 0.81
+          - 0
+        - - 50
+          - 0.9
+          - 0
+        - - 100
+          - 0.738
+          - 0
+        - - 125
+          - 0.702
+          - 0
+        - - 150
+          - 0.603
+          - 0
+        - - 200
+          - 0.54
+          - 0
+        - - 300
+          - 0.711
+          - 0
+        - - 400
+          - 0.522
+          - 0
+        - - 450
+          - 0.459
+          - 0
+        - - 500
+          - 0.423
+          - 0
+        - - 627
+          - 0.477
+          - 0
+        - - 746
+          - 0.343
+          - 0
+        - - 750
+          - 0.2
+          - 0
+        CurrentMethod: Interpolated
+        CurrentRamp: false
+        HorizontalCurrentFactor: '~'
+        Name: N10
+        RefCurrentDirection: 90
+        RefCurrentSpeed: 1
+      - CurrentDepth, CurrentFactor, CurrentRotation:
+        - - 0
+          - 2.1
+          - 0
+        - - 10
+          - 2.1
+          - 0
+        - - 20
+          - 1.91
+          - 0
+        - - 50
+          - 1.88
+          - 0
+        - - 100
+          - 1.56
+          - 0
+        - - 125
+          - 1.49
+          - 0
+        - - 150
+          - 1.49
+          - 0
+        - - 200
+          - 1.47
+          - 0
+        - - 300
+          - 0.59
+          - 0
+        - - 310
+          - 0.58
+          - 0
+        - - 400
+          - 0.4
+          - 0
+        - - 442
+          - 0.35
+          - 0
+        - - 500
+          - 0.31
+          - 0
+        - - 746
+          - 0.31
+          - 0
+        - - 750
+          - 0.18
+          - 0
+        CurrentMethod: Interpolated
+        CurrentRamp: false
+        HorizontalCurrentFactor: '~'
+        Name: NNW100
+        RefCurrentDirection: 180
+        RefCurrentSpeed: 1
+      MultipleCurrentDataCanBeDefined: true
+      Vessel:
+        Draft: Ballast
+        InitialPosition:
+        - 0
+        - 0
+        - -11.89
+        Offset: None
+        OffsetPercentWD: 6
+        Orientation:
+        - 0
+        - 0
+        - 0
+      Wave:
+        KinematicStretchingMethod: Vertical Stretching
+        SimulationTimeOrigin: 6595.1
+        UserSpecifiedRandomWaveSeeds: true
+        WaveCalculationMethod: Instantaneous Position (exact)
+        WaveCalculationSpatialInterval: 0
+        WaveCalculationTimeInterval: 0
+        WaveFrequencySpectrumDiscretisationMethod: Equal energy
+        WaveKinematicsCutoffDepth: 200
+        WaveTrains:
+        - Name: Wave1
+          WaveDirection: 270
+          WaveHs1: 0.0001
+          WaveHs2: 0.0001
+          WaveLambda1: 8
+          WaveLambda2: 2
+          WaveNumberOfComponents: 500
+          WaveNumberOfSpectralDirections: 1
+          WaveOchiHubbleParameters: Specified
+          WaveOrigin:
+          - 0
+          - 0
+          WaveSeed: 848251
+          WaveSpectrumMaxComponentFrequencyRange: 0.05
+          WaveSpectrumMaxRelFrequency: 10
+          WaveSpectrumMinRelFrequency: 0.5
+          WaveTimeOrigin: 0
+          WaveType: Ochi-Hubble
+          Wavefm1: 0.05235602
+          Wavefm2: 0.0892857143
+    Fatigue:
+    - CodeChecks:
+        APISTD2RDAlphaFab: 1
+        APISTD2RDDelta: 0.01
+        APISTD2RDFd1: 0.8
+        APISTD2RDFd2: 0.8
+        APISTD2RDk: 0.45
+      Current:
+        CurrentDepth, CurrentFactor, CurrentRotation:
+        - - 0
+          - 1.0
+          - 0
+        - - 36.5
+          - 1.0
+          - 0
+        - - 64.5
+          - 0.95
+          - 0
+        - - 100
+          - 0.77
+          - -45
+        - - 400
+          - 0.51
+          - -45
+        - - 750
+          - 0.4
+          - -157.5
+        RefCurrentDirection: 180
+        RefCurrentSpeed: 0
+      MultipleCurrentDataCanBeDefined: false
+      Vessel:
+        Draft: Ballast
+        InitialPosition:
+        - 0
+        - 0
+        - -11.89
+        Offset: None
+        OffsetPercentWD: 0
+        Orientation:
+        - 0
+        - 0
+        - 0
+      Wave:
+        KinematicStretchingMethod: Vertical Stretching
+        SimulationTimeOrigin: 0
+        UserSpecifiedRandomWaveSeeds: true
+        WaveCalculationMethod: Instantaneous Position (exact)
+        WaveCalculationSpatialInterval: 0
+        WaveCalculationTimeInterval: 0
+        WaveFrequencySpectrumDiscretisationMethod: Equal energy
+        WaveKinematicsCutoffDepth: 200
+        WaveTrains:
+        - Name: Wave1
+          WaveDirection: 45
+          WaveGamma: 2.2
+          WaveHs: 0.5
+          WaveJONSWAPParameters: Partially Specified
+          WaveNumberOfComponents: 300
+          WaveNumberOfSpectralDirections: 1
+          WaveOrigin:
+          - 0
+          - 0
+          WaveSpectrumMaxComponentFrequencyRange: 0.05
+          WaveSpectrumMaxRelFrequency: 10
+          WaveSpectrumMinRelFrequency: 0.5
+          WaveTimeOrigin: 0
+          WaveTp: 3.0
+          WaveType: JONSWAP
+  FEASettings:
+    AnchorAdjustment:
+      SCR: 10
+      SLWR: 25
+    CorrosionAllowance:
+      Extreme: 0.236
+      Fatigue: 0.118
+    Damping:
+      Extreme:
+        ApplyToGeometricStiffness: false
+        DampingRatio: 0.5
+        Mode: Stiffness Proportional
+        Name: SteelDamping
+        Period1: '~'
+      Fatigue:
+        ApplyToGeometricStiffness: false
+        DampingRatio: 0.5
+        Mode: Stiffness Proportional
+        Name: SteelDamping
+        Period1: '~'
+    DesignPressure:
+      Surface: 750
+      TDP: null
+    EndOrientation:
+      SCR:
+        A:
+          Azimuth: calculated
+          Declination: calculated
+          Gamma: 0
+        B:
+          Azimuth: calculated
+          Declination: 90
+          Gamma: 0
+      SLWR:
+        A:
+          Azimuth: calculated
+          Declination: calculated
+          Gamma: 0
+        B:
+          Azimuth: calculated
+          Declination: 90
+          Gamma: 0
+    FlexJointStiffness:
+      ConnectionLabel: FJProfile
+      Extreme:
+      - - 0.0
+        - 0.0
+      - - 0.01
+        - 7.36
+      - - 0.02
+        - 11.4
+      - - 0.03
+        - 14.72
+      - - 0.04
+        - 17.65
+      - - 0.05
+        - 20.33
+      - - 0.06
+        - 22.81
+      - - 0.07
+        - 25.14
+      - - 0.08
+        - 27.35
+      - - 0.09
+        - 29.46
+      - - 0.1
+        - 31.49
+      - - 0.2
+        - 48.78
+      - - 0.3
+        - 63.01
+      - - 0.4
+        - 75.56
+      - - 0.5
+        - 87.0
+      - - 0.6
+        - 97.61
+      - - 0.7
+        - 107.59
+      - - 0.8
+        - 117.05
+      - - 0.9
+        - 126.1
+      - - 1.0
+        - 134.77
+      - - 1.5
+        - 174.1
+      - - 2.0
+        - 208.77
+      - - 3.0
+        - 269.67
+      - - 4.0
+        - 323.41
+      - - 6.0
+        - 417.78
+      - - 8.0
+        - 501.02
+      - - 10.0
+        - 576.77
+      - - 12.0
+        - 647.16
+      - - 13.25
+        - 688.96
+      - - 22.0
+        - 1143.94
+      Fatigue:
+      - - 0.0
+        - 0.0
+      - - 0.01
+        - 4.28
+      - - 0.02
+        - 6.77
+      - - 0.03
+        - 8.85
+      - - 0.04
+        - 10.7
+      - - 0.05
+        - 12.4
+      - - 0.06
+        - 13.99
+      - - 0.07
+        - 15.49
+      - - 0.08
+        - 16.91
+      - - 0.09
+        - 18.28
+      - - 0.1
+        - 19.6
+      - - 0.2
+        - 30.99
+      - - 0.3
+        - 40.51
+      - - 0.4
+        - 48.99
+      - - 0.5
+        - 56.77
+      - - 0.6
+        - 64.04
+      - - 0.7
+        - 70.91
+      - - 0.8
+        - 77.44
+      - - 0.9
+        - 83.71
+      - - 1.0
+        - 89.75
+      - - 1.5
+        - 117.31
+      - - 2.0
+        - 141.87
+      - - 3.0
+        - 185.49
+      - - 4.0
+        - 224.33
+      - - 6.0
+        - 293.27
+      - - 8.0
+        - 354.54
+      - - 10.0
+        - 410.96
+      - - 11.8
+        - 458.33
+    Hydrodynamic:
+      Extreme:
+        BuoyPipe:
+          Ca:
+          - 1
+          - '~'
+          - 0.001
+          Cd:
+          - 1
+          - '~'
+          - 0.001
+        BuoyPipeStartEnd:
+          Ca:
+          - 1
+          - '~'
+          - 0.053570901
+          Cd:
+          - 1
+          - '~'
+          - 0.080356352
+        MainPipe:
+          Ca:
+          - 1.5
+          - '~'
+          - 0
+          Cd:
+          - 1.5
+          - '~'
+          - 0.008
+      Fatigue:
+        BuoyPipe:
+          Ca:
+          - 1
+          - '~'
+          - 0.001
+          Cd:
+          - 0.9
+          - '~'
+          - 0.001
+        BuoyPipeStartEnd:
+          Ca:
+          - 1
+          - '~'
+          - 0.053570901
+          Cd:
+          - 1
+          - '~'
+          - 0.080356352
+        MainPipe:
+          Ca:
+          - 1.5
+          - '~'
+          - 0
+          Cd:
+          - 1.35
+          - '~'
+          - 0.008
+    Mesh:
+      AfterTDP:
+        L: 250
+        Size: 1
+      BeforeTDP:
+        L: 250
+        Size: 1
+      Buoyancy:
+        L: null
+        Size: 2
+      SCR:
+        AfterTDP:
+          L: 250
+          Size: 1
+        BeforeTDP:
+          L: 250
+          Size: 1
+        Buoyancy:
+          L: null
+          Size: 2
+        Top:
+          L: 25
+          Size: 0.5
+      Top:
+        L: 25
+        Size: 0.5
+      Vertical: null
+    Seabed:
+      FrictionCoefficient:
+        Axial: 0.45
+        Normal: 0.6
+      Stiffness:
+        Extreme: 10000
+        Fatigue: 1000
+    Stage:
+      Extreme:
+        Duration:
+        - 8
+        - 120
+        ImplicitConstantTimeStep: 0.02
+        TargetLogSampleInterval: 0.3
+      Fatigue:
+        Duration:
+        - 8
+        - 600
+        ImplicitConstantTimeStep: 0.2
+        TargetLogSampleInterval: 0.3
+  LazyWaveCatenaryDefinition:
+    DiscreteBuoyancy:
+      BuoyancyCoverage: 100
+      BuoyancyFactor: null
+      Thickness: null
+    Hangoff:
+      above_keel: 11.21
+      from_centerline: 32
+      from_midship: 80
+    HangoffBelowMeanSeaLevel: 0
+    HogBendAboveSeabed: 1097.28
+    SagBendElevationAboveSeabed: 731.52
+    Spacing: 10
+    TDPToAnchor: 1500
+    TaperJoint:
+      L: 3.66
+      ThickendThickness: 2.5
+    UniformBuoyancy:
+      BuoyancyFactor: 2
+      Thickness: null
+    VerticalDistance: 1874.64
+    declinationAngle: 8
+    lay_azimuth_to_vessel: 90
+  Material:
+    Buoyancy:
+      Rho: 650
+    ExternalCoating:
+      Rho: 800.9
+    Fluid:
+      Rho: 400.4616
+    MarineGrowth:
+      Density: null
+    Reference_Fluid:
+      Rho: 400.4616
+    SeaWater:
+      Rho: 1025
+    Steel:
+      E: 30000000.0
+      G: 11538461.54
+      Grades:
+        API 5L X60:
+          Reference: null
+          SMUS: null
+          SMYS: 60000
+        API 5L X65:
+          Reference: null
+          SMUS: 77500
+          SMYS: 65300
+        API 5L X70:
+          Reference: null
+          SMUS: null
+          SMYS: 70300
+        API 5L X80:
+          Reference: Assumed
+          SMUS: 95000
+          SMYS: 80000
+        ASTM A106 Grade A:
+          Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
+          SMUS: 48000
+          SMYS: 30000
+        ASTM A106 Grade B:
+          Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
+          SMUS: 60000
+          SMYS: 35000
+        ASTM A106 Grade C:
+          Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
+          SMUS: 70000
+          SMYS: 40000
+        P110:
+          Reference: Assumed
+          SMUS: 125000
+          SMYS: 110000
+        S125:
+          Reference: Assumed
+          SMUS: 140000
+          SMYS: 125000
+      PoissionsRatio: 0.3
+      Poissionsratio: 0.3
+      Rho: 7850
+      SMUS: 77600
+      SMYS: 65300
+      ThermalExpansionCoefficient: 6.5e-06
+    Strakes:
+      Density: null
+      MassPerUnitLength: 21.5787
+      WeightPerUnitLength: -42.3375
+  default:
+    Analysis:
+      Extreme: true
+      Fatigue: false
+      Jumper: false
+      SCR: false
+      SLWR: true
+    Constants:
+      g: 9.81
+    analysis:
+      host:
+        id: 1
+        raos:
+          Extreme: src\digitalmodel\tests\test_data\vessels\host_id_1_extreme_disp_raos.yml
+          Fatigue: src\digitalmodel\tests\test_data\vessels\host_id_1_extreme_disp_raos.yml
+        type: drilling
+      loading_type:
+        Extreme: true
+        Fatigue: true
+        VIV: true
+      riser:
+        shape: vertical
+        type:
+          drilling: true
+          intervention: false
+          top_tensioned: false
+      well:
+        id: 1
+    config:
+      cfg_sensitivities: false
+      overwrite:
+        output: true
+    log_level: DEBUG
+    units:
+      BendingMoment: kNm
+      BuoyancyCoverage: Percentage
+      E: psi
+      EffectiveTension: kN
+      MassPerUnitLength: kg/m
+      NominalID: inch
+      NominalOD: inch
+      NominalWT: inch
+      Pressure: psi
+      Rho: kg/m3
+      SoilStiffness: kN/m/m
+      Temperature: deg F
+      WeightPerUnitLength: N/m
+      YieldStrength: psi
+      declinationAngle: deg with vertical
+      elevations:
+      - Start elevations above Mudline (m)
+      - End elevations above Mudline (m)
+      verticalDistance: m
+  geometry:
+    DesignWT: 1.0
+    ExternalCoating:
+      Thickness: 2.953
+    MarineGrowth:
+      Thickness: null
+    Material: Steel
+    NominalID: null
+    NominalOD: 8.625
+    Strakes:
+      Area: null
+      BaseThickness: 0.5906
+    waterDepth: 1347.2
+  plotSettings:
+    label: Design Pressure Limit
+    plotFileName: OD_{0}
+    pltSupTitle: Design Pressure With Thickness
+    pltTitle: API STD 2RD, X-65, {2} of {0} inch, Corrosion Allowance {1} inch
+    pltXLabel: Thickness (inch)
+    pltYLabel: Pressure (psi)
+    yLim:
+    - 0
+    - 12500
+  plot_settings:
+  - file_name: effective_tension
+    grid: true
+    label:
+    - effective tension
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Effective Tension along Riser
+    title: ' '
+    x:
+    - component_bottom_effective_tension
+    xlabel: Effective Tension (kN)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim: null
+  - file_name: effective_tension_top
+    grid: true
+    label:
+    - effective tension
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Effective Tension along Riser
+    title: ' '
+    x:
+    - component_bottom_effective_tension
+    xlabel: Effective Tension (kN)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim:
+    - 0
+    - 50
+  - file_name: effective_tension_bottom
+    grid: true
+    label:
+    - effective tension
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Effective Tension along Riser
+    title: ' '
+    x:
+    - component_bottom_effective_tension
+    xlabel: Effective Tension (kN)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim:
+    - 2800
+    - 3000
+  - file_name: diameters
+    grid: true
+    label:
+    - StressOD
+    - StressID
+    - drag_diameter
+    - buoyancy_diameter
+    - internal_fluid_ID
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Diameters along Riser
+    title: ' '
+    x:
+    - StressOD
+    - StressID
+    - drag_diameter
+    - buoyancy_diameter
+    - internal_fluid_ID
+    xlabel: Diameters (m)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim: null
+  - file_name: area_moments
+    grid: true
+    label:
+    - Area
+    - Area Moment of Intertia
+    - Polar Moment
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Area Moments along Riser
+    title: ' '
+    x:
+    - A
+    - I
+    - J
+    xlabel: Area Moments (m4)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim: null
+  - file_name: stiffness
+    grid: true
+    label:
+    - Bending
+    - Axial
+    - Torsional
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Stiffness along Riser
+    title: ' '
+    x:
+    - EI
+    - EA
+    - GJ
+    xlabel: Stiffness (kgm2)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim: null
+  - file_name: weights
+    grid: true
+    label:
+    - stack_in_service_weight
+    - dry_weight_per_unit_length
+    - wet_weight_per_unit_length
+    - internal_fluid_weight_per_unit_length
+    - internal_fluid_weight_in_seawater_per_unit_length
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Weights along Riser
+    title: ' '
+    x:
+    - stack_in_service_weight
+    - dry_weight_per_unit_length
+    - wet_weight_per_unit_length
+    - internal_fluid_weight_per_unit_length
+    - internal_fluid_weight_in_seawater_per_unit_length
+    xlabel: weights (kN)
+    xticklabels:
+    - Drillships
+    - Semisubmersibles
+    y:
+    - component_bottom_elevation_above_mudline
+    ylabel: Elevation Above Mudline (m)
+    ylim: null
+  simpleCatenaryDefinition:
+    HangoffBelowMeanSeaLevel: 0
+    Spacing: 10
+    TDPToAnchor: 500
+    axialLineForce: null
+    declinationAngle: 8
+    lay_azimuth_to_vessel: 90
+    verticalDistance: 1874.64
+  stack_up:
+    from_xlsx:
+    - columns: null
+      index_col: null
+      io: src\digitalmodel\tests\test_data\vertical_riser\drilling_riser_template.xlsx
+      label: stack_up_table
+      replace: null
+      sheet_name: SU_Configuration 2500ft WD
+      skipfooter: 0
+      skiprows: 0
+    - columns: null
+      index_col: null
+      io: src\digitalmodel\tests\test_data\vertical_riser\drilling_riser_template.xlsx
+      label: riser_joints
+      replace: null
+      sheet_name: Joints
+      skipfooter: 0
+      skiprows: 0
+    - columns: null
+      index_col: null
+      io: src\digitalmodel\tests\test_data\vertical_riser\drilling_riser_template.xlsx
+      label: tensioners
+      replace: null
+      sheet_name: Tensioners
+      skipfooter: 0
+      skiprows: 0
+    - columns: null
+      index_col: null
+      io: src\digitalmodel\tests\test_data\vertical_riser\drilling_riser_template.xlsx
+      label: flexible_joints
+      replace: null
+      sheet_name: Flexible Jts
+      skipfooter: 0
+      skiprows: 0
+    - columns: null
+      index_col: null
+      io: src\digitalmodel\tests\test_data\vertical_riser\drilling_riser_template.xlsx
+      label: geotechnical
+      replace: null
+      sheet_name: geotechnical
+      skipfooter: 0
+      skiprows: 0
+    - columns: null
+      index_col: null
+      io: src\digitalmodel\tests\test_data\vertical_riser\drilling_riser_template.xlsx
+      label: hosts
+      replace: null
+      sheet_name: hosts
+      skipfooter: 0
+      skiprows: 0
+    overpull:
+      drilling:
+        bottom_of_component: LMRP
+        unit: kips
+        value: 400
+      intervention:
+        bottom_of_component: EDP
+        unit: kips
+        value: 125
+      top_tensioned:
+        bottom_of_component: Wellhead
+        unit: kips
+        value: 100
+    stroke_setting:
+      initial_down_stroke: 0.25
+      model_stroke_in_and_out_limits: true
+state: *id001

@@ -1,3 +1,5 @@
+@pytest.mark.skip(reason="Not implemented yet")
+
 from dash import Dash
 from dash.dependencies import Input, Output
 

@@ -22,3 +22,5 @@ dependencies:
       - OrcFxAPI
       - docx
       - deepdiff
+      - pytest
+      - sympy

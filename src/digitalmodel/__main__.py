@@ -19,3 +19,7 @@ Version:
 
 - dashhtmlgrid v0.1.0
 """
+
+from digitalmodel.engine import engine
+
+engine()

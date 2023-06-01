@@ -42,7 +42,7 @@ def insulationSectionProperties(cfg):
     return cfg
 
 def buoyancySectionProperties(cfg):
-    OD = cfg['InsulationSection']["OD"]+2*cfg["LazyWaveCatenaryDefinition"]["UniformBuoyancy"]['Thickness']
+    OD = cfg['InsulationSection']["OD"]+2*cfg["commonDefinition"]["UniformBuoyancy"]['Thickness']
     ID = cfg['InsulationSection']["OD"]
     data = {"OD": OD, "ID": ID}
     cfg['BuoyancySection'] = sectionProperties(data)

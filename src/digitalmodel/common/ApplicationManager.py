@@ -3,6 +3,7 @@ import yaml
 import datetime
 import logging
 import functools
+import pkgutil
 
 from digitalmodel.common.update_deep import update_deep_dictionary
 from digitalmodel.common.data import AttributeDict
@@ -161,32 +162,43 @@ class ConfigureApplicationInputs():
     def unify_application_and_default_and_custom_yamls(self, run_dict):
         self.ApplicationInputFile = os.getcwd(
         ) + '\\src\\digitalmodel\\tests\\test_data\\' + self.basename + '.yml'
-        self.get_custom_file(run_dict)
+        self.get_custom_file()
+        if not os.path.isfile(self.ApplicationInputFile):
+            data = pkgutil.get_data('digitalmodel',
+                                    'tests/test_data/' + self.basename + '.yml')
+            self.ApplicationInputFile_dict = yaml.safe_load(data)
+
         # Get updated configuration file for Analysis
         self.cfg = self.generateYMLInput(run_dict)
 
-    def get_custom_file(self, run_dict):
+    def get_custom_file(self, run_dict=None):
         import sys
-        if run_dict is None:
-            try:
-                if (sys.argv[1] != None):
-                    self.customYaml = sys.argv[1]
-                    print("Updating default values with contents in file {0}".
-                          format(self.customYaml))
-            except:
-                self.customYaml = None
+
+        try:
+            if (sys.argv[1] != None):
+                self.customYaml = sys.argv[1]
                 print(
-                    "No update values file is provided. Running program default values "
-                    "from {0}".format(self.ApplicationInputFile))
-            self.CustomInputs = None
-        else:
+                    "Updating default values with contents in file {0}".format(
+                        self.customYaml))
+        except:
+            self.customYaml = None
+            print(
+                "No update values file is provided. Running program default values "
+                "from {0}".format(self.ApplicationInputFile))
+
+        if run_dict is not None:
             self.customYaml = None
             self.CustomInputs = run_dict.get('CustomInputs', None)
+        else:
+            self.CustomInputs = None
 
     def generateYMLInput(self, run_dict):
 
-        with open(self.ApplicationInputFile, 'r') as ymlfile:
-            cfg = yaml.load(ymlfile, Loader=yaml.Loader)
+        if os.path.isfile(self.ApplicationInputFile):
+            with open(self.ApplicationInputFile, 'r') as ymlfile:
+                cfg = yaml.load(ymlfile, Loader=yaml.Loader)
+        else:
+            cfg = self.ApplicationInputFile_dict
 
         if self.customYaml is not None:
             try:
@@ -261,31 +273,7 @@ class ConfigureApplicationInputs():
         if not os.path.exists(result_plot_folder):
             os.mkdir(result_plot_folder)
 
-        # files = self.cfg.get('Files', None)
         cfg_array_file_names = None
-        # if files is not None:
-        #     cfg_array_file_names_without_path_without_ext = []
-        #     cfg_array_file_names_with_path_without_ext = []
-        #     cfg_array_file_names_with_path_with_ext = []
-        #
-        #     for file_index in range(0, len(files)):
-        #         cfg_array_file_names_without_path_without_ext.append(
-        #             file_name_for_overwrite + '_' + os.path.basename(files['data'][file_index]['Name']).split('.')[0])
-        #         cfg_array_file_names_with_path_without_ext.append(
-        #             result_folder + cfg_array_file_names_without_path_without_ext[file_index])
-        #         cfg_array_file_names_with_path_with_ext.append(cfg_array_file_names_with_path_without_ext[file_index] +
-        #                                                        '.yml')
-        #
-        #     cfg_array_file_names = {
-        #         'without_path': {
-        #             'with_ext': None,
-        #             'without_ext': cfg_array_file_names_without_path_without_ext
-        #         },
-        #         'with_path': {
-        #             'with_ext': cfg_array_file_names_with_path_with_ext,
-        #             'without_ext': cfg_array_file_names_with_path_without_ext
-        #         }
-        #     }
 
         application_configuration_parameters = {
             "Analysis": {

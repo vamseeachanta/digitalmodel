@@ -1,3 +1,5 @@
+basename: vertical_riser
+
 default:
   analysis:
     host:
