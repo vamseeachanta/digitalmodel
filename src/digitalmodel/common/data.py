@@ -7,7 +7,29 @@ from digitalmodel.common.utilities import is_file_valid
 
 
 class ReadFromExcel():
-    pass
+
+    def from_xlsx(self, cfg, file_index=0):
+        cfg_template_single_xlsx = {'io': 'data_manager/data/sample_data.xlsx'}
+        import pandas as pd
+
+        if cfg.__contains__('files'):
+            cfg_temp = cfg['files']['from_xlsx'][file_index]
+        else:
+            cfg_temp = cfg
+
+        if cfg_temp.__contains__('sheet_name'):
+            result = pd.read_excel(cfg_temp['io'],
+                                   sheet_name=cfg_temp['sheet_name'],
+                                   skiprows=cfg_temp['skiprows'],
+                                   skipfooter=cfg_temp['skipfooter'],
+                                   index_col=cfg_temp['index_col'])
+        else:
+            xls = pd.ExcelFile(cfg_temp['io'])
+            result = {}
+            for sheet_name in xls.sheet_names:
+                result[sheet_name] = xls.parse(sheet_name)
+
+        return result
 
 
 class ReadData():
@@ -33,29 +55,6 @@ class ReadData():
         df.drop(df.columns[dropped_column_array], axis=1, inplace=True)
 
         return df
-
-    def from_xlsx(self, cfg, file_index=0):
-        cfg_template_single_xlsx = {'io': 'data_manager/data/sample_data.xlsx'}
-        import pandas as pd
-
-        if cfg.__contains__('files'):
-            cfg_temp = cfg['files']['from_xlsx'][file_index]
-        else:
-            cfg_temp = cfg
-
-        if cfg_temp.__contains__('sheet_name'):
-            result = pd.read_excel(cfg_temp['io'],
-                                   sheet_name=cfg_temp['sheet_name'],
-                                   skiprows=cfg_temp['skiprows'],
-                                   skipfooter=cfg_temp['skipfooter'],
-                                   index_col=cfg_temp['index_col'])
-        else:
-            xls = pd.ExcelFile(cfg_temp['io'])
-            result = {}
-            for sheet_name in xls.sheet_names:
-                result[sheet_name] = xls.parse(sheet_name)
-
-        return result
 
     def from_xlsx_get_line_number_containing_keyword(self, cfg):
         """

@@ -10,6 +10,7 @@ from digitalmodel.vertical_riser import vertical_riser
 from digitalmodel.orcaflex_analysis import orcaflex_analysis
 from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
+from digitalmodel.custom.rigging import Rigging
 
 
 def engine(inputfile=None):
@@ -54,8 +55,11 @@ def engine(inputfile=None):
         cpf = CopyAndPasteFiles()
         cfg_base = cpf.iterate_all_cfgs(application_manager.cfg)
     elif basename == 'umbilical_end':
-        ua = UmbilicalAnalysis(cfg)
-        ua.perform_analysis()
+        ua = UmbilicalAnalysis()
+        ua.perform_analysis(application_manager.cfg)
+    elif basename == 'rigging':
+        rigging = Rigging()
+        cfg_base = rigging.get_rigging_groups(application_manager.cfg)
     else:
         raise (Exception(f'Analysis for base name not found. ... FAIL'))
 
