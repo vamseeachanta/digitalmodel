@@ -49,3 +49,8 @@ https://www.thecrosbygroup.com/catalog/shackles/
 |---------|--------|-----|-----|------------------|-------------|
 | Shackles |  Nautilus ROV Hooks |  | tba |  | nautilus_subsea_data_sheet |
 | Shackles |  Bolt Type G2130 |  | tba |  | 26_shackles_bolt_type_anchor_g2130 |
+
+## Using OrcaFlex wizard
+
+https://www.orcina.com/webhelp/OrcFxAPI/Content/html/Pythonreference,OrcaFlexWizardObject.htm
+

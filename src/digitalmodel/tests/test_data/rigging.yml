@@ -34,11 +34,14 @@ rigging_groups:
     rigging_array:
     - category: shackle
       subcategory: G2100
+      part_number: 2038614
       wll_mt: 25
     - category: sling
       subcategory: polyester_endless_round
+      part_number: 1500
       length: 4
       wll_mt: 5
     - category: shackle
       subcategory: G2130
+      part_number: 1019533
       wll_mt: 6.5

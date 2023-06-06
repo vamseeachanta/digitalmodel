@@ -7,6 +7,8 @@ from digitalmodel.common.data import ReadFromExcel
 from digitalmodel.custom.rigging_components import Slings
 from digitalmodel.custom.rigging_components import Shackles
 
+
+
 read_excel = ReadFromExcel()
 
 slings = Slings()
@@ -37,5 +39,5 @@ class Rigging:
         return 1
 
     def get_shackle(self, cfg=None):
-        slings.get_sling(cfg)
+        shackles.get_shackle(cfg)
         return 1
