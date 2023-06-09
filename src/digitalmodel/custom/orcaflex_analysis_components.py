@@ -142,7 +142,30 @@ class OrcaFlexAnalysis():
             print("No FEA performed per user request")
 
     def run_static_analysis(self, filename_with_ext, model):
-        model.CalculateStatics()
+        print(f"Static analysis for {filename_with_ext} ... .... ")
+        try:
+            print(f"First analysis ......")
+            model.CalculateStatics()
+            print(f"First analysis ... PASS")
+            self.save_model_with_calculated_positions(filename_with_ext, model)
+            model = self.analysis_with_calculated_positions(model)
+        except:
+            print(f"First static analysis for ... FAIL")
+
+        print(f"Analysis with calculated positions ....... ")
+
+        return model
+
+    def analysis_with_calculated_positions(self, model):
+        try:
+            model.CalculateStatics()
+            print(f"Analysis with calculated positions ... PASS")
+        except:
+            print(f"Analysis with calculated positions ... FAIL")
+
+        return model
+
+    def save_model_with_calculated_positions(self, filename_with_ext, model):
         if self.cfg['default']['Analysis']['Analyze']['statics'][
                 'UseCalculatedPositions']['flag']:
             model.UseCalculatedPositions(
@@ -155,8 +178,6 @@ class OrcaFlexAnalysis():
                 )[0] + '_calculated_positions' + os.path.splitext(
                     filename_with_ext)[1]
             model.SaveData(calculated_positions_filename)
-
-        return model
 
     def iterate_to_value(self, model, iterate_cfg):
         iterations_df = pd.DataFrame(columns=['variable', 'output'])
@@ -244,7 +265,7 @@ class OrcaFlexAnalysis():
             self.cfg, self.cfg['Analysis']['result_folder'] +
             self.cfg['Analysis']['file_name'], False)
 
-        if self.cfg.default['Analysis']['cummulative_histograms']['flag']:
+        if self.cfg.default['postprocess']['cummulative_histograms']['flag']:
             histogram_data_array = [
                 item['data'] for item in self.detailed_histograms_array
             ]
