@@ -12,6 +12,8 @@ default:
           flag: True
           overwrite: True
       iterate: True
+  postprocess:
+    flag: True
     Summary:
       flag: True
       AddMinimumToSummary: True

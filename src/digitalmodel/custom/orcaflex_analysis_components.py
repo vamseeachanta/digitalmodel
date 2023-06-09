@@ -73,7 +73,8 @@ class OrcaFlexAnalysis():
         ]:
             print("Processing orcaflex yaml files")
             self.process_fea()
-            self.post_process_files()
+            if self.cfg['default']['postprocess']['flag']:
+                self.post_process_files()
             self.save_data()
         if self.cfg['default']['Analysis']['Analyze']['file_type'] in [
                 'script'
@@ -116,20 +117,7 @@ class OrcaFlexAnalysis():
 
                 if self.cfg['default']['Analysis']['Analyze']['statics'][
                         'flag']:
-                    model.CalculateStatics()
-                    if self.cfg['default']['Analysis']['Analyze']['statics'][
-                            'UseCalculatedPositions']['flag']:
-                        model.UseCalculatedPositions(
-                            SetLinesToUserSpecifiedStartingShape=True)
-                        calculated_positions_filename = filename_with_ext
-                        if not self.cfg['default']['Analysis']['Analyze'][
-                                'statics']['UseCalculatedPositions'][
-                                    'overwrite']:
-                            calculated_positions_filename = os.path.splitext(
-                                filename_with_ext
-                            )[0] + '_calculated_positions' + os.path.splitext(
-                                filename_with_ext)[1]
-                        model.SaveData(calculated_positions_filename)
+                    model = self.run_static_analysis(filename_with_ext, model)
                 elif self.cfg['default']['Analysis']['Analyze']['simulation']:
                     model.RunSimulation()
                 elif self.cfg['default']['Analysis']['Analyze']['iterate'][
@@ -152,6 +140,23 @@ class OrcaFlexAnalysis():
             )
         else:
             print("No FEA performed per user request")
+
+    def run_static_analysis(self, filename_with_ext, model):
+        model.CalculateStatics()
+        if self.cfg['default']['Analysis']['Analyze']['statics'][
+                'UseCalculatedPositions']['flag']:
+            model.UseCalculatedPositions(
+                SetLinesToUserSpecifiedStartingShape=True)
+            calculated_positions_filename = filename_with_ext
+            if not self.cfg['default']['Analysis']['Analyze']['statics'][
+                    'UseCalculatedPositions']['overwrite']:
+                calculated_positions_filename = os.path.splitext(
+                    filename_with_ext
+                )[0] + '_calculated_positions' + os.path.splitext(
+                    filename_with_ext)[1]
+            model.SaveData(calculated_positions_filename)
+
+        return model
 
     def iterate_to_value(self, model, iterate_cfg):
         iterations_df = pd.DataFrame(columns=['variable', 'output'])

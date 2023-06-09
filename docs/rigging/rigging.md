@@ -54,3 +54,9 @@ https://www.thecrosbygroup.com/catalog/shackles/
 
 https://www.orcina.com/webhelp/OrcFxAPI/Content/html/Pythonreference,OrcaFlexWizardObject.htm
 
+## Tips for COnvergence
+
+- ENsure the Z axis is aligned over the length of umblilical/sling for convergence
+- Mesh is refined sufficiently at the end points. However, not below OD of the structure as this can lead to convergence issues.
+- General: In statics, increase the tolerance (0.025) and damping (max Up to 100 and min up to 40)
+- Solve 6D Buoys for "NOne" and them change to "X,Y,Z" and then to "ALL" after getting them running
