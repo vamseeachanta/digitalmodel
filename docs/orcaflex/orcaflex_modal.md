@@ -12,6 +12,11 @@ The typical workflow to automate resonance analysis:
     - Needs a very small background current to identify transverse direction to generate modes3D file.
 - Assess shapes and identify axial mode 
 
+### Notable Features
+
+- Can compare 2 files in orcaflex (.dat files). File -> Compare
+- Add pictures 1 on top of another i.e. import multiple models into same screen?
+
 
 ### Modal Analysis
 

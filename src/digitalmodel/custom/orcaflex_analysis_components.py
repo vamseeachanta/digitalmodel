@@ -166,16 +166,22 @@ class OrcaFlexAnalysis():
         return model
 
     def save_model_with_calculated_positions(self, filename_with_ext, model):
-        if self.cfg['default']['Analysis']['Analyze']['statics'][
-                'UseCalculatedPositions']['flag']:
-            model.UseCalculatedPositions(
-                SetLinesToUserSpecifiedStartingShape=True)
+        calculated_cfg = self.cfg['default']['Analysis']['Analyze']['statics'][
+            'UseCalculatedPositions'].copy()
+        if calculated_cfg['flag']:
+            if calculated_cfg['SetLinesToUserSpecifiedStartingShape']:
+                model.UseCalculatedPositions(
+                    SetLinesToUserSpecifiedStartingShape=True)
+            elif calculated_cfg['UseStaticLineEndOrientations']:
+                model.UseCalculatedPositions(UseStaticLineEndOrientations=True)
+            else:
+                model.UseCalculatedPositions()
             calculated_positions_filename = filename_with_ext
             if not self.cfg['default']['Analysis']['Analyze']['statics'][
                     'UseCalculatedPositions']['overwrite']:
                 calculated_positions_filename = os.path.splitext(
                     filename_with_ext
-                )[0] + '_calculated_positions' + os.path.splitext(
+                )[0] + '_calculated_all' + os.path.splitext(
                     filename_with_ext)[1]
             model.SaveData(calculated_positions_filename)
 

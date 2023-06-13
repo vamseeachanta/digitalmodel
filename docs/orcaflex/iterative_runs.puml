@@ -1,0 +1,60 @@
+@startuml iterative_runs
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Iterative Run Management \n OrcaFlex
+
+start
+
+    note right
+        Objective: To streamline (and automate) iterative analysis. 
+        Examples are:
+         - Umbilical installation steps with calculated positions
+         - difficult convergence runs
+         - etc
+    end note
+
+    partition "Iterative Runs" {
+        :Load .YML file (filename);
+            note right
+                save only delta values
+                file kept intact
+            end note
+
+        :Rerun Simulation;
+            note right
+                TBA
+            end note
+
+    }
+
+    partition "Saving input files & simulations" {
+        :Select calculated positions 
+            Save as "filename_calculated_select";
+            note right
+                Save select component positions 
+                  to help convergence
+                Select json "keys" used to save
+                Purpose: to help rerun with change in positions
+            end note
+
+        :All calculated positions 
+            Save as "filename_calculated_all";
+            note right
+                new "filename" for design modular
+                All new calculated positions saved
+                Purpose: to save final run
+            end note
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

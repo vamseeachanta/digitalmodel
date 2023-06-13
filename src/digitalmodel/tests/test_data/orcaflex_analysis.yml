@@ -10,7 +10,10 @@ default:
         flag: True
         UseCalculatedPositions: 
           flag: True
-          overwrite: True
+          overwrite: False
+          # Only 1 of settings below works. 
+          SetLinesToUserSpecifiedStartingShape: True
+          UseStaticLineEndOrientations: False
       iterate: True
   postprocess:
     flag: True
