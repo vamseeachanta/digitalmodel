@@ -19,25 +19,25 @@ start
 
 
     partition "Common Files" {
-        :Vessel Files
-            save as __filename.yml;
-
+            note right
+                All common files 
+                saved as "__filename.yml" 
+            end note
+        :Definition - Vessel;
             note right
                 example filenames: 
                     __01_Seven Arctic_v11.yml
                     __02_stern_chute.yml
             end note
 
-        :Structure Definitions
-            save as __filename.yml;
+        :Definition - Structures;
             note right
                 example filenames: 
                     __04_wd718m_umb.yml
                     __05_150mLB.yml
             end note
 
-        :Other Structure Definitions
-            save as __filename.yml;
+        :Definition - Other Structures;
             note right
                 example filenames: 
                     __06_uth2_splz.yml
@@ -48,7 +48,7 @@ start
 
     partition "Change Runs" {
         :Load .YML file
-            save as *_filename.yml;
+            save as "_filename.yml";
             note right
                 save only delta values
                 file kept intact
@@ -63,7 +63,7 @@ start
 
     partition "Saving input files & simulations" {
         :Select calculated positions 
-            Save as "filename_calculated_select";
+            Save as "filename";
             note right
                 Save select component positions 
                   to help convergence
