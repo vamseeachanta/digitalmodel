@@ -63,20 +63,21 @@ start
 
     partition "Saving input files & simulations" {
         :Select calculated positions 
-            Save as "filename";
+            Save as "_filename_nn";
             note right
-                Save select component positions 
-                  to help convergence
+                unique "_filename_nn" for design modular
+                Variations for convergence 
+                    i.e. with component positions 
+                        no bend stiffener etc.
                 Select json "keys" used to save
                 Purpose: to help rerun with change in positions
             end note
 
         :All calculated positions 
-            Save as "filename_calculated_all";
+            Save as "filename";
             note right
-                new "filename" for design modular
                 All new calculated positions saved
-                Purpose: to save final run
+                Purpose: final run for further use
             end note
     }
 

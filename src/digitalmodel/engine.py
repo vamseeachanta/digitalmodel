@@ -46,8 +46,6 @@ def engine(inputfile=None):
         cfg_base = vertical_riser(application_manager.cfg)
     elif basename == 'orcaflex_analysis':
         cfg_base = orcaflex_analysis(application_manager.cfg)
-    elif basename == 'orcaflex_analysis':
-        cfg_base = orcaflex_analysis(application_manager.cfg)
     elif basename == 'modal_analysis':
         oma = OrcModalAnalysis()
         cfg_base = oma.run_modal_analysis(application_manager.cfg)

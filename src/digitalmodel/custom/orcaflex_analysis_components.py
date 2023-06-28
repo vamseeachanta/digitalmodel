@@ -50,14 +50,18 @@ class OrcaFlexAnalysis():
         except:
             print("No simulation files found or resolved")
 
-        if self.cfg['default']['Analysis']['Analyze']['flag']:
+        if self.cfg['default']['Analysis']['Analyze']['flag'] or self.cfg[
+                'orcaflex']['iterate']['flag']:
             for fileIndex in range(0, len(self.simulation_filenames)):
                 self.get_files_for_analysis(analysis_type, fileIndex,
                                             input_files_with_extension,
                                             input_files_without_extension)
-        elif (self.cfg['default']['Analysis']['Summary'] or
-              self.cfg['default']['Analysis']['RangeGraph'] or
-              self.cfg['default']['Analysis']['time_series']):
+        elif (('Summary' in self.cfg['default']['Analysis'] and
+               self.cfg['default']['Analysis']['Summary']) or
+              ('RangeGraph' in self.cfg['default']['Analysis'] and
+               self.cfg['default']['Analysis']['RangeGraph']) or
+              ('time_series' in self.cfg['default']['Analysis'] and
+               self.cfg['default']['Analysis']['time_series'])):
             for fileIndex in range(0, len(self.simulation_filenames)):
                 self.get_files_for_postprocess(analysis_type, fileIndex,
                                                input_files_with_extension,
@@ -67,24 +71,25 @@ class OrcaFlexAnalysis():
                                         input_files_with_extension,
                                         input_files_without_extension)
 
-    def perform_analysis(self):
+    def perform_simulations(self):
         if self.cfg['default']['Analysis']['Analyze']['file_type'] in [
                 'yaml', 'yml'
         ]:
             print("Processing orcaflex yaml files")
-            self.process_fea()
+            if self.cfg['default']['Analysis']['Analyze']['flag']:
+                self.process_fea()
+            else:
+                print("No FEA performed per user request")
+
             if self.cfg['default']['postprocess']['flag']:
                 self.post_process_files()
             self.save_data()
         if self.cfg['default']['Analysis']['Analyze']['file_type'] in [
-                'script'
+                'script', 'batch_script'
         ]:
-            print("Processing orcaflex script files for orcaflex input files")
-            self.process_scripts()
-        if self.cfg['default']['Analysis']['Analyze']['file_type'] in [
-                'batch_script'
-        ]:
-            print("Processing orcaflex batch script files to run analysis")
+            print(
+                "Processing orcaflex script/batch files for orcaflex input files"
+            )
             self.process_scripts()
 
     def assign_and_summarize_files(self, analysis_type,
@@ -104,42 +109,36 @@ class OrcaFlexAnalysis():
         self.cfg['Analysis']['input_files']['analysis_type'] = analysis_type
 
     def process_fea(self):
-        if self.cfg['default']['Analysis']['Analyze']['flag']:
-            for fileIndex in range(
-                    0, len(self.cfg['Analysis']['input_files']['with_ext'])):
-                filename_with_ext = self.cfg['Analysis']['input_files'][
-                    'with_ext'][fileIndex]
-                filename_without_ext = self.cfg['Analysis']['input_files'][
-                    'no_ext'][fileIndex]
-                model = OrcFxAPI.Model()
-                model.LoadData(filename_with_ext)
-                logging.info("Load input file successful")
+        for fileIndex in range(
+                0, len(self.cfg['Analysis']['input_files']['with_ext'])):
+            filename_with_ext = self.cfg['Analysis']['input_files']['with_ext'][
+                fileIndex]
+            filename_without_ext = self.cfg['Analysis']['input_files'][
+                'no_ext'][fileIndex]
+            model = OrcFxAPI.Model()
+            model.LoadData(filename_with_ext)
+            logging.info("Load input file successful")
 
-                if self.cfg['default']['Analysis']['Analyze']['statics'][
-                        'flag']:
-                    model = self.run_static_analysis(filename_with_ext, model)
-                elif self.cfg['default']['Analysis']['Analyze']['simulation']:
-                    model.RunSimulation()
-                elif self.cfg['default']['Analysis']['Analyze']['iterate'][
-                        'flag']:
-                    iterate_cfg = self.cfg['default']['Analysis'][
-                        'Analyze'].copy()
-                    iterate_cfg.update(
-                        {'filename_without_ext': filename_without_ext})
-                    self.iterate_to_value(model, iterate_cfg)
+            if self.cfg['default']['Analysis']['Analyze']['statics']['flag']:
+                model = self.run_static_analysis(filename_with_ext, model)
+            elif self.cfg['default']['Analysis']['Analyze']['simulation']:
+                model.RunSimulation()
+            elif self.cfg['default']['Analysis']['Analyze']['iterate']['flag']:
+                iterate_cfg = self.cfg['default']['Analysis']['Analyze'].copy()
+                iterate_cfg.update(
+                    {'filename_without_ext': filename_without_ext})
+                self.iterate_to_value(model, iterate_cfg)
 
-                logging.info("Run simulation successful")
-                try:
-                    model.SaveSimulation(filename_without_ext + '.sim')
-                    logging.info("Save simulation successful")
-                except:
-                    print("Save simulation.. FAILED")
+            logging.info("Run simulation successful")
+            try:
+                model.SaveSimulation(filename_without_ext + '.sim')
+                logging.info("Save simulation successful")
+            except:
+                print("Save simulation.. FAILED")
 
-            print(
-                f"Analysis done for {len(self.cfg['Analysis']['input_files']['with_ext'])} input files"
-            )
-        else:
-            print("No FEA performed per user request")
+        print(
+            f"Analysis done for {len(self.cfg['Analysis']['input_files']['with_ext'])} input files"
+        )
 
     def run_static_analysis(self, filename_with_ext, model):
         print(f"Static analysis for {filename_with_ext} ... .... ")
@@ -1197,12 +1196,14 @@ class OrcaFlexAnalysis():
         else:
             print('File not found: {0}'.format(filename))
 
-        if self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg[
-                'default']['Analysis']['Analyze']['simulation']:
-            analysis_type.append('simulation')
-        elif self.cfg['default']['Analysis']['Analyze']['flag'] and self.cfg[
-                'default']['Analysis']['Analyze']['statics']['flag']:
-            analysis_type.append('statics')
+        if self.cfg['default']['Analysis']['Analyze']['flag']:
+            if self.cfg['default']['Analysis']['Analyze']['simulation']:
+                analysis_type.append('simulation')
+            elif self.cfg['default']['Analysis']['Analyze']['statics']['flag']:
+                analysis_type.append('statics')
+
+        if self.cfg['orcaflex']['iterate']['flag']:
+            analysis_type.append('iterate')
 
     def get_simulation_filenames(self):
         if self.cfg['Files']['data_source'] == 'yml':
