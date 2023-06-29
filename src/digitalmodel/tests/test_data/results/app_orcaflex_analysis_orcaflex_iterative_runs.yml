@@ -1,7 +1,7 @@
 &id001 !!python/object/new:digitalmodel.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data/orcaflex_iterative_runs.yml
+    CustomInputFile: .\orcaflex_iterative_runs.yml
     DefaultInputFile: null
     basename: orcaflex_analysis
     cfg_array_file_names: null
@@ -10,18 +10,68 @@ dictitems:
     input_files:
       analysis_type:
       - iterate
+      - iterate
+      - iterate
+      - iterate
+      - iterate
+      - iterate
       no_ext:
       - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\car-858m\C180\594-CAR-NL-858m-150LB-0deg-120H2.00P9C180
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C000\334-ORL-NL-858m-150LB-0deg-120H2.50P9C000
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\467-ORL-NL-858m-100LB-0deg-090H2.00P7C180
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\734-ORL-NL-858m-200LB-0deg-120H2.50P9C180
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\957-ORL-NL-858m-300LB-0deg-090H2.50P9C180
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-718m\C180\496-ORL-NL-718m-100LB-0deg-120H2.50P7C180
       with_ext:
       - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\car-858m\C180\594-CAR-NL-858m-150LB-0deg-120H2.00P9C180.yml
-    log_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\logs\
-    result_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\results\
-    start_time: 2023-06-28 18:50:06.788297
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C000\334-ORL-NL-858m-150LB-0deg-120H2.50P9C000.yml
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\467-ORL-NL-858m-100LB-0deg-090H2.00P7C180.yml
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\734-ORL-NL-858m-200LB-0deg-120H2.50P9C180.yml
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\957-ORL-NL-858m-300LB-0deg-090H2.50P9C180.yml
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-718m\C180\496-ORL-NL-718m-100LB-0deg-120H2.50P7C180.yml
+    log_folder: .\logs\
+    result_folder: .\results\
+    start_time: 2023-06-29 09:55:21.089040
   Files:
     csv_filename: ''
     data:
     - Label: No Load
       Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\car-858m\C180\594-CAR-NL-858m-150LB-0deg-120H2.00P9C180.yml
+      iterate_yml:
+        add: []
+        delete: []
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        replace: []
+    - Label: No Load
+      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C000\334-ORL-NL-858m-150LB-0deg-120H2.50P9C000.yml
+      iterate_yml:
+        add: []
+        delete: []
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        replace: []
+    - Label: No Load
+      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\467-ORL-NL-858m-100LB-0deg-090H2.00P7C180.yml
+      iterate_yml:
+        add: []
+        delete: []
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        replace: []
+    - Label: No Load
+      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\734-ORL-NL-858m-200LB-0deg-120H2.50P9C180.yml
+      iterate_yml:
+        add: []
+        delete: []
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        replace: []
+    - Label: No Load
+      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\957-ORL-NL-858m-300LB-0deg-090H2.50P9C180.yml
+      iterate_yml:
+        add: []
+        delete: []
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        replace: []
+    - Label: No Load
+      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-718m\C180\496-ORL-NL-718m-100LB-0deg-120H2.50P7C180.yml
       iterate_yml:
         add: []
         delete: []
@@ -107,6 +157,7 @@ dictitems:
   orcaflex:
     iterate:
       flag: true
+      overwrite_data: false
       rerun: true
   time_series: []
 state: *id001

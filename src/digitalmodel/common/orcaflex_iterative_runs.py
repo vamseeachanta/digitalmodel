@@ -158,7 +158,9 @@ class OrcaflexIterativeRuns():
 
             model.RunSimulation()
 
-            model.filename_save_data(filename_save_data)
             model.SaveSimulation(filename_save_simulation)
+            if self.cfg['orcaflex']['iterate']['overwrite_data']:
+                model.SaveData(filename_save_data)
+
             logging.info(
                 f'Finished running iterative file: {filename_with_ext}')
