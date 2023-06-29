@@ -11,6 +11,7 @@ from digitalmodel.orcaflex_analysis import orcaflex_analysis
 from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
 from digitalmodel.custom.rigging import Rigging
+from digitalmodel.common.code_dnvrph103_hydrodynamics import DNVRPH103_hydrodynamics
 
 
 def engine(inputfile=None):
@@ -58,7 +59,11 @@ def engine(inputfile=None):
     elif basename == 'rigging':
         rigging = Rigging()
         cfg_base = rigging.get_rigging_groups(application_manager.cfg)
+    elif basename == 'code_dnvrph103':
+        code_dnvrph103 = DNVRPH103_hydrodynamics()
+        cfg_base = code_dnvrph103.get_properties(application_manager.cfg)
     else:
-        raise (Exception(f'Analysis for base name not found. ... FAIL'))
+        raise (
+            Exception(f'Analysis for basename: {basename} not found. ... FAIL'))
 
     return cfg_base

@@ -7,7 +7,7 @@ properties:
   m_water: 554
 
   shape: rectangular # rectangular, circular
-  L: 2.943
+  l: 2.943
   w: 0.886
   r: NULL
   h: 0.687
@@ -22,7 +22,7 @@ properties:
     y: 0
     z: 0
 
-  perforation:
+  perforation_ratio:
     x: 0
     y: 0
     z: 0
