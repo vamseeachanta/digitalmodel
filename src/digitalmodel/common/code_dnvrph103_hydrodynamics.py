@@ -55,7 +55,9 @@ class DNVRPH103_hydrodynamics():
         mass_added = mass_added_term_1 * mass_added_term_2
         perforation_ratio = self.cfg['properties']['perforation_ratio']['x']
         mass_added_with_perforation = self.get_mass_added_with_perforation(
-            self, mass_added, perforation_ratio)
+            mass_added, perforation_ratio)
+        ca = mass_added_with_perforation / dimensions['volume'] / self.cfg[
+            'rho_water']
 
     def get_translational_circular(self):
 
@@ -67,7 +69,7 @@ class DNVRPH103_hydrodynamics():
         return {'a': a, 'b': b, 'c': c}
 
     def get_mass_added_with_perforation(self, mass_added, perforation_ratio):
-        if perforation_ratio < 0.05:
+        if perforation_ratio <= 0.05:
             reduction_factor = 1
         elif perforation_ratio < 0.34:
             reduction_factor = 0.7 + 0.3 * math.cos(
