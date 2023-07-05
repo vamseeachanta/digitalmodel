@@ -1,0 +1,26 @@
+﻿Shapes:
+  New: UTH2-Connector
+  UTH2-Connector:
+    Locked: No
+    ShapeType: Elastic solid
+    Shape: Cylinder
+    Connection: UTA2
+    Origin: [1.4594741173119135, 0, 0.934063435079622]
+    Azimuth: 0
+    Declination: 115
+    Length: 0.5
+    OuterDiameter: 0.2
+    InnerDiameter: 0.1
+    NormalStiffness: 100
+    ShearStiffness: 100
+    Labels: []
+    Hidden: No
+    OutsidePen: [1, Solid, Gray]
+    InsidePen: [1, Solid, $FF6000]
+    NumberOfLines: 10
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: '~'
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]

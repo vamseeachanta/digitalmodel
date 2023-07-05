@@ -8,8 +8,8 @@
     DampingRelativeTo: Earth
     DisturbanceVessel: (none)
     WaveCalculationMethod: Specified by environment
-    CharacteristicLength: ~
-    CharacteristicForce: ~
+    CharacteristicLength: '~'
+    CharacteristicForce: '~'
     InitialPosition: [0, 0, 0]
     InitialAttitude: [0, 270, 0]
     Mass: 1.35
@@ -26,16 +26,16 @@
     DragAreaMoment: [0.885, 9.885, 6.477]
     DragForceCoefficient: [2.78, 3.56, 3.52]
     DragMomentCoefficient: [1, 1, 1]
-    HydrodynamicMass: [~, ~, ~]
+    HydrodynamicMass: ['~', '~', '~']
     HydrodynamicInertia: [0.222, 0.938, 1.033]
     AddedMassCoefficient: [0.58, 1.54, 3.24]
     AddedInertiaCoefficient: [0.395, 0.068, 0.669]
-    FluidAccelerationForceCoefficient: [~, ~, ~]
+    FluidAccelerationForceCoefficient: ['~', '~', '~']
     LumpedBuoySlamArea: 0
     LumpedBuoySlamForceDataEntry: 0
     LumpedBuoySlamForceDataExit: 0
     SupportGeometrySpecification: Explicit
-    SupportReleaseStage: ~
+    SupportReleaseStage: '~'
     SupportCoordinateSystems: []
     SupportedLine: []
     Supports: []
@@ -43,7 +43,7 @@
     GlobalAppliedLoads: []
     LocalAppliedLoads: []
     SeabedFrictionCoefficient: 0
-    TotalContactArea: ~
+    TotalContactArea: '~'
     Wings: []
     Hidden: No
     Pen: [2, Solid, Fuchsia]
@@ -52,34 +52,30 @@
     WireFrameOrigin: [0, 0, 0]
     WireFrameSymmetry: None
     WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.943, 0.4, 0.4175]
+      - [-0.943, 0.4, 0.4175]
+      - [-0.943, -0.4, 0.4175]
+      - [0.943, -0.4, 0.4175]
+      - [0.943, 0.4, -0.4175]
+      - [-0.943, 0.4, -0.4175]
+      - [-0.943, -0.4, -0.4175]
+      - [0.943, -0.4, -0.4175]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, '~']
+      - [2, 3, '~']
+      - [3, 4, '~']
+      - [4, 1, '~']
+      - [5, 6, '~']
+      - [6, 7, '~']
+      - [7, 8, '~']
+      - [8, 5, '~']
+      - [1, 5, '~']
+      - [2, 6, '~']
+      - [3, 7, '~']
+      - [4, 8, '~']
     ShadedDrawingFileName: 
-    ShadedDrawingDrawSize: ~
-    ShadedDrawingCullingMode: No culling
-    ShadedDrawingMirrorInPlane: Not mirrored
-    ShadedDrawingOrigin: [0, 0, 0]
-    ShadedDrawingOrientation: [0, 0, 0]
-Shapes:
-  New: UTH2-Connector
-  UTH2-Connector:
-    Locked: No
-    ShapeType: Elastic solid
-    Shape: Cylinder
-    Connection: UTA2
-    Origin: [1.4594741173119135, 0, 0.934063435079622]
-    Azimuth: 0
-    Declination: 115
-    Length: 0.5
-    OuterDiameter: 0.2
-    InnerDiameter: 0.1
-    NormalStiffness: 100
-    ShearStiffness: 100
-    Labels: []
-    Hidden: No
-    OutsidePen: [1, Solid, Gray]
-    InsidePen: [1, Solid, $FF6000]
-    NumberOfLines: 10
-    ShadedDrawingFileName: 
-    ShadedDrawingDrawSize: ~
+    ShadedDrawingDrawSize: '~'
     ShadedDrawingCullingMode: No culling
     ShadedDrawingMirrorInPlane: Not mirrored
     ShadedDrawingOrigin: [0, 0, 0]

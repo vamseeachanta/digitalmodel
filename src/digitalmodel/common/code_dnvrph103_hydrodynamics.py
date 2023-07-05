@@ -1,3 +1,4 @@
+import os
 import math
 import numpy as np
 from scipy import interpolate
@@ -23,21 +24,45 @@ class DNVRPH103_rectangular_hydrodynamics:
         I = self.get_mass_moment_of_inertia()
         rotational_properties = self.get_rotational_properties(
             translational_properties)
+        shape_coordinates = self.get_shape_coordinates()
 
         properties = {
             'translational': translational_properties,
             'rotational': rotational_properties,
-            'I': I
+            'I': I,
+            'shape_coordinates': shape_coordinates
         }
 
         return properties
 
     def get_6d_buoy(self, properties):
 
-        buoy_6d_template = omu.get_6d_buoy_template()
-        buoy_6d = self.update_6d_buoy(buoy_6d_template, properties)
+        zone = 'splash'
+        self.get_6d_buoy_by_zone(properties, zone)
+        zone = 'deep'
+        self.get_6d_buoy_by_zone(properties, zone)
 
-    def update_6d_buoy(self, buoy_6d_template, properties):
+    def get_6d_buoy_by_zone(self, properties, zone):
+        buoy_6d_template = omu.get_6d_buoy_template()
+        buoy_6d = self.update_6d_buoy(buoy_6d_template, properties, zone=zone)
+        self.save_model(buoy_6d, zone=zone)
+
+    def save_model(self, yaml_data, zone):
+
+        output_dir = self.cfg['inputs']['output_dir']
+        if not os.path.isdir(output_dir):
+            cwd = os.getcwd()
+            output_dir = os.path.join(cwd, output_dir)
+            if not os.path.isdir(output_dir):
+                raise Exception(f'Output directory not found: {output_dir}')
+
+        filename = self.cfg['inputs']['output_filename']
+
+        save_data.saveDataYaml(yaml_data,
+                               output_dir + "\\" + filename + "_" + zone,
+                               default_flow_style=False)
+
+    def update_6d_buoy(self, buoy_6d_template, properties, zone):
         buoy_6d = buoy_6d_template.copy()
         structure = self.cfg['inputs']['name']
         buoy_6d['6DBuoys']['New'][0] = structure
@@ -45,34 +70,93 @@ class DNVRPH103_rectangular_hydrodynamics:
 
         buoy_data = buoy_6d['6DBuoys'][structure]
 
-        buoy_data.update({'Mass': self.cfg['inputs']['m_air'] / 1000})
-        buoy_data.update({'MomentsOfInertia': []})
-        buoy_data.update({
-            'CentreOfMass': [
-                self.cfg['inputs']['cog']['x'], self.cfg['inputs']['cog']['y'],
-                self.cfg['inputs']['cog']['z']
-            ]
-        })
+        self.update_6d_buoy_translational(properties, zone, buoy_data)
 
-        dimensions = self.get_x_dimensions()
-        buoy_data.update({'Volume': dimensions['volume']})
-        buoy_data.update({'Height': self.cfg['inputs']['h']})
-        buoy_data.update({
-            'CentreOfVolume': [
-                self.cfg['inputs']['cov']['x'], self.cfg['inputs']['cov']['y'],
-                self.cfg['inputs']['cov']['z']
-            ]
-        })
+        self.update_6d_buoy_inertia(properties, buoy_data)
 
-        buoy_data.update({
-            'DragArea': [
-                round(properties['translational']['area_drag']['x'], 3),
-                round(properties['translational']['area_drag']['y'], 3),
-                round(properties['translational']['area_drag']['z'], 3)
-            ]
-        })
+        self.update_6d_buoy_rotational(properties, zone, buoy_data)
+
+        shape_coordinates = properties['shape_coordinates']
+        buoy_data.update({'VertexX, VertexY, VertexZ': shape_coordinates})
 
         return buoy_6d
+
+    def update_6d_buoy_rotational(self, properties, zone, buoy_data):
+        DragAreaMoment = [
+            properties['rotational']['am'][zone]['x'],
+            properties['rotational']['am'][zone]['y'],
+            properties['rotational']['am'][zone]['z']
+        ]
+        buoy_data.update({'DragAreaMoment': DragAreaMoment})
+
+        DragMomentCoefficient = [
+            properties['rotational']['cd']['x'],
+            properties['rotational']['cd']['y'],
+            properties['rotational']['cd']['z']
+        ]
+        buoy_data.update({'DragMomentCoefficient': DragMomentCoefficient})
+
+        HydrodynamicInertia = [
+            round(properties['rotational']['I']['x'], 3),
+            round(properties['rotational']['I']['y'], 3),
+            round(properties['rotational']['I']['z'], 3)
+        ]
+        buoy_data.update({'HydrodynamicInertia': HydrodynamicInertia})
+
+        AddedInertiaCoefficient = [
+            float(round(properties['rotational']['ca']['x'], 3)),
+            float(round(properties['rotational']['ca']['y'], 3)),
+            float(round(properties['rotational']['ca']['z'], 3))
+        ]
+        buoy_data.update({'AddedInertiaCoefficient': AddedInertiaCoefficient})
+
+    def update_6d_buoy_inertia(self, properties, buoy_data):
+        MomentsOfInertia = [
+            round(properties['I']['Ix'] / 1000, 3),
+            round(properties['I']['Iy'] / 1000, 3),
+            round(properties['I']['Iz'] / 1000, 3)
+        ]
+        buoy_data.update({'MomentsOfInertia': MomentsOfInertia})
+
+    def update_6d_buoy_translational(self, properties, zone, buoy_data):
+        buoy_data.update({'Mass': self.cfg['inputs']['m_air'] / 1000})
+
+        CentreOfMass = [
+            self.cfg['inputs']['cog']['x'], self.cfg['inputs']['cog']['y'],
+            self.cfg['inputs']['cog']['z']
+        ]
+        buoy_data.update({'CentreOfMass': CentreOfMass})
+
+        dimensions = self.get_x_dimensions()
+        buoy_data.update({'Volume': round(dimensions['volume'], 5)})
+        buoy_data.update({'Height': self.cfg['inputs']['h']})
+
+        cov = [
+            self.cfg['inputs']['cov']['x'], self.cfg['inputs']['cov']['y'],
+            self.cfg['inputs']['cov']['z']
+        ]
+        buoy_data.update({'CentreOfVolume': cov})
+
+        DragArea = [
+            round(properties['translational']['area_drag']['x'], 3),
+            round(properties['translational']['area_drag']['y'], 3),
+            round(properties['translational']['area_drag']['z'], 3)
+        ]
+        buoy_data.update({'DragArea': DragArea})
+
+        DragForceCoefficient = [
+            round(properties['translational']['cd'][zone]['x'], 3),
+            round(properties['translational']['cd'][zone]['y'], 3),
+            round(properties['translational']['cd'][zone]['z'], 3)
+        ]
+        buoy_data.update({'DragForceCoefficient': DragForceCoefficient})
+
+        AddedMassCoefficient = [
+            float(round(properties['translational']['ca']['x'], 3)),
+            float(round(properties['translational']['ca']['y'], 3)),
+            float(round(properties['translational']['ca']['z'], 3))
+        ]
+        buoy_data.update({'AddedMassCoefficient': AddedMassCoefficient})
 
     def get_translational_properties(self):
 
@@ -221,6 +305,7 @@ class DNVRPH103_rectangular_hydrodynamics:
             f = interpolate.interp1d(ratio, value)
             deep = f(aspect_ratio)
 
+        deep = deep.tolist()
         splash = self.get_splash_from_deep_drag(deep)
 
         cd = {'deep': deep, 'splash': splash}
@@ -260,6 +345,23 @@ class DNVRPH103_rectangular_hydrodynamics:
 
         return dimensions
 
+    def get_shape_coordinates(self):
+        x_half = self.cfg['inputs']['l'] / 2
+        y_half = self.cfg['inputs']['w'] / 2
+        z_half = self.cfg['inputs']['h'] / 2
+
+        shape_coordinates = []
+        shape_coordinates.append([x_half, y_half, z_half])
+        shape_coordinates.append([-x_half, y_half, z_half])
+        shape_coordinates.append([-x_half, -y_half, z_half])
+        shape_coordinates.append([x_half, -y_half, z_half])
+        shape_coordinates.append([x_half, y_half, -z_half])
+        shape_coordinates.append([-x_half, y_half, -z_half])
+        shape_coordinates.append([-x_half, -y_half, -z_half])
+        shape_coordinates.append([x_half, -y_half, -z_half])
+
+        return shape_coordinates
+
     def get_splash_from_deep_drag(self, deep):
         splash = 3 * deep
         if splash < 2.5:
@@ -296,11 +398,11 @@ class DNVRPH103_rectangular_hydrodynamics:
         w = inputs['w']
         h = inputs['h']
 
-        term_1 = 1 / 12 * m_air * (l**2 + w**2)
+        term_1 = 1 / 12 * m_air * (w**2 + h**2)
         term_2 = m_air * (inputs['cog']['y']**2 + inputs['cog']['z']**2)
         Ix = term_1 + term_2
 
-        term_1 = 1 / 12 * m_air * (l**2 + h**2)
+        term_1 = 1 / 12 * m_air * (h**2 + l**2)
         term_2 = m_air * (inputs['cog']['x']**2 + inputs['cog']['z']**2)
         Iy = term_1 + term_2
 
@@ -330,6 +432,8 @@ class DNVRPH103_rectangular_hydrodynamics:
 
         am = {'splash': am_splash, 'deep': am_deep}
 
+        return am
+
     def get_moment_coefficient(self):
         cd = {'x': 1.0, 'y': 1.0, 'z': 1.0}
 
@@ -358,14 +462,14 @@ class DNVRPH103_rectangular_hydrodynamics:
         l = inputs['l']
         w = inputs['w']
         h = inputs['h']
-        am_x = (translational_properties['cd']['splash']['y'] * l * h**4 +
-                translational_properties['cd']['splash']['z'] * l * w**4) / 12
+        am_x = (translational_properties['cd'][type]['y'] * l * h**4 +
+                translational_properties['cd'][type]['z'] * l * w**4) / 12
 
-        am_y = (translational_properties['cd']['splash']['x'] * w * h**4 +
-                translational_properties['cd']['splash']['z'] * w * l**4) / 12
+        am_y = (translational_properties['cd'][type]['x'] * w * h**4 +
+                translational_properties['cd'][type]['z'] * w * l**4) / 12
 
-        am_z = (translational_properties['cd']['splash']['x'] * h * w**4 +
-                translational_properties['cd']['splash']['y'] * h * l**4) / 12
+        am_z = (translational_properties['cd'][type]['x'] * h * w**4 +
+                translational_properties['cd'][type]['y'] * h * l**4) / 12
 
         am = {'x': am_x, 'y': am_y, 'z': am_z}
 
@@ -391,7 +495,8 @@ class DNVRPH103_rectangular_hydrodynamics:
         ratio_1 = b / a
         ratio_2 = a / b
 
-        ca_ = self.get_newman_ca(a, b, ratio_1, ratio_2)
+        ca = self.get_newman_ca(a, b, ratio_1, ratio_2)
+        return ca
 
     def get_ca_intertial_y(self, l, w, h):
         a = w / 2
@@ -399,7 +504,8 @@ class DNVRPH103_rectangular_hydrodynamics:
         ratio_1 = b / a
         ratio_2 = a / b
 
-        ca_ = self.get_newman_ca(a, b, ratio_1, ratio_2)
+        ca = self.get_newman_ca(a, b, ratio_1, ratio_2)
+        return ca
 
     def get_ca_intertial_z(self, l, w, h):
         a = h / 2
@@ -407,7 +513,8 @@ class DNVRPH103_rectangular_hydrodynamics:
         ratio_1 = b / a
         ratio_2 = a / b
 
-        ca_ = self.get_newman_ca(a, b, ratio_1, ratio_2)
+        ca = self.get_newman_ca(a, b, ratio_1, ratio_2)
+        return ca
 
     def get_newman_ca(self, a, b, ratio_1, ratio_2):
         if ratio_1 < 1.6:

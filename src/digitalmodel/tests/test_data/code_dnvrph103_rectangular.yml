@@ -28,3 +28,5 @@ inputs:
     y: 0
     z: 0
 
+  output_dir: 'src\digitalmodel\tests\test_data\6d_buoy'
+  output_filename: 'buoy_6d_rectangular_px_0'
