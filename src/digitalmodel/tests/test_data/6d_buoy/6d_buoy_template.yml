@@ -1,0 +1,86 @@
+﻿6DBuoys:
+  New:
+    - structure
+  structure:
+    Locked: No
+    BuoyType: Lumped buoy
+    Connection: Fixed
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    InitialPosition: [0, 0, 0]
+    InitialAttitude: [0, 270, 0]
+    Mass: 1.35
+    MomentsOfInertia: [0.3, 2.08, 2.12]
+    CentreOfMass: [-0.857, 0, 0.209]
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 1.2059
+    BulkModulus: Infinity
+    Height: 0.688
+    CentreOfVolume: [-0.215, 0, 0.209]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0.98, 2.29, 3.62]
+    DragAreaMoment: [0.885, 9.885, 6.477]
+    DragForceCoefficient: [2.78, 3.56, 3.52]
+    DragMomentCoefficient: [1, 1, 1]
+    HydrodynamicMass: [~, ~, ~]
+    HydrodynamicInertia: [0.222, 0.938, 1.033]
+    AddedMassCoefficient: [0.58, 1.54, 3.24]
+    AddedInertiaCoefficient: [0.395, 0.068, 0.669]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 0
+    LumpedBuoySlamForceDataEntry: 0
+    LumpedBuoySlamForceDataExit: 0
+    SupportGeometrySpecification: Explicit
+    SupportReleaseStage: ~
+    SupportCoordinateSystems: []
+    SupportedLine: []
+    Supports: []
+    MorisonElements: []
+    GlobalAppliedLoads: []
+    LocalAppliedLoads: []
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    Wings: []
+    Hidden: No
+    Pen: [2, Solid, Fuchsia]
+    CentreOfMassOriginColour: Red
+    CentreOfVolumeOriginColour: Aqua
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+Shapes:
+  New: UTH2-Connector
+  UTH2-Connector:
+    Locked: No
+    ShapeType: Elastic solid
+    Shape: Cylinder
+    Connection: UTA2
+    Origin: [1.4594741173119135, 0, 0.934063435079622]
+    Azimuth: 0
+    Declination: 115
+    Length: 0.5
+    OuterDiameter: 0.2
+    InnerDiameter: 0.1
+    NormalStiffness: 100
+    ShearStiffness: 100
+    Labels: []
+    Hidden: No
+    OutsidePen: [1, Solid, Gray]
+    InsidePen: [1, Solid, $FF6000]
+    NumberOfLines: 10
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]

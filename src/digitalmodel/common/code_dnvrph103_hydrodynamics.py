@@ -1,42 +1,112 @@
 import math
+import numpy as np
 from scipy import interpolate
 from digitalmodel.common.data import SaveData
+from digitalmodel.common.orcaflex_model_utilities import OrcaflexModelUtilities
 
 save_data = SaveData()
+omu = OrcaflexModelUtilities()
 
 
-class DNVRPH103_rectangular_hydrodynamics():
+class DNVRPH103_rectangular_hydrodynamics:
 
     def __init__(self):
         pass
 
-    def get_orcaflex_6dbuoy(self):
-        pass
+    def get_orcaflex_6dbuoy(self, cfg):
+        properties = self.get_properties(cfg)
+        buoy_6d = self.get_6d_buoy(properties)
 
     def get_properties(self, cfg):
         self.cfg = cfg
         translational_properties = self.get_translational_properties()
         I = self.get_mass_moment_of_inertia()
-        AM = self.get_rotational_properties(translational_properties)
+        rotational_properties = self.get_rotational_properties(
+            translational_properties)
+
+        properties = {
+            'translational': translational_properties,
+            'rotational': rotational_properties,
+            'I': I
+        }
+
+        return properties
+
+    def get_6d_buoy(self, properties):
+
+        buoy_6d_template = omu.get_6d_buoy_template()
+        buoy_6d = self.update_6d_buoy(buoy_6d_template, properties)
+
+    def update_6d_buoy(self, buoy_6d_template, properties):
+        buoy_6d = buoy_6d_template.copy()
+        structure = self.cfg['inputs']['name']
+        buoy_6d['6DBuoys']['New'][0] = structure
+        buoy_6d['6DBuoys'][structure] = buoy_6d['6DBuoys'].pop('structure')
+
+        buoy_data = buoy_6d['6DBuoys'][structure]
+
+        buoy_data.update({'Mass': self.cfg['inputs']['m_air'] / 1000})
+        buoy_data.update({'MomentsOfInertia': []})
+        buoy_data.update({
+            'CentreOfMass': [
+                self.cfg['inputs']['cog']['x'], self.cfg['inputs']['cog']['y'],
+                self.cfg['inputs']['cog']['z']
+            ]
+        })
+
+        dimensions = self.get_x_dimensions()
+        buoy_data.update({'Volume': dimensions['volume']})
+        buoy_data.update({'Height': self.cfg['inputs']['h']})
+        buoy_data.update({
+            'CentreOfVolume': [
+                self.cfg['inputs']['cov']['x'], self.cfg['inputs']['cov']['y'],
+                self.cfg['inputs']['cov']['z']
+            ]
+        })
+
+        buoy_data.update({
+            'DragArea': [
+                round(properties['translational']['area_drag']['x'], 3),
+                round(properties['translational']['area_drag']['y'], 3),
+                round(properties['translational']['area_drag']['z'], 3)
+            ]
+        })
+
+        return buoy_6d
 
     def get_translational_properties(self):
 
-        x_ca, x_cd = self.get_translational_x()
-        y_ca, y_cd = self.get_translational_y()
-        z_ca, z_cd = self.get_translational_z()
+        x_added_mass, x_ca, x_area_drag, x_cd = self.get_translational_x()
+        y_added_mass, y_ca, y_area_drag, y_cd = self.get_translational_y()
+        z_added_mass, z_ca, z_area_drag, z_cd = self.get_translational_z()
 
         translational_properties = {
-            'x': {
-                'ca': x_ca,
-                'cd': x_cd
+            'added_mass': {
+                'x': x_added_mass,
+                'y': y_added_mass,
+                'z': z_added_mass
             },
-            'y': {
-                'ca': y_ca,
-                'cd': y_cd
+            'ca': {
+                'x': x_ca,
+                'y': y_ca,
+                'z': z_ca
             },
-            'z': {
-                'ca': z_ca,
-                'cd': z_cd
+            'area_drag': {
+                'x': x_area_drag,
+                'y': y_area_drag,
+                'z': z_area_drag
+            },
+            'cd': {
+                'deep': {
+                    'x': x_cd['deep'],
+                    'y': y_cd['deep'],
+                    'z': z_cd['deep'],
+                },
+                'splash': {
+                    'x': x_cd['splash'],
+                    'y': y_cd['splash'],
+                    'z': z_cd['splash']
+                }
             }
         }
 
@@ -44,46 +114,49 @@ class DNVRPH103_rectangular_hydrodynamics():
 
     def get_translational_x(self):
 
-        ca = self.get_translational_x_ca()
-        cd = self.get_translational_x_cd()
+        added_mass, ca = self.get_translational_x_ca()
+        area_drag, cd = self.get_translational_x_cd()
 
-        return ca, cd
+        return added_mass, ca, area_drag, cd
 
     def get_translational_y(self):
-        ca = self.get_translational_y_ca()
-        cd = self.get_translational_y_cd()
+        added_mass, ca = self.get_translational_y_ca()
+        area_drag, cd = self.get_translational_y_cd()
 
-        return ca, cd
+        return added_mass, ca, area_drag, cd
 
     def get_translational_z(self):
-        ca = self.get_translational_z_ca()
-        cd = self.get_translational_z_cd()
+        added_mass, ca = self.get_translational_z_ca()
+        area_drag, cd = self.get_translational_z_cd()
 
-        return ca, cd
+        return added_mass, ca, area_drag, cd
 
     def get_translational_x_ca(self):
         dimensions = self.get_x_dimensions()
 
-        perforation_ratio = self.cfg['properties']['perforation_ratio']['x']
-        ca = self.get_translational_ca(dimensions, perforation_ratio)
+        perforation_ratio = self.cfg['inputs']['perforation_ratio']['x']
+        added_mass, ca = self.get_translational_ca(dimensions,
+                                                   perforation_ratio)
 
-        return ca
+        return added_mass, ca
 
     def get_translational_y_ca(self):
         dimensions = self.get_y_dimensions()
 
-        perforation_ratio = self.cfg['properties']['perforation_ratio']['y']
-        ca = self.get_translational_ca(dimensions, perforation_ratio)
+        perforation_ratio = self.cfg['inputs']['perforation_ratio']['y']
+        added_mass, ca = self.get_translational_ca(dimensions,
+                                                   perforation_ratio)
 
-        return ca
+        return added_mass, ca
 
     def get_translational_z_ca(self):
         dimensions = self.get_z_dimensions()
 
-        perforation_ratio = self.cfg['properties']['perforation_ratio']['z']
-        ca = self.get_translational_ca(dimensions, perforation_ratio)
+        perforation_ratio = self.cfg['inputs']['perforation_ratio']['z']
+        added_mass, ca = self.get_translational_ca(dimensions,
+                                                   perforation_ratio)
 
-        return ca
+        return added_mass, ca
 
     def get_translational_ca(self, dimensions, perforation_ratio):
         b_over_a = dimensions['b'] / dimensions['a']
@@ -106,26 +179,26 @@ class DNVRPH103_rectangular_hydrodynamics():
         ca = mass_added_with_perforation / dimensions['volume'] / self.cfg[
             'rho_water']
 
-        return ca
+        return mass_added_with_perforation, ca
 
     def get_translational_x_cd(self):
 
         dimensions = self.get_x_dimensions()
-        perforation_ratio = self.cfg['properties']['perforation_ratio']['x']
+        perforation_ratio = self.cfg['inputs']['perforation_ratio']['x']
 
         return self.get_translational_cd(dimensions, perforation_ratio)
 
     def get_translational_y_cd(self):
 
         dimensions = self.get_y_dimensions()
-        perforation_ratio = self.cfg['properties']['perforation_ratio']['y']
+        perforation_ratio = self.cfg['inputs']['perforation_ratio']['y']
 
         return self.get_translational_cd(dimensions, perforation_ratio)
 
     def get_translational_z_cd(self):
 
         dimensions = self.get_z_dimensions()
-        perforation_ratio = self.cfg['properties']['perforation_ratio']['z']
+        perforation_ratio = self.cfg['inputs']['perforation_ratio']['z']
 
         return self.get_translational_cd(dimensions, perforation_ratio)
 
@@ -152,36 +225,36 @@ class DNVRPH103_rectangular_hydrodynamics():
 
         cd = {'deep': deep, 'splash': splash}
 
-        return cd
+        return drag_area, cd
 
     def get_x_dimensions(self):
-        a = min(self.cfg['properties']['h'], self.cfg['properties']['w'])
-        b = max(self.cfg['properties']['h'], self.cfg['properties']['w'])
-        c = self.cfg['properties']['l']
-        volume = (self.cfg['properties']['m_air'] -
-                  self.cfg['properties']['m_water']) / self.cfg['rho_water']
+        a = min(self.cfg['inputs']['h'], self.cfg['inputs']['w'])
+        b = max(self.cfg['inputs']['h'], self.cfg['inputs']['w'])
+        c = self.cfg['inputs']['l']
+        volume = (self.cfg['inputs']['m_air'] -
+                  self.cfg['inputs']['m_water']) / self.cfg['rho_water']
 
         dimensions = {'a': a, 'b': b, 'c': c, 'volume': volume}
 
         return dimensions
 
     def get_y_dimensions(self):
-        a = min(self.cfg['properties']['h'], self.cfg['properties']['l'])
-        b = max(self.cfg['properties']['h'], self.cfg['properties']['l'])
-        c = self.cfg['properties']['w']
-        volume = (self.cfg['properties']['m_air'] -
-                  self.cfg['properties']['m_water']) / self.cfg['rho_water']
+        a = min(self.cfg['inputs']['h'], self.cfg['inputs']['l'])
+        b = max(self.cfg['inputs']['h'], self.cfg['inputs']['l'])
+        c = self.cfg['inputs']['w']
+        volume = (self.cfg['inputs']['m_air'] -
+                  self.cfg['inputs']['m_water']) / self.cfg['rho_water']
 
         dimensions = {'a': a, 'b': b, 'c': c, 'volume': volume}
 
         return dimensions
 
     def get_z_dimensions(self):
-        a = min(self.cfg['properties']['w'], self.cfg['properties']['l'])
-        b = max(self.cfg['properties']['w'], self.cfg['properties']['l'])
-        c = self.cfg['properties']['h']
-        volume = (self.cfg['properties']['m_air'] -
-                  self.cfg['properties']['m_water']) / self.cfg['rho_water']
+        a = min(self.cfg['inputs']['w'], self.cfg['inputs']['l'])
+        b = max(self.cfg['inputs']['w'], self.cfg['inputs']['l'])
+        c = self.cfg['inputs']['h']
+        volume = (self.cfg['inputs']['m_air'] -
+                  self.cfg['inputs']['m_water']) / self.cfg['rho_water']
 
         dimensions = {'a': a, 'b': b, 'c': c, 'volume': volume}
 
@@ -217,22 +290,22 @@ class DNVRPH103_rectangular_hydrodynamics():
         return mass_added_with_perforation
 
     def get_mass_moment_of_inertia(self):
-        props = self.cfg['properties']
-        m_air = props['m_air']
-        l = props['l']
-        w = props['w']
-        h = props['h']
+        inputs = self.cfg['inputs']
+        m_air = inputs['m_air']
+        l = inputs['l']
+        w = inputs['w']
+        h = inputs['h']
 
         term_1 = 1 / 12 * m_air * (l**2 + w**2)
-        term_2 = m_air * (props['cog']['y']**2 + props['cog']['z']**2)
+        term_2 = m_air * (inputs['cog']['y']**2 + inputs['cog']['z']**2)
         Ix = term_1 + term_2
 
         term_1 = 1 / 12 * m_air * (l**2 + h**2)
-        term_2 = m_air * (props['cog']['x']**2 + props['cog']['z']**2)
+        term_2 = m_air * (inputs['cog']['x']**2 + inputs['cog']['z']**2)
         Iy = term_1 + term_2
 
         term_1 = 1 / 12 * m_air * (l**2 + w**2)
-        term_2 = m_air * (props['cog']['y']**2 + props['cog']['x']**2)
+        term_2 = m_air * (inputs['cog']['y']**2 + inputs['cog']['x']**2)
         Iz = term_1 + term_2
 
         I = {'Ix': Ix, 'Iy': Iy, 'Iz': Iz}
@@ -244,6 +317,10 @@ class DNVRPH103_rectangular_hydrodynamics():
         cd = self.get_moment_coefficient()
         I = self.get_hydrodynamic_intertia()
         ca = self.get_added_inertia_coefficient()
+
+        rotational_properties = {'am': am, 'cd': cd, 'I': I, 'ca': ca}
+
+        return rotational_properties
 
     def get_area_moment_of_intertia(self, translational_properties):
         am_splash = self.get_area_moment_of_inertia_by_type(
@@ -259,12 +336,12 @@ class DNVRPH103_rectangular_hydrodynamics():
         return cd
 
     def get_hydrodynamic_intertia(self):
-        props = self.cfg['properties']
-        l = props['l']
-        w = props['w']
-        h = props['h']
+        inputs = self.cfg['inputs']
+        l = inputs['l']
+        w = inputs['w']
+        h = inputs['h']
         rho_water = self.cfg['rho_water']
-        volume = (props['m_air'] - props['m_water']) / rho_water
+        volume = (inputs['m_air'] - inputs['m_water']) / rho_water
 
         I_x = volume * rho_water * (w**2 * h**2) / 12
         I_y = volume * rho_water * (h**2 * l**2) / 12
@@ -277,48 +354,71 @@ class DNVRPH103_rectangular_hydrodynamics():
     def get_area_moment_of_inertia_by_type(self, translational_properties,
                                            type):
 
-        props = self.cfg['properties']
-        l = props['l']
-        w = props['w']
-        h = props['h']
-        am_x = (translational_properties['y']['cd']['splash'] * l * h**4 +
-                translational_properties['z']['cd']['splash'] * l * w**4) / 12
+        inputs = self.cfg['inputs']
+        l = inputs['l']
+        w = inputs['w']
+        h = inputs['h']
+        am_x = (translational_properties['cd']['splash']['y'] * l * h**4 +
+                translational_properties['cd']['splash']['z'] * l * w**4) / 12
 
-        am_y = (translational_properties['x']['cd']['splash'] * w * h**4 +
-                translational_properties['z']['cd']['splash'] * w * l**4) / 12
+        am_y = (translational_properties['cd']['splash']['x'] * w * h**4 +
+                translational_properties['cd']['splash']['z'] * w * l**4) / 12
 
-        am_z = (translational_properties['x']['cd']['splash'] * h * w**4 +
-                translational_properties['y']['cd']['splash'] * h * l**4) / 12
+        am_z = (translational_properties['cd']['splash']['x'] * h * w**4 +
+                translational_properties['cd']['splash']['y'] * h * l**4) / 12
 
         am = {'x': am_x, 'y': am_y, 'z': am_z}
 
         return am
 
     def get_added_inertia_coefficient(self):
-        ca_x = self.get_added_inertia_coefficient_x()
-        ca_y = self.get_added_inertia_coefficient_y()
-        ca_z = self.get_added_inertia_coefficient_z()
+        inputs = self.cfg['inputs']
+        l = inputs['l']
+        w = inputs['w']
+        h = inputs['h']
 
-    def get_added_inertia_coefficient_x(self):
-        props = self.cfg['properties']
-        l = props['l']
-        w = props['w']
-        h = props['h']
-        a_x = l / 2
-        b_x = math.sqrt(w * h / math.pi)
-        ratio_1 = b_x / a_x
-        ratio_2 = a_x / b_x
+        ca_x = self.get_ca_intertial_x(l, w, h)
+        ca_y = self.get_ca_intertial_y(l, w, h)
+        ca_z = self.get_ca_intertial_z(l, w, h)
 
+        ca = {'x': ca_x, 'y': ca_y, 'z': ca_z}
 
-        if ratio_1 < 1.6
+        return ca
+
+    def get_ca_intertial_x(self, l, w, h):
+        a = l / 2
+        b = math.sqrt(w * h / math.pi)
+        ratio_1 = b / a
+        ratio_2 = a / b
+
+        ca_ = self.get_newman_ca(a, b, ratio_1, ratio_2)
+
+    def get_ca_intertial_y(self, l, w, h):
+        a = w / 2
+        b = math.sqrt(h * l / math.pi)
+        ratio_1 = b / a
+        ratio_2 = a / b
+
+        ca_ = self.get_newman_ca(a, b, ratio_1, ratio_2)
+
+    def get_ca_intertial_z(self, l, w, h):
+        a = h / 2
+        b = math.sqrt(l * w / math.pi)
+        ratio_1 = b / a
+        ratio_2 = a / b
+
+        ca_ = self.get_newman_ca(a, b, ratio_1, ratio_2)
+
+    def get_newman_ca(self, a, b, ratio_1, ratio_2):
+        if ratio_1 < 1.6:
             ratio = self.cfg['look_up']['rotational']['ratio']
             value = self.cfg['look_up']['rotational']['m55_upper']
-
-            f = interpolate.interp1d(ratio, value, kind='cubic')
-            c = f(b_over_a)
-            ca_x = 0.2 + 0.8 * ratio_1
+            p = np.polyfit(ratio, value, deg=6)
+            ca = np.polyval(p, ratio_1)
         else:
-            ca_x = 1.0
+            ratio = self.cfg['look_up']['rotational']['ratio']
+            value = self.cfg['look_up']['rotational']['m55_lower']
+            p = np.polyfit(ratio, value, deg=6)
+            ca = np.polyval(p, ratio_2) * 2 * b**3 / (a * (a**2 + b**2))
 
-    def get_orcaflex_6dbuoy(self):
-        pass
+        return ca

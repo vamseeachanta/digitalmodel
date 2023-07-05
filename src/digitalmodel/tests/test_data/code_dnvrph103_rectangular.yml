@@ -2,7 +2,8 @@ basename: code_dnvrph103
 
 calculation_type: simplified
 
-properties:
+inputs:
+  name: uta2
   m_air: 635
   m_water: 554
 

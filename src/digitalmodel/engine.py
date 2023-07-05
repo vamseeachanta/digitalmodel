@@ -61,7 +61,7 @@ def engine(inputfile=None):
         cfg_base = rigging.get_rigging_groups(application_manager.cfg)
     elif basename == 'code_dnvrph103':
         code_dnvrph103 = DNVRPH103_rectangular_hydrodynamics()
-        cfg_base = code_dnvrph103.get_properties(application_manager.cfg)
+        cfg_base = code_dnvrph103.get_orcaflex_6dbuoy(application_manager.cfg)
     else:
         raise (
             Exception(f'Analysis for basename: {basename} not found. ... FAIL'))

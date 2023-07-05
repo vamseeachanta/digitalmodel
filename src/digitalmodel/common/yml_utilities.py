@@ -1,5 +1,6 @@
 import os
 import yaml
+import pkgutil
 import types
 from deepdiff import DeepDiff
 
@@ -154,3 +155,14 @@ class WorkingWithYAML():
             print(
                 "Yaml files are different. See wwyaml files saved in the current file directory"
             )
+
+    def get_library_yaml_file(self, cfg):
+        library_yaml_filename = cfg['filename']
+        if os.path.isfile(library_yaml_filename):
+            with open(library_yaml_filename, 'r') as ymlfile:
+                library_yaml = yaml.load(ymlfile, Loader=yaml.Loader)
+        else:
+            data = pkgutil.get_data('digitalmodel', cfg['filename'])
+            library_yaml = yaml.safe_load(data)
+
+        return library_yaml
