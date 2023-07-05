@@ -90,9 +90,9 @@ class DNVRPH103_rectangular_hydrodynamics:
         buoy_data.update({'DragAreaMoment': DragAreaMoment})
 
         DragMomentCoefficient = [
-            properties['rotational']['cd']['x'],
-            properties['rotational']['cd']['y'],
-            properties['rotational']['cd']['z']
+            round(properties['rotational']['cd']['x'], 3),
+            round(properties['rotational']['cd']['y'], 3),
+            round(properties['rotational']['cd']['z'], 3)
         ]
         buoy_data.update({'DragMomentCoefficient': DragMomentCoefficient})
 
@@ -447,9 +447,9 @@ class DNVRPH103_rectangular_hydrodynamics:
         rho_water = self.cfg['rho_water']
         volume = (inputs['m_air'] - inputs['m_water']) / rho_water
 
-        I_x = volume * rho_water * (w**2 * h**2) / 12
-        I_y = volume * rho_water * (h**2 * l**2) / 12
-        I_z = volume * rho_water * (l**2 * w**2) / 12
+        I_x = volume * rho_water / 1000 * (w**2 + h**2) / 12
+        I_y = volume * rho_water / 1000 * (h**2 + l**2) / 12
+        I_z = volume * rho_water / 1000 * (l**2 + w**2) / 12
 
         I = {'x': I_x, 'y': I_y, 'z': I_z}
 
@@ -463,13 +463,13 @@ class DNVRPH103_rectangular_hydrodynamics:
         w = inputs['w']
         h = inputs['h']
         am_x = (translational_properties['cd'][type]['y'] * l * h**4 +
-                translational_properties['cd'][type]['z'] * l * w**4) / 12
+                translational_properties['cd'][type]['z'] * l * w**4) / 32
 
         am_y = (translational_properties['cd'][type]['x'] * w * h**4 +
-                translational_properties['cd'][type]['z'] * w * l**4) / 12
+                translational_properties['cd'][type]['z'] * w * l**4) / 32
 
         am_z = (translational_properties['cd'][type]['x'] * h * w**4 +
-                translational_properties['cd'][type]['y'] * h * l**4) / 12
+                translational_properties['cd'][type]['y'] * h * l**4) / 32
 
         am = {'x': am_x, 'y': am_y, 'z': am_z}
 

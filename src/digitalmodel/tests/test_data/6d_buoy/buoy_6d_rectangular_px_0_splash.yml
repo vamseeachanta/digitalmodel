@@ -32,17 +32,17 @@
     - 2.022
     - 2.607
     DragAreaMoment:
-    - 0.885
-    - 9.885
-    - 6.477
+    - 0.2744800059658316
+    - 7.390257250183223
+    - 5.800815894276318
     DragForceCoefficient:
     - 2.836
     - 3.579
     - 3.55
     DragMomentCoefficient:
-    - 1
-    - 1
-    - 1
+    - 1.0
+    - 1.0
+    - 1.0
     EdgeFrom, EdgeTo, EdgeDiameter:
     - - 1
       - 2
@@ -88,16 +88,16 @@
     Height: 0.687
     Hidden: false
     HydrodynamicInertia:
-    - 2.501
-    - 27.593
-    - 45.894
+    - 0.008
+    - 0.062
+    - 0.064
     HydrodynamicMass:
     - '~'
     - '~'
     - '~'
     InitialAttitude:
     - 0
-    - 270
+    - 0
     - 0
     InitialPosition:
     - 0

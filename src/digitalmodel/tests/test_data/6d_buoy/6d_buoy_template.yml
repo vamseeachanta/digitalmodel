@@ -11,7 +11,7 @@
     CharacteristicLength: '~'
     CharacteristicForce: '~'
     InitialPosition: [0, 0, 0]
-    InitialAttitude: [0, 270, 0]
+    InitialAttitude: [0, 0, 0]
     Mass: 1.35
     MomentsOfInertia: [0.3, 2.08, 2.12]
     CentreOfMass: [-0.857, 0, 0.209]
