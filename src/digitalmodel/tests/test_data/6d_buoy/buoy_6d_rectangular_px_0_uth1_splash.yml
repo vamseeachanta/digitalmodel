@@ -1,26 +1,26 @@
 6DBuoys:
   New:
-  - uta2
-  uta2:
+  - uta1
+  uta1:
     AddedInertiaCoefficient:
-    - 0.531
-    - 0.232
-    - 0.632
+    - 0.409
+    - 0.004
+    - 1.14
     AddedMassCoefficient:
-    - 4.536
-    - 17.89
-    - 27.433
+    - 0.598
+    - 1.261
+    - 4.982
     BulkModulus: Infinity
     BuoyType: Lumped buoy
     CentreOfMass:
-    - -0.123
+    - -0.0355
     - 0
-    - 0.2096
+    - 0.249
     CentreOfMassOriginColour: Red
     CentreOfVolume:
+    - -0.3965
     - 0
-    - 0
-    - 0
+    - -0.055
     CentreOfVolumeOriginColour: Aqua
     CharacteristicForce: '~'
     CharacteristicLength: '~'
@@ -28,17 +28,17 @@
     DampingRelativeTo: Earth
     DisturbanceVessel: (none)
     DragArea:
-    - 0.609
-    - 2.022
-    - 2.607
+    - 1.09
+    - 2.169
+    - 4.994
     DragAreaMoment:
-    - 0.274
-    - 7.39
-    - 5.801
+    - 2.251
+    - 17.201
+    - 7.535
     DragForceCoefficient:
-    - 2.836
-    - 3.579
-    - 3.55
+    - 2.791
+    - 3.368
+    - 3.51
     DragMomentCoefficient:
     - 1.0
     - 1.0
@@ -85,12 +85,12 @@
     - '~'
     - '~'
     GlobalAppliedLoads: []
-    Height: 0.687
+    Height: 0.688
     Hidden: false
     HydrodynamicInertia:
-    - 0.008
-    - 0.062
-    - 0.064
+    - 0.327
+    - 1.142
+    - 1.365
     HydrodynamicMass:
     - '~'
     - '~'
@@ -109,11 +109,11 @@
     LumpedBuoySlamArea: 0
     LumpedBuoySlamForceDataEntry: 0
     LumpedBuoySlamForceDataExit: 0
-    Mass: 0.635
+    Mass: 1.6516
     MomentsOfInertia:
-    - 0.094
-    - 0.521
-    - 0.509
+    - 0.513
+    - 1.538
+    - 1.716
     MorisonElements: []
     Pen:
     - 2
@@ -147,31 +147,31 @@
     - 0
     - 0
     VertexX, VertexY, VertexZ:
-    - - 1.4715
-      - 0.443
-      - 0.3435
-    - - -1.4715
-      - 0.443
-      - 0.3435
-    - - -1.4715
-      - -0.443
-      - 0.3435
-    - - 1.4715
-      - -0.443
-      - 0.3435
-    - - 1.4715
-      - 0.443
-      - -0.3435
-    - - -1.4715
-      - 0.443
-      - -0.3435
-    - - -1.4715
-      - -0.443
-      - -0.3435
-    - - 1.4715
-      - -0.443
-      - -0.3435
-    Volume: 0.07902
+    - - 1.5765
+      - 0.792
+      - 0.344
+    - - -1.5765
+      - 0.792
+      - 0.344
+    - - -1.5765
+      - -0.792
+      - 0.344
+    - - 1.5765
+      - -0.792
+      - 0.344
+    - - 1.5765
+      - 0.792
+      - -0.344
+    - - -1.5765
+      - 0.792
+      - -0.344
+    - - -1.5765
+      - -0.792
+      - -0.344
+    - - 1.5765
+      - -0.792
+      - -0.344
+    Volume: 1.2838
     WaveCalculationMethod: Specified by environment
     Wings: []
     WireFrameOrigin:

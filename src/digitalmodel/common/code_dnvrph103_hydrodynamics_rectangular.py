@@ -83,9 +83,9 @@ class DNVRPH103_hydrodynamics_rectangular:
 
     def update_6d_buoy_rotational(self, properties, zone, buoy_data):
         DragAreaMoment = [
-            properties['rotational']['am'][zone]['x'],
-            properties['rotational']['am'][zone]['y'],
-            properties['rotational']['am'][zone]['z']
+            round(properties['rotational']['am'][zone]['x'], 3),
+            round(properties['rotational']['am'][zone]['y'], 3),
+            round(properties['rotational']['am'][zone]['z'], 3)
         ]
         buoy_data.update({'DragAreaMoment': DragAreaMoment})
 
