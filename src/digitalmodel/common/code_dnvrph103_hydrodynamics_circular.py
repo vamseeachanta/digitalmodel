@@ -9,7 +9,7 @@ save_data = SaveData()
 omu = OrcaflexModelUtilities()
 
 
-class DNVRPH103_rectangular_hydrodynamics:
+class DNVRPH103_hydrodynamics_circular:
 
     def __init__(self):
         pass
