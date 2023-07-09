@@ -24,7 +24,7 @@ def engine(inputfile=None):
         if not os.path.isfile(sys.argv[1]):
             raise (FileNotFoundError(
                 f'Input file {sys.argv[1]} not found ... FAIL'))
-        else:
+        else:   
             inputfile = sys.argv[1]
 
     if len(sys.argv) <= 1:
