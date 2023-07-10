@@ -7,7 +7,7 @@ from deepdiff import DeepDiff
 from pathlib import Path
 from collections.abc import Mapping
 from digitalmodel.common.saveData import saveDataYaml
-from digitalmodel.common.utilities import is_file_valid, get_common_name_from_2_filenames
+from digitalmodel.common.utilities import is_file_valid_func, get_common_name_from_2_filenames
 from digitalmodel.common.data import ReadData
 
 read_data = ReadData()
@@ -15,7 +15,7 @@ read_data = ReadData()
 
 def ymlInput(defaultYml, updateYml=None):
 
-    if not is_file_valid(defaultYml):
+    if not is_file_valid_func(defaultYml):
         raise Exception("Not valid file. Please check the file path.")
 
     with open(defaultYml, 'r') as ymlfile:

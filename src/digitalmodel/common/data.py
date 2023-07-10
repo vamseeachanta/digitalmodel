@@ -3,7 +3,7 @@ import yaml
 import operator
 from functools import reduce
 
-from digitalmodel.common.utilities import is_file_valid
+from digitalmodel.common.utilities import is_file_valid_func
 
 
 class ReadFromExcel():

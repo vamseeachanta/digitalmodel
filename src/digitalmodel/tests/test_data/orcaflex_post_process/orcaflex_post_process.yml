@@ -41,5 +41,30 @@ Files:
       visualization: 
         hidden: []
         views: ['Elevation', 'Plan']
-        add: []
+        tdp_line: Umbilical
+        RelativeToObject: uth2-deep
+        viewparams:
+          elevation:
+            ViewCentre : -17, 0, 12
+            ViewSize : 200
+            DrawViewAxes : False
+            DrawGlobalAxes : False
+            DrawScaleBar : False
+            ViewAzimuth : 270
+            ViewElevation : 0
+            ViewGamma : 70
+            Height : 500
+            Width : 800
+          plan:
+            ViewCentre : -150, 0, 0
+            ViewCentre : -150, 0, 0
+            ViewSize : 200
+            DrawViewAxes : False
+            DrawGlobalAxes : False
+            DrawScaleBar : False
+            ViewAzimuth : 270
+            ViewElevation : 90
+            ViewGamma : 0
+            Height : 500
+            Width : 800
 

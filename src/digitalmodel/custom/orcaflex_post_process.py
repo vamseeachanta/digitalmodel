@@ -1,9 +1,7 @@
 import os
 import OrcFxAPI
-# import pandas as pd
-# import sys
-# import math
-# import pickle
+import logging
+from digitalmodel.common.utilities import is_file_valid_func
 
 
 class orcaflex_post_process:
@@ -26,24 +24,23 @@ class orcaflex_visualizations:
         pass
 
     def get_visualizations(self, cfg):
-        self.get_files(cfg)
         self.save_views_for_files(cfg)
 
-    def get_files(self, cfg):
-        for file_index in range(0, len(cfg['Files']['data'])):
-            file_cfg = cfg['Files']['data'][file_index]
-            if not os.path.isfile(file_cfg['Name']):
-                file_cfg['Name'] = os.path.join(os.getcwd(), file_cfg['Name'])
+    def is_file_valid(self, file_name):
+        is_file_valid, file_name = is_file_valid_func(file_name)
 
-    def save_views_for_files(self, model, x):
+        return is_file_valid, file_name
+
+    def save_views_for_files(self, cfg):
         model = OrcFxAPI.Model()
 
-        for x in wf.loadcasedat:
-            print(x)
-            model.LoadData(x)
+        for file_index in range(0, len(cfg['Files']['data'])):
+            file_cfg = cfg['Files']['data'][file_index]
+            is_file_valid, file_name = self.is_file_valid(file_cfg['Name'])
+            model.LoadData(file_name)
 
             # for TDP Colour change
-            line = model["10inGE_R1"]
+            line = model[file_cfg['visualization']['tdp_line']]
             line.ContactPenColour = 128 * 65536 + 128 * 256 + 128
 
             env = model['Environment']
@@ -52,14 +49,11 @@ class orcaflex_visualizations:
             env.SeaSurfacePenStyle = "Clear"
             model.general.NorthDirectionDefined = "No"
 
-            vessel = model["NO102"]
+            vessel = model["SevenArctic"]
             x_value = vessel.InitialX
             y_value = vessel.InitialY
             heading = vessel.InitialHeading
 
-            # items_to_hide = ["20m_FPSO_envelop","ML1","ML2","ML3","ML4","ML5","ML6","ML7","ML8","ML9","Turret","Turret_Ref","I_Tube_R1"
-            #                  ,"STPLightShip","STP_buoy_main body","TurretShape","STP_buoy_origin","GE_Curve","b6 vls arch1","HOP-1", "HOP-2"
-            #                  ,"VLS_Bellmouth","Yoke_Contrain","R1_PIHO_Con" ]
             items_to_hide = [
                 "20m_FPSO_envelop", "LowestTransfer Position", "b6 vls arch1",
                 "R1_PIHO_Con", "PullHead_R1", "250TeCrane"
@@ -67,29 +61,27 @@ class orcaflex_visualizations:
 
             all_objects = []
             for obj in model.objects:
-                y = str(obj)
-                name_raw = y.split(":")[1]
-                name_raw_2 = name_raw[:len(name_raw) - 2]
-                all_objects.append(name_raw_2[2:])
+                Name = str(obj)
+                all_objects.append(Name)
             for item in items_to_hide:
                 if item in all_objects:
                     model[item].Hidden = "Yes"
-                else:
-                    pass
 
+            #TODO crane settings
             # crane = model["250TeCrane"]
             # crane.OutsidePenStyle = "Dot"
             # crane.InsidePenStyle = "Clear"
             # crane.NumberOfLines = 2
 
             model.CalculateStatics()
-            self.plan_view(model, x)
-            self.elevation_view(model, x)
+            self.plan_view(model, file_name, file_cfg)
+            self.elevation_view(model, file_name, file_cfg)
 
-    def plan_view(self, model, x):
+    def plan_view(self, model, file_name, file_cfg):
         '''        Plan View      '''
         viewparams = model.defaultViewParameters
-        viewparams.RelativeToObject = model['NO102']
+        viewparams.RelativeToObject = model[file_cfg['visualization']
+                                            ['RelativeToObject']]
         viewparams.ViewCentre = -150, 0, 0
         viewparams.ViewSize = 200
         # if heading == 0:
@@ -108,16 +100,15 @@ class orcaflex_visualizations:
         viewparams.Width = 800
         viewparams.BackgroundColour = 255 * 65536 + 255 * 256 + 255
 
-        file_name = wf.location_name + x.split(
-            "/")[1][:-4] + "_image_PlanView.jpg"
-        print(file_name)
-        model.SaveModelView(file_name, viewparams)
+        self.save_image(model, file_name, viewparams, viewtype='plan')
 
-    def elevation_view(self, model, x):
+    def elevation_view(self, model, file_name, file_cfg):
         '''        Elevation  View      '''
+        env = model['Environment']
         env.SeaSurfacePenStyle = "Solid"
         viewparams = model.defaultViewParameters
-        viewparams.RelativeToObject = model['NO102']
+        viewparams.RelativeToObject = model[file_cfg['visualization']
+                                            ['RelativeToObject']]
         viewparams.ViewCentre = -150, 0, -200
         viewparams.ViewSize = 550
         # if heading == 0:
@@ -137,10 +128,14 @@ class orcaflex_visualizations:
         viewparams.Width = 800
         viewparams.BackgroundColour = 255 * 65536 + 255 * 256 + 255
 
-        file_name = wf.location_name + x.split(
-            "/")[1][:-4] + "_image_ElevationView.jpeg"
-        print(file_name)
-        model.SaveModelView(file_name, viewparams)
+        self.save_image(model, file_name, viewparams, viewtype='elevation')
+
+    def save_image(self, model, file_name, viewparams, viewtype):
+        file_location = os.path.split(file_name)[0]
+        file_name_img = file_location + os.path.basename(file_name).split(
+            ".")[0] + "_" + viewtype + ".jpg"
+        logging.info(f"Saving {file_name_img}  view    ...")
+        model.SaveModelView(file_name_img, viewparams)
 
 
 #
