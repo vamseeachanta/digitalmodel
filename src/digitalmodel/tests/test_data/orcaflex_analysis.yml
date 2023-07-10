@@ -1,6 +1,7 @@
 basename: orcaflex_analysis
 
 default:
+  log_level: DEBUG
   Analysis:
     Analyze:
       flag: True
@@ -59,7 +60,6 @@ default:
     WeightPerUnitLength: N/m
     SoilStiffness: kN/m/m
     BuoyancyCoverage: Percentage
-  log_level: DEBUG
 
 PostProcessUnits:
     System : US

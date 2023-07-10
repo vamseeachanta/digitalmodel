@@ -164,8 +164,14 @@ class ConfigureApplicationInputs():
         ) + '\\src\\digitalmodel\\tests\\test_data\\' + self.basename + '.yml'
         self.get_custom_file()
         if not os.path.isfile(self.ApplicationInputFile):
-            data = pkgutil.get_data('digitalmodel',
-                                    'tests/test_data/' + self.basename + '.yml')
+            try:
+                self.ApplicationInputFile = 'tests/test_data/' + self.basename + "/" + self.basename + '.yml'
+                data = pkgutil.get_data('digitalmodel',
+                                        self.ApplicationInputFile)
+            except:
+                self.ApplicationInputFile = 'tests/test_data/' + self.basename + '.yml'
+                data = pkgutil.get_data('digitalmodel',
+                                        self.ApplicationInputFile)
             self.ApplicationInputFile_dict = yaml.safe_load(data)
 
         # Get updated configuration file for Analysis

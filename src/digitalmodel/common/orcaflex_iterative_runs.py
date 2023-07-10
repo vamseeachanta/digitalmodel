@@ -25,17 +25,25 @@ class OrcaflexIterativeRuns():
             filename = cfg['Analysis']['input_files']['with_ext'][i]
 
             if os.path.isfile(filename):
-                logging.info(f'File {filename} found ... PASS')
-                filename_copy = self.get_filename_copy(filename)
-                self.make_copy_per_iterative_guideline(filename, filename_copy)
-                cfg['Analysis']['input_files']['iterate'].append(filename_copy)
+                if 'iterate_yml' in cfg_files[0]:
+                    logging.info(
+                        f'Iteration analysis for File: {filename} ... START')
+                    filename_copy = self.get_filename_copy(filename)
+                    self.make_copy_per_iterative_guideline(
+                        filename, filename_copy)
+                    cfg['Analysis']['input_files']['iterate'].append(
+                        filename_copy)
 
-                iterate_cfg = cfg_files[0]['iterate_yml'].copy()
-                iterative_yml = self.get_iterative_yaml(iterate_cfg,
-                                                        filename_copy)
+                    iterate_cfg = cfg_files[0]['iterate_yml'].copy()
+                    iterative_yml = self.get_iterative_yaml(
+                        iterate_cfg, filename_copy)
 
-                self.save_iterative_file(filename_copy, iterative_yml)
-
+                    self.save_iterative_file(filename_copy, iterative_yml)
+                    logging.info(
+                        f'Iteration analysis for File: {filename} ... COMPLETE')
+                else:
+                    logging.info(
+                        f'Iteration analysis for File: {filename} ... SKIP')
             else:
                 logging.error(f'File {filename_copy} not found ... FAIL')
 

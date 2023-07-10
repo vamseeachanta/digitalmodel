@@ -12,6 +12,7 @@ from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
 from digitalmodel.custom.rigging import Rigging
 from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import DNVRPH103_hydrodynamics_rectangular
+from digitalmodel.custom.orcaflex_post_process import orcaflex_post_process
 
 
 def engine(inputfile=None):
@@ -24,7 +25,7 @@ def engine(inputfile=None):
         if not os.path.isfile(sys.argv[1]):
             raise (FileNotFoundError(
                 f'Input file {sys.argv[1]} not found ... FAIL'))
-        else:   
+        else:
             inputfile = sys.argv[1]
 
     if len(sys.argv) <= 1:
@@ -56,6 +57,9 @@ def engine(inputfile=None):
     elif basename == 'umbilical_end':
         ua = UmbilicalAnalysis()
         ua.perform_analysis(application_manager.cfg)
+    elif basename == 'orcaflex_post_process':
+        opp = orcaflex_post_process()
+        cfg_base = opp.post_process_router(application_manager.cfg)
     elif basename == 'rigging':
         rigging = Rigging()
         cfg_base = rigging.get_rigging_groups(application_manager.cfg)
