@@ -33,109 +33,114 @@ class orcaflex_visualizations:
 
     def save_views_for_files(self, cfg):
         model = OrcFxAPI.Model()
+        combined_model = None
 
         for file_index in range(0, len(cfg['Files']['data'])):
             file_cfg = cfg['Files']['data'][file_index]
             is_file_valid, file_name = self.is_file_valid(file_cfg['Name'])
-            model.LoadData(file_name)
+            if is_file_valid:
+                model.LoadData(file_name)
+                combined_model = self.combine_models(combined_model, model)
 
-            # for TDP Colour change
-            line = model[file_cfg['visualization']['tdp_line']]
-            line.ContactPenColour = 128 * 65536 + 128 * 256 + 128
+                model = self.set_general_visualization_settings(model, cfg)
+                model.CalculateStatics()
+                self.plan_view(model, file_name, cfg)
+                self.elevation_view(model, file_name, cfg)
 
-            env = model['Environment']
-            # env.SeabedPenStyle = "Clear"
-            # env.SeabedProfilePenStyle = "Clear"
-            env.SeaSurfacePenStyle = "Clear"
-            model.general.NorthDirectionDefined = "No"
+            combined_model.CalculateStatics()
+            self.plan_view(combined_model,
+                           cfg['visualization_settings']['label'], cfg)
+            self.elevation_view(combined_model,
+                                cfg['visualization_settings']['label'], cfg)
 
-            vessel = model["SevenArctic"]
-            x_value = vessel.InitialX
-            y_value = vessel.InitialY
-            heading = vessel.InitialHeading
+    def set_general_visualization_settings(self, model, cfg):
+        # for TDP Colour change
+        line = model[cfg['visualization_settings']['tdp_line']]
+        line.ContactPenColour = 128 * 65536 + 128 * 256 + 128
 
-            items_to_hide = [
-                "20m_FPSO_envelop", "LowestTransfer Position", "b6 vls arch1",
-                "R1_PIHO_Con", "PullHead_R1", "250TeCrane"
-            ]
+        env = model['Environment']
+        # env.SeabedPenStyle = "Clear"
+        # env.SeabedProfilePenStyle = "Clear"
+        env.SeaSurfacePenStyle = "Clear"
+        model.general.NorthDirectionDefined = "No"
 
-            all_objects = []
+        vessel = model["SevenArctic"]
+        x_value = vessel.InitialX
+        y_value = vessel.InitialY
+        heading = vessel.InitialHeading
+
+        hide_items = cfg['visualization_settings']['hide_items']
+
+        all_objects = []
+        for obj in model.objects:
+            Name = str(obj)
+            all_objects.append(Name)
+        for item in hide_items:
+            if item in all_objects:
+                model[item].Hidden = "Yes"
+
+        #TODO crane settings
+        # crane = model["250TeCrane"]
+        # crane.OutsidePenStyle = "Dot"
+        # crane.InsidePenStyle = "Clear"
+        # crane.NumberOfLines = 2
+        return model
+
+    def combine_models(self, combined_model, model):
+        if combined_model is None:
+            combined_model = model
+        else:
             for obj in model.objects:
-                Name = str(obj)
-                all_objects.append(Name)
-            for item in items_to_hide:
-                if item in all_objects:
-                    model[item].Hidden = "Yes"
+                combined_model.createObject(obj)
+                line = combined_model.CreateObject(obj.type)
 
-            #TODO crane settings
-            # crane = model["250TeCrane"]
-            # crane.OutsidePenStyle = "Dot"
-            # crane.InsidePenStyle = "Clear"
-            # crane.NumberOfLines = 2
 
-            model.CalculateStatics()
-            self.plan_view(model, file_name, file_cfg)
-            self.elevation_view(model, file_name, file_cfg)
+        combined_model.SaveData("combined_model.dat")
+        return combined_model
 
-    def plan_view(self, model, file_name, file_cfg):
+    def plan_view(self, model, file_name, cfg):
         '''        Plan View      '''
-        viewparams = model.defaultViewParameters
-        viewparams.RelativeToObject = model[file_cfg['visualization']
-                                            ['RelativeToObject']]
-        viewparams.ViewCentre = -150, 0, 0
-        viewparams.ViewSize = 200
-        # if heading == 0:
-        #     viewparams.ViewCentre[0] = x_value - 50
-        #     viewparams.ViewCentre[1] = 0
-        # else:
-        #     viewparams.ViewCentre[0] = x_value - 50
-        #     viewparams.ViewCentre[1] = y_value * 0.5
-        viewparams.DrawViewAxes = False
-        viewparams.DrawGlobalAxes = False
-        viewparams.DrawScaleBar = False
-        viewparams.ViewAzimuth = 270
-        viewparams.ViewElevation = 90
-        viewparams.ViewGamma = 0
-        viewparams.Height = 500
-        viewparams.Width = 800
-        viewparams.BackgroundColour = 255 * 65536 + 255 * 256 + 255
+        viewparams = self.assign_view_parameters(model, cfg, viewtype='plan')
 
         self.save_image(model, file_name, viewparams, viewtype='plan')
+
+    def assign_view_parameters(self, model, cfg, viewtype):
+        viewparams = model.defaultViewParameters
+        viewparams_cfg = cfg['visualization_settings']['viewparams'][viewtype]
+        for key in viewparams_cfg:
+            try:
+                if key == 'ViewCentre':
+                    ViewCentre = viewparams_cfg['ViewCentre']
+                    for i in range(0, len(ViewCentre)):
+                        viewparams.ViewCentre[i] = ViewCentre[i]
+                elif key == 'RelativeToObject':
+                    viewparams.RelativeToObject = model[
+                        viewparams_cfg['RelativeToObject']]
+                else:
+                    setattr(viewparams, key, viewparams_cfg[key])
+            except Exception as e:
+                logging.error(e)
+
+        return viewparams
 
     def elevation_view(self, model, file_name, file_cfg):
         '''        Elevation  View      '''
         env = model['Environment']
         env.SeaSurfacePenStyle = "Solid"
-        viewparams = model.defaultViewParameters
-        viewparams.RelativeToObject = model[file_cfg['visualization']
-                                            ['RelativeToObject']]
-        viewparams.ViewCentre = -150, 0, -200
-        viewparams.ViewSize = 550
-        # if heading == 0:
-        #     viewparams.ViewCentre[0] = x_value - 50
-        #     viewparams.ViewCentre[1] = 0
-        # else:
-        #     viewparams.ViewCentre[0] = x_value - 50
-        #     viewparams.ViewCentre[1] = y_value * 0.5
-        # viewparams.ViewCentre[2] = -170
-        viewparams.DrawViewAxes = False
-        viewparams.DrawGlobalAxes = False
-        viewparams.DrawScaleBar = False
-        viewparams.ViewAzimuth = 270
-        viewparams.ViewElevation = 0
-        viewparams.ViewGamma = 0
-        viewparams.Height = 500
-        viewparams.Width = 800
-        viewparams.BackgroundColour = 255 * 65536 + 255 * 256 + 255
+
+        viewparams = self.assign_view_parameters(model,
+                                                 file_cfg,
+                                                 viewtype='elevation')
 
         self.save_image(model, file_name, viewparams, viewtype='elevation')
 
     def save_image(self, model, file_name, viewparams, viewtype):
         file_location = os.path.split(file_name)[0]
-        file_name_img = file_location + os.path.basename(file_name).split(
+        file_name_img = os.path.basename(file_name).split(
             ".")[0] + "_" + viewtype + ".jpg"
-        logging.info(f"Saving {file_name_img}  view    ...")
-        model.SaveModelView(file_name_img, viewparams)
+        file_name_with_path = os.path.join(file_location, file_name_img)
+        logging.info(f"Saving ...  {file_name_img}  view")
+        model.SaveModelView(file_name_with_path, viewparams)
 
 
 #
