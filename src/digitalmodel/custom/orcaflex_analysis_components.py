@@ -16,6 +16,7 @@ from digitalmodel.common.yml_utilities import ymlInput
 from digitalmodel.common.time_series_components import TimeSeriesComponents
 from digitalmodel.common.ETL_components import ETL_components
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.common.utilities import is_file_valid_func
 
 ou = OrcaflexUtilities()
 
@@ -50,8 +51,8 @@ class OrcaFlexAnalysis():
         except:
             print("No simulation files found or resolved")
 
-        if self.cfg['default']['Analysis']['Analyze']['flag'] or self.cfg[
-                'orcaflex']['iterate']['flag']:
+        if self.cfg['orcaflex']['analysis']['flag'] or self.cfg['orcaflex'][
+                'iterate']['flag']:
             for fileIndex in range(0, len(self.simulation_filenames)):
                 self.get_files_for_analysis(analysis_type, fileIndex,
                                             input_files_with_extension,
@@ -76,12 +77,13 @@ class OrcaFlexAnalysis():
                 'yaml', 'yml'
         ]:
             print("Processing orcaflex yaml files")
-            if self.cfg['default']['Analysis']['Analyze']['flag']:
+            if self.cfg['orcaflex']['iterate']['flag']:
                 self.process_fea()
             else:
                 print("No FEA performed per user request")
 
-            if self.cfg['default']['postprocess']['flag']:
+            if 'postprocess' in self.cfg['orcaflex'] and self.cfg['orcaflex'][
+                    'postprocess']['flag']:
                 self.post_process_files()
             self.save_data()
         if self.cfg['default']['Analysis']['Analyze']['file_type'] in [
@@ -119,7 +121,7 @@ class OrcaFlexAnalysis():
             model.LoadData(filename_with_ext)
             logging.info("Load input file successful")
 
-            if self.cfg['default']['Analysis']['Analyze']['statics']['flag']:
+            if self.cfg['orcaflex']['iterate']['flag']:
                 model = self.run_static_analysis(filename_with_ext, model)
             elif self.cfg['default']['Analysis']['Analyze']['simulation']:
                 model.RunSimulation()
@@ -165,24 +167,21 @@ class OrcaFlexAnalysis():
         return model
 
     def save_model_with_calculated_positions(self, filename_with_ext, model):
-        calculated_cfg = self.cfg['default']['Analysis']['Analyze']['statics'][
+        calculated_cfg = self.cfg['orcaflex']['iterate'][
             'UseCalculatedPositions'].copy()
-        if calculated_cfg['flag']:
-            if calculated_cfg['SetLinesToUserSpecifiedStartingShape']:
-                model.UseCalculatedPositions(
-                    SetLinesToUserSpecifiedStartingShape=True)
-            elif calculated_cfg['UseStaticLineEndOrientations']:
-                model.UseCalculatedPositions(UseStaticLineEndOrientations=True)
-            else:
-                model.UseCalculatedPositions()
-            calculated_positions_filename = filename_with_ext
-            if not self.cfg['default']['Analysis']['Analyze']['statics'][
-                    'UseCalculatedPositions']['overwrite']:
-                calculated_positions_filename = os.path.splitext(
-                    filename_with_ext
-                )[0] + '_calculated_all' + os.path.splitext(
-                    filename_with_ext)[1]
-            model.SaveData(calculated_positions_filename)
+
+        if calculated_cfg['SetLinesToUserSpecifiedStartingShape']:
+            model.UseCalculatedPositions(
+                SetLinesToUserSpecifiedStartingShape=True)
+        elif calculated_cfg['UseStaticLineEndOrientations']:
+            model.UseCalculatedPositions(UseStaticLineEndOrientations=True)
+        else:
+            model.UseCalculatedPositions()
+        calculated_positions_filename = filename_with_ext
+        if not self.cfg['orcaflex']['iterate']['overwrite_data']:
+            calculated_positions_filename = os.path.splitext(filename_with_ext)[
+                0] + '_calculated_all' + os.path.splitext(filename_with_ext)[1]
+        model.SaveData(calculated_positions_filename)
 
     def iterate_to_value(self, model, iterate_cfg):
         iterations_df = pd.DataFrame(columns=['variable', 'output'])
@@ -1179,6 +1178,9 @@ class OrcaFlexAnalysis():
                                input_files_with_extension,
                                input_files_without_extension):
         filename = self.simulation_filenames[fileIndex]
+        analysis_root_folder = self.cfg['Analysis']['analysis_root_folder']
+        file_is_valid, filename = is_file_valid_func(filename,
+                                                     analysis_root_folder)
         filename_components = filename.split('.')
         filename_without_extension = filename.replace(
             '.' + filename_components[-1], "")
@@ -1210,21 +1212,26 @@ class OrcaFlexAnalysis():
             self.simulation_filenames = [
                 file_group['Name'] for file_group in self.cfg['Files']['data']
             ]
-            self.simulation_ObjectNames = [
-                file_group['ObjectName']
-                for file_group in self.cfg['Files']['data']
-            ]
-            self.simulation_SimulationDuration = [
-                file_group['SimulationDuration']
-                for file_group in self.cfg['Files']['data']
-            ]
-            self.simulation_ProbabilityRatio = [
-                file_group['ProbabilityRatio']
-                for file_group in self.cfg['Files']['data']
-            ]
-            self.simulation_Labels = [
-                file_group['Label'] for file_group in self.cfg['Files']['data']
-            ]
+            if 'ObjectName' in self.cfg['Files']['data'][0]:
+                self.simulation_ObjectNames = [
+                    file_group['ObjectName']
+                    for file_group in self.cfg['Files']['data']
+                ]
+            if 'SimulationDuration' in self.cfg['Files']['data'][0]:
+                self.simulation_SimulationDuration = [
+                    file_group['SimulationDuration']
+                    for file_group in self.cfg['Files']['data']
+                ]
+            if 'ProbabilityRatio' in self.cfg['Files']['data'][0]:
+                self.simulation_ProbabilityRatio = [
+                    file_group['ProbabilityRatio']
+                    for file_group in self.cfg['Files']['data']
+                ]
+            if 'Label' in self.cfg['Files']['data'][0]:
+                self.simulation_Labels = [
+                    file_group['Label']
+                    for file_group in self.cfg['Files']['data']
+                ]
         elif self.cfg['Files']['data_source'] == 'csv':
             import pandas as pd
             self.load_matrix = pd.read_csv(self.cfg['Files']['csv_filename'])

@@ -94,7 +94,6 @@ class orcaflex_visualizations:
                 combined_model.createObject(obj)
                 line = combined_model.CreateObject(obj.type)
 
-
         combined_model.SaveData("combined_model.dat")
         return combined_model
 

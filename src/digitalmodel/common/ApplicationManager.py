@@ -284,6 +284,7 @@ class ConfigureApplicationInputs():
         application_configuration_parameters = {
             "Analysis": {
                 "basename": self.basename,
+                "analysis_root_folder": AnalysisRootFolder,
                 "file_name": file_name,
                 "file_name_for_overwrite": file_name_for_overwrite,
                 "result_folder": result_folder,
