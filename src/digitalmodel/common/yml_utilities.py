@@ -1,12 +1,13 @@
 import os
 import yaml
+import pkgutil
 import types
 from deepdiff import DeepDiff
 
 from pathlib import Path
 from collections.abc import Mapping
 from digitalmodel.common.saveData import saveDataYaml
-from digitalmodel.common.utilities import is_file_valid, get_common_name_from_2_filenames
+from digitalmodel.common.utilities import is_file_valid_func, get_common_name_from_2_filenames
 from digitalmodel.common.data import ReadData
 
 read_data = ReadData()
@@ -14,7 +15,7 @@ read_data = ReadData()
 
 def ymlInput(defaultYml, updateYml=None):
 
-    if not is_file_valid(defaultYml):
+    if not is_file_valid_func(defaultYml):
         raise Exception("Not valid file. Please check the file path.")
 
     with open(defaultYml, 'r') as ymlfile:
@@ -154,3 +155,14 @@ class WorkingWithYAML():
             print(
                 "Yaml files are different. See wwyaml files saved in the current file directory"
             )
+
+    def get_library_yaml_file(self, cfg):
+        library_yaml_filename = cfg['filename']
+        if os.path.isfile(library_yaml_filename):
+            with open(library_yaml_filename, 'r') as ymlfile:
+                library_yaml = yaml.load(ymlfile, Loader=yaml.Loader)
+        else:
+            data = pkgutil.get_data('digitalmodel', cfg['filename'])
+            library_yaml = yaml.safe_load(data)
+
+        return library_yaml

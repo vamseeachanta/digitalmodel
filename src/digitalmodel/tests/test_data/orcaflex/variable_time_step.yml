@@ -1,0 +1,5 @@
+﻿BaseFile: NULL
+General:
+  ImplicitUseVariableTimeStep: Yes
+  ImplicitVariableMaxTimeStep: 0.25
+  ImplicitVariableMaxNumOfIterations: 20

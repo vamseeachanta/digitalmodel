@@ -1,8 +1,151 @@
-# import OrcFxAPI
-# import pandas as pd
-# import sys
-# import math
-# import pickle
+import os
+import OrcFxAPI
+import logging
+from digitalmodel.common.utilities import is_file_valid_func
+
+
+class orcaflex_post_process:
+
+    def __init__(self):
+        pass
+
+    def post_process_router(self, cfg):
+        if cfg['orcaflex']['postprocess']['visualization']:
+            self.get_visualizations(cfg)
+
+    def get_visualizations(self, cfg):
+        ov = orcaflex_visualizations()
+        ov.get_visualizations(cfg)
+
+
+class orcaflex_visualizations:
+
+    def __init__(self):
+        pass
+
+    def get_visualizations(self, cfg):
+        self.save_views_for_files(cfg)
+
+    def is_file_valid(self, file_name):
+        is_file_valid, file_name = is_file_valid_func(file_name)
+
+        return is_file_valid, file_name
+
+    def save_views_for_files(self, cfg):
+        model = OrcFxAPI.Model()
+        combined_model = None
+
+        for file_index in range(0, len(cfg['Files']['data'])):
+            file_cfg = cfg['Files']['data'][file_index]
+            is_file_valid, file_name = self.is_file_valid(file_cfg['Name'])
+            if is_file_valid:
+                model.LoadData(file_name)
+
+                if cfg['visualization_settings']['combined']:
+                    print(f"Combined model code in library does not exist")
+                    # combined_model = self.combine_models(combined_model, model)
+
+                model = self.set_general_visualization_settings(model, cfg)
+                model.CalculateStatics()
+                self.plan_view(model, file_name, cfg)
+                self.elevation_view(model, file_name, cfg)
+
+        if cfg['visualization_settings']['combined']:
+            combined_model.CalculateStatics()
+            self.plan_view(combined_model,
+                           cfg['visualization_settings']['label'], cfg)
+            self.elevation_view(combined_model,
+                                cfg['visualization_settings']['label'], cfg)
+
+    def set_general_visualization_settings(self, model, cfg):
+        # for TDP Colour change
+        line = model[cfg['visualization_settings']['tdp_line']]
+        line.ContactPenColour = 128 * 65536 + 128 * 256 + 128
+
+        env = model['Environment']
+        # env.SeabedPenStyle = "Clear"
+        # env.SeabedProfilePenStyle = "Clear"
+        env.SeaSurfacePenStyle = "Clear"
+        model.general.NorthDirectionDefined = "No"
+
+        vessel = model["SevenArctic"]
+        x_value = vessel.InitialX
+        y_value = vessel.InitialY
+        heading = vessel.InitialHeading
+
+        hide_items = cfg['visualization_settings']['hide_items']
+
+        all_objects = []
+        for obj in model.objects:
+            Name = str(obj)
+            all_objects.append(Name)
+        for item in hide_items:
+            if item in all_objects:
+                model[item].Hidden = "Yes"
+
+        #TODO crane settings
+        # crane = model["250TeCrane"]
+        # crane.OutsidePenStyle = "Dot"
+        # crane.InsidePenStyle = "Clear"
+        # crane.NumberOfLines = 2
+        return model
+
+    def combine_models(self, combined_model, model):
+        if combined_model is None:
+            combined_model = model
+        else:
+            for obj in model.objects:
+                combined_model.createObject(obj)
+                line = combined_model.CreateObject(obj.type)
+
+        combined_model.SaveData("combined_model.dat")
+        return combined_model
+
+    def plan_view(self, model, file_name, cfg):
+        '''        Plan View      '''
+        viewparams = self.assign_view_parameters(model, cfg, viewtype='plan')
+
+        self.save_image(model, file_name, viewparams, viewtype='plan')
+
+    def assign_view_parameters(self, model, cfg, viewtype):
+        viewparams = model.defaultViewParameters
+        viewparams_cfg = cfg['visualization_settings']['viewparams'][viewtype]
+        for key in viewparams_cfg:
+            try:
+                if key == 'ViewCentre':
+                    ViewCentre = viewparams_cfg['ViewCentre']
+                    for i in range(0, len(ViewCentre)):
+                        viewparams.ViewCentre[i] = ViewCentre[i]
+                elif key == 'RelativeToObject':
+                    viewparams.RelativeToObject = model[
+                        viewparams_cfg['RelativeToObject']]
+                else:
+                    setattr(viewparams, key, viewparams_cfg[key])
+            except Exception as e:
+                logging.error(e)
+
+        return viewparams
+
+    def elevation_view(self, model, file_name, file_cfg):
+        '''        Elevation  View      '''
+        env = model['Environment']
+        env.SeaSurfacePenStyle = "Solid"
+
+        viewparams = self.assign_view_parameters(model,
+                                                 file_cfg,
+                                                 viewtype='elevation')
+
+        self.save_image(model, file_name, viewparams, viewtype='elevation')
+
+    def save_image(self, model, file_name, viewparams, viewtype):
+        file_location = os.path.split(file_name)[0]
+        file_name_img = os.path.basename(file_name).split(
+            ".")[0] + "_" + viewtype + ".jpg"
+        file_name_with_path = os.path.join(file_location, file_name_img)
+        logging.info(f"Saving ...  {file_name_img}  view")
+        model.SaveModelView(file_name_with_path, viewparams)
+
+
 #
 # '''
 # To load and postprocess model files

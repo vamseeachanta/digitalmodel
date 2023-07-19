@@ -1,6 +1,7 @@
 basename: orcaflex_analysis
 
 default:
+  log_level: DEBUG
   Analysis:
     Analyze:
       flag: True
@@ -10,8 +11,13 @@ default:
         flag: True
         UseCalculatedPositions: 
           flag: True
-          overwrite: True
+          overwrite: False
+          # Only 1 of settings below works. 
+          SetLinesToUserSpecifiedStartingShape: True
+          UseStaticLineEndOrientations: False
       iterate: True
+  postprocess:
+    flag: True
     Summary:
       flag: True
       AddMinimumToSummary: True
@@ -54,7 +60,6 @@ default:
     WeightPerUnitLength: N/m
     SoilStiffness: kN/m/m
     BuoyancyCoverage: Percentage
-  log_level: DEBUG
 
 PostProcessUnits:
     System : US

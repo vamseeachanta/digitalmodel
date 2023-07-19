@@ -1,15 +1,28 @@
 import os
+import logging
 from pathlib import Path
 
 
 # Determine if file is valid
-def is_file_valid(file_name):
-    is_file_valid = True
+def is_file_valid_func(file_name, analysis_root_folder=None):
+    file_is_valid = True
     if not os.path.isfile(file_name):
-        print("File does not exist")
-        is_file_valid = False
+        file_name_cwd = os.path.join(os.getcwd(), file_name)
+        if os.path.isfile(file_name_cwd):
+            file_name = file_name_cwd
+        elif analysis_root_folder is not None:
+            file_name_analysis_root = os.path.join(analysis_root_folder,
+                                                   file_name)
+            if os.path.isfile(file_name_analysis_root):
+                file_name = file_name_analysis_root
+            else:
+                file_is_valid = False
+                logging.error(f'File not found: {file_name}')
+        else:
+            file_is_valid = False
+            logging.error(f'File not found: {file_name}')
 
-    return is_file_valid
+    return file_is_valid, file_name
 
 
 def add_cwd_to_filename(file_name, cwd=None):

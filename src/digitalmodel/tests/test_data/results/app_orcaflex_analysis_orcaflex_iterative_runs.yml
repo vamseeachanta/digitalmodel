@@ -1,0 +1,163 @@
+&id001 !!python/object/new:digitalmodel.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data/orcaflex_iterative_runs.yml
+    DefaultInputFile: null
+    basename: orcaflex_analysis
+    cfg_array_file_names: null
+    file_name: app_orcaflex_analysis_orcaflex_iterative_runs
+    file_name_for_overwrite: app_orcaflex_analysis_orcaflex_iterative_runs
+    input_files:
+      analysis_type:
+      - iterate
+      - iterate
+      - iterate
+      - iterate
+      - iterate
+      - iterate
+      no_ext:
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\car-858m\C180\594-CAR-NL-858m-150LB-0deg-120H2.00P9C180
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C000\334-ORL-NL-858m-150LB-0deg-120H2.50P9C000
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\467-ORL-NL-858m-100LB-0deg-090H2.00P7C180
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\734-ORL-NL-858m-200LB-0deg-120H2.50P9C180
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\957-ORL-NL-858m-300LB-0deg-090H2.50P9C180
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-718m\C180\496-ORL-NL-718m-100LB-0deg-120H2.50P7C180
+      with_ext:
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\car-858m\C180\594-CAR-NL-858m-150LB-0deg-120H2.00P9C180.yml
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C000\334-ORL-NL-858m-150LB-0deg-120H2.50P9C000.yml
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\467-ORL-NL-858m-100LB-0deg-090H2.00P7C180.yml
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\734-ORL-NL-858m-200LB-0deg-120H2.50P9C180.yml
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\957-ORL-NL-858m-300LB-0deg-090H2.50P9C180.yml
+      - \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-718m\C180\496-ORL-NL-718m-100LB-0deg-120H2.50P7C180.yml
+    log_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\logs\
+    result_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\results\
+    start_time: 2023-07-07 08:02:21.905521
+  Files:
+    csv_filename: ''
+    data:
+    - Label: No Load
+      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\car-858m\C180\594-CAR-NL-858m-150LB-0deg-120H2.00P9C180.yml
+      iterate_yml:
+        add: []
+        delete: []
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        replace: []
+    - Label: No Load
+      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C000\334-ORL-NL-858m-150LB-0deg-120H2.50P9C000.yml
+      iterate_yml:
+        add: []
+        delete: []
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        replace: []
+    - Label: No Load
+      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\467-ORL-NL-858m-100LB-0deg-090H2.00P7C180.yml
+      iterate_yml:
+        add: []
+        delete: []
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        replace: []
+    - Label: No Load
+      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\734-ORL-NL-858m-200LB-0deg-120H2.50P9C180.yml
+      iterate_yml:
+        add: []
+        delete: []
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        replace: []
+    - Label: No Load
+      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\957-ORL-NL-858m-300LB-0deg-090H2.50P9C180.yml
+      iterate_yml:
+        add: []
+        delete: []
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        replace: []
+    - Label: No Load
+      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-718m\C180\496-ORL-NL-718m-100LB-0deg-120H2.50P7C180.yml
+      iterate_yml:
+        add: []
+        delete: []
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        replace: []
+    data_source: yml
+  PlotSettings:
+    Name: Buoyancy Element Hydrodynamic Coefficients
+    SupTitle: Buoyancy Element Hydrodynamic Coefficients
+    Title: SLWR Configuration Development
+  PostProcessUnits:
+    API STD 2RD Method 1:
+      SI: 1
+      US: 1
+    Bend Moment:
+      SI: 1
+      US: 1
+    Effective Tension:
+      SI: 1
+      US: 1
+    System: US
+  RangeGraph: []
+  Summary: []
+  basename: orcaflex_analysis
+  default:
+    Analysis:
+      Analyze:
+        file_type: yml
+        flag: false
+        iterate: true
+        simulation: false
+        statics:
+          UseCalculatedPositions:
+            SetLinesToUserSpecifiedStartingShape: true
+            UseStaticLineEndOrientations: false
+            flag: true
+            overwrite: false
+          flag: false
+    Constants:
+      g: 9.81
+    config:
+      overwrite:
+        output: true
+    log_level: DEBUG
+    postprocess:
+      RangeGraph:
+        add_effective_tension_to_cfg: false
+        flag: true
+      Summary:
+        AddMaximumToSummary: true
+        AddMeanToSummary: true
+        AddMinimumToSummary: true
+        flag: true
+      cummulative_histograms:
+        flag: false
+      flag: false
+      rain_flow:
+        bins: 10
+        range:
+        - 0
+        - 10
+      time_series:
+        flag: true
+        histogram: true
+        summation: true
+    units:
+      BendingMoment: kNm
+      BuoyancyCoverage: Percentage
+      E: psi
+      EffectiveTension: kN
+      MassPerUnitLength: kg/m
+      NominalID: inch
+      NominalOD: inch
+      NominalWT: inch
+      Pressure: psi
+      Rho: kg/m3
+      SoilStiffness: kN/m/m
+      Temperature: deg F
+      WeightPerUnitLength: N/m
+      YieldStrength: psi
+      declinationAngle: deg with vertical
+      verticalDistance: m
+  orcaflex:
+    iterate:
+      flag: true
+      overwrite_data: false
+      rerun: true
+  time_series: []
+state: *id001

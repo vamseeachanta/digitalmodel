@@ -10,6 +10,9 @@ from digitalmodel.vertical_riser import vertical_riser
 from digitalmodel.orcaflex_analysis import orcaflex_analysis
 from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
+from digitalmodel.custom.rigging import Rigging
+from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import DNVRPH103_hydrodynamics_rectangular
+from digitalmodel.custom.orcaflex_post_process import orcaflex_post_process
 
 
 def engine(inputfile=None):
@@ -45,8 +48,6 @@ def engine(inputfile=None):
         cfg_base = vertical_riser(application_manager.cfg)
     elif basename == 'orcaflex_analysis':
         cfg_base = orcaflex_analysis(application_manager.cfg)
-    elif basename == 'orcaflex_analysis':
-        cfg_base = orcaflex_analysis(application_manager.cfg)
     elif basename == 'modal_analysis':
         oma = OrcModalAnalysis()
         cfg_base = oma.run_modal_analysis(application_manager.cfg)
@@ -54,9 +55,23 @@ def engine(inputfile=None):
         cpf = CopyAndPasteFiles()
         cfg_base = cpf.iterate_all_cfgs(application_manager.cfg)
     elif basename == 'umbilical_end':
-        ua = UmbilicalAnalysis(cfg)
-        ua.perform_analysis()
+        ua = UmbilicalAnalysis()
+        ua.perform_analysis(application_manager.cfg)
+    elif basename == 'orcaflex_post_process':
+        opp = orcaflex_post_process()
+        cfg_base = opp.post_process_router(application_manager.cfg)
+    elif basename == 'rigging':
+        rigging = Rigging()
+        cfg_base = rigging.get_rigging_groups(application_manager.cfg)
+    elif basename == 'code_dnvrph103':
+        if application_manager.cfg['inputs']['shape'] == 'rectangular':
+            code_dnvrph103 = DNVRPH103_hydrodynamics_rectangular()
+            cfg_base = code_dnvrph103.get_orcaflex_6dbuoy(
+                application_manager.cfg)
+        if application_manager.cfg['inputs']['shape'] == 'circular':
+            code_dnvrph103 = DNVRPH103_hydrodynamics_rectangular()
     else:
-        raise (Exception(f'Analysis for base name not found. ... FAIL'))
+        raise (
+            Exception(f'Analysis for basename: {basename} not found. ... FAIL'))
 
     return cfg_base
