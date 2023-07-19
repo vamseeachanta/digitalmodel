@@ -40,13 +40,17 @@ class orcaflex_visualizations:
             is_file_valid, file_name = self.is_file_valid(file_cfg['Name'])
             if is_file_valid:
                 model.LoadData(file_name)
-                combined_model = self.combine_models(combined_model, model)
+
+                if cfg['visualization_settings']['combined']:
+                    print(f"Combined model code in library does not exist")
+                    # combined_model = self.combine_models(combined_model, model)
 
                 model = self.set_general_visualization_settings(model, cfg)
                 model.CalculateStatics()
                 self.plan_view(model, file_name, cfg)
                 self.elevation_view(model, file_name, cfg)
 
+        if cfg['visualization_settings']['combined']:
             combined_model.CalculateStatics()
             self.plan_view(combined_model,
                            cfg['visualization_settings']['label'], cfg)

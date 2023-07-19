@@ -34,7 +34,7 @@ orcaflex:
 visualization_settings: 
   label: ld_6_7_8
   individual: True
-  combined: True
+  combined: False #TODO to be coded
   hide_items: []
   add_items: [Umbilical, uta2-deep]
   views: ['Elevation', 'Plan']
