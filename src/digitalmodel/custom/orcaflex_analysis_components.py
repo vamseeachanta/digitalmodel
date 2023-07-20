@@ -73,19 +73,16 @@ class OrcaFlexAnalysis():
                                         input_files_without_extension)
 
     def perform_simulations(self):
-        if self.cfg['default']['Analysis']['Analyze']['file_type'] in [
-                'yaml', 'yml'
-        ]:
-            print("Processing orcaflex yaml files")
-            if self.cfg['orcaflex']['iterate']['flag']:
-                self.process_fea()
-            else:
-                print("No FEA performed per user request")
+        if self.cfg['orcaflex']['analysis']['flag']:
+            self.process_fea()
+        else:
+            print("Iterative analysis                  ... SKIPPED")
 
-            if 'postprocess' in self.cfg['orcaflex'] and self.cfg['orcaflex'][
-                    'postprocess']['flag']:
-                self.post_process_files()
-            self.save_data()
+        if 'postprocess' in self.cfg['orcaflex'] and self.cfg['orcaflex'][
+                'postprocess']['flag']:
+            self.post_process_files()
+        self.save_data()
+
         if self.cfg['default']['Analysis']['Analyze']['file_type'] in [
                 'script', 'batch_script'
         ]:
@@ -117,26 +114,43 @@ class OrcaFlexAnalysis():
                 fileIndex]
             filename_without_ext = self.cfg['Analysis']['input_files'][
                 'no_ext'][fileIndex]
-            model = OrcFxAPI.Model()
-            model.LoadData(filename_with_ext)
-            logging.info("Load input file successful")
 
-            if self.cfg['orcaflex']['iterate']['flag']:
+            simulation_flag = self.cfg['orcaflex']['analysis']['simulation']
+            iterate_flag = self.cfg['orcaflex']['iterate']['flag']
+            iterate_to_target_value_flag = self.cfg['orcaflex']['iterate'][
+                'to_target_value']
+
+            model = OrcFxAPI.Model()
+            try:
+                model.LoadData(filename_with_ext)
+                logging.info("Load input file successful")
+            except:
+                simulation_flag = False
+                iterate_flag = False
+                logging.info(f"Load data for {filename_with_ext} ... FAIL")
+
+            if iterate_flag:
                 model = self.run_static_analysis(filename_with_ext, model)
-            elif self.cfg['default']['Analysis']['Analyze']['simulation']:
+            elif simulation_flag:
                 model.RunSimulation()
-            elif self.cfg['default']['Analysis']['Analyze']['iterate']['flag']:
+                logging.info("Run simulation successful")
+                try:
+                    model.SaveSimulation(filename_without_ext + '.sim')
+                    logging.info("Save simulation successful")
+                except:
+                    print("Save simulation.. FAILED")
+                if self.cfg['orcaflex']['analysis']['save_dat']:
+                    try:
+                        model.SaveSimulation(filename_without_ext + '.sim')
+                        logging.info("Save data file      ... SUCCESS")
+                    except:
+                        logging.info("Save data file      ... FAILED")
+
+            elif iterate_to_target_value_flag:
                 iterate_cfg = self.cfg['default']['Analysis']['Analyze'].copy()
                 iterate_cfg.update(
                     {'filename_without_ext': filename_without_ext})
-                self.iterate_to_value(model, iterate_cfg)
-
-            logging.info("Run simulation successful")
-            try:
-                model.SaveSimulation(filename_without_ext + '.sim')
-                logging.info("Save simulation successful")
-            except:
-                print("Save simulation.. FAILED")
+                self.iterate_to_target_value(model, iterate_cfg)
 
         print(
             f"Analysis done for {len(self.cfg['Analysis']['input_files']['with_ext'])} input files"
@@ -183,7 +197,7 @@ class OrcaFlexAnalysis():
                 0] + '_calculated_all' + os.path.splitext(filename_with_ext)[1]
         model.SaveData(calculated_positions_filename)
 
-    def iterate_to_value(self, model, iterate_cfg):
+    def iterate_to_target_value(self, model, iterate_cfg):
         iterations_df = pd.DataFrame(columns=['variable', 'output'])
         model.CalculateStatics()
         model.SaveSimulation(iterate_cfg['filename_without_ext'] + '.sim')
