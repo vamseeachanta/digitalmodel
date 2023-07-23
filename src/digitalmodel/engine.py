@@ -12,6 +12,7 @@ from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
 from digitalmodel.custom.rigging import Rigging
 from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import DNVRPH103_hydrodynamics_rectangular
+from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import DNVRPH103_hydrodynamics_circular
 from digitalmodel.custom.orcaflex_post_process import orcaflex_post_process
 
 
@@ -66,10 +67,9 @@ def engine(inputfile=None):
     elif basename == 'code_dnvrph103':
         if application_manager.cfg['inputs']['shape'] == 'rectangular':
             code_dnvrph103 = DNVRPH103_hydrodynamics_rectangular()
-            cfg_base = code_dnvrph103.get_orcaflex_6dbuoy(
-                application_manager.cfg)
-        if application_manager.cfg['inputs']['shape'] == 'circular':
-            code_dnvrph103 = DNVRPH103_hydrodynamics_rectangular()
+        elif application_manager.cfg['inputs']['shape'] == 'circular':
+            code_dnvrph103 = DNVRPH103_hydrodynamics_circular()
+        cfg_base = code_dnvrph103.get_orcaflex_6dbuoy(application_manager.cfg)
     else:
         raise (
             Exception(f'Analysis for basename: {basename} not found. ... FAIL'))
