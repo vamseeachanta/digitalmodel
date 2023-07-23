@@ -371,8 +371,8 @@ class DNVRPH103_hydrodynamics_circular:
         return dimensions
 
     def get_shape_coordinates(self):
-        x_half = self.cfg['inputs']['l'] / 2
-        y_half = self.cfg['inputs']['w'] / 2
+        x_half = self.cfg['inputs']['r'] / 2
+        y_half = self.cfg['inputs']['r'] / 2
         z_half = self.cfg['inputs']['h'] / 2
 
         shape_coordinates = []
