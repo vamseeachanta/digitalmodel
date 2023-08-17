@@ -1038,6 +1038,23 @@ class TransformData():
         return cfg
 
 
+class TransferDataFromExcelToWord():
+
+    def __init__(self):
+        pass
+
+    def transfer_table_from_excel_to_word(self, cfg=None):
+        if cfg is None:
+            cfg = {
+                'excel_file': 'K:\\0173 KM Extreme\\SLWR\\Fatigue\\Test.xlsx',
+                'sheet_name': 'Sheet1',
+                'table_name': 'Table1',
+                'word_file': 'K:\\0173 KM Extreme\\SLWR\\Fatigue\\Test.docx',
+                'word_table_name': 'Table1'
+            }
+        #TODO implement this function
+
+
 if __name__ == '__main__':
     # write better tests
     FileName = 'K:\\0173 KM Extreme\\SLWR\\Fatigue\\Test.xlsx'

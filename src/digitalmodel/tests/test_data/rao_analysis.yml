@@ -16,6 +16,9 @@ default:
       output: True
 
 Files:
-- Label: Depth - 300 m 
-  Name: C:\Users\ss7a2365\Documents\CVX_Ballymore\zl\plet_res\300.yml
+- Label: disp_raos
+  Name: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\vessels\host_id_1_extreme_disp_raos.yml
+  vessel_name: West Sirius
+  draughts: []
+  
   

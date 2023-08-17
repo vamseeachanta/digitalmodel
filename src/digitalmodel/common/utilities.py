@@ -1,6 +1,20 @@
 import os
+import imp
 import logging
 from pathlib import Path
+
+
+def get_valid_file_name(file_name):
+    pass
+
+
+def get_module_path(module=None):
+    if module is None:
+        module_path = __name__
+        module = module_path.split(".")[0]
+    module_info = imp.find_module(module)
+    module_path = module_info[1]
+    return module_path
 
 
 # Determine if file is valid
