@@ -74,7 +74,7 @@ def engine(inputfile=None):
     elif basename == 'rao_analysis':
         rao = RAOAnalysis()
         cfg_base = rao.read_orcaflex_raos(application_manager.cfg)
-        rao.plot_amplitudes()
+
     else:
         raise (
             Exception(f'Analysis for basename: {basename} not found. ... FAIL'))

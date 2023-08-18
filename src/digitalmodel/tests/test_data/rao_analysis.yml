@@ -3,17 +3,17 @@ basename: rao_analysis
 default:
   log_level: DEBUG
 
-  Analysis:
-    Analyze :
-      flag: True
-      simulation: False
-      statics: False
-      rao: 
-        flag: True
-
   config:
     overwrite:
       output: True
+
+rao_plot:
+  displacement:
+    xaxis_range: [4, 10]
+    RAODirections: [0, 30, 45, 90]
+  seastate:
+    xaxis_range: [4, 10]
+    RAODirections: [0, 30, 45, 90]
 
 Files:
 - Label: disp_raos

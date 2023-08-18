@@ -4,6 +4,7 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
 from digitalmodel.common.yml_utilities import ymlInput
+from digitalmodel.common.utilities import get_colors
 
 
 class RAOAnalysis:
@@ -23,7 +24,7 @@ class RAOAnalysis:
                 vessel_data_all_files.append({file['Label']: file_vessel_data})
 
         self.vessel_data_all_files = vessel_data_all_files
-        self.plot_amplitudes()
+        self.plot_multiple_vessel_data()
 
     def read_vessel_data_from_file(self, file_name):
         print('Reading file: {}'.format(file_name))
@@ -31,16 +32,8 @@ class RAOAnalysis:
         vessel_data = yml_data['VesselTypes']
         return vessel_data
 
-    def plot_amplitudes(self):
-        vessel_data_all_files = self.vessel_data_all_files
-
-        for vessel_data in vessel_data_all_files:
-            keys = list(vessel_data.keys())
-            for key in keys:
-                if key == 'RAOs':
-                    vessel_data[key]['Amplitude'].plot()
-
-        self.vessel_data_all_files['Vessel1']['RAOs']['Amplitude'].plot()
+    def plot_multiple_vessel_data(self):
+        pass
 
     def plot_single_vessel_data(self, file_vessel_data, vessel_cfg):
         vessel_names = [vessel_data['Name'] for vessel_data in file_vessel_data]
@@ -50,93 +43,232 @@ class RAOAnalysis:
         draught_data = self.get_draught_indices(vessel_cfg, vessel_data)
 
         RAOs_draughts = self.get_rao_data_for_vessel(vessel_data, draught_data)
-        self.plot_RAOs(RAOs_draughts, draught_data)
+        self.plot_displacement_RAOs(RAOs_draughts, draught_data)
 
-    def plot_RAOs(self, RAOs_draughts, draught_data):
+    def plot_displacement_RAOs(self, RAOs_draughts, draught_data):
         draughts = draught_data['draughts']
 
         for draught in draughts:
             RAOs = RAOs_draughts[draught]
-            self.plot_RAOs_for_draught(RAOs, draught)
+            self.plot_displacement_RAOs_amplitudes_for_draught(RAOs, draught)
+            self.plot_displacement_RAOs_phases_for_draught(RAOs, draught)
 
-    def plot_RAOs_for_draught(self, RAOs, draught):
+    def plot_displacement_RAOs_amplitudes_for_draught(self, RAOs, draught):
         '''
         key references:
         https://stackoverflow.com/questions/60751008/sharing-same-legends-for-subplots-in-plotly
         '''
-        nrows = 3
-        ncols = 2
+        nrows = 6
+        ncols = 1
+
+        RAODirections = self.cfg['rao_plot']['displacement']['RAODirections']
+        if len(RAODirections) == 0:
+            RAODirections = RAOs['RAODirection'].unique()
+
+        title_text = f"Amplitude RAOs, Draught: {draught}"
+
+        xaxes_title_text = [
+            "Period (s)", "Period (s)", "Period (s)", "Period (s)",
+            "Period (s)", "Period (s)"
+        ]
+        yaxes_title_text = [
+            "Amp, m/m",
+            "Amp, m/m",
+            "Amp, m/m",
+            "Amp, deg/m",
+            "Amp, deg/m",
+            "Amp, deg/m",
+        ]
+
+        RAODirection_x_columns = [
+            'RAOPeriodOrFreq', 'RAOPeriodOrFreq', 'RAOPeriodOrFreq',
+            'RAOPeriodOrFreq', 'RAOPeriodOrFreq', 'RAOPeriodOrFreq'
+        ]
+        RAODirection_y_columns = [
+            'RAOHeaveAmp', 'RAOSurgeAmp', 'RAOSwayAmp', 'RAOYawAmp',
+            'RAORollAmp', 'RAOPitchAmp'
+        ]
+
         fig = make_subplots(rows=nrows,
                             cols=ncols,
                             shared_xaxes=True,
-                            subplot_titles=("Heave", "Heave", "Surge", "Surge",
-                                            "Yaw", "Yaw"))
-        fig.update_layout(title_text=f"RAOs for Draught: {draught}")
+                            subplot_titles=("Heave", "Surge", "Sway", "Yaw",
+                                            "Roll", "Pitch"))
+        fig.update_layout(title_text=title_text)
+        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                          plot_bgcolor='rgba(0,0,0,0)')
 
-        for row in range(0, nrows):
-            col = 1
-            fig.update_yaxes(title_text="Amplitude (m)", row=row, col=col)
-            col = 2
-            fig.update_yaxes(title_text="Phase (deg)", row=row, col=col)
+        xaxis_range = self.cfg['rao_plot']['displacement']['xaxis_range']
+        if len(xaxis_range) > 0:
+            RAOs = RAOs[(RAOs['RAOPeriodOrFreq'] >= xaxis_range[0]) &
+                        (RAOs['RAOPeriodOrFreq'] <= xaxis_range[1])].copy()
 
-        for row in range(0, nrows):
-            for col in range(0, ncols):
-                fig.update_xaxes(title_text="Period (s)", row=nrows, col=ncols)
+        showlegend_array = [True, False, False, False, False, False]
+        file_name = self.cfg['Analysis']['result_folder'] + self.cfg[
+            'Analysis']['file_name_for_overwrite']
+        file_name = file_name + '_rao_amp'
 
-        RAODirections = RAOs['RAODirection'].unique()
+        col = 1
+        for row_index in range(0, nrows):
+            fig.update_yaxes(title_text=yaxes_title_text[row_index],
+                             row=row_index + 1,
+                             col=col)
+
+        fig.update_xaxes(title_text=xaxes_title_text[nrows - 1],
+                         row=nrows,
+                         col=ncols)
+
+        num_colors = len(RAODirections)
+        plot_colors = get_colors(set='single', n=num_colors)
+
         for RAODirection_index in range(0, len(RAODirections)):
             RAODirection = RAODirections[RAODirection_index]
-            legend_group = RAODirection
             RAOs_direction = RAOs[RAOs['RAODirection'] == RAODirection]
-            fig.add_trace(go.Scatter(x=RAOs_direction['RAOPeriodOrFreq'],
-                                     y=RAOs_direction['RAOSurgeAmp'],
-                                     name=RAODirection,
-                                     legendgroup=legend_group,
-                                     mode='lines'),
-                          row=1,
-                          col=1)
-            fig.add_trace(go.Scatter(x=RAOs_direction['RAOPeriodOrFreq'],
-                                     y=RAOs_direction['RAOSwayAmp'],
-                                     name=RAODirection,
-                                     legendgroup=legend_group,
-                                     showlegend=False,
-                                     mode='lines'),
-                          row=2,
-                          col=1)
-            fig.add_trace(go.Scatter(x=RAOs_direction['RAOPeriodOrFreq'],
-                                     y=RAOs_direction['RAOYawAmp'],
-                                     name=RAODirection,
-                                     legendgroup=legend_group,
-                                     showlegend=False,
-                                     mode='lines'),
-                          row=3,
-                          col=1)
-            fig.add_trace(go.Scatter(x=RAOs_direction['RAOPeriodOrFreq'],
-                                     y=RAOs_direction['RAOSurgePhase'],
-                                     name=RAODirection,
-                                     legendgroup=legend_group,
-                                     showlegend=False,
-                                     mode='lines'),
-                          row=3,
-                          col=2)
-            fig.add_trace(go.Scatter(x=RAOs_direction['RAOPeriodOrFreq'],
-                                     y=RAOs_direction['RAOSwayPhase'],
-                                     name=RAODirection,
-                                     legendgroup=legend_group,
-                                     showlegend=False,
-                                     mode='lines'),
-                          row=3,
-                          col=2)
-            fig.add_trace(go.Scatter(x=RAOs_direction['RAOPeriodOrFreq'],
-                                     y=RAOs_direction['RAOYawPhase'],
-                                     name=RAODirection,
-                                     legendgroup=legend_group,
-                                     showlegend=False,
-                                     mode='lines'),
-                          row=3,
-                          col=2)
 
-        fig.show()
+            name = RAODirection
+            line_color = plot_colors[RAODirection_index]
+            legend_group = RAODirection
+            mode = 'lines'
+
+            for row_index in range(0, nrows):
+                x = RAOs_direction[RAODirection_x_columns[row_index]]
+                y = RAOs_direction[RAODirection_y_columns[row_index]]
+                showlegend = showlegend_array[row_index]
+                row = row_index + 1
+                col = 1
+
+                add_trace_cfg = {
+                    'x': x,
+                    'y': y,
+                    'name': name,
+                    'line_color': line_color,
+                    'legendgroup': legend_group,
+                    'showlegend': showlegend,
+                    'mode': mode,
+                    'row': row,
+                    'col': col
+                }
+                self.add_trace_to_fig(fig, add_trace_cfg)
+
+        # fig.write_image(file_name + '_rao_amp' + '.png')
+        fig.write_html(file_name + '.html')
+
+    def plot_displacement_RAOs_phases_for_draught(self, RAOs, draught):
+        '''
+        key references:
+        https://stackoverflow.com/questions/60751008/sharing-same-legends-for-subplots-in-plotly
+        '''
+        nrows = 6
+        ncols = 1
+
+        RAODirections = self.cfg['rao_plot']['displacement']['RAODirections']
+        if len(RAODirections) == 0:
+            RAODirections = RAOs['RAODirection'].unique()
+
+        title_text = f"Amplitude RAOs, Draught: {draught}"
+
+        xaxes_title_text = [
+            "Period (s)", "Period (s)", "Period (s)", "Period (s)",
+            "Period (s)", "Period (s)"
+        ]
+        yaxes_title_text = [
+            "Ph, deg", "Ph, deg", "Ph, deg", "Ph, deg", "Ph, deg", "Ph, deg"
+        ]
+
+        RAODirection_x_columns = [
+            'RAOPeriodOrFreq', 'RAOPeriodOrFreq', 'RAOPeriodOrFreq',
+            'RAOPeriodOrFreq', 'RAOPeriodOrFreq', 'RAOPeriodOrFreq'
+        ]
+        RAODirection_y_columns = [
+            'RAOHeavePhase', 'RAOSurgePhase', 'RAOSwayPhase', 'RAOYawPhase',
+            'RAORollPhase', 'RAOPitchPhase'
+        ]
+
+        fig = make_subplots(rows=nrows,
+                            cols=ncols,
+                            shared_xaxes=True,
+                            subplot_titles=("Heave", "Surge", "Sway", "Yaw",
+                                            "Roll", "Pitch"))
+        fig.update_layout(title_text=title_text)
+        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                          plot_bgcolor='rgba(0,0,0,0)')
+
+        xaxis_range = self.cfg['rao_plot']['displacement']['xaxis_range']
+        if len(xaxis_range) > 0:
+            RAOs = RAOs[(RAOs['RAOPeriodOrFreq'] >= xaxis_range[0]) &
+                        (RAOs['RAOPeriodOrFreq'] <= xaxis_range[1])].copy()
+
+        showlegend_array = [True, False, False, False, False, False]
+        file_name = self.cfg['Analysis']['result_folder'] + self.cfg[
+            'Analysis']['file_name_for_overwrite']
+        file_name = file_name + '_rao_phase'
+
+        col = 1
+        for row_index in range(0, nrows):
+            fig.update_yaxes(title_text=yaxes_title_text[row_index],
+                             row=row_index + 1,
+                             col=col)
+
+        fig.update_xaxes(title_text=xaxes_title_text[nrows - 1],
+                         row=nrows,
+                         col=ncols)
+
+        num_colors = len(RAODirections)
+        plot_colors = get_colors(set='single', n=num_colors)
+
+        for RAODirection_index in range(0, len(RAODirections)):
+            RAODirection = RAODirections[RAODirection_index]
+            RAOs_direction = RAOs[RAOs['RAODirection'] == RAODirection]
+
+            name = RAODirection
+            line_color = plot_colors[RAODirection_index]
+            legend_group = RAODirection
+            mode = 'lines'
+
+            for row_index in range(0, nrows):
+                x = RAOs_direction[RAODirection_x_columns[row_index]]
+                y = RAOs_direction[RAODirection_y_columns[row_index]]
+                showlegend = showlegend_array[row_index]
+                row = row_index + 1
+                col = 1
+
+                add_trace_cfg = {
+                    'x': x,
+                    'y': y,
+                    'name': name,
+                    'line_color': line_color,
+                    'legendgroup': legend_group,
+                    'showlegend': showlegend,
+                    'mode': mode,
+                    'row': row,
+                    'col': col
+                }
+                self.add_trace_to_fig(fig, add_trace_cfg)
+
+        # fig.write_image(file_name  + '.png')
+        fig.write_html(file_name + '.html')
+
+    def add_trace_to_fig(self, fig, add_trace_cfg):
+
+        x = add_trace_cfg['x']
+        y = add_trace_cfg['y']
+        name = add_trace_cfg['name']
+        line_color = add_trace_cfg['line_color']
+        legendgroup = add_trace_cfg['legendgroup']
+        showlegend = add_trace_cfg['showlegend']
+        mode = add_trace_cfg['mode']
+        row = add_trace_cfg['row']
+        col = add_trace_cfg['col']
+
+        fig.add_trace(go.Scatter(x=x,
+                                 y=y,
+                                 name=name,
+                                 line_color=line_color,
+                                 legendgroup=legendgroup,
+                                 showlegend=showlegend,
+                                 mode=mode),
+                      row=row,
+                      col=col)
 
     def get_rao_data_for_vessel(self, vessel_data, draught_data):
         draughts = draught_data['draughts']
