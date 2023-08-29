@@ -80,10 +80,11 @@ class RAOAnalysis:
             "Amp, deg/m",
         ]
 
-        RAODirection_x_columns = [
-            'RAOPeriodOrFreq', 'RAOPeriodOrFreq', 'RAOPeriodOrFreq',
-            'RAOPeriodOrFreq', 'RAOPeriodOrFreq', 'RAOPeriodOrFreq'
-        ]
+        if 'RAOPeriodOrFreq' in list(RAOs.keys()):
+            RAODirection_x_columns = 6 * ['RAOPeriodOrFreq']
+        else:
+            RAODirection_x_columns = 6 * ['RAOPeriodOrFrequency']
+
         RAODirection_y_columns = [
             'RAOHeaveAmp', 'RAOSurgeAmp', 'RAOSwayAmp', 'RAOYawAmp',
             'RAORollAmp', 'RAOPitchAmp'
@@ -100,8 +101,9 @@ class RAOAnalysis:
 
         xaxis_range = self.cfg['rao_plot']['displacement']['xaxis_range']
         if len(xaxis_range) > 0:
-            RAOs = RAOs[(RAOs['RAOPeriodOrFreq'] >= xaxis_range[0]) &
-                        (RAOs['RAOPeriodOrFreq'] <= xaxis_range[1])].copy()
+            RAOPeriodOrFreq_column = RAODirection_x_columns[0]
+            RAOs = RAOs[(RAOs[RAOPeriodOrFreq_column] >= xaxis_range[0]) & (
+                RAOs[RAOPeriodOrFreq_column] <= xaxis_range[1])].copy()
 
         showlegend_array = [True, False, False, False, False, False]
         file_name = self.cfg['Analysis']['result_folder'] + self.cfg[
@@ -175,10 +177,11 @@ class RAOAnalysis:
             "Ph, deg", "Ph, deg", "Ph, deg", "Ph, deg", "Ph, deg", "Ph, deg"
         ]
 
-        RAODirection_x_columns = [
-            'RAOPeriodOrFreq', 'RAOPeriodOrFreq', 'RAOPeriodOrFreq',
-            'RAOPeriodOrFreq', 'RAOPeriodOrFreq', 'RAOPeriodOrFreq'
-        ]
+        if 'RAOPeriodOrFreq' in list(RAOs.keys()):
+            RAODirection_x_columns = 6 * ['RAOPeriodOrFreq']
+        else:
+            RAODirection_x_columns = 6 * ['RAOPeriodOrFrequency']
+
         RAODirection_y_columns = [
             'RAOHeavePhase', 'RAOSurgePhase', 'RAOSwayPhase', 'RAOYawPhase',
             'RAORollPhase', 'RAOPitchPhase'
@@ -195,8 +198,9 @@ class RAOAnalysis:
 
         xaxis_range = self.cfg['rao_plot']['displacement']['xaxis_range']
         if len(xaxis_range) > 0:
-            RAOs = RAOs[(RAOs['RAOPeriodOrFreq'] >= xaxis_range[0]) &
-                        (RAOs['RAOPeriodOrFreq'] <= xaxis_range[1])].copy()
+            RAOPeriodOrFreq_column = RAODirection_x_columns[0]
+            RAOs = RAOs[(RAOs[RAOPeriodOrFreq_column] >= xaxis_range[0]) & (
+                RAOs[RAOPeriodOrFreq_column] <= xaxis_range[1])].copy()
 
         showlegend_array = [True, False, False, False, False, False]
         file_name = self.cfg['Analysis']['result_folder'] + self.cfg[

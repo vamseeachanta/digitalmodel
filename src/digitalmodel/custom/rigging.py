@@ -7,8 +7,6 @@ from digitalmodel.common.data import ReadFromExcel
 from digitalmodel.custom.rigging_components import Slings
 from digitalmodel.custom.rigging_components import Shackles
 
-
-
 read_excel = ReadFromExcel()
 
 slings = Slings()
@@ -22,13 +20,13 @@ class Rigging:
 
     def get_rigging_groups(self, cfg=None):
         self.cfg = cfg
-        rigging_groups = self.cfg.rigging_groups
+        rigging_groups = self.cfg.rigging['groups']
         for rigging_group in rigging_groups:
             self.get_rigging_group(rigging_group)
 
     def get_rigging_group(self, rigging_group=None):
-        rigging_array = rigging_group['rigging_array']
-        for rigging in rigging_array:
+        rigging_elements = rigging_group['elements']
+        for rigging in rigging_elements:
             if rigging['category'] == 'sling':
                 rigging_dict = self.get_sling(rigging)
             elif rigging['category'] == 'shackle':

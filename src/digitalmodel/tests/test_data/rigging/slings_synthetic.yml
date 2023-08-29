@@ -1,0 +1,49 @@
+LineTypes:
+  - Name: synthetic_round_200MBL
+    Category: General
+    # Geometry and mass
+    OD: 0.1
+    ID: 0
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.00887096
+    # Limits
+    CompressionIsLimited: Yes
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [0.001, ~]
+    EA: 20.776000000000004e3
+    PoissonRatio: 0.5
+    GJ: 80
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1.2, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: (no damping)
+    # Drawing
+    Pen: [2, Solid, Teal]
+  - Name: synthetic_round_200MBLx2

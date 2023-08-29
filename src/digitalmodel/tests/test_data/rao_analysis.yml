@@ -20,5 +20,23 @@ Files:
   Name: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\vessels\host_id_1_extreme_disp_raos.yml
   vessel_name: West Sirius
   draughts: []
-  
-  
+
+qa_criteria:
+
+  conventions:
+    - name: DNVGL-ST-0111
+      version: 2018-01
+      rule: 5-1
+      tolerance: 0.02
+
+  heave:
+    heading: 0
+    amplitude: 1.0
+    period: maximum
+    tolerance: 0.02
+
+  pitch:
+    heading: 0
+    amplitude: 1.0
+    period: maximum
+    tolerance: 0.02

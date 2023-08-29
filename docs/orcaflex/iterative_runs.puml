@@ -1,43 +1,37 @@
-@startuml iterative_runs
+@startuml structure_installation
 scale 3
 skinparam titleBorderRoundCorner 15
 skinparam titleBorderThickness 2
 skinparam titleBorderColor red
 skinparam titleBackgroundColor Tomato
 
-title Iterative Run Management \n OrcaFlex
+title Structure Installation \n OrcaFlex
 
 start
 
     note right
-        Objective: To streamline (and automate) iterative analysis. 
+        Objective: To streamline (and automate) structure installation analysis. 
         Examples are:
-         - Umbilical installation steps with calculated positions
-         - difficult convergence runs
+         - mudmat installation
          - etc
     end note
 
 
-    partition "Common Files" {
+    partition "Vessel Files" {
             note right
-                All common files 
-                saved as "__filename.yml" 
+                Vessel Definition
             end note
         :Definition - Vessel;
             note right
-                example filenames: 
-                    __01_Seven Arctic_v11.yml
-                    __02_stern_chute.yml
+                If .dat file, convert to .yml
             end note
 
-        :Definition - Structures;
+        :Delete Unwanted Structures;
             note right
-                example filenames: 
-                    __04_wd718m_umb.yml
-                    __05_150mLB.yml
+                ?
             end note
 
-        :Definition - Other Structures;
+        :Definition - Crane Radius;
             note right
                 example filenames: 
                     __06_uth2_splz.yml
@@ -46,39 +40,47 @@ start
 
     }
 
-    partition "Change Runs" {
-        :Load .YML file
+    partition "Add Rigging" {
+        :Add Rigging
             save as "_filename.yml";
             note right
-                save only delta values
-                file kept intact
-                No simulation performed/saved
-                example filenames: 
-                    _01_uth2_at_stern.yml
-                    _02_uth2_at_port.yml
-                    _03_uth2_v0080_p0105.yml
+                Top wire:
+                    1 m
+                    define at crane radius & azimuth
+                Winch:
+                    beween top and bottom wire
+                Bottom wire
+                    crane hook?
+                    define 25 m length
+                masterlink
+                slings
+                    correct length and orientation
+                    fix bottom to vessel
+                
+                
             end note
 
     }
 
-    partition "Saving input files & simulations" {
-        :Select calculated positions 
+    partition "Add structure" {
+        :Add structures 
             Save as "_filename_nn";
             note right
-                unique "_filename_nn" for design modular
-                Variations for convergence 
-                    i.e. with component positions 
-                        no bend stiffener etc.
-                Select json "keys" used to save
-                Purpose: to help rerun with change in positions
+                add mudmat and structure.
+                use suffix a, b, c to indicate varying models
+            end note
+        
+        : Connect rigging EndB to structure;
+
+    }
+
+    partition "Add shapes" {
+        :Add ancillary equipment
+            Save as "_filename_nn";
+            note right
+                Padeyes, shackles etc.
             end note
 
-        :All calculated positions 
-            Save as "filename";
-            note right
-                All new calculated positions saved
-                Purpose: final run for further use
-            end note
     }
 
 stop

@@ -69,7 +69,7 @@ rigging:
   connections: NULL
   groups:
     - label: uta1_clump_weight
-      rigging_array:
+      elements:
       - category: shackle
         subcategory: G2100
         part_number: 2038614
@@ -84,3 +84,19 @@ rigging:
         part_number: 1019533
         wll_mt: 6.5
 
+structure:
+  type: 6DBuoy
+  name: 10ksi Production Manifold mudmat - Splash Zone
+  padeyes:
+    - x: -1.1938
+      y: -3.0861
+      z:  6.4067
+    - x: -1.1938
+      y:  3.0861
+      z:  6.4067
+    - x:  1.1938
+      y:  3.0861
+      z:  6.4067
+    - x:  1.1938
+      y: -3.0861
+      z:  6.4067
