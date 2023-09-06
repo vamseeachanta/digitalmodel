@@ -50,7 +50,9 @@ class DNVRPH103_hydrodynamics_rectangular:
     def save_model(self, yaml_data, zone):
 
         output_dir = self.cfg['inputs']['output_dir']
-        if not os.path.isdir(output_dir):
+        if output_dir is None:
+            output_dir = os.getcwd()
+        elif not os.path.isdir(output_dir):
             cwd = os.getcwd()
             output_dir = os.path.join(cwd, output_dir)
             if not os.path.isdir(output_dir):

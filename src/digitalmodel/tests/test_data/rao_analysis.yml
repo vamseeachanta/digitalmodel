@@ -9,16 +9,27 @@ default:
 
 rao_plot:
   displacement:
+    flag: False
     xaxis_range: [4, 10]
     RAODirections: [0, 30, 45, 90]
   seastate:
+    flag: True
+    filter:
+      cog: 
+        x: -32.65
+        y: 38.14
+        z: 7.1
+      l: 11.3
+      w: 11.3
+      beyond_boundary: 2
     xaxis_range: [4, 10]
     RAODirections: [0, 30, 45, 90]
 
+
 Files:
-- Label: disp_raos
-  Name: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\vessels\host_id_1_extreme_disp_raos.yml
-  vessel_name: West Sirius
+- Label: seastate_raos
+  Name: my_ss_raos.yml
+  vessel_name: SevenArctic
   draughts: []
 
 qa_criteria:

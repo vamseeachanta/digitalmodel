@@ -1,10 +1,12 @@
 import os
 import pandas as pd
+from pathlib import Path
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
 from digitalmodel.common.yml_utilities import ymlInput
 from digitalmodel.common.utilities import get_colors
+from digitalmodel.common.saveData import saveDataYaml
 
 
 class RAOAnalysis:
@@ -12,25 +14,50 @@ class RAOAnalysis:
     def __init__(self):
         pass
 
-    def read_orcaflex_raos(self, cfg=None):
+    def read_orcaflex_displacement_raos(self, cfg=None):
         self.cfg = cfg
-        vessel_data_all_files = []
-        for file in cfg['Files']:
-            if os.path.isfile(file['Name']):
-                file_vessel_data = self.read_vessel_data_from_file(file['Name'])
-                vessel_cfg = file
-                self.plot_single_vessel_data(file_vessel_data, vessel_cfg)
+        if self.cfg['rao_plot']['displacement']['flag']:
+            vessel_data_all_files = []
+            for file in cfg['Files']:
+                if os.path.isfile(file['Name']):
+                    file_vessel_data = self.read_vessel_data_from_file(
+                        file['Name'])
+                    vessel_cfg = file
+                    self.plot_single_vessel_data(file_vessel_data, vessel_cfg)
 
-                vessel_data_all_files.append({file['Label']: file_vessel_data})
+                    vessel_data_all_files.append(
+                        {file['Label']: file_vessel_data})
 
-        self.vessel_data_all_files = vessel_data_all_files
-        self.plot_multiple_vessel_data()
+            self.vessel_data_all_files = vessel_data_all_files
+            self.plot_multiple_vessel_data()
+        else:
+            print("No RAO displacement plots requested")
 
     def read_vessel_data_from_file(self, file_name):
         print('Reading file: {}'.format(file_name))
         yml_data = ymlInput(file_name, updateYml=None)
         vessel_data = yml_data['VesselTypes']
         return vessel_data
+
+    def write_filtered_orcaflex_seastate_rao_file(self, file_name,
+                                                  filter_SeaStateRAOs_data,
+                                                  filtered_file_vessel_data):
+        print('Reading file: {}'.format(file_name))
+        yml_data = ymlInput(file_name, updateYml=None)
+        yml_data['VesselTypes'] = filtered_file_vessel_data
+
+        p = Path(file_name)
+        file_name_stem = p.stem
+
+        filtered_vessel_data_name = file_name.replace(
+            file_name_stem + '.yml', 'filter_SeaStateRAOs_data')
+        saveDataYaml(filter_SeaStateRAOs_data,
+                     filtered_vessel_data_name,
+                     default_flow_style=False)
+
+        file_name_filtered = file_name.replace(file_name_stem + '.yml',
+                                               file_name_stem + '_filtered')
+        saveDataYaml(yml_data, file_name_filtered, default_flow_style=False)
 
     def plot_multiple_vessel_data(self):
         pass
@@ -357,3 +384,58 @@ class RAOAnalysis:
 
     def check_units(self):
         pass
+
+    def assess_orcaflex_seastate_raos(self, cfg):
+        self.cfg = cfg
+        if self.cfg['rao_plot']['seastate']['flag']:
+            vessel_data_all_files = []
+            for file in cfg['Files']:
+                if os.path.isfile(file['Name']):
+                    file_vessel_data = self.read_vessel_data_from_file(
+                        file['Name'])
+                    filter_SeaStateRAOs_data, filtered_file_vessel_data = self.filter_orcaflex_seastate_raos(
+                        file_vessel_data)
+                    self.write_filtered_orcaflex_seastate_rao_file(
+                        file['Name'], filter_SeaStateRAOs_data,
+                        filtered_file_vessel_data)
+
+        else:
+            print("No Seastate RAO plots requested")
+
+    def filter_orcaflex_seastate_raos(self, file_vessel_data):
+        filter_settings = self.cfg['rao_plot']['seastate']['filter']
+
+        x_low = filter_settings['cog'][
+            'x'] - filter_settings['l'] / 2 - filter_settings['beyond_boundary']
+        x_high = filter_settings['cog'][
+            'x'] + filter_settings['l'] / 2 + filter_settings['beyond_boundary']
+        y_low = filter_settings['cog'][
+            'y'] - filter_settings['w'] / 2 - filter_settings['beyond_boundary']
+        y_high = filter_settings['cog'][
+            'y'] + filter_settings['w'] / 2 + filter_settings['beyond_boundary']
+
+        SeaStateRAOs_key = 'SeaStateRAODirection, SeaStateRAOPeriodOrFrequency, SeaStateRAOX, SeaStateRAOY, SeaStateRAOZ, SeaStateRAOPotentialAmp, SeaStateRAOPotentialPhase, SeaStateRAOGradientXAmp, SeaStateRAOGradientXPhase, SeaStateRAOGradientYAmp, SeaStateRAOGradientYPhase, SeaStateRAOGradientZAmp, SeaStateRAOGradientZPhase'
+        SeaStateRAOs = file_vessel_data[0]['Draughts'][0]['SeaStateRAOs'][
+            SeaStateRAOs_key]
+        df_columns = [
+            'SeaStateRAODirection', 'SeaStateRAOPeriodOrFrequency',
+            'SeaStateRAOX', 'SeaStateRAOY', 'SeaStateRAOZ',
+            'SeaStateRAOPotentialAmp', 'SeaStateRAOPotentialPhase',
+            'SeaStateRAOGradientXAmp', 'SeaStateRAOGradientXPhase',
+            'SeaStateRAOGradientYAmp', 'SeaStateRAOGradientYPhase',
+            'SeaStateRAOGradientZAmp', 'SeaStateRAOGradientZPhase'
+        ]
+        SeaStateRAOs_df = pd.DataFrame(SeaStateRAOs, columns=df_columns)
+        filter_SeaStateRAOs_df = SeaStateRAOs_df[
+            (SeaStateRAOs_df['SeaStateRAOX'] < x_high) &
+            (SeaStateRAOs_df['SeaStateRAOX'] > x_low) &
+            (SeaStateRAOs_df['SeaStateRAOY'] < y_high) &
+            (SeaStateRAOs_df['SeaStateRAOY'] > y_low)]
+
+        filter_SeaStateRAOs_data = filter_SeaStateRAOs_df.to_dict(
+            'split')['data']
+        filtered_file_vessel_data = file_vessel_data.copy()
+        filtered_file_vessel_data[0]['Draughts'][0]['SeaStateRAOs'][
+            SeaStateRAOs_key] = filter_SeaStateRAOs_data
+
+        return filter_SeaStateRAOs_data, filtered_file_vessel_data
