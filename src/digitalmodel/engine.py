@@ -15,6 +15,7 @@ from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import DNVRPH1
 from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import DNVRPH103_hydrodynamics_circular
 from digitalmodel.custom.orcaflex_post_process import orcaflex_post_process
 from digitalmodel.custom.rao_analysis import RAOAnalysis
+from digitalmodel.custom.orcaflex_installation import OrcInstallation
 
 
 def engine(inputfile=None):
@@ -43,6 +44,8 @@ def engine(inputfile=None):
     basename = cfg['basename']
     application_manager = ConfigureApplicationInputs(basename)
     application_manager.configure(cfg)
+    if cfg is None:
+        raise ValueError("cfg is None")
 
     if basename in ['simple_catenary_riser', 'catenary_riser']:
         cfg_base = catenary_riser(application_manager.cfg)
@@ -75,6 +78,11 @@ def engine(inputfile=None):
         rao = RAOAnalysis()
         cfg_base = rao.read_orcaflex_displacement_raos(application_manager.cfg)
         cfg_base = rao.assess_orcaflex_seastate_raos(application_manager.cfg)
+    elif basename == 'installation':
+        orc_install = OrcInstallation()
+        if application_manager.cfg['structure']['flag']:
+            cfg_base = orc_install.create_model_for_water_depth(
+                application_manager.cfg)
 
     else:
         raise (

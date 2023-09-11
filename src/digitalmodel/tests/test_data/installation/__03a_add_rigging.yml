@@ -1,0 +1,806 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\ss7a2365\Documents\github\rock-oil-field\s7\shell_perdido_south\anl\manifold\01-SZ-00deg\wo_shielding\__03a_add_rigging.yml
+# Created: 9:53 AM on 9/6/2023
+# User: SS7A2365
+# Machine: USNGL23LR3
+---
+BaseFile: __02__field_and_general.yml
+LineTypes:
+  New:
+    - 90mm-Wire Rope
+    - SynthRoundSling200MBLx2
+  90mm-Wire Rope:
+    Category: General
+    OD: 0.072
+    ID: 0
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.032316569999999996
+    CompressionIsLimited: Yes
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    EI: [0, ~]
+    EA: 327.24e3
+    PoissonRatio: 0.5
+    GJ: 80
+    TensionTorqueCoupling: 0
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    Cd: [1.2, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    RayleighDampingCoefficients: (no damping)
+    APIRP2RDTcorr: 0
+    APIRP2RDSMYS: 360e3
+    APISTD2RDE: 0
+    APISTD2RDS: 0
+    APISTD2RDU: 0
+    APISTD2RDDelta: 0
+    APISTD2RDFd1: 0
+    APISTD2RDFd2: 0
+    APISTD2RDAlphaFab: 0
+    APISTD2RDk: 0
+    APISTD2RDTca: 0
+    APIRP1111E: 0
+    APIRP1111S: 0
+    APIRP1111U: 0
+    APIRP1111Delta: 0
+    APIRP1111Fa: 0
+    APIRP1111Fc: 0
+    APIRP1111Fbs: 0
+    APIRP1111SAF: 0
+    DNVOSF101Pmin: ~
+    DNVOSF101T2: ~
+    DNVOSF101Fy: 0
+    DNVOSF101Fu: 0
+    DNVOSF101E: 0
+    DNVOSF101AlphaH: 0
+    DNVOSF101F0: 0
+    DNVOSF101GammaSC: 0
+    DNVOSF101GammaEpsilon: 0
+    DNVOSF101GammaM: 0
+    DNVOSF101AlphaFab: 0
+    DNVOSF101AlphaGW: 0
+    DNVOSF101AlphaPm: 0
+    DNVOSF101SimplifiedStrainLimit: 0
+    DNVOSF201Pmin: ~
+    DNVOSF201T2: ~
+    DNVOSF201Fy: 0
+    DNVOSF201Fu: 0
+    DNVOSF201E: 0
+    DNVOSF201F0: 0
+    DNVOSF201GammaSC: 0
+    DNVOSF201GammaM: 0
+    DNVOSF201AlphaFab: 0
+    DNVOSF201Eta: 0
+    PD8010Tcorr: 0
+    PD8010E: 0
+    PD8010SigmaY: 0
+    PD8010AlphaFab: 0
+    PD8010F0: 0
+    PD8010Fd: 0
+    Pen: [1, Solid, Yellow]
+  SynthRoundSling200MBLx2:
+    Category: General
+    OD: 0.208
+    ID: 0
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.035
+    CompressionIsLimited: Yes
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    EI: [0.001, ~]
+    EA: 41.55200000000001e3
+    PoissonRatio: 0.5
+    GJ: 80
+    TensionTorqueCoupling: 0
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    Cd: [1.2, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    RayleighDampingCoefficients: (no damping)
+    APIRP2RDTcorr: 0
+    APIRP2RDSMYS: 360e3
+    APISTD2RDE: 0
+    APISTD2RDS: 0
+    APISTD2RDU: 0
+    APISTD2RDDelta: 0
+    APISTD2RDFd1: 0
+    APISTD2RDFd2: 0
+    APISTD2RDAlphaFab: 0
+    APISTD2RDk: 0
+    APISTD2RDTca: 0
+    APIRP1111E: 0
+    APIRP1111S: 0
+    APIRP1111U: 0
+    APIRP1111Delta: 0
+    APIRP1111Fa: 0
+    APIRP1111Fc: 0
+    APIRP1111Fbs: 0
+    APIRP1111SAF: 0
+    DNVOSF101Pmin: ~
+    DNVOSF101T2: ~
+    DNVOSF101Fy: 0
+    DNVOSF101Fu: 0
+    DNVOSF101E: 0
+    DNVOSF101AlphaH: 0
+    DNVOSF101F0: 0
+    DNVOSF101GammaSC: 0
+    DNVOSF101GammaEpsilon: 0
+    DNVOSF101GammaM: 0
+    DNVOSF101AlphaFab: 0
+    DNVOSF101AlphaGW: 0
+    DNVOSF101AlphaPm: 0
+    DNVOSF101SimplifiedStrainLimit: 0
+    DNVOSF201Pmin: ~
+    DNVOSF201T2: ~
+    DNVOSF201Fy: 0
+    DNVOSF201Fu: 0
+    DNVOSF201E: 0
+    DNVOSF201F0: 0
+    DNVOSF201GammaSC: 0
+    DNVOSF201GammaM: 0
+    DNVOSF201AlphaFab: 0
+    DNVOSF201Eta: 0
+    PD8010Tcorr: 0
+    PD8010E: 0
+    PD8010SigmaY: 0
+    PD8010AlphaFab: 0
+    PD8010F0: 0
+    PD8010Fd: 0
+    Pen: [2, Solid, Teal]
+3DBuoys:
+  New: Masterlink
+  Masterlink:
+    Locked: No
+    Connection: Free
+    IncludedInStatics: Yes
+    InitialPosition: [-32.65, 38.14, 17.3]
+    Mass: 0.1279
+    Volume: 0.016292994
+    BulkModulus: Infinity
+    Height: 0.4
+    SeabedFrictionCoefficient: 0
+    ContactArea: ~
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    DragArea: [0, 0, 0]
+    Cd: [0, 0, 0]
+    Ca: [0, 0, 0]
+    Hidden: No
+    Pen: [7, Solid, $408080]
+Lines:
+  Deleted: 900TeMainCraneWire
+  New:
+    - _01_main_crane_wire_top
+    - _02_main_crane_wire_bot
+    - TopRigging
+    - Sling1
+    - Sling2
+    - Sling3
+    - Sling4
+  _01_main_crane_wire_top:
+    Locked: No
+    IncludeTorsion: No
+    TopEnd: End A
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    EndAConnection: SevenArctic
+    EndAX: -32.650000000000006
+    EndAY: 38.14
+    EndAZ: 39.3
+    EndAAzimuth: 0
+    EndADeclination: 0
+    EndAGamma: 0
+    EndAReleaseStage: ~
+    EndBConnection: Free
+    EndBX: -32.650000000000006
+    EndBY: 38.14
+    EndBZ: 38.3
+    EndBAzimuth: 0
+    EndBDeclination: 0
+    EndBGamma: 0
+    EndBReleaseStage: ~
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - []
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo: []
+    Sections:
+      - LineType: 900TeMainCrane MainHoist
+        Length: 1
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.5
+        ClashCheck: No
+        PreBend: [0, 0]
+        PreBendBendAngle: 0
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+    Attachments: []
+    DecoupleLateralAndAxialSeabedFriction: No
+    ResistanceProfiles: []
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    AppliedLoads: []
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 180
+    AsLaidTension: 0
+    FullStaticsConvergenceControlMethod: Line search
+    FullStaticsMaxIterations: 400
+    FullStaticsTolerance: 1e-6
+    FullStaticsMinDamping: 1
+    FullStaticsMaxDamping: 10
+    LogResults: Yes
+    LogVelocity: No
+    LogAcceleration: No
+    Hidden: No
+    DrawNodesAsDiscs: Yes
+    NodePen: [1, Solid, $0080FF]
+    SegmentPenMode: Use line type pen
+    DrawShadedNodesAsSpheres: No
+    NodeAxesColours: [Red, Lime, $0080FF]
+    DrawContact: Yes
+    ContactPen: [3, Solid, White]
+  _02_main_crane_wire_bot:
+    Locked: No
+    IncludeTorsion: No
+    TopEnd: End A
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    EndAConnection: Free
+    EndAX: -32.650000000000006
+    EndAY: 38.14
+    EndAZ: 28.3
+    EndAAzimuth: 0
+    EndADeclination: 180
+    EndAGamma: 0
+    EndAReleaseStage: ~
+    EndBConnection: Free
+    EndBX: -32.650000000000006
+    EndBY: 38.14
+    EndBZ: 20.3
+    EndBAzimuth: 0
+    EndBDeclination: 0
+    EndBGamma: 0
+    EndBReleaseStage: ~
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - []
+      - []
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo: []
+    Sections:
+      - LineType: 900TeMainCrane MainHoist
+        Length: 2
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.5
+        ClashCheck: No
+        PreBend: [0, 0]
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+      - LineType: 900TeMainCrane MainHoist
+        Length: 2
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.5
+        ClashCheck: No
+        PreBend: [0, 0]
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+      - LineType: 900TeMainCrane MainHoist
+        Length: 4
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.5
+        ClashCheck: No
+        PreBend: [0, 0]
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+    Attachments:
+      - AttachmentType: 900TeMainCrane MainSingleFall 600tHook
+        AttachmentPosition: [0, 0, 0, End B]
+    DecoupleLateralAndAxialSeabedFriction: No
+    ResistanceProfiles: []
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    AppliedLoads: []
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    FullStaticsConvergenceControlMethod: Line search
+    FullStaticsMaxIterations: 400
+    FullStaticsTolerance: 1e-6
+    FullStaticsMinDamping: 5
+    FullStaticsMaxDamping: 10
+    LogResults: Yes
+    LogVelocity: No
+    LogAcceleration: No
+    Hidden: No
+    DrawNodesAsDiscs: No
+    NodePen: [1, Solid, $0080FF]
+    SegmentPenMode: Use line type pen
+    DrawShadedNodesAsSpheres: Yes
+    NodeAxesColours: [Red, Lime, $0080FF]
+    DrawContact: Yes
+    ContactPen: [3, Solid, White]
+  TopRigging:
+    Locked: No
+    IncludeTorsion: No
+    TopEnd: End A
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    EndAConnection: _02_main_crane_wire_bot
+    EndAZ: 0
+    EndAAzimuth: 270
+    EndADeclination: 57.53976447467572
+    EndAGamma: 90
+    EndAReleaseStage: ~
+    EndAConnectionzRelativeTo: End B
+    EndBConnection: Masterlink
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0.2
+    EndBAzimuth: 0
+    EndBDeclination: 180
+    EndBGamma: 0
+    EndBReleaseStage: ~
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo: []
+    Sections:
+      - LineType: SynthRoundSling200MBLx2
+        Length: 3
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.5
+        ClashCheck: No
+        PreBend: [0, 0]
+        PreBendBendAngle: 0
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+    Attachments: []
+    DecoupleLateralAndAxialSeabedFriction: No
+    ResistanceProfiles: []
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    AppliedLoads: []
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 180
+    AsLaidTension: 0
+    FullStaticsConvergenceControlMethod: Line search
+    FullStaticsMaxIterations: 400
+    FullStaticsTolerance: 1e-6
+    FullStaticsMinDamping: 1
+    FullStaticsMaxDamping: 10
+    LogResults: Yes
+    LogVelocity: No
+    LogAcceleration: No
+    Hidden: No
+    DrawNodesAsDiscs: No
+    NodePen: [1, Solid, $0080FF]
+    SegmentPenMode: Use line type pen
+    DrawShadedNodesAsSpheres: No
+    NodeAxesColours: [Red, Lime, $0080FF]
+    DrawContact: Yes
+    ContactPen: [3, Solid, White]
+  Sling1:
+    Locked: No
+    IncludeTorsion: No
+    TopEnd: End A
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    EndAConnection: Masterlink
+    EndAX: 0
+    EndAY: 0
+    EndAZ: -0.2
+    EndAAzimuth: 357.2279002238101
+    EndADeclination: 164.6927523589586
+    EndAGamma: 110.84
+    EndAReleaseStage: ~
+    EndBConnection: Fixed
+    EndBX: -35.7361
+    EndBY: 36.9462
+    EndBZ: 10.8933
+    EndBAzimuth: 17.225164598747842
+    EndBDeclination: 170.49364562087015
+    EndBGamma: 9.76718380467534
+    EndBReleaseStage: ~
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo: []
+    Sections:
+      - LineType: 90mm-Wire Rope
+        Length: 7.4
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.5
+        ClashCheck: No
+        PreBend: [0, 0]
+        PreBendBendAngle: 0
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+    Attachments: []
+    DecoupleLateralAndAxialSeabedFriction: No
+    ResistanceProfiles: []
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    AppliedLoads: []
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 211.4349730613308
+    AsLaidTension: 0
+    FullStaticsConvergenceControlMethod: Line search
+    FullStaticsMaxIterations: 400
+    FullStaticsTolerance: 1e-6
+    FullStaticsMinDamping: 1
+    FullStaticsMaxDamping: 10
+    LogResults: Yes
+    LogVelocity: No
+    LogAcceleration: No
+    Hidden: No
+    DrawNodesAsDiscs: No
+    NodePen: [1, Solid, $0080FF]
+    SegmentPenMode: Use line type pen
+    DrawShadedNodesAsSpheres: No
+    NodeAxesColours: [Red, Lime, $0080FF]
+    DrawContact: Yes
+    ContactPen: [3, Solid, White]
+  Sling2:
+    Locked: No
+    IncludeTorsion: No
+    TopEnd: End A
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    EndAConnection: Masterlink
+    EndAX: 0
+    EndAY: 0
+    EndAZ: -0.2
+    EndAAzimuth: 309.7529014424829
+    EndADeclination: 164.69275235895643
+    EndAGamma: 110.8400000000005
+    EndAReleaseStage: ~
+    EndBConnection: Fixed
+    EndBX: -35.7361
+    EndBY: 39.3338
+    EndBZ: 10.8933
+    EndBAzimuth: 302.1125477996308
+    EndBDeclination: 169.30793030702836
+    EndBGamma: -18.5441536351532
+    EndBReleaseStage: ~
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo: []
+    Sections:
+      - LineType: 90mm-Wire Rope
+        Length: 7.4
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.5
+        ClashCheck: No
+        PreBend: [0, 0]
+        PreBendBendAngle: 0
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+    Attachments: []
+    DecoupleLateralAndAxialSeabedFriction: No
+    ResistanceProfiles: []
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    AppliedLoads: []
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 148.68788990665945
+    AsLaidTension: 0
+    FullStaticsConvergenceControlMethod: Line search
+    FullStaticsMaxIterations: 400
+    FullStaticsTolerance: 1e-6
+    FullStaticsMinDamping: 1
+    FullStaticsMaxDamping: 10
+    LogResults: Yes
+    LogVelocity: No
+    LogAcceleration: No
+    Hidden: No
+    DrawNodesAsDiscs: No
+    NodePen: [1, Solid, $0080FF]
+    SegmentPenMode: Use line type pen
+    DrawShadedNodesAsSpheres: No
+    NodeAxesColours: [Red, Lime, $0080FF]
+    DrawContact: Yes
+    ContactPen: [3, Solid, White]
+  Sling3:
+    Locked: No
+    IncludeTorsion: No
+    TopEnd: End A
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    EndAConnection: Masterlink
+    EndAX: 0
+    EndAY: 0
+    EndAZ: -0.2
+    EndAAzimuth: 129.75290144248535
+    EndADeclination: 164.69275235895518
+    EndAGamma: 110.84000000000086
+    EndAReleaseStage: ~
+    EndBConnection: Fixed
+    EndBX: -29.5639
+    EndBY: 39.3338
+    EndBZ: 10.8933
+    EndBAzimuth: 149.21309274341604
+    EndBDeclination: 158.9980102903496
+    EndBGamma: 9.47603972567375
+    EndBReleaseStage: ~
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo: []
+    Sections:
+      - LineType: 90mm-Wire Rope
+        Length: 7.4
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.5
+        ClashCheck: No
+        PreBend: [0, 0]
+        PreBendBendAngle: 0
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+    Attachments: []
+    DecoupleLateralAndAxialSeabedFriction: No
+    ResistanceProfiles: []
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    AppliedLoads: []
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 330.34016370618184
+    AsLaidTension: 0
+    FullStaticsConvergenceControlMethod: Line search
+    FullStaticsMaxIterations: 400
+    FullStaticsTolerance: 1e-6
+    FullStaticsMinDamping: 1
+    FullStaticsMaxDamping: 10
+    LogResults: Yes
+    LogVelocity: No
+    LogAcceleration: No
+    Hidden: No
+    DrawNodesAsDiscs: No
+    NodePen: [1, Solid, $0080FF]
+    SegmentPenMode: Use line type pen
+    DrawShadedNodesAsSpheres: No
+    NodeAxesColours: [Red, Lime, $0080FF]
+    DrawContact: Yes
+    ContactPen: [3, Solid, White]
+  Sling4:
+    Locked: No
+    IncludeTorsion: No
+    TopEnd: End A
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    EndAConnection: Masterlink
+    EndAX: 0
+    EndAY: 0
+    EndAZ: -0.2
+    EndAAzimuth: 177.2279002238103
+    EndADeclination: 164.6927523589569
+    EndAGamma: 110.84000000000009
+    EndAReleaseStage: ~
+    EndBConnection: Fixed
+    EndBX: -29.5639
+    EndBY: 36.9462
+    EndBZ: 10.8933
+    EndBAzimuth: 183.52476326864186
+    EndBDeclination: 158.42533550632731
+    EndBGamma: -4.369910576049943
+    EndBReleaseStage: ~
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo: []
+    Sections:
+      - LineType: 90mm-Wire Rope
+        Length: 7.4
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.5
+        ClashCheck: No
+        PreBend: [0, 0]
+        PreBendBendAngle: 0
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+    Attachments: []
+    DecoupleLateralAndAxialSeabedFriction: No
+    ResistanceProfiles: []
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    AppliedLoads: []
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 29.541122972556497
+    AsLaidTension: 0
+    FullStaticsConvergenceControlMethod: Line search
+    FullStaticsMaxIterations: 400
+    FullStaticsTolerance: 1e-6
+    FullStaticsMinDamping: 1
+    FullStaticsMaxDamping: 10
+    LogResults: Yes
+    LogVelocity: No
+    LogAcceleration: No
+    Hidden: No
+    DrawNodesAsDiscs: No
+    NodePen: [1, Solid, $0080FF]
+    SegmentPenMode: Use line type pen
+    DrawShadedNodesAsSpheres: No
+    NodeAxesColours: [Red, Lime, $0080FF]
+    DrawContact: Yes
+    ContactPen: [3, Solid, White]
+Winches:
+  New: Winch
+  Winch:
+    Locked: No
+    WinchType: Simple
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [_01_main_crane_wire_top, 0, 0, 0, End B]
+      - [_02_main_crane_wire_bot, 0, 0, 0, End A]
+    Stiffness: 898e3
+    Damping: 0.01
+    ReleaseStage: ~
+    WinchControlType: By stage
+    StageMode, StageValue:
+      - [Specified length, 10]
+      - [Specified payout rate change, 0]
+      - [Specified payout rate, 0.1]
+    Hidden: No
+    Pen: [3, Solid, Aqua]
+    ShadedDrawingDiameter: 0.1
+...

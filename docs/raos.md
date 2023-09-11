@@ -21,3 +21,14 @@ To help QA RAOs
     - RAO amplitude vs. period for all headings
     - RAO Phases should follow long period criteria (i.e. free riding vessel)
     - RAO amplitude should follow long period criteria (i.e. free riding vessel)
+
+## Seastate RAOs Filtering
+
+- Convert vessel .dat file with Seastate RAOs to .yml file
+-  Run the digitalmodel program and provide the CoG and the structures dimensiosn relative to .yml. Coordinates should be the model coordinates of the vessel.
+- Run the program with the .yml file and the digitalmodel output file.
+- Copy digitalmodel output file into suitable format with a key and the output as value.
+- Copy this into the main file to get the reduced seastate RAO file for further analysis.
+- Also copy the updated filtered grid drawing file for visual purposes (and accuracy)
+
+

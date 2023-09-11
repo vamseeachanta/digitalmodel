@@ -57,7 +57,7 @@ class RAOAnalysis:
 
         file_name_filtered = file_name.replace(file_name_stem + '.yml',
                                                file_name_stem + '_filtered')
-        saveDataYaml(yml_data, file_name_filtered, default_flow_style=False)
+        saveDataYaml(yml_data, file_name_filtered, default_flow_style=True)
 
     def plot_multiple_vessel_data(self):
         pass
@@ -391,10 +391,12 @@ class RAOAnalysis:
             vessel_data_all_files = []
             for file in cfg['Files']:
                 if os.path.isfile(file['Name']):
-                    file_vessel_data = self.read_vessel_data_from_file(
+                    # file_vessel_data = self.read_vessel_data_from_file(
+                    #     file['Name'])
+                    # filter_SeaStateRAOs_data, filtered_file_vessel_data = self.filter_orcaflex_seastate_raos(
+                    #     file_vessel_data)
+                    filter_SeaStateRAOs_data, filtered_file_vessel_data = self.filter_orcaflex_seastate_raos_visual_grid(
                         file['Name'])
-                    filter_SeaStateRAOs_data, filtered_file_vessel_data = self.filter_orcaflex_seastate_raos(
-                        file_vessel_data)
                     self.write_filtered_orcaflex_seastate_rao_file(
                         file['Name'], filter_SeaStateRAOs_data,
                         filtered_file_vessel_data)
@@ -433,9 +435,73 @@ class RAOAnalysis:
             (SeaStateRAOs_df['SeaStateRAOY'] > y_low)]
 
         filter_SeaStateRAOs_data = filter_SeaStateRAOs_df.to_dict(
-            'split')['data']
+            'tight')['data']
         filtered_file_vessel_data = file_vessel_data.copy()
         filtered_file_vessel_data[0]['Draughts'][0]['SeaStateRAOs'][
             SeaStateRAOs_key] = filter_SeaStateRAOs_data
 
         return filter_SeaStateRAOs_data, filtered_file_vessel_data
+
+    def filter_orcaflex_seastate_raos_visual_grid(self, file_name):
+        filter_settings = self.cfg['rao_plot']['seastate']['filter']
+
+        x_low = filter_settings['cog'][
+            'x'] - filter_settings['l'] / 2 - filter_settings['beyond_boundary']
+        x_high = filter_settings['cog'][
+            'x'] + filter_settings['l'] / 2 + filter_settings['beyond_boundary']
+        y_low = filter_settings['cog'][
+            'y'] - filter_settings['w'] / 2 - filter_settings['beyond_boundary']
+        y_high = filter_settings['cog'][
+            'y'] + filter_settings['w'] / 2 + filter_settings['beyond_boundary']
+
+        self.get_shape_data(file_name)
+
+        SeaStateRAOs_df = pd.DataFrame(SeaStateRAOs, columns=df_columns)
+        filter_SeaStateRAOs_df = SeaStateRAOs_df[
+            (SeaStateRAOs_df['SeaStateRAOX'] < x_high) &
+            (SeaStateRAOs_df['SeaStateRAOX'] > x_low) &
+            (SeaStateRAOs_df['SeaStateRAOY'] < y_high) &
+            (SeaStateRAOs_df['SeaStateRAOY'] > y_low)]
+
+        filter_SeaStateRAOs_data = filter_SeaStateRAOs_df.to_dict(
+            'tight')['data']
+        filtered_file_vessel_data = file_vessel_data.copy()
+        filtered_file_vessel_data[0]['Draughts'][0]['SeaStateRAOs'][
+            SeaStateRAOs_key] = filter_SeaStateRAOs_data
+
+        return filter_SeaStateRAOs_data, filtered_file_vessel_data
+
+    def get_shape_data(self, file_name):
+        print('Reading file: {}'.format(file_name))
+        yml_data = ymlInput(file_name, updateYml=None)
+        shapes = yml_data['Shapes']
+        shape_names = [shape['Name'] for shape in shapes]
+        rao_visual_grid_shape = self.cfg['rao_plot']['seastate']['filter'][
+            'grid_label']
+        rao_visual_grid_shape_index = shape_names.index(rao_visual_grid_shape)
+        shape_data = shapes[rao_visual_grid_shape_index]
+
+        l_grid = self.cfg['rao_plot']['seastate']['filter']['l'] + 2 * self.cfg[
+            'rao_plot']['seastate']['filter']['beyond_boundary']
+        w_grid = self.cfg['rao_plot']['seastate']['filter']['w'] + 2 * self.cfg[
+            'rao_plot']['seastate']['filter']['beyond_boundary']
+
+        filtered_origin = [
+            self.cfg['rao_plot']['seastate']['filter']['cog']['x'] - l_grid / 2,
+            self.cfg['rao_plot']['seastate']['filter']['cog']['y'] - w_grid / 2,
+            shape_data['Origin'][2]
+        ]
+        shape_data['Origin'] = filtered_origin
+        filtered_size = [l_grid, w_grid, shape_data['Size'][2]]
+        shape_data['Size'] = filtered_size
+
+        p = Path(file_name)
+        file_name_stem = p.stem
+
+        filtered_vessel_data_name = file_name.replace(file_name_stem + '.yml',
+                                                      'shape_data')
+        saveDataYaml(shape_data,
+                     filtered_vessel_data_name,
+                     default_flow_style=False)
+
+        return shape_data
