@@ -7,6 +7,7 @@ BaseFile: __03structure.yml
     InitialZ: -83.0
 Lines:
   _02_main_crane_wire_bot:
-    length_index: 102
+    Length[1]: 102
     TargetSegmentLength[1]: 10
     TargetSegmentLength[2]: 2
+    EndBZ: -79.7

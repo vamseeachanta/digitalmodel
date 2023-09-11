@@ -62,6 +62,7 @@ class OrcInstallation:
                         'InitialRotation3': 0
                     }
                 }})
+
             file_base_name = '_el_' + elevation_str + 'm' + '_str_orentation'
             file_name = os.path.join(cfg['Analysis']['analysis_root_folder'],
                                      file_base_name)
@@ -90,13 +91,22 @@ class OrcInstallation:
                         pass
                     elif 'TargetSegmentLength' in line_item_key:
                         line_dict.update({line_item_key: line[line_item_key]})
+                    elif 'End' in line_item_key:
+                        ref_end_elevation = round(
+                            ref_model_file[orc_object][line['name']]
+                            [line_item_key], 1)
+                        line_dict.update({
+                            line_item_key: ref_end_elevation + delta_elevation
+                        })
                     elif 'length_index' in line_item_key:
                         length_index = line[line_item_key]
+
                         ref_line_length = round(
                             ref_model_file[orc_object][line['name']]['Sections']
                             [length_index]['Length'], 1)
                         line_length = ref_line_length + abs(delta_elevation)
-                        line_dict.update({line_item_key: line_length})
+                        line_dict.update(
+                            {'Length[' + str(length_index) + ']': line_length})
                     else:
                         raise KeyError(
                             "Key not found in line item. Programming/library updates required."
