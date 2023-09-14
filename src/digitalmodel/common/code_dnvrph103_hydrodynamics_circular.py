@@ -36,11 +36,12 @@ class DNVRPH103_hydrodynamics_circular:
         return properties
 
     def get_6d_buoy(self, properties):
-
         zone = 'splash'
-        self.get_6d_buoy_by_zone(properties, zone)
+        if zone in self.cfg.zones:
+            self.get_6d_buoy_by_zone(properties, zone)
         zone = 'deep'
-        self.get_6d_buoy_by_zone(properties, zone)
+        if zone in self.cfg.zones:
+            self.get_6d_buoy_by_zone(properties, zone)
 
     def get_6d_buoy_by_zone(self, properties, zone):
         buoy_6d_template = omu.get_6d_buoy_template()
@@ -50,11 +51,8 @@ class DNVRPH103_hydrodynamics_circular:
     def save_model(self, yaml_data, zone):
 
         output_dir = self.cfg['inputs']['output_dir']
-        if not os.path.isdir(output_dir):
-            cwd = os.getcwd()
-            output_dir = os.path.join(cwd, output_dir)
-            if not os.path.isdir(output_dir):
-                raise Exception(f'Output directory not found: {output_dir}')
+        if output_dir is None or not os.path.isdir(output_dir):
+            output_dir = self.cfg.Analysis['analysis_root_folder']
 
         filename = self.cfg['inputs']['output_filename']
 
@@ -64,6 +62,12 @@ class DNVRPH103_hydrodynamics_circular:
 
     def update_6d_buoy(self, buoy_6d_template, properties, zone):
         buoy_6d = buoy_6d_template.copy()
+
+        if 'BaseFile' in self.cfg.inputs:
+            buoy_6d['BaseFile'] = self.cfg.inputs['BaseFile']
+        else:
+            buoy_6d.pop('BaseFile')
+
         structure = self.cfg['inputs']['name']
         buoy_6d['6DBuoys']['New'][0] = structure
         buoy_6d['6DBuoys'][structure] = buoy_6d['6DBuoys'].pop('structure')
