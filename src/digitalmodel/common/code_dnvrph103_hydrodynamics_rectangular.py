@@ -16,7 +16,7 @@ class DNVRPH103_hydrodynamics_rectangular:
 
     def get_orcaflex_6dbuoy(self, cfg):
         properties = self.get_properties(cfg)
-        buoy_6d = self.get_6d_buoy(properties)
+        self.save_6d_buoy_models(properties)
 
     def get_properties(self, cfg):
         self.cfg = cfg
@@ -35,15 +35,15 @@ class DNVRPH103_hydrodynamics_rectangular:
 
         return properties
 
-    def get_6d_buoy(self, properties):
+    def save_6d_buoy_models(self, properties):
         zone = 'splash'
         if zone in self.cfg.zones:
-            self.get_6d_buoy_by_zone(properties, zone)
+            self.save_6d_buoy_by_zone(properties, zone)
         zone = 'deep'
         if zone in self.cfg.zones:
-            self.get_6d_buoy_by_zone(properties, zone)
+            self.save_6d_buoy_by_zone(properties, zone)
 
-    def get_6d_buoy_by_zone(self, properties, zone):
+    def save_6d_buoy_by_zone(self, properties, zone):
         buoy_6d_template = omu.get_6d_buoy_template()
         buoy_6d = self.update_6d_buoy(buoy_6d_template, properties, zone=zone)
         # buoy_6d = omu.get_BaseFile_first(buoy_6d)

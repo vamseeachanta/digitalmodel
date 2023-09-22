@@ -56,13 +56,8 @@ class OrcaFlexAnalysis():
                                         input_files_with_extension,
                                         input_files_without_extension)
 
-        post_process_flag = True
-        # (('Summary' in self.cfg['default']['Analysis'] and
-        #      self.cfg['default']['Analysis']['Summary']) or
-        #     ('RangeGraph' in self.cfg['default']['Analysis'] and
-        #      self.cfg['default']['Analysis']['RangeGraph']) or
-        #     ('time_series' in self.cfg['default']['Analysis'] and
-        #      self.cfg['default']['Analysis']['time_series']))
+        post_process_flag = self.cfg['orcaflex']['post_process']['flag']
+
         if post_process_flag:
             for fileIndex in range(0, len(self.simulation_filenames)):
                 self.get_files_for_postprocess(analysis_type, fileIndex,
@@ -81,9 +76,12 @@ class OrcaFlexAnalysis():
             self.post_process_files()
         self.save_data()
 
-        if self.cfg['default']['Analysis']['Analyze']['file_type'] in [
-                'script', 'batch_script'
-        ]:
+        try:
+            file_type = self.cfg['default']['Analysis']['Analyze']['file_type']
+        except:
+            file_type = None
+
+        if file_type is not None and file_type in ['script', 'batch_script']:
             print(
                 "Processing orcaflex script/batch files for orcaflex input files"
             )
@@ -118,6 +116,8 @@ class OrcaFlexAnalysis():
             iterate_flag = self.cfg['orcaflex']['iterate']['flag']
             iterate_to_target_value_flag = self.cfg['orcaflex']['iterate'][
                 'to_target_value']
+
+            save_sim_flag = self.cfg['orcaflex']['analysis']['save_sim']
             save_dat_flag = self.cfg['orcaflex']['analysis']['save_dat']
 
             model = OrcFxAPI.Model()
@@ -127,24 +127,29 @@ class OrcaFlexAnalysis():
             except:
                 simulation_flag = False
                 iterate_flag = False
-                logging.info(f"Load data for {filename_with_ext} ... FAIL")
+                raise ImportError(f"Load data for {filename_with_ext} ... FAIL")
 
-            if iterate_flag:
-                model = self.run_static_analysis(filename_with_ext, model)
+            if static_flag or iterate_flag:
+                model = self.clean_model(model, filename_with_ext,
+                                         filename_without_ext)
+                model, run_success_flag = self.run_static_analysis(
+                    filename_with_ext, model)
+                if run_success_flag:
+                    logging.info("Run statics  ....  SUCCESS")
+                else:
+                    logging.info("Run statics  ....  FAIL")
+                    simulation_flag = save_sim_flag = save_dat_flag = iterate_to_target_value_flag = False
 
             if simulation_flag:
                 model.RunSimulation()
                 logging.info("Run simulation successful")
 
-            if static_flag:
-                model.CalculateStatics()
-                logging.info("Run statics  ....  SUCCESS")
-
-            try:
-                model.SaveSimulation(filename_without_ext + '.sim')
-                logging.info("Save simulation successful")
-            except:
-                print("Save simulation.. FAILED")
+            if save_sim_flag:
+                try:
+                    model.SaveSimulation(filename_without_ext + '.sim')
+                    logging.info("Save simulation successful")
+                except:
+                    print("Save simulation.. FAILED")
 
             if save_dat_flag:
                 try:
@@ -163,6 +168,22 @@ class OrcaFlexAnalysis():
             f"Analysis done for {len(self.cfg['Analysis']['input_files']['with_ext'])} input files"
         )
 
+    def clean_model(self, model, filename_with_ext, filename_without_ext):
+        clean_model = model
+
+        UseCalculatedPositions_cfg = self.cfg['orcaflex']['iterate'][
+            'UseCalculatedPositions'].copy()
+        if UseCalculatedPositions_cfg['flag'] and UseCalculatedPositions_cfg[
+                'clean_StaleCalculatedPositions']:
+            save_data = SaveData()
+            file_yml = ymlInput(filename_with_ext)
+            clean_file = {'BaseFile': file_yml['BaseFile']}
+            save_data.saveDataYaml(clean_file, filename_without_ext)
+            clean_model = OrcFxAPI.Model()
+            clean_model.LoadData(filename_with_ext)
+
+        return clean_model
+
     def run_static_analysis(self, filename_with_ext, model):
         print(f"Static analysis for {filename_with_ext} ... .... ")
         try:
@@ -171,17 +192,16 @@ class OrcaFlexAnalysis():
             print(f"First analysis ... PASS")
             self.save_model_with_calculated_positions(filename_with_ext, model)
             model = self.analysis_with_calculated_positions(model)
+            run_success_flag = True
         except:
+            run_success_flag = False
             print(f"First static analysis for ... FAIL")
 
-        print(f"Analysis with calculated positions ....... ")
-
-        return model
+        return model, run_success_flag
 
     def analysis_with_calculated_positions(self, model):
         try:
             model.CalculateStatics()
-            print(f"Analysis with calculated positions ... PASS")
         except:
             print(f"Analysis with calculated positions ... FAIL")
 
@@ -290,7 +310,8 @@ class OrcaFlexAnalysis():
             self.cfg, self.cfg['Analysis']['result_folder'] +
             self.cfg['Analysis']['file_name'], False)
 
-        if self.cfg.default['postprocess']['cummulative_histograms']['flag']:
+        if 'postprocess' in self.cfg.default and self.cfg.default[
+                'postprocess']['cummulative_histograms']['flag']:
             histogram_data_array = [
                 item['data'] for item in self.detailed_histograms_array
             ]
@@ -310,8 +331,9 @@ class OrcaFlexAnalysis():
                 save_data.DataFrameArray_To_xlsx_openpyxl(
                     histogram_data_array, customdata)
 
-        if self.cfg.default['Analysis'].__contains__(
-                'RAOs') and self.cfg.default['Analysis']['RAOs']['flag']:
+        if 'Analysis' in self.cfg.default and self.cfg.default[
+                'Analysis'].__contains__(
+                    'RAOs') and self.cfg.default['Analysis']['RAOs']['flag']:
             self.save_RAOs()
 
     def post_process_RAOs(self, model, FileObjectName):
