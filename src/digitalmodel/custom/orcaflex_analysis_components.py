@@ -122,16 +122,17 @@ class OrcaFlexAnalysis():
 
             model = OrcFxAPI.Model()
             try:
+                logging.info("Loading input file ...")
+                model = self.clean_model(model, filename_with_ext,
+                                         filename_without_ext)
                 model.LoadData(filename_with_ext)
-                logging.info("Load input file successful")
+                logging.info("Loading input file ... COMPLETE")
             except:
                 simulation_flag = False
                 iterate_flag = False
                 raise ImportError(f"Load data for {filename_with_ext} ... FAIL")
 
             if static_flag or iterate_flag:
-                model = self.clean_model(model, filename_with_ext,
-                                         filename_without_ext)
                 model, run_success_flag = self.run_static_analysis(
                     filename_with_ext, model)
                 if run_success_flag:

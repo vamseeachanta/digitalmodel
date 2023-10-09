@@ -1,6 +1,7 @@
 basename: code_dnvrph103
 
 calculation_type: simplified
+zones: [deep]
 
 inputs:
   name: uta2
