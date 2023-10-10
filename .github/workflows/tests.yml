@@ -7,8 +7,6 @@ jobs:
 
     runs-on: ubuntu-latest
     strategy:
-      # You can use PyPy versions in python-version.
-      # For example, pypy2.7 and pypy3.9
       matrix:
         python-version: ["3.11"]
 
@@ -23,7 +21,7 @@ jobs:
       - name: Install dependencies
         uses: py-actions/py-dependency-install@v4
         with:
-          path: "requirements.txt"
+          path: "dev_tools/requirements.txt"
 
       - name: Lint with Ruff
         run: |
