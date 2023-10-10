@@ -23,6 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          echo "$PWD"
           pip install -r dev_tools/requirements.txt
 
 
