@@ -22,10 +22,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          echo "$PWD"
-          ls
-          pip install -r dev_tools/requirements.txt
+          # python -m pip install --upgrade pip
+          # echo "$PWD"
+          # ls
+          pip install -r dev_tools/requirements_test.txt
           pip list
 
 
