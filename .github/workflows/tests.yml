@@ -21,11 +21,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: |
-          pip install pytest
-          pip install -r requirements.txt
-          pip list
-
+        uses: py-actions/py-dependency-install@v4
+        with:
+          path: "requirements.txt"
 
       - name: Lint with Ruff
         run: |
