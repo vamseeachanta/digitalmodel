@@ -25,8 +25,8 @@ jobs:
           # python -m pip install --upgrade pip
           # echo "$PWD"
           # ls
-          pip install -r dev_tools/requirements_test.txt
-          pip list
+          pip3 install -r dev_tools/requirements_test.txt
+          pip3 list
 
 
       - name: Lint with Ruff
