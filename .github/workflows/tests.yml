@@ -34,5 +34,4 @@ jobs:
 
       - name: Test with pytest
         run: |
-          echo $(PWD)
-          pytest tests/workflow/test*
+          pytest src/digitalmodel/tests/workflow/test*
