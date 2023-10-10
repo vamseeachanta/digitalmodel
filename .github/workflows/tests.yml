@@ -22,8 +22,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
-          pip list
+          pip3 install -r requirements.txt
+          pip3 list
 
 
       - name: Lint with Ruff
