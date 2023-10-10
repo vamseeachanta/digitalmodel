@@ -1,22 +1,23 @@
 basename: code_dnvrph103
 
 calculation_type: simplified
+zones: [deep]
 
 inputs:
   name: uta2
-  m_air: 635
-  m_water: 554
+  m_air: 285
+  m_water: -300
 
-  shape: rectangular # rectangular, circular
-  l: 2.943
-  w: 0.886
-  r: NULL
-  h: 0.687
+  shape: circular # rectangular, circular
+  l: NULL
+  w: NULL
+  r: 0.728
+  h: 1.0
 
   cog:
-    x: -0.123
+    x: 0
     y: 0
-    z: 0.2096
+    z: 0
 
   cov:
     x: 0

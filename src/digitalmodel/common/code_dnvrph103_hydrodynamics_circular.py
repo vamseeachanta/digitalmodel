@@ -16,7 +16,7 @@ class DNVRPH103_hydrodynamics_circular:
 
     def get_orcaflex_6dbuoy(self, cfg):
         properties = self.get_properties(cfg)
-        buoy_6d = self.get_6d_buoy(properties)
+        self.save_6d_buoy_models(properties)
 
     def get_properties(self, cfg):
         self.cfg = cfg
@@ -35,14 +35,15 @@ class DNVRPH103_hydrodynamics_circular:
 
         return properties
 
-    def get_6d_buoy(self, properties):
-
+    def save_6d_buoy_models(self, properties):
         zone = 'splash'
-        self.get_6d_buoy_by_zone(properties, zone)
+        if zone in self.cfg.zones:
+            self.save_6d_buoy_by_zone(properties, zone)
         zone = 'deep'
-        self.get_6d_buoy_by_zone(properties, zone)
+        if zone in self.cfg.zones:
+            self.save_6d_buoy_by_zone(properties, zone)
 
-    def get_6d_buoy_by_zone(self, properties, zone):
+    def save_6d_buoy_by_zone(self, properties, zone):
         buoy_6d_template = omu.get_6d_buoy_template()
         buoy_6d = self.update_6d_buoy(buoy_6d_template, properties, zone=zone)
         self.save_model(buoy_6d, zone=zone)
@@ -50,11 +51,8 @@ class DNVRPH103_hydrodynamics_circular:
     def save_model(self, yaml_data, zone):
 
         output_dir = self.cfg['inputs']['output_dir']
-        if not os.path.isdir(output_dir):
-            cwd = os.getcwd()
-            output_dir = os.path.join(cwd, output_dir)
-            if not os.path.isdir(output_dir):
-                raise Exception(f'Output directory not found: {output_dir}')
+        if output_dir is None or not os.path.isdir(output_dir):
+            output_dir = self.cfg.Analysis['analysis_root_folder']
 
         filename = self.cfg['inputs']['output_filename']
 
@@ -64,6 +62,12 @@ class DNVRPH103_hydrodynamics_circular:
 
     def update_6d_buoy(self, buoy_6d_template, properties, zone):
         buoy_6d = buoy_6d_template.copy()
+
+        if 'BaseFile' in self.cfg.inputs:
+            buoy_6d['BaseFile'] = self.cfg.inputs['BaseFile']
+        else:
+            buoy_6d.pop('BaseFile')
+
         structure = self.cfg['inputs']['name']
         buoy_6d['6DBuoys']['New'][0] = structure
         buoy_6d['6DBuoys'][structure] = buoy_6d['6DBuoys'].pop('structure')
@@ -220,7 +224,8 @@ class DNVRPH103_hydrodynamics_circular:
 
         perforation_ratio = self.cfg['inputs']['perforation_ratio']['x']
         added_mass, ca = self.get_translational_ca(dimensions,
-                                                   perforation_ratio)
+                                                   perforation_ratio,
+                                                   direction='x')
 
         return added_mass, ca
 
@@ -229,7 +234,8 @@ class DNVRPH103_hydrodynamics_circular:
 
         perforation_ratio = self.cfg['inputs']['perforation_ratio']['y']
         added_mass, ca = self.get_translational_ca(dimensions,
-                                                   perforation_ratio)
+                                                   perforation_ratio,
+                                                   direction='y')
 
         return added_mass, ca
 
@@ -238,25 +244,35 @@ class DNVRPH103_hydrodynamics_circular:
 
         perforation_ratio = self.cfg['inputs']['perforation_ratio']['z']
         added_mass, ca = self.get_translational_ca(dimensions,
-                                                   perforation_ratio)
+                                                   perforation_ratio,
+                                                   direction='z')
 
         return added_mass, ca
 
-    def get_translational_ca(self, dimensions, perforation_ratio):
+    def get_translational_ca(self, dimensions, perforation_ratio, direction):
         b_over_a = dimensions['b'] / dimensions['a']
-        ratio = self.cfg['look_up']['plate']['added_mass']['ratio']
-        value = self.cfg['look_up']['plate']['added_mass']['value']
+
+        if direction in ['x', 'y']:
+            ratio = self.cfg['look_up']['cylinder']['added_mass']['ratio']
+            value = self.cfg['look_up']['cylinder']['added_mass']['value']
+        else:
+            ratio = self.cfg['look_up']['plate']['added_mass']['ratio']
+            value = self.cfg['look_up']['plate']['added_mass']['value']
 
         f = interpolate.interp1d(ratio, value)
         c = f(b_over_a)
-        lambda_0 = math.sqrt(dimensions['a'] * dimensions['b']) / (
-            dimensions['c'] + math.sqrt(dimensions['a'] * dimensions['b']))
 
-        mass_added_term_1 = c * math.pi / 4 * self.cfg[
-            'rho_water'] * dimensions['a']**2 * dimensions['b']
-        mass_added_term_2 = 1 + math.sqrt(
-            (1 - lambda_0**2) / (2 * (1 + lambda_0**2)))
-        mass_added = mass_added_term_1 * mass_added_term_2
+        if direction in ['x', 'y']:
+            mass_added = c * math.pi * self.cfg['rho_water'] * self.cfg[
+                'inputs']['h'] * self.cfg['inputs']['r']**2 / 4
+
+        else:
+            lambda_0 = math.sqrt(dimensions['a'] * dimensions['b']) / (
+                dimensions['c'] + math.sqrt(dimensions['a'] * dimensions['b']))
+            term_1 = self.cfg['rho_water'] * 2 / math.pi * 4 / 3 * math.pi * (
+                dimensions['a'] / 2)**3
+            term_2 = 1 + math.sqrt((1 - lambda_0**2) / (2 * (1 + lambda_0**2)))
+            mass_added = term_1 * term_2
 
         mass_added_with_perforation = self.get_mass_added_with_perforation(
             mass_added, perforation_ratio)
@@ -270,40 +286,54 @@ class DNVRPH103_hydrodynamics_circular:
         dimensions = self.get_x_dimensions()
         perforation_ratio = self.cfg['inputs']['perforation_ratio']['x']
 
-        return self.get_translational_cd(dimensions, perforation_ratio)
+        return self.get_translational_cd(dimensions,
+                                         perforation_ratio,
+                                         direction='x')
 
     def get_translational_y_cd(self):
 
         dimensions = self.get_y_dimensions()
         perforation_ratio = self.cfg['inputs']['perforation_ratio']['y']
 
-        return self.get_translational_cd(dimensions, perforation_ratio)
+        return self.get_translational_cd(dimensions,
+                                         perforation_ratio,
+                                         direction='y')
 
     def get_translational_z_cd(self):
 
         dimensions = self.get_z_dimensions()
         perforation_ratio = self.cfg['inputs']['perforation_ratio']['z']
 
-        return self.get_translational_cd(dimensions, perforation_ratio)
+        return self.get_translational_cd(dimensions,
+                                         perforation_ratio,
+                                         direction='z')
 
-    def get_translational_cd(self, dimensions, perforation_ratio):
-        drag_area = dimensions['a'] * dimensions['b'] * (1 - perforation_ratio)
-        aspect_ratio = dimensions['c'] / math.sqrt(
-            (dimensions['a'] * dimensions['b']))
+    def get_translational_cd(self, dimensions, perforation_ratio, direction):
 
-        if aspect_ratio < 1:
+        if direction in ['x', 'y']:
+            drag_area = dimensions['a'] * dimensions['b'] * (1 -
+                                                             perforation_ratio)
+
             b_over_a = dimensions['b'] / dimensions['a']
-            ratio = self.cfg['look_up']['plate']['drag']['ratio']
-            value = self.cfg['look_up']['plate']['drag']['value']
+
+            ratio = self.cfg['look_up']['cylinder']['drag']['normal']['ratio']
+            value = self.cfg['look_up']['cylinder']['drag']['normal']['value']
 
             f = interpolate.interp1d(ratio, value)
             deep = f(b_over_a)
+
         else:
-            ratio = self.cfg['look_up']['prism']['drag']['ratio']
-            value = self.cfg['look_up']['prism']['drag']['value']
+
+            drag_area = math.pi * dimensions['a']**2 / 4 * (1 -
+                                                            perforation_ratio)
+
+            c_over_a = dimensions['c'] / dimensions['a']
+
+            ratio = self.cfg['look_up']['cylinder']['drag']['axial']['ratio']
+            value = self.cfg['look_up']['cylinder']['drag']['axial']['value']
 
             f = interpolate.interp1d(ratio, value)
-            deep = f(aspect_ratio)
+            deep = f(c_over_a)
 
         deep = deep.tolist()
         splash = self.get_splash_from_deep_drag(deep)
@@ -313,9 +343,9 @@ class DNVRPH103_hydrodynamics_circular:
         return drag_area, cd
 
     def get_x_dimensions(self):
-        a = min(self.cfg['inputs']['h'], self.cfg['inputs']['w'])
-        b = max(self.cfg['inputs']['h'], self.cfg['inputs']['w'])
-        c = self.cfg['inputs']['l']
+        a = min(self.cfg['inputs']['r'], self.cfg['inputs']['h'])
+        b = max(self.cfg['inputs']['r'], self.cfg['inputs']['h'])
+        c = self.cfg['inputs']['r']
         volume = (self.cfg['inputs']['m_air'] -
                   self.cfg['inputs']['m_water']) / self.cfg['rho_water']
 
@@ -324,9 +354,9 @@ class DNVRPH103_hydrodynamics_circular:
         return dimensions
 
     def get_y_dimensions(self):
-        a = min(self.cfg['inputs']['h'], self.cfg['inputs']['l'])
-        b = max(self.cfg['inputs']['h'], self.cfg['inputs']['l'])
-        c = self.cfg['inputs']['w']
+        a = min(self.cfg['inputs']['r'], self.cfg['inputs']['h'])
+        b = max(self.cfg['inputs']['r'], self.cfg['inputs']['h'])
+        c = self.cfg['inputs']['r']
         volume = (self.cfg['inputs']['m_air'] -
                   self.cfg['inputs']['m_water']) / self.cfg['rho_water']
 
@@ -335,8 +365,7 @@ class DNVRPH103_hydrodynamics_circular:
         return dimensions
 
     def get_z_dimensions(self):
-        a = min(self.cfg['inputs']['w'], self.cfg['inputs']['l'])
-        b = max(self.cfg['inputs']['w'], self.cfg['inputs']['l'])
+        a = b = self.cfg['inputs']['r']
         c = self.cfg['inputs']['h']
         volume = (self.cfg['inputs']['m_air'] -
                   self.cfg['inputs']['m_water']) / self.cfg['rho_water']
@@ -346,8 +375,8 @@ class DNVRPH103_hydrodynamics_circular:
         return dimensions
 
     def get_shape_coordinates(self):
-        x_half = self.cfg['inputs']['l'] / 2
-        y_half = self.cfg['inputs']['w'] / 2
+        x_half = self.cfg['inputs']['r'] / 2
+        y_half = self.cfg['inputs']['r'] / 2
         z_half = self.cfg['inputs']['h'] / 2
 
         shape_coordinates = []
@@ -394,19 +423,18 @@ class DNVRPH103_hydrodynamics_circular:
     def get_mass_moment_of_inertia(self):
         inputs = self.cfg['inputs']
         m_air = inputs['m_air']
-        l = inputs['l']
-        w = inputs['w']
+        r = inputs['r']
         h = inputs['h']
 
-        term_1 = 1 / 12 * m_air * (w**2 + h**2)
+        term_1 = 1 / 12 * m_air * (3 * (r / 2)**2 + h**2)
         term_2 = m_air * (inputs['cog']['y']**2 + inputs['cog']['z']**2)
         Ix = term_1 + term_2
 
-        term_1 = 1 / 12 * m_air * (h**2 + l**2)
+        term_1 = 1 / 12 * m_air * (h**2 + 3 * (r / 2)**2)
         term_2 = m_air * (inputs['cog']['x']**2 + inputs['cog']['z']**2)
         Iy = term_1 + term_2
 
-        term_1 = 1 / 12 * m_air * (l**2 + w**2)
+        term_1 = 1 / 2 * m_air * (r / 2)**2
         term_2 = m_air * (inputs['cog']['y']**2 + inputs['cog']['x']**2)
         Iz = term_1 + term_2
 
@@ -441,15 +469,15 @@ class DNVRPH103_hydrodynamics_circular:
 
     def get_hydrodynamic_intertia(self):
         inputs = self.cfg['inputs']
-        l = inputs['l']
-        w = inputs['w']
+        r = inputs['r']
         h = inputs['h']
+
         rho_water = self.cfg['rho_water']
         volume = (inputs['m_air'] - inputs['m_water']) / rho_water
 
-        I_x = volume * rho_water / 1000 * (w**2 + h**2) / 12
-        I_y = volume * rho_water / 1000 * (h**2 + l**2) / 12
-        I_z = volume * rho_water / 1000 * (l**2 + w**2) / 12
+        I_x = volume * rho_water / 1000 * (3 * r**2 + h**2) / 12
+        I_y = volume * rho_water / 1000 * (h**2 + 3 * r**2) / 12
+        I_z = volume * rho_water / 1000 / 2 * (r / 2)**2
 
         I = {'x': I_x, 'y': I_y, 'z': I_z}
 
@@ -459,17 +487,14 @@ class DNVRPH103_hydrodynamics_circular:
                                            type):
 
         inputs = self.cfg['inputs']
-        l = inputs['l']
-        w = inputs['w']
+        r = inputs['r']
         h = inputs['h']
-        am_x = (translational_properties['cd'][type]['y'] * l * h**4 +
-                translational_properties['cd'][type]['z'] * l * w**4) / 32
 
-        am_y = (translational_properties['cd'][type]['x'] * w * h**4 +
-                translational_properties['cd'][type]['z'] * w * l**4) / 32
+        am_x = am_y = translational_properties['cd'][type][
+            'y'] * r * h**4 / 32 + translational_properties['cd'][type][
+                'z'] * r**5 / 60
 
-        am_z = (translational_properties['cd'][type]['x'] * h * w**4 +
-                translational_properties['cd'][type]['y'] * h * l**4) / 32
+        am_z = translational_properties['cd'][type]['x'] * h * r**4 / 16
 
         am = {'x': am_x, 'y': am_y, 'z': am_z}
 
@@ -477,13 +502,12 @@ class DNVRPH103_hydrodynamics_circular:
 
     def get_added_inertia_coefficient(self):
         inputs = self.cfg['inputs']
-        l = inputs['l']
-        w = inputs['w']
+        r = inputs['r']
         h = inputs['h']
 
-        ca_x = self.get_ca_intertial_x(l, w, h)
-        ca_y = self.get_ca_intertial_y(l, w, h)
-        ca_z = self.get_ca_intertial_z(l, w, h)
+        ca_x = self.get_ca_intertial_x(r, r, h)
+        ca_y = self.get_ca_intertial_y(r, r, h)
+        ca_z = self.get_ca_intertial_z(r, r, h)
 
         ca = {'x': ca_x, 'y': ca_y, 'z': ca_z}
 

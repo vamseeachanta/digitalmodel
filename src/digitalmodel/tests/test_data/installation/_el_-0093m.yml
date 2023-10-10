@@ -1,0 +1,13 @@
+BaseFile: __03structure.yml
+6DBuoys:
+  mudmat:
+    InitialZ: -92.9
+3DBuoys:
+  Masterlink:
+    InitialZ: -83.0
+Lines:
+  _02_main_crane_wire_bot:
+    Length[1]: 102
+    TargetSegmentLength[1]: 10
+    TargetSegmentLength[2]: 2
+    EndBZ: -79.7

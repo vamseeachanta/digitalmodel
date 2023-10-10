@@ -6,7 +6,6 @@
 - webcolors
 - matplotlib
 - scipy
-- pandas
 - xlrd
 - openpyxl
 - imgkit
@@ -16,3 +15,4 @@
 - deepdiff
 - pytest
 - sympy
+- kaleido

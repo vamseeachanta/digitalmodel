@@ -1,0 +1,26 @@
+basename: installation
+
+structure:
+  flag: True
+
+  BaseFile: __03structure.yml
+  reference_model_file: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\installation\__03a_add_rigging.yml
+  reference_elevation_file: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\installation\__04a_calculated_positions.yml
+  delta_elevations: [-100]
+  6DBuoys: [mudmat]
+  3DBuoys: [Masterlink]
+  Lines: 
+    - name: _02_main_crane_wire_bot
+      length_index : 1
+      TargetSegmentLength[1]: 10
+      TargetSegmentLength[2]: 2
+      EndBZ: NULL
+
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+

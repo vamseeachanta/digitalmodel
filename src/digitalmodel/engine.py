@@ -12,7 +12,10 @@ from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
 from digitalmodel.custom.rigging import Rigging
 from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import DNVRPH103_hydrodynamics_rectangular
+from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import DNVRPH103_hydrodynamics_circular
 from digitalmodel.custom.orcaflex_post_process import orcaflex_post_process
+from digitalmodel.custom.rao_analysis import RAOAnalysis
+from digitalmodel.custom.orcaflex_installation import OrcInstallation
 
 
 def engine(inputfile=None):
@@ -41,6 +44,8 @@ def engine(inputfile=None):
     basename = cfg['basename']
     application_manager = ConfigureApplicationInputs(basename)
     application_manager.configure(cfg)
+    if cfg is None:
+        raise ValueError("cfg is None")
 
     if basename in ['simple_catenary_riser', 'catenary_riser']:
         cfg_base = catenary_riser(application_manager.cfg)
@@ -66,10 +71,19 @@ def engine(inputfile=None):
     elif basename == 'code_dnvrph103':
         if application_manager.cfg['inputs']['shape'] == 'rectangular':
             code_dnvrph103 = DNVRPH103_hydrodynamics_rectangular()
-            cfg_base = code_dnvrph103.get_orcaflex_6dbuoy(
+        elif application_manager.cfg['inputs']['shape'] == 'circular':
+            code_dnvrph103 = DNVRPH103_hydrodynamics_circular()
+        cfg_base = code_dnvrph103.get_orcaflex_6dbuoy(application_manager.cfg)
+    elif basename == 'rao_analysis':
+        rao = RAOAnalysis()
+        cfg_base = rao.read_orcaflex_displacement_raos(application_manager.cfg)
+        cfg_base = rao.assess_orcaflex_seastate_raos(application_manager.cfg)
+    elif basename == 'installation':
+        orc_install = OrcInstallation()
+        if application_manager.cfg['structure']['flag']:
+            cfg_base = orc_install.create_model_for_water_depth(
                 application_manager.cfg)
-        if application_manager.cfg['inputs']['shape'] == 'circular':
-            code_dnvrph103 = DNVRPH103_hydrodynamics_rectangular()
+
     else:
         raise (
             Exception(f'Analysis for basename: {basename} not found. ... FAIL'))

@@ -24,3 +24,4 @@ dependencies:
       - deepdiff
       - pytest
       - sympy
+      - kaleido

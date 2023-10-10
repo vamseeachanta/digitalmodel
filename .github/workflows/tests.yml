@@ -10,7 +10,7 @@ jobs:
       # You can use PyPy versions in python-version.
       # For example, pypy2.7 and pypy3.9
       matrix:
-        python-version: ["2.7", "3.7", "3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.11"]
 
     steps:
       - uses: actions/checkout@v3
@@ -21,10 +21,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r dev_tools/requirements.txt
-
+        uses: py-actions/py-dependency-install@v4
+        with:
+          path: "requirements.txt"
 
       - name: Lint with Ruff
         run: |
@@ -37,4 +36,4 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pytest
+          python -m pytest
