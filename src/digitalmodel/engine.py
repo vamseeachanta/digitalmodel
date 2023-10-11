@@ -19,24 +19,7 @@ from digitalmodel.custom.orcaflex_installation import OrcInstallation
 
 
 def engine(inputfile=None):
-    if len(sys.argv) > 1 and inputfile is not None:
-        raise (Exception(
-            '2 Input files provided via arguments & function. Please provide only 1 file ... FAIL'
-        ))
-
-    if len(sys.argv) > 1:
-        if not os.path.isfile(sys.argv[1]):
-            raise (FileNotFoundError(
-                f'Input file {sys.argv[1]} not found ... FAIL'))
-        else:
-            inputfile = sys.argv[1]
-
-    if len(sys.argv) <= 1:
-        if not os.path.isfile(inputfile):
-            raise (
-                FileNotFoundError(f'Input file {inputfile} not found ... FAIL'))
-        else:
-            sys.argv.append(inputfile)
+    inputfile = validate_arguments_run_methods(inputfile)
 
     cfg = ymlInput(inputfile, updateYml=None)
     cfg = AttributeDict(cfg)
@@ -89,3 +72,31 @@ def engine(inputfile=None):
             Exception(f'Analysis for basename: {basename} not found. ... FAIL'))
 
     return cfg_base
+
+
+def validate_arguments_run_methods(inputfile):
+    '''
+    Validate inputs for following run methods:  
+    - module (i.e. python -m digitalmodel input.yml)
+    - from python file (i.e. )
+    '''
+
+    if len(sys.argv) > 1 and inputfile is not None:
+        raise (Exception(
+            '2 Input files provided via arguments & function. Please provide only 1 file ... FAIL'
+        ))
+
+    if len(sys.argv) > 1:
+        if not os.path.isfile(sys.argv[1]):
+            raise (FileNotFoundError(
+                f'Input file {sys.argv[1]} not found ... FAIL'))
+        else:
+            inputfile = sys.argv[1]
+
+    if len(sys.argv) <= 1:
+        if not os.path.isfile(inputfile):
+            raise (
+                FileNotFoundError(f'Input file {inputfile} not found ... FAIL'))
+        else:
+            sys.argv.append(inputfile)
+    return inputfile
