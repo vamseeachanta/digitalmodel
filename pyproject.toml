@@ -23,7 +23,7 @@ requires-python = ">=3.7"
     dev   = ["black", "bumpver", "isort", "pytest"]
 
     [project.scripts]
-    pressure_pipe = "digitalmodel.pressure_pipe"
+    digital_model = "digitalmodel:__main__"
 
     [project.urls]
     repository    = "https://github.com/vamseeachanta/digitalmodel"
