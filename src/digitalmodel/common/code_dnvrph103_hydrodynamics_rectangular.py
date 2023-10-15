@@ -16,7 +16,10 @@ class DNVRPH103_hydrodynamics_rectangular:
 
     def get_orcaflex_6dbuoy(self, cfg):
         properties = self.get_properties(cfg)
+        cfg.update({'code_dnvrph103': {'properties': properties}})
         self.save_6d_buoy_models(properties)
+
+        return self.cfg
 
     def get_properties(self, cfg):
         self.cfg = cfg
@@ -46,7 +49,6 @@ class DNVRPH103_hydrodynamics_rectangular:
     def save_6d_buoy_by_zone(self, properties, zone):
         buoy_6d_template = omu.get_6d_buoy_template()
         buoy_6d = self.update_6d_buoy(buoy_6d_template, properties, zone=zone)
-        # buoy_6d = omu.get_BaseFile_first(buoy_6d)
         self.save_model(buoy_6d, zone=zone)
 
     def save_model(self, yaml_data, zone):
@@ -252,7 +254,7 @@ class DNVRPH103_hydrodynamics_rectangular:
         value = self.cfg['look_up']['plate']['added_mass']['value']
 
         f = interpolate.interp1d(ratio, value)
-        c = f(b_over_a)
+        c = float(f(b_over_a))
         lambda_0 = math.sqrt(dimensions['a'] * dimensions['b']) / (
             dimensions['c'] + math.sqrt(dimensions['a'] * dimensions['b']))
 
@@ -532,4 +534,5 @@ class DNVRPH103_hydrodynamics_rectangular:
             p = np.polyfit(ratio, value, deg=6)
             ca = np.polyval(p, ratio_2) * 2 * b**3 / (a * (a**2 + b**2))
 
+        ca = float(ca)
         return ca

@@ -4,7 +4,7 @@ import pytest
 from digitalmodel.common.utilities import get_module_path
 
 
-def test_module_path(module=None):
+def run_get_module_path(module=None):
     module_path = get_module_path(module)
     # Check if valid directory
     try:
@@ -13,6 +13,13 @@ def test_module_path(module=None):
         pytest.fail(exc, pytrace=True)
 
 
-test_module_path()
-test_module_path(module="digitalmodel")
-# test_module_path(module="mydigitalmodel")
+def test_no_module(module=None):
+    run_get_module_path(module=module)
+
+
+def test_with_module(module="digitalmodel"):
+    run_get_module_path(module=module)
+
+
+# def test_with_non_existent_module(module="fakemodule"):
+#     run_get_module_path(module=module)

@@ -1,6 +1,7 @@
 import os
 import sys
 
+from digitalmodel.common.data import SaveData
 from digitalmodel.common.yml_utilities import ymlInput
 from digitalmodel.common.update_deep import AttributeDict
 from digitalmodel.common.ApplicationManager import ConfigureApplicationInputs
@@ -16,6 +17,8 @@ from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import DNVRPH103_
 from digitalmodel.custom.orcaflex_post_process import orcaflex_post_process
 from digitalmodel.custom.rao_analysis import RAOAnalysis
 from digitalmodel.custom.orcaflex_installation import OrcInstallation
+
+save_data = SaveData()
 
 
 def engine(inputfile=None):
@@ -71,6 +74,8 @@ def engine(inputfile=None):
         raise (
             Exception(f'Analysis for basename: {basename} not found. ... FAIL'))
 
+    save_cfg(cfg_base=cfg_base)
+
     return cfg_base
 
 
@@ -100,3 +105,14 @@ def validate_arguments_run_methods(inputfile):
         else:
             sys.argv.append(inputfile)
     return inputfile
+
+
+def save_cfg(cfg_base):
+    output_dir = cfg_base['inputs']['output_dir']
+    if output_dir is None or not os.path.isdir(output_dir):
+        output_dir = cfg_base.Analysis['analysis_root_folder']
+
+    filename = cfg_base['inputs']['output_filename']
+    filename_path = os.path.join(output_dir, filename)
+
+    save_data.saveDataYaml(cfg_base, filename_path, default_flow_style=False)

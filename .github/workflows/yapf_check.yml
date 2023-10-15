@@ -10,6 +10,6 @@ jobs:
     - name: run YAPF to test if python code is correctly formatted
       uses: AlexanderMelde/yapf-action@master
       with:
-        args: --verbose --style '{based_on_style: google, indent_width: 4, spaces_before_comment: 4, column_limit: 80}'
+        args: --verbose --style google
       continue-on-error: true
 
