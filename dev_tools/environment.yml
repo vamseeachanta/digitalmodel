@@ -25,3 +25,4 @@ dependencies:
       - pytest
       - sympy
       - kaleido
+      - winreg
