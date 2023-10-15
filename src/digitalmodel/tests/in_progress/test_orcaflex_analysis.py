@@ -1,4 +1,4 @@
-# Fatigue analysis is not functional due to inputfile reading error
+# Modal analysis test
 
 import os
 import sys
@@ -14,15 +14,16 @@ def test_orcaflex_license():
     assert (orcaflex_license_flag)
 
 
-def run_fatigue_analysis(input_file, expected_result={}):
+def run_orcaflex_analysis(input_file, expected_result={}):
     if input_file is not None and not os.path.isfile(input_file):
         input_file = os.path.join(os.path.dirname(__file__), input_file)
     cfg = engine(input_file)
     assert (True)
 
 
-def test_fatigue_analysis():
-    input_file = '../test_data/fatigue_analysis.yml'
+# Orcaflex input files paths are not working.
+def test_orcaflex_analysis():
+    input_file = '../test_data/orcaflex_analysis.yml'
     pytest_output_file = None
     # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     # expected_result = ymlInput(pytest_output_file, updateYml=None)
@@ -30,7 +31,7 @@ def test_fatigue_analysis():
     if len(sys.argv) > 1:
         sys.argv.pop()
 
-    run_fatigue_analysis(input_file, expected_result={})
+    run_orcaflex_analysis(input_file, expected_result={})
 
 
-test_fatigue_analysis()
+test_orcaflex_analysis()

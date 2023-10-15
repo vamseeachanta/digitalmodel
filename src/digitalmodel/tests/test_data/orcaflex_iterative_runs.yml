@@ -50,9 +50,8 @@ Files:
   data_source: yml
   csv_filename: ""
 
-  data:
     - Label: No Load
-      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\car-858m\C180\594-CAR-NL-858m-150LB-0deg-120H2.00P9C180.yml
+      Name: C:\orl-858m\C180\467-ORL-NL-858m-100LB-0deg-090H2.00P7C180.yml
       iterate_yml: 
         name: tests\test_data\orcaflex\variable_time_step.yml
         delete: []
@@ -60,7 +59,7 @@ Files:
         add: []
 
     - Label: No Load
-      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C000\334-ORL-NL-858m-150LB-0deg-120H2.50P9C000.yml
+      Name: C:\orl-858m\C180\734-ORL-NL-858m-200LB-0deg-120H2.50P9C180.yml
       iterate_yml: 
         name: tests\test_data\orcaflex\variable_time_step.yml
         delete: []
@@ -68,7 +67,7 @@ Files:
         add: []
 
     - Label: No Load
-      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\467-ORL-NL-858m-100LB-0deg-090H2.00P7C180.yml
+      Name: C:\orl-858m\C180\957-ORL-NL-858m-300LB-0deg-090H2.50P9C180.yml
       iterate_yml: 
         name: tests\test_data\orcaflex\variable_time_step.yml
         delete: []
@@ -76,23 +75,7 @@ Files:
         add: []
 
     - Label: No Load
-      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\734-ORL-NL-858m-200LB-0deg-120H2.50P9C180.yml
-      iterate_yml: 
-        name: tests\test_data\orcaflex\variable_time_step.yml
-        delete: []
-        replace: []
-        add: []
-
-    - Label: No Load
-      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-858m\C180\957-ORL-NL-858m-300LB-0deg-090H2.50P9C180.yml
-      iterate_yml: 
-        name: tests\test_data\orcaflex\variable_time_step.yml
-        delete: []
-        replace: []
-        add: []
-
-    - Label: No Load
-      Name: \\Usd4ndn4z2\wg5-ssd\vamsee-05\talos_venice\2-DYN\orl-718m\C180\496-ORL-NL-718m-100LB-0deg-120H2.50P7C180.yml
+      Name: C:\orl-718m\C180\496-ORL-NL-718m-100LB-0deg-120H2.50P7C180.yml
       iterate_yml: 
         name: tests\test_data\orcaflex\variable_time_step.yml
         delete: []

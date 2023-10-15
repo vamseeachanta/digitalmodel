@@ -14,6 +14,8 @@ class OrcInstallation:
 
     def create_model_for_water_depth(self, cfg):
 
+        self.cfg = cfg
+
         cfg_str = cfg['structure']
         model_file = OrderedDict({})
 
@@ -79,6 +81,8 @@ class OrcInstallation:
             saveDataYaml(model_file,
                          file_name,
                          default_flow_style='OrderedDumper')
+
+        return self.cfg
 
     def update_lines_for_installation(self, cfg_str, model_file, ref_model_file,
                                       delta_elevation, orc_object):

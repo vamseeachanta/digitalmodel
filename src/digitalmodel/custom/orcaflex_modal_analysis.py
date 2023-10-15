@@ -39,6 +39,8 @@ class OrcModalAnalysis:
 
             self.summarize_all_files()
 
+        return self.cfg
+
     def summarize_all_files(self):
         files = self.cfg['Files'] if 'Files' in self.cfg else []
         dof_analysis = self.cfg['default']['Analysis']['Analyze']['modal'][

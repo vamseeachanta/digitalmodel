@@ -5,6 +5,8 @@ orcaflex:
     static: True
     simulation: False
     save_dat: True
+    save_sim: True
+    save_dat: True
 
   iterate: 
     to_target_value: False
@@ -17,6 +19,8 @@ orcaflex:
       # Only 1 of settings below works. 
       SetLinesToUserSpecifiedStartingShape: True
       UseStaticLineEndOrientations: False
+  post_process:
+    flag: True
 
 
 default:
@@ -99,17 +103,17 @@ Files:
 
   data:
     - Label: No Load
-      Name: data_manager\data\orcaflex\orcaflex_test1
+      Name: ..\test_data\orcaflex\orcaflex_test1
       ObjectName: SLWR
       SimulationDuration: 120
       ProbabilityRatio: 0.10
     - Label: No Load
-      Name: data_manager\data\orcaflex\orcaflex_test2
+      Name: ..\test_data\orcaflex\orcaflex_test2
       ObjectName: SLWR
       SimulationDuration: 120
       ProbabilityRatio: 0.03
     - Label: No File
-      Name: data_manager\data\orcaflex\orcaflex_test3
+      Name: ..\test_data\orcaflex\orcaflex_test3
       ObjectName: SLWR
       SimulationDuration: 120
       ProbabilityRatio: 0.02

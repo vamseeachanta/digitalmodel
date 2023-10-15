@@ -10,7 +10,7 @@ dictitems:
     file_name_for_overwrite: app_rao_analysis_rao_analysis
     log_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data\logs\
     result_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data\results\
-    start_time: 2023-10-15 06:55:04.596968
+    start_time: 2023-10-15 13:19:57.523003
   Files:
   - Label: seastate_raos
     Name: my_ss_raos.yml
