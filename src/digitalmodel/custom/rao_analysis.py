@@ -33,6 +33,8 @@ class RAOAnalysis:
         else:
             print("No RAO displacement plots requested")
 
+        return self.cfg
+
     def read_vessel_data_from_file(self, file_name):
         print('Reading file: {}'.format(file_name))
         yml_data = ymlInput(file_name, updateYml=None)
@@ -403,6 +405,8 @@ class RAOAnalysis:
 
         else:
             print("No Seastate RAO plots requested")
+
+        return self.cfg
 
     def filter_orcaflex_seastate_raos(self, file_vessel_data):
         filter_settings = self.cfg['rao_plot']['seastate']['filter']

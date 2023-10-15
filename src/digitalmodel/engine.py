@@ -63,7 +63,7 @@ def engine(inputfile=None):
     elif basename == 'rao_analysis':
         rao = RAOAnalysis()
         cfg_base = rao.read_orcaflex_displacement_raos(application_manager.cfg)
-        cfg_base = rao.assess_orcaflex_seastate_raos(application_manager.cfg)
+        cfg_base = rao.read_orcaflex_displacement_raos(application_manager.cfg)
     elif basename == 'installation':
         orc_install = OrcInstallation()
         if application_manager.cfg['structure']['flag']:
@@ -108,11 +108,9 @@ def validate_arguments_run_methods(inputfile):
 
 
 def save_cfg(cfg_base):
-    output_dir = cfg_base['inputs']['output_dir']
-    if output_dir is None or not os.path.isdir(output_dir):
-        output_dir = cfg_base.Analysis['analysis_root_folder']
+    output_dir = cfg_base.Analysis['analysis_root_folder']
 
-    filename = cfg_base['inputs']['output_filename']
+    filename = cfg_base.Analysis['file_name']
     filename_path = os.path.join(output_dir, filename)
 
     save_data.saveDataYaml(cfg_base, filename_path, default_flow_style=False)
