@@ -4,14 +4,18 @@ import pkgutil
 import types
 from deepdiff import DeepDiff
 from collections import OrderedDict
+import importlib.util
+from pathlib import Path
 
 from pathlib import Path
 from collections.abc import Mapping
-from digitalmodel.common.saveData import saveDataYaml
-from digitalmodel.common.utilities import is_file_valid_func, get_common_name_from_2_filenames
-from digitalmodel.common.data import ReadData
+from pyintegrity.common.saveData import saveDataYaml
+from pyintegrity.common.utilities import is_file_valid_func, get_common_name_from_2_filenames
+from pyintegrity.common.data import ReadData
 
 read_data = ReadData()
+
+library_name = 'pyintegrity'
 
 
 def ymlInput(defaultYml, updateYml=None):
@@ -163,7 +167,18 @@ class WorkingWithYAML():
             with open(library_yaml_filename, 'r') as ymlfile:
                 library_yaml = yaml.load(ymlfile, Loader=yaml.Loader)
         else:
-            data = pkgutil.get_data('digitalmodel', cfg['filename'])
+            data = pkgutil.get_data(library_name, cfg['filename'])
             library_yaml = yaml.safe_load(data)
 
         return library_yaml
+
+    def get_library_filename(self, cfg):
+
+        if not os.path.isfile(cfg['filename']):
+            lib_spec = importlib.util.find_spec(library_name)
+            lib_path = Path(lib_spec.origin).parent
+            filename_with_lib_path = os.path.join(lib_path, cfg['filename'])
+            if not os.path.isfile(filename_with_lib_path):
+                raise FileNotFoundError()
+
+        return filename_with_lib_path

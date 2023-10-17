@@ -16,4 +16,3 @@ deepdiff
 pytest
 sympy
 kaleido
-winreg
