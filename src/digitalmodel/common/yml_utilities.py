@@ -9,13 +9,13 @@ from pathlib import Path
 
 from pathlib import Path
 from collections.abc import Mapping
-from pyintegrity.common.saveData import saveDataYaml
-from pyintegrity.common.utilities import is_file_valid_func, get_common_name_from_2_filenames
-from pyintegrity.common.data import ReadData
+from digitalmodel.common.saveData import saveDataYaml
+from digitalmodel.common.utilities import is_file_valid_func, get_common_name_from_2_filenames
+from digitalmodel.common.data import ReadData
 
 read_data = ReadData()
 
-library_name = 'pyintegrity'
+library_name = 'digitalmodel'
 
 
 def ymlInput(defaultYml, updateYml=None):
@@ -174,6 +174,7 @@ class WorkingWithYAML():
 
     def get_library_filename(self, cfg):
 
+        filename_with_lib_path = cfg['filename']
         if not os.path.isfile(cfg['filename']):
             lib_spec = importlib.util.find_spec(library_name)
             lib_path = Path(lib_spec.origin).parent
