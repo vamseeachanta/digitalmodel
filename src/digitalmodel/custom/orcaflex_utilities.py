@@ -38,3 +38,35 @@ class OrcaflexUtilities:
         saveDataYaml(model_file_updated,
                      os.path.splitext(cfg['model_file'])[0],
                      default_flow_style='OrderedDumper')
+
+    def get_sim_file_finish_flag(self, simfname):
+        tmodel = OrcFxAPI.Model(simfname)
+        settime = tmodel.general.StageEndTime[len(tmodel.general.StageEndTime) -
+                                              1]
+        simtime = tmodel.simulationTimeStatus.CurrentTime
+        simfinish = True
+        if settime > simtime:
+            simfinish = False
+        return simfinish
+
+    def edit_simfiles_to_finish_runs(self, simfs):
+        dt = 0.05    ### timestep
+        constdt = True
+
+        for simf in simfs:
+            sim_file_finish_flag = self.simfinish(simf)
+            if not sim_file_finish_flag:
+                failfn = failfn + 1
+                print(failfn)
+                failfs.append(simf)
+                fname = simf[:len(simf) - 4] + '.dat'
+                tmodel = OrcFxAPI.Model(fname)
+                tmodel.DynamicSolutionMethod = 'Implicit time domain'
+                if constdt:
+                    tmodel.general.ImplicitUseVariableTimeStep = 'No'
+                    tmodel.general.ImplicitConstantTimeStep = dt
+                else:
+                    tmodel.general.ImplicitUseVariableTimeStep = 'Yes'
+                    tmodel.general.ImplicitVaribaleMaxTimeStep = dt
+                #tmodel.DynamicSolutionMethod = 'Explicit time domain'
+                tmodel.SaveData(fname)
