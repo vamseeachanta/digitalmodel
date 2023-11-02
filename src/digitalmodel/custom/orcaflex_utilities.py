@@ -1,5 +1,6 @@
 import copy
 import os
+import glob
 import OrcFxAPI
 from collections import OrderedDict
 
@@ -52,6 +53,9 @@ class OrcaflexUtilities:
     def edit_simfiles_to_finish_runs(self, simfs):
         dt = 0.05    ### timestep
         constdt = True
+        simfs = glob.glob('*.sim')
+        failfn = 0
+        failfs = []
 
         for simf in simfs:
             sim_file_finish_flag = self.simfinish(simf)
