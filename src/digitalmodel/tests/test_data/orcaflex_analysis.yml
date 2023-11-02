@@ -24,7 +24,7 @@ orcaflex:
 
 
 default:
-  log_level: DEBUG
+  log_level: INFO
   # Analysis:
   #   Analyze:
   #     flag: True
