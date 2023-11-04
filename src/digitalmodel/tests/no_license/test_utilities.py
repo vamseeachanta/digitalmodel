@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from digitalmodel.common.utilities import get_module_path
+from assetutilities.common.utilities import get_module_path
 
 
 def run_get_module_path(module=None):

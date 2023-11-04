@@ -1,14 +1,16 @@
 import os
 import sys
 
-from digitalmodel.common.data import SaveData
-from digitalmodel.common.yml_utilities import ymlInput
-from digitalmodel.common.update_deep import AttributeDict
-from digitalmodel.common.ApplicationManager import ConfigureApplicationInputs
-from digitalmodel.common.data import CopyAndPasteFiles
+from assetutilities.common.data import SaveData
+from assetutilities.common.yml_utilities1 import ymlInput
+from assetutilities.common.update_deep import AttributeDict
+from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
+from assetutilities.common.data import CopyAndPasteFiles
+
 from digitalmodel.catenary_riser import catenary_riser
 from digitalmodel.vertical_riser import vertical_riser
 from digitalmodel.orcaflex_analysis import orcaflex_analysis
+from digitalmodel.custom.orcaflex_analysis_components import OrcaFlexAnalysis
 from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
 from digitalmodel.custom.rigging import Rigging
@@ -32,6 +34,10 @@ def engine(inputfile=None):
     application_manager.configure(cfg)
     if cfg is None:
         raise ValueError("cfg is None")
+
+    if 'file_management' in cfg and cfg['file_management']['flag']:
+        orcaFlex_analysis = OrcaFlexAnalysis(cfg)
+        orcaFlex_analysis.get_files()
 
     if basename in ['simple_catenary_riser', 'catenary_riser']:
         cfg_base = catenary_riser(application_manager.cfg)

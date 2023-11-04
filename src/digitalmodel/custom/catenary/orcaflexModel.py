@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 import yaml
 
-from digitalmodel.common.saveData import saveDataYaml
+from assetutilities.common.saveData import saveDataYaml
 
 
 def orcaflexModel(data, FEAType, LoadingIndex=0):

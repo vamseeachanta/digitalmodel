@@ -3,7 +3,7 @@ import math
 import yaml
 from collections import OrderedDict
 
-from digitalmodel.common.data import SaveData
+from assetutilities.common.data import SaveData
 
 class OrcaflexModelComponents():
 

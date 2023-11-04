@@ -1,4 +1,4 @@
-&id001 !!python/object/new:digitalmodel.common.data.AttributeDict
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
 dictitems:
   Analysis:
     CustomInputFile: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/code_dnvrph103_circular.yml

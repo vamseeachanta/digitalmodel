@@ -8,15 +8,16 @@ import copy
 import scipy
 from collections import OrderedDict
 
-from digitalmodel.common.visualizations import Visualization
-from digitalmodel.common.data import SaveData
-from digitalmodel.common.data import PandasChainedAssignent
-from digitalmodel.common.data import TransformData
-from digitalmodel.common.yml_utilities import ymlInput
+from assetutilities.common.visualizations import Visualization
+from assetutilities.common.utilities import is_file_valid_func
+from assetutilities.common.data import SaveData
+from assetutilities.common.data import PandasChainedAssignent
+from assetutilities.common.data import TransformData
+from assetutilities.common.yml_utilities1 import ymlInput
+
 from digitalmodel.common.time_series_components import TimeSeriesComponents
 from digitalmodel.common.ETL_components import ETL_components
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
-from digitalmodel.common.utilities import is_file_valid_func
 
 ou = OrcaflexUtilities()
 
@@ -42,32 +43,6 @@ class OrcaFlexAnalysis():
                         'from_csv']['label']
                     setattr(self, attribute, pd.read_csv(file_name))
 
-    def get_files(self):
-        input_files_without_extension = []
-        input_files_with_extension = []
-        analysis_type = []
-        try:
-            self.get_simulation_filenames()
-        except:
-            print("No simulation files found or resolved")
-
-        for fileIndex in range(0, len(self.simulation_filenames)):
-            self.get_files_for_analysis(analysis_type, fileIndex,
-                                        input_files_with_extension,
-                                        input_files_without_extension)
-
-        post_process_flag = self.cfg['orcaflex']['post_process']['flag']
-
-        if post_process_flag:
-            for fileIndex in range(0, len(self.simulation_filenames)):
-                self.get_files_for_postprocess(analysis_type, fileIndex,
-                                               input_files_with_extension,
-                                               input_files_without_extension)
-
-        self.assign_and_summarize_files(analysis_type,
-                                        input_files_with_extension,
-                                        input_files_without_extension)
-
     def perform_simulations(self):
         self.process_fea()
 
@@ -86,22 +61,6 @@ class OrcaFlexAnalysis():
                 "Processing orcaflex script/batch files for orcaflex input files"
             )
             self.process_scripts()
-
-    def assign_and_summarize_files(self, analysis_type,
-                                   input_files_with_extension,
-                                   input_files_without_extension):
-        number_of_files_not_found = len(
-            self.simulation_filenames) - len(input_files_with_extension)
-        if number_of_files_not_found == 0:
-            print('Successfully found all input files')
-        else:
-            print(f'Number of input files missing: {number_of_files_not_found}')
-        self.cfg['Analysis']['input_files'] = {}
-        self.cfg['Analysis']['input_files'][
-            'no_ext'] = input_files_without_extension
-        self.cfg['Analysis']['input_files'][
-            'with_ext'] = input_files_with_extension
-        self.cfg['Analysis']['input_files']['analysis_type'] = analysis_type
 
     def process_fea(self):
         for fileIndex in range(
@@ -1244,49 +1203,6 @@ class OrcaFlexAnalysis():
             analysis_type.append('statics')
         if self.cfg['orcaflex']['iterate']['flag']:
             analysis_type.append('iterate')
-
-    def get_simulation_filenames(self):
-        if self.cfg['Files']['data_source'] == 'yml':
-            self.simulation_filenames = [
-                file_group['Name'] for file_group in self.cfg['Files']['data']
-            ]
-            if 'ObjectName' in self.cfg['Files']['data'][0]:
-                self.simulation_ObjectNames = [
-                    file_group['ObjectName']
-                    for file_group in self.cfg['Files']['data']
-                ]
-            if 'SimulationDuration' in self.cfg['Files']['data'][0]:
-                self.simulation_SimulationDuration = [
-                    file_group['SimulationDuration']
-                    for file_group in self.cfg['Files']['data']
-                ]
-            if 'ProbabilityRatio' in self.cfg['Files']['data'][0]:
-                self.simulation_ProbabilityRatio = [
-                    file_group['ProbabilityRatio']
-                    for file_group in self.cfg['Files']['data']
-                ]
-            if 'Label' in self.cfg['Files']['data'][0]:
-                self.simulation_Labels = [
-                    file_group['Label']
-                    for file_group in self.cfg['Files']['data']
-                ]
-        elif self.cfg['Files']['data_source'] == 'csv':
-            import pandas as pd
-            self.load_matrix = pd.read_csv(self.cfg['Files']['csv_filename'])
-            self.load_matrix['RunStatus'] = None
-            self.simulation_filenames = self.load_matrix['fe_filename']
-            self.simulation_ObjectNames = self.load_matrix['ObjectName']
-            self.simulation_SimulationDuration = self.load_matrix[
-                'SimulationDuration']
-            self.simulation_ProbabilityRatio = self.load_matrix[
-                'ProbabilityRatio']
-
-            self.simulation_Labels = self.load_matrix.index.to_list()
-            self.simulation_Labels = [
-                ('LC_' + str(item)) for item in self.simulation_Labels
-            ]
-        else:
-            self.simulation_filenames = []
 
     def get_filename_without_extension(self, filename):
         filename_components = filename.split('.')

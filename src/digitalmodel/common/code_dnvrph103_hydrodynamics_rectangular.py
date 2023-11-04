@@ -2,7 +2,7 @@ import os
 import math
 import numpy as np
 from scipy import interpolate
-from digitalmodel.common.data import SaveData
+from assetutilities.common.data import SaveData
 from digitalmodel.common.orcaflex_model_utilities import OrcaflexModelUtilities
 
 save_data = SaveData()

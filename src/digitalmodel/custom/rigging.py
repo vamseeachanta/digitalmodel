@@ -2,8 +2,9 @@ import os
 import pkgutil
 import pandas as pd
 
-from digitalmodel.common.yml_utilities import ymlInput
-from digitalmodel.common.data import ReadFromExcel
+from assetutilities.common.yml_utilities1 import ymlInput
+from assetutilities.common.data import ReadFromExcel
+
 from digitalmodel.custom.rigging_components import Slings
 from digitalmodel.custom.rigging_components import Shackles
 

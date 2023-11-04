@@ -3,8 +3,8 @@ import os
 import re
 from collections import OrderedDict
 
-from digitalmodel.common.saveData import saveDataYaml
-from digitalmodel.common.yml_utilities import ymlInput
+from assetutilities.common.saveData import saveDataYaml
+from assetutilities.common.yml_utilities import ymlInput
 
 
 class OrcInstallation:

@@ -4,10 +4,10 @@ import logging
 import pandas as pd
 import numpy as np
 
-from digitalmodel.common.data import FromString
-from digitalmodel.common.data import ReadData
-from digitalmodel.common.data import SaveData
-from digitalmodel.common.visualizations import Visualization
+from assetutilities.common.data import FromString
+from assetutilities.common.data import ReadData
+from assetutilities.common.data import SaveData
+from assetutilities.common.visualizations import Visualization
 
 
 class FatigueAnalysisComponents():

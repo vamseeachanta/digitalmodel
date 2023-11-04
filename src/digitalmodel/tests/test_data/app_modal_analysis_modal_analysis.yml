@@ -1,16 +1,16 @@
 &id001 !!python/object/new:digitalmodel.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\local\../test_data/modal_analysis.yml
+    CustomInputFile: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\local\../test_data/modal_analysis.yml
     DefaultInputFile: null
-    analysis_root_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\local\../test_data
+    analysis_root_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\local\../test_data
     basename: modal_analysis
     cfg_array_file_names: null
     file_name: app_modal_analysis_modal_analysis
     file_name_for_overwrite: app_modal_analysis_modal_analysis
-    log_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\local\../test_data\logs\
-    result_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\local\../test_data\results\
-    start_time: 2023-10-15 08:34:17.697464
+    log_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\local\../test_data\logs\
+    result_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\local\../test_data\results\
+    start_time: 2023-11-03 14:39:18.670780
   basename: modal_analysis
   default:
     Analysis:

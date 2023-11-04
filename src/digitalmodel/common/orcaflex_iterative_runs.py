@@ -6,7 +6,7 @@ import pkgutil
 import OrcFxAPI
 import shutil
 
-from digitalmodel.common.data import SaveData
+from assetutilities.common.data import SaveData
 
 save_data = SaveData()
 

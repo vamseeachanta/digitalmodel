@@ -2,7 +2,7 @@ import os
 import pkgutil
 import pandas as pd
 
-from digitalmodel.common.data import ReadFromExcel
+from assetutilities.common.data import ReadFromExcel
 from digitalmodel.custom.fea_model.LineType_components import LineType
 from digitalmodel.custom.fea_model.line_components import Line
 

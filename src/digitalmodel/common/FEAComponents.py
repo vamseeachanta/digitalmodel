@@ -1,11 +1,14 @@
 import os
 import glob
 import pandas as pd
+
+from assetutilities.common.data import SaveData
+from assetutilities.common.data import SaveData, Transform
+from assetutilities.common.visualization_components import VisualizationComponents
+
 from digitalmodel.custom.fea_model.VesselType_components import VesselType
 from digitalmodel.custom.fea_model.Constraint_components import Constraint
 from digitalmodel.custom.fea_model.shape_components import Shape
-from digitalmodel.common.data import SaveData
-from digitalmodel.common.data import SaveData, Transform
 from digitalmodel.custom.fea_model.environment_components import Environment
 from digitalmodel.custom.fea_model.general_components import General
 from digitalmodel.custom.fea_model.environment_components import Environment
@@ -15,7 +18,6 @@ from digitalmodel.custom.fea_model.line_components import Line
 from digitalmodel.custom.fea_model.Vessel_components import Vessel
 from digitalmodel.custom.fea_model.VariableData_components import VariableData
 from digitalmodel.custom.fea_model.group_components import Group
-from digitalmodel.common.visualization_components import VisualizationComponents
 
 class FEAComponents():
 

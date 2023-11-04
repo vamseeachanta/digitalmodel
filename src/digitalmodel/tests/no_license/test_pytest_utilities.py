@@ -1,5 +1,5 @@
 import deepdiff
-from digitalmodel.common.pytest_utilities import pytest_approx_float_dict, pytest_deepdiff_nested_dict
+from assetutilities.common.pytest_utilities import pytest_approx_float_dict, pytest_deepdiff_nested_dict
 
 
 def test_pytest_nested_dict():

@@ -9,9 +9,9 @@ from pathlib import Path
 
 from pathlib import Path
 from collections.abc import Mapping
-from digitalmodel.common.saveData import saveDataYaml
-from digitalmodel.common.utilities import is_file_valid_func, get_common_name_from_2_filenames
-from digitalmodel.common.data import ReadData
+from assetutilities.common.saveData import saveDataYaml
+from assetutilities.common.utilities import is_file_valid_func, get_common_name_from_2_filenames
+from assetutilities.common.data import ReadData
 
 read_data = ReadData()
 

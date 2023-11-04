@@ -1,5 +1,5 @@
 import logging
-from digitalmodel.common.data import SaveData
+from assetutilities.common.data import SaveData
 
 
 class Shear7ModelComponents():

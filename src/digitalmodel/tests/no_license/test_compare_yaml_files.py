@@ -1,7 +1,7 @@
 import os
 
-from digitalmodel.common.utilities import add_cwd_to_filename
-from digitalmodel.common.yml_utilities import WorkingWithYAML
+from assetutilities.common.utilities import add_cwd_to_filename
+from digitalmodel.common.yml_utilities1 import WorkingWithYAML
 
 
 def compare_yaml_file_content_deepdiff():
