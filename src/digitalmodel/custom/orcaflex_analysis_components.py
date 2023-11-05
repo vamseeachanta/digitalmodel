@@ -13,7 +13,7 @@ from assetutilities.common.utilities import is_file_valid_func
 from assetutilities.common.data import SaveData
 from assetutilities.common.data import PandasChainedAssignent
 from assetutilities.common.data import TransformData
-from assetutilities.common.yml_utilities1 import ymlInput
+from assetutilities.common.yml_utilities import ymlInput
 
 from digitalmodel.common.time_series_components import TimeSeriesComponents
 from digitalmodel.common.ETL_components import ETL_components

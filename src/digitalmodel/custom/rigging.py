@@ -2,7 +2,7 @@ import os
 import pkgutil
 import pandas as pd
 
-from assetutilities.common.yml_utilities1 import ymlInput
+from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.data import ReadFromExcel
 
 from digitalmodel.custom.rigging_components import Slings

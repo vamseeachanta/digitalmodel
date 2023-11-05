@@ -4,7 +4,7 @@ import os
 import sys
 
 from digitalmodel.engine import engine
-from digitalmodel.common.yml_utilities1 import ymlInput
+from assetutilities.common.yml_utilities import ymlInput
 
 
 def run_dnvrph103_circular(input_file, expected_result={}):
@@ -39,5 +39,6 @@ def test_dnvrph103_circular():
         sys.argv.pop()
 
     run_dnvrph103_circular(input_file, expected_result)
+
 
 test_dnvrph103_circular()

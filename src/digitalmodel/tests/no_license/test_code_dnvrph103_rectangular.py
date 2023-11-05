@@ -4,7 +4,7 @@ import os
 import sys
 
 from digitalmodel.engine import engine
-from digitalmodel.common.yml_utilities1 import ymlInput
+from assetutilities.common.yml_utilities import ymlInput
 
 
 def run_dnvrph103_rectangular(input_file, expected_result={}):

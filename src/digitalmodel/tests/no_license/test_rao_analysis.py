@@ -3,8 +3,9 @@ import deepdiff
 import os
 import sys
 
+from assetutilities.common.yml_utilities import ymlInput
+
 from digitalmodel.engine import engine
-from digitalmodel.common.yml_utilities1 import ymlInput
 
 
 def run_rao_analysis(input_file, expected_result={}):

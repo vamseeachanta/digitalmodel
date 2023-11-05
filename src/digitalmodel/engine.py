@@ -2,7 +2,7 @@ import os
 import sys
 
 from assetutilities.common.data import SaveData
-from assetutilities.common.yml_utilities1 import ymlInput
+from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import CopyAndPasteFiles
