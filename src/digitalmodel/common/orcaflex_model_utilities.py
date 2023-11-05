@@ -3,9 +3,8 @@ import os
 import OrcFxAPI
 from collections import OrderedDict
 
-from assetutilities.common.saveData import saveDataYaml
-from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.yml_utilities import WorkingWithYAML
+from modulefinder import ModuleFinder
 
 wwy = WorkingWithYAML()
 
@@ -16,8 +15,10 @@ class OrcaflexModelUtilities:
         pass
 
     def get_6d_buoy_template(self):
+        library_name = 'digitalmodel'
         library_yaml_cfg = {
-            'filename': 'tests/test_data/6d_buoy/6d_buoy_template.yml'
+            'filename': 'tests/test_data/6d_buoy/6d_buoy_template.yml',
+            'library_name': library_name
         }
         buoy_6d_template = wwy.get_library_yaml_file(library_yaml_cfg)
 

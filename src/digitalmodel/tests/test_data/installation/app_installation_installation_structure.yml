@@ -1,16 +1,16 @@
-&id001 !!python/object/new:digitalmodel.common.data.AttributeDict
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/installation/installation_structure.yml
+    CustomInputFile: ../test_data/installation/installation_structure.yml
     DefaultInputFile: null
-    analysis_root_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/installation
+    analysis_root_folder: ../test_data/installation
     basename: installation
     cfg_array_file_names: null
     file_name: app_installation_installation_structure
     file_name_for_overwrite: app_installation_installation_structure
-    log_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/installation\logs\
-    result_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/installation\results\
-    start_time: 2023-10-15 13:19:57.445661
+    log_folder: ../test_data/installation\logs\
+    result_folder: ../test_data/installation\results\
+    start_time: 2023-11-05 11:26:51.727858
   basename: installation
   default:
     Constants:

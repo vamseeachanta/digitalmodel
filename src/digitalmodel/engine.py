@@ -21,6 +21,7 @@ from digitalmodel.custom.rao_analysis import RAOAnalysis
 from digitalmodel.custom.orcaflex_installation import OrcInstallation
 
 save_data = SaveData()
+library_name = 'digitalmodel'
 
 
 def engine(inputfile=None):
@@ -31,7 +32,7 @@ def engine(inputfile=None):
 
     basename = cfg['basename']
     application_manager = ConfigureApplicationInputs(basename)
-    application_manager.configure(cfg)
+    application_manager.configure(cfg, library_name)
     if cfg is None:
         raise ValueError("cfg is None")
 

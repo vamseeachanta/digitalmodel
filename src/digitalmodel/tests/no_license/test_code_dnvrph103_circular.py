@@ -39,3 +39,5 @@ def test_dnvrph103_circular():
         sys.argv.pop()
 
     run_dnvrph103_circular(input_file, expected_result)
+
+test_dnvrph103_circular()
