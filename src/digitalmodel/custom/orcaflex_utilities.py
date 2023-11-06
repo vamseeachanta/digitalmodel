@@ -6,6 +6,9 @@ from collections import OrderedDict
 
 from assetutilities.common.saveData import saveDataYaml
 from assetutilities.common.yml_utilities import ymlInput
+from assetutilities.common.file_management import FileManagement
+
+fm = FileManagement()
 
 
 class OrcaflexUtilities:
@@ -75,7 +78,26 @@ class OrcaflexUtilities:
                 #tmodel.DynamicSolutionMethod = 'Explicit time domain'
                 tmodel.SaveData(fname)
 
+    def file_management(self, cfg):
+        if cfg.file_management['flag']:
+            cfg = self.get_files(cfg)
+
+        return cfg
+
     def get_files(self, cfg):
+        orcaflex_extensions = ['*.yml', '*.yaml', '*.dat', '*.sim', '*.txt']
+        input_files = {}
+
+        if cfg.file_management['files']['files_in_folder']:
+            for file_ext in orcaflex_extensions:
+                input_files_for_ext = glob.glob(
+                    cfg.Analysis['analysis_root_folder'] + '/' + file_ext)
+                input_files.update({file_ext: input_files_for_ext})
+
+        cfg.update({cfg['basename']: {'input_files': input_files}})
+
+        return cfg
+
         input_files_without_extension = []
         input_files_with_extension = []
         analysis_type = []
@@ -139,8 +161,7 @@ class OrcaflexUtilities:
                 ]
             if 'Label' in cfg['Files']['data'][0]:
                 self.simulation_Labels = [
-                    file_group['Label']
-                    for file_group in cfg['Files']['data']
+                    file_group['Label'] for file_group in cfg['Files']['data']
                 ]
         elif cfg['Files']['data_source'] == 'csv':
             import pandas as pd

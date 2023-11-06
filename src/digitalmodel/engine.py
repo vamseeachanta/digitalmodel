@@ -14,6 +14,7 @@ from digitalmodel.custom.orcaflex_analysis_components import OrcaFlexAnalysis
 from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
 from digitalmodel.custom.rigging import Rigging
+from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import DNVRPH103_hydrodynamics_rectangular
 from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import DNVRPH103_hydrodynamics_circular
 from digitalmodel.custom.orcaflex_post_process import orcaflex_post_process
@@ -21,6 +22,7 @@ from digitalmodel.custom.rao_analysis import RAOAnalysis
 from digitalmodel.custom.orcaflex_installation import OrcInstallation
 
 save_data = SaveData()
+ou = OrcaflexUtilities()
 library_name = 'digitalmodel'
 
 
@@ -36,9 +38,9 @@ def engine(inputfile=None):
     if cfg is None:
         raise ValueError("cfg is None")
 
-    if 'file_management' in cfg and cfg['file_management']['flag']:
-        orcaFlex_analysis = OrcaFlexAnalysis(cfg)
-        orcaFlex_analysis.get_files()
+    if 'file_management' in application_manager.cfg and cfg['file_management'][
+            'flag']:
+        application_manager.cfg = ou.file_management(application_manager.cfg)
 
     if basename in ['simple_catenary_riser', 'catenary_riser']:
         cfg_base = catenary_riser(application_manager.cfg)
