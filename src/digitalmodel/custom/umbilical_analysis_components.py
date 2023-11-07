@@ -10,6 +10,8 @@ class UmbilicalAnalysis():
         if self.cfg['default']['analysis']['end'] == 'second':
             self.second_end_analysis()
 
+        return self.cfg
+
     def first_end_analysis(self):
         pass
 

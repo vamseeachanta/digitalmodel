@@ -31,53 +31,52 @@ def engine(inputfile=None):
 
     cfg = ymlInput(inputfile, updateYml=None)
     cfg = AttributeDict(cfg)
+    if cfg is None:
+        raise ValueError("cfg is None")
 
     basename = cfg['basename']
     application_manager = ConfigureApplicationInputs(basename)
     application_manager.configure(cfg, library_name)
-    if cfg is None:
-        raise ValueError("cfg is None")
+    cfg_base = application_manager.cfg
 
-    if 'file_management' in application_manager.cfg and cfg['file_management'][
-            'flag']:
-        application_manager.cfg = ou.file_management(application_manager.cfg)
+    if 'file_management' in cfg_base and cfg['file_management']['flag']:
+        cfg_base = ou.file_management(cfg_base)
 
     if basename in ['simple_catenary_riser', 'catenary_riser']:
-        cfg_base = catenary_riser(application_manager.cfg)
+        cfg_base = catenary_riser(cfg_base)
     elif basename == 'vertical_riser':
-        cfg_base = vertical_riser(application_manager.cfg)
+        cfg_base = vertical_riser(cfg_base)
     elif basename == 'orcaflex_analysis':
-        cfg_base = orcaflex_analysis(application_manager.cfg)
+        cfg_base = orcaflex_analysis(cfg_base)
     elif basename == 'modal_analysis':
         oma = OrcModalAnalysis()
-        cfg_base = oma.run_modal_analysis(application_manager.cfg)
+        cfg_base = oma.run_modal_analysis(cfg_base)
     elif basename == 'copy_and_paste':
         cpf = CopyAndPasteFiles()
-        cfg_base = cpf.iterate_all_cfgs(application_manager.cfg)
+        cfg_base = cpf.iterate_all_cfgs(cfg_base)
     elif basename == 'umbilical_end':
         ua = UmbilicalAnalysis()
-        ua.perform_analysis(application_manager.cfg)
+        cfg_base = ua.perform_analysis(cfg_base)
     elif basename == 'orcaflex_post_process':
         opp = orcaflex_post_process()
-        cfg_base = opp.post_process_router(application_manager.cfg)
+        cfg_base = opp.post_process_router(cfg_base)
     elif basename == 'rigging':
         rigging = Rigging()
-        cfg_base = rigging.get_rigging_groups(application_manager.cfg)
+        cfg_base = rigging.get_rigging_groups(cfg_base)
     elif basename == 'code_dnvrph103':
-        if application_manager.cfg['inputs']['shape'] == 'rectangular':
+        if cfg_base['inputs']['shape'] == 'rectangular':
             code_dnvrph103 = DNVRPH103_hydrodynamics_rectangular()
-        elif application_manager.cfg['inputs']['shape'] == 'circular':
+        elif cfg_base['inputs']['shape'] == 'circular':
             code_dnvrph103 = DNVRPH103_hydrodynamics_circular()
-        cfg_base = code_dnvrph103.get_orcaflex_6dbuoy(application_manager.cfg)
+        cfg_base = code_dnvrph103.get_orcaflex_6dbuoy(cfg_base)
     elif basename == 'rao_analysis':
         rao = RAOAnalysis()
-        cfg_base = rao.read_orcaflex_displacement_raos(application_manager.cfg)
-        cfg_base = rao.read_orcaflex_displacement_raos(application_manager.cfg)
+        cfg_base = rao.read_orcaflex_displacement_raos(cfg_base)
+        cfg_base = rao.read_orcaflex_displacement_raos(cfg_base)
     elif basename == 'installation':
         orc_install = OrcInstallation()
-        if application_manager.cfg['structure']['flag']:
-            cfg_base = orc_install.create_model_for_water_depth(
-                application_manager.cfg)
+        if cfg_base['structure']['flag']:
+            cfg_base = orc_install.create_model_for_water_depth(cfg_base)
 
     else:
         raise (

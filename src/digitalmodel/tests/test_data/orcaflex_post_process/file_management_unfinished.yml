@@ -13,9 +13,11 @@ orcaflex:
 
 file_management:
   flag: True
-  rerun_unfinished: 
+  update_unfinished: 
     flag: True
     cfg: 
+      save_as: .yml
+      prepare_rerun_batch: True
       general: 
         ImplicitUseVariableTimeStep: No
         ImplicitConstantTimeStep : 0.05

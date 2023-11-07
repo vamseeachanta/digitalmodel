@@ -28,6 +28,8 @@ class orcaflex_post_process:
         else:
             logging.info("No postprocess option to run specified ... End Run.")
 
+        return cfg
+
     def get_visualizations(self, cfg):
         ov = orcaflex_visualizations()
         ov.get_visualizations(cfg)

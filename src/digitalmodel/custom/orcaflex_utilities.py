@@ -43,44 +43,44 @@ class OrcaflexUtilities:
                      os.path.splitext(cfg['model_file'])[0],
                      default_flow_style='OrderedDumper')
 
-    def get_sim_file_finish_flag(self, simfname):
-        tmodel = OrcFxAPI.Model(simfname)
-        settime = tmodel.general.StageEndTime[len(tmodel.general.StageEndTime) -
-                                              1]
-        simtime = tmodel.simulationTimeStatus.CurrentTime
+    def get_sim_file_finish_status(self, model):
+        settime = model.general.StageEndTime[len(model.general.StageEndTime) -
+                                             1]
+        simtime = model.simulationTimeStatus.CurrentTime
         simfinish = True
         if settime > simtime:
             simfinish = False
-        return simfinish
 
-    def edit_simfiles_to_finish_runs(self, simfs):
+        sim_status = {
+            'finish_flag': simfinish,
+            'run_time': {
+                'set': settime,
+                'last': simtime
+            }
+        }
+        return sim_status
+
+    def update_input_file(self, model):
         dt = 0.05    ### timestep
         constdt = True
-        simfs = glob.glob('*.sim')
-        failfn = 0
-        failfs = []
 
-        for simf in simfs:
-            sim_file_finish_flag = self.simfinish(simf)
-            if not sim_file_finish_flag:
-                failfn = failfn + 1
-                print(failfn)
-                failfs.append(simf)
-                fname = simf[:len(simf) - 4] + '.dat'
-                tmodel = OrcFxAPI.Model(fname)
-                tmodel.DynamicSolutionMethod = 'Implicit time domain'
-                if constdt:
-                    tmodel.general.ImplicitUseVariableTimeStep = 'No'
-                    tmodel.general.ImplicitConstantTimeStep = dt
-                else:
-                    tmodel.general.ImplicitUseVariableTimeStep = 'Yes'
-                    tmodel.general.ImplicitVaribaleMaxTimeStep = dt
-                #tmodel.DynamicSolutionMethod = 'Explicit time domain'
-                tmodel.SaveData(fname)
+        fname = simf[:len(simf) - 4] + '.dat'
+        model = OrcFxAPI.Model(fname)
+        model.DynamicSolutionMethod = 'Implicit time domain'
+        if constdt:
+            model.general.ImplicitUseVariableTimeStep = 'No'
+            model.general.ImplicitConstantTimeStep = dt
+        else:
+            model.general.ImplicitUseVariableTimeStep = 'Yes'
+            model.general.ImplicitVaribaleMaxTimeStep = dt
+        #tmodel.DynamicSolutionMethod = 'Explicit time domain'
+        model.SaveData(fname)
 
     def file_management(self, cfg):
         if cfg.file_management['flag']:
             cfg = self.get_files(cfg)
+        if cfg.file_management['update_unfinished']['flag']:
+            cfg = self.sim_file_analysis_and_update(cfg)
 
         return cfg
 
@@ -98,30 +98,15 @@ class OrcaflexUtilities:
 
         return cfg
 
-        input_files_without_extension = []
-        input_files_with_extension = []
-        analysis_type = []
-        try:
-            self.get_simulation_filenames()
-        except:
-            print("No simulation files found or resolved")
+    def sim_file_analysis_and_update(self, cfg):
+        sim_files = cfg.orcaflex_post_process['input_files']['*.sim']
+        for sim_file in sim_files:
+            model = OrcFxAPI.Model(sim_file)
+            sim_status = self.get_sim_file_finish_status(model)
+            if not sim_status['finish_flag']:
+                self.update_input_file(model)
 
-        for fileIndex in range(0, len(self.simulation_filenames)):
-            self.get_files_for_analysis(analysis_type, fileIndex,
-                                        input_files_with_extension,
-                                        input_files_without_extension)
-
-        post_process_flag = self.cfg['orcaflex']['post_process']['flag']
-
-        if post_process_flag:
-            for fileIndex in range(0, len(self.simulation_filenames)):
-                self.get_files_for_postprocess(cfg, analysis_type, fileIndex,
-                                               input_files_with_extension,
-                                               input_files_without_extension)
-
-        self.assign_and_summarize_files(analysis_type,
-                                        input_files_with_extension,
-                                        input_files_without_extension)
+        return cfg
 
     def assign_and_summarize_files(self, cfg, analysis_type,
                                    input_files_with_extension,

@@ -6,8 +6,10 @@ These operations include (and not limited to) the following:
 - Analytical calculations
 - Computational analysis
 - 3D CAD models
-- 3D animations
-- Drawing automations
+    - 3D animations
+    - Drawing automation
+
+Dedicated to my idol and a lifelong engineer, **Mark Cerkovnik**
 
 # Summary
 

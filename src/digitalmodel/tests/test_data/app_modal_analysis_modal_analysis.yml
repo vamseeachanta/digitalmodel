@@ -10,7 +10,7 @@ dictitems:
     file_name_for_overwrite: app_modal_analysis_modal_analysis
     log_folder: ../test_data\logs\
     result_folder: ../test_data\results\
-    start_time: 2023-11-04 10:28:50.610278
+    start_time: 2023-11-07 10:59:46.702283
   basename: modal_analysis
   default:
     Analysis:

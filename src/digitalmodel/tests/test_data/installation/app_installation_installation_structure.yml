@@ -10,7 +10,7 @@ dictitems:
     file_name_for_overwrite: app_installation_installation_structure
     log_folder: ../test_data/installation\logs\
     result_folder: ../test_data/installation\results\
-    start_time: 2023-11-05 11:56:10.084138
+    start_time: 2023-11-07 10:59:29.033982
   basename: installation
   default:
     Constants:

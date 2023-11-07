@@ -1,0 +1,78 @@
+@startuml orcaflex_post_process
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title OrcaFlex Post Process
+
+start
+
+    note right
+        Objective: To manage Orcaflex postprocess files
+    end note
+
+    partition "Specify Inputs" {
+
+        :Current directory or \n specify directory;
+
+    }
+
+    partition "Analysis" {
+        :Get sim file status;
+            note right
+                Set time, end time and completion status
+            end note
+
+        :Summarize all files;
+            note right
+                TBA
+            end note
+
+    }
+
+    partition "Unfinished Run Actions" {
+        :Update unfinished runs per cfg settings;
+            note right
+                Files saved as: 
+                  - .yml or .dat
+                  
+            end note
+
+        :Prepare batch file;
+            note right
+                TBA
+            end note
+    }
+
+    partition "Post-Processing" {
+        :Visualizations;
+            note right
+                Snapshots
+                range graphs
+                etc.
+            end note
+
+        :summary;
+            note right
+                key outputs
+                Including LinkedStatistics
+            end note
+
+        :detailed data;
+            note right
+                .csv
+                .json /.yml 
+            end note
+
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
