@@ -1,0 +1,36 @@
+basename: orcaflex_post_process
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  postprocess:
+    visualization: 
+      flag: False
+
+file_management:
+  flag: True
+  update_unfinished: 
+    flag: True
+    cfg: 
+      save_as: .yml
+      prepare_rerun_batch: True
+      general: 
+        ImplicitUseVariableTimeStep: No
+        ImplicitConstantTimeStep : 0.05
+        #  Add damping parameters etc. This should be based on number of iterations etc.
+
+  files:
+    files_in_folder: 
+      flag: True
+      folder: None
+    data_source: yml
+    csv_filename: ""
+
+    data:
+      - Name: step06.sim
+      - Name: step07.sim
+

@@ -10,7 +10,7 @@ dictitems:
     file_name_for_overwrite: app_orcaflex_post_process_file_management_unfinished
     log_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\logs\
     result_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\results\
-    start_time: 2023-11-07 11:02:48.256019
+    start_time: 2023-11-07 14:48:25.981639
   Files:
     csv_filename: ''
     data:
@@ -27,10 +27,12 @@ dictitems:
     files:
       csv_filename: ''
       data:
-      - Name: C:\Users\ss7a2365\Documents\github\rock-oil-field\s7\talos_venice\infield\5.ld\step06.sim
-      - Name: C:\Users\ss7a2365\Documents\github\rock-oil-field\s7\talos_venice\infield\5.ld\step07.sim
+      - Name: step06.sim
+      - Name: step07.sim
       data_source: yml
-      files_in_folder: true
+      files_in_current_directory:
+        directory: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6
+        flag: false
     flag: true
     update_unfinished:
       cfg:
@@ -66,17 +68,1463 @@ dictitems:
   orcaflex_post_process:
     input_files:
       '*.dat':
-      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\100Step6-925m-160H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\101Step6-925m-80H1.00P8C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\102Step6-925m-80H1.50P8C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\103Step6-925m-80H2.00P8C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\104Step6-925m-80H2.50P8C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\105Step6-925m-70H1.00P8C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\106Step6-925m-70H1.50P8C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\107Step6-925m-70H2.00P8C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\108Step6-925m-70H2.50P8C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\109Step6-925m-60H1.00P8C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\10Step6-925m-60H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\110Step6-925m-60H1.50P8C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\111Step6-925m-60H2.00P8C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\112Step6-925m-60H2.50P8C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\113Step6-925m-50H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\114Step6-925m-50H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\115Step6-925m-50H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\116Step6-925m-50H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\117Step6-925m-40H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\118Step6-925m-40H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\119Step6-925m-40H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\11Step6-925m-60H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\120Step6-925m-40H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\121Step6-925m-110H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\122Step6-925m-110H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\123Step6-925m-110H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\124Step6-925m-110H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\125Step6-925m-100H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\126Step6-925m-100H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\127Step6-925m-100H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\128Step6-925m-100H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\129Step6-925m-90H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\12Step6-925m-60H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\130Step6-925m-90H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\131Step6-925m-90H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\132Step6-925m-90H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\133Step6-925m-80H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\134Step6-925m-80H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\135Step6-925m-80H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\136Step6-925m-80H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\137Step6-925m-70H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\138Step6-925m-70H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\139Step6-925m-70H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\13Step6-925m-50H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\140Step6-925m-70H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\141Step6-925m-140H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\142Step6-925m-140H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\143Step6-925m-140H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\144Step6-925m-140H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\145Step6-925m-130H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\146Step6-925m-130H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\147Step6-925m-130H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\148Step6-925m-130H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\149Step6-925m-120H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\14Step6-925m-50H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\150Step6-925m-120H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\151Step6-925m-120H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\152Step6-925m-120H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\153Step6-925m-110H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\154Step6-925m-110H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\155Step6-925m-110H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\156Step6-925m-110H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\157Step6-925m-100H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\158Step6-925m-100H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\159Step6-925m-100H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\15Step6-925m-50H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\160Step6-925m-100H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\161Step6-925m-170H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\162Step6-925m-170H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\163Step6-925m-170H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\164Step6-925m-170H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\165Step6-925m-160H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\166Step6-925m-160H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\167Step6-925m-160H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\168Step6-925m-160H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\169Step6-925m-150H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\16Step6-925m-50H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\170Step6-925m-150H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\171Step6-925m-150H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\172Step6-925m-150H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\173Step6-925m-140H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\174Step6-925m-140H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\175Step6-925m-140H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\176Step6-925m-140H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\177Step6-925m-130H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\178Step6-925m-130H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\179Step6-925m-130H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\17Step6-925m-40H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\180Step6-925m-130H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\181Step6-925m-200H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\182Step6-925m-200H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\183Step6-925m-200H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\184Step6-925m-200H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\185Step6-925m-190H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\186Step6-925m-190H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\187Step6-925m-190H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\188Step6-925m-190H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\189Step6-925m-180H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\18Step6-925m-40H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\190Step6-925m-180H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\191Step6-925m-180H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\192Step6-925m-180H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\193Step6-925m-170H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\194Step6-925m-170H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\195Step6-925m-170H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\196Step6-925m-170H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\197Step6-925m-160H1.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\198Step6-925m-160H1.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\199Step6-925m-160H2.00P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\19Step6-925m-40H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\1Step6-925m-80H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\200Step6-925m-160H2.50P8C0.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\20Step6-925m-40H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\21Step6-925m-110H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\22Step6-925m-110H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\23Step6-925m-110H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\24Step6-925m-110H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\25Step6-925m-100H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\26Step6-925m-100H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\27Step6-925m-100H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\28Step6-925m-100H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\29Step6-925m-90H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\2Step6-925m-80H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\30Step6-925m-90H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\31Step6-925m-90H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\32Step6-925m-90H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\33Step6-925m-80H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\34Step6-925m-80H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\35Step6-925m-80H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\36Step6-925m-80H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\37Step6-925m-70H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\38Step6-925m-70H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\39Step6-925m-70H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\3Step6-925m-80H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\40Step6-925m-70H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\41Step6-925m-140H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\42Step6-925m-140H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\43Step6-925m-140H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\44Step6-925m-140H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\45Step6-925m-130H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\46Step6-925m-130H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\47Step6-925m-130H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\48Step6-925m-130H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\49Step6-925m-120H1.00P7C180
+        - Copy.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\49Step6-925m-120H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\4Step6-925m-80H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\50Step6-925m-120H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\51Step6-925m-120H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\52Step6-925m-120H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\53Step6-925m-110H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\54Step6-925m-110H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\55Step6-925m-110H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\56Step6-925m-110H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\57Step6-925m-100H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\58Step6-925m-100H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\59Step6-925m-100H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\5Step6-925m-70H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\60Step6-925m-100H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\61Step6-925m-170H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\62Step6-925m-170H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\63Step6-925m-170H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\64Step6-925m-170H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\65Step6-925m-160H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\66Step6-925m-160H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\67Step6-925m-160H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\68Step6-925m-160H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\69Step6-925m-150H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\6Step6-925m-70H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\70Step6-925m-150H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\71Step6-925m-150H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\72Step6-925m-150H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\73Step6-925m-140H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\74Step6-925m-140H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\75Step6-925m-140H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\76Step6-925m-140H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\77Step6-925m-130H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\78Step6-925m-130H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\79Step6-925m-130H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\7Step6-925m-70H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\80Step6-925m-130H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\81Step6-925m-200H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\82Step6-925m-200H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\83Step6-925m-200H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\84Step6-925m-200H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\85Step6-925m-190H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\86Step6-925m-190H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\87Step6-925m-190H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\88Step6-925m-190H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\89Step6-925m-180H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\8Step6-925m-70H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\90Step6-925m-180H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\91Step6-925m-180H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\92Step6-925m-180H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\93Step6-925m-170H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\94Step6-925m-170H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\95Step6-925m-170H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\96Step6-925m-170H2.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\97Step6-925m-160H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\98Step6-925m-160H1.50P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\99Step6-925m-160H2.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\9Step6-925m-60H1.00P7C180.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06head00.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06head10.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06head20.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06head30.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06headn10.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06headn20.dat
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06headn30.dat
       '*.sim':
-      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.sim
-      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.sim
-      '*.txt': []
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\100Step6-925m-160H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\101Step6-925m-80H1.00P8C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\102Step6-925m-80H1.50P8C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\103Step6-925m-80H2.00P8C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\104Step6-925m-80H2.50P8C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\105Step6-925m-70H1.00P8C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\106Step6-925m-70H1.50P8C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\107Step6-925m-70H2.00P8C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\108Step6-925m-70H2.50P8C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\109Step6-925m-60H1.00P8C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\10Step6-925m-60H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\110Step6-925m-60H1.50P8C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\111Step6-925m-60H2.00P8C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\112Step6-925m-60H2.50P8C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\113Step6-925m-50H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\114Step6-925m-50H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\115Step6-925m-50H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\116Step6-925m-50H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\117Step6-925m-40H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\118Step6-925m-40H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\119Step6-925m-40H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\11Step6-925m-60H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\120Step6-925m-40H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\121Step6-925m-110H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\122Step6-925m-110H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\123Step6-925m-110H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\124Step6-925m-110H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\125Step6-925m-100H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\126Step6-925m-100H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\127Step6-925m-100H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\128Step6-925m-100H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\129Step6-925m-90H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\12Step6-925m-60H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\130Step6-925m-90H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\131Step6-925m-90H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\132Step6-925m-90H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\133Step6-925m-80H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\134Step6-925m-80H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\135Step6-925m-80H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\136Step6-925m-80H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\137Step6-925m-70H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\138Step6-925m-70H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\139Step6-925m-70H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\13Step6-925m-50H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\140Step6-925m-70H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\141Step6-925m-140H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\142Step6-925m-140H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\143Step6-925m-140H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\144Step6-925m-140H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\145Step6-925m-130H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\146Step6-925m-130H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\147Step6-925m-130H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\148Step6-925m-130H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\149Step6-925m-120H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\14Step6-925m-50H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\150Step6-925m-120H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\151Step6-925m-120H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\152Step6-925m-120H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\153Step6-925m-110H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\154Step6-925m-110H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\155Step6-925m-110H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\156Step6-925m-110H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\157Step6-925m-100H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\158Step6-925m-100H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\159Step6-925m-100H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\15Step6-925m-50H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\160Step6-925m-100H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\161Step6-925m-170H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\162Step6-925m-170H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\163Step6-925m-170H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\164Step6-925m-170H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\165Step6-925m-160H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\166Step6-925m-160H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\167Step6-925m-160H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\168Step6-925m-160H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\169Step6-925m-150H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\16Step6-925m-50H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\170Step6-925m-150H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\171Step6-925m-150H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\172Step6-925m-150H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\173Step6-925m-140H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\174Step6-925m-140H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\175Step6-925m-140H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\176Step6-925m-140H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\177Step6-925m-130H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\178Step6-925m-130H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\179Step6-925m-130H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\17Step6-925m-40H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\180Step6-925m-130H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\181Step6-925m-200H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\182Step6-925m-200H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\183Step6-925m-200H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\184Step6-925m-200H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\185Step6-925m-190H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\186Step6-925m-190H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\187Step6-925m-190H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\188Step6-925m-190H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\189Step6-925m-180H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\18Step6-925m-40H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\190Step6-925m-180H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\191Step6-925m-180H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\192Step6-925m-180H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\193Step6-925m-170H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\194Step6-925m-170H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\195Step6-925m-170H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\196Step6-925m-170H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\197Step6-925m-160H1.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\198Step6-925m-160H1.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\199Step6-925m-160H2.00P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\19Step6-925m-40H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\1Step6-925m-80H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\200Step6-925m-160H2.50P8C0.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\20Step6-925m-40H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\21Step6-925m-110H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\22Step6-925m-110H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\23Step6-925m-110H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\24Step6-925m-110H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\25Step6-925m-100H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\26Step6-925m-100H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\27Step6-925m-100H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\28Step6-925m-100H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\29Step6-925m-90H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\2Step6-925m-80H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\30Step6-925m-90H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\31Step6-925m-90H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\32Step6-925m-90H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\33Step6-925m-80H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\34Step6-925m-80H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\35Step6-925m-80H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\36Step6-925m-80H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\37Step6-925m-70H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\38Step6-925m-70H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\39Step6-925m-70H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\3Step6-925m-80H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\40Step6-925m-70H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\41Step6-925m-140H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\42Step6-925m-140H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\43Step6-925m-140H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\44Step6-925m-140H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\45Step6-925m-130H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\46Step6-925m-130H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\47Step6-925m-130H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\48Step6-925m-130H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\49Step6-925m-120H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\4Step6-925m-80H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\50Step6-925m-120H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\51Step6-925m-120H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\52Step6-925m-120H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\53Step6-925m-110H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\54Step6-925m-110H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\55Step6-925m-110H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\56Step6-925m-110H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\57Step6-925m-100H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\58Step6-925m-100H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\59Step6-925m-100H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\5Step6-925m-70H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\60Step6-925m-100H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\61Step6-925m-170H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\62Step6-925m-170H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\63Step6-925m-170H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\64Step6-925m-170H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\65Step6-925m-160H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\66Step6-925m-160H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\67Step6-925m-160H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\68Step6-925m-160H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\69Step6-925m-150H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\6Step6-925m-70H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\70Step6-925m-150H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\71Step6-925m-150H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\72Step6-925m-150H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\73Step6-925m-140H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\74Step6-925m-140H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\75Step6-925m-140H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\76Step6-925m-140H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\77Step6-925m-130H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\78Step6-925m-130H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\79Step6-925m-130H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\7Step6-925m-70H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\80Step6-925m-130H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\81Step6-925m-200H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\82Step6-925m-200H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\83Step6-925m-200H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\84Step6-925m-200H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\85Step6-925m-190H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\86Step6-925m-190H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\87Step6-925m-190H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\88Step6-925m-190H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\89Step6-925m-180H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\8Step6-925m-70H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\90Step6-925m-180H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\91Step6-925m-180H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\92Step6-925m-180H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\93Step6-925m-170H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\94Step6-925m-170H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\95Step6-925m-170H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\96Step6-925m-170H2.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\97Step6-925m-160H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\98Step6-925m-160H1.50P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\99Step6-925m-160H2.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\9Step6-925m-60H1.00P7C180.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06head00.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06head10.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06head20.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06head30.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06headn10.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06headn20.sim
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06headn30.sim
+      '*.txt':
+      - \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\Step6.txt
       '*.yaml': []
-      '*.yml':
-      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\file_management_unfinished.yml
-      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process.yml
-      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.yml
-      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\visualization.yml
+      '*.yml': []
+    sim_status:
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\100Step6-925m-160H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\101Step6-925m-80H1.00P8C180.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\102Step6-925m-80H1.50P8C180.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\103Step6-925m-80H2.00P8C180.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\104Step6-925m-80H2.50P8C180.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\105Step6-925m-70H1.00P8C180.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\106Step6-925m-70H1.50P8C180.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\107Step6-925m-70H2.00P8C180.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\108Step6-925m-70H2.50P8C180.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\109Step6-925m-60H1.00P8C180.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\10Step6-925m-60H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\110Step6-925m-60H1.50P8C180.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\111Step6-925m-60H2.00P8C180.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\112Step6-925m-60H2.50P8C180.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\113Step6-925m-50H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\114Step6-925m-50H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\115Step6-925m-50H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\116Step6-925m-50H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\117Step6-925m-40H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\118Step6-925m-40H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\119Step6-925m-40H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\11Step6-925m-60H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\120Step6-925m-40H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\121Step6-925m-110H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\122Step6-925m-110H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\123Step6-925m-110H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\124Step6-925m-110H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\125Step6-925m-100H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\126Step6-925m-100H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\127Step6-925m-100H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\128Step6-925m-100H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\129Step6-925m-90H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\12Step6-925m-60H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\130Step6-925m-90H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\131Step6-925m-90H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\132Step6-925m-90H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\133Step6-925m-80H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\134Step6-925m-80H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\135Step6-925m-80H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\136Step6-925m-80H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\137Step6-925m-70H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\138Step6-925m-70H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\139Step6-925m-70H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\13Step6-925m-50H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\140Step6-925m-70H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\141Step6-925m-140H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\142Step6-925m-140H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\143Step6-925m-140H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\144Step6-925m-140H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\145Step6-925m-130H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\146Step6-925m-130H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\147Step6-925m-130H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\148Step6-925m-130H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\149Step6-925m-120H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\14Step6-925m-50H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\150Step6-925m-120H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\151Step6-925m-120H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\152Step6-925m-120H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\153Step6-925m-110H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\154Step6-925m-110H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\155Step6-925m-110H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\156Step6-925m-110H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\157Step6-925m-100H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\158Step6-925m-100H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\159Step6-925m-100H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\15Step6-925m-50H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\160Step6-925m-100H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\161Step6-925m-170H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\162Step6-925m-170H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\163Step6-925m-170H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\164Step6-925m-170H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\165Step6-925m-160H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\166Step6-925m-160H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\167Step6-925m-160H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\168Step6-925m-160H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\169Step6-925m-150H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\16Step6-925m-50H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\170Step6-925m-150H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\171Step6-925m-150H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\172Step6-925m-150H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\173Step6-925m-140H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\174Step6-925m-140H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\175Step6-925m-140H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\176Step6-925m-140H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\177Step6-925m-130H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\178Step6-925m-130H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\179Step6-925m-130H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\17Step6-925m-40H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\180Step6-925m-130H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\181Step6-925m-200H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\182Step6-925m-200H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\183Step6-925m-200H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\184Step6-925m-200H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\185Step6-925m-190H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\186Step6-925m-190H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\187Step6-925m-190H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\188Step6-925m-190H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\189Step6-925m-180H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\18Step6-925m-40H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\190Step6-925m-180H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\191Step6-925m-180H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\192Step6-925m-180H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\193Step6-925m-170H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\194Step6-925m-170H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\195Step6-925m-170H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\196Step6-925m-170H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\197Step6-925m-160H1.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\198Step6-925m-160H1.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\199Step6-925m-160H2.00P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\19Step6-925m-40H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\1Step6-925m-80H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\200Step6-925m-160H2.50P8C0.sim
+      finish_flag: true
+      run_time:
+        last: 40.0
+        set: 40.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\20Step6-925m-40H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\21Step6-925m-110H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\22Step6-925m-110H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\23Step6-925m-110H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\24Step6-925m-110H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\25Step6-925m-100H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\26Step6-925m-100H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\27Step6-925m-100H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\28Step6-925m-100H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\29Step6-925m-90H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\2Step6-925m-80H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\30Step6-925m-90H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\31Step6-925m-90H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\32Step6-925m-90H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\33Step6-925m-80H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\34Step6-925m-80H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\35Step6-925m-80H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\36Step6-925m-80H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\37Step6-925m-70H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\38Step6-925m-70H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\39Step6-925m-70H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\3Step6-925m-80H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\40Step6-925m-70H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\41Step6-925m-140H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\42Step6-925m-140H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\43Step6-925m-140H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\44Step6-925m-140H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\45Step6-925m-130H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\46Step6-925m-130H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\47Step6-925m-130H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\48Step6-925m-130H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\49Step6-925m-120H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\4Step6-925m-80H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\50Step6-925m-120H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\51Step6-925m-120H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\52Step6-925m-120H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\53Step6-925m-110H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\54Step6-925m-110H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\55Step6-925m-110H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\56Step6-925m-110H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\57Step6-925m-100H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\58Step6-925m-100H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\59Step6-925m-100H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\5Step6-925m-70H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\60Step6-925m-100H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\61Step6-925m-170H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\62Step6-925m-170H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\63Step6-925m-170H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\64Step6-925m-170H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\65Step6-925m-160H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\66Step6-925m-160H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\67Step6-925m-160H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\68Step6-925m-160H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\69Step6-925m-150H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\6Step6-925m-70H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\70Step6-925m-150H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\71Step6-925m-150H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\72Step6-925m-150H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\73Step6-925m-140H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\74Step6-925m-140H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\75Step6-925m-140H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\76Step6-925m-140H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\77Step6-925m-130H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\78Step6-925m-130H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\79Step6-925m-130H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\7Step6-925m-70H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\80Step6-925m-130H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\81Step6-925m-200H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\82Step6-925m-200H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\83Step6-925m-200H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\84Step6-925m-200H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\85Step6-925m-190H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\86Step6-925m-190H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\87Step6-925m-190H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\88Step6-925m-190H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\89Step6-925m-180H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\8Step6-925m-70H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\90Step6-925m-180H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\91Step6-925m-180H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\92Step6-925m-180H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\93Step6-925m-170H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\94Step6-925m-170H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\95Step6-925m-170H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\96Step6-925m-170H2.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\97Step6-925m-160H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\98Step6-925m-160H1.50P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\99Step6-925m-160H2.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\9Step6-925m-60H1.00P7C180.sim
+      finish_flag: true
+      run_time:
+        last: 35.0
+        set: 35.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06head00.sim
+      finish_flag: true
+      run_time:
+        last: 2.0e+307
+        set: 100.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06head10.sim
+      finish_flag: true
+      run_time:
+        last: 2.0e+307
+        set: 100.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06head20.sim
+      finish_flag: true
+      run_time:
+        last: 2.0e+307
+        set: 100.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06head30.sim
+      finish_flag: true
+      run_time:
+        last: 2.0e+307
+        set: 100.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06headn10.sim
+      finish_flag: true
+      run_time:
+        last: 2.0e+307
+        set: 100.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06headn20.sim
+      finish_flag: true
+      run_time:
+        last: 2.0e+307
+        set: 100.0
+    - file: \\Usd4ndn4z2\wg5-mech\vamsee-05\talos_venice\Step6\step06headn30.sim
+      finish_flag: true
+      run_time:
+        last: 2.0e+307
+        set: 100.0
   visualization_settings:
     add_items:
     - Umbilical

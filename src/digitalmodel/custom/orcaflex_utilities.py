@@ -1,6 +1,7 @@
 import copy
 import os
 import glob
+import logging
 import OrcFxAPI
 from collections import OrderedDict
 
@@ -60,27 +61,71 @@ class OrcaflexUtilities:
         }
         return sim_status
 
-    def update_input_file(self, model):
-        dt = 0.05    ### timestep
-        constdt = True
+    def update_input_file(self, update_cfg):
+        update_cfg['cfg']
+        sim_file = update_cfg['filename']
 
-        fname = simf[:len(simf) - 4] + '.dat'
-        model = OrcFxAPI.Model(fname)
-        model.DynamicSolutionMethod = 'Implicit time domain'
-        if constdt:
-            model.general.ImplicitUseVariableTimeStep = 'No'
-            model.general.ImplicitConstantTimeStep = dt
+        input_file = input_file_save_as = sim_file[:len(sim_file) -
+                                                   4] + update_cfg['cfg'][
+                                                       'save_as']
+        if not os.path.isfile(input_file):
+            input_file = sim_file[:len(sim_file) - 4] + '.dat'
+            if not os.path.isfile(input_file):
+                raise FileExistsError
+
+        model = OrcFxAPI.Model(input_file)
+        # TODO Check for implicit method or otherwise
+        # old_value = model.DynamicSolutionMethod
+        # new_value = 'Implicit time domain'
+        # if old_value != new_value:
+        #     model.DynamicSolutionMethod = new_value
+        #     logging.info(
+        #         f"      DynamicSolutionMethod... old: {old_value} to new: {new_value}"
+        #     )
+
+        general_properties = update_cfg['cfg']['general'].copy()
+        if general_properties[
+                'ImplicitUseVariableTimeStep'] or general_properties[
+                    'ImplicitUseVariableTimeStep'] == 'No':
+            old_value = model.general.ImplicitUseVariableTimeStep
+            new_value = general_properties['ImplicitUseVariableTimeStep']
+            if old_value != new_value:
+                model.general.ImplicitUseVariableTimeStep = new_value
+                logging.info(
+                    f"      ImplicitUseVariableTimeStep... old: {old_value} to new: {new_value}"
+                )
+
+            old_value = model.general.ImplicitConstantTimeStep
+            new_value = general_properties['TimeStep']
+            if old_value != new_value:
+                model.general.ImplicitConstantTimeStep = new_value
+                logging.info(
+                    f"      ImplicitConstantTimeStep... old: {old_value} to new: {new_value}"
+                )
+
         else:
-            model.general.ImplicitUseVariableTimeStep = 'Yes'
-            model.general.ImplicitVaribaleMaxTimeStep = dt
+            old_value = model.general.ImplicitUseVariableTimeStep
+            new_value = 'Yes'
+            if old_value != new_value:
+                model.general.ImplicitUseVariableTimeStep = new_value
+                logging.info(
+                    f"      ImplicitUseVariableTimeStep... old: {old_value} to new: {new_value}"
+                )
+
+            old_value = model.general.ImplicitVariableMaxTimeStep
+            new_value = general_properties['TimeStep']
+            if old_value != new_value:
+                model.general.ImplicitVariableMaxTimeStep = new_value
+                logging.info(
+                    f"      ImplicitVaribaleMaxTimeStep... old: {old_value} to new: {new_value}"
+                )
+
         #tmodel.DynamicSolutionMethod = 'Explicit time domain'
-        model.SaveData(fname)
+        model.SaveData(input_file_save_as)
 
     def file_management(self, cfg):
         if cfg.file_management['flag']:
             cfg = self.get_files(cfg)
-        if cfg.file_management['update_unfinished']['flag']:
-            cfg = self.sim_file_analysis_and_update(cfg)
 
         return cfg
 
@@ -88,11 +133,14 @@ class OrcaflexUtilities:
         orcaflex_extensions = ['*.yml', '*.yaml', '*.dat', '*.sim', '*.txt']
         input_files = {}
 
-        if cfg.file_management['files']['files_in_folder']:
-            for file_ext in orcaflex_extensions:
-                input_files_for_ext = glob.glob(
-                    cfg.Analysis['analysis_root_folder'] + '/' + file_ext)
-                input_files.update({file_ext: input_files_for_ext})
+        if cfg.file_management['files']['files_in_current_directory']['flag']:
+            file_location = cfg.Analysis['analysis_root_folder']
+        else:
+            file_location = cfg.file_management['files'][
+                'files_in_current_directory']['directory']
+        for file_ext in orcaflex_extensions:
+            input_files_for_ext = glob.glob(file_location + '/' + file_ext)
+            input_files.update({file_ext: input_files_for_ext})
 
         cfg.update({cfg['basename']: {'input_files': input_files}})
 
@@ -100,11 +148,29 @@ class OrcaflexUtilities:
 
     def sim_file_analysis_and_update(self, cfg):
         sim_files = cfg.orcaflex_post_process['input_files']['*.sim']
+        sim_status_cfg = []
+        update_unfinished_cfg = cfg['file_management'][
+            'update_unfinished'].copy()
         for sim_file in sim_files:
+            logging.info(
+                f"Simulation file analysis for : {sim_file} .... START")
             model = OrcFxAPI.Model(sim_file)
-            sim_status = self.get_sim_file_finish_status(model)
-            if not sim_status['finish_flag']:
-                self.update_input_file(model)
+            sim_status = {'file': sim_file}
+            sim_status.update(self.get_sim_file_finish_status(model))
+
+            if not sim_status['finish_flag'] and update_unfinished_cfg['flag']:
+                update_unfinished_cfg.update({'filename': sim_file})
+                try:
+                    self.update_input_file(update_unfinished_cfg)
+                except Exception as e:
+                    logging.info(e)
+                    logging.info(
+                        f"Version incompatibility for file: {sim_file}.")
+
+            sim_status_cfg.append(sim_status)
+            logging.info(f"Simulation file analysis for : {sim_file} .... End")
+
+        cfg[cfg['basename']].update({'sim_status': sim_status_cfg})
 
         return cfg
 

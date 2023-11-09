@@ -6,6 +6,9 @@ import OrcFxAPI
 
 import logging
 from assetutilities.common.utilities import is_file_valid_func
+from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+
+ou = OrcaflexUtilities()
 
 
 class orcaflex_post_process:
@@ -15,15 +18,17 @@ class orcaflex_post_process:
 
     def post_process_router(self, cfg):
 
+        if cfg.file_management['update_unfinished']['flag']:
+            cfg = ou.sim_file_analysis_and_update(cfg)
         if cfg['orcaflex']['postprocess']['visualization']['flag']:
             self.get_visualizations(cfg)
-        elif cfg['orcaflex']['postprocess']['Summary']['flag']:
+        if cfg['orcaflex']['postprocess']['Summary']['flag']:
             raise ImportError("Coding not completed ... FAIL")
-        elif cfg['orcaflex']['postprocess']['RangeGraph']['flag']:
+        if cfg['orcaflex']['postprocess']['RangeGraph']['flag']:
             raise ImportError("Coding not completed ... FAIL")
-        elif cfg['orcaflex']['postprocess']['time_series']['flag']:
+        if cfg['orcaflex']['postprocess']['time_series']['flag']:
             raise ImportError("Coding not completed ... FAIL")
-        elif cfg['orcaflex']['postprocess']['cummulative_histograms']['flag']:
+        if cfg['orcaflex']['postprocess']['cummulative_histograms']['flag']:
             raise ImportError("Coding not completed ... FAIL")
         else:
             logging.info("No postprocess option to run specified ... End Run.")
