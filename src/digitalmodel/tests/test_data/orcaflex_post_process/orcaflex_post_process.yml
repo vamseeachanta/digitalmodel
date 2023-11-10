@@ -10,14 +10,10 @@ orcaflex:
   postprocess:
     visualization: 
       flag: True
-    Summary:
+    summary:
       flag: False
-      AddMinimumToSummary: True
-      AddMaximumToSummary: True
-      AddMeanToSummary: True
     RangeGraph:
       flag: False
-      add_effective_tension_to_cfg: False
     time_series:
       flag: False
       histogram: True

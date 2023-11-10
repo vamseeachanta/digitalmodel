@@ -1,4 +1,4 @@
-basename: orcaflex_post_process
+basename: file_management
 
 default:
   log_level: DEBUG
@@ -24,9 +24,9 @@ file_management:
         #  Add damping parameters etc. This should be based on number of iterations etc.
 
   files:
-    files_in_folder: 
+    files_in_current_directory: 
       flag: True
-      folder: None
+      directory: NULL
     data_source: yml
     csv_filename: ""
 

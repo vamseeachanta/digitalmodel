@@ -18,6 +18,7 @@ from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import DNVRPH103_hydrodynamics_rectangular
 from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import DNVRPH103_hydrodynamics_circular
 from digitalmodel.custom.orcaflex_post_process import orcaflex_post_process
+from digitalmodel.custom.orcaflex_file_management import OrcaflexFileManagement
 from digitalmodel.custom.rao_analysis import RAOAnalysis
 from digitalmodel.custom.orcaflex_installation import OrcInstallation
 
@@ -57,6 +58,9 @@ def engine(inputfile=None):
     elif basename == 'umbilical_end':
         ua = UmbilicalAnalysis()
         cfg_base = ua.perform_analysis(cfg_base)
+    elif basename == 'file_management':
+        ofm = OrcaflexFileManagement()
+        cfg_base = ofm.file_management(cfg_base)
     elif basename == 'orcaflex_post_process':
         opp = orcaflex_post_process()
         cfg_base = opp.post_process_router(cfg_base)

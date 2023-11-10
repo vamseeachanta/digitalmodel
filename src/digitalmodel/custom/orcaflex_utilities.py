@@ -142,12 +142,12 @@ class OrcaflexUtilities:
             input_files_for_ext = glob.glob(file_location + '/' + file_ext)
             input_files.update({file_ext: input_files_for_ext})
 
-        cfg.update({cfg['basename']: {'input_files': input_files}})
+        cfg.file_management.update({'input_files': input_files})
 
         return cfg
 
     def sim_file_analysis_and_update(self, cfg):
-        sim_files = cfg.orcaflex_post_process['input_files']['*.sim']
+        sim_files = cfg.file_management['input_files']['*.sim']
         sim_status_cfg = []
         update_unfinished_cfg = cfg['file_management'][
             'update_unfinished'].copy()

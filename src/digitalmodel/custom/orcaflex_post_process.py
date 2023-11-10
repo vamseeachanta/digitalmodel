@@ -7,8 +7,10 @@ import OrcFxAPI
 import logging
 from assetutilities.common.utilities import is_file_valid_func
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.custom.orcaflex_analysis_components import OrcaFlexAnalysis
 
 ou = OrcaflexUtilities()
+ofa = OrcaFlexAnalysis()
 
 
 class orcaflex_post_process:
@@ -18,18 +20,18 @@ class orcaflex_post_process:
 
     def post_process_router(self, cfg):
 
-        if cfg.file_management['update_unfinished']['flag']:
-            cfg = ou.sim_file_analysis_and_update(cfg)
-        if cfg['orcaflex']['postprocess']['visualization']['flag']:
-            self.get_visualizations(cfg)
-        if cfg['orcaflex']['postprocess']['Summary']['flag']:
-            raise ImportError("Coding not completed ... FAIL")
-        if cfg['orcaflex']['postprocess']['RangeGraph']['flag']:
-            raise ImportError("Coding not completed ... FAIL")
-        if cfg['orcaflex']['postprocess']['time_series']['flag']:
-            raise ImportError("Coding not completed ... FAIL")
-        if cfg['orcaflex']['postprocess']['cummulative_histograms']['flag']:
-            raise ImportError("Coding not completed ... FAIL")
+        if cfg['orcaflex']['postprocess']['visualization']['flag'] or cfg[
+                'orcaflex']['postprocess']['summary']['flag'] or cfg[
+                    'orcaflex']['postprocess']['RangeGraph']['flag'] or cfg[
+                        'orcaflex']['postprocess']['time_series'][
+                            'flag'] or cfg['orcaflex']['postprocess'][
+                                'cummulative_histograms']['flag']:
+            post_process_flag = True
+
+        if post_process_flag:
+            cfg.update({cfg['basename']: {}})
+            ofa.post_process(cfg)
+            ofa.save_summary(cfg)
         else:
             logging.info("No postprocess option to run specified ... End Run.")
 
@@ -39,42 +41,40 @@ class orcaflex_post_process:
         ov = orcaflex_visualizations()
         ov.get_visualizations(cfg)
 
-    def postProcess(self, cfg):
+    def post_process_superseded(self, cfg):
         # Intialize output arrays
         RangeAllFiles = []
         SummaryDFAllFiles = []
 
         # Load Simulation file(s)
-        for fileIndex in range(0,
-                               len(cfg['Analysis']['input_files']['no_ext'])):
-            FileName = cfg['Analysis']['input_files']['no_ext'][
-                fileIndex] + '.sim'
-            FileDescription = cfg['Files'][fileIndex]['Label']
-            FileObjectName = cfg['Files'][fileIndex]['ObjectName']
-            model = loadSimulation(FileName)
+        sim_files = cfg.file_management['input_files']['*.sim']
+        summary_cfg = cfg['summary_settings'].copy()
+        for fileIndex in range(0, len(sim_files)):
+            FileName = sim_files[fileIndex]
+            FileDescription = None
+            FileObjectName = None
+            model = OrcFxAPI.Model(FileName)
 
             # Perform (All) Range Postprocessing for each simulation file
-            RangeAllFiles.append(postProcessRange(model, cfg, FileObjectName))
+            if cfg['orcaflex']['postprocess']['RangeGraph']['flag']:
+                RangeAllFiles.append(
+                    self.get_range_graphs(model, cfg, FileObjectName))
 
-            for SummaryIndex in range(0, len(cfg['Summary'])):
+            for summary_group_index in range(0, len(summary_cfg['groups'])):
                 try:
-                    SummaryDFAllFiles[SummaryIndex]
+                    SummaryDFAllFiles[summary_group_index]
                 except:
                     SummaryDFAllFiles.append(pd.DataFrame())
 
-                SummaryDFAllFiles[SummaryIndex] = postProcessSummary(
-                    model, cfg, SummaryDFAllFiles[SummaryIndex], SummaryIndex,
-                    FileDescription, FileObjectName, FileName)
+                SummaryDFAllFiles[summary_group_index] = self.get_summary_group(
+                    model, cfg, SummaryDFAllFiles[summary_group_index],
+                    summary_group_index, FileDescription, FileObjectName,
+                    FileName)
                 # TO DO: Parametrize this.
             # decimals = pd.Series([1, 1], index=columns)
         return RangeAllFiles, SummaryDFAllFiles
 
-    # Load Simulation File
-    def loadSimulation(self, FileName):
-        model = OrcFxAPI.Model(FileName)
-        return model
-
-    def postProcessRange(self, model, cfg, FileObjectName):
+    def get_range_graphs(self, model, cfg, FileObjectName):
         # Range Graphs for a simulation
         RangeFile = []
 
@@ -141,57 +141,54 @@ class orcaflex_post_process:
 
         return RangeFile
 
-    def postProcessSummary(self, model, cfg, SummaryDF, SummaryIndex,
-                           FileDescription, FileObjectName, FileName):
+    def get_summary_group(self, model, cfg, SummaryDF, summary_group_index,
+                          FileDescription, FileObjectName, FileName):
+
+        summary_group = cfg['summary_settings']['groups'][summary_group_index]
+
         if SummaryDF.empty:
             columns = []
             columns.append('FileName')
             columns.append('Description')
-            for SummaryColumnIndex in range(
-                    0, len(cfg['Summary'][SummaryIndex]['Columns'])):
-                columns.append(cfg['Summary'][SummaryIndex]['Columns']
-                               [SummaryColumnIndex]['Label'])
+            for column_index in range(0, len(summary_group['Columns'])):
+                columns.append(summary_group['Columns'][column_index]['Label'])
 
             SummaryDF = pd.DataFrame(columns=columns)
 
         SummaryFile = []
         SummaryFile.append(FileName)
         SummaryFile.append(FileDescription)
-        for SummaryColumnIndex in range(
-                0, len(cfg['Summary'][SummaryIndex]['Columns'])):
+        for column_index in range(0, len(summary_group['Columns'])):
             RangeDF = pd.DataFrame()
             #Read Object
 
             try:
-                objectName = cfg['Summary'][SummaryIndex]['Columns'][
-                    SummaryColumnIndex]['ObjectName']
+                objectName = summary_group['Columns'][column_index][
+                    'ObjectName']
                 OrcFXAPIObject = model[objectName]
             except:
                 OrcFXAPIObject = model[FileObjectName]
 
             # Arc Length Definition
             #Time Period Definition
-            TimePeriod = exec(
-                "OrcFxAPI.{0}".format(cfg['Summary'][SummaryIndex]['Columns']
-                                      [SummaryColumnIndex]['SimulationPeriod']))
-            VariableName = cfg['Summary'][SummaryIndex]['Columns'][
-                SummaryColumnIndex]['Variable']
+            TimePeriod = exec("OrcFxAPI.{0}".format(
+                summary_group['Columns'][column_index]['SimulationPeriod']))
+            VariableName = summary_group['Columns'][column_index]['Variable']
 
             try:
-                if len(cfg['Summary'][SummaryIndex]['Columns']
-                       [SummaryColumnIndex]['ArcLength']) > 1:
-                    StartArcLength = cfg['Summary'][SummaryIndex]['Columns'][
-                        SummaryColumnIndex]['ArcLength'][0]
-                    EndArcLength = cfg['Summary'][SummaryIndex]['Columns'][
-                        SummaryColumnIndex]['ArcLength'][1]
+                if len(summary_group['Columns'][column_index]['ArcLength']) > 1:
+                    StartArcLength = summary_group['Columns'][column_index][
+                        'ArcLength'][0]
+                    EndArcLength = summary_group['Columns'][column_index][
+                        'ArcLength'][1]
                     output = OrcFXAPIObject.RangeGraph(
                         VariableName,
                         TimePeriod,
                         arclengthRange=OrcFxAPI.arSpecifiedArclengths(
                             StartArcLength, EndArcLength))
                 else:
-                    StartArcLength = cfg['Summary'][SummaryIndex]['Columns'][
-                        SummaryColumnIndex]['ArcLength'][0]
+                    StartArcLength = summary_group['Columns'][column_index][
+                        'ArcLength'][0]
                     output = OrcFXAPIObject.RangeGraph(
                         VariableName,
                         TimePeriod,
@@ -210,10 +207,10 @@ class orcaflex_post_process:
 
             for AdditionalDataIndex in range(
                     0,
-                    len(cfg['Summary'][SummaryIndex]['Columns']
-                        [SummaryColumnIndex]['AdditionalData'])):
-                AdditionalDataName = cfg['Summary'][SummaryIndex]['Columns'][
-                    SummaryColumnIndex]['AdditionalData'][AdditionalDataIndex]
+                    len(summary_group['Columns'][column_index]
+                        ['AdditionalData'])):
+                AdditionalDataName = summary_group['Columns'][column_index][
+                    'AdditionalData'][AdditionalDataIndex]
                 if AdditionalDataName == "Max":
                     RangeDF[VariableName] = output.Max
                     if VariableName == "API STD 2RD Method 1":
@@ -353,7 +350,7 @@ class orcaflex_visualizations:
                 else:
                     setattr(viewparams, key, viewparams_cfg[key])
             except Exception as e:
-                logging.error(e)
+                logging.error(str(e))
 
         return viewparams
 

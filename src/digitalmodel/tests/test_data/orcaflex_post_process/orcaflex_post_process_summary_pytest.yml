@@ -1,0 +1,96 @@
+orcaflex_post_process:
+  summary_groups: 1
+summary_settings:
+  AddMaximumToSummary: true
+  AddMeanToSummary: true
+  AddMinimumToSummary: true
+  groups:
+  - Columns:
+    - AdditionalData:
+      - Max
+      ArcLength:
+      - 0
+      - 50
+      Command: Range Graph
+      Label: Eff. Tension
+      ObjectName: SLWR
+      SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+      Variable: Effective Tension
+    - AdditionalData:
+      - Max
+      ArcLength:
+      - 0
+      - 50
+      Command: Range Graph
+      Label: Bend. Moment
+      ObjectName: SLWR
+      SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+      Variable: Bend Moment
+    - AdditionalData:
+      - Max
+      ArcLength:
+      - 0
+      - 50
+      Command: Range Graph
+      Label: API M1
+      ObjectName: SLWR
+      SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+      Variable: API STD 2RD Method 1
+    - AdditionalData:
+      - Max
+      ArcLength:
+      - 0
+      - 50
+      Command: Range Graph
+      Label: vM stress
+      ObjectName: SLWR
+      SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+      Variable: Max von Mises Stress
+    SummaryFileName: Table_Top
+time_series_settings:
+  groups: []
+  histogram: true
+  summation: true
+visualization_settings:
+  add_items:
+  - Umbilical
+  - uta2-deep
+  combined: false
+  hide_items: []
+  individual: true
+  label: ld_6_7_8
+  tdp_line: Umbilical
+  viewparams:
+    elevation:
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      DrawViewAxes: false
+      Height: 1425
+      RelativeToObject: uth2-deep
+      ViewAzimuth: 270
+      ViewCentre:
+      - -17
+      - 0
+      - 12
+      ViewElevation: 0
+      ViewGamma: 71.89
+      ViewSize: 120
+      Width: 892
+    plan:
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      DrawViewAxes: false
+      Height: 1425
+      RelativeToObject: uth2-deep
+      ViewAzimuth: 270
+      ViewCentre:
+      - 10
+      - 0
+      - 8
+      ViewElevation: 90
+      ViewGamma: 0
+      ViewSize: 80
+      Width: 892
+  views:
+  - Elevation
+  - Plan
