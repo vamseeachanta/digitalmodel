@@ -2,7 +2,7 @@
 # Type: Model
 # Program: OrcaFlex 11.2d
 # File: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test2.yml
-# Created: 5:29 PM on 11/9/2023
+# Created: 7:54 AM on 11/11/2023
 # User: SS7A2365
 # Machine: USNGL23LR3
 ---
@@ -18,8 +18,8 @@ General:
   WholeSystemStaticsEnabled: Yes
   # Dynamics
   DynamicsSolutionMethod: Implicit time domain
-  ImplicitUseVariableTimeStep: Yes
-  ImplicitVariableMaxTimeStep: 0.025
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.025
   LogPrecision: Single
   TargetLogSampleInterval: 0.3
   LogStartTime: ~

@@ -20,7 +20,7 @@ file_management:
       prepare_rerun_batch: True
       general: 
         constdt: True
-        ImplicitUseVariableTimeStep: No
+        ImplicitUseVariableTimeStep: 'No' # Keep quotes for value to avoid yml True/False conversion
         TimeStep : 0.025
         #  Add damping parameters etc. This should be based on number of iterations elapsed etc.
 

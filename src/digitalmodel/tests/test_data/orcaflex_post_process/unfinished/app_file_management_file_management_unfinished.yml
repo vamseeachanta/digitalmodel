@@ -10,7 +10,7 @@ dictitems:
     file_name_for_overwrite: app_file_management_file_management_unfinished
     log_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\logs\
     result_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\results\
-    start_time: 2023-11-09 17:29:49.934666
+    start_time: 2023-11-11 07:54:36.628704
   basename: file_management
   default:
     config:
@@ -37,6 +37,7 @@ dictitems:
       '*.txt': []
       '*.yaml': []
       '*.yml':
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\app_file_management_file_management_unfinished.yml
       - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\file_management_unfinished.yml
       - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\file_management_unfinished_1.yml
       - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test1.yml
@@ -55,7 +56,7 @@ dictitems:
     update_unfinished:
       cfg:
         general:
-          ImplicitUseVariableTimeStep: false
+          ImplicitUseVariableTimeStep: 'No'
           TimeStep: 0.025
           constdt: true
         prepare_rerun_batch: true

@@ -61,6 +61,14 @@ visualization_settings:
       Height : 1425
       Width : 892
 
+RangeGraph_settings:
+  add_effective_tension_to_cfg: False
+
+time_series_settings:
+  histogram: True
+  summation: True
+  groups: []
+
 
 
 Files:

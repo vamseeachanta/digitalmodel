@@ -483,6 +483,14 @@ class OrcaFlexAnalysis():
         elif cfg['Command'] == 'StaticResult':
             output_value = self.get_StaticResult(OrcFXAPIObject, VariableName,
                                                  ArcLengthArray)
+        elif cfg['Command'] == 'GetData':
+            output_value = self.get_input_data(OrcFXAPIObject, VariableName,
+                                               ArcLengthArray)
+
+        return output_value
+
+    def get_input_data(self, OrcFXAPIObject, VariableName, ArcLengthArray):
+        output_value = OrcFXAPIObject.GetData(VariableName, -1)
 
         return output_value
 
@@ -903,8 +911,13 @@ class OrcaFlexAnalysis():
         return output
 
     def get_TimePeriodObject(self, SimulationPeriod):
-
-        if len(SimulationPeriod) == 2:
+        if type(SimulationPeriod) is int:
+            TimePeriodObject = SimulationPeriod
+        elif SimulationPeriod == 'WhileSimulation':
+            TimePeriodObject = OrcFxAPI.PeriodNum.WholeSimulation
+        elif SimulationPeriod == 'LatestWave':
+            TimePeriodObject = OrcFxAPI.PeriodNum.LatestWave
+        elif len(SimulationPeriod) == 2:
             TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0],
                                                         SimulationPeriod[1])
         elif len(SimulationPeriod) == 1:
@@ -914,15 +927,26 @@ class OrcaFlexAnalysis():
 
         return TimePeriodObject
 
-    def get_ArcLengthObject(self, ArcLengthArray):
+    def get_ArcLengthObject(self, ArcLength):
 
-        if len(ArcLengthArray) == 2:
-            StartArcLength = ArcLengthArray[0]
-            EndArcLength = ArcLengthArray[1]
+        if ArcLength is None:
+            arclengthRange = None
+        elif type(ArcLength) is str:
+            if 'EndA' in ArcLength:
+                arclengthRange = OrcFxAPI.oeEndA
+            elif 'EndB' in ArcLength:
+                arclengthRange = OrcFxAPI.oeEndB
+            elif 'Touchdown' in ArcLength:
+                arclengthRange = OrcFxAPI.oeTouchdown
+            else:
+                raise ValueError
+        elif len(ArcLength) == 2:
+            StartArcLength = ArcLength[0]
+            EndArcLength = ArcLength[1]
             arclengthRange = OrcFxAPI.arSpecifiedArclengths(
                 StartArcLength, EndArcLength)
-        elif len(ArcLengthArray) == 1:
-            StartArcLength = ArcLengthArray[0]
+        elif len(ArcLength) == 1:
+            StartArcLength = ArcLength[0]
             arclengthRange = OrcFxAPI.arSpecifiedArclengths(
                 StartArcLength, StartArcLength)
         else:

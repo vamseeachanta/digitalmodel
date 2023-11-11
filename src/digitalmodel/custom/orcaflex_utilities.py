@@ -84,15 +84,13 @@ class OrcaflexUtilities:
         #     )
 
         general_properties = update_cfg['cfg']['general'].copy()
-        if general_properties[
-                'ImplicitUseVariableTimeStep'] or general_properties[
-                    'ImplicitUseVariableTimeStep'] == 'No':
+        if general_properties['ImplicitUseVariableTimeStep'] == 'No':
             old_value = model.general.ImplicitUseVariableTimeStep
             new_value = general_properties['ImplicitUseVariableTimeStep']
             if old_value != new_value:
                 model.general.ImplicitUseVariableTimeStep = new_value
                 logging.info(
-                    f"      ImplicitUseVariableTimeStep... old: {old_value} to new: {new_value}"
+                    f"      ImplicitUseVariableTimeStep... changed from : '{old_value}' to '{new_value}'"
                 )
 
             old_value = model.general.ImplicitConstantTimeStep
@@ -100,12 +98,12 @@ class OrcaflexUtilities:
             if old_value != new_value:
                 model.general.ImplicitConstantTimeStep = new_value
                 logging.info(
-                    f"      ImplicitConstantTimeStep... old: {old_value} to new: {new_value}"
+                    f"      ImplicitConstantTimeStep... changed from : '{old_value}' to '{new_value}'"
                 )
 
         else:
             old_value = model.general.ImplicitUseVariableTimeStep
-            new_value = 'Yes'
+            new_value = general_properties['ImplicitUseVariableTimeStep']
             if old_value != new_value:
                 model.general.ImplicitUseVariableTimeStep = new_value
                 logging.info(
