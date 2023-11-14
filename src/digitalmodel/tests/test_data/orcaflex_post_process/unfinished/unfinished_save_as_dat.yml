@@ -16,18 +16,18 @@ file_management:
   update_unfinished: 
     flag: True
     cfg: 
-      save_as: .yml
+      save_as: .dat
       prepare_rerun_batch: True
       general: 
-        ImplicitUseVariableTimeStep: No
-        ImplicitConstantTimeStep : 0.05
-        #  Add damping parameters etc. This should be based on number of iterations etc.
+        constdt: True
+        ImplicitUseVariableTimeStep: 'No' # Keep quotes for value to avoid yml True/False conversion
+        TimeStep : 0.025
+        #  Add damping parameters etc. This should be based on number of iterations elapsed etc.
 
   files:
     files_in_current_directory: 
       flag: True
       directory: NULL
-      auto_read: True
     data_source: yml
     csv_filename: ""
 

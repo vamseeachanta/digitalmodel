@@ -107,7 +107,7 @@ class OrcaflexUtilities:
             if old_value != new_value:
                 model.general.ImplicitUseVariableTimeStep = new_value
                 logging.info(
-                    f"      ImplicitUseVariableTimeStep... old: {old_value} to new: {new_value}"
+                    f"      ImplicitUseVariableTimeStep... changed from : '{old_value}' to '{new_value}'"
                 )
 
             old_value = model.general.ImplicitVariableMaxTimeStep
@@ -115,7 +115,7 @@ class OrcaflexUtilities:
             if old_value != new_value:
                 model.general.ImplicitVariableMaxTimeStep = new_value
                 logging.info(
-                    f"      ImplicitVaribaleMaxTimeStep... old: {old_value} to new: {new_value}"
+                    f"      ImplicitVaribaleMaxTimeStep... changed from : '{old_value}' to '{new_value}'"
                 )
 
         #tmodel.DynamicSolutionMethod = 'Explicit time domain'
@@ -128,21 +128,53 @@ class OrcaflexUtilities:
         return cfg
 
     def get_files(self, cfg):
-        orcaflex_extensions = ['*.yml', '*.yaml', '*.dat', '*.sim', '*.txt']
-        input_files = {}
+        file_management_directory = self.get_file_management_directory(cfg)
 
-        if cfg.file_management['files']['files_in_current_directory']['flag']:
-            file_location = cfg.Analysis['analysis_root_folder']
+        if cfg.file_management['files']['files_in_current_directory'][
+                'auto_read']:
+            orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
+            input_files = {}
+
+            for file_ext in orcaflex_extensions:
+                raw_input_files_for_ext = glob.glob(file_management_directory +
+                                                    '/*.' + file_ext)
+                input_files.update({file_ext: raw_input_files_for_ext})
+
+            cfg.file_management.update({'input_files': input_files})
+
         else:
-            file_location = cfg.file_management['files'][
-                'files_in_current_directory']['directory']
-        for file_ext in orcaflex_extensions:
-            input_files_for_ext = glob.glob(file_location + '/' + file_ext)
-            input_files.update({file_ext: input_files_for_ext})
+            orcaflex_extensions = cfg.file_management['input_files'].keys()
+            for file_ext in orcaflex_extensions:
+                raw_input_files_for_ext = cfg.file_management['input_files'][
+                    file_ext]
 
-        cfg.file_management.update({'input_files': input_files})
+                valid_file_count = 0
+                for input_file_index in range(0, len(raw_input_files_for_ext)):
+                    input_file = raw_input_files_for_ext[input_file_index]
+                    if not os.path.isfile(input_file):
+                        raw_input_files_for_ext[
+                            input_file_index] = os.path.join(
+                                cfg.Analysis['analysis_root_folder'],
+                                input_file)
+                    if os.path.isfile(
+                            raw_input_files_for_ext[input_file_index]):
+                        valid_file_count = valid_file_count + 1
+
+                logging.info(
+                    f"Number of '{file_ext}' input files : {len(raw_input_files_for_ext)} . Valid files are: {valid_file_count}."
+                )
 
         return cfg
+
+    def get_file_management_directory(self, cfg):
+
+        if cfg.file_management['files']['files_in_current_directory']['flag']:
+            file_management_directory = cfg.Analysis['analysis_root_folder']
+        else:
+            file_management_directory = cfg.file_management['files'][
+                'files_in_current_directory']['directory']
+
+        return file_management_directory
 
     def sim_file_analysis_and_update(self, cfg):
         sim_files = cfg.file_management['input_files']['*.sim']

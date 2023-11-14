@@ -19,8 +19,30 @@ def run_orcaflex_post_process(input_file, expected_result={}):
     assert (True)
 
 
+def test_orcaflex_file_management():
+    input_file = 'file_management_unfinished_1.yml'
+    pytest_output_file = None
+    # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
+    # expected_result = ymlInput(pytest_output_file, updateYml=None)
+
+    if len(sys.argv) > 1:
+        sys.argv.pop()
+
+    run_orcaflex_post_process(input_file, expected_result={})
+
 def test_orcaflex_post_process():
-    input_file = 'file_management_unfinished1.yml'
+    input_file = 'orcaflex_post_process_unfinished_1.yml'
+    pytest_output_file = None
+    # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
+    # expected_result = ymlInput(pytest_output_file, updateYml=None)
+
+    if len(sys.argv) > 1:
+        sys.argv.pop()
+
+    run_orcaflex_post_process(input_file, expected_result={})
+
+def test_orcaflex_post_process_2():
+    input_file = 'orcaflex_post_process_unfinished_2.yml'
     pytest_output_file = None
     # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     # expected_result = ymlInput(pytest_output_file, updateYml=None)
@@ -31,4 +53,6 @@ def test_orcaflex_post_process():
     run_orcaflex_post_process(input_file, expected_result={})
 
 
-test_orcaflex_post_process()
+# test_orcaflex_file_management()
+# test_orcaflex_post_process()
+test_orcaflex_post_process_2()

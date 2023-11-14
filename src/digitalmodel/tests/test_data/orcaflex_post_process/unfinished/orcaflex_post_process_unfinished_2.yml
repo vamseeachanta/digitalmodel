@@ -6,27 +6,22 @@ default:
     overwrite:
       output: True
 
-
-
 orcaflex:
   postprocess:
-    visualization: 
-      flag: False
     summary:
       flag: True
-    RangeGraph:
-      flag: False
-    time_series:
-      flag: False
-    RAOs:
-      flag: False
-    cummulative_histograms:
-      flag: False
-    rain_flow:
-      bins: 10
-      range:
-        - 0
-        - 10
+
+file_management:
+  flag: True
+  update_unfinished: 
+    flag: True
+    cfg: 
+      save_as: .yml
+      prepare_rerun_batch: True
+      general: 
+        ImplicitUseVariableTimeStep: No
+        ImplicitConstantTimeStep : 0.05
+        #  Add damping parameters etc. This should be based on number of iterations etc.
 
 summary_settings:
   AddMinimumToSummary: True
@@ -101,4 +96,11 @@ file_management:
     files_in_current_directory: 
       flag: True
       directory: NULL
-      auto_read: True
+      auto_read: False
+
+  input_files:
+    sim: 
+      - orcaflex_test1.sim
+      - orcaflex_test20.sim
+      - orcaflex_test2.sim
+

@@ -14,6 +14,8 @@ orcaflex:
       flag: False
     RangeGraph:
       flag: False
+    RAOs:
+      flag: False
     time_series:
       flag: False
       histogram: True

@@ -604,7 +604,7 @@ class OrcaFlexAnalysis():
 
     def get_load_matrix_with_filenames(self, cfg):
         self.load_matrix['fe_filename'] = cfg.file_management['input_files'][
-            '*.sim']
+            'sim']
         self.load_matrix['RunStatus'] = None
         return self.load_matrix
 
@@ -616,7 +616,7 @@ class OrcaFlexAnalysis():
         SummaryDFAllFiles = [pd.DataFrame()] * len(
             cfg['summary_settings']['groups'])
 
-        sim_files = cfg.file_management['input_files']['*.sim']
+        sim_files = cfg.file_management['input_files']['sim']
 
         summary_cfg = cfg['summary_settings'].copy()
 
@@ -627,37 +627,37 @@ class OrcaFlexAnalysis():
             FileObjectName = 'Dummy_Object'
             histogram_for_file = [[]] * len(cfg.time_series_settings['groups'])
 
-            if model is not None:
-                self.fileIndex = fileIndex
-                print("Post-processing file: {}".format(file_name))
+            self.fileIndex = fileIndex
+            print("Post-processing file: {}".format(file_name))
+            try:
+                RangeAllFiles.append(
+                    self.postProcessRange(model, self.cfg, FileObjectName))
+            except:
+                RangeAllFiles.append(None)
+            if cfg['orcaflex']['postprocess']['time_series']['flag']:
                 try:
-                    RangeAllFiles.append(
-                        self.postProcessRange(model, self.cfg, FileObjectName))
+                    histogram_for_file = self.post_process_histograms(
+                        model, FileObjectName)
                 except:
-                    RangeAllFiles.append(None)
-                if cfg['orcaflex']['postprocess']['time_series']['flag']:
-                    try:
-                        histogram_for_file = self.post_process_histograms(
-                            model, FileObjectName)
-                    except:
-                        pass
-                    histogram_all_files.append(histogram_for_file)
+                    pass
+                histogram_all_files.append(histogram_for_file)
 
-                for SummaryIndex in range(
-                        0, len(cfg['summary_settings']['groups'])):
-                    try:
-                        SimulationFileName = self.get_SimulationFileName(
-                            file_name)
-                        SummaryDFAllFiles[
-                            SummaryIndex] = self.postProcessSummary(
-                                model, SummaryDFAllFiles[SummaryIndex],
-                                SummaryIndex, FileDescription, FileObjectName,
-                                SimulationFileName, fileIndex, cfg)
-                    except Exception as e:
-                        logging.info(str(e))
+            for SummaryIndex in range(0,
+                                      len(cfg['summary_settings']['groups'])):
+                try:
+                    SimulationFileName = self.get_SimulationFileName(file_name)
+                    SummaryDFAllFiles[SummaryIndex] = self.postProcessSummary(
+                        model, SummaryDFAllFiles[SummaryIndex], SummaryIndex,
+                        FileDescription, FileObjectName, SimulationFileName,
+                        fileIndex, cfg)
+                except Exception as e:
+                    logging.info(str(e))
 
-                if cfg['orcaflex']['postprocess']['RAOs']['flag']:
-                    self.post_process_RAOs(model, FileObjectName)
+            if cfg['orcaflex']['postprocess']['RAOs']['flag']:
+                self.post_process_RAOs(model, FileObjectName)
+
+            else:
+                pass
 
             histogram_all_files.append(histogram_for_file)
             RangeAllFiles.append(None)
@@ -856,39 +856,45 @@ class OrcaFlexAnalysis():
         summary_from_sim_file = []
         summary_from_sim_file.append(FileName)
         summary_from_sim_file.append(FileDescription)
-        for SummaryColumnIndex in range(0, len(summary_group_cfg['Columns'])):
-            summary_group_item_cfg = summary_group_cfg['Columns'][
-                SummaryColumnIndex]
-
-            output_value = self.process_summary_by_model_and_cfg(
-                model, summary_group_item_cfg)
-            summary_from_sim_file.append(output_value)
 
         loading_condition_array = self.get_loading_condition_array(fileIndex)
 
-        if np.nan in summary_from_sim_file:
-            print(
-                "Summary Incomplete for : '{}' in simulation file: '{}'".format(
-                    summary_group_cfg['SummaryFileName'], FileDescription))
-            if (ArcLengthArray is None):
+        if model is not None:
+            for SummaryColumnIndex in range(0,
+                                            len(summary_group_cfg['Columns'])):
+                summary_group_item_cfg = summary_group_cfg['Columns'][
+                    SummaryColumnIndex]
+
+                output_value = self.process_summary_by_model_and_cfg(
+                    model, summary_group_item_cfg)
+                summary_from_sim_file.append(output_value)
+
+            if np.nan in summary_from_sim_file:
+                print("Summary Incomplete for : '{}' in simulation file: '{}'".
+                      format(summary_group_cfg['SummaryFileName'],
+                             FileDescription))
+                if (ArcLengthArray is None):
+                    print(
+                        "          Arc length is {}. Define appropriate arc length value or range"
+                        .format(ArcLengthArray))
+                elif (len(ArcLengthArray) == 0):
+                    print(
+                        "          Arc length is {}. Define appropriate arc length value or range"
+                        .format(ArcLengthArray))
+                elif len(ArcLengthArray) == 1:
+                    print(
+                        "          Node may not be in arc length exact position for Arc length {}. Provide a range of approx. element length"
+                        .format(ArcLengthArray))
+                elif len(ArcLengthArray) == 2:
+                    print(
+                        "          Node may not be in arc length range position for Arc length {}. Check range and fe element length"
+                        .format(ArcLengthArray))
                 print(
-                    "          Arc length is {}. Define appropriate arc length value or range"
-                    .format(ArcLengthArray))
-            elif (len(ArcLengthArray) == 0):
-                print(
-                    "          Arc length is {}. Define appropriate arc length value or range"
-                    .format(ArcLengthArray))
-            elif len(ArcLengthArray) == 1:
-                print(
-                    "          Node may not be in arc length exact position for Arc length {}. Provide a range of approx. element length"
-                    .format(ArcLengthArray))
-            elif len(ArcLengthArray) == 2:
-                print(
-                    "          Node may not be in arc length range position for Arc length {}. Check range and fe element length"
-                    .format(ArcLengthArray))
-            print(
-                "          (or) Simulation failed for : {} before postprocess Time {}"
-                .format(FileDescription, SimulationPeriod))
+                    "          (or) Simulation failed for : {} before postprocess Time {}"
+                    .format(FileDescription, SimulationPeriod))
+        else:
+            summary_from_sim_file = summary_from_sim_file + [None] * len(
+                summary_group_cfg['Columns'])
 
         pd.options.mode.chained_assignment = None
         SummaryDF.loc[len(
