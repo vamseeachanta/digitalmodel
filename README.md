@@ -1,6 +1,6 @@
 # Introduction
 
-Digital models for engineering assets. The objective of digital models is to utilize a single source of ascii inputs (single source of truth) to generate equivalent analytical models to encompass lifecycle operations of a product. 
+Sustainable Digital models for engineering assets built with sustainable engineering processes and solutions. The objective of digital models is to utilize a single source of ascii inputs (promoting single source of truth) to generate equivalent analytical models to encompass lifecycle operations of a product. 
 
 These operations include (and not limited to) the following:
 - Analytical calculations
@@ -9,7 +9,7 @@ These operations include (and not limited to) the following:
     - 3D animations
     - Drawing automation
 
-Dedicated to my idol and a lifelong engineer, **Mark Cerkovnik**
+Dedicated to my idol and a lifelong chief engineer, **Mark Cerkovnik**. His insights shaped major portions of my life and this repository.
 
 # Summary
 

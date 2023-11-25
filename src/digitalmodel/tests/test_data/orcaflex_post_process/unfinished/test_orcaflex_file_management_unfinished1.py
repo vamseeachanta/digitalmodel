@@ -30,6 +30,7 @@ def test_orcaflex_file_management():
 
     run_orcaflex_post_process(input_file, expected_result={})
 
+
 def test_orcaflex_post_process():
     input_file = 'orcaflex_post_process_unfinished_1.yml'
     pytest_output_file = None
@@ -40,6 +41,7 @@ def test_orcaflex_post_process():
         sys.argv.pop()
 
     run_orcaflex_post_process(input_file, expected_result={})
+
 
 def test_orcaflex_post_process_2():
     input_file = 'orcaflex_post_process_unfinished_2.yml'
@@ -53,6 +55,6 @@ def test_orcaflex_post_process_2():
     run_orcaflex_post_process(input_file, expected_result={})
 
 
-# test_orcaflex_file_management()
-# test_orcaflex_post_process()
+test_orcaflex_file_management()
+test_orcaflex_post_process()
 test_orcaflex_post_process_2()
