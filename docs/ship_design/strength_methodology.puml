@@ -1,0 +1,60 @@
+@startuml enigma_safety_rubric_mvp1
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Hull | Strength Analysis \n Comparison of Available Workflows
+
+component "Strength Analysis" as strength_analysis
+
+note right of strength_analysis
+    Notes:
+        1/ Manhours, mh 
+        2/ Other notes
+end note
+
+package "Structures" {
+component CSR
+component PULS
+component Leadership
+}
+
+strength_analysis <-- Observation_Card : w=0.333
+strength_analysis <-- Inspections_Dxxx: w=0.333
+strength_analysis <-- Leadership: w=0.333
+
+package "Utilizations" {
+    agent "Quality" as Observation_Card_Quality
+    agent "Count" as Observation_Frequency
+    agent "Hurt Index" as Observation_Card_Hurt_Level_Index
+
+    agent "Completed \nCount" as No_Completed_and_approved_Forms
+    agent "Audit Score" as Audit_score 
+    agent "Audit Score \n- Optimum" as Optimum_Audit_score
+
+    agent "Rank" as Leadership_Rank
+    agent "Excalations" as Leadership_Excalations
+    agent "Communications" as Leadership_Communications
+}
+
+Observation_Card <-- Observation_Card_Quality: w=0.333
+Observation_Card <-- Observation_Frequency : w=0.333
+Observation_Card <-- Observation_Card_Hurt_Level_Index : w=0.333
+
+Inspections_Dxxx <--No_Completed_and_approved_Forms: w=0.333
+Inspections_Dxxx <--Audit_score: w=0.333
+Inspections_Dxxx <--Optimum_Audit_score: w=0.333
+
+Leadership <-- Leadership_Rank: w=0.333
+Leadership <-- Leadership_Excalations : w=0.333
+Leadership <-- Leadership_Communications : w=0.333
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
