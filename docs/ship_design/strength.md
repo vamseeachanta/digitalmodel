@@ -1,7 +1,6 @@
 
-
-
-
+Plate
+Panel (Stiffened, Unstiffened)
 
 
 ### References
