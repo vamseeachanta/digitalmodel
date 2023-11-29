@@ -1,4 +1,4 @@
-@startuml enigma_safety_rubric_mvp1
+@startuml strength_methodology_theories
 
 scale 2
 skinparam titleBorderRoundCorner 15
@@ -6,7 +6,7 @@ skinparam titleBorderThickness 2
 skinparam titleBorderColor red
 skinparam titleBackgroundColor Tomato
 
-title Hull | Strength Analysis \n Available Workflows
+title Hull | Strength Analysis \n Methodologies
 
 component "Strength Analysis" as strength_analysis
 
@@ -20,7 +20,7 @@ package "Structures" {
 component Plates
 component "Panel - Stiffened, Reg. Geom." as p_stiff_reg_geom
 component "Panel - Stiffened, Non-Reg. Geom." as p_stiff_nonreg_geom
-component "Panel - UnStiffened" as p_unstiff
+component "Plate - UnStiffened" as p_unstiff
 component Girders
 }
 
