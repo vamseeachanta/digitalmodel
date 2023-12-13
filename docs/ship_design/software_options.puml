@@ -1,0 +1,34 @@
+@startwbs software_options
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Naval Architecture \n Software Options
+
+* Ship Design
+
+** 3D Design
+*** Rhino
+*** FreeCAD?
+*** AutoCAD inventor
+
+** Global System Analysis \n Global Hull Analysis \n Local Hull Analysis
+*** ANSYS/AQWA
+*** DNV SESAM Genie
+*** ABS SafeHull
+
+** Foundations
+*** Nastran or other tools
+*** Nastran or other tools
+
+
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@endwbs
