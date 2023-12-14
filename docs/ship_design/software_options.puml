@@ -10,21 +10,31 @@ title Naval Architecture \n Software Options
 
 * Ship Design
 
-** 3D Design
-*** Rhino
-*** FreeCAD?
-*** AutoCAD inventor
+** Document Control
+*** Vault (Native Drawing Files)
+*** Reports (?)
 
-** Global System Analysis \n Global Hull Analysis \n Local Hull Analysis
+** Design
+*** Rhino
+*** AutoCAD inventor
+*** FreeCAD
+
+** Stability
+*** GHS
+
+** Weight
+*** Ad Hoc Excel Workbooks
+
+** Global System Analysis \nLocal Hull Analysis
 *** ANSYS/AQWA
 *** DNV SESAM Genie
-*** ABS SafeHull
+*** ABS SafeHull \n(Nastran Engine)
 
 ** Foundations
-*** Nastran or other tools
-*** Nastran or other tools
-
-
+*** Nastran \n(Autodesk/Solidworks etc)
+*** ANSYS
+*** CADRE \n(Beam Elements program)
+*** Beam Sec. Mod. Calcs \n(Excel Workbooks)
 
 footer
 %date("yyyy.MM.dd' at 'HH:mm")
