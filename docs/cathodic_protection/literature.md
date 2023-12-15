@@ -26,6 +26,7 @@ Tyipical design for CP system is shown in the figure below:
 The detailed calculations for Sacrificial Anode Cathodic Protection System is:
 
 The detailed calculations for Impressed Current Cathodic Protection System is:
+[Sacrificial Anode Methodology](sacrificial_anode.md)
 
 ## Vendors
 
