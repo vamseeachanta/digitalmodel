@@ -7,6 +7,10 @@
 docs\cathodic_protection\codes\ABS cathodic-protection-offshore-gn-dec18.pdf
 docs\cathodic_protection\codes\cathodic-protection-gn-dec17.pdf
 
+## Courses
+
+See, [See other literature including course work from various sources](literature)
+
 ## Other References
 
 SNAME T&R Report R-21: Fundamentals of Cathodic Protection for Marine Service (1976)
