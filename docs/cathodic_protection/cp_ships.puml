@@ -1,0 +1,128 @@
+@startuml  cp_ships
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Hull CP Design | Workflow
+
+start
+:CP Design;
+
+:Identify Class (ABS or DNV);
+
+  note right
+    - ABS Cathodic Protection of Ships 
+      see docs\cathodic_protection\codes\cathodic-protection-gn-dec17.pdf
+    - DNV RP B401 Cathodic Protection Design 
+      see docs\cathodic_protection\codes\DNV-RP-B401.pdf
+    - others
+  end note
+
+partition CP Design {
+:Sacarificial vs. ICCP;
+  note right
+    - Choose between sacrifical anode or ICCP
+    - Design can be hybrid (i.e. both)
+    - Existing CP system (If any)
+  end note
+
+:Perform CP calculations;
+  note right
+    - Sacrificial Anode material & weight
+    - ICCP voltage and current requirements
+  end note
+
+}
+
+partition CP Specification {
+
+  partition Fabrication {
+
+  :Sacrificial Anode;
+    note right
+      - Anode material & weight
+      - How many anodes?
+      - Anode locations
+      - distance between locations to protect entire structure
+      - Connection to structure
+    end note
+
+  :ICCP;
+    note right
+      - ICCP stations required
+      - Station locations 
+      - distance between locations to protect entire structure
+      - Connection to structure
+    end note
+
+  }
+
+  partition Installation {
+
+  :Installation method;
+    note right
+      - At dry-dock
+      - Fab yard
+      - Diver-assisted
+      - port-side or starboard-side or both based on berthing?
+      - other?
+    end note
+
+
+    note right
+    Avoid anodes at:
+      - Areas where they can cause problems in the normal operation of the ship
+      - High stress areas or areas subject to high fatigue loads
+      - Areas where they could be damaged (by craft coming alongside, anchor chains or cables)
+    end note
+
+  }
+
+  partition IMR {
+
+  :Inspection;
+    note right
+      - Inspection frequency
+      - Any cleaning required to inspect?
+      - etc.
+    end note
+
+  :Maintenance;
+    note right
+      - Any cleaning required to maintain anode efficiency?
+      - etc.
+    end note
+
+  :Repair/Replace;
+    note right
+      - Provision for repair/replace if required?
+      - etc.
+    end note
+
+  }
+
+  partition Project-Specific {
+
+  :Any project specific details;
+    note right
+      - No-zones
+      - corrosive fluids
+      - etc.
+    end note
+
+  }
+  
+  partition Vendor Evaluation {
+
+  :Collect vendors;
+  :Get product Specs;
+  :Evaluate;
+
+  }
+
+}
+stop
+@enduml
