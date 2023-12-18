@@ -20,6 +20,15 @@ SNAME T&R Report R-21: Fundamentals of Cathodic Protection for Marine Service (1
 <https://www.linkedin.com/pulse/cathodic-protection-design-summary-kaya-korkmaz/>
 
 <https://engineercalcs.com/cathodic-protection-calculation/>
+
+### Maintenance and Service
+
+
+
+**References**
+
+OTC 24012, Service Life and Definition of Failure of Coatings and Cathodic Protection, Brian Gibbs, Thomas Graf, ABS Consulting Inc., 2013
+
 SNAME T&R Report R-21: Fundamentals of Cathodic Protection for Marine Service (1976)
 
 ## Ship Design
