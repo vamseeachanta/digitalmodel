@@ -5,7 +5,12 @@
 ## ABS
 
 docs\cathodic_protection\codes\ABS cathodic-protection-offshore-gn-dec18.pdf
+
+CATHODIC PROTECTION OF SHIPS, DECEMBER 2017
 docs\cathodic_protection\codes\cathodic-protection-gn-dec17.pdf
+
+DNV Cathodic Protection Design, October 2010
+docs\cathodic_protection\codes\DNV RP B401 (2011) Cathodic Protection Design.pdf
 
 ## Courses
 
@@ -22,8 +27,6 @@ SNAME T&R Report R-21: Fundamentals of Cathodic Protection for Marine Service (1
 <https://engineercalcs.com/cathodic-protection-calculation/>
 
 ### Maintenance and Service
-
-
 
 **References**
 

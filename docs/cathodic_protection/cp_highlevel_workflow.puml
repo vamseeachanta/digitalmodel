@@ -23,7 +23,7 @@ start
   end note
 
 partition CP Design (Typ.){
-:Sacarificial vs. ICCP;
+:Sacrificial vs. ICCP;
   note right
     - Choose between sacrifical anode or ICCP
     - Design can be hybrid (i.e. both)
@@ -63,8 +63,6 @@ partition CP Specification {
       - Connection to structure
     end note
 
-
-
   }
 
   partition Installation {
@@ -73,7 +71,7 @@ partition CP Specification {
     note right
       - At dry-dock/Fab yard
       - Diver-assisted
-      - Hot-tab work?
+      - Hot-tap work?
       - port-side or starboard-side or both based on berthing?
       - other?
     end note
@@ -82,15 +80,13 @@ partition CP Specification {
     note right
     Requirements:
       - Welding,clamping etc.  electrical continuity
-      - nmechnical integrity of fastening devices
+      - mechanical integrity of fastening devices
       - no welding/brazing in pressure containing components
     Avoid anodes at:
       - Areas where they can cause problems in the normal operation of the ship
       - High stress areas or areas subject to high fatigue loads
       - Areas where they could be damaged (by craft coming alongside, anchor chains or cables)
     end note
-
-
 
   }
 
@@ -132,7 +128,9 @@ partition CP Specification {
     end note
 
   }
-  
+
+}
+
   partition Vendor Evaluation {
 
   :Collect vendors;
@@ -159,6 +157,5 @@ partition CP Specification {
   }
 
 
-}
 stop
 @enduml
