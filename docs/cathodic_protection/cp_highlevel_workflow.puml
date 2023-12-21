@@ -136,7 +136,7 @@ partition CP Specification {
   :Collect vendors;
   :Get product Specs;
   :Evaluate;
-  :Previous failures and learnigns (if any);
+  :Previous failures and learnings (if any);
   }
 
   partition Integrity Assessment {
