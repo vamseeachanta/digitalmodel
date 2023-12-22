@@ -34,6 +34,8 @@ OTC 24012, Service Life and Definition of Failure of Coatings and Cathodic Prote
 
 SNAME T&R Report R-21: Fundamentals of Cathodic Protection for Marine Service (1976)
 
+<https://www.marineinsight.com/tech/understanding-sacrificial-anodes-on-ships>
+
 ## Ship Design
 
 Tyipical design for CP system is shown in the figure below:
@@ -49,6 +51,9 @@ The detailed calculations for Impressed Current Cathodic Protection System is:
 ### Sacrificial Anode Cathodic Protection System
 
 <https://www.mme-group.com/cathodic-protection/sacrificial-anodes/>
+<https://cathwell.com/industries/floating-offshore-units/sacrificial-anodes/>
+    - <https://cathwell.com/tech-categories/data-sheet/ht-anode/>
+    - <https://cathwell.com/tech-categories/data-sheet/aluminium-sacrificial-anodes/>
 
 ### ICCP
 
