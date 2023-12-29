@@ -1,0 +1,38 @@
+basename: ship_design
+
+inputs:
+  software: sesam
+  file_type: seasam_xtract
+  calculation_type: overall_fatigue
+
+  stress:
+
+  locations:
+    coordinate:
+      flag: True
+      data:
+        - x: -0.0615
+          y: 0
+          z: 0.141
+
+    element:
+      flag: True
+      data:
+        - 1300
+
+  files:
+    fatigue_states:
+      - 'src\digitalmodel\tests\test_data\ship_design\MinDraft'
+      - 'src\digitalmodel\tests\test_data\ship_design\MaxDraft'
+
+  output_filename: "buoy_6d_rectangular_px_0_uth2"
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
+
+Analysis:
+  fe_folder: NULL

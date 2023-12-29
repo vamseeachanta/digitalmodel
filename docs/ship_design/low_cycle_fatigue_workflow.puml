@@ -12,7 +12,7 @@ start
 
   note right
   python_architecture:
-  ship_design
+  basename: ship_design
   software: sesam
   file_type: seasam_xtract
   end note
