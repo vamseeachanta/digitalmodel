@@ -10,7 +10,7 @@ from assetutilities.common.data import SaveData
 from assetutilities.common.visualizations import Visualization
 
 
-class FatigueAnalysisComponents():
+class VIVFatigueAnalysisComponents():
 
     def __init__(self, cfg):
         self.cfg = cfg

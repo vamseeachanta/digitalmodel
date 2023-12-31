@@ -2,7 +2,10 @@ import copy
 import os
 import glob
 import logging
-import OrcFxAPI
+try:
+    import OrcFxAPI
+except:
+    print("OrcFxAPI not available")
 from collections import OrderedDict
 
 from assetutilities.common.saveData import saveDataYaml

@@ -3,7 +3,10 @@ import logging
 import glob
 import yaml
 import pkgutil
-import OrcFxAPI
+try:
+    import OrcFxAPI
+except:
+    print("OrcFxAPI not available")
 import shutil
 
 from assetutilities.common.data import SaveData

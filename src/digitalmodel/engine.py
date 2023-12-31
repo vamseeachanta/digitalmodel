@@ -21,6 +21,7 @@ from digitalmodel.custom.orcaflex_post_process import orcaflex_post_process
 from digitalmodel.custom.orcaflex_file_management import OrcaflexFileManagement
 from digitalmodel.custom.rao_analysis import RAOAnalysis
 from digitalmodel.custom.orcaflex_installation import OrcInstallation
+from digitalmodel.common.ship_design import ShipDesign
 
 save_data = SaveData()
 ou = OrcaflexUtilities()
@@ -81,6 +82,9 @@ def engine(inputfile=None):
         orc_install = OrcInstallation()
         if cfg_base['structure']['flag']:
             cfg_base = orc_install.create_model_for_water_depth(cfg_base)
+    elif basename == 'ship_design':
+        ship_design = ShipDesign()
+        ship_design.router(cfg_base)
 
     else:
         raise (

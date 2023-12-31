@@ -2,28 +2,30 @@ basename: ship_design
 
 inputs:
   software: sesam
-  file_type: seasam_xtract
-  calculation_type: overall_fatigue
+  calculation_type: combined_fatigue
 
   stress:
 
-  locations:
-    coordinate:
-      flag: True
-      data:
-        - x: -0.0615
-          y: 0
-          z: 0.141
-
-    element:
-      flag: True
-      data:
-        - 1300
-
   files:
-    fatigue_states:
-      - 'src\digitalmodel\tests\test_data\ship_design\MinDraft'
-      - 'src\digitalmodel\tests\test_data\ship_design\MaxDraft'
+    lcf:
+      file_type: seasam_xtract
+      fatigue_states:
+        - 'src\digitalmodel\tests\test_data\ship_design\MinDraft'
+        - 'src\digitalmodel\tests\test_data\ship_design\MaxDraft'
+    locations:
+      coordinate:
+        flag: True
+        data:
+          - { x: -0.0615, y: 0, z: 0.141 }
+
+      element:
+        flag: True
+        data:
+          - 1300
+    wave:
+      file_type: data
+      data:
+        - 0.5
 
   output_filename: "buoy_6d_rectangular_px_0_uth2"
 

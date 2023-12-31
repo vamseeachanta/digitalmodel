@@ -2,7 +2,11 @@ import os
 import math
 import pandas as pd
 
-import OrcFxAPI
+try:
+    import OrcFxAPI
+except:
+    print("OrcFxAPI not available")
+
 
 import logging
 from assetutilities.common.utilities import is_file_valid_func

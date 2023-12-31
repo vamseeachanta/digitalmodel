@@ -1,7 +1,7 @@
-from digitalmodel.common.fatigue_analysis_components import FatigueAnalysisComponents
+from digitalmodel.common.viv_fatigue_analysis_components import VIVFatigueAnalysisComponents
 
 def fatigue_analysis(cfg):
-    fatigue_components = FatigueAnalysisComponents(cfg)
+    fatigue_components = VIVFatigueAnalysisComponents(cfg)
 
     if cfg['default']['Analysis']['wave_fatigue']['orcaflex']:
         fatigue_components.orcaflex_wave_fatigue_analysis()

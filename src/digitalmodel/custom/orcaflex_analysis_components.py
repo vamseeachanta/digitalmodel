@@ -2,7 +2,6 @@ import os
 import logging
 import pandas as pd
 import numpy as np
-import OrcFxAPI
 import math
 import copy
 import scipy
@@ -18,6 +17,11 @@ from assetutilities.common.yml_utilities import ymlInput
 from digitalmodel.common.time_series_components import TimeSeriesComponents
 from digitalmodel.common.ETL_components import ETL_components
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+
+try:
+    import OrcFxAPI
+except:
+    print("OrcFxAPI not available")
 
 ou = OrcaflexUtilities()
 

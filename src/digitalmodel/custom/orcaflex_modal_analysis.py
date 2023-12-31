@@ -3,7 +3,11 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-import OrcFxAPI
+try:
+    import OrcFxAPI
+except:
+    print("OrcFxAPI not available")
+
 
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 

@@ -25,3 +25,6 @@ dependencies:
       - pytest
       - sympy
       - kaleido
+      - assetutilities
+      - digitalmodel
+      - winreg
