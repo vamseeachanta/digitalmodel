@@ -62,8 +62,11 @@ R = circuit resistance, which is sum of anode-to-electrolyte resistance, electro
 Q(T) = 2000 – 27 × (T – 20°C) A-h/kg
 Q(T) = 907 – 6.8 × (T – 68°F) A-h/lb
 
-- Minimum Net Weight of Anode (Main Output). If calculation is started in this Section, Rest of it will be chain reaction to the above and below evaluations.
-  - See Section 7.3
+#### Minimum Net Weight of Anode (Main Output)
+
+If calculation is started in this Section, Rest of it will be chain reaction to the above and below evaluations
+
+- See Section 7.3
 
 Wtotal = (Imean × Tdesign × 8760)/(Q × u) kg
 Wtotal = 2.2046 × (Imean × Tdesign × 8760)/(Q × u) lb
@@ -75,7 +78,7 @@ u = utilization factor determined by the portion of anodic material consumed whe
 Q = practical current capacity for the anode material in the environment considered, in A-h/kg (A-h/lb). (see EN 12496)
 8760 = number of hours per year
 
-- Anode Life: 25 yrs Design life
+#### Anode Life: 25 yrs Design life
 
 Tanode = (Wanode × u)/(E × Is) years
 where
@@ -85,7 +88,7 @@ u = utilization factor determined by the portion of anodic material consumed whe
 E = consumption rate of the anode material in the environment considered, in kg/(A-y) [lb/(A-y)]
 Is = average (mean) current output of the anode during the lifetime, in amperes (A)
 
-- Anode resistance at End of Life, Section 7.5
+#### Anode resistance at End of Life, Section 7.5
 
 Wfinal = Winitial(1 – u) kg (lb)
 where
