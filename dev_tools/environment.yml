@@ -28,3 +28,6 @@ dependencies:
       - assetutilities
       - digitalmodel
       - winreg
+      - tabula
+      - PyPDF2
+      - xlsxwriter

@@ -1,0 +1,60 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/ship_design_fatigue.yml
+    DefaultInputFile: null
+    analysis_root_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design
+    basename: file_management
+    cfg_array_file_names: null
+    fe_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design\results\
+    file_name: app_file_management_ship_design_fatigue
+    file_name_for_overwrite: app_file_management_ship_design_fatigue
+    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design\logs\
+    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design\results\
+    start_time: 2024-01-04 20:52:24.582716
+  basename: ship_design
+  default:
+    config:
+      cfg_sensitivities: false
+      overwrite:
+        output: true
+    log_level: DEBUG
+  files:
+    extension: pdf
+    files_in_current_directory:
+      directory: C:\Users\vamseea\Desktop\Wood Deliverables
+      flag: false
+    filters:
+      filename_contains:
+      - WLNG
+      filename_not_contains: []
+  inputs:
+    calculation_type: combined_fatigue
+    files:
+      lcf:
+        fatigue_states:
+        - src/digitalmodel/tests/test_data/ship_design/MinDraft
+        - src/digitalmodel/tests/test_data/ship_design/MaxDraft
+        file_name: MULL
+        file_type: seasam_xtract
+      locations:
+        coordinate:
+          data:
+          - x: -0.0615
+            y: 0
+            z: 0.141
+          flag: true
+        element:
+          data:
+          - 1300
+          flag: true
+      wave:
+        data:
+        - 0.5
+        file_type: data
+    output_filename: buoy_6d_rectangular_px_0_uth2
+    software: sesam
+    stress: null
+  ship_design:
+    files: []
+state: *id001
