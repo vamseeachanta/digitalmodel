@@ -8,7 +8,7 @@ from assetutilities.common.utilities import add_cwd_to_filename
 from assetutilities.common.data import ReadData
 from assetutilities.common.data import SaveData
 from assetutilities.common.visualizations import Visualization
-
+read_data = ReadData()
 
 class ShipFatigueAnalysis():
 
@@ -43,15 +43,39 @@ class ShipFatigueAnalysis():
 
 
         return fatigue_state_pairs
-    
+
     def read_files_and_get_stress_range(self, fatigue_state_pair):
         stress_range = []
-        for state in fatigue_state_pair:
-            seasam_xtract_file = ReadData(fatigue_state_pair[state])
-            seasam_xtract_file = seasam_xtract_file.read_seasam_xtract()
-            stress_range.append(seasam_xtract_file['stress_range'])
+
+        state_0_df = self.read_seasam_xtract(fatigue_state_pair['state_0'])
+        state_1_df = self.read_seasam_xtract(fatigue_state_pair['state_1'])
+
+        seasam_xtract_file = seasam_xtract_file.read_seasam_xtract()
+        stress_range.append(seasam_xtract_file['stress_range'])
         stress_range = self.get_stress_range(stress_range)
         fatigue_state_pair['stress_range'] = stress_range
+
+    def read_seasam_xtract(self, seasam_xtract_file):
+        cfg = {
+            'io': seasam_xtract_file,
+            'start_line': 6,
+            'end_line': 6,
+            'DataFrame': False
+        }
+
+        column_data = read_data.from_ascii_file_get_structured_data_delimited_white_space(cfg)
+        columns = [data[0] for data in column_data]
+
+        cfg = {
+            'io': seasam_xtract_file,
+            'start_line': 7,
+            'columns': columns,
+            'DataFrame': True
+        }
+
+        df = read_data.from_ascii_file_get_structured_data_delimited_white_space(cfg)
+
+        return df
 
     def get_fatigue_state_pairs(self, state_0_files, state_1_files):
         fatigue_state_pairs = []

@@ -15,7 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 keywords=['finite element', 'asset representation', 'structural', 'physical', 'engineering', 'animation', 'lifecycle', 'lifecycle analysis', 'single source of truth', 'digital model', 'digital twin']
-dependencies = ["pyyaml", "plotly", "webcolors", "flask_wtf", "flask_httpauth", "flask_restful", "urllib3", 'tomli; python_version < "3.11"']
+dependencies = ["pyyaml", "plotly", "webcolors", "flask_wtf", "flask_httpauth", "flask_restful", "urllib3", 'tomli', 'dash','bumpver','matplotlib','scipy','pandas','xlrd','openpyxl','imgkit','xmltodict','OrcFxAPI; python_version < "3.10"','docx','deepdiff','pytest','sympy','kaleido','assetutilities']
 requires-python = ">=3.7"
 
     [project.optional-dependencies]
