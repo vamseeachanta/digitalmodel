@@ -33,19 +33,34 @@ class ShipFatigueAnalysis():
         state_1_files = self.get_files_in_directory(fatigue_states[1])
 
         fatigue_state_pairs = self.get_fatigue_state_pairs(state_0_files, state_1_files)
-                    
-        seasam_xtract_file = cfg['inputs']['files']['lcf']['file_name']
-        seasam_xtract_file = os.path.join(os.path.dirname(__file__), seasam_xtract_file)
-        seasam_xtract_file = ReadData(seasam_xtract_file)
-        seasam_xtract_file = seasam_xtract_file.read_seasam_xtract()
 
+        
+        fatigue_state_pairs = self.get_stress_ranges(cfg, fatigue_state_pairs)
+
+    def get_stress_ranges(self, cfg, fatigue_state_pairs):
+        for fatigue_state_pair in fatigue_state_pairs:
+            fatigue_state_pair = self.read_files_and_get_stress_range(fatigue_state_pair)
+
+
+        return fatigue_state_pairs
+    
+    def read_files_and_get_stress_range(self, fatigue_state_pair):
+        stress_range = []
+        for state in fatigue_state_pair:
+            seasam_xtract_file = ReadData(fatigue_state_pair[state])
+            seasam_xtract_file = seasam_xtract_file.read_seasam_xtract()
+            stress_range.append(seasam_xtract_file['stress_range'])
+        stress_range = self.get_stress_range(stress_range)
+        fatigue_state_pair['stress_range'] = stress_range
 
     def get_fatigue_state_pairs(self, state_0_files, state_1_files):
         fatigue_state_pairs = []
-        for basename_0 in state_0_files['basenames']:
-            basename_index_1 in state_1_files['basenames']:
-                if file_0 == file_1:
-                    fatigue_state_pairs.append([file_0, file_1])
+        for state_0_index in range(0, len(state_0_files['basenames'])):
+            basename_0 = state_0_files['basenames'][state_0_index]
+            basename_index_1= state_1_files['basenames'].index(basename_0)
+            fatigue_state_pair = {'state_0': state_0_files['files'][state_0_index], 'state_1': state_1_files['files'][basename_index_1]}
+            fatigue_state_pairs.append(fatigue_state_pair)
+            
         return fatigue_state_pairs
 
     def get_files_in_directory(self, directory):
