@@ -17,7 +17,7 @@ inputs:
       coordinate:
         flag: True
         data:
-          - { x: -0.0615, y: 0, z: 0.141 }
+          - { X-coord(1): 77.0091, yY-coord(1): 15.3, Z-coord(1): 2.1 }
 
       element:
         flag: True

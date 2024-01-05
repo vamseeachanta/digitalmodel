@@ -1,4 +1,5 @@
 import os
+import logging
 import statistics
 import logging
 import pandas as pd
@@ -40,20 +41,51 @@ class ShipFatigueAnalysis():
     def get_stress_ranges(self, cfg, fatigue_state_pairs):
         for fatigue_state_pair in fatigue_state_pairs:
             fatigue_state_pair = self.read_files_and_get_stress_range(fatigue_state_pair)
-
+            fatigue_state_pair = self.get_stress_data(cfg, fatigue_state_pair)
 
         return fatigue_state_pairs
 
+
+    def get_stress_data(self, cfg, fatigue_state_pair):
+        for df_label in ['state_0_df', 'state_1_df']:
+            
+            for column in ['Mises', 'S11', 'S22', 'S33']:
+                fatigue_state_pair[df_label][column] = self.get_stress(fatigue_state_pair[df_label][column])
+             
+        
     def read_files_and_get_stress_range(self, fatigue_state_pair):
         stress_range = []
 
-        state_0_df = self.read_seasam_xtract(fatigue_state_pair['state_0'])
-        state_1_df = self.read_seasam_xtract(fatigue_state_pair['state_1'])
+        for state in ['state_0', 'state_1']:
+            state_df = self.read_seasam_xtract(fatigue_state_pair[state])
+            transformed_df = self.transform_df_for_stress_analysis(state_df)
+            fatigue_state_pair.update({(state + '_df'): transformed_df})
+        
+        return fatigue_state_pair
 
-        seasam_xtract_file = seasam_xtract_file.read_seasam_xtract()
-        stress_range.append(seasam_xtract_file['stress_range'])
-        stress_range = self.get_stress_range(stress_range)
-        fatigue_state_pair['stress_range'] = stress_range
+    def transform_df_for_stress_analysis(self, df):
+        # Convert columns to float
+        df.replace('N/A', np.nan, inplace=True)
+        for column in df.columns:
+            try:
+                df[column] = df[column].astype(float)
+            except:
+                logging.info(f'Could not convert column {column} to float')
+        
+        add_columns = ['Element', 'x_min', 'x_max', 'y_min', 'y_max', 'z_min', 'S']
+        for column in add_columns:
+            df[column] = np.nan
+
+        for df_row in range(0, len(df)):
+            df.loc[df_row, 'x_min'] = min(df.iloc[df_row]['X-coord(1)'], df.iloc[df_row]['X-coord(2)'], df.iloc[df_row]['X-coord(3)'], df.iloc[df_row]['X-coord(4)'], df.iloc[df_row]['X-coord(5)'], df.iloc[df_row]['X-coord(6)'], df.iloc[df_row]['X-coord(7)'], df.iloc[df_row]['X-coord(8)'])
+            df.loc[df_row, 'x_max'] = max(df.iloc[df_row]['X-coord(1)'], df.iloc[df_row]['X-coord(2)'], df.iloc[df_row]['X-coord(3)'], df.iloc[df_row]['X-coord(4)'], df.iloc[df_row]['X-coord(5)'], df.iloc[df_row]['X-coord(6)'], df.iloc[df_row]['X-coord(7)'], df.iloc[df_row]['X-coord(8)'])
+            df.loc[df_row, 'y_min'] = min(df.iloc[df_row]['Y-coord(1)'], df.iloc[df_row]['Y-coord(2)'], df.iloc[df_row]['Y-coord(3)'], df.iloc[df_row]['Y-coord(4)'], df.iloc[df_row]['Y-coord(5)'], df.iloc[df_row]['Y-coord(6)'], df.iloc[df_row]['Y-coord(7)'], df.iloc[df_row]['Y-coord(8)'])
+            df.loc[df_row, 'y_max'] = max(df.iloc[df_row]['Y-coord(1)'], df.iloc[df_row]['Y-coord(2)'], df.iloc[df_row]['Y-coord(3)'], df.iloc[df_row]['Y-coord(4)'], df.iloc[df_row]['Y-coord(5)'], df.iloc[df_row]['Y-coord(6)'], df.iloc[df_row]['Y-coord(7)'], df.iloc[df_row]['Y-coord(8)'])
+            df.loc[df_row, 'z_min'] = min(df.iloc[df_row]['Z-coord(1)'], df.iloc[df_row]['Z-coord(2)'], df.iloc[df_row]['Z-coord(3)'], df.iloc[df_row]['Z-coord(4)'], df.iloc[df_row]['Z-coord(5)'], df.iloc[df_row]['Z-coord(6)'], df.iloc[df_row]['Z-coord(7)'], df.iloc[df_row]['Z-coord(8)'])   
+            df.loc[df_row, 'z_max'] = max(df.iloc[df_row]['Z-coord(1)'], df.iloc[df_row]['Z-coord(2)'], df.iloc[df_row]['Z-coord(3)'], df.iloc[df_row]['Z-coord(4)'], df.iloc[df_row]['Z-coord(5)'], df.iloc[df_row]['Z-coord(6)'], df.iloc[df_row]['Z-coord(7)'], df.iloc[df_row]['Z-coord(8)'])   
+            df.loc[df_row, 'S'] = mean(df.iloc[df_row]['S11'], df.iloc[df_row]['S22'], df.iloc[df_row]['S33'])
+
+        return df
 
     def read_seasam_xtract(self, seasam_xtract_file):
         cfg = {
