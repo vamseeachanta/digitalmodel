@@ -83,7 +83,16 @@ class ShipFatigueAnalysis():
             df.loc[df_row, 'y_max'] = max(df.iloc[df_row]['Y-coord(1)'], df.iloc[df_row]['Y-coord(2)'], df.iloc[df_row]['Y-coord(3)'], df.iloc[df_row]['Y-coord(4)'], df.iloc[df_row]['Y-coord(5)'], df.iloc[df_row]['Y-coord(6)'], df.iloc[df_row]['Y-coord(7)'], df.iloc[df_row]['Y-coord(8)'])
             df.loc[df_row, 'z_min'] = min(df.iloc[df_row]['Z-coord(1)'], df.iloc[df_row]['Z-coord(2)'], df.iloc[df_row]['Z-coord(3)'], df.iloc[df_row]['Z-coord(4)'], df.iloc[df_row]['Z-coord(5)'], df.iloc[df_row]['Z-coord(6)'], df.iloc[df_row]['Z-coord(7)'], df.iloc[df_row]['Z-coord(8)'])   
             df.loc[df_row, 'z_max'] = max(df.iloc[df_row]['Z-coord(1)'], df.iloc[df_row]['Z-coord(2)'], df.iloc[df_row]['Z-coord(3)'], df.iloc[df_row]['Z-coord(4)'], df.iloc[df_row]['Z-coord(5)'], df.iloc[df_row]['Z-coord(6)'], df.iloc[df_row]['Z-coord(7)'], df.iloc[df_row]['Z-coord(8)'])   
-            df.loc[df_row, 'S'] = mean(df.iloc[df_row]['S11'], df.iloc[df_row]['S22'], df.iloc[df_row]['S33'])
+            if 'VONMISES(1)' in df.columns:
+                df.loc[df_row, 'S'] = statistics.mean([df.iloc[df_row]['VONMISES(1)'], df.iloc[df_row]['VONMISES(2)'], df.iloc[df_row]['VONMISES(3)'], df.iloc[df_row]['VONMISES(4)'], df.iloc[df_row]['VONMISES(5)'], df.iloc[df_row]['VONMISES(6)'], df.iloc[df_row]['VONMISES(7)'], df.iloc[df_row]['VONMISES(8)']])
+            elif 'SIGXX(3)' in df.columns:
+                df.loc[df_row, 'S'] = statistics.mean([df.iloc[df_row]['SIGXX(1)'], df.iloc[df_row]['SIGXX(2)'], df.iloc[df_row]['SIGXX(3)'], df.iloc[df_row]['SIGXX(4)'], df.iloc[df_row]['SIGXX(5)'], df.iloc[df_row]['SIGXX(6)'], df.iloc[df_row]['SIGXX(7)'], df.iloc[df_row]['SIGXX(8)']])
+            elif 'SIGYY(1)' in df.columns:
+                df.loc[df_row, 'S'] = statistics.mean([df.iloc[df_row]['SIGYY(1)'], df.iloc[df_row]['SIGYY(2)'], df.iloc[df_row]['SIGYY(3)'], df.iloc[df_row]['SIGYY(4)'], df.iloc[df_row]['SIGYY(5)'], df.iloc[df_row]['SIGYY(6)'], df.iloc[df_row]['SIGYY(7)'], df.iloc[df_row]['SIGYY(8)']])
+            elif 'TAUXY(1)' in df.columns:
+                df.loc[df_row, 'S'] = statistics.mean([df.iloc[df_row]['TAUXY(1)'], df.iloc[df_row]['TAUXY(2)'], df.iloc[df_row]['TAUXY(3)'], df.iloc[df_row]['TAUXY(4)'], df.iloc[df_row]['TAUXY(5)'], df.iloc[df_row]['TAUXY(6)'], df.iloc[df_row]['TAUXY(7)'], df.iloc[df_row]['TAUXY(8)']])
+            else:
+                raise ValueError('Could not find stress column')
 
         return df
 
