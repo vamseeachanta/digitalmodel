@@ -1,4 +1,4 @@
-&id005 !!python/object/new:assetutilities.common.data.AttributeDict
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
 dictitems:
   Analysis:
     CustomInputFile: src/digitalmodel/tests/test_data/ship_design/ship_design_fatigue.yml
@@ -11,7 +11,7 @@ dictitems:
     file_name_for_overwrite: app_ship_design_ship_design_fatigue
     log_folder: src/digitalmodel/tests/test_data/ship_design\logs\
     result_folder: src/digitalmodel/tests/test_data/ship_design\results\
-    start_time: 2024-01-07 20:06:36.892695
+    start_time: 2024-01-08 05:49:19.943542
   basename: ship_design
   default:
     config:
@@ -31,121 +31,93 @@ dictitems:
       locations:
         coordinate:
           data:
-          - &id002
-            t: 15
+          - t: 15
             x: 77.0091
             y: 15.3
             z: 2.1
           flag: true
         element:
           data:
-          - &id003
-            element: 1300
+          - element: 1300
             t: 15
-          - &id004
-            element: 2381
+          - element: 2381
             t: 15
           flag: true
       wave:
         data:
         - 0.5
         file_type: data
-    output_filename: buoy_6d_rectangular_px_0_uth2
     software: sesam
     stress: null
   ship_design:
     stress_output:
     - coordinate:
-      - delta_stress: !!python/object/apply:numpy.core.multiarray.scalar
-        - &id001 !!python/object/apply:numpy.dtype
-          args:
-          - f8
-          - false
-          - true
-          state: !!python/tuple
-          - 3
-          - <
-          - null
-          - null
-          - null
-          - -1
-          - -1
-          - 0
-        - !!binary |
-          qqqqovQnb0E=
+      - delta_stress: 16334757.08
         state_0:
-          S: !!python/object/apply:numpy.core.multiarray.scalar
-          - *id001
-          - !!binary |
-            AAAAkC2vWkE=
-          coordinate: *id002
+          S: 6995126.25
+          coordinate:
+            t: 15
+            x: 77.0091
+            y: 15.3
+            z: 2.1
           element:
           - 1300.0
           - 1318.0
           - 1337.0
           label: state_0
         state_1:
-          S: !!python/object/apply:numpy.core.multiarray.scalar
-          - *id001
-          - !!binary |
-            VVVVtcU/dkE=
-          coordinate: *id002
+          S: 23329883.33
+          coordinate:
+            t: 15
+            x: 77.0091
+            y: 15.3
+            z: 2.1
           element:
           - 1300.0
           - 1318.0
           - 1337.0
           label: state_1
       element:
-      - delta_stress: !!python/object/apply:numpy.core.multiarray.scalar
-        - *id001
-        - !!binary |
-          AAAAMCGvbUE=
+      - delta_stress: 15563017.5
         state_0:
-          S: !!python/object/apply:numpy.core.multiarray.scalar
-          - *id001
-          - !!binary |
-            AAAAgGvlWkE=
+          S: 7050670.0
           coordinate:
-            x: 77.05675
+            x: 77.06
             y: 15.3
-            z: 2.063215
-          element: *id003
+            z: 2.06
+          element:
+            element: 1300
+            t: 15
           label: state_0
         state_1:
-          S: !!python/object/apply:numpy.core.multiarray.scalar
-          - *id001
-          - !!binary |
-            AAAAeOuQdUE=
+          S: 22613687.5
           coordinate:
-            x: 77.05675
+            x: 77.06
             y: 15.3
-            z: 2.063215
-          element: *id003
+            z: 2.06
+          element:
+            element: 1300
+            t: 15
           label: state_1
-      - delta_stress: !!python/object/apply:numpy.core.multiarray.scalar
-        - *id001
-        - !!binary |
-          AAAA+LM3jEE=
+      - delta_stress: 59176575.0
         state_0:
-          S: !!python/object/apply:numpy.core.multiarray.scalar
-          - *id001
-          - !!binary |
-            AAAAILarZEE=
+          S: 10837425.0
           coordinate:
-            x: 76.5255
-            y: 15.119250000000001
+            x: 76.53
+            y: 15.12
             z: 2.4
-          element: *id004
+          element:
+            element: 2381
+            t: 15
           label: state_0
         state_1:
-          S: !!python/object/apply:numpy.core.multiarray.scalar
-          - *id001
-          - !!binary |
-            AAAAwFCxkEE=
+          S: 70014000.0
           coordinate:
-            x: 76.5255
-            y: 15.119250000000001
+            x: 76.53
+            y: 15.12
             z: 2.4
-          element: *id004
+          element:
+            element: 2381
+            t: 15
           label: state_1
-state: *id005
+state: *id001

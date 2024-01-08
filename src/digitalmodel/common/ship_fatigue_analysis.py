@@ -69,7 +69,9 @@ class ShipFatigueAnalysis:
                     stress_range.append(stress_output["S"])
 
                 delta_stress = stress_range[1] - stress_range[0]
-                coordinate_output.update({"delta_stress": delta_stress})
+                coordinate_output.update(
+                    {"delta_stress": round(float(delta_stress), 2)}
+                )
                 coordinate_output_array.append(coordinate_output)
 
             stress_data_output_by_pair.update({"coordinate": coordinate_output_array})
@@ -91,7 +93,7 @@ class ShipFatigueAnalysis:
                     stress_range.append(stress_output["S"])
 
                 delta_stress = stress_range[1] - stress_range[0]
-                element_output.update({"delta_stress": delta_stress})
+                element_output.update({"delta_stress": round(float(delta_stress), 2)})
                 element_output_array.append(element_output)
 
             stress_data_output_by_pair.update({"element": element_output_array})
@@ -109,9 +111,9 @@ class ShipFatigueAnalysis:
             & (df["z_min"] <= coordinate["z"])
             & (df["z_max"] >= coordinate["z"])
         ]
-        stress_output.update({"coordinate": coordinate})
+        stress_output.update({"coordinate": coordinate.copy()})
         stress_output.update({"element": df_filter["Element"].to_list()})
-        stress_output.update({"S": df_filter["S"].mean()})
+        stress_output.update({"S": round(float(df_filter["S"].mean()), 2)})
         stress_output.update({"label": label})
 
         return stress_output
@@ -121,21 +123,18 @@ class ShipFatigueAnalysis:
 
         df_filter = df[df["Element"] == element_dict["element"]]
 
+        x = statistics.mean(df_filter["x_min"].tolist() + df_filter["x_max"].tolist())
+        y = statistics.mean(df_filter["y_min"].tolist() + df_filter["y_max"].tolist())
+        z = statistics.mean(df_filter["z_min"].tolist() + df_filter["z_max"].tolist())
         coordinate = {
-            "x": statistics.mean(
-                df_filter["x_min"].tolist() + df_filter["x_max"].tolist()
-            ),
-            "y": statistics.mean(
-                df_filter["y_min"].tolist() + df_filter["y_max"].tolist()
-            ),
-            "z": statistics.mean(
-                df_filter["z_min"].tolist() + df_filter["z_max"].tolist()
-            ),
+            "x": round(float(x), 2),
+            "y": round(float(y), 2),
+            "z": round(float(z), 2),
         }
         stress_output.update({"coordinate": coordinate})
 
-        stress_output.update({"element": element_dict})
-        stress_output.update({"S": df_filter["S"].mean()})
+        stress_output.update({"element": element_dict.copy()})
+        stress_output.update({"S": round(float(df_filter["S"].mean()), 2)})
         stress_output.update({"label": label})
 
         return stress_output

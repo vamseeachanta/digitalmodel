@@ -30,8 +30,6 @@ inputs:
       data:
         - 0.5
 
-  output_filename: "buoy_6d_rectangular_px_0_uth2"
-
 default:
   log_level: DEBUG
   config:
