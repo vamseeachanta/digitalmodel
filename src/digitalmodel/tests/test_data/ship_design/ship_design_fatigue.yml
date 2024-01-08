@@ -17,12 +17,14 @@ inputs:
       coordinate:
         flag: True
         data:
-          - { X-coord(1): 77.0091, yY-coord(1): 15.3, Z-coord(1): 2.1 }
+          - { x: 77.0091, y: 15.3, z: 2.1, t: 15 }
 
       element:
         flag: True
         data:
-          - 1300
+          - { element: 1300, t: 15 }
+          - { element: 2381, t: 15 }
+
     wave:
       file_type: data
       data:
