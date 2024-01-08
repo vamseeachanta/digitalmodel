@@ -10,7 +10,7 @@ dictitems:
     file_name_for_overwrite: app_fatigue_analysis_fatigue_analysis
     log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data\logs\
     result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data\results\
-    start_time: 2024-01-08 15:45:10.888749
+    start_time: 2024-01-08 15:50:37.758160
   basename: fatigue_analysis
   default:
     config:
@@ -18,7 +18,7 @@ dictitems:
         output: true
     log_level: DEBUG
   fatigue_analysis:
-    damage: 0.0
+    damage: 1.5700381456467867e-13
   fatigue_data:
     csv: true
     io: src\digitalmodel\tests\test_data\fatigue_analysis\fatigue_data.csv
