@@ -1,0 +1,151 @@
+&id005 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: src/digitalmodel/tests/test_data/ship_design/ship_design_fatigue.yml
+    DefaultInputFile: null
+    analysis_root_folder: src/digitalmodel/tests/test_data/ship_design
+    basename: ship_design
+    cfg_array_file_names: null
+    fe_folder: src/digitalmodel/tests/test_data/ship_design\results\
+    file_name: app_ship_design_ship_design_fatigue
+    file_name_for_overwrite: app_ship_design_ship_design_fatigue
+    log_folder: src/digitalmodel/tests/test_data/ship_design\logs\
+    result_folder: src/digitalmodel/tests/test_data/ship_design\results\
+    start_time: 2024-01-07 20:06:36.892695
+  basename: ship_design
+  default:
+    config:
+      cfg_sensitivities: false
+      overwrite:
+        output: true
+    log_level: DEBUG
+  inputs:
+    calculation_type: combined_fatigue
+    files:
+      lcf:
+        fatigue_states:
+        - src/digitalmodel/tests/test_data/ship_design/seasam/MinDraft
+        - src/digitalmodel/tests/test_data/ship_design/seasam/MaxDraft
+        file_name: MULL
+        file_type: seasam_xtract
+      locations:
+        coordinate:
+          data:
+          - &id002
+            t: 15
+            x: 77.0091
+            y: 15.3
+            z: 2.1
+          flag: true
+        element:
+          data:
+          - &id003
+            element: 1300
+            t: 15
+          - &id004
+            element: 2381
+            t: 15
+          flag: true
+      wave:
+        data:
+        - 0.5
+        file_type: data
+    output_filename: buoy_6d_rectangular_px_0_uth2
+    software: sesam
+    stress: null
+  ship_design:
+    stress_output:
+    - coordinate:
+      - delta_stress: !!python/object/apply:numpy.core.multiarray.scalar
+        - &id001 !!python/object/apply:numpy.dtype
+          args:
+          - f8
+          - false
+          - true
+          state: !!python/tuple
+          - 3
+          - <
+          - null
+          - null
+          - null
+          - -1
+          - -1
+          - 0
+        - !!binary |
+          qqqqovQnb0E=
+        state_0:
+          S: !!python/object/apply:numpy.core.multiarray.scalar
+          - *id001
+          - !!binary |
+            AAAAkC2vWkE=
+          coordinate: *id002
+          element:
+          - 1300.0
+          - 1318.0
+          - 1337.0
+          label: state_0
+        state_1:
+          S: !!python/object/apply:numpy.core.multiarray.scalar
+          - *id001
+          - !!binary |
+            VVVVtcU/dkE=
+          coordinate: *id002
+          element:
+          - 1300.0
+          - 1318.0
+          - 1337.0
+          label: state_1
+      element:
+      - delta_stress: !!python/object/apply:numpy.core.multiarray.scalar
+        - *id001
+        - !!binary |
+          AAAAMCGvbUE=
+        state_0:
+          S: !!python/object/apply:numpy.core.multiarray.scalar
+          - *id001
+          - !!binary |
+            AAAAgGvlWkE=
+          coordinate:
+            x: 77.05675
+            y: 15.3
+            z: 2.063215
+          element: *id003
+          label: state_0
+        state_1:
+          S: !!python/object/apply:numpy.core.multiarray.scalar
+          - *id001
+          - !!binary |
+            AAAAeOuQdUE=
+          coordinate:
+            x: 77.05675
+            y: 15.3
+            z: 2.063215
+          element: *id003
+          label: state_1
+      - delta_stress: !!python/object/apply:numpy.core.multiarray.scalar
+        - *id001
+        - !!binary |
+          AAAA+LM3jEE=
+        state_0:
+          S: !!python/object/apply:numpy.core.multiarray.scalar
+          - *id001
+          - !!binary |
+            AAAAILarZEE=
+          coordinate:
+            x: 76.5255
+            y: 15.119250000000001
+            z: 2.4
+          element: *id004
+          label: state_0
+        state_1:
+          S: !!python/object/apply:numpy.core.multiarray.scalar
+          - *id001
+          - !!binary |
+            AAAAwFCxkEE=
+          coordinate:
+            x: 76.5255
+            y: 15.119250000000001
+            z: 2.4
+          element: *id004
+          label: state_1
+state: *id005
