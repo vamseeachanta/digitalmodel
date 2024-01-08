@@ -26,6 +26,7 @@ from digitalmodel.custom.orcaflex_file_management import OrcaflexFileManagement
 from digitalmodel.custom.rao_analysis import RAOAnalysis
 from digitalmodel.custom.orcaflex_installation import OrcInstallation
 from digitalmodel.common.ship_design import ShipDesign
+from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 
 save_data = SaveData()
 ou = OrcaflexUtilities()
