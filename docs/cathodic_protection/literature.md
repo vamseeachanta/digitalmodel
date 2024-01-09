@@ -39,7 +39,7 @@ SNAME T&R Report R-21: Fundamentals of Cathodic Protection for Marine Service (1
 ## Ship Design
 
 Tyipical design for CP system is shown in the figure below:
-<img src="cp_ships.png" width=auto, height=auto/>
+<img src="cp_calculation.png" width=auto, height=auto/>
 
 The detailed calculations for Sacrificial Anode Cathodic Protection System is:
 
