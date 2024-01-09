@@ -23,7 +23,7 @@ def get_valid_pytest_output_file(pytest_output_file):
 
 
 def test_ship_design():
-    input_file = '../test_data/ship_design/ship_design_fatigue.yml'
+    input_file = '../test_data/ship_design/ship_design_seasam_xtract.yml'
     pytest_output_file = None
     # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     # expected_result = ymlInput(pytest_output_file, updateYml=None)

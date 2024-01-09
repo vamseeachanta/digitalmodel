@@ -2,7 +2,7 @@ basename: ship_design
 
 inputs:
   software: sesam
-  calculation_type: combined_fatigue
+  calculation_type: seasam_xtract
 
   stress:
 

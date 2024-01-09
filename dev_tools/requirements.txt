@@ -18,3 +18,4 @@ deepdiff
 pytest
 sympy
 kaleido
+pytest
