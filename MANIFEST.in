@@ -1,2 +1,2 @@
-include tests/*.yaml
-include tests/*.py
+recursive-include digitalmodel *.py
+recursive-include digitalmodel *.yaml
