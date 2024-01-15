@@ -292,19 +292,33 @@ class ShipFatigueAnalysis:
             else:
                 raise ValueError("Could not find stress column")
 
-            if cfg['inputs']['files']['lcf']['stress_range']['flag']:
-            df.loc[df_row, "S"] = statistics.mean(
-                [
-                    df.iloc[df_row][stress_nomenclature + "(1)"],
-                    df.iloc[df_row][stress_nomenclature + "(2)"],
-                    df.iloc[df_row][stress_nomenclature + "(3)"],
-                    df.iloc[df_row][stress_nomenclature + "(4)"],
-                    df.iloc[df_row][stress_nomenclature + "(5)"],
-                    df.iloc[df_row][stress_nomenclature + "(6)"],
-                    df.iloc[df_row][stress_nomenclature + "(7)"],
-                    df.iloc[df_row][stress_nomenclature + "(8)"],
-                ]
-            )
+            if True:
+                df.loc[df_row, "S"] = statistics.mean(
+                    [
+                        df.iloc[df_row][stress_nomenclature + "(1)"],
+                        df.iloc[df_row][stress_nomenclature + "(2)"],
+                        df.iloc[df_row][stress_nomenclature + "(3)"],
+                        df.iloc[df_row][stress_nomenclature + "(4)"],
+                        df.iloc[df_row][stress_nomenclature + "(5)"],
+                        df.iloc[df_row][stress_nomenclature + "(6)"],
+                        df.iloc[df_row][stress_nomenclature + "(7)"],
+                        df.iloc[df_row][stress_nomenclature + "(8)"],
+                    ]
+                )
+            else:
+                df.loc[df_row, "S"] = statistics.max(
+                    [
+                        df.iloc[df_row][stress_nomenclature + "(1)"],
+                        df.iloc[df_row][stress_nomenclature + "(2)"],
+                        df.iloc[df_row][stress_nomenclature + "(3)"],
+                        df.iloc[df_row][stress_nomenclature + "(4)"],
+                        df.iloc[df_row][stress_nomenclature + "(5)"],
+                        df.iloc[df_row][stress_nomenclature + "(6)"],
+                        df.iloc[df_row][stress_nomenclature + "(7)"],
+                        df.iloc[df_row][stress_nomenclature + "(8)"],
+                    ]
+                )
+                
 
         return df
 
