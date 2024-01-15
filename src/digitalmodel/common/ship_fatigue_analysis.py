@@ -39,7 +39,7 @@ class ShipFatigueAnalysis:
         fatigue_state_pairs = self.get_fatigue_state_pairs(state_0_files, state_1_files)
 
         stress_output = self.get_stress_ranges(cfg, fatigue_state_pairs)
-        self.save_stress_output_as_csv(stress_output)
+        self.save_stress_output_as_csv(stress_output, cfg)
 
         cfg.update({"ship_design": {"stress_output": stress_output}})
 
@@ -49,34 +49,15 @@ class ShipFatigueAnalysis:
         df = self.get_output_df_definition(cfg)
 
         for fatigue_state_pair in stress_output:
-            basename = list(fatigue_state_pair.keys())[0]
-            for idx in range(0, len(fatigue_state_pair[basename]["coordinate"])):
-                delta_stress = fatigue_state_pair[basename]["coordinate"][0][
-                    "delta_stress"
-                ]
-            for location_type in fatigue_state_pair.keys():
-                if location_type == "basename":
-                    continue
-                for location in fatigue_state_pair[location_type]:
-                    df = pd.DataFrame(location)
-                    filename = (
-                        location["label"]
-                        + "_"
-                        + location_type
-                        + "_"
-                        + str(location["coordinate"]["x"])
-                        + "_"
-                        + str(location["coordinate"]["y"])
-                        + "_"
-                        + str(location["coordinate"]["z"])
-                        + ".csv"
-                    )
-                    filename = filename.replace(".", "_")
-                    filename = filename.replace("-", "_")
-                    filename = filename.replace(" ", "_")
-                    filename = filename.replace("(", "_")
-                    filename = filename.replace(")", "_")
-                    filename = filename.replace(",", "_")
+            df.loc[len(df)] = [np.nan] * len(list(df.columns))
+            df['basename'].iloc[len(df)] = list(fatigue_state_pair.keys())[0]
+
+            for by_type in ["coordinate", "element"]:
+                for idx in range(0, len(fatigue_state_pair[basename][by_type])):
+                    delta_stress = fatigue_state_pair[basename][by_type][0][
+                        "delta_stress"
+                    ]
+                    element = fatigue_state_pair[basename]["coordinate"][0]["element"]
 
     def get_output_df_definition(self, cfg):
         columns = ["basename"]
@@ -95,7 +76,7 @@ class ShipFatigueAnalysis:
                     ]
 
         df = pd.DataFrame(columns=columns)
-        
+
         return df
 
     def get_stress_ranges(self, cfg, fatigue_state_pairs):
@@ -245,7 +226,7 @@ class ShipFatigueAnalysis:
             try:
                 df[column] = df[column].astype(float)
             except:
-                logging.warning(f"      Could not convert column {column} to float")
+                logging.debug(f"      Could not convert column {column} to float")
 
         add_columns = ["x_min", "x_max", "y_min", "y_max", "z_min", "S"]
         for column in add_columns:
