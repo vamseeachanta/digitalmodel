@@ -45,9 +45,15 @@ class ShipFatigueAnalysis:
 
         return cfg
 
-    def save_stress_output_as_csv(self, stress_output):
-        df = pd.DataFrame()
+    def save_stress_output_as_csv(self, stress_output, cfg):
+        df = self.get_output_df_definition(cfg)
+
         for fatigue_state_pair in stress_output:
+            basename = list(fatigue_state_pair.keys())[0]
+            for idx in range(0, len(fatigue_state_pair[basename]["coordinate"])):
+                delta_stress = fatigue_state_pair[basename]["coordinate"][0][
+                    "delta_stress"
+                ]
             for location_type in fatigue_state_pair.keys():
                 if location_type == "basename":
                     continue
@@ -71,6 +77,26 @@ class ShipFatigueAnalysis:
                     filename = filename.replace("(", "_")
                     filename = filename.replace(")", "_")
                     filename = filename.replace(",", "_")
+
+    def get_output_df_definition(self, cfg):
+        columns = ["basename"]
+
+        for by_type in ["coordinate", "element"]:
+            if cfg["inputs"]["files"]["locations"][by_type]["flag"]:
+                for idx in range(
+                    0, len(cfg["inputs"]["files"]["locations"][by_type]["data"])
+                ):
+                    columns = columns + [
+                        by_type + str(idx) + "_" + column
+                        for column in [
+                            "delta_stress",
+                            "element",
+                        ]
+                    ]
+
+        df = pd.DataFrame(columns=columns)
+        
+        return df
 
     def get_stress_ranges(self, cfg, fatigue_state_pairs):
         stress_output = []
@@ -199,10 +225,16 @@ class ShipFatigueAnalysis:
         return stress_output
 
     def read_files_and_get_data_as_df(self, fatigue_state_pair):
+        status = {}
         for state in ["state_0", "state_1"]:
             state_df = self.read_seasam_xtract(fatigue_state_pair[state])
             transformed_df = self.transform_df_for_stress_analysis(state_df)
             fatigue_state_pair.update({(state + "_df"): transformed_df})
+            if len(transformed_df) > 0:
+                status.update({state + "_data": "Pass"})
+            else:
+                status.update({state + "_data": "Fail"})
+        fatigue_state_pair.update({"status": status})
 
         return fatigue_state_pair
 
@@ -318,7 +350,6 @@ class ShipFatigueAnalysis:
                         df.iloc[df_row][stress_nomenclature + "(8)"],
                     ]
                 )
-                
 
         return df
 
