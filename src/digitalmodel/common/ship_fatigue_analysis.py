@@ -19,9 +19,11 @@ class ShipFatigueAnalysis:
 
     def router(self, cfg):
         if cfg["inputs"]["files"]["lcf"]["file_type"] == "seasam_xtract":
-            self.get_fatigue_states(cfg)
+            cfg = self.get_fatigue_states_and_stress_range(cfg)
 
-    def get_fatigue_states(self, cfg):
+        return cfg
+
+    def get_fatigue_states_and_stress_range(self, cfg):
         fatigue_states = cfg["inputs"]["files"]["lcf"]["fatigue_states"]
 
         for fatigue_state in fatigue_states:
@@ -37,22 +39,70 @@ class ShipFatigueAnalysis:
         fatigue_state_pairs = self.get_fatigue_state_pairs(state_0_files, state_1_files)
 
         stress_output = self.get_stress_ranges(cfg, fatigue_state_pairs)
+        self.save_stress_output_as_csv(stress_output)
 
         cfg.update({"ship_design": {"stress_output": stress_output}})
+
+        return cfg
+
+    def save_stress_output_as_csv(self, stress_output):
+        df = pd.DataFrame()
+        for fatigue_state_pair in stress_output:
+            for location_type in fatigue_state_pair.keys():
+                if location_type == "basename":
+                    continue
+                for location in fatigue_state_pair[location_type]:
+                    df = pd.DataFrame(location)
+                    filename = (
+                        location["label"]
+                        + "_"
+                        + location_type
+                        + "_"
+                        + str(location["coordinate"]["x"])
+                        + "_"
+                        + str(location["coordinate"]["y"])
+                        + "_"
+                        + str(location["coordinate"]["z"])
+                        + ".csv"
+                    )
+                    filename = filename.replace(".", "_")
+                    filename = filename.replace("-", "_")
+                    filename = filename.replace(" ", "_")
+                    filename = filename.replace("(", "_")
+                    filename = filename.replace(")", "_")
+                    filename = filename.replace(",", "_")
 
     def get_stress_ranges(self, cfg, fatigue_state_pairs):
         stress_output = []
         for fatigue_state_pair in fatigue_state_pairs:
-            fatigue_state_pair = self.read_files_and_get_data_as_df(fatigue_state_pair)
-            stress_data_output_by_pair = self.get_stress_data(cfg, fatigue_state_pair)
+            logging.info(
+                f"Getting stress data for fatigue pair: {fatigue_state_pair['basename']}"
+            )
+            try:
+                fatigue_state_pair = self.read_files_and_get_data_as_df(
+                    fatigue_state_pair
+                )
+                stress_data_output_by_pair = self.get_stress_data_for_pair(
+                    cfg, fatigue_state_pair
+                )
 
-        stress_output.append(stress_data_output_by_pair)
+            except Exception as e:
+                logging.warning(
+                    "   Could not get stress data for pair: {fatigue_state_pair['basename']} due to error: {e}"
+                )
+
+                stress_data_output_by_pair = {}
+
+            stress_output.append(
+                {fatigue_state_pair["basename"]: stress_data_output_by_pair}
+            )
 
         return stress_output
 
-    def get_stress_data(self, cfg, fatigue_state_pair):
+    def get_stress_data_for_pair(self, cfg, fatigue_state_pair):
         stress_data_output_by_pair = {}
         if cfg["inputs"]["files"]["locations"]["coordinate"]["flag"]:
+            logging.info("   Getting stress data by coordinates ... START")
             coordinate_data = cfg["inputs"]["files"]["locations"]["coordinate"]["data"]
 
             coordinate_output_array = []
@@ -75,8 +125,10 @@ class ShipFatigueAnalysis:
                 coordinate_output_array.append(coordinate_output)
 
             stress_data_output_by_pair.update({"coordinate": coordinate_output_array})
+            logging.info("   Getting stress data by coordinates ... COMPLETE")
 
         if cfg["inputs"]["files"]["locations"]["element"]["flag"]:
+            logging.info("   Getting stress data by elements ... START")
             element_data = cfg["inputs"]["files"]["locations"]["element"]["data"]
 
             element_output_array = []
@@ -97,10 +149,14 @@ class ShipFatigueAnalysis:
                 element_output_array.append(element_output)
 
             stress_data_output_by_pair.update({"element": element_output_array})
+            logging.info("   Getting stress data by elements ... COMPLETE")
 
         return stress_data_output_by_pair
 
     def get_stress_data_for_coordinate(self, coordinate, df, label):
+        logging.info(
+            f"      Getting stress data, state: {label}, coordinate: {coordinate}"
+        )
         stress_output = {}
 
         df_filter = df[
@@ -119,6 +175,9 @@ class ShipFatigueAnalysis:
         return stress_output
 
     def get_stress_data_for_element(self, element_dict, df, label):
+        logging.info(
+            f"      Getting stress data for state: {label}, element: {element_dict['element']}"
+        )
         stress_output = {}
 
         df_filter = df[df["Element"] == element_dict["element"]]
@@ -154,7 +213,7 @@ class ShipFatigueAnalysis:
             try:
                 df[column] = df[column].astype(float)
             except:
-                logging.info(f"Could not convert column {column} to float")
+                logging.warning(f"      Could not convert column {column} to float")
 
         add_columns = ["x_min", "x_max", "y_min", "y_max", "z_min", "S"]
         for column in add_columns:
@@ -221,60 +280,31 @@ class ShipFatigueAnalysis:
                 df.iloc[df_row]["Z-coord(7)"],
                 df.iloc[df_row]["Z-coord(8)"],
             )
+
             if "VONMISES(1)" in df.columns:
-                df.loc[df_row, "S"] = statistics.mean(
-                    [
-                        df.iloc[df_row]["VONMISES(1)"],
-                        df.iloc[df_row]["VONMISES(2)"],
-                        df.iloc[df_row]["VONMISES(3)"],
-                        df.iloc[df_row]["VONMISES(4)"],
-                        df.iloc[df_row]["VONMISES(5)"],
-                        df.iloc[df_row]["VONMISES(6)"],
-                        df.iloc[df_row]["VONMISES(7)"],
-                        df.iloc[df_row]["VONMISES(8)"],
-                    ]
-                )
-            elif "SIGXX(3)" in df.columns:
-                df.loc[df_row, "S"] = statistics.mean(
-                    [
-                        df.iloc[df_row]["SIGXX(1)"],
-                        df.iloc[df_row]["SIGXX(2)"],
-                        df.iloc[df_row]["SIGXX(3)"],
-                        df.iloc[df_row]["SIGXX(4)"],
-                        df.iloc[df_row]["SIGXX(5)"],
-                        df.iloc[df_row]["SIGXX(6)"],
-                        df.iloc[df_row]["SIGXX(7)"],
-                        df.iloc[df_row]["SIGXX(8)"],
-                    ]
-                )
+                stress_nomenclature = "VONMISES"
+            elif "SIGXX(1)" in df.columns:
+                stress_nomenclature = "SIGXX"
             elif "SIGYY(1)" in df.columns:
-                df.loc[df_row, "S"] = statistics.mean(
-                    [
-                        df.iloc[df_row]["SIGYY(1)"],
-                        df.iloc[df_row]["SIGYY(2)"],
-                        df.iloc[df_row]["SIGYY(3)"],
-                        df.iloc[df_row]["SIGYY(4)"],
-                        df.iloc[df_row]["SIGYY(5)"],
-                        df.iloc[df_row]["SIGYY(6)"],
-                        df.iloc[df_row]["SIGYY(7)"],
-                        df.iloc[df_row]["SIGYY(8)"],
-                    ]
-                )
+                stress_nomenclature = "SIGYY"
             elif "TAUXY(1)" in df.columns:
-                df.loc[df_row, "S"] = statistics.mean(
-                    [
-                        df.iloc[df_row]["TAUXY(1)"],
-                        df.iloc[df_row]["TAUXY(2)"],
-                        df.iloc[df_row]["TAUXY(3)"],
-                        df.iloc[df_row]["TAUXY(4)"],
-                        df.iloc[df_row]["TAUXY(5)"],
-                        df.iloc[df_row]["TAUXY(6)"],
-                        df.iloc[df_row]["TAUXY(7)"],
-                        df.iloc[df_row]["TAUXY(8)"],
-                    ]
-                )
+                stress_nomenclature = "TAUXY"
             else:
                 raise ValueError("Could not find stress column")
+
+            if cfg['inputs']['files']['lcf']['stress_range']['flag']:
+            df.loc[df_row, "S"] = statistics.mean(
+                [
+                    df.iloc[df_row][stress_nomenclature + "(1)"],
+                    df.iloc[df_row][stress_nomenclature + "(2)"],
+                    df.iloc[df_row][stress_nomenclature + "(3)"],
+                    df.iloc[df_row][stress_nomenclature + "(4)"],
+                    df.iloc[df_row][stress_nomenclature + "(5)"],
+                    df.iloc[df_row][stress_nomenclature + "(6)"],
+                    df.iloc[df_row][stress_nomenclature + "(7)"],
+                    df.iloc[df_row][stress_nomenclature + "(8)"],
+                ]
+            )
 
         return df
 
@@ -310,6 +340,7 @@ class ShipFatigueAnalysis:
             fatigue_state_pair = {
                 "state_0": state_0_files["files"][state_0_index],
                 "state_1": state_1_files["files"][basename_index_1],
+                "basename": basename_0,
             }
             fatigue_state_pairs.append(fatigue_state_pair)
 

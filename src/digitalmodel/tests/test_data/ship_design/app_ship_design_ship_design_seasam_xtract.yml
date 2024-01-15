@@ -1,17 +1,17 @@
 &id001 !!python/object/new:assetutilities.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design/ship_design_seasam_xtract.yml
+    CustomInputFile: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/ship_design_seasam_xtract.yml
     DefaultInputFile: null
-    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design
+    analysis_root_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design
     basename: ship_design
     cfg_array_file_names: null
-    fe_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\results\
+    fe_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design\results\
     file_name: app_ship_design_ship_design_seasam_xtract
     file_name_for_overwrite: app_ship_design_ship_design_seasam_xtract
-    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\logs\
-    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\results\
-    start_time: 2024-01-09 11:50:27.979073
+    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design\logs\
+    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design\results\
+    start_time: 2024-01-14 16:39:47.434177
   basename: ship_design
   default:
     config:
@@ -52,9 +52,9 @@ dictitems:
   ship_design:
     stress_output:
     - coordinate:
-      - delta_stress: 16334757.08
+      - delta_stress: 31024936.67
         state_0:
-          S: 6995126.25
+          S: -7439974.17
           coordinate:
             t: 15
             x: 77.0091
@@ -66,7 +66,7 @@ dictitems:
           - 1337.0
           label: state_0
         state_1:
-          S: 23329883.33
+          S: 23584962.5
           coordinate:
             t: 15
             x: 77.0091
@@ -78,9 +78,9 @@ dictitems:
           - 1337.0
           label: state_1
       element:
-      - delta_stress: 15563017.5
+      - delta_stress: 31445293.75
         state_0:
-          S: 7050670.0
+          S: -7565518.75
           coordinate:
             x: 77.06
             y: 15.3
@@ -90,7 +90,7 @@ dictitems:
             t: 15
           label: state_0
         state_1:
-          S: 22613687.5
+          S: 23879775.0
           coordinate:
             x: 77.06
             y: 15.3
@@ -99,9 +99,9 @@ dictitems:
             element: 1300
             t: 15
           label: state_1
-      - delta_stress: 59176575.0
+      - delta_stress: 67527303.75
         state_0:
-          S: 10837425.0
+          S: -4723328.75
           coordinate:
             x: 76.53
             y: 15.12
@@ -111,7 +111,76 @@ dictitems:
             t: 15
           label: state_0
         state_1:
-          S: 70014000.0
+          S: 62803975.0
+          coordinate:
+            x: 76.53
+            y: 15.12
+            z: 2.4
+          element:
+            element: 2381
+            t: 15
+          label: state_1
+    - coordinate:
+      - delta_stress: 30153854.17
+        state_0:
+          S: -7850687.5
+          coordinate:
+            t: 15
+            x: 77.0091
+            y: 15.3
+            z: 2.1
+          element:
+          - 1300.0
+          - 1318.0
+          - 1337.0
+          label: state_0
+        state_1:
+          S: 22303166.67
+          coordinate:
+            t: 15
+            x: 77.0091
+            y: 15.3
+            z: 2.1
+          element:
+          - 1300.0
+          - 1318.0
+          - 1337.0
+          label: state_1
+      element:
+      - delta_stress: 30692476.25
+        state_0:
+          S: -7908763.75
+          coordinate:
+            x: 77.06
+            y: 15.3
+            z: 2.06
+          element:
+            element: 1300
+            t: 15
+          label: state_0
+        state_1:
+          S: 22783712.5
+          coordinate:
+            x: 77.06
+            y: 15.3
+            z: 2.06
+          element:
+            element: 1300
+            t: 15
+          label: state_1
+      - delta_stress: -10934532.5
+        state_0:
+          S: -8198717.5
+          coordinate:
+            x: 76.53
+            y: 15.12
+            z: 2.4
+          element:
+            element: 2381
+            t: 15
+          label: state_0
+        state_1:
+          S: -19133250.0
           coordinate:
             x: 76.53
             y: 15.12

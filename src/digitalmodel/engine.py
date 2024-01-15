@@ -13,7 +13,6 @@ from digitalmodel.orcaflex_analysis import orcaflex_analysis
 from digitalmodel.custom.orcaflex_analysis_components import OrcaFlexAnalysis
 from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
-from digitalmodel.custom.rigging import Rigging
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
     DNVRPH103_hydrodynamics_rectangular,
@@ -71,6 +70,8 @@ def engine(inputfile=None):
         opp = orcaflex_post_process()
         cfg_base = opp.post_process_router(cfg_base)
     elif basename == "rigging":
+        from digitalmodel.custom.rigging import Rigging
+
         rigging = Rigging()
         cfg_base = rigging.get_rigging_groups(cfg_base)
     elif basename == "code_dnvrph103":
