@@ -50,14 +50,25 @@ class ShipFatigueAnalysis:
 
         for fatigue_state_pair in stress_output:
             df.loc[len(df)] = [np.nan] * len(list(df.columns))
-            df['basename'].iloc[len(df)] = list(fatigue_state_pair.keys())[0]
+            basename = list(fatigue_state_pair.keys())[0]
+            df["basename"].loc[len(df) - 1] = basename
 
-            for by_type in ["coordinate", "element"]:
-                for idx in range(0, len(fatigue_state_pair[basename][by_type])):
-                    delta_stress = fatigue_state_pair[basename][by_type][0][
-                        "delta_stress"
-                    ]
-                    element = fatigue_state_pair[basename]["coordinate"][0]["element"]
+            if fatigue_state_pair[basename]["status"] == "Pass":
+                for by_type in ["coordinate", "element"]:
+                    for idx in range(0, len(fatigue_state_pair[basename][by_type])):
+                        df[by_type + str(idx) + "_delta_stress"].loc[
+                            len(df) - 1
+                        ] = fatigue_state_pair[basename][by_type][idx]["delta_stress"]
+                        # df[by_type + str(idx) + "_element"].loc[
+                        #     len(df) - 1
+                        # ] = fatigue_state_pair[basename][by_type][idx]["state_0"]["element"]
+
+        file_name = (
+            cfg["Analysis"]["result_folder"]
+            + cfg["Analysis"]["file_name"]
+            + "_stress_output.csv"
+        )
+        df.to_csv(file_name, index=False)
 
     def get_output_df_definition(self, cfg):
         columns = ["basename"]
@@ -92,14 +103,17 @@ class ShipFatigueAnalysis:
                 stress_data_output_by_pair = self.get_stress_data_for_pair(
                     cfg, fatigue_state_pair
                 )
+                status = "Pass"
 
             except Exception as e:
                 logging.warning(
-                    "   Could not get stress data for pair: {fatigue_state_pair['basename']} due to error: {e}"
+                    f"   Could not get stress data for pair: {fatigue_state_pair['basename']} due to error: {e}"
                 )
 
                 stress_data_output_by_pair = {}
+                status = "Fail"
 
+            stress_data_output_by_pair.update({"status": status})
             stress_output.append(
                 {fatigue_state_pair["basename"]: stress_data_output_by_pair}
             )
@@ -123,7 +137,14 @@ class ShipFatigueAnalysis:
                         coordinate, df, label
                     )
                     coordinate_output.update({label: stress_output})
-                    stress_range.append(stress_output["S"])
+                    if coordinate["stress_method"] == "mean":
+                        stress_range.append(stress_output["S_mean"])
+                    elif coordinate["stress_method"] == "max":
+                        stress_range.append(stress_output["S_max"])
+                    else:
+                        raise ValueError(
+                            f"Invalid stress method: {coordinate['stress_method']}"
+                        )
 
                 delta_stress = stress_range[1] - stress_range[0]
                 coordinate_output.update(
@@ -149,7 +170,14 @@ class ShipFatigueAnalysis:
                         element_dict, df, label
                     )
                     element_output.update({label: stress_output})
-                    stress_range.append(stress_output["S"])
+                    if element_dict["stress_method"] == "mean":
+                        stress_range.append(stress_output["S_mean"])
+                    elif element_dict["stress_method"] == "max":
+                        stress_range.append(stress_output["S_max"])
+                    else:
+                        raise ValueError(
+                            f"Invalid stress method: {element_dict['stress_method']}"
+                        )
 
                 delta_stress = stress_range[1] - stress_range[0]
                 element_output.update({"delta_stress": round(float(delta_stress), 2)})
@@ -228,7 +256,7 @@ class ShipFatigueAnalysis:
             except:
                 logging.debug(f"      Could not convert column {column} to float")
 
-        add_columns = ["x_min", "x_max", "y_min", "y_max", "z_min", "S"]
+        add_columns = ["x_min", "x_max", "y_min", "y_max", "z_min", "S_mean", "S_max"]
         for column in add_columns:
             df[column] = np.nan
 
@@ -305,32 +333,31 @@ class ShipFatigueAnalysis:
             else:
                 raise ValueError("Could not find stress column")
 
-            if True:
-                df.loc[df_row, "S"] = statistics.mean(
-                    [
-                        df.iloc[df_row][stress_nomenclature + "(1)"],
-                        df.iloc[df_row][stress_nomenclature + "(2)"],
-                        df.iloc[df_row][stress_nomenclature + "(3)"],
-                        df.iloc[df_row][stress_nomenclature + "(4)"],
-                        df.iloc[df_row][stress_nomenclature + "(5)"],
-                        df.iloc[df_row][stress_nomenclature + "(6)"],
-                        df.iloc[df_row][stress_nomenclature + "(7)"],
-                        df.iloc[df_row][stress_nomenclature + "(8)"],
-                    ]
-                )
-            else:
-                df.loc[df_row, "S"] = statistics.max(
-                    [
-                        df.iloc[df_row][stress_nomenclature + "(1)"],
-                        df.iloc[df_row][stress_nomenclature + "(2)"],
-                        df.iloc[df_row][stress_nomenclature + "(3)"],
-                        df.iloc[df_row][stress_nomenclature + "(4)"],
-                        df.iloc[df_row][stress_nomenclature + "(5)"],
-                        df.iloc[df_row][stress_nomenclature + "(6)"],
-                        df.iloc[df_row][stress_nomenclature + "(7)"],
-                        df.iloc[df_row][stress_nomenclature + "(8)"],
-                    ]
-                )
+            df.loc[df_row, "S_mean"] = statistics.mean(
+                [
+                    df.iloc[df_row][stress_nomenclature + "(1)"],
+                    df.iloc[df_row][stress_nomenclature + "(2)"],
+                    df.iloc[df_row][stress_nomenclature + "(3)"],
+                    df.iloc[df_row][stress_nomenclature + "(4)"],
+                    df.iloc[df_row][stress_nomenclature + "(5)"],
+                    df.iloc[df_row][stress_nomenclature + "(6)"],
+                    df.iloc[df_row][stress_nomenclature + "(7)"],
+                    df.iloc[df_row][stress_nomenclature + "(8)"],
+                ]
+            )
+
+            df.loc[df_row, "S_max"] = max(
+                [
+                    df.iloc[df_row][stress_nomenclature + "(1)"],
+                    df.iloc[df_row][stress_nomenclature + "(2)"],
+                    df.iloc[df_row][stress_nomenclature + "(3)"],
+                    df.iloc[df_row][stress_nomenclature + "(4)"],
+                    df.iloc[df_row][stress_nomenclature + "(5)"],
+                    df.iloc[df_row][stress_nomenclature + "(6)"],
+                    df.iloc[df_row][stress_nomenclature + "(7)"],
+                    df.iloc[df_row][stress_nomenclature + "(8)"],
+                ]
+            )
 
         return df
 
