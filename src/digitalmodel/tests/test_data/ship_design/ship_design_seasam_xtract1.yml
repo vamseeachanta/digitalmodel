@@ -11,24 +11,27 @@ inputs:
       file_type: seasam_xtract
       file_name: NULL # Not programmed
       fatigue_states:
-        - src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft
-        - src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft
+        - src/digitalmodel/tests/test_data/ship_design/seasam/MinDraft
+        - src/digitalmodel/tests/test_data/ship_design/seasam/MaxDraft
     locations:
       coordinate:
         flag: True
-        data: []
+        data:
+          - {
+              x: 77.0,
+              y: 15.3,
+              z: 2.1,
+              t: 15,
+              stress_method: mean,
+              wave_damage: 0.6,
+            }
+
       element:
         flag: True
         data:
           # stress_method options: mean/max
-          - {
-              element: 1300,
-              thickness: 15,
-              stress_method: mean,
-              wave_damage: 0.5,
-              n_cycles: 200,
-              fatigue_curve: DnV 2005 C2 Seawater CP,
-            }
+          - { element: 1300, t: 15, stress_method: mean, wave_damage: 0.5 }
+          - { element: 2381, t: 15, stress_method: max, wave_damage: 0.6 }
 
     wave:
       file_type: data
