@@ -8,7 +8,7 @@ inputs:
   software: NULL
   calculation_type: damage
   SN:
-    - { S: 2000000, N: 1 }
+    - { s: 2000000, n_cycles: 1, thickness: 15 }
   fatigue_curve: DnV 2005 C2 Seawater CP
 
 default:

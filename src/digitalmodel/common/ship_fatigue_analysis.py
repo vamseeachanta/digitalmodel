@@ -20,6 +20,19 @@ class ShipFatigueAnalysis:
     def router(self, cfg):
         if cfg["inputs"]["files"]["lcf"]["file_type"] == "seasam_xtract":
             cfg = self.get_fatigue_states_and_stress_range(cfg)
+        if cfg["inputs"]["calculation"] == "abs_combined_fatigue":
+            cfg = self.get_lcf_fatigue_damage(cfg)
+            cfg = self.get_abs_combined_fatigue(cfg)
+
+        return cfg
+
+    def get_lcf_fatigue_damage(self, cfg):
+        df = self.get_stress_output_df(cfg["ship_design"]["stress_output"], cfg)
+        
+
+    def get_abs_combined_fatigue(self, cfg):
+        cfg = self.get_abs_combined_fatigue_stress_range(cfg)
+        cfg = self.get_abs_combined_fatigue_life(cfg)
 
         return cfg
 
@@ -39,55 +52,81 @@ class ShipFatigueAnalysis:
         fatigue_state_pairs = self.get_fatigue_state_pairs(state_0_files, state_1_files)
 
         stress_output = self.get_stress_ranges(cfg, fatigue_state_pairs)
-        self.save_stress_output_as_csv(stress_output, cfg)
+        self.save_stress_output_as_csv(cfg, stress_output)
 
         cfg.update({"ship_design": {"stress_output": stress_output}})
 
         return cfg
 
-    def save_stress_output_as_csv(self, stress_output, cfg):
+    def save_stress_output_as_csv(self, cfg, stress_output):
+        df = self.get_stress_output_df(stress_output, cfg)
+        sress_output_file_name = os.path.join(
+            cfg["Analysis"]["result_folder"],
+            cfg["Analysis"]["file_name"] + "_stress_output.csv",
+        )
+        df.to_csv(sress_output_file_name, index=False)
+
+    def get_stress_output_df(self, stress_output, cfg):
         df = self.get_output_df_definition(cfg)
 
         for fatigue_state_pair in stress_output:
-            df.loc[len(df)] = [np.nan] * len(list(df.columns))
             basename = list(fatigue_state_pair.keys())[0]
-            df.loc[len(df) - 1, ["basename"]] = basename
 
             if fatigue_state_pair[basename]["status"] == "Pass":
                 for by_type in ["coordinate", "element"]:
                     for idx in range(0, len(fatigue_state_pair[basename][by_type])):
-                        df.loc[
-                            len(df) - 1, [by_type + str(idx) + "_delta_stress"]
-                        ] = fatigue_state_pair[basename][by_type][idx]["delta_stress"]
+                        coordinate = fatigue_state_pair[basename][by_type][idx][
+                            "coordinate"
+                        ]
+                        element = fatigue_state_pair[basename][by_type][idx]["element"]
+                        delta_stress = fatigue_state_pair[basename][by_type][idx][
+                            "delta_stress"
+                        ]
+                        df.loc[len(df)] = [
+                            basename,
+                            coordinate,
+                            element,
+                            delta_stress,
+                            fatigue_state_pair[basename]["status"],
+                            np.nan,
+                            np.nan,
+                            np.nan,
+                        ]
+            else:
+                df.loc[len(df)] = [
+                    basename,
+                    np.nan,
+                    np.nan,
+                    np.nan,
+                    fatigue_state_pair[basename]["status"],
+                    np.nan,
+                    np.nan,
+                    np.nan,
+                ]
 
-                        # df[by_type + str(idx) + "_delta_stress"].loc[
-                        #     len(df) - 1
-                        # ] = fatigue_state_pair[basename][by_type][idx]["delta_stress"]
-                        # df[by_type + str(idx) + "_element"].loc[
-                        #     len(df) - 1
-                        # ] = fatigue_state_pair[basename][by_type][idx]["state_0"]["element"]
-
-        file_name = os.path.join(
-            cfg["Analysis"]["result_folder"],
-            cfg["Analysis"]["file_name"] + "_stress_output.csv",
-        )
-        df.to_csv(file_name, index=False)
+        return df
 
     def get_output_df_definition(self, cfg):
-        columns = ["basename"]
+        columns = (
+            ["basename"]
+            + ["coordinate", "element"]
+            + ["delta_stress"]
+            + ["status"]
+            + ["lcf_damage", "wave_damage", "abs_damage"]
+        )
 
-        for by_type in ["coordinate", "element"]:
-            if cfg["inputs"]["files"]["locations"][by_type]["flag"]:
-                for idx in range(
-                    0, len(cfg["inputs"]["files"]["locations"][by_type]["data"])
-                ):
-                    columns = columns + [
-                        by_type + str(idx) + "_" + column
-                        for column in [
-                            "delta_stress",
-                            "element",
-                        ]
-                    ]
+        # for by_type in ["coordinate", "element"]:
+        #     if cfg["inputs"]["files"]["locations"][by_type]["flag"]:
+        #         for idx in range(
+        #             0, len(cfg["inputs"]["files"]["locations"][by_type]["data"])
+        #         ):
+        #             columns = columns + [
+        #                 by_type + str(idx) + "_" + column
+        #                 for column in [
+        #                     "delta_stress",
+        #                     "element",
+        #                 ]
+        #             ]
 
         df = pd.DataFrame(columns=columns)
 
