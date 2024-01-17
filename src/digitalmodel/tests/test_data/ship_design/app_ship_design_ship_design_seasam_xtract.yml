@@ -11,7 +11,7 @@ dictitems:
     file_name_for_overwrite: app_ship_design_ship_design_seasam_xtract
     log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/logs
     result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
-    start_time: 2024-01-17 06:45:33.885703
+    start_time: 2024-01-17 06:54:00.388692
   basename: ship_design
   default:
     config:
@@ -46,7 +46,73 @@ dictitems:
   ship_design:
     stress_output:
     - SigXX-Lower.txt:
-        status: Fail
+        coordinate: []
+        element:
+        - delta_stress: 31445293.75
+          state_0:
+            S_max: -7416030.0
+            S_mean: -7565518.75
+            coordinate:
+              x: 77.06
+              y: 15.3
+              z: 2.06
+            element:
+              element: 1300
+              fatigue_curve: DnV 2005 C2 Seawater CP
+              n_cycles: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: state_0
+          state_1:
+            S_max: 24479000.0
+            S_mean: 23879775.0
+            coordinate:
+              x: 77.06
+              y: 15.3
+              z: 2.06
+            element:
+              element: 1300
+              fatigue_curve: DnV 2005 C2 Seawater CP
+              n_cycles: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: state_1
+        status: Pass
     - SigXX-Upper.txt:
-        status: Fail
+        coordinate: []
+        element:
+        - delta_stress: 30692476.25
+          state_0:
+            S_max: -7855820.0
+            S_mean: -7908763.75
+            coordinate:
+              x: 77.06
+              y: 15.3
+              z: 2.06
+            element:
+              element: 1300
+              fatigue_curve: DnV 2005 C2 Seawater CP
+              n_cycles: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: state_0
+          state_1:
+            S_max: 23326300.0
+            S_mean: 22783712.5
+            coordinate:
+              x: 77.06
+              y: 15.3
+              z: 2.06
+            element:
+              element: 1300
+              fatigue_curve: DnV 2005 C2 Seawater CP
+              n_cycles: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: state_1
+        status: Pass
 state: *id001

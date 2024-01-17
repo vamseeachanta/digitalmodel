@@ -75,9 +75,11 @@ class ShipFatigueAnalysis:
                 for by_type in ["coordinate", "element"]:
                     for idx in range(0, len(fatigue_state_pair[basename][by_type])):
                         coordinate = fatigue_state_pair[basename][by_type][idx][
-                            "coordinate"
+                            "state_0"
+                        ]["coordinate"]
+                        element = fatigue_state_pair[basename][by_type][idx]["state_0"][
+                            "element"
                         ]
-                        element = fatigue_state_pair[basename][by_type][idx]["element"]
                         delta_stress = fatigue_state_pair[basename][by_type][idx][
                             "delta_stress"
                         ]
