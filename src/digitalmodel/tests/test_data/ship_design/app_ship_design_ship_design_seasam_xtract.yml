@@ -6,19 +6,19 @@ dictitems:
     analysis_root_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design
     basename: ship_design
     cfg_array_file_names: null
-    fe_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design\results\
+    fe_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
     file_name: app_ship_design_ship_design_seasam_xtract
     file_name_for_overwrite: app_ship_design_ship_design_seasam_xtract
-    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design\logs\
-    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design\results\
-    start_time: 2024-01-14 16:39:47.434177
+    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/logs
+    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
+    start_time: 2024-01-17 04:58:47.174697
   basename: ship_design
   default:
     config:
       cfg_sensitivities: false
       overwrite:
         output: true
-    log_level: DEBUG
+    log_level: INFO
   inputs:
     calculation_type: seasam_xtract
     files:
@@ -31,17 +31,23 @@ dictitems:
       locations:
         coordinate:
           data:
-          - t: 15
-            x: 77.0091
+          - stress_method: mean
+            t: 15
+            wave_damage: 0.6
+            x: 77.0
             y: 15.3
             z: 2.1
           flag: true
         element:
           data:
           - element: 1300
+            stress_method: mean
             t: 15
+            wave_damage: 0.5
           - element: 2381
+            stress_method: max
             t: 15
+            wave_damage: 0.6
           flag: true
       wave:
         data:
@@ -51,142 +57,178 @@ dictitems:
     stress: null
   ship_design:
     stress_output:
-    - coordinate:
-      - delta_stress: 31024936.67
-        state_0:
-          S: -7439974.17
-          coordinate:
-            t: 15
-            x: 77.0091
-            y: 15.3
-            z: 2.1
-          element:
-          - 1300.0
-          - 1318.0
-          - 1337.0
-          label: state_0
-        state_1:
-          S: 23584962.5
-          coordinate:
-            t: 15
-            x: 77.0091
-            y: 15.3
-            z: 2.1
-          element:
-          - 1300.0
-          - 1318.0
-          - 1337.0
-          label: state_1
-      element:
-      - delta_stress: 31445293.75
-        state_0:
-          S: -7565518.75
-          coordinate:
-            x: 77.06
-            y: 15.3
-            z: 2.06
-          element:
-            element: 1300
-            t: 15
-          label: state_0
-        state_1:
-          S: 23879775.0
-          coordinate:
-            x: 77.06
-            y: 15.3
-            z: 2.06
-          element:
-            element: 1300
-            t: 15
-          label: state_1
-      - delta_stress: 67527303.75
-        state_0:
-          S: -4723328.75
-          coordinate:
-            x: 76.53
-            y: 15.12
-            z: 2.4
-          element:
-            element: 2381
-            t: 15
-          label: state_0
-        state_1:
-          S: 62803975.0
-          coordinate:
-            x: 76.53
-            y: 15.12
-            z: 2.4
-          element:
-            element: 2381
-            t: 15
-          label: state_1
-    - coordinate:
-      - delta_stress: 30153854.17
-        state_0:
-          S: -7850687.5
-          coordinate:
-            t: 15
-            x: 77.0091
-            y: 15.3
-            z: 2.1
-          element:
-          - 1300.0
-          - 1318.0
-          - 1337.0
-          label: state_0
-        state_1:
-          S: 22303166.67
-          coordinate:
-            t: 15
-            x: 77.0091
-            y: 15.3
-            z: 2.1
-          element:
-          - 1300.0
-          - 1318.0
-          - 1337.0
-          label: state_1
-      element:
-      - delta_stress: 30692476.25
-        state_0:
-          S: -7908763.75
-          coordinate:
-            x: 77.06
-            y: 15.3
-            z: 2.06
-          element:
-            element: 1300
-            t: 15
-          label: state_0
-        state_1:
-          S: 22783712.5
-          coordinate:
-            x: 77.06
-            y: 15.3
-            z: 2.06
-          element:
-            element: 1300
-            t: 15
-          label: state_1
-      - delta_stress: -10934532.5
-        state_0:
-          S: -8198717.5
-          coordinate:
-            x: 76.53
-            y: 15.12
-            z: 2.4
-          element:
-            element: 2381
-            t: 15
-          label: state_0
-        state_1:
-          S: -19133250.0
-          coordinate:
-            x: 76.53
-            y: 15.12
-            z: 2.4
-          element:
-            element: 2381
-            t: 15
-          label: state_1
+    - SigXX-Lower.txt:
+        coordinate:
+        - delta_stress: 30814758.13
+          state_0:
+            S_max: -7238680.0
+            S_mean: -7377201.88
+            coordinate:
+              stress_method: mean
+              t: 15
+              wave_damage: 0.6
+              x: 77.0
+              y: 15.3
+              z: 2.1
+            element:
+            - 1318.0
+            - 1337.0
+            label: state_0
+          state_1:
+            S_max: 24234700.0
+            S_mean: 23437556.25
+            coordinate:
+              stress_method: mean
+              t: 15
+              wave_damage: 0.6
+              x: 77.0
+              y: 15.3
+              z: 2.1
+            element:
+            - 1318.0
+            - 1337.0
+            label: state_1
+        element:
+        - delta_stress: 31445293.75
+          state_0:
+            S_max: -7416030.0
+            S_mean: -7565518.75
+            coordinate:
+              x: 77.06
+              y: 15.3
+              z: 2.06
+            element:
+              element: 1300
+              stress_method: mean
+              t: 15
+              wave_damage: 0.5
+            label: state_0
+          state_1:
+            S_max: 24479000.0
+            S_mean: 23879775.0
+            coordinate:
+              x: 77.06
+              y: 15.3
+              z: 2.06
+            element:
+              element: 1300
+              stress_method: mean
+              t: 15
+              wave_damage: 0.5
+            label: state_1
+        - delta_stress: 76438620.0
+          state_0:
+            S_max: -4545420.0
+            S_mean: -4723328.75
+            coordinate:
+              x: 76.53
+              y: 15.12
+              z: 2.4
+            element:
+              element: 2381
+              stress_method: max
+              t: 15
+              wave_damage: 0.6
+            label: state_0
+          state_1:
+            S_max: 71893200.0
+            S_mean: 62803975.0
+            coordinate:
+              x: 76.53
+              y: 15.12
+              z: 2.4
+            element:
+              element: 2381
+              stress_method: max
+              t: 15
+              wave_damage: 0.6
+            label: state_1
+        status: Pass
+    - SigXX-Upper.txt:
+        coordinate:
+        - delta_stress: 29884543.13
+          state_0:
+            S_max: -7748870.0
+            S_mean: -7821649.38
+            coordinate:
+              stress_method: mean
+              t: 15
+              wave_damage: 0.6
+              x: 77.0
+              y: 15.3
+              z: 2.1
+            element:
+            - 1318.0
+            - 1337.0
+            label: state_0
+          state_1:
+            S_max: 22859700.0
+            S_mean: 22062893.75
+            coordinate:
+              stress_method: mean
+              t: 15
+              wave_damage: 0.6
+              x: 77.0
+              y: 15.3
+              z: 2.1
+            element:
+            - 1318.0
+            - 1337.0
+            label: state_1
+        element:
+        - delta_stress: 30692476.25
+          state_0:
+            S_max: -7855820.0
+            S_mean: -7908763.75
+            coordinate:
+              x: 77.06
+              y: 15.3
+              z: 2.06
+            element:
+              element: 1300
+              stress_method: mean
+              t: 15
+              wave_damage: 0.5
+            label: state_0
+          state_1:
+            S_max: 23326300.0
+            S_mean: 22783712.5
+            coordinate:
+              x: 77.06
+              y: 15.3
+              z: 2.06
+            element:
+              element: 1300
+              stress_method: mean
+              t: 15
+              wave_damage: 0.5
+            label: state_1
+        - delta_stress: -3433950.0
+          state_0:
+            S_max: -7995750.0
+            S_mean: -8198717.5
+            coordinate:
+              x: 76.53
+              y: 15.12
+              z: 2.4
+            element:
+              element: 2381
+              stress_method: max
+              t: 15
+              wave_damage: 0.6
+            label: state_0
+          state_1:
+            S_max: -11429700.0
+            S_mean: -19133250.0
+            coordinate:
+              x: 76.53
+              y: 15.12
+              z: 2.4
+            element:
+              element: 2381
+              stress_method: max
+              t: 15
+              wave_damage: 0.6
+            label: state_1
+        status: Pass
 state: *id001

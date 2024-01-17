@@ -51,22 +51,25 @@ class ShipFatigueAnalysis:
         for fatigue_state_pair in stress_output:
             df.loc[len(df)] = [np.nan] * len(list(df.columns))
             basename = list(fatigue_state_pair.keys())[0]
-            df["basename"].loc[len(df) - 1] = basename
+            df.loc[len(df) - 1, ["basename"]] = basename
 
             if fatigue_state_pair[basename]["status"] == "Pass":
                 for by_type in ["coordinate", "element"]:
                     for idx in range(0, len(fatigue_state_pair[basename][by_type])):
-                        df[by_type + str(idx) + "_delta_stress"].loc[
-                            len(df) - 1
+                        df.loc[
+                            len(df) - 1, [by_type + str(idx) + "_delta_stress"]
                         ] = fatigue_state_pair[basename][by_type][idx]["delta_stress"]
+
+                        # df[by_type + str(idx) + "_delta_stress"].loc[
+                        #     len(df) - 1
+                        # ] = fatigue_state_pair[basename][by_type][idx]["delta_stress"]
                         # df[by_type + str(idx) + "_element"].loc[
                         #     len(df) - 1
                         # ] = fatigue_state_pair[basename][by_type][idx]["state_0"]["element"]
 
-        file_name = (
-            cfg["Analysis"]["result_folder"]
-            + cfg["Analysis"]["file_name"]
-            + "_stress_output.csv"
+        file_name = os.path.join(
+            cfg["Analysis"]["result_folder"],
+            cfg["Analysis"]["file_name"] + "_stress_output.csv",
         )
         df.to_csv(file_name, index=False)
 
@@ -204,7 +207,8 @@ class ShipFatigueAnalysis:
         ]
         stress_output.update({"coordinate": coordinate.copy()})
         stress_output.update({"element": df_filter["Element"].to_list()})
-        stress_output.update({"S": round(float(df_filter["S"].mean()), 2)})
+        stress_output.update({"S_mean": round(float(df_filter["S_mean"].mean()), 2)})
+        stress_output.update({"S_max": round(float(df_filter["S_max"].max()), 2)})
         stress_output.update({"label": label})
 
         return stress_output
@@ -228,7 +232,8 @@ class ShipFatigueAnalysis:
         stress_output.update({"coordinate": coordinate})
 
         stress_output.update({"element": element_dict.copy()})
-        stress_output.update({"S": round(float(df_filter["S"].mean()), 2)})
+        stress_output.update({"S_mean": round(float(df_filter["S_mean"].mean()), 2)})
+        stress_output.update({"S_max": round(float(df_filter["S_max"].mean()), 2)})
         stress_output.update({"label": label})
 
         return stress_output
