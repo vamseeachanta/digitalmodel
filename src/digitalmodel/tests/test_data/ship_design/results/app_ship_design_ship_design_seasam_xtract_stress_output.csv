@@ -1,3 +1,3 @@
 basename,coordinate,element,delta_stress,status,lcf_damage,wave_damage,abs_damage
-SigXX-Lower.txt,"{'x': 77.06, 'y': 15.3, 'z': 2.06}","{'element': 1300, 'thickness': 15, 'stress_method': 'mean', 'wave_damage': 0.5, 'n_cycles': 200, 'fatigue_curve': 'DnV 2005 C2 Seawater CP'}",31445293.75,Pass,,,
-SigXX-Upper.txt,"{'x': 77.06, 'y': 15.3, 'z': 2.06}","{'element': 1300, 'thickness': 15, 'stress_method': 'mean', 'wave_damage': 0.5, 'n_cycles': 200, 'fatigue_curve': 'DnV 2005 C2 Seawater CP'}",30692476.25,Pass,,,
+SigXX-Lower.txt,"{'x': 77.06, 'y': 15.3, 'z': 2.06}",1300,31445293.75,Pass,,,
+SigXX-Upper.txt,"{'x': 77.06, 'y': 15.3, 'z': 2.06}",1300,30692476.25,Pass,,,

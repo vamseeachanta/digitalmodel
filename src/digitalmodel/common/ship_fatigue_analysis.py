@@ -79,7 +79,7 @@ class ShipFatigueAnalysis:
                         ]["coordinate"]
                         element = fatigue_state_pair[basename][by_type][idx]["state_0"][
                             "element"
-                        ]
+                        ]["element"]
                         delta_stress = fatigue_state_pair[basename][by_type][idx][
                             "delta_stress"
                         ]
