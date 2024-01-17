@@ -11,7 +11,7 @@ dictitems:
     file_name_for_overwrite: app_ship_design_ship_design_seasam_xtract
     log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/logs
     result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
-    start_time: 2024-01-17 06:41:46.091569
+    start_time: 2024-01-17 06:45:33.885703
   basename: ship_design
   default:
     config:
@@ -21,7 +21,6 @@ dictitems:
     log_level: INFO
   inputs:
     calculation: null
-    calculation_type: combined_fatigue
     files:
       lcf:
         fatigue_states:
@@ -42,10 +41,6 @@ dictitems:
             thickness: 15
             wave_damage: 0.5
           flag: true
-      wave:
-        data:
-        - 0.5
-        file_type: data
     software: sesam
     stress: null
   ship_design:

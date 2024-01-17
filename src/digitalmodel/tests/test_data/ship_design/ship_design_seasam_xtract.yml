@@ -30,11 +30,6 @@ inputs:
               fatigue_curve: DnV 2005 C2 Seawater CP,
             }
 
-    wave:
-      file_type: data
-      data:
-        - 0.5
-
 default:
   log_level: INFO
   config:
