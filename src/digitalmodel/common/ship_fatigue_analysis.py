@@ -28,7 +28,6 @@ class ShipFatigueAnalysis:
 
     def get_lcf_fatigue_damage(self, cfg):
         df = self.get_stress_output_df(cfg["ship_design"]["stress_output"], cfg)
-        
 
     def get_abs_combined_fatigue(self, cfg):
         cfg = self.get_abs_combined_fatigue_stress_range(cfg)
