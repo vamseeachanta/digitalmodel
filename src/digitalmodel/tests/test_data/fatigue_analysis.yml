@@ -2,7 +2,7 @@ basename: fatigue_analysis
 
 fatigue_data:
   csv: True
-  io: src\digitalmodel\tests\test_data\fatigue_analysis\fatigue_data.csv
+  io: src/digitalmodel/tests/test_data/fatigue_analysis/fatigue_data.csv
 
 inputs:
   software: NULL
