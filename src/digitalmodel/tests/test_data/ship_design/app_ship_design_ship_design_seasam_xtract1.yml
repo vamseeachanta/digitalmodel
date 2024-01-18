@@ -11,7 +11,7 @@ dictitems:
     file_name_for_overwrite: app_ship_design_ship_design_seasam_xtract1
     log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/logs
     result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
-    start_time: 2024-01-18 05:55:06.520835
+    start_time: 2024-01-18 06:21:55.099147
   basename: ship_design
   default:
     config:
@@ -65,6 +65,7 @@ dictitems:
           state_0:
             S_max: -7238680.0
             S_mean: -7377201.88
+            S_min: -7554750.0
             coordinate:
               fatigue_curve: DnV 2005 C2 Seawater CP
               n_cycles: 200
@@ -81,6 +82,7 @@ dictitems:
           state_1:
             S_max: 24234700.0
             S_mean: 23437556.25
+            S_min: 22778000.0
             coordinate:
               fatigue_curve: DnV 2005 C2 Seawater CP
               n_cycles: 200
@@ -99,6 +101,7 @@ dictitems:
           state_0:
             S_max: -7416030.0
             S_mean: -7565518.75
+            S_min: -7740760.0
             coordinate:
               x: 77.06
               y: 15.3
@@ -114,6 +117,7 @@ dictitems:
           state_1:
             S_max: 24479000.0
             S_mean: 23879775.0
+            S_min: 23281200.0
             coordinate:
               x: 77.06
               y: 15.3
@@ -126,10 +130,11 @@ dictitems:
               thickness: 15
               wave_damage: 0.5
             label: state_1
-        - delta_stress: 76438620.0
+        - delta_stress: 76754540.0
           state_0:
             S_max: -4545420.0
             S_mean: -4723328.75
+            S_min: -4861340.0
             coordinate:
               x: 76.53
               y: 15.12
@@ -145,6 +150,7 @@ dictitems:
           state_1:
             S_max: 71893200.0
             S_mean: 62803975.0
+            S_min: 54780200.0
             coordinate:
               x: 76.53
               y: 15.12
@@ -164,6 +170,7 @@ dictitems:
           state_0:
             S_max: -7748870.0
             S_mean: -7821649.38
+            S_min: -7889230.0
             coordinate:
               fatigue_curve: DnV 2005 C2 Seawater CP
               n_cycles: 200
@@ -180,6 +187,7 @@ dictitems:
           state_1:
             S_max: 22859700.0
             S_mean: 22062893.75
+            S_min: 21373200.0
             coordinate:
               fatigue_curve: DnV 2005 C2 Seawater CP
               n_cycles: 200
@@ -198,6 +206,7 @@ dictitems:
           state_0:
             S_max: -7855820.0
             S_mean: -7908763.75
+            S_min: -7975890.0
             coordinate:
               x: 77.06
               y: 15.3
@@ -213,6 +222,7 @@ dictitems:
           state_1:
             S_max: 23326300.0
             S_mean: 22783712.5
+            S_min: 22195100.0
             coordinate:
               x: 77.06
               y: 15.3
@@ -225,10 +235,11 @@ dictitems:
               thickness: 15
               wave_damage: 0.5
             label: state_1
-        - delta_stress: -3433950.0
+        - delta_stress: 19187880.0
           state_0:
             S_max: -7995750.0
             S_mean: -8198717.5
+            S_min: -8397220.0
             coordinate:
               x: 76.53
               y: 15.12
@@ -244,6 +255,7 @@ dictitems:
           state_1:
             S_max: -11429700.0
             S_mean: -19133250.0
+            S_min: -27585100.0
             coordinate:
               x: 76.53
               y: 15.12

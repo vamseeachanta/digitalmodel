@@ -11,7 +11,7 @@ dictitems:
     file_name_for_overwrite: app_ship_design_ship_design_seasam_xtract
     log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/logs
     result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
-    start_time: 2024-01-18 06:10:40.610351
+    start_time: 2024-01-18 06:21:54.981602
   basename: ship_design
   default:
     config:
