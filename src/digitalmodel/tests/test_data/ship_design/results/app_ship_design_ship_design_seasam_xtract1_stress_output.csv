@@ -1,0 +1,3 @@
+basename,coordinate,element,delta_stress,status,thickness,stress_method
+SigXX-Lower.txt,,,,Fail,,
+SigXX-Upper.txt,,,,Fail,,

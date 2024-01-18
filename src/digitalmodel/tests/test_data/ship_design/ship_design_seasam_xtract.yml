@@ -16,7 +16,18 @@ inputs:
     locations:
       coordinate:
         flag: True
-        data: []
+        data:
+          - {
+              x: 77.1,
+              y: 15.3,
+              z: 2.1,
+              thickness: 15,
+              stress_method: mean,
+              wave_damage: 0.6,
+              n_cycles: 200,
+              fatigue_curve: DnV 2005 C2 Seawater CP,
+            }
+
       element:
         flag: True
         data:

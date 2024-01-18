@@ -183,7 +183,7 @@ class ShipFatigueAnalysis:
                         ]["coordinate"]
                         element = fatigue_state_pair[basename][by_type][idx]["state_0"][
                             "element"
-                        ]["element"]
+                        ]
                         delta_stress = fatigue_state_pair[basename][by_type][idx][
                             "delta_stress"
                         ]
@@ -339,7 +339,7 @@ class ShipFatigueAnalysis:
 
     def get_stress_data_for_coordinate(self, coordinate, df, label):
         logging.info(
-            f"      Getting stress data, state: {label}, coordinate: {coordinate['coordinate']}"
+            f"      Getting stress data, state: {label}, coordinate: x {coordinate['x']}, y {coordinate['y']}, x {coordinate['z']}"
         )
         stress_output = {}
 

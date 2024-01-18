@@ -11,7 +11,7 @@ dictitems:
     file_name_for_overwrite: app_ship_design_ship_design_seasam_xtract
     log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/logs
     result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
-    start_time: 2024-01-17 20:39:04.634719
+    start_time: 2024-01-17 22:42:29.246019
   basename: ship_design
   default:
     config:
@@ -30,7 +30,15 @@ dictitems:
         file_type: seasam_xtract
       locations:
         coordinate:
-          data: []
+          data:
+          - fatigue_curve: DnV 2005 C2 Seawater CP
+            n_cycles: 200
+            stress_method: mean
+            thickness: 15
+            wave_damage: 0.6
+            x: 77.1
+            y: 15.3
+            z: 2.1
           flag: true
         element:
           data:
@@ -46,7 +54,38 @@ dictitems:
   ship_design:
     stress_output:
     - SigXX-Lower.txt:
-        coordinate: []
+        coordinate:
+        - delta_stress: 31445293.75
+          state_0:
+            S_max: -7416030.0
+            S_mean: -7565518.75
+            coordinate:
+              fatigue_curve: DnV 2005 C2 Seawater CP
+              n_cycles: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.6
+              x: 77.1
+              y: 15.3
+              z: 2.1
+            element:
+            - 1300.0
+            label: state_0
+          state_1:
+            S_max: 24479000.0
+            S_mean: 23879775.0
+            coordinate:
+              fatigue_curve: DnV 2005 C2 Seawater CP
+              n_cycles: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.6
+              x: 77.1
+              y: 15.3
+              z: 2.1
+            element:
+            - 1300.0
+            label: state_1
         element:
         - delta_stress: 31445293.75
           state_0:
@@ -81,7 +120,38 @@ dictitems:
             label: state_1
         status: Pass
     - SigXX-Upper.txt:
-        coordinate: []
+        coordinate:
+        - delta_stress: 30692476.25
+          state_0:
+            S_max: -7855820.0
+            S_mean: -7908763.75
+            coordinate:
+              fatigue_curve: DnV 2005 C2 Seawater CP
+              n_cycles: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.6
+              x: 77.1
+              y: 15.3
+              z: 2.1
+            element:
+            - 1300.0
+            label: state_0
+          state_1:
+            S_max: 23326300.0
+            S_mean: 22783712.5
+            coordinate:
+              fatigue_curve: DnV 2005 C2 Seawater CP
+              n_cycles: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.6
+              x: 77.1
+              y: 15.3
+              z: 2.1
+            element:
+            - 1300.0
+            label: state_1
         element:
         - delta_stress: 30692476.25
           state_0:

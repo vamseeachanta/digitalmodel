@@ -1,0 +1,64 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/ship_design_seasam_xtract1.yml
+    DefaultInputFile: null
+    analysis_root_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design
+    basename: ship_design
+    cfg_array_file_names: null
+    fe_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
+    file_name: app_ship_design_ship_design_seasam_xtract1
+    file_name_for_overwrite: app_ship_design_ship_design_seasam_xtract1
+    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/logs
+    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
+    start_time: 2024-01-17 20:43:10.506959
+  basename: ship_design
+  default:
+    config:
+      cfg_sensitivities: false
+      overwrite:
+        output: true
+    log_level: INFO
+  inputs:
+    calculation: null
+    files:
+      lcf:
+        fatigue_states:
+        - src/digitalmodel/tests/test_data/ship_design/seasam/MinDraft
+        - src/digitalmodel/tests/test_data/ship_design/seasam/MaxDraft
+        file_name: null
+        file_type: seasam_xtract
+      locations:
+        coordinate:
+          data:
+          - stress_method: mean
+            t: 15
+            wave_damage: 0.6
+            x: 77.0
+            y: 15.3
+            z: 2.1
+          flag: true
+        element:
+          data:
+          - element: 1300
+            stress_method: mean
+            t: 15
+            wave_damage: 0.5
+          - element: 2381
+            stress_method: max
+            t: 15
+            wave_damage: 0.6
+          flag: true
+      wave:
+        data:
+        - 0.5
+        file_type: data
+    software: sesam
+    stress: null
+  ship_design:
+    stress_output:
+    - SigXX-Lower.txt:
+        status: Fail
+    - SigXX-Upper.txt:
+        status: Fail
+state: *id001
