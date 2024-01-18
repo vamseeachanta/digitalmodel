@@ -11,7 +11,7 @@ dictitems:
     file_name_for_overwrite: app_ship_design_ship_design_seasam_combined_fatigue
     log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/logs
     result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
-    start_time: 2024-01-18 06:02:10.225344
+    start_time: 2024-01-18 06:10:43.298366
   basename: ship_design
   default:
     config:
@@ -53,6 +53,7 @@ dictitems:
           state_0:
             S_max: -7416030.0
             S_mean: -7565518.75
+            S_min: -7740760.0
             coordinate:
               x: 77.06
               y: 15.3
@@ -68,6 +69,7 @@ dictitems:
           state_1:
             S_max: 24479000.0
             S_mean: 23879775.0
+            S_min: 23281200.0
             coordinate:
               x: 77.06
               y: 15.3
@@ -88,6 +90,7 @@ dictitems:
           state_0:
             S_max: -7855820.0
             S_mean: -7908763.75
+            S_min: -7975890.0
             coordinate:
               x: 77.06
               y: 15.3
@@ -103,6 +106,7 @@ dictitems:
           state_1:
             S_max: 23326300.0
             S_mean: 22783712.5
+            S_min: 22195100.0
             coordinate:
               x: 77.06
               y: 15.3
