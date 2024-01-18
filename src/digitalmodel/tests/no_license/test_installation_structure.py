@@ -2,15 +2,6 @@ import os
 import sys
 
 from digitalmodel.engine import engine
-from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
-
-ou = OrcaflexUtilities()
-
-
-def test_orcaflex_license():
-    orcaflex_license_flag = ou.is_orcaflex_available()
-    assert (orcaflex_license_flag)
-
 
 def run_installation_structure(input_file, expected_result={}):
     if input_file is not None and not os.path.isfile(input_file):
