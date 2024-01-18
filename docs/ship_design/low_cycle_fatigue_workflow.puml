@@ -42,7 +42,10 @@ partition Delta Stress {
 
 :Get delta stress;
   note right
-  Difference between 2 files (Different drafts etc.)
+  Stress difference between 2 files (Different drafts etc.)
+  - Max if positive
+  - Min if negative
+  - Mean
   end note
 
 }
@@ -51,7 +54,8 @@ partition Fatigue Calculation {
 
 :Apply SN Curve;
   note right
-  Need SN curve. Can be an input.
+  Added basic SN curves
+  Add Modified D per ABS code
   end note
 
 :Calculate Fatigue Damage;
@@ -60,6 +64,21 @@ partition Fatigue Calculation {
 
 
 partition Combined Fatigue {
+
+:Get Wave Damage;
+  note right
+  At the same location 
+  as low-cycle fatigue
+  end note
+
+: Combined Fatigue damage;
+  note right
+  Per ABS methodology
+  end note
+
+}
+
+partition Outputs {
 
 :Get Wave Damage;
   note right
