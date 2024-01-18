@@ -3,7 +3,7 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - python
+  - python==3.11
   - pandas
   - pip
   - pip:
@@ -25,3 +25,9 @@ dependencies:
       - pytest
       - sympy
       - kaleido
+      - assetutilities
+      - digitalmodel
+      - winreg
+      - tabula
+      - PyPDF2
+      - xlsxwriter

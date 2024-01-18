@@ -1,0 +1,52 @@
+@startmindmap
+
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Fatigue Methodology \n FPSO
+
+
+* Overall Fatigue
+** Results
+** Plots
+left side
+
+**:Combined Fatigue Damage
+<code>
+Damage combination method
+ABS Spectral-Based Fatigue Analysis 
+ for FPSO Installations, Section 9 
+ hot spot stresses
+</code>
+;
+
+***:In-service | Wave Fatigue
+<code>
+Fatigue Domain /spectral Method
+For all seastates
+ABS S-N approach
+</code>
+;
+
+***:In-service | Low Cycle Fatigue 
+<code>
+Min/Max Load/Draft
+Based on stress change of Static conditions
+ABS S-N approach
+</code>
+;
+
+***:Trading | Low Cycle Fatigue 
+<code>
+All seastates and all directions
+50% min and 50% max drafts
+ABS S-N approach
+ABS Dynamic Loading Approach for FPSOs
+</code>
+;
+
+@endmindmap
+

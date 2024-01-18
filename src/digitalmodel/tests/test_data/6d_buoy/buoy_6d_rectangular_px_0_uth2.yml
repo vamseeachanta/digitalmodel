@@ -1,0 +1,297 @@
+&id001 !!python/object/new:digitalmodel.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/code_dnvrph103_rectangular_uth2.yml
+    DefaultInputFile: null
+    analysis_root_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data
+    basename: code_dnvrph103
+    cfg_array_file_names: null
+    fe_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data\results\
+    file_name: app_code_dnvrph103_code_dnvrph103_rectangular_uth2
+    file_name_for_overwrite: app_code_dnvrph103_code_dnvrph103_rectangular_uth2
+    log_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data\logs\
+    result_folder: C:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data\results\
+    start_time: 2023-10-15 06:24:37.855054
+  basename: code_dnvrph103
+  calculation_type: simplified
+  code_dnvrph103:
+    properties:
+      I:
+        Ix: 322.02998508333326
+        Iy: 1402.1411240666662
+        Iz: 1439.6276462166663
+      rotational:
+        I:
+          x: 0.23933883521666663
+          y: 1.126396665483333
+          z: 1.1840034872333332
+        am:
+          deep:
+            x: 0.27240304600510046
+            y: 3.666233485023545
+            z: 2.9148791853358933
+          splash:
+            x: 0.8172091380153015
+            y: 10.998700455070637
+            z: 8.74463755600768
+        ca:
+          x: 0.4020436725241767
+          y: 0.15389593769299403
+          z: 0.4792234372742848
+        cd:
+          x: 1.0
+          y: 1.0
+          z: 1.0
+      shape_coordinates:
+      - - 1.5225
+        - 0.5765
+        - 0.451
+      - - -1.5225
+        - 0.5765
+        - 0.451
+      - - -1.5225
+        - -0.5765
+        - 0.451
+      - - 1.5225
+        - -0.5765
+        - 0.451
+      - - 1.5225
+        - 0.5765
+        - -0.451
+      - - -1.5225
+        - 0.5765
+        - -0.451
+      - - -1.5225
+        - -0.5765
+        - -0.451
+      - - 1.5225
+        - -0.5765
+        - -0.451
+      translational:
+        added_mass:
+          x: 814.7118948371614
+          y: 2522.9973132042596
+          z: 3777.1482165254165
+        area_drag:
+          x: 1.040006
+          y: 2.74659
+          z: 3.510885
+        ca:
+          x: 0.607903219547203
+          y: 1.8825528377885838
+          z: 2.818346677007474
+        cd:
+          deep:
+            x: 0.9291515726660938
+            y: 1.1837583148558757
+            z: 1.1764093668690372
+          splash:
+            x: 2.7874547179982816
+            y: 3.551274944567627
+            z: 3.529228100607112
+  default:
+    config:
+      cfg_sensitivities: false
+      overwrite:
+        output: true
+    log_level: DEBUG
+  inputs:
+    cog:
+      x: -0.0615
+      y: 0
+      z: 0.141
+    cov:
+      x: -0.5285
+      y: 0
+      z: 0.009
+    h: 0.902
+    l: 3.045
+    m_air: 1622.6
+    m_water: 282.4
+    name: uta2
+    output_dir: src\digitalmodel\tests\test_data\6d_buoy
+    output_filename: buoy_6d_rectangular_px_0_uth2
+    perforation_ratio:
+      x: 0
+      y: 0
+      z: 0
+    r: null
+    shape: rectangular
+    w: 1.153
+  look_up:
+    cylinder:
+      added_mass:
+        ratio:
+        - 1.2
+        - 2.5
+        - 5
+        - 9
+        - 100000
+        value:
+        - 0.62
+        - 0.78
+        - 0.9
+        - 0.96
+        - 1
+      drag:
+        axial:
+          ratio:
+          - 0
+          - 1
+          - 2
+          - 4
+          - 7
+          value:
+          - 1.12
+          - 0.91
+          - 0.85
+          - 0.87
+          - 0.99
+        normal:
+          ratio:
+          - 0.01
+          - 2
+          - 5
+          - 10
+          - 20
+          - 40
+          - 50
+          - 100
+          value:
+          - 0.8
+          - 0.8
+          - 0.8
+          - 0.82
+          - 0.9
+          - 0.98
+          - 0.99
+          - 1.0
+    plate:
+      added_mass:
+        ratio:
+        - 1
+        - 1.2
+        - 1.25
+        - 1.33
+        - 1.5
+        - 1.59
+        - 2.0
+        - 2.5
+        - 3.0
+        - 3.17
+        - 4
+        - 5
+        - 6.25
+        - 8
+        - 10
+        - 100000
+        value:
+        - 0.579
+        - 0.63
+        - 0.642
+        - 0.66
+        - 0.69
+        - 0.704
+        - 0.757
+        - 0.801
+        - 0.83
+        - 0.84
+        - 0.872
+        - 0.897
+        - 0.917
+        - 0.934
+        - 0.947
+        - 1
+      drag:
+        ratio:
+        - 1
+        - 5
+        - 10
+        - 50
+        - 100000
+        value:
+        - 1.16
+        - 1.2
+        - 1.5
+        - 1.9
+        - 1.9
+    prism:
+      drag:
+        ratio:
+        - 1
+        - 1.5
+        - 2
+        - 2.5
+        - 3
+        - 4
+        - 5
+        value:
+        - 1.15
+        - 0.97
+        - 0.87
+        - 0.9
+        - 0.93
+        - 0.95
+        - 0.95
+    rotational:
+      m55_lower:
+      - 0.21
+      - 0.21
+      - 0.205
+      - 0.19
+      - 0.155
+      - 0.13
+      - 0.1
+      - 0.07
+      - 0.045
+      - 0.02
+      - 0.005
+      - 0
+      - 0.005
+      - 0.03
+      - 0.055
+      - 0.14
+      - 0.225
+      - 0.35
+      m55_upper:
+      - 1
+      - 0.99
+      - 0.89
+      - 0.7
+      - 0.525
+      - 0.37
+      - 0.24
+      - 0.15
+      - 0.065
+      - 0.03
+      - 0.01
+      - 0
+      - 0.01
+      - 0.025
+      - 0.045
+      - 0.075
+      - 0.1
+      - 0.125
+      ratio:
+      - 0
+      - 0.02
+      - 0.1
+      - 0.2
+      - 0.3
+      - 0.4
+      - 0.5
+      - 0.6
+      - 0.7
+      - 0.8
+      - 0.9
+      - 1.0
+      - 1.1
+      - 1.2
+      - 1.3
+      - 1.4
+      - 1.5
+      - 1.6
+  rho_water: 1025
+  zones:
+  - deep
+state: *id001

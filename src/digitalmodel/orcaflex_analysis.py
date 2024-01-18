@@ -6,8 +6,8 @@ oir = OrcaflexIterativeRuns()
 
 def orcaflex_analysis(cfg):
     orcaFlex_analysis = OrcaFlexAnalysis(cfg)
-
     orcaFlex_analysis.get_files()
+
     orcaFlex_analysis.perform_simulations()
 
     if cfg['orcaflex']['iterate']['flag']:

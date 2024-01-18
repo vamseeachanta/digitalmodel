@@ -1,18 +1,22 @@
-- pandas
-- plotly
-- dash
-- pyyaml
-- bumpver
-- webcolors
-- matplotlib
-- scipy
-- xlrd
-- openpyxl
-- imgkit
-- xmltodict
-- OrcFxAPI
-- docx
-- deepdiff
-- pytest
-- sympy
-- kaleido
+digitalmodel
+assetutilities
+pandas
+plotly
+dash
+pyyaml
+bumpver
+webcolors
+matplotlib
+scipy
+xlrd
+openpyxl
+imgkit
+xmltodict
+OrcFxAPI
+docx
+deepdiff
+pytest
+sympy
+kaleido
+pytest
+deepdiff

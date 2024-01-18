@@ -1,0 +1,70 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/rao_analysis.yml
+    DefaultInputFile: null
+    analysis_root_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data
+    basename: rao_analysis
+    cfg_array_file_names: null
+    file_name: app_rao_analysis_rao_analysis
+    file_name_for_overwrite: app_rao_analysis_rao_analysis
+    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/logs
+    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/results
+    start_time: 2024-01-18 06:20:46.256577
+  Files:
+  - Label: seastate_raos
+    Name: my_ss_raos.yml
+    draughts: []
+    vessel_name: SevenArctic
+  basename: rao_analysis
+  default:
+    config:
+      overwrite:
+        output: true
+    log_level: DEBUG
+  qa_criteria:
+    conventions:
+    - name: DNVGL-ST-0111
+      rule: 5-1
+      tolerance: 0.02
+      version: 2018-01
+    heave:
+      amplitude: 1.0
+      heading: 0
+      period: maximum
+      tolerance: 0.02
+    pitch:
+      amplitude: 1.0
+      heading: 0
+      period: maximum
+      tolerance: 0.02
+  rao_plot:
+    displacement:
+      RAODirections:
+      - 0
+      - 30
+      - 45
+      - 90
+      flag: false
+      xaxis_range:
+      - 4
+      - 10
+    seastate:
+      RAODirections:
+      - 0
+      - 30
+      - 45
+      - 90
+      filter:
+        beyond_boundary: 2
+        cog:
+          x: -32.65
+          y: 38.14
+          z: 7.1
+        l: 11.3
+        w: 11.3
+      flag: true
+      xaxis_range:
+      - 4
+      - 10
+state: *id001

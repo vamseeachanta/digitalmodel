@@ -1,4 +1,4 @@
-"""Generic python package for a plotly dash grid
+"""Python package for digital model
 
 Usage:
 ------
@@ -10,14 +10,14 @@ Contact:
 
 More information is available at:
 
-- https://pypi.org/project/dashhtmlgrid/
-- https://github.com/vamseeachanta/dashhtmlgrid
+- https://pypi.org/project/digitalmodel/
+- https://github.com/vamseeachanta/digitalmodel
 
 
 Version:
 --------
 
-- dashhtmlgrid v0.1.0
+- digitalmodel v0.0.3
 """
 
 from digitalmodel.engine import engine

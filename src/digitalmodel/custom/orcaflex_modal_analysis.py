@@ -3,7 +3,11 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-import OrcFxAPI
+try:
+    import OrcFxAPI
+except:
+    print("OrcFxAPI not available")
+
 
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 
@@ -38,6 +42,8 @@ class OrcModalAnalysis:
                     {file['Label']: selected_modes})
 
             self.summarize_all_files()
+
+        return self.cfg
 
     def summarize_all_files(self):
         files = self.cfg['Files'] if 'Files' in self.cfg else []

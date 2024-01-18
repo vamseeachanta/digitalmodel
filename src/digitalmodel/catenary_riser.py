@@ -107,7 +107,7 @@ def catenary_riser(cfg):
         rangeresult = gethorizontalDistanceHangofftoTDPrange(cfg)
         cfg['simpleCatenaryDefinition']['rangeresult'] = rangeresult
 
-    cfg = buoyancyProperties(cfg, WeightPerUnitLengthWithOutBuoyancy)
+        cfg = buoyancyProperties(cfg, WeightPerUnitLengthWithOutBuoyancy)
 
     # Lazy Wave Analysis
     if cfg['default']['Analysis']['SLWR']:

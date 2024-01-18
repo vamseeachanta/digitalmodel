@@ -10,14 +10,12 @@ orcaflex:
   postprocess:
     visualization: 
       flag: True
-    Summary:
+    summary:
       flag: False
-      AddMinimumToSummary: True
-      AddMaximumToSummary: True
-      AddMeanToSummary: True
     RangeGraph:
       flag: False
-      add_effective_tension_to_cfg: False
+    RAOs:
+      flag: False
     time_series:
       flag: False
       histogram: True
@@ -64,6 +62,14 @@ visualization_settings:
       ViewGamma : 0
       Height : 1425
       Width : 892
+
+RangeGraph_settings:
+  add_effective_tension_to_cfg: False
+
+time_series_settings:
+  histogram: True
+  summation: True
+  groups: []
 
 
 

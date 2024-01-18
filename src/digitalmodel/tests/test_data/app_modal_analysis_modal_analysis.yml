@@ -1,0 +1,45 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: ../test_data/modal_analysis.yml
+    DefaultInputFile: null
+    analysis_root_folder: ../test_data
+    basename: modal_analysis
+    cfg_array_file_names: null
+    file_name: app_modal_analysis_modal_analysis
+    file_name_for_overwrite: app_modal_analysis_modal_analysis
+    log_folder: ../test_data\logs\
+    result_folder: ../test_data\results\
+    start_time: 2023-11-10 13:58:43.851519
+  basename: modal_analysis
+  default:
+    Analysis:
+      Analyze:
+        flag: true
+        modal:
+          ObjectName:
+          - SUT_DZ_30deg
+          - CraneWire#2
+          - Masterlink
+          dof_analysis:
+            dofs:
+            - 1
+            - 2
+            - 3
+            threshold_percentages:
+              1: 20
+              2: 20
+              3: 5
+          flag: true
+          lastMode: 40
+          mode_shapes: false
+          mode_summary: true
+          simulation: false
+          statics: true
+        simulation: false
+        statics: false
+    config:
+      overwrite:
+        output: true
+    log_level: DEBUG
+state: *id001

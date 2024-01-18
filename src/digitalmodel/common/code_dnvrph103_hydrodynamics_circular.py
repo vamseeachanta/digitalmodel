@@ -2,7 +2,9 @@ import os
 import math
 import numpy as np
 from scipy import interpolate
-from digitalmodel.common.data import SaveData
+
+from assetutilities.common.data import SaveData
+
 from digitalmodel.common.orcaflex_model_utilities import OrcaflexModelUtilities
 
 save_data = SaveData()
@@ -16,7 +18,10 @@ class DNVRPH103_hydrodynamics_circular:
 
     def get_orcaflex_6dbuoy(self, cfg):
         properties = self.get_properties(cfg)
+        cfg.update({'code_dnvrph103': {'properties': properties}})
         self.save_6d_buoy_models(properties)
+
+        return self.cfg
 
     def get_properties(self, cfg):
         self.cfg = cfg
@@ -260,7 +265,7 @@ class DNVRPH103_hydrodynamics_circular:
             value = self.cfg['look_up']['plate']['added_mass']['value']
 
         f = interpolate.interp1d(ratio, value)
-        c = f(b_over_a)
+        c = float(f(b_over_a))
 
         if direction in ['x', 'y']:
             mass_added = c * math.pi * self.cfg['rho_water'] * self.cfg[
@@ -552,4 +557,5 @@ class DNVRPH103_hydrodynamics_circular:
             p = np.polyfit(ratio, value, deg=6)
             ca = np.polyval(p, ratio_2) * 2 * b**3 / (a * (a**2 + b**2))
 
+        ca = float(ca)
         return ca

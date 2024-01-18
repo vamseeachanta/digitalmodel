@@ -1,0 +1,16 @@
+basename: cathodic_protection
+
+inputs:
+  calculation_type: ABS
+
+  stress:
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
+
+Analysis:
+  fe_folder: NULL

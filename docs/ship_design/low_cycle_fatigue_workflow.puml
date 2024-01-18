@@ -1,0 +1,78 @@
+@startuml  low_cycle_fatigue_workflow
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Hull | Fatigue \nLow Cycle | Workflow
+
+start
+
+  note right
+  python_architecture:
+  basename: ship_design
+  software: sesam
+  file_type: seasam_xtract
+  end note
+
+:Sesam Xtract | TXT Files;
+  note right
+  Options:
+    - What is the maximum size of .txt. 
+    Mainly understand program constraints
+  end note
+
+:Read appropriate Stress Output File;
+  note right
+  Options for location:
+    - Search by Element (Done)
+    - Search by nearest coordinate (Done)
+  end note
+
+  note right
+  Using vm stress for current algo, see attached delta_stress.png
+  Options for Stress:
+    - Should this be done by Hotspot type?
+    - i.e. parent metal, weld root, weld cap etc.
+  end note
+
+partition Delta Stress {
+
+:Get delta stress;
+  note right
+  Difference between 2 files (Different drafts etc.)
+  end note
+
+}
+
+partition Fatigue Calculation {
+
+:Apply SN Curve;
+  note right
+  Need SN curve. Can be an input.
+  end note
+
+:Calculate Fatigue Damage;
+
+}
+
+
+partition Combined Fatigue {
+
+:Get Wave Damage;
+  note right
+  At the same location 
+  as low-cycle fatigue
+  end note
+
+: Combined Fatigue damage;
+  note right
+  Per ABS methodology
+  end note
+
+}
+
+stop
+@enduml

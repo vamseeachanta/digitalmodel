@@ -1,0 +1,37 @@
+basename: file_management
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  postprocess:
+    visualization: 
+      flag: False
+
+file_management:
+  flag: True
+  update_unfinished: 
+    flag: True
+    cfg: 
+      save_as: .yml
+      prepare_rerun_batch: True
+      general: 
+        constdt: True
+        ImplicitUseVariableTimeStep: 'No' # Keep quotes for value to avoid yml True/False conversion
+        TimeStep : 0.025
+        #  Add damping parameters etc. This should be based on number of iterations elapsed etc.
+
+  files:
+    files_in_current_directory: 
+      flag: True
+      directory: NULL
+    data_source: yml
+    csv_filename: ""
+
+    data:
+      - Name: step06.sim
+      - Name: step07.sim
+

@@ -1,0 +1,171 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_post_process_unfinished_1.yml
+    DefaultInputFile: null
+    analysis_root_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished
+    basename: orcaflex_post_process
+    cfg_array_file_names: null
+    file_name: app_orcaflex_post_process_orcaflex_post_process_unfinished_1
+    file_name_for_overwrite: app_orcaflex_post_process_orcaflex_post_process_unfinished_1
+    log_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\logs\
+    result_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\results\
+    start_time: 2023-11-13 16:10:21.294961
+  Files:
+    csv_filename: ''
+    data:
+    - Name: C:\Users\ss7a2365\Documents\github\rock-oil-field\s7\talos_venice\infield\5.ld\step06.sim
+    - Name: C:\Users\ss7a2365\Documents\github\rock-oil-field\s7\talos_venice\infield\5.ld\step07.sim
+    data_source: yml
+  RangeGraph_settings:
+    add_effective_tension_to_cfg: false
+  basename: orcaflex_post_process
+  default:
+    config:
+      overwrite:
+        output: true
+    log_level: DEBUG
+  file_management:
+    files:
+      files_in_current_directory:
+        auto_read: true
+        directory: null
+        flag: true
+    flag: true
+    input_files:
+      dat:
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test2.dat
+      sim:
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test1.sim
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test2.sim
+      txt: []
+      yaml: []
+      yml:
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\app_file_management_file_management_unfinished.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\app_file_management_file_management_unfinished_1.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\file_management_unfinished_1.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\file_management_unfinished_save_as_yml.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_post_process_unfinished_1.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test1.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test2.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\unfinished_save_as_dat.yml
+    update_unfinished:
+      flag: false
+  orcaflex:
+    postprocess:
+      RAOs:
+        flag: false
+      RangeGraph:
+        flag: false
+      cummulative_histograms:
+        flag: false
+      rain_flow:
+        bins: 10
+        range:
+        - 0
+        - 10
+      summary:
+        flag: true
+      time_series:
+        flag: false
+        histogram: true
+        summation: true
+      visualization:
+        flag: true
+  orcaflex_post_process:
+    summary_groups: 1
+  summary_settings:
+    AddMaximumToSummary: true
+    AddMeanToSummary: true
+    AddMinimumToSummary: true
+    groups:
+    - Columns:
+      - AdditionalData:
+        - Max
+        ArcLength:
+        - 0
+        - 50
+        Command: Range Graph
+        Label: Eff. Tension
+        ObjectName: SLWR
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        Variable: Effective Tension
+      - AdditionalData:
+        - Max
+        ArcLength:
+        - 0
+        - 50
+        Command: Range Graph
+        Label: Bend. Moment
+        ObjectName: SLWR
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        Variable: Bend Moment
+      - AdditionalData:
+        - Max
+        ArcLength:
+        - 0
+        - 50
+        Command: Range Graph
+        Label: API M1
+        ObjectName: SLWR
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        Variable: API STD 2RD Method 1
+      - AdditionalData:
+        - Max
+        ArcLength:
+        - 0
+        - 50
+        Command: Range Graph
+        Label: vM stress
+        ObjectName: SLWR
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        Variable: Max von Mises Stress
+      SummaryFileName: Table_Top
+  time_series_settings:
+    groups: []
+    histogram: true
+    summation: true
+  visualization_settings:
+    add_items:
+    - Umbilical
+    - uta2-deep
+    combined: false
+    hide_items: []
+    individual: true
+    label: ld_6_7_8
+    tdp_line: Umbilical
+    viewparams:
+      elevation:
+        DrawGlobalAxes: false
+        DrawScaleBar: false
+        DrawViewAxes: false
+        Height: 1425
+        RelativeToObject: uth2-deep
+        ViewAzimuth: 270
+        ViewCentre:
+        - -17
+        - 0
+        - 12
+        ViewElevation: 0
+        ViewGamma: 71.89
+        ViewSize: 120
+        Width: 892
+      plan:
+        DrawGlobalAxes: false
+        DrawScaleBar: false
+        DrawViewAxes: false
+        Height: 1425
+        RelativeToObject: uth2-deep
+        ViewAzimuth: 270
+        ViewCentre:
+        - 10
+        - 0
+        - 8
+        ViewElevation: 90
+        ViewGamma: 0
+        ViewSize: 80
+        Width: 892
+    views:
+    - Elevation
+    - Plan
+state: *id001

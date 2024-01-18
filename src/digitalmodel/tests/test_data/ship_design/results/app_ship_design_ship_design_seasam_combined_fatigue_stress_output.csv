@@ -1,0 +1,3 @@
+basename,coordinate,element,delta_stress,status,thickness,stress_method
+SigXX-Lower.txt,"{'x': 77.06, 'y': 15.3, 'z': 2.06}",1300,31445293.75,Pass,15,mean
+SigXX-Upper.txt,"{'x': 77.06, 'y': 15.3, 'z': 2.06}",1300,30692476.25,Pass,15,mean

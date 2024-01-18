@@ -1,0 +1,168 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: ../test_data/orcaflex_post_process/orcaflex_post_process_summary.yml
+    DefaultInputFile: null
+    analysis_root_folder: ../test_data/orcaflex_post_process
+    basename: orcaflex_post_process
+    cfg_array_file_names: null
+    file_name: app_orcaflex_post_process_orcaflex_post_process_summary
+    file_name_for_overwrite: app_orcaflex_post_process_orcaflex_post_process_summary
+    log_folder: ../test_data/orcaflex_post_process\logs\
+    result_folder: ../test_data/orcaflex_post_process\results\
+    start_time: 2023-11-10 13:58:46.084665
+  Files:
+    csv_filename: ''
+    data:
+    - Name: C:\Users\ss7a2365\Documents\github\rock-oil-field\s7\talos_venice\infield\5.ld\step06.sim
+    - Name: C:\Users\ss7a2365\Documents\github\rock-oil-field\s7\talos_venice\infield\5.ld\step07.sim
+    data_source: yml
+  RangeGraph_settings:
+    add_effective_tension_to_cfg: false
+  basename: orcaflex_post_process
+  default:
+    config:
+      overwrite:
+        output: true
+    log_level: DEBUG
+  file_management:
+    files:
+      files_in_current_directory:
+        directory: null
+        flag: true
+    flag: true
+    input_files:
+      '*.dat':
+      - ../test_data/orcaflex_post_process\orcaflex_test2.dat
+      '*.sim':
+      - ../test_data/orcaflex_post_process\orcaflex_test1.sim
+      - ../test_data/orcaflex_post_process\orcaflex_test2.sim
+      '*.txt': []
+      '*.yaml': []
+      '*.yml':
+      - ../test_data/orcaflex_post_process\app_orcaflex_post_process_orcaflex_post_process_summary.yml
+      - ../test_data/orcaflex_post_process\orcaflex_post_process.yml
+      - ../test_data/orcaflex_post_process\orcaflex_post_process_summary.yml
+      - ../test_data/orcaflex_post_process\orcaflex_post_process_summary_pytest.yml
+      - ../test_data/orcaflex_post_process\orcaflex_test1.yml
+      - ../test_data/orcaflex_post_process\visualization.yml
+    update_unfinished:
+      flag: false
+  orcaflex:
+    postprocess:
+      RAOs:
+        flag: false
+      RangeGraph:
+        flag: false
+      cummulative_histograms:
+        flag: false
+      rain_flow:
+        bins: 10
+        range:
+        - 0
+        - 10
+      summary:
+        flag: true
+      time_series:
+        flag: false
+        histogram: true
+        summation: true
+      visualization:
+        flag: false
+  orcaflex_post_process:
+    summary_groups: 1
+  summary_settings:
+    AddMaximumToSummary: true
+    AddMeanToSummary: true
+    AddMinimumToSummary: true
+    groups:
+    - Columns:
+      - AdditionalData:
+        - Max
+        ArcLength:
+        - 0
+        - 50
+        Command: Range Graph
+        Label: Eff. Tension
+        ObjectName: SLWR
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        Variable: Effective Tension
+      - AdditionalData:
+        - Max
+        ArcLength:
+        - 0
+        - 50
+        Command: Range Graph
+        Label: Bend. Moment
+        ObjectName: SLWR
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        Variable: Bend Moment
+      - AdditionalData:
+        - Max
+        ArcLength:
+        - 0
+        - 50
+        Command: Range Graph
+        Label: API M1
+        ObjectName: SLWR
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        Variable: API STD 2RD Method 1
+      - AdditionalData:
+        - Max
+        ArcLength:
+        - 0
+        - 50
+        Command: Range Graph
+        Label: vM stress
+        ObjectName: SLWR
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        Variable: Max von Mises Stress
+      SummaryFileName: Table_Top
+  time_series_settings:
+    groups: []
+    histogram: true
+    summation: true
+  visualization_settings:
+    add_items:
+    - Umbilical
+    - uta2-deep
+    combined: false
+    hide_items: []
+    individual: true
+    label: ld_6_7_8
+    tdp_line: Umbilical
+    viewparams:
+      elevation:
+        DrawGlobalAxes: false
+        DrawScaleBar: false
+        DrawViewAxes: false
+        Height: 1425
+        RelativeToObject: uth2-deep
+        ViewAzimuth: 270
+        ViewCentre:
+        - -17
+        - 0
+        - 12
+        ViewElevation: 0
+        ViewGamma: 71.89
+        ViewSize: 120
+        Width: 892
+      plan:
+        DrawGlobalAxes: false
+        DrawScaleBar: false
+        DrawViewAxes: false
+        Height: 1425
+        RelativeToObject: uth2-deep
+        ViewAzimuth: 270
+        ViewCentre:
+        - 10
+        - 0
+        - 8
+        ViewElevation: 90
+        ViewGamma: 0
+        ViewSize: 80
+        Width: 892
+    views:
+    - Elevation
+    - Plan
+state: *id001

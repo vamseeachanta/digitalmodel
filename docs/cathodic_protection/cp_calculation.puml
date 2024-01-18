@@ -1,0 +1,123 @@
+@startuml  cp_calculation
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title CP | Calculation
+
+start
+:CP Calculation;
+
+:Inputs - Seawater;
+
+  note right
+    - dissolved oxygen content
+    - sea currents
+    - temperature
+    - marine growth
+    - salinity
+    - Seawater pH, carbonate content etc. (calcaresous layers)
+  end note
+
+:Inputs - Seabed sediments;
+
+  note right
+    - temperature
+    - bacterial growth
+    - salinity
+    - sediment coarseness
+  end note
+
+
+partition Design Considerations {
+
+:Protective Potentials;
+  note right
+    - design range: -0.9V to 1.05V
+    - < -0.8V (underprotection)
+    - > -1.15V (overprotection)
+    - These potentials do not apply for CP 
+    by galvanic andoes based on Al or Zn
+  end note
+
+:Detrimental effects of CP;
+    - protective potential: -0.8 V to 0.9 V 
+    - No ventilition can develop explosive gas mixure (H2/O2)
+    - calcareous layer (consisting primarily of calcium carbonate)
+      - film coating
+      - insulate connectors of COp system
+}
+
+
+partition Design {
+
+:Materials;
+  note right
+    - design electrochemical capacity, ε (Ah /kg)
+    - design closed circuit anode potential, Eoa (V)
+    - Ohms & Faradays laws use ε & Eoa to calculate:
+      - anode current output
+      - required anode mass
+    - Al - for higher electrochemical capacity
+    - Zn - more reliable in anaerobic conditions 
+    i.e. sediments or internal compartments with high bacterial activity
+  end note
+
+:Geometry;
+  note right
+    - Initial anode diemensions are calculated using  anode resistance, Ra 
+    - Anode utilization
+    - Slender Stand-off
+      - short/long (l/w ratio)
+      - long stand-off (100 kg + )for Platforms ubstructures, susbsea templates
+    - Elongated, flush mounted
+      - Compared to stand-off, a flush-mounted anode with the same net anode mass 
+      will have a lower anode current output and lower utilisation factor.
+    - bracelet (pipelines)
+  end note
+
+:(non-metallic) Coating;
+  note right
+    - used when CP demand for bare metal is high
+  end note
+
+:Electrical continuity & current drain;
+  note right
+    - TBA
+  end note
+
+:electrochemical potential;
+  note right
+    - Standard calomel electrode (SCE)
+  end note
+
+:Design Life;
+  note right
+    - TBA
+  end note
+
+:Design Current Densitites;
+  note right
+    - Initial design current density
+    - Final design current density
+    - mean design current density (typ. 0.15 or 0.2 V more negative than design protective potenttial)
+    - Guidelines are provided in code
+    - all electrically connected items for COP system  considered for current drain
+  end note
+
+:Coating breakdown factor;
+  note right
+    - fc = a + b*t 
+    - t in years is coating age
+    - fcm (mean)
+    - fcf (final)
+  end note
+
+
+}
+
+stop
+@enduml

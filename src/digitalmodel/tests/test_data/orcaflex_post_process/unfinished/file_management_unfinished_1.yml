@@ -1,0 +1,99 @@
+basename: file_management
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  postprocess:
+    summary:
+      flag: True
+
+file_management:
+  flag: True
+  update_unfinished: 
+    flag: True
+    cfg: 
+      save_as: .yml
+      prepare_rerun_batch: True
+      general: 
+        ImplicitUseVariableTimeStep: No
+        ImplicitConstantTimeStep : 0.05
+        #  Add damping parameters etc. This should be based on number of iterations etc.
+
+summary_settings:
+  AddMinimumToSummary: True
+  AddMaximumToSummary: True
+  AddMeanToSummary: True
+
+  groups:
+  -
+    SummaryFileName: Table_Top
+    Columns:
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData:
+          - Max
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 50
+        Variable: Effective Tension
+        Label: Eff. Tension
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData:
+          - Max
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 50
+        Variable: Bend Moment
+        Label: Bend. Moment
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData:
+          - Max
+        SimulationPeriod:  SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 50
+        Variable: API STD 2RD Method 1
+        Label: API M1
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData:
+          - Max
+        SimulationPeriod:  SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 50
+        Variable: Max von Mises Stress
+        Label: vM stress
+
+
+RangeGraph_settings:
+  add_effective_tension_to_cfg: False
+
+time_series_settings:
+  histogram: True
+  summation: True
+  groups: []
+
+
+file_management:
+  flag: True
+  update_unfinished: 
+    flag: False
+
+  files:
+    files_in_current_directory: 
+      flag: True
+      directory: NULL
+      auto_read: True

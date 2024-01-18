@@ -4,9 +4,9 @@ from pathlib import Path
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
-from digitalmodel.common.yml_utilities import ymlInput
-from digitalmodel.common.utilities import get_colors
-from digitalmodel.common.saveData import saveDataYaml
+from assetutilities.common.yml_utilities import ymlInput
+from assetutilities.common.utilities import get_colors
+from assetutilities.common.saveData import saveDataYaml
 
 
 class RAOAnalysis:
@@ -32,6 +32,8 @@ class RAOAnalysis:
             self.plot_multiple_vessel_data()
         else:
             print("No RAO displacement plots requested")
+
+        return self.cfg
 
     def read_vessel_data_from_file(self, file_name):
         print('Reading file: {}'.format(file_name))
@@ -403,6 +405,8 @@ class RAOAnalysis:
 
         else:
             print("No Seastate RAO plots requested")
+
+        return self.cfg
 
     def filter_orcaflex_seastate_raos(self, file_vessel_data):
         filter_settings = self.cfg['rao_plot']['seastate']['filter']

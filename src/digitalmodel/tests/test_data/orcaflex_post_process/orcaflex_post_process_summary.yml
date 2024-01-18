@@ -1,0 +1,104 @@
+basename: orcaflex_post_process
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+
+
+orcaflex:
+  postprocess:
+    visualization: 
+      flag: False
+    summary:
+      flag: True
+    RangeGraph:
+      flag: False
+    time_series:
+      flag: False
+    RAOs:
+      flag: False
+    cummulative_histograms:
+      flag: False
+    rain_flow:
+      bins: 10
+      range:
+        - 0
+        - 10
+
+summary_settings:
+  AddMinimumToSummary: True
+  AddMaximumToSummary: True
+  AddMeanToSummary: True
+
+  groups:
+  -
+    SummaryFileName: Table_Top
+    Columns:
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData:
+          - Max
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 50
+        Variable: Effective Tension
+        Label: Eff. Tension
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData:
+          - Max
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 50
+        Variable: Bend Moment
+        Label: Bend. Moment
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData:
+          - Max
+        SimulationPeriod:  SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 50
+        Variable: API STD 2RD Method 1
+        Label: API M1
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData:
+          - Max
+        SimulationPeriod:  SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 50
+        Variable: Max von Mises Stress
+        Label: vM stress
+
+
+RangeGraph_settings:
+  add_effective_tension_to_cfg: False
+
+time_series_settings:
+  histogram: True
+  summation: True
+  groups: []
+
+
+file_management:
+  flag: True
+  update_unfinished: 
+    flag: False
+
+  files:
+    files_in_current_directory: 
+      flag: True
+      directory: NULL
+      auto_read: True

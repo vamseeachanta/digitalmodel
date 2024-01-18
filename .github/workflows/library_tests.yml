@@ -1,0 +1,31 @@
+name: Python package
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        uses: py-actions/py-dependency-install@v4
+        with:
+          path: "dev_tools/requirements.txt"
+
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+
+      - name: Test with pytest
+        run: |
+          pytest src/digitalmodel/tests/no_license

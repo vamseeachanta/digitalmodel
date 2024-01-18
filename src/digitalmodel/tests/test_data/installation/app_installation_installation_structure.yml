@@ -1,0 +1,56 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/installation/installation_structure.yml
+    DefaultInputFile: null
+    analysis_root_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/installation
+    basename: installation
+    cfg_array_file_names: null
+    file_name: app_installation_installation_structure
+    file_name_for_overwrite: app_installation_installation_structure
+    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/installation/logs
+    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/installation/results
+    start_time: 2024-01-18 06:31:17.070907
+  basename: installation
+  default:
+    Constants:
+      g: 9.81
+    config:
+      overwrite:
+        output: true
+    log_level: DEBUG
+    units:
+      BendingMoment: kNm
+      BuoyancyCoverage: Percentage
+      E: psi
+      EffectiveTension: kN
+      MassPerUnitLength: kg/m
+      NominalID: inch
+      NominalOD: inch
+      NominalWT: inch
+      Pressure: psi
+      Rho: kg/m3
+      SoilStiffness: kN/m/m
+      Temperature: deg F
+      WeightPerUnitLength: N/m
+      YieldStrength: psi
+      declinationAngle: deg with vertical
+      verticalDistance: m
+  structure:
+    3DBuoys:
+    - Masterlink
+    6DBuoys:
+    - mudmat
+    BaseFile: __03structure.yml
+    Lines:
+    - EndBZ: null
+      TargetSegmentLength[1]: 10
+      TargetSegmentLength[2]: 2
+      length_index: 1
+      name: _02_main_crane_wire_bot
+    delta_elevations:
+    - -100
+    flag: true
+    reference_elevation_file: src/digitalmodel/tests/test_data/installation/__04a_calculated_positions.yml
+    reference_model_file: src/digitalmodel/tests/test_data/installation/__03a_add_rigging.yml
+state: *id001

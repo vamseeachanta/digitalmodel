@@ -1,0 +1,123 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: src/digitalmodel/tests/test_data/ship_design/ship_design_fatigue.yml
+    DefaultInputFile: null
+    analysis_root_folder: src/digitalmodel/tests/test_data/ship_design
+    basename: ship_design
+    cfg_array_file_names: null
+    fe_folder: src/digitalmodel/tests/test_data/ship_design\results\
+    file_name: app_ship_design_ship_design_fatigue
+    file_name_for_overwrite: app_ship_design_ship_design_fatigue
+    log_folder: src/digitalmodel/tests/test_data/ship_design\logs\
+    result_folder: src/digitalmodel/tests/test_data/ship_design\results\
+    start_time: 2024-01-08 05:49:19.943542
+  basename: ship_design
+  default:
+    config:
+      cfg_sensitivities: false
+      overwrite:
+        output: true
+    log_level: DEBUG
+  inputs:
+    calculation_type: combined_fatigue
+    files:
+      lcf:
+        fatigue_states:
+        - src/digitalmodel/tests/test_data/ship_design/seasam/MinDraft
+        - src/digitalmodel/tests/test_data/ship_design/seasam/MaxDraft
+        file_name: MULL
+        file_type: seasam_xtract
+      locations:
+        coordinate:
+          data:
+          - t: 15
+            x: 77.0091
+            y: 15.3
+            z: 2.1
+          flag: true
+        element:
+          data:
+          - element: 1300
+            t: 15
+          - element: 2381
+            t: 15
+          flag: true
+      wave:
+        data:
+        - 0.5
+        file_type: data
+    software: sesam
+    stress: null
+  ship_design:
+    stress_output:
+    - coordinate:
+      - delta_stress: 16334757.08
+        state_0:
+          S: 6995126.25
+          coordinate:
+            t: 15
+            x: 77.0091
+            y: 15.3
+            z: 2.1
+          element:
+          - 1300.0
+          - 1318.0
+          - 1337.0
+          label: state_0
+        state_1:
+          S: 23329883.33
+          coordinate:
+            t: 15
+            x: 77.0091
+            y: 15.3
+            z: 2.1
+          element:
+          - 1300.0
+          - 1318.0
+          - 1337.0
+          label: state_1
+      element:
+      - delta_stress: 15563017.5
+        state_0:
+          S: 7050670.0
+          coordinate:
+            x: 77.06
+            y: 15.3
+            z: 2.06
+          element:
+            element: 1300
+            t: 15
+          label: state_0
+        state_1:
+          S: 22613687.5
+          coordinate:
+            x: 77.06
+            y: 15.3
+            z: 2.06
+          element:
+            element: 1300
+            t: 15
+          label: state_1
+      - delta_stress: 59176575.0
+        state_0:
+          S: 10837425.0
+          coordinate:
+            x: 76.53
+            y: 15.12
+            z: 2.4
+          element:
+            element: 2381
+            t: 15
+          label: state_0
+        state_1:
+          S: 70014000.0
+          coordinate:
+            x: 76.53
+            y: 15.12
+            z: 2.4
+          element:
+            element: 2381
+            t: 15
+          label: state_1
+state: *id001

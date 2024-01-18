@@ -1,0 +1,69 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\file_management_unfinished.yml
+    DefaultInputFile: null
+    analysis_root_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished
+    basename: file_management
+    cfg_array_file_names: null
+    file_name: app_file_management_file_management_unfinished
+    file_name_for_overwrite: app_file_management_file_management_unfinished
+    log_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\logs\
+    result_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\results\
+    start_time: 2023-11-11 07:54:36.628704
+  basename: file_management
+  default:
+    config:
+      overwrite:
+        output: true
+    log_level: DEBUG
+  file_management:
+    files:
+      csv_filename: ''
+      data:
+      - Name: step06.sim
+      - Name: step07.sim
+      data_source: yml
+      files_in_current_directory:
+        directory: null
+        flag: true
+    flag: true
+    input_files:
+      '*.dat':
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test2.dat
+      '*.sim':
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test1.sim
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test2.sim
+      '*.txt': []
+      '*.yaml': []
+      '*.yml':
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\app_file_management_file_management_unfinished.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\file_management_unfinished.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\file_management_unfinished_1.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test1.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test2.yml
+    sim_status:
+    - file: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test1.sim
+      finish_flag: true
+      run_time:
+        last: 10.0
+        set: 10.0
+    - file: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\unfinished\orcaflex_test2.sim
+      finish_flag: false
+      run_time:
+        last: 6.859999999999996
+        set: 10.0
+    update_unfinished:
+      cfg:
+        general:
+          ImplicitUseVariableTimeStep: 'No'
+          TimeStep: 0.025
+          constdt: true
+        prepare_rerun_batch: true
+        save_as: .yml
+      flag: true
+  orcaflex:
+    postprocess:
+      visualization:
+        flag: false
+state: *id001
