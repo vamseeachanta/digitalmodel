@@ -21,22 +21,33 @@ inputs:
               x: 77.0,
               y: 15.3,
               z: 2.1,
-              t: 15,
+              thickness: 15,
               stress_method: mean,
               wave_damage: 0.6,
+              n_cycles: 200,
+              fatigue_curve: DnV 2005 C2 Seawater CP,
             }
 
       element:
         flag: True
         data:
           # stress_method options: mean/max
-          - { element: 1300, t: 15, stress_method: mean, wave_damage: 0.5 }
-          - { element: 2381, t: 15, stress_method: max, wave_damage: 0.6 }
-
-    wave:
-      file_type: data
-      data:
-        - 0.5
+          - {
+              element: 1300,
+              thickness: 15,
+              stress_method: mean,
+              wave_damage: 0.5,
+              n_cycles: 200,
+              fatigue_curve: DnV 2005 C2 Seawater CP,
+            }
+          - {
+              element: 2381,
+              thickness: 15,
+              stress_method: max,
+              wave_damage: 0.6,
+              n_cycles: 200,
+              fatigue_curve: DnV 2005 C2 Seawater CP,
+            }
 
 default:
   log_level: INFO

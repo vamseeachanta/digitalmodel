@@ -31,6 +31,7 @@ class ShipFatigueAnalysis:
         return cfg
 
     def get_lcf_fatigue_damage(self, cfg):
+        logging.info("Calculating LCF fatigue damage ... START")
         df = self.get_fatigue_damage_output_df(cfg["ship_design"]["stress_output"])
 
         cfg_fat_dam = fatigue_analysis.get_default_cfg()
@@ -49,9 +50,12 @@ class ShipFatigueAnalysis:
             cfg_fat_dam = fatigue_analysis.router(cfg_fat_dam)
             df.loc[idx, "lcf_damage"] = cfg_fat_dam["fatigue_analysis"]["damage"]
 
+        logging.info("Calculating LCF fatigue damage ... COMPLETE")
+
         return df
 
     def get_abs_combined_fatigue(self, df):
+        logging.info("Calculating ABS combined fatigue ... START")
         delta = 0.02
         for idx in range(0, len(df)):
             lcf_damage = df.iloc[idx]["lcf_damage"]
@@ -64,6 +68,8 @@ class ShipFatigueAnalysis:
             combined_damage_denominator = math.sqrt(lcf_damage**2 + wave_damage**2)
             combined_damage = combined_damage_numerator / combined_damage_denominator
             df.loc[idx, "combined_damage"] = combined_damage
+
+        logging.info("Calculating ABS combined fatigue ... COMPLETE")
 
         return df
 
@@ -116,9 +122,14 @@ class ShipFatigueAnalysis:
                         coordinate = fatigue_state_pair[basename][by_type][idx][
                             "state_0"
                         ]["coordinate"]
-                        element = fatigue_state_pair[basename][by_type][idx]["state_0"][
-                            "element"
-                        ]["element"]
+                        if by_type == "coordinate":
+                            element = fatigue_state_pair[basename][by_type][idx][
+                                "state_0"
+                            ]["element"]
+                        elif by_type == "element":
+                            element = fatigue_state_pair[basename][by_type][idx][
+                                "state_0"
+                            ]["element"]["element"]
                         delta_stress = fatigue_state_pair[basename][by_type][idx][
                             "delta_stress"
                         ]
@@ -140,6 +151,21 @@ class ShipFatigueAnalysis:
                         lcf_damage = np.nan
                         combined_damage = np.nan
 
+                        df.loc[len(df)] = [
+                            basename,
+                            coordinate,
+                            element,
+                            delta_stress,
+                            fatigue_state_pair[basename]["status"],
+                            thickness,
+                            stress_method,
+                            fatigue_curve,
+                            n_cycles,
+                            lcf_damage,
+                            wave_damage,
+                            combined_damage,
+                        ]
+
             else:
                 coordinate = np.nan
                 element = np.nan
@@ -152,20 +178,20 @@ class ShipFatigueAnalysis:
                 lcf_damage = np.nan
                 combined_damage = np.nan
 
-            df.loc[len(df)] = [
-                basename,
-                coordinate,
-                element,
-                delta_stress,
-                fatigue_state_pair[basename]["status"],
-                thickness,
-                stress_method,
-                fatigue_curve,
-                n_cycles,
-                lcf_damage,
-                wave_damage,
-                combined_damage,
-            ]
+                df.loc[len(df)] = [
+                    basename,
+                    coordinate,
+                    element,
+                    delta_stress,
+                    fatigue_state_pair[basename]["status"],
+                    thickness,
+                    stress_method,
+                    fatigue_curve,
+                    n_cycles,
+                    lcf_damage,
+                    wave_damage,
+                    combined_damage,
+                ]
 
         return df
 
@@ -181,9 +207,14 @@ class ShipFatigueAnalysis:
                         coordinate = fatigue_state_pair[basename][by_type][idx][
                             "state_0"
                         ]["coordinate"]
-                        element = fatigue_state_pair[basename][by_type][idx]["state_0"][
-                            "element"
-                        ]
+                        if by_type == "coordinate":
+                            element = fatigue_state_pair[basename][by_type][idx][
+                                "state_0"
+                            ]["element"]
+                        elif by_type == "element":
+                            element = fatigue_state_pair[basename][by_type][idx][
+                                "state_0"
+                            ]["element"]["element"]
                         delta_stress = fatigue_state_pair[basename][by_type][idx][
                             "delta_stress"
                         ]
@@ -193,6 +224,17 @@ class ShipFatigueAnalysis:
                         stress_method = fatigue_state_pair[basename][by_type][idx][
                             "state_0"
                         ][by_type]["stress_method"]
+
+                        df.loc[len(df)] = [
+                            basename,
+                            coordinate,
+                            element,
+                            delta_stress,
+                            fatigue_state_pair[basename]["status"],
+                            thickness,
+                            stress_method,
+                        ]
+
             else:
                 coordinate = np.nan
                 element = np.nan
@@ -200,15 +242,15 @@ class ShipFatigueAnalysis:
                 thickness = np.nan
                 stress_method = np.nan
 
-            df.loc[len(df)] = [
-                basename,
-                coordinate,
-                element,
-                delta_stress,
-                fatigue_state_pair[basename]["status"],
-                thickness,
-                stress_method,
-            ]
+                df.loc[len(df)] = [
+                    basename,
+                    coordinate,
+                    element,
+                    delta_stress,
+                    fatigue_state_pair[basename]["status"],
+                    thickness,
+                    stress_method,
+                ]
 
         return df
 
@@ -289,13 +331,16 @@ class ShipFatigueAnalysis:
                     if coordinate["stress_method"] == "mean":
                         stress_range.append(stress_output["S_mean"])
                     elif coordinate["stress_method"] == "max":
-                        stress_range.append(stress_output["S_max"])
+                        if stress_output["S_max"] < 0:
+                            stress_range.append(stress_output["S_min"])
+                        else:
+                            stress_range.append(stress_output["S_max"])
                     else:
                         raise ValueError(
                             f"Invalid stress method: {coordinate['stress_method']}"
                         )
 
-                delta_stress = stress_range[1] - stress_range[0]
+                delta_stress = abs(stress_range[1] - stress_range[0])
                 coordinate_output.update(
                     {"delta_stress": round(float(delta_stress), 2)}
                 )
@@ -322,13 +367,16 @@ class ShipFatigueAnalysis:
                     if element_dict["stress_method"] == "mean":
                         stress_range.append(stress_output["S_mean"])
                     elif element_dict["stress_method"] == "max":
-                        stress_range.append(stress_output["S_max"])
+                        if stress_output["S_max"] < 0:
+                            stress_range.append(stress_output["S_min"])
+                        else:
+                            stress_range.append(stress_output["S_max"])
                     else:
                         raise ValueError(
                             f"Invalid stress method: {element_dict['stress_method']}"
                         )
 
-                delta_stress = stress_range[1] - stress_range[0]
+                delta_stress = abs(stress_range[1] - stress_range[0])
                 element_output.update({"delta_stress": round(float(delta_stress), 2)})
                 element_output_array.append(element_output)
 
@@ -355,6 +403,7 @@ class ShipFatigueAnalysis:
         stress_output.update({"element": df_filter["Element"].to_list()})
         stress_output.update({"S_mean": round(float(df_filter["S_mean"].mean()), 2)})
         stress_output.update({"S_max": round(float(df_filter["S_max"].max()), 2)})
+        stress_output.update({"S_min": round(float(df_filter["S_min"].min()), 2)})
         stress_output.update({"label": label})
 
         return stress_output
@@ -380,6 +429,7 @@ class ShipFatigueAnalysis:
         stress_output.update({"element": element_dict.copy()})
         stress_output.update({"S_mean": round(float(df_filter["S_mean"].mean()), 2)})
         stress_output.update({"S_max": round(float(df_filter["S_max"].mean()), 2)})
+        stress_output.update({"S_min": round(float(df_filter["S_min"].min()), 2)})
         stress_output.update({"label": label})
 
         return stress_output
@@ -407,7 +457,16 @@ class ShipFatigueAnalysis:
             except:
                 logging.debug(f"      Could not convert column {column} to float")
 
-        add_columns = ["x_min", "x_max", "y_min", "y_max", "z_min", "S_mean", "S_max"]
+        add_columns = [
+            "x_min",
+            "x_max",
+            "y_min",
+            "y_max",
+            "z_min",
+            "S_mean",
+            "S_max",
+            "S_min",
+        ]
         for column in add_columns:
             df[column] = np.nan
 
@@ -498,6 +557,19 @@ class ShipFatigueAnalysis:
             )
 
             df.loc[df_row, "S_max"] = max(
+                [
+                    df.iloc[df_row][stress_nomenclature + "(1)"],
+                    df.iloc[df_row][stress_nomenclature + "(2)"],
+                    df.iloc[df_row][stress_nomenclature + "(3)"],
+                    df.iloc[df_row][stress_nomenclature + "(4)"],
+                    df.iloc[df_row][stress_nomenclature + "(5)"],
+                    df.iloc[df_row][stress_nomenclature + "(6)"],
+                    df.iloc[df_row][stress_nomenclature + "(7)"],
+                    df.iloc[df_row][stress_nomenclature + "(8)"],
+                ]
+            )
+
+            df.loc[df_row, "S_min"] = min(
                 [
                     df.iloc[df_row][stress_nomenclature + "(1)"],
                     df.iloc[df_row][stress_nomenclature + "(2)"],
