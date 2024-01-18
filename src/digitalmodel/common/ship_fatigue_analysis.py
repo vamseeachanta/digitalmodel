@@ -1,5 +1,6 @@
 import os
 import logging
+import math
 import statistics
 import logging
 import pandas as pd
@@ -9,8 +10,10 @@ from assetutilities.common.utilities import add_cwd_to_filename
 from assetutilities.common.data import ReadData
 from assetutilities.common.data import SaveData
 from assetutilities.common.visualizations import Visualization
+from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 
 read_data = ReadData()
+fatigue_analysis = FatigueAnalysis()
 
 
 class ShipFatigueAnalysis:
@@ -21,19 +24,55 @@ class ShipFatigueAnalysis:
         if cfg["inputs"]["files"]["lcf"]["file_type"] == "seasam_xtract":
             cfg = self.get_fatigue_states_and_stress_range(cfg)
         if cfg["inputs"]["calculation"] == "abs_combined_fatigue":
-            cfg = self.get_lcf_fatigue_damage(cfg)
-            cfg = self.get_abs_combined_fatigue(cfg)
+            df = self.get_lcf_fatigue_damage(cfg)
+            df = self.get_abs_combined_fatigue(df)
+            self.save_combined_fatigue_as_csv(cfg, df)
 
         return cfg
 
     def get_lcf_fatigue_damage(self, cfg):
-        df = self.get_stress_output_df(cfg["ship_design"]["stress_output"], cfg)
+        df = self.get_fatigue_damage_output_df(cfg["ship_design"]["stress_output"])
 
-    def get_abs_combined_fatigue(self, cfg):
-        cfg = self.get_abs_combined_fatigue_stress_range(cfg)
-        cfg = self.get_abs_combined_fatigue_life(cfg)
+        cfg_fat_dam = fatigue_analysis.get_default_cfg()
+        for idx in range(0, len(df)):
+            cfg_fat_dam["inputs"].update(
+                {
+                    "SN": [
+                        {
+                            "s": df.iloc[idx]["delta_stress"],
+                            "n_cycles": df.iloc[idx]["n_cycles"],
+                            "thickness": df.iloc[idx]["thickness"],
+                        }
+                    ]
+                }
+            )
+            cfg_fat_dam = fatigue_analysis.router(cfg_fat_dam)
+            df.loc[idx, "lcf_damage"] = cfg_fat_dam["fatigue_analysis"]["damage"]
 
-        return cfg
+        return df
+
+    def get_abs_combined_fatigue(self, df):
+        delta = 0.02
+        for idx in range(0, len(df)):
+            lcf_damage = df.iloc[idx]["lcf_damage"]
+            wave_damage = df.iloc[idx]["wave_damage"]
+            combined_damage_numerator = (
+                lcf_damage**2
+                + wave_damage**2
+                + 2 * delta * lcf_damage * wave_damage
+            )
+            combined_damage_denominator = math.sqrt(lcf_damage**2 + wave_damage**2)
+            combined_damage = combined_damage_numerator / combined_damage_denominator
+            df.loc[idx, "combined_damage"] = combined_damage
+
+        return df
+
+    def save_combined_fatigue_as_csv(self, cfg, df):
+        file_name = os.path.join(
+            cfg["Analysis"]["result_folder"],
+            cfg["Analysis"]["file_name"] + "_combined_fatigue.csv",
+        )
+        df.to_csv(file_name, index=False)
 
     def get_fatigue_states_and_stress_range(self, cfg):
         fatigue_states = cfg["inputs"]["files"]["lcf"]["fatigue_states"]
@@ -58,15 +97,15 @@ class ShipFatigueAnalysis:
         return cfg
 
     def save_stress_output_as_csv(self, cfg, stress_output):
-        df = self.get_stress_output_df(stress_output, cfg)
+        df = self.get_stress_output_df(stress_output)
         sress_output_file_name = os.path.join(
             cfg["Analysis"]["result_folder"],
             cfg["Analysis"]["file_name"] + "_stress_output.csv",
         )
         df.to_csv(sress_output_file_name, index=False)
 
-    def get_stress_output_df(self, stress_output, cfg):
-        df = self.get_output_df_definition(cfg)
+    def get_fatigue_damage_output_df(self, stress_output):
+        df = self.get_fatigue_df_definition()
 
         for fatigue_state_pair in stress_output:
             basename = list(fatigue_state_pair.keys())[0]
@@ -83,51 +122,118 @@ class ShipFatigueAnalysis:
                         delta_stress = fatigue_state_pair[basename][by_type][idx][
                             "delta_stress"
                         ]
-                        df.loc[len(df)] = [
-                            basename,
-                            coordinate,
-                            element,
-                            delta_stress,
-                            fatigue_state_pair[basename]["status"],
-                            np.nan,
-                            np.nan,
-                            np.nan,
-                        ]
+                        thickness = fatigue_state_pair[basename][by_type][idx][
+                            "state_0"
+                        ][by_type]["thickness"]
+                        stress_method = fatigue_state_pair[basename][by_type][idx][
+                            "state_0"
+                        ][by_type]["stress_method"]
+                        fatigue_curve = fatigue_state_pair[basename][by_type][idx][
+                            "state_0"
+                        ][by_type]["fatigue_curve"]
+                        n_cycles = fatigue_state_pair[basename][by_type][idx][
+                            "state_0"
+                        ][by_type]["n_cycles"]
+                        wave_damage = fatigue_state_pair[basename][by_type][idx][
+                            "state_0"
+                        ][by_type]["wave_damage"]
+                        lcf_damage = np.nan
+                        combined_damage = np.nan
+
             else:
-                df.loc[len(df)] = [
-                    basename,
-                    np.nan,
-                    np.nan,
-                    np.nan,
-                    fatigue_state_pair[basename]["status"],
-                    np.nan,
-                    np.nan,
-                    np.nan,
-                ]
+                coordinate = np.nan
+                element = np.nan
+                delta_stress = np.nan
+                thickness = np.nan
+                stress_method = np.nan
+                fatigue_curve = np.nan
+                n_cycles = np.nan
+                wave_damage = np.nan
+                lcf_damage = np.nan
+                combined_damage = np.nan
+
+            df.loc[len(df)] = [
+                basename,
+                coordinate,
+                element,
+                delta_stress,
+                fatigue_state_pair[basename]["status"],
+                thickness,
+                stress_method,
+                fatigue_curve,
+                n_cycles,
+                lcf_damage,
+                wave_damage,
+                combined_damage,
+            ]
 
         return df
 
-    def get_output_df_definition(self, cfg):
+    def get_stress_output_df(self, stress_output):
+        df = self.get_stress_df_definition()
+
+        for fatigue_state_pair in stress_output:
+            basename = list(fatigue_state_pair.keys())[0]
+
+            if fatigue_state_pair[basename]["status"] == "Pass":
+                for by_type in ["coordinate", "element"]:
+                    for idx in range(0, len(fatigue_state_pair[basename][by_type])):
+                        coordinate = fatigue_state_pair[basename][by_type][idx][
+                            "state_0"
+                        ]["coordinate"]
+                        element = fatigue_state_pair[basename][by_type][idx]["state_0"][
+                            "element"
+                        ]["element"]
+                        delta_stress = fatigue_state_pair[basename][by_type][idx][
+                            "delta_stress"
+                        ]
+                        thickness = fatigue_state_pair[basename][by_type][idx][
+                            "state_0"
+                        ][by_type]["thickness"]
+                        stress_method = fatigue_state_pair[basename][by_type][idx][
+                            "state_0"
+                        ][by_type]["stress_method"]
+            else:
+                coordinate = np.nan
+                element = np.nan
+                delta_stress = np.nan
+                thickness = np.nan
+                stress_method = np.nan
+
+            df.loc[len(df)] = [
+                basename,
+                coordinate,
+                element,
+                delta_stress,
+                fatigue_state_pair[basename]["status"],
+                thickness,
+                stress_method,
+            ]
+
+        return df
+
+    def get_stress_df_definition(self):
         columns = (
             ["basename"]
             + ["coordinate", "element"]
             + ["delta_stress"]
             + ["status"]
-            + ["lcf_damage", "wave_damage", "abs_damage"]
+            + ["thickness", "stress_method"]
         )
 
-        # for by_type in ["coordinate", "element"]:
-        #     if cfg["inputs"]["files"]["locations"][by_type]["flag"]:
-        #         for idx in range(
-        #             0, len(cfg["inputs"]["files"]["locations"][by_type]["data"])
-        #         ):
-        #             columns = columns + [
-        #                 by_type + str(idx) + "_" + column
-        #                 for column in [
-        #                     "delta_stress",
-        #                     "element",
-        #                 ]
-        #             ]
+        df = pd.DataFrame(columns=columns)
+
+        return df
+
+    def get_fatigue_df_definition(self):
+        columns = (
+            ["basename"]
+            + ["coordinate", "element"]
+            + ["delta_stress"]
+            + ["status"]
+            + ["thickness", "stress_method", "fatigue_curve", "n_cycles"]
+            + ["lcf_damage", "wave_damage", "combined_damage"]
+        )
 
         df = pd.DataFrame(columns=columns)
 

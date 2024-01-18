@@ -8,13 +8,14 @@ class FatigueAnalysis:
         pass
 
     def router(self, cfg):
-        if cfg["inputs"]["software"] == "orcaflex":
-            raise NotImplementedError
-        elif cfg["inputs"]["software"] == "abaqus":
-            raise NotImplementedError
-        elif cfg["inputs"]["software"] is None:
-            if cfg["inputs"]["calculation_type"] == "damage":
-                cfg = self.damage_from_sn_data(cfg)
+        if "software" in cfg["inputs"]:
+            if cfg["inputs"]["software"] == "orcaflex":
+                raise NotImplementedError
+            elif cfg["inputs"]["software"] == "abaqus":
+                raise NotImplementedError
+        if cfg["inputs"]["calculation_type"] == "damage":
+            cfg = self.damage_from_sn_data(cfg)
+
         return cfg
 
     def damage_from_sn_data(self, cfg):
@@ -23,7 +24,7 @@ class FatigueAnalysis:
         for sn in cfg["inputs"]["SN"]:
             damage += self.damage_from_stress_range_single(sn, fatigue_curve)
 
-        cfg = cfg.update({"fatigue_analysis": {"damage": damage}})
+        cfg.update({"fatigue_analysis": {"damage": damage}})
 
         return cfg
 
@@ -57,3 +58,19 @@ class FatigueAnalysis:
         fatigue_curve_data = pd.read_csv(fatigue_data_file)
 
         return fatigue_curve_data
+
+    def get_default_cfg(self):
+        default_cfg = {
+            "basename": "fatigue_analysis",
+            "inputs": {
+                "calculation_type": "damage",
+                "SN": [{"s": 2000000, "n_cycles": 1, "thickness": 15}],
+                "fatigue_curve": "DnV 2005 C2 Seawater CP",
+            },
+            "fatigue_data": {
+                "csv": True,  # True
+                "io": "src/digitalmodel/tests/test_data/fatigue_analysis/fatigue_data.csv",
+            },
+        }
+
+        return default_cfg
