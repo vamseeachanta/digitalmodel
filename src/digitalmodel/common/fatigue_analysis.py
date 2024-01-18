@@ -1,6 +1,7 @@
 import os
 import pandas as pd
-from assetutilities.common.utilities import add_cwd_to_filename
+from assetutilities.common.yml_utilities import WorkingWithYAML
+wwy = WorkingWithYAML()
 
 
 class FatigueAnalysis:
@@ -51,10 +52,17 @@ class FatigueAnalysis:
         return fatigue_curve
 
     def get_fatigue_curve_data(self, cfg):
+
         if cfg["fatigue_data"]["csv"]:
             fatigue_data_file = cfg["fatigue_data"]["io"]
-        cwd = os.getcwd()
-        fatigue_data_file = add_cwd_to_filename(fatigue_data_file, cwd)
+
+        library_name = 'digitalmodel'
+        library_cfg = {
+            'filename': fatigue_data_file,
+            'library_name': library_name
+        }
+
+        fatigue_data_file = wwy.get_library_filename(library_cfg)
         fatigue_curve_data = pd.read_csv(fatigue_data_file)
 
         return fatigue_curve_data
@@ -69,7 +77,7 @@ class FatigueAnalysis:
             },
             "fatigue_data": {
                 "csv": True,  # True
-                "io": "src/digitalmodel/tests/test_data/fatigue_analysis/fatigue_data.csv",
+                "io": "tests/test_data/fatigue_analysis/fatigue_data.csv",
             },
         }
 
