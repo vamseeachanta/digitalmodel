@@ -17,7 +17,7 @@ More information is available at:
 Version:
 --------
 
-- digitalmodel v0.0.3
+- digitalmodel v0.0.4
 """
 
 from digitalmodel.engine import engine
