@@ -339,7 +339,7 @@ class ShipFatigueAnalysis:
 
     def get_stress_data_for_coordinate(self, coordinate, df, label):
         logging.info(
-            f"      Getting stress data, state: {label}, coordinate: {coordinate}"
+            f"      Getting stress data, state: {label}, coordinate: {coordinate['coordinate']}"
         )
         stress_output = {}
 
