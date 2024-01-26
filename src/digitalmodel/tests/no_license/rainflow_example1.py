@@ -1,10 +1,48 @@
-# https://pypi.org/project/rainflow/
-# ASTM E1049-85 rainflow cycle counting algorythm for fatigue analysis
-# https://docs.scipy.org/doc/numpy/reference/generated/numpy.histogram.html
-# Implement Histogram counting
+import pytest
+import deepdiff
+import os
+import sys
+
+def run_rainflow_for_timeseries(input_file, expected_result={}):
+    if input_file is not None and not os.path.isfile(input_file):
+        input_file = os.path.join(os.path.dirname(__file__), input_file)
+    cfg = engine(input_file)
+    
+    obtained_result = cfg[cfg['basename']]['properties']
+    expected_result = expected_result[cfg['basename']]['properties'].copy()
+
+    assert not deepdiff.DeepDiff(obtained_result,
+                                 expected_result,
+                                 ignore_order=True,
+                                 significant_digits=4)
+
+
+def get_valid_pytest_output_file(pytest_output_file):
+    if pytest_output_file is not None and not os.path.isfile(
+            pytest_output_file):
+        pytest_output_file = os.path.join(os.path.dirname(__file__),
+                                          pytest_output_file)
+    return pytest_output_file
+
+
+def test_dnvrph103_circular():
+    input_file = '../test_data/code_dnvrph103_circular.yml'
+    pytest_output_file = '../test_data/6d_buoy/buoy_6d_circular_px_0_pytest.yml'
+    pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
+    expected_result = ymlInput(pytest_output_file, updateYml=None)
+
+    if len(sys.argv) > 1:
+        sys.argv.pop()
+
+    run_dnvrph103_circular(input_file, expected_result)
+
+
+test_dnvrph103_circular()
+
 
 import pandas as pd
 import numpy as np
+
 import rainflow
 
 timeseries_data = [125522.09174021, 125522.08992211, 125522.06542729, 125521.96068642,
@@ -67,7 +105,7 @@ print(histogram_package)
 print("rng, mean, count, i_start, i_end") 
 for rng, mean, count, i_start, i_end in rainflow.extract_cycles(timeseries_data): 
     print(rng, mean, count, i_start, i_end) 
-    
+
 
 df_columns = ['rng', 'mean', 'count', 'i_start', 'i_end']
 df = pd.DataFrame(rainflow.extract_cycles(timeseries_data), columns = df_columns)
