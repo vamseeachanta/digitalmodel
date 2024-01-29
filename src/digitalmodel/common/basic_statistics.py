@@ -11,6 +11,7 @@ class BasicStatistics:
 
     def get_histograms(self, dataset: array, cfg) -> pd.DataFrame:
         bins = cfg["bins"]
+        range = cfg["range"]
 
         histogram = np.histogram(dataset, bins=10, range=(0, 2000))
 
@@ -29,7 +30,7 @@ class BasicStatistics:
         )
         return df
 
-    deg get_bins_from_range(self, dataset: array, cfg) -> pd.DataFrame:
+    def get_bins_from_range(self, dataset: array, cfg) -> pd.DataFrame:
         bins = cfg["bins"]
 
         histogram = np.histogram(dataset, bins=10, range=(0, 2000))
