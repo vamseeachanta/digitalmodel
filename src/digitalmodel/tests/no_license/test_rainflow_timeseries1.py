@@ -35,10 +35,10 @@ def run_rainflow_for_timeseries(input_file, expected_result={}):
 
     half_cycles_diff = deepdiff.DeepDiff(result['half_cycles'], expected_result['half_cycles'], ignore_order=True)
     histogram_diff = deepdiff.DeepDiff(result['histogram'], expected_result['histogram'], ignore_order=True)
-    
+
     return df
-    
-    
+
+
 
 
 def test_rainflow_for_timeseries():
