@@ -14,7 +14,7 @@ def run_fatigue_analysis(input_file, expected_result={}):
     cfg = engine(input_file)
 
     total_damage_comparison = deepdiff.DeepDiff(expected_result['fatigue_analysis'], cfg['fatigue_analysis'], ignore_order=True)
-    timetrace_comparison = deepdiff.DeepDiff(expected_result['inputs']['timetraces'], cfg['inputs']['timetraces'], ignore_order=True)
+    timetrace_comparison = deepdiff.DeepDiff(expected_result['fatigue_analysis']['timetraces'], cfg['fatigue_analysis']['timetraces'], ignore_order=True)
 
     assert total_damage_comparison == {}
     assert timetrace_comparison == {}

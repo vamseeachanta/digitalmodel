@@ -51,7 +51,8 @@ class FatigueAnalysis:
     def damage_from_timetrace(self, cfg):
         fatigue_curve = self.get_fatigue_curve(cfg)
         damage = 0
-        for timetrace in cfg["inputs"]["timetraces"]:
+        cfg_timetraces = cfg["inputs"]["timetraces"].copy()
+        for timetrace in cfg_timetraces:
             s_trace = timetrace['s_trace']
             n_traces = timetrace['n_traces']
             rainflow_df, rainflow_dict = self.get_rainflow_from_timetrace(s_trace)
@@ -63,7 +64,7 @@ class FatigueAnalysis:
 
             damage += damage_n_timetraces
 
-        cfg.update({"fatigue_analysis": {"total_damage": float(damage)}})
+        cfg.update({"fatigue_analysis": {"total_damage": float(damage), "timetraces": cfg_timetraces.copy()}})
 
         return cfg
 
@@ -96,12 +97,42 @@ class FatigueAnalysis:
 
         return fatigue_curve_data
 
-    def get_default_cfg(self):
+    def get_default_sn_cfg(self):
         default_cfg = {
             "basename": "fatigue_analysis",
             "inputs": {
                 "calculation_type": "damage",
+                "stress_input": 'sn',
                 "SN": [{"s": 2000000, "n_cycles": 1, "thickness": 15}],
+                "fatigue_curve": "DnV 2005 C2 Seawater CP",
+            },
+            "fatigue_data": {
+                "csv": True,  # True
+                "io": "tests/test_data/fatigue_analysis/fatigue_data.csv",
+            },
+        }
+
+        return default_cfg
+
+    def get_default_timetrace_cfg(self):
+        default_cfg = {
+            "basename": "fatigue_analysis",
+            "inputs": {
+                "calculation_type": "damage",
+                "stress_input": 'timetrace',
+                "timetraces":[{
+                        's_trace':
+                        [
+                            -7565518.75,
+                            23879775.0,
+                            -7565518.75,
+                            23879775.0,
+                            -7565518.75,
+                            23879775.0,
+                        ],
+                        'n_traces': 1,
+                        'thickness': 15,
+                    }],
                 "fatigue_curve": "DnV 2005 C2 Seawater CP",
             },
             "fatigue_data": {

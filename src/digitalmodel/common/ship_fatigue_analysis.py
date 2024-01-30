@@ -24,17 +24,18 @@ class ShipFatigueAnalysis:
         if cfg["inputs"]["files"]["lcf"]["file_type"] == "seasam_xtract":
             cfg = self.get_fatigue_states_and_stress_timetrace(cfg)
         if cfg["inputs"]["calculation"] == "abs_combined_fatigue":
-            df = self.get_lcf_fatigue_damage(cfg)
+            df = self.get_lcf_timetrace_fatigue_damage(cfg)
             df = self.get_abs_combined_fatigue(df)
             self.save_combined_fatigue_as_csv(cfg, df)
 
         return cfg
 
-    def get_lcf_fatigue_damage(self, cfg):
-        logging.info("Calculating LCF fatigue damage ... START")
+    def get_lcf_sn_fatigue_damage(self, cfg):
+        #TODO Not tested. May not work. DELETE by 01 March 2024.
+        logging.info("Calculating LCF fatigue damage by SN cycles ... START")
         df = self.get_fatigue_damage_output_df(cfg["ship_design"]["stress_output"], cfg)
 
-        cfg_fat_dam = fatigue_analysis.get_default_cfg()
+        cfg_fat_dam = fatigue_analysis.get_default_sn_cfg()
         for idx in range(0, len(df)):
             cfg_fat_dam["inputs"].update(
                 {
@@ -44,15 +45,43 @@ class ShipFatigueAnalysis:
                             "n_cycles": df.iloc[idx]["n_cycles"],
                             "thickness": df.iloc[idx]["thickness"],
                         }
-                    ]
+                    ],
+                    'fatigue_curve': df.iloc[idx]["fatigue_curve"]
                 }
             )
             cfg_fat_dam = fatigue_analysis.router(cfg_fat_dam)
             df.loc[idx, "lcf_damage"] = cfg_fat_dam["fatigue_analysis"]["damage"]
 
-        logging.info("Calculating LCF fatigue damage ... COMPLETE")
+        logging.info("Calculating LCF fatigue damage by SN cycles ... COMPLETE")
 
         return df 
+
+    def get_lcf_timetrace_fatigue_damage(self, cfg):
+        logging.info("Calculating LCF fatigue damage by Timetraces ... START")
+        df = self.get_fatigue_damage_output_df(cfg["ship_design"]["stress_output"], cfg)
+
+        cfg_fat_dam = fatigue_analysis.get_default_timetrace_cfg()
+        for idx in range(0, len(df)):
+            cfg_fat_dam["inputs"].update(
+                {
+                "timetraces":[{
+                        's_trace':
+                        df.iloc[idx]["stress_timetrace"],
+                        'n_traces': df.iloc[idx]["n_traces"],
+                        'thickness': df.iloc[idx]["thickness"],
+                    }],
+                    'fatigue_curve': df.iloc[idx]["fatigue_curve"]
+                }
+            )
+            cfg_fat_dam = fatigue_analysis.router(cfg_fat_dam)
+            df.loc[idx, "lcf_damage"] = cfg_fat_dam["fatigue_analysis"]["total_damage"]
+            cfg.update({"fatigue_analysis": cfg_fat_dam["fatigue_analysis"]})
+
+        logging.info("Calculating LCF fatigue damage  by Timetraces ... COMPLETE")
+
+        return df
+
+
     def get_abs_combined_fatigue(self, df):
         logging.info("Calculating ABS combined fatigue ... START")
         delta = 0.02

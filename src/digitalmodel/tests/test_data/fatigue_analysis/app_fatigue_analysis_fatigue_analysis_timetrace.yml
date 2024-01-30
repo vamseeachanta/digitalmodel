@@ -1,4 +1,4 @@
-&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+&id002 !!python/object/new:assetutilities.common.data.AttributeDict
 dictitems:
   Analysis:
     CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis/fatigue_analysis_timetrace.yml
@@ -10,7 +10,7 @@ dictitems:
     file_name_for_overwrite: app_fatigue_analysis_fatigue_analysis_timetrace
     log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis\logs
     result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis\results
-    start_time: 2024-01-30 15:27:13.510930
+    start_time: 2024-01-30 16:09:44.161427
   basename: fatigue_analysis
   default:
     config:
@@ -18,17 +18,9 @@ dictitems:
         output: true
     log_level: DEBUG
   fatigue_analysis:
-    total_damage: 1.009887601561726e-34
-  fatigue_data:
-    csv: true
-    io: tests/test_data/fatigue_analysis/fatigue_data.csv
-  inputs:
-    calculation_type: damage
-    fatigue_curve: DnV 2005 C2 Seawater CP
-    software: null
-    stress_input: timetrace
     timetraces:
-    - damage:
+    - &id001
+      damage:
         n_timetraces: 1.009887601561726e-34
         timetrace: 1.009887601561726e-34
       n_traces: 1
@@ -71,4 +63,15 @@ dictitems:
       - -7565518.75
       - 23879775.0
       thickness: 15
-state: *id001
+    total_damage: 1.009887601561726e-34
+  fatigue_data:
+    csv: true
+    io: tests/test_data/fatigue_analysis/fatigue_data.csv
+  inputs:
+    calculation_type: damage
+    fatigue_curve: DnV 2005 C2 Seawater CP
+    software: null
+    stress_input: timetrace
+    timetraces:
+    - *id001
+state: *id002

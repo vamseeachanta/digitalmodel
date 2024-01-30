@@ -51,7 +51,7 @@ inputs:
               stress_method: mean,
               wave_damage: 0.5,
               n_traces: 200,
-              fatigue_curve: DnV 2005 C2 Seawater CP,
+              fatigue_curve: ABS 2018 D-Mod In Air,
             }
 
 default:
