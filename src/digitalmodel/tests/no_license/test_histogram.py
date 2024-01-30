@@ -13,22 +13,26 @@ bs = BasicStatistics()
 def run_histogram_1(dataset, expected_result={}):
     cfg_hist = {"bins": 5, "bin_range": (0, 5)}
     df = bs.get_histograms(dataset, cfg_hist)
-    
+
     result = {"histogram": list(df["frequency"])}
-    
-    deepdiff.DeepDiff(result, expected_result, ignore_order=True)
+
+    hist_diff = deepdiff.DeepDiff(result, expected_result, ignore_order=True)
+    assert hist_diff == {}
 
     return df
+
 
 def run_histogram_2(dataset, expected_result={}):
     cfg_hist = {"bins": 5}
     df = bs.get_histograms(dataset, cfg_hist)
-    
+
     result = {"histogram": list(df["frequency"])}
-    
-    deepdiff.DeepDiff(result, expected_result, ignore_order=True)
+
+    hist_diff = deepdiff.DeepDiff(result, expected_result, ignore_order=True)
+    assert hist_diff == {}
 
     return df
+
 
 def test_histogram():
     dataset = [1, 1, 2, 2, 2, 2, 3]
@@ -39,5 +43,6 @@ def test_histogram():
 
     run_histogram_1(dataset, expected_result)
     run_histogram_2(dataset, expected_result)
+
 
 test_histogram()

@@ -14,31 +14,38 @@ bs = BasicStatistics()
 
 def run_rainflow_for_timeseries(input_file, expected_result={}):
     df = tsa.get_rainflow_count_from_time_series(input_file)
-    
+
     half_cycle_result = []
     for i in range(len(df)):
-        half_cycle_result = half_cycle_result + [df["range"][i]] *int(df["count"][i]/0.5)
+        half_cycle_result = half_cycle_result + [df["range"][i]] * int(
+            df["count"][i] / 0.5
+        )
 
     cfg_hist = {"bins": 10, "bin_range": (0, 2000)}
-    
-    rainflow_hist = bs.get_histograms(
-        half_cycle_result, cfg_hist
-    )
+
+    rainflow_hist = bs.get_histograms(half_cycle_result, cfg_hist)
 
     # Convert half cycles to full cycles
     rainflow_hist["frequency"] = rainflow_hist["frequency"] / 2
 
     result = {
         "half_cycles": half_cycle_result,
-        "histogram": list(rainflow_hist['frequency']),
+        "histogram": list(rainflow_hist["frequency"]),
     }
 
-    half_cycles_diff = deepdiff.DeepDiff(result['half_cycles'], expected_result['half_cycles'], ignore_order=True)
-    histogram_diff = deepdiff.DeepDiff(result['histogram'], expected_result['histogram'], ignore_order=True)
+    half_cycles_diff = deepdiff.DeepDiff(
+        result["half_cycles"], expected_result["half_cycles"], ignore_order=True
+    )
+    histogram_diff = deepdiff.DeepDiff(
+        result["histogram"], expected_result["histogram"], ignore_order=True
+    )
+
+    assert histogram_diff["values_changed"]["root[0]"] == {
+        "new_value": 8.0,
+        "old_value": 8.5,
+    }
 
     return df
-
-
 
 
 def test_rainflow_for_timeseries():
@@ -235,20 +242,10 @@ def test_rainflow_for_timeseries():
 
     expected_result = {
         "half_cycles": orcaflex_rainflow_half_cycles_result,
-        "histogram": list(orcaflex_rainflow_hist['frequency']),
+        "histogram": list(orcaflex_rainflow_hist["frequency"]),
     }
+
     df = run_rainflow_for_timeseries(timeseries_data, expected_result)
 
 
 test_rainflow_for_timeseries()
-
-
-# print("rng, mean, count, i_start, i_end")
-# for rng, mean, count, i_start, i_end in rainflow.extract_cycles(timeseries_data):
-#     print(rng, mean, count, i_start, i_end)
-
-
-# df_columns = ["rng", "mean", "count", "i_start", "i_end"]
-# df = pd.DataFrame(rainflow.extract_cycles(timeseries_data), columns=df_columns)
-
-# return df
