@@ -22,7 +22,7 @@ class ShipFatigueAnalysis:
 
     def router(self, cfg):
         if cfg["inputs"]["files"]["lcf"]["file_type"] == "seasam_xtract":
-            cfg = self.get_fatigue_states_and_stress_range(cfg)
+            cfg = self.get_fatigue_states_and_stress_timetrace(cfg)
         if cfg["inputs"]["calculation"] == "abs_combined_fatigue":
             df = self.get_lcf_fatigue_damage(cfg)
             df = self.get_abs_combined_fatigue(df)
@@ -80,7 +80,7 @@ class ShipFatigueAnalysis:
         )
         df.to_csv(file_name, index=False)
 
-    def get_fatigue_states_and_stress_range(self, cfg):
+    def get_fatigue_states_and_stress_timetrace(self, cfg):
         fatigue_states = cfg["inputs"]["files"]["lcf"]["fatigue_states"]
 
         state_files = []
@@ -110,7 +110,7 @@ class ShipFatigueAnalysis:
 
         fatigue_states = self.get_fatigue_states(state_files)
 
-        stress_output = self.get_stress_ranges(cfg, fatigue_states)
+        stress_output = self.get_stress_timetrace(cfg, fatigue_states)
         self.save_stress_output_as_csv(cfg, stress_output)
 
         cfg.update({"ship_design": {"stress_output": stress_output}})
@@ -118,7 +118,7 @@ class ShipFatigueAnalysis:
         return cfg
 
     def save_stress_output_as_csv(self, cfg, stress_output):
-        df = self.get_stress_output_df(stress_output)
+        df = self.get_stress_output_df(stress_output, cfg)
         sress_output_file_name = os.path.join(
             cfg["Analysis"]["result_folder"],
             cfg["Analysis"]["file_name"] + "_stress_output.csv",
@@ -210,42 +210,43 @@ class ShipFatigueAnalysis:
 
         return df
 
-    def get_stress_output_df(self, stress_output):
+    def get_stress_output_df(self, stress_output, cfg):
         df = self.get_stress_df_definition()
 
-        for fatigue_state_pair in stress_output:
-            basename = list(fatigue_state_pair.keys())[0]
+        labels = [fatigue_state['label'] for fatigue_state in cfg["inputs"]["files"]["lcf"]["fatigue_states"]]
+        for fatigue_state_set in stress_output:
+            basename = list(fatigue_state_set.keys())[0]
 
-            if fatigue_state_pair[basename]["status"] == "Pass":
+            if fatigue_state_set[basename]["status"] == "Pass":
                 for by_type in ["coordinate", "element"]:
-                    for idx in range(0, len(fatigue_state_pair[basename][by_type])):
-                        coordinate = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
+                    for idx in range(0, len(fatigue_state_set[basename][by_type])):
+                        coordinate = fatigue_state_set[basename][by_type][idx][
+                            labels[0]
                         ]["coordinate"]
                         if by_type == "coordinate":
-                            element = fatigue_state_pair[basename][by_type][idx][
-                                "state_0"
+                            element = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
                             ]["element"]
                         elif by_type == "element":
-                            element = fatigue_state_pair[basename][by_type][idx][
-                                "state_0"
+                            element = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
                             ]["element"]["element"]
-                        delta_stress = fatigue_state_pair[basename][by_type][idx][
-                            "delta_stress"
+                        stress_timetrace = fatigue_state_set[basename][by_type][idx][
+                            "stress_timetrace"
                         ]
-                        thickness = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
+                        thickness = fatigue_state_set[basename][by_type][idx][
+                            labels[0]
                         ][by_type]["thickness"]
-                        stress_method = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
+                        stress_method = fatigue_state_set[basename][by_type][idx][
+                            labels[0]
                         ][by_type]["stress_method"]
 
                         df.loc[len(df)] = [
                             basename,
                             coordinate,
                             element,
-                            delta_stress,
-                            fatigue_state_pair[basename]["status"],
+                            stress_timetrace,
+                            fatigue_state_set[basename]["status"],
                             thickness,
                             stress_method,
                         ]
@@ -262,7 +263,7 @@ class ShipFatigueAnalysis:
                     coordinate,
                     element,
                     delta_stress,
-                    fatigue_state_pair[basename]["status"],
+                    fatigue_state_set[basename]["status"],
                     thickness,
                     stress_method,
                 ]
@@ -273,7 +274,7 @@ class ShipFatigueAnalysis:
         columns = (
             ["basename"]
             + ["coordinate", "element"]
-            + ["delta_stress"]
+            + ["stress_timetrace"]
             + ["status"]
             + ["thickness", "stress_method"]
         )
@@ -296,7 +297,7 @@ class ShipFatigueAnalysis:
 
         return df
 
-    def get_stress_ranges(self, cfg, fatigue_state_sets):
+    def get_stress_timetrace(self, cfg, fatigue_state_sets):
         stress_output = []
         for fatigue_state_set in fatigue_state_sets:
             logging.info(
@@ -332,11 +333,12 @@ class ShipFatigueAnalysis:
             logging.info("   Getting stress data by coordinates ... START")
             coordinate_data = cfg["inputs"]["files"]["locations"]["coordinate"]["data"]
 
+            labels = [fatigue_state_pair['state_files'][i]['label'] for i in range(0, len(fatigue_state_pair['state_files']))]
             coordinate_output_array = []
             for coordinate in coordinate_data:
                 coordinate_output = {}
-                stress_range = []
-                for label in ["state_0", "state_1"]:
+                stress_timetrace = []
+                for label in labels:
                     df = fatigue_state_pair[label + "_df"]
 
                     stress_output = self.get_stress_data_for_coordinate(
@@ -344,20 +346,19 @@ class ShipFatigueAnalysis:
                     )
                     coordinate_output.update({label: stress_output})
                     if coordinate["stress_method"] == "mean":
-                        stress_range.append(stress_output["S_mean"])
+                        stress_timetrace.append(stress_output["S_mean"])
                     elif coordinate["stress_method"] == "max":
                         if stress_output["S_max"] < 0:
-                            stress_range.append(stress_output["S_min"])
+                            stress_timetrace.append(stress_output["S_min"])
                         else:
-                            stress_range.append(stress_output["S_max"])
+                            stress_timetrace.append(stress_output["S_max"])
                     else:
                         raise ValueError(
                             f"Invalid stress method: {coordinate['stress_method']}"
                         )
 
-                delta_stress = abs(stress_range[1] - stress_range[0])
                 coordinate_output.update(
-                    {"delta_stress": round(float(delta_stress), 2)}
+                    {"stress_timetrace": stress_timetrace}
                 )
                 coordinate_output_array.append(coordinate_output)
 
@@ -371,8 +372,8 @@ class ShipFatigueAnalysis:
             element_output_array = []
             for element_dict in element_data:
                 element_output = {}
-                stress_range = []
-                for label in ["state_0", "state_1"]:
+                stress_timetrace = []
+                for label in labels:
                     df = fatigue_state_pair[label + "_df"]
 
                     stress_output = self.get_stress_data_for_element(
@@ -380,19 +381,18 @@ class ShipFatigueAnalysis:
                     )
                     element_output.update({label: stress_output})
                     if element_dict["stress_method"] == "mean":
-                        stress_range.append(stress_output["S_mean"])
+                        stress_timetrace.append(stress_output["S_mean"])
                     elif element_dict["stress_method"] == "max":
                         if stress_output["S_max"] < 0:
-                            stress_range.append(stress_output["S_min"])
+                            stress_timetrace.append(stress_output["S_min"])
                         else:
-                            stress_range.append(stress_output["S_max"])
+                            stress_timetrace.append(stress_output["S_max"])
                     else:
                         raise ValueError(
                             f"Invalid stress method: {element_dict['stress_method']}"
                         )
 
-                delta_stress = abs(stress_range[1] - stress_range[0])
-                element_output.update({"delta_stress": round(float(delta_stress), 2)})
+                element_output.update({"stress_timetrace": stress_timetrace})
                 element_output_array.append(element_output)
 
             stress_data_output_by_pair.update({"element": element_output_array})

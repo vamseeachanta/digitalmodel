@@ -21,7 +21,7 @@ inputs:
           }
         - {
             label: "2-02",
-            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft,
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft,
           }
         - {
             label: "2-03",
@@ -29,7 +29,7 @@ inputs:
           }
         - {
             label: "2-04",
-            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft,
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft,
           }
         - {
             label: "2-05",
