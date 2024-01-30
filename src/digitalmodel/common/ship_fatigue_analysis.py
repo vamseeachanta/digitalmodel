@@ -32,7 +32,7 @@ class ShipFatigueAnalysis:
 
     def get_lcf_fatigue_damage(self, cfg):
         logging.info("Calculating LCF fatigue damage ... START")
-        df = self.get_fatigue_damage_output_df(cfg["ship_design"]["stress_output"])
+        df = self.get_fatigue_damage_output_df(cfg["ship_design"]["stress_output"], cfg)
 
         cfg_fat_dam = fatigue_analysis.get_default_cfg()
         for idx in range(0, len(df)):
@@ -125,43 +125,44 @@ class ShipFatigueAnalysis:
         )
         df.to_csv(sress_output_file_name, index=False)
 
-    def get_fatigue_damage_output_df(self, stress_output):
+    def get_fatigue_damage_output_df(self, stress_output, cfg):
         df = self.get_fatigue_df_definition()
 
         for fatigue_state_pair in stress_output:
             basename = list(fatigue_state_pair.keys())[0]
 
+            labels = [fatigue_state['label'] for fatigue_state in cfg["inputs"]["files"]["lcf"]["fatigue_states"]]
             if fatigue_state_pair[basename]["status"] == "Pass":
                 for by_type in ["coordinate", "element"]:
                     for idx in range(0, len(fatigue_state_pair[basename][by_type])):
                         coordinate = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
+                            labels[0]
                         ]["coordinate"]
                         if by_type == "coordinate":
                             element = fatigue_state_pair[basename][by_type][idx][
-                                "state_0"
+                                labels[0]
                             ]["element"]
                         elif by_type == "element":
                             element = fatigue_state_pair[basename][by_type][idx][
-                                "state_0"
+                                labels[0]
                             ]["element"]["element"]
-                        delta_stress = fatigue_state_pair[basename][by_type][idx][
-                            "delta_stress"
+                        stress_timetrace = fatigue_state_pair[basename][by_type][idx][
+                            "stress_timetrace"
                         ]
                         thickness = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
+                            labels[0]
                         ][by_type]["thickness"]
                         stress_method = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
+                            labels[0]
                         ][by_type]["stress_method"]
                         fatigue_curve = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
+                            labels[0]
                         ][by_type]["fatigue_curve"]
                         n_cycles = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
+                            labels[0]
                         ][by_type]["n_cycles"]
                         wave_damage = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
+                            labels[0]
                         ][by_type]["wave_damage"]
                         lcf_damage = np.nan
                         combined_damage = np.nan
@@ -170,7 +171,7 @@ class ShipFatigueAnalysis:
                             basename,
                             coordinate,
                             element,
-                            delta_stress,
+                            stress_timetrace,
                             fatigue_state_pair[basename]["status"],
                             thickness,
                             stress_method,
@@ -287,7 +288,7 @@ class ShipFatigueAnalysis:
         columns = (
             ["basename"]
             + ["coordinate", "element"]
-            + ["delta_stress"]
+            + ["stress_timetrace"]
             + ["status"]
             + ["thickness", "stress_method", "fatigue_curve", "n_cycles"]
             + ["lcf_damage", "wave_damage", "combined_damage"]
