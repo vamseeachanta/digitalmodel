@@ -83,19 +83,34 @@ class ShipFatigueAnalysis:
     def get_fatigue_states_and_stress_range(self, cfg):
         fatigue_states = cfg["inputs"]["files"]["lcf"]["fatigue_states"]
 
-        for fatigue_state in fatigue_states:
-            if not os.path.isdir(fatigue_state):
+        state_files = []
+        for fatigue_state_indx in range(0, len(fatigue_states)):
+            valid_directory_flag = False
+
+            fatigue_state = fatigue_states[fatigue_state_indx]
+            if not os.path.isdir(fatigue_state["directory"]):
                 cwd = os.getcwd()
-                fatigue_states[0] = add_cwd_to_filename(fatigue_state, cwd)
-                if not os.path.isdir(fatigue_state):
-                    raise ValueError(f"Invalid directory: {fatigue_states[0]}")
+                fatigue_state["directory"] = add_cwd_to_filename(
+                    fatigue_state["directory"], cwd
+                )
+                fatigue_states[fatigue_state_indx] = fatigue_state
+            else:
+                valid_directory_flag = True
 
-        state_0_files = self.get_files_in_directory(fatigue_states[0])
-        state_1_files = self.get_files_in_directory(fatigue_states[1])
+            if not valid_directory_flag and not os.path.isdir(
+                fatigue_state["directory"]
+            ):
+                valid_directory_flag = False
+                raise ValueError(
+                    f"Invalid directory: {fatigue_state["directory"]}"
+                )
+            files = self.get_files_in_directory(fatigue_state["directory"])
+            files.update({"label": fatigue_state["label"]})
+            state_files.append(files)
 
-        fatigue_state_pairs = self.get_fatigue_state_pairs(state_0_files, state_1_files)
+        fatigue_states = self.get_fatigue_states(state_files)
 
-        stress_output = self.get_stress_ranges(cfg, fatigue_state_pairs)
+        stress_output = self.get_stress_ranges(cfg, fatigue_states)
         self.save_stress_output_as_csv(cfg, stress_output)
 
         cfg.update({"ship_design": {"stress_output": stress_output}})
@@ -281,37 +296,37 @@ class ShipFatigueAnalysis:
 
         return df
 
-    def get_stress_ranges(self, cfg, fatigue_state_pairs):
+    def get_stress_ranges(self, cfg, fatigue_state_sets):
         stress_output = []
-        for fatigue_state_pair in fatigue_state_pairs:
+        for fatigue_state_set in fatigue_state_sets:
             logging.info(
-                f"Getting stress data for fatigue pair: {fatigue_state_pair['basename']}"
+                f"Getting stress data for fatigue pair: {fatigue_state_set['basename']}"
             )
             try:
-                fatigue_state_pair = self.read_files_and_get_data_as_df(
-                    fatigue_state_pair
+                fatigue_state_set = self.read_files_and_get_data_as_df(
+                    fatigue_state_set
                 )
-                stress_data_output_by_pair = self.get_stress_data_for_pair(
-                    cfg, fatigue_state_pair
+                stress_data_by_set = self.get_stress_data_by_set(
+                    cfg, fatigue_state_set
                 )
                 status = "Pass"
 
             except Exception as e:
                 logging.warning(
-                    f"   Could not get stress data for pair: {fatigue_state_pair['basename']} due to error: {e}"
+                    f"   Could not get stress data for pair: {fatigue_state_set['basename']} due to error: {e}"
                 )
 
-                stress_data_output_by_pair = {}
+                stress_data_by_set = {}
                 status = "Fail"
 
-            stress_data_output_by_pair.update({"status": status})
+            stress_data_by_set.update({"status": status})
             stress_output.append(
-                {fatigue_state_pair["basename"]: stress_data_output_by_pair}
+                {fatigue_state_set["basename"]: stress_data_by_set}
             )
 
         return stress_output
 
-    def get_stress_data_for_pair(self, cfg, fatigue_state_pair):
+    def get_stress_data_by_set(self, cfg, fatigue_state_pair):
         stress_data_output_by_pair = {}
         if cfg["inputs"]["files"]["locations"]["coordinate"]["flag"]:
             logging.info("   Getting stress data by coordinates ... START")
@@ -436,14 +451,14 @@ class ShipFatigueAnalysis:
 
     def read_files_and_get_data_as_df(self, fatigue_state_pair):
         status = {}
-        for state in ["state_0", "state_1"]:
-            state_df = self.read_seasam_xtract(fatigue_state_pair[state])
+        for state_file in fatigue_state_pair['state_files']:
+            state_df = self.read_seasam_xtract(state_file['state_file'])
             transformed_df = self.transform_df_for_stress_analysis(state_df)
-            fatigue_state_pair.update({(state + "_df"): transformed_df})
+            fatigue_state_pair.update({(state_file['label'] + "_df"): transformed_df})
             if len(transformed_df) > 0:
-                status.update({state + "_data": "Pass"})
+                status.update({state_file['label']: "Pass"})
             else:
-                status.update({state + "_data": "Fail"})
+                status.update({state_file['label']: "Fail"})
         fatigue_state_pair.update({"status": status})
 
         return fatigue_state_pair
@@ -608,19 +623,24 @@ class ShipFatigueAnalysis:
 
         return df
 
-    def get_fatigue_state_pairs(self, state_0_files, state_1_files):
-        fatigue_state_pairs = []
-        for state_0_index in range(0, len(state_0_files["basenames"])):
-            basename_0 = state_0_files["basenames"][state_0_index]
-            basename_index_1 = state_1_files["basenames"].index(basename_0)
-            fatigue_state_pair = {
-                "state_0": state_0_files["files"][state_0_index],
-                "state_1": state_1_files["files"][basename_index_1],
-                "basename": basename_0,
-            }
-            fatigue_state_pairs.append(fatigue_state_pair)
+    def get_fatigue_states(self, state_files):
+        fatigue_states = []
 
-        return fatigue_state_pairs
+        for state_file_index in range(0, len(state_files[0]["basenames"])):
+            basename_first_set = state_files[0]["basenames"][state_file_index]
+            state_files_for_basename = []
+            for state_file_set in state_files:
+                basename_index = state_file_set["basenames"].index(basename_first_set)
+                state_file = state_file_set["files"][basename_index]
+                state_files_for_basename.append({"state_file": state_file, "label": state_file_set["label"]})
+
+            fatigue_state = {
+                "state_files": state_files_for_basename,
+                "basename": basename_first_set,
+            }
+            fatigue_states.append(fatigue_state)
+
+        return fatigue_states
 
     def get_files_in_directory(self, directory):
         from assetutilities.engine import engine

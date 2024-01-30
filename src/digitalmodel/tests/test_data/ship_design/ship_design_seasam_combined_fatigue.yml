@@ -13,6 +13,10 @@ inputs:
       fatigue_states:
         - src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft
         - src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft
+        - src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft
+        - src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft
+        - src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft
+        - src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft
     wave_fatigue: NULL
     locations:
       coordinate:

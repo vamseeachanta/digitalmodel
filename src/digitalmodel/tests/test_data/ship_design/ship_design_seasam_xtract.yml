@@ -11,8 +11,30 @@ inputs:
       file_type: seasam_xtract
       file_name: NULL # Not programmed
       fatigue_states:
-        - src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft
-        - src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft
+        - {
+            label: "2-00",
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft,
+          }
+        - {
+            label: "2-01",
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft,
+          }
+        - {
+            label: "2-02",
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft,
+          }
+        - {
+            label: "2-03",
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft,
+          }
+        - {
+            label: "2-04",
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft,
+          }
+        - {
+            label: "2-05",
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft,
+          }
     locations:
       coordinate:
         flag: True
