@@ -12,8 +12,8 @@ tsa = TimeSeriesAnalysis()
 bs = BasicStatistics()
 
 
-def run_rainflow_for_timeseries(input_file, expected_result={}):
-    df = tsa.get_rainflow_count_from_time_series(input_file)
+def run_rainflow_for_timeseries(timeseries_data, expected_result={}):
+    df = tsa.get_rainflow_count_from_time_series(timeseries_data)
 
     half_cycle_result = []
     for i in range(len(df)):

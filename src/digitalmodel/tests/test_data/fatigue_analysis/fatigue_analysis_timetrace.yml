@@ -1,0 +1,31 @@
+basename: fatigue_analysis
+
+fatigue_data:
+  csv: True
+  io: tests/test_data/fatigue_analysis/fatigue_data.csv
+
+inputs:
+  software: NULL
+  calculation_type: damage
+  stress_input: timetrace
+  timetraces:
+    - {
+        s_trace:
+          [
+            -7565518.75,
+            23879775.0,
+            -7565518.75,
+            23879775.0,
+            -7565518.75,
+            23879775.0,
+          ],
+        n_traces: 1,
+        thickness: 15,
+      }
+  fatigue_curve: DnV 2005 C2 Seawater CP
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True

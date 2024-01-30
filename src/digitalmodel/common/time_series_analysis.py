@@ -18,7 +18,8 @@ class TimeSeriesAnalysis():
 
         df_columns = ['range', 'mean', 'count', 'i_start', 'i_end']
         df = pd.DataFrame(rainflow.extract_cycles(time_series), columns = df_columns)
+        dict = df.to_dict()
 
         logging.info("Rainflow count from time series ... END")
     
-        return df
+        return df, dict

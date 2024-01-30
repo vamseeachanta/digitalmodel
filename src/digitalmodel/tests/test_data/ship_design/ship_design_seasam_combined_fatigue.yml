@@ -50,7 +50,7 @@ inputs:
               thickness: 15,
               stress_method: mean,
               wave_damage: 0.5,
-              n_cycles: 200,
+              n_traces: 200,
               fatigue_curve: DnV 2005 C2 Seawater CP,
             }
 

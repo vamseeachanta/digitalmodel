@@ -1,7 +1,10 @@
 import os
 import pandas as pd
 from assetutilities.common.yml_utilities import WorkingWithYAML
+from digitalmodel.common.time_series_analysis import TimeSeriesAnalysis
+
 wwy = WorkingWithYAML()
+tsa = TimeSeriesAnalysis()
 
 
 class FatigueAnalysis:
@@ -15,7 +18,12 @@ class FatigueAnalysis:
             elif cfg["inputs"]["software"] == "abaqus":
                 raise NotImplementedError
         if cfg["inputs"]["calculation_type"] == "damage":
-            cfg = self.damage_from_sn_data(cfg)
+            if cfg['inputs']['stress_input'] == 'timetrace':
+                cfg = self.damage_from_timetrace(cfg) 
+            elif cfg['inputs']['stress_input'] == 'sn':
+                cfg = self.damage_from_sn_data(cfg) 
+            else:
+                raise Exception("Only SN and timetrace data inputs are supported")   
 
         return cfg
 
@@ -23,20 +31,41 @@ class FatigueAnalysis:
         fatigue_curve = self.get_fatigue_curve(cfg)
         damage = 0
         for sn in cfg["inputs"]["SN"]:
-            damage += self.damage_from_stress_range_single(sn, fatigue_curve)
+            damage += self.damage_from_rainflow(sn, fatigue_curve)
 
         cfg.update({"fatigue_analysis": {"damage": damage}})
 
         return cfg
 
-    def damage_from_stress_range_single(self, sn, fatigue_curve):
-        s = sn["s"] / 1e6
-        n = sn["n_cycles"]
-        N = self.get_cycles_to_failure(fatigue_curve, s)
+    def damage_from_rainflow_cycles(self, rainflow_df, fatigue_curve):
+        damage = 0
+        for index, row in rainflow_df.iterrows():
+            s = row["range"]
+            n = row["count"]
+            N = self.get_cycles_to_failure(fatigue_curve, s)
 
-        damage = n / N
+            damage += n / N
 
         return damage
+
+    def damage_from_timetrace(self, cfg):
+        fatigue_curve = self.get_fatigue_curve(cfg)
+        damage = 0
+        for timetrace in cfg["inputs"]["timetraces"]:
+            s_trace = timetrace['s_trace']
+            n_traces = timetrace['n_traces']
+            rainflow_df, rainflow_dict = self.get_rainflow_from_timetrace(s_trace)
+            timetrace.update({'rainflow': rainflow_dict})
+
+            damage_timetrace = self.damage_from_rainflow_cycles(rainflow_df, fatigue_curve)
+            damage_n_timetraces = damage_timetrace * n_traces
+            timetrace.update({'damage': {'timetrace': float(damage_timetrace), 'n_timetraces': float(damage_n_timetraces)}})
+
+            damage += damage_n_timetraces
+
+        cfg.update({"fatigue_analysis": {"total_damage": float(damage)}})
+
+        return cfg
 
     def get_cycles_to_failure(self, fatigue_curve, s):
         N = fatigue_curve["a1"] * s ** fatigue_curve["m1"]
@@ -82,3 +111,8 @@ class FatigueAnalysis:
         }
 
         return default_cfg
+
+    def get_rainflow_from_timetrace(self, timetrace):
+        rainflow_df, rainflow_dict = tsa.get_rainflow_count_from_time_series(timetrace)
+
+        return rainflow_df, rainflow_dict

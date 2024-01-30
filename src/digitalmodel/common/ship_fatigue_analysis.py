@@ -40,7 +40,7 @@ class ShipFatigueAnalysis:
                 {
                     "SN": [
                         {
-                            "s": df.iloc[idx]["delta_stress"],
+                            "s": df.iloc[idx]["stress_timetrace"],
                             "n_cycles": df.iloc[idx]["n_cycles"],
                             "thickness": df.iloc[idx]["thickness"],
                         }
@@ -52,8 +52,7 @@ class ShipFatigueAnalysis:
 
         logging.info("Calculating LCF fatigue damage ... COMPLETE")
 
-        return df
-
+        return df 
     def get_abs_combined_fatigue(self, df):
         logging.info("Calculating ABS combined fatigue ... START")
         delta = 0.02
@@ -102,7 +101,7 @@ class ShipFatigueAnalysis:
             ):
                 valid_directory_flag = False
                 raise ValueError(
-                    f"Invalid directory: {fatigue_state["directory"]}"
+                    f"Invalid directory: {fatigue_state['directory']}"
                 )
             files = self.get_files_in_directory(fatigue_state["directory"])
             files.update({"label": fatigue_state["label"]})
@@ -158,9 +157,9 @@ class ShipFatigueAnalysis:
                         fatigue_curve = fatigue_state_pair[basename][by_type][idx][
                             labels[0]
                         ][by_type]["fatigue_curve"]
-                        n_cycles = fatigue_state_pair[basename][by_type][idx][
+                        n_traces = fatigue_state_pair[basename][by_type][idx][
                             labels[0]
-                        ][by_type]["n_cycles"]
+                        ][by_type]["n_traces"]
                         wave_damage = fatigue_state_pair[basename][by_type][idx][
                             labels[0]
                         ][by_type]["wave_damage"]
@@ -176,7 +175,7 @@ class ShipFatigueAnalysis:
                             thickness,
                             stress_method,
                             fatigue_curve,
-                            n_cycles,
+                            n_traces,
                             lcf_damage,
                             wave_damage,
                             combined_damage,
@@ -290,7 +289,7 @@ class ShipFatigueAnalysis:
             + ["coordinate", "element"]
             + ["stress_timetrace"]
             + ["status"]
-            + ["thickness", "stress_method", "fatigue_curve", "n_cycles"]
+            + ["thickness", "stress_method", "fatigue_curve", "n_traces"]
             + ["lcf_damage", "wave_damage", "combined_damage"]
         )
 

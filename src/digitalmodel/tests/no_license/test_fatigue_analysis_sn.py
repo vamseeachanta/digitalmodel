@@ -21,8 +21,8 @@ def get_valid_pytest_output_file(pytest_output_file):
 
 
 def test_fatigue_analysis():
-    input_file = "../test_data/fatigue_analysis.yml"
-    pytest_output_file = "../test_data/app_fatigue_analysis_fatigue_analysis_pytest.yml"
+    input_file = "../test_data/fatigue_analysis/fatigue_analysis_sn.yml"
+    pytest_output_file = "../test_data/app_fatigue_analysis_fatigue_analysis_sn_pytest.yml"
     pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     expected_result = ymlInput(pytest_output_file, updateYml=None)
 
