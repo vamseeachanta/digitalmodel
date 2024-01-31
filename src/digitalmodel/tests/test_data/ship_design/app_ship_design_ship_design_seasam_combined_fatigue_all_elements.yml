@@ -1,17 +1,17 @@
 &id003 !!python/object/new:assetutilities.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design/ship_design_seasam_combined_fatigue_all_elements.yml
+    CustomInputFile: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design/ship_design_seasam_combined_fatigue_all_elements.yml
     DefaultInputFile: null
-    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design
+    analysis_root_folder: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design
     basename: ship_design
     cfg_array_file_names: null
-    fe_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\results
+    fe_folder: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\results
     file_name: app_ship_design_ship_design_seasam_combined_fatigue_all_elements
     file_name_for_overwrite: app_ship_design_ship_design_seasam_combined_fatigue_all_elements
-    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\logs
-    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\results
-    start_time: 2024-01-31 13:40:11.712453
+    log_folder: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\logs
+    result_folder: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\results
+    start_time: 2024-01-31 14:12:16.950190
   basename: ship_design
   default:
     config:

@@ -31,7 +31,10 @@ class FatigueAnalysis:
         fatigue_curve = self.get_fatigue_curve(cfg)
         damage = 0
         for sn in cfg["inputs"]["SN"]:
-            damage += self.damage_from_rainflow(sn, fatigue_curve)
+            s = sn['s']
+            n = sn['n_cycles']
+            N = self.get_cycles_to_failure(fatigue_curve, s)
+            damage += n/N
 
         cfg.update({"fatigue_analysis": {"damage": damage}})
 

@@ -1,17 +1,17 @@
 &id003 !!python/object/new:assetutilities.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/ship_design_seasam_combined_fatigue.yml
+    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design/ship_design_seasam_combined_fatigue.yml
     DefaultInputFile: null
-    analysis_root_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design
+    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design
     basename: ship_design
     cfg_array_file_names: null
-    fe_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
+    fe_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\results
     file_name: app_ship_design_ship_design_seasam_combined_fatigue
     file_name_for_overwrite: app_ship_design_ship_design_seasam_combined_fatigue
-    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/logs
-    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
-    start_time: 2024-01-30 20:16:15.152937
+    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\logs
+    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\results
+    start_time: 2024-01-31 14:24:01.130270
   basename: ship_design
   default:
     config:
@@ -116,6 +116,12 @@ dictitems:
             thickness: 15
             wave_damage: 0.5
           flag: true
+          settings:
+            fatigue_curve: ABS 2018 D-Mod In Air
+            n_traces: 200
+            stress_method: mean
+            thickness: 15
+            wave_damage: 0.5
       wave_fatigue: null
     software: sesam
     stress: null

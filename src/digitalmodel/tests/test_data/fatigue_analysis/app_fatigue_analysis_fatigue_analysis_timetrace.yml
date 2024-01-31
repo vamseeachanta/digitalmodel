@@ -1,16 +1,16 @@
 &id002 !!python/object/new:assetutilities.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis/fatigue_analysis_timetrace.yml
+    CustomInputFile: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis/fatigue_analysis_timetrace.yml
     DefaultInputFile: null
-    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis
+    analysis_root_folder: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis
     basename: fatigue_analysis
     cfg_array_file_names: null
     file_name: app_fatigue_analysis_fatigue_analysis_timetrace
     file_name_for_overwrite: app_fatigue_analysis_fatigue_analysis_timetrace
-    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis\logs
-    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis\results
-    start_time: 2024-01-30 16:09:44.161427
+    log_folder: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis\logs
+    result_folder: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis\results
+    start_time: 2024-01-31 14:07:07.724098
   basename: fatigue_analysis
   default:
     config:

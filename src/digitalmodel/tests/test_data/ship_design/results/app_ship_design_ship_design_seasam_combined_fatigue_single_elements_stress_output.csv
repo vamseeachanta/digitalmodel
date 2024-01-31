@@ -1,0 +1,3 @@
+basename,coordinate,element,stress_timetrace,status,thickness,stress_method
+SigXX-Lower.txt,"{'x': 77.06, 'y': 15.3, 'z': 2.06}",1300,"[-7565518.75, 23879775.0, -7565518.75, 23879775.0, -7565518.75, 23879775.0]",Pass,15,mean
+SigXX-Upper.txt,"{'x': 77.06, 'y': 15.3, 'z': 2.06}",1300,"[-7908763.75, 22783712.5, -7908763.75, 22783712.5, -7908763.75, 22783712.5]",Pass,15,mean

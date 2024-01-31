@@ -43,6 +43,12 @@ inputs:
 
       element:
         flag: True
+        settings:
+          thickness: 15
+          stress_method: mean # mean/max
+          wave_damage: 0.5
+          n_traces: 200
+          fatigue_curve: ABS 2018 D-Mod In Air
         data:
           # stress_method options: mean/max
           - {
