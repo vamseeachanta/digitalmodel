@@ -1,0 +1,62 @@
+basename: ship_design
+
+inputs:
+  software: sesam
+  calculation: abs_combined_fatigue
+
+  stress:
+
+  files:
+    lcf:
+      file_type: seasam_xtract
+      file_name: NULL # Not programmed
+      fatigue_states:
+        - {
+            label: "2-00",
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft,
+          }
+        - {
+            label: "2-01",
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft,
+          }
+        - {
+            label: "2-02",
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft,
+          }
+        - {
+            label: "2-03",
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft,
+          }
+        - {
+            label: "2-04",
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft,
+          }
+        - {
+            label: "2-05",
+            directory: src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft,
+          }
+    wave_fatigue: NULL
+    locations:
+      coordinate:
+        flag: False
+        data: []
+
+      element:
+        flag: True
+        settings:
+          thickness: 15
+          stress_method: mean # mean/max
+          wave_damage: 0.5
+          n_traces: 200
+          fatigue_curve: ABS 2018 D-Mod In Air
+        data: All
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
+
+Analysis:
+  fe_folder: NULL

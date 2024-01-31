@@ -163,65 +163,67 @@ class ShipFatigueAnalysis:
     def get_fatigue_damage_output_df_for_timetrace(self, stress_output, cfg):
         df = self.get_fatigue_df_definition_for_timetrace()
 
-        for fatigue_state_pair in stress_output:
-            basename = list(fatigue_state_pair.keys())[0]
+        for fatigue_state_set in stress_output:
+            basename = list(fatigue_state_set.keys())[0]
 
             labels = [
                 fatigue_state["label"]
                 for fatigue_state in cfg["inputs"]["files"]["lcf"]["fatigue_states"]
             ]
-            if fatigue_state_pair[basename]["status"] == "Pass":
+            if fatigue_state_set[basename]["status"] == "Pass":
                 for by_type in ["coordinate", "element"]:
-                    for idx in range(0, len(fatigue_state_pair[basename][by_type])):
-                        coordinate = fatigue_state_pair[basename][by_type][idx][
-                            labels[0]
-                        ]["coordinate"]
-                        if by_type == "coordinate":
-                            element = fatigue_state_pair[basename][by_type][idx][
-                                labels[0]
-                            ]["element"]
-                        elif by_type == "element":
-                            element = fatigue_state_pair[basename][by_type][idx][
-                                labels[0]
-                            ]["element"]["element"]
-                        stress_timetrace = fatigue_state_pair[basename][by_type][idx][
-                            "stress_timetrace"
-                        ]
-                        rainflow = np.nan
+                    if by_type in fatigue_state_set[basename].keys():
 
-                        thickness = fatigue_state_pair[basename][by_type][idx][
-                            labels[0]
-                        ][by_type]["thickness"]
-                        stress_method = fatigue_state_pair[basename][by_type][idx][
-                            labels[0]
-                        ][by_type]["stress_method"]
-                        fatigue_curve = fatigue_state_pair[basename][by_type][idx][
-                            labels[0]
-                        ][by_type]["fatigue_curve"]
-                        n_traces = fatigue_state_pair[basename][by_type][idx][
-                            labels[0]
-                        ][by_type]["n_traces"]
-                        wave_damage = fatigue_state_pair[basename][by_type][idx][
-                            labels[0]
-                        ][by_type]["wave_damage"]
-                        lcf_damage = np.nan
-                        combined_damage = np.nan
+                        for idx in range(0, len(fatigue_state_set[basename][by_type])):
+                            coordinate = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ]["coordinate"]
+                            if by_type == "coordinate":
+                                element = fatigue_state_set[basename][by_type][idx][
+                                    labels[0]
+                                ]["element"]
+                            elif by_type == "element":
+                                element = fatigue_state_set[basename][by_type][idx][
+                                    labels[0]
+                                ]["element"]["element"]
+                            stress_timetrace = fatigue_state_set[basename][by_type][idx][
+                                "stress_timetrace"
+                            ]
+                            rainflow = np.nan
 
-                        df.loc[len(df)] = [
-                            basename,
-                            coordinate,
-                            element,
-                            stress_timetrace,
-                            rainflow,
-                            fatigue_state_pair[basename]["status"],
-                            thickness,
-                            stress_method,
-                            fatigue_curve,
-                            n_traces,
-                            lcf_damage,
-                            wave_damage,
-                            combined_damage,
-                        ]
+                            thickness = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ][by_type]["thickness"]
+                            stress_method = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ][by_type]["stress_method"]
+                            fatigue_curve = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ][by_type]["fatigue_curve"]
+                            n_traces = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ][by_type]["n_traces"]
+                            wave_damage = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ][by_type]["wave_damage"]
+                            lcf_damage = np.nan
+                            combined_damage = np.nan
+
+                            df.loc[len(df)] = [
+                                basename,
+                                coordinate,
+                                element,
+                                stress_timetrace,
+                                rainflow,
+                                fatigue_state_set[basename]["status"],
+                                thickness,
+                                stress_method,
+                                fatigue_curve,
+                                n_traces,
+                                lcf_damage,
+                                wave_damage,
+                                combined_damage,
+                            ]
 
             else:
                 coordinate = np.nan
@@ -242,7 +244,7 @@ class ShipFatigueAnalysis:
                     element,
                     stress_timetrace,
                     rainflow,
-                    fatigue_state_pair[basename]["status"],
+                    fatigue_state_set[basename]["status"],
                     thickness,
                     stress_method,
                     fatigue_curve,
@@ -266,37 +268,38 @@ class ShipFatigueAnalysis:
 
             if fatigue_state_set[basename]["status"] == "Pass":
                 for by_type in ["coordinate", "element"]:
-                    for idx in range(0, len(fatigue_state_set[basename][by_type])):
-                        coordinate = fatigue_state_set[basename][by_type][idx][
-                            labels[0]
-                        ]["coordinate"]
-                        if by_type == "coordinate":
-                            element = fatigue_state_set[basename][by_type][idx][
+                    if by_type in fatigue_state_set[basename].keys():
+                        for idx in range(0, len(fatigue_state_set[basename][by_type])):
+                            coordinate = fatigue_state_set[basename][by_type][idx][
                                 labels[0]
-                            ]["element"]
-                        elif by_type == "element":
-                            element = fatigue_state_set[basename][by_type][idx][
+                            ]["coordinate"]
+                            if by_type == "coordinate":
+                                element = fatigue_state_set[basename][by_type][idx][
+                                    labels[0]
+                                ]["element"]
+                            elif by_type == "element":
+                                element = fatigue_state_set[basename][by_type][idx][
+                                    labels[0]
+                                ]["element"]["element"]
+                            stress_timetrace = fatigue_state_set[basename][by_type][idx][
+                                "stress_timetrace"
+                            ]
+                            thickness = fatigue_state_set[basename][by_type][idx][
                                 labels[0]
-                            ]["element"]["element"]
-                        stress_timetrace = fatigue_state_set[basename][by_type][idx][
-                            "stress_timetrace"
-                        ]
-                        thickness = fatigue_state_set[basename][by_type][idx][
-                            labels[0]
-                        ][by_type]["thickness"]
-                        stress_method = fatigue_state_set[basename][by_type][idx][
-                            labels[0]
-                        ][by_type]["stress_method"]
+                            ][by_type]["thickness"]
+                            stress_method = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ][by_type]["stress_method"]
 
-                        df.loc[len(df)] = [
-                            basename,
-                            coordinate,
-                            element,
-                            stress_timetrace,
-                            fatigue_state_set[basename]["status"],
-                            thickness,
-                            stress_method,
-                        ]
+                            df.loc[len(df)] = [
+                                basename,
+                                coordinate,
+                                element,
+                                stress_timetrace,
+                                fatigue_state_set[basename]["status"],
+                                thickness,
+                                stress_method,
+                            ]
 
             else:
                 coordinate = np.nan
@@ -373,14 +376,16 @@ class ShipFatigueAnalysis:
 
     def get_stress_data_by_set(self, cfg, fatigue_state_pair):
         stress_data_output_by_pair = {}
+
+        labels = [
+            fatigue_state_pair["state_files"][i]["label"]
+            for i in range(0, len(fatigue_state_pair["state_files"]))
+        ]
+
         if cfg["inputs"]["files"]["locations"]["coordinate"]["flag"]:
             logging.info("   Getting stress data by coordinates ... START")
             coordinate_data = cfg["inputs"]["files"]["locations"]["coordinate"]["data"]
 
-            labels = [
-                fatigue_state_pair["state_files"][i]["label"]
-                for i in range(0, len(fatigue_state_pair["state_files"]))
-            ]
             coordinate_output_array = []
             for coordinate in coordinate_data:
                 coordinate_output = {}
@@ -413,9 +418,16 @@ class ShipFatigueAnalysis:
         if cfg["inputs"]["files"]["locations"]["element"]["flag"]:
             logging.info("   Getting stress data by elements ... START")
             element_data = cfg["inputs"]["files"]["locations"]["element"]["data"]
+            if element_data == 'All':
+                df = fatigue_state_pair[labels[0] + "_df"]
+                element_data = list(df['Element'])
+                element_data = [{'element': element} for element in element_data]
 
             element_output_array = []
+            element_settings = cfg["inputs"]["files"]["locations"]["element"]['settings'].copy()
             for element_dict in element_data:
+                element_settings.update(element_dict)
+                element_dict = element_settings.copy()
                 element_output = {}
                 stress_timetrace = []
                 for label in labels:
