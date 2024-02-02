@@ -1,17 +1,17 @@
 &id001 !!python/object/new:assetutilities.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design/ship_design_seasam_xtract.yml
+    CustomInputFile: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/ship_design_seasam_xtract.yml
     DefaultInputFile: null
-    analysis_root_folder: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design
+    analysis_root_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design
     basename: ship_design
     cfg_array_file_names: null
-    fe_folder: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\results
+    fe_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
     file_name: app_ship_design_ship_design_seasam_xtract
     file_name_for_overwrite: app_ship_design_ship_design_seasam_xtract
-    log_folder: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\logs
-    result_folder: C:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\results
-    start_time: 2024-01-31 14:12:17.555392
+    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/logs
+    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
+    start_time: 2024-02-02 05:24:37.400397
   basename: ship_design
   default:
     config:
@@ -49,7 +49,7 @@ dictitems:
             x: 77.1
             y: 15.3
             z: 2.1
-          flag: true
+          flag: false
         element:
           data:
           - element: 1300
@@ -64,6 +64,8 @@ dictitems:
   ship_design:
     stress_output:
     - SigXX-Lower.txt:
+        status: Fail
+    - SigXX-Lower_P1.txt:
         status: Fail
     - SigXX-Upper.txt:
         status: Fail
