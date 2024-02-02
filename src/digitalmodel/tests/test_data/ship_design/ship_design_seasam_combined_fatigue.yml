@@ -38,7 +38,7 @@ inputs:
     wave_fatigue: NULL
     locations:
       coordinate:
-        flag: True
+        flag: False
         data: []
 
       element:

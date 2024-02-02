@@ -1,0 +1,2 @@
+basename,coordinate,element,stress_timetrace,status,thickness,stress_method
+,"{'x': 301.9, 'y': 12.76, 'z': 17.77}",1300,"[31013200.0, 24287150.0, 31013200.0, 24287150.0, 31013200.0, 24287150.0]",Pass,15,mean

@@ -1,0 +1,8 @@
+Run 1, Result case LC1, 1: Case 1
+Position      : Elements
+Attribute     : G-STRESS
+Shell surface : Lower
+
+Superelement	Element	X-coord(1)	  Y-coord(1)	  Z-coord(1)	       P1(1)	X-coord(2)	  Y-coord(2)	  Z-coord(2)	       P1(2)	X-coord(3)	  Y-coord(3)	  Z-coord(3)	       P1(3)	X-coord(4)	  Y-coord(4)	  Z-coord(4)	       P1(4)	
+          R1	   1300	     301.9	       12.32	        4.95	 6.33149e+07	     301.9	     12.1613	     4.55342	 2.24001e+06	     301.9	     12.7407	     4.60047	 7.45299e+06	     301.9	        13.2	        4.95	 2.41407e+07	
+          R1	   1488	     301.9	       -20.9	     29.1838	         N/A	     301.9	       -20.9	     28.2414	         N/A	       N/A	         N/A	         N/A	         N/A	       N/A	         N/A	         N/A	         N/A	

@@ -1,17 +1,17 @@
 &id003 !!python/object/new:assetutilities.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design/ship_design_seasam_combined_fatigue.yml
+    CustomInputFile: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/ship_design_seasam_combined_fatigue.yml
     DefaultInputFile: null
-    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design
+    analysis_root_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design
     basename: ship_design
     cfg_array_file_names: null
-    fe_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\results
+    fe_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
     file_name: app_ship_design_ship_design_seasam_combined_fatigue
     file_name_for_overwrite: app_ship_design_ship_design_seasam_combined_fatigue
-    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\logs
-    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/ship_design\results
-    start_time: 2024-01-31 14:24:01.130270
+    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/logs
+    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
+    start_time: 2024-02-02 05:19:32.747922
   basename: ship_design
   default:
     config:
@@ -106,7 +106,7 @@ dictitems:
       locations:
         coordinate:
           data: []
-          flag: true
+          flag: false
         element:
           data:
           - element: 1300
@@ -128,7 +128,6 @@ dictitems:
   ship_design:
     stress_output:
     - SigXX-Lower.txt:
-        coordinate: []
         element:
         - 2-00:
             S_max: -7416030.0
@@ -234,8 +233,113 @@ dictitems:
           - -7565518.75
           - 23879775.0
         status: Pass
+    - SigXX-Lower_P1.txt:
+        element:
+        - 2-00:
+            S_max: 35007400.0
+            S_mean: 31013200.0
+            S_min: 25636300.0
+            coordinate:
+              x: 301.9
+              y: 12.76
+              z: 17.77
+            element:
+              element: 1300
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-00
+          2-01:
+            S_max: 63314900.0
+            S_mean: 24287150.0
+            S_min: 2240010.0
+            coordinate:
+              x: 301.9
+              y: 12.68
+              z: 4.75
+            element:
+              element: 1300
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-01
+          2-02:
+            S_max: 35007400.0
+            S_mean: 31013200.0
+            S_min: 25636300.0
+            coordinate:
+              x: 301.9
+              y: 12.76
+              z: 17.77
+            element:
+              element: 1300
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-02
+          2-03:
+            S_max: 63314900.0
+            S_mean: 24287150.0
+            S_min: 2240010.0
+            coordinate:
+              x: 301.9
+              y: 12.68
+              z: 4.75
+            element:
+              element: 1300
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-03
+          2-04:
+            S_max: 35007400.0
+            S_mean: 31013200.0
+            S_min: 25636300.0
+            coordinate:
+              x: 301.9
+              y: 12.76
+              z: 17.77
+            element:
+              element: 1300
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-04
+          2-05:
+            S_max: 63314900.0
+            S_mean: 24287150.0
+            S_min: 2240010.0
+            coordinate:
+              x: 301.9
+              y: 12.68
+              z: 4.75
+            element:
+              element: 1300
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-05
+          stress_timetrace:
+          - 31013200.0
+          - 24287150.0
+          - 31013200.0
+          - 24287150.0
+          - 31013200.0
+          - 24287150.0
+        status: Pass
     - SigXX-Upper.txt:
-        coordinate: []
         element:
         - 2-00:
             S_max: -7855820.0
