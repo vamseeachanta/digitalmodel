@@ -27,6 +27,7 @@ class ShipFatigueAnalysis:
             df = self.get_lcf_timetrace_rainflow_and_fatigue_damage(cfg)
             df = self.get_abs_combined_fatigue(df)
             self.save_combined_fatigue_as_csv(cfg, df)
+            self.save_combined_fatigue_summary_as_csv(cfg, df)
 
         return cfg
 
@@ -117,14 +118,77 @@ class ShipFatigueAnalysis:
         )
         df.to_csv(file_name, index=False)
 
+    def save_combined_fatigue_summary_as_csv(self, cfg, df):
+        file_name = os.path.join(
+            cfg["Analysis"]["result_folder"],
+            cfg["Analysis"]["file_name"] + "_combined_fatigue_summary.csv",
+        )
+        df_summary = df[
+            ["element", "lcf_damage", "wave_damage", "combined_damage"]
+        ].copy()
+        df_summary.to_csv(file_name, index=False)
+
     def get_fatigue_states_and_stress_timetrace(self, cfg):
         fatigue_states = cfg["inputs"]["files"]["lcf"]["fatigue_states"]
 
+        if "directory" in fatigue_states[0]:
+            state_files = self.get_state_files_by_directory(fatigue_states)
+            fatigue_states_analysis = self.get_fatigue_states_by_directory(state_files)
+        elif "file_name" in fatigue_states[0]:
+            fatigue_states_analysis = self.get_fatigue_states_by_file_name(
+                fatigue_states
+            )
+
+        stress_output = self.get_stress_timetrace(cfg, fatigue_states_analysis)
+        self.save_stress_output_as_csv(cfg, stress_output)
+
+        cfg.update({"ship_design": {"stress_output": stress_output}})
+
+        return cfg
+
+    def get_fatigue_states_by_file_name(self, fatigue_states):
+        state_files = []
+        for fatigue_state_indx in range(0, len(fatigue_states)):
+            valid_file_flag = False
+
+            fatigue_state = fatigue_states[fatigue_state_indx]
+
+            if not os.path.isfile(fatigue_state["file_name"]):
+                cwd = os.getcwd()
+                fatigue_state["file_name"] = add_cwd_to_filename(
+                    fatigue_state["file_name"], cwd
+                )
+                fatigue_states[fatigue_state_indx] = fatigue_state
+            else:
+                valid_file_flag = True
+
+            if not valid_file_flag and not os.path.isfile(fatigue_state["file_name"]):
+                valid_file_flag = False
+                raise ValueError(f"Invalid file: {fatigue_state['file_name']}")
+
+            state_files.append(
+                {
+                    "state_file": fatigue_state["file_name"],
+                    "label": fatigue_state["label"],
+                }
+            )
+
+        fatigue_states_analysis = [
+            {
+                "state_files": state_files,
+                "basename": None,
+            }
+        ]
+
+        return fatigue_states_analysis
+
+    def get_state_files_by_directory(self, fatigue_states):
         state_files = []
         for fatigue_state_indx in range(0, len(fatigue_states)):
             valid_directory_flag = False
 
             fatigue_state = fatigue_states[fatigue_state_indx]
+
             if not os.path.isdir(fatigue_state["directory"]):
                 cwd = os.getcwd()
                 fatigue_state["directory"] = add_cwd_to_filename(
@@ -143,14 +207,7 @@ class ShipFatigueAnalysis:
             files.update({"label": fatigue_state["label"]})
             state_files.append(files)
 
-        fatigue_states = self.get_fatigue_states(state_files)
-
-        stress_output = self.get_stress_timetrace(cfg, fatigue_states)
-        self.save_stress_output_as_csv(cfg, stress_output)
-
-        cfg.update({"ship_design": {"stress_output": stress_output}})
-
-        return cfg
+            return state_files
 
     def save_stress_output_as_csv(self, cfg, stress_output):
         df = self.get_stress_output_df(stress_output, cfg)
@@ -173,7 +230,6 @@ class ShipFatigueAnalysis:
             if fatigue_state_set[basename]["status"] == "Pass":
                 for by_type in ["coordinate", "element"]:
                     if by_type in fatigue_state_set[basename].keys():
-
                         for idx in range(0, len(fatigue_state_set[basename][by_type])):
                             coordinate = fatigue_state_set[basename][by_type][idx][
                                 labels[0]
@@ -186,9 +242,9 @@ class ShipFatigueAnalysis:
                                 element = fatigue_state_set[basename][by_type][idx][
                                     labels[0]
                                 ]["element"]["element"]
-                            stress_timetrace = fatigue_state_set[basename][by_type][idx][
-                                "stress_timetrace"
-                            ]
+                            stress_timetrace = fatigue_state_set[basename][by_type][
+                                idx
+                            ]["stress_timetrace"]
                             rainflow = np.nan
 
                             thickness = fatigue_state_set[basename][by_type][idx][
@@ -281,9 +337,9 @@ class ShipFatigueAnalysis:
                                 element = fatigue_state_set[basename][by_type][idx][
                                     labels[0]
                                 ]["element"]["element"]
-                            stress_timetrace = fatigue_state_set[basename][by_type][idx][
-                                "stress_timetrace"
-                            ]
+                            stress_timetrace = fatigue_state_set[basename][by_type][
+                                idx
+                            ]["stress_timetrace"]
                             thickness = fatigue_state_set[basename][by_type][idx][
                                 labels[0]
                             ][by_type]["thickness"]
@@ -418,13 +474,15 @@ class ShipFatigueAnalysis:
         if cfg["inputs"]["files"]["locations"]["element"]["flag"]:
             logging.info("   Getting stress data by elements ... START")
             element_data = cfg["inputs"]["files"]["locations"]["element"]["data"]
-            if element_data == 'All':
+            if element_data == "All":
                 df = fatigue_state_pair[labels[0] + "_df"]
-                element_data = list(df['Element'])
-                element_data = [{'element': element} for element in element_data]
+                element_data = list(df["Element"])
+                element_data = [{"element": element} for element in element_data]
 
             element_output_array = []
-            element_settings = cfg["inputs"]["files"]["locations"]["element"]['settings'].copy()
+            element_settings = cfg["inputs"]["files"]["locations"]["element"][
+                "settings"
+            ].copy()
             for element_dict in element_data:
                 element_settings.update(element_dict)
                 element_dict = element_settings.copy()
@@ -680,8 +738,8 @@ class ShipFatigueAnalysis:
 
         return df
 
-    def get_fatigue_states(self, state_files):
-        fatigue_states = []
+    def get_fatigue_states_by_directory(self, state_files):
+        fatigue_states_analysis = []
 
         for state_file_index in range(0, len(state_files[0]["basenames"])):
             basename_first_set = state_files[0]["basenames"][state_file_index]
@@ -697,9 +755,9 @@ class ShipFatigueAnalysis:
                 "state_files": state_files_for_basename,
                 "basename": basename_first_set,
             }
-            fatigue_states.append(fatigue_state)
+            fatigue_states_analysis.append(fatigue_state)
 
-        return fatigue_states
+        return fatigue_states_analysis
 
     def get_files_in_directory(self, directory):
         from assetutilities.engine import engine
