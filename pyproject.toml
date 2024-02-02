@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "digitalmodel"
-version = "0.0.5"
+version = "0.0.6"
 description = "engineering asset digital model(s) for life cycle analysis"
 readme = "README.md"
 authors = [{ name = "Vamsee Achanta", email = "vamsee.achanta@aceengineer.com" }]
@@ -37,7 +37,7 @@ where = ["src"]
 "*" = ["*.yml", "*.csv", "*.xlsx", "*.html", "*.txt"]
 
 [tool.bumpver]
-current_version = "0.0.5"
+current_version = "0.0.6"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message  = "bump version {old_version} -> {new_version}"
 commit          = true
