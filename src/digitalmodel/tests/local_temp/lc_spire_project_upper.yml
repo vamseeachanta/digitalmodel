@@ -1,0 +1,62 @@
+basename: ship_design
+
+inputs:
+  software: sesam
+  calculation: abs_combined_fatigue
+
+  stress:
+
+  files:
+    lcf:
+      file_type: seasam_xtract
+      file_name: NULL # Not programmed
+      fatigue_states:
+        - {
+            label: "2-01",
+            file_name: /mnt/github/spire_temp/Low Cycle Fatigue Load Steps/P1-LC2-01-Upper.txt,
+          }
+        - {
+            label: "2-02",
+            file_name: /mnt/github/spire_temp/Low Cycle Fatigue Load Steps/P1-LC2-02-Upper.txt,
+          }
+        - {
+            label: "2-03",
+            file_name: /mnt/github/spire_temp/Low Cycle Fatigue Load Steps/P1-LC2-03-Upper.txt,
+          }
+        - {
+            label: "2-04",
+            file_name: /mnt/github/spire_temp/Low Cycle Fatigue Load Steps/P1-LC2-04-Upper.txt,
+          }
+        - {
+            label: "2-05",
+            file_name: /mnt/github/spire_temp/Low Cycle Fatigue Load Steps/P1-LC2-05-Upper.txt,
+          }
+        - {
+            label: "2-06",
+            file_name: /mnt/github/spire_temp/Low Cycle Fatigue Load Steps/P1-LC2-06-Upper.txt,
+          }
+    wave_fatigue: NULL
+    locations:
+      coordinate:
+        flag: False
+        data: []
+
+      element:
+        flag: True
+        settings:
+          thickness: 15
+          stress_method: mean # mean/max
+          wave_damage: 0.0
+          n_traces: 1
+          fatigue_curve: ABS 2018 D-Mod In Air
+        data: All
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
+
+Analysis:
+  fe_folder: NULL
