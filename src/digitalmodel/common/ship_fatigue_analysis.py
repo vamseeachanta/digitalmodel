@@ -568,7 +568,7 @@ class ShipFatigueAnalysis:
         status = {}
         for state_file in fatigue_state_pair["state_files"]:
             state_df = self.read_seasam_xtract(state_file["state_file"])
-            transformed_df = self.transform_df_for_stress_analysis(state_df)
+            transformed_df = self.transform_df_for_stress_analysis(state_df, state_file)
             fatigue_state_pair.update({(state_file["label"] + "_df"): transformed_df})
             if len(transformed_df) > 0:
                 status.update({state_file["label"]: "Pass"})
@@ -578,7 +578,11 @@ class ShipFatigueAnalysis:
 
         return fatigue_state_pair
 
-    def transform_df_for_stress_analysis(self, df):
+    def transform_df_for_stress_analysis(self, df, state_file):
+        logging.info(
+            f"      Transforming data for: {state_file['state_file']} ... START"
+        )
+
         # Convert columns to float
         if len(df.keys()) == 18:
             number_of_nodes = 4
@@ -610,6 +614,7 @@ class ShipFatigueAnalysis:
         elif number_of_nodes == 8:
             df = self.get_df_with_8_nodes(df)
 
+        logging.info(f"      Transforming data for: {state_file['state_file']} ... END")
         return df
 
     def get_df_with_4_nodes(self, df):
@@ -809,6 +814,7 @@ class ShipFatigueAnalysis:
         return df
 
     def read_seasam_xtract(self, seasam_xtract_file):
+        logging.info(f"      Reading file: {seasam_xtract_file} ... START")
         cfg = {
             "io": seasam_xtract_file,
             "start_line": 6,
@@ -830,6 +836,7 @@ class ShipFatigueAnalysis:
 
         df = read_data.from_ascii_file_get_structured_data_delimited_white_space(cfg)
 
+        logging.info(f"      Reading file: {seasam_xtract_file} ... END")
         return df
 
     def get_fatigue_states_by_directory(self, state_files):

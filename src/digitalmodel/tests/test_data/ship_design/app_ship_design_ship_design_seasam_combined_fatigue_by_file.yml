@@ -11,7 +11,7 @@ dictitems:
     file_name_for_overwrite: app_ship_design_ship_design_seasam_combined_fatigue_by_file
     log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/logs
     result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
-    start_time: 2024-02-02 05:24:36.840211
+    start_time: 2024-02-02 06:21:52.649621
   basename: ship_design
   default:
     config:
