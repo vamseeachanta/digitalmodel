@@ -207,7 +207,7 @@ class ShipFatigueAnalysis:
             files.update({"label": fatigue_state["label"]})
             state_files.append(files)
 
-            return state_files
+        return state_files
 
     def save_stress_output_as_csv(self, cfg, stress_output):
         df = self.get_stress_output_df(stress_output, cfg)
