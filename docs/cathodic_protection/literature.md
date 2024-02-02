@@ -1,8 +1,35 @@
+# Introduction
+
+- Ship is a steel structure and will need be protected from Corrosion
+- To prevent/mitigate/minimize corrosion from occuring cathodic protection is required.
+- If a ship is coated, is cathodic protection (Anodes or ICCP) required? Yes
+  - Even if coated efficiently, there can be presence of holidays during the initial paining
+  - Due to the dynamic nature of these structures, there can be areas of damage that needs to be protected which can be done using minimal cathodic protection
+  - This minimal cathodic protection will also provide insurance against any coating failures
+
+## Design Data
+
+#### Salinity
+
+Salinity Calculations
+
+3.5% Salinity = 35,000 ppm = 35 ppt
+
+<https://www.capitalcityaquatics.com/salinity>
+<https://www.unitsconverters.com/en/Salinitypercentage-To-Partsperthousand/Unittounit-4923-4921>
+
+Engineering contractor data:
+Salinity 0.1ppt =  0.21  mS/cm = 4762  Ohm.cm
+Salinity 1.0ppt = 1.970 mS/cm = 507.6 Ohm.cm
+Salinity 10ppt  = 17.02 mS/cm = 58.75 Ohm.cm
+Salinity 25ppt  = 39.26 mS/cm = 25.47 Ohm.cm
+Salinity 31ppt  = 47.62 mS/cm = 21.00 Ohm.cm
+
 # Codes
 
-## DNV
+### DNV
 
-## ABS
+### ABS
 
 docs\cathodic_protection\codes\ABS cathodic-protection-offshore-gn-dec18.pdf
 
