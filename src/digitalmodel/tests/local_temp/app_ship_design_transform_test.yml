@@ -1,0 +1,307 @@
+&id003 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: /mnt/github/github/digitalmodel/src/digitalmodel/tests/local_temp/transform_test.yml
+    DefaultInputFile: null
+    analysis_root_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/local_temp
+    basename: ship_design
+    cfg_array_file_names: null
+    fe_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/local_temp/results
+    file_name: app_ship_design_transform_test
+    file_name_for_overwrite: app_ship_design_transform_test
+    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/local_temp/logs
+    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/local_temp/results
+    start_time: 2024-02-03 21:27:11.666055
+  basename: ship_design
+  default:
+    config:
+      cfg_sensitivities: false
+      overwrite:
+        output: true
+    log_level: INFO
+  fatigue_analysis:
+    timetraces:
+    - damage:
+        n_timetraces: .nan
+        timetrace: .nan
+      n_traces: !!python/object/apply:numpy.core.multiarray.scalar
+      - &id001 !!python/object/apply:numpy.dtype
+        args:
+        - i8
+        - false
+        - true
+        state: !!python/tuple
+        - 3
+        - <
+        - null
+        - null
+        - null
+        - -1
+        - -1
+        - 0
+      - !!binary |
+        yAAAAAAAAAA=
+      rainflow:
+        count:
+          0: 0.5
+        i_end:
+          0: 5
+        i_start:
+          0: 0
+        mean:
+          0: .nan
+        range:
+          0: .nan
+      s_trace: &id002
+      - .nan
+      - .nan
+      - .nan
+      - .nan
+      - .nan
+      - .nan
+      thickness: !!python/object/apply:numpy.core.multiarray.scalar
+      - *id001
+      - !!binary |
+        DwAAAAAAAAA=
+    total_damage: .nan
+  inputs:
+    calculation: abs_combined_fatigue
+    files:
+      lcf:
+        fatigue_states:
+        - file_name: /mnt/github/github/digitalmodel/src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft/SigXX-Lower_P1.txt
+          label: 2-00
+        - file_name: /mnt/github/github/digitalmodel/src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft/SigXX-Lower_P1.txt
+          label: 2-01
+        - file_name: /mnt/github/github/digitalmodel/src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft/SigXX-Lower_P1.txt
+          label: 2-02
+        - file_name: /mnt/github/github/digitalmodel/src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft/SigXX-Lower_P1.txt
+          label: 2-03
+        - file_name: /mnt/github/github/digitalmodel/src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft/SigXX-Lower_P1.txt
+          label: 2-04
+        - file_name: /mnt/github/github/digitalmodel/src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft/SigXX-Lower_P1.txt
+          label: 2-05
+        file_name: null
+        file_type: seasam_xtract
+      locations:
+        coordinate:
+          data: []
+          flag: false
+        element:
+          data: All
+          flag: true
+          settings:
+            fatigue_curve: ABS 2018 D-Mod In Air
+            n_traces: 200
+            stress_method: mean
+            thickness: 15
+            wave_damage: 0.5
+      wave_fatigue: null
+    software: sesam
+    stress: null
+  ship_design:
+    stress_output:
+    - null:
+        element:
+        - 2-00:
+            S_max: 35007400.0
+            S_mean: 31013200.0
+            S_min: 25636300.0
+            coordinate:
+              x: 301.9
+              y: 12.76
+              z: 17.77
+            element:
+              element: 1300.0
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-00
+          2-01:
+            S_max: 63314900.0
+            S_mean: 24287150.0
+            S_min: 2240010.0
+            coordinate:
+              x: 301.9
+              y: 12.68
+              z: 4.75
+            element:
+              element: 1300.0
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-01
+          2-02:
+            S_max: 35007400.0
+            S_mean: 31013200.0
+            S_min: 25636300.0
+            coordinate:
+              x: 301.9
+              y: 12.76
+              z: 17.77
+            element:
+              element: 1300.0
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-02
+          2-03:
+            S_max: 63314900.0
+            S_mean: 24287150.0
+            S_min: 2240010.0
+            coordinate:
+              x: 301.9
+              y: 12.68
+              z: 4.75
+            element:
+              element: 1300.0
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-03
+          2-04:
+            S_max: 35007400.0
+            S_mean: 31013200.0
+            S_min: 25636300.0
+            coordinate:
+              x: 301.9
+              y: 12.76
+              z: 17.77
+            element:
+              element: 1300.0
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-04
+          2-05:
+            S_max: 63314900.0
+            S_mean: 24287150.0
+            S_min: 2240010.0
+            coordinate:
+              x: 301.9
+              y: 12.68
+              z: 4.75
+            element:
+              element: 1300.0
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-05
+          stress_timetrace:
+          - 31013200.0
+          - 24287150.0
+          - 31013200.0
+          - 24287150.0
+          - 31013200.0
+          - 24287150.0
+        - 2-00:
+            S_max: .nan
+            S_mean: .nan
+            S_min: .nan
+            coordinate:
+              x: 301.9
+              y: -20.9
+              z: 28.71
+            element:
+              element: 1488.0
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-00
+          2-01:
+            S_max: .nan
+            S_mean: .nan
+            S_min: .nan
+            coordinate:
+              x: 301.9
+              y: -20.9
+              z: 28.71
+            element:
+              element: 1488.0
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-01
+          2-02:
+            S_max: .nan
+            S_mean: .nan
+            S_min: .nan
+            coordinate:
+              x: 301.9
+              y: -20.9
+              z: 28.71
+            element:
+              element: 1488.0
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-02
+          2-03:
+            S_max: .nan
+            S_mean: .nan
+            S_min: .nan
+            coordinate:
+              x: 301.9
+              y: -20.9
+              z: 28.71
+            element:
+              element: 1488.0
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-03
+          2-04:
+            S_max: .nan
+            S_mean: .nan
+            S_min: .nan
+            coordinate:
+              x: 301.9
+              y: -20.9
+              z: 28.71
+            element:
+              element: 1488.0
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-04
+          2-05:
+            S_max: .nan
+            S_mean: .nan
+            S_min: .nan
+            coordinate:
+              x: 301.9
+              y: -20.9
+              z: 28.71
+            element:
+              element: 1488.0
+              fatigue_curve: ABS 2018 D-Mod In Air
+              n_traces: 200
+              stress_method: mean
+              thickness: 15
+              wave_damage: 0.5
+            label: 2-05
+          stress_timetrace: *id002
+        status: Pass
+state: *id003

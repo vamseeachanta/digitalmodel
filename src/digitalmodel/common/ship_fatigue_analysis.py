@@ -618,83 +618,86 @@ class ShipFatigueAnalysis:
         return df
 
     def get_df_with_4_nodes(self, df):
-        for df_row in range(0, len(df)):
-            df.loc[df_row, "x_min"] = min(
-                df.iloc[df_row]["X-coord(1)"],
-                df.iloc[df_row]["X-coord(2)"],
-                df.iloc[df_row]["X-coord(3)"],
-                df.iloc[df_row]["X-coord(4)"],
-            )
-            df.loc[df_row, "x_max"] = max(
-                df.iloc[df_row]["X-coord(1)"],
-                df.iloc[df_row]["X-coord(2)"],
-                df.iloc[df_row]["X-coord(3)"],
-                df.iloc[df_row]["X-coord(4)"],
-            )
-            df.loc[df_row, "y_min"] = min(
-                df.iloc[df_row]["Y-coord(1)"],
-                df.iloc[df_row]["Y-coord(2)"],
-                df.iloc[df_row]["Y-coord(3)"],
-                df.iloc[df_row]["Y-coord(4)"],
-            )
-            df.loc[df_row, "y_max"] = max(
-                df.iloc[df_row]["Y-coord(1)"],
-                df.iloc[df_row]["Y-coord(2)"],
-                df.iloc[df_row]["Y-coord(3)"],
-                df.iloc[df_row]["Y-coord(4)"],
-            )
-            df.loc[df_row, "z_min"] = min(
-                df.iloc[df_row]["Z-coord(1)"],
-                df.iloc[df_row]["Z-coord(2)"],
-                df.iloc[df_row]["Z-coord(3)"],
-                df.iloc[df_row]["Z-coord(4)"],
-            )
-            df.loc[df_row, "z_max"] = max(
-                df.iloc[df_row]["Z-coord(1)"],
-                df.iloc[df_row]["Z-coord(2)"],
-                df.iloc[df_row]["Z-coord(3)"],
-                df.iloc[df_row]["Z-coord(4)"],
-            )
+        try:
+            for df_row in range(0, len(df)):
+                df.loc[df_row, "x_min"] = min(
+                    df.iloc[df_row]["X-coord(1)"],
+                    df.iloc[df_row]["X-coord(2)"],
+                    df.iloc[df_row]["X-coord(3)"],
+                    df.iloc[df_row]["X-coord(4)"],
+                )
+                df.loc[df_row, "x_max"] = max(
+                    df.iloc[df_row]["X-coord(1)"],
+                    df.iloc[df_row]["X-coord(2)"],
+                    df.iloc[df_row]["X-coord(3)"],
+                    df.iloc[df_row]["X-coord(4)"],
+                )
+                df.loc[df_row, "y_min"] = min(
+                    df.iloc[df_row]["Y-coord(1)"],
+                    df.iloc[df_row]["Y-coord(2)"],
+                    df.iloc[df_row]["Y-coord(3)"],
+                    df.iloc[df_row]["Y-coord(4)"],
+                )
+                df.loc[df_row, "y_max"] = max(
+                    df.iloc[df_row]["Y-coord(1)"],
+                    df.iloc[df_row]["Y-coord(2)"],
+                    df.iloc[df_row]["Y-coord(3)"],
+                    df.iloc[df_row]["Y-coord(4)"],
+                )
+                df.loc[df_row, "z_min"] = min(
+                    df.iloc[df_row]["Z-coord(1)"],
+                    df.iloc[df_row]["Z-coord(2)"],
+                    df.iloc[df_row]["Z-coord(3)"],
+                    df.iloc[df_row]["Z-coord(4)"],
+                )
+                df.loc[df_row, "z_max"] = max(
+                    df.iloc[df_row]["Z-coord(1)"],
+                    df.iloc[df_row]["Z-coord(2)"],
+                    df.iloc[df_row]["Z-coord(3)"],
+                    df.iloc[df_row]["Z-coord(4)"],
+                )
 
-            if "VONMISES(1)" in df.columns:
-                stress_nomenclature = "VONMISES"
-            elif "SIGXX(1)" in df.columns:
-                stress_nomenclature = "SIGXX"
-            elif "SIGYY(1)" in df.columns:
-                stress_nomenclature = "SIGYY"
-            elif "TAUXY(1)" in df.columns:
-                stress_nomenclature = "TAUXY"
-            elif "P1(1)" in df.columns:
-                stress_nomenclature = "P1"
-            else:
-                raise ValueError("Could not find stress column")
+                if "VONMISES(1)" in df.columns:
+                    stress_nomenclature = "VONMISES"
+                elif "SIGXX(1)" in df.columns:
+                    stress_nomenclature = "SIGXX"
+                elif "SIGYY(1)" in df.columns:
+                    stress_nomenclature = "SIGYY"
+                elif "TAUXY(1)" in df.columns:
+                    stress_nomenclature = "TAUXY"
+                elif "P1(1)" in df.columns:
+                    stress_nomenclature = "P1"
+                else:
+                    raise ValueError("Could not find stress column")
 
-            df.loc[df_row, "S_mean"] = statistics.mean(
-                [
-                    df.iloc[df_row][stress_nomenclature + "(1)"],
-                    df.iloc[df_row][stress_nomenclature + "(2)"],
-                    df.iloc[df_row][stress_nomenclature + "(3)"],
-                    df.iloc[df_row][stress_nomenclature + "(4)"],
-                ]
-            )
+                df.loc[df_row, "S_mean"] = statistics.mean(
+                    [
+                        df.iloc[df_row][stress_nomenclature + "(1)"],
+                        df.iloc[df_row][stress_nomenclature + "(2)"],
+                        df.iloc[df_row][stress_nomenclature + "(3)"],
+                        df.iloc[df_row][stress_nomenclature + "(4)"],
+                    ]
+                )
 
-            df.loc[df_row, "S_max"] = max(
-                [
-                    df.iloc[df_row][stress_nomenclature + "(1)"],
-                    df.iloc[df_row][stress_nomenclature + "(2)"],
-                    df.iloc[df_row][stress_nomenclature + "(3)"],
-                    df.iloc[df_row][stress_nomenclature + "(4)"],
-                ]
-            )
+                df.loc[df_row, "S_max"] = max(
+                    [
+                        df.iloc[df_row][stress_nomenclature + "(1)"],
+                        df.iloc[df_row][stress_nomenclature + "(2)"],
+                        df.iloc[df_row][stress_nomenclature + "(3)"],
+                        df.iloc[df_row][stress_nomenclature + "(4)"],
+                    ]
+                )
 
-            df.loc[df_row, "S_min"] = min(
-                [
-                    df.iloc[df_row][stress_nomenclature + "(1)"],
-                    df.iloc[df_row][stress_nomenclature + "(2)"],
-                    df.iloc[df_row][stress_nomenclature + "(3)"],
-                    df.iloc[df_row][stress_nomenclature + "(4)"],
-                ]
-            )
+                df.loc[df_row, "S_min"] = min(
+                    [
+                        df.iloc[df_row][stress_nomenclature + "(1)"],
+                        df.iloc[df_row][stress_nomenclature + "(2)"],
+                        df.iloc[df_row][stress_nomenclature + "(3)"],
+                        df.iloc[df_row][stress_nomenclature + "(4)"],
+                    ]
+                )
+        except Exception as e:
+            logging.warning(f"Could not transform data: {e}")
 
         return df
 
