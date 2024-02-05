@@ -6,7 +6,7 @@ To help automate Orcaflex for a typical analysis
 
 ## N-S Orientation
 
-lease follow below steps for changing the orientation of the FPSO and vessel as per Alignment sheets.
+Follow below steps for changing the orientation of the FPSO and vessel as per Alignment sheets.
 
 Goto
 General>Drawing>Select "North Direction Defined" and define the north direction from alignment sheet and press "OK"
