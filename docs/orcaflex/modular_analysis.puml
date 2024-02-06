@@ -24,7 +24,7 @@ start
         :Analysis Parameters;
             note right
                 Simulation time, time step, etc.
-                These parameters may be changed if convergence is not reached
+                These parameters may be changed later if unconvergence occurs
             end note
 
     }
@@ -39,7 +39,7 @@ start
         :Seabed and Water Depth;
             note right
                 water depth
-                seabed profile (2D Alignment sheets)
+                seabed profile (3D profile using 2D Alignment sheets)
             end note
 
         :Environment;
@@ -54,6 +54,7 @@ start
     note right
         Add Host vessel
         Add installation vessel(s)
+        Repeat process for all vessels
     end note
 
         :Vessel Data;
@@ -67,26 +68,31 @@ start
                 Type of solution, etc.
             end note
 
+        :Vessel Location;
+            note right
+                Location of vessel
+                Orientation of vessel
+            end note
+
     }
 
     partition "Structure - Vessel Assets" {
 
-        :Basic Structure;
+        :Basic Structure properties;
             note right
                 examples are:
-                 FPSO itube
+                 Host interface/FPSO Itube
                  Moonpool flare/tulip etc.
-            end note
-
-        :Variations & Parameters;
-            note right
-                ?
             end note
 
         :Interface Data;
             note right
                 Attachment relative to vessel
+            end note
 
+        :Variations & Parameters;
+            note right
+                TBA
             end note
 
     }
@@ -101,10 +107,12 @@ start
                 TBA
             end note
 
-        :Attachments;
+        :Attachment Definitions;
             note right
+                UTH
+                Pots
                 Buoyancy modules
-
+                etc.
             end note
 
         :Variations & Parameters;
@@ -114,19 +122,7 @@ start
 
     }
 
-
     partition "Stucture Interface to Vessel" {
-        :Structure to Vessel;
-            note right
-                Rigging, Chutes, Tensioners etc.
-            end note
-
-        :Other interfaces;
-            note right
-                For modelling etc.
-            end note
-
-    partition "Stucture Aux equipment" {
         :Structure to Vessel;
             note right
                 Rigging, Chutes, Tensioners etc.
