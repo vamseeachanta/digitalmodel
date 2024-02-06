@@ -655,9 +655,9 @@ class ShipFatigueAnalysis:
         ]
         stress_output.update({"coordinate": coordinate.copy()})
         stress_output.update({"element": df_filter["Element"].to_list()})
-        stress_output.update({"S_mean": round(float(df_filter["S_mean"].mean()), 2)})
-        stress_output.update({"S_max": round(float(df_filter["S_max"].max()), 2)})
-        stress_output.update({"S_min": round(float(df_filter["S_min"].min()), 2)})
+        stress_output.update({"S_mean": round(float(df_filter["S_mean"].mean()), 0)})
+        stress_output.update({"S_max": round(float(df_filter["S_max"].max()), 0)})
+        stress_output.update({"S_min": round(float(df_filter["S_min"].min()), 0)})
         stress_output.update({"label": label})
 
         return stress_output
@@ -669,7 +669,7 @@ class ShipFatigueAnalysis:
 
         df_filter = df[df["Element"] == element_dict["element"]]
 
-        stress_output = {'S': round(float(df_filter["S"].mean()), 2), 'Element': element_dict["element"]}
+        stress_output = {'S': round(float(df_filter["S"].mean()), 0), 'Element': element_dict["element"]}
         stress_output.update({"element": element_dict.copy()})
 
         return stress_output
@@ -694,9 +694,9 @@ class ShipFatigueAnalysis:
         stress_output.update({"coordinate": coordinate})
 
         stress_output.update({"element": element_dict.copy()})
-        stress_output.update({"S_mean": round(float(df_filter["S_mean"].mean()), 2)})
-        stress_output.update({"S_max": round(float(df_filter["S_max"].max()), 2)})
-        stress_output.update({"S_min": round(float(df_filter["S_min"].min()), 2)})
+        stress_output.update({"S_mean": round(float(df_filter["S_mean"].mean()), 0)})
+        stress_output.update({"S_max": round(float(df_filter["S_max"].max()), 0)})
+        stress_output.update({"S_min": round(float(df_filter["S_min"].min()), 0)})
         stress_output.update({"label": label})
 
         return stress_output
@@ -735,11 +735,11 @@ class ShipFatigueAnalysis:
 
         df_stress = df[[stress_nomenclature + "(1)", stress_nomenclature + "(2)", stress_nomenclature + "(3)", stress_nomenclature + "(4)"]]
         if stress_method == "mean":
-            df['S'] = df_stress.mean(axis=1)
+            df['S'] = round(df_stress.mean(axis=1), 0)
         elif stress_method == "max":
-            df['S'] = df_stress.max(axis=1)
+            df['S'] = round(df_stress.max(axis=1), 0)
         elif stress_method == "min":
-            df['S'] = df_stress.min(axis=1)
+            df['S'] = round(df_stress.min(axis=1), 0)
         else:
             raise ValueError(f"Stress summary method NOT implemented: {stress_method}")
 
