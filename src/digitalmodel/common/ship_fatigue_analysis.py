@@ -133,7 +133,9 @@ class ShipFatigueAnalysis:
                 for timetrace in cfg_fat_dam["fatigue_analysis"]["timetraces"]
             ]
             df.loc[idx, "rainflow"] = rainflow
-            cfg.update({"fatigue_analysis": cfg_fat_dam["fatigue_analysis"]})
+            
+            if not cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+                cfg.update({"fatigue_analysis": cfg_fat_dam["fatigue_analysis"]})
 
         logging.info("Calculating LCF fatigue damage  by Timetraces ... COMPLETE")
 
@@ -189,8 +191,8 @@ class ShipFatigueAnalysis:
         stress_output = self.get_stress_timetrace(cfg, fatigue_states_analysis)
 
         self.save_stress_output_as_csv(cfg, stress_output)
-
-        # cfg.update({"ship_design": {"stress_output": stress_output}})
+        if not cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+            cfg.update({"ship_design": {"stress_output": stress_output}})
 
         return cfg, stress_output
 
@@ -258,6 +260,7 @@ class ShipFatigueAnalysis:
         return state_files
 
     def save_stress_output_as_csv(self, cfg, stress_output):
+        logging.info("Saving stress output as csv ... START")
         if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
             df = self.get_stress_output_df_P1_fast(stress_output, cfg)
         else:
@@ -267,6 +270,8 @@ class ShipFatigueAnalysis:
             cfg["Analysis"]["file_name"] + "_stress_output.csv",
         )
         df.to_csv(sress_output_file_name, index=False)
+        
+        logging.info("Saving stress output as csv ... COMPLETE")
 
     def get_fatigue_damage_output_df_for_timetrace(self, stress_output, cfg):
         df = self.get_fatigue_df_definition_for_timetrace()
