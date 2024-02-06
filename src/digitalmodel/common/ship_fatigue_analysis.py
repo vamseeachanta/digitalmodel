@@ -66,17 +66,27 @@ class ShipFatigueAnalysis:
         )
 
         cfg_fat_dam = fatigue_analysis.get_default_timetrace_cfg()
+
         for idx in range(0, len(df)):
+            if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+                fatigue_curve = cfg['inputs']['files']['locations']['element']['settings']['fatigue_curve']
+                n_traces = cfg['inputs']['files']['locations']['element']['settings']['n_traces']
+                thickness = cfg['inputs']['files']['locations']['element']['settings']['thickness']
+            else:
+                df.loc[idx, "fatigue_curve"] = fatigue_curve
+                n_traces = df.iloc[idx]["n_traces"]
+                thickness = df.iloc[idx]["thickness"]
+
             cfg_fat_dam["inputs"].update(
                 {
                     "timetraces": [
                         {
                             "s_trace": df.iloc[idx]["stress_timetrace"],
-                            "n_traces": df.iloc[idx]["n_traces"],
-                            "thickness": df.iloc[idx]["thickness"],
+                            "n_traces": n_traces,
+                            "thickness": thickness,
                         }
                     ],
-                    "fatigue_curve": df.iloc[idx]["fatigue_curve"],
+                    "fatigue_curve": fatigue_curve,
                 }
             )
             cfg_fat_dam = fatigue_analysis.router(cfg_fat_dam)
@@ -140,6 +150,7 @@ class ShipFatigueAnalysis:
             )
 
         stress_output = self.get_stress_timetrace(cfg, fatigue_states_analysis)
+
         self.save_stress_output_as_csv(cfg, stress_output)
 
         cfg.update({"ship_design": {"stress_output": stress_output}})
@@ -412,9 +423,12 @@ class ShipFatigueAnalysis:
             )
             try:
                 fatigue_state_set = self.read_files_and_get_data_as_df(
-                    fatigue_state_set
+                    fatigue_state_set, cfg
                 )
-                stress_data_by_set = self.get_stress_data_by_set(cfg, fatigue_state_set)
+                if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+                    stress_data_by_set = self.get_stress_data_by_set_P1_fast(cfg, fatigue_state_set)
+                else:
+                    stress_data_by_set = self.get_stress_data_by_set(cfg, fatigue_state_set)
                 status = "Pass"
 
             except Exception as e:
@@ -429,6 +443,40 @@ class ShipFatigueAnalysis:
             stress_output.append({fatigue_state_set["basename"]: stress_data_by_set})
 
         return stress_output
+
+    def get_stress_data_by_set_P1_fast(self, cfg, fatigue_state_pair):
+        stress_data_output_by_pair = {}
+        labels = [
+            fatigue_state_pair["state_files"][i]["label"]
+            for i in range(0, len(fatigue_state_pair["state_files"]))
+        ]
+
+        logging.info("   Getting stress data by elements ... START")
+        element_data = cfg["inputs"]["files"]["locations"]["element"]["data"]
+        if element_data == "All":
+            df = fatigue_state_pair[labels[0] + "_df"]
+            element_data = list(df["Element"])
+            element_data = [{"element": element} for element in element_data]
+
+        element_output_array = []
+        for element_dict in element_data:
+            element_output = {}
+            stress_timetrace = []
+            for label in labels:
+                df = fatigue_state_pair[label + "_df"]
+
+                stress_output = self.get_stress_data_for_element_P1_fast(
+                    element_dict, df, label
+                )
+                stress_timetrace.append(stress_output["S"])
+
+            element_output.update({"stress_timetrace": stress_timetrace})
+            element_output_array.append(element_output)
+
+        stress_data_output_by_pair.update({"element": element_output_array})
+        logging.info("   Getting stress data by elements ... COMPLETE")
+
+        return stress_data_output_by_pair
 
     def get_stress_data_by_set(self, cfg, fatigue_state_pair):
         stress_data_output_by_pair = {}
@@ -538,6 +586,19 @@ class ShipFatigueAnalysis:
 
         return stress_output
 
+    def get_stress_data_for_element_P1_fast(self, element_dict, df, label):
+        logging.info(
+            f"      Getting stress data for state: {label}, element: {element_dict['element']}"
+        )
+
+        df_filter = df[df["Element"] == element_dict["element"]]
+
+        stress_output = {'S': round(float(df_filter["S"].mean()), 2), 'Element': element_dict["element"]}
+        stress_output.update({"element": element_dict.copy()})
+
+        return stress_output
+
+
     def get_stress_data_for_element(self, element_dict, df, label):
         logging.info(
             f"      Getting stress data for state: {label}, element: {element_dict['element']}"
@@ -558,17 +619,20 @@ class ShipFatigueAnalysis:
 
         stress_output.update({"element": element_dict.copy()})
         stress_output.update({"S_mean": round(float(df_filter["S_mean"].mean()), 2)})
-        stress_output.update({"S_max": round(float(df_filter["S_max"].mean()), 2)})
+        stress_output.update({"S_max": round(float(df_filter["S_max"].max()), 2)})
         stress_output.update({"S_min": round(float(df_filter["S_min"].min()), 2)})
         stress_output.update({"label": label})
 
         return stress_output
 
-    def read_files_and_get_data_as_df(self, fatigue_state_pair):
+    def read_files_and_get_data_as_df(self, fatigue_state_pair, cfg):
         status = {}
         for state_file in fatigue_state_pair["state_files"]:
             state_df = self.read_seasam_xtract(state_file["state_file"])
-            transformed_df = self.transform_df_for_stress_analysis(state_df, state_file)
+            if 'sesam_extract_type' in cfg['inputs'] and cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+                transformed_df = self.transform_df_for_P1_stress_fast_process(state_df, state_file, cfg)
+            else:
+                transformed_df = self.transform_df_for_stress_analysis(state_df, state_file)
             fatigue_state_pair.update({(state_file["label"] + "_df"): transformed_df})
             if len(transformed_df) > 0:
                 status.update({state_file["label"]: "Pass"})
@@ -577,6 +641,59 @@ class ShipFatigueAnalysis:
         fatigue_state_pair.update({"status": status})
 
         return fatigue_state_pair
+
+    def transform_df_for_P1_stress_fast_process(self, df, state_file, cfg):
+        logging.info(
+            f"      Transforming data for: {state_file['state_file']} ... START"
+        )
+
+        df.replace("N/A", np.nan, inplace=True)
+        for column in df.columns:
+            try:
+                df[column] = df[column].astype(float)
+            except:
+                logging.debug(f"      Could not convert column {column} to float")
+
+        stress_nomenclature = "P1"
+        stress_method = cfg['inputs']['files']['locations']['element']['settings']['stress_method']
+        
+        for df_row in range(0, len(df)):
+            if stress_method == "mean":
+                df.loc[df_row, "S"] = statistics.mean(
+                    [
+                        df.iloc[df_row][stress_nomenclature + "(1)"],
+                        df.iloc[df_row][stress_nomenclature + "(2)"],
+                        df.iloc[df_row][stress_nomenclature + "(3)"],
+                        df.iloc[df_row][stress_nomenclature + "(4)"],
+                    ]
+                )
+            elif stress_method == "max":
+                df.loc[df_row, "S"] = max(
+                    [
+                        df.iloc[df_row][stress_nomenclature + "(1)"],
+                        df.iloc[df_row][stress_nomenclature + "(2)"],
+                        df.iloc[df_row][stress_nomenclature + "(3)"],
+                        df.iloc[df_row][stress_nomenclature + "(4)"],
+                    ]
+                )
+                
+            elif stress_method == "min":
+                df.loc[df_row, "S"] = min(
+                    [
+                        df.iloc[df_row][stress_nomenclature + "(1)"],
+                        df.iloc[df_row][stress_nomenclature + "(2)"],
+                        df.iloc[df_row][stress_nomenclature + "(3)"],
+                        df.iloc[df_row][stress_nomenclature + "(4)"],
+                    ]
+                )
+        
+        df = df[['Element', 'S']]
+
+        logging.info(f"      Transforming data for: {state_file['state_file']} ... END")
+        
+        return df
+
+
 
     def transform_df_for_stress_analysis(self, df, state_file):
         logging.info(

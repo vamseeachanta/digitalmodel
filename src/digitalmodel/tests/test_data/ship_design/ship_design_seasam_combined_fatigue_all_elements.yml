@@ -3,6 +3,7 @@ basename: ship_design
 inputs:
   software: sesam
   calculation: abs_combined_fatigue
+  sesam_extract_type: fast_optimum
 
   stress:
 
