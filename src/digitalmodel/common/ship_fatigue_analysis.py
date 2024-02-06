@@ -22,10 +22,13 @@ class ShipFatigueAnalysis:
 
     def router(self, cfg):
         if cfg["inputs"]["files"]["lcf"]["file_type"] == "seasam_xtract":
-            cfg = self.get_fatigue_states_and_stress_timetrace(cfg)
+            cfg, stress_output = self.get_fatigue_states_and_stress_timetrace(cfg)
         if cfg["inputs"]["calculation"] == "abs_combined_fatigue":
-            df = self.get_lcf_timetrace_rainflow_and_fatigue_damage(cfg)
-            df = self.get_abs_combined_fatigue(df)
+            if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+                df = self.get_lcf_timetrace_rainflow_and_fatigue_damage_P1_fast(cfg, stress_output)
+            else:
+                df = self.get_lcf_timetrace_rainflow_and_fatigue_damage(cfg)
+                df = self.get_abs_combined_fatigue(df)
             self.save_combined_fatigue_as_csv(cfg, df)
             self.save_combined_fatigue_summary_as_csv(cfg, df)
 
@@ -56,6 +59,40 @@ class ShipFatigueAnalysis:
             df.loc[idx, "lcf_damage"] = cfg_fat_dam["fatigue_analysis"]["damage"]
 
         logging.info("Calculating LCF fatigue damage by SN cycles ... COMPLETE")
+
+        return df
+
+    def get_lcf_timetrace_rainflow_and_fatigue_damage_P1_fast(self, cfg, stress_output):
+        logging.info("Calculating LCF fatigue damage by Timetraces ... START    P1 Fast")
+        stress_df = self.get_stress_output_df_P1_fast(stress_output, cfg)
+        df = pd.DataFrame(columns=["element", "lcf_damage"])
+        df['element'] = stress_df['element']
+        
+        for idx in range(0, len(stress_df)):
+
+            fatigue_curve = cfg['inputs']['files']['locations']['element']['settings']['fatigue_curve']
+            n_traces = cfg['inputs']['files']['locations']['element']['settings']['n_traces']
+            thickness = cfg['inputs']['files']['locations']['element']['settings']['thickness']
+
+            cfg_fat_dam = fatigue_analysis.get_default_timetrace_cfg()
+            cfg_fat_dam["inputs"].update(
+                {
+                    "timetraces": [
+                        {
+                            "s_trace": stress_df.iloc[idx]["stress_timetrace"],
+                            "n_traces": n_traces,
+                            "thickness": thickness,
+                        }
+                    ],
+                    "fatigue_curve": fatigue_curve,
+                }
+            )
+
+            cfg_fat_dam = fatigue_analysis.router(cfg_fat_dam)
+
+            df.loc[idx, "lcf_damage"] = cfg_fat_dam["fatigue_analysis"]["total_damage"]
+
+        logging.info("Calculating LCF fatigue damage  by Timetraces ... COMPLETE")
 
         return df
 
@@ -134,7 +171,7 @@ class ShipFatigueAnalysis:
             cfg["Analysis"]["file_name"] + "_combined_fatigue_summary.csv",
         )
         df_summary = df[
-            ["element", "lcf_damage", "wave_damage", "combined_damage"]
+            ["element", "lcf_damage"]
         ].copy()
         df_summary.to_csv(file_name, index=False)
 
@@ -153,9 +190,9 @@ class ShipFatigueAnalysis:
 
         self.save_stress_output_as_csv(cfg, stress_output)
 
-        cfg.update({"ship_design": {"stress_output": stress_output}})
+        # cfg.update({"ship_design": {"stress_output": stress_output}})
 
-        return cfg
+        return cfg, stress_output
 
     def get_fatigue_states_by_file_name(self, fatigue_states):
         state_files = []
@@ -221,7 +258,10 @@ class ShipFatigueAnalysis:
         return state_files
 
     def save_stress_output_as_csv(self, cfg, stress_output):
-        df = self.get_stress_output_df(stress_output, cfg)
+        if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+            df = self.get_stress_output_df_P1_fast(stress_output, cfg)
+        else:
+            df = self.get_stress_output_df(stress_output, cfg)
         sress_output_file_name = os.path.join(
             cfg["Analysis"]["result_folder"],
             cfg["Analysis"]["file_name"] + "_stress_output.csv",
@@ -320,6 +360,36 @@ class ShipFatigueAnalysis:
                     wave_damage,
                     combined_damage,
                 ]
+
+        return df
+
+    def get_stress_output_df_P1_fast(self, stress_output, cfg):
+        df = pd.DataFrame(columns=["element", "stress_timetrace"])
+
+        labels = [
+            fatigue_state["label"]
+            for fatigue_state in cfg["inputs"]["files"]["lcf"]["fatigue_states"]
+        ]
+        for fatigue_state_set in stress_output:
+            basename = list(fatigue_state_set.keys())[0]
+
+            if fatigue_state_set[basename]["status"] == "Pass":
+                for by_type in ["coordinate", "element"]:
+                    if by_type in fatigue_state_set[basename].keys():
+                        for idx in range(0, len(fatigue_state_set[basename][by_type])):
+                            if by_type == "coordinate":
+                                element = fatigue_state_set[basename][by_type][idx][
+                                    labels[0]
+                                ]["element"]
+                            elif by_type == "element":
+                                element = fatigue_state_set[basename][by_type][idx]['element']
+                            stress_timetrace = fatigue_state_set[basename][by_type][
+                                idx
+                            ]["stress_timetrace"]
+                            df.loc[len(df)] = [
+                                element,
+                                stress_timetrace,
+                            ]
 
         return df
 
@@ -471,6 +541,7 @@ class ShipFatigueAnalysis:
                 stress_timetrace.append(stress_output["S"])
 
             element_output.update({"stress_timetrace": stress_timetrace})
+            element_output.update({"element": element_dict['element']})
             element_output_array.append(element_output)
 
         stress_data_output_by_pair.update({"element": element_output_array})
@@ -587,9 +658,9 @@ class ShipFatigueAnalysis:
         return stress_output
 
     def get_stress_data_for_element_P1_fast(self, element_dict, df, label):
-        logging.info(
-            f"      Getting stress data for state: {label}, element: {element_dict['element']}"
-        )
+        # logging.info(
+        #     f"      Getting stress data for state: {label}, element: {element_dict['element']}"
+        # )
 
         df_filter = df[df["Element"] == element_dict["element"]]
 
@@ -656,37 +727,17 @@ class ShipFatigueAnalysis:
 
         stress_nomenclature = "P1"
         stress_method = cfg['inputs']['files']['locations']['element']['settings']['stress_method']
-        
-        for df_row in range(0, len(df)):
-            if stress_method == "mean":
-                df.loc[df_row, "S"] = statistics.mean(
-                    [
-                        df.iloc[df_row][stress_nomenclature + "(1)"],
-                        df.iloc[df_row][stress_nomenclature + "(2)"],
-                        df.iloc[df_row][stress_nomenclature + "(3)"],
-                        df.iloc[df_row][stress_nomenclature + "(4)"],
-                    ]
-                )
-            elif stress_method == "max":
-                df.loc[df_row, "S"] = max(
-                    [
-                        df.iloc[df_row][stress_nomenclature + "(1)"],
-                        df.iloc[df_row][stress_nomenclature + "(2)"],
-                        df.iloc[df_row][stress_nomenclature + "(3)"],
-                        df.iloc[df_row][stress_nomenclature + "(4)"],
-                    ]
-                )
-                
-            elif stress_method == "min":
-                df.loc[df_row, "S"] = min(
-                    [
-                        df.iloc[df_row][stress_nomenclature + "(1)"],
-                        df.iloc[df_row][stress_nomenclature + "(2)"],
-                        df.iloc[df_row][stress_nomenclature + "(3)"],
-                        df.iloc[df_row][stress_nomenclature + "(4)"],
-                    ]
-                )
-        
+
+        df_stress = df[[stress_nomenclature + "(1)", stress_nomenclature + "(2)", stress_nomenclature + "(3)", stress_nomenclature + "(4)"]]
+        if stress_method == "mean":
+            df['S'] = df_stress.mean(axis=1)
+        elif stress_method == "max":
+            df['S'] = df_stress.max(axis=1)
+        elif stress_method == "min":
+            df['S'] = df_stress.min(axis=1)
+        else:
+            raise ValueError(f"Stress summary method NOT implemented: {stress_method}")
+
         df = df[['Element', 'S']]
 
         logging.info(f"      Transforming data for: {state_file['state_file']} ... END")
