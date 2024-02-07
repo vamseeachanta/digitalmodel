@@ -11,6 +11,7 @@ inputs:
       csv_filename: NULL
 
   anode:
+    material: aluminium #  aluminium or zinc
     protection_potential: 0.8 # V
     closed_circuit_anode_potential: -1.09 # V
     anode_density: 2750 # kg/m3

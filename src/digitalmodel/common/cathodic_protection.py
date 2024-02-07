@@ -9,23 +9,36 @@ class CathodicProtection():
             self.ABS_gn_ships_2018(cfg)
         else:
             raise (Exception(f"Calculation type: {cfg['inputs']['calculation_type']} not IMPLEMENTED. ... FAIL"))
-        
+
 
         return cfg
-    
+
+
     def ABS_gn_ships_2018(self, cfg):
         """
         This method is used to calculate the cathodic protection for ABS gn ships 2018
         """
-        pass
+        anode_current_capacity = self.get_anode_current_capacity(cfg)
+
+
+    def get_anode_current_capacity(self, cfg):
+        """
+        This method is used to calculate the anode current capacity
+        """
+        if cfg['inputs']['anode'] == 'zinc':
+            anode_current_capacity = 780
+        elif cfg['inputs']['anode'] == 'aluminium':
+            anode_current_capacity = 2000 - 27(cfg['inputs']['design_data']['seawater_max_temperature'] - 20)
+    
+        return anode_current_capacity
 
     def get_design_current_density(self, cfg):
         """
         This method is used to calculate the design current density
         """
         pass
-    
-    
+
+
     def get_required_current_density(self, cfg):
         """
         This method is used to calculate the required current density
