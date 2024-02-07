@@ -14,12 +14,12 @@ class TimeSeriesAnalysis():
         https://pypi.org/project/rainflow/
         ASTM E1049-85 rainflow cycle counting algorythm for fatigue analysis
         '''
-        logging.info("Rainflow count from time series ... BEGIN")
+        logging.debug("Rainflow count from time series ... BEGIN")
 
         df_columns = ['range', 'mean', 'count', 'i_start', 'i_end']
         df = pd.DataFrame(rainflow.extract_cycles(time_series), columns = df_columns)
         dict = df.to_dict()
 
-        logging.info("Rainflow count from time series ... END")
+        logging.debug("Rainflow count from time series ... END")
     
         return df, dict

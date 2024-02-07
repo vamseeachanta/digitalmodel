@@ -67,12 +67,15 @@ class ShipFatigueAnalysis:
         stress_df = self.get_stress_output_df_P1_fast(stress_output, cfg)
         df = pd.DataFrame(columns=["element", "lcf_damage"])
         df['element'] = stress_df['element']
+
+        fatigue_curve = cfg['inputs']['files']['locations']['element']['settings']['fatigue_curve']
+        n_traces = cfg['inputs']['files']['locations']['element']['settings']['n_traces']
+        thickness = cfg['inputs']['files']['locations']['element']['settings']['thickness']
         
         for idx in range(0, len(stress_df)):
 
-            fatigue_curve = cfg['inputs']['files']['locations']['element']['settings']['fatigue_curve']
-            n_traces = cfg['inputs']['files']['locations']['element']['settings']['n_traces']
-            thickness = cfg['inputs']['files']['locations']['element']['settings']['thickness']
+            if idx % 5000 == 0:
+                logging.info(f"   Calculating LCF fatigue damage for elements: {idx} to {idx+1000} ...")
 
             cfg_fat_dam = fatigue_analysis.get_default_timetrace_cfg()
             cfg_fat_dam["inputs"].update(
@@ -105,6 +108,8 @@ class ShipFatigueAnalysis:
         cfg_fat_dam = fatigue_analysis.get_default_timetrace_cfg()
 
         for idx in range(0, len(df)):
+            if idx % 1000 == 0:
+                logging.info(f"   Calculating LCF fatigue damage for elements: {idx} to {idx+1000} ...")
             if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
                 fatigue_curve = cfg['inputs']['files']['locations']['element']['settings']['fatigue_curve']
                 n_traces = cfg['inputs']['files']['locations']['element']['settings']['n_traces']
@@ -369,32 +374,8 @@ class ShipFatigueAnalysis:
         return df
 
     def get_stress_output_df_P1_fast(self, stress_output, cfg):
-        df = pd.DataFrame(columns=["element", "stress_timetrace"])
 
-        labels = [
-            fatigue_state["label"]
-            for fatigue_state in cfg["inputs"]["files"]["lcf"]["fatigue_states"]
-        ]
-        for fatigue_state_set in stress_output:
-            basename = list(fatigue_state_set.keys())[0]
-
-            if fatigue_state_set[basename]["status"] == "Pass":
-                for by_type in ["coordinate", "element"]:
-                    if by_type in fatigue_state_set[basename].keys():
-                        for idx in range(0, len(fatigue_state_set[basename][by_type])):
-                            if by_type == "coordinate":
-                                element = fatigue_state_set[basename][by_type][idx][
-                                    labels[0]
-                                ]["element"]
-                            elif by_type == "element":
-                                element = fatigue_state_set[basename][by_type][idx]['element']
-                            stress_timetrace = fatigue_state_set[basename][by_type][
-                                idx
-                            ]["stress_timetrace"]
-                            df.loc[len(df)] = [
-                                element,
-                                stress_timetrace,
-                            ]
+        df = pd.DataFrame(stress_output[0][None]['element'])
 
         return df
 
