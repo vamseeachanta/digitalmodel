@@ -10,13 +10,13 @@ title Modular Model Building \n OrcaFlex
 start
 
     note right
-        Objective: modular analysis for 
-        easy updates/maintenance/reruns
+        Objective: modular file management and 
+        analysis for easy updates/maintenance/reruns
     end note
 
     note right
-        All files in .YML format
-        Each partition box is a unique .yml file
+        All files in .yml format
+        Each partition box is a unique group of .yml files
     end note
 
     partition "Analysis Parameters" {
@@ -24,20 +24,38 @@ start
         :Analysis Parameters;
             note right
                 Simulation time, time step, etc.
+                These parameters may be changed later if unconvergence occurs
             end note
 
     }
 
-    partition "Environment" {
+    partition "field" {
+
+        :N-S Directions;
+            note right
+                North Direction per alignment sheet
+            end note
+
+        :Seabed and Water Depth;
+            note right
+                water depth
+                seabed profile (3D profile using 2D Alignment sheets)
+            end note
 
         :Environment;
             note right
-                Water Depth, others?
+                environment - waves, current, wind etc.
             end note
 
     }
 
     partition "Vessel Data" {
+
+    note right
+        Add Host vessel
+        Add installation vessel(s)
+        Repeat process for all vessels
+    end note
 
         :Vessel Data;
             note right
@@ -46,26 +64,35 @@ start
 
         :Vessel Settings;
             note right
-                Draft, Type of solution, etc.
+                Draft
+                Type of solution, etc.
             end note
 
+        :Vessel Location;
+            note right
+                Location of vessel
+                Orientation of vessel
+            end note
 
     }
 
     partition "Structure - Vessel Assets" {
-        :Basic Structure;
-            note right
-                TBA
-            end note
 
-        :Variations & Parameters;
+        :Basic Structure properties;
             note right
-                TBA
+                examples are:
+                 Host interface/FPSO Itube
+                 Moonpool flare/tulip etc.
             end note
 
         :Interface Data;
             note right
                 Attachment relative to vessel
+            end note
+
+        :Variations & Parameters;
+            note right
+                TBA
             end note
 
     }
@@ -74,9 +101,18 @@ start
     partition "Structure - Assets" {
         :Basic Structures:
         - Risers
+        - Flexibles
         - Umbilical/UTH/Pots etc.;
             note right
                 TBA
+            end note
+
+        :Attachment Definitions;
+            note right
+                UTH
+                Pots
+                Buoyancy modules
+                etc.
             end note
 
         :Variations & Parameters;
@@ -86,8 +122,7 @@ start
 
     }
 
-
-    partition "Interfaces" {
+    partition "Stucture Interface to Vessel" {
         :Structure to Vessel;
             note right
                 Rigging, Chutes, Tensioners etc.

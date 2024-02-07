@@ -1,0 +1,58 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/ship_design_seasam_combined_fatigue_by_file.yml
+    DefaultInputFile: null
+    analysis_root_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design
+    basename: ship_design
+    cfg_array_file_names: null
+    fe_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
+    file_name: app_ship_design_ship_design_seasam_combined_fatigue_by_file
+    file_name_for_overwrite: app_ship_design_ship_design_seasam_combined_fatigue_by_file
+    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/logs
+    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/ship_design/results
+    start_time: 2024-02-06 19:27:51.058139
+  basename: ship_design
+  default:
+    config:
+      cfg_sensitivities: false
+      overwrite:
+        output: true
+    log_level: INFO
+  inputs:
+    calculation: abs_combined_fatigue
+    files:
+      lcf:
+        fatigue_states:
+        - file_name: src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft/SigXX-Lower_P1.txt
+          label: 2-00
+        - file_name: src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft/SigXX-Lower_P1.txt
+          label: 2-01
+        - file_name: src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft/SigXX-Lower_P1.txt
+          label: 2-02
+        - file_name: src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft/SigXX-Lower_P1.txt
+          label: 2-03
+        - file_name: src/digitalmodel/tests/test_data/ship_design/seasam_test/MinDraft/SigXX-Lower_P1.txt
+          label: 2-04
+        - file_name: src/digitalmodel/tests/test_data/ship_design/seasam_test/MaxDraft/SigXX-Lower_P1.txt
+          label: 2-05
+        file_name: null
+        file_type: seasam_xtract
+      locations:
+        coordinate:
+          data: []
+          flag: false
+        element:
+          data: All
+          flag: true
+          settings:
+            fatigue_curve: ABS 2018 D-Mod In Air
+            n_traces: 200
+            stress_method: mean
+            thickness: 15
+            wave_damage: 0.5
+      wave_fatigue: null
+    sesam_extract_type: fast_optimum
+    software: sesam
+    stress: null
+state: *id001

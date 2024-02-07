@@ -10,7 +10,7 @@ dictitems:
     file_name_for_overwrite: app_installation_installation_structure
     log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/installation/logs
     result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/installation/results
-    start_time: 2024-01-18 06:31:17.070907
+    start_time: 2024-02-02 05:19:32.624221
   basename: installation
   default:
     Constants:

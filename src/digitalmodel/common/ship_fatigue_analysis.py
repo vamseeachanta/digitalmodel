@@ -22,35 +22,127 @@ class ShipFatigueAnalysis:
 
     def router(self, cfg):
         if cfg["inputs"]["files"]["lcf"]["file_type"] == "seasam_xtract":
-            cfg = self.get_fatigue_states_and_stress_range(cfg)
+            cfg, stress_output = self.get_fatigue_states_and_stress_timetrace(cfg)
         if cfg["inputs"]["calculation"] == "abs_combined_fatigue":
-            df = self.get_lcf_fatigue_damage(cfg)
-            df = self.get_abs_combined_fatigue(df)
+            if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+                df = self.get_lcf_timetrace_rainflow_and_fatigue_damage_P1_fast(cfg, stress_output)
+            else:
+                df = self.get_lcf_timetrace_rainflow_and_fatigue_damage(cfg)
+                df = self.get_abs_combined_fatigue(df)
             self.save_combined_fatigue_as_csv(cfg, df)
+            self.save_combined_fatigue_summary_as_csv(cfg, df)
 
         return cfg
 
-    def get_lcf_fatigue_damage(self, cfg):
-        logging.info("Calculating LCF fatigue damage ... START")
-        df = self.get_fatigue_damage_output_df(cfg["ship_design"]["stress_output"])
+    def get_lcf_sn_fatigue_damage(self, cfg):
+        # TODO Not tested. May not work. DELETE by 01 March 2024.
+        logging.info("Calculating LCF fatigue damage by SN cycles ... START")
+        df = self.get_fatigue_damage_output_df_for_timetrace(
+            cfg["ship_design"]["stress_output"], cfg
+        )
 
-        cfg_fat_dam = fatigue_analysis.get_default_cfg()
+        cfg_fat_dam = fatigue_analysis.get_default_sn_cfg()
         for idx in range(0, len(df)):
             cfg_fat_dam["inputs"].update(
                 {
                     "SN": [
                         {
-                            "s": df.iloc[idx]["delta_stress"],
+                            "s": df.iloc[idx]["stress_timetrace"],
                             "n_cycles": df.iloc[idx]["n_cycles"],
                             "thickness": df.iloc[idx]["thickness"],
                         }
-                    ]
+                    ],
+                    "fatigue_curve": df.iloc[idx]["fatigue_curve"],
                 }
             )
             cfg_fat_dam = fatigue_analysis.router(cfg_fat_dam)
             df.loc[idx, "lcf_damage"] = cfg_fat_dam["fatigue_analysis"]["damage"]
 
-        logging.info("Calculating LCF fatigue damage ... COMPLETE")
+        logging.info("Calculating LCF fatigue damage by SN cycles ... COMPLETE")
+
+        return df
+
+    def get_lcf_timetrace_rainflow_and_fatigue_damage_P1_fast(self, cfg, stress_output):
+        logging.info("Calculating LCF fatigue damage by Timetraces ... START    P1 Fast")
+        stress_df = self.get_stress_output_df_P1_fast(stress_output, cfg)
+        df = pd.DataFrame(columns=["element", "lcf_damage"])
+        df['element'] = stress_df['element']
+
+        fatigue_curve = cfg['inputs']['files']['locations']['element']['settings']['fatigue_curve']
+        n_traces = cfg['inputs']['files']['locations']['element']['settings']['n_traces']
+        thickness = cfg['inputs']['files']['locations']['element']['settings']['thickness']
+        
+        for idx in range(0, len(stress_df)):
+
+            if idx % 5000 == 0:
+                logging.info(f"   Calculating LCF fatigue damage for elements: {idx} to {idx+1000} ...")
+
+            cfg_fat_dam = fatigue_analysis.get_default_timetrace_cfg()
+            cfg_fat_dam["inputs"].update(
+                {
+                    "timetraces": [
+                        {
+                            "s_trace": stress_df.iloc[idx]["stress_timetrace"],
+                            "n_traces": n_traces,
+                            "thickness": thickness,
+                        }
+                    ],
+                    "fatigue_curve": fatigue_curve,
+                }
+            )
+
+            cfg_fat_dam = fatigue_analysis.router(cfg_fat_dam)
+
+            df.loc[idx, "lcf_damage"] = cfg_fat_dam["fatigue_analysis"]["total_damage"]
+
+        logging.info("Calculating LCF fatigue damage  by Timetraces ... COMPLETE")
+
+        return df
+
+    def get_lcf_timetrace_rainflow_and_fatigue_damage(self, cfg):
+        logging.info("Calculating LCF fatigue damage by Timetraces ... START")
+        df = self.get_fatigue_damage_output_df_for_timetrace(
+            cfg["ship_design"]["stress_output"], cfg
+        )
+
+        cfg_fat_dam = fatigue_analysis.get_default_timetrace_cfg()
+
+        for idx in range(0, len(df)):
+            if idx % 1000 == 0:
+                logging.info(f"   Calculating LCF fatigue damage for elements: {idx} to {idx+1000} ...")
+            if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+                fatigue_curve = cfg['inputs']['files']['locations']['element']['settings']['fatigue_curve']
+                n_traces = cfg['inputs']['files']['locations']['element']['settings']['n_traces']
+                thickness = cfg['inputs']['files']['locations']['element']['settings']['thickness']
+            else:
+                df.loc[idx, "fatigue_curve"] = fatigue_curve
+                n_traces = df.iloc[idx]["n_traces"]
+                thickness = df.iloc[idx]["thickness"]
+
+            cfg_fat_dam["inputs"].update(
+                {
+                    "timetraces": [
+                        {
+                            "s_trace": df.iloc[idx]["stress_timetrace"],
+                            "n_traces": n_traces,
+                            "thickness": thickness,
+                        }
+                    ],
+                    "fatigue_curve": fatigue_curve,
+                }
+            )
+            cfg_fat_dam = fatigue_analysis.router(cfg_fat_dam)
+            df.loc[idx, "lcf_damage"] = cfg_fat_dam["fatigue_analysis"]["total_damage"]
+            rainflow = [
+                timetrace["rainflow"]
+                for timetrace in cfg_fat_dam["fatigue_analysis"]["timetraces"]
+            ]
+            df.loc[idx, "rainflow"] = rainflow
+            
+            if not cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+                cfg.update({"fatigue_analysis": cfg_fat_dam["fatigue_analysis"]})
+
+        logging.info("Calculating LCF fatigue damage  by Timetraces ... COMPLETE")
 
         return df
 
@@ -80,96 +172,181 @@ class ShipFatigueAnalysis:
         )
         df.to_csv(file_name, index=False)
 
-    def get_fatigue_states_and_stress_range(self, cfg):
+    def save_combined_fatigue_summary_as_csv(self, cfg, df):
+        file_name = os.path.join(
+            cfg["Analysis"]["result_folder"],
+            cfg["Analysis"]["file_name"] + "_combined_fatigue_summary.csv",
+        )
+        df_summary = df[
+            ["element", "lcf_damage"]
+        ].copy()
+        df_summary.to_csv(file_name, index=False)
+
+    def get_fatigue_states_and_stress_timetrace(self, cfg):
         fatigue_states = cfg["inputs"]["files"]["lcf"]["fatigue_states"]
 
-        for fatigue_state in fatigue_states:
-            if not os.path.isdir(fatigue_state):
-                cwd = os.getcwd()
-                fatigue_states[0] = add_cwd_to_filename(fatigue_state, cwd)
-                if not os.path.isdir(fatigue_state):
-                    raise ValueError(f"Invalid directory: {fatigue_states[0]}")
+        if "directory" in fatigue_states[0]:
+            state_files = self.get_state_files_by_directory(fatigue_states)
+            fatigue_states_analysis = self.get_fatigue_states_by_directory(state_files)
+        elif "file_name" in fatigue_states[0]:
+            fatigue_states_analysis = self.get_fatigue_states_by_file_name(
+                fatigue_states
+            )
 
-        state_0_files = self.get_files_in_directory(fatigue_states[0])
-        state_1_files = self.get_files_in_directory(fatigue_states[1])
+        stress_output = self.get_stress_timetrace(cfg, fatigue_states_analysis)
 
-        fatigue_state_pairs = self.get_fatigue_state_pairs(state_0_files, state_1_files)
-
-        stress_output = self.get_stress_ranges(cfg, fatigue_state_pairs)
         self.save_stress_output_as_csv(cfg, stress_output)
+        if not cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+            cfg.update({"ship_design": {"stress_output": stress_output}})
 
-        cfg.update({"ship_design": {"stress_output": stress_output}})
+        return cfg, stress_output
 
-        return cfg
+    def get_fatigue_states_by_file_name(self, fatigue_states):
+        state_files = []
+        for fatigue_state_indx in range(0, len(fatigue_states)):
+            valid_file_flag = False
+
+            fatigue_state = fatigue_states[fatigue_state_indx]
+
+            if not os.path.isfile(fatigue_state["file_name"]):
+                cwd = os.getcwd()
+                fatigue_state["file_name"] = add_cwd_to_filename(
+                    fatigue_state["file_name"], cwd
+                )
+                fatigue_states[fatigue_state_indx] = fatigue_state
+            else:
+                valid_file_flag = True
+
+            if not valid_file_flag and not os.path.isfile(fatigue_state["file_name"]):
+                valid_file_flag = False
+                raise ValueError(f"Invalid file: {fatigue_state['file_name']}")
+
+            state_files.append(
+                {
+                    "state_file": fatigue_state["file_name"],
+                    "label": fatigue_state["label"],
+                }
+            )
+
+        fatigue_states_analysis = [
+            {
+                "state_files": state_files,
+                "basename": None,
+            }
+        ]
+
+        return fatigue_states_analysis
+
+    def get_state_files_by_directory(self, fatigue_states):
+        state_files = []
+        for fatigue_state_indx in range(0, len(fatigue_states)):
+            valid_directory_flag = False
+
+            fatigue_state = fatigue_states[fatigue_state_indx]
+
+            if not os.path.isdir(fatigue_state["directory"]):
+                cwd = os.getcwd()
+                fatigue_state["directory"] = add_cwd_to_filename(
+                    fatigue_state["directory"], cwd
+                )
+                fatigue_states[fatigue_state_indx] = fatigue_state
+            else:
+                valid_directory_flag = True
+
+            if not valid_directory_flag and not os.path.isdir(
+                fatigue_state["directory"]
+            ):
+                valid_directory_flag = False
+                raise ValueError(f"Invalid directory: {fatigue_state['directory']}")
+            files = self.get_files_in_directory(fatigue_state["directory"])
+            files.update({"label": fatigue_state["label"]})
+            state_files.append(files)
+
+        return state_files
 
     def save_stress_output_as_csv(self, cfg, stress_output):
-        df = self.get_stress_output_df(stress_output)
+        logging.info("Saving stress output as csv ... START")
+        if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+            df = self.get_stress_output_df_P1_fast(stress_output, cfg)
+        else:
+            df = self.get_stress_output_df(stress_output, cfg)
         sress_output_file_name = os.path.join(
             cfg["Analysis"]["result_folder"],
             cfg["Analysis"]["file_name"] + "_stress_output.csv",
         )
         df.to_csv(sress_output_file_name, index=False)
+        
+        logging.info("Saving stress output as csv ... COMPLETE")
 
-    def get_fatigue_damage_output_df(self, stress_output):
-        df = self.get_fatigue_df_definition()
+    def get_fatigue_damage_output_df_for_timetrace(self, stress_output, cfg):
+        df = self.get_fatigue_df_definition_for_timetrace()
 
-        for fatigue_state_pair in stress_output:
-            basename = list(fatigue_state_pair.keys())[0]
+        for fatigue_state_set in stress_output:
+            basename = list(fatigue_state_set.keys())[0]
 
-            if fatigue_state_pair[basename]["status"] == "Pass":
+            labels = [
+                fatigue_state["label"]
+                for fatigue_state in cfg["inputs"]["files"]["lcf"]["fatigue_states"]
+            ]
+            if fatigue_state_set[basename]["status"] == "Pass":
                 for by_type in ["coordinate", "element"]:
-                    for idx in range(0, len(fatigue_state_pair[basename][by_type])):
-                        coordinate = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
-                        ]["coordinate"]
-                        if by_type == "coordinate":
-                            element = fatigue_state_pair[basename][by_type][idx][
-                                "state_0"
-                            ]["element"]
-                        elif by_type == "element":
-                            element = fatigue_state_pair[basename][by_type][idx][
-                                "state_0"
-                            ]["element"]["element"]
-                        delta_stress = fatigue_state_pair[basename][by_type][idx][
-                            "delta_stress"
-                        ]
-                        thickness = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
-                        ][by_type]["thickness"]
-                        stress_method = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
-                        ][by_type]["stress_method"]
-                        fatigue_curve = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
-                        ][by_type]["fatigue_curve"]
-                        n_cycles = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
-                        ][by_type]["n_cycles"]
-                        wave_damage = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
-                        ][by_type]["wave_damage"]
-                        lcf_damage = np.nan
-                        combined_damage = np.nan
+                    if by_type in fatigue_state_set[basename].keys():
+                        for idx in range(0, len(fatigue_state_set[basename][by_type])):
+                            coordinate = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ]["coordinate"]
+                            if by_type == "coordinate":
+                                element = fatigue_state_set[basename][by_type][idx][
+                                    labels[0]
+                                ]["element"]
+                            elif by_type == "element":
+                                element = fatigue_state_set[basename][by_type][idx][
+                                    labels[0]
+                                ]["element"]["element"]
+                            stress_timetrace = fatigue_state_set[basename][by_type][
+                                idx
+                            ]["stress_timetrace"]
+                            rainflow = np.nan
 
-                        df.loc[len(df)] = [
-                            basename,
-                            coordinate,
-                            element,
-                            delta_stress,
-                            fatigue_state_pair[basename]["status"],
-                            thickness,
-                            stress_method,
-                            fatigue_curve,
-                            n_cycles,
-                            lcf_damage,
-                            wave_damage,
-                            combined_damage,
-                        ]
+                            thickness = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ][by_type]["thickness"]
+                            stress_method = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ][by_type]["stress_method"]
+                            fatigue_curve = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ][by_type]["fatigue_curve"]
+                            n_traces = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ][by_type]["n_traces"]
+                            wave_damage = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ][by_type]["wave_damage"]
+                            lcf_damage = np.nan
+                            combined_damage = np.nan
+
+                            df.loc[len(df)] = [
+                                basename,
+                                coordinate,
+                                element,
+                                stress_timetrace,
+                                rainflow,
+                                fatigue_state_set[basename]["status"],
+                                thickness,
+                                stress_method,
+                                fatigue_curve,
+                                n_traces,
+                                lcf_damage,
+                                wave_damage,
+                                combined_damage,
+                            ]
 
             else:
                 coordinate = np.nan
                 element = np.nan
-                delta_stress = np.nan
+                stress_timetrace = np.nan
+                rainflow = np.nan
                 thickness = np.nan
                 stress_method = np.nan
                 fatigue_curve = np.nan
@@ -182,8 +359,9 @@ class ShipFatigueAnalysis:
                     basename,
                     coordinate,
                     element,
-                    delta_stress,
-                    fatigue_state_pair[basename]["status"],
+                    stress_timetrace,
+                    rainflow,
+                    fatigue_state_set[basename]["status"],
                     thickness,
                     stress_method,
                     fatigue_curve,
@@ -195,50 +373,61 @@ class ShipFatigueAnalysis:
 
         return df
 
-    def get_stress_output_df(self, stress_output):
+    def get_stress_output_df_P1_fast(self, stress_output, cfg):
+
+        df = pd.DataFrame(stress_output[0][None]['element'])
+
+        return df
+
+    def get_stress_output_df(self, stress_output, cfg):
         df = self.get_stress_df_definition()
 
-        for fatigue_state_pair in stress_output:
-            basename = list(fatigue_state_pair.keys())[0]
+        labels = [
+            fatigue_state["label"]
+            for fatigue_state in cfg["inputs"]["files"]["lcf"]["fatigue_states"]
+        ]
+        for fatigue_state_set in stress_output:
+            basename = list(fatigue_state_set.keys())[0]
 
-            if fatigue_state_pair[basename]["status"] == "Pass":
+            if fatigue_state_set[basename]["status"] == "Pass":
                 for by_type in ["coordinate", "element"]:
-                    for idx in range(0, len(fatigue_state_pair[basename][by_type])):
-                        coordinate = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
-                        ]["coordinate"]
-                        if by_type == "coordinate":
-                            element = fatigue_state_pair[basename][by_type][idx][
-                                "state_0"
-                            ]["element"]
-                        elif by_type == "element":
-                            element = fatigue_state_pair[basename][by_type][idx][
-                                "state_0"
-                            ]["element"]["element"]
-                        delta_stress = fatigue_state_pair[basename][by_type][idx][
-                            "delta_stress"
-                        ]
-                        thickness = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
-                        ][by_type]["thickness"]
-                        stress_method = fatigue_state_pair[basename][by_type][idx][
-                            "state_0"
-                        ][by_type]["stress_method"]
+                    if by_type in fatigue_state_set[basename].keys():
+                        for idx in range(0, len(fatigue_state_set[basename][by_type])):
+                            coordinate = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ]["coordinate"]
+                            if by_type == "coordinate":
+                                element = fatigue_state_set[basename][by_type][idx][
+                                    labels[0]
+                                ]["element"]
+                            elif by_type == "element":
+                                element = fatigue_state_set[basename][by_type][idx][
+                                    labels[0]
+                                ]["element"]["element"]
+                            stress_timetrace = fatigue_state_set[basename][by_type][
+                                idx
+                            ]["stress_timetrace"]
+                            thickness = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ][by_type]["thickness"]
+                            stress_method = fatigue_state_set[basename][by_type][idx][
+                                labels[0]
+                            ][by_type]["stress_method"]
 
-                        df.loc[len(df)] = [
-                            basename,
-                            coordinate,
-                            element,
-                            delta_stress,
-                            fatigue_state_pair[basename]["status"],
-                            thickness,
-                            stress_method,
-                        ]
+                            df.loc[len(df)] = [
+                                basename,
+                                coordinate,
+                                element,
+                                stress_timetrace,
+                                fatigue_state_set[basename]["status"],
+                                thickness,
+                                stress_method,
+                            ]
 
             else:
                 coordinate = np.nan
                 element = np.nan
-                delta_stress = np.nan
+                stress_timetrace = np.nan
                 thickness = np.nan
                 stress_method = np.nan
 
@@ -246,8 +435,8 @@ class ShipFatigueAnalysis:
                     basename,
                     coordinate,
                     element,
-                    delta_stress,
-                    fatigue_state_pair[basename]["status"],
+                    stress_timetrace,
+                    fatigue_state_set[basename]["status"],
                     thickness,
                     stress_method,
                 ]
@@ -258,7 +447,7 @@ class ShipFatigueAnalysis:
         columns = (
             ["basename"]
             + ["coordinate", "element"]
-            + ["delta_stress"]
+            + ["stress_timetrace"]
             + ["status"]
             + ["thickness", "stress_method"]
         )
@@ -267,13 +456,14 @@ class ShipFatigueAnalysis:
 
         return df
 
-    def get_fatigue_df_definition(self):
+    def get_fatigue_df_definition_for_timetrace(self):
         columns = (
             ["basename"]
             + ["coordinate", "element"]
-            + ["delta_stress"]
+            + ["stress_timetrace"]
+            + ["rainflow"]
             + ["status"]
-            + ["thickness", "stress_method", "fatigue_curve", "n_cycles"]
+            + ["thickness", "stress_method", "fatigue_curve", "n_traces"]
             + ["lcf_damage", "wave_damage", "combined_damage"]
         )
 
@@ -281,38 +471,78 @@ class ShipFatigueAnalysis:
 
         return df
 
-    def get_stress_ranges(self, cfg, fatigue_state_pairs):
+    def get_stress_timetrace(self, cfg, fatigue_state_sets):
         stress_output = []
-        for fatigue_state_pair in fatigue_state_pairs:
+        for fatigue_state_set in fatigue_state_sets:
             logging.info(
-                f"Getting stress data for fatigue pair: {fatigue_state_pair['basename']}"
+                f"Getting stress data for fatigue pair: {fatigue_state_set['basename']}"
             )
             try:
-                fatigue_state_pair = self.read_files_and_get_data_as_df(
-                    fatigue_state_pair
+                fatigue_state_set = self.read_files_and_get_data_as_df(
+                    fatigue_state_set, cfg
                 )
-                stress_data_output_by_pair = self.get_stress_data_for_pair(
-                    cfg, fatigue_state_pair
-                )
+                if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+                    stress_data_by_set = self.get_stress_data_by_set_P1_fast(cfg, fatigue_state_set)
+                else:
+                    stress_data_by_set = self.get_stress_data_by_set(cfg, fatigue_state_set)
                 status = "Pass"
 
             except Exception as e:
                 logging.warning(
-                    f"   Could not get stress data for pair: {fatigue_state_pair['basename']} due to error: {e}"
+                    f"   Could not get stress data for pair: {fatigue_state_set['basename']} due to error: {e}"
                 )
 
-                stress_data_output_by_pair = {}
+                stress_data_by_set = {}
                 status = "Fail"
 
-            stress_data_output_by_pair.update({"status": status})
-            stress_output.append(
-                {fatigue_state_pair["basename"]: stress_data_output_by_pair}
-            )
+            stress_data_by_set.update({"status": status})
+            stress_output.append({fatigue_state_set["basename"]: stress_data_by_set})
 
         return stress_output
 
-    def get_stress_data_for_pair(self, cfg, fatigue_state_pair):
+    def get_stress_data_by_set_P1_fast(self, cfg, fatigue_state_pair):
         stress_data_output_by_pair = {}
+        labels = [
+            fatigue_state_pair["state_files"][i]["label"]
+            for i in range(0, len(fatigue_state_pair["state_files"]))
+        ]
+
+        logging.info("   Getting stress data by elements ... START")
+        element_data = cfg["inputs"]["files"]["locations"]["element"]["data"]
+        if element_data == "All":
+            df = fatigue_state_pair[labels[0] + "_df"]
+            element_data = list(df["Element"])
+            element_data = [{"element": element} for element in element_data]
+
+        element_output_array = []
+        for element_dict in element_data:
+            element_output = {}
+            stress_timetrace = []
+            for label in labels:
+                df = fatigue_state_pair[label + "_df"]
+
+                stress_output = self.get_stress_data_for_element_P1_fast(
+                    element_dict, df, label
+                )
+                stress_timetrace.append(stress_output["S"])
+
+            element_output.update({"stress_timetrace": stress_timetrace})
+            element_output.update({"element": element_dict['element']})
+            element_output_array.append(element_output)
+
+        stress_data_output_by_pair.update({"element": element_output_array})
+        logging.info("   Getting stress data by elements ... COMPLETE")
+
+        return stress_data_output_by_pair
+
+    def get_stress_data_by_set(self, cfg, fatigue_state_pair):
+        stress_data_output_by_pair = {}
+
+        labels = [
+            fatigue_state_pair["state_files"][i]["label"]
+            for i in range(0, len(fatigue_state_pair["state_files"]))
+        ]
+
         if cfg["inputs"]["files"]["locations"]["coordinate"]["flag"]:
             logging.info("   Getting stress data by coordinates ... START")
             coordinate_data = cfg["inputs"]["files"]["locations"]["coordinate"]["data"]
@@ -320,8 +550,8 @@ class ShipFatigueAnalysis:
             coordinate_output_array = []
             for coordinate in coordinate_data:
                 coordinate_output = {}
-                stress_range = []
-                for label in ["state_0", "state_1"]:
+                stress_timetrace = []
+                for label in labels:
                     df = fatigue_state_pair[label + "_df"]
 
                     stress_output = self.get_stress_data_for_coordinate(
@@ -329,21 +559,18 @@ class ShipFatigueAnalysis:
                     )
                     coordinate_output.update({label: stress_output})
                     if coordinate["stress_method"] == "mean":
-                        stress_range.append(stress_output["S_mean"])
+                        stress_timetrace.append(stress_output["S_mean"])
                     elif coordinate["stress_method"] == "max":
                         if stress_output["S_max"] < 0:
-                            stress_range.append(stress_output["S_min"])
+                            stress_timetrace.append(stress_output["S_min"])
                         else:
-                            stress_range.append(stress_output["S_max"])
+                            stress_timetrace.append(stress_output["S_max"])
                     else:
                         raise ValueError(
                             f"Invalid stress method: {coordinate['stress_method']}"
                         )
 
-                delta_stress = abs(stress_range[1] - stress_range[0])
-                coordinate_output.update(
-                    {"delta_stress": round(float(delta_stress), 2)}
-                )
+                coordinate_output.update({"stress_timetrace": stress_timetrace})
                 coordinate_output_array.append(coordinate_output)
 
             stress_data_output_by_pair.update({"coordinate": coordinate_output_array})
@@ -352,12 +579,21 @@ class ShipFatigueAnalysis:
         if cfg["inputs"]["files"]["locations"]["element"]["flag"]:
             logging.info("   Getting stress data by elements ... START")
             element_data = cfg["inputs"]["files"]["locations"]["element"]["data"]
+            if element_data == "All":
+                df = fatigue_state_pair[labels[0] + "_df"]
+                element_data = list(df["Element"])
+                element_data = [{"element": element} for element in element_data]
 
             element_output_array = []
+            element_settings = cfg["inputs"]["files"]["locations"]["element"][
+                "settings"
+            ].copy()
             for element_dict in element_data:
+                element_settings.update(element_dict)
+                element_dict = element_settings.copy()
                 element_output = {}
-                stress_range = []
-                for label in ["state_0", "state_1"]:
+                stress_timetrace = []
+                for label in labels:
                     df = fatigue_state_pair[label + "_df"]
 
                     stress_output = self.get_stress_data_for_element(
@@ -365,19 +601,18 @@ class ShipFatigueAnalysis:
                     )
                     element_output.update({label: stress_output})
                     if element_dict["stress_method"] == "mean":
-                        stress_range.append(stress_output["S_mean"])
+                        stress_timetrace.append(stress_output["S_mean"])
                     elif element_dict["stress_method"] == "max":
                         if stress_output["S_max"] < 0:
-                            stress_range.append(stress_output["S_min"])
+                            stress_timetrace.append(stress_output["S_min"])
                         else:
-                            stress_range.append(stress_output["S_max"])
+                            stress_timetrace.append(stress_output["S_max"])
                     else:
                         raise ValueError(
                             f"Invalid stress method: {element_dict['stress_method']}"
                         )
 
-                delta_stress = abs(stress_range[1] - stress_range[0])
-                element_output.update({"delta_stress": round(float(delta_stress), 2)})
+                element_output.update({"stress_timetrace": stress_timetrace})
                 element_output_array.append(element_output)
 
             stress_data_output_by_pair.update({"element": element_output_array})
@@ -401,12 +636,25 @@ class ShipFatigueAnalysis:
         ]
         stress_output.update({"coordinate": coordinate.copy()})
         stress_output.update({"element": df_filter["Element"].to_list()})
-        stress_output.update({"S_mean": round(float(df_filter["S_mean"].mean()), 2)})
-        stress_output.update({"S_max": round(float(df_filter["S_max"].max()), 2)})
-        stress_output.update({"S_min": round(float(df_filter["S_min"].min()), 2)})
+        stress_output.update({"S_mean": round(float(df_filter["S_mean"].mean()), 0)})
+        stress_output.update({"S_max": round(float(df_filter["S_max"].max()), 0)})
+        stress_output.update({"S_min": round(float(df_filter["S_min"].min()), 0)})
         stress_output.update({"label": label})
 
         return stress_output
+
+    def get_stress_data_for_element_P1_fast(self, element_dict, df, label):
+        # logging.info(
+        #     f"      Getting stress data for state: {label}, element: {element_dict['element']}"
+        # )
+
+        df_filter = df[df["Element"] == element_dict["element"]]
+
+        stress_output = {'S': round(float(df_filter["S"].mean()), 0), 'Element': element_dict["element"]}
+        stress_output.update({"element": element_dict.copy()})
+
+        return stress_output
+
 
     def get_stress_data_for_element(self, element_dict, df, label):
         logging.info(
@@ -427,29 +675,74 @@ class ShipFatigueAnalysis:
         stress_output.update({"coordinate": coordinate})
 
         stress_output.update({"element": element_dict.copy()})
-        stress_output.update({"S_mean": round(float(df_filter["S_mean"].mean()), 2)})
-        stress_output.update({"S_max": round(float(df_filter["S_max"].mean()), 2)})
-        stress_output.update({"S_min": round(float(df_filter["S_min"].min()), 2)})
+        stress_output.update({"S_mean": round(float(df_filter["S_mean"].mean()), 0)})
+        stress_output.update({"S_max": round(float(df_filter["S_max"].max()), 0)})
+        stress_output.update({"S_min": round(float(df_filter["S_min"].min()), 0)})
         stress_output.update({"label": label})
 
         return stress_output
 
-    def read_files_and_get_data_as_df(self, fatigue_state_pair):
+    def read_files_and_get_data_as_df(self, fatigue_state_pair, cfg):
         status = {}
-        for state in ["state_0", "state_1"]:
-            state_df = self.read_seasam_xtract(fatigue_state_pair[state])
-            transformed_df = self.transform_df_for_stress_analysis(state_df)
-            fatigue_state_pair.update({(state + "_df"): transformed_df})
-            if len(transformed_df) > 0:
-                status.update({state + "_data": "Pass"})
+        for state_file in fatigue_state_pair["state_files"]:
+            state_df = self.read_seasam_xtract(state_file["state_file"])
+            if 'sesam_extract_type' in cfg['inputs'] and cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+                transformed_df = self.transform_df_for_P1_stress_fast_process(state_df, state_file, cfg)
             else:
-                status.update({state + "_data": "Fail"})
+                transformed_df = self.transform_df_for_stress_analysis(state_df, state_file)
+            fatigue_state_pair.update({(state_file["label"] + "_df"): transformed_df})
+            if len(transformed_df) > 0:
+                status.update({state_file["label"]: "Pass"})
+            else:
+                status.update({state_file["label"]: "Fail"})
         fatigue_state_pair.update({"status": status})
 
         return fatigue_state_pair
 
-    def transform_df_for_stress_analysis(self, df):
+    def transform_df_for_P1_stress_fast_process(self, df, state_file, cfg):
+        logging.info(
+            f"      Transforming data for: {state_file['state_file']} ... START"
+        )
+
+        df.replace("N/A", np.nan, inplace=True)
+        for column in df.columns:
+            try:
+                df[column] = df[column].astype(float)
+            except:
+                logging.debug(f"      Could not convert column {column} to float")
+
+        stress_nomenclature = "P1"
+        stress_method = cfg['inputs']['files']['locations']['element']['settings']['stress_method']
+
+        df_stress = df[[stress_nomenclature + "(1)", stress_nomenclature + "(2)", stress_nomenclature + "(3)", stress_nomenclature + "(4)"]]
+        if stress_method == "mean":
+            df['S'] = round(df_stress.mean(axis=1), 0)
+        elif stress_method == "max":
+            df['S'] = round(df_stress.max(axis=1), 0)
+        elif stress_method == "min":
+            df['S'] = round(df_stress.min(axis=1), 0)
+        else:
+            raise ValueError(f"Stress summary method NOT implemented: {stress_method}")
+
+        df = df[['Element', 'S']]
+
+        logging.info(f"      Transforming data for: {state_file['state_file']} ... END")
+        
+        return df
+
+
+
+    def transform_df_for_stress_analysis(self, df, state_file):
+        logging.info(
+            f"      Transforming data for: {state_file['state_file']} ... START"
+        )
+
         # Convert columns to float
+        if len(df.keys()) == 18:
+            number_of_nodes = 4
+        else:
+            number_of_nodes = 8
+
         df.replace("N/A", np.nan, inplace=True)
         for column in df.columns:
             try:
@@ -470,6 +763,99 @@ class ShipFatigueAnalysis:
         for column in add_columns:
             df[column] = np.nan
 
+        if number_of_nodes == 4:
+            df = self.get_df_with_4_nodes(df)
+        elif number_of_nodes == 8:
+            df = self.get_df_with_8_nodes(df)
+
+        logging.info(f"      Transforming data for: {state_file['state_file']} ... END")
+        return df
+
+    def get_df_with_4_nodes(self, df):
+        try:
+            for df_row in range(0, len(df)):
+                df.loc[df_row, "x_min"] = min(
+                    df.iloc[df_row]["X-coord(1)"],
+                    df.iloc[df_row]["X-coord(2)"],
+                    df.iloc[df_row]["X-coord(3)"],
+                    df.iloc[df_row]["X-coord(4)"],
+                )
+                df.loc[df_row, "x_max"] = max(
+                    df.iloc[df_row]["X-coord(1)"],
+                    df.iloc[df_row]["X-coord(2)"],
+                    df.iloc[df_row]["X-coord(3)"],
+                    df.iloc[df_row]["X-coord(4)"],
+                )
+                df.loc[df_row, "y_min"] = min(
+                    df.iloc[df_row]["Y-coord(1)"],
+                    df.iloc[df_row]["Y-coord(2)"],
+                    df.iloc[df_row]["Y-coord(3)"],
+                    df.iloc[df_row]["Y-coord(4)"],
+                )
+                df.loc[df_row, "y_max"] = max(
+                    df.iloc[df_row]["Y-coord(1)"],
+                    df.iloc[df_row]["Y-coord(2)"],
+                    df.iloc[df_row]["Y-coord(3)"],
+                    df.iloc[df_row]["Y-coord(4)"],
+                )
+                df.loc[df_row, "z_min"] = min(
+                    df.iloc[df_row]["Z-coord(1)"],
+                    df.iloc[df_row]["Z-coord(2)"],
+                    df.iloc[df_row]["Z-coord(3)"],
+                    df.iloc[df_row]["Z-coord(4)"],
+                )
+                df.loc[df_row, "z_max"] = max(
+                    df.iloc[df_row]["Z-coord(1)"],
+                    df.iloc[df_row]["Z-coord(2)"],
+                    df.iloc[df_row]["Z-coord(3)"],
+                    df.iloc[df_row]["Z-coord(4)"],
+                )
+
+                if "VONMISES(1)" in df.columns:
+                    stress_nomenclature = "VONMISES"
+                elif "SIGXX(1)" in df.columns:
+                    stress_nomenclature = "SIGXX"
+                elif "SIGYY(1)" in df.columns:
+                    stress_nomenclature = "SIGYY"
+                elif "TAUXY(1)" in df.columns:
+                    stress_nomenclature = "TAUXY"
+                elif "P1(1)" in df.columns:
+                    stress_nomenclature = "P1"
+                else:
+                    raise ValueError("Could not find stress column")
+
+                df.loc[df_row, "S_mean"] = statistics.mean(
+                    [
+                        df.iloc[df_row][stress_nomenclature + "(1)"],
+                        df.iloc[df_row][stress_nomenclature + "(2)"],
+                        df.iloc[df_row][stress_nomenclature + "(3)"],
+                        df.iloc[df_row][stress_nomenclature + "(4)"],
+                    ]
+                )
+
+                df.loc[df_row, "S_max"] = max(
+                    [
+                        df.iloc[df_row][stress_nomenclature + "(1)"],
+                        df.iloc[df_row][stress_nomenclature + "(2)"],
+                        df.iloc[df_row][stress_nomenclature + "(3)"],
+                        df.iloc[df_row][stress_nomenclature + "(4)"],
+                    ]
+                )
+
+                df.loc[df_row, "S_min"] = min(
+                    [
+                        df.iloc[df_row][stress_nomenclature + "(1)"],
+                        df.iloc[df_row][stress_nomenclature + "(2)"],
+                        df.iloc[df_row][stress_nomenclature + "(3)"],
+                        df.iloc[df_row][stress_nomenclature + "(4)"],
+                    ]
+                )
+        except Exception as e:
+            logging.warning(f"Could not transform data: {e}")
+
+        return df
+
+    def get_df_with_8_nodes(self, df):
         for df_row in range(0, len(df)):
             df.loc[df_row, "x_min"] = min(
                 df.iloc[df_row]["X-coord(1)"],
@@ -585,6 +971,7 @@ class ShipFatigueAnalysis:
         return df
 
     def read_seasam_xtract(self, seasam_xtract_file):
+        logging.info(f"      Reading file: {seasam_xtract_file} ... START")
         cfg = {
             "io": seasam_xtract_file,
             "start_line": 6,
@@ -606,21 +993,29 @@ class ShipFatigueAnalysis:
 
         df = read_data.from_ascii_file_get_structured_data_delimited_white_space(cfg)
 
+        logging.info(f"      Reading file: {seasam_xtract_file} ... END")
         return df
 
-    def get_fatigue_state_pairs(self, state_0_files, state_1_files):
-        fatigue_state_pairs = []
-        for state_0_index in range(0, len(state_0_files["basenames"])):
-            basename_0 = state_0_files["basenames"][state_0_index]
-            basename_index_1 = state_1_files["basenames"].index(basename_0)
-            fatigue_state_pair = {
-                "state_0": state_0_files["files"][state_0_index],
-                "state_1": state_1_files["files"][basename_index_1],
-                "basename": basename_0,
-            }
-            fatigue_state_pairs.append(fatigue_state_pair)
+    def get_fatigue_states_by_directory(self, state_files):
+        fatigue_states_analysis = []
 
-        return fatigue_state_pairs
+        for state_file_index in range(0, len(state_files[0]["basenames"])):
+            basename_first_set = state_files[0]["basenames"][state_file_index]
+            state_files_for_basename = []
+            for state_file_set in state_files:
+                basename_index = state_file_set["basenames"].index(basename_first_set)
+                state_file = state_file_set["files"][basename_index]
+                state_files_for_basename.append(
+                    {"state_file": state_file, "label": state_file_set["label"]}
+                )
+
+            fatigue_state = {
+                "state_files": state_files_for_basename,
+                "basename": basename_first_set,
+            }
+            fatigue_states_analysis.append(fatigue_state)
+
+        return fatigue_states_analysis
 
     def get_files_in_directory(self, directory):
         from assetutilities.engine import engine

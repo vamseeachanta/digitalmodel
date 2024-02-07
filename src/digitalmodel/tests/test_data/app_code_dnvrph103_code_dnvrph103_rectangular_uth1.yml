@@ -1,17 +1,17 @@
 &id001 !!python/object/new:assetutilities.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: ../test_data/code_dnvrph103_rectangular_uth1.yml
+    CustomInputFile: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/code_dnvrph103_rectangular_uth1.yml
     DefaultInputFile: null
-    analysis_root_folder: ../test_data
+    analysis_root_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data
     basename: code_dnvrph103
     cfg_array_file_names: null
-    fe_folder: ../test_data\results\
+    fe_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/results
     file_name: app_code_dnvrph103_code_dnvrph103_rectangular_uth1
     file_name_for_overwrite: app_code_dnvrph103_code_dnvrph103_rectangular_uth1
-    log_folder: ../test_data\logs\
-    result_folder: ../test_data\results\
-    start_time: 2023-11-07 10:59:27.114503
+    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/logs
+    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/results
+    start_time: 2024-02-02 05:19:32.366430
   basename: code_dnvrph103
   calculation_type: simplified
   code_dnvrph103:
@@ -35,9 +35,9 @@ dictitems:
             y: 17.201065335340804
             z: 7.5354294875173515
         ca:
-          x: 0.40867422903156847
-          y: 0.004313132803237751
-          z: 1.1398364062481405
+          x: 0.4086742290315679
+          y: 0.004313132803236863
+          z: 1.1398364062481467
         cd:
           x: 1.0
           y: 1.0

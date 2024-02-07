@@ -1,0 +1,116 @@
+Analysis:
+  CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis/fatigue_analysis_timetrace.yml
+  DefaultInputFile: null
+  analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis
+  basename: fatigue_analysis
+  cfg_array_file_names: null
+  file_name: app_fatigue_analysis_fatigue_analysis_timetrace
+  file_name_for_overwrite: app_fatigue_analysis_fatigue_analysis_timetrace
+  log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis\logs
+  result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/fatigue_analysis\results
+  start_time: 2024-01-30 15:17:59.531364
+basename: fatigue_analysis
+default:
+  config:
+    overwrite:
+      output: true
+  log_level: DEBUG
+fatigue_analysis:
+  timetraces:
+    - damage:
+        n_timetraces: 1.009887601561726e-34
+        timetrace: 1.009887601561726e-34
+      n_traces: 1
+      rainflow:
+        count:
+          0: 0.5
+          1: 0.5
+          2: 0.5
+          3: 0.5
+          4: 0.5
+        i_end:
+          0: 1
+          1: 2
+          2: 3
+          3: 4
+          4: 5
+        i_start:
+          0: 0
+          1: 1
+          2: 2
+          3: 3
+          4: 4
+        mean:
+          0: 8157128.125
+          1: 8157128.125
+          2: 8157128.125
+          3: 8157128.125
+          4: 8157128.125
+        range:
+          0: 31445293.75
+          1: 31445293.75
+          2: 31445293.75
+          3: 31445293.75
+          4: 31445293.75
+      s_trace:
+        - -7565518.75
+        - 23879775.0
+        - -7565518.75
+        - 23879775.0
+        - -7565518.75
+        - 23879775.0
+      thickness: 15
+
+  total_damage: 1.009887601561726e-34
+fatigue_data:
+  csv: true
+  io: tests/test_data/fatigue_analysis/fatigue_data.csv
+inputs:
+  calculation_type: damage
+  fatigue_curve: DnV 2005 C2 Seawater CP
+  software: null
+  stress_input: timetrace
+  timetraces:
+    - damage:
+        n_timetraces: 1.009887601561726e-34
+        timetrace: 1.009887601561726e-34
+      n_traces: 1
+      rainflow:
+        count:
+          0: 0.5
+          1: 0.5
+          2: 0.5
+          3: 0.5
+          4: 0.5
+        i_end:
+          0: 1
+          1: 2
+          2: 3
+          3: 4
+          4: 5
+        i_start:
+          0: 0
+          1: 1
+          2: 2
+          3: 3
+          4: 4
+        mean:
+          0: 8157128.125
+          1: 8157128.125
+          2: 8157128.125
+          3: 8157128.125
+          4: 8157128.125
+        range:
+          0: 31445293.75
+          1: 31445293.75
+          2: 31445293.75
+          3: 31445293.75
+          4: 31445293.75
+      s_trace:
+        - -7565518.75
+        - 23879775.0
+        - -7565518.75
+        - 23879775.0
+        - -7565518.75
+        - 23879775.0
+      thickness: 15

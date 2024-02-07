@@ -1,0 +1,34 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/fatigue_analysis/fatigue_analysis_sn.yml
+    DefaultInputFile: null
+    analysis_root_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/fatigue_analysis
+    basename: fatigue_analysis
+    cfg_array_file_names: null
+    file_name: app_fatigue_analysis_fatigue_analysis_sn
+    file_name_for_overwrite: app_fatigue_analysis_fatigue_analysis_sn
+    log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/fatigue_analysis/logs
+    result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/fatigue_analysis/results
+    start_time: 2024-02-02 05:19:32.558966
+  basename: fatigue_analysis
+  default:
+    config:
+      overwrite:
+        output: true
+    log_level: DEBUG
+  fatigue_analysis:
+    damage: 1.570037454618595e-31
+  fatigue_data:
+    csv: true
+    io: tests/test_data/fatigue_analysis/fatigue_data.csv
+  inputs:
+    SN:
+    - n_cycles: 1
+      s: 2000000
+      thickness: 15
+    calculation_type: damage
+    fatigue_curve: DnV 2005 C2 Seawater CP
+    software: null
+    stress_input: sn
+state: *id001

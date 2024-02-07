@@ -11,7 +11,7 @@ dictitems:
     file_name_for_overwrite: app_code_dnvrph103_code_dnvrph103_circular
     log_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/logs
     result_folder: /mnt/github/github/digitalmodel/src/digitalmodel/tests/no_license/../test_data/results
-    start_time: 2024-01-18 06:20:45.988393
+    start_time: 2024-02-02 05:19:32.233759
   basename: code_dnvrph103
   calculation_type: simplified
   code_dnvrph103:
