@@ -24,7 +24,7 @@ Salinity Calculations
 <https://www.capitalcityaquatics.com/salinity>
 <https://www.unitsconverters.com/en/Salinitypercentage-To-Partsperthousand/Unittounit-4923-4921>
 
-**example data of seawater at a location:**
+**example data of seawater at a location, Temperature is ?:**
 Salinity 0.1ppt =  0.21  mS/cm = 4762  Ohm.cm
 Salinity 1.0ppt = 1.970 mS/cm = 507.6 Ohm.cm
 Salinity 10ppt  = 17.02 mS/cm = 58.75 Ohm.cm
