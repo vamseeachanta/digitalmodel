@@ -14,6 +14,12 @@
 Salinity Calculations
 
 3.5% Salinity = 35,000 ppm = 35 ppt
+**Unit Definitions**
+
+- ppt parts per thousand
+- ppm parts per million
+- % parts per hundred
+- therefore, 1 ppm = 0.001 ppt = 0.0001 % or (parts per hundred)
 
 <https://www.capitalcityaquatics.com/salinity>
 <https://www.unitsconverters.com/en/Salinitypercentage-To-Partsperthousand/Unittounit-4923-4921>
