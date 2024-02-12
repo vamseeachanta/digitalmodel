@@ -35,7 +35,7 @@ start
 
     }
 
-    partition "Bend Stiffener" {
+    partition "Bend Stiffener or bend restricter" {
 
         :Method 1: Equivalent pipe properties;
             note right
@@ -52,6 +52,15 @@ start
 
     partition "UTH" {
 
+        :Method 1: Clump Weight;
+            note right
+                TBA
+            end note
+
+        :Method 2: 6D Buoys;
+            note right
+                TBA
+            end note
 
     }
 
