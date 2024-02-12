@@ -1,0 +1,49 @@
+﻿BaseFile: __04.yml
+
+LineTypes:
+  - Name: UMB-1_DYN_top100m
+    Category: General
+    # Geometry and mass
+    OD: 0.215
+    ID: 0.005
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.07515
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [210, ~]
+    EA: 850e3
+    PoissonRatio: 0.5
+    ExpansionTable: None
+    GJ: 159
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 200
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1.2, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.3
+    SeabedAxialFrictionCoefficient: 0.3
+    # Structural damping
+    RayleighDampingCoefficients: (no damping)

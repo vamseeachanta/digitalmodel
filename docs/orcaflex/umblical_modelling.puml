@@ -27,11 +27,6 @@ start
                 weight etc.
             end note
 
-        :Seabed stiffness and Friction;
-            note right
-                Based on seabed stiffness and diameter
-                Lateral and axial Coefficient of friction 
-            end note
 
     }
 
