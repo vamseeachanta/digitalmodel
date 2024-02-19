@@ -134,7 +134,7 @@ class OrcaflexUtilities:
         file_management_directory = self.get_file_management_directory(cfg)
 
         if cfg.file_management['files']['files_in_current_directory'][
-                'auto_read']:
+                'flag']:
             orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
             input_files = {}
 

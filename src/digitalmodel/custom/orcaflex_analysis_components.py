@@ -13,6 +13,7 @@ from assetutilities.common.data import SaveData
 from assetutilities.common.data import PandasChainedAssignent
 from assetutilities.common.data import TransformData
 from assetutilities.common.yml_utilities import ymlInput
+from assetutilities.common.file_management import FileManagement
 
 from digitalmodel.common.time_series_components import TimeSeriesComponents
 from digitalmodel.common.ETL_components import ETL_components
@@ -24,7 +25,7 @@ except:
     print("OrcFxAPI not available")
 
 ou = OrcaflexUtilities()
-
+fm = FileManagement()
 
 class OrcaFlexAnalysis():
 
@@ -68,13 +69,19 @@ class OrcaFlexAnalysis():
             )
             self.process_scripts()
 
+    def file_management(self, cfg):
+        cfg = ou.file_management(cfg)
+        return cfg
+
     def process_fea(self):
+        exts= list(self.cfg.file_management['input_files'].keys())
+
         for fileIndex in range(
-                0, len(self.cfg['Analysis']['input_files']['with_ext'])):
-            filename_with_ext = self.cfg['Analysis']['input_files']['with_ext'][
+                0, len(self.cfg['file_management']['input_files'][exts[0]])):
+            filename_with_ext = self.cfg['file_management']['input_files'][exts[0]][
                 fileIndex]
-            filename_without_ext = self.cfg['Analysis']['input_files'][
-                'no_ext'][fileIndex]
+            filename_without_extension_dict = fm.get_filename_without_extension(filename_with_ext)
+            filename_without_ext = filename_without_extension_dict['with_path']
 
             static_flag = self.cfg['orcaflex']['analysis']['static']
             simulation_flag = self.cfg['orcaflex']['analysis']['simulation']

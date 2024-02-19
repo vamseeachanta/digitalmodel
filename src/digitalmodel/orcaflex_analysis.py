@@ -6,7 +6,7 @@ oir = OrcaflexIterativeRuns()
 
 def orcaflex_analysis(cfg):
     orcaFlex_analysis = OrcaFlexAnalysis(cfg)
-    orcaFlex_analysis.get_files()
+    orcaFlex_analysis.file_management(cfg)
 
     orcaFlex_analysis.perform_simulations()
 
