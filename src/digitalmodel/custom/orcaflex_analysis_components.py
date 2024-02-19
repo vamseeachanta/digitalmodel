@@ -138,7 +138,7 @@ class OrcaFlexAnalysis():
                 self.iterate_to_target_value(model, iterate_cfg)
 
         print(
-            f"Analysis done for {len(self.cfg['Analysis']['input_files']['with_ext'])} input files"
+            f"Analysis done for {len(self.cfg['file_management']['input_files'][exts[0]])} input files"
         )
 
     def clean_model(self, model, filename_with_ext, filename_without_ext):
