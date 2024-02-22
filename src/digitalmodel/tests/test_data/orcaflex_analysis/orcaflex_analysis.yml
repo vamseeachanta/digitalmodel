@@ -1,27 +1,49 @@
 basename: orcaflex_analysis
 
 orcaflex:
-  analysis: 
+  analysis:
     static: True
     simulation: False
     save_dat: True
     save_sim: True
-    save_dat: True
 
-  iterate: 
-    to_target_value: False
-    flag: False
-    rerun: False
-    overwrite_data: True
-    UseCalculatedPositions: 
-      flag: True
-      overwrite: False
-      # Only 1 of settings below works. 
-      SetLinesToUserSpecifiedStartingShape: True
-      UseStaticLineEndOrientations: False
-  post_process:
-    flag: True
+    iterate:
+      flag: False
+      to_target_value: False
+      rerun: False
+      overwrite_data: True
+      UseCalculatedPositions:
+        flag: True
+        overwrite: False
+        # Only 1 of settings below works.
+        SetLinesToUserSpecifiedStartingShape: True
+        UseStaticLineEndOrientations: False
 
+    UseCalculatedPositions_cfg:
+
+  postprocess:
+    visualization:
+      flag: False
+    summary:
+      flag: False
+      AddMinimumToSummary: True
+      AddMaximumToSummary: True
+      AddMeanToSummary: True
+    RangeGraph:
+      flag: False
+      add_effective_tension_to_cfg: False
+    time_series:
+      flag: False
+      histogram: True
+      summation: True
+    cummulative_histograms:
+      flag: False
+    rain_flow:
+      flag: False
+      bins: 10
+      range:
+        - 0
+        - 10
 
 default:
   log_level: INFO
@@ -30,12 +52,12 @@ default:
   #     flag: True
   #     file_type: yaml
   #     simulation: False
-  #     statics: 
+  #     statics:
   #       flag: True
-  #       UseCalculatedPositions: 
+  #       UseCalculatedPositions:
   #         flag: True
   #         overwrite: False
-  #         # Only 1 of settings below works. 
+  #         # Only 1 of settings below works.
   #         SetLinesToUserSpecifiedStartingShape: True
   #         UseStaticLineEndOrientations: False
   #     iterate: True
@@ -66,7 +88,7 @@ default:
       output: True
 
   Constants:
-    g : 9.81
+    g: 9.81
   units:
     verticalDistance: m
     declinationAngle: deg with vertical
@@ -86,17 +108,16 @@ default:
     BuoyancyCoverage: Percentage
 
 PostProcessUnits:
-    System : US
-    Effective Tension:
-        US: 1
-        SI: 1
-    Bend Moment:
-        US: 1
-        SI: 1
-    API STD 2RD Method 1:
-        US: 1
-        SI: 1
-
+  System: US
+  Effective Tension:
+    US: 1
+    SI: 1
+  Bend Moment:
+    US: 1
+    SI: 1
+  API STD 2RD Method 1:
+    US: 1
+    SI: 1
 
 file_management:
   flag: True
@@ -114,9 +135,7 @@ file_management:
 
   input_files:
     yml:
-      - src/digitalmodel/test_data/orcaflex/orcaflex_test1.sim
-      - src/digitalmodel/test_data/orcaflex/orcaflex_test2.sim
-      - src/digitalmodel/test_data/orcaflex/orcaflex_test3.sim
+      - src/digitalmodel/test_data/orcaflex/orcaflex_test1.yml
 
 PlotSettings:
   Name: Buoyancy Element Hydrodynamic Coefficients
@@ -128,4 +147,3 @@ RangeGraph: []
 Summary: []
 
 time_series: []
-

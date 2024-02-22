@@ -53,9 +53,6 @@ class OrcaFlexAnalysis():
     def perform_simulations(self):
         self.process_fea()
 
-        if 'postprocess' in self.cfg['orcaflex'] and self.cfg['orcaflex'][
-                'postprocess']['flag']:
-            self.post_process_files()
         self.save_data()
 
         try:
@@ -133,7 +130,7 @@ class OrcaFlexAnalysis():
                 except:
                     logging.info("Save data file      ... FAILED")
 
-            if iterate_to_target_value_flag:
+            if iterate_flag and iterate_to_target_value_flag:
                 iterate_cfg = self.cfg['default']['Analysis']['Analyze'].copy()
                 iterate_cfg.update(
                     {'filename_without_ext': filename_without_ext})
@@ -146,8 +143,8 @@ class OrcaFlexAnalysis():
     def clean_model(self, model, filename_with_ext, filename_without_ext):
         clean_model = model
 
-        UseCalculatedPositions_cfg = self.cfg['orcaflex']['iterate'][
-            'UseCalculatedPositions'].copy()
+        UseCalculatedPositions_cfg = self.cfg['orcaflex']['analysis'][
+            'UseCalculatedPositions_cfg'].copy()
         if UseCalculatedPositions_cfg['flag'] and UseCalculatedPositions_cfg[
                 'clean_StaleCalculatedPositions']:
             save_data = SaveData()
