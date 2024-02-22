@@ -98,26 +98,25 @@ PostProcessUnits:
         SI: 1
 
 
-Files:
-  data_source: yml
-  csv_filename: ""
+file_management:
+  flag: True
+  files:
+    files_in_current_directory:
+      flag: False
+      directory: NULL
+    extension: yml
+    filters:
+      filename_contains: [step]
+      filename_not_contains: []
 
-  data:
-    - Label: No Load
-      Name: ..\test_data\orcaflex\orcaflex_test1
-      ObjectName: SLWR
-      SimulationDuration: 120
-      ProbabilityRatio: 0.10
-    - Label: No Load
-      Name: ..\test_data\orcaflex\orcaflex_test2
-      ObjectName: SLWR
-      SimulationDuration: 120
-      ProbabilityRatio: 0.03
-    - Label: No File
-      Name: ..\test_data\orcaflex\orcaflex_test3
-      ObjectName: SLWR
-      SimulationDuration: 120
-      ProbabilityRatio: 0.02
+    data_source: yml
+    csv_filename: ""
+
+  input_files:
+    yml:
+      - src/digitalmodel/test_data/orcaflex/orcaflex_test1.sim
+      - src/digitalmodel/test_data/orcaflex/orcaflex_test2.sim
+      - src/digitalmodel/test_data/orcaflex/orcaflex_test3.sim
 
 PlotSettings:
   Name: Buoyancy Element Hydrodynamic Coefficients
