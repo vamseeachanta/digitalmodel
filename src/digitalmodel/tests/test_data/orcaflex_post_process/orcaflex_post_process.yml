@@ -8,7 +8,7 @@ default:
 
 orcaflex:
   postprocess:
-    visualization: 
+    visualization:
       flag: True
     summary:
       flag: False
@@ -28,40 +28,39 @@ orcaflex:
         - 0
         - 10
 
-
-visualization_settings: 
+visualization_settings:
   label: ld_6_7_8
   individual: True
   combined: False #TODO to be coded
   hide_items: []
   add_items: [Umbilical, uta2-deep]
-  views: ['Elevation', 'Plan']
+  views: ["Elevation", "Plan"]
   tdp_line: Umbilical
   viewparams:
     elevation:
       RelativeToObject: uth2-deep
-      ViewCentre : [-17, 0, 12]
-      ViewSize : 120
-      DrawViewAxes : False
-      DrawGlobalAxes : False
-      DrawScaleBar : False
-      ViewAzimuth : 270
-      ViewElevation : 0
-      ViewGamma : 71.89
-      Height : 1425
-      Width : 892
+      ViewCentre: [-17, 0, 12]
+      ViewSize: 120
+      DrawViewAxes: False
+      DrawGlobalAxes: False
+      DrawScaleBar: False
+      ViewAzimuth: 270
+      ViewElevation: 0
+      ViewGamma: 71.89
+      Height: 1425
+      Width: 892
     plan:
       RelativeToObject: uth2-deep
-      ViewCentre : [10, 0, 8]
-      ViewSize : 80
-      DrawViewAxes : False
-      DrawGlobalAxes : False
-      DrawScaleBar : False
-      ViewAzimuth : 270
-      ViewElevation : 90
-      ViewGamma : 0
-      Height : 1425
-      Width : 892
+      ViewCentre: [10, 0, 8]
+      ViewSize: 80
+      DrawViewAxes: False
+      DrawGlobalAxes: False
+      DrawScaleBar: False
+      ViewAzimuth: 270
+      ViewElevation: 90
+      ViewGamma: 0
+      Height: 1425
+      Width: 892
 
 RangeGraph_settings:
   add_effective_tension_to_cfg: False
@@ -71,13 +70,11 @@ time_series_settings:
   summation: True
   groups: []
 
-
-
 Files:
   data_source: yml
   csv_filename: ""
 
-  data:
-    - Name: C:\Users\ss7a2365\Documents\github\rock-oil-field\s7\talos_venice\infield\5.ld\step06.sim
-    - Name: C:\Users\ss7a2365\Documents\github\rock-oil-field\s7\talos_venice\infield\5.ld\step07.sim
-
+  input_files:
+    yml:
+      - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
+      # - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test2.sim
