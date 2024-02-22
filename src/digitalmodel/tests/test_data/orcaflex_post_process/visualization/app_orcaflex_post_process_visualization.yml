@@ -10,7 +10,7 @@ dictitems:
     file_name_for_overwrite: app_orcaflex_post_process_visualization
     log_folder: c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\in_progress\../test_data/orcaflex_post_process/visualization\logs
     result_folder: c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\in_progress\../test_data/orcaflex_post_process/visualization\results
-    start_time: 2024-02-22 05:50:10.661346
+    start_time: 2024-02-22 06:20:12.436730
   Files:
     csv_filename: ''
     data_source: yml
@@ -42,6 +42,13 @@ dictitems:
       yml:
       - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
   orcaflex:
+    analysis:
+      iterate:
+        flag: false
+      save_dat: false
+      save_sim: false
+      simulation: false
+      static: false
     postprocess:
       RAOs:
         flag: false
@@ -80,7 +87,9 @@ dictitems:
     hide_items: []
     individual: true
     label: ld_6_7_8
-    tdp_line: Umbilical
+    tdp_line:
+      Name: Umbilical
+      flag: false
     viewparams:
       elevation:
         DrawGlobalAxes: false
