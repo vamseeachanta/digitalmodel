@@ -50,27 +50,27 @@ visualization_settings:
     Name: Umbilical
   viewparams:
     elevation:
-      RelativeToObject: Vessel1
-      ViewCentre: [-17, 0, 12]
-      ViewSize: 120
+      # RelativeToObject: Global
+      ViewCentre: [0, 500, -350]
+      ViewSize: 1700
       DrawViewAxes: False
       DrawGlobalAxes: False
       DrawScaleBar: False
-      ViewAzimuth: 270
+      ViewAzimuth: 360
       ViewElevation: 0
-      ViewGamma: 71.89
+      ViewGamma: 0
       Height: 1425
       Width: 892
     plan:
       RelativeToObject: Vessel1
-      ViewCentre: [10, 0, 8]
-      ViewSize: 80
+      ViewCentre: [125, 500, -350]
+      ViewSize: 1500
       DrawViewAxes: False
       DrawGlobalAxes: False
       DrawScaleBar: False
-      ViewAzimuth: 270
+      ViewAzimuth: 90
       ViewElevation: 90
-      ViewGamma: 0
+      ViewGamma: 90
       Height: 1425
       Width: 892
 

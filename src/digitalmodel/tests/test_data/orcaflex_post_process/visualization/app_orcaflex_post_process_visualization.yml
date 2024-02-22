@@ -10,7 +10,7 @@ dictitems:
     file_name_for_overwrite: app_orcaflex_post_process_visualization
     log_folder: c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\in_progress\../test_data/orcaflex_post_process/visualization\logs
     result_folder: c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\in_progress\../test_data/orcaflex_post_process/visualization\results
-    start_time: 2024-02-22 09:14:10.949743
+    start_time: 2024-02-22 09:22:38.297039
   Files:
     csv_filename: ''
     data_source: yml
@@ -96,15 +96,15 @@ dictitems:
         DrawScaleBar: false
         DrawViewAxes: false
         Height: 1425
-        RelativeToObject: Vessel1
-        ViewAzimuth: 270
+        RelativeToObject: uth2-deep
+        ViewAzimuth: 360
         ViewCentre:
-        - -17
         - 0
-        - 12
+        - 500
+        - -350
         ViewElevation: 0
-        ViewGamma: 71.89
-        ViewSize: 120
+        ViewGamma: 0
+        ViewSize: 1700
         Width: 892
       plan:
         DrawGlobalAxes: false
@@ -112,14 +112,14 @@ dictitems:
         DrawViewAxes: false
         Height: 1425
         RelativeToObject: Vessel1
-        ViewAzimuth: 270
+        ViewAzimuth: 90
         ViewCentre:
-        - 10
-        - 0
-        - 8
+        - 125
+        - 500
+        - -350
         ViewElevation: 90
-        ViewGamma: 0
-        ViewSize: 80
+        ViewGamma: 90
+        ViewSize: 1500
         Width: 892
     views:
     - elevation
