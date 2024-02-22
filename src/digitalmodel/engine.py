@@ -64,7 +64,7 @@ def engine(inputfile=None):
     elif basename == "umbilical_end":
         ua = UmbilicalAnalysis()
         cfg_base = ua.perform_analysis(cfg_base)
-    elif basename == "file_management":
+    elif basename == "orcaflex_file_management":
         ofm = OrcaflexFileManagement()
         cfg_base = ofm.file_management(cfg_base)
     elif basename == "orcaflex_post_process":

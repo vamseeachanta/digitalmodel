@@ -24,18 +24,26 @@ class orcaflex_post_process:
 
     def post_process_router(self, cfg):
 
-        if cfg['orcaflex']['postprocess']['visualization']['flag'] or cfg[
-                'orcaflex']['postprocess']['summary']['flag'] or cfg[
+        if cfg['orcaflex']['postprocess']['summary']['flag'] or cfg[
                     'orcaflex']['postprocess']['RangeGraph']['flag'] or cfg[
                         'orcaflex']['postprocess']['time_series'][
                             'flag'] or cfg['orcaflex']['postprocess'][
                                 'cummulative_histograms']['flag']:
-            post_process_flag = True
+            post_process_data_flag = True
+        else:
+            post_process_data_flag = False
 
-        if post_process_flag:
+        if cfg['orcaflex']['postprocess']['visualization']['flag']:
+            post_process_visualization_flag = True
+        else:
+            post_process_visualization_flag = False
+
+        if post_process_data_flag:
             cfg.update({cfg['basename']: {}})
             ofa.post_process(cfg)
             ofa.save_summary(cfg)
+        elif post_process_visualization_flag: 
+            self.get_visualizations(cfg)
         else:
             logging.info("No postprocess option to run specified ... End Run.")
 
