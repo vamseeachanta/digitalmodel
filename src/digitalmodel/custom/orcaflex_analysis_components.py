@@ -76,6 +76,12 @@ class OrcaFlexAnalysis():
     def process_fea(self):
         exts= list(self.cfg.file_management['input_files'].keys())
 
+        static_flag = self.cfg['orcaflex']['analysis']['static']
+        simulation_flag = self.cfg['orcaflex']['analysis']['simulation']
+        iterate_flag = self.cfg['orcaflex']['analysis']['iterate']['flag']
+        save_sim_flag = self.cfg['orcaflex']['analysis']['save_sim']
+        save_dat_flag = self.cfg['orcaflex']['analysis']['save_dat']
+
         for fileIndex in range(
                 0, len(self.cfg['file_management']['input_files'][exts[0]])):
             filename_with_ext = self.cfg['file_management']['input_files'][exts[0]][
@@ -83,14 +89,10 @@ class OrcaFlexAnalysis():
             filename_without_extension_dict = fm.get_filename_without_extension(filename_with_ext)
             filename_without_ext = filename_without_extension_dict['with_path']
 
-            static_flag = self.cfg['orcaflex']['analysis']['static']
-            simulation_flag = self.cfg['orcaflex']['analysis']['simulation']
-            iterate_flag = self.cfg['orcaflex']['iterate']['flag']
-            iterate_to_target_value_flag = self.cfg['orcaflex']['iterate'][
-                'to_target_value']
+            if iterate_flag:
+                iterate_to_target_value_flag = self.cfg['orcaflex']['analysis']['iterate'][
+                    'to_target_value']
 
-            save_sim_flag = self.cfg['orcaflex']['analysis']['save_sim']
-            save_dat_flag = self.cfg['orcaflex']['analysis']['save_dat']
 
             model = OrcFxAPI.Model()
             try:

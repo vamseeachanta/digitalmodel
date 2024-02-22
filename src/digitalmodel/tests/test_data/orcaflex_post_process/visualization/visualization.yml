@@ -7,6 +7,14 @@ default:
       output: True
 
 orcaflex:
+  analysis:
+    static: False
+    simulation: False
+    iterate:
+      flag: False
+    save_sim: False
+    save_dat: False
+
   postprocess:
     visualization:
       flag: True
@@ -37,7 +45,9 @@ visualization_settings:
   hide_items: []
   add_items: [Umbilical, uta2-deep]
   views: [elevation, plan]
-  tdp_line: Umbilical
+  tdp_line:
+    flag: False
+    Name: Umbilical
   viewparams:
     elevation:
       RelativeToObject: uth2-deep
