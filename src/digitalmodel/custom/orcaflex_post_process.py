@@ -275,11 +275,21 @@ class orcaflex_visualizations:
         model = OrcFxAPI.Model()
         combined_model = None
 
-        for file_index in range(0, len(cfg['Files']['data'])):
-            file_cfg = cfg['Files']['data'][file_index]
-            is_file_valid, file_name = self.is_file_valid(file_cfg['Name'])
-            if is_file_valid:
-                model.LoadData(file_name)
+        if cfg.file_management['files']['files_in_current_directory'][
+                'flag']:
+            orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
+
+        else:
+            orcaflex_extensions = cfg.file_management['input_files'].keys()
+
+        for file_ext in orcaflex_extensions:
+            raw_input_files_for_ext = cfg.file_management['input_files'][
+                file_ext]
+
+            for input_file_index in range(0, len(raw_input_files_for_ext)):
+                input_file = raw_input_files_for_ext[input_file_index]
+
+                model.LoadData(input_file)
 
                 if cfg['visualization_settings']['combined']:
                     print(f"Combined model code in library does not exist")
@@ -287,20 +297,20 @@ class orcaflex_visualizations:
 
                 model = self.set_general_visualization_settings(model, cfg)
                 model.CalculateStatics()
-                self.plan_view(model, file_name, cfg)
-                self.elevation_view(model, file_name, cfg)
+                self.plan_view(model, input_file, cfg)
+                self.elevation_view(model, input_file, cfg)
 
-        if cfg['visualization_settings']['combined']:
-            combined_model.CalculateStatics()
-            self.plan_view(combined_model,
-                           cfg['visualization_settings']['label'], cfg)
-            self.elevation_view(combined_model,
-                                cfg['visualization_settings']['label'], cfg)
+            if cfg['visualization_settings']['combined']:
+                combined_model.CalculateStatics()
+                self.plan_view(combined_model,
+                            cfg['visualization_settings']['label'], cfg)
+                self.elevation_view(combined_model,
+                                    cfg['visualization_settings']['label'], cfg)
 
     def set_general_visualization_settings(self, model, cfg):
-        # for TDP Colour change
-        line = model[cfg['visualization_settings']['tdp_line']]
-        line.ContactPenColour = 128 * 65536 + 128 * 256 + 128
+        #TODO for TDP Colour change
+        # line = model[cfg['visualization_settings']['tdp_line']]
+        # line.ContactPenColour = 128 * 65536 + 128 * 256 + 128
 
         env = model['Environment']
         # env.SeabedPenStyle = "Clear"
@@ -308,10 +318,11 @@ class orcaflex_visualizations:
         env.SeaSurfacePenStyle = "Clear"
         model.general.NorthDirectionDefined = "No"
 
-        vessel = model["SevenArctic"]
-        x_value = vessel.InitialX
-        y_value = vessel.InitialY
-        heading = vessel.InitialHeading
+        #TODO for vessel settings
+        # vessel = model["SevenArctic"]
+        # x_value = vessel.InitialX
+        # y_value = vessel.InitialY
+        # heading = vessel.InitialHeading
 
         hide_items = cfg['visualization_settings']['hide_items']
 

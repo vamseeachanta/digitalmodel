@@ -20,7 +20,7 @@ def run_orcaflex_post_process(input_file, expected_result={}):
 
 
 def test_orcaflex_post_process():
-    input_file = '../test_data/orcaflex_post_process/visualization.yml'
+    input_file = '../test_data/orcaflex_post_process/visualization/visualization.yml'
     pytest_output_file = None
     # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     # expected_result = ymlInput(pytest_output_file, updateYml=None)
