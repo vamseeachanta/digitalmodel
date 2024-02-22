@@ -50,7 +50,7 @@ visualization_settings:
     Name: Umbilical
   viewparams:
     elevation:
-      RelativeToObject: uth2-deep
+      RelativeToObject: Vessel1
       ViewCentre: [-17, 0, 12]
       ViewSize: 120
       DrawViewAxes: False
@@ -62,7 +62,7 @@ visualization_settings:
       Height: 1425
       Width: 892
     plan:
-      RelativeToObject: uth2-deep
+      RelativeToObject: Vessel1
       ViewCentre: [10, 0, 8]
       ViewSize: 80
       DrawViewAxes: False

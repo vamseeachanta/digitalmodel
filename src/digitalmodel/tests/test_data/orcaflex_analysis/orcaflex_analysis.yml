@@ -20,6 +20,12 @@ orcaflex:
         UseStaticLineEndOrientations: False
 
     UseCalculatedPositions_cfg:
+      flag: False
+      overwrite: False
+      clean_StaleCalculatedPositions: True
+      # Only 1 of settings below works.
+      SetLinesToUserSpecifiedStartingShape: True
+      UseStaticLineEndOrientations: False
 
   postprocess:
     visualization:
@@ -135,7 +141,7 @@ file_management:
 
   input_files:
     yml:
-      - src/digitalmodel/test_data/orcaflex/orcaflex_test1.yml
+      - orcaflex_test1.yml
 
 PlotSettings:
   Name: Buoyancy Element Hydrodynamic Coefficients
