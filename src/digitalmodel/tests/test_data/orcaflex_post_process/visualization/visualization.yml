@@ -61,6 +61,7 @@ visualization_settings:
       ViewGamma: 0
       Height: 1425
       Width: 892
+      SeaSurfacePenStyle: Solid
     plan:
       RelativeToObject: Vessel1
       ViewCentre: [125, 500, -350]

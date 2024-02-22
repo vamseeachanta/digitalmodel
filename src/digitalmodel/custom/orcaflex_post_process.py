@@ -297,16 +297,12 @@ class orcaflex_visualizations:
 
                 model = self.set_general_visualization_settings(model, cfg)
                 model.CalculateStatics()
-                self.plan_view(model, input_file, cfg)
-                self.elevation_view(model, input_file, cfg)
+                self.save_all_views(model, input_file, cfg)
 
-            if cfg['visualization_settings']['combined']:
-                combined_model.CalculateStatics()
-                self.plan_view(combined_model,
-                            cfg['visualization_settings']['label'], cfg)
-                self.elevation_view(combined_model,
-                                    cfg['visualization_settings']['label'], cfg)
-
+            #TODO 
+            # if cfg['visualization_settings']['combined']:
+            #     combined_model.CalculateStatics()
+                
     def set_general_visualization_settings(self, model, cfg):
         #TODO for TDP Colour change
         # line = model[cfg['visualization_settings']['tdp_line']]
@@ -352,46 +348,42 @@ class orcaflex_visualizations:
         combined_model.SaveData("combined_model.dat")
         return combined_model
 
-    def plan_view(self, model, file_name, cfg):
-        '''        Plan View      '''
-        viewparams = self.assign_view_parameters(model, cfg, viewtype='plan')
+    def save_all_views(self, model, file_name, cfg):
 
-        self.save_image(model, file_name, viewparams, viewtype='plan')
+        viewparams_cfg = cfg['visualization_settings']['viewparams']
+        for view_label in list(viewparams_cfg.keys()):
+            viewparams = self.assign_view_parameters(model, cfg, view_label)
+            self.save_image(model, file_name, viewparams, view_label)
 
-    def assign_view_parameters(self, model, cfg, viewtype):
+    def assign_view_parameters(self, model, cfg, view_label):
+
+        viewparams_view_label_cfg = cfg['visualization_settings']['viewparams'][view_label]
         viewparams = model.defaultViewParameters
-        viewparams_cfg = cfg['visualization_settings']['viewparams'][viewtype]
-        for key in viewparams_cfg:
+
+        if 'SeaSurfacePenStyle' in viewparams_view_label_cfg:
+            env = model['Environment']
+            env.SeaSurfacePenStyle = viewparams_view_label_cfg['SeaSurfacePenStyle']
+
+        for key in viewparams_view_label_cfg:
             try:
                 if key == 'ViewCentre':
-                    ViewCentre = viewparams_cfg['ViewCentre']
+                    ViewCentre = viewparams_view_label_cfg['ViewCentre']
                     for i in range(0, len(ViewCentre)):
                         viewparams.ViewCentre[i] = ViewCentre[i]
                 elif key == 'RelativeToObject':
                     viewparams.RelativeToObject = model[
-                        viewparams_cfg['RelativeToObject']]
+                        viewparams_view_label_cfg['RelativeToObject']]
                 else:
-                    setattr(viewparams, key, viewparams_cfg[key])
+                    setattr(viewparams, key, viewparams_view_label_cfg[key])
             except Exception as e:
                 logging.error(str(e))
 
         return viewparams
 
-    def elevation_view(self, model, file_name, file_cfg):
-        '''        Elevation  View      '''
-        env = model['Environment']
-        env.SeaSurfacePenStyle = "Solid"
-
-        viewparams = self.assign_view_parameters(model,
-                                                 file_cfg,
-                                                 viewtype='elevation')
-
-        self.save_image(model, file_name, viewparams, viewtype='elevation')
-
-    def save_image(self, model, file_name, viewparams, viewtype):
+    def save_image(self, model, file_name, viewparams, view_label):
         file_location = os.path.split(file_name)[0]
         file_name_img = os.path.basename(file_name).split(
-            ".")[0] + "_" + viewtype + ".jpg"
+            ".")[0] + "_" + view_label + ".jpg"
         file_name_with_path = os.path.join(file_location, file_name_img)
         logging.info(f"Saving ...  {file_name_img}  view")
         model.SaveModelView(file_name_with_path, viewparams)
