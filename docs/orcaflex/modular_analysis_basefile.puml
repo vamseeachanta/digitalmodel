@@ -16,7 +16,7 @@ start
 
     note right
         All files in .yml format
-        Each partition box is a group of .yml files with related content
+        Each partition box is a unique group of .yml files
     end note
 
     partition "01.yml Analysis Parameters" {
@@ -45,7 +45,6 @@ start
         :Environment;
             note right
                 environment - waves, current, wind etc.
-                maximize 'includefile' from individual .yml files
             end note
 
     }
