@@ -19,7 +19,7 @@ class CathodicProtection():
         This method is used to calculate the cathodic protection for ABS gn ships 2018
         """
         anode_current_capacity = self.get_anode_current_capacity(cfg)
-
+        my_value = cfg.inputs['design_data']['seawater_max_temperature'] * cfg.inputs['design_data']['design_life']
 
     def get_anode_current_capacity(self, cfg):
         """
@@ -31,6 +31,9 @@ class CathodicProtection():
             anode_current_capacity = 2000 - 27(cfg['inputs']['design_data']['seawater_max_temperature'] - 20)
     
         return anode_current_capacity
+
+    def get_seawater_resistivity(self, cfg):
+        pass
 
     def get_design_current_density(self, cfg):
         """
