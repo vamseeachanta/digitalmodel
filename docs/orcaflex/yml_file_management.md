@@ -115,7 +115,7 @@ The typical BaseFile import to yml definition is given in this section. The belo
 **MasterFile to run in OrcaFlex:** 01.yml
 
 ```yml
-BaseFile: 02a_global_direction.yml
+BaseFile: _dynamic_analysis_parameters.yml
 
 General:
   StaticsMinDamping: 2
@@ -145,7 +145,7 @@ Multiple chaining is the process of importing multiple BaseFiles into a MasterFi
 **MasterFile to run in OrcaFlex:** 01.yml
 
 ```yml
-BaseFile: 02a_global_direction.yml
+BaseFile: _dynamic_analysis_parameters.yml
 
 General:
   StaticsMinDamping: 2
