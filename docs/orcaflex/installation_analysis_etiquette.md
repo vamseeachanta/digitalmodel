@@ -43,3 +43,6 @@ QA
 
 - Use static table
 - Use views
+
+OrcaFlex Experimentation is best done in Python
+OrcaFlex Batchfiles are best run on UI right now (Parallel processing need to be understood best).
