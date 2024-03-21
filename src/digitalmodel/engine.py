@@ -58,7 +58,7 @@ def engine(inputfile=None):
     elif basename == "copy_and_paste":
         cpf = CopyAndPasteFiles()
         cfg_base = cpf.iterate_all_cfgs(cfg_base)
-    elif basename == "umbilical_end":
+    elif basename == "umbilical_analysis":
         ua = UmbilicalAnalysis()
         cfg_base = ua.perform_analysis(cfg_base)
     elif basename == "orcaflex_file_management":
