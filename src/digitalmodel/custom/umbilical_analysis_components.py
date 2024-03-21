@@ -7,8 +7,10 @@ class UmbilicalAnalysis():
     def perform_analysis(self):
         if self.cfg['default']['analysis']['end'] == 'first':
             self.first_end_analysis()
-        if self.cfg['default']['analysis']['end'] == 'second':
+        elif self.cfg['default']['analysis']['end'] == 'second':
             self.second_end_analysis()
+        elif self.cfg['default']['analysis']['end'] == 'second':
+            self.installation_analysis()
 
         return self.cfg
 
@@ -17,3 +19,7 @@ class UmbilicalAnalysis():
 
     def second_end_analysis(self):
         pass
+
+    def installation_analysis(self):
+        pass
+
