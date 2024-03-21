@@ -1,18 +1,21 @@
 class UmbilicalAnalysis():
 
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.cfg_array = []
+    def __init__(self):
+        pass
 
-    def perform_analysis(self):
-        if self.cfg['default']['analysis']['end'] == 'first':
-            self.first_end_analysis()
-        elif self.cfg['default']['analysis']['end'] == 'second':
-            self.second_end_analysis()
-        elif self.cfg['default']['analysis']['end'] == 'second':
-            self.installation_analysis()
+    def perform_analysis(self, cfg):
+        if cfg['installation_phases']:
+            self.installation_phases(cfg)
+        # if cfg['default']['analysis']['end'] == 'first':
+        #     self.first_end_analysis()
+        # elif cfg['default']['analysis']['end'] == 'second':
+        #     self.second_end_analysis()
+        # elif cfg['default']['analysis']['end'] == 'second':
+        #     self.installation_analysis()
+        else:
+            raise NotImplementedError("Analysis not implemented.")
 
-        return self.cfg
+        return cfg
 
     def first_end_analysis(self):
         pass
@@ -20,6 +23,21 @@ class UmbilicalAnalysis():
     def second_end_analysis(self):
         pass
 
-    def installation_analysis(self):
-        pass
+    def installation_phases(self, cfg):
+        for phase in cfg['installation']['phase']:
+            self.installation_phase(cfg, phase)
 
+        return cfg
+
+    def installation_phase(self, cfg, phase):
+        for step in phase['step']:
+            self.installation_step(cfg, step)
+
+        return cfg
+
+    def installation_step(self, cfg, step):
+        for target_settings in step['target']:
+            target_value = self.get_installation_analysis_target_result(cfg, target_settings)
+
+    def get_installation_analysis_target_result(self, cfg, target_settings):
+        pass

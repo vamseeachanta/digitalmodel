@@ -1,6 +1,6 @@
 basename: umbilical_analysis
 
-installation_steps: True
+installation_phases: True
 line_properties: False
 
 default:
@@ -24,21 +24,16 @@ default:
     SoilStiffness: kN/m/m
     BuoyancyCoverage: Percentage
   log_level: DEBUG
-  analysis:
-    end: first
   config:
     overwrite:
       output: True
     cfg_sensitivities: False
 
-Analysis:
-  fe_folder: NULL
-
 installation:
   lay_direction: 26
   host:
     reference_file: 03_fpso_vessel.yml
-    reference_location: [168.4	8.9, 30]
+    reference_location: [168.4, 8.9, 30]
     key_chain:
       InitialPosition: [Yellowtail FPSO, InitialPosition]
       Orientation: [Yellowtail FPSO, Orientation]
@@ -51,7 +46,7 @@ installation:
 
   phase:
     - name: pih
-      steps:
+      step:
         - name: pih_step01_def
           includefile: __07_config00_pih_ups_wire.yml
           target:
@@ -100,3 +95,5 @@ femodel:
         x: 2.506
         y: 3.494
         z: 0.920
+# Analysis:
+#   fe_folder: NULL
