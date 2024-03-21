@@ -92,6 +92,9 @@ def engine(inputfile=None):
     elif basename == "ship_design":
         ship_design = ShipDesign()
         cfg_base = ship_design.router(cfg_base)
+    elif basename == "ship_design_aqwa":
+        ship_design = ShipDesign()
+        cfg_base = ship_design.router(cfg_base)
     elif basename == "fatigue_analysis":
         fatigue_analysis = FatigueAnalysis()
         cfg_base = fatigue_analysis.router(cfg_base)
