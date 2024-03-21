@@ -37,7 +37,9 @@ class UmbilicalAnalysis():
 
     def installation_step(self, cfg, step):
         for target_settings in step['target']:
-            target_value = self.get_installation_analysis_target_result(cfg, target_settings)
+            target_value = self.get_target_result(cfg, target_settings)
 
-    def get_installation_analysis_target_result(self, cfg, target_settings):
+        # Write step file
+
+    def get_target_result(self, cfg, target_settings):
         pass
