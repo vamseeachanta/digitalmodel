@@ -47,32 +47,34 @@ installation:
   phase:
     - name: pih
       step:
-        - name: pih_step01_def
+        - name: yellowtail/code/src/modular/__pih_step01_def
           includefile: __07_config00_pih_ups_wire.yml
           target:
             - type: line_length
-              reference_file: config00_pih_ups_wire.yml
+              reference_file: yellowtail/code/src/modular/_common/06_07_Product/config00_pih_ups_wire.yml
               Lines: [product_installation_side, product_host_side]
-              LineType: oceanmax35
+              LineType: [oceanmax35]
               value: 550
-              keychain: [Lines, product_host_side, "Length[1]"]
+              keychain_target: [Lines, product_host_side, "Length[1]"]
             - type: reference_distance
-              heading: -64
-              distance: 90
-              keychain: [Vessels, Constellation]
-        - name: pih_step02_def
+              initial_heading: -64
+              value: 90
+              keychain_target_vessel: [Vessels, Constellation]
+              keychain_target_line: [Lines, product_installation_side]
+        - name: yellowtail/code/src/modular/__pih_step02_def
           includefile: 07_config01_pih_umbilical_section1_install_side.yml
           target:
             - type: line_length
-              reference_file: config01_pih_umbilical_section1_install_side.yml
+              reference_file: yellowtail/code/src/modular/_common/06_07_Product/config01_pih_umbilical_section1_install_side.yml
               Lines: [product_host_side]
-              LineType: oceanmax35
+              LineType: [oceanmax35]
               value: 550
-              keychain: [Lines, product_host_side, "Length[2]"]
+              keychain_target: [Lines, product_host_side, "Length[2]"]
             - type: reference_distance
-              heading: -64
-              distance: 90
-              keychain: [Vessels, Constellation]
+              initial_heading: -64
+              value: 90
+              keychain_target_vessel: [Vessels, Constellation]
+              keychain_target_line: [Lines, product_installation_side]
 
 femodel:
   1st_end: pih
@@ -95,5 +97,3 @@ femodel:
         x: 2.506
         y: 3.494
         z: 0.920
-# Analysis:
-#   fe_folder: NULL
