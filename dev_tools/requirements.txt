@@ -21,3 +21,4 @@ kaleido
 pytest
 deepdiff
 rainflow
+pydantic
