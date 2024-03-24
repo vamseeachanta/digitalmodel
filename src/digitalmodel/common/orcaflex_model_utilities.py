@@ -21,6 +21,16 @@ class OrcaflexModelUtilities:
 
         return buoy_6d_template
 
+    def get_umbilical_LineType_template(self):
+        library_name = 'digitalmodel'
+        library_yaml_cfg = {
+            'filename': 'tests/test_data/umbilical_analysis/umbilical_LineType_template.yml',
+            'library_name': library_name
+        }
+        buoy_6d_template = wwy.get_library_yaml_file(library_yaml_cfg)
+
+        return buoy_6d_template
+
     def get_BaseFile_first(self, model):
         '''
         OrderDict to get BaseFile at top of model is not working efficiently.

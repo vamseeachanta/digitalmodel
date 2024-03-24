@@ -4,7 +4,10 @@ from assetutilities.common.update_deep import update_deep_dictionary
 
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.data import SaveData
+
+from digitalmodel.common.orcaflex_linetypes import OrcaflexLineTypes
 save_data = SaveData()
+olt = OrcaflexLineTypes()
 class UmbilicalAnalysis():
 
     def __init__(self):
@@ -15,12 +18,8 @@ class UmbilicalAnalysis():
             # TODO program assumes host at 0 deg and No Y coordinate for installation vessel reference point. 
             # Program this feature for future analysis
             self.installation_phases(cfg)
-        # if cfg['default']['analysis']['end'] == 'first':
-        #     self.first_end_analysis()
-        # elif cfg['default']['analysis']['end'] == 'second':
-        #     self.second_end_analysis()
-        # elif cfg['default']['analysis']['end'] == 'second':
-        #     self.installation_analysis()
+        elif cfg['line_properties']:
+            olt.get_umbilical_lines(cfg)
         else:
             raise NotImplementedError("Analysis not implemented.")
 
@@ -103,11 +102,12 @@ class UmbilicalAnalysis():
         initial_y = host_reference_location[1] + reference_distance*math.sin(math.radians(lay_direction)) - installation_vessel_reference_location[0]*math.sin(math.radians(initial_heading))
 
         dict  = {}
-        dict.update({keychain_target_vessel[0]: {keychain_target_vessel[1]: {'InitialX': round(initial_x,1), 'InitialY': round(initial_y,1), 'InitialHeading': round(initial_heading,1)}}})
+        dict = update_deep_dictionary(dict, {keychain_target_vessel[0]: {keychain_target_vessel[1]: {'InitialX': round(initial_x,1), 'InitialY': round(initial_y,1), 'InitialHeading': round(initial_heading,1)}}})
 
         keychain_target_line = target_settings['keychain_target_line']
         endbx = initial_x  + installation_vessel_reference_location[0]*math.cos(math.radians(initial_heading))
         endby = initial_y  + installation_vessel_reference_location[0]*math.sin(math.radians(initial_heading))
-        dict.update({"Lines": {keychain_target_line[1]: {'EndBX': round(endbx,1), 'EndBY': round(endby,1)}}})
+        for keychain_target_line_item in keychain_target_line:
+            dict = update_deep_dictionary(dict, {"Lines": {keychain_target_line_item[1]: {'EndBX': round(endbx,1), 'EndBY': round(endby,1)}}})
 
         return dict
