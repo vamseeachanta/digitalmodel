@@ -62,7 +62,7 @@ def engine(inputfile=None):
     elif basename == "umbilical_analysis":
         ua = UmbilicalAnalysis()
         cfg_base = ua.perform_analysis(cfg_base)
-    elif basename == "orcaflex_file_management":
+    elif basename in ["orcaflex_file_management", "orcaflex_file_preparation"]:
         ofm = OrcaflexFileManagement()
         cfg_base = ofm.file_management(cfg_base)
     elif basename == "rigging":

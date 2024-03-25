@@ -266,3 +266,6 @@ class OrcaflexUtilities:
             self.simulation_filenames = []
 
         return cfg
+    
+    def prepare_operating_window_definition(self, cfg):
+        pass
