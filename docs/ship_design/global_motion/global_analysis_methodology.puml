@@ -1,0 +1,54 @@
+@startuml global_analysis_methodology
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Global Motion Analysis | Model Development \n Weighted Average Method
+
+component "Global Motion Analysis" as Global_Motion_Analysis
+
+note right
+    Notes:
+        1a/ Design data spreadsheet to drive key dimensions and parameters
+        1b/ Key coordinates
+        1c/ Key inputs for both Diffraction/Radiation, rsponse analysis etc.
+end note
+
+package "Geometries" as gm {
+component "FST Shell Geometry \nLight, Full, 90% etc." as FST_Gometries
+component LNG
+component "Struts, Dampener, Jacket etc" as Other_Structures
+}
+note right
+    Notes:
+        1a/ FST1 and FST2 geometries
+        1b/ 2 LNG sizes
+        1c/ Other structures, Fixed objects etc.
+        1c/ Marine growth weight?
+end note
+
+
+Global_Motion_Analysis --> FST_Gometries 
+Global_Motion_Analysis --> LNG
+Global_Motion_Analysis --> Other_Structures
+
+package "Modelling Details" as gm {
+agent "FSTs/LNG \nRAOs, 2nd Order wave coeffs, Wind, current coeffs" as No_Completed_and_approved_Forms
+agent "Dampener" as Audit_score 
+agent "Audit Score, \nActual vs. Optimum" as Optimum_Audit_score
+}
+
+Inspections_Dxxx <--No_Completed_and_approved_Forms:w=0.333
+Inspections_Dxxx <--Audit_score:w=0.333
+Inspections_Dxxx <--Optimum_Audit_score:w=0.333
+
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
