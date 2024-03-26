@@ -2,51 +2,42 @@ basename: orcaflex_file_preparation
 
 operating_envelopes: True
 
-default:
-  Constants:
-    g: 9.81
-  units:
-    verticalDistance: m
-    declinationAngle: deg with vertical
-    Temperature: deg F
-    Pressure: psi
-    EffectiveTension: kN
-    BendingMoment: kNm
-    YieldStrength: psi
-    E: psi
-    NominalID: inch
-    NominalOD: inch
-    NominalWT: inch
-    Rho: kg/m3
-    MassPerUnitLength: kg/m
-    WeightPerUnitLength: N/m
-    SoilStiffness: kN/m/m
-    BuoyancyCoverage: Percentage
-  log_level: DEBUG
-  config:
-    overwrite:
-      output: True
-    cfg_sensitivities: False
-
 inputs:
   - output_dir: bm_step02
     includedfile:
       - ../bm_step02.dat
       - ../yt_currents.yml
+
     general:
       initial_load_factor: 2
       analysis_load_factor: 5
       output: LatestWave
+
     loads:
       wave:
-        hs:
-          min: 2.75
-          max: 2.50
-          step: 0.25
-        tp:
-          min: 6
-          max: 13
-          step: 1
+        hs: [2.75, 2.50]
+        tp: [13] # [6, 7, 8, 9, 10, 11, 12, 13]
+        direction: [255, 270] # [270, 180]
       current:
-        - name:
-    offsets: NULL
+        []
+
+        # - name: NoCurrent
+        #   maginitude: 0
+        #   direction: 0
+
+    offsets: []
+
+default:
+  Constants:
+    g: 9.81
+  units:
+    loads:
+      wave:
+        hs: m
+        tp: s
+        heading: deg
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

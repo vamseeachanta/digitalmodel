@@ -8,19 +8,21 @@ class OrcaflexFileManagement:
     def __init__(self):
         pass
 
-    def orcaflex_pre_analysis(self, cfg):
-            
+    def file_management(self, cfg):
+
         if cfg.basename in ['orcaflex_file_preparation']:
-            cfg = ou.prepare_operating_window_definition(cfg)
+            if cfg.operating_envelopes:
+                cfg = ou.prepare_operating_window_definition(cfg)
+            else:
+                raise NotImplementedError('Other options not implemented yet.')
         elif cfg.basename in ['orcaflex_file_management']:
-            self.file_management(cfg)
+            self.sim_file_analysis_and_update(cfg)
 
         return cfg
 
-    def file_management(self, cfg):
+    def sim_file_analysis_and_update(self, cfg):
 
         if cfg.file_management['update_unfinished']['flag']:
             cfg = ou.sim_file_analysis_and_update(cfg)
 
         return cfg
-    

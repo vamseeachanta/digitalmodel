@@ -1,3 +1,6 @@
+from assetutilities.common.yml_utilities import ymlInput
+from assetutilities.common.data import SaveData
+
 import copy
 import os
 import glob
@@ -268,4 +271,13 @@ class OrcaflexUtilities:
         return cfg
     
     def prepare_operating_window_definition(self, cfg):
-        pass
+        yaml_file = {}
+        
+        for include_file in cfg['includedfile']:
+            yaml_file.update({'includefile': include_file})
+        
+
+    def get_random_wave_seeds(self):
+        seeds = [123456, 234567, 345678, 456789, 567890, 678901, 789012, 890123, 901234, 12345, 19918, 51352, 64477, 42864, 89141, 82983, 34067, 65909, 54827, 48305]
+        return seeds
+
