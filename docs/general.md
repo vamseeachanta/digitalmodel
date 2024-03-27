@@ -20,3 +20,7 @@ To perform general tasks for any software/tools related to digital models
 - Good scripts to run during multithread simulation/postprocessing analysis:
     - No.of processors = N-n 
     - At end, send an email to Teams channel with folder path, failure report etc., Potentially email by folder name?
+
+
+# Python
+
