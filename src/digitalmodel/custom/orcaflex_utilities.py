@@ -271,12 +271,26 @@ class OrcaflexUtilities:
         return cfg
     
     def prepare_operating_window_definition(self, cfg):
+        
+        # for include_file in cfg['includedfile']:
+        #     yaml_file.update({'includefile': include_file})
+        for input_set in cfg['inputs']:
+            self.get_operating_window_for_input_set(input_set)
+        
+    def get_operating_window_for_input_set(self, input_set):
         yaml_file = {}
-        
-        for include_file in cfg['includedfile']:
-            yaml_file.update({'includefile': include_file})
-        
+        hs = input_set['loads']['wave']['hs']
+        hmax = [item*1.86 for item in hs]
+        tp = input_set['loads']['wave']['tp']
+        tmax = [item*1.86 for item in tp]
+        if 
+        loads = {}
+        WaveType: Airy
+      WaveDirection: 180
+      WaveHeight: 7
+      WavePeriod: 8
 
+    
     def get_random_wave_seeds(self):
         seeds = [123456, 234567, 345678, 456789, 567890, 678901, 789012, 890123, 901234, 12345, 19918, 51352, 64477, 42864, 89141, 82983, 34067, 65909, 54827, 48305]
         return seeds
