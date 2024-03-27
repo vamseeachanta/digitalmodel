@@ -1,4 +1,6 @@
 from assetutilities.common.yml_utilities import ymlInput
+from digitalmodel.common.orcaflex_model_utilities import OrcaflexModelUtilities
+
 from assetutilities.common.data import SaveData
 
 import copy
@@ -16,6 +18,7 @@ from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.file_management import FileManagement
 
 fm = FileManagement()
+omu = OrcaflexModelUtilities()
 
 
 class OrcaflexUtilities:
@@ -275,22 +278,26 @@ class OrcaflexUtilities:
         # for include_file in cfg['includedfile']:
         #     yaml_file.update({'includefile': include_file})
         for input_set in cfg['inputs']:
-            self.get_operating_window_for_input_set(input_set)
+            self.prepare_operating_window_for_input_set(input_set)
         
-    def get_operating_window_for_input_set(self, input_set):
-        yaml_file = {}
-        hs = input_set['loads']['wave']['hs']
-        hmax = [item*1.86 for item in hs]
-        tp = input_set['loads']['wave']['tp']
-        tmax = [item*1.86 for item in tp]
-        if 
-        loads = {}
-        WaveType: Airy
-      WaveDirection: 180
-      WaveHeight: 7
-      WavePeriod: 8
+    def prepare_operating_window_for_input_set(self, input_set):
+        wave = input_set['loads']['wave']
 
-    
+        yaml_file = omu.get_wave_template()
+        
+        hs = wave['hs']
+        hmax = [item*1.86 for item in hs]
+        tp = wave['tp']
+        tmax = [item*1.05 for item in tp]
+        WaveDirection = wave['WaveDirection']
+
+        if wave['WaveType'] == 'Airy':
+            for hmax_item in hmax:
+                for tmax_item in tmax:
+                    for WaveDirection_item in WaveDirection:
+                        yaml_variation = {'WaveType': wave['WaveType'], 'WaveDirection': WaveDirection_item, 'WaveHeight': hmax_item, 'WavePeriod': tmax_item}
+
+
     def get_random_wave_seeds(self):
         seeds = [123456, 234567, 345678, 456789, 567890, 678901, 789012, 890123, 901234, 12345, 19918, 51352, 64477, 42864, 89141, 82983, 34067, 65909, 54827, 48305]
         return seeds

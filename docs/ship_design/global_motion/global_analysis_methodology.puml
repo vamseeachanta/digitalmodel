@@ -7,7 +7,7 @@ skinparam titleBorderColor red
 skinparam titleBackgroundColor Tomato
 
 
-title Global Motion Analysis | Model Development \n Weighted Average Method
+title Global Motion Analysis \nModel Development
 
 
 
@@ -18,7 +18,7 @@ component "**Other Structures** \nStruts, Dampener, Jacket etc" as Other_Structu
 
 }
 
-note right
+note bottom
     Notes:
         1a/ FST1 and FST2 geometries
         1b/ 2 LNG sizes
@@ -27,13 +27,14 @@ note right
 end note
 
 package "Model Data" as md {
-agent "**FSTs/LNG** \n 1st order Load RAOs, 2nd wave drift load, \n Wind coeffs, current coeffs" as FST_model_data
+agent "**FSTs/LNG** \n Wave 1st order Load RAOs, \n Wave 2nd order drift load, \nWind load coeffs, \nCurrent load coeffs" as FST_model_data
 agent "**Strut** \n Using a rigid link" as Strut
 agent "**Jacket** \n As Fixed Structure" as Jacket
 agent "**Dampener** \n Using non-linear Curve" as Dampener
 }
 
-note right
+note bottom
+
     Notes:
         1a/ Design data spreadsheet to drive key dimensions, weights and parameters
         1b/ Key coordinates
