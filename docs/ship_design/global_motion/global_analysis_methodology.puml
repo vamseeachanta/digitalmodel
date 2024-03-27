@@ -6,44 +6,45 @@ skinparam titleBorderThickness 2
 skinparam titleBorderColor red
 skinparam titleBackgroundColor Tomato
 
+
 title Global Motion Analysis | Model Development \n Weighted Average Method
 
-component "Global Motion Analysis" as Global_Motion_Analysis
 
-note right
-    Notes:
-        1a/ Design data spreadsheet to drive key dimensions and parameters
-        1b/ Key coordinates
-        1c/ Key inputs for both Diffraction/Radiation, rsponse analysis etc.
-end note
 
-package "Geometries" as gm {
-component "FST Shell Geometry \nLight, Full, 90% etc." as FST_Gometries
-component LNG
-component "Struts, Dampener, Jacket etc" as Other_Structures
+package Geometries {
+component "**FST Geometry** \nLight, Full, 90% etc." as FST_Gometries
+component "**LNG**" as LNG
+component "**Other Structures** \nStruts, Dampener, Jacket etc" as Other_Structures
+
 }
+
 note right
     Notes:
         1a/ FST1 and FST2 geometries
         1b/ 2 LNG sizes
         1c/ Other structures, Fixed objects etc.
-        1c/ Marine growth weight?
+        1d/ Marine growth weight?
 end note
 
-
-Global_Motion_Analysis --> FST_Gometries 
-Global_Motion_Analysis --> LNG
-Global_Motion_Analysis --> Other_Structures
-
-package "Modelling Details" as gm {
-agent "FSTs/LNG \nRAOs, 2nd Order wave coeffs, Wind, current coeffs" as No_Completed_and_approved_Forms
-agent "Dampener" as Audit_score 
-agent "Audit Score, \nActual vs. Optimum" as Optimum_Audit_score
+package "Model Data" as md {
+agent "**FSTs/LNG** \n 1st order Load RAOs, 2nd wave drift load, \n Wind coeffs, current coeffs" as FST_model_data
+agent "**Strut** \n Using a rigid link" as Strut
+agent "**Jacket** \n As Fixed Structure" as Jacket
+agent "**Dampener** \n Using non-linear Curve" as Dampener
 }
 
-Inspections_Dxxx <--No_Completed_and_approved_Forms:w=0.333
-Inspections_Dxxx <--Audit_score:w=0.333
-Inspections_Dxxx <--Optimum_Audit_score:w=0.333
+note right
+    Notes:
+        1a/ Design data spreadsheet to drive key dimensions, weights and parameters
+        1b/ Key coordinates
+        1c/ Key inputs for both all analysis etc.
+end note
+
+FST_Gometries --> FST_model_data
+LNG --> FST_model_data
+Other_Structures --> Strut 
+Other_Structures --> Dampener 
+Other_Structures --> Jacket 
 
 
 footer
