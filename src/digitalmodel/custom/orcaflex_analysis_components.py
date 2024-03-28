@@ -609,8 +609,8 @@ class OrcaFlexAnalysis():
             save_data = SaveData()
             customdata = {
                 "FileName":
-                    cfg['Analysis']['result_folder'] +
-                    cfg['Analysis']['file_name'] + '.xlsx',
+                    os.path.join(cfg['Analysis']['result_folder'],
+                    cfg['Analysis']['file_name'] + '.xlsx'),
                 "SheetNames":
                     SummaryFileNameArray,
                 "thin_border":
