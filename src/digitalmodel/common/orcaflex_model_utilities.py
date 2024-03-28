@@ -41,6 +41,14 @@ class OrcaflexModelUtilities:
 
         return buoy_6d_template
 
+    def get_wave_template_with_n_waves(self, n_waves):
+
+        wave_template = self.get_wave_template()
+        if n_waves != 1:
+            raise NotImplementedError('Other options not implemented yet.')
+
+        return wave_template
+
 
     def get_BaseFile_first(self, model):
         '''

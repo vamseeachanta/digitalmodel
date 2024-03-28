@@ -6,11 +6,17 @@ default:
     overwrite:
       output: True
 
-
-
 orcaflex:
+  analysis:
+    static: False
+    simulation: False
+    iterate:
+      flag: False
+    save_sim: False
+    save_dat: False
+
   postprocess:
-    visualization: 
+    visualization:
       flag: False
     summary:
       flag: True
@@ -34,54 +40,48 @@ summary_settings:
   AddMeanToSummary: True
 
   groups:
-  -
-    SummaryFileName: Table_Top
-    Columns:
-      -
-        Command: Range Graph
-        ObjectName: SLWR
-        AdditionalData:
-          - Max
-        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
-        ArcLength:
-          - 0
-          - 50
-        Variable: Effective Tension
-        Label: Eff. Tension
-      -
-        Command: Range Graph
-        ObjectName: SLWR
-        AdditionalData:
-          - Max
-        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
-        ArcLength:
-          - 0
-          - 50
-        Variable: Bend Moment
-        Label: Bend. Moment
-      -
-        Command: Range Graph
-        ObjectName: SLWR
-        AdditionalData:
-          - Max
-        SimulationPeriod:  SpecifiedPeriod(30.0, 120.0)
-        ArcLength:
-          - 0
-          - 50
-        Variable: API STD 2RD Method 1
-        Label: API M1
-      -
-        Command: Range Graph
-        ObjectName: SLWR
-        AdditionalData:
-          - Max
-        SimulationPeriod:  SpecifiedPeriod(30.0, 120.0)
-        ArcLength:
-          - 0
-          - 50
-        Variable: Max von Mises Stress
-        Label: vM stress
-
+    - SummaryFileName: Table_Top
+      Columns:
+        - Command: Range Graph
+          ObjectName: SLWR
+          AdditionalData:
+            - Max
+          SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+          ArcLength:
+            - 0
+            - 50
+          Variable: Effective Tension
+          Label: Eff. Tension
+        - Command: Range Graph
+          ObjectName: SLWR
+          AdditionalData:
+            - Max
+          SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+          ArcLength:
+            - 0
+            - 50
+          Variable: Bend Moment
+          Label: Bend. Moment
+        - Command: Range Graph
+          ObjectName: SLWR
+          AdditionalData:
+            - Max
+          SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+          ArcLength:
+            - 0
+            - 50
+          Variable: API STD 2RD Method 1
+          Label: API M1
+        - Command: Range Graph
+          ObjectName: SLWR
+          AdditionalData:
+            - Max
+          SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+          ArcLength:
+            - 0
+            - 50
+          Variable: Max von Mises Stress
+          Label: vM stress
 
 RangeGraph_settings:
   add_effective_tension_to_cfg: False
@@ -91,14 +91,13 @@ time_series_settings:
   summation: True
   groups: []
 
-
 file_management:
   flag: True
-  update_unfinished: 
+  update_unfinished:
     flag: False
 
   files:
-    files_in_current_directory: 
+    files_in_current_directory:
       flag: True
       directory: NULL
       auto_read: True

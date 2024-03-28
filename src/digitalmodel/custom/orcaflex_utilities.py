@@ -1,19 +1,21 @@
-from assetutilities.common.yml_utilities import ymlInput
-from digitalmodel.common.orcaflex_model_utilities import OrcaflexModelUtilities
-
-from assetutilities.common.data import SaveData
-
 import copy
 import os
 import glob
 import logging
+import math
+
+from assetutilities.common.yml_utilities import ymlInput
+from digitalmodel.common.orcaflex_model_utilities import OrcaflexModelUtilities
+
+from assetutilities.common.data import SaveData
+save_data = SaveData()
+
 try:
     import OrcFxAPI
 except:
     print("OrcFxAPI not available")
 from collections import OrderedDict
 
-from assetutilities.common.saveData import saveDataYaml
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.file_management import FileManagement
 
@@ -49,9 +51,9 @@ class OrcaflexUtilities:
         model_file_updated['Lines']['Umbilical']['Length[7]'] = cfg[
             'variable_value']
 
-        saveDataYaml(model_file_updated,
+        save_data.saveDataYaml(model_file_updated,
                      os.path.splitext(cfg['model_file'])[0],
-                     default_flow_style='OrderedDumper')
+                     default_flow_style='OrderedDumper', sort_keys=False)
 
     def get_sim_file_finish_status(self, model):
         settime = model.general.StageEndTime[len(model.general.StageEndTime) -
@@ -272,33 +274,117 @@ class OrcaflexUtilities:
             self.simulation_filenames = []
 
         return cfg
-    
+
     def prepare_operating_window_definition(self, cfg):
-        
+
         # for include_file in cfg['includedfile']:
         #     yaml_file.update({'includefile': include_file})
         for input_set in cfg['inputs']:
-            self.prepare_operating_window_for_input_set(input_set)
-        
-    def prepare_operating_window_for_input_set(self, input_set):
+            self.prepare_operating_window_for_input_set(input_set, cfg)
+            
+        return cfg
+
+    def prepare_operating_window_for_input_set(self, input_set, cfg):
         wave = input_set['loads']['wave']
 
-        yaml_file = omu.get_wave_template()
-        
+        wave_yaml_file = omu.get_wave_template()
+
         hs = wave['hs']
-        hmax = [item*1.86 for item in hs]
         tp = wave['tp']
-        tmax = [item*1.05 for item in tp]
         WaveDirection = wave['WaveDirection']
 
-        if wave['WaveType'] == 'Airy':
-            for hmax_item in hmax:
-                for tmax_item in tmax:
-                    for WaveDirection_item in WaveDirection:
-                        yaml_variation = {'WaveType': wave['WaveType'], 'WaveDirection': WaveDirection_item, 'WaveHeight': hmax_item, 'WavePeriod': tmax_item}
 
+        if wave['WaveType'] == 'Airy':
+            for hs_item in hs:
+                for tp_item in tp:
+                    if input_set['loads']['wave']['peakedness']['by_region']:
+                        cfg_peakedness = {'region': wave['peakedness']['region'], 'hs': hs_item, 'tp': tp_item}
+                        peakedness = self.get_wave_peak_enhancement_factor_by_region(cfg_peakedness)
+                    hmax = self.get_theoretical_hmax({'hs': hs_item, 'tp': tp_item, 'peakedness': peakedness})
+                    tassociated = self.get_theoretical_tassociated({'tp': tp_item, 'peakedness': peakedness})
+
+                    for WaveDirection_item in WaveDirection:
+                        yaml_variation = {'WaveType': wave['WaveType'], 'WaveDirection': WaveDirection_item, 'WaveHeight': hmax, 'WavePeriod': tassociated}
+                        wave_yaml_file['WaveTrains'][0].update(yaml_variation)
+
+                        yml_file_name = f"Hs{'{:.2f}'.format(hs_item)}-WD{'{:02d}'.format(WaveDirection_item)}-Tp{'{:.1f}'.format(tp_item)}"
+                        self.get_full_yaml_file_and_save(input_set, wave_yaml_file, yml_file_name, cfg)
+
+    def get_full_yaml_file_and_save(self, input_set, wave_yaml_file, yml_file_name, cfg):
+        if 'includefile' in input_set:
+            full_yml_file = {'includefile': input_set['includefile']}
+        elif 'BaseFile' in input_set:
+            full_yml_file = {'BaseFile': input_set['BaseFile']}
+
+        general_yml = self.get_general_yml(input_set, wave_yaml_file)
+        full_yml_file.update(general_yml)
+        full_yml_file.update({'Environment': wave_yaml_file})
+
+        output_dir = input_set['output_dir']
+        full_output_dir_path = os.path.join(cfg['Analysis']['analysis_root_folder'], output_dir)
+        if not os.path.isdir(full_output_dir_path):
+            os.makedirs(full_output_dir_path)
+
+        save_data.saveDataYaml(full_yml_file, os.path.join(full_output_dir_path, yml_file_name), default_flow_style=False, sort_keys=False)
+
+    def get_general_yml(self, input_set, wave_yaml_file):
+        tperiod_factor = input_set['general']['initial_tperiod_factor'] + input_set['general']['analysis_tperiod_factor']
+        WavePeriod = wave_yaml_file['WaveTrains'][0]['WavePeriod']
+        StageDuration2 = round(tperiod_factor*WavePeriod, 0)
+        general_yml = {'General': {'StageDuration[2]': StageDuration2}}
+        return general_yml
 
     def get_random_wave_seeds(self):
         seeds = [123456, 234567, 345678, 456789, 567890, 678901, 789012, 890123, 901234, 12345, 19918, 51352, 64477, 42864, 89141, 82983, 34067, 65909, 54827, 48305]
         return seeds
 
+    def get_wave_peak_enhancement_factor_by_region(self, cfg_peakedness):
+        cfg_tempate = {'region': 'Gayana', 'tp': 10}
+
+        peakedness = 0
+        if cfg_peakedness['region'] == "Gayana":
+            if cfg_peakedness['tp'] < 10:
+                peakedness = 2
+            else:
+                peakedness = 8
+
+        return peakedness
+
+    def get_theoretical_wave_peak_enhancement_factor(self, cfg_peakedness):
+        cfg_tempate = {'hs': 2.5, 'tp': 10}
+        tp_over_sqrt_hs = cfg_peakedness['tp']/cfg_peakedness['hs']**0.5
+        if tp_over_sqrt_hs > 5:
+            peakedness = 1
+        elif tp_over_sqrt_hs <3.6:
+            peakedness = 5
+        else:
+            peakedness = math.exp(5.75 - 1.15*tp_over_sqrt_hs)
+
+        peakedness = round(peakedness, 2)
+
+        return round(peakedness, 2)
+
+    def get_theoretical_tz(self, cfg_tz):
+        cfg_tempate = {'tp': 10, 'peakedness': 5}
+        tz = cfg_tz['tp']*(0.6673 + 0.05037*cfg_tz['peakedness'] - 0.00623*cfg_tz['peakedness']**2 + 0.0003341*cfg_tz['peakedness']**3)
+
+        return round(tz, 2)
+
+    def get_theoretical_hmax(self, cfg_hmax):
+        cfg_tempate = {'hs': 2.5, 'peakedness': 5}
+        hmax = cfg_hmax['hs']*cfg_hmax['peakedness']
+        tz= self.get_theoretical_tz({'tp': cfg_hmax['tp'], 'peakedness': cfg_hmax['peakedness']})
+        N = 10800/ tz
+        factor = (math.log(N)/2)**0.5
+        if factor > 1.86:
+            factor = 1.86
+        hmax = cfg_hmax['hs']*factor
+
+        return round(hmax, 2)
+
+    def get_theoretical_tassociated(self, cfg_tassociated):
+        cfg_tempate = {'tp': 10, 'peakedness': 5}
+        tz = self.get_theoretical_tz({'tp': cfg_tassociated['tp'], 'peakedness': cfg_tassociated['peakedness']})
+        tassociated = 1.05*tz
+
+        return round(tassociated, 2)
