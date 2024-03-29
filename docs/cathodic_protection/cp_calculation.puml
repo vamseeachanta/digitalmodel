@@ -11,48 +11,129 @@ title CP | Calculation
 start
 :CP Calculation;
 
-:Inputs - Seawater;
+
+partition Inputs {
+:Environment - Seawater \nSalinity and Resistivity;
 
   note right
+    Seawater properties depend on:
     - dissolved oxygen content
     - sea currents
     - temperature
     - marine growth
-    - salinity
+    - water depth 
+    - tide changes 
     - Seawater pH, carbonate content etc. (calcaresous layers)
+    - etc.
   end note
 
-:Inputs - Seabed sediments;
+:Enviornment - Seabed sediments;
 
   note right
+    Seabed sediments influences CP system behavior:
     - temperature
     - bacterial growth
     - salinity
-    - sediment coarseness
+    - sediment coarseness etc.
+    - etc.
   end note
 
+:Structure - Wetted Area;
+
+  note right
+    Area considers following:
+    - tide changes for fixed structures
+    - Draft changes for ships
+
+  end note
+
+:Structure - Coatings\n influence Current demand requirements;
+
+  note right
+    CP  varies with:
+    - Low vs. high durability
+    - Coating gaps
+    - Coating holidays
+    - etc.
+
+  end note
+
+:(non-metallic) Coating;
+  note right
+    - used when CP demand for bare metal is high
+      - eg: subsea structures are coated
+      - eg: Ships are also Coating breakdown factor
+  end note
+
+}
 
 partition Design Considerations {
 
+
 :Protective Potentials;
   note right
-    - design range: -0.9V to 1.05V
+    - design range: -0.9V to -1.05V
     - < -0.8V (underprotection)
     - > -1.15V (overprotection)
-    - These potentials do not apply for CP 
+    - These potentials may not apply for CP 
     by galvanic andoes based on Al or Zn
   end note
 
 :Detrimental effects of CP;
-    - protective potential: -0.8 V to 0.9 V 
+  note right
     - No ventilition can develop explosive gas mixure (H2/O2)
     - calcareous layer (consisting primarily of calcium carbonate)
-      - film coating
-      - insulate connectors of COp system
+      - forms film coating
+      - may insulate connectors of CP system
+  end note
 }
 
 
-partition Design {
+partition CP Design {
+
+:Structure Electrical continuity & current drain;
+  note right
+    - TBA
+  end note
+
+:electrochemical potential;
+  note right
+    - Standard calomel electrode (SCE)
+  end note
+
+:Design Life;
+  note right
+    - TBA
+  end note
+
+:Coating breakdown factor\nIf coating present;
+  note right
+    - fc = a + b*t 
+    - t in years is coating age
+    - fcm (mean)
+    - fcf (final) 
+  end note
+
+:Design Current Densitites;
+  note right
+    - Initial design current density
+    - Final design current density
+    - mean design current density (typ. 0.15 or 0.2 V more negative than design protective potenttial)
+    - Guidelines are provided in code
+    - all electrically connected items for COP system  considered for current drain
+  end note
+
+:Anode Weight Required;
+  note right
+    Evaluate Anode weight based on:
+    - Current capacity
+    - Based on anode geometry
+    - etc.
+  end note
+
+}
+
+partition Anode Considerations {
 
 :Materials;
   note right
@@ -79,45 +160,17 @@ partition Design {
     - bracelet (pipelines)
   end note
 
-:(non-metallic) Coating;
-  note right
-    - used when CP demand for bare metal is high
-  end note
-
 :Electrical continuity & current drain;
   note right
-    - TBA
+    - None
   end note
 
-:electrochemical potential;
+:Anode Current Demand Checks;
   note right
-    - Standard calomel electrode (SCE)
+    - Initial check
+    - End of Life check
   end note
-
-:Design Life;
-  note right
-    - TBA
-  end note
-
-:Design Current Densitites;
-  note right
-    - Initial design current density
-    - Final design current density
-    - mean design current density (typ. 0.15 or 0.2 V more negative than design protective potenttial)
-    - Guidelines are provided in code
-    - all electrically connected items for COP system  considered for current drain
-  end note
-
-:Coating breakdown factor;
-  note right
-    - fc = a + b*t 
-    - t in years is coating age
-    - fcm (mean)
-    - fcf (final)
-  end note
-
 
 }
-
 stop
 @enduml
