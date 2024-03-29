@@ -606,11 +606,10 @@ class OrcaFlexAnalysis():
         print(f"Processed summary files: {len(summary_groups)}")
 
     def save_summary_to_csv(self, SummaryFileNameArray, cfg):
-        for group_idx in range(0, len(cfg['summary_settings']['groups'])):
-            group_cfg = cfg['summary_settings']['groups'][group_idx]
-            df = SummaryFileNameArray[group_idx]
+        for group_idx in range(0, len(SummaryFileNameArray)):
+            df = self.SummaryDFAllFiles[group_idx]
             file_name = os.path.join(cfg['Analysis']['result_folder'],
-                    cfg['Analysis']['file_name'] + group_cfg['SummaryFileName'] + '.csv')
+                    cfg['Analysis']['file_name'] + '_' + SummaryFileNameArray[group_idx] + '.csv')
 
             df.to_csv(file_name, index=False)
 
