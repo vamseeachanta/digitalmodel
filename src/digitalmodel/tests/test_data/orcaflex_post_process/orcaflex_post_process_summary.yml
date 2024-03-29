@@ -40,7 +40,7 @@ summary_settings:
   AddMeanToSummary: True
 
   groups:
-    - SummaryFileName: Table_Top
+    - SummaryFileName: dynamics
       Columns:
         - Command: Range Graph
           ObjectName: SLWR
