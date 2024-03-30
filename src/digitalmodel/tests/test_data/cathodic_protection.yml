@@ -3,12 +3,17 @@ basename: cathodic_protection
 inputs:
   calculation_type: ABS_gn_ships_2018 # DNV_rp_b401_2011, DNV_rp_b401_2021_05, ABS_gn_ships_2018
 
+  environment:
+    seawater:
+      max_temperature: 10 # °C
+      resistivity:
+        input: 0.5875 # or float_value or .csv
+        csv_filename: NULL
+
   design_data:
-    seawater_max_temperature: 10 # °C
     design_life: 5 # yr
-    seawater_resistivity:
-      input: 0.5875 # or float_value or .csv
-      csv_filename: NULL
+    biofouling:
+      type: aerobic #aerobic or anaerobic
 
   anode:
     material: aluminium #  aluminium or zinc
@@ -28,11 +33,31 @@ inputs:
 
   structure:
     coating: Yes # Yes or No
+    area_coverage: 100 # %
     coating_yearly_breakdown_factor: 3 # % per year
     steel_coated_area: 13446.04 # m2
 
   design_current:
-    input: .csv
+    input: csv
+    csv_filename: 
+
+ABS_gn_ships_2018:
+  v_ssc: # Protection potential (V) with respect to Ag/AgCl/seawater reference electrode, Section 2, Chapter 3.1, Table 1
+    material: steel
+      aerobic: -0.8
+      anaerobic: -0.9
+    material: iron
+      aerobic: -0.8
+      anaerobic: -0.9
+    material: high_strength_steel
+      aerobic: -0.8
+      anaerobic: -0.9
+    material: austenitic_stainless_steel_n_pre_10_to_1000
+      aerobic: -0.3
+      anaerobic: -0.3
+    material: austenitic_stainless_steel_n_pre_0_to_10
+      aerobic: -0.6
+      anaerobic: -0.6
 
 default:
   log_level: DEBUG
@@ -40,6 +65,3 @@ default:
     overwrite:
       output: True
     cfg_sensitivities: False
-
-Analysis:
-  fe_folder: NULL
