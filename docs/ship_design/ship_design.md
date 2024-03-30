@@ -1,7 +1,7 @@
 # Fundamentals
 
 <https://kstatelibraries.pressbooks.pub/nicholsproject/>
-<https://www.usna.edu/NAOE/_files/documents/Courses/EN455/EN455_Chapter4.pdf>
+
 
 ## Fatigue Assessment
 
