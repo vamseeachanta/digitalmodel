@@ -307,7 +307,7 @@ class OrcaflexUtilities:
                         yaml_variation = {'WaveType': wave['WaveType'], 'WaveDirection': WaveDirection_item, 'WaveHeight': hmax, 'WavePeriod': tassociated}
                         wave_yaml_file['WaveTrains'][0].update(yaml_variation)
 
-                        yml_file_name = f"Hs{'{:.2f}'.format(hs_item)}-WD{'{:02d}'.format(WaveDirection_item)}-Tp{'{:.1f}'.format(tp_item)}"
+                        yml_file_name = f"Hs{'{:.2f}'.format(hs_item)}-WD{'{:03d}'.format(WaveDirection_item)}-Tp{'{:04.1f}'.format(tp_item)}"
                         self.get_full_yaml_file_and_save(input_set, wave_yaml_file, yml_file_name, cfg)
 
     def get_full_yaml_file_and_save(self, input_set, wave_yaml_file, yml_file_name, cfg):
