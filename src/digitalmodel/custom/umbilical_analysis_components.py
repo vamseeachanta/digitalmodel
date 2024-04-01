@@ -1,9 +1,12 @@
+import os
 import math
 import pandas as pd
 from assetutilities.common.update_deep import update_deep_dictionary
 
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.data import SaveData
+
+from assetutilities.common.utilities import is_file_valid_func
 
 from digitalmodel.common.orcaflex_linetypes import OrcaflexLineTypes
 save_data = SaveData()
@@ -44,7 +47,7 @@ class UmbilicalAnalysis():
         return cfg
 
     def installation_step(self, cfg, step):
-        installation_step_dict  = {}
+        installation_step_dict = {}
 
         installation_step_dict = update_deep_dictionary(installation_step_dict, {"includefile": step['includefile']})
         for target_settings in step['target']:
@@ -52,7 +55,8 @@ class UmbilicalAnalysis():
             installation_step_dict = update_deep_dictionary(installation_step_dict, target_dict)
 
         # Write step file
-        filename_path = step['name']
+        analysis_root_folder = cfg['Analysis']['analysis_root_folder']
+        filename_path = os.path.join(analysis_root_folder, step['name'])
         save_data.saveDataYaml(installation_step_dict, filename_path, default_flow_style=False)
 
     def get_target_result(self, cfg, target_settings):
@@ -65,6 +69,9 @@ class UmbilicalAnalysis():
         
     def get_target_line_length(self, cfg, target_settings):
         reference_file = target_settings['reference_file']
+        analysis_root_folder = cfg['Analysis']['analysis_root_folder']
+        file_is_valid, reference_file = is_file_valid_func(reference_file,
+                                                     analysis_root_folder)
         reference_file_yml = ymlInput(reference_file)
         Lines = target_settings['Lines']
         reference_line_length = 0
