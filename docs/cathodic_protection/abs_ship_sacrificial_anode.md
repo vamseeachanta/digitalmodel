@@ -1,4 +1,34 @@
 
+## General Calculation Methodology
+
+To calculate the weight and number of sacrificial anodes in cathodic protection, you can follow these general steps:
+
+1. **Determine Total Surface Area:**
+
+- Calculate the total surface area of the structure that needs protection. This might include the surface area of the metal that needs to be protected against corrosion.
+
+2. **Select Anode Material:**
+
+- Choose the sacrificial anode material based on the type of structure and the electrolyte in which it is immersed. Common materials include zinc, aluminum, and magnesium.
+
+3. **Determine Anode Consumption Rate:**
+
+- Find the anode consumption rate, usually provided by the manufacturer or based on literature. This rate is typically expressed in terms of weight loss per unit area per year.
+
+4. **Calculate Required Weight of Anode:**
+
+- Multiply the total surface area by the anode consumption rate to determine the required weight of the sacrificial anode. This will give you an estimate of how much material is needed to protect the structure.
+Required Weight of Anode= Surface Area x Anode Consumption Rate
+
+5. **Determine Anode Efficiency:**
+
+- Consider the efficiency of the anode material. Anode efficiency is the ratio of the weight of the anode material that actually protects the structure to the total weight of the anode.
+
+6. **Calculate Number of Anodes:**
+
+- Divide the total weight of anodes required by the weight of an individual anode to find the number of anodes needed.
+Number of Anodes = Required Weight of Anode / Weight of One Anode.
+
 # Codes
 
 ## DNV
@@ -98,3 +128,15 @@ Wfinal = final (or end of life) value, in kg (lb)
 ABSGUIDANCE NOTES ON CATHODIC PROTECTION OF SHIPS . 2017 15
 Section 2 Design Criteria and Recommendations
 u = utilization factor determined by the portion of anodic material consumed when the remaining anode material cannot deliver the current needed (dimensionless). The shape of the anode and the design of the stee1 core within it will affect the utilization factor, which may be in the range of 0.70 to 0.95.
+
+### Key References
+
+<https://www.boatus.com/expert-advice/expert-advice-archive/2012/july/how-do-sacrificial-anodes-work>
+
+<https://www.corrosionpedia.com/definition/104/sacrificial-anode>
+
+<https://blog.sleipnergroup.com/en/the-boaters-guide-to-corrosion>
+
+<https://www.totalmateria.com/page.aspx?ID=CheckArticle&site=ktn&NM=375>
+
+<https://boatzincs.com/pages/anode-weight-calculation-formula.html>
