@@ -476,29 +476,32 @@ class OrcaFlexAnalysis():
         if 'Variable' in cfg:
             VariableName = cfg['Variable']
             
-        AdditionalDataArray = None
-        if 'AdditionalData' in cfg:
-            AdditionalDataArray = cfg['AdditionalData']
+        Range_Graph_Type = None
+        if 'Range_Graph_Type' in cfg:
+            Range_Graph_Type = cfg['Range_Graph_Type']
 
         if cfg['Command'] == 'Range Graph':
             output = self.get_RangeGraph(OrcFXAPIObject, TimePeriod,
-                                         VariableName, arclengthRange, objectExtra)
+                                         wip, arclengthRange, objectExtra)
 
             AdditionalDataName = 'X'
             RangeDF[AdditionalDataName] = output.X
 
             output_value = self.get_additional_data(cfg, RangeDF, VariableName,
-                                                    output, AdditionalDataArray)
+                                                    output, Range_Graph_Type)
         elif cfg['Command'] == 'TimeHistory':
             try:
-                output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
-                                                    arclengthRange)
-            except:
-                arclengthRange = None
-                output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
+                if objectExtra is None:
+                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
+                else:
+                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
+                                                   objectExtra)
+            except Exception as e:
+                logging.info(str(e))
+                raise Exception(f"Error in TimeHistory: {str(e)}")
 
             output_value = self.get_additional_data(cfg, RangeDF, VariableName,
-                                                    output, AdditionalDataArray)
+                                                    output, Range_Graph_Type)
         elif cfg['Command'] in ['Static Result', 'StaticResult']:
             output_value = self.get_StaticResult(OrcFXAPIObject, VariableName,
                                                  objectExtra)
@@ -514,10 +517,10 @@ class OrcaFlexAnalysis():
         else:
             ArcLengthArray = []
         try:
-            arclengthRange = self.get_ArcLengthObject(ArcLengthArray)
+            arclengthRange = self.get_ArcLengthObject(ArcLengthArray, cfg)
         except:
             arclengthRange = self.get_ArcLengthObject([])
-        return ArcLengthArray,arclengthRange
+        return ArcLengthArray, arclengthRange
 
     def get_OrcFXAPIObject(self, model, cfg):
         if 'ObjectName' in cfg:
@@ -541,29 +544,30 @@ class OrcaFlexAnalysis():
         return TimePeriod
 
     def get_objectExtra(self, cfg):
-        if 'objectExtra' not in cfg and len(cfg['objectExtra']) == 0:
-            objectExtra = None
 
-        if cfg['objectExtra'][0] == 'Section':
-            if len(cfg['objectExtra'][1]) == 1:
-                objectExtra = OrcFxAPI.arSpecifiedSections(FromSection=cfg['objectExtra'][1][0], ToSection=cfg['objectExtra'][1][0])
-            elif len(cfg['objectExtra'][1]) == 2:
-                objectExtra = OrcFxAPI.arSpecifiedSections(FromSection=cfg['objectExtra'][1][0], ToSection=cfg['objectExtra'][1][1])
-
+        objectExtra = None
         if 'Support' in cfg['Variable'] and 'SupportIndex' in cfg:
             objectExtra = OrcFxAPI.oeSupport(SupportIndex = cfg['SupportIndex'])
-        elif 'ArcLength' in cfg:
-            if len(cfg['AdditionalData']) > 0:
-                if 'End' in cfg['AdditionalData'][0] or len(ArcLengthArray) == 0 or ArcLengthArray is None:
-                    if 'End A' in cfg['AdditionalData'][0]:
-                        objectExtra = OrcFxAPI.oeEndA
-                    elif 'End B' in cfg['AdditionalData'][0]:
-                        objectExtra = OrcFxAPI.oeEndB
-            elif len(ArcLengthArray) == 1:
-                # Result at Arc Length X
-                objectExtra = OrcFxAPI.oeLine(ArcLength=ArcLengthArray[0])
-            elif len(ArcLengthArray) == 2:
-                raise Exception("ArcLengthArray not supported")
+
+        if 'objectExtra' in cfg and len(cfg['objectExtra']) > 0:
+            if cfg['objectExtra'][0] == 'Section':
+                if len(cfg['objectExtra'][1]) == 1:
+                    objectExtra = OrcFxAPI.arSpecifiedSections(FromSection=cfg['objectExtra'][1][0], ToSection=cfg['objectExtra'][1][0])
+                elif len(cfg['objectExtra'][1]) == 2:
+                    objectExtra = OrcFxAPI.arSpecifiedSections(FromSection=cfg['objectExtra'][1][0], ToSection=cfg['objectExtra'][1][1])
+            elif 'End A' in cfg['objectExtra'][0]:
+                objectExtra = OrcFxAPI.oeEndA
+            elif 'End B' in cfg['objectExtra'][0]:
+                objectExtra = OrcFxAPI.oeEndB
+
+        elif 'ArcLength' in cfg and len(cfg['ArcLength']) > 0:
+            ArcLength = cfg['ArcLength']
+            if len(ArcLength) == 1:
+                objectExtra = OrcFxAPI.oeLine(ArcLength[0])
+            elif len(ArcLength) == 2:
+                objectExtra = OrcFxAPI.oeLine(ArcLength[0], ArcLength[1])
+            else:
+                objectExtra = OrcFxAPI.oeLine([])
 
         return objectExtra
 
@@ -573,36 +577,34 @@ class OrcaFlexAnalysis():
         return output_value
 
     def get_additional_data(self, cfg, RangeDF, VariableName, output,
-                            AdditionalDataArray):
-        for AdditionalDataIndex in range(0, len(AdditionalDataArray)):
-            AdditionalDataName = AdditionalDataArray[AdditionalDataIndex]
-            if cfg['Command'] == 'Range Graph':
-                RangeDF[VariableName] = getattr(output, AdditionalDataName)
-                if VariableName == "API STD 2RD Method 1":
-                    RangeDF[VariableName] = [
-                        math.sqrt(x) for x in RangeDF[VariableName]
-                    ]
-                if AdditionalDataName == "Max":
-                    output_value = RangeDF[VariableName].max()
-                elif AdditionalDataName == "Min":
-                    output_value = RangeDF[VariableName].min()
-                elif AdditionalDataName == "Mean":
-                    output_value = RangeDF[VariableName].mean()
-            else:
-                if AdditionalDataName == "Max":
-                    output_value = output.max()
-                elif AdditionalDataName == "Min":
-                    output_value = output.min()
-                elif AdditionalDataName == "Mean":
-                    output_value = output.mean()
+                            Range_Graph_Type):
+        if cfg['Command'] == 'Range Graph':
+            RangeDF[VariableName] = getattr(output, Range_Graph_Type)
+            if VariableName == "API STD 2RD Method 1":
+                RangeDF[VariableName] = [
+                    math.sqrt(x) for x in RangeDF[VariableName]
+                ]
+            if Range_Graph_Type == "Max":
+                output_value = RangeDF[VariableName].max()
+            elif Range_Graph_Type == "Min":
+                output_value = RangeDF[VariableName].min()
+            elif Range_Graph_Type == "Mean":
+                output_value = RangeDF[VariableName].mean()
+        else:
+            if Range_Graph_Type == "Max":
+                output_value = output.max()
+            elif Range_Graph_Type == "Min":
+                output_value = output.min()
+            elif Range_Graph_Type == "Mean":
+                output_value = output.mean()
 
-            if cfg.__contains__('transform'):
-                trans_cfg = cfg['transform']
-                trans_cfg['data'] = output_value
-                transformed_cfg = self.transform_output(trans_cfg)
-                output_value = transformed_cfg['data']
+        if cfg.__contains__('transform'):
+            trans_cfg = cfg['transform']
+            trans_cfg['data'] = output_value
+            transformed_cfg = self.transform_output(trans_cfg)
+            output_value = transformed_cfg['data']
 
-            return output_value
+        return output_value
 
     def get_StaticResult(self, OrcFXAPIObject, VariableName, objectExtra=None):
         output = OrcFXAPIObject.StaticResult(VariableName, objectExtra)
@@ -737,6 +739,7 @@ class OrcaFlexAnalysis():
                         fileIndex, cfg)
                 except Exception as e:
                     logging.info(str(e))
+                    raise Exception("Error in post processing")
 
             if cfg['orcaflex']['postprocess']['RAOs']['flag']:
                 self.post_process_RAOs(model, FileObjectName)
@@ -1018,19 +1021,27 @@ class OrcaFlexAnalysis():
 
         return TimePeriodObject
 
-    def get_ArcLengthObject(self, ArcLength):
+    def get_ArcLengthObject(self, ArcLength, cfg):
 
         if ArcLength is None:
             arclengthRange = None
-        elif type(ArcLength) is str:
-            if 'EndA' in ArcLength:
+        elif 'objectExtra' in cfg:
+            if 'End A' in cfg['objectExtra'][0]:
                 arclengthRange = OrcFxAPI.oeEndA
-            elif 'EndB' in ArcLength:
+            elif 'End B' in cfg['objectExtra'][0]:
+                arclengthRange = OrcFxAPI.oeEndB
+            elif 'Touchdown' in cfg['objectExtra'][0]:
+                arclengthRange = OrcFxAPI.oeTouchdown
+        elif type(ArcLength) is str:
+            if 'End A' in ArcLength:
+                arclengthRange = OrcFxAPI.oeEndA
+            elif 'End B' in ArcLength:
                 arclengthRange = OrcFxAPI.oeEndB
             elif 'Touchdown' in ArcLength:
                 arclengthRange = OrcFxAPI.oeTouchdown
             else:
                 raise ValueError
+
         elif len(ArcLength) == 2:
             StartArcLength = ArcLength[0]
             EndArcLength = ArcLength[1]
