@@ -21,6 +21,8 @@ Salinity Calculations
 - % parts per hundred
 - therefore, 1 ppm = 0.001 ppt = 0.0001 % or (parts per hundred)
 
+![Resistivity with Salinity](image.png)
+
 <https://www.capitalcityaquatics.com/salinity>
 <https://www.unitsconverters.com/en/Salinitypercentage-To-Partsperthousand/Unittounit-4923-4921>
 
@@ -30,6 +32,8 @@ Salinity 1.0ppt = 1.970 mS/cm = 507.6 Ohm.cm
 Salinity 10ppt  = 17.02 mS/cm = 58.75 Ohm.cm
 Salinity 25ppt  = 39.26 mS/cm = 25.47 Ohm.cm
 Salinity 31ppt  = 47.62 mS/cm = 21.00 Ohm.cm
+
+<https://civilweb-spreadsheets.com/marine-design-spreadsheets/cathodic-protection-design-spreadsheet/resistivity-of-seawater/>
 
 # Codes
 
