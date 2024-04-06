@@ -26,6 +26,7 @@ except:
 
 ou = OrcaflexUtilities()
 fm = FileManagement()
+save_data = SaveData()
 
 class OrcaFlexAnalysis():
 
@@ -154,7 +155,6 @@ class OrcaFlexAnalysis():
             'UseCalculatedPositions_cfg'].copy()
         if UseCalculatedPositions_cfg['flag'] and UseCalculatedPositions_cfg[
                 'clean_StaleCalculatedPositions']:
-            save_data = SaveData()
             file_yml = ymlInput(filename_with_ext)
             clean_file = {'BaseFile': file_yml['BaseFile']}
             save_data.saveDataYaml(clean_file, filename_without_ext)
@@ -284,7 +284,6 @@ class OrcaFlexAnalysis():
         self.save_cfg_files_from_multiple_files(cfg)
 
     def save_data(self):
-        save_data = SaveData()
         save_data.saveDataYaml(
             self.cfg, self.cfg['Analysis']['result_folder'] +
             self.cfg['Analysis']['file_name'], False)
@@ -476,19 +475,19 @@ class OrcaFlexAnalysis():
         if 'Variable' in cfg:
             VariableName = cfg['Variable']
             
-        Range_Graph_Type = None
-        if 'Range_Graph_Type' in cfg:
-            Range_Graph_Type = cfg['Range_Graph_Type']
+        Statistic_Type = None
+        if 'Statistic_Type' in cfg:
+            Statistic_Type = cfg['Statistic_Type']
 
         if cfg['Command'] == 'Range Graph':
-            output = self.get_RangeGraph(OrcFXAPIObject, TimePeriod,
-                                         wip, arclengthRange, objectExtra)
+            output = self.get_RangeGraph(OrcFXAPIObject, TimePeriod, VariableName,
+                       arclengthRange, objectExtra)
 
             AdditionalDataName = 'X'
             RangeDF[AdditionalDataName] = output.X
 
             output_value = self.get_additional_data(cfg, RangeDF, VariableName,
-                                                    output, Range_Graph_Type)
+                                                    output, Statistic_Type)
         elif cfg['Command'] == 'TimeHistory':
             try:
                 if objectExtra is None:
@@ -501,7 +500,7 @@ class OrcaFlexAnalysis():
                 raise Exception(f"Error in TimeHistory: {str(e)}")
 
             output_value = self.get_additional_data(cfg, RangeDF, VariableName,
-                                                    output, Range_Graph_Type)
+                                                    output, Statistic_Type)
         elif cfg['Command'] in ['Static Result', 'StaticResult']:
             output_value = self.get_StaticResult(OrcFXAPIObject, VariableName,
                                                  objectExtra)
@@ -512,14 +511,15 @@ class OrcaFlexAnalysis():
         return output_value
 
     def get_arc_length_objects(self, cfg):
+        ArcLengthArray = []
         if 'ArcLength' in cfg:
             ArcLengthArray = cfg['ArcLength']
-        else:
-            ArcLengthArray = []
+
         try:
             arclengthRange = self.get_ArcLengthObject(ArcLengthArray, cfg)
         except:
             arclengthRange = self.get_ArcLengthObject([])
+
         return ArcLengthArray, arclengthRange
 
     def get_OrcFXAPIObject(self, model, cfg):
@@ -577,25 +577,25 @@ class OrcaFlexAnalysis():
         return output_value
 
     def get_additional_data(self, cfg, RangeDF, VariableName, output,
-                            Range_Graph_Type):
+                            Statistic_Type):
         if cfg['Command'] == 'Range Graph':
-            RangeDF[VariableName] = getattr(output, Range_Graph_Type)
+            RangeDF[VariableName] = getattr(output, Statistic_Type)
             if VariableName == "API STD 2RD Method 1":
                 RangeDF[VariableName] = [
                     math.sqrt(x) for x in RangeDF[VariableName]
                 ]
-            if Range_Graph_Type == "Max":
+            if Statistic_Type == "Max":
                 output_value = RangeDF[VariableName].max()
-            elif Range_Graph_Type == "Min":
+            elif Statistic_Type == "Min":
                 output_value = RangeDF[VariableName].min()
-            elif Range_Graph_Type == "Mean":
+            elif Statistic_Type == "Mean":
                 output_value = RangeDF[VariableName].mean()
         else:
-            if Range_Graph_Type == "Max":
+            if Statistic_Type == "Max":
                 output_value = output.max()
-            elif Range_Graph_Type == "Min":
+            elif Statistic_Type == "Min":
                 output_value = output.min()
-            elif Range_Graph_Type == "Mean":
+            elif Statistic_Type == "Mean":
                 output_value = output.mean()
 
         if cfg.__contains__('transform'):
@@ -660,10 +660,30 @@ class OrcaFlexAnalysis():
                 SummaryDF = SummaryDF.round(2)
 
         self.save_summary_to_csv(SummaryFileNameArray, cfg)
-        self.saveSummaryToExcel(SummaryFileNameArray, cfg)
+        self.saveSummaryToNewExcel(SummaryFileNameArray, cfg)
+        self.injectSummaryToNewExcel(SummaryFileNameArray, cfg)
 
         cfg[cfg['basename']].update({'summary_groups': len(summary_groups)})
         print(f"Processed summary files: {len(summary_groups)}")
+
+    def injectSummaryToNewExcel(self, SummaryFileNameArray, cfg):
+        for group_idx in range(0, len(SummaryFileNameArray)):
+            summary_group_cfg = cfg['summary_settings']['groups'][group_idx]
+            if 'inject_into' in summary_group_cfg and summary_group_cfg[
+                    'inject_into']['flag']:
+                inject_into_file = summary_group_cfg['inject_into']['filename']
+                file_name = os.path.join(cfg['Analysis']['analysis_root_folder'],
+                            inject_into_file)
+                if not os.path.isfile(file_name):
+                    raise Exception(f"Inject Into File {file_name} not found for writing summary data")
+
+                sheetname = summary_group_cfg['inject_into']['sheetname']
+                if sheetname is None:
+                    sheetname = SummaryFileNameArray[group_idx]
+
+                df = self.SummaryDFAllFiles[group_idx]
+                cfg_save_to_existing_workbook = {'template_file_name': file_name, 'sheetname': sheetname, 'saved_file_name': file_name, 'if_sheet_exists': 'replace', 'df': df}
+                save_data.df_to_sheet_in_existing_workbook(cfg_save_to_existing_workbook)
 
     def save_summary_to_csv(self, SummaryFileNameArray, cfg):
         for group_idx in range(0, len(SummaryFileNameArray)):
@@ -674,9 +694,8 @@ class OrcaFlexAnalysis():
             df.to_csv(file_name, index=False)
 
 
-    def saveSummaryToExcel(self, SummaryFileNameArray, cfg):
+    def saveSummaryToNewExcel(self, SummaryFileNameArray, cfg):
         if len(self.SummaryDFAllFiles) > 0:
-            save_data = SaveData()
             customdata = {
                 "FileName":
                     os.path.join(cfg['Analysis']['result_folder'],
@@ -952,10 +971,13 @@ class OrcaFlexAnalysis():
                                             len(summary_group_cfg['Columns'])):
                 summary_group_item_cfg = summary_group_cfg['Columns'][
                     SummaryColumnIndex]
-
-                output_value = self.process_summary_by_model_and_cfg(
-                    model, summary_group_item_cfg)
-                summary_from_sim_file.append(output_value)
+                try:
+                    output_value = self.process_summary_by_model_and_cfg(
+                        model, summary_group_item_cfg)
+                    summary_from_sim_file.append(output_value)
+                except:
+                    summary_from_sim_file.append(None)
+                    raise Exception("Error in post processing")
 
             if np.nan in summary_from_sim_file:
                 print("Summary Incomplete for : '{}' in simulation file: '{}'".
@@ -1023,15 +1045,17 @@ class OrcaFlexAnalysis():
 
     def get_ArcLengthObject(self, ArcLength, cfg):
 
-        if ArcLength is None:
-            arclengthRange = None
-        elif 'objectExtra' in cfg:
+        arclengthRange = None
+        if 'objectExtra' in cfg:
             if 'End A' in cfg['objectExtra'][0]:
                 arclengthRange = OrcFxAPI.oeEndA
             elif 'End B' in cfg['objectExtra'][0]:
                 arclengthRange = OrcFxAPI.oeEndB
             elif 'Touchdown' in cfg['objectExtra'][0]:
                 arclengthRange = OrcFxAPI.oeTouchdown
+
+        if arclengthRange is None and ArcLength is None:
+            arclengthRange = None
         elif type(ArcLength) is str:
             if 'End A' in ArcLength:
                 arclengthRange = OrcFxAPI.oeEndA
@@ -1239,7 +1263,6 @@ class OrcaFlexAnalysis():
             self.all_histogram_file_dfs)
 
     def save_histograms(self):
-        save_data = SaveData()
         customdata = {
             "FileName":
                 self.cfg['Analysis']['result_folder'] +
@@ -1280,7 +1303,6 @@ class OrcaFlexAnalysis():
 
     def save_cfg_files_from_multiple_files(self):
 
-        save_data = SaveData()
 
         for file_index in range(0, len(self.cfg_array)):
             save_data.saveDataYaml(
@@ -1362,8 +1384,6 @@ class OrcaFlexAnalysis():
 
         df_array = [item['RAO_df'] for item in self.RAO_df_array]
         df_label_array = [item['Label'] for item in self.RAO_df_array]
-
-        save_data = SaveData()
 
         customdata = {
             "FileName":
