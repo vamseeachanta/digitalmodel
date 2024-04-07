@@ -469,12 +469,14 @@ class OrcaFlexAnalysis():
 
         ArcLengthArray, arclengthRange = self.get_arc_length_objects(cfg)
 
-        objectExtra = self.get_objectExtra(cfg)
+        objectExtra, arclengthRange_objectExtra = self.get_objectExtra(cfg)
+        if arclengthRange is None:
+            arclengthRange = arclengthRange_objectExtra
 
         VariableName = None
         if 'Variable' in cfg:
             VariableName = cfg['Variable']
-            
+
         Statistic_Type = None
         if 'Statistic_Type' in cfg:
             Statistic_Type = cfg['Statistic_Type']
@@ -546,6 +548,8 @@ class OrcaFlexAnalysis():
     def get_objectExtra(self, cfg):
 
         objectExtra = None
+        arclengthRange = None
+
         if 'Support' in cfg['Variable'] and 'SupportIndex' in cfg:
             objectExtra = OrcFxAPI.oeSupport(SupportIndex = cfg['SupportIndex'])
 
@@ -559,6 +563,7 @@ class OrcaFlexAnalysis():
                 objectExtra = OrcFxAPI.oeEndA
             elif 'End B' in cfg['objectExtra'][0]:
                 objectExtra = OrcFxAPI.oeEndB
+            arclengthRange = objectExtra
 
         elif 'ArcLength' in cfg and len(cfg['ArcLength']) > 0:
             ArcLength = cfg['ArcLength']
@@ -569,7 +574,7 @@ class OrcaFlexAnalysis():
             else:
                 objectExtra = OrcFxAPI.oeLine([])
 
-        return objectExtra
+        return objectExtra, arclengthRange
 
     def get_input_data(self, OrcFXAPIObject, VariableName, ArcLengthArray):
         output_value = OrcFXAPIObject.GetData(VariableName[0], VariableName[1])
@@ -1018,12 +1023,11 @@ class OrcaFlexAnalysis():
         try:
             output = OrcFXAPIObject.RangeGraph(VariableName,
                                                TimePeriod,
-                                               arclengthRange=arclengthRange, objectExtra=objectExtra)
+                                               arclengthRange=arclengthRange)
         except:
-            arclengthRange = None
             output = OrcFXAPIObject.RangeGraph(VariableName,
                                                TimePeriod,
-                                               arclengthRange=arclengthRange)
+                                               objectExtra=objectExtra, arclengthRange=arclengthRange)
         return output
 
     def get_TimePeriodObject(self, SimulationPeriod):
