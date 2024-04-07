@@ -37,9 +37,22 @@ class OrcaflexModelUtilities:
             'filename': 'tests/test_data/orcaflex_file_preparation/wave_template.yml',
             'library_name': library_name
         }
-        buoy_6d_template = wwy.get_library_yaml_file(library_yaml_cfg)
+        template = wwy.get_library_yaml_file(library_yaml_cfg)
 
-        return buoy_6d_template
+        return template
+
+
+    def get_current_template(self):
+        library_name = 'digitalmodel'
+        library_yaml_cfg = {
+            'filename': 'tests/test_data/orcaflex_file_preparation/current_template.yml',
+            'library_name': library_name
+        }
+        template = wwy.get_library_yaml_file(library_yaml_cfg)
+
+        return template
+
+
 
     def get_wave_template_with_n_waves(self, n_waves):
 

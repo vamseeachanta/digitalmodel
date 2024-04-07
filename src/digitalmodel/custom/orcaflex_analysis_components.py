@@ -1,4 +1,5 @@
 import os
+import re
 import logging
 import pandas as pd
 import numpy as np
@@ -508,7 +509,7 @@ class OrcaFlexAnalysis():
                                                  objectExtra)
         elif cfg['Command'] in ['GetData', 'Get Data']:
             output_value = self.get_input_data(OrcFXAPIObject, VariableName,
-                                               ArcLengthArray)
+                                               model)
 
         return output_value
 
@@ -550,8 +551,12 @@ class OrcaFlexAnalysis():
         objectExtra = None
         arclengthRange = None
 
-        if 'Support' in cfg['Variable'] and 'SupportIndex' in cfg:
-            objectExtra = OrcFxAPI.oeSupport(SupportIndex = cfg['SupportIndex'])
+        if 'Support' in cfg['Variable']:
+            if 'SupportIndex' in cfg:
+                objectExtra = OrcFxAPI.oeSupport(SupportIndex = cfg['SupportIndex'])
+            else:
+                logging.info("SupportIndex not implemented fully. Edit definition to get acceptance.")
+                raise Exception("SupportIndex not implemented fully. Edit definition to get acceptance.")
 
         if 'objectExtra' in cfg and len(cfg['objectExtra']) > 0:
             if cfg['objectExtra'][0] == 'Section':
@@ -576,8 +581,13 @@ class OrcaFlexAnalysis():
 
         return objectExtra, arclengthRange
 
-    def get_input_data(self, OrcFXAPIObject, VariableName, ArcLengthArray):
-        output_value = OrcFXAPIObject.GetData(VariableName[0], VariableName[1])
+    def get_input_data(self, OrcFXAPIObject, VariableName, model):
+        if 'Current' in VariableName[0]:
+            ActiveCurrent = OrcFXAPIObject.GetData('ActiveCurrent', -1)
+            model.environment.SelectedCurrent = ActiveCurrent
+            output_value = model.environment.GetData(VariableName[0], VariableName[1])
+        else:
+            output_value = OrcFXAPIObject.GetData(VariableName[0], VariableName[1])
 
         return output_value
 
@@ -756,11 +766,16 @@ class OrcaFlexAnalysis():
             for SummaryIndex in range(0,
                                       len(cfg['summary_settings']['groups'])):
                 try:
-                    SimulationFileName = self.get_SimulationFileName(file_name)
-                    SummaryDFAllFiles[SummaryIndex] = self.postProcessSummary(
-                        model, SummaryDFAllFiles[SummaryIndex], SummaryIndex,
-                        FileDescription, FileObjectName, SimulationFileName,
-                        fileIndex, cfg)
+                    if 'filename_pattern' in cfg['summary_settings']['groups'][SummaryIndex]:
+                        filename_pattern = cfg['summary_settings']['groups'][SummaryIndex]['filename_pattern']
+                        if filename_pattern in file_name:
+                            filename_pattern = True
+                    if filename_pattern:
+                        SimulationFileName = self.get_SimulationFileName(file_name)
+                        SummaryDFAllFiles[SummaryIndex] = self.postProcessSummary(
+                            model, SummaryDFAllFiles[SummaryIndex], SummaryIndex,
+                            FileDescription, FileObjectName, SimulationFileName,
+                            fileIndex, cfg)
                 except Exception as e:
                     logging.info(str(e))
                     raise Exception("Error in post processing")

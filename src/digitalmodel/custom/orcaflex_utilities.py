@@ -291,13 +291,16 @@ class OrcaflexUtilities:
         return cfg
 
     def prepare_operating_window_for_input_set(self, input_set, cfg):
-        wave = input_set['loads']['wave']
-
         wave_yaml_file = omu.get_wave_template()
-
+        wave = input_set['loads']['wave']
         hs = wave['hs']
         tp = wave['tp']
         WaveDirection = wave['WaveDirection']
+
+        current = input_set['loads']['current']
+        ActiveCurrent = current['ActiveCurrent']
+        RefCurrentDirection = current['RefCurrentDirection']
+        SurfaceCurrentFactor = current['SurfaceCurrentFactor']
 
 
         if wave['WaveType'] == 'Airy':
@@ -310,13 +313,25 @@ class OrcaflexUtilities:
                     tassociated = self.get_theoretical_tassociated({'tp': tp_item, 'peakedness': peakedness})
 
                     for WaveDirection_item in WaveDirection:
-                        yaml_variation = {'WaveType': wave['WaveType'], 'WaveDirection': WaveDirection_item, 'WaveHeight': hmax, 'WavePeriod': tassociated}
-                        wave_yaml_file['WaveTrains'][0].update(yaml_variation)
+                        wave_yaml_variation = {'WaveType': wave['WaveType'], 'WaveDirection': WaveDirection_item, 'WaveHeight': hmax, 'WavePeriod': tassociated}
+                        wave_yaml_file['WaveTrains'][0].update(wave_yaml_variation)
 
-                        yml_file_name = f"Hs{'{:.2f}'.format(hs_item)}-WD{'{:03d}'.format(WaveDirection_item)}-Tp{'{:04.1f}'.format(tp_item)}"
-                        self.get_full_yaml_file_and_save(input_set, wave_yaml_file, yml_file_name, cfg)
+                        for ActiveCurrent_index in range(0, len(ActiveCurrent)):
+                            ActiveCurrent_item = ActiveCurrent[ActiveCurrent_index]
+                            current_type = current['current_type'][ActiveCurrent_index]
+                            for RefCurrentDirection_item in RefCurrentDirection:
+                                for SurfaceCurrentFactor_item in SurfaceCurrentFactor:
+                                    
+                                    current_yaml_file = {'ActiveCurrent': ActiveCurrent_item, 'Currents': {ActiveCurrent_item: {'RefCurrentDirection': RefCurrentDirection_item, 'CurrentFactor[1]': SurfaceCurrentFactor_item}}}
 
-    def get_full_yaml_file_and_save(self, input_set, wave_yaml_file, yml_file_name, cfg):
+                                    wave_file_name = f"Hs{'{:.2f}'.format(hs_item)}-WD{'{:03d}'.format(WaveDirection_item)}-Tp{'{:04.1f}'.format(tp_item)}"
+                                    current_file_name = f"-AC{current_type}-CD{'{:03d}'.format(RefCurrentDirection_item)}-CF{'{:02.1f}'.format(SurfaceCurrentFactor_item)}"
+                                    yml_file_name = wave_file_name + current_file_name
+                                    self.get_full_yaml_file_and_save(input_set, wave_yaml_file, current_yaml_file, yml_file_name, cfg)
+
+
+
+    def get_full_yaml_file_and_save(self, input_set, wave_yaml_file, current_yaml_file, yml_file_name, cfg):
         if 'includefile' in input_set:
             full_yml_file = {'includefile': input_set['includefile']}
         elif 'BaseFile' in input_set:
@@ -325,6 +340,7 @@ class OrcaflexUtilities:
         general_yml = self.get_general_yml(input_set, wave_yaml_file)
         full_yml_file.update(general_yml)
         full_yml_file.update({'Environment': wave_yaml_file})
+        full_yml_file['Environment'].update(current_yaml_file)
 
         output_dir = input_set['output_dir']
         full_output_dir_path = os.path.join(cfg['Analysis']['analysis_root_folder'], output_dir)

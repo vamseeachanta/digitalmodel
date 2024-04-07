@@ -10,6 +10,7 @@ except:
 
 import logging
 from assetutilities.common.utilities import is_file_valid_func
+from assetutilities.common.update_deep import update_deep_dictionary
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 from digitalmodel.custom.orcaflex_analysis_components import OrcaFlexAnalysis
 
@@ -24,6 +25,7 @@ class orcaflex_post_process:
 
     def post_process_router(self, cfg):
 
+        cfg = self.get_cfg_with_master_data(cfg)
         if cfg['orcaflex']['postprocess']['summary']['flag'] or cfg[
                     'orcaflex']['postprocess']['RangeGraph']['flag'] or cfg[
                         'orcaflex']['postprocess']['time_series'][
@@ -42,10 +44,22 @@ class orcaflex_post_process:
             cfg.update({cfg['basename']: {}})
             ofa.post_process(cfg)
             ofa.save_summary(cfg)
-        elif post_process_visualization_flag: 
+        elif post_process_visualization_flag:
             self.get_visualizations(cfg)
         else:
             logging.info("No postprocess option to run specified ... End Run.")
+
+        return cfg
+
+    def get_cfg_with_master_data(self, cfg):
+        if 'summary_settings_master' in cfg:
+            summary_settings_master = cfg['summary_settings_master'].copy()
+            summary_settings = cfg['summary_settings']
+
+            for group_index in range(0, len(summary_settings['groups'])):
+                group = summary_settings['groups'][group_index].copy()
+                group = update_deep_dictionary(summary_settings_master['groups'][0], group)
+                summary_settings['groups'][group_index] = group.copy()
 
         return cfg
 

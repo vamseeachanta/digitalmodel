@@ -5,6 +5,7 @@ from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 
 ou = OrcaflexUtilities()
 oir = OrcaflexIterativeRuns()
+opp = orcaflex_post_process()
 
 
 def orcaflex_analysis(cfg):
@@ -27,7 +28,6 @@ def orcaflex_analysis(cfg):
         if cfg['orcaflex']['iterate']['rerun']:
             oir.run_iterative_simulations()
 
-    opp = orcaflex_post_process()
     opp.post_process_router(cfg)
 
     return cfg
