@@ -153,8 +153,12 @@ class OrcaflexUtilities:
             input_files = {}
 
             for file_ext in orcaflex_extensions:
-                raw_input_files_for_ext = glob.glob(file_management_directory +
-                                                    '/*.' + file_ext)
+                filename_pattern = cfg['file_management']['files']['files_in_current_directory'].get('filename_pattern', None)
+                if filename_pattern is None:
+                    glob_search = os.path.join(file_management_directory, f'*.{file_ext}')
+                else:
+                    glob_search = os.path.join(file_management_directory, f'*{filename_pattern}*.{file_ext}')
+                raw_input_files_for_ext = glob.glob(glob_search)
                 input_files.update({file_ext: raw_input_files_for_ext})
 
             cfg.file_management.update({'input_files': input_files})

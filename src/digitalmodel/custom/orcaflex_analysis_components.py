@@ -730,16 +730,13 @@ class OrcaFlexAnalysis():
         return self.load_matrix
 
     def post_process(self, cfg):
+
         self.load_matrix = self.get_load_matrix_with_filenames(cfg)
         # Intialize output arrays
         RangeAllFiles = []
         histogram_all_files = []
-        SummaryDFAllFiles = [pd.DataFrame()] * len(
-            cfg['summary_settings']['groups'])
 
         sim_files = cfg.file_management['input_files']['sim']
-
-        summary_cfg = cfg['summary_settings'].copy()
 
         for fileIndex in range(0, len(sim_files)):
             file_name = sim_files[fileIndex]
@@ -763,23 +760,6 @@ class OrcaFlexAnalysis():
                     pass
                 histogram_all_files.append(histogram_for_file)
 
-            for SummaryIndex in range(0,
-                                      len(cfg['summary_settings']['groups'])):
-                try:
-                    if 'filename_pattern' in cfg['summary_settings']['groups'][SummaryIndex]:
-                        filename_pattern = cfg['summary_settings']['groups'][SummaryIndex]['filename_pattern']
-                        if filename_pattern in file_name:
-                            filename_pattern = True
-                    if filename_pattern:
-                        SimulationFileName = self.get_SimulationFileName(file_name)
-                        SummaryDFAllFiles[SummaryIndex] = self.postProcessSummary(
-                            model, SummaryDFAllFiles[SummaryIndex], SummaryIndex,
-                            FileDescription, FileObjectName, SimulationFileName,
-                            fileIndex, cfg)
-                except Exception as e:
-                    logging.info(str(e))
-                    raise Exception("Error in post processing")
-
             if cfg['orcaflex']['postprocess']['RAOs']['flag']:
                 self.post_process_RAOs(model, FileObjectName)
 
@@ -791,7 +771,47 @@ class OrcaFlexAnalysis():
 
         self.HistogramAllFiles = histogram_all_files
         self.RangeAllFiles = RangeAllFiles
+
+        SummaryDFAllFiles = self.process_summary_groups(cfg)
         self.SummaryDFAllFiles = SummaryDFAllFiles
+
+    def process_summary_groups(self, cfg):
+        
+        summary_cfg = cfg['summary_settings'].copy()
+        SummaryDFAllFiles = [pd.DataFrame()] * len(
+            summary_cfg['groups'])
+
+        for SummaryIndex in range(0, len(cfg['summary_settings']['groups'])):
+            if 'filename_pattern' in cfg['summary_settings']['groups'][SummaryIndex]:
+                filename_pattern = cfg['summary_settings']['groups'][SummaryIndex]['filename_pattern']
+                if filename_pattern is not None:
+                    cfg['file_management']['files']['files_in_current_directory']['filename_pattern'] = filename_pattern
+
+            self.file_management(cfg)
+            self.load_matrix = self.get_load_matrix_with_filenames(cfg)
+
+            sim_files = cfg.file_management['input_files']['sim']
+
+            for fileIndex in range(0, len(sim_files)):
+                file_name = sim_files[fileIndex]
+                self.fileIndex = fileIndex
+                model = self.get_model_from_filename(file_name=file_name)
+                FileDescription = 'Description'
+                FileObjectName = 'Dummy_Object'
+                print("Post-processing file: {}".format(file_name))
+
+                SimulationFileName = self.get_SimulationFileName(file_name)
+
+                try:
+                    SummaryDFAllFiles[SummaryIndex] = self.postProcessSummary(
+                            model, SummaryDFAllFiles[SummaryIndex], SummaryIndex,
+                            FileDescription, FileObjectName, SimulationFileName,
+                            fileIndex, cfg)
+                except Exception as e:
+                    logging.info(str(e))
+                    raise Exception("Error in post processing")
+            
+        return SummaryDFAllFiles
 
     def get_model_from_filename(self, file_name):
         SimulationFileName = self.get_SimulationFileName(file_name)
