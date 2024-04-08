@@ -1020,9 +1020,10 @@ class OrcaFlexAnalysis():
                     output_value = self.process_summary_by_model_and_cfg(
                         model, summary_group_item_cfg)
                     summary_from_sim_file.append(output_value)
-                except:
+                except Exception as e:
                     summary_from_sim_file.append(None)
-                    raise Exception("Error in post processing")
+                    print(str(e))
+                    print(f"Summary Group {summary_group_item_cfg}  in post processing")
 
             if np.nan in summary_from_sim_file:
                 print("Summary Incomplete for : '{}' in simulation file: '{}'".
