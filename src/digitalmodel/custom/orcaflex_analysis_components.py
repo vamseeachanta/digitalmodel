@@ -568,6 +568,8 @@ class OrcaFlexAnalysis():
                 objectExtra = OrcFxAPI.oeEndA
             elif 'End B' in cfg['objectExtra'][0]:
                 objectExtra = OrcFxAPI.oeEndB
+            elif 'Touchdown' in cfg['objectExtra'][0]:
+                objectExtra = OrcFxAPI.oeTouchdown
             arclengthRange = objectExtra
 
         elif 'ArcLength' in cfg and len(cfg['ArcLength']) > 0:
