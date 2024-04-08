@@ -787,6 +787,11 @@ class OrcaFlexAnalysis():
                 if filename_pattern is not None:
                     cfg['file_management']['files']['files_in_current_directory']['filename_pattern'] = filename_pattern
 
+            if 'directory' in cfg['summary_settings']['groups'][SummaryIndex]:
+                directory = cfg['summary_settings']['groups'][SummaryIndex]['directory']
+                if directory is not None:
+                    cfg['file_management']['files']['files_in_current_directory']['directory'] = directory
+
             self.file_management(cfg)
             self.load_matrix = self.get_load_matrix_with_filenames(cfg)
 
