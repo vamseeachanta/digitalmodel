@@ -1,0 +1,86 @@
+@startuml aqwa_model
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title AQWA Model \nDecks
+
+start
+
+    note right
+        Objective: modular file management and 
+        analysis for easy updates/maintenance/reruns
+    end note
+
+    note right
+        All files in ascii (.dat) format
+    end note
+
+    partition "Deck 0: Preliminary Deck" {
+            note right
+                General and 
+            end note
+
+        :General Info;
+        :Analysis Settings;
+            note right
+                For running pre and post python scripts
+            end note
+        :Restart Card;
+            note right
+                For analysis settings
+            end note
+    }
+
+    partition "Deck 1: Coordinate Positions" {
+            note right
+                Mesh, Mesh sizing, 
+                These parameters may be changed later if unconvergence occurs
+            end note
+
+        :Coordinate;
+        :Coordinate Strtucture;
+        :Coordinate  Offset;
+        :NOD5 Card;
+            note right
+                5 digit Node numbers
+            end note
+    }
+
+    partition "Deck 2 : (ELM*) - Element Topology" {
+            note right
+                Point mass, hydrodynamic interaction
+                Fix Structure
+                Waterline height etc.
+            end note
+
+        :Element Topology;
+        :HYDI - Hydrodynamic Interaction;
+        :FIXD - FIx structure;
+        :VLID - Suppression of standing waves;
+        :ILID - Suppression of irrelgular frequencies;
+        :ZLWL - Waterline height;
+    }
+
+    partition "Deck 3 (MATE) - Material Properties" {
+            note right
+                Point mass, hydrodynamic interaction
+                Fix Structure
+                Waterline height etc.
+            end note
+
+        :Material Property;
+
+    }
+
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
