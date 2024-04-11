@@ -47,16 +47,33 @@ Pre- Solving options. Ability to run Python scripts to automate input generation
 aqwa -b -i inputfile.dat -o outputfile.dat
 ```
 
+PLT Options:
+
+- PLT1: For Structure 1 Parameters vs. Frequency
+- PLT2: Direction 1
+- PLT3: Free Floating Position RAOs
+- PLT4: Surge (X) RAOs.
+
 ```
+
 cd C:\Program Files\ANSYS Inc\v222\aisol\bin\winx64\
 
-"..\..\workbench.bat -cmd" AqwaReader --Type "Graphical" --InFile "K:\b1522_ctr07\wb\fst1_015_files\dp1\AQW\AQW\AQ\Analysis\Analysis.plt" --OutFile "C:\Users\vamseea\csv" --Format "csv" --PLT1 1 --PLT2 1 --PLT3 1 --PLT4 1
+CALL ..\..\workbench.bat -cmd AqwaReader --Type "Graphical" --InFile "K:\b1522_ctr07\wb\fst1_015_files\dp1\AQW\AQW\AQ\Analysis\Analysis.plt" --OutFile "C:\Users\vamseea\fst1_l015_ad000_rao_p_dx" --Format "csv" --PLT1 1 --PLT2 1 --PLT3 1 --PLT4 1
+CALL ..\..\workbench.bat -cmd AqwaReader --Type "Graphical" --InFile "K:\b1522_ctr07\wb\fst1_015_files\dp1\AQW\AQW\AQ\Analysis\Analysis.plt" --OutFile "C:\Users\vamseea\fst1_l015_ad000_rao_p_dy" --Format "csv" --PLT1 1 --PLT2 1 --PLT3 1 --PLT4 2
+CALL ..\..\workbench.bat -cmd AqwaReader --Type "Graphical" --InFile "K:\b1522_ctr07\wb\fst1_015_files\dp1\AQW\AQW\AQ\Analysis\Analysis.plt" --OutFile "C:\Users\vamseea\fst1_l015_ad000_rao_p_dz" --Format "csv" --PLT1 1 --PLT2 1 --PLT3 1 --PLT4 3
+
+CALL ..\..\workbench.bat -cmd AqwaReader --Type "Graphical" --InFile "K:\b1522_ctr07\wb\fst1_015_files\dp1\AQW\AQW\AQ\Analysis\Analysis.plt" --OutFile "C:\Users\vamseea\fst1_l015_ad000_rao_p_rx" --Format "csv" --PLT1 1 --PLT2 1 --PLT3 1 --PLT4 4
+CALL ..\..\workbench.bat -cmd AqwaReader --Type "Graphical" --InFile "K:\b1522_ctr07\wb\fst1_015_files\dp1\AQW\AQW\AQ\Analysis\Analysis.plt" --OutFile "C:\Users\vamseea\fst1_l015_ad000_rao_p_ry" --Format "csv" --PLT1 1 --PLT2 1 --PLT3 1 --PLT4 5
+CALL ..\..\workbench.bat -cmd AqwaReader --Type "Graphical" --InFile "K:\b1522_ctr07\wb\fst1_015_files\dp1\AQW\AQW\AQ\Analysis\Analysis.plt" --OutFile "C:\Users\vamseea\fst1_l015_ad000_rao_p_rz" --Format "csv" --PLT1 1 --PLT2 1 --PLT3 1 --PLT4 6
+
 ```
 
 ```
+
 cd C:\Program Files\ANSYS Inc\v222\aisol\bin\winx64\
 
-"..\..\workbench.bat -cmd" AqwaReader --Type "Graphical" --InFile "<path_to_your_project>\<project_name>_files\dp0\AQW\AQW\AQ\Analysis\Analysis.plt" --OutFile "stdout" --Format "csv" --PLT1 1 --PLT2 5 --PLT3 1 --PLT4 5
+..\..\workbench.bat -cmd AqwaReader --Type "Graphical" --InFile "<path_to_your_project>\<project_name>_files\dp0\AQW\AQW\AQ\Analysis\Analysis.plt" --OutFile "stdout" --Format "csv" --PLT1 1 --PLT2 5 --PLT3 1 --PLT4 5
+
 ```
 
 ### JScript | Workbench
