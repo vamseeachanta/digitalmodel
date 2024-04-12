@@ -43,7 +43,7 @@ class InstallationVtoHost():
             return self.get_target_reference_distance(cfg, target_settings)
         else:
             raise NotImplementedError("Target type not implemented.")
-        
+
     def get_target_line_length(self, cfg, target_settings):
         reference_file = target_settings['reference_file']
         analysis_root_folder = cfg['Analysis']['analysis_root_folder']
@@ -72,7 +72,7 @@ class InstallationVtoHost():
             dict.update({'Lines': {keychain_target[1]: {keychain_target[2]: target_length }}})
 
         return dict
-    
+
     def get_target_reference_distance(self, cfg, target_settings):
         lay_direction = cfg['installation']['lay_direction']
         host_reference_location = cfg['installation']['host']['reference_location']
