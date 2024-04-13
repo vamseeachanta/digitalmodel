@@ -105,4 +105,13 @@ class Lower2ndEnd():
         for keychain_target_6DBuoys_item in keychain_target_6DBuoys:
             dict = update_deep_dictionary(dict, {"6DBuoys": {keychain_target_6DBuoys_item[1]: {'InitialX': round(buoy_initial_x,1), 'InitialY': round(buoy_initial_y,1), 'InitialZ': round(buoy_initial_z,1)}}})
 
+        keychain_target_3DBuoys = target_settings.get('keychain_target_3DBuoys', None)
+        if keychain_target_3DBuoys is not None:
+            buoy_initial_x = initial_x
+            buoy_initial_y = initial_y
+            buoy_initial_z = -20 - step_cfg['target'][0]['value']
+
+            for keychain_target_3DBuoys_item in keychain_target_3DBuoys:
+                dict = update_deep_dictionary(dict, {"3DBuoys": {keychain_target_3DBuoys_item[1]: {'InitialX': round(buoy_initial_x,1), 'InitialY': round(buoy_initial_y,1), 'InitialZ': round(buoy_initial_z,1)}}})
+
         return dict
