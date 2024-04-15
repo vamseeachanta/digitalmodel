@@ -76,15 +76,15 @@ class Lower2ndEnd():
     def get_target_reference_distance(self, cfg, target_settings, step_cfg):
 
         lay_direction = cfg['installation']['lay_direction']
-        # host_reference_location = cfg['installation']['host']['reference_location']
+        reference_distance_definition = cfg['installation']['reference_distance_definition']
         installation_vessel_reference_location = cfg['installation']['installation_vessel']['reference_location']
         reference_distance = target_settings['value']
 
         keychain_target_vessel = target_settings['keychain_target_vessel']
 
         initial_heading = target_settings['initial_heading']
-        initial_x = installation_vessel_reference_location[0] + reference_distance*math.cos(math.radians(lay_direction))
-        initial_y = installation_vessel_reference_location[1] + reference_distance*math.sin(math.radians(lay_direction))
+        initial_x = reference_distance_definition[0] + reference_distance*math.cos(math.radians(lay_direction)) - installation_vessel_reference_location[0]*math.cos(math.radians(initial_heading))
+        initial_y = reference_distance_definition[1] + reference_distance*math.sin(math.radians(lay_direction)) - installation_vessel_reference_location[1]*math.sin(math.radians(initial_heading))
 
         dict  = {}
         dict = update_deep_dictionary(dict, {keychain_target_vessel[0]: {keychain_target_vessel[1]: {'InitialX': round(initial_x,1), 'InitialY': round(initial_y,1), 'InitialHeading': round(initial_heading,1)}}})
