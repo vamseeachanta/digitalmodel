@@ -16,18 +16,39 @@ start
 
     note right
         All files in ascii (.dat) format as much as possible
+        - Single source of truth
+        - Helps in  version control
     end note
 
-    partition "Preprocess: Model" {
+    partition "Preprocess: Model Setup" {
+
+        :Generate Decks for .dat files;
             note right
-                Tools:
-                 - Programming (Python, Fortran etc.)
-                 - MS DOS
+            Pros:
+            - License independent
+            - Easy to wire : Single source of truth data source
+            - Programming (Python, Fortran etc.) or MS DOS Batch 
+            Cons:
+            - ASCII format and picky to run: 
+                i.e. manual edits, additional spaces etc. can cause it not run
+            - Format archiac as opposed to advanced programming formatse 
+                - eg yml format (eg: OrcaFlex)
             end note
 
-        :Geometry;
-        :Mass Distribution;
-        :Damping correction;
+        :Workbench UI;
+            note right
+             Manual operations to extract & plot
+             Pros:
+            - Good for beginners and adding new features
+            - Parameter Sets to automate across programs and geometry
+             Cons:
+            - License dependency
+            - Limited data definitions
+                - eg: data given in .csv files can not be parametrized by filename
+            - Manual operations
+            - Slow to open and work in
+            - Difficult to wire : Single source of truth data source
+            end note
 
     }
 
@@ -57,16 +78,35 @@ start
                     - Cons: Too many csv files
             end note
 
-        :Programming;
+        :AQWA output file (.LIS);
             note right
-            Programming from .LIS files
+             Reading/Programming from .LIS files
              Pros:
-                - Porgramming to get single shot at complete data 
+                - Programming to get single shot at complete data 
              Cons:
                 - multiple tables for single set of data
+                    - Headers are repeated
+                    - White Space between sets of each data
                 - file format may change?
             end note
 
+        :AQL - Excel Interface;
+            note right
+             Manual operations to extract & plot
+            end note
+
+        :Workbench - UI;
+            note right
+             Manual operations to extract & plot
+             Pros:
+                - Good/killer graphics and 3D plots etc 
+             Cons:
+                - Limited 
+                    - Headers are repeated
+                    - White Space between sets of each data
+                - file format may change?
+                - Many manual operations to extract outputs
+            end note
 
     }
 
