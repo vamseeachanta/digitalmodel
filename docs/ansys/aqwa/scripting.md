@@ -30,6 +30,18 @@ c/ utilities like Aqwa reader.
 | .LIS | AQWA output file |
 | .PLT | AQWA plot file |
 
+## Batch Processing
+
+Note the following:
+
+- No .dat filetype extension should be given.
+
+"C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind "I:\B1516\100 mph\15\LIBR_15"
+"C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind "I:\B1516\100 mph\30\LIBR_30"
+"C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind "I:\B1516\100 mph\45\LIBR_45"
+"C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind "I:\B1516\100 mph\60\LIBR_60"
+...
+
 ## Pre Processing
 
 Pre- Solving options. Ability to run Python scripts to automate input generation process.
@@ -38,7 +50,7 @@ Pre- Solving options. Ability to run Python scripts to automate input generation
 
 - Command line
 
-#### Setting up
+### Setting up ?
 
 <code>
 
@@ -47,7 +59,7 @@ Pre- Solving options. Ability to run Python scripts to automate input generation
 aqwa -b -i inputfile.dat -o outputfile.dat
 ```
 
-PLT Options:
+### CSV PLT Route Options
 
 - PLT1: For Structure 1 Parameters vs. Frequency
 - PLT2: Direction 1
