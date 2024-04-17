@@ -82,8 +82,8 @@ class InstallationVtoHost():
         keychain_target_vessel = target_settings['keychain_target_vessel']
 
         initial_heading = target_settings['initial_heading']
-        initial_x = host_reference_location[0] + reference_distance*math.cos(math.radians(lay_direction)) - installation_vessel_reference_location[0]*math.cos(math.radians(initial_heading))
-        initial_y = host_reference_location[1] + reference_distance*math.sin(math.radians(lay_direction)) - installation_vessel_reference_location[1]*math.sin(math.radians(initial_heading))
+        initial_x = host_reference_location[0] + reference_distance*math.cos(math.radians(lay_direction)) - installation_vessel_reference_location[0]*math.cos(math.radians(initial_heading)) - installation_vessel_reference_location[1]*math.sin(math.radians(initial_heading)) 
+        initial_y = host_reference_location[1] + reference_distance*math.sin(math.radians(lay_direction)) - installation_vessel_reference_location[0]*math.sin(math.radians(initial_heading)) - installation_vessel_reference_location[1]*math.cos(math.radians(initial_heading)) 
 
         dict  = {}
         dict = update_deep_dictionary(dict, {keychain_target_vessel[0]: {keychain_target_vessel[1]: {'InitialX': round(initial_x,1), 'InitialY': round(initial_y,1), 'InitialHeading': round(initial_heading,1)}}})

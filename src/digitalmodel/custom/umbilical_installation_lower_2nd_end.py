@@ -89,21 +89,22 @@ class Lower2ndEnd():
         dict  = {}
         dict = update_deep_dictionary(dict, {keychain_target_vessel[0]: {keychain_target_vessel[1]: {'InitialX': round(initial_x,1), 'InitialY': round(initial_y,1), 'InitialHeading': round(initial_heading,1)}}})
 
-        keychain_target_line = target_settings['keychain_target_line']
-        endbx = initial_x
-        endby = initial_y
-        endbz = -20 - step_cfg['target'][0]['value']
-        for keychain_target_line_item in keychain_target_line:
-            dict = update_deep_dictionary(dict, {"Lines": {keychain_target_line_item[1]: {'EndBX': round(endbx,1), 'EndBY': round(endby,1), 'EndBZ': round(endbz,1)}}})
+        keychain_target_line = target_settings.get('keychain_target_line', None)
+        if keychain_target_line is not None:
+            endbx = initial_x
+            endby = initial_y
+            endbz = -20 - step_cfg['target'][0]['value']
+            for keychain_target_line_item in keychain_target_line:
+                dict = update_deep_dictionary(dict, {"Lines": {keychain_target_line_item[1]: {'EndBX': round(endbx,1), 'EndBY': round(endby,1), 'EndBZ': round(endbz,1)}}})
 
 
-        keychain_target_6DBuoys = target_settings['keychain_target_6DBuoys']
-        buoy_initial_x = initial_x
-        buoy_initial_y = initial_y
-        buoy_initial_z = -20 - step_cfg['target'][0]['value']
-
-        for keychain_target_6DBuoys_item in keychain_target_6DBuoys:
-            dict = update_deep_dictionary(dict, {"6DBuoys": {keychain_target_6DBuoys_item[1]: {'InitialX': round(buoy_initial_x,1), 'InitialY': round(buoy_initial_y,1), 'InitialZ': round(buoy_initial_z,1)}}})
+        keychain_target_6DBuoys = target_settings.get('keychain_target_6DBuoys',None)
+        if keychain_target_6DBuoys is not None:
+            buoy_initial_x = initial_x
+            buoy_initial_y = initial_y
+            buoy_initial_z = -20 - step_cfg['target'][0]['value']
+            for keychain_target_6DBuoys_item in keychain_target_6DBuoys:
+                dict = update_deep_dictionary(dict, {"6DBuoys": {keychain_target_6DBuoys_item[1]: {'InitialX': round(buoy_initial_x,1), 'InitialY': round(buoy_initial_y,1), 'InitialZ': round(buoy_initial_z,1)}}})
 
         keychain_target_3DBuoys = target_settings.get('keychain_target_3DBuoys', None)
         if keychain_target_3DBuoys is not None:
