@@ -15,6 +15,8 @@ a/ journaling
 b/ JScript programming
 c/ utilities like Aqwa reader.
 
+**Read AQWAReader Manual**
+
 ## Post Processing
 
 ## Key Files
@@ -99,5 +101,7 @@ cd C:\Program Files\ANSYS Inc\v222\aisol\bin\winx64\
 ### Python Script
 
 Yes, python interface available for AQWA to run post finish commands results?
+
+<https://forum.ansys.com/forums/topic/aqwa-export-data-csv-file/>
 
 # Questions
