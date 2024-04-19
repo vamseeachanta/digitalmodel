@@ -35,6 +35,18 @@ inputs:
 
     outputs: []
 
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: nl_lb080
+      filename_pattern: ABCD
+
 default:
   Constants:
     g: 9.81

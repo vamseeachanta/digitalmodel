@@ -10,6 +10,7 @@ from assetutilities.common.data import CopyAndPasteFiles
 from digitalmodel.catenary_riser import catenary_riser
 from digitalmodel.vertical_riser import vertical_riser
 from digitalmodel.orcaflex_analysis import orcaflex_analysis
+from digitalmodel.aqwa import Aqwa
 from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
@@ -53,6 +54,9 @@ def engine(inputfile=None):
         cfg_base = vertical_riser(cfg_base)
     elif basename in ["orcaflex_analysis", "orcaflex_post_process"]:
         cfg_base = orcaflex_analysis(cfg_base)
+    elif basename in ["aqwa"]:
+        aqwa = Aqwa()
+        cfg_base = aqwa.router(cfg_base)
     elif basename == "modal_analysis":
         oma = OrcModalAnalysis()
         cfg_base = oma.run_modal_analysis(cfg_base)

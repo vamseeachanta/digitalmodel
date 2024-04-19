@@ -1,0 +1,34 @@
+basename: aqwa
+
+softwaere:
+  version: []
+
+type:
+  preprocess: False
+  analysis: False
+  results: True
+
+result:
+  moorings:
+    flag: True
+    file_extension: lis
+    search_term: M O O R I N G   F O R C E S   A N D   S T I F F N E S S
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: output/lis
+      filename_pattern: NULL
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
