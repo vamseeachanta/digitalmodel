@@ -558,7 +558,7 @@ class OrcaFlexAnalysis():
                 logging.info("SupportIndex not implemented fully. Edit definition to get acceptance.")
                 raise Exception("SupportIndex not implemented fully. Edit definition to get acceptance.")
 
-        if 'objectExtra' in cfg and len(cfg['objectExtra']) > 0:
+        if 'objectExtra' in cfg and cfg['objectExtra'] is not None and len(cfg['objectExtra']) > 0:
             if cfg['objectExtra'][0] == 'Section':
                 if len(cfg['objectExtra'][1]) == 1:
                     objectExtra = OrcFxAPI.arSpecifiedSections(FromSection=cfg['objectExtra'][1][0], ToSection=cfg['objectExtra'][1][0])
@@ -1093,7 +1093,7 @@ class OrcaFlexAnalysis():
     def get_ArcLengthObject(self, ArcLength, cfg):
 
         arclengthRange = None
-        if 'objectExtra' in cfg:
+        if 'objectExtra' in cfg and cfg['objectExtra'] is not None:
             if 'End A' in cfg['objectExtra'][0]:
                 arclengthRange = OrcFxAPI.oeEndA
             elif 'End B' in cfg['objectExtra'][0]:
