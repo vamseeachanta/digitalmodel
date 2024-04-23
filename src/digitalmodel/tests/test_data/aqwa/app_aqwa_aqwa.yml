@@ -1,0 +1,72 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: aqwa
+  softwaere:
+    version: []
+  type:
+    preprocess: false
+    analysis: false
+    results: true
+  result:
+  - label: moorings
+    file_extension: LIS
+    search_cfg:
+      start:
+        keyword: M O O R I N G   F O R C E S   A N D   S T I F F N E S S
+        occurrence: 1
+      end:
+        keyword: '---------------------------------'
+        occurrence: 2
+      data_extraction:
+        keyword: COMP
+        scale: 1
+        shift: 0
+        line_idx: 4
+    inject_into:
+      flag: true
+      filename: output/aqwa_lis.xlsx
+      sheetname: m_f
+  file_management:
+    flag: true
+    update_unfinished:
+      flag: false
+    files:
+      files_in_current_directory:
+        flag: false
+        auto_read: true
+        directory: output/lis
+        filename_pattern: 9MOORS
+    input_files:
+      LIS:
+      - !!python/object/apply:pathlib.WindowsPath
+        - c:\
+        - Users
+        - vamseea
+        - github
+        - digitalmodel
+        - src
+        - digitalmodel
+        - tests
+        - test_data
+        - aqwa
+        - output
+        - lis
+        - LD_100MPH000WD_09MOORS.LIS
+  default:
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+      cfg_sensitivities: false
+  Analysis:
+    basename: aqwa
+    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa
+    file_name: app_aqwa_aqwa
+    file_name_for_overwrite: app_aqwa_aqwa
+    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
+    start_time: 2024-04-23 11:28:02.737559
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa.yml

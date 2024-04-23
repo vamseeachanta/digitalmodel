@@ -9,8 +9,7 @@ type:
   results: True
 
 result:
-  moorings:
-    flag: True
+  - label: moorings
     file_extension: LIS
     search_cfg:
       start:
@@ -21,6 +20,13 @@ result:
         occurrence: 2
       data_extraction:
         keyword: COMP
+        scale: 1
+        shift: 0
+        line_idx: 4
+    inject_into:
+      flag: True
+      filename: output/aqwa_lis.xlsx
+      sheetname: m_f
 
 file_management:
   flag: True
@@ -32,7 +38,7 @@ file_management:
       flag: False
       auto_read: True
       directory: output/lis
-      filename_pattern: NULL
+      filename_pattern: 9MOORS
 
 default:
   log_level: DEBUG
