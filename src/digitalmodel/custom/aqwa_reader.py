@@ -1,6 +1,8 @@
 import os
 import math
 import logging
+import subprocess
+
 import pandas as pd
 from pathlib import Path
 
@@ -49,7 +51,8 @@ class AqwaReader:
     def get_result_group(self, input_file, cfg, result_group):
         basename = Path(input_file).stem
         csv_output = basename + result_group['file_suffix']
-                
+        workdir = cfg['Analysis']['result_folder']
+
         argStrings = []
         argVals = []
         args = [self.aqwareader_exe]
@@ -64,19 +67,20 @@ class AqwaReader:
         argStrings.append("--PLT4")
         
         argVals.append("Graphical")
-        argVals.append("{:s}".format(inputFile))
+        argVals.append("{:s}".format(str(input_file)))
         argVals.append("{:s}".format(os.path.join(workdir, csv_output)))
         argVals.append("csv")
-        argVals.append("{:d}".format(resultSet[1]))
-        argVals.append("{:d}".format(resultSet[2]))
-        argVals.append("{:d}".format(resultSet[3]))
-        argVals.append("{:d}".format(resultSet[4]))
+        argVals.append("{:d}".format(result_group['plt'][0]))
+        argVals.append("{:d}".format(result_group['plt'][1]))
+        argVals.append("{:d}".format(result_group['plt'][2]))
+        argVals.append("{:d}".format(result_group['plt'][3]))
         
         for (string, val) in zip(argStrings, argVals):
             args.extend([string, val])
         
-        code = subprocess.call(args, stdout = ts, stderr = ts)
-        ts.write("Returned " + str(code) + "\n")
+        code = subprocess.call(args, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+        # code = subprocess.call(args, stdout = ts, stderr = ts)
+        logging.info("Returned " + str(code) + "\n")
 
 
     def injectSummaryToExcel(self, df, result_item, cfg):
