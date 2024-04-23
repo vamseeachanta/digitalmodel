@@ -1,6 +1,7 @@
 import copy
 import os
 import glob
+import pathlib
 import logging
 import math
 from assetutilities.common.utilities import is_dir_valid_func
@@ -142,22 +143,28 @@ class AqwaUtilities:
         file_management_directory = self.get_file_management_directory(cfg)
         if file_management_directory is not None:
             analysis_root_folder = cfg['Analysis']['analysis_root_folder']
-            file_is_valid, file_management_directory = is_dir_valid_func(file_management_directory,
+            dir_is_valid, file_management_directory = is_dir_valid_func(file_management_directory,
                                                      analysis_root_folder)
 
-
+        if not dir_is_valid:
+            raise ValueError(f"Directory {file_management_directory} is not valid")
+        else:
+            file_directory = pathlib.Path(file_management_directory)
+            
         if cfg.file_management['files']['files_in_current_directory'][
                 'flag'] or cfg.file_management['files']['files_in_current_directory']['auto_read']:
-            program_extensions = ['lis']
+            program_extensions = ['LIS']
             input_files = {}
 
             for file_ext in program_extensions:
+
                 filename_pattern = cfg['file_management']['files']['files_in_current_directory'].get('filename_pattern', None)
                 if filename_pattern is None:
-                    glob_search = os.path.join(file_management_directory, f'*.{file_ext}')
+                    glob_search = f'*.{file_ext}'
                 else:
-                    glob_search = os.path.join(file_management_directory, f'*{filename_pattern}*.{file_ext}')
-                raw_input_files_for_ext = glob.glob(glob_search)
+                    glob_search = f'*{filename_pattern}*.{file_ext}'
+
+                raw_input_files_for_ext = list(file_directory.glob(glob_search))
                 input_files.update({file_ext: raw_input_files_for_ext})
 
             cfg.file_management.update({'input_files': input_files})

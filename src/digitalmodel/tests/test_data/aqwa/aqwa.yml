@@ -11,8 +11,16 @@ type:
 result:
   moorings:
     flag: True
-    file_extension: lis
-    search_term: M O O R I N G   F O R C E S   A N D   S T I F F N E S S
+    file_extension: LIS
+    search_cfg:
+      start:
+        keyword: M O O R I N G   F O R C E S   A N D   S T I F F N E S S
+        occurrence: 1
+      end:
+        keyword: ---------------------------------
+        occurrence: 2
+      data_extraction:
+        keyword: COMP
 
 file_management:
   flag: True
