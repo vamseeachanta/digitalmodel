@@ -2,7 +2,7 @@ import os
 import math
 import logging
 import pandas as pd
-
+from pathlib import Path
 
 from assetutilities.common.data import ReadData
 from assetutilities.common.data import SaveData
@@ -43,14 +43,13 @@ class AqwaReader:
         return df_all_files
 
     def get_result_groups(self, input_file, cfg, result_item):
-        for result_group in result_item['result_groups']:
+        for result_group in result_item['groups']:
             self.get_result_group(input_file, cfg, result_group)
 
     def get_result_group(self, input_file, cfg, result_group):
-        basename = os.path.basename(input_file)
-        csv_output = inputfile
-        
-        
+        basename = Path(input_file).stem
+        csv_output = basename + result_group['file_suffix']
+                
         argStrings = []
         argVals = []
         args = [self.aqwareader_exe]
@@ -65,8 +64,8 @@ class AqwaReader:
         argStrings.append("--PLT4")
         
         argVals.append("Graphical")
-        argVals.append("{:s}".format(os.path.join(workdir, inputFile)))
-        argVals.append("{:s}".format(os.path.join(workdir, resultSet[0])))
+        argVals.append("{:s}".format(inputFile))
+        argVals.append("{:s}".format(os.path.join(workdir, csv_output)))
         argVals.append("csv")
         argVals.append("{:d}".format(resultSet[1]))
         argVals.append("{:d}".format(resultSet[2]))
