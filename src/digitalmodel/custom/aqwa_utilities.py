@@ -153,7 +153,7 @@ class AqwaUtilities:
             
         if cfg.file_management['files']['files_in_current_directory'][
                 'flag'] or cfg.file_management['files']['files_in_current_directory']['auto_read']:
-            program_extensions = ['LIS']
+            program_extensions = ['LIS', 'DAT', 'PLT']
             input_files = {}
 
             for file_ext in program_extensions:

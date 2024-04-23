@@ -2,10 +2,6 @@ import os
 import sys
 
 from digitalmodel.engine import engine
-from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
-
-ou = OrcaflexUtilities()
-
 
 
 def run_process(input_file, expected_result={}):
@@ -16,7 +12,7 @@ def run_process(input_file, expected_result={}):
 
 
 def test_run_process():
-    input_file = 'aqwa.yml'
+    input_file = 'aqwa_aqwareader.yml'
     pytest_output_file = None
     # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     # expected_result = ymlInput(pytest_output_file, updateYml=None)

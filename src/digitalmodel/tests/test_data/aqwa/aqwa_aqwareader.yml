@@ -1,0 +1,45 @@
+basename: aqwa
+
+software:
+  version: []
+  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v181
+
+type:
+  preprocess: False
+  analysis: False
+  results: True
+
+result_method: aqwareader # lis
+
+result:
+  - label: raos
+    inject_into:
+      flag: True
+      filename: output/aqwa_lis.xlsx
+      sheetname: raw_raos
+    groups:
+      - file_suffix: _x
+        plt: [1, 1, 1, 1]
+      - file_suffix: _y
+        plt: [1, 1, 1, 2]
+      - file_suffix: _rz
+        plt: [1, 1, 1, 6]
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: output/plt
+      filename_pattern: NULL
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

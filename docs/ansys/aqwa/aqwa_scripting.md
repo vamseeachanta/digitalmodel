@@ -124,6 +124,12 @@ CALL ..\..\workbench.bat -cmd AqwaReader --Type "Graphical" --InFile "K:\b1522_c
 ```
 
 ```
+"C:\Program Files\ANSYS Inc\v181\aisol\workbench.bat" -cmd "C:\Program Files\ANSYS Inc\v181\aisol\bin\winx64\AqwaReader.exe" --InFile Analysis.plt --OutFile "output\example" --Format "csv" --PLT1 1 --PLT2 1 --PLT3 1 --PLT4 1
+
+
+"C:\Program Files\ANSYS Inc\v182\aisol\workbench.bat" -cmd "C:\Program Files\ANSYS Inc\v182\aisol\bin\winx64\AqwaReader.exe" --InFile Analysis.plt --OutFile "output\example" --Format "csv" --PLT1 1 --PLT2 1 --PLT3 1 --PLT4 1
+
+```
 
 cd C:\Program Files\ANSYS Inc\v222\aisol\bin\winx64\
 

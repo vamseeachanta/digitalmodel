@@ -7,8 +7,10 @@ from assetutilities.common.utilities import is_file_valid_func
 from assetutilities.common.update_deep import update_deep_dictionary
 
 from digitalmodel.custom.aqwa_lis_files import AqwaLISFiles
+from digitalmodel.custom.aqwa_reader import AqwaReader
 
 lis_files = AqwaLISFiles()
+ar = AqwaReader()
 
 class AqwaPostProcess:
 
@@ -28,7 +30,10 @@ class AqwaPostProcess:
             raise NotImplementedError("Preprocess not implemented")
 
         if cfg['type']['results']:
-            lis_files.router(cfg)
+            if cfg['result_method'] == 'lis':
+                lis_files.router(cfg)
+            elif cfg['result_method'] == 'aqwareader':
+                ar.router(cfg)
 
         else:
             logging.info("No option to run specified ... End Run.")
