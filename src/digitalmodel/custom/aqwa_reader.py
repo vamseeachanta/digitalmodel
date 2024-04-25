@@ -55,34 +55,39 @@ class AqwaReader:
                 all_files_result.append(result_item_dict)
 
             df = pd.DataFrame.from_dict(all_files_result)
+            self.save_to_csv(df, result_item, cfg)
             self.inject_to_excel(df, result_item, cfg)
 
     def get_result_groups(self, input_file, cfg, result_item):
         result_item_dict = {}
         for aqwa_fundamental_cfg in result_item['groups']:
-            fundamental_result_group = self.get_aqwa_fundamental_property(input_file, cfg, aqwa_fundamental_cfg, result_item)
-            result_item_dict= update_deep_dictionary(result_item_dict, fundamental_result_group)
+            result_group = self.get_result_group(input_file, cfg, aqwa_fundamental_cfg, result_item)
+            result_item_dict= update_deep_dictionary(result_item_dict, result_group)
 
         return result_item_dict
 
-    def get_aqwa_fundamental_property(self, input_file, cfg, aqwa_fundamental_cfg, result_item):
+    def get_result_group(self, input_file, cfg, aqwa_fundamental_cfg, result_item):
 
         logging.debug(f"Running AqwaReader for {input_file } ... START\n")
 
-        plt_2d_array = self.get_fundamental_property_args_array(aqwa_fundamental_cfg, result_item)
+        plt_2d_array = self.get_property_args_array(aqwa_fundamental_cfg, result_item)
 
-        fundamental_result_group = {}
+        result_group = {}
         for plt_1d_array in plt_2d_array:
             args = self.get_args_for_data(input_file, cfg, plt_1d_array)
             stdout_process = subprocess.Popen(args,
                             stdout=subprocess.PIPE, 
                             stderr=subprocess.PIPE)
             stdout_output, err = stdout_process.communicate()
-            result_plt_1d_item = self.process_aqwa_fundamental_result(input_file, stdout_output)
-            fundamental_result_group = update_deep_dictionary(fundamental_result_group , result_plt_1d_item)
+            result_category = result_item['category']
+            if result_category == 'equilibrium':
+                result_plt_1d_item = self.process_equilibrium_result(input_file, stdout_output)
+            elif result_category == 'frequency':
+                result_plt_1d_item = self.process_frequency_result(input_file, stdout_output)
+            result_group = update_deep_dictionary(result_group , result_plt_1d_item)
 
-            save_csv = result_item.get('save_csv', False)
-            if save_csv:
+            save_aqwareader_csv = result_item.get('save_aqwareader_csv', False)
+            if save_aqwareader_csv:
                 args = self.get_args_for_data(input_file, cfg, plt_1d_array, result_format='csv')
                 csv_process = subprocess.Popen(args,
                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -92,7 +97,7 @@ class AqwaReader:
             logging.debug(f"Returned {err} \n")
             logging.debug(f"Running AqwaReader for {input_file } ... COMPLETE\n")
 
-        return fundamental_result_group
+        return result_group
 
     def get_args_for_data(self, input_file, cfg, plt_1d_array, result_format='stdout'):
         basename = Path(input_file).stem
@@ -141,27 +146,30 @@ class AqwaReader:
             args.extend([string, val])
         return args
 
-    def get_fundamental_property_args_array(self, aqwa_fundamental_cfg, result_item):
+    def get_property_args_array(self, aqwa_fundamental_cfg, result_item):
         plt_2d_array = []
         third_level_label = aqwa_fundamental_cfg['third_level_label']
-
-        third_level = aqwa_fundamental_cfg['third_level']
-        fourth_level = aqwa_fundamental_cfg['fourth_level']
+        second_level = aqwa_fundamental_cfg.get('second_level', None)
+        third_level = aqwa_fundamental_cfg.get('third_level', None)
+        fourth_level = aqwa_fundamental_cfg.get('fourth_level', None)
 
         if fourth_level is None:
-            if third_level_label in ['POSITION OF COG', 'MOORING FORCE - LINE']:
+            if third_level_label in ['POSITION OF COG', 'MOORING FORCE - LINE', 'FREE FLOATING RAOS']:
                 fourth_level = [idx+1 for idx in range(0, 6)]
             else:
                 raise Exception(f"Invalid third_level {third_level} for Aqwa Fundamental Property")
 
-
-        plt_2d_for_itertools = [[1], [result_item['structure']], third_level, fourth_level]
+        result_category = result_item.get('category')
+        if result_category == 'equilibrium':
+            plt_2d_for_itertools = [[1], [result_item['structure']], third_level, fourth_level]
+        elif result_category == 'frequency':
+            plt_2d_for_itertools = [[result_item['structure']], second_level, third_level, fourth_level]
 
         plt_2d_array = [list(item) for item in list(itertools.product(*plt_2d_for_itertools))]
 
         return plt_2d_array
 
-    def process_aqwa_fundamental_result(self, input_file, stdout_output):
+    def process_equilibrium_result(self, input_file, stdout_output):
         df = pd.read_csv(io.BytesIO(stdout_output), encoding='utf8', sep=",|:", dtype={"switch": np.int8}, names=['column1', 'column2'], engine='python')
         structure_number = df.iloc[1]['column2'].replace('\t', '').replace('"', '').replace('Structure Number ', '')
         third_level = df.iloc[2]['column2'].replace('\t', '').replace('"', '')
@@ -171,6 +179,18 @@ class AqwaReader:
         value_label = third_level + '_'+ fourth_level
         fundamental_result = {'input_file': str(input_file), 'structure_number': structure_number, value_label: value}
         return fundamental_result
+
+    def process_frequency_result(self, input_file, stdout_output):
+        df = pd.read_csv(io.BytesIO(stdout_output), encoding='utf8', sep=",|:", dtype={"switch": np.int8}, names=['column1', 'column2'], engine='python')
+        structure_number = df.iloc[0]['column2'].replace('\t', '').replace('PARAMETERS VERSUS FREQUENCY', '').replace('STRUCTURE', '').replace('"', '').replace(' ', '')
+        third_level = df.iloc[2]['column2'].replace('\t', '').replace('"', '').replace('-', '')
+        fourth_level = df.iloc[3]['column2'].replace('\t', '').replace('"', '')
+
+        frequency = [float(item) for item in list(df[5:-1]['column1'])]
+        value = [float(item) for item in list(df[5:-1]['column2'])]
+        value_label = third_level + '_'+ fourth_level
+        frequency_result = {'frequency': frequency, value_label: value}
+        return frequency_result
 
     def inject_to_excel(self, df, result_item, cfg):
         if 'inject_into' in result_item and result_item[
@@ -185,3 +205,11 @@ class AqwaReader:
 
             cfg_save_to_existing_workbook = {'template_file_name': file_name, 'sheetname': sheetname, 'saved_file_name': file_name, 'if_sheet_exists': 'replace', 'df': df}
             save_data.df_to_sheet_in_existing_workbook(cfg_save_to_existing_workbook)
+
+    def save_to_csv(self, df, result_item, cfg):
+        save_csv = result_item.get('save_csv', False)
+        if save_csv:
+            sheetname = result_item['inject_into']['sheetname']
+            csv_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '.csv')
+            df.to_csv(csv_filename, index=False, header=True)
+
