@@ -54,7 +54,11 @@ class AqwaReader:
                 result_item_dict = self.get_result_groups(input_file, cfg, result_item)
                 all_files_result.append(result_item_dict)
 
-            df = pd.DataFrame.from_dict(all_files_result)
+            result_category = result_item['category']
+            if result_category == 'equilibrium':
+                df = pd.DataFrame.from_dict(all_files_result)
+            elif result_category == 'frequency':
+                df = pd.DataFrame(all_files_result[0])
             self.save_to_csv(df, result_item, cfg)
             self.inject_to_excel(df, result_item, cfg)
 
@@ -148,23 +152,16 @@ class AqwaReader:
 
     def get_property_args_array(self, aqwa_fundamental_cfg, result_item):
         plt_2d_array = []
-        third_level_label = aqwa_fundamental_cfg['third_level_label']
+        first_level = aqwa_fundamental_cfg.get('first_level', None)
         second_level = aqwa_fundamental_cfg.get('second_level', None)
+        third_level_label = aqwa_fundamental_cfg.get('third_level_label', None)
         third_level = aqwa_fundamental_cfg.get('third_level', None)
         fourth_level = aqwa_fundamental_cfg.get('fourth_level', None)
 
         if fourth_level is None:
-            if third_level_label in ['POSITION OF COG', 'MOORING FORCE - LINE', 'FREE FLOATING RAOS']:
-                fourth_level = [idx+1 for idx in range(0, 6)]
-            else:
-                raise Exception(f"Invalid third_level {third_level} for Aqwa Fundamental Property")
+            fourth_level = [idx+1 for idx in range(0, 6)]
 
-        result_category = result_item.get('category')
-        if result_category == 'equilibrium':
-            plt_2d_for_itertools = [[1], [result_item['structure']], third_level, fourth_level]
-        elif result_category == 'frequency':
-            plt_2d_for_itertools = [[result_item['structure']], second_level, third_level, fourth_level]
-
+        plt_2d_for_itertools = [first_level, second_level, third_level, fourth_level]
         plt_2d_array = [list(item) for item in list(itertools.product(*plt_2d_for_itertools))]
 
         return plt_2d_array
