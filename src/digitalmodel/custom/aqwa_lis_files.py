@@ -4,11 +4,13 @@ import logging
 import pandas as pd
 
 
+from assetutilities.common.file_management import FileManagement
 from assetutilities.common.data import ReadData
 from assetutilities.common.data import SaveData
 
 from digitalmodel.custom.aqwa_utilities import AqwaUtilities
 
+fm = FileManagement()
 au = AqwaUtilities()
 rd = ReadData()
 save_data = SaveData()
@@ -19,10 +21,16 @@ class AqwaLISFiles:
         pass
 
     def router(self, cfg):
-        au.file_management(cfg)
+        cfg = self.file_management(cfg)
         for result_item in cfg['result']:
             df = self.get_data(cfg, result_item)
             self.injectSummaryToExcel(df, result_item, cfg)
+
+    def file_management(self, cfg):
+        cfg = fm.router(cfg)
+
+        return cfg
+
 
     def get_data(self, cfg, cfg_lis):
         input_files = cfg['file_management']['input_files']['LIS']

@@ -28,3 +28,12 @@ c/ utilities like Aqwa reader.
 # Questions
 
 - Is there python interface available for AQWA to get results?
+
+# Calculate RAOs
+
+NRNM - Calculates Nodal RAOs With No Moorings
+
+(L) This option is used to output in Aqwa-Line run RAOs at particular nodes defined in Data Cat-
+egory 18. The run stages should be from 1 to 5.
+
+- An experiment is performed with an example RUn. Check it works or otherwise?
