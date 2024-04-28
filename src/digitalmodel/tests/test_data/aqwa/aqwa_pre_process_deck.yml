@@ -12,23 +12,25 @@ pre_process_settings:
   file_extension: dat
 
 inputs:
-  - label:
+  - file_prefix: D05266mm_
     file_extension: deck
     data:
       category: 3
-      raw: { node: 9800, mass: 3.894E+07 }
-  - label:
+      raw: [{ node: 98000, mass: 3.894E+07 }]
+  - file_prefix: D05266mm_
     file_extension: deck
     data:
       category: 4
-      raw: { node: 9800, I: [8.083E+09, 1.371E+11, 1.381E+11] }
-  - label:
+      element_type: PMAS
+      raw: [{ node: 98000, Ixx: 8.083E+09, Iyy: 1.371E+11, Izz: 1.381E+11 }]
+  - file_prefix: NULL
     file_extension: deck
     data:
       category: 6
+      element_type: HRTZ
       raw:
         {
-          frequency:
+          period:
             [
               4,
               5,
@@ -60,13 +62,13 @@ inputs:
               36,
               40,
             ],
-          direction: [-180, -135, -90, -45, 0, 45, 90, 135, 180],
         }
-  - label:
+  - file_prefix: D05266mm_
     file_extension: deck
     data:
+      element_type: FIDP
       category: 7
-      raw: { additional_damping: { rxx: 5729.578, ryy: 5729.578 } }
+      raw: { added_damping: { rxx: 5729.578, ryy: 5729.578 } }
 
 file_management:
   flag: True
@@ -78,7 +80,8 @@ file_management:
       flag: False
       auto_read: True
       directory: output/lis
-      filename_pattern: 9MOORS
+      filename_pattern: NULL
+    output_directory: results
 
 default:
   log_level: DEBUG

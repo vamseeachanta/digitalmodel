@@ -3,11 +3,12 @@ import math
 import pandas as pd
 
 import logging
-from assetutilities.common.utilities import is_file_valid_func
+from assetutilities.common.file_management import FileManagement
 from assetutilities.common.update_deep import update_deep_dictionary
 
 from digitalmodel.custom.aqwa.aqwa_dat_files import AqwaDATFiles
 
+fm = FileManagement()
 adf = AqwaDATFiles()
 
 class AqwaPreProcess:
@@ -17,13 +18,11 @@ class AqwaPreProcess:
 
     def pre_process_router(self, cfg):
 
+        cfg = fm.router(cfg)
         cfg = self.get_cfg_with_master_data(cfg)
 
         if cfg['type']['preprocess']:
             adf.router(cfg)
-            
-            raise NotImplementedError("Preprocess not implemented")
-
 
         return cfg
 
