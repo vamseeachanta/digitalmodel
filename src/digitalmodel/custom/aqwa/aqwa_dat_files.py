@@ -132,7 +132,9 @@ class AqwaDATFiles:
         raw_data = dc_cfg['data']['raw']
         element_type = dc_cfg['data']['element_type']
         body = []
-        for body_item_idx in range(0, len(raw_data['period'])):
+        period_array = raw_data['period']
+        period_array.sort(reverse=True)
+        for body_item_idx in range(0, len(period_array)):
             period = raw_data['period'][body_item_idx]
             frequency = 1/period
             frequency = f'{frequency:.3e}'

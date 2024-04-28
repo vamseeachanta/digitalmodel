@@ -63,12 +63,89 @@ inputs:
               40,
             ],
         }
-  - file_prefix: D05266mm_
+  - file_prefix: NULL
     file_extension: deck
     data:
       element_type: FIDP
       category: 7
       raw: { added_damping: { rxx: 5729.578, ryy: 5729.578 } }
+
+  - file_prefix: D07708mm_
+    file_extension: deck
+    data:
+      category: 3
+      raw: [{ node: 98000, mass: 5.951E+07 }]
+  - file_prefix: D07708mm_
+    file_extension: deck
+    data:
+      category: 4
+      element_type: PMAS
+      raw:
+        [{ node: 98000, Ixx: 8103125864, Iyy: 200565562004, Izz: 201491887207 }]
+
+  - file_prefix: D10761mm_
+    file_extension: deck
+    data:
+      category: 3
+      raw: [{ node: 98000, mass: 8.596E+07 }]
+  - file_prefix: D10761mm_
+    file_extension: deck
+    data:
+      category: 4
+      element_type: PMAS
+      raw:
+        [{ node: 98000, Ixx: 8042265381, Iyy: 281982709241, Izz: 282968877132 }]
+
+  - file_prefix: D05315mm_
+    file_extension: deck
+    data:
+      category: 3
+      raw: [{ node: 98000, mass: 40836614 }]
+  - file_prefix: D05315mm_
+    file_extension: deck
+    data:
+      category: 4
+      element_type: PMAS
+      raw:
+        [
+          {
+            node: 98000,
+            Ixx: 19475062072,
+            Iyy: 290699622247,
+            Izz: 280840484388,
+          },
+        ]
+  - file_prefix: D07752mm_
+    file_extension: deck
+    data:
+      category: 3
+      raw: [{ node: 98000, mass: 61405773 }]
+  - file_prefix: D07752mm_
+    file_extension: deck
+    data:
+      category: 4
+      element_type: PMAS
+      raw:
+        [
+          {
+            node: 98000,
+            Ixx: 14904073573,
+            Iyy: 280938728984,
+            Izz: 275652350523,
+          },
+        ]
+  - file_prefix: D10806mm_
+    file_extension: deck
+    data:
+      category: 3
+      raw: [{ node: 98000, mass: 87851834 }]
+  - file_prefix: D10806mm_
+    file_extension: deck
+    data:
+      category: 4
+      element_type: PMAS
+      raw:
+        [{ node: 98000, Ixx: 8793205414, Iyy: 293390654400, Izz: 294216243869 }]
 
 file_management:
   flag: True

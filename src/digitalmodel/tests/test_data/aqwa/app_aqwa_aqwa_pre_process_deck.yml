@@ -37,7 +37,7 @@ dictitems:
         flag: false
         auto_read: true
         directory: output/lis
-        filename_pattern: 9MOORS
+        filename_pattern: ~
       output_directory: results
     input_files: {}
   default:
@@ -73,36 +73,36 @@ dictitems:
       element_type: HRTZ
       raw:
         period:
-        - 4
-        - 5
-        - 6
-        - 7
-        - 8
-        - 8.5
-        - 9
-        - 9.25
-        - 9.5
-        - 9.75
-        - 10
-        - 10.25
-        - 10.5
-        - 10.75
-        - 11
-        - 11.25
-        - 11.5
-        - 11.75
-        - 12
-        - 13
-        - 14
-        - 15
-        - 16
-        - 20
-        - 24
-        - 28
-        - 32
-        - 36
         - 40
-  - file_prefix: D05266mm_
+        - 36
+        - 32
+        - 28
+        - 24
+        - 20
+        - 16
+        - 15
+        - 14
+        - 13
+        - 12
+        - 11.75
+        - 11.5
+        - 11.25
+        - 11
+        - 10.75
+        - 10.5
+        - 10.25
+        - 10
+        - 9.75
+        - 9.5
+        - 9.25
+        - 9
+        - 8.5
+        - 8
+        - 7
+        - 6
+        - 5
+        - 4
+  - file_prefix: ~
     file_extension: deck
     data:
       element_type: FIDP
@@ -111,39 +111,104 @@ dictitems:
         added_damping:
           rxx: 5729.578
           ryy: 5729.578
+  - file_prefix: D07708mm_
+    file_extension: deck
+    data:
+      category: 3
+      raw:
+      - node: 98000
+        mass: 59510000.0
+  - file_prefix: D07708mm_
+    file_extension: deck
+    data:
+      category: 4
+      element_type: PMAS
+      raw:
+      - node: 98000
+        Ixx: 8103125864
+        Iyy: 200565562004
+        Izz: 201491887207
+  - file_prefix: D10761mm_
+    file_extension: deck
+    data:
+      category: 3
+      raw:
+      - node: 98000
+        mass: 85960000.0
+  - file_prefix: D10761mm_
+    file_extension: deck
+    data:
+      category: 4
+      element_type: PMAS
+      raw:
+      - node: 98000
+        Ixx: 8042265381
+        Iyy: 281982709241
+        Izz: 282968877132
+  - file_prefix: D05315mm_
+    file_extension: deck
+    data:
+      category: 3
+      raw:
+      - node: 98000
+        mass: 40836614
+  - file_prefix: D05315mm_
+    file_extension: deck
+    data:
+      category: 4
+      element_type: PMAS
+      raw:
+      - node: 98000
+        Ixx: 19475062072
+        Iyy: 290699622247
+        Izz: 280840484388
+  - file_prefix: D07752mm_
+    file_extension: deck
+    data:
+      category: 3
+      raw:
+      - node: 98000
+        mass: 61405773
+  - file_prefix: D07752mm_
+    file_extension: deck
+    data:
+      category: 4
+      element_type: PMAS
+      raw:
+      - node: 98000
+        Ixx: 14904073573
+        Iyy: 280938728984
+        Izz: 275652350523
+  - file_prefix: D10806mm_
+    file_extension: deck
+    data:
+      category: 3
+      raw:
+      - node: 98000
+        mass: 87851834
+  - file_prefix: D10806mm_
+    file_extension: deck
+    data:
+      category: 4
+      element_type: PMAS
+      raw:
+      - node: 98000
+        Ixx: 8793205414
+        Iyy: 293390654400
+        Izz: 294216243869
   Analysis:
     basename: aqwa
-    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa
+    analysis_root_folder: .
     file_name: app_aqwa_aqwa_pre_process_deck
     file_name_for_overwrite: app_aqwa_aqwa_pre_process_deck
-    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
-    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-04-28 17:11:02.588069
+    result_folder: .\results
+    log_folder: .\logs
+    start_time: 2024-04-28 18:06:28.350760
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_pre_process_deck.yml
+    CustomInputFile: .\aqwa_pre_process_deck.yml
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - c:\
-    - Users
-    - vamseea
-    - github
-    - digitalmodel
-    - src
-    - digitalmodel
-    - tests
-    - test_data
-    - aqwa
     - output
     - lis
     file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - c:\
-    - Users
-    - vamseea
-    - github
-    - digitalmodel
-    - src
-    - digitalmodel
-    - tests
-    - test_data
-    - aqwa
     - results
