@@ -1,17 +1,40 @@
-from digitalmodel.custom.aqwa_post_process import AqwaPostProcess
+from assetutilities.common.update_deep import update_deep_dictionary
+from digitalmodel.custom.aqwa.aqwa_pre_process import AqwaPreProcess
+from digitalmodel.custom.aqwa.aqwa_post_process import AqwaPostProcess
 
-app = AqwaPostProcess()
+a_post = AqwaPostProcess()
+a_pre = AqwaPreProcess()
 
 
 class Aqwa:
 
     def __init__(self):
         pass
-        
 
     def router(self, cfg):
 
-        app.post_process_router(cfg)
+        cfg = self.get_cfg_with_master_data(cfg)
+
+        if cfg['type']['preprocess']:
+            a_pre.pre_process_router(cfg)
+
+        if cfg['type']['analysis']:
+            raise NotImplementedError("Preprocess not implemented")
+
+        if cfg['type']['results']:
+            a_post.post_process_router(cfg)
+
+        return cfg
+
+    def get_cfg_with_master_data(self, cfg):
+        if 'summary_settings_master' in cfg:
+            summary_settings_master = cfg['summary_settings_master'].copy()
+            summary_settings = cfg['summary_settings']
+
+            for group_index in range(0, len(summary_settings['groups'])):
+                group = summary_settings['groups'][group_index].copy()
+                group = update_deep_dictionary(summary_settings_master['groups'][0], group)
+                summary_settings['groups'][group_index] = group.copy()
 
         return cfg
 

@@ -1,0 +1,88 @@
+basename: aqwa
+
+software:
+  version: []
+
+type:
+  preprocess: True
+  analysis: False
+  results: False
+
+pre_process_settings:
+  file_extension: dat
+
+inputs:
+  - label:
+    file_extension: deck
+    data:
+      category: 3
+      raw: { node: 9800, mass: 3.894E+07 }
+  - label:
+    file_extension: deck
+    data:
+      category: 4
+      raw: { node: 9800, I: [8.083E+09, 1.371E+11, 1.381E+11] }
+  - label:
+    file_extension: deck
+    data:
+      category: 6
+      raw:
+        {
+          frequency:
+            [
+              4,
+              5,
+              6,
+              7,
+              8,
+              8.5,
+              9,
+              9.25,
+              9.5,
+              9.75,
+              10,
+              10.25,
+              10.5,
+              10.75,
+              11,
+              11.25,
+              11.5,
+              11.75,
+              12,
+              13,
+              14,
+              15,
+              16,
+              20,
+              24,
+              28,
+              32,
+              36,
+              40,
+            ],
+          direction: [-180, -135, -90, -45, 0, 45, 90, 135, 180],
+        }
+  - label:
+    file_extension: deck
+    data:
+      category: 7
+      raw: { additional_damping: { rxx: 5729.578, ryy: 5729.578 } }
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: output/lis
+      filename_pattern: 9MOORS
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

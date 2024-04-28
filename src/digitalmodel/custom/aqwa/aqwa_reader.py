@@ -12,7 +12,7 @@ from assetutilities.common.data import ReadData
 from assetutilities.common.data import SaveData
 from assetutilities.common.update_deep import update_deep_dictionary
 
-from digitalmodel.custom.aqwa_utilities import AqwaUtilities
+from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
 
 au = AqwaUtilities()
 rd = ReadData()

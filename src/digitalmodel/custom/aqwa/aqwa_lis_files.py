@@ -8,7 +8,7 @@ from assetutilities.common.file_management import FileManagement
 from assetutilities.common.data import ReadData
 from assetutilities.common.data import SaveData
 
-from digitalmodel.custom.aqwa_utilities import AqwaUtilities
+from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
 
 fm = FileManagement()
 au = AqwaUtilities()

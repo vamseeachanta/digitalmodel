@@ -7,7 +7,7 @@ from assetutilities.common.file_management import FileManagement
 from assetutilities.common.data import ReadData
 from assetutilities.common.data import SaveData
 
-from digitalmodel.custom.aqwa_utilities import AqwaUtilities
+from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
 
 fm = FileManagement()
 au = AqwaUtilities()
@@ -20,9 +20,13 @@ class AqwaDATFiles:
         pass
 
     def router(self, cfg):
-        self.prepare_data_category(cfg)
+        self.process_all_data_categories(cfg)
 
-    def prepare_data_category(self, cfg):
+    def process_all_data_categories(self, cfg):
+        for dc_cfg in cfg['inputs']:
+            self.prepare_data_category(dc_cfg, cfg)
+
+    def prepare_data_category(self, dc_cfg, cfg):
         data_category = cfg['data_category']
         return data_category
 

@@ -152,3 +152,10 @@ Yes, python interface available for AQWA to run post finish commands results?
 <https://forum.ansys.com/forums/topic/aqwa-export-data-csv-file/>
 
 # Questions
+
+### LIS File
+start:
+N A T U R A L   F R E Q U E N C I E S / P E R I O D S   F O R   S T R U C T U R E
+
+end:
+H Y D R O D Y N A M I C   P A R A M E T E R S   F O R
