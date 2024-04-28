@@ -25,10 +25,19 @@ class AqwaDATFiles:
     def prepare_data_category(self, cfg):
         data_category = cfg['data_category']
         return data_category
-    
-    def get_header(self, data_category):
+
+    def get_header(self, data_category,cfg_header):
         data_category = self.prepare_data_category(cfg)
         header = cfg['header'][data_category]
         return header
-    
-    
+
+    def get_body(self, data_category,cfg_body):
+        data_category = self.prepare_data_category(cfg)
+        header = cfg['header'][data_category]
+        return header
+
+    def get_footer(self, data_category,cfg_footer):
+        data_category = self.prepare_data_category(cfg)
+        header = cfg['header'][data_category]
+        return header
+
