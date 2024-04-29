@@ -11,24 +11,79 @@ type:
 result_method: lis # aqwareader
 
 result:
-  - label: moorings
+  - label: natural_frequency
     file_extension: LIS
     search_cfg:
       start:
-        keyword: M O O R I N G   F O R C E S   A N D   S T I F F N E S S
-        occurrence: 1
+        line_number: NULL
+        key_words:
+          [
+            N A T U R A L   F R E Q U E N C I E S / P E R I O D S   F O R   S T R U C T U R E,
+          ]
+        occurrence: 4 # freq, period, critical damping, repeated data at end
+        transform: { scale: 1, shift: 0 }
       end:
-        keyword: ---------------------------------
-        occurrence: 2
+        line_number: NULL
+        key_words: [FINISH DATE]
+        occurrence: 1
+        transform: { scale: 1, shift: -2 }
+
       data_extraction:
-        keyword: COMP
-        scale: 1
-        shift: 0
-        line_idx: 4
+        key_words:
+          [
+            PERIOD     PERIOD                         UNDAMPED  NATURAL  PERIOD(SECONDS),
+          ]
+        occurrence: NULL
+        header:
+          transform:
+            scale: 1
+            shift: 2
+        data:
+          transform:
+            scale: 1
+            shift: 5
+
     inject_into:
       flag: True
       filename: output/aqwa_lis.xlsx
-      sheetname: m_f
+      sheetname: natural_period
+
+  - label: critical_damping
+    file_extension: LIS
+    search_cfg:
+      start:
+        line_number: NULL
+        key_words:
+          [
+            N A T U R A L   F R E Q U E N C I E S / P E R I O D S   F O R   S T R U C T U R E,
+          ]
+        occurrence: 4 # freq, period, critical damping, repeated data at end
+        transform: { scale: 1, shift: 0 }
+      end:
+        line_number: NULL
+        key_words: [FINISH DATE]
+        occurrence: 1
+        transform: { scale: 1, shift: -2 }
+
+      data_extraction:
+        key_words:
+          [
+            FREQUENCY  FREQUENCY                  APPROXIMATE  PERCENTAGE  CRITICAL DAMPING,
+          ]
+        occurrence: NULL
+        header:
+          transform:
+            scale: 1
+            shift: 2
+        data:
+          transform:
+            scale: 1
+            shift: 5
+
+    inject_into:
+      flag: True
+      filename: output/aqwa_lis.xlsx
+      sheetname: critical_damping
 
 file_management:
   flag: True
@@ -40,7 +95,9 @@ file_management:
       flag: False
       auto_read: True
       directory: output/lis
-      filename_pattern: 9MOORS
+      file_extensions: [LIS]
+      filename_pattern: NO_DAMP
+    output_directory: NULL
 
 default:
   log_level: DEBUG

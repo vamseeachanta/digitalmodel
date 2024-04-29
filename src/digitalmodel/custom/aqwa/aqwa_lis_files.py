@@ -2,6 +2,7 @@ import os
 import math
 import logging
 import pandas as pd
+from pathlib import Path
 
 
 from assetutilities.common.file_management import FileManagement
@@ -40,44 +41,59 @@ class AqwaLISFiles:
             cfg_file = {'io': input_file, 'basename': os.path.basename(input_file)}
             cfg_keyword_lines = {
                 'io': cfg_file['io'],
-                'line': {
-                    'key_words': [cfg_lis['search_cfg']['start']['keyword']],
-                    'transform': {
-                        'scale': 1,
-                        'shift': 0
-                    }
+                'line': cfg_lis['search_cfg']['start'].copy()
                 }
-            }
 
             start_keyword_lines = rd.from_ascii_file_get_line_number_containing_keywords(cfg_keyword_lines)
-            # start_keyword_line = start_keyword_lines[cfg_lis['search_cfg']['start']['occurrence'] -1]
+            start_keyword_line = start_keyword_lines[cfg_lis['search_cfg']['start']['occurrence'] -1]
+
+            cfg_keyword_lines = {
+                'io': cfg_file['io'],
+                'line': cfg_lis['search_cfg']['end'].copy()
+                }
+
+            end_keyword_lines = rd.from_ascii_file_get_line_number_containing_keywords(cfg_keyword_lines)
+            end_keyword_line = end_keyword_lines[cfg_lis['search_cfg']['end']['occurrence'] -1]
 
             cfg_data_format = {
                 'io': input_file,
-                'start_line': start_keyword_lines,
-                # 'end_line': None
+                'start_line': start_keyword_line,
+                'end_line': end_keyword_line
             }
 
             data = rd.from_ascii_file_get_lines_as_string_arrays(cfg_data_format)
-            df_file = self.get_data_as_dataframe(data, cfg_lis, cfg_file)
-            df_master = pd.concat([df_master, df_file], axis=0)
-
+            cfg_refine = cfg_lis['search_cfg']['data_extraction']
+            df = self.get_refine_data_using_cfg(data, cfg_refine)
+            df['input_file'] = Path(input_file).stem
+            df_master = pd.concat([df_master, df], axis=0)
+            
         return df_master
 
+    def get_refine_data_using_cfg(self, data, cfg_refine):
+        refine_data_line_numbers = rd.get_array_rows_containing_keywords(data, cfg_refine['key_words'], cfg_refine)
+        df_data = pd.DataFrame()
+        for refine_data_line in refine_data_line_numbers:
+            df_refine = self.get_data_for_refine_data_line_number(data, refine_data_line, cfg_refine)
+            df_data = pd.concat([df_data, df_refine], axis=0)
 
-    def get_data_as_dataframe(self, raw_data, cfg_lis, cfg_file):
-        keyword = cfg_lis['search_cfg']['data_extraction']['keyword']
-        raw_data = [x for x in raw_data if keyword in x]
-        
-        cfg_file_keys = list(cfg_file.keys())
-        data_columns = cfg_file_keys + [x.split()[0] for x in raw_data]
-        cfg_file_values = [cfg_file[cfg_file_keys[0]], cfg_file[cfg_file_keys[1]]]
+        return df_data
+    
+    def get_data_for_refine_data_line_number(self, data, refine_data_line, cfg_refine):
+        cfg_header_trans = cfg_refine['header']['transform']
+        header = data[cfg_header_trans['scale']*refine_data_line + cfg_header_trans['shift'] - 1]
+        cfg_data_trans = cfg_refine['data']['transform']
+        data_start_line = cfg_data_trans['scale']*refine_data_line + cfg_data_trans['shift'] - 1
+        data_array = data[data_start_line:]
+        columns = header.split()
+        df = pd.DataFrame(columns=columns)
+        for data_line in data_array:
+            data = data_line.split()
+            if len(data) == len(columns):
+                df.loc[len(df)] = data
+            else:
+                break
 
-        data = cfg_file_values + [float(x.split()[4]) for x in raw_data]
-        df = pd.DataFrame(columns=data_columns)
-        df.loc[len(df)] = data
         return df
-
 
     def injectSummaryToExcel(self, df, result_item, cfg):
         if 'inject_into' in result_item and result_item[
