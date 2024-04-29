@@ -22,16 +22,10 @@ class AqwaLISFiles:
         pass
 
     def router(self, cfg):
-        cfg = self.file_management(cfg)
+        cfg = fm.router(cfg)
         for result_item in cfg['result']:
             df = self.get_data(cfg, result_item)
             self.injectSummaryToExcel(df, result_item, cfg)
-
-    def file_management(self, cfg):
-        cfg = fm.router(cfg)
-
-        return cfg
-
 
     def get_data(self, cfg, cfg_lis):
         input_files = cfg['file_management']['input_files']['LIS']

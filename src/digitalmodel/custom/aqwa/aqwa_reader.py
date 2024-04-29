@@ -11,10 +11,9 @@ from pathlib import Path
 from assetutilities.common.data import ReadData
 from assetutilities.common.data import SaveData
 from assetutilities.common.update_deep import update_deep_dictionary
+from assetutilities.common.file_management import FileManagement
 
-from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
-
-au = AqwaUtilities()
+fm = FileManagement()
 rd = ReadData()
 save_data = SaveData()
 
@@ -26,7 +25,7 @@ class AqwaReader:
     def router(self, cfg):
         self.get_aqwareader_exe(cfg)
         self.get_workbench_bat(cfg)
-        au.file_management(cfg)
+        cfg = fm.router(cfg)
         self.postprocess(cfg)
 
     def get_aqwareader_exe(self, cfg):
@@ -58,7 +57,11 @@ class AqwaReader:
             if result_category == 'equilibrium':
                 df = pd.DataFrame.from_dict(all_files_result)
             elif result_category == 'frequency':
-                df = pd.DataFrame(all_files_result[0])
+                df = pd.DataFrame()
+                for input_file in input_files:
+                    df_item = pd.DataFrame(all_files_result[0])
+                    df_item['input_file'] = Path(input_file).stem
+                    df = pd.concat([df, df_item], axis=0)
             self.save_to_csv(df, result_item, cfg)
             self.inject_to_excel(df, result_item, cfg)
 
