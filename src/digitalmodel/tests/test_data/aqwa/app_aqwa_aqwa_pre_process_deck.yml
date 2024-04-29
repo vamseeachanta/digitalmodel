@@ -196,19 +196,107 @@ dictitems:
         Ixx: 8793205414
         Iyy: 293390654400
         Izz: 294216243869
+  - file_prefix: D05266mm_
+    file_extension: deck
+    data:
+      element_type: FIDP
+      category: 7
+      raw:
+        added_damping:
+          rxx: 22976330
+          ryy: -1608307289
+  - file_prefix: D07708mm_
+    file_extension: deck
+    data:
+      element_type: FIDP
+      category: 7
+      raw:
+        added_damping:
+          rxx: 516878698
+          ryy: -1352200607
+  - file_prefix: D10761mm_
+    file_extension: deck
+    data:
+      element_type: FIDP
+      category: 7
+      raw:
+        added_damping:
+          rxx: 1000
+          ryy: -1232619773
+  - file_prefix: D05315mm_
+    file_extension: deck
+    data:
+      element_type: FIDP
+      category: 7
+      raw:
+        added_damping:
+          rxx: 36915965
+          ryy: -1263611441
+  - file_prefix: D07752mm_
+    file_extension: deck
+    data:
+      element_type: FIDP
+      category: 7
+      raw:
+        added_damping:
+          rxx: 556511974
+          ryy: -1260632289
+  - file_prefix: D10806mm_
+    file_extension: deck
+    data:
+      element_type: FIDP
+      category: 7
+      raw:
+        added_damping:
+          rxx: 1000
+          ryy: -1222401381
+  - file_prefix: ~
+    file_extension: deck
+    data:
+      element_type: NRNM
+      category: 18
+      raw:
+        structure: 1
+        nodes:
+        - 99800
+        - 99801
+        - 99802
+        - 99803
+        - 99804
+        - 99805
   Analysis:
     basename: aqwa
-    analysis_root_folder: .
+    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa
     file_name: app_aqwa_aqwa_pre_process_deck
     file_name_for_overwrite: app_aqwa_aqwa_pre_process_deck
-    result_folder: .\results
-    log_folder: .\logs
-    start_time: 2024-04-28 18:06:28.350760
+    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
+    start_time: 2024-04-29 10:29:15.300007
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: .\aqwa_pre_process_deck.yml
+    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_pre_process_deck.yml
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
+    - c:\
+    - Users
+    - vamseea
+    - github
+    - digitalmodel
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa
     - output
     - lis
     file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
+    - c:\
+    - Users
+    - vamseea
+    - github
+    - digitalmodel
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa
     - results

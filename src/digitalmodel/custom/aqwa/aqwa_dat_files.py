@@ -163,3 +163,20 @@ class AqwaDATFiles:
         return body
 
 
+    def get_dc_18_body(self, dc_cfg):
+        raw_data = dc_cfg['data']['raw']
+        element_type = dc_cfg['data']['element_type']
+        body = []
+
+        structure = raw_data['structure']
+        node_array = raw_data['nodes']
+        for node in node_array:
+            body_item_idx = node_array.index(node)
+            node = node_array[body_item_idx]
+
+            body_item_str = f'{white_space:>1s}{white_space:>3s}{body_item_idx+1:>2d}{element_type:>4s}{structure:>5d}{node:>5d}'
+            body.append(body_item_str)
+
+        return body
+
+

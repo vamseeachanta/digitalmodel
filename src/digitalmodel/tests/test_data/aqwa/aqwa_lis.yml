@@ -11,7 +11,7 @@ type:
 result_method: lis # aqwareader
 
 result:
-  - label: natural_frequency
+  - label: natural_period
     file_extension: LIS
     search_cfg:
       start:
@@ -45,8 +45,8 @@ result:
 
     inject_into:
       flag: True
-      filename: output/aqwa_lis.xlsx
-      sheetname: natural_period
+      filename: output/aqwa_damp.xlsx
+      sheetname: no_damp_np
 
   - label: critical_damping
     file_extension: LIS
@@ -82,8 +82,8 @@ result:
 
     inject_into:
       flag: True
-      filename: output/aqwa_lis.xlsx
-      sheetname: critical_damping
+      filename: output/aqwa_damp.xlsx
+      sheetname: no_damp_cdp
 
 file_management:
   flag: True
