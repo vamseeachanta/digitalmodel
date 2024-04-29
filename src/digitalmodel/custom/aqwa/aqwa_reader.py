@@ -45,27 +45,27 @@ class AqwaReader:
         self.workbench_bat = workbench_bat
         
     def postprocess(self, cfg):
-        input_files = cfg['file_management']['input_files']['PLT']
 
         for result_item in cfg['result']:
-            self.update_iteration_item_with_master_settings(result_item, cfg)
-            all_files_result = []
+            result_item, cfg = self.update_iteration_item_with_master_settings(result_item, cfg)
+            input_files = cfg['file_management']['input_files']['PLT']
+
             for input_file in input_files:
-
+                single_file_result = []
                 result_item_dict = self.get_result_groups(input_file, cfg, result_item)
-                all_files_result.append(result_item_dict)
+                single_file_result.append(result_item_dict)
 
-            result_category = result_item['category']
-            if result_category == 'equilibrium':
-                df = pd.DataFrame.from_dict(all_files_result)
-            elif result_category == 'frequency':
-                df = pd.DataFrame()
-                for input_file in input_files:
-                    df_item = pd.DataFrame(all_files_result[0])
-                    df_item['input_file'] = Path(input_file).stem
-                    df = pd.concat([df, df_item], axis=0)
-            self.save_to_csv(df, result_item, cfg)
-            self.inject_to_excel(df, result_item, cfg)
+                result_category = result_item['category']
+                if result_category == 'equilibrium':
+                    df = pd.DataFrame.from_dict(single_file_result)
+                elif result_category == 'frequency':
+                    df = pd.DataFrame()
+                    for input_file in input_files:
+                        df_item = pd.DataFrame(single_file_result[0])
+                        df_item['input_file'] = Path(input_file).stem
+                        df = pd.concat([df, df_item], axis=0)
+                self.save_to_csv(df, result_item, cfg)
+                self.inject_to_excel(df, result_item, cfg)
 
     def get_result_groups(self, input_file, cfg, result_item):
         result_item_dict = {}
