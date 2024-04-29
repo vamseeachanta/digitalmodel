@@ -23,8 +23,8 @@ class AqwaReader:
         pass
 
     def router(self, cfg):
-        self.get_aqwareader_exe(cfg)
-        self.get_workbench_bat(cfg)
+        # self.get_aqwareader_exe(cfg)
+        # self.get_workbench_bat(cfg)
         cfg = fm.router(cfg)
         self.postprocess(cfg)
 
@@ -48,8 +48,10 @@ class AqwaReader:
         input_files = cfg['file_management']['input_files']['PLT']
 
         for result_item in cfg['result']:
+            self.update_iteration_item_with_master_settings(result_item, cfg)
             all_files_result = []
             for input_file in input_files:
+
                 result_item_dict = self.get_result_groups(input_file, cfg, result_item)
                 all_files_result.append(result_item_dict)
 
@@ -213,3 +215,20 @@ class AqwaReader:
             csv_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '.csv')
             df.to_csv(csv_filename, index=False, header=True)
 
+    def update_iteration_item_with_master_settings(self, iteration_item, cfg):
+        master_settings = cfg['master_settings']
+        iteration_item = update_deep_dictionary(iteration_item, master_settings)
+
+        if 'filename_pattern' in iteration_item:
+            filename_pattern = iteration_item['filename_pattern']
+            if filename_pattern is not None:
+                cfg['file_management']['files']['files_in_current_directory']['filename_pattern'] = filename_pattern
+
+        if 'directory' in iteration_item:
+            directory = iteration_item['directory']
+            if directory is not None:
+                cfg['file_management']['files']['files_in_current_directory']['directory'] = directory
+
+        cfg = fm.router(cfg)
+
+        return iteration_item, cfg
