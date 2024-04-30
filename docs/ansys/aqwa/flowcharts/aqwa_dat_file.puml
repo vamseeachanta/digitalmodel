@@ -72,9 +72,55 @@ start
             end note
 
         :Material Property;
-
     }
 
+    partition "Deck 4 (GEOM) - Geometric Properties" {
+            note right
+                tba
+            end note
+    }
+
+    partition "Deck 5 (GLOB) - Constant Parameters" {
+            note right
+                tba
+            end note
+    }
+
+    partition "Deck 6 (FDR) - Frequency/Direction" {
+            note right
+                tba
+            end note
+    }
+
+    partition "Deck 7 (WFS) - Frequency depedent data" {
+            note right
+                tba
+            end note
+    }
+
+    partition "Deck 8 (DRC) - Drift Force Coeff" {
+            note right
+                tba
+            end note
+    }
+
+    partition "Deck 9 (DRM) - Drift Motions" {
+            note right
+                tba
+            end note
+    }
+
+    partition "Deck 10 (HLD) - Hull draft coefficient and thruster forces" {
+            note right
+                tba
+            end note
+    }
+
+    partition "Deck 11 (HLD) - Current and wind parameters" {
+            note right
+                tba
+            end note
+    }
 
 stop
 
