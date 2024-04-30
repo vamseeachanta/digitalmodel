@@ -12,7 +12,8 @@ def run_process(input_file, expected_result={}):
 
 
 def test_run_process():
-    input_file = 'aqwa_lis.yml'
+    # input_file = 'aqwa_lis_rao_damp.yml'
+    input_file = 'aqwa_lis_rao_acc.yml'
     pytest_output_file = None
     # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     # expected_result = ymlInput(pytest_output_file, updateYml=None)

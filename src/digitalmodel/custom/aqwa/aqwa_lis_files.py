@@ -60,7 +60,7 @@ class AqwaLISFiles:
             df = self.get_refine_data_using_cfg(data, cfg_refine)
             df['input_file'] = Path(input_file).stem
             df_master = pd.concat([df_master, df], axis=0)
-            
+
         return df_master
 
     def get_refine_data_using_cfg(self, data, cfg_refine):
@@ -81,9 +81,13 @@ class AqwaLISFiles:
         columns = header.split()
         df = pd.DataFrame(columns=columns)
         for data_line in data_array:
-            data = data_line.split()
-            if len(data) == len(columns):
-                df.loc[len(df)] = data
+            data_row = data_line.split()
+            if len(data_row) == len(columns):
+                df.loc[len(df)] = data_row
+            elif len(data_row) == len(columns) - 1:
+                if 'ACC R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY' in cfg_refine['key_words']:
+                    data_row = data_row[0:2] + [df.iloc[-1,2]] + data_row[2:]
+                    df.loc[len(df)] = data_row
             else:
                 break
 
