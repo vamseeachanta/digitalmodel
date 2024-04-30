@@ -29,6 +29,24 @@ result:
         key_words: [ACC R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY]
         occurrence: NULL
         header:
+          columns:
+            [
+              Period (SECS),
+              Frequency (RAD/S),
+              Direction (DEGREES),
+              Surge AMP,
+              Surge PHASE,
+              Sway AMP,
+              Sway PHASE,
+              Heave AMP,
+              Heave PHASE,
+              Roll AMP,
+              Roll PHASE,
+              Pitch AMP,
+              Pitch PHASE,
+              Yaw AMP,
+              Yaw PHASE,
+            ]
           transform:
             scale: 1
             shift: 4

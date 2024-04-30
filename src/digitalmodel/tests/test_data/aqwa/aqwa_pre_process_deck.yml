@@ -159,7 +159,7 @@ inputs:
     data:
       element_type: FIDP
       category: 7
-      raw: { added_damping: { rxx: 10555297823, ryy: -77475387826 } }
+      raw: { added_damping: { rxx: 45457236, ryy: -26271983465 } }
 
   - file_prefix: D10761mm_
     file_extension: deck
@@ -180,7 +180,7 @@ inputs:
     data:
       element_type: FIDP
       category: 7
-      raw: { added_damping: { rxx: 10672318623, ryy: -72228909697 } }
+      raw: { added_damping: { rxx: 82494735, ryy: 1545355949 } }
 
   - file_prefix: D10806mm_
     file_extension: deck

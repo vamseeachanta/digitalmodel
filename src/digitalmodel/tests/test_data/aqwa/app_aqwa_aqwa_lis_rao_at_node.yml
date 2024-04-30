@@ -16,7 +16,7 @@ dictitems:
       start:
         line_number: ~
         key_words:
-        - ACC R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY
+        - P O S I T I O N   R . A . O . S   A T   U S E R - R E Q U E S T E D
         occurrence: 1
         transform:
           scale: 1
@@ -24,14 +24,14 @@ dictitems:
       end:
         line_number: ~
         key_words:
-        - ACC R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY
-        occurrence: 9
+        - P O S I T I O N   R . A . O . S   A T   U S E R - R E Q U E S T E D
+        occurrence: 40
         transform:
           scale: 1
           shift: 50
       data_extraction:
         key_words:
-        - ACC R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY
+        - STRUCTURE NUMBER 1 - NODE NUMBER 99800
         occurrence: ~
         header:
           columns:
@@ -44,12 +44,6 @@ dictitems:
           - Sway PHASE
           - Heave AMP
           - Heave PHASE
-          - Roll AMP
-          - Roll PHASE
-          - Pitch AMP
-          - Pitch PHASE
-          - Yaw AMP
-          - Yaw PHASE
           transform:
             scale: 1
             shift: 4
@@ -70,7 +64,7 @@ dictitems:
         flag: false
         auto_read: true
         directory: output/lis
-        filename_pattern: NO_DAMP
+        filename_pattern: AD010_FST1_L015_node_raos
         file_extensions:
         - LIS
       output_directory: ~
@@ -89,52 +83,66 @@ dictitems:
         - aqwa
         - output
         - lis
-        - NO_DAMP_FST1_L015.LIS
-      - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - Users
-        - vamseea
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - lis
-        - NO_DAMP_FST1_L050.LIS
-      - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - Users
-        - vamseea
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - lis
-        - NO_DAMP_FST1_L095.LIS
+        - AD010_FST1_L015_node_raos.LIS
   default:
     log_level: DEBUG
     config:
       overwrite:
         output: true
       cfg_sensitivities: false
+  output_transformation:
+    flag: true
+    input: motion
+    output:
+      velocity:
+        flag: false
+        input_columns:
+        - Period (SECS)
+        - Frequency (RAD/S)
+        - Direction (DEGREES)
+        - Surge AMP
+        - Surge PHASE
+        - Sway AMP
+        - Sway PHASE
+        - Heave AMP
+        - Heave PHASE
+        output_columns:
+        - Surge Vel. AMP
+        - Surge Vel. PHASE
+        - Sway Vel. AMP
+        - Sway Vel. PHASE
+        - Heave Vel. AMP
+        - Heave Vel. PHASE
+      acceleration:
+        flag: true
+        input_columns:
+        - Period (SECS)
+        - Frequency (RAD/S)
+        - Direction (DEGREES)
+        - Surge AMP
+        - Surge PHASE
+        - Sway AMP
+        - Sway PHASE
+        - Heave AMP
+        - Heave PHASE
+        output_columns:
+        - Surge Acc. AMP
+        - Surge Acc. PHASE
+        - Sway Acc. AMP
+        - Sway Acc. PHASE
+        - Heave Acc. AMP
+        - Heave Acc. PHASE
   Analysis:
     basename: aqwa
     analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa
-    file_name: app_aqwa_aqwa_lis_rao_acc
-    file_name_for_overwrite: app_aqwa_aqwa_lis_rao_acc
+    file_name: app_aqwa_aqwa_lis_rao_at_node
+    file_name_for_overwrite: app_aqwa_aqwa_lis_rao_at_node
     result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-04-30 15:58:43.352567
+    start_time: 2024-04-30 16:03:20.461996
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_lis_rao_acc.yml
+    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_lis_rao_at_node.yml
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
     - c:\
     - Users

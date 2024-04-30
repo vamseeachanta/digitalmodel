@@ -5,11 +5,12 @@ skinparam titleBorderThickness 2
 skinparam titleBorderColor red
 skinparam titleBackgroundColor Tomato
 
-title AQWA Runs \nAutomation Options
+title AQWA Runs \nAutomation
 
 start
 
     note right
+        **(IN PROGRESS)**
         Objective: modular file management and 
         analysis for easy updates/maintenance/reruns
     end note
@@ -25,9 +26,9 @@ start
         :Generate Decks for .dat files;
             note right
             Pros:
-            - License independent
-            - Easy to wire : Single source of truth data source
+            - Easy to wire data: Single source of truth data source
             - Programming (Python, Fortran etc.) or MS DOS Batch 
+            - License independent
             Cons:
             - ASCII format and picky to run: 
                 i.e. manual edits, additional spaces etc. can cause it not run
