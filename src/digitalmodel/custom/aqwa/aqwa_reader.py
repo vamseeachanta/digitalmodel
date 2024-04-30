@@ -216,7 +216,7 @@ class AqwaReader:
             df.to_csv(csv_filename, index=False, header=True)
 
     def update_iteration_item_with_master_settings(self, iteration_item, cfg):
-        master_settings = cfg['master_settings']
+        master_settings = cfg.get('master_settings', {})
         iteration_item = update_deep_dictionary(iteration_item, master_settings)
 
         if 'filename_pattern' in iteration_item:
