@@ -25,6 +25,11 @@ class AqwaLISFiles:
         cfg = fm.router(cfg)
         for result_item in cfg['result']:
             df = self.get_data(cfg, result_item)
+
+            df = self.get_sorted_dataframe(df, result_item)
+            df = self.get_output_transformed_data(df, cfg)
+
+            self.save_to_csv(df, result_item, cfg)
             self.injectSummaryToExcel(df, result_item, cfg)
 
     def get_data(self, cfg, cfg_lis):
@@ -88,9 +93,17 @@ class AqwaLISFiles:
                 if 'ACC R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY' in cfg_refine['key_words']:
                     data_row = data_row[0:2] + [df.iloc[-1, 2]] + data_row[2:]
                     df.loc[len(df)] = data_row
-                elif 'P O S I T I O N   R . A . O . S   A T   U S E R - R E Q U E S T E D' in cfg_lis_search_cfg['key_words']:
-                    data_row = data_row[0:2] + [df.iloc[-1, 2]] + data_row[2:]
-                    df.loc[len(df)] = data_row
+            elif len(data_row) == len(columns) - 2:
+                if 'P O S I T I O N   R . A . O . S   A T   U S E R - R E Q U E S T E D' in cfg_lis_search_cfg['key_words']:
+                    try:
+                        float(data_row[0])
+                        data_row = [df.iloc[-1, 0]] + [df.iloc[-1, 1]] + data_row
+                        df.loc[len(df)] = data_row
+                    except ValueError:
+                        pass
+            elif len(data_row) == 0:
+                if 'P O S I T I O N   R . A . O . S   A T   U S E R - R E Q U E S T E D' in cfg_lis_search_cfg['key_words']:
+                    pass
             else:
                 break
 
@@ -104,6 +117,44 @@ class AqwaLISFiles:
             header = data[cfg_header_trans['scale']*refine_data_line + cfg_header_trans['shift'] - 1]
             columns = header.split()
         return columns
+
+    def get_sorted_dataframe(self, df, result_item):
+        sort_cfg = result_item['search_cfg']['data_extraction'].get('sort', None)
+        if sort_cfg is not None and sort_cfg['flag']:
+            df.sort_values(by=sort_cfg['columns'], inplace=True)
+
+        return df
+
+    def get_output_transformed_data(self, df, cfg):
+        ot_cfg = cfg.get('output_transformation', None)
+        if ot_cfg is not None and ot_cfg['flag']:
+            frequency_column = ot_cfg['input']['columns']['frequency']
+            transform_data_key = 'rao_velocity'
+            df = self.transform_by_data_key(df, ot_cfg, frequency_column, transform_data_key)
+            transform_data_key = 'rao_acceleration'
+            df = self.transform_by_data_key(df, ot_cfg, frequency_column, transform_data_key)
+
+        return df
+
+    def transform_by_data_key(self, df, ot_cfg, frequency_column, transform_data_key):
+        if ot_cfg['output'][transform_data_key]['flag']:
+            input_columns = ot_cfg['input']['columns']['transform']
+            for column_idx in range(0, len(input_columns)):
+                input_column = input_columns[column_idx]
+                output_column = ot_cfg['output'][transform_data_key]['columns'][column_idx]
+                if transform_data_key == 'rao_velocity':
+                    df[output_column] = df.apply(lambda row: round((float(row[input_column])*float(row[frequency_column])), 4), axis= 1)
+                elif transform_data_key == 'rao_acceleration':
+                    df[output_column] = df.apply(lambda row: round((float(row[input_column])*float(row[frequency_column])**2), 4), axis= 1)
+
+            return df
+
+    def save_to_csv(self, df, result_item, cfg):
+        save_csv = result_item.get('save_csv', False)
+        if save_csv:
+            sheetname = result_item['inject_into']['sheetname']
+            csv_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '.csv')
+            df.to_csv(csv_filename, index=False, header=True)
 
     def injectSummaryToExcel(self, df, result_item, cfg):
         if 'inject_into' in result_item and result_item[

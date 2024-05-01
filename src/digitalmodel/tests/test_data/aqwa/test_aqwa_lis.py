@@ -10,7 +10,6 @@ def run_process(input_file, expected_result={}):
     cfg = engine(input_file)
     assert (True)
 
-
 def test_run_process():
     # input_file = 'aqwa_lis_rao_damp.yml'
     input_file = 'aqwa_lis_rao_at_node.yml'
