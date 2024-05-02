@@ -36,5 +36,18 @@ class Aqwa:
                 group = update_deep_dictionary(summary_settings_master['groups'][0], group)
                 summary_settings['groups'][group_index] = group.copy()
 
+
+        if 'settings_master' in cfg:
+            keychain = cfg['settings_master']['keychain']
+            settings_master = cfg['settings_master'].copy()
+
+            groups = cfg[keychain[0]]
+
+            for group_index in range(0, len(groups)):
+                group = groups[group_index].copy()
+                group = update_deep_dictionary(settings_master, group)
+                cfg[keychain[0]][group_index] = update_deep_dictionary(cfg[keychain[0]][group_index], group.copy())
+
         return cfg
+
 

@@ -26,6 +26,7 @@ from digitalmodel.custom.orcaflex_installation import OrcInstallation
 from digitalmodel.common.ship_design import ShipDesign
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.cathodic_protection import CathodicProtection
+from digitalmodel.custom.transformation import Transformation
 
 save_data = SaveData()
 ou = OrcaflexUtilities()
@@ -97,10 +98,12 @@ def engine(inputfile=None):
     elif basename == "fatigue_analysis":
         fatigue_analysis = FatigueAnalysis()
         cfg_base = fatigue_analysis.router(cfg_base)
-    
     elif basename == "cathodic_protection":
         cp = CathodicProtection()
         cfg_base = cp.router(cfg_base)
+    elif basename == "transformation":
+        trans = Transformation()
+        cfg_base = trans.router(cfg_base)
 
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))

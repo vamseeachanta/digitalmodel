@@ -1,0 +1,347 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: aqwa
+  software:
+    version: []
+  type:
+    preprocess: false
+    analysis: false
+    results: true
+  result_method: lis
+  result:
+  - search_cfg:
+      data_extraction:
+        key_words:
+        - STRUCTURE NUMBER 1 - NODE NUMBER 99800
+        occurrence: ~
+        header:
+          columns: &id002
+          - Period (SECS)
+          - Frequency (RAD/S)
+          - Direction (DEGREES)
+          - Surge AMP
+          - Surge PHASE
+          - Sway AMP
+          - Sway PHASE
+          - Heave AMP
+          - Heave PHASE
+          transform:
+            scale: 1
+            shift: 4
+        data:
+          transform:
+            scale: 1
+            shift: 8
+        sort:
+          flag: true
+          columns: &id003
+          - Direction (DEGREES)
+          - Frequency (RAD/S)
+      start:
+        line_number: ~
+        key_words: &id004
+        - P O S I T I O N   R . A . O . S   A T   U S E R - R E Q U E S T E D
+        occurrence: 1
+        transform:
+          scale: 1
+          shift: 0
+      end:
+        line_number: ~
+        key_words: &id005
+        - P O S I T I O N   R . A . O . S   A T   U S E R - R E Q U E S T E D
+        occurrence: 40
+        transform:
+          scale: 1
+          shift: 50
+    inject_into:
+      sheetname: 00-T-7105
+      flag: true
+      filename: output/aqwa_raos.xlsx
+    keychain: &id006
+    - result
+    file_extension: LIS
+    save_csv: true
+  - search_cfg:
+      data_extraction:
+        key_words:
+        - STRUCTURE NUMBER 1 - NODE NUMBER 99801
+        occurrence: ~
+        header:
+          columns: *id002
+          transform:
+            scale: 1
+            shift: 4
+        data:
+          transform:
+            scale: 1
+            shift: 8
+        sort:
+          flag: true
+          columns: *id003
+      start:
+        line_number: ~
+        key_words: *id004
+        occurrence: 1
+        transform:
+          scale: 1
+          shift: 0
+      end:
+        line_number: ~
+        key_words: *id005
+        occurrence: 40
+        transform:
+          scale: 1
+          shift: 50
+    inject_into:
+      sheetname: 00-T-7104
+      flag: true
+      filename: output/aqwa_raos.xlsx
+    keychain: *id006
+    file_extension: LIS
+    save_csv: true
+  - search_cfg:
+      data_extraction:
+        key_words:
+        - STRUCTURE NUMBER 1 - NODE NUMBER 99802
+        occurrence: ~
+        header:
+          columns: *id002
+          transform:
+            scale: 1
+            shift: 4
+        data:
+          transform:
+            scale: 1
+            shift: 8
+        sort:
+          flag: true
+          columns: *id003
+      start:
+        line_number: ~
+        key_words: *id004
+        occurrence: 1
+        transform:
+          scale: 1
+          shift: 0
+      end:
+        line_number: ~
+        key_words: *id005
+        occurrence: 40
+        transform:
+          scale: 1
+          shift: 50
+    inject_into:
+      sheetname: 00-T-7103
+      flag: true
+      filename: output/aqwa_raos.xlsx
+    keychain: *id006
+    file_extension: LIS
+    save_csv: true
+  - search_cfg:
+      data_extraction:
+        key_words:
+        - STRUCTURE NUMBER 1 - NODE NUMBER 99803
+        occurrence: ~
+        header:
+          columns: *id002
+          transform:
+            scale: 1
+            shift: 4
+        data:
+          transform:
+            scale: 1
+            shift: 8
+        sort:
+          flag: true
+          columns: *id003
+      start:
+        line_number: ~
+        key_words: *id004
+        occurrence: 1
+        transform:
+          scale: 1
+          shift: 0
+      end:
+        line_number: ~
+        key_words: *id005
+        occurrence: 40
+        transform:
+          scale: 1
+          shift: 50
+    inject_into:
+      sheetname: 00-T-7102
+      flag: true
+      filename: output/aqwa_raos.xlsx
+    keychain: *id006
+    file_extension: LIS
+    save_csv: true
+  - search_cfg:
+      data_extraction:
+        key_words: &id007
+        - STRUCTURE NUMBER 1 - NODE NUMBER 99804
+        occurrence: ~
+        header:
+          columns: *id002
+          transform:
+            scale: 1
+            shift: 4
+        data:
+          transform:
+            scale: 1
+            shift: 8
+        sort:
+          flag: true
+          columns: *id003
+      start:
+        line_number: ~
+        key_words: *id004
+        occurrence: 1
+        transform:
+          scale: 1
+          shift: 0
+      end:
+        line_number: ~
+        key_words: *id005
+        occurrence: 40
+        transform:
+          scale: 1
+          shift: 50
+    inject_into:
+      sheetname: 00-T-7101
+      flag: true
+      filename: output/aqwa_raos.xlsx
+    keychain: *id006
+    file_extension: LIS
+    save_csv: true
+  file_management:
+    flag: true
+    update_unfinished:
+      flag: false
+    files:
+      files_in_current_directory:
+        flag: false
+        auto_read: true
+        directory: output/lis
+        filename_pattern: AD010_FST1_L015_node_raos
+        file_extensions:
+        - LIS
+      output_directory: ~
+    input_files:
+      LIS:
+      - !!python/object/apply:pathlib.WindowsPath
+        - c:\
+        - Users
+        - vamseea
+        - github
+        - digitalmodel
+        - src
+        - digitalmodel
+        - tests
+        - test_data
+        - aqwa
+        - output
+        - lis
+        - AD010_FST1_L015_node_raos.LIS
+  default:
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+      cfg_sensitivities: false
+  settings_master:
+    keychain: *id006
+    file_extension: LIS
+    save_csv: true
+    inject_into:
+      flag: true
+      filename: output/aqwa_raos.xlsx
+      sheetname: 00-T-7101
+    search_cfg:
+      start:
+        line_number: ~
+        key_words: *id004
+        occurrence: 1
+        transform:
+          scale: 1
+          shift: 0
+      end:
+        line_number: ~
+        key_words: *id005
+        occurrence: 40
+        transform:
+          scale: 1
+          shift: 50
+      data_extraction:
+        key_words: *id007
+        occurrence: ~
+        header:
+          columns: *id002
+          transform:
+            scale: 1
+            shift: 4
+        data:
+          transform:
+            scale: 1
+            shift: 8
+        sort:
+          flag: true
+          columns: *id003
+  output_transformation:
+    flag: true
+    input:
+      data: rao_motion
+      columns:
+        frequency: Frequency (RAD/S)
+        transform:
+        - Surge AMP
+        - Sway AMP
+        - Heave AMP
+    output:
+      rao_velocity:
+        flag: true
+        columns:
+        - Surge Vel. AMP
+        - Sway Vel. AMP
+        - Heave Vel. AMP
+      rao_acceleration:
+        flag: true
+        columns:
+        - Surge Acc. AMP
+        - Sway Acc. AMP
+        - Heave Acc. AMP
+  Analysis:
+    basename: aqwa
+    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa
+    file_name: app_aqwa_aqwa_lis_rao_at_node
+    file_name_for_overwrite: app_aqwa_aqwa_lis_rao_at_node
+    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
+    start_time: 2024-05-01 14:17:38.765760
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_lis_rao_at_node.yml
+    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
+    - c:\
+    - Users
+    - vamseea
+    - github
+    - digitalmodel
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa
+    - output
+    - lis
+    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
+    - c:\
+    - Users
+    - vamseea
+    - github
+    - digitalmodel
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa
