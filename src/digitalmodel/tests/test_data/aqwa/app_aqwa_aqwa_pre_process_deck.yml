@@ -203,8 +203,8 @@ dictitems:
       category: 7
       raw:
         added_damping:
-          rxx: 22976330
-          ryy: -1608307289
+          rxx: 1373072182
+          ryy: -88408142301
   - file_prefix: D07708mm_
     file_extension: deck
     data:
@@ -212,8 +212,8 @@ dictitems:
       category: 7
       raw:
         added_damping:
-          rxx: 516878698
-          ryy: -1352200607
+          rxx: 10555297823
+          ryy: -77475387826
   - file_prefix: D10761mm_
     file_extension: deck
     data:
@@ -222,7 +222,7 @@ dictitems:
       raw:
         added_damping:
           rxx: 1000
-          ryy: -1232619773
+          ryy: -70623910736
   - file_prefix: D05315mm_
     file_extension: deck
     data:
@@ -230,8 +230,8 @@ dictitems:
       category: 7
       raw:
         added_damping:
-          rxx: 36915965
-          ryy: -1263611441
+          rxx: 3935591687
+          ryy: -72399602530
   - file_prefix: D07752mm_
     file_extension: deck
     data:
@@ -239,8 +239,8 @@ dictitems:
       category: 7
       raw:
         added_damping:
-          rxx: 556511974
-          ryy: -1260632289
+          rxx: 10672318623
+          ryy: -72228909697
   - file_prefix: D10806mm_
     file_extension: deck
     data:
@@ -249,7 +249,7 @@ dictitems:
       raw:
         added_damping:
           rxx: 1000
-          ryy: -1222401381
+          ryy: -70038440000
   - file_prefix: ~
     file_extension: deck
     data:
@@ -271,7 +271,7 @@ dictitems:
     file_name_for_overwrite: app_aqwa_aqwa_pre_process_deck
     result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-04-29 10:29:15.300007
+    start_time: 2024-04-29 14:47:04.376608
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_pre_process_deck.yml
