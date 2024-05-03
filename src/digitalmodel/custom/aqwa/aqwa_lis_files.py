@@ -88,17 +88,17 @@ class AqwaLISFiles:
         for data_line in data_array:
             data_row = data_line.split()
             if len(data_row) == len(columns):
-                df.loc[len(df)] = data_row
+                df.loc[len(df)] = [float(item) for item in data_row]
             elif len(data_row) == len(columns) - 1:
                 if 'ACC R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY' in cfg_refine['key_words']:
                     data_row = data_row[0:2] + [df.iloc[-1, 2]] + data_row[2:]
-                    df.loc[len(df)] = data_row
+                    df.loc[len(df)] = [float(item) for item in data_row]
             elif len(data_row) == len(columns) - 2:
                 if 'P O S I T I O N   R . A . O . S   A T   U S E R - R E Q U E S T E D' in cfg_lis_search_cfg['key_words']:
                     try:
                         float(data_row[0])
                         data_row = [df.iloc[-1, 0]] + [df.iloc[-1, 1]] + data_row
-                        df.loc[len(df)] = data_row
+                        df.loc[len(df)] = [float(item) for item in data_row]
                     except ValueError:
                         pass
             elif len(data_row) == 0:
@@ -167,5 +167,5 @@ class AqwaLISFiles:
 
             sheetname = result_item['inject_into']['sheetname']
 
-            cfg_save_to_existing_workbook = {'template_file_name': file_name, 'sheetname': sheetname, 'saved_file_name': file_name, 'if_sheet_exists': 'replace', 'df': df}
+            cfg_save_to_existing_workbook = {'template_file_name': file_name, 'sheetname': sheetname, 'saved_file_name': file_name, 'if_sheet_exists': 'replace', 'df': df, 'index': False}
             save_data.df_to_sheet_in_existing_workbook(cfg_save_to_existing_workbook)
