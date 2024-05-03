@@ -60,7 +60,15 @@ c/ utilities like Aqwa reader.
 
 ## Post Processing
 
-## Key Files
+### Philosophy
+
+Generally, the dev team tries to keep the LIS file format as constant as possible to avoid breaking any legacy customer scripts that are designed around it. Of course, it's not 100% guaranteed that it won't change in the future.
+There are some aspects are left over from the older format of post processing and result storage, e.g. one set of data is spread over multiple tables because this is how much fits on a sheet of paper.
+It came to their attention recently from other users as well as Vamsee that there is need to focus on post-processing for a release. There are some talks about a version that is more automation friendly when it comes to post processing as well as automated output from AqwaWB.
+I communicated the Aqwa reader with the dev team and they are looking into getting in a single AqwaReader operation to output all RAO data in one hit. They might have to limit it to separate DOFs, but at least these will be constant (unlike numbers of freqs/dirs).
+on the restart analysis as well for the time being the best we can do is the one procedure that is in place i.e. restart 4 5 reading decks 9-20.
+
+### Key Files
 
 | File Extension | Description |
 | --- | --- |

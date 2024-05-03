@@ -14,4 +14,3 @@ Option 2:    <https://nghiaho.com/?page_id=671>
     <https://github.com/nghiaho12/rigid_transform_3D/blob/master/rigid_transform_3D.py>
 
 <https://alexsm.com/transformations-with-eigen-and-scipy-spatial/>
-
