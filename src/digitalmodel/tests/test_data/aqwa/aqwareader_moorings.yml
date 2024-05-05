@@ -1,0 +1,54 @@
+basename: aqwa
+
+software:
+  version: []
+  # ANSYSInstallDir: C:\Program Files\ANSYS Inc\v181
+  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
+  # "C:\Program Files\ANSYS Inc\v222\aisol\workbench.bat" -cmd "C:\Program Files\ANSYS Inc\v222\aisol\bin\winx64\AqwaReader.exe" --Type 2
+
+type:
+  preprocess: False
+  analysis: False
+  results: True
+
+result_method: aqwareader # lis
+
+result:
+  - label: stability
+    category: equilibrium
+    save_csv: True
+    inject_into:
+      flag: True
+      filename: results/aqr_moorings.xlsx
+      sheetname: raw_stability
+    structure: 1
+    groups:
+      - third_level_label: POSITION OF COG
+        first_level: [1] # Motion Analysis Time History
+        second_level: [1] # Structure
+        third_level: [1] # COG
+        fourth_level: NULL # Default DOFs
+      - third_level_label: MOORING FORCE - LINE
+        first_level: [1] # Motion Analysis Time History
+        second_level: [1] # Structure
+        third_level: [15, 16, 17, 18, 19, 20, 21, 22, 23, 24] # Moorings
+        fourth_level: [1, 2, 3, 4, 5, 6] # DOFs
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: 100mph
+      filename_pattern: NULL
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
