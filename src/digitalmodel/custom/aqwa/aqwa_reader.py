@@ -50,22 +50,29 @@ class AqwaReader:
             result_item, cfg = self.update_iteration_item_with_master_settings(result_item, cfg)
             input_files = cfg['file_management']['input_files']['PLT']
 
+            master_df = pd.DataFrame()
+            result_category = result_item['category']
             for input_file in input_files:
                 single_file_result = []
                 result_item_dict = self.get_result_groups(input_file, cfg, result_item)
                 single_file_result.append(result_item_dict)
 
-                result_category = result_item['category']
-                if result_category == 'equilibrium':
-                    df = pd.DataFrame.from_dict(single_file_result)
-                elif result_category == 'frequency':
+                if result_category == 'frequency':
                     df = pd.DataFrame()
                     for input_file in input_files:
                         df_item = pd.DataFrame(single_file_result[0])
                         df_item['input_file'] = Path(input_file).stem
                         df = pd.concat([df, df_item], axis=0)
-                self.save_to_csv(df, result_item, cfg)
-                self.inject_to_excel(df, result_item, cfg)
+                    self.save_to_csv(df, result_item, cfg)
+                    self.inject_to_excel(df, result_item, cfg)
+                elif result_category == 'equilibrium':
+                    df = pd.DataFrame.from_dict(single_file_result)
+                    master_df = pd.concat([master_df, df], axis=0)
+
+            if result_category == 'equilibrium':
+                self.save_to_csv(master_df, result_item, cfg)
+                self.inject_to_excel(master_df, result_item, cfg)
+
 
     def get_result_groups(self, input_file, cfg, result_item):
         result_item_dict = {}
