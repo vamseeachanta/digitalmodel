@@ -13,14 +13,15 @@ type:
 
 result_method: aqwareader # lis
 
+
 result:
-  - label: stability
+  - label: cog
     category: equilibrium
     save_csv: True
     inject_into:
       flag: True
       filename: results/aqr_moorings.xlsx
-      sheetname: raw_stability
+      sheetname: cog
     structure: 1
     groups:
       - third_level_label: POSITION OF COG
@@ -28,6 +29,16 @@ result:
         second_level: [1] # Structure
         third_level: [1] # COG
         fourth_level: NULL # Default DOFs
+
+  - label: moorings
+    category: equilibrium
+    save_csv: True
+    inject_into:
+      flag: True
+      filename: results/aqr_moorings.xlsx
+      sheetname: moorings
+    structure: 1
+    groups:
       - third_level_label: MOORING FORCE - LINE
         first_level: [1] # Motion Analysis Time History
         second_level: [1] # Structure
