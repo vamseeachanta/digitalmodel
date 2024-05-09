@@ -21,6 +21,13 @@ steps for constructing ship_with_piers.scdoc
   - Make the external lid surface normal to point upwards
   - Associate external lid with one of the components i.e. Pier
 
+- Shared Topology:
+  - Put the following objects in a single component:
+    - Pier
+    - PierBase
+    - External Lid
+  - Share topoology between all objects in Pier
+  
 ### Workbench
 
 Steps in workbench are given in this section.
@@ -51,7 +58,6 @@ Steps in workbench are given in this section.
 -
 
 #### Model: 02_s03_hr_wave.wbpj
-
 
 ### Error Troubleshooting
 

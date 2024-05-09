@@ -16,3 +16,10 @@ Apply back to the node.
 - Utilize virtual environment to test the python code
 - Test the code with another function.
 - Wireup AQWA node/variables to the forces
+
+### Way Forward
+
+- Create a Python3 server (more flexibility). But many things have to be changed.
+  - I am assuming we have to use Python2 server (i.e. Python.exe) for our AqwaServerMgr is primary Python 2. Going to Python 3 requires some handling of another python 3 virtual environment/server etc.? However, wanted to hear from the professionals.
+
+-
