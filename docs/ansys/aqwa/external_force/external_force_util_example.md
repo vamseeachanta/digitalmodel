@@ -53,7 +53,7 @@ math        : katex
 
 ---
 
-## Running Process
+## Terminology & Running Process
 
 External Force (EF) Server:
 
@@ -87,6 +87,7 @@ Best mode : using .DAT AQWA file in Command mode
 ## References
 
 - ANSYS AQWA Reference Manual, 2024R1, Section 30.3. External Server for User-Defined Force Calculation
+- ANSYS AQWA Reference Manual, 2024R1, Chapter 30: External Force Calculation
 - [external Force Notes](docs\ansys\aqwa\external_force\external_force.md)
 - ANSYS AQWA Utils folder:
 <code>
@@ -396,7 +397,7 @@ Summary of AQWA Utils
 </code>
 
 PRNT: For structure 1, print External force (34th Option)
-LIST (.LIS file) Output for nodes 1, 3 and 2 on structure 1
+LIST (.LIS file) Output for nodes 1, 3 and 2 on structure 1 relative to other nodes.
 
 ```markdown
 Output of External force defined.
