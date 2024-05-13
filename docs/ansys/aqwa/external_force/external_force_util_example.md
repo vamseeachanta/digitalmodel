@@ -13,10 +13,10 @@
 ```
 
 
-title       : Jira Adoption for ACMA
+title       : AQWA External Force Function
 author      : Vamsee Achanta
-description : Technology Enabled Engineering
-keywords    : Technology, Engineering, Manufacturing.
+description : ANSYS AQWA Tutorial
+keywords    : ANSYS, AQWA, External Force, Debug
 marp        : true
 paginate    : true
 theme       : leibniz
@@ -32,28 +32,59 @@ math        : katex
 
 ### Vamsee Achanta
 
-#### 11.May.2024
+#### 13.May.2024
 
-##### Understand Details
+##### ANSYS Utils Example Explanation
 
 ---
 
 ## Introduction and Objectives
 
-- Understand the ANSYS AQWA Utils example
-- Define a new function to provide the force to simulate
-- Plot the Nodal force timetrace (and verify change with time)
-
 **Agenda**
 
+- Understand and run ANSYS AQWA Utils example
+- Plot the Nodal force timetrace (and verify change with time)
+
 - Understand the Existing example
-- Define new example
-- Verify output
+- How to work with python in following methods
+  - Command line
+  - IDE (VS Code)
 - Summary and Conclusions
 
 ---
 
-## Options
+## Running Process
+
+Server:
+
+- External Force server
+- Uses Python to open a port and Socket
+- Utilizes Python 2 or 3 code as suitable
+  - Any ANSYS commonfile Python version works
+  - virtual environment (unverified)
+
+AQWA Client:
+
+- The AQWA .DAT Run that uses data from Server
+
+- Run modes:
+  - .dat or command mode (Supported)
+  - Workbench
+    - No external force specification given in Workbench (ANSYS/AQWA 2022R1)
+  - Potentially can read back .dat file (not verfied?)
+
+Steps to run:
+
+1. Start Python server then run AQWA client
+1. Run AQWA client
+
+```markdown
+Best mode : using .DAT AQWA file in Command mode
+```
+
+---
+
+## .Dat file : Options
 
 <code>
 
@@ -71,7 +102,7 @@ SUFC - Look for External User-Defined Force Server
 PBIS - Print Force Components at Each Iteration Step
 
 ```markdown
-TBA
+The Option to look for External User-Defined Force Server is **SUFC**
 ```
 
 ---
@@ -98,15 +129,15 @@ TBA
 </code>
 
 ```markdown
-TBA
+Tube is defined
 ```
 
 ---
 
 ## IUFC/RUFC Records
 
-<img src="v222\101_s01_geometry_schematic.PNG" alt="geometry_schematic" width="400"/>
-
+- Control parameters can be used to configure the External Force server.
+- Alternatively, use a suitable configuration (.INI or .YML or .PY etc.) to directly configure the python server.
 <br>
 
 <code>
@@ -116,8 +147,8 @@ TBA
 </code>
 
 HLD1: Structure 1 related
-IUFC - Up to 6 Interger (control) parameters
-RUFC - Up to 6 Real (control) parameters
+IUFC - Up to 6 Interger (control) parameters. Also known as I_Control parameters
+RUFC - Up to 6 Real (control) parameters. Also known as R_Control parameters
 
 For above data:
 1st Parameter number: 1
@@ -125,7 +156,7 @@ Last Parmeter number: 6
 RUFC paramters: 24     1.5e3    1.5e4      1.5e6    1.5e6        3e4
 
 ```markdown
-What do the control parameters defined above mean?
+Utilize suitable configuration (AQWA .DAT, .INI, .YML or .PY etc.) to get maximum flexibility for the project.
 ```
 
 ---
@@ -151,7 +182,7 @@ SPDN - Wave Spectral Direction
 Environmental loads defined.
 ```
 
-## Nodal Force
+## Nodal Force in .DAT File
 
 <img src="v222\101_s01_hr_load_summary.PNG" alt="geometry_schematic" width="400"/>
 
@@ -165,23 +196,23 @@ Environmental loads defined.
 
 The LINE/WNCH/FORC Data Records - Linear Cables
 
-FORC - A constant force
-Structure 1, Node 3, Structure 0, Node 303, Force of 30 kN
+- FORC - A constant force
+- Structure 1, Node 3, Structure 0, Node 303, Force of 30 kN
 
 ```markdown
-Linear Constant Force
+Based on Python Server User Function (UF) used, A linear force can be accessed and also overidden (eg. in UF2). 
+
+This force can also be directly controlled in the external python program without .DAT definition.
 ```
 
 ---
 
 ## Python Function | Inputs
 
-Analysis,Mode,Stage,Time,TimeStep,Pos,Vel
-
 <br>
 
 <code>
-??
+Analysis,Mode,Stage,Time,TimeStep,Pos,Vel
 </code>
 
 ??
@@ -203,7 +234,7 @@ Based on structures etc., One can access inputs.
 
 <br>
 
-**Analysis Error below**
+**AQWA Runtime Analysis Error below**
 <br>
 
 <code>
@@ -216,12 +247,12 @@ Based on structures etc., One can access inputs.
 
 Use this method to throughly understand how AQWA exposes its analysis data to Python.
 
-```markdown
-Running in VS Code no-debug (or in-debug) mode stops the program due to either :
-a/ Not able to find socket (or) 
-b/ connection time-out. 
+Running in VS Code no-debug (or in-debug) mode, the AQWA_SocketUserForceServerDetails.cfg file is not updated with appropriate port number.
 
-**Can this connection error be resolved?
+Manually update AQWA_SocketUserForceServerDetails.cfg file with correct port number before running AQWAClient i.e. AQWA run.
+
+```markdown
+Successful run with external client in debug mode.
 ```
 
 ---
