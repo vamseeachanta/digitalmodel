@@ -55,9 +55,9 @@ math        : katex
 
 ## Running Process
 
-Server:
+External Force (EF) Server:
 
-- External Force server
+- External Force (EF) server
 - Uses Python to open a port and Socket
 - Utilizes Python 2 or 3 code as suitable
   - Any ANSYS commonfile Python version works
@@ -65,7 +65,7 @@ Server:
 
 AQWA Client:
 
-- The AQWA .DAT Run that uses data from Server
+- The AQWA .DAT Run that uses data from EF Server
 
 - Run modes:
   - .dat or command mode (Supported)
@@ -75,11 +75,27 @@ AQWA Client:
 
 Steps to run:
 
-1. Start Python server then run AQWA client
+1. Start EF server
 1. Run AQWA client
 
 ```markdown
 Best mode : using .DAT AQWA file in Command mode
+```
+
+---
+
+## References
+
+- ANSYS AQWA Reference Manual, 2024R1, Section 30.3. External Server for User-Defined Force Calculation
+- [external Force Notes](docs\ansys\aqwa\external_force\external_force.md)
+- ANSYS AQWA Utils folder:
+<code>
+
+ANSYS_INSTALL_DIR\v241\aqwa\utils\ExternalForceCalculation\
+</code>
+
+```markdown
+Key Referenes
 ```
 
 ---
@@ -207,28 +223,122 @@ This force can also be directly controlled in the external python program withou
 
 ---
 
-## Python Function | Inputs
+## EF Server | Inputs
 
+The key inputs are:
+
+- Analysis: Analysis Class Object for data
+- Mode:
+- Stage:
+- Pos: Position of structures
+- Vel: Velocity of structures
+- Time:
+- TImeStep:
 <br>
 
 <code>
-Analysis,Mode,Stage,Time,TimeStep,Pos,Vel
-</code>
 
-??
+def UF3(Analysis,Mode,Stage,Time,TimeStep,Pos,Vel)
+
+</code>
+Using structure ID, the analysis outputs can be accessed and used for calculations.
 
 ```markdown
-Based on structures etc., One can access inputs.
+The analysis outputs can be accessed and utilized as EF server inputs to perform calculations.
 ```
 
 ---
 
-## Python Function | Run in VS Code
+## EF Server | Calculation - Node Current Position
 
-- Open VS COde
-- Set interpreter to ANSYS common files python executable
+- Use initial position (X, Y, Z) of a node (on a structure)
+- Get current position using the Rotation matrix (based on rotation of relevant structure) and the initial position.
+
+<br>
+
+<code>
+        RotMat=RotationMatrix(self.Pos[Struct][3:]) # Pos[Struct][3:] are the rotation angles
+
+        # Calculating offset from COGs in definition axes system
+        COGOffsetX = DefAxesX - self.COGs[Struct][0]
+        COGOffsetY = DefAxesY - self.COGs[Struct][1]
+        COGOffsetZ = DefAxesZ - self.COGs[Struct][2]
+
+        ...
+
+        # Need to apply rotation on that vector
+        RotatedX,RotatedY,RotatedZ = RotMat.Apply(COGOffsetX,COGOffsetY,COGOffsetZ)
+
+        # Now we just need to add the current COG position to the rotated vector
+        FinalX = RotatedX + self.Pos[Struct][0]
+        FinalY = RotatedY + self.Pos[Struct][1]
+        FinalZ = RotatedZ + self.Pos[Struct][2]
+
+</code>
+
+```markdown
+Calculation to get Node Current position
+```
+
+---
+
+## EF Server | Calculation - Apply Force on Structure
+
+- Transform the Force components at point of application and into Force and Torque components at the Structure CoG.
+  - Use Point of force application and CoG coordinates for the transformation
+- These forces with appropriate structure index is returned to apply in AQWA analysis
+
+<br>
+
+<code>
+    def ApplyForceOnStructureAtPoint(self,Struct,FX,FY,FZ,AppPtX,AppPtY,AppPtZ):
+        Force = BlankForce(self.NOfStruct)
+
+        DX = AppPtX - self.Pos[Struct][0]
+        DY = AppPtY - self.Pos[Struct][1]
+        DZ = AppPtZ - self.Pos[Struct][2]
+        
+        Tx,Ty,Tz = ForceTorque(FX,FY,FZ,DX,DY,DZ)
+
+        Force[Struct] = [FX,FY,FZ,Tx,Ty,Tz]
+
+        return Force
+</code>
+
+```markdown
+Calculation to apply force on Structure at a defined location
+```
+
+---
+
+## EF Server | Outputs
+
+- Force: Force to be applied on the structure at a given timestep
+- AddMass: AddMass to be applied on the structure at a given timestep
+-Error: If Error=1, the AQWA Client program will stop and analysis is aborted
+<br>
+
+<code>
+return Force,AddMass,Error
+</code>
+
+```markdown
+EF server outputs are used as AQWA client analysis inputs
+```
+
+---
+
+## EF Server | Run in VS Code
+
+Use this method to throughly understand how AQWA exposes its analysis data to Python.
+
+- Open VS Code
+- Set interpreter to ANSYS common files (or other suitable) python executable
 - Run AqwaSocketUserForceExample.py
 - "Socket now listening" message will appear as below (If no errors)
+Running in VS Code no-debug (or in-debug) mode, the AQWA_SocketUserForceServerDetails.cfg file is not updated with appropriate port number.
+
+Manually update AQWA_SocketUserForceServerDetails.cfg file with correct port number before running AQWAClient i.e. AQWA run.
 
 <img src="v222\101_s01_hr_vscode_socket_running.PNG" alt="geometry_schematic" width="300"/>
 
@@ -245,50 +355,25 @@ Based on structures etc., One can access inputs.
 
 </code>
 
-Use this method to throughly understand how AQWA exposes its analysis data to Python.
-
-Running in VS Code no-debug (or in-debug) mode, the AQWA_SocketUserForceServerDetails.cfg file is not updated with appropriate port number.
-
-Manually update AQWA_SocketUserForceServerDetails.cfg file with correct port number before running AQWAClient i.e. AQWA run.
-
 ```markdown
-Successful run with external client in debug mode.
+Manual edits are required to run with EF Server and AQWA client in debug mode.
 ```
 
 ---
 
-## Structure Force and AddMass | UF1 Outputs
+## Utils | EF Server Example Functions
 
-Force,AddMass,Error
-
-<br>
-
-<code>
-??
-</code>
-
-??
-
-```markdown
-The Force,AddMass are provided to a structure
-```
-
----
-
-## Node Force | UF2 Outputs
-
-Force,AddMass,Error
-
-<br>
-
-<code>
-??
-</code>
-
-??
+- 3 example functions i.e. UF1, UF2, UF3 are provided by AQWA
+- UF1:
+  - Takes the node position
+  - calculates force and added mass
+- UF2:
+  - A custom calculation of force to be applied on strcture
+- UF3:
+  - A couple force applied on structure
 
 ```markdown
-The Force are provided to a node of a structure
+Summary of AQWA Utils
 ```
 
 ---
@@ -327,11 +412,8 @@ Output of External force defined.
 
 # Way Forward
 
-- Utilize VS Code to keep the external server running
-- When using UF1, understand what are the inputs and outputs
-- Also understand what the key inputs that we can access
-- What are the key outputs/external Forces we can set?
+- Utilize VS Code for custom EF Server programming/development
 
 ```markdown
-  Decide Yes or No to Jira now.
+  Proceed to impement in projects
 ```
