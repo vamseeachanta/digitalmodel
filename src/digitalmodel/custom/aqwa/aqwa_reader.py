@@ -57,7 +57,7 @@ class AqwaReader:
                 result_item_dict = self.get_result_groups(input_file, cfg, result_item)
                 single_file_result.append(result_item_dict)
 
-                if result_category == 'frequency':
+                if result_category in ['frequency', 'timeresponse']:
                     df = pd.DataFrame()
                     for input_file in input_files:
                         df_item = pd.DataFrame(single_file_result[0])
@@ -100,7 +100,13 @@ class AqwaReader:
                 result_plt_1d_item = self.process_equilibrium_result(input_file, stdout_output)
             elif result_category == 'frequency':
                 result_plt_1d_item = self.process_frequency_result(input_file, stdout_output)
+            elif result_category == 'timeresponse':
+                result_plt_1d_item = self.process_timeresponse_result(input_file, stdout_output)
+
             result_group = update_deep_dictionary(result_group , result_plt_1d_item)
+            change_result_plt_1d_item= self.get_change_of_data_result_group(result_plt_1d_item, aqwa_fundamental_cfg)
+            if change_result_plt_1d_item is not None:
+                result_group = update_deep_dictionary(result_group , change_result_plt_1d_item)
 
             save_aqwareader_csv = result_item.get('save_aqwareader_csv', False)
             if save_aqwareader_csv:
@@ -114,6 +120,32 @@ class AqwaReader:
             logging.debug(f"Running AqwaReader for {input_file } ... COMPLETE\n")
 
         return result_group
+
+    def get_change_of_data_result_group(self, result_plt_1d_item, aqwa_fundamental_cfg):
+        change_result_plt_1d_item = None
+        change_of_data_flag = False
+        change_of_data = aqwa_fundamental_cfg.get('change_of_data', None)
+        if change_of_data  is not None and change_of_data ['flag']:
+            change_of_data_flag  = True
+
+        if change_of_data_flag:
+            data_key = list(result_plt_1d_item.keys())[1]
+            values = result_plt_1d_item[data_key]
+
+            if change_of_data['reference'] == 'start':
+                reference = values[0]
+            elif change_of_data['reference'] == 'end':
+                reference = values[-1]
+            elif change_of_data['reference'] == 'mean':
+                reference = values.mean()
+
+            values = [value - reference for value in values]
+
+            change_data_key = data_key.replace(change_of_data['label_substitution']['before'], change_of_data['label_substitution']['after'])
+            column_1_key = list(result_plt_1d_item.keys())[0]
+            change_result_plt_1d_item = {column_1_key: result_plt_1d_item[column_1_key] , change_data_key: values}
+
+        return change_result_plt_1d_item 
 
     def get_args_for_data(self, input_file, cfg, plt_1d_array, result_format='stdout'):
         basename = Path(input_file).stem
@@ -186,8 +218,8 @@ class AqwaReader:
 
         value = float(df.iloc[-1]['column2'])
         value_label = third_level + '_'+ fourth_level
-        fundamental_result = {'input_file': str(input_file), 'structure_number': structure_number, value_label: value}
-        return fundamental_result
+        result = {'input_file': str(input_file), 'structure_number': structure_number, value_label: value}
+        return result
 
     def process_frequency_result(self, input_file, stdout_output):
         df = pd.read_csv(io.BytesIO(stdout_output), encoding='utf8', sep=",|:", dtype={"switch": np.int8}, names=['column1', 'column2'], engine='python')
@@ -198,8 +230,20 @@ class AqwaReader:
         frequency = [float(item) for item in list(df[5:-1]['column1'])]
         value = [float(item) for item in list(df[5:-1]['column2'])]
         value_label = third_level + '_'+ fourth_level
-        frequency_result = {'frequency': frequency, value_label: value}
-        return frequency_result
+        result = {'frequency': frequency, value_label: value}
+        return result
+
+    def process_timeresponse_result(self, input_file, stdout_output):
+        df = pd.read_csv(io.BytesIO(stdout_output), encoding='utf8', sep=",|:", dtype={"switch": np.int8}, names=['column1', 'column2'], engine='python')
+        structure_number = df.iloc[1]['column2'].replace('\t', '').replace('"', '').replace('Structure Number ', '')
+        third_level = df.iloc[2]['column2'].replace('\t', '').replace('"', '').replace('-', '')
+        fourth_level = df.iloc[3]['column2'].replace('\t', '').replace('"', '')
+
+        time_step = [float(item) for item in list(df[5:-1]['column1'])]
+        value = [float(item) for item in list(df[5:-1]['column2'])]
+        value_label = third_level + '_'+ fourth_level
+        result = {'time_step': time_step, value_label: value}
+        return result
 
     def inject_to_excel(self, df, result_item, cfg):
         if 'inject_into' in result_item and result_item[

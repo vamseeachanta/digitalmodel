@@ -46,14 +46,14 @@ def engine(inputfile=None):
     application_manager.configure(cfg, library_name)
     cfg_base = application_manager.cfg
 
-    if "file_management" in cfg_base and cfg["file_management"]["flag"]:
-        cfg_base = ou.file_management(cfg_base)
 
     if basename in ["simple_catenary_riser", "catenary_riser"]:
         cfg_base = catenary_riser(cfg_base)
     elif basename == "vertical_riser":
         cfg_base = vertical_riser(cfg_base)
     elif basename in ["orcaflex_analysis", "orcaflex_post_process"]:
+        if "file_management" in cfg_base and cfg["file_management"]["flag"]:
+            cfg_base = ou.file_management(cfg_base)
         cfg_base = orcaflex_analysis(cfg_base)
     elif basename in ["aqwa"]:
         aqwa = Aqwa()
