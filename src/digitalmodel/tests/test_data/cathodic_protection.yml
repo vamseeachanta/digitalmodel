@@ -3,12 +3,26 @@ basename: cathodic_protection
 inputs:
   calculation_type: ABS_gn_ships_2018 # DNV_rp_b401_2011, DNV_rp_b401_2021_05, ABS_gn_ships_2018
 
-  design_data:
-    seawater_max_temperature: 10 # °C
-    design_life: 5 # yr
+  design_life: 5 # yr
+  environment:
+    seawater_max_temperature: 14 # °C
     seawater_resistivity:
-      input: 0.5875 # or float_value or .csv
+      input: 0.2547 # or float_value or .csv
       csv_filename: NULL
+
+  structure:
+    material: steel
+    area:
+      value: 10778 # m2
+      coat_percentage: 100 # %
+      coating_breakdown:
+        year: [1, 2, 3, 3, 5] # year
+        percentage: [2, 2, 3, 3, 3] # % per year
+
+  current_density:
+    initial: { coated: 13.5, uncoated: 200 } # mA/m2
+
+  cathodic_protection: NULL
 
   anode:
     material: aluminium #  aluminium or zinc
@@ -25,11 +39,6 @@ inputs:
       net_weight: 27.5 # kg
       ratio_of_gross_to_net_weight: 1.1 #
       gross_weight: 30.25 # kg
-
-  structure:
-    coating: Yes # Yes or No
-    coating_yearly_breakdown_factor: 3 # % per year
-    steel_coated_area: 13446.04 # m2
 
   design_current:
     input: .csv
