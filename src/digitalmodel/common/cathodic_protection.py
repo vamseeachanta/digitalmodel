@@ -53,7 +53,7 @@ class CathodicProtection():
 
         fcm = np.mean(cummulative_breakdown_factor)
         fcf = cummulative_breakdown_factor[-1]
-        
+
         breakdown_factor = {'fcm': fcm, 'fcf': fcf}
         return breakdown_factor
 
