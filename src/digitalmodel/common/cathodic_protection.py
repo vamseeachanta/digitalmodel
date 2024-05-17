@@ -22,6 +22,7 @@ class CathodicProtection():
         This method is used to calculate the cathodic protection for ABS gn ships 2018
         """
 
+        current_demand = self.current_demand_structure(cfg)
         current_density = self.get_design_current_density(cfg)
         breakdown_factor = self.assess_coating_breakdown(cfg)
         anode_current_capacity = self.get_anode_current_capacity(cfg)
@@ -58,17 +59,7 @@ class CathodicProtection():
         breakdown_factor = {'fcm': fcm, 'fcf': fcf}
         return breakdown_factor
 
-    def get_anode_current_capacity(self, cfg):
-        """
-        This method is used to calculate the anode current capacity
-        """
-        if cfg['inputs']['anode'] == 'zinc':
-            anode_current_capacity = 780
-        elif cfg['inputs']['anode'] == 'aluminium':
-            anode_current_capacity = 2000 - 27(cfg['inputs']['design_data']['seawater_max_temperature'] - 20)
     
-        return anode_current_capacity
-
     def get_design_current_density(self, cfg):
         """
         
@@ -87,7 +78,33 @@ class CathodicProtection():
         current_density = {'deterioration_mean': deterioration_mean,'disbonding_mean': disbonding_mean}
         return current_density
 
+    def current_demand_structure(self,cfg):
         
+        value = self.get_design_current_density(cfg)['initial_coated_value']
+        value_2 = self.assess_coating_breakdown(cfg)['structure_cfg']['area']['value']
+        value_3 = self.get_design_current_density(cfg)['deterioration_mean']
+        value_4 = self.get_design_current_density(cfg)['deterioration_final_current_density']
+        
+        initial_demand = value_2 * value * 0.001
+        mean_demand = value_2 * value_3 * 0.001
+        final_demand = value_2 * value_4 * 0.001
+
+        current_demand = {'initial_demand': initial_demand,'mean_demand': mean_demand,'final_demand': final_demand}
+        return current_demand
+
+    
+    def get_anode_current_capacity(self, cfg):
+        """
+        This method is used to calculate the anode current capacity
+        """
+        if cfg['inputs']['anode'] == 'zinc':
+            anode_current_capacity = 780
+        elif cfg['inputs']['anode'] == 'aluminium':
+            anode_current_capacity = 2000 - 27(cfg['inputs']['design_data']['seawater_max_temperature'] - 20)
+    
+        return anode_current_capacity
+    
+
     def get_seawater_resistivity(self, cfg):
         """
         This method is used to calculate seawater resistivity
