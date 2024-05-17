@@ -20,9 +20,10 @@ Convergence path
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | D05315mm_pms_1pms_rigid_jts | (1) Jacket | High Stiffness <br> in all DOFs | Rigid | 5 Te Mass | Rigid Joints & Rigid Dampener | Converged | - |
 | D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | High Stiffness <br> in Z & Rots | Rigid | 5 Te Mass| Rigid Joints | Converged | - |
+| D05315mm_pms_1pms_BS_jts | (1) Jacket | High Stiffness <br> in Z & Rots | B/S Joints <br> small stiffness & friction | 5 Te Mass | representative | UnConverged | - |
 | D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | High Stiffness <br> in Z & Rots | Hinged | 5 Te Mass| Hinged Joints | unConverged | SOLUTION DIVERGED ON STRUCTURE 4 in Z-Heave at time=0.20 step #2 <br> YOUR TIME-STEP IS PROBABLY TOO BIG. For this time-step(0.100 secs) the natural periods of the system throughout the analysis MUST BE GREATER THAN 1.00 seconds. |
-| D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | High Stiffness <br> for all Z comps & Rots | Hinged | 5 Te Mass| Hinged Joints | unConverged | SOLUTION DIVERGED ON STRUCTURE 4 in Z-Heave at time=0.20 step #2  |
-| D05315mm_pms_single_strut | (1) Jacket | High Stiffness <br> in Z & Rots | B/S Joints <br> small stiffness & friction | 5 Te Mass | representative | UnConverged | - |
+| D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | DCAF Z, RX, RY, RZ | Hinged | 5 Te Mass| Hinged Joints | Stability - Converged. <br> Time Domain - Needs Fender/Mooring |   |
+| D05315mm_pms_1pms_<br>z_damp_BS_jts | (1) Jacket | DCAF Z, RX, RY, RZ | Hinged | 5 Te Mass| B/S Joints | Stability - Converged. <br> Time Domain-unconverged |  Time Domain - Needs Fender/Mooring  |
 
 ### Fender Model using External Force (Update)
 
