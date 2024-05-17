@@ -16,6 +16,7 @@ inputs:
       value: 10778 # m2
       coat_percentage: 100 # %
       coating_breakdown:
+        type: deterioration # deterioration or disbondment
         year: [1, 2, 3, 3, 5] # year
         percentage: [2, 2, 3, 3, 3] # % per year
 
