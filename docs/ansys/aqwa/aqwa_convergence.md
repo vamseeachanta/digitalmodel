@@ -1,0 +1,41 @@
+## Introduction
+
+Lessons Learnt from AQWA Convergence Studies
+
+### Summary
+
+TBA
+
+### Multi Structures (WLNG Project)
+
+A ship structures is moored to shore using following:
+    - 4 mooring struts
+    - 2 universal joints at either end of strut
+    - single dampener system with X and Y Stiffness properties
+    - Dampener system is connected to mooring stuts and the shore
+
+Convergence path
+
+| Runname | Jackets | Dampener | B/S Joints | Struts | Description | Convergence Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| D05315mm_pms_1pms_rigid_jts | (1) Jacket | High Stiffness <br> in all DOFs | Rigid | 5 Te Mass | Rigid Joints & Rigid Dampener | Converged | - |
+| D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | High Stiffness <br> in Z & Rots | Rigid | 5 Te Mass| Rigid Joints | Converged | - |
+| D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | High Stiffness <br> in Z & Rots | Hinged | 5 Te Mass| Hinged Joints | unConverged | SOLUTION DIVERGED ON STRUCTURE 4 in Z-Heave at time=0.20 step #2 <br> YOUR TIME-STEP IS PROBABLY TOO BIG. For this time-step(0.100 secs) the natural periods of the system throughout the analysis MUST BE GREATER THAN 1.00 seconds. |
+| D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | High Stiffness <br> for all Z comps & Rots | Hinged | 5 Te Mass| Hinged Joints | unConverged | SOLUTION DIVERGED ON STRUCTURE 4 in Z-Heave at time=0.20 step #2  |
+| D05315mm_pms_single_strut | (1) Jacket | High Stiffness <br> in Z & Rots | B/S Joints <br> small stiffness & friction | 5 Te Mass | representative | UnConverged | - |
+
+### Fender Model using External Force (Update)
+
+A ship structures is moored to shore using following:
+    - 1 fender (directly via AQWA element)
+    - 1 fender modelled using external force
+
+- Forces may be negative. COrrect the function and rerun
+- Damper may need to be fixed instead of floating to simulate the forces properly.
+
+Benchmarking path
+
+| Runname | Jackets | Dampener | B/S Joints | Struts | Description | Convergence Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| D05315mm_pms_1pms_rigid_jts | (1) Jacket | High Stiffness <br> in all DOFs | Rigid | 5 Te Mass | Rigid Joints & Rigid Dampener | Converged | - |
+| D05315mm_pms_1pms_z_damp_rigid_jts | (1) Jacket | High Stiffness <br> in Z & Rots | Rigid | 5 Te Mass| Rigid Joints | Converged | - |
