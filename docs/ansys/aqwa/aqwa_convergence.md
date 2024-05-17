@@ -23,7 +23,7 @@ Convergence path
 | D05315mm_pms_1pms_BS_jts | (1) Jacket | High Stiffness <br> in Z & Rots | B/S Joints <br> small stiffness & friction | 5 Te Mass | representative | UnConverged | - |
 | D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | High Stiffness <br> in Z & Rots | Hinged | 5 Te Mass| Hinged Joints | unConverged | SOLUTION DIVERGED ON STRUCTURE 4 in Z-Heave at time=0.20 step #2 |
 | D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | DCAF Z, RX, RY, RZ | Hinged | 5 Te Mass| Hinged Joints | Stability - Converged. <br> Time Domain - Needs Fender/Mooring |   |
-| D05315mm_pms_1pms_<br>z_damp_BS_jts | (1) Jacket | DCAF Z, RX, RY, RZ | Hinged | 5 Te Mass| B/S Joints | Stability - Converged. <br> Time Domain-unconverged |  Time Domain - Needs Fender/Mooring  |
+| D05315mm_pms_1pms_<br>z_damp_BS_jts | (1) Jacket | DCAF Z, RX, RY, RZ | B/S | 5 Te Mass| Representative | Stability - Converged. <br> Time Domain-unconverged |  Time Domain - Needs Fender/Mooring  |
 
 ### Fender Model using External Force (Update)
 
