@@ -28,13 +28,6 @@ start
                 Utilizes filename or args to run
             end note
 
-        :Command line using dictionary <br> (NOT IMPLEMENTED);
-            note right
-                **NOT IMPLEMENTED**
-                In python digitalmodel environment
-                Use .yml as argument
-                Utilizes args to run
-            end note
 
         :as module;
             note right
@@ -44,6 +37,23 @@ start
                 Utilizes args to run
             end note
 
+        :Command line using dictionary 
+        (NOT IMPLEMENTED);
+            note right
+                **NOT IMPLEMENTED**
+                In python digitalmodel environment
+                Use .yml as argument
+                Utilizes args to run
+            end note
+
+        :Command line using 3-4 level of args
+        for out of the box analysis
+        (NOT IMPLEMENTED);
+            note right
+                **NOT IMPLEMENTED**
+                eg: run analysis on a folder using basename, option1, option 2.
+                python -m diditalmodel -aqwa -aqwareader -raos
+            end note
     }
 
     partition "Results" {
