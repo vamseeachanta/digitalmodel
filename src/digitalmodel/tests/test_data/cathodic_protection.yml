@@ -25,21 +25,17 @@ inputs:
 
   cathodic_protection: NULL
 
-  anode:
+  anode_capacity:
     material: aluminium #  aluminium or zinc
-    protection_potential: 0.8 # V
-    closed_circuit_anode_potential: -1.09 # V
-    anode_density: 2750 # kg/m3
-    anode_current_capacity: 2270 # (Ca*N) , Q
-    anode_Utilisation_factor: 0.85 # factor, u
+    anode_current_capacity: 2500 # (Ca*N) , Q
+    anode_Utilisation_factor: 0.825 # factor, u
     physical_properties:
-      mean_length: 1.4 # m
-      width: 0.15 # m
-      height: 0.06 # m
-      volume: 0.0126 # m3
-      net_weight: 27.5 # kg
-      ratio_of_gross_to_net_weight: 1.1 #
-      gross_weight: 30.25 # kg
+      mean_length: 0.650 # m
+      width: 0.125 # m
+      height: 0.13 # m
+      net_weight: 29.00 # kg
+      ratio_of_gross_to_net_weight: 1.03 #
+      gross_weight: 30.00 # kg
 
   design_current:
     input: .csv

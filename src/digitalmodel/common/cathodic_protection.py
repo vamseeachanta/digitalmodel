@@ -21,19 +21,22 @@ class CathodicProtection():
         """
         This method is used to calculate the cathodic protection for ABS gn ships 2018
         """
+        
+        anodes_required = self.get_anodes_required(cfg,breakdown_factor,current_demand,anode_capacity)
+        anode_capacity = self.get_anode_current_capacity(cfg)
         structure_area = self.get_structure_area(cfg)
         breakdown_factor = self.assess_coating_breakdown(cfg)
         current_density = self.get_design_current_density(cfg)
 
         current_demand = self.get_current_demand(cfg, structure_area, current_density)
 
-        anode_current_capacity = self.get_anode_current_capacity(cfg)
         my_value = cfg.inputs['design_data']['seawater_max_temperature'] * cfg.inputs['design_data']['design_life']
 
     def assess_coating_breakdown(self, cfg):
         """
 
         """
+        design_life = cfg['inputs']['design_life']
         coating_breakdown_cfg = cfg['inputs']['structure']['area']['coating_breakdown']
 
         #TODO - implement yearly breakdown calculations using lookup from inputs
@@ -120,37 +123,41 @@ class CathodicProtection():
         """
         This method is used to calculate the anode current capacity
         """
-        if cfg['inputs']['anode'] == 'zinc':
-            anode_current_capacity = 780
-        elif cfg['inputs']['anode'] == 'aluminium':
-            anode_current_capacity = 2000 - 27(cfg['inputs']['design_data']['seawater_max_temperature'] - 20)
-    
-        return anode_current_capacity
-    
+        anode_cfg = cfg['inputs']['anode_capacity']
+        anode_current_capacity = anode_cfg['anode_current_capacity']
+        anode_utilisation_factor = anode_cfg['anode_Utilisation_factor']
+        
+        
+        volume = anode_cfg['physical_properties']['mean_length'] * anode_cfg['physical_properties']['width'] * anode_cfg['physical_properties']['height']
 
-    def get_seawater_resistivity(self, cfg):
-        """
-        This method is used to calculate seawater resistivity
-        """
-        pass
-
-
-
-    def get_required_current_density(self, cfg):
-        """
-        This method is used to calculate the required current density
-        """
-        pass
-
-
+        anode_capacity = {'anode_volume': volume}
+        return anode_capacity
     
         
-    def get_anodes_required(self, cfg):
+    def get_anodes_required(self,cfg, breakdown_factor, current_demand, anode_capacity):
         """
         This method is used to calculate weight and no of anodes required
         """
-        pass
-    
+        design_life_count = cfg['inputs']['breakdown_factor']['design_life']
+        mean = cfg['current_demand']['mean_demand']
+        initial_current = cfg['current_demand']['initial_demand']
+        final_current = cfg['current_demand']['final_demand']
+        anode_current = cfg['anode_capacity']['anode_current_capacity']
+        anode_utilisation = cfg['anode_capacity']['anode_utilisation_factor']
+        anode_net_weight = cfg['inputs']['anode_capacity']['physical_properties']['net_weight']
+
+        anode_mass = mean / anode_current * 24 * 365 * design_life_count / anode_utilisation
+        anode_count_on_mass = anode_mass / anode_net_weight
+        anode_count_on_initial_current = initial_current / anode_current *24 *365 *design_life_count /anode_utilisation /anode_net_weight
+        anode_count_on_final_current = final_current /anode_current *24 *365 *design_life_count /anode_utilisation /anode_net_weight
+
+        anodes_required = {'anode_mass_calculation':anode_mass,'Number of Anodes Based on Mass':anode_count_on_mass,
+                           'Number of Anodes Based on Initial Current ':anode_count_on_initial_current,
+                           'Number of Anodes Based on Final Current':anode_count_on_final_current}
+        return anodes_required
+
+
+
     def anode_initial_check(self, cfg):
         """
         This method is used to check the initial anode
@@ -162,6 +169,12 @@ class CathodicProtection():
         
         """
         This method is used to check the final anode
+        """
+        pass
+
+    def get_seawater_resistivity(self, cfg):
+        """
+        This method is used to calculate seawater resistivity
         """
         pass
     
