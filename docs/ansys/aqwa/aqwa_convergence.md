@@ -16,14 +16,18 @@ A ship structures is moored to shore using following:
 
 Convergence path
 
-| Runname | Jackets | Dampener | B/S Joints | Struts | Description | Convergence Status | Notes |
+| Runname <br> (.wbpj or .dat)| Jackets | Dampener | B/S Joints | Struts | Description | Convergence Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| D05315mm_pms_1pms_rigid_jts | (1) Jacket | High Stiffness <br> in all DOFs | Rigid | 5 Te Mass | Rigid Joints & Rigid Dampener | Converged | - |
-| D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | High Stiffness <br> in Z & Rots | Rigid | 5 Te Mass| Rigid Joints | Converged | - |
-| D05315mm_pms_1pms_BS_jts | (1) Jacket | High Stiffness <br> in Z & Rots | B/S Joints <br> small stiffness & friction | 5 Te Mass | representative | UnConverged | - |
-| D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | High Stiffness <br> in Z & Rots | Hinged | 5 Te Mass| Hinged Joints | unConverged | SOLUTION DIVERGED ON STRUCTURE 4 in Z-Heave at time=0.20 step #2 |
-| D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | DCAF Z, RX, RY, RZ | Hinged | 5 Te Mass| Hinged Joints | Stability - Converged. <br> Time Domain - Needs Fender/Mooring |   |
-| D05315mm_pms_1pms_<br>z_damp_BS_jts | (1) Jacket | DCAF Z, RX, RY, RZ | B/S | 5 Te Mass| Representative | Stability - Converged. <br> Time Domain-unconverged |  Time Domain - Needs Fender/Mooring  |
+| D05315mm_pms_1pms_rigid_jts | (1) Jacket | High Stiffness <br> in all DOFs | Rigid | 5 Te Mass | Rigid Joints & Rigid Dampener | :heavy_check_mark: | - |
+| D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | High Stiffness <br> in Z & Rots | Rigid | 5 Te Mass| Rigid Joints | :heavy_check_mark: | - |
+| D05315mm_pms_1pms_BS_jts | (1) Jacket | High Stiffness <br> in Z & Rots | B/S Joints <br> small stiffness & friction | 5 Te Mass | representative | &cross; | - |
+| D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | High Stiffness <br> in Z & Rots | Hinged | 5 Te Mass| Hinged Joints | &cross; | SOLUTION DIVERGED ON STRUCTURE 4 in Z-Heave at time=0.20 step #2 |
+| D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | DCAF Z, RX, RY, RZ | Hinged | 5 Te Mass| Hinged Joints | Stability - &cross;. <br> Time Domain - Needs Fender/Mooring |   |
+| D05315mm_pms_1pms_<br>z_damp_BS_jts | (1) Jacket | DCAF Z, RX, RY, RZ | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain-&cross; |  Time Domain - Needs Fender/Mooring |
+| D05315mm_1pms_fender | (1) Jacket | Fender/Mooring pair <br> DCAF Z, RX, RY, RZ | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: |  |
+| D05315mm_pms_fender | (2) Jackets | Fender/Mooring pair <br> DCAF Z, RX, RY, RZ | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: |  |
+| D05315mm_pms_ef| (2) Jackets | EF in python <br> DCAF Constraints | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: |  |
+| D05315mm_pms.dat | (2) Jackets | EF in python <br> DCAF Constraints | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: | Prep D05315mm_pms_ef to prep files <br> .HYD, .EQP File <br> perform EF analysis |
 
 ### Fender Model using External Force (Update)
 
