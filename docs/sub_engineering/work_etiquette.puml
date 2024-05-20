@@ -11,15 +11,10 @@ title Engineering \n Work Etiquette
 * Engineering 
 
 ** Data : Github
-*** rep: digitalmodel \nengineering tools
-*** rep: assetutilities \ngeneral tools
-*** rep: company-repo \nCompany/project Specific \ntypically private repo
+*** rep: digitalmodel \ndes:engineering tools \ndir: docs, src(or code)
+*** rep: assetutilities \ndes: general tools \ndir: docs, src(or code)
+*** rep: company-repo \ndes:Company/project data \ndir: project \ntypically private repo
 
-
-** Design \n Output: Software Neutral Drawings
-*** Vault \n(Native Drawings)
-*** Rhino
-*** AutoCAD inventor
 
 
 footer
