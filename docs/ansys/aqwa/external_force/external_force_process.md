@@ -120,10 +120,11 @@ TBA
 
 - StartAqwaPythonUserForceServer.bat
 - The batch file uses latest ANSYS python release
-- This can be changed to access another python release if required.
+- This can be changed to access another virtual environment (python version & associated libraries) as required.
+- The EF server can also be started using custom IDE (VS Code etc.)
 
 ```markdown
-TBA
+A EF server can be started from AQWA provided method (or) advanced programming environment.
 ```
 
 ---
@@ -133,7 +134,11 @@ TBA
 - AQWA_SocketUserForceServerDetails.cfg
 - In command mode run, this file is automatically created and updated by EF Server driver upon start
 - In case of using VS Code (or other IDEs),
-  - this file need to be created
+  - This file gets created in current working directory (CWD)
+    - This may need to be moved to appropriate run directory everytime the EF server is started/restarted.
+  - Alternatively use the code in below folder for following additional features:
+    - VS code debugging
+    - Custom finish function to save output data
   - port number needs to match the EF Server run. See screenshot below.
 
 <img src="v222\101_s01_hr_vscode_socket_running.PNG" alt="geometry_schematic" width="300"/>
@@ -141,7 +146,10 @@ TBA
 ```markdown
 # Server waiting for a connection from an AqwaClient on
 ACMA-ANSYS03:52642
+```
 
+```markdown
+.cfg file port number allows EF server to be detected by AQWA Client
 ```
 
 ---
