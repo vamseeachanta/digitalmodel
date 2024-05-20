@@ -32,6 +32,7 @@ A ship structures is moored to shore using following:
     - 1 fender modelled using external force
 
 - Forces may be negative. COrrect the function and rerun
+- Apply forces only when delta_L > 0 etc. Move forces application inside the if statement.
 - Damper may need to be fixed instead of floating to simulate the forces properly.
 
 Benchmarking path
