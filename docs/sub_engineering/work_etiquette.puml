@@ -15,6 +15,10 @@ title Engineering \n Work Etiquette
 *** rep: assetutilities \ndes: general tools \ndir: docs, src(or code)
 *** rep: company-repo \ndes:Company/project data \ndir: project \ntypically private repo
 
+** Data : Working in src
+*** rep: digitalmodel \ndes:engineering tools \ndir: docs, src(or code)
+*** rep: assetutilities \ndes: general tools \ndir: docs, src(or code)
+*** rep: company-repo \ndes:Company/project data \ndir: project \ntypically private repo
 
 
 footer
