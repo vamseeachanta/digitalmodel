@@ -37,11 +37,13 @@ A ship structures is moored to shore using following:
 
 - Forces may be negative. COrrect the function and rerun
 - Apply forces only when delta_L > 0 etc. Move forces application inside the if statement.
-- Damper may need to be fixed instead of floating to simulate the forces properly.
+- Damper may need to be fixed instead of floating to simulate the forces properly - check relevancy.
 
 Benchmarking path
 
-| Runname | Jackets | Dampener | B/S Joints | Struts | Description | Convergence Status | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| D05315mm_pms_1pms_rigid_jts | (1) Jacket | High Stiffness <br> in all DOFs | Rigid | 5 Te Mass | Rigid Joints & Rigid Dampener | Converged | - |
-| D05315mm_pms_1pms_z_damp_rigid_jts | (1) Jacket | High Stiffness <br> in Z & Rots | Rigid | 5 Te Mass| Rigid Joints | Converged | - |
+| Runname | Pier | Mooring | Fender| Description | Convergence Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| 02_s01_hd_pier | Generic | n/a | n/a  | With Pier | Diffraction - :heavy_check_mark: | - |
+| 02_s02_hr_add_fenders | Generic | stiffness | Y-direction | Mooring/fender pair | Stability - :heavy_check_mark: | - |
+| 02_s03_hr_wave | Generic | stiffness | Y-direction | Irregular Wave analysis | Time Domain - :heavy_check_mark: | - |
+| 02_s04_hr_ext_force | Generic | stiffness | Y-direction | Fender with external force | Time Domain - :heavy_check_mark: | - |

@@ -1,0 +1,12 @@
+# Aqwa Socket based User Force Calculation
+#========================================
+# Used on 2024-05-21 06:44:37
+# InputFile : K:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\ef_server\02_S04_HR_EXT_FORCE
+# Let's try getting server information from file K:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\ef_server\AQWA_SocketUserForceServerDetails.cfg
+# Found address 192.168.0.93 for hostname ACMA-ANSYS03
+AqwaSocket: The Winsock 2.2 dll was found okay
+AqwaSocket: socket initialization passed
+AqwaSocket: Getting hostname ACMA-ANSYS03 
+AqwaSocket: Found local IP address to be : 192.168.0.93
+# Socket initialization passed
+# Interface version requested by the other process (v0) is within the available range
