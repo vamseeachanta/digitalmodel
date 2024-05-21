@@ -22,14 +22,16 @@ class CathodicProtection():
         This method is used to calculate the cathodic protection for ABS gn ships 2018
         """
         
-        anodes_required = self.get_anodes_required(cfg,breakdown_factor,current_demand,anode_capacity)
-        anode_capacity = self.get_anode_current_capacity(cfg)
         structure_area = self.get_structure_area(cfg)
         breakdown_factor = self.assess_coating_breakdown(cfg)
         current_density = self.get_design_current_density(cfg)
 
         current_demand = self.get_current_demand(cfg, structure_area, current_density)
 
+        anode_capacity = self.get_anode_current_capacity(cfg)
+        
+        anodes_required = self.get_anodes_required(cfg,breakdown_factor,current_demand,anode_capacity)
+        
         my_value = cfg.inputs['design_data']['seawater_max_temperature'] * cfg.inputs['design_data']['design_life']
 
     def assess_coating_breakdown(self, cfg):
