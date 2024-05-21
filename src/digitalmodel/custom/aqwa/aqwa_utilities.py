@@ -1,12 +1,7 @@
-import copy
 import os
-import glob
-import pathlib
 import logging
-import math
-from assetutilities.common.utilities import is_dir_valid_func
+import subprocess
 
-from assetutilities.common.yml_utilities import ymlInput
 from digitalmodel.common.orcaflex_model_utilities import OrcaflexModelUtilities
 
 from assetutilities.common.data import SaveData
@@ -30,7 +25,7 @@ class AqwaUtilities:
         pass
 
     def is_license_available(self):
-        # Template code from OrcaFlex
+        #TODO
         try:
             model = OrcFxAPI.Model()
             print("Orcaflex license is available")
@@ -40,97 +35,50 @@ class AqwaUtilities:
             raise Exception("Orcaflex license is NOT available .... FAIL")
             return False
 
-    def save_sim_file(self, model, model_file_name):
-        sim_filename = os.path.splitext(model_file_name)[0] + '.sim'
-        model.SaveSimulation(sim_filename)
+    def get_aqwareader_exe(self, cfg):
+        ANSYSInstallDir = cfg['software']['ANSYSInstallDir']
+        aqwareader_exe = os.path.join(ANSYSInstallDir, "aisol", "bin", "winx64", "AqwaReader.exe")
+        if not os.path.isfile(aqwareader_exe):
+            raise Exception(f"AqwaReader.exe not found in {aqwareader_exe}")
 
-    def update_model(self, cfg=None):
-        if cfg is None or cfg['model_file'] is None:
-            raise ValueError("model_file is not provided ... FAIL")
+        self.aqwareader_exe = aqwareader_exe
 
-        model_file = OrderedDict(ymlInput(cfg['model_file']))
-        model_file_updated = copy.deepcopy(model_file)
-        model_file_updated['Lines']['Umbilical']['Length[7]'] = cfg[
-            'variable_value']
+    def get_workbench_bat(self, cfg):
+        ANSYSInstallDir = cfg['software']['ANSYSInstallDir']
+        workbench_bat = os.path.join(ANSYSInstallDir, "aisol", "workbench.bat")
+        if not os.path.isfile(workbench_bat):
+            raise Exception(f"workbench.bat not found in {workbench_bat}")
 
-        save_data.saveDataYaml(model_file_updated,
-                     os.path.splitext(cfg['model_file'])[0],
-                     default_flow_style='OrderedDumper', sort_keys=False)
+        self.workbench_bat = workbench_bat
 
-    def get_sim_file_finish_status(self, model):
-        settime = model.general.StageEndTime[len(model.general.StageEndTime) -
-                                             1]
-        simtime = model.simulationTimeStatus.CurrentTime
-        simfinish = True
-        if settime > simtime:
-            simfinish = False
+    def get_aqwa_exe(self, cfg):
+        ANSYSInstallDir = cfg['software']['ANSYSInstallDir']
+        aqwa_exe = os.path.join(ANSYSInstallDir, "aqwa", "bin", "winx64", "aqwa.exe")
+        if not os.path.isfile(aqwa_exe):
+            raise Exception(f"aqwa.exe not found in {aqwa_exe}")
 
-        sim_status = {
-            'finish_flag': simfinish,
-            'run_time': {
-                'set': settime,
-                'last': simtime
-            }
-        }
-        return sim_status
+        self.aqwa_exe = aqwa_exe
+        
+        return aqwa_exe
 
-    def update_input_file(self, update_cfg):
-        update_cfg['cfg']
-        sim_file = update_cfg['filename']
+    def run_aqwa_analysis_as_process(self, cfg):
+        #TODO
+        aqwa_exe = self.get_aqwa_exe(cfg)
+        return aqwa_exe
 
-        input_file = input_file_save_as = sim_file[:len(sim_file) -
-                                                   4] + update_cfg['cfg'][
-                                                       'save_as']
-        if not os.path.isfile(input_file):
-            input_file = sim_file[:len(sim_file) - 4] + '.dat'
-            if not os.path.isfile(input_file):
-                raise FileExistsError
+    def run_aqwa_analysis_as_subprocess(self, cfg, input_file, process='subprocess'):
+        aqwa_exe = self.get_aqwa_exe(cfg)
+        args = ['timeout', '5', '&&', aqwa_exe, '/nowind', input_file]
+        logging.info(f"AQWA process running for {input_file} ... START")
 
-        model = OrcFxAPI.Model(input_file)
-        # TODO Check for implicit method or otherwise
-        # old_value = model.DynamicSolutionMethod
-        # new_value = 'Implicit time domain'
-        # if old_value != new_value:
-        #     model.DynamicSolutionMethod = new_value
-        #     logging.info(
-        #         f"      DynamicSolutionMethod... old: {old_value} to new: {new_value}"
-        #     )
+        if process == 'detached':
+            DETACHED_PROCESS = 0x00000008
+            aqwa_process = subprocess.Popen(args,
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=DETACHED_PROCESS)
+        elif process == 'subprocess':
+            aqwa_process = subprocess.Popen(args,
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            aqwa_out, err = aqwa_process.communicate()
 
-        general_properties = update_cfg['cfg']['general'].copy()
-        if general_properties['ImplicitUseVariableTimeStep'] == 'No':
-            old_value = model.general.ImplicitUseVariableTimeStep
-            new_value = general_properties['ImplicitUseVariableTimeStep']
-            if old_value != new_value:
-                model.general.ImplicitUseVariableTimeStep = new_value
-                logging.info(
-                    f"      ImplicitUseVariableTimeStep... changed from : '{old_value}' to '{new_value}'"
-                )
-
-            old_value = model.general.ImplicitConstantTimeStep
-            new_value = general_properties['TimeStep']
-            if old_value != new_value:
-                model.general.ImplicitConstantTimeStep = new_value
-                logging.info(
-                    f"      ImplicitConstantTimeStep... changed from : '{old_value}' to '{new_value}'"
-                )
-
-        else:
-            old_value = model.general.ImplicitUseVariableTimeStep
-            new_value = general_properties['ImplicitUseVariableTimeStep']
-            if old_value != new_value:
-                model.general.ImplicitUseVariableTimeStep = new_value
-                logging.info(
-                    f"      ImplicitUseVariableTimeStep... changed from : '{old_value}' to '{new_value}'"
-                )
-
-            old_value = model.general.ImplicitVariableMaxTimeStep
-            new_value = general_properties['TimeStep']
-            if old_value != new_value:
-                model.general.ImplicitVariableMaxTimeStep = new_value
-                logging.info(
-                    f"      ImplicitVaribaleMaxTimeStep... changed from : '{old_value}' to '{new_value}'"
-                )
-
-        #tmodel.DynamicSolutionMethod = 'Explicit time domain'
-        model.SaveData(input_file_save_as)
+        logging.info(f"AQWA process running for {input_file} ... ... ... ... COMPLETE")
 

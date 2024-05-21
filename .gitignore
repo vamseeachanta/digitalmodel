@@ -1,3 +1,8 @@
+# AQWA files
+src\digitalmodel\tests\test_data\aqwa\ef_server\*.LIS
+src\digitalmodel\tests\test_data\aqwa\ef_server\*.PLT
+src\digitalmodel\tests\test_data\aqwa\ef_server\*.PLD
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

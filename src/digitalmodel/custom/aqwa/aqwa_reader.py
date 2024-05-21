@@ -13,9 +13,12 @@ from assetutilities.common.data import SaveData
 from assetutilities.common.update_deep import update_deep_dictionary
 from assetutilities.common.file_management import FileManagement
 
+from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
+
 fm = FileManagement()
 rd = ReadData()
 save_data = SaveData()
+au = AqwaUtilities()
 
 class AqwaReader:
 
@@ -23,27 +26,11 @@ class AqwaReader:
         pass
 
     def router(self, cfg):
-        self.get_aqwareader_exe(cfg)
-        self.get_workbench_bat(cfg)
+        au.get_aqwareader_exe(cfg)
+        au.get_workbench_bat(cfg)
         cfg = fm.router(cfg)
         self.postprocess(cfg)
 
-    def get_aqwareader_exe(self, cfg):
-        ANSYSInstallDir = cfg['software']['ANSYSInstallDir']
-        aqwareader_exe = os.path.join(ANSYSInstallDir, "aisol", "bin", "winx64", "AqwaReader.exe")
-        if not os.path.isfile(aqwareader_exe):
-            raise Exception(f"AqwaReader.exe not found in {aqwareader_exe}")
-
-        self.aqwareader_exe = aqwareader_exe
-
-    def get_workbench_bat(self, cfg):
-        ANSYSInstallDir = cfg['software']['ANSYSInstallDir']
-        workbench_bat = os.path.join(ANSYSInstallDir, "aisol", "workbench.bat")
-        if not os.path.isfile(workbench_bat):
-            raise Exception(f"workbench.bat not found in {workbench_bat}")
-
-        self.workbench_bat = workbench_bat
-        
     def postprocess(self, cfg):
 
         for result_item in cfg['result']:

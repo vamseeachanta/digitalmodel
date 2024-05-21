@@ -4,17 +4,13 @@ import pandas as pd
 
 import logging
 
-########################################################################################################
-#
-#  This code provides users of Ansys Aqwa with examples of how to use the interface allowing them to 
-#  apply forces onto Aqwa structures at runtime. Please do not use if you are not a registered user of Aqwa.
-#
-########################################################################################################
-from digitalmodel.custom.aqwa.ef_server.AqwaServerMgr import *
-
 from assetutilities.common.file_management import FileManagement
 
+from digitalmodel.custom.aqwa.ef_server.AqwaServerMgr import *
+from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
+
 fm = FileManagement()
+au = AqwaUtilities()
 
 class AqwaEFServer: 
 
@@ -43,7 +39,6 @@ class AqwaEFServer:
         run_function_name = cfg['analysis_settings']['ef_input']['run_function']
         run_function = getattr(self, run_function_name)
 
-
         closing_function = cfg['analysis_settings']['ef_input']['closing_function']
         if closing_function is not None:
             closing_function = getattr(self,cfg['analysis_settings']['ef_input']['closing_function'])
@@ -52,7 +47,7 @@ class AqwaEFServer:
             try:
                 print("Now running user function {0}".format(run_function_name))
                 InputFileName = self.cfg['file_management']['input_files']['DAT'][run_idx]
-                self.create_subprocess_for_aqwa_run(InputFileName)
+                au.run_aqwa_analysis_as_subprocess(cfg, InputFileName, process='detached')
                 self.define_result_df(cfg)
                 Server.Run(run_function, closing_function)
             except Exception as E: # If an error occurred, we print it but continue
@@ -60,22 +55,17 @@ class AqwaEFServer:
                 print("Skipping to next case")
 
             print("Now saving result for: {0}".format(InputFileName))
-            self.save_result_df(InputFileName)
+            self.save_result_df(cfg, InputFileName)
 
     def define_result_df(self, cfg):
         columns = cfg['analysis_settings']['ef_input']['columns']
         self.result_df = pd.DataFrame(columns=columns)
 
-    def create_subprocess_for_aqwa_run(self, InputFileName):
-        print("Running Aqwa client with input file : ",InputFileName)
-        #TODO create AQWA utilities function
-        pass
-
-
-    def save_result_df(self, InputFileName):
+    def save_result_df(self, cfg, InputFileName):
         basename = os.path.basename(InputFileName)
         output_file_basename = basename.split('.')[0]
-        self.result_df.to_csv(output_file_basename+ '_py_inputs.csv', index=False)
+        filename_path = os.path.join(cfg['Analysis']['file_management_input_directory'], output_file_basename + '_py_inputs.csv')
+        self.result_df.to_csv(filename_path , index=False)
 
     def UF1(self, Analysis,Mode,Stage,Time,TimeStep,Pos,Vel):
         ########################################################################################################
