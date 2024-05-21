@@ -33,41 +33,42 @@ class AqwaEFServer:
         cfg = fm.router(cfg)
         self.cfg = cfg
 
+        number_of_client_runs = cfg['analysis_settings']['ef_input']['number_of_runs']
+        if number_of_client_runs is None:
+            number_of_client_runs = len(self.cfg['file_management']['input_files']['DAT'])
+
         aqwa_client_directory = cfg['Analysis']['file_management_input_directory']
-        
         Server = AqwaUserForceServer(port=0, dir_path=aqwa_client_directory)
 
         run_function_name = cfg['analysis_settings']['ef_input']['run_function']
         run_function = getattr(self, run_function_name)
-        number_of_runs = cfg['analysis_settings']['ef_input']['number_of_runs']
+
+
         closing_function = cfg['analysis_settings']['ef_input']['closing_function']
         if closing_function is not None:
             closing_function = getattr(self,cfg['analysis_settings']['ef_input']['closing_function'])
 
-        for run_idx in range(0, number_of_runs):
+        for run_idx in range(0, number_of_client_runs):
             try:
-                print("Now running user function {0}".format(UF.__name__))
+                print("Now running user function {0}".format(run_function_name))
+                InputFileName = self.cfg['file_management']['input_files']['DAT'][run_idx]
+                self.create_subprocess_for_aqwa_run(InputFileName)
                 self.define_result_df(cfg)
                 Server.Run(run_function, closing_function)
             except Exception as E: # If an error occurred, we print it but continue
                 print("Caught error : ",E)
                 print("Skipping to next case")
 
-            print("Now running user function {0}".format('run_function_name'))
-            InputFileName = self.cfg['file_management']['input_files']['DAT'][run_idx]
-            self.create_subprocess_for_aqwa_run(InputFileName)
+            print("Now saving result for: {0}".format(InputFileName))
             self.save_result_df(InputFileName)
 
     def define_result_df(self, cfg):
-        # basename = os.path.basename(self.Analysis.InputFileName.split('/')[-1])
         columns = cfg['analysis_settings']['ef_input']['columns']
         self.result_df = pd.DataFrame(columns=columns)
 
     def create_subprocess_for_aqwa_run(self, InputFileName):
-        # We will create a subprocess to run the Aqwa program.
-        # This is just a dummy function that should be replaced by the actual code
-        # that will run the Aqwa program with the input file InputFileName
-        print("Running Aqwa with input file : ",InputFileName)
+        print("Running Aqwa client with input file : ",InputFileName)
+        #TODO create AQWA utilities function
         pass
 
 

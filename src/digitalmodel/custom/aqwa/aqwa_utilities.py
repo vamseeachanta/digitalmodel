@@ -30,6 +30,7 @@ class AqwaUtilities:
         pass
 
     def is_license_available(self):
+        # Template code from OrcaFlex
         try:
             model = OrcFxAPI.Model()
             print("Orcaflex license is available")

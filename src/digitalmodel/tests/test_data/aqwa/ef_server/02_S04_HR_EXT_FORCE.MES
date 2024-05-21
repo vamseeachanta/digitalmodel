@@ -38,3 +38,12 @@
  **** WARNING **** HYDRODYNAMICALLY INTERACTING STRUCTURES HAVE MOVED FROM THE ANALYSIS POSITION
                    MOVEMENT EXCEEDS 30%
  ------------------------------------------------------------------------------------------------
+
+ **** WARNING **** HYDRODYNAMICALLY INTERACTING STRUCTURES HAVE MOVED SIGNIFICANTLY FROM THE ANALYSIS POSITION
+                   RESULTS ARE INACCURATE - MOVEMENT EXCEEDS 50%
+ --------------------------------------------------------------------------------------------------------------
+
+ **** ERROR **** HYDRODYNAMICALLY INTERACTING STRUCTURES HAVE MOVED TOO FAR FROM ANALYSIS POSITION
+                 MOVEMENT EXCEEDS 75%
+                 STOPPED AT TIME = 52.50
+ --------------------------------------------------------------------------------------------------
