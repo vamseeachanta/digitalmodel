@@ -212,9 +212,9 @@ class AqwaEFServer:
 
             delta_L = fender_node_change 
             if delta_L  > 0:
-                stiffener_force = 50000 * delta_L+ 3000*delta_L**2
-                dampener_force = 0.2 * CurVel[1]
-                force_fender_y = -stiffener_force - dampener_force
+                stiffener_force = - (50000 * delta_L+ 3000*delta_L**2)
+                dampener_force = -0.2 * CurVel[1]
+                force_fender_y = stiffener_force + dampener_force
                 force_fender = [0, force_fender_y, 0]
 
                 ExtraForce = Analysis.ApplyForceOnStructureAtPoint(Struct=0,
@@ -233,7 +233,7 @@ class AqwaEFServer:
                 dampener_force = 0
                 stiffener_force = 0
 
-            result_array = [TimeStep, CurPos[1], delta_L, stiffener_force, CurVel[1], dampener_force, force_fender[1]] 
+            result_array = [TimeStep, CurPos[1], delta_L, -stiffener_force, CurVel[1], -dampener_force, -force_fender[1]] 
             self.result_df.loc[len(self.result_df)] = result_array 
 
             # Now return the results
