@@ -6,3 +6,35 @@
  **** MODELLING WARNING **** WHEN AQWA IS *NOT* RUN FROM WORKBENCH, ONLY 2 PARAMETERS (RESOLUTION) ARE ALLOWED ON THE 
                              SEAG CARD. DEFAULT VALUES HAVE BEEN USED FOR THE GRID SIZE.
  ----------------------------------------------------------------------------------------------------------------------
+
+ **** WARNING **** CONVOLUTION WARNING.
+                   An inaccurate convolution fit has been detected to the
+                   added mass/damping for structure#2/1 Roll(Rx)/Heave(Z) for frequency #2 .
+                   The fit quality (100% = exact) was 19%.
+                   This can be caused by insufficient frequencies or an unusual
+                   geometry of the structure.
+ 
+                   PLEASE - ENSURE THAT THERE ARE SUFFICIENT FREQUENCIES
+                   *BEFORE* contacting user support.
+ 
+                   Frequency range for structure 2/1 should be at least 0.065 to 1.007 rad/sec.
+ -----------------------------------------------------------------------------------------------
+
+ **** ANALYSIS WARNING **** Negative generalized damping = -0.25 is detected at frequency =0.04 rad/sec,
+                            for the mode with the 1st 4 dominant motions of
+                            Str#1 RY:0.99 , Str#1 X:0.15 , Str#1 Z:-0.05 , Str#1 Y:-0.00
+ --------------------------------------------------------------------------------------------------------
+
+ **** ANALYSIS WARNING **** Negative generalized damping = -0.16 is detected at frequency =0.83 rad/sec,
+                            for the mode with the 1st 4 dominant motions of
+                            Str#1 Z:0.80 , Str#1 Y:-0.50 , Str#1 RX:-0.32 , Str#1 RY:-0.10
+ --------------------------------------------------------------------------------------------------------
+
+ **** ANALYSIS WARNING **** Negative generalized damping = -0.14 is detected at frequency =0.85 rad/sec,
+                            for the mode with the 1st 4 dominant motions of
+                            Str#1 Z:-0.77 , Str#1 Y:0.49 , Str#1 RX:0.40 , Str#1 RY:0.11
+ --------------------------------------------------------------------------------------------------------
+
+ **** WARNING **** HYDRODYNAMICALLY INTERACTING STRUCTURES HAVE MOVED FROM THE ANALYSIS POSITION
+                   MOVEMENT EXCEEDS 30%
+ ------------------------------------------------------------------------------------------------
