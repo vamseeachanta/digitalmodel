@@ -42,6 +42,8 @@ class AqwaUtilities:
             raise Exception(f"AqwaReader.exe not found in {aqwareader_exe}")
 
         self.aqwareader_exe = aqwareader_exe
+        
+        return aqwareader_exe
 
     def get_workbench_bat(self, cfg):
         ANSYSInstallDir = cfg['software']['ANSYSInstallDir']
@@ -50,6 +52,8 @@ class AqwaUtilities:
             raise Exception(f"workbench.bat not found in {workbench_bat}")
 
         self.workbench_bat = workbench_bat
+        
+        return workbench_bat
 
     def get_aqwa_exe(self, cfg):
         ANSYSInstallDir = cfg['software']['ANSYSInstallDir']

@@ -26,8 +26,8 @@ class AqwaReader:
         pass
 
     def router(self, cfg):
-        au.get_aqwareader_exe(cfg)
-        au.get_workbench_bat(cfg)
+        self.aqwareader_exe = au.get_aqwareader_exe(cfg)
+        self.workbench_bat = au.get_workbench_bat(cfg)
         cfg = fm.router(cfg)
         self.postprocess(cfg)
 
