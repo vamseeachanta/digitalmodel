@@ -1,7 +1,7 @@
 # AQWA files
-src\digitalmodel\tests\test_data\aqwa\ef_server\*.LIS
-src\digitalmodel\tests\test_data\aqwa\ef_server\*.PLT
-src\digitalmodel\tests\test_data\aqwa\ef_server\*.PLD
+src\digitalmodel\tests\test_data\aqwa\ef_server\02_S04_HR_EXT_FORCE.LIS
+src\digitalmodel\tests\test_data\aqwa\ef_server\02_S04_HR_EXT_FORCE.PLT
+src\digitalmodel\tests\test_data\aqwa\ef_server\02_S04_HR_EXT_FORCE.PLD
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -87,7 +87,7 @@ dictitems:
     file_name_for_overwrite: app_aqwa_aqwa_ef_run
     result_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     log_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-05-21 15:00:06.625020
+    start_time: 2024-05-21 15:23:54.731506
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_ef_run.yml

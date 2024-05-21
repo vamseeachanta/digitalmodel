@@ -68,7 +68,11 @@ class AqwaUtilities:
 
     def run_aqwa_analysis_as_subprocess(self, cfg, input_file, process='subprocess'):
         aqwa_exe = self.get_aqwa_exe(cfg)
-        args = ['timeout', '5', '&&', aqwa_exe, '/nowind', input_file]
+        # Currently the time to startup client is sufficent for socket to be ready. 
+        # possibly write out a temp.bat and send that to detached subprocess.
+        # args = ['ping 127.0.0.1 -n 1', '&&', aqwa_exe, '/nowind', input_file]
+        # args = ['timeout', '5', '&&', aqwa_exe, '/nowind', input_file]
+        args = [aqwa_exe, '/nowind', input_file]
         logging.info(f"AQWA process running for {input_file} ... START")
 
         if process == 'detached':

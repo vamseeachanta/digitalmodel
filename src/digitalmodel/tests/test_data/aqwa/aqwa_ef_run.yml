@@ -15,6 +15,7 @@ analysis_settings:
   method: ef_server
   ef_input:
     run_function: UFFender # uf_wlng_fst
+    time_delay_in_client: 0 
     closing_function: NULL
     number_of_runs: NULL
     columns:
