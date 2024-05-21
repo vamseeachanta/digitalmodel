@@ -116,7 +116,7 @@ class CathodicProtection():
         mean_demand = mean_demand/1000
         final_demand = final_demand/1000
         
-        current_demand = {'initial_demand': initial_demand,'mean_demand': mean_demand,'final_demand': final_demand}
+        current_demand = {'initial': initial_demand,'mean': mean_demand,'final': final_demand}
 
         return current_demand
 
@@ -127,7 +127,7 @@ class CathodicProtection():
         """
         anode_cfg = cfg['inputs']['anode_capacity']
         anode_current_capacity = anode_cfg['anode_current_capacity']
-        anode_utilisation_factor = anode_cfg['anode_Utilisation_factor']
+        anode_utilisation_factor = anode_cfg['anode_utilisation_factor']
         
         
         volume = anode_cfg['physical_properties']['mean_length'] * anode_cfg['physical_properties']['width'] * anode_cfg['physical_properties']['height']
@@ -140,22 +140,23 @@ class CathodicProtection():
         """
         This method is used to calculate weight and no of anodes required
         """
-        design_life_count = cfg['inputs']['breakdown_factor']['design_life']
-        mean = cfg['current_demand']['mean_demand']
-        initial_current = cfg['current_demand']['initial_demand']
-        final_current = cfg['current_demand']['final_demand']
-        anode_current = cfg['anode_capacity']['anode_current_capacity']
-        anode_utilisation = cfg['anode_capacity']['anode_utilisation_factor']
+        design_life = cfg['inputs']['design_life']
+        anode_current = cfg['inputs']['anode_capacity']['anode_current_capacity']
+        anode_utilisation = cfg['inputs']['anode_capacity']['anode_utilisation_factor']
         anode_net_weight = cfg['inputs']['anode_capacity']['physical_properties']['net_weight']
 
-        anode_mass = mean / anode_current * 24 * 365 * design_life_count / anode_utilisation
-        anode_count_on_mass = anode_mass / anode_net_weight
-        anode_count_on_initial_current = initial_current / anode_current *24 *365 *design_life_count /anode_utilisation /anode_net_weight
-        anode_count_on_final_current = final_current /anode_current *24 *365 *design_life_count /anode_utilisation /anode_net_weight
-
-        anodes_required = {'anode_mass_calculation':anode_mass,'Number of Anodes Based on Mass':anode_count_on_mass,
-                           'Number of Anodes Based on Initial Current ':anode_count_on_initial_current,
-                           'Number of Anodes Based on Final Current':anode_count_on_final_current}
+        anode_mass_mean = current_demand['mean'] / anode_current * 24 * 365 * design_life / anode_utilisation/anode_net_weight
+        anode_mass_initial = current_demand['initial'] / anode_current * 24 * 365 * design_life / anode_utilisation/anode_net_weight
+        anode_mass_final = current_demand['final'] / anode_current * 24 * 365 * design_life / anode_utilisation/anode_net_weight
+        anode_mass = {'mean': round(anode_mass_mean, 3) , 'initial': round(anode_mass_initial, 3), 'final': round(anode_mass_final, 3)}
+        
+        anode_count_mean = math.ceil(anode_mass_mean / anode_capacity['anode_volume'])
+        anode_count_initial = math.ceil(anode_mass_initial / anode_capacity['anode_volume'])
+        anode_count_final = math.ceil(anode_mass_final / anode_capacity['anode_volume'])
+        anode_count = {'mean': anode_count_mean, 'initial': anode_count_initial, 'final': anode_count_final}
+        
+        anodes_required = {'mass': anode_mass, 'count': anode_count}
+        
         return anodes_required
 
 
