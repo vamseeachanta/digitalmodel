@@ -1,0 +1,123 @@
+@startuml aqwa_general
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title AQWA Highlevel \nWorkflow
+
+start
+
+    note right
+        **(IN PROGRESS)**
+        Objective: Provide high-level workflow as follows
+        - software access
+        - working guidelines
+    end note
+
+    partition "Preprocess: Geometry" {
+
+        :.dat files;
+            note right
+            define geometry format directly 
+            i.e. nodes, elements
+            end note
+
+        :SpaceClaim;
+            note right
+             Prepare geometry from scratch
+            - good features
+            - learning takes time and practice
+            - **License** dependency
+            end note
+
+    }
+
+    partition "Preprocess: Model Setup" {
+
+        : .dat files;
+            note right
+            - Stringent format:
+                - i.e. Reference manual provides examples and format
+            - Programming (Python, Fortran etc.) or MS DOS Batch 
+            - License independent
+            end note
+
+        :Workbench UI;
+            note right
+             - visual and helpful
+             - Manual operations 
+            - **License** dependency
+            end note
+
+    }
+
+    partition "Run" {
+        :Run AQWA;
+
+        note right
+            Tools:
+            - Workbench
+            - AQWA.exe with .dat files
+            - Batch file
+            - **License** dependency
+        end note
+
+    }
+
+    partition "Postprocess" {
+            note right
+                Tools:
+                 - MS DOS
+                 - Programming (Python) for .LIS files
+            end note
+
+        :AQWAReader;
+            note right
+                Tools:
+                 - AQWAReader (.csv files)
+                    - Pros: Official support
+                    - Cons: Too many csv files
+            end note
+
+        :AQWA output file (.LIS);
+            note right
+             Reading/Programming from .LIS files
+             Pros:
+                - Programming to get single shot at complete data 
+             Cons:
+                - multiple tables for single set of data
+                    - Headers are repeated
+                    - White Space between sets of each data
+                - file format may change?
+            end note
+
+        :AQL - Excel Interface;
+            note right
+             Manual operations to extract & plot
+            end note
+
+        :Workbench - UI;
+            note right
+             Manual operations to extract & plot
+             Pros:
+                - Good/killer graphics and 3D plots etc 
+             Cons:
+                - Limited 
+                    - Headers are repeated
+                    - White Space between sets of each data
+                - file format may change?
+                - Many manual operations to extract outputs
+            end note
+
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
