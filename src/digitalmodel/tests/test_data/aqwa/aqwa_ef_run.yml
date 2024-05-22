@@ -16,7 +16,7 @@ analysis_settings:
   ef_input:
     run_function: UFFender # uf_wlng_fst
     time_delay_in_client: 0
-    load_ramp: {flag: True, time: 100, type: linear, }
+    load_ramp: { flag: True, time: 100, type: linear, initial_factor: 0.5 }
     closing_function: NULL
     number_of_runs: NULL
     columns:

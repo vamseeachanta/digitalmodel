@@ -33,6 +33,9 @@ class AqwaEFServer:
         if number_of_client_runs is None:
             number_of_client_runs = len(self.cfg['file_management']['input_files']['DAT'])
 
+        if number_of_client_runs == 0:
+            raise ValueError("No client runs specified. Exiting.")
+
         aqwa_client_directory = cfg['Analysis']['file_management_input_directory']
         Server = AqwaUserForceServer(port=0, dir_path=aqwa_client_directory)
 
@@ -214,10 +217,15 @@ class AqwaEFServer:
             if delta_L  > 0:
                 stiffener_force = - (50000 * delta_L+ 3000*delta_L**2)
                 dampener_force = -0.2 * CurVel[1]
-                if Time > 100:
-                    force_array_for_ramp = []
-                    ramp_cfg = self.cfg['analysis_settings']['ef_input']['load_ramp']
-                    force_array_for_ramp = self.get_ramp(ramp_cfg, force_array_for_ramp)
+
+                ramp_cfg = self.cfg['analysis_settings']['ef_input']['load_ramp']
+                if ramp_cfg['flag'] and Time < ramp_cfg['time']:
+                    force_dict= {'stiffener_force': stiffener_force, 'dampener_force': dampener_force}
+                    ramp_force_dict= self.get_ramp_force(ramp_cfg, Time, force_dict)
+
+                    stiffener_force = ramp_force_dict['stiffener_force']
+                    dampener_force = ramp_force_dict['dampener_force']
+
                 force_fender_y = stiffener_force + dampener_force
                 force_fender = [0, force_fender_y, 0]
 
@@ -244,23 +252,38 @@ class AqwaEFServer:
 
         return Force,AddMass,Error
 
+    def get_ramp_force(self, ramp_cfg, Time, force_dict):
+
+        ramp_factor = self.get_ramp_factor(ramp_cfg, Time)
+        ramp_force_dict = force_dict.copy()
+        for key in force_dict:
+            ramp_force_dict[key] = force_dict[key] * ramp_factor
+
+        return ramp_force_dict
+
+    def get_ramp_factor(self, ramp_cfg, Time):
+        t_0 = 0
+        f_0 = ramp_cfg['initial_factor']
+        t_f = ramp_cfg['time']
+        f_f= 1
+        
+        ramp_factor = (Time - t_0) * (f_f - f_0) / (t_f - t_0) + f_0
+
+        return ramp_factor
 
     def uf_wlng_fst(self, Analysis,Mode,Stage,Time,TimeStep,Pos,Vel):
         AddMass = BlankAddedMass(Analysis.NOfStruct)
         Force   = BlankForce(Analysis.NOfStruct)
         Error   = 0
 
-        ef_cfg = {'Struct': 4, 'DefPos': (51, 70, 8.8)}
-        f, a , e = uf_wsp_dampener(Analysis,Mode,Stage,Time,TimeStep,Pos,Vel, ef_cfg)
-        Force = Force  + f
-        AddMass = AddMass + a
-        Error = e
+        
+        def_pos_cfg = self.cfg['analysis_settings']['ef_input']['def_pos']
+        for def_pos in def_pos_cfg:
 
-        ef_cfg = {'Struct': 7, 'DefPos': (149, 70, 8.8)}
-        f, a , e = uf_wsp_dampener(Analysis,Mode,Stage,Time,TimeStep,Pos,Vel, ef_cfg)
-        Force = Force  + f
-        AddMass = AddMass + a
-        Error = e
+            f, a , e = self.uf_wsp_dampener(Analysis,Mode,Stage,Time,TimeStep,Pos,Vel, def_pos)
+            Force = Force  + f
+            AddMass = AddMass + a
+            Error = e
 
         return Force, AddMass, Error
 
@@ -285,8 +308,8 @@ class AqwaEFServer:
 
         dl = [CurPos[0] - DefPos[0], CurPos[1] - DefPos[1], CurPos[2] - DefPos[2]]
 
-        force_x = get_wsp_dampener_force(dl[0], CurNodeVel[0], dir='X')
-        force_y = get_wsp_dampener_force(dl[1], CurNodeVel[1], dir='Y')
+        force_x = self.get_wsp_dampener_force(dl[0], CurNodeVel[0], dir='X')
+        force_y = self.get_wsp_dampener_force(dl[1], CurNodeVel[1], dir='Y')
 
         force_vector = [-force_x['total'], -force_y['total'], 0]
 
@@ -302,10 +325,9 @@ class AqwaEFServer:
         # (BlankForce and BlankAddedMass classes support algebraic operations (+, -, and scalar multiplication)
         Force += ExtraForce
 
-        if Time > 20:
         # columns = ['TimeStep', 'dl_x', 'dl_y', 'velocity_x', 'velocity_y', 'stiffener_force_x', 'dampener_force_x', 'total_force_x', 'stiffener_force_y', 'dampener_force_y', 'total_force_y']
-            result_array = [Time, dl[0], dl[1], CurNodeVel[0], CurNodeVel[1], force_x['stiffness'], force_x['dampener'] , force_x['total'], force_y['stiffness'], force_y['dampener'], force_y['total']]
-            self.result_df.loc[len(self.result_df)] = result_array 
+        result_array = [Time, dl[0], dl[1], CurNodeVel[0], CurNodeVel[1], force_x['stiffness'], force_x['dampener'] , force_x['total'], force_y['stiffness'], force_y['dampener'], force_y['total']]
+        self.result_df.loc[len(self.result_df)] = result_array 
 
         # Now return the results
 

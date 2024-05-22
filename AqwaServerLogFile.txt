@@ -2,14 +2,14 @@ OrcFxAPI not available
 Updating default values with contents in file k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_ef_run.yml
 Socket created
 # Server waiting for a connection from an AqwaClient on
-ACMA-ANSYS03:53178
+ACMA-ANSYS03:50219
 Now running user function UFFender
 Socket now listening
-Connected with 192.168.0.93:53192
+Connected with 192.168.0.93:50236
 Latest interface version on Client is v0
 Input File Name is "K:\PYTHON\DIGITALMODEL\SRC\DIGITALMODEL\TESTS\TEST_DATA\AQWA\EF_SERVER\02_S04_HR_EXT_FORCE.DAT"
 I_Control = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 R_Control = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 Position of CoG of Aqwa structure #1 in the definition axis : (108.613930,-0.002139,8.500000)
 Position of CoG of Aqwa structure #2 in the definition axis : (100.000000,30.000000,0.000000)
-Now saving result for: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\ef_server\02_s04_hr_ext_force.dat
+Backend TkAgg is interactive backend. Turning interactive mode on.

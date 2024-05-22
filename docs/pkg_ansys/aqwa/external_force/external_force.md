@@ -19,6 +19,17 @@ External Force Example
 - Test the code with another function.
 - Wireup AQWA node/variables to the forces
 
+### Digital Model - Error Troubleshooting
+
+Ensure the more than zero files are found by the program.
+
+<code>
+Exception ignored in: <function AqwaServerMgr.__del__ at 0x00000198EE4FD1C0>
+Traceback (most recent call last):
+  File "K:\python\digitalmodel\src\digitalmodel\custom\aqwa\ef_server\AqwaServerMgr.py", line 196, in __del__
+    self.Connection.shutdown(socket.SHUT_RDWR)
+</code>
+
 ### Way Forward
 
 - Create a Python3 server (more flexibility). But many things have to be changed.

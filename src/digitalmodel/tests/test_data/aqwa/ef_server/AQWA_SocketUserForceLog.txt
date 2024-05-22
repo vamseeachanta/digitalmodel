@@ -1,6 +1,6 @@
 # Aqwa Socket based User Force Calculation
 #========================================
-# Used on 2024-05-21 15:23:57
+# Used on 2024-05-22 13:15:55
 # InputFile : K:\PYTHON\DIGITALMODEL\SRC\DIGITALMODEL\TESTS\TEST_DATA\AQWA\EF_SERVER\02_S04_HR_EXT_FORCE
 # Let's try getting server information from file K:\PYTHON\DIGITALMODEL\SRC\DIGITALMODEL\TESTS\TEST_DATA\AQWA\EF_SERVER\AQWA_SocketUserForceServerDetails.cfg
 # Found address 192.168.0.93 for hostname ACMA-ANSYS03
