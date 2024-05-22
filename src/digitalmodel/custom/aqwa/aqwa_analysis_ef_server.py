@@ -214,6 +214,10 @@ class AqwaEFServer:
             if delta_L  > 0:
                 stiffener_force = - (50000 * delta_L+ 3000*delta_L**2)
                 dampener_force = -0.2 * CurVel[1]
+                if Time > 100:
+                    force_array_for_ramp = []
+                    ramp_cfg = self.cfg['analysis_settings']['ef_input']['load_ramp']
+                    force_array_for_ramp = self.get_ramp(ramp_cfg, force_array_for_ramp)
                 force_fender_y = stiffener_force + dampener_force
                 force_fender = [0, force_fender_y, 0]
 
