@@ -1,4 +1,14 @@
 
+## Introduction
+
+Instructions to run AQWA and the associated suite of softwares
+
+### Summary
+
+#### General Working and License requirements
+
+<img src="flowcharts/aqwa_general.svg" width=400, height=auto/>
+
 ### Command Line Method
 
 #### Hydrodynamic Runs
@@ -30,7 +40,7 @@ Using below command, the error is thrown:
 "C:\Program Files\ANSYS Inc\v222\aqwa\bin\winx64\aqwa.exe" /STD I:\B1516\rev2\master\LIBR_NE
 
 **** MODELLING WARNING **** WHEN AQWA IS *NOT* RUN FROM WORKBENCH, ONLY 2 PARAMETERS (RESOLUTION) ARE ALLOWED ON THE
-                             SEAG CARD. DEFAULT VALUES HAVE BEEN USED FOR THE GRID SIZE.
+                             SEAG CARD. DEFAULT VALUES HAVE BEEN USED FOR THE GRID SIZE
  ----------------------------------------------------------------------------------------------------------------------
 
 **** INPUT DATA ERROR **** FAILED TO OPEN HYDRODYNAMIC DATA. PLEASE CHECK SPELLING

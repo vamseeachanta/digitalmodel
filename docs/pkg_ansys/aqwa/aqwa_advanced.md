@@ -1,21 +1,3 @@
-## Introduction
-
-### Integrated System
-
-Ansys AQWA software is an integrated system for undertaking hydrodynamic and mooring analyses. Functionally is split into six operations:
-
-Diffraction/radiation
-Static and dynamic initial stability including the effects of mooring systems and other physical connections
-Frequency domain dynamic analysis
-Time domain with irregular waves including slow drift
-Nonlinear time domain with large-amplitude regular or irregular waves
-Hydrodynamic load transfer to a structural finite element analysis
-ANSYS Aqwa - Integrated System
-An optional facility for coupled cable dynamics is available with the static and dynamic solvers (in both frequency and time domain) to provide more rigorous modeling of mooring system loading and response, especially in deep waters.
-
-![Overview](image.png)
-
-![alt text](image-1.png)
 
 ### Summary
 
