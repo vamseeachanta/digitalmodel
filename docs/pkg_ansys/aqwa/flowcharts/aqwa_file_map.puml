@@ -1,0 +1,78 @@
+@startuml aqwa_file_map
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title AQWA Analysis \nFile Map
+
+start
+
+    note right
+        Objective: Describe AQWA input and output files
+    end note
+
+    partition "DAT" {
+            note right
+                Input Files
+            end note
+
+        :Analysis Settings;
+        :Restart Card;
+        :Geometry;
+        :Mesh;
+        :Material;
+        :Element Topology;
+        :Hydrodynamic Interaction;
+        :Fix Structure;
+
+    }
+
+    partition "MES" {
+            note right
+                For errors and warnings
+            end note
+        :use1 - TBA;
+
+    }
+
+    partition "LIS" {
+            note right
+                For key output
+            end note
+    }
+
+    partition "RES" {
+            note right
+                For key output
+            end note
+    }
+
+    partition "PLT" {
+            note right
+                For key output
+            end note
+    }
+
+    partition "PLD" {
+            note right
+                For key output
+            end note
+    }
+
+    partition "POS" {
+            note right
+                For key output
+            end note
+    }
+
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

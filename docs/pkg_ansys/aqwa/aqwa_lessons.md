@@ -4,7 +4,12 @@
 
 ### Share Topology Usage
 
--
+- For grouping structures as single entity so they can more together in AQWA
+
+### Starting position
+
+- Stability run
+- run dynamic run
 
 ### Working in Workbench
 
@@ -126,5 +131,3 @@ Those are the three inputs files for the diffraction, stability, and time respon
 For each project:
 
 If you compare the Analysis.dat between the s01 and s03 projects, you should see small differences. For something like this, I use Notepad++ and a plugin called Compare to compare files against each other. This pointed out several differences:
-
-

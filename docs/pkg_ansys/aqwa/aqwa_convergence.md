@@ -36,7 +36,7 @@ b/ Get all the mass and damping properties for the FST structure (Done)
 b/ Rerun irregular wave analysis
 c/ Saved 2 dataframes for 2 dampener systems.
 d/ Plot the results for the dampener system(s) and compare.
-d/ POS* run decay tests. Check, D05315mm_pms_fender_decay_test.wbpj for reference.
+d/ POS* run decay tests. Check, D05315mm_pms_fender_decay_test.wbpj for reference (Deck xx)
 e/ Add mass for all other strucures.
 
 ### Fender Model using External Force (Update)
