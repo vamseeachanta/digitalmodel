@@ -28,6 +28,11 @@ Convergence path
 | D05315mm_pms_fender | (2) Jackets | Fender/Mooring pair <br> DCAF Z, RX, RY, RZ | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: |  |
 | D05315mm_pms_ef| (2) Jackets | EF in python <br> DCAF Constraints | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: |  |
 | D05315mm_pms.dat | (2) Jackets | EF in python <br> DCAF Constraints | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: | Prep D05315mm_pms_ef to prep files <br> .HYD, .EQP File <br> perform EF analysis |
+| D05315mm_pms.dat | (2) Jackets | EF in python <br> DCAF Constraints | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: | Prep D05315mm_pms_ef to prep files <br> .HYD, .EQP File <br> perform EF analysis |
+a/ check and copy dat file again.
+b/ Rerun irregular wave analysis
+c/ Save 2 dataframes for 2 dampener systems. use index.
+d/ POS* run decay tests. Check, D05315mm_pms_fender_decay_test.wbpj for reference.
 
 ### Fender Model using External Force (Update)
 

@@ -295,6 +295,7 @@ class AqwaEFServer:
 
         Struct = cfg['Struct']
         DefPos = cfg['DefPos']
+        dl_correction = cfg['dl_correction']
         CurPos = Analysis.GetNodeCurrentPosition(Struct=Struct ,
                                                 DefAxesX=DefPos[0],
                                                 DefAxesY=DefPos[1],
@@ -306,12 +307,12 @@ class AqwaEFServer:
                                                 DefAxesY=CurPos[1],
                                                 DefAxesZ=CurPos[2])
 
-        dl = [CurPos[0] - DefPos[0], CurPos[1] - DefPos[1], CurPos[2] - DefPos[2]]
+        dl = [CurPos[0] - DefPos[0] -dl_correction[0], CurPos[1] - DefPos[1]-dl_correction[1], CurPos[2] - DefPos[2]-dl_correction[2]]
 
-        force_x = self.get_wsp_dampener_force(dl[0], CurNodeVel[0], dir='X')
-        force_y = self.get_wsp_dampener_force(dl[1], CurNodeVel[1], dir='Y')
+        force_x = self.get_wsp_dampener_force(Time, dl[0], CurNodeVel[0], dir='X')
+        force_y = self.get_wsp_dampener_force(Time, dl[1], CurNodeVel[1], dir='Y')
 
-        force_vector = [-force_x['total'], -force_y['total'], 0]
+        force_vector = [force_x['total'], force_y['total'], 0]
 
         ExtraForce = Analysis.ApplyForceOnStructureAtPoint(Struct=0,
                                                         FX=force_vector[0],
@@ -333,21 +334,32 @@ class AqwaEFServer:
 
         return Force,AddMass,Error
 
-    def get_wsp_dampener_force(self, dof_pos_delta, dof_vel, dir='X'):
+    def get_wsp_dampener_force(self, Time, dof_pos_delta, dof_vel, dir='X'):
         stiffness = {'X': {'dl': [0.15, 0.70, 10], 'k': [0, 7.03e6, 2.8e7]}, 
                     'Y': {'dl': [0.15, 0.70, 10], 'k': [0, 14.06e6, 5.6e7]}}
         c = {'X': 3.75E+06, 'Y': 7.51E+06}
 
+        if abs(dof_pos_delta) > 1:
+            pass
+
         if abs(dof_pos_delta) < stiffness[dir]['dl'][0]:
-            stiffness_force = stiffness[dir]['k'][0] * dof_pos_delta
+            stiffness_force = -stiffness[dir]['k'][0] * dof_pos_delta
         elif abs(dof_pos_delta) < stiffness[dir]['dl'][1]:
-            stiffness_force = stiffness[dir]['k'][1] * dof_pos_delta
+            stiffness_force = -stiffness[dir]['k'][1] * dof_pos_delta
         else:
-            stiffness_force = stiffness[dir]['k'][2] * dof_pos_delta
+            stiffness_force = -stiffness[dir]['k'][2] * dof_pos_delta
 
         dampener_force = c[dir] * (abs(dof_vel)**0.6)
-        if dof_vel < 0:
+        if dof_vel > 0:
             dampener_force = -dampener_force
+
+        ramp_cfg = self.cfg['analysis_settings']['ef_input']['load_ramp']
+        if ramp_cfg['flag'] and Time < ramp_cfg['time']:
+            force_dict= {'stiffness_force': stiffness_force, 'dampener_force': dampener_force}
+            ramp_force_dict= self.get_ramp_force(ramp_cfg, Time, force_dict)
+
+            stiffness_force = ramp_force_dict['stiffness_force']
+            dampener_force = ramp_force_dict['dampener_force']
 
         total_force = stiffness_force + dampener_force
         force = {'stiffness': stiffness_force, 'dampener': dampener_force, 'total': total_force}
