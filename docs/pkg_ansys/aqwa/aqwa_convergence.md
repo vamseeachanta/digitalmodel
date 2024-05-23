@@ -29,10 +29,15 @@ Convergence path
 | D05315mm_pms_ef| (2) Jackets | EF in python <br> DCAF Constraints | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: |  |
 | D05315mm_pms.dat | (2) Jackets | EF in python <br> DCAF Constraints | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: | Prep D05315mm_pms_ef to prep files <br> .HYD, .EQP File <br> perform EF analysis |
 | D05315mm_pms.dat | (2) Jackets | EF in python <br> DCAF Constraints | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: | Prep D05315mm_pms_ef to prep files <br> .HYD, .EQP File <br> perform EF analysis |
+
 a/ check and copy dat file again.
+b/ Get all the mass and damping properties for the FST structure (Done)
+    - Get HYD data for new structures (i.e. 2, 3 etc) onwards.
 b/ Rerun irregular wave analysis
-c/ Save 2 dataframes for 2 dampener systems. use index.
+c/ Saved 2 dataframes for 2 dampener systems.
+d/ Plot the results for the dampener system(s) and compare.
 d/ POS* run decay tests. Check, D05315mm_pms_fender_decay_test.wbpj for reference.
+e/ Add mass for all other strucures.
 
 ### Fender Model using External Force (Update)
 

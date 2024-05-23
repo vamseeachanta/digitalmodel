@@ -62,13 +62,17 @@ class AqwaEFServer:
 
     def define_result_df(self, cfg):
         columns = cfg['analysis_settings']['ef_input']['columns']
-        self.result_df = pd.DataFrame(columns=columns)
+        
+        def_pos_cfg = cfg['analysis_settings']['ef_input']['def_pos']
+        self.result_df_array = [pd.DataFrame(columns=columns)]*len(def_pos_cfg)
 
     def save_result_df(self, cfg, InputFileName):
         basename = os.path.basename(InputFileName)
         output_file_basename = basename.split('.')[0]
-        filename_path = os.path.join(cfg['Analysis']['file_management_input_directory'], output_file_basename + '_py_inputs.csv')
-        self.result_df.to_csv(filename_path , index=False)
+        def_pos_cfg = cfg['analysis_settings']['ef_input']['def_pos']
+        for def_pos_idx in range(0, len(def_pos_cfg)):
+            filename_path = os.path.join(cfg['Analysis']['file_management_input_directory'], output_file_basename + '_' +str(def_pos_idx) + '_py_inputs.csv')
+            self.result_df_array[def_pos_idx].to_csv(filename_path , index=False)
 
     def UF1(self, Analysis,Mode,Stage,Time,TimeStep,Pos,Vel):
         ########################################################################################################
@@ -196,8 +200,8 @@ class AqwaEFServer:
 
         # Fender Definition
         def_pos_cfg = self.cfg['analysis_settings']['ef_input']['def_pos']
-        for def_pos in def_pos_cfg:
-
+        for def_pos_idx in range(0, len(def_pos_cfg)):
+            def_pos = def_pos_cfg[def_pos_idx]
             Struct = def_pos['Struct']
             DefPos = def_pos['DefPos']
             CurPos = Analysis.GetNodeCurrentPosition(Struct=Struct ,
@@ -246,9 +250,7 @@ class AqwaEFServer:
                 stiffener_force = 0
 
             result_array = [TimeStep, CurPos[1], delta_L, -stiffener_force, CurVel[1], -dampener_force, -force_fender[1]] 
-            self.result_df.loc[len(self.result_df)] = result_array 
-
-            # Now return the results
+            self.result_df_array[def_pos_idx].loc[len(self.result_df_array[def_pos_idx])] = result_array 
 
         return Force,AddMass,Error
 
@@ -278,9 +280,9 @@ class AqwaEFServer:
 
         
         def_pos_cfg = self.cfg['analysis_settings']['ef_input']['def_pos']
-        for def_pos in def_pos_cfg:
-
-            f, a , e = self.uf_wsp_dampener(Analysis,Mode,Stage,Time,TimeStep,Pos,Vel, def_pos)
+        for def_pos_idx in range(0, len(def_pos_cfg)):
+            def_pos = def_pos_cfg[def_pos_idx]
+            f, a , e = self.uf_wsp_dampener(Analysis,Mode,Stage,Time,TimeStep,Pos,Vel, def_pos, def_pos_idx)
             Force = Force  + f
             AddMass = AddMass + a
             Error = e
@@ -288,14 +290,14 @@ class AqwaEFServer:
         return Force, AddMass, Error
 
 
-    def uf_wsp_dampener(self, Analysis,Mode,Stage,Time,TimeStep,Pos,Vel, cfg={}):
+    def uf_wsp_dampener(self, Analysis,Mode,Stage,Time,TimeStep,Pos,Vel, def_pos, def_pos_idx):
         AddMass = BlankAddedMass(Analysis.NOfStruct)
         Force   = BlankForce(Analysis.NOfStruct)
         Error   = 0
 
-        Struct = cfg['Struct']
-        DefPos = cfg['DefPos']
-        dl_correction = cfg['dl_correction']
+        Struct = def_pos['Struct']
+        DefPos = def_pos['DefPos']
+        dl_correction = def_pos['dl_correction']
         CurPos = Analysis.GetNodeCurrentPosition(Struct=Struct ,
                                                 DefAxesX=DefPos[0],
                                                 DefAxesY=DefPos[1],
@@ -328,7 +330,7 @@ class AqwaEFServer:
 
         # columns = ['TimeStep', 'dl_x', 'dl_y', 'velocity_x', 'velocity_y', 'stiffener_force_x', 'dampener_force_x', 'total_force_x', 'stiffener_force_y', 'dampener_force_y', 'total_force_y']
         result_array = [Time, dl[0], dl[1], CurNodeVel[0], CurNodeVel[1], force_x['stiffness'], force_x['dampener'] , force_x['total'], force_y['stiffness'], force_y['dampener'], force_y['total']]
-        self.result_df.loc[len(self.result_df)] = result_array 
+        self.result_df_array[def_pos_idx].loc[len(self.result_df_array[def_pos_idx])] = result_array 
 
         # Now return the results
 
