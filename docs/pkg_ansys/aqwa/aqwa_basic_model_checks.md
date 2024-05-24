@@ -10,13 +10,30 @@ Weight, Gyradii etc. Stability is part of ANSYS and will need to be checked to e
 
 ### Hydrodynamic
 
-- Do zero and check all loads in all structures
+- Do No load and check all loads in all structures
   - X, Y and Z starting positions
   - find the equilibrium position and specify utilze for zero load
-  - Check the structure loads
+  - Check the structure locations, loads etc.
+
+- Repeat Stability analysis
+  - Input correct FST position, (all structures)
+  - Remove the dl-correction term
+
+- For structure where force is determined by external python code:
+  - Going by pure force for determining position is difficult
+  - Need to include a combination of spring and damper to get the equilibrium position
+  - Provide additional force to get the overall force correct
 
 - X, Y and Z starting positions
+- Check if rotations are in deg or radians. Mark the plots accordingly
+
+- WSP:
+  - Deadband. How to capture it
 
 ### External Force Analysis
 
-- Why do we get 4 values at each time step. Should we take the final time step iteration value as the main value.
+- Why do we get 4 values at each time step.
+  - For now, take the final time step iteration value as the main value.
+  - Check that multiple values are not for PMS3, PMS4, X and Y direction.
+
+-
