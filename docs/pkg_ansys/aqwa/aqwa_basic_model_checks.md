@@ -26,6 +26,11 @@ Weight, Gyradii etc. Stability is part of ANSYS and will need to be checked to e
 - X, Y and Z starting positions
 - Check if rotations are in deg or radians. Mark the plots accordingly
 
+- **Stability** Run
+  - Data taken from own software (ie. AQWA/GHS)
+  - Position is input from GHS. Take it from AQWA.
+  - Restoring force of the order 1e-8.
+
 - WSP Dampener:
   - Deadband. How to capture it
 
@@ -35,8 +40,9 @@ Weight, Gyradii etc. Stability is part of ANSYS and will need to be checked to e
 
 ### External Force
 
-- Why do we get 4 values at each time step.
-  - For now, take the final time step iteration value as the main value.
-  - Check that multiple values are not for PMS3, PMS4, X and Y direction.
-- dl-correction term
-  - Do we need this?
+- Perform the above hydrodynamic basic checks prior to producing results
+-
+
+### Animations
+
+- How to load a solved .DAT file results into Workbench to get animations?

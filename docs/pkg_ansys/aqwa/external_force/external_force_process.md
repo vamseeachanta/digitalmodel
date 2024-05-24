@@ -197,3 +197,13 @@ TBA
 
 ??
 ---
+
+## Output
+
+- There are 2 iterations for each timestep.
+  - One iteration purpose is unknown
+  - 2nd iteration purpose is unknown
+
+- dl-correction term
+  - For zero load, zero offset, perform sensitivity analysis to determine the effect of the term
+  - Do we need this term in future. Keep it in programming

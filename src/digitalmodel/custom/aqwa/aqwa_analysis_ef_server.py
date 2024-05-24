@@ -294,12 +294,12 @@ class AqwaEFServer:
         return Force, AddMass, Error
 
     def assign_results_to_df(self, def_pos_idx, Time, result_dict):
-        # columns = ['Time', 'dl_x', 'dl_y', 'velocity_x', 'velocity_y', 'stiffener_force_x', 'dampener_force_x', 'total_force_x', 'stiffener_force_y', 'dampener_force_y', 'total_force_y']
+        # columns = ['Time', 'dl_x', 'dl_y', 'dl_z','velocity_x', 'velocity_y', 'stiffener_force_x', 'dampener_force_x', 'total_force_x', 'stiffener_force_y', 'dampener_force_y', 'total_force_y']
         dl = result_dict['dl']
         CurNodeVel = result_dict['CurNodeVel']
         force_x = result_dict['force_x']
         force_y = result_dict['force_y']
-        result_array = [Time, dl[0], dl[1], CurNodeVel[0], CurNodeVel[1], force_x['stiffness'], force_x['dampener'] , force_x['total'], force_y['stiffness'], force_y['dampener'], force_y['total']]
+        result_array = [Time, dl[0], dl[1], dl[2], CurNodeVel[0], CurNodeVel[1], force_x['stiffness'], force_x['dampener'] , force_x['total'], force_y['stiffness'], force_y['dampener'], force_y['total']]
         result_array = [round(item, 4) for item in result_array]
 
         result_array_idx = len(self.result_df_array[def_pos_idx])

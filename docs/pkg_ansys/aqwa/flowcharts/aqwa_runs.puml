@@ -59,9 +59,22 @@ start
                  - Workbench
                  - AQWA.exe with .dat files
                  - MS DOS
+                 - Python
             end note
 
         :Run AQWA;
+            note right
+                run_filename: *.dat
+                - Noload: NOLD_*.dat
+                - stability/equilibrium: STAB_*.dat
+                - Dynamic: DYNA_*.dat
+                run_script: aqwa_*.bat
+                - Python External Force server: aqwa_efs_*.bat
+                - Python cmd runs: aqwa_cmd_*.bat
+
+            end note
+
+
     }
 
     partition "Postprocess" {
@@ -91,6 +104,7 @@ start
                 - file format may change?
             end note
 
+
         :AQL - Excel Interface;
             note right
              Manual operations to extract & plot
@@ -107,6 +121,13 @@ start
                     - White Space between sets of each data
                 - file format may change?
                 - Many manual operations to extract outputs
+            end note
+
+        :Py - Python;
+            note right
+             scripts:
+             - post_dm
+             - post_au
             end note
 
     }
