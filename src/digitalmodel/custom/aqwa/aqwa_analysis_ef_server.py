@@ -64,7 +64,9 @@ class AqwaEFServer:
         columns = cfg['analysis_settings']['ef_input']['columns']
         
         def_pos_cfg = cfg['analysis_settings']['ef_input']['def_pos']
-        self.result_df_array = [pd.DataFrame(columns=columns)]*len(def_pos_cfg)
+        self.result_df_array = []
+        for idx in range(0, len(def_pos_cfg)):
+            self.result_df_array.append(pd.DataFrame(columns=columns))
 
     def save_result_df(self, cfg, InputFileName):
         basename = os.path.basename(InputFileName)
@@ -278,19 +280,32 @@ class AqwaEFServer:
         Force   = BlankForce(Analysis.NOfStruct)
         Error   = 0
 
-        
+
         def_pos_cfg = self.cfg['analysis_settings']['ef_input']['def_pos']
         for def_pos_idx in range(0, len(def_pos_cfg)):
             def_pos = def_pos_cfg[def_pos_idx]
-            f, a , e = self.uf_wsp_dampener(Analysis,Mode,Stage,Time,TimeStep,Pos,Vel, def_pos, def_pos_idx)
-            Force = Force  + f
-            AddMass = AddMass + a
-            Error = e
+            result_dict = self.wsp_dampener_by_def_pos(Analysis, Time, def_pos)
+
+            Force = Force  + result_dict['Force']
+            AddMass = AddMass + result_dict['AddMass']
+            Error = result_dict['Error']
+            self.assign_results_to_df(def_pos_idx, Time, result_dict)
 
         return Force, AddMass, Error
 
+    def assign_results_to_df(self, def_pos_idx, Time, result_dict):
+        # columns = ['Time', 'dl_x', 'dl_y', 'velocity_x', 'velocity_y', 'stiffener_force_x', 'dampener_force_x', 'total_force_x', 'stiffener_force_y', 'dampener_force_y', 'total_force_y']
+        dl = result_dict['dl']
+        CurNodeVel = result_dict['CurNodeVel']
+        force_x = result_dict['force_x']
+        force_y = result_dict['force_y']
+        result_array = [Time, dl[0], dl[1], CurNodeVel[0], CurNodeVel[1], force_x['stiffness'], force_x['dampener'] , force_x['total'], force_y['stiffness'], force_y['dampener'], force_y['total']]
+        result_array = [round(item, 4) for item in result_array]
 
-    def uf_wsp_dampener(self, Analysis,Mode,Stage,Time,TimeStep,Pos,Vel, def_pos, def_pos_idx):
+        result_array_idx = len(self.result_df_array[def_pos_idx])
+        self.result_df_array[def_pos_idx].loc[result_array_idx] = result_array
+
+    def wsp_dampener_by_def_pos(self, Analysis, Time, def_pos):
         AddMass = BlankAddedMass(Analysis.NOfStruct)
         Force   = BlankForce(Analysis.NOfStruct)
         Error   = 0
@@ -328,13 +343,9 @@ class AqwaEFServer:
         # (BlankForce and BlankAddedMass classes support algebraic operations (+, -, and scalar multiplication)
         Force += ExtraForce
 
-        # columns = ['TimeStep', 'dl_x', 'dl_y', 'velocity_x', 'velocity_y', 'stiffener_force_x', 'dampener_force_x', 'total_force_x', 'stiffener_force_y', 'dampener_force_y', 'total_force_y']
-        result_array = [Time, dl[0], dl[1], CurNodeVel[0], CurNodeVel[1], force_x['stiffness'], force_x['dampener'] , force_x['total'], force_y['stiffness'], force_y['dampener'], force_y['total']]
-        self.result_df_array[def_pos_idx].loc[len(self.result_df_array[def_pos_idx])] = result_array 
-
+        result_dict = {'Force': Force, 'AddMass': AddMass, 'Error': Error, 'dl': dl, 'CurNodeVel': CurNodeVel, 'force_x': force_x, 'force_y': force_y}
         # Now return the results
-
-        return Force,AddMass,Error
+        return result_dict
 
     def get_wsp_dampener_force(self, Time, dof_pos_delta, dof_vel, dir='X'):
         stiffness = {'X': {'dl': [0.15, 0.70, 10], 'k': [0, 7.03e6, 2.8e7]}, 
