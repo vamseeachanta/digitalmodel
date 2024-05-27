@@ -82,18 +82,26 @@ class CathodicProtection():
         final_value = self.assess_coating_breakdown(cfg)['fcf']
 
         deterioration_final_current_density = initial_coated_value * final_value
-        disbonding_final_current_density = initial_uncoated_value * (final_value - 1)
+        disbondment_final_current_density = initial_uncoated_value * (final_value - 1)
 
         deterioration_mean = np.mean([initial_coated_value, deterioration_final_current_density])
-        disbondment_mean = np.mean([initial_coated_value, disbonding_final_current_density])
+        disbondment_mean = np.mean([initial_coated_value, disbondment_final_current_density])
 
-        design_current_density = {'initial': {'coated': initial_coated_value, 'uncoated': initial_uncoated_value},
-            'mean': {'deterioration': {'coated': initial_coated_value, 'uncoated': initial_uncoated_value}, 
-                     'disbondment': {'coated': initial_coated_value, 'uncoated': initial_uncoated_value},},
-            'final': {'deterioration': {'coated': initial_coated_value, 'uncoated': initial_uncoated_value},
-                      'disbondment': {'coated': initial_coated_value, 'uncoated': initial_uncoated_value},}  
-            }
-        
+        design_current_density = {
+        'initial': {
+            'coated': initial_coated_value,
+            'uncoated': initial_uncoated_value
+        },
+        'mean': {
+            'deterioration': round(deterioration_mean, 3),
+            'disbondment': round(disbondment_mean, 3)
+        },
+        'final': {
+            'deterioration': round(deterioration_final_current_density, 3),
+            'disbondment': round(disbondment_final_current_density, 3)
+        }
+    }
+          
         return design_current_density
 
     def get_current_demand(self, cfg, structure_area, current_density):
@@ -107,16 +115,15 @@ class CathodicProtection():
         coated_area = structure_area['coated']
         uncoated_area = structure_area['uncoated']
         
-            
-        initial_demand = coated_area * current_density['initial']['coated'] + uncoated_area * current_density['initial']['uncoated']
-        mean_demand = coated_area * current_density['mean'][coating_breakdown_type]['coated'] + uncoated_area * current_density['mean'][coating_breakdown_type]['uncoated']
-        final_demand = coated_area * current_density['final'][coating_breakdown_type]['coated'] + uncoated_area * current_density['final'][coating_breakdown_type]['uncoated']
+        initial_demand = (coated_area * current_density['initial']['coated'] + uncoated_area * current_density['initial']['uncoated'])
+        mean_demand = (coated_area * current_density['mean'][coating_breakdown_type] + uncoated_area * current_density['mean'][coating_breakdown_type])
+        final_demand = (coated_area * current_density['final'][coating_breakdown_type] + uncoated_area * current_density['final'][coating_breakdown_type])
 
         initial_demand = initial_demand/1000
         mean_demand = mean_demand/1000
         final_demand = final_demand/1000
         
-        current_demand = {'initial': initial_demand,'mean': mean_demand,'final': final_demand}
+        current_demand = {'initial': initial_demand,'mean': round(mean_demand,3),'final': round(final_demand,3)}
 
         return current_demand
 
@@ -144,16 +151,19 @@ class CathodicProtection():
         anode_current = cfg['inputs']['anode_capacity']['anode_current_capacity']
         anode_utilisation = cfg['inputs']['anode_capacity']['anode_utilisation_factor']
         anode_net_weight = cfg['inputs']['anode_capacity']['physical_properties']['net_weight']
-
-        anode_mass_mean = current_demand['mean'] / anode_current * 24 * 365 * design_life / anode_utilisation/anode_net_weight
+        ratio_of_net_weight = cfg['inputs']['anode_capacity']['physical_properties']['ratio_of_gross_to_net_weight']
+        
+        anode_mass_mean = current_demand['mean'] / anode_current * 24 * 365 * design_life / anode_utilisation
+        anode_mass_mean_current = (anode_mass_mean / anode_net_weight)
         anode_mass_initial = current_demand['initial'] / anode_current * 24 * 365 * design_life / anode_utilisation/anode_net_weight
         anode_mass_final = current_demand['final'] / anode_current * 24 * 365 * design_life / anode_utilisation/anode_net_weight
-        anode_mass = {'mean': round(anode_mass_mean, 3) , 'initial': round(anode_mass_initial, 3), 'final': round(anode_mass_final, 3)}
+        anode_mass = {'mean': round(anode_mass_mean, 3) , 'mean_of_mean_current':anode_mass_mean_current,
+                      'initial': round(anode_mass_initial, 3), 'final': round(anode_mass_final, 3)}
         
-        anode_count_mean = math.ceil(anode_mass_mean / anode_capacity['anode_volume'])
-        anode_count_initial = math.ceil(anode_mass_initial / anode_capacity['anode_volume'])
-        anode_count_final = math.ceil(anode_mass_final / anode_capacity['anode_volume'])
-        anode_count = {'mean': anode_count_mean, 'initial': anode_count_initial, 'final': anode_count_final}
+        
+        total_gross_mass_in_kg = (anode_mass_mean * ratio_of_net_weight )
+        total_gross_mass_in_MT = total_gross_mass_in_kg / 1000
+        anode_count = {'total_mass_kg': round(total_gross_mass_in_kg,2), 'total_mass_MT': round(total_gross_mass_in_MT,2)}
         
         anodes_required = {'mass': anode_mass, 'count': anode_count}
         
