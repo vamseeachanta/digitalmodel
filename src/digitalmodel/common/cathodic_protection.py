@@ -157,7 +157,7 @@ class CathodicProtection():
         anode_mass_mean_current = (anode_mass_mean / anode_net_weight)
         anode_mass_initial = current_demand['initial'] / anode_current * 24 * 365 * design_life / anode_utilisation/anode_net_weight
         anode_mass_final = current_demand['final'] / anode_current * 24 * 365 * design_life / anode_utilisation/anode_net_weight
-        anode_mass = {'mean': round(anode_mass_mean, 3) , 'mean_of_mean_current':anode_mass_mean_current,
+        anode_mass = {'mean': round(anode_mass_mean, 3) , 'mean_of_mean_current':round(anode_mass_mean_current,3),
                       'initial': round(anode_mass_initial, 3), 'final': round(anode_mass_final, 3)}
         
         
