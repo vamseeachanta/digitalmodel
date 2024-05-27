@@ -37,6 +37,10 @@ inputs:
       ratio_of_gross_to_net_weight: 1.03 #
       gross_weight: 30.00 # kg
 
+  anode_shape:
+   steel_iron_calomel_voltage: -0.8
+   anode_voltage : -1.09
+  
   design_current:
     input: .csv
 

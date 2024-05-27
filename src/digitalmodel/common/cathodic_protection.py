@@ -32,6 +32,8 @@ class CathodicProtection():
         
         anodes_required = self.get_anodes_required(cfg,breakdown_factor,current_demand,anode_capacity)
         
+        anode_initial_check = self.anode_initial_check(cfg,anode_capacity,breakdown_factor,current_demand, anodes_required)
+        
         my_value = cfg.inputs['design_data']['seawater_max_temperature'] * cfg.inputs['design_data']['design_life']
 
     def assess_coating_breakdown(self, cfg):
@@ -39,6 +41,7 @@ class CathodicProtection():
 
         """
         design_life = cfg['inputs']['design_life']
+        environment_cfg = cfg['inputs']['environment']
         coating_breakdown_cfg = cfg['inputs']['structure']['area']['coating_breakdown']
 
         #TODO - implement yearly breakdown calculations using lookup from inputs
@@ -56,8 +59,9 @@ class CathodicProtection():
 
         fcm = np.mean(cummulative_breakdown_factor)
         fcf = cummulative_breakdown_factor[-1]
-
-        breakdown_factor = {'fcm': fcm, 'fcf': fcf}
+        resistivity = environment_cfg['seawater_resistivity']['input']
+        
+        breakdown_factor = {'resistivity' :resistivity ,'fcm': fcm, 'fcf': fcf}
         return breakdown_factor
 
     def get_structure_area(self, cfg):
@@ -135,11 +139,15 @@ class CathodicProtection():
         anode_cfg = cfg['inputs']['anode_capacity']
         anode_current_capacity = anode_cfg['anode_current_capacity']
         anode_utilisation_factor = anode_cfg['anode_utilisation_factor']
-        
+        anode_length = anode_cfg['physical_properties']['mean_length']
+        anode_width = anode_cfg['physical_properties']['width']
+        anode_height = anode_cfg['physical_properties']['height']
+        anode_weight = anode_cfg['physical_properties']['gross_weight']
         
         volume = anode_cfg['physical_properties']['mean_length'] * anode_cfg['physical_properties']['width'] * anode_cfg['physical_properties']['height']
 
-        anode_capacity = {'anode_volume': volume}
+        anode_capacity = {'anode_length': anode_length, 'anode_width':anode_width, 'anode_height':anode_height,
+                          'anode_gross_weight': anode_weight, 'anode_volume': volume}
         return anode_capacity
     
         
@@ -171,13 +179,54 @@ class CathodicProtection():
 
 
 
-    def anode_initial_check(self, cfg):
+    def anode_initial_check(self, cfg, anode_capacity, breakdown_factor, current_demand,anodes_required):
         """
         This method is used to check the initial anode
         """
-        pass
+        anode_cfg = cfg['inputs']['anode_shape']
+        Delta_E = abs( anode_cfg['steel_iron_calomel_voltage'] - anode_cfg['anode_voltage'] )
+        anode_length_width = anode_capacity['anode_length'] / anode_capacity['anode_width']
+        resistivity = breakdown_factor['resistivity']
+        anode_exposed_area = 2 * (anode_capacity['anode_length'] * anode_capacity['anode_width'] + anode_capacity['anode_width']
+                           * anode_capacity['anode_height'] + anode_capacity['anode_length'] * anode_capacity['anode_height'])
+
+        if anode_length_width > 4:
+            anode_length = anode_capacity['anode_length']
+            anode_width = anode_capacity['anode_width']
+            
+            mean_dimension = np.mean([anode_length, anode_width])
+            mean_dimension = float(mean_dimension) 
+            anode_resistance = resistivity / (2 * mean_dimension)
+        else:
+            anode_resistance = 0.315 * resistivity / math.sqrt(anode_exposed_area)
+
+        invidual_anode_current = Delta_E / anode_resistance
+        
+        total_anode_current = invidual_anode_current * anodes_required['mass']['mean_of_mean_current']
+        
+        if total_anode_current > current_demand['initial'] :
+            total_anode_current_output_check = "Yes"
+        else:
+            total_anode_current_output_check = "No"
+        
+        if total_anode_current_output_check == "Yes":
+            updated_anode_count = " - "
+        else:
+            updated_anode_count = current_demand['initial'] / invidual_anode_current
+        if total_anode_current_output_check == "Yes":
+            updated_anode_weight = " - "
+        else:
+            updated_anode_weight = updated_anode_count * anode_capacity['anode_gross_weight'] / 1000
+
+        anode_initial_check = {'anode_resistance':round(anode_resistance,3), 'individual_anode_current': round(invidual_anode_current,3),
+                               'total_anode_current': round(total_anode_current,3), 'total_current_output_check':total_anode_current_output_check,
+                               'updated_anode_count':round(updated_anode_count,3),'updated_anode-weight':round(updated_anode_weight,1)
+
+                              }
+        return anode_initial_check
 
 
+    
     def anode_final_check(self, cfg):
         
         """
