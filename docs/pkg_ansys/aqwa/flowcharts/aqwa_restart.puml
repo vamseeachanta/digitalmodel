@@ -1,23 +1,23 @@
-@startuml aqwa_restart
+@startwbs aqwa_restart
 scale 3
 skinparam titleBorderRoundCorner 15
 skinparam titleBorderThickness 2
 skinparam titleBorderColor red
 skinparam titleBackgroundColor Tomato
 
+
 title AQWA Restart \nWorkflow
 
-    note right
-        **(IN PROGRESS)**
-        Objective: Provide restart options with following
-        - usage guidelines
-        - minimum data requirements
-    end note
 
 * RESTART
-* RESTART
+    ' note right of RESTART
+    '     **(IN PROGRESS)**
+    '     Objective: Provide restart options with following
+    '     - usage guidelines
+    '     - minimum data requirements
+    ' end note
 
-** Mooring Analysis
+** RESTART
 *** Mooring Forces \n Method: AqwaReader
 *** Structure CoG \n Method: AqwaReader
 
@@ -33,4 +33,4 @@ footer
 %filename()
 end footer
 
-@enduml
+@endwbs
