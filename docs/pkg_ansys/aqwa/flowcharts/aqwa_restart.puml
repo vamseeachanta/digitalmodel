@@ -1,0 +1,36 @@
+@startuml aqwa_restart
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title AQWA Restart \nWorkflow
+
+    note right
+        **(IN PROGRESS)**
+        Objective: Provide restart options with following
+        - usage guidelines
+        - minimum data requirements
+    end note
+
+* RESTART
+* RESTART
+
+** Mooring Analysis
+*** Mooring Forces \n Method: AqwaReader
+*** Structure CoG \n Method: AqwaReader
+
+** RAO Analysis
+*** Damping Values  \n Method: AqwaReader
+*** Damping in %  \n Method: LISFile
+*** RAOs-Motion(m)/Velocity(v), CoG  \n Method: AqwaReader
+*** RAOs-Acceleration(a), CoG  \n Method: LISFile
+*** RAOs-m/v/a, pre-defined Node  \n Method: LISFile
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
