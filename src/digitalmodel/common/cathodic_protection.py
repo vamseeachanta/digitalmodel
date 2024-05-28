@@ -13,7 +13,6 @@ class CathodicProtection():
         else:
             raise (Exception(f"Calculation type: {cfg['inputs']['calculation_type']} not IMPLEMENTED. ... FAIL"))
 
-
         return cfg
 
 
@@ -32,9 +31,8 @@ class CathodicProtection():
         
         anodes_required = self.get_anodes_required(cfg,breakdown_factor,current_demand,anode_capacity)
         
-        anode_initial_check = self.anode_initial_check(cfg,anode_capacity,breakdown_factor,current_demand, anodes_required)
+        anode_initial_check = self.get_anode_initial_check(cfg,anode_capacity,breakdown_factor,current_demand, anodes_required)
         
-        my_value = cfg.inputs['design_data']['seawater_max_temperature'] * cfg.inputs['design_data']['design_life']
 
     def assess_coating_breakdown(self, cfg):
         """
@@ -61,7 +59,7 @@ class CathodicProtection():
         fcf = cummulative_breakdown_factor[-1]
         resistivity = environment_cfg['seawater_resistivity']['input']
         
-        breakdown_factor = {'resistivity' :resistivity ,'fcm': fcm, 'fcf': fcf}
+        breakdown_factor = {'resistivity' :resistivity ,'fcm': round(fcm,3), 'fcf': round(fcf,3)}
         return breakdown_factor
 
     def get_structure_area(self, cfg):
@@ -104,7 +102,7 @@ class CathodicProtection():
             'deterioration': round(deterioration_final_current_density, 3),
             'disbondment': round(disbondment_final_current_density, 3)
         }
-    }
+             }
           
         return design_current_density
 
@@ -139,6 +137,7 @@ class CathodicProtection():
         anode_cfg = cfg['inputs']['anode_capacity']
         anode_current_capacity = anode_cfg['anode_current_capacity']
         anode_utilisation_factor = anode_cfg['anode_utilisation_factor']
+        
         anode_length = anode_cfg['physical_properties']['mean_length']
         anode_width = anode_cfg['physical_properties']['width']
         anode_height = anode_cfg['physical_properties']['height']
@@ -158,6 +157,7 @@ class CathodicProtection():
         design_life = cfg['inputs']['design_life']
         anode_current = cfg['inputs']['anode_capacity']['anode_current_capacity']
         anode_utilisation = cfg['inputs']['anode_capacity']['anode_utilisation_factor']
+        
         anode_net_weight = cfg['inputs']['anode_capacity']['physical_properties']['net_weight']
         ratio_of_net_weight = cfg['inputs']['anode_capacity']['physical_properties']['ratio_of_gross_to_net_weight']
         
@@ -179,7 +179,8 @@ class CathodicProtection():
 
 
 
-    def anode_initial_check(self, cfg, anode_capacity, breakdown_factor, current_demand,anodes_required):
+    def get_anode_initial_check(self, cfg, anode_capacity, breakdown_factor, current_demand,anodes_required):
+
         """
         This method is used to check the initial anode
         """
@@ -188,7 +189,7 @@ class CathodicProtection():
         anode_length_width = anode_capacity['anode_length'] / anode_capacity['anode_width']
         resistivity = breakdown_factor['resistivity']
         anode_exposed_area = 2 * (anode_capacity['anode_length'] * anode_capacity['anode_width'] + anode_capacity['anode_width']
-                           * anode_capacity['anode_height'] + anode_capacity['anode_length'] * anode_capacity['anode_height'])
+                              * anode_capacity['anode_height'] + anode_capacity['anode_length'] * anode_capacity['anode_height'])
 
         if anode_length_width > 4:
             anode_length = anode_capacity['anode_length']
@@ -196,6 +197,7 @@ class CathodicProtection():
             
             mean_dimension = np.mean([anode_length, anode_width])
             mean_dimension = float(mean_dimension) 
+            
             anode_resistance = resistivity / (2 * mean_dimension)
         else:
             anode_resistance = 0.315 * resistivity / math.sqrt(anode_exposed_area)
