@@ -46,7 +46,7 @@ dictitems:
         ratio_of_gross_to_net_weight: 1.03
         gross_weight: 30.0
     anode_shape:
-      Steel_iron_Calomel_voltage: -0.8
+      steel_iron_calomel_voltage: -0.8
       anode_voltage: -1.09
     design_current:
       input: .csv
@@ -64,7 +64,7 @@ dictitems:
     file_name_for_overwrite: app_cathodic_protection_cathodic_protection
     result_folder: C:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\..\results
     log_folder: C:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\..\logs
-    start_time: 2024-05-27 16:50:19.381872
+    start_time: 2024-05-29 10:09:49.050825
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: C:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\../cathodic_protection.yml
