@@ -17,3 +17,7 @@ Resource available:
 
 - For automating workbench tasks
   - Archving files etc.
+
+## External Force
+
+<https://ansyshelp.ansys.com/account/secured?returnurl=/Views/Secured/corp/v241/en/aqwa_ref/aqwaref_ext_forces_server_pythonmod.html>
