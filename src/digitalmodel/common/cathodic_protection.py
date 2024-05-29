@@ -139,7 +139,7 @@ class CathodicProtection():
         volume = anode_cfg['physical_properties']['mean_length'] * anode_cfg['physical_properties']['width'] * anode_cfg['physical_properties']['height']
 
         anode_capacity = {'anode_length': anode_length, 'anode_width':anode_width, 'anode_height':anode_height,
-                          'anode_gross_weight': anode_weight, 'anode_volume': volume,'utilisation_factor':anode_utilisation_factor}
+                          'anode_gross_weight': anode_weight, 'anode_volume': round(volume,3),'utilisation_factor':anode_utilisation_factor}
         return anode_capacity
     
         
@@ -213,7 +213,7 @@ class CathodicProtection():
         else:
             updated_anode_weight = updated_anode_count * anode_capacity['anode_gross_weight'] / 1000
 
-        anode_initial_check = {'delta':Delta_E, 'anode_resistance':round(anode_resistance,3), 'individual_anode_current': round(invidual_anode_current,3),
+        anode_initial_check = {'delta':round(Delta_E,3), 'anode_resistance':round(anode_resistance,3), 'individual_anode_current': round(invidual_anode_current,3),
                                'total_anode_current': round(total_anode_current,3), 'initial_total_anode_output_check':initial_total_current_output_check,
                                'updated_anode_count':round(updated_anode_count,3),'updated_anode-weight':round(updated_anode_weight,1)
 
@@ -230,9 +230,9 @@ class CathodicProtection():
         depleted_anode_mass = anode_capacity['anode_gross_weight'] * (1- anode_capacity['utilisation_factor'])
         depleted_anode_length = anode_capacity['anode_length']* (1- 0.1 * anode_capacity['utilisation_factor'])
 
-        anode_length_width = anode_capacity['anode_length'] / anode_capacity['anode_width']
+        anode_length_width = depleted_anode_length / anode_capacity['anode_width']
         anode_exposed_area = 2*(anode_length_width* anode_capacity['anode_width']+anode_capacity['anode_width']
-                                *anode_capacity['anode_height']+anode_length_width*anode_capacity['anode_height'])
+                                *anode_capacity['anode_height']+anode_length_width *anode_capacity['anode_height'])
         if anode_length_width > 4:
             depleted_anode = depleted_anode_length
             anode_width = anode_capacity['anode_width']
@@ -267,11 +267,7 @@ class CathodicProtection():
                              }
         return anode_final_check
 
-        
-        
-
-        
-
+ 
 
     def get_seawater_resistivity(self, cfg):
         """

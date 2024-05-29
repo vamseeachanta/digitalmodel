@@ -8,7 +8,7 @@ inputs:
     seawater_max_temperature: 14 # °C
     seawater_resistivity:
       input: 0.2547 # or float_value or .csv
-      csv_filename: NULL
+      csv_filename: NULL 
 
   structure:
     material: steel
