@@ -9,7 +9,15 @@ Resource available:
 - General Pythonic interfaces to various ANSYS packages
 - Post processing of results etc.
 
-### Workbench Batch
+### Workbench 
+
+#### General
+
+https://www.youtube.com/watch?v=FIi9_8eFTTg&list=PLOahOE6DpL4qq_QxPHieAeVejzDP1yIYW
+https://www.youtube.com/watch?v=f3N0yM_Wt7w&list=PLICzjIuc4UqH3hllQc1kEF19YoBfAkEBQ
+
+
+#### Batch
 
 <https://github.com/sikvelsigma/ANSYS-WB-Batch-Script/tree/master>
 
