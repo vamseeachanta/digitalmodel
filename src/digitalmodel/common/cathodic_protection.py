@@ -240,12 +240,13 @@ class CathodicProtection():
             mean_dimension = np.mean([depleted_anode,anode_width])
             mean_dimension = float(mean_dimension)
 
-            anode_resistance = breakdown_factor['resistivity']/ (2 * mean_dimension)
+            anode_resistance = breakdown_factor['resistivity'] / (2 * mean_dimension)
         else:
             anode_resistance = 0.315* breakdown_factor['resistivity']/ math.sqrt(anode_exposed_area)
         
         individual_anode_output = anode_initial_check['delta'] / anode_resistance
         total_anode_current_output = individual_anode_output * anodes_required['mass']['mean_of_mean_current']
+        
         if total_anode_current_output >current_demand['final']:
             initial_total_current_output_check = "Yes"
         else:
@@ -273,5 +274,5 @@ class CathodicProtection():
         """
         This method is used to calculate seawater resistivity
         """
-        pass
+        
     
