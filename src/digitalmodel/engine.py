@@ -1,11 +1,11 @@
 import os
 import sys
 
-from assetutilities.common.data import SaveData
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import CopyAndPasteFiles
+from assetutilities.common.utilities import save_application_cfg
 
 from digitalmodel.catenary_riser import catenary_riser
 from digitalmodel.vertical_riser import vertical_riser
@@ -28,7 +28,6 @@ from digitalmodel.common.ship_design import ShipDesign
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.cathodic_protection import CathodicProtection
 
-save_data = SaveData()
 ou = OrcaflexUtilities()
 library_name = "digitalmodel"
 
@@ -106,7 +105,7 @@ def engine(inputfile=None):
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
-    save_cfg(cfg_base=cfg_base)
+    save_application_cfg(cfg_base=cfg_base)
 
     return cfg_base
 
@@ -138,11 +137,3 @@ def validate_arguments_run_methods(inputfile):
             sys.argv.append(inputfile)
     return inputfile
 
-
-def save_cfg(cfg_base):
-    output_dir = cfg_base.Analysis["analysis_root_folder"]
-
-    filename = cfg_base.Analysis["file_name"]
-    filename_path = os.path.join(output_dir, filename)
-
-    save_data.saveDataYaml(cfg_base, filename_path, default_flow_style=False)

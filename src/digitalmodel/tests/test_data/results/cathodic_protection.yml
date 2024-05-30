@@ -1,0 +1,123 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: cathodic_protection
+  inputs:
+    calculation_type: ABS_gn_ships_2018
+    design_life: 5
+    environment:
+      seawater_max_temperature: 14
+      seawater_resistivity:
+        input: 0.2547
+        csv_filename: ~
+    structure:
+      material: steel
+      area:
+        value: 10778
+        coat_percentage: 100
+        coating_breakdown:
+          type: deterioration
+          year:
+          - 1
+          - 2
+          - 3
+          - 3
+          - 5
+          percentage:
+          - 2
+          - 2
+          - 3
+          - 3
+          - 3
+    current_density:
+      initial:
+        coated: 13.5
+        uncoated: 200
+    cathodic_protection: ~
+    anode_capacity:
+      material: aluminium
+      anode_current_capacity: 2500
+      anode_utilisation_factor: 0.825
+      physical_properties:
+        mean_length: 0.65
+        width: 0.125
+        height: 0.13
+        net_weight: 29.0
+        ratio_of_gross_to_net_weight: 1.0345
+        gross_weight: 30.0
+    anode_shape:
+      steel_iron_calomel_voltage: -0.8
+      anode_voltage: -1.09
+    design_current:
+      input: .csv
+  default:
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+      cfg_sensitivities: false
+  Analysis:
+    fe_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\..\results
+    basename: cathodic_protection
+    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\..
+    file_name: cathodic_protection
+    file_name_for_overwrite: cathodic_protection
+    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\..\results
+    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\..\logs
+    start_time: 2024-05-30 11:54:03.522926
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\../cathodic_protection.yml
+  outputs:
+    structure_area:
+      coated: 10778.0
+      uncoated: 0.0
+    breakdown_factor:
+      resistivity: 0.2547
+      fcm: 1.075
+      fcf: 1.137
+    current_density:
+      initial:
+        coated: 13.5
+        uncoated: 200
+      mean:
+        deterioration: 14.425
+        disbondment: 20.45
+      final:
+        deterioration: 15.35
+        disbondment: 27.4
+    current_demand:
+      initial: 145.503
+      mean: 155.473
+      final: 165.442
+    anode_capacity:
+      anode_length: 0.65
+      anode_width: 0.125
+      anode_height: 0.13
+      anode_gross_weight: 30.0
+      anode_volume: 0.01056
+      utilisation_factor: 0.825
+    anodes_required:
+      mass:
+        mean: 3301.681
+        mean_of_mean_current: 113.851
+        initial: 106.55
+        final: 121.151
+      count:
+        total_mass_kg: 3415.59
+        total_mass_MT: 3.42
+    anode_initial_check:
+      delta_E: 0.29
+      anode_resistance: 0.329
+      individual_anode_current: 0.882
+      total_anode_current: 100.463
+      initial_total_anode_output_check: 'No'
+      updated_anode_count: 164.893
+      updated_anode-weight: 4.9
+    anode_final_check:
+      updated_anode_count: 201.426
+      updated_anode_weight: 6.043
+      initial_total_current_output_check: 'No'
+      total_current_output: 93.512
+      individual_anode_output: 0.821
+      anode_resistance: 0.353

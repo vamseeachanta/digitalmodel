@@ -8,7 +8,7 @@ inputs:
     seawater_max_temperature: 14 # °C
     seawater_resistivity:
       input: 0.2547 # or float_value or .csv
-      csv_filename: NULL 
+      csv_filename: NULL
 
   structure:
     material: steel
@@ -34,13 +34,13 @@ inputs:
       width: 0.125 # m
       height: 0.130 # m
       net_weight: 29.00 # kg
-      ratio_of_gross_to_net_weight: 1.03 #
+      ratio_of_gross_to_net_weight: 1.0345 #
       gross_weight: 30.00 # kg
 
   anode_shape:
-   steel_iron_calomel_voltage: -0.8
-   anode_voltage : -1.09
-  
+    steel_iron_calomel_voltage: -0.8
+    anode_voltage: -1.09
+
   design_current:
     input: .csv
 

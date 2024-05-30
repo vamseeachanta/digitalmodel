@@ -35,6 +35,13 @@ class CathodicProtection():
         
         anode_final_check = self.anode_final_check(cfg,anode_capacity,breakdown_factor,anode_initial_check, anodes_required,current_demand)
 
+        cfg['outputs'] = {'structure_area': structure_area, 'breakdown_factor': breakdown_factor,
+                          'current_density': current_density, 'current_demand': current_demand,
+                          'anode_capacity': anode_capacity, 'anodes_required': anodes_required,
+                          'anode_initial_check': anode_initial_check, 'anode_final_check': anode_final_check}
+
+        return cfg
+
     def assess_coating_breakdown(self, cfg):
         """
 
@@ -57,7 +64,9 @@ class CathodicProtection():
             cummulative_breakdown_factor.append(value)
 
         fcm = np.mean(cummulative_breakdown_factor)
+        fcm = round(float(fcm), 4)
         fcf = cummulative_breakdown_factor[-1]
+        fcf = round(float(fcf), 4)
         resistivity = environment_cfg['seawater_resistivity']['input']
         
         breakdown_factor = {'resistivity' :resistivity ,'fcm': round(fcm,3), 'fcf': round(fcf,3)}
@@ -88,7 +97,9 @@ class CathodicProtection():
         disbondment_final_current_density = initial_uncoated_value * (final_value - 1)
 
         deterioration_mean = np.mean([initial_coated_value, deterioration_final_current_density])
+        deterioration_mean = round(float(deterioration_mean), 4)
         disbondment_mean = np.mean([initial_coated_value, disbondment_final_current_density])
+        disbondment_mean = round(float(disbondment_mean), 4)
 
         design_current_density = { 'initial': {'coated': initial_coated_value,'uncoated': initial_uncoated_value},
                  'mean': {  'deterioration': round(deterioration_mean, 3),
@@ -139,7 +150,7 @@ class CathodicProtection():
         volume = anode_cfg['physical_properties']['mean_length'] * anode_cfg['physical_properties']['width'] * anode_cfg['physical_properties']['height']
 
         anode_capacity = {'anode_length': anode_length, 'anode_width':anode_width, 'anode_height':anode_height,
-                          'anode_gross_weight': anode_weight, 'anode_volume': round(volume,3),'utilisation_factor':anode_utilisation_factor}
+                          'anode_gross_weight': anode_weight, 'anode_volume': round(volume,5),'utilisation_factor':anode_utilisation_factor}
         return anode_capacity
     
         
@@ -187,10 +198,10 @@ class CathodicProtection():
         if anode_length_width > 4:
             anode_length = anode_capacity['anode_length']
             anode_width = anode_capacity['anode_width']
-            
+
             mean_dimension = np.mean([anode_length, anode_width])
-            mean_dimension = float(mean_dimension) 
-            
+            mean_dimension = round(float(mean_dimension), 5)
+
             anode_resistance = resistivity / (2 * mean_dimension)
         else:
             anode_resistance = 0.315 * resistivity / math.sqrt(anode_exposed_area)
@@ -213,7 +224,7 @@ class CathodicProtection():
         else:
             updated_anode_weight = updated_anode_count * anode_capacity['anode_gross_weight'] / 1000
 
-        anode_initial_check = {'delta':round(Delta_E,3), 'anode_resistance':round(anode_resistance,3), 'individual_anode_current': round(invidual_anode_current,3),
+        anode_initial_check = {'delta_E':round(Delta_E,3), 'anode_resistance':round(anode_resistance,3), 'individual_anode_current': round(invidual_anode_current,3),
                                'total_anode_current': round(total_anode_current,3), 'initial_total_anode_output_check':initial_total_current_output_check,
                                'updated_anode_count':round(updated_anode_count,3),'updated_anode-weight':round(updated_anode_weight,1)
 
@@ -244,7 +255,7 @@ class CathodicProtection():
         else:
             anode_resistance = 0.315* breakdown_factor['resistivity']/ math.sqrt(anode_exposed_area)
         
-        individual_anode_output = anode_initial_check['delta'] / anode_resistance
+        individual_anode_output = anode_initial_check['delta_E'] / anode_resistance
         total_anode_current_output = individual_anode_output * anodes_required['mass']['mean_of_mean_current']
         
         if total_anode_current_output >current_demand['final']:
@@ -274,5 +285,5 @@ class CathodicProtection():
         """
         This method is used to calculate seawater resistivity
         """
-        
+        pass
     
