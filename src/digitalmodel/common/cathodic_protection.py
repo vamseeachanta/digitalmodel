@@ -295,7 +295,7 @@ class CathodicProtection():
         
         
         df = pd.read_csv(csv_file)
-        df
+        
         
         def calculate_resistivity(temperature, salinity):
             
@@ -306,7 +306,7 @@ class CathodicProtection():
              values = df['Conductance 1/(ohm.cm)'].values
              conductance = griddata(points, values, (temperature, salinity), method='linear')
         
-        # If interpolation result is NaN use nearest neighbor interpolation
+        # If interpolation result is NaN use nearest neighbor
              if np.isnan(conductance):
                  conductance = griddata(points, values, (temperature, salinity), method='nearest')
             else:
@@ -320,5 +320,5 @@ class CathodicProtection():
         salinity = float(input("enter salinity value :"))
         
         resistivity = calculate_resistivity(temperature, salinity)
-        return (resistivity)
+        return resistivity
    
