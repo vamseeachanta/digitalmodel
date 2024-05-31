@@ -1,6 +1,7 @@
 import math
 import numpy as np
 from scipy.interpolate import interp1d
+import pandas as pd
 
 class CathodicProtection():
 
@@ -35,10 +36,13 @@ class CathodicProtection():
         
         anode_final_check = self.anode_final_check(cfg,anode_capacity,breakdown_factor,anode_initial_check, anodes_required,current_demand)
 
+        seawater_resistivity = self.get_seawater_resistivity(cfg)
+        
         cfg['outputs'] = {'structure_area': structure_area, 'breakdown_factor': breakdown_factor,
                           'current_density': current_density, 'current_demand': current_demand,
                           'anode_capacity': anode_capacity, 'anodes_required': anodes_required,
-                          'anode_initial_check': anode_initial_check, 'anode_final_check': anode_final_check}
+                          'anode_initial_check': anode_initial_check, 'anode_final_check': anode_final_check,
+                          'seawater_resistivity':seawater_resistivity}
 
         return cfg
 
@@ -285,5 +289,30 @@ class CathodicProtection():
         """
         This method is used to calculate seawater resistivity
         """
-        pass
+        seawater_cfg = cfg['inputs']['environment']['seawater_resistivity']
+        csv_file = seawater_cfg['csv_filename']
+        
+        
+        df = pd.read_csv(csv_file)
+        df
+        
+        def calculate_resistivity(temperature, salinity):
+            
+            input_check = df[(df['Temperature (deg C)'] == temperature) & (df['Salinity (%)'] == salinity)]
+            
+            if input_check.empty:
+                input_check = df
+                conductance = input_check['Conductance 1/(ohm.cm)'].mean()
+            else:
+                conductance = input_check['Conductance 1/(ohm.cm)'].values[0] 
+        
+            resistivity = 1 / conductance
     
+            return round(resistivity,5)
+        
+        temperature = int(input("enter temperature value :"))
+        salinity = float(input("enter salinity value :"))
+        
+        resistivity = calculate_resistivity(temperature, salinity)
+        return (resistivity)
+   
