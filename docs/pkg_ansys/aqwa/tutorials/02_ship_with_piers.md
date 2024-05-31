@@ -26,7 +26,7 @@ steps for constructing ship_with_piers.scdoc
     - Pier
     - PierBase
     - External Lid
-  - Share topoology between all objects in Pier
+  - Share topology between all objects in Pier
   
 ### Workbench
 
@@ -37,10 +37,10 @@ Steps in workbench are given in this section.
 - Add Hydrodynamic Diffraction
 - Set water depth to 40 m
 - ShipHull: If hull geometry is cut at water plane, Generate Internal Lid
-- Pier: Select Pier and fixed in place
+- Pier, PierStructure: Select Pier and fixed in place
 - PierBase:
   - Surface Type is "Non-Diffracting"
-- External Lid: Set external lid propertie
+- Pier, External Lid: Set external lid properties
   - Surface Type: Abstract Geometry
   - Abstract Geometry: External Lid
   - Lid Damping Factor: 0.02
