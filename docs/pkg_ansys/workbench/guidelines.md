@@ -13,4 +13,4 @@
 - View Menu - Isometric view
   - Click on "Isometric view" to get a 3D view of the model
   - Click multiple times to change this view.
-  - Use the most optimum view per user's discretion.
+  - Use the most optimum view per user's choice.
