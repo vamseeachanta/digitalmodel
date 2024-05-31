@@ -2,6 +2,7 @@ import math
 import numpy as np
 from scipy.interpolate import interp1d
 import pandas as pd
+from scipy.interpolate import griddata
 
 class CathodicProtection():
 
@@ -301,8 +302,13 @@ class CathodicProtection():
             input_check = df[(df['Temperature (deg C)'] == temperature) & (df['Salinity (%)'] == salinity)]
             
             if input_check.empty:
-                input_check = df
-                conductance = input_check['Conductance 1/(ohm.cm)'].mean()
+             points = df[['Temperature (deg C)', 'Salinity (%)']].values
+             values = df['Conductance 1/(ohm.cm)'].values
+             conductance = griddata(points, values, (temperature, salinity), method='linear')
+        
+        # If interpolation result is NaN use nearest neighbor interpolation
+             if np.isnan(conductance):
+                 conductance = griddata(points, values, (temperature, salinity), method='nearest')
             else:
                 conductance = input_check['Conductance 1/(ohm.cm)'].values[0] 
         
@@ -310,7 +316,7 @@ class CathodicProtection():
     
             return round(resistivity,5)
         
-        temperature = int(input("enter temperature value :"))
+        temperature = float(input("enter temperature value :"))
         salinity = float(input("enter salinity value :"))
         
         resistivity = calculate_resistivity(temperature, salinity)
