@@ -5,10 +5,12 @@ inputs:
 
   design_life: 5 # yr
   environment:
-    seawater_max_temperature: 14 # °C
     seawater_resistivity:
-      input: 0.2547 # or float_value or .csv
-      csv_filename: src/digitalmodel/tests/test_data/cathodic_protection/seawater_conductance_with_temperature.csv
+      input: 40 # or float_value or csv. if csv, use temperature & salinity.
+      csv_filename: src/digitalmodel/tests/test_data/cathodic_protection/seawater_conductance_with_temperature.csv0
+      csv_reference: https://github.com/vamseeachanta/digitalmodel/blob/master/docs/cathodic_protection/literature/course_notes_Appendix_A_Cathodic_Protection_Design.pdf
+    seawater_max_temperature: 15 # °C
+    salinity: 2 # ppt
 
   structure:
     material: steel
