@@ -17,16 +17,21 @@ title AQWA Restart \nWorkflow
     '     - minimum data requirements
     ' end note
 
-** RESTART
-*** Mooring Forces \n Method: AqwaReader
-*** Structure CoG \n Method: AqwaReader
+** Hydrodynamic Diffraction
+*** Frequency & direction data
+*** Command: ?
 
-** RAO Analysis
-*** Damping Values  \n Method: AqwaReader
-*** Damping in %  \n Method: LISFile
-*** RAOs-Motion(m)/Velocity(v), CoG  \n Method: AqwaReader
-*** RAOs-Acceleration(a), CoG  \n Method: LISFile
-*** RAOs-m/v/a, pre-defined Node  \n Method: LISFile
+** Stability
+*** Mooring Data & No Load
+*** Command: ?
+
+** Equilibrium
+*** Mooring Data & Wind Data
+*** Command: ?
+
+** Wave Analysis - Time Domain
+*** Mooring Data & Wave Data
+*** Command: ?
 
 footer
 %date("yyyy.MM.dd' at 'HH:mm")

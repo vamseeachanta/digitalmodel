@@ -1,4 +1,4 @@
-@startuml aqwa_general
+@startuml aqwa_highlevel_workflow
 scale 3
 skinparam titleBorderRoundCorner 15
 skinparam titleBorderThickness 2
@@ -10,7 +10,6 @@ title AQWA Highlevel \nWorkflow
 start
 
     note right
-        **(IN PROGRESS)**
         Objective: Provide high-level workflow as follows
         - software access
         - working guidelines
@@ -36,19 +35,19 @@ start
 
     partition "Preprocess: Model Setup" {
 
+        :Workbench UI;
+            note right
+             - visual and helpful
+             - Manual operations
+            - **License** dependency
+            end note
+
         : .dat files;
             note right
             - Stringent format:
                 - i.e. Reference manual provides examples and format
             - Programming (Python, Fortran etc.) or MS DOS Batch 
             - License independent
-            end note
-
-        :Workbench UI;
-            note right
-             - visual and helpful
-             - Manual operations 
-            - **License** dependency
             end note
 
     }
