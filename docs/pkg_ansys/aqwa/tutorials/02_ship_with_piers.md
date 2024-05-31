@@ -26,7 +26,7 @@ steps for constructing ship_with_piers.scdoc
     - Pier
     - PierBase
     - External Lid
-  - Share topoology between all objects in Pier
+  - Share topology between all objects in Pier
   
 ### Workbench
 
