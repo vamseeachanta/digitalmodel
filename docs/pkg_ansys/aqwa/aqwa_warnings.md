@@ -75,3 +75,27 @@ modeling errors will be turned into warnings by this option. Users are advised n
 **Explanation**
 
 - Mass data is provided through either .MSD file or .dat file
+
+### Other Warnings
+
+**** INPUT DATA WARNING **** Without WFRQ in JOB card for AQWA-DRIFT run: Drift frequency responses ONLY in this
+                              analysis
+ ------------------------------------------------------------------------------------------------------------------
+
+**** WARNING **** Previously defined additional structure stiffness information in the hydrodynamic database file
+                   (*.HYD/*.RES) is set to be zero as Stage#2 is required by the current analysis task. New relevant
+                   input in Deck 7 will be used
+ ---------------------------------------------------------------------------------------------------------------------
+
+ **** WARNING **** Previously defined additional stiffness for STR#1 in the hydrodynamic database file (*.HYD/*.RES) is
+                   set to be zero as Stage#2 is required by the current analysis task. New relevant input in Deck 7
+                   will be used.
+
+**** INPUT DATA WARNING **** Additional structure stiffness has been defined for structure#5 , but additional
+                              structure stiffness force at initial position has not been defined
+ ---------------------------------------------------------------------------------------------------------------
+
+**** ANALYSIS WARNING **** Negative generalized damping = -0.68 is detected at frequency =0.04 rad/sec, for the mode
+                            with the 1st 4 dominant motions of Str#1 Z:0.97 , Str#1 RY:0.22 , Str#1 X:0.01 , Str#1
+                            RX:-0.01
+ ----------------------------------------------------------------------------------------------------------------------
