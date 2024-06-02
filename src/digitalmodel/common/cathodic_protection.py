@@ -6,9 +6,17 @@ from scipy.interpolate import griddata
 
 class CathodicProtection():
 
+    
     def __init__(self):
         pass
 
+    def is_float(value):
+        try:
+            float(value)
+            return True
+        except ValueError:
+            return False
+        
     def router(self, cfg):
         if cfg['inputs']['calculation_type'] == 'ABS_gn_ships_2018':
             self.ABS_gn_ships_2018(cfg)
@@ -284,41 +292,42 @@ class CathodicProtection():
                              }
         return anode_final_check
 
- 
-
+    
     def get_seawater_resistivity(self, cfg):
         """
         This method is used to calculate seawater resistivity
         """
-        seawater_cfg = cfg['inputs']['environment']['seawater_resistivity']
-        csv_file = seawater_cfg['csv_filename']
+        seawater_cfg = cfg['inputs']['environment']
+        csv_file = seawater_cfg['seawater_resistivity']['csv_filename']
         
+        temperature = seawater_cfg['temperature']
+        salinity = seawater_cfg['salinity']
+        input_value = seawater_cfg['seawater_resistivity']['input']
         
-        df = pd.read_csv(csv_file)
+        if CathodicProtection.is_float(input_value):
+            resistivity = float(input_value)
+        else:
+            df = pd.read_csv(csv_file)
         
-        
-        def calculate_resistivity(temperature, salinity):
+            def calculate_resistivity(temperature, salinity):
+                input_check = df[(df['Temperature (deg C)'] == temperature) & (df['Salinity (%)'] == salinity)]
             
-            input_check = df[(df['Temperature (deg C)'] == temperature) & (df['Salinity (%)'] == salinity)]
-            
-            if input_check.empty:
-             points = df[['Temperature (deg C)', 'Salinity (%)']].values
-             values = df['Conductance 1/(ohm.cm)'].values
-             conductance = griddata(points, values, (temperature, salinity), method='linear')
+                if input_check.empty:  
+                    points = df[['Temperature (deg C)', 'Salinity (%)']].values
+                    values = df['Conductance 1/(ohm.cm)'].values
+                    conductance = griddata(points, values, (temperature, salinity), method='linear')
         
-        # If interpolation result is NaN use nearest neighbor
-             if np.isnan(conductance):
-                 conductance = griddata(points, values, (temperature, salinity), method='nearest')
-            else:
-                conductance = input_check['Conductance 1/(ohm.cm)'].values[0] 
+                # If interpolation result is NaN use nearest neighbor
+                    if np.isnan(conductance):
+                        conductance = griddata(points, values, (temperature, salinity), method='nearest')
+                else:
+                    conductance = input_check['Conductance 1/(ohm.cm)'].values[0] 
         
-            resistivity = 1 / conductance
+                resistivity = 1 / conductance
     
-            return round(resistivity,5)
+                return round(resistivity,5)
         
-        temperature = float(input("enter temperature value :"))
-        salinity = float(input("enter salinity value :"))
+            resistivity = calculate_resistivity(temperature, salinity)
+            return resistivity
         
-        resistivity = calculate_resistivity(temperature, salinity)
         return resistivity
-   
