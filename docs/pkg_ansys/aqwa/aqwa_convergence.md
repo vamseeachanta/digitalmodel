@@ -4,7 +4,31 @@ Lessons Learnt from AQWA Convergence Studies
 
 ### Summary
 
-TBA
+**Way Forward:**
+
+- For Refresh WB to Command mode, follow below steps
+- Create new folder:
+  - check .dat file using Notepad++ file compare.
+    - Make note of all properies to copy
+      - Mass
+      - Additional damping (frequency independent)
+  - Copy dat file.
+- Restart file for equilibrium analysis
+  - Correct all the mass and damping properties for the FST structure (Done)
+  - Reference HYD file for all structures (i.e. 2, 3 etc) onwards from appropriate file.
+- Restart file for equilibrium analysis
+- Saved 2 dataframes for 2 dampener systems.
+- Plot the results for the dampener system(s) and compare.
+- Run decay tests:
+  - Use POS* to redefine structure positions (if required)
+  - Check against all other work
+- Postprocess
+
+**Long-term corrections**
+
+- Correct mass for all minor strucures (Struts, dampener, bearings etc.)
+- Add nodes for providing accelerations for MOSS
+- Others?
 
 ### Multi Structures (WLNG Project)
 
@@ -25,19 +49,10 @@ Convergence path
 | D05315mm_pms_1pms_<br>z_damp_rigid_jts | (1) Jacket | DCAF Z, RX, RY, RZ | Hinged | 5 Te Mass| Hinged Joints | Stability - &cross;. <br> Time Domain - Needs Fender/Mooring |   |
 | D05315mm_pms_1pms_<br>z_damp_BS_jts | (1) Jacket | DCAF Z, RX, RY, RZ | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain-&cross; |  Time Domain - Needs Fender/Mooring |
 | D05315mm_1pms_fender | (1) Jacket | Fender/Mooring pair <br> DCAF Z, RX, RY, RZ | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: |  |
-| D05315mm_pms_fender | (2) Jackets | Fender/Mooring pair <br> DCAF Z, RX, RY, RZ | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: |  |
+| D05315mm_pms_fender | (2) Jackets | Fender/Mooring pair <br> DCAF Z, RX, RY, RZ | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: | For **analysis** with AQWA restart |
 | D05315mm_pms_ef| (2) Jackets | EF in python <br> DCAF Constraints | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: |  |
 | D05315mm_pms.dat | (2) Jackets | EF in python <br> DCAF Constraints | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: | Prep D05315mm_pms_ef to prep files <br> .HYD, .EQP File <br> perform EF analysis |
 | D05315mm_pms.dat | (2) Jackets | EF in python <br> DCAF Constraints | B/S | 5 Te Mass| Representative | Stability - :heavy_check_mark:. <br> Time Domain - :heavy_check_mark: | Prep D05315mm_pms_ef to prep files <br> .HYD, .EQP File <br> perform EF analysis |
-
-a/ check and copy dat file again.
-b/ Get all the mass and damping properties for the FST structure (Done)
-    - Get HYD data for new structures (i.e. 2, 3 etc) onwards.
-b/ Rerun irregular wave analysis
-c/ Saved 2 dataframes for 2 dampener systems.
-d/ Plot the results for the dampener system(s) and compare.
-d/ POS* run decay tests. Check, D05315mm_pms_fender_decay_test.wbpj for reference (Deck xx)
-e/ Add mass for all other strucures.
 
 ### Fender Model using External Force (Update)
 
