@@ -44,3 +44,11 @@ Search for "NON-DIFFRACTING STRUCTURE"
  ----------------------------------------------------------------------------------------------------------------------
 
 </code>
+
+### 
+
+<code>
+ ELMAXF:SYSTEM LOGIC ERROR#1 - NEL=0 NNSI>0.<code>
+</code>
+
+**Explanation**
