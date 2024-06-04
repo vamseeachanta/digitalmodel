@@ -9,6 +9,7 @@ Instructions to run AQWA and the associated suite of softwares
 
 <img src="flowcharts/aqwa_general.svg" width=400, height=auto/>
 
+
 ### Command Line Method
 
 #### Hydrodynamic Runs

@@ -15,6 +15,7 @@ Lessons Learnt from AQWA Convergence Studies
   - Copy dat file.
 - Restart file for equilibrium analysis
   - Correct all the mass and damping properties for the FST structure (Done)
+  - Delete additional stiffness as required
   - Reference HYD file for all structures (i.e. 2, 3 etc) onwards from appropriate file.
 - Restart file for equilibrium analysis
 - Saved 2 dataframes for 2 dampener systems.
@@ -27,8 +28,46 @@ Lessons Learnt from AQWA Convergence Studies
 **Long-term corrections**
 
 - Correct mass for all minor strucures (Struts, dampener, bearings etc.)
-- Add nodes for providing accelerations for MOSS
+- Add nodes for
+  - Tank accelerations (MOSS)
+  - Jumper arm motions (MDR)
 - Others?
+
+**Architecture**
+
+- Naming comvention need to be simplified.
+  - WFRQ_02PMS_ad010_fst2_l015 : Limited frequency run (Done)
+  - WFRQ_ad010_fst2_l015 : Comprehensive frequency run (Done)
+  - STAT_ad010_fst2_l015 : Equilibrium run (postprocess?)
+  - Analysis Type (WFRQ, STAT/Stability, DYNA ) + Structure (02PMS) + Damping (ad010) + Structure (fst2) + Length (l015)
+        Analysis Type Conventions (2 characters): F_, S_, D_
+        Structure Conventions (5 characters) : 2PMS_, fst2_, l015_? (project specific?)
+        Wave and Current (12 characters) (examples: W01_V01_C01_: ??
+        Damping Conventions (4 charaters) : d00_, d08_, d10_, d22_ (examples)
+          - small d Occurs in middle
+        Frequency Analysis:
+          - Simple : SIMP
+          - Comprehensive : COMP
+
+- Simplify reruns with stage restart
+
+Filelog:
+
+- WFRQ_02PMS_ad010_fst2_l015 : Limited frequency run (Done)
+  - Filename: F_F2L15_d00_SIMP
+  - Filename: F_F2L15_d10_SIMP
+- WFRQ_ad010_fst2_l015 : Comprehensive frequency run (Done)
+  - restart: F_F2L15_d10_COMP
+  - Simplify reruns with stage restart (DONE)
+- STAT_ad010_fst2_l015 : Equilibrium run (postprocess?)
+  - Postprocess (code enhancement?)
+  - restart: S_F2L15_d10_W00V00C00 (Done)
+- DYNA_NOL_MOOR_FST2_L015 : Time domain run No Load, with moorings.
+  - Postprocess (code enhancement?)
+  - Simplify run with stage restart: D_F2L15_d10_W00V00C00
+- DYNA_NOL_fst2_l015 : Time domain run No Load, No moorings.
+  - Postprocess (code enhancement?)
+  - Simplify run with stage restart?
 
 ### Multi Structures (WLNG Project)
 

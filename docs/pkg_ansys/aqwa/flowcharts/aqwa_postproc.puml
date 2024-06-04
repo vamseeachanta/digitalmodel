@@ -11,8 +11,9 @@ title AQWA post process
 * Postprocess
 
 ** Mooring Analysis
-*** Mooring Forces \n Method: AqwaReader
-*** Structure CoG \n Method: AqwaReader
+*** Mooring Forces \n Method: AqwaReader \n summary, iteration plots
+*** Structure CoG \n Method: AqwaReader \n summary, iteration plots
+
 
 ** RAO Analysis
 *** Damping Values  \n Method: AqwaReader

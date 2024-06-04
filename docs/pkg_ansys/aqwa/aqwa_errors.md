@@ -45,10 +45,33 @@ Search for "NON-DIFFRACTING STRUCTURE"
 
 </code>
 
-### 
+###
 
 <code>
  ELMAXF:SYSTEM LOGIC ERROR#1 - NEL=0 NNSI>0.<code>
 </code>
 
 **Explanation**
+
+### TERMINATED WITH ERRORS: ERROR COUNT=    1
+
+Analysis terminated without .MES file
+Error is mentioned in .LIS file
+
+<code>
+ ----------------------------------------
+
+FINISH DATE:03/06/24       TIME:03:36:45
+ Total elapsed time (Seconds): 770774400.00
+ ----------------------------------------
+
+ ***************************************************
+ **** TERMINATED WITH ERRORS: ERROR COUNT=    1 ***
+ ***************************************************
+</code>
+
+**Explanation**
+
+- Filename is too long.
+- The maximum length of the filename is 28 characters (32 with the extension).
+- On Windows, file names are case-insensitive.

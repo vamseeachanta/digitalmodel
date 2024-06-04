@@ -50,7 +50,7 @@ class AqwaReader:
                         df_item = pd.DataFrame(single_file_result[0])
                         df_item['input_file'] = Path(input_file).stem
                         df = pd.concat([df, df_item], axis=0)
-                    self.save_to_csv(df, result_item, cfg)
+                        self.save_to_csv(df, result_item, cfg, input_file)
                     self.inject_to_excel(df, result_item, cfg)
                 elif result_category == 'equilibrium':
                     df = pd.DataFrame.from_dict(single_file_result)
@@ -222,6 +222,10 @@ class AqwaReader:
 
     def process_timeresponse_result(self, input_file, stdout_output):
         df = pd.read_csv(io.BytesIO(stdout_output), encoding='utf8', sep=",|:", dtype={"switch": np.int8}, names=['column1', 'column2'], engine='python')
+
+        if df is None or df.empty:
+            raise Exception(f"Error in reading std output data from {input_file}")
+
         structure_number = df.iloc[1]['column2'].replace('\t', '').replace('"', '').replace('Structure Number ', '')
         third_level = df.iloc[2]['column2'].replace('\t', '').replace('"', '').replace('-', '')
         fourth_level = df.iloc[3]['column2'].replace('\t', '').replace('"', '')
@@ -246,10 +250,15 @@ class AqwaReader:
             cfg_save_to_existing_workbook = {'template_file_name': file_name, 'sheetname': sheetname, 'saved_file_name': file_name, 'if_sheet_exists': 'replace', 'df': df}
             save_data.df_to_sheet_in_existing_workbook(cfg_save_to_existing_workbook)
 
-    def save_to_csv(self, df, result_item, cfg):
+    def save_to_csv(self, df, result_item, cfg, input_file=None):
         save_csv = result_item.get('save_csv', False)
         if save_csv:
             sheetname = result_item['inject_into']['sheetname']
+            if sheetname is None:
+                input_files = cfg['file_management']['input_files']['PLT']
+                if len(input_files) > 1:
+                    sheetname = Path(input_file).stem + '_' + result_item['label']
+                    
             csv_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '.csv')
             df.to_csv(csv_filename, index=False, header=True)
 
