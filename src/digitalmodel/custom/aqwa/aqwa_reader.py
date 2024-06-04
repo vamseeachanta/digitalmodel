@@ -50,16 +50,27 @@ class AqwaReader:
                         df_item = pd.DataFrame(single_file_result[0])
                         df_item['input_file'] = Path(input_file).stem
                         df = pd.concat([df, df_item], axis=0)
-                        self.save_to_csv(df, result_item, cfg, input_file)
+                        save_csv = result_item.get('save_csv', False)
+                        if save_csv:
+                            sheetname = result_item['inject_into']['sheetname']
+                            if sheetname is None:
+                                input_files = cfg['file_management']['input_files']['PLT']
+                                if len(input_files) > 1:
+                                    sheetname = Path(input_file).stem + '_' + result_item['label']
+                            self.save_to_csv(df, result_item, cfg, sheetname)
+
                     self.inject_to_excel(df, result_item, cfg)
                 elif result_category == 'equilibrium':
                     df = pd.DataFrame.from_dict(single_file_result)
                     master_df = pd.concat([master_df, df], axis=0)
 
             if result_category == 'equilibrium':
-                self.save_to_csv(master_df, result_item, cfg)
-                self.inject_to_excel(master_df, result_item, cfg)
+                sheetname = Path(input_file).stem + '_' + result_item['label']
+                if sheetname is None:
+                    sheetname = result_item['label']
 
+                self.save_to_csv(master_df, result_item, cfg, sheetname)
+                self.inject_to_excel(master_df, result_item, cfg)
 
     def get_result_groups(self, input_file, cfg, result_item):
         result_item_dict = {}
@@ -246,21 +257,16 @@ class AqwaReader:
                 raise Exception(f"Inject Into File {file_name} not found for writing summary data")
 
             sheetname = result_item['inject_into']['sheetname']
+            if sheetname is None:
+                sheetname = result_item['label']
 
             cfg_save_to_existing_workbook = {'template_file_name': file_name, 'sheetname': sheetname, 'saved_file_name': file_name, 'if_sheet_exists': 'replace', 'df': df}
             save_data.df_to_sheet_in_existing_workbook(cfg_save_to_existing_workbook)
 
-    def save_to_csv(self, df, result_item, cfg, input_file=None):
-        save_csv = result_item.get('save_csv', False)
-        if save_csv:
-            sheetname = result_item['inject_into']['sheetname']
-            if sheetname is None:
-                input_files = cfg['file_management']['input_files']['PLT']
-                if len(input_files) > 1:
-                    sheetname = Path(input_file).stem + '_' + result_item['label']
-                    
-            csv_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '.csv')
-            df.to_csv(csv_filename, index=False, header=True)
+    def save_to_csv(self, df, result_item, cfg, sheetname):
+
+        csv_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '.csv')
+        df.to_csv(csv_filename, index=False, header=True)
 
     def update_iteration_item_with_master_settings(self, iteration_item, cfg):
         master_settings = cfg.get('master_settings', {})
