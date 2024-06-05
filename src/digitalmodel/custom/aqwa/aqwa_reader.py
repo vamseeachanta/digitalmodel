@@ -39,36 +39,45 @@ class AqwaReader:
 
             master_df = pd.DataFrame()
             result_category = result_item['category']
+
             for input_file in input_files:
-                single_file_result = []
+                input_file_result = []
                 result_item_dict = self.get_result_groups(input_file, cfg, result_item)
-                single_file_result.append(result_item_dict)
+                input_file_result.append(result_item_dict)
 
-                if result_category in ['frequency', 'timeresponse']:
-                    df = pd.DataFrame()
-                    for input_file in input_files:
-                        df_item = pd.DataFrame(single_file_result[0])
-                        df_item['input_file'] = Path(input_file).stem
-                        df = pd.concat([df, df_item], axis=0)
-                        save_csv = result_item.get('save_csv', False)
-                        if save_csv:
-                            sheetname = result_item['inject_into']['sheetname']
-                            if sheetname is None:
-                                input_files = cfg['file_management']['input_files']['PLT']
-                                if len(input_files) > 1:
-                                    sheetname = Path(input_file).stem + '_' + result_item['label']
-                            self.save_to_csv(df, result_item, cfg, sheetname)
+                df_item = pd.DataFrame(result_item_dict)
+                df_item['input_file'] = Path(input_file).stem
+                save_csv = result_item.get('save_csv', False)
+                if save_csv:
+                    sheetname = result_item['inject_into']['sheetname']
+                    if sheetname is None:
+                        sheetname = Path(input_file).stem + '_' + result_item['label']
+                    self.save_to_csv(df_item, result_item, cfg, sheetname)
+                    self.inject_to_excel(df_item, result_item, cfg)
 
-                    self.inject_to_excel(df, result_item, cfg)
-                elif result_category == 'equilibrium':
-                    df = pd.DataFrame.from_dict(single_file_result)
+            # if result_category in ['frequency', 'timeresponse']:
+            #     df = pd.DataFrame()
+            #     for idx in range(0, len(input_files)):
+            #         input_file = input_files[idx]
+            #         df_item = pd.DataFrame(single_file_result[idx])
+            #         df_item['input_file'] = Path(input_file).stem
+            #         df = pd.concat([df, df_item], axis=0)
+            #         save_csv = result_item.get('save_csv', False)
+            #         if save_csv:
+            #             sheetname = result_item['inject_into']['sheetname']
+            #             if sheetname is None:
+            #                 input_files = cfg['file_management']['input_files']['PLT']
+            #                 if len(input_files) > 1:
+            #                     sheetname = Path(input_file).stem + '_' + result_item['label']
+            #             self.save_to_csv(df, result_item, cfg, sheetname)
+
+            #     self.inject_to_excel(df, result_item, cfg)
+
+                if result_category == 'equilibrium':
+                    df = pd.DataFrame.from_dict(input_file_result)
                     master_df = pd.concat([master_df, df], axis=0)
 
-            if result_category == 'equilibrium':
-                sheetname = Path(input_file).stem + '_' + result_item['label']
-                if sheetname is None:
-                    sheetname = result_item['label']
-
+                sheetname = result_item['label']
                 self.save_to_csv(master_df, result_item, cfg, sheetname)
                 self.inject_to_excel(master_df, result_item, cfg)
 
