@@ -22,3 +22,9 @@
  ANSYS AQWA Documentation link
 
 <https://ansyshelp.ansys.com/account/secured?returnurl=/Views/Secured/prod_page.html?pn=Aqwa&pid=Aqwa&lang=en>
+
+### Damping
+
+Frequency analysis: Added damping
+
+This damping may not carry into further restart analysis. This need to be reviewed and added to the restart analysis.

@@ -4,6 +4,18 @@ The software is diverges in dat and workbench routes.
 
 At times working in dat files has significant advantages eg. Working with external-force has many manual steps, easier batch processing, more version control  etc.
 
+### Understanding Workbench
+
+Explanation
+
+- _files\dp0\AQW\AQW\AQ\Analysis\Analysis.dat : A4 analysis .dat file
+- _files\dp0\AQW-1\AQW\AQ\Analysis\Equilibrium.dat : B4 analysis .dat file (Equilibrium or stability analysis)
+- _files\dp0\AQW-2\AQW\AQ\Analysis\TimeResponse.dat : C4 analysis .dat file (time domain analysis)
+
+- Note the above expanation is valid only if no parametric analysis is performed i.e. only 1 design point. If multiple design points are used, the above dp0 reference folder needs to be changed.
+
+![Screenshot](image-2.png)
+
 ### Workbench to .dat
 
 The .dat (in workbnech files ) is created everytime we hit the solve button.

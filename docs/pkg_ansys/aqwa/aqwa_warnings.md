@@ -76,11 +76,21 @@ modeling errors will be turned into warnings by this option. Users are advised n
 
 - Mass data is provided through either .MSD file or .dat file
 
-### Other Warnings
+### Without WFRQ in JOB card for AQWA-DRIFT run
+
+<code>
 
 **** INPUT DATA WARNING **** Without WFRQ in JOB card for AQWA-DRIFT run: Drift frequency responses ONLY in this
                               analysis
  ------------------------------------------------------------------------------------------------------------------
+
+</code>
+
+**Explanation**
+
+- When running drift analysis, **the WFRQ card is required to import damping**?
+
+### Damping Related Warnings
 
 **** WARNING **** Previously defined additional structure stiffness information in the hydrodynamic database file
                    (*.HYD/*.RES) is set to be zero as Stage#2 is required by the current analysis task. New relevant
@@ -99,3 +109,9 @@ modeling errors will be turned into warnings by this option. Users are advised n
                             with the 1st 4 dominant motions of Str#1 Z:0.97 , Str#1 RY:0.22 , Str#1 X:0.01 , Str#1
                             RX:-0.01
  ----------------------------------------------------------------------------------------------------------------------
+
+**Explanation**
+
+- Definition of damping is missing or overwritten by the program. Review damping section document.
+
+### TBA
