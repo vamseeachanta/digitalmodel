@@ -6,7 +6,9 @@ THe basic model checks
 
 ### Hydrostatic
 
-Weight, Gyradii etc. Stability is part of ANSYS and will need to be checked to ensure runs are as expected.
+- Weight, Gyradii etc. 
+- Stability is part of ANSYS and will need to be checked to ensure runs are as expected.
+- From raw model, automatically correct the 
 
 ### Hydrodynamic
 
