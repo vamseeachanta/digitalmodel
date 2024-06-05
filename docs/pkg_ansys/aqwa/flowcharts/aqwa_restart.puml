@@ -20,31 +20,31 @@ title AQWA Restart \nWorkflow
 ** Stage 1: 
 *** Geometric Definition and Static Environment
 *** Input Decks: 1 to 5
-*** Command: ?
+*** Command: RESTART  1  5
 
 ** Stage 2: 
 *** Analysis: Radiation/Diffraction
 *** Input Decks: 6 to 8
 *** Frequency & direction data
-*** Command: ?
+*** Command: RESTART  2  3       RESFILE
 
 ** Stage 3: 
 *** Analysis: Radiation/Diffraction
 *** Input Decks: 6 to 8 as reqiuired
 *** Frequency & direction data
-*** Command: ?
+*** Command: RESTART  4  5       RESFILE
 
 ** Stage 4: 
 *** Analysis: Analysis Environment
 *** Input Decks: 9 to 18 as required
 *** Extensive analysis data
-*** Command: Can we refer **2 to 5 ** and avoid repeat of geometry definintion?
+*** Command: RESTART  4  5       RESFILE
 
 ** Stage 5: 
 *** Analysis: Motion Analysis and Post-processing
 *** Input Decks: 9 to 18 as required
 *** TBA
-*** Command: ?
+*** Command: RESTART  4  5       RESFILE
 
 ** Stage 6: 
 *** Analysis: Post-processing of loads on TUBE elements
