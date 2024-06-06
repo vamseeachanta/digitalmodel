@@ -1,4 +1,4 @@
-@startuml aqwa_runs
+@startuml aqwa_runs_automation
 scale 3
 skinparam titleBorderRoundCorner 15
 skinparam titleBorderThickness 2

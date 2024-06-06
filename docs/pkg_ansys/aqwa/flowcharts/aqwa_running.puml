@@ -1,0 +1,79 @@
+@startuml aqwa_running
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title AQWA Running
+
+start
+
+    note right
+        **(IN PROGRESS)**
+        Objective: Current running status with future developments
+        - #TODO: add logging for AQWA tools
+        Currently application very light on logging
+    end note
+
+    partition "Preprocess: Model Setup" {
+
+        :TBA;
+
+    }
+
+    partition "Run AQWA" {
+        :Run AQWA in command line;
+            note right
+                run_script: run_aqwa_*.bat
+                - Python External Force server: aqwa_efs_*.bat
+                - Python cmd runs: aqwa_cmd_*.bat
+                    modify aqwa_run
+            end note
+
+    }
+
+    partition "Postprocess" {
+            note right
+            TBA
+            end note
+
+        :Collect Errors & Warnings (#TODO);
+            note right
+             read from .MES
+             Collect errors and warnings 
+             from individual files
+             Summarize in a single file
+            end note
+
+        :Data Extract - aqwareader;
+            note right
+             scripts:
+             - input files: aqr_*.yml
+             - run_post_dm.bat
+             (#TODO get COG for all structures. Only 1 structure is currently supported)
+            end note
+
+        :Data Extract - .LIS;
+            note right
+             - input files: lis_*.yml
+             - run_post_lis.bat
+
+            end note
+
+        :Visualizations - Python;
+            note right
+             - input files: vis_*.yml
+             - run_post_au
+            end note
+
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
