@@ -28,3 +28,16 @@
 Frequency analysis: Added damping
 
 This damping may not carry into further restart analysis. This need to be reviewed and added to the restart analysis.
+These are all DECK 7 - entiries.
+
+FIAM - Frequency independent added mass
+FIDA - Frequency independent added mass
+
+- FIDP - Frequency independent damping
+- FIDD - Frequency independent damping
+
+For restart runs, FIDP and FIDD are typically imported from previous analysis when using WFRQ in DRIF analysis
+
+FIDP,FIDD,  - Works only for diffraction analysis
+DDEP (and MDIN) ? works only for static analysis.
+

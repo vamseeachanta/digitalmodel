@@ -9,7 +9,6 @@ Instructions to run AQWA and the associated suite of softwares
 
 <img src="flowcharts/aqwa_general.svg" width=400, height=auto/>
 
-
 ### Command Line Method
 
 #### Hydrodynamic Runs
@@ -48,3 +47,18 @@ Using below command, the error is thrown:
  ----------------------------------------------------------------------------------------
 
 **<span style="color:red">WHere to get the HYDRODYNAMIC DATA file Workbench run??</span>**
+
+### Restart
+
+OPTIONS CONV NASF
+OPTIONS NOST
+OPTIONS RDEP REST END
+
+CONV: Convergence criteria will be used
+NASF: Additional Structural stiffness matrix will not be included in the analysis
+NOST: No statics
+RDEP: Starting position will be taken from .EQP/.RES file
+REST: Restart run will be specified
+
+WFRQ: Aqwa-Drift by default runs only drift frequency motions. WFRQ will include wave frequency motions
+

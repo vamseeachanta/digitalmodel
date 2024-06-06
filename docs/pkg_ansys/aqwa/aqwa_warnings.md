@@ -88,7 +88,11 @@ modeling errors will be turned into warnings by this option. Users are advised n
 
 **Explanation**
 
-- When running drift analysis, **the WFRQ card is required to import damping**?
+- When running drift analysis, the WFRQ JOB card is used as follows. **Note** that this only adds damping to the wave fequency.
+
+<code>
+JOB AQWA  DRIF  WFRQ  c07a21bd1a5b2414c4c6f713d4d6cd2fbf73b23f
+</code>
 
 ### Damping Related Warnings
 

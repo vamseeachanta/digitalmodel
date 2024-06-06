@@ -15,7 +15,7 @@ This document summarizes the AQWA typical errors and the way to troubleshoot the
 
 Search for "NON-DIFFRACTING STRUCTURE"
 <code>
-**** INPUT DATA ERROR **** READING DECK 2: NON-DIFFRACTING STRUCTURE #2 CANNOT BE IN AN INTERACTING SET
+ ---------------------------------------------------------------- **** INPUT DATA ERROR ***READING DECK 2: NON-DIFFRACTING STRUCTURE #2 CANNOT BE IN AN INTERACTING SET
  ---------------------------------------------------------------------------------------------------------
 
 </code>
@@ -35,14 +35,12 @@ Search for "NON-DIFFRACTING STRUCTURE"
 <code>
 **** ERROR **** ABORTING- SOLUTION DIVERGED ON STRUCTURE 3 in X-Surge at time=4.80 step #48
  --------------------------------------------------------------------------------------------
-
 **** ERROR **** YOUR TIME-STEP IS PROBABLY TOO BIG. For this time-step(0.100 secs) the natural periods of the system
                  throughout the analysis MUST BE GREATER THAN 1.00 seconds. i.e. Frequency LESS THAN 6.283 rad/sec.
                  PLEASE - Do NOT contact support unless you have: 1.Checked the system natural frequencies/periods.
                  2.Re-run with a smaller timestep. Support will require the results of these investigations BEFORE
                  replying
  ----------------------------------------------------------------------------------------------------------------------
-
 </code>
 
 ###
@@ -88,6 +86,18 @@ FINISH DATE:03/06/24       TIME:03:36:45
                                     USE FREQUENCY *INDEPENDENT* INPUT. E.G.FIDP,FIDD.
 </code>
 
+**Explanation**
+
+- Background:
+  - Error occurs when using the following options:
+    - RESTART  4  5
+    - RESTART  5  5
+
+- Resolution:
+  - Use frequency independent damping options
+    - FIDP?
+    - FIDD?
+
 <code>
  **** ERROR **** CHKAD0: - CONVTH - T/H CONVOLUTION ERROR.
                  The low frequency added mass/damping (deck 9) has
@@ -96,6 +106,18 @@ FINISH DATE:03/06/24       TIME:03:36:45
 
                  USE FREQUENCY INDEPENDENT ADDITIONAL ADDED
                  MASS/DAMPING. (See FIAM,FIDA,FIDP,FIDD input)
+</code>
+**Explanation**
+
+- Background:
+  - Error occurs when using the following options:
+    - RESTART  1  5
+
+- Resolution:
+  - if running DRIF analysis, ensure WFRQ is used
+<code>
+
+JOB AQWA  DRIF  WFRQ  c07a21bd1a5b2414c4c6f713d4d6cd2fbf73b23f
 </code>
 
 **Explanation**
