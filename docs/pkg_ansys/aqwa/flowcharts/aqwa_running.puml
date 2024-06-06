@@ -25,7 +25,7 @@ start
     partition "Run AQWA" {
         :Run AQWA in command line;
             note right
-                run_script: run_aqwa_*.bat
+                run_script: run_aqwa_*.bat 
                 - Python External Force server: aqwa_efs_*.bat
                 - Python cmd runs: aqwa_cmd_*.bat
                     modify aqwa_run
