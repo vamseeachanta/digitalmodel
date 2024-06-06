@@ -10,13 +10,13 @@ dictitems:
         input: 40
         csv_filename: src/digitalmodel/tests/test_data/cathodic_protection/seawater_conductance_with_temperature.csv
         csv_reference: https://github.com/vamseeachanta/digitalmodel/blob/master/docs/cathodic_protection/literature/course_notes_Appendix_A_Cathodic_Protection_Design.pdf
-      temperature: 15
-      salinity: 2
+      temperature: 20
+      salinity: 10
     structure:
       material: steel
       area:
         value: 10778
-        coat_percentage: 100
+        coat_percentage: 80
         coating_breakdown:
           type: deterioration
           year:
@@ -59,21 +59,21 @@ dictitems:
         output: true
       cfg_sensitivities: false
   Analysis:
-    fe_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\..\results
+    fe_folder: .\results
     basename: cathodic_protection
-    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\..
-    file_name: cathodic_protection
-    file_name_for_overwrite: cathodic_protection
-    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\..\results
-    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\..\logs
-    start_time: 2024-06-06 11:35:18.113637
+    analysis_root_folder: .
+    file_name: cathodic_protection_20c
+    file_name_for_overwrite: cathodic_protection_20c
+    result_folder: .\results
+    log_folder: .\logs
+    start_time: 2024-06-06 11:41:20.008634
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\../cathodic_protection.yml
+    CustomInputFile: .\cathodic_protection_20c.yml
   outputs:
     structure_area:
-      coated: 10778.0
-      uncoated: 0.0
+      coated: 8622.4
+      uncoated: 2155.5999999999995
     breakdown_factor:
       resistivity: 40
       fcm: 1.075
@@ -89,7 +89,7 @@ dictitems:
         deterioration: 15.35
         disbondment: 27.4
     current_demand:
-      initial: 145.503
+      initial: 547.5224
       mean: 155.473
       final: 165.442
     anode_capacity:
@@ -101,11 +101,11 @@ dictitems:
       utilisation_factor: 0.825
     anodes_required:
       mass:
-        initial: 106.55
+        initial: 400.944
         mean: 113.851
         final: 121.151
       count:
-        initial: 107
+        initial: 401
         mean: 114
         final: 122
     anode_initial_check:
@@ -114,8 +114,8 @@ dictitems:
       individual_anode_current: 0.006
       total_anode_current: 0.64
       initial_total_anode_output_check: 'No'
-      updated_anode_count: 25895.973
-      updated_anode-weight: 776.9
+      updated_anode_count: 97445.588
+      updated_anode-weight: 2923.4
     anode_final_check:
       updated_anode_count: 31633.459
       updated_anode_weight: 949.004

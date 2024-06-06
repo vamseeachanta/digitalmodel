@@ -1,3 +1,4 @@
+import os
 import math
 import numpy as np
 from scipy.interpolate import interp1d
@@ -47,13 +48,39 @@ class CathodicProtection():
 
         seawater_resistivity = self.get_seawater_resistivity(cfg)
         
-        cfg['outputs'] = {'structure_area': structure_area, 'breakdown_factor': breakdown_factor,
+        outputs_dict = {'structure_area': structure_area, 'breakdown_factor': breakdown_factor,
                           'current_density': current_density, 'current_demand': current_demand,
                           'anode_capacity': anode_capacity, 'anodes_required': anodes_required,
                           'anode_initial_check': anode_initial_check, 'anode_final_check': anode_final_check,
                           'seawater_resistivity':seawater_resistivity}
 
+        cfg['outputs'] = outputs_dict
+        self.save_csv_output(cfg)
+
         return cfg
+
+    def save_csv_output(self, cfg):
+        outputs_dict = cfg['outputs']
+
+        anode_count_initial_kg = outputs_dict['anodes_required']['count']['initial']
+        anode_count_mean_kg = outputs_dict['anodes_required']['count']['mean']
+        anode_count_final_kg = outputs_dict['anodes_required']['count']['final']
+        
+        anode_mass_initial_kg = outputs_dict['anodes_required']['mass']['initial']
+        anode_mass_mean_kg = outputs_dict['anodes_required']['mass']['mean']
+        anode_mass_final_kg = outputs_dict['anodes_required']['mass']['final']
+
+        dict = {'anode_count_initial_kg': anode_count_initial_kg, 'anode_count_mean_kg': anode_count_mean_kg,
+                'anode_count_final_kg': anode_count_final_kg, 'anode_mass_initial_kg': anode_mass_initial_kg,
+                'anode_mass_mean_kg': anode_mass_mean_kg, 'anode_mass_final_kg': anode_mass_final_kg}
+        df = pd.DataFrame(dict, index=[0])
+        
+        result_folder = cfg['Analysis']['result_folder']
+        filename = cfg['Analysis']['file_name'] + '.csv'
+        filename_with_path = os.path.join(result_folder, filename)
+        
+        df.to_csv(filename_with_path, index=False)
+        
 
     def assess_coating_breakdown(self, cfg):
         """
@@ -177,24 +204,21 @@ class CathodicProtection():
         
         anode_net_weight = cfg['inputs']['anode_capacity']['physical_properties']['net_weight']
         ratio_of_net_weight = cfg['inputs']['anode_capacity']['physical_properties']['ratio_of_gross_to_net_weight']
-        
+
+        anode_mass_initial = current_demand['initial'] / anode_current * 24 * 365 * design_life / anode_utilisation
         anode_mass_mean = current_demand['mean'] / anode_current * 24 * 365 * design_life / anode_utilisation
-        anode_mass_mean_current = (anode_mass_mean / anode_net_weight)
-        anode_mass_initial = current_demand['initial'] / anode_current * 24 * 365 * design_life / anode_utilisation/anode_net_weight
-        anode_mass_final = current_demand['final'] / anode_current * 24 * 365 * design_life / anode_utilisation/anode_net_weight
-        anode_mass = {'mean': round(anode_mass_mean, 3) , 'mean_of_mean_current':round(anode_mass_mean_current,3),
-                      'initial': round(anode_mass_initial, 3), 'final': round(anode_mass_final, 3)}
+        anode_mass_final = current_demand['final'] / anode_current * 24 * 365 * design_life / anode_utilisation
         
+        anode_mass_initial_count = anode_mass_initial / anode_net_weight
+        anode_mass_mean_count = anode_mass_mean / anode_net_weight
+        anode_mass_final_count = anode_mass_final / anode_net_weight
         
-        total_gross_mass_in_kg = (anode_mass_mean * ratio_of_net_weight )
-        total_gross_mass_in_MT = total_gross_mass_in_kg / 1000
-        anode_count = {'total_mass_kg': round(total_gross_mass_in_kg,2), 'total_mass_MT': round(total_gross_mass_in_MT,2)}
+        anode_mass = {'initial': round(anode_mass_initial_count, 3), 'mean': round(anode_mass_mean_count, 3), 'final': round(anode_mass_final_count , 3)}   
+        anode_count = {'initial': math.ceil(anode_mass_initial_count), 'mean': math.ceil(anode_mass_mean_count), 'final': math.ceil(anode_mass_final_count  )}
         
         anodes_required = {'mass': anode_mass, 'count': anode_count}
         
         return anodes_required
-
-
 
     def get_anode_initial_check(self, cfg, anode_capacity, breakdown_factor, current_demand,anodes_required):
 
@@ -221,7 +245,7 @@ class CathodicProtection():
 
         invidual_anode_current = Delta_E / anode_resistance
         
-        total_anode_current = invidual_anode_current * anodes_required['mass']['mean_of_mean_current']
+        total_anode_current = invidual_anode_current * anodes_required['mass']['mean']
         
         if total_anode_current > current_demand['initial'] :
             initial_total_current_output_check = "Yes"
@@ -269,7 +293,7 @@ class CathodicProtection():
             anode_resistance = 0.315* breakdown_factor['resistivity']/ math.sqrt(anode_exposed_area)
         
         individual_anode_output = anode_initial_check['delta_E'] / anode_resistance
-        total_anode_current_output = individual_anode_output * anodes_required['mass']['mean_of_mean_current']
+        total_anode_current_output = individual_anode_output * anodes_required['mass']['mean']
         
         if total_anode_current_output >current_demand['final']:
             initial_total_current_output_check = "Yes"
