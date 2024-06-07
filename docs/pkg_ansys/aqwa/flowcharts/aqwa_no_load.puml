@@ -55,7 +55,7 @@ start
 
         :Equilibrium Analysis;
             note right
-                Static analysis
+                Static/stability analysis
                 filename: S_F2L15HSMR.dat
                 <code>
                 OPTIONS PBIS PRST 
