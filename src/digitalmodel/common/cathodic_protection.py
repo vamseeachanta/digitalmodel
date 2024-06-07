@@ -70,17 +70,20 @@ class CathodicProtection():
         anode_mass_mean_kg = outputs_dict['anodes_required']['mass']['mean']
         anode_mass_final_kg = outputs_dict['anodes_required']['mass']['final']
 
-        dict = {'anode_count_initial_kg': anode_count_initial_kg, 'anode_count_mean_kg': anode_count_mean_kg,
+        output_summary = {'anode_count_initial_kg': anode_count_initial_kg, 'anode_count_mean_kg': anode_count_mean_kg,
                 'anode_count_final_kg': anode_count_final_kg, 'anode_mass_initial_kg': anode_mass_initial_kg,
                 'anode_mass_mean_kg': anode_mass_mean_kg, 'anode_mass_final_kg': anode_mass_final_kg}
-        df = pd.DataFrame(dict, index=[0])
-        
+        df = pd.DataFrame(output_summary, index=[0])
+
         result_folder = cfg['Analysis']['result_folder']
         filename = cfg['Analysis']['file_name'] + '.csv'
         filename_with_path = os.path.join(result_folder, filename)
-        
+
         df.to_csv(filename_with_path, index=False)
-        
+
+        cfg['outputs']['summary'] = output_summary
+
+        return cfg
 
     def assess_coating_breakdown(self, cfg):
         """
