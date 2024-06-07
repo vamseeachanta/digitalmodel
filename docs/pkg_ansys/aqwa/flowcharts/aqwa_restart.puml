@@ -1,4 +1,4 @@
-@startwbs aqwa_restart
+@startuml aqwa_restart
 scale 3
 skinparam titleBorderRoundCorner 15
 skinparam titleBorderThickness 2
