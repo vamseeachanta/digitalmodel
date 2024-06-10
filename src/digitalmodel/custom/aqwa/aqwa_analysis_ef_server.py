@@ -280,6 +280,7 @@ class AqwaEFServer:
         Force   = BlankForce(Analysis.NOfStruct)
         Error   = 0
 
+        self.print_heartbeat(Time)
 
         def_pos_cfg = self.cfg['analysis_settings']['ef_input']['def_pos']
         for def_pos_idx in range(0, len(def_pos_cfg)):
@@ -299,7 +300,7 @@ class AqwaEFServer:
         CurNodeVel = result_dict['CurNodeVel']
         force_x = result_dict['force_x']
         force_y = result_dict['force_y']
-        result_array = [Time, dl[0], dl[1], dl[2], CurNodeVel[0], CurNodeVel[1], force_x['stiffness'], force_x['dampener'] , force_x['total'], force_y['stiffness'], force_y['dampener'], force_y['total']]
+        result_array = [Time, dl[0], dl[1], dl[2], CurNodeVel[0], CurNodeVel[1], CurNodeVel[2], force_x['stiffness'], force_x['dampener'] , force_x['total'], force_y['stiffness'], force_y['dampener'], force_y['total']]
         result_array = [round(item, 4) for item in result_array]
 
         result_array_idx = len(self.result_df_array[def_pos_idx])
@@ -380,3 +381,6 @@ class AqwaEFServer:
         return force
 
 
+    def print_heartbeat(self, Time):
+        if Time % 50 == 0:
+            print(f"analysis Time: {Time} s")

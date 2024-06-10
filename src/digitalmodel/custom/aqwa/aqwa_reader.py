@@ -45,11 +45,19 @@ class AqwaReader:
                 result_item_dict = self.get_result_groups(input_file, cfg, result_item)
                 input_file_result.append(result_item_dict)
 
-                df_item = pd.DataFrame(result_item_dict)
+                try:
+                    df_item = pd.DataFrame(result_item_dict)
+                except Exception as e:
+                    if 'you must pass an index' in str(e):
+                        df_item = pd.DataFrame(result_item_dict, index = [0])
+                    else:
+                        raise e
+                    
+                
                 df_item['input_file'] = Path(input_file).stem
                 save_csv = result_item.get('save_csv', False)
                 if save_csv:
-                    sheetname = result_item['inject_into']['sheetname']
+                    sheetname = result_item['inject_into'].get('sheetname', None)
                     if sheetname is None:
                         sheetname = Path(input_file).stem + '_' + result_item['label']
                     self.save_to_csv(df_item, result_item, cfg, sheetname)

@@ -10,9 +10,15 @@ title AQWA post process
 
 * Postprocess
 
+' Post processing improvements:
+' Automatically run the scripts to generate the results
+' Automatically find number of structures and moorings
+' Automatically find the number of RAOs
+' Generate required tables, charts and plots
+
 ** Mooring Analysis
-*** Mooring Forces \n Method: AqwaReader \n summary, iteration plots
-*** Structure CoG \n Method: AqwaReader \n summary, iteration plots
+*** Structure CoG \n Method: AqwaReader \n Output: summary, iteration plots \n Dev Status: Done
+*** Mooring Forces \n Method: AqwaReader \n Output: summary, iteration plots \n Dev Status: Done
 
 
 ** RAO Analysis

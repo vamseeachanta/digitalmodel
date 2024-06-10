@@ -31,9 +31,10 @@ AQWA can sometimes be have convergence issues. Lessons learnt from AQWA Converge
 - Add nodes for
   - Tank accelerations (MOSS)
   - Jumper arm motions (MDR)
+- Time step sensivity (basecase: 0.1s, sensivities: 0.05s, 0.025s)
 - Others?
 
-- Simplify reruns with stage restart
+- Simplify reruns with stage restart (ongoing)
 
 Filelog:
 
