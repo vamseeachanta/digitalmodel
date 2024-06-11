@@ -1,0 +1,33 @@
+@startuml plate-buckling
+skinparam titleBorderRoundCorner 14
+skinparam titleBorderThickness 1
+skinparam titleBorderColor black
+skinparam titleBackgroundColor white
+
+title plate buckling structure
+
+start
+
+:Input - Dimensions;
+:Input - Loads;
+:Calculation - Stress;
+:Buckling Checks;
+
+if (Acceptable) then
+    :Proceed to Next Step;
+else
+    :Revise Inputs;
+endif
+
+stop
+
+
+footer
+
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
+
+
