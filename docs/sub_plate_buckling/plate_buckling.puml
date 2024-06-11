@@ -14,8 +14,10 @@ start
 :Buckling Checks;
 
 if (Acceptable) then
+    ->Yes;
     :Proceed to Next Step;
 else
+    ->No;
     :Revise Inputs;
 endif
 
@@ -23,6 +25,7 @@ stop
 
 
 footer
+
 
 %date("yyyy.MM.dd' at 'HH:mm")
 %filename()
