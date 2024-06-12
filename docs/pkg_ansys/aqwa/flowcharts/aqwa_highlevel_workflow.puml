@@ -19,35 +19,36 @@ start
 
         :.dat files;
             note right
+            - No License Req.
             define geometry format directly 
             i.e. nodes, elements
             end note
 
         :SpaceClaim;
             note right
+            - **License** Req.
+             Import from various software (or)
              Prepare geometry from scratch
-            - good features
-            - learning takes time and practice
-            - **License** dependency
             end note
 
     }
 
     partition "Preprocess: Model Setup" {
 
-        :Workbench UI;
-            note right
-             - visual and helpful
-             - Manual operations
-            - **License** dependency
-            end note
-
         : .dat files;
             note right
-            - Stringent format:
-                - i.e. Reference manual provides examples and format
-            - Programming (Python, Fortran etc.) or MS DOS Batch 
-            - License independent
+            - No License Req.
+            - Manual. Note Stringent format
+            - Programming 
+              - assetutilities au_*.yml
+              - run_prep_*.bat
+            end note
+
+        :Workbench UI;
+            note right
+            - **License** Req.
+            - visual and helpful
+            - Manual operations
             end note
 
     }
@@ -57,10 +58,11 @@ start
 
         note right
             Tools:
+            - **License** Req.
             - Workbench
             - AQWA.exe with .dat files
-            - Batch file
-            - **License** dependency
+             - Batch (run_aqwa.bat)
+             - External force batch (run_aqwa_ef.bat)
         end note
 
     }
@@ -74,40 +76,28 @@ start
 
         :AQWAReader;
             note right
-                Tools:
-                 - AQWAReader (.csv files)
-                    - Pros: Official support
-                    - Cons: Too many csv files
+            - AQWAReader (.csv files)
+            - run_post_dm.bat
+            - aqr_*.yml
             end note
 
         :AQWA output file (.LIS);
             note right
              Reading/Programming from .LIS files
-             Pros:
-                - Programming to get single shot at complete data 
-             Cons:
-                - multiple tables for single set of data
-                    - Headers are repeated
-                    - White Space between sets of each data
-                - file format may change?
+            - run_post_dm.bat
+            - lis_*.yml
             end note
 
         :AQL - Excel Interface;
             note right
-             Manual operations to extract & plot
+             None
             end note
 
         :Workbench - UI;
             note right
-             Manual operations to extract & plot
-             Pros:
-                - Good/killer graphics and 3D plots etc 
-             Cons:
-                - Limited 
-                    - Headers are repeated
-                    - White Space between sets of each data
-                - file format may change?
-                - Many manual operations to extract outputs
+            - Dummy geometry
+            - Find process
+            - Do this manually until its use is clear
             end note
 
     }
