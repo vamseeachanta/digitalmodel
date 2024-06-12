@@ -69,15 +69,9 @@ start
              - EF batch : run_aqwa_ef.bat
         end note
 
-
     }
 
     partition "Postprocess" {
-            note right
-                Tools:
-                 - MS DOS
-                 - Programming (Python) for .LIS files
-            end note
 
         :AQWAReader;
             note right
@@ -101,8 +95,8 @@ start
         :Workbench - UI;
             note right
             - Dummy geometry
-            - Find process
-            - Do this manually until its use is clear
+            - **Prepare process**
+            - Manual process
             end note
 
     }
