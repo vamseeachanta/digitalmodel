@@ -53,17 +53,22 @@ start
 
     }
 
-    partition "Run" {
-        :Run AQWA;
-
+    partition "Run AQWA" {
+        :Workbench UI;
         note right
             Tools:
             - **License** Req.
-            - Workbench
-            - AQWA.exe with .dat files
-             - Batch (run_aqwa.bat)
-             - External force batch (run_aqwa_ef.bat)
         end note
+
+        :Batch Mode;
+        note right
+            Tools:
+            - **License** Req.
+            - AQWA.exe with .dat files
+             - Batch :run_aqwa.bat
+             - EF batch : run_aqwa_ef.bat
+        end note
+
 
     }
 
