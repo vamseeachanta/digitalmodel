@@ -23,14 +23,21 @@ AQWA can sometimes be have convergence issues. Lessons learnt from AQWA Converge
 - Run decay tests:
   - Use POS* to redefine structure positions (if required)
   - Check against all other work
-- Postprocess
+- Postprocess Improvements:
+  - improve labels for output columns coming out of Aqwa reader
+    - eg: "Position of COG" to "CoG"
+    - others?
+    - for _EF run, add a flowchart
+    - distinguish postprocessing between summary (ending value) and timetrace
 
 **Long-term corrections**
 
-- Correct mass for all minor strucures (Struts, dampener, bearings etc.)
-- Add nodes for
-  - Tank accelerations (MOSS)
-  - Jumper arm motions (MDR)
+- Model improvements
+  - Flare out the springs to have more stability
+  - Correct mass for all minor strucures (Struts, dampener, bearings etc.)
+  - Add nodes for
+    - Tank accelerations (MOSS)
+    - Jumper arm motions (MDR)
 - Time step sensivity (basecase: 0.1s, sensivities: 0.05s, 0.025s)
 - Others?
 

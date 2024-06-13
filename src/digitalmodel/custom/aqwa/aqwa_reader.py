@@ -149,12 +149,36 @@ class AqwaReader:
 
             if change_of_data['reference'] == 'start':
                 reference = values[0]
+                values = [value - reference for value in values]
             elif change_of_data['reference'] == 'end':
                 reference = values[-1]
+                values = [value - reference for value in values]
             elif change_of_data['reference'] == 'mean':
                 reference = values.mean()
+                values = [value - reference for value in values]
+            elif change_of_data['reference'] == 'transform':
+                result_keys = list(result_plt_1d_item.keys())
+                if 'COG_in X direction' in result_keys[1]:
+                    idx = 0
+                elif 'COG_in Y direction' in result_keys[1]:
+                    idx = 1
+                elif 'COG_in Z direction' in result_keys[1]:
+                    idx = 2
+                elif 'COG_about X axis' in result_keys[1]:
+                    idx = 3
+                elif 'COG_about Y axis' in result_keys[1]:
+                    idx = 4
+                elif 'COG_about Z axis' in result_keys[1]:
+                    idx = 5
+                else:
+                    raise Exception(f"Invalid result key {result_keys[1]}")
 
-            values = [value - reference for value in values]
+                cfg_transform = change_of_data['transform']
+                values = [value * cfg_transform['scale'][idx] + cfg_transform['shift'][idx] for value in values]
+
+            else:
+                print(f"Invalid reference {change_of_data['reference']}")
+                return change_result_plt_1d_item
 
             change_data_key = data_key.replace(change_of_data['label_substitution']['before'], change_of_data['label_substitution']['after'])
             column_1_key = list(result_plt_1d_item.keys())[0]
