@@ -1,0 +1,27 @@
+basename: plate_buckling
+
+inputs:
+  calculation_type: ABS_gn_ships_2018 # DNV_rp_b401_2011, DNV_rp_b401_2021_05, ABS_gn_ships_2018
+
+  plate_1:
+    length: 2.69
+    breadth: 0.70
+    thickness: 0.014
+    water_depth: 40
+    yield_strength: 34
+    poission_ratio: 0.30
+    young_modulus: 30450
+    longtudinal_stress: 0.5
+    shear_stress: 0.7
+    transverse_stress: 0.5
+    buckling_coefficient: 4.0  
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
+
+Analysis:
+  fe_folder: NULL

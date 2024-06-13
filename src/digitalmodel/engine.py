@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 
 from assetutilities.common.data import SaveData
 from assetutilities.common.yml_utilities import ymlInput
@@ -27,6 +28,7 @@ from digitalmodel.custom.orcaflex_installation import OrcInstallation
 from digitalmodel.common.ship_design import ShipDesign
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.cathodic_protection import CathodicProtection
+from digitalmodel.common.plate_buckling import PlateBuckling
 
 save_data = SaveData()
 ou = OrcaflexUtilities()
@@ -43,6 +45,9 @@ def engine(inputfile=None):
 
     basename = cfg["basename"]
     application_manager = ConfigureApplicationInputs(basename)
+    
+    logging.debug("cfg before configuring: %s", cfg)
+    
     application_manager.configure(cfg, library_name)
     cfg_base = application_manager.cfg
 
@@ -102,6 +107,11 @@ def engine(inputfile=None):
     elif basename == "cathodic_protection":
         cp = CathodicProtection()
         cfg_base = cp.router(cfg_base)
+
+    elif basename == "plate_buckling":
+        cp = PlateBuckling()
+        cfg_base = cp.router(cfg_base)
+    
 
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
