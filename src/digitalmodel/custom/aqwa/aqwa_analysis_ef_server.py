@@ -349,19 +349,26 @@ class AqwaEFServer:
         return result_dict
 
     def get_wsp_dampener_force(self, Time, dof_pos_delta, dof_vel, dir='X'):
-        stiffness = {'X': {'dl': [0.15, 0.70, 10], 'k': [0, 7.03e6, 2.8e7]}, 
-                    'Y': {'dl': [0.15, 0.70, 10], 'k': [0, 14.06e6, 5.6e7]}}
+        stiffness = {'X': {'dl': [0.15, 0.70, 10], 'k': [1, 7.03e6, 2.8e7]}, 
+                    'Y': {'dl': [0.15, 0.70, 10], 'k': [1, 14.06e6, 5.6e7]}}
         c = {'X': 3.75E+06, 'Y': 7.51E+06}
 
         if abs(dof_pos_delta) > 1:
             pass
 
-        if abs(dof_pos_delta) < stiffness[dir]['dl'][0]:
-            stiffness_force = -stiffness[dir]['k'][0] * dof_pos_delta
-        elif abs(dof_pos_delta) < stiffness[dir]['dl'][1]:
-            stiffness_force = -stiffness[dir]['k'][1] * dof_pos_delta
+        stiffness_force = 0
+        dof_pos_delta_abs = abs(dof_pos_delta)
+        if dof_pos_delta_abs < stiffness[dir]['dl'][0]:
+            stiffness_force = stiffness[dir]['k'][0] * dof_pos_delta_abs
+        elif dof_pos_delta_abs < stiffness[dir]['dl'][1]:
+            stiffness_force = stiffness[dir]['k'][0] * stiffness[dir]['dl'][0]
+            stiffness_force = stiffness_force + stiffness[dir]['k'][1] * (dof_pos_delta_abs - stiffness[dir]['dl'][0])
         else:
-            stiffness_force = -stiffness[dir]['k'][2] * dof_pos_delta
+            stiffness_force = stiffness[dir]['k'][0] * stiffness[dir]['dl'][0]
+            stiffness_force = stiffness_force + stiffness[dir]['k'][1] * stiffness[dir]['dl'][1]
+            stiffness_force = stiffness_force + stiffness[dir]['k'][2] * (dof_pos_delta_abs - stiffness[dir]['dl'][1])
+
+        stiffness_force = -stiffness_force
 
         dampener_force = c[dir] * (abs(dof_vel)**0.6)
         if dof_vel > 0:
@@ -383,4 +390,4 @@ class AqwaEFServer:
 
     def print_heartbeat(self, Time):
         if Time % 50 == 0:
-            print(f"analysis Time: {Time} s")
+            logging.info(f"analysis Time: {Time} s")
