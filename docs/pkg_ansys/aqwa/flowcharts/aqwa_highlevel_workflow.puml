@@ -31,6 +31,13 @@ start
              Prepare geometry from scratch
             end note
 
+        :FreeCAD;
+            note right
+            - No License Req.
+             Import from various software (or)
+             Prepare geometry from scratch
+            end note
+
     }
 
     partition "Preprocess: Model Setup" {

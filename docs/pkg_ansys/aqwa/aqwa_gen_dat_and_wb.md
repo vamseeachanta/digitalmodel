@@ -33,8 +33,14 @@ To import data from an Aqwa solver input file:
 
 - Attach a geometry, or a dummy geometry, to the system and open the Aqwa editor.
   - Can we suppress existing geometry and only keep other geometry?
+  - Spacecliam geometry did not import properly. Explore if we can use nuetral CAD format files?
+  
 
 - Perform analysis.
+
+Reference:
+
+- [AQWA User Manual](https://www.sharcnet.ca/Software/Ansys/16.2.3/en-us/help/aqwa/aqwa_user.pdf), Section 5.12
 
 ### Communications
 
