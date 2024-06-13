@@ -11,7 +11,7 @@ Standardizing file preperation helps to:
 
 <img src="flowcharts/aqwa_naming_.svg" width=400, height=auto/>
 
-#### Filenaming Conventions
+#### .DAT Filenaming Conventions
 
 - The maximum length of the filename is 28 characters (32 with the extension).
 - On Windows, file names are case-insensitive.
@@ -21,9 +21,14 @@ Naming comvention need to be simplified.
 **#TODO** : convert to table and schematic for easier reference
 
 - Analysis Type Conventions (2 characters):
-  - Frequency Analysis: F_
-  - Static Analysis: S_
-  - Dynamic Analysis: D_
+  - Frequency Analysis:
+    - F_ : Prefix for Frequency Analysis
+    - F_S_* : Limited no.of Frequency used. Quick analysis for first pass sanity checks
+    - F_C_* : Comprehensive frequency analysis. Used for final results.
+  - Static Analysis:
+    - S_ : Prefix for Static Analysis
+  - Dynamic Analysis:
+    - D_ : Prefix for Dynamic Analysis
 
 - WFRQ_02PMS_ad010_fst2_l015 : Limited frequency run (Done)
 - WFRQ_ad010_fst2_l015 : Comprehensive frequency run (Done)

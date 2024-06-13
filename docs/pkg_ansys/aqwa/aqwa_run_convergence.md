@@ -26,19 +26,19 @@ AQWA can sometimes be have convergence issues. Lessons learnt from AQWA Converge
 - Postprocess Improvements:
   - improve labels for output columns coming out of Aqwa reader
     - eg: "Position of COG" to "CoG"
-    - others?
+    - add other structures for CoG
     - for _EF run, add a flowchart
-    - distinguish postprocessing between summary (ending value) and timetrace
+    - distinguish postprocessing between summary (ending value) and time/iteration progression
 
 **Long-term corrections**
 
 - Model improvements
-  - Flare out the springs to have more stability
-  - Correct mass for all minor strucures (Struts, dampener, bearings etc.)
-  - Add nodes for
+  - Flare out the springs to have more stability (Done)
+  - Correct elevation, geometry, mass for all minor strucures (Struts, dampener, bearings etc.)
+  - Add nodes for:
     - Tank accelerations (MOSS)
     - Jumper arm motions (MDR)
-- Time step sensivity (basecase: 0.1s, sensivities: 0.05s, 0.025s)
+- Time step sensivity (basecase: 0.1s, sensitivities: 0.05s, 0.025s)
 - Others?
 
 - Simplify reruns with stage restart (ongoing)
