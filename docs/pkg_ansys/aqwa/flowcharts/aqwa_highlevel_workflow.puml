@@ -13,6 +13,11 @@ start
         Objective: Provide high-level workflow as follows
         - software access
         - working guidelines
+    Running all batches:
+    - Goto command miniconda powershell
+    - change to relevant folder
+    - run_all.bat
+    - temp.bat (run specific batches)
     end note
 
     partition "Preprocess: Geometry" {
