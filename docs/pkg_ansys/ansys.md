@@ -38,3 +38,7 @@ Resource available:
 ## External Force
 
 <https://ansyshelp.ansys.com/account/secured?returnurl=/Views/Secured/corp/v241/en/aqwa_ref/aqwaref_ext_forces_server_pythonmod.html>
+
+### Python Interface
+
+<https://innovationspace.ansys.com/product/intro-to-python/>
