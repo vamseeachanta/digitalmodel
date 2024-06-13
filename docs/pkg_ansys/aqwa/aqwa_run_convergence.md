@@ -27,6 +27,7 @@ AQWA can sometimes be have convergence issues. Lessons learnt from AQWA Converge
   - improve labels for output columns coming out of Aqwa reader
     - eg: "Position of COG" to "CoG"
     - add other structures for CoG
+      - Users can use the data in .dat file to find out the number of structures and articulations and use it in Aqwareader. cards STRC, FLIN, NLIN etc.
     - for _EF run, add a flowchart
     - distinguish postprocessing between summary (ending value) and time/iteration progression
 
