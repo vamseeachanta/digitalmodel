@@ -353,9 +353,6 @@ class AqwaEFServer:
                     'Y': {'dl': [0.15, 0.70, 10], 'k': [1, 14.06e6, 5.6e7]}}
         c = {'X': 3.75E+06, 'Y': 7.51E+06}
 
-        if abs(dof_pos_delta) > 1:
-            pass
-
         stiffness_force = 0
         dof_pos_delta_abs = abs(dof_pos_delta)
         if dof_pos_delta_abs < stiffness[dir]['dl'][0]:
@@ -368,7 +365,8 @@ class AqwaEFServer:
             stiffness_force = stiffness_force + stiffness[dir]['k'][1] * stiffness[dir]['dl'][1]
             stiffness_force = stiffness_force + stiffness[dir]['k'][2] * (dof_pos_delta_abs - stiffness[dir]['dl'][1])
 
-        stiffness_force = -stiffness_force
+        if dof_pos_delta > 0:
+            stiffness_force = -stiffness_force
 
         dampener_force = c[dir] * (abs(dof_vel)**0.6)
         if dof_vel > 0:
