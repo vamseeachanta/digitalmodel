@@ -12,13 +12,14 @@ from assetutilities.common.data import ReadData
 from assetutilities.common.data import SaveData
 from assetutilities.common.update_deep import update_deep_dictionary
 from assetutilities.common.file_management import FileManagement
-
+from assetutilities.common.data_exploration import DataExploration
 from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
 
 fm = FileManagement()
 rd = ReadData()
 save_data = SaveData()
 au = AqwaUtilities()
+de = DataExploration()
 
 class AqwaReader:
 
@@ -52,8 +53,7 @@ class AqwaReader:
                         df_item = pd.DataFrame(result_item_dict, index = [0])
                     else:
                         raise e
-                    
-                
+
                 df_item['input_file'] = Path(input_file).stem
                 save_csv = result_item.get('save_csv', False)
                 if save_csv:
@@ -61,33 +61,16 @@ class AqwaReader:
                     if sheetname is None:
                         sheetname = Path(input_file).stem + '_' + result_item['label']
                     self.save_to_csv(df_item, result_item, cfg, sheetname)
+                    self.save_statistics(cfg, df_item, sheetname)
                     self.inject_to_excel(df_item, result_item, cfg)
 
-            # if result_category in ['frequency', 'timeresponse']:
-            #     df = pd.DataFrame()
-            #     for idx in range(0, len(input_files)):
-            #         input_file = input_files[idx]
-            #         df_item = pd.DataFrame(single_file_result[idx])
-            #         df_item['input_file'] = Path(input_file).stem
-            #         df = pd.concat([df, df_item], axis=0)
-            #         save_csv = result_item.get('save_csv', False)
-            #         if save_csv:
-            #             sheetname = result_item['inject_into']['sheetname']
-            #             if sheetname is None:
-            #                 input_files = cfg['file_management']['input_files']['PLT']
-            #                 if len(input_files) > 1:
-            #                     sheetname = Path(input_file).stem + '_' + result_item['label']
-            #             self.save_to_csv(df, result_item, cfg, sheetname)
+                # if result_category == 'equilibrium':
+                #     df = pd.DataFrame.from_dict(input_file_result)
+                #     master_df = pd.concat([master_df, df], axis=0)
 
-            #     self.inject_to_excel(df, result_item, cfg)
-
-                if result_category == 'equilibrium':
-                    df = pd.DataFrame.from_dict(input_file_result)
-                    master_df = pd.concat([master_df, df], axis=0)
-
-                sheetname = result_item['label']
-                self.save_to_csv(master_df, result_item, cfg, sheetname)
-                self.inject_to_excel(master_df, result_item, cfg)
+            sheetname = result_item['label']
+            self.save_to_csv(master_df, result_item, cfg, sheetname)
+            self.inject_to_excel(master_df, result_item, cfg)
 
     def get_result_groups(self, input_file, cfg, result_item):
         result_item_dict = {}
@@ -255,9 +238,11 @@ class AqwaReader:
         third_level = df.iloc[2]['column2'].replace('\t', '').replace('"', '')
         fourth_level = df.iloc[3]['column2'].replace('\t', '').replace('"', '')
 
-        value = float(df.iloc[-1]['column2'])
+        iteration = [float(item) for item in list(df[5:-1]['column1'])]
+        value = [float(item) for item in list(df[5:-1]['column2'])]
         value_label = third_level + '_'+ fourth_level
-        result = {'input_file': str(input_file), 'structure_number': structure_number, value_label: value}
+        result = {'iteration': iteration, value_label: value}
+
         return result
 
     def process_frequency_result(self, input_file, stdout_output):
@@ -308,6 +293,11 @@ class AqwaReader:
 
         csv_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '.csv')
         df.to_csv(csv_filename, index=False, header=True)
+
+    def save_statistics(self, cfg, df, sheetname):
+        statistics_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '_statistics.csv')
+        df_statistics = de.get_df_statistics(df)
+        df_statistics.to_csv(statistics_filename, index=True, header=True)
 
     def update_iteration_item_with_master_settings(self, iteration_item, cfg):
         master_settings = cfg.get('master_settings', {})
