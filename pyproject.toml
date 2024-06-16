@@ -64,3 +64,9 @@ strict = true
     [[tool.mypy.overrides]]
     module                 = "feedparser"
     ignore_missing_imports = true
+
+[tool.ruff.lint]
+select = ["ALL"]
+
+[tool.ruff]
+line-length = 120

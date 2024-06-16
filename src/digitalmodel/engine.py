@@ -1,39 +1,39 @@
 import os
 import sys
 
-from assetutilities.common.data import SaveData
-from assetutilities.common.yml_utilities import ymlInput
-from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
-from assetutilities.common.data import CopyAndPasteFiles
+from assetutilities.common.data import CopyAndPasteFiles, SaveData
+from assetutilities.common.update_deep import AttributeDict
+from assetutilities.common.yml_utilities import ymlInput
 
-from digitalmodel.catenary_riser import catenary_riser
-from digitalmodel.vertical_riser import vertical_riser
-from digitalmodel.orcaflex_analysis import orcaflex_analysis
 from digitalmodel.aqwa import Aqwa
-from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
-from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
-from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
-from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
-    DNVRPH103_hydrodynamics_rectangular,
-)
+from digitalmodel.catenary_riser import catenary_riser
+from digitalmodel.common.cathodic_protection import CathodicProtection
 from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
     DNVRPH103_hydrodynamics_circular,
 )
-from digitalmodel.custom.orcaflex_file_management import OrcaflexFileManagement
-from digitalmodel.custom.rao_analysis import RAOAnalysis
-from digitalmodel.custom.orcaflex_installation import OrcInstallation
-from digitalmodel.common.ship_design import ShipDesign
+from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
+    DNVRPH103_hydrodynamics_rectangular,
+)
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
-from digitalmodel.common.cathodic_protection import CathodicProtection
+from digitalmodel.common.ship_design import ShipDesign
+from digitalmodel.custom.orcaflex_file_management import OrcaflexFileManagement
+from digitalmodel.custom.orcaflex_installation import OrcInstallation
+from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
+from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+
+from digitalmodel.custom.rao_analysis import RAOAnalysis
 from digitalmodel.custom.transformation import Transformation
+from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
+from digitalmodel.orcaflex_analysis import orcaflex_analysis
+from digitalmodel.vertical_riser import vertical_riser
 
 save_data = SaveData()
 ou = OrcaflexUtilities()
 library_name = "digitalmodel"
 
 
-def engine(inputfile=None):
+def engine(inputfile: str = None) -> dict:
     inputfile = validate_arguments_run_methods(inputfile)
 
     cfg = ymlInput(inputfile, updateYml=None)
@@ -45,7 +45,6 @@ def engine(inputfile=None):
     application_manager = ConfigureApplicationInputs(basename)
     application_manager.configure(cfg, library_name)
     cfg_base = application_manager.cfg
-
 
     if basename in ["simple_catenary_riser", "catenary_riser"]:
         cfg_base = catenary_riser(cfg_base)
@@ -92,9 +91,6 @@ def engine(inputfile=None):
     elif basename == "ship_design":
         ship_design = ShipDesign()
         cfg_base = ship_design.router(cfg_base)
-    elif basename == "ship_design_aqwa":
-        ship_design = ShipDesign()
-        cfg_base = ship_design.router(cfg_base)
     elif basename == "fatigue_analysis":
         fatigue_analysis = FatigueAnalysis()
         cfg_base = fatigue_analysis.router(cfg_base)
@@ -121,11 +117,7 @@ def validate_arguments_run_methods(inputfile):
     """
 
     if len(sys.argv) > 1 and inputfile is not None:
-        raise (
-            Exception(
-                "2 Input files provided via arguments & function. Please provide only 1 file ... FAIL"
-            )
-        )
+        raise (Exception("2 Input files provided via arguments & function. Please provide only 1 file ... FAIL"))
 
     if len(sys.argv) > 1:
         if not os.path.isfile(sys.argv[1]):
@@ -145,6 +137,6 @@ def save_cfg(cfg_base):
     output_dir = cfg_base.Analysis["analysis_root_folder"]
 
     filename = cfg_base.Analysis["file_name"]
-    filename_path = os.path.join(output_dir, 'results', filename)
+    filename_path = os.path.join(output_dir, "results", filename)
 
     save_data.saveDataYaml(cfg_base, filename_path, default_flow_style=False)
