@@ -33,3 +33,6 @@ dependencies:
       - xlsxwriter
       - rainflow
       - pydantic
+      - black
+      - isort
+      - poetry

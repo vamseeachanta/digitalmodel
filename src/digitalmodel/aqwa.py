@@ -1,6 +1,9 @@
+# Third party imports
 from assetutilities.common.update_deep import update_deep_dictionary
-from digitalmodel.custom.aqwa.aqwa_pre_process import AqwaPreProcess
+
+# Reader imports
 from digitalmodel.custom.aqwa.aqwa_post_process import AqwaPostProcess
+from digitalmodel.custom.aqwa.aqwa_pre_process import AqwaPreProcess
 
 a_post = AqwaPostProcess()
 a_pre = AqwaPreProcess()
@@ -18,6 +21,7 @@ class Aqwa:
             a_pre.pre_process_router(cfg)
 
         if cfg['type']['analysis']:
+            # Reader imports
             from digitalmodel.custom.aqwa.aqwa_analysis import AqwaAnalysis
             a_analysis = AqwaAnalysis()
             a_analysis.analysis_router(cfg)
@@ -50,5 +54,6 @@ class Aqwa:
                 cfg[keychain[0]][group_index] = update_deep_dictionary(cfg[keychain[0]][group_index], group.copy())
 
         return cfg
+
 
 

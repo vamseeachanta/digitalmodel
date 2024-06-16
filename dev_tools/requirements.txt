@@ -22,3 +22,6 @@ pytest
 deepdiff
 rainflow
 pydantic
+black
+isort
+poetry
