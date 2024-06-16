@@ -21,7 +21,6 @@ from digitalmodel.custom.orcaflex_file_management import OrcaflexFileManagement
 from digitalmodel.custom.orcaflex_installation import OrcInstallation
 from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
-
 from digitalmodel.custom.rao_analysis import RAOAnalysis
 from digitalmodel.custom.transformation import Transformation
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
