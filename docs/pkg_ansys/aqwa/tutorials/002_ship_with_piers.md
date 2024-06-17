@@ -2,6 +2,14 @@
 
 The key steps for running ship with Piers is given below.
 
+### Background
+
+![mooring close snapshot](ship_pier_mooring.png)
+
+![mooring close snapshot](ship_pier_mooring1.png)
+
+![fender close Snapshot](ship_pier_fender.png)
+
 ### Geometry
 
 steps for constructing ship_with_piers.scdoc
