@@ -1,19 +1,20 @@
-import os
 import logging
+import os
 import subprocess
 
-from digitalmodel.common.orcaflex_model_utilities import OrcaflexModelUtilities
+from assetutilities.common.data import SaveData
 
 from assetutilities.common.data import SaveData
+
 save_data = SaveData()
 
 try:
+    # Third party imports
     import OrcFxAPI
 except:
     print("OrcFxAPI not available")
-from collections import OrderedDict
 
-from assetutilities.common.yml_utilities import ymlInput
+# Third party imports
 from assetutilities.common.file_management import FileManagement
 
 fm = FileManagement()
@@ -21,7 +22,7 @@ fm = FileManagement()
 
 class AqwaUtilities:
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def is_license_available(self):

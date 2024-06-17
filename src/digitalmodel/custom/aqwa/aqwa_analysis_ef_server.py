@@ -1,23 +1,26 @@
-import os
-import math
-import pandas as pd
-
+# Standard library imports
 import logging
+import os
 
+# Third party imports
+import pandas as pd
+from assetutilities.common.data_exploration import DataExploration
 from assetutilities.common.file_management import FileManagement
 
-from digitalmodel.custom.aqwa.ef_server.AqwaServerMgr import *
+# Reader imports
 from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
+from digitalmodel.custom.aqwa.ef_server.AqwaServerMgr import *
 
 fm = FileManagement()
 au = AqwaUtilities()
+de = DataExploration()
 
 class AqwaEFServer: 
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def ef_server_router(self, cfg):
+    def ef_server_router(self, cfg: dict) -> None:
 
         ########################################################################################################
         # 
@@ -34,7 +37,8 @@ class AqwaEFServer:
             number_of_client_runs = len(self.cfg['file_management']['input_files']['DAT'])
 
         if number_of_client_runs == 0:
-            raise ValueError("No client runs specified. Exiting.")
+            logging.info("No AQWA client runs specified. Exiting...")
+            raise ValueError("No AQWA client runs specified. Exiting...")
 
         aqwa_client_directory = cfg['Analysis']['file_management_input_directory']
         Server = AqwaUserForceServer(port=0, dir_path=aqwa_client_directory)
@@ -73,8 +77,20 @@ class AqwaEFServer:
         output_file_basename = basename.split('.')[0]
         def_pos_cfg = cfg['analysis_settings']['ef_input']['def_pos']
         for def_pos_idx in range(0, len(def_pos_cfg)):
-            filename_path = os.path.join(cfg['Analysis']['file_management_input_directory'], output_file_basename + '_' +str(def_pos_idx) + '_py_inputs.csv')
-            self.result_df_array[def_pos_idx].to_csv(filename_path , index=False)
+            df = self.result_df_array[def_pos_idx]
+            
+            aqwa_client_directory = cfg['Analysis']['file_management_input_directory']
+            filename = output_file_basename + '_' +str(def_pos_idx) + '_py_inputs.csv'
+            filename_path = os.path.join(aqwa_client_directory , filename)
+            df.to_csv(filename_path , index=False)
+
+            filename = output_file_basename + '_' +str(def_pos_idx) + '_py_inputs_statistics.csv'
+            filename_path = os.path.join(aqwa_client_directory , filename)
+            self.save_statistics(df, filename_path)
+
+    def save_statistics(self, df, statistics_filename):
+        df_statistics = de.get_df_statistics(df)
+        df_statistics.to_csv(statistics_filename, index=True, header=True)
 
     def UF1(self, Analysis,Mode,Stage,Time,TimeStep,Pos,Vel):
         ########################################################################################################

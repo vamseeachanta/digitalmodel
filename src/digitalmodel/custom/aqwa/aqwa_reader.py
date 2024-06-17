@@ -1,18 +1,20 @@
-import os
+# Standard library imports
 import io
-import logging
-import subprocess
 import itertools
-
-import pandas as pd
-import numpy as np
+import logging
+import os
+import subprocess
 from pathlib import Path
 
-from assetutilities.common.data import ReadData
-from assetutilities.common.data import SaveData
-from assetutilities.common.update_deep import update_deep_dictionary
-from assetutilities.common.file_management import FileManagement
+# Third party imports
+import numpy as np
+import pandas as pd
+from assetutilities.common.data import ReadData, SaveData
 from assetutilities.common.data_exploration import DataExploration
+from assetutilities.common.file_management import FileManagement
+from assetutilities.common.update_deep import update_deep_dictionary
+
+# Reader imports
 from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
 
 fm = FileManagement()
@@ -23,7 +25,7 @@ de = DataExploration()
 
 class AqwaReader:
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def router(self, cfg):
@@ -39,7 +41,7 @@ class AqwaReader:
             input_files = cfg['file_management']['input_files']['PLT']
 
             master_df = pd.DataFrame()
-            result_category = result_item['category']
+            result_category = result_item['category'] 
 
             for input_file in input_files:
                 input_file_result = []
