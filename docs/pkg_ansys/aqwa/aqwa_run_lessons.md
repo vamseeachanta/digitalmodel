@@ -23,7 +23,7 @@ The key lessons learnt for use of AQWA are given in this document.
 
 <https://ansyshelp.ansys.com/account/secured?returnurl=/Views/Secured/prod_page.html?pn=Aqwa&pid=Aqwa&lang=en>
 
-#### Reference - Shared Topology Usage
+#### Communications - Shared Topology Usage
 
 From: Alex Austin <aaustin@drd.com>
 Sent: Thursday, May 9, 2024 1:27 PM
@@ -133,3 +133,7 @@ Those are the three inputs files for the diffraction, stability, and time respon
 For each project:
 
 If you compare the Analysis.dat between the s01 and s03 projects, you should see small differences. For something like this, I use Notepad++ and a plugin called Compare to compare files against each other. This pointed out several differences:
+
+#### Communications - Slow Drift Problem
+
+Internal Lid

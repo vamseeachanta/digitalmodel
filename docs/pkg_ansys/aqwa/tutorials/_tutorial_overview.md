@@ -36,3 +36,4 @@ Summarizes the tutorials worked
 | 02_s03_hr_wave.wbpj | Time Domain analysis using regular wave | &cross; | Convolution Error. <br> Contacted support |
 | 02_s04_hr_ext_force.wbpj | External force on a fender | &cross; | Determine implementation strategy |
 | 101_s01_external_force.wbpj | External force example in utils | &cross; | Determine implementation strategy |
+
