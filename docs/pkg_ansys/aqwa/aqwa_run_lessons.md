@@ -8,10 +8,24 @@ The key lessons learnt for use of AQWA are given in this document.
 
 - For grouping structures as single entity so they can more together in AQWA
 
+### Internal Lid
+
+- DECK2
+- format
+
+<code>
+
+</code>
+
 ### Starting position
 
 - Stability run
 - run dynamic run
+
+Either positions can be
+
+- Explicityly defined
+- From a previous run (RESTART)
 
 ### Working in Workbench
 
@@ -135,5 +149,3 @@ For each project:
 If you compare the Analysis.dat between the s01 and s03 projects, you should see small differences. For something like this, I use Notepad++ and a plugin called Compare to compare files against each other. This pointed out several differences:
 
 #### Communications - Slow Drift Problem
-
-Internal Lid
