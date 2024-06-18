@@ -1,0 +1,36 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: plate_buckling
+  inputs:
+    calculation_type: DNV_rp_C201
+    plate_1:
+    - length: 2.69
+    - breadth: 0.7
+    - thickness: 0.014
+    - water_depth: 40
+    - yield_strength: 34
+    - poission_ratio: 0.3
+    - young_modulus: 30450
+    - longtudinal_stress: 0.5
+    - shear_stress: 0.7
+    - transverse_stress: 0.5
+    - buckling_coefficient: 4.0
+  default:
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+      cfg_sensitivities: false
+  Analysis:
+    fe_folder: src/digitalmodel/tests/test_data/plate_buckling\results
+    basename: plate_buckling
+    analysis_root_folder: src/digitalmodel/tests/test_data/plate_buckling
+    file_name: plate_buckling
+    file_name_for_overwrite: plate_buckling
+    result_folder: src/digitalmodel/tests/test_data/plate_buckling\results
+    log_folder: src/digitalmodel/tests/test_data/plate_buckling\logs
+    start_time: 2024-06-18 11:00:39.810332
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: src/digitalmodel/tests/test_data/plate_buckling/plate_buckling.yml

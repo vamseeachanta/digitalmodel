@@ -1,18 +1,16 @@
 import math
 class PlateBuckling():
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def router(self, cfg):
         if cfg['inputs']['calculation_type'] == 'DNV_rp_C201':
-            self.DNV_rp_C201(cfg)
+            cfg = self.DNV_rp_C201(cfg)
         else:
             raise (Exception(f"Calculation type: {cfg['inputs']['calculation_type']} not IMPLEMENTED. ... FAIL"))
 
-
         return cfg
-
 
     def DNV_rp_C201(self, cfg):
         """
@@ -23,9 +21,12 @@ class PlateBuckling():
         characteristic_resistance = self.get_characteristic_resistance(cfg,plate_properties)
         buckling_coefficient = self.get_buckling_coefficient(cfg,plate_properties)
         elastic_buckling_resistance = self.get_elastic_resistance(cfg,plate_properties,buckling_coefficient)
-        reduced_slender_ratio = self.reduced_slenders_ratio(cfg,elastic_buckling_resistance,characteristic_resistance,plate_properties,FEA_stress)
-        buckling_resistance_serviceability = self.buckling_resistance_serviceability(cfg,characteristic_resistance,reduced_slender_ratio,plate_properties)
-        usage_factor_serviceabilty = self.usage_factor_serviceability_check(cfg,FEA_stress,buckling_resistance_serviceability)
+        # reduced_slender_ratio = self.reduced_slenders_ratio(cfg,elastic_buckling_resistance,characteristic_resistance,plate_properties,FEA_stress)
+        # buckling_resistance_serviceability = self.buckling_resistance_serviceability(cfg,characteristic_resistance,reduced_slender_ratio,plate_properties)
+        # usage_factor_serviceabilty = self.usage_factor_serviceability_check(cfg,FEA_stress,buckling_resistance_serviceability)
+
+        return cfg
+
     def get_plate_properties(self,cfg):
         
         plate_cfg = cfg['inputs']['plate_1']

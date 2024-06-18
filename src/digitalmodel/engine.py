@@ -1,34 +1,35 @@
+# Standard library imports
+import logging
 import os
 import sys
-import logging
 
-from assetutilities.common.data import SaveData
-from assetutilities.common.yml_utilities import ymlInput
-from assetutilities.common.update_deep import AttributeDict
+# Third party imports
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
-from assetutilities.common.data import CopyAndPasteFiles
+from assetutilities.common.data import CopyAndPasteFiles, SaveData
+from assetutilities.common.update_deep import AttributeDict
+from assetutilities.common.yml_utilities import ymlInput
 
+# Reader imports
 from digitalmodel.catenary_riser import catenary_riser
-from digitalmodel.vertical_riser import vertical_riser
-from digitalmodel.orcaflex_analysis import orcaflex_analysis
-from digitalmodel.custom.orcaflex_analysis_components import OrcaFlexAnalysis
-from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
-from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
-from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
-from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
-    DNVRPH103_hydrodynamics_rectangular,
-)
+from digitalmodel.common.cathodic_protection import CathodicProtection
 from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
     DNVRPH103_hydrodynamics_circular,
 )
-from digitalmodel.custom.orcaflex_post_process import orcaflex_post_process
-from digitalmodel.custom.orcaflex_file_management import OrcaflexFileManagement
-from digitalmodel.custom.rao_analysis import RAOAnalysis
-from digitalmodel.custom.orcaflex_installation import OrcInstallation
-from digitalmodel.common.ship_design import ShipDesign
+from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
+    DNVRPH103_hydrodynamics_rectangular,
+)
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
-from digitalmodel.common.cathodic_protection import CathodicProtection
 from digitalmodel.common.plate_buckling import PlateBuckling
+from digitalmodel.common.ship_design import ShipDesign
+from digitalmodel.custom.orcaflex_file_management import OrcaflexFileManagement
+from digitalmodel.custom.orcaflex_installation import OrcInstallation
+from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
+from digitalmodel.custom.orcaflex_post_process import orcaflex_post_process
+from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.custom.rao_analysis import RAOAnalysis
+from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
+from digitalmodel.orcaflex_analysis import orcaflex_analysis
+from digitalmodel.vertical_riser import vertical_riser
 
 save_data = SaveData()
 ou = OrcaflexUtilities()
@@ -76,6 +77,7 @@ def engine(inputfile=None):
         opp = orcaflex_post_process()
         cfg_base = opp.post_process_router(cfg_base)
     elif basename == "rigging":
+        # Reader imports
         from digitalmodel.custom.rigging import Rigging
 
         rigging = Rigging()
@@ -150,7 +152,7 @@ def validate_arguments_run_methods(inputfile):
 
 
 def save_cfg(cfg_base):
-    output_dir = cfg_base.Analysis["analysis_root_folder"]
+    output_dir = cfg_base.Analysis["result_folder"]
 
     filename = cfg_base.Analysis["file_name"]
     filename_path = os.path.join(output_dir, filename)
