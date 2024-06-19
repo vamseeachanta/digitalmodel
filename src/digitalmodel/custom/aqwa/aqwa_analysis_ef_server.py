@@ -378,7 +378,7 @@ class AqwaEFServer:
             stiffness_force = stiffness_force + stiffness[dir]['k'][1] * (dof_pos_delta_abs - stiffness[dir]['dl'][0])
         else:
             stiffness_force = stiffness[dir]['k'][0] * stiffness[dir]['dl'][0]
-            stiffness_force = stiffness_force + stiffness[dir]['k'][1] * (dof_pos_delta_abs - stiffness[dir]['dl'][0])
+            stiffness_force = stiffness_force + stiffness[dir]['k'][1] * (stiffness[dir]['dl'][1] - stiffness[dir]['dl'][0])
             stiffness_force = stiffness_force + stiffness[dir]['k'][2] * (dof_pos_delta_abs - stiffness[dir]['dl'][1])
 
         if dof_pos_delta > 0:
