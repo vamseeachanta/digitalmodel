@@ -79,7 +79,7 @@ class AqwaEFServer:
         for def_pos_idx in range(0, len(def_pos_cfg)):
             df = self.result_df_array[def_pos_idx]
             
-            aqwa_client_directory = cfg['Analysis']['file_management_input_directory']
+            aqwa_client_directory = cfg['Analysis']['result_folder']
             filename = output_file_basename + '_' +str(def_pos_idx) + '_py_inputs.csv'
             filename_path = os.path.join(aqwa_client_directory , filename)
             df.to_csv(filename_path , index=False)
@@ -378,7 +378,7 @@ class AqwaEFServer:
             stiffness_force = stiffness_force + stiffness[dir]['k'][1] * (dof_pos_delta_abs - stiffness[dir]['dl'][0])
         else:
             stiffness_force = stiffness[dir]['k'][0] * stiffness[dir]['dl'][0]
-            stiffness_force = stiffness_force + stiffness[dir]['k'][1] * stiffness[dir]['dl'][1]
+            stiffness_force = stiffness_force + stiffness[dir]['k'][1] * (dof_pos_delta_abs - stiffness[dir]['dl'][0])
             stiffness_force = stiffness_force + stiffness[dir]['k'][2] * (dof_pos_delta_abs - stiffness[dir]['dl'][1])
 
         if dof_pos_delta > 0:

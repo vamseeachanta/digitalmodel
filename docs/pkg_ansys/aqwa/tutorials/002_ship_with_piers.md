@@ -74,3 +74,5 @@ Steps in workbench are given in this section.
  CONVOLUTION ERROR. The convolution has failed to calculate a satisfactory fit to the added mass/damping for structure#2/1 Yaw(Rz)/Heave(Z). The fit quality (100% = exact) was only -22264%. This is usually caused by insufficient frequencies or an inadequate frequency range. PLEASE - ENSURE THAT THESE ARE SUFFICIENT *BEFORE* contacting user support. Frequency range for structure 2/1 should be at least 0.065 to 1.241 rad/sec.
 
 #### Model: 02_s03_hr_wave.wbpj
+
+### Result

@@ -21,8 +21,8 @@ Naming comvention need to be simplified.
 **#TODO** : convert to table and schematic for easier reference
 
 - Analysis Type Conventions (2 characters):
-  - Frequency Analysis:
-    - F_ : Prefix for Frequency Analysis
+  - Frequency or Hydrodynamic diffraction Analysis:
+    - F_ : Prefix for Frequency or hydrodynamic diffraction Analysis
     - F_S_* : Limited no.of Frequency used. Quick analysis for first pass sanity checks
     - F_C_* : Comprehensive frequency analysis. Used for final results.
   - Static Analysis:

@@ -16,9 +16,12 @@ Explanation
 - _files\dp0\AQW-1\AQW\AQ\Analysis\Equilibrium.dat : B4 analysis .dat file (Equilibrium or stability analysis)
 - _files\dp0\AQW-2\AQW\AQ\Analysis\TimeResponse.dat : C4 analysis .dat file (time domain analysis)
 
+- Associated error files are given with the same filename as the analysis file however with .mes extension. For example,
+  - _files\dp0\AQW\AQW\AQ\Analysis\Analysis.mes
+
 - Note the above expanation is valid only if no parametric analysis is performed i.e. only 1 design point. If multiple design points are used, the above dp0 reference folder needs to be changed.
 
-![Screenshot](image-2.png)
+![Screenshot](wb_vs_dat.png)
 
 ### Workbench to .dat
 
@@ -33,9 +36,8 @@ To import data from an Aqwa solver input file:
 
 - Attach a geometry, or a dummy geometry, to the system and open the Aqwa editor.
   - Can we suppress existing geometry and only keep other geometry?
-  - Spacecliam geometry did not import properly. Explore if we can use nuetral CAD format files?
+  - Spaceclaim geometry did not import properly. Explore if we can use nuetral CAD format files?
   
-
 - Perform analysis.
 
 Reference:
