@@ -76,3 +76,9 @@ Steps in workbench are given in this section.
 #### Model: 02_s03_hr_wave.wbpj
 
 ### Result
+
+**Hydrostatics** Analysis
+
+**Hydrodynamic Diffraction** Analysis
+
+**Time Domain** Analysis
