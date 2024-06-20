@@ -9,9 +9,9 @@ class PlateBuckling():
             cfg = self.DNV_rp_C201(cfg)
         else:
             raise (Exception(f"Calculation type: {cfg['inputs']['calculation_type']} not IMPLEMENTED. ... FAIL"))
-
+        
         return cfg
-
+    
     def DNV_rp_C201(self, cfg):
         """
         This method is used to calculate the cathodic protection for ABS gn ships 2018
@@ -27,8 +27,13 @@ class PlateBuckling():
         
         resistance_ultimate = self.resistance_ultimate_check(cfg,reduced_slender_ratio,characteristic_resistance)
         usage_factor_ultimate = self.usage_factor_ultimate_check(cfg,resistance_ultimate,FEA_stress)
+        
+        coefficient_factor = self.buckling_coefficient(cfg,plate_properties)
+        elastic_resistance = self.elastic_resistance(cfg,plate_properties,elastic_buckling_resistance,coefficient_factor)
+        reduced_ratio = self.get_reduced_ratio(cfg,elastic_resistance,characteristic_resistance,FEA_stress,plate_properties)
+        characteristic_buckling_serviceability = self.get_characteristic_buckling_serviceability(cfg,characteristic_resistance,reduced_ratio,plate_properties,reduced_slender_ratio)
         return cfg
-
+    
     def get_plate_properties(self,cfg):
         
         plate_cfg = cfg['inputs']['plate_1']
@@ -85,7 +90,7 @@ class PlateBuckling():
                                 'buckling_coefficient_shear_stress': round(shear_stress,2),
                                 'buckling_coefficient_longtudinal_stress':buckling_cfg[10]['buckling_coefficient']}
         return buckling_coefficient
-
+    
     def get_elastic_resistance(self,cfg,plate_properties,buckling_coefficient):
 
         coefficient = 3.14159265358979 ** 2 * plate_properties['young_modulus']/12/(1-plate_properties['poission_ratio'] ** 2)
@@ -98,7 +103,7 @@ class PlateBuckling():
 
         elastic_buckling_resistance = {'elastic_resistance_longtudinal_stress':round(longtudinal_stress,1),
                                        'elastic_resistance_transverse_stress':round(transverse_stress,2),
-                                       'elastic_resistance_shear_stress':round(shear_stress,2)}
+                                       'elastic_resistance_shear_stress':round(shear_stress,2),'coefficient':round(coefficient,2)}
         return elastic_buckling_resistance
     
     def reduced_slenders_ratio(self,cfg,elastic_buckling_resistance,characteristic_resistance,plate_properties,FEA_stress):
@@ -195,6 +200,59 @@ class PlateBuckling():
                                  'usage_shear_direction':round(shear_direction,2),'usage_equivalent_direction':round(equivalent_direction,2)
                                  }
         return usage_factor_ultimate
+    
+    def buckling_coefficient(self,cfg,plate_properties):
+
+        longtudinal_stress = 7.0
+        transverse_stress = 1 + 2.5 *plate_properties['s/l'] **2 +5 *plate_properties['s/l'] ** 4
+        shear_stress = 9 + 5.6* plate_properties['s/l'] ** 2
+
+        coefficinet_factor = {'coefficinet_longtudinal_stress':round(longtudinal_stress,2),
+                       'coefficinet_transverse_stress' :round(transverse_stress,2),
+                       'coefficinet_shear_stress': round(shear_stress,2)
+                       }
+        return coefficinet_factor
+    
+    def elastic_resistance(self,cfg,plate_properties,elastic_buckling_resistance,coefficient_factor):
+
+        longtudinal_stress = elastic_buckling_resistance['coefficient'] * coefficient_factor['coefficinet_longtudinal_stress'] * plate_properties['t/s'] ** 2
+        transverse_stress = elastic_buckling_resistance['coefficient'] * coefficient_factor['coefficinet_transverse_stress'] * plate_properties['t/s'] ** 2
+        shear_stress = elastic_buckling_resistance['coefficient'] * coefficient_factor['coefficinet_shear_stress'] * plate_properties['t/s'] ** 2
+
+        elastic_resistance = {'resistance_longtudinal_stress':round(longtudinal_stress,2),'resistance_transverse_stress':round(transverse_stress,2),
+                              'resistance_shear_stress':round(shear_stress,2)
+                              }
+        return elastic_resistance
+    
+    def get_reduced_ratio(self,cfg,elastic_resistance,characteristic_resistance,FEA_stress,plate_properties):
+
+        longtudinal_direction = math.sqrt(characteristic_resistance['normal_stress_kx']/elastic_resistance['resistance_longtudinal_stress'])
+        transverse_direction = math.sqrt(characteristic_resistance['normal_stress_kx']/elastic_resistance['resistance_transverse_stress'])
+        shear_direction = math.sqrt(characteristic_resistance['normal_stress_τk']/elastic_resistance['resistance_shear_stress'])
+        equivalent_direction = math.sqrt((plate_properties['yield_strength']/FEA_stress['vonmises_stress'])*((FEA_stress['longtudinal_stress']/
+                                               elastic_resistance['resistance_longtudinal_stress'])** plate_properties['c']+
+                                               (FEA_stress['transverse_stress']/elastic_resistance['resistance_transverse_stress'])** plate_properties['c']+
+                                               (FEA_stress['shear_stress']/elastic_resistance['resistance_shear_stress'])** plate_properties['c'])** (1/plate_properties['c']))
+ 
+        reduced_ratio = {'ratio_longtudinal_direction':round(longtudinal_direction,2),'ratio_transverse_direction':round(transverse_direction,2),
+                         'ratio_shear_direction':round(shear_direction,2),'ratio_equivalent_direction':round(equivalent_direction,2)
+                         }
+        return reduced_ratio
+ 
+    def get_characteristic_buckling_serviceability(self,cfg,characteristic_resistance,reduced_ratio,plate_properties,reduced_slender_ratio):
+
+        longtudinal_direction = characteristic_resistance['normal_stress_kx']/math.sqrt(1 + reduced_ratio['ratio_longtudinal_direction'] ** 4)
+        transverse_direction = characteristic_resistance['normal_stress_kx']/math.sqrt(1 + reduced_ratio['ratio_transverse_direction'] ** 4)
+        shear_direction = characteristic_resistance['normal_stress_τk']/math.sqrt(1 + reduced_ratio['ratio_shear_direction'] ** 4)
+        equialent_direction = plate_properties['yield_strength']/math.sqrt(1 + reduced_slender_ratio['equivalent_slenderness_ratio'] ** 4)
+
+        characteristic_buckling_serviceabilty = {'resistance_longtudinal_direction':round(longtudinal_direction,2),
+                                                  'resistance_transverse_direction':round(transverse_direction,2),
+                                                  'resistance_shear_direction':round(shear_direction,2),
+                                                  'resistance_equivalent_direction':round(equialent_direction,2)
+                                                  }
+        return characteristic_buckling_serviceabilty
+    
     
 
 
