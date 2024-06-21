@@ -30,7 +30,7 @@ dictitems:
     file_name_for_overwrite: plate_buckling
     result_folder: src/digitalmodel/tests/test_data/plate_buckling\results
     log_folder: src/digitalmodel/tests/test_data/plate_buckling\logs
-    start_time: 2024-06-18 11:00:39.810332
+    start_time: 2024-06-21 11:11:19.094499
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: src/digitalmodel/tests/test_data/plate_buckling/plate_buckling.yml

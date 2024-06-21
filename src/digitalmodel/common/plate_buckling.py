@@ -32,6 +32,11 @@ class PlateBuckling():
         elastic_resistance = self.elastic_resistance(cfg,plate_properties,elastic_buckling_resistance,coefficient_factor)
         reduced_ratio = self.get_reduced_ratio(cfg,elastic_resistance,characteristic_resistance,FEA_stress,plate_properties)
         characteristic_buckling_serviceability = self.get_characteristic_buckling_serviceability(cfg,characteristic_resistance,reduced_ratio,plate_properties,reduced_slender_ratio)
+        usage_factor_serviceabilty_check = self.usage_factor(cfg,FEA_stress,characteristic_buckling_serviceability)
+        
+        char_resistance_ultimate = self.get_resistance_ultimate_check(cfg,reduced_ratio,characteristic_resistance)
+        usage_factor_ultimate_check = self.usage_factor_ultimate(cfg,FEA_stress,char_resistance_ultimate)
+        
         return cfg
     
     def get_plate_properties(self,cfg):
@@ -253,6 +258,62 @@ class PlateBuckling():
                                                   }
         return characteristic_buckling_serviceabilty
     
+    def usage_factor(self,cfg,FEA_stress,characteristic_buckling_serviceability):
+
+        longtudinal_direction = FEA_stress['longtudinal_stress']/characteristic_buckling_serviceability['resistance_longtudinal_direction']
+
+        transverse_direction = FEA_stress['transverse_stress']/characteristic_buckling_serviceability['resistance_transverse_direction']
+
+        shear_direction = FEA_stress['shear_stress']/characteristic_buckling_serviceability['resistance_shear_direction']
+
+        equialent_direction = FEA_stress['vonmises_stress']/characteristic_buckling_serviceability['resistance_equivalent_direction']
+        
+        usage_factor = {'usage_longtudinal_direction':round(longtudinal_direction,3),'usage_transverse_direction':round(transverse_direction,2),
+                        'usage_shear_direction':round(shear_direction,2),'usage_equialent_direction':round(equialent_direction,3)
+                        }
+        return usage_factor
+    
+    def get_resistance_ultimate_check(self,cfg,reduced_ratio,characteristic_resistance):
+
+        if reduced_ratio['ratio_longtudinal_direction']<1:
+            longtudinal_direction = characteristic_resistance['normal_stress_kx']/(math.sqrt(1+ reduced_ratio['ratio_longtudinal_direction']**4))
+        else:
+            longtudinal_direction = characteristic_resistance['normal_stress_kx']/math.sqrt(2)/reduced_ratio['ratio_longtudinal_direction']
+        
+        if reduced_ratio['ratio_transverse_direction']<1:
+            transverse = characteristic_resistance['normal_stress_kx']
+        else:
+            transverse = characteristic_resistance['normal_stress_kx']/math.sqrt(2)/reduced_ratio['ratio_transverse_direction']
+        
+        if reduced_ratio['ratio_shear_direction']<1:
+            shear_direction = characteristic_resistance['normal_stress_τk']/(math.sqrt(1+ reduced_ratio['ratio_shear_direction']** 4))
+        else:
+            shear_direction = characteristic_resistance['normal_stress_τk']/math.sqrt(2)/reduced_ratio['ratio_shear_direction']
+
+        if reduced_ratio['ratio_equivalent_direction']<1:
+            equialent_direction = characteristic_resistance['normal_stress_kx']/(math.sqrt(1+ reduced_ratio['ratio_equivalent_direction']** 4))
+        else:
+            equialent_direction = characteristic_resistance['normal_stress_kx']/math.sqrt(2)/reduced_ratio['ratio_equivalent_direction']
+        
+        resistance_ultimate = {'longtudinal_resistance':round(longtudinal_direction,2),'transverse_resistance':round(transverse,2),
+                               'shear_resistance':round(shear_direction,2),'equialent_resistance':round(equialent_direction,2)
+                               }
+        return resistance_ultimate
+    
+    def usage_factor_ultimate(self,cfg,FEA_stress,char_resistance_ultimate):
+
+        longtudinal = FEA_stress['longtudinal_stress']/char_resistance_ultimate['longtudinal_resistance']
+
+        transverse = FEA_stress['transverse_stress']/char_resistance_ultimate['transverse_resistance']
+
+        shear = FEA_stress['shear_stress']/char_resistance_ultimate['shear_resistance']
+
+        equivalent = FEA_stress['vonmises_stress']/char_resistance_ultimate['equialent_resistance']
+
+        usage_factor_ultimate_check = {'usage_longtudinal':round(longtudinal,3),'usage_transverse':round(transverse,3),
+                                       'usage_shear':round(shear,2),'usage_equivalent':round(equivalent,3)
+                                       }
+        return usage_factor_ultimate_check
     
 
 
