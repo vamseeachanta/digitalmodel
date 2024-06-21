@@ -1,4 +1,6 @@
 import math
+import logging
+
 class PlateBuckling():
 
     def __init__(self) -> None:
@@ -6,17 +8,23 @@ class PlateBuckling():
 
     def router(self, cfg):
         if cfg['inputs']['calculation_type'] == 'DNV_rp_C201':
-            cfg = self.DNV_rp_C201(cfg)
+            plates = cfg['groups']
+            plate_buckling_result_array = []
+            for plate_cfg in plates:
+                plate_buckling_result = self.run_plate_DNV_rp_C201(cfg, plate_cfg)
+                plate_buckling_result_array.append(plate_buckling_result)
+        
         else:
+            logging.error(f"Calculation type: {cfg['inputs']['calculation_type']} not IMPLEMENTED. ... FAIL")
             raise (Exception(f"Calculation type: {cfg['inputs']['calculation_type']} not IMPLEMENTED. ... FAIL"))
         
         return cfg
     
-    def DNV_rp_C201(self, cfg):
+    def run_plate_DNV_rp_C201(self, cfg, plate_cfg):
         """
-        This method is used to calculate the cathodic protection for ABS gn ships 2018
+        This method is used to calculate plate buckling using DNV-RP-C201 Guidelines
         """
-        plate_properties = self.get_plate_properties(cfg)
+        plate_properties = self.get_plate_properties(plate_cfg)
         FEA_stress= self.get_FEA_stress(cfg)
         characteristic_resistance = self.get_characteristic_resistance(cfg,plate_properties)
         buckling_coefficient = self.get_buckling_coefficient(cfg,plate_properties)
@@ -37,15 +45,21 @@ class PlateBuckling():
         char_resistance_ultimate = self.get_resistance_ultimate_check(cfg,reduced_ratio,characteristic_resistance)
         usage_factor_ultimate_check = self.usage_factor_ultimate(cfg,FEA_stress,char_resistance_ultimate)
         
-        return cfg
-    
-    def get_plate_properties(self,cfg):
+        plate_buckling_result = {'plate_properties':plate_properties,'FEA_stress':FEA_stress, 'characteristic_resistance':characteristic_resistance, }
         
-        plate_cfg = cfg['inputs']['plate_1']
-        length = round(plate_cfg[0]['length']/0.3048,2) #ft
-        breadth = round(plate_cfg[1]['breadth']/0.3048,2) #ft
-        thickness = round(plate_cfg[2]['thickness']/0.3048,3) #ft
-        water_depth = round(plate_cfg[3]['water_depth']/0.3048,2) #ft
+        return plate_buckling_result
+
+
+    
+    def get_plate_properties(self,plate_cfg):
+        
+        length = round(plate_cfg['length']/0.3048,2) #ft
+        breadth = round(plate_cfg['breadth']/0.3048,2) #ft
+        thickness = round(plate_cfg['thickness']/0.3048,3) #ft
+        yield_strength = plate_cfg['yield_strength']
+        young_modulus = plate_cfg['young_modulus']
+        poisson_ratio = plate_cfg['poisson_ratio']
+        water_depth = round(plate_cfg['water_depth']/0.3048,2) #ft
 
         s_by_l = breadth/length
         l_by_s = 1/ s_by_l
@@ -55,8 +69,9 @@ class PlateBuckling():
         l_by_t = length/ thickness
 
         plate_properties = { 's/l': round(s_by_l,2), 'l/s': round(l_by_s,2), 'c':round(c,2), 't/s':round(t_by_s,2),
-                       's/t':round(s_by_t,2), 'l/t':round(l_by_t,2), 'yield_strength': plate_cfg[4]['yield_strength'],
-                     'young_modulus':plate_cfg[6]['young_modulus'], 'poission_ratio':plate_cfg[5]['poission_ratio']}
+                       's/t':round(s_by_t,2), 'l/t':round(l_by_t,2), 'yield_strength': yield_strength,
+                     'young_modulus': young_modulus, 'poisson_ratio': poisson_ratio, 'water_depth': water_depth}
+        
         return plate_properties
     
     def get_FEA_stress(self,cfg):

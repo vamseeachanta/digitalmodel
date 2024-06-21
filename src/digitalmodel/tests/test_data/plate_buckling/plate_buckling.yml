@@ -1,10 +1,35 @@
 basename: plate_buckling
 
-inputs:
-  calculation_type: DNV_rp_C201 # ABS_gn_ships_2018, DNV_rp_b401_2021_05, DNV_rp_b401_2011
+calculation_type: DNV_rp_C201 # ABS_gn_ships_2018, DNV_rp_b401_2021_05, DNV_rp_b401_2011
 
-  plate_1: [length: 2.69 , breadth: 0.70,thickness: 0.014 ,water_depth: 40 ,yield_strength: 34 ,poission_ratio: 0.30,
-          young_modulus: 30450,longtudinal_stress: 0.5 ,shear_stress: 0.7 ,transverse_stress: 0.5 ,buckling_coefficient: 4.0]  
+groups:
+  - label: plate_1
+    length: 2.69
+    breadth: 0.70
+    thickness: 0.014
+    water_depth: 40
+    yield_strength: 34
+    poisson_ratio: 0.30
+    young_modulus: 30450
+    longtudinal_stress: 0.5
+    shear_stress: 0.7
+    transverse_stress: 0.5
+    buckling_coefficient: 4.0
+
+  - label: plate_2
+    length: 2.69
+    breadth: 0.75
+    thickness: 0.014
+    water_depth: 50
+    yield_strength: 34
+    poisson_ratio: 0.30
+    young_modulus: 30450
+    longtudinal_stress: 0.5
+    shear_stress: 0.7
+    transverse_stress: 0.5
+    buckling_coefficient: 4.0
+
+master_settings: NULL
 
 default:
   log_level: DEBUG

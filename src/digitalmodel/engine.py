@@ -111,8 +111,8 @@ def engine(inputfile=None):
         cfg_base = cp.router(cfg_base)
 
     elif basename == "plate_buckling":
-        cp = PlateBuckling()
-        cfg_base = cp.router(cfg_base)
+        pb = PlateBuckling()
+        cfg_base = pb.router(cfg_base)
     
 
     else:

@@ -28,7 +28,7 @@ class CathodicProtection():
         if cfg['inputs']['anode'] == 'zinc':
             anode_current_capacity = 780
         elif cfg['inputs']['anode'] == 'aluminium':
-            anode_current_capacity = 2000 - 27(cfg['inputs']['design_data']['seawater_max_temperature'] - 20)
+            anode_current_capacity = 2000 - 27*(cfg['inputs']['design_data']['seawater_max_temperature'] - 20)
     
         return anode_current_capacity
 
