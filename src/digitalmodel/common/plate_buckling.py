@@ -7,7 +7,7 @@ class PlateBuckling():
         pass
 
     def router(self, cfg):
-        if cfg['inputs']['calculation_type'] == 'DNV_rp_C201':
+        if cfg['calculation_type'] == 'DNV_rp_C201':
             plates = cfg['groups']
             plate_buckling_result_array = []
             for plate_cfg in plates:
@@ -15,8 +15,8 @@ class PlateBuckling():
                 plate_buckling_result_array.append(plate_buckling_result)
         
         else:
-            logging.error(f"Calculation type: {cfg['inputs']['calculation_type']} not IMPLEMENTED. ... FAIL")
-            raise (Exception(f"Calculation type: {cfg['inputs']['calculation_type']} not IMPLEMENTED. ... FAIL"))
+            logging.error(f"Calculation type: {cfg['calculation_type']} not IMPLEMENTED. ... FAIL")
+            raise (Exception(f"Calculation type: {cfg['calculation_type']} not IMPLEMENTED. ... FAIL"))
         
         return cfg
     
@@ -25,9 +25,9 @@ class PlateBuckling():
         This method is used to calculate plate buckling using DNV-RP-C201 Guidelines
         """
         plate_properties = self.get_plate_properties(plate_cfg)
-        FEA_stress= self.get_FEA_stress(cfg)
+        FEA_stress= self.get_FEA_stress(plate_cfg)
         characteristic_resistance = self.get_characteristic_resistance(cfg,plate_properties)
-        buckling_coefficient = self.get_buckling_coefficient(cfg,plate_properties)
+        buckling_coefficient = self.get_buckling_coefficient(plate_cfg,plate_properties)
         elastic_buckling_resistance = self.get_elastic_resistance(cfg,plate_properties,buckling_coefficient)
         reduced_slender_ratio = self.reduced_slenders_ratio(cfg,elastic_buckling_resistance,characteristic_resistance,plate_properties,FEA_stress)
         buckling_resistance_serviceability = self.buckling_resistance_serviceability(cfg,characteristic_resistance,reduced_slender_ratio,plate_properties)
@@ -74,12 +74,11 @@ class PlateBuckling():
         
         return plate_properties
     
-    def get_FEA_stress(self,cfg):
+    def get_FEA_stress(self,plate_cfg):
         
-        stress_cfg = cfg['inputs']['plate_1']
-        longtudinal_stress = stress_cfg[7]['longtudinal_stress']
-        transverse_stress = stress_cfg[9]['transverse_stress']
-        shear_stress = stress_cfg[8]['shear_stress']
+        longtudinal_stress = plate_cfg['longtudinal_stress']
+        transverse_stress = plate_cfg['transverse_stress']
+        shear_stress = plate_cfg['shear_stress']
 
         vonmises_stress = math.sqrt(longtudinal_stress * longtudinal_stress + transverse_stress * transverse_stress
                                      -(longtudinal_stress * transverse_stress) +
@@ -98,9 +97,8 @@ class PlateBuckling():
                                      'normal_stress_kx':round(normal_stress_kx,2)}
         return characteristic_resistance
     
-    def get_buckling_coefficient(self,cfg,plate_properties):
+    def get_buckling_coefficient(self,plate_cfg,plate_properties):
         
-        buckling_cfg = cfg['inputs']['plate_1']
         key_value = plate_properties['s/l']
         transverse_stress = (1+key_value * key_value)
         transverse_stress = transverse_stress*transverse_stress
@@ -108,12 +106,12 @@ class PlateBuckling():
         
         buckling_coefficient = {'buckling_coefficient_transverse_stress': round(transverse_stress,2),
                                 'buckling_coefficient_shear_stress': round(shear_stress,2),
-                                'buckling_coefficient_longtudinal_stress':buckling_cfg[10]['buckling_coefficient']}
+                                'buckling_coefficient_longtudinal_stress':plate_cfg['buckling_coefficient']}
         return buckling_coefficient
     
     def get_elastic_resistance(self,cfg,plate_properties,buckling_coefficient):
 
-        coefficient = 3.14159265358979 ** 2 * plate_properties['young_modulus']/12/(1-plate_properties['poission_ratio'] ** 2)
+        coefficient = 3.14159265358979 ** 2 * plate_properties['young_modulus']/12/(1-plate_properties['poisson_ratio'] ** 2)
         
         longtudinal_stress = coefficient * buckling_coefficient['buckling_coefficient_longtudinal_stress'] * plate_properties['t/s'] *plate_properties['t/s']
         

@@ -24,7 +24,7 @@ groups:
     yield_strength: 34
     poisson_ratio: 0.30
     young_modulus: 30450
-    longtudinal_stress: 0.5
+    longtudinal_stress: 0.8
     shear_stress: 0.7
     transverse_stress: 0.5
     buckling_coefficient: 4.0
