@@ -45,6 +45,10 @@ class PlateBuckling():
         char_resistance_ultimate = self.get_resistance_ultimate_check(cfg,reduced_ratio,characteristic_resistance)
         usage_factor_ultimate_check = self.usage_factor_ultimate(cfg,FEA_stress,char_resistance_ultimate)
         
+        stress_longtudinal = self.get_stress_longitudinal_direction(cfg,plate_properties)
+        stress_transverse = self.get_stress_transverse_direction(cfg,plate_properties)
+        stress_shear = self.get_stress_shear_direction(cfg,plate_properties)
+        
         plate_buckling_result = {'plate_properties':plate_properties,'FEA_stress':FEA_stress, 'characteristic_resistance':characteristic_resistance, }
         
         return plate_buckling_result
@@ -70,7 +74,7 @@ class PlateBuckling():
 
         plate_properties = { 's/l': round(s_by_l,2), 'l/s': round(l_by_s,2), 'c':round(c,2), 't/s':round(t_by_s,2),
                        's/t':round(s_by_t,2), 'l/t':round(l_by_t,2), 'yield_strength': yield_strength,
-                     'young_modulus': young_modulus, 'poisson_ratio': poisson_ratio, 'water_depth': water_depth}
+                     'young_modulus': young_modulus,'length':round(length,2), 'poisson_ratio': poisson_ratio, 'water_depth': water_depth,'thickness':round(thickness,3)}
         
         return plate_properties
     
@@ -327,6 +331,52 @@ class PlateBuckling():
                                        'usage_shear':round(shear,2),'usage_equivalent':round(equivalent,3)
                                        }
         return usage_factor_ultimate_check
+    
+    def get_stress_longitudinal_direction(self,cfg,plate_properties):
+
+        reduced_ratio_value = 0.525 * plate_properties['s/t']*math.sqrt(plate_properties['yield_strength']/plate_properties['young_modulus'])
+
+        Cx = (reduced_ratio_value-0.22)/reduced_ratio_value**2
+
+        resulting_factor = 1.15
+
+        design_resistance = Cx*plate_properties['yield_strength']/resulting_factor
+
+        longtudinal_stress = {'design_resistance':round(design_resistance,2)
+                             }
+        return longtudinal_stress
+    
+    def get_stress_transverse_direction(self,cfg,plate_properties):
+
+        k_value = 0.26
+        reduction_factor = 1.00
+        resulting_factor = 1.15
+        R_value = (1.3 *plate_properties['thickness']/plate_properties['length']*math.sqrt(plate_properties['young_modulus']/plate_properties['yield_strength'])+
+                   k_value*(1-1.3*plate_properties['thickness']/plate_properties['length']*math.sqrt(plate_properties['young_modulus']/plate_properties['yield_strength'])))*plate_properties['yield_strength']*reduction_factor
+        
+        design_resistance_transverse = R_value/resulting_factor
+
+        transverse_stress = {'design_resistance_transverse':round(design_resistance_transverse,2)
+                            }
+        return transverse_stress
+    
+    def get_stress_shear_direction(self,cfg,plate_properties):
+
+        kl_value = 5.34 +4 *(plate_properties['s/l'])** 2
+        w_value = 0.795* plate_properties['s/t']* math.sqrt(plate_properties['yield_strength']/(plate_properties['young_modulus']*kl_value))
+        C_value = 1
+
+        resulting_factor = 1.15
+        shear_resistance = C_value / resulting_factor * plate_properties['yield_strength']/math.sqrt(3)
+
+        shear_stress = {'shear_resistance':round(shear_resistance,2)
+                       }
+        return shear_stress
+
+
+
+
+
     
 
 
