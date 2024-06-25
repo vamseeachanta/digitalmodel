@@ -11,6 +11,25 @@ This document summarizes the AQWA typical errors and the way to troubleshoot the
   - Open .MES file
   - read from top to bottom
 
+### .MES File comparison
+
+A typical comparison of errors is given below
+
+| File.No | File.No | E01 | E02 |  E03 | W01 | W02 | W03 |
+|------|------|-----|-----|------|-----|-----|-----|
+| 1    |    |  X  |  -   |  -  |  X  |  X  | -  |
+| 2    |    |  X  |  -   |  -  |  X  |  X  | -  |
+
+Error and Warning List:
+| Type | Code | Description |
+|------|------|-------------|
+| Error | E01 | Input Error - There was a failure to open the hydrodynamic data file due to a spelling error |
+| Error | E02 | None |
+| Warning | W01 | The number of requested cores often exceeds available licenses, causing it to be reduced |
+| Warning | W02 | For Morison-type hull drag, the current at depth is ignored and the current at COG is used instead |
+| Warning | W02 | Specified low-frequency damping is being withdrawn, and should be replaced with frequency-independent values using the FIDD card |
+| Warning | W03 | Some modelling rule violations are ignored by the GOON option |
+
 ### Summary List
 
  #TODO summary list.

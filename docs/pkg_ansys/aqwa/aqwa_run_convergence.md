@@ -42,12 +42,8 @@ AQWA can sometimes be have convergence issues. Lessons learnt from AQWA Converge
 - Time step sensivity (basecase: 0.1s, sensitivities: 0.05s, 0.025s)
 - Others?
 
-- Simplify reruns with stage restart. Document findings (ongoing)
+- Simplify reruns with stage restart. Update documentation (ongoing)
 
-- B1516: Remove slow drift in the analysis
-- B1522: automate the following
-  - Check CoG and delta positions for all structures
-  - Get rotations on the ball joints as well
 
 Filelog:
 
