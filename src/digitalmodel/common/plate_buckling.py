@@ -10,7 +10,9 @@ class PlateBuckling():
         if cfg['calculation_type'] == 'DNV_rp_C201':
             plates = cfg['groups']
             plate_buckling_result_array = []
-            for plate_cfg in plates:
+            # for plate_cfg in plates:
+            for plate_idx in (0, len(plates)):
+                plate_cfg = plates[plate_idx]
                 plate_buckling_result = self.run_plate_DNV_rp_C201(cfg, plate_cfg)
                 plate_buckling_result_array.append(plate_buckling_result)
         
@@ -52,12 +54,12 @@ class PlateBuckling():
         dnv_rp_usage_factor = self.DNV_RP_C201_usage_factor(cfg,FEA_stress,stress_longtudinal,stress_transverse,stress_shear,stress_bi_axial)
 
         plate_buckling_result = {'plate_properties':plate_properties,'FEA_stress':FEA_stress, 'characteristic_resistance':characteristic_resistance, }
-        
+
         return plate_buckling_result
 
 
     
-    def get_plate_properties(self,plate_cfg):
+    def get_plate_properties(self, plate_cfg):
         
         length = round(plate_cfg['length']/0.3048,2) #ft
         breadth = round(plate_cfg['breadth']/0.3048,2) #ft
@@ -80,7 +82,7 @@ class PlateBuckling():
         
         return plate_properties
     
-    def get_FEA_stress(self,plate_cfg):
+    def get_FEA_stress(self, plate_cfg):
         
         longtudinal_stress = plate_cfg['longtudinal_stress']
         transverse_stress = plate_cfg['transverse_stress']
@@ -94,7 +96,7 @@ class PlateBuckling():
                       'transverse_stress':round(transverse_stress,2),'shear_stress':round(shear_stress,2)}
         return FEA_stress
     
-    def get_characteristic_resistance(self,cfg,plate_properties):
+    def get_characteristic_resistance(self, cfg,plate_properties):
 
         normal_stress_kx = plate_properties['yield_strength']
         normal_stress_τk = normal_stress_kx/math.sqrt(3) 
@@ -102,25 +104,25 @@ class PlateBuckling():
         characteristic_resistance = {'normal_stress_τk': round(normal_stress_τk,2),
                                      'normal_stress_kx':round(normal_stress_kx,2)}
         return characteristic_resistance
-    
-    def get_buckling_coefficient(self,plate_cfg,plate_properties):
-        
+
+    def get_buckling_coefficient(self, plate_cfg,plate_properties):
+
         key_value = plate_properties['s/l']
         transverse_stress = (1+key_value * key_value)
         transverse_stress = transverse_stress*transverse_stress
         shear_stress = 5.34 + 4* key_value * key_value
-        
+
         buckling_coefficient = {'buckling_coefficient_transverse_stress': round(transverse_stress,2),
                                 'buckling_coefficient_shear_stress': round(shear_stress,2),
                                 'buckling_coefficient_longtudinal_stress':plate_cfg['buckling_coefficient']}
         return buckling_coefficient
-    
+
     def get_elastic_resistance(self,cfg,plate_properties,buckling_coefficient):
 
         coefficient = 3.14159265358979 ** 2 * plate_properties['young_modulus']/12/(1-plate_properties['poisson_ratio'] ** 2)
-        
+
         longtudinal_stress = coefficient * buckling_coefficient['buckling_coefficient_longtudinal_stress'] * plate_properties['t/s'] *plate_properties['t/s']
-        
+
         transverse_stress = coefficient * buckling_coefficient['buckling_coefficient_transverse_stress'] * plate_properties['t/s'] *plate_properties['t/s']
 
         shear_stress = coefficient * buckling_coefficient['buckling_coefficient_shear_stress'] * plate_properties['t/s'] *plate_properties['t/s']
@@ -129,7 +131,7 @@ class PlateBuckling():
                                        'elastic_resistance_transverse_stress':round(transverse_stress,2),
                                        'elastic_resistance_shear_stress':round(shear_stress,2),'coefficient':round(coefficient,2)}
         return elastic_buckling_resistance
-    
+
     def reduced_slenders_ratio(self,cfg,elastic_buckling_resistance,characteristic_resistance,plate_properties,FEA_stress):
 
         longtudinal_direction = math.sqrt(characteristic_resistance['normal_stress_kx']/elastic_buckling_resistance['elastic_resistance_longtudinal_stress'])
@@ -147,7 +149,7 @@ class PlateBuckling():
                                  'equivalent_slenderness_ratio':round(equivalent_ratio,4)
                                  }
         return reduced_slender_ratio
-    
+
     def buckling_resistance_serviceability(self,cfg,characteristic_resistance,reduced_slender_ratio,plate_properties):
 
         longtudinal_direction = characteristic_resistance['normal_stress_kx']/math.sqrt(1+reduced_slender_ratio['reduced_ratio_longtudinal_direction'] **4)
@@ -157,13 +159,13 @@ class PlateBuckling():
         shear_direction = characteristic_resistance['normal_stress_τk']/math.sqrt(1+reduced_slender_ratio['reduced_ratio_shear_direction'] **4)
 
         equivalent_stress = plate_properties['yield_strength']/math.sqrt(1+reduced_slender_ratio['equivalent_slenderness_ratio']**4)
-        
+
         buckling_resistance_serviceability ={'buckling_resistance_longtudinal_direction':round(longtudinal_direction,2),
                                              'buckling_resistance_transverse_direction':round(transverse_direction,2),
                                              'buckling_resistance_shear_direction':round(shear_direction,2),
                                              'equivalent_stress':round(equivalent_stress,5)
                                              }
-        
+
         return buckling_resistance_serviceability
     
     def usage_factor_serviceability_check(self,cfg,FEA_stress,buckling_resistance_serviceability):
