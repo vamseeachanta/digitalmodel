@@ -11,7 +11,7 @@ class PlateBuckling():
             plates = cfg['groups']
             plate_buckling_result_array = []
             # for plate_cfg in plates:
-            for plate_idx in (0, len(plates)):
+            for plate_idx in range(0, len(plates)):
                 plate_cfg = plates[plate_idx]
                 plate_buckling_result = self.run_plate_DNV_rp_C201(cfg, plate_cfg)
                 plate_buckling_result_array.append(plate_buckling_result)
@@ -19,7 +19,9 @@ class PlateBuckling():
         else:
             logging.error(f"Calculation type: {cfg['calculation_type']} not IMPLEMENTED. ... FAIL")
             raise (Exception(f"Calculation type: {cfg['calculation_type']} not IMPLEMENTED. ... FAIL"))
-        
+
+        cfg[cfg['basename']] = plate_buckling_result_array
+
         return cfg
     
     def run_plate_DNV_rp_C201(self, cfg, plate_cfg):
@@ -53,7 +55,7 @@ class PlateBuckling():
         stress_bi_axial = self.get_bi_axial_direction(cfg,plate_properties,stress_longtudinal,stress_transverse,stress_shear,FEA_stress)
         dnv_rp_usage_factor = self.DNV_RP_C201_usage_factor(cfg,FEA_stress,stress_longtudinal,stress_transverse,stress_shear,stress_bi_axial)
 
-        plate_buckling_result = {'plate_properties':plate_properties,'FEA_stress':FEA_stress, 'characteristic_resistance':characteristic_resistance, }
+        plate_buckling_result = {'plate_properties':plate_properties,'FEA_stress':FEA_stress, 'characteristic_resistance':characteristic_resistance, 'dnv_rp_usage_factor': dnv_rp_usage_factor,}
 
         return plate_buckling_result
 
