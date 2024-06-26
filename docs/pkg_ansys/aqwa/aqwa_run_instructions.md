@@ -11,6 +11,18 @@ Instructions to run AQWA and the associated suite of softwares
 
 ### Command Line Method
 
+How to open powershell and run the analysis:
+
+- open "Anaconda PowerShell Prompt" by searching for "powershell"
+- change director:
+  - cd K:\tutorial\sp\dat\003_FPSO_Turret\rev0
+- if not in same dirve. change drive. I.e.
+  - K:
+- check directory files using following command
+  - dir
+- run batch
+  - aqwa_sp.bat
+
 #### Hydrodynamic Runs
 
 #### DAMP Runs
@@ -61,4 +73,3 @@ RDEP: Starting position will be taken from .EQP/.RES file
 REST: Restart run will be specified
 
 WFRQ: Aqwa-Drift by default runs only drift frequency motions. WFRQ will include wave frequency motions
-

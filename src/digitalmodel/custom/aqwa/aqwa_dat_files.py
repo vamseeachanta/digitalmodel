@@ -1,14 +1,15 @@
-import os
-import math
+# Standard library imports
 import logging
-import pandas as pd
+import os
 
+# Third party imports
+from assetutilities.common.data import ReadData, SaveData
 from assetutilities.common.file_management import FileManagement
-from assetutilities.common.data import ReadData
-from assetutilities.common.data import SaveData
-
-from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
 from assetutilities.common.yml_utilities import WorkingWithYAML
+
+
+# Reader imports
+from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
 
 wwy = WorkingWithYAML()
 
@@ -158,6 +159,67 @@ class AqwaDATFiles:
 
             data_array_str = [f'{data:.3e}' for data in data_array]
             body_item_str = f'{white_space:>1s}{white_space:>3s}{white_space:>2s}{element_type:>4s}{white_space:>5s}{body_item_idx+1:>5d}{data_array_str[0]:>10s}{data_array_str[1]:>10s}{data_array_str[2]:>10s}{data_array_str[3]:>10s}{data_array_str[4]:>10s}{data_array_str[5]:>10s}'
+            body.append(body_item_str)
+
+        return body
+
+
+    def get_dc_10_body(self, dc_cfg):
+        raw_data = dc_cfg['data']['raw']
+        body = []
+        
+        for item in raw_data:
+            element_type = item['element_type']
+
+            if element_type == 'CPRF':
+                depth = item['depth']
+                if depth > 0:
+                    logging.error('Depth must be negative')
+                    raise ValueError('Depth must be negative')
+                depth = f'{depth:.1f}'
+                speed = item['speed']
+                speed = f'{speed:.2f}'
+                direction = item['direction']
+                direction = f'{direction:.1f}'
+                body_item_str = f'{white_space:>1s}{white_space:>3s}{white_space:>2s}{element_type:>4s}{depth:>10s}{speed:>10s}{direction:>10s}'
+
+            elif element_type == 'WIND':
+                speed = item['speed']
+                speed = f'{speed:.2f}'
+                direction = item['direction']
+                direction = f'{direction:.1f}'
+                body_item_str = f'{white_space:>1s}{white_space:>3s}{white_space:>2s}{element_type:>4s}{speed:>10s}{direction:>10s}'
+
+            body.append(body_item_str)
+
+        return body
+
+    def get_dc_11_body(self, dc_cfg):
+        raw_data = dc_cfg['data']['raw']
+        body = []
+        
+        for item in raw_data:
+            element_type = item['element_type']
+
+            if element_type == 'CPRF':
+                depth = item['depth']
+                if depth > 0:
+                    logging.error('Depth must be negative')
+                    raise ValueError('Depth must be negative')
+                depth = f'{depth:.1f}'
+                speed = item['speed']
+                speed = f'{speed:.2f}'
+                direction = item['direction']
+                direction = f'{direction:.1f}'
+                body_item_str = f'{white_space:>1s}{white_space:>3s}{white_space:>2s}{element_type:>4s}{depth:>10s}{speed:>10s}{direction:>10s}'
+
+            elif element_type == 'WIND':
+                speed = item['speed']
+                speed = f'{speed:.2f}'
+                direction = item['direction']
+                direction = f'{direction:.1f}'
+                body_item_str = f'{white_space:>1s}{white_space:>3s}{white_space:>2s}{element_type:>4s}{speed:>10s}{direction:>10s}'
+
             body.append(body_item_str)
 
         return body

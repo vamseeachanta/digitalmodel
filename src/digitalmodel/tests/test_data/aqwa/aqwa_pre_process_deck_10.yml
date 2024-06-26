@@ -1,0 +1,54 @@
+basename: aqwa
+
+software:
+  version: []
+
+type:
+  preprocess: True
+  analysis: False
+  results: False
+
+pre_process_settings:
+  file_extension: dat
+
+inputs:
+  - file_prefix: fst2_
+    file_extension: deck
+    data:
+      category: 11
+
+      raw:
+        [
+          {
+            element_type: CFC,
+            scaling:
+              [4.25E+04, 1.99E+05, 7.35E+05, 8.70E+06, 8.70E+06, 4.07E+07],
+            csv: True,
+          },
+          {
+            element_type: WFC,
+            scaling:
+              [4.25E+04, 1.99E+05, 7.35E+05, 8.70E+06, 8.70E+06, 4.07E+07],
+            csv: True,
+          },
+        ]
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: output/lis
+      filename_pattern: NULL
+    output_directory: results
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
