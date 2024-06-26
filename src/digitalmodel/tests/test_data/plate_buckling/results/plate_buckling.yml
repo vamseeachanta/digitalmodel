@@ -2,20 +2,33 @@
 state: *id001
 dictitems:
   basename: plate_buckling
-  inputs:
-    calculation_type: DNV_rp_C201
-    plate_1:
-    - length: 2.69
-    - breadth: 0.7
-    - thickness: 0.014
-    - water_depth: 40
-    - yield_strength: 34
-    - poission_ratio: 0.3
-    - young_modulus: 30450
-    - longtudinal_stress: 0.5
-    - shear_stress: 0.7
-    - transverse_stress: 0.5
-    - buckling_coefficient: 4.0
+  calculation_type: DNV_rp_C201
+  groups:
+  - label: plate_1
+    length: 2.69
+    breadth: 0.7
+    thickness: 0.014
+    water_depth: 40
+    yield_strength: 34
+    poisson_ratio: 0.3
+    young_modulus: 30450
+    longtudinal_stress: 0.5
+    shear_stress: 0.7
+    transverse_stress: 0.5
+    buckling_coefficient: 4.0
+  - label: plate_2
+    length: 2.69
+    breadth: 0.75
+    thickness: 0.014
+    water_depth: 50
+    yield_strength: 34
+    poisson_ratio: 0.3
+    young_modulus: 30450
+    longtudinal_stress: 0.8
+    shear_stress: 0.7
+    transverse_stress: 0.5
+    buckling_coefficient: 4.0
+  master_settings: ~
   default:
     log_level: DEBUG
     config:
@@ -30,7 +43,7 @@ dictitems:
     file_name_for_overwrite: plate_buckling
     result_folder: src/digitalmodel/tests/test_data/plate_buckling\results
     log_folder: src/digitalmodel/tests/test_data/plate_buckling\logs
-    start_time: 2024-06-21 11:11:19.094499
+    start_time: 2024-06-26 11:28:41.843000
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: src/digitalmodel/tests/test_data/plate_buckling/plate_buckling.yml

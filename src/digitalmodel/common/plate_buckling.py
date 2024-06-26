@@ -48,7 +48,9 @@ class PlateBuckling():
         stress_longtudinal = self.get_stress_longitudinal_direction(cfg,plate_properties)
         stress_transverse = self.get_stress_transverse_direction(cfg,plate_properties)
         stress_shear = self.get_stress_shear_direction(cfg,plate_properties)
-        
+        stress_bi_axial = self.get_bi_axial_direction(cfg,plate_properties,stress_longtudinal,stress_transverse,stress_shear,FEA_stress)
+        dnv_rp_usage_factor = self.DNV_RP_C201_usage_factor(cfg,FEA_stress,stress_longtudinal,stress_transverse,stress_shear,stress_bi_axial)
+
         plate_buckling_result = {'plate_properties':plate_properties,'FEA_stress':FEA_stress, 'characteristic_resistance':characteristic_resistance, }
         
         return plate_buckling_result
@@ -73,7 +75,7 @@ class PlateBuckling():
         l_by_t = length/ thickness
 
         plate_properties = { 's/l': round(s_by_l,2), 'l/s': round(l_by_s,2), 'c':round(c,2), 't/s':round(t_by_s,2),
-                       's/t':round(s_by_t,2), 'l/t':round(l_by_t,2), 'yield_strength': yield_strength,
+                       's/t':round(s_by_t,2), 'l/t':round(l_by_t,2), 'yield_strength': yield_strength,'breadth':round(breadth,2),
                      'young_modulus': young_modulus,'length':round(length,2), 'poisson_ratio': poisson_ratio, 'water_depth': water_depth,'thickness':round(thickness,3)}
         
         return plate_properties
@@ -142,7 +144,7 @@ class PlateBuckling():
         reduced_slender_ratio = {'reduced_ratio_longtudinal_direction':round(longtudinal_direction,2),
                                  'reduced_ratio_transverse_direction':round(transverse_direction,2),
                                  'reduced_ratio_shear_direction':round(shear_direction,2),
-                                 'equivalent_slenderness_ratio':round(equivalent_ratio,2)
+                                 'equivalent_slenderness_ratio':round(equivalent_ratio,4)
                                  }
         return reduced_slender_ratio
     
@@ -372,6 +374,37 @@ class PlateBuckling():
         shear_stress = {'shear_resistance':round(shear_resistance,2)
                        }
         return shear_stress
+    
+    def get_bi_axial_direction(self,cfg,plate_properties,stress_longtudinal,stress_transverse,stress_shear,FEA_stress):
+
+        ci_value = 1 - plate_properties['breadth']/(120 * plate_properties['thickness'])
+        C_value = 1.00
+        resulting_factor = 1.15
+        stress_biaxial_with_shear = round(C_value/resulting_factor * plate_properties['yield_strength']/ math.sqrt(3),2)
+
+        longtudinal_stress = stress_longtudinal['design_resistance']
+        transverse_stress = stress_transverse['design_resistance_transverse']
+        
+        bi_axial_loading = ((FEA_stress['longtudinal_stress']/longtudinal_stress)**2+ (FEA_stress['longtudinal_stress']/transverse_stress)**2 - ci_value*(FEA_stress['longtudinal_stress']/longtudinal_stress)*(FEA_stress['longtudinal_stress']/transverse_stress)+(FEA_stress['shear_stress']/stress_biaxial_with_shear)**2)
+
+        bi_axial_stress = {'bi_axial_loading_shear_condition':bi_axial_loading}
+        return bi_axial_stress
+
+    def DNV_RP_C201_usage_factor(self,cfg,FEA_stress,stress_longtudinal,stress_transverse,stress_shear,stress_bi_axial):
+
+        longtudinal = FEA_stress['longtudinal_stress']/stress_longtudinal['design_resistance']
+
+        transverse = FEA_stress['longtudinal_stress']/stress_transverse['design_resistance_transverse']
+
+        shear = FEA_stress['shear_stress']/stress_shear['shear_resistance']
+
+        bi_axial_with_shear = math.sqrt(stress_bi_axial['bi_axial_loading_shear_condition'])
+
+        dnv_rp_usage_factor = {'usage_longtudinal':round(longtudinal,4),'usage_transverse':round(transverse,3),
+                               'usage_shear':round(shear,3),'usage_bi_axial_with_shear':round(bi_axial_with_shear,3)
+                               }
+        return dnv_rp_usage_factor
+
 
 
 
