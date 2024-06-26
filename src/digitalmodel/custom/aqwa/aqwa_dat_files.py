@@ -3,10 +3,11 @@ import logging
 import os
 
 # Third party imports
+import pandas as pd  # noqa : F401
 from assetutilities.common.data import ReadData, SaveData
 from assetutilities.common.file_management import FileManagement
+from assetutilities.common.utilities import is_file_valid_func
 from assetutilities.common.yml_utilities import WorkingWithYAML
-
 
 # Reader imports
 from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
@@ -40,7 +41,7 @@ class AqwaDATFiles:
 
         dc_header = self.get_dc_header(data_category)
 
-        dc_body_func = getattr(self, f'get_dc_{data_category}_body')
+        dc_body_func = getattr(self, f"get_dc_{data_category}_body")
         dc_body = dc_body_func(dc_cfg)
 
         dc_footer = self.get_dc_footer(data_category)
@@ -62,11 +63,11 @@ class AqwaDATFiles:
         save_data.save_ascii_file_from_array(dc_data, io)
 
     def get_dc_header(self, data_category):
-        file_name = f'{data_category}_header.deck'
+        file_name = f"{data_category}_header.deck"
 
         library_name = 'digitalmodel'
         library_file_cfg = {
-            'filename': f'tests/test_data/aqwa/decks/{file_name}',
+            'filename': f"tests/test_data/aqwa/decks/{file_name}",
             'library_name': library_name
         }
 
@@ -78,11 +79,11 @@ class AqwaDATFiles:
 
 
     def get_dc_footer(self, data_category):
-        file_name = f'{data_category}_footer.deck'
+        file_name = f"{data_category}_footer.deck"
 
         library_name = 'digitalmodel'
         library_file_cfg = {
-            'filename': f'tests/test_data/aqwa/decks/{file_name}',
+            'filename': f"tests/test_data/aqwa/decks/{file_name}",
             'library_name': library_name
         }
 
@@ -99,7 +100,7 @@ class AqwaDATFiles:
             body_item = raw_data[body_item_idx]
             node = body_item['node']
             mass = int(body_item['mass'])
-            body_item_str = f'{white_space:>1s}{white_space:>3s}{body_item_idx+1:>2d}{white_space:>4s}{white_space:>5s}{node:>5d}{mass:>10d}'
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{body_item_idx+1:>2d}{white_space:>4s}{white_space:>5s}{node:>5d}{mass:>10d}"
             body.append(body_item_str)
 
         return body
@@ -112,18 +113,18 @@ class AqwaDATFiles:
             body_item = raw_data[body_item_idx]
             node = body_item['node']
             Ixx = body_item.get('Ixx', 0)
-            Ixx = f'{Ixx:.3e}'
+            Ixx = f"{Ixx:.3e}"
             Ixy = body_item.get('Ixy', 0)
-            Ixy = f'{Ixy:.3e}'
+            Ixy = f"{Ixy:.3e}"
             Ixz = body_item.get('Ixz', 0)
-            Ixz = f'{Ixz:.3e}'
+            Ixz = f"{Ixz:.3e}"
             Iyy = body_item.get('Iyy', 0)
-            Iyy = f'{Iyy:.3e}'
+            Iyy = f"{Iyy:.3e}"
             Iyz = body_item.get('Iyz', 0)
-            Iyz = f'{Iyz:.3e}'
+            Iyz = f"{Iyz:.3e}"
             Izz = body_item.get('Izz', 0)
-            Izz = f'{Izz:.3e}'
-            body_item_str = f'{white_space:>1s}{white_space:>3s}{body_item_idx+1:>2d}{element_type:>4s}{white_space:>5s}{node:>5d}{Ixx:>10s}{Ixy:>10s}{Ixz:>10s}{Iyy:>10s}{Iyz:>10s}{Izz:>10s}'
+            Izz = f"{Izz:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{body_item_idx+1:>2d}{element_type:>4s}{white_space:>5s}{node:>5d}{Ixx:>10s}{Ixy:>10s}{Ixz:>10s}{Iyy:>10s}{Iyz:>10s}{Izz:>10s}"
             body.append(body_item_str)
 
         return body
@@ -138,8 +139,8 @@ class AqwaDATFiles:
         for body_item_idx in range(0, len(period_array)):
             period = raw_data['period'][body_item_idx]
             frequency = 1/period
-            frequency = f'{frequency:.3e}'
-            body_item_str = f'{white_space:>1s}{white_space:>3s}{body_item_idx+1:>2d}{element_type:>4s}{body_item_idx+1:>5d}{body_item_idx+1:>5d}{frequency:>10s}'
+            frequency = f"{frequency:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{body_item_idx+1:>2d}{element_type:>4s}{body_item_idx+1:>5d}{body_item_idx+1:>5d}{frequency:>10s}"
             body.append(body_item_str)
 
         return body
@@ -157,8 +158,8 @@ class AqwaDATFiles:
             elif body_item_idx in [4]:
                 data_array = [0]*4 + [raw_data['added_damping']['ryy']] + [0]
 
-            data_array_str = [f'{data:.3e}' for data in data_array]
-            body_item_str = f'{white_space:>1s}{white_space:>3s}{white_space:>2s}{element_type:>4s}{white_space:>5s}{body_item_idx+1:>5d}{data_array_str[0]:>10s}{data_array_str[1]:>10s}{data_array_str[2]:>10s}{data_array_str[3]:>10s}{data_array_str[4]:>10s}{data_array_str[5]:>10s}'
+            data_array_str = [f"{data:.3e}" for data in data_array]
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{element_type:>4s}{white_space:>5s}{body_item_idx+1:>5d}{data_array_str[0]:>10s}{data_array_str[1]:>10s}{data_array_str[2]:>10s}{data_array_str[3]:>10s}{data_array_str[4]:>10s}{data_array_str[5]:>10s}"
             body.append(body_item_str)
 
         return body
@@ -168,31 +169,95 @@ class AqwaDATFiles:
         raw_data = dc_cfg['data']['raw']
         body = []
         
+        direction_index = 1
         for item in raw_data:
             element_type = item['element_type']
+            csv_file = item['csv']
+            is_file_valid, file_name = is_file_valid_func(csv_file)
+            if not is_file_valid:
+                logging.error(f"File {file_name} is not valid")
+                raise ValueError(f"File {file_name} is not valid")
+            
 
-            if element_type == 'CPRF':
-                depth = item['depth']
-                if depth > 0:
-                    logging.error('Depth must be negative')
-                    raise ValueError('Depth must be negative')
-                depth = f'{depth:.1f}'
-                speed = item['speed']
-                speed = f'{speed:.2f}'
-                direction = item['direction']
-                direction = f'{direction:.1f}'
-                body_item_str = f'{white_space:>1s}{white_space:>3s}{white_space:>2s}{element_type:>4s}{depth:>10s}{speed:>10s}{direction:>10s}'
+            df_item = pd.read_csv(file_name)
+            scaling = item['scaling']
 
-            elif element_type == 'WIND':
-                speed = item['speed']
-                speed = f'{speed:.2f}'
-                direction = item['direction']
-                direction = f'{direction:.1f}'
-                body_item_str = f'{white_space:>1s}{white_space:>3s}{white_space:>2s}{element_type:>4s}{speed:>10s}{direction:>10s}'
+            if element_type == 'CFC':
+                body, direction_index = self.get_CFC_data(body, direction_index, df_item, scaling)
 
-            body.append(body_item_str)
+            elif element_type == 'WFC':
+                body, direction_index = self.get_WFC_data(body, direction_index, df_item, scaling)
+
 
         return body
+
+    def get_WFC_data(self, body, direction_index, df_item, scaling):
+        for idx in range(0, len(df_item)):
+            direction_index = direction_index + 1
+            direction_identifier = str(direction_index)
+            direction = f"{df_item.iloc[idx]['Direction']:.1f}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'DIRN':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{direction:>10s}"
+            body.append(body_item_str)
+
+            Cx = f"{df_item.iloc[idx]['Cx'] * scaling['Cx']:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'WIFX':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cx:>10s}"
+            body.append(body_item_str)
+
+            Cy = f"{df_item.iloc[idx]['Cy'] * scaling['Cy']:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'WIFY':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cy:>10s}"
+            body.append(body_item_str)
+
+            Cz = f"{df_item.iloc[idx]['Cz'] * scaling['Cz']:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'WIFZ':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cz:>10s}"
+            body.append(body_item_str)
+                    
+            Cnx = f"{df_item.iloc[idx]['Cnx'] * scaling['Cnx']:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'WIRX':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cnx:>10s}"
+            body.append(body_item_str)
+                    
+            Cny = f"{df_item.iloc[idx]['Cny'] * scaling['Cny']:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'WIRY':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cny:>10s}"
+            body.append(body_item_str)
+                    
+            Cnz = f"{df_item.iloc[idx]['Cnz'] * scaling['Cnz']:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'WIRZ':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cnz:>10s}"
+            body.append(body_item_str)
+            
+        return body, direction_index
+
+    def get_CFC_data(self, body, direction_index, df_item, scaling):
+        for idx in range(0, len(df_item)):
+            direction_index = direction_index + 1
+            direction_identifier = str(direction_index)
+            direction = f"{df_item.iloc[idx]['Direction']:.1f}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'DIRN':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{direction:>10s}"
+            body.append(body_item_str)
+
+            Cx = f"{df_item.iloc[idx]['Cx'] * scaling['Cx']:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'CUFX':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cx:>10s}"
+            body.append(body_item_str)
+
+            Cy = f"{df_item.iloc[idx]['Cy'] * scaling['Cy']:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'CUFY':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cy:>10s}"
+            body.append(body_item_str)
+
+            Cz = f"{df_item.iloc[idx]['Cz'] * scaling['Cz']:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'CUFZ':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cz:>10s}"
+            body.append(body_item_str)
+                    
+            Cnx = f"{df_item.iloc[idx]['Cnx'] * scaling['Cnx']:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'CURX':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cnx:>10s}"
+            body.append(body_item_str)
+                    
+            Cny = f"{df_item.iloc[idx]['Cny'] * scaling['Cny']:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'CURY':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cny:>10s}"
+            body.append(body_item_str)
+                    
+            Cnz = f"{df_item.iloc[idx]['Cnz'] * scaling['Cnz']:.3e}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'CURZ':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cnz:>10s}"
+            body.append(body_item_str)
+
+        return body, direction_index
 
     def get_dc_11_body(self, dc_cfg):
         raw_data = dc_cfg['data']['raw']
@@ -201,24 +266,24 @@ class AqwaDATFiles:
         for item in raw_data:
             element_type = item['element_type']
 
-            if element_type == 'CPRF':
+            if element_type == "CPRF":
                 depth = item['depth']
                 if depth > 0:
                     logging.error('Depth must be negative')
                     raise ValueError('Depth must be negative')
-                depth = f'{depth:.1f}'
+                depth = f"{depth:.1f}"
                 speed = item['speed']
-                speed = f'{speed:.2f}'
+                speed = f"{speed:.2f}"
                 direction = item['direction']
-                direction = f'{direction:.1f}'
-                body_item_str = f'{white_space:>1s}{white_space:>3s}{white_space:>2s}{element_type:>4s}{depth:>10s}{speed:>10s}{direction:>10s}'
+                direction = f"{direction:.1f}"
+                body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{element_type:>4s}{depth:>10s}{speed:>10s}{direction:>10s}"
 
-            elif element_type == 'WIND':
+            elif element_type == "WIND":
                 speed = item['speed']
-                speed = f'{speed:.2f}'
+                speed = f"{speed:.2f}"
                 direction = item['direction']
-                direction = f'{direction:.1f}'
-                body_item_str = f'{white_space:>1s}{white_space:>3s}{white_space:>2s}{element_type:>4s}{speed:>10s}{direction:>10s}'
+                direction = f"{direction:.1f}"
+                body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{element_type:>4s}{speed:>10s}{direction:>10s}"
 
             body.append(body_item_str)
 
@@ -236,7 +301,7 @@ class AqwaDATFiles:
             body_item_idx = node_array.index(node)
             node = node_array[body_item_idx]
 
-            body_item_str = f'{white_space:>1s}{white_space:>3s}{body_item_idx+1:>2d}{element_type:>4s}{structure:>5d}{node:>5d}'
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{body_item_idx+1:>2d}{element_type:>4s}{structure:>5d}{node:>5d}"
             body.append(body_item_str)
 
         return body

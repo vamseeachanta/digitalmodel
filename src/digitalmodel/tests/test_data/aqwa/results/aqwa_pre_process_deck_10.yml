@@ -52,27 +52,26 @@ dictitems:
   - file_prefix: fst2_
     file_extension: deck
     data:
-      category: 11
+      category: 10
       raw:
-      - element_type: CPRF
-        depth: -40
-        speed: 0.3
-        direction: 75.5
-      - element_type: CPRF
-        depth: -30
-        speed: 0.4
-        direction: 75.5
-      - element_type: CPRF
-        depth: -15
-        speed: 0.45
-        direction: 75.5
-      - element_type: CPRF
-        depth: 0
-        speed: 0.5
-        direction: 75.5
-      - element_type: WIND
-        speed: 20.1
-        direction: 22.8
+      - element_type: CFC
+        scaling:
+          Cx: 42500.0
+          Cy: 199000.0
+          Cz: 735000.0
+          Cnx: 8700000.0
+          Cny: 8700000.0
+          Cnz: 40700000.0
+        csv: src/digitalmodel/tests/test_data/aqwa/csv/FST2_L000_CFC.csv
+      - element_type: WFC
+        scaling:
+          Cx: 1678
+          Cy: 7811
+          Cz: 8949
+          Cnx: 298215
+          Cny: 32704
+          Cnz: 1598052
+        csv: src/digitalmodel/tests/test_data/aqwa/csv/od_fst-2_01_light_long_truss_wolngc.csv
   Analysis:
     basename: aqwa
     analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa
@@ -80,7 +79,7 @@ dictitems:
     file_name_for_overwrite: aqwa_pre_process_deck_10
     result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-06-26 09:54:24.032483
+    start_time: 2024-06-26 15:55:10.520237
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_pre_process_deck_10.yml

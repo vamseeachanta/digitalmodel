@@ -15,21 +15,35 @@ inputs:
   - file_prefix: fst2_
     file_extension: deck
     data:
-      category: 11
+      category: 10
 
       raw:
         [
           {
             element_type: CFC,
             scaling:
-              [4.25E+04, 1.99E+05, 7.35E+05, 8.70E+06, 8.70E+06, 4.07E+07],
-            csv: True,
+              {
+                Cx: 4.25E+04,
+                Cy: 1.99E+05,
+                Cz: 7.35E+05,
+                Cnx: 8.70E+06,
+                Cny: 8.70E+06,
+                Cnz: 4.07E+07,
+              },
+            csv: src/digitalmodel/tests/test_data/aqwa/csv/FST2_L000_CFC.csv,
           },
           {
             element_type: WFC,
             scaling:
-              [4.25E+04, 1.99E+05, 7.35E+05, 8.70E+06, 8.70E+06, 4.07E+07],
-            csv: True,
+              {
+                Cx: 1678,
+                Cy: 7811,
+                Cz: 8949,
+                Cnx: 298215,
+                Cny: 32704,
+                Cnz: 1598052,
+              },
+            csv: src/digitalmodel/tests/test_data/aqwa/csv/od_fst-2_01_light_long_truss_wolngc.csv,
           },
         ]
 
