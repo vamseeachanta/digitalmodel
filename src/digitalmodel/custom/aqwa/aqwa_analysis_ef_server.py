@@ -84,9 +84,9 @@ class AqwaEFServer:
             filename_path = os.path.join(aqwa_client_directory , filename)
             df.to_csv(filename_path , index=False)
 
-            filename = output_file_basename + '_' +str(def_pos_idx) + '_py_inputs_statistics.csv'
-            filename_path = os.path.join(aqwa_client_directory , filename)
-            self.save_statistics(df, filename_path)
+            # filename = output_file_basename + '_' +str(def_pos_idx) + '_py_inputs_statistics.csv'
+            # filename_path = os.path.join(aqwa_client_directory , filename)
+            # self.save_statistics(df, filename_path)
 
     def save_statistics(self, df, statistics_filename):
         df_statistics = de.get_df_statistics(df)

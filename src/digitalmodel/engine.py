@@ -1,11 +1,16 @@
+# Standard library imports
+import logging
 import os
 import sys
 
+# Third party imports
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import CopyAndPasteFiles, SaveData
+from assetutilities.common.file_management import FileManagement
 from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.yml_utilities import ymlInput
 
+# Reader imports
 from digitalmodel.aqwa import Aqwa
 from digitalmodel.catenary_riser import catenary_riser
 from digitalmodel.common.cathodic_protection import CathodicProtection
@@ -28,22 +33,27 @@ from digitalmodel.orcaflex_analysis import orcaflex_analysis
 from digitalmodel.vertical_riser import vertical_riser
 
 save_data = SaveData()
+fm = FileManagement()
 ou = OrcaflexUtilities()
 library_name = "digitalmodel"
 
 
-def engine(inputfile: str = None) -> dict:
-    inputfile = validate_arguments_run_methods(inputfile)
-
-    cfg = ymlInput(inputfile, updateYml=None)
-    cfg = AttributeDict(cfg)
+def engine(inputfile: str = None, cfg: dict = None) -> dict:
+    fm = FileManagement()
     if cfg is None:
-        raise ValueError("cfg is None")
+        inputfile = validate_arguments_run_methods(inputfile)
+        cfg = ymlInput(inputfile, updateYml=None)
+        cfg = AttributeDict(cfg)
+        if cfg is None:
+            raise ValueError("cfg is None")
 
     basename = cfg["basename"]
     application_manager = ConfigureApplicationInputs(basename)
     application_manager.configure(cfg, library_name)
     cfg_base = application_manager.cfg
+    cfg_base = fm.router(cfg_base)
+
+    logging.info(f"{basename}, application ... START")
 
     if basename in ["simple_catenary_riser", "catenary_riser"]:
         cfg_base = catenary_riser(cfg_base)
@@ -69,6 +79,7 @@ def engine(inputfile: str = None) -> dict:
         ofm = OrcaflexFileManagement()
         cfg_base = ofm.file_management(cfg_base)
     elif basename == "rigging":
+        # Reader imports
         from digitalmodel.custom.rigging import Rigging
 
         rigging = Rigging()

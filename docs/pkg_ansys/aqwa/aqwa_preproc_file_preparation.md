@@ -36,6 +36,7 @@ Naming comvention need to be simplified.
 - Analysis Type (WFRQ, STAT/Stability, DYNA ) + Structure (02PMS) + Damping (ad010) + Structure (fst2) + Length (l015)
         Structure Conventions (5 characters) : 2PMS_, fst2_, l015_? (project specific?)
         Wave and Current (12 characters) (examples: W01_V01_C01_: ??
+        100 Year return perod, Direction 90 deg (12 characters) (examples: 100Y_D90: ??
         Damping Conventions (4 charaters) : d00_, d08_, d10_, d22_ (examples)
           - small d Occurs in middle
         Frequency Analysis:
