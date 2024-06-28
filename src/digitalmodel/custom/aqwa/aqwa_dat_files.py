@@ -168,6 +168,22 @@ class AqwaDATFiles:
     def get_dc_10_body(self, dc_cfg):
         raw_data = dc_cfg['data']['raw']
         body = []
+
+        directions = []
+        for item in raw_data:
+            element_type = item['element_type']
+            csv_file = item['csv']
+            is_file_valid, file_name = is_file_valid_func(csv_file)
+            if not is_file_valid:
+                logging.error(f"File {file_name} is not valid")
+                raise ValueError(f"File {file_name} is not valid")
+            
+            df_item = pd.read_csv(file_name)
+            directions += list(df_item['Direction'])
+        
+        directions = list(set(directions))
+        direction_identifier_df = pd.DataFrame(columns=['Direction'], data=directions)
+        direction_identifier_df['direction_identifier'] = [str(item) for item in directions]
         
         direction_index = 1
         for item in raw_data:

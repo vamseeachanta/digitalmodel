@@ -36,3 +36,4 @@ dependencies:
       - black
       - isort
       - poetry
+      - tabulate

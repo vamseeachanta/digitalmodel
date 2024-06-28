@@ -1,7 +1,13 @@
+# Standard library imports
 import os
 import re
 from collections import Counter, defaultdict
+
+# Third party imports
+import pandas as pd  # noqa
+from assetutilities.common.utilities import is_dir_valid_func
 from tabulate import tabulate
+
 
 def read_mes_files(directory):
     mes_files = [f for f in os.listdir(directory) if f.endswith('.MES')]
@@ -47,12 +53,36 @@ def summarize_warnings_and_errors(warnings, errors):
     
     return warning_table, error_table
 
+def to_dataframe():
+    df_columns = ['Type', 'Description', 'Frequency', 'Files']
+    df = pd.DataFrame(columns=df_columns)
+    Type = 'INPUT DATA'
+    Description = 'Requested number of cores, 12, is reduced to the number of available licenses'
+    Frequency = 5
+    Files = 'File1, File2, File3, ...'
+    
+    df.loc[len(df)] = [Type, Description, Frequency, Files]
+    
+    df.head()
+    df.to_csv('warnings.csv', index=False)
+    df.to_csv('errors.csv', index=False)
+
+    return df
+
 if __name__ == "__main__":
-    directory = r'C:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\aqwa\mes_files'  # Replace with the actual path to the .MES files directory
-    warnings, errors = read_mes_files(directory)
+    directory = r'src\digitalmodel\tests\test_data\aqwa\mes_files'  # Replace with the actual path to the .MES files directory
+    dir_is_valid, dir = is_dir_valid_func(directory)
+    if not dir_is_valid:
+        raise FileNotFoundError(f"Directory not found: {dir}")
+        
+    warnings, errors = read_mes_files(dir)
     warning_table, error_table = summarize_warnings_and_errors(warnings, errors)
     
     print("Summary of Warnings:")
     print(warning_table)
     print("\nSummary of Errors:")
     print(error_table)
+    print("\nSummary of Errors:")
+    print(error_table)
+    print(error_table)
+    df = to_dataframe()
