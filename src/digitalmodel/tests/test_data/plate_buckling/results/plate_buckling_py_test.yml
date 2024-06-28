@@ -27,29 +27,29 @@ plate_buckling:
       usage_shear: 0.041
       usage_bi_axial_with_shear: 0.057
   - plate_properties:
-      s/l: 0.28
-      l/s: 3.59
-      c: 1.72
-      t/s: 0.02
-      s/t: 53.48
-      l/t: 191.96
+      s/l: 0.27
+      l/s: 3.77
+      c: 1.73
+      t/s: 0.01
+      s/t: 69.7
+      l/t: 262.42
       yield_strength: 34
-      breadth: 2.46
+      breadth: 2.3
       young_modulus: 30450
-      length: 8.83
+      length: 8.66
       poisson_ratio: 0.3
-      water_depth: 164.04
-      thickness: 0.046
+      water_depth: 131.23
+      thickness: 0.033
     FEA_stress:
-      vonmises_stress: 1.4
-      longtudinal_stress: 0.8
-      transverse_stress: 0.5
-      shear_stress: 0.7
+      vonmises_stress: 2.48
+      longtudinal_stress: 0.3
+      transverse_stress: 1.9
+      shear_stress: 1.0
     characteristic_resistance:
       "normal_stress_\u03C4k": 19.63
       normal_stress_kx: 34
     dnv_rp_usage_factor:
-      usage_longtudinal: 0.0332
-      usage_transverse: 0.066
-      usage_shear: 0.041
-      usage_bi_axial_with_shear: 0.077
+      usage_longtudinal: 0.0151
+      usage_transverse: 0.027
+      usage_shear: 0.059
+      usage_bi_axial_with_shear: 0.065
