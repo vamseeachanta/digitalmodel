@@ -183,9 +183,9 @@ class AqwaDATFiles:
         
         directions = list(set(directions))
         direction_identifier_df = pd.DataFrame(columns=['Direction'], data=directions)
-        direction_identifier_df['direction_identifier'] = [str(item) for item in directions]
+        direction_identifier_df['direction_identifier'] = [str(item) for item in list(range(1,len(directions)+1))]
+        self. get_direction_data(body, direction_identifier_df)
         
-        direction_index = 1
         for item in raw_data:
             element_type = item['element_type']
             csv_file = item['csv']
@@ -196,24 +196,33 @@ class AqwaDATFiles:
             
 
             df_item = pd.read_csv(file_name)
+            res_df = pd.merge(df_item, direction_identifier_df, how='inner', on=['Direction'])
             scaling = item['scaling']
 
             if element_type == 'CFC':
-                body, direction_index = self.get_CFC_data(body, direction_index, df_item, scaling)
+                body = self.get_CFC_data(body, res_df, scaling)
 
             elif element_type == 'WFC':
-                body, direction_index = self.get_WFC_data(body, direction_index, df_item, scaling)
+                body = self.get_WFC_data(body, res_df, scaling)
 
 
         return body
 
-    def get_WFC_data(self, body, direction_index, df_item, scaling):
-        for idx in range(0, len(df_item)):
+    def get_direction_data(self, body, direction_identifier_df):
+
+        direction_index = 0
+        for idx in range(0, len(direction_identifier_df)):
             direction_index = direction_index + 1
-            direction_identifier = str(direction_index)
-            direction = f"{df_item.iloc[idx]['Direction']:.1f}"
+            direction = f"{direction_identifier_df.iloc[idx]['Direction']:.1f}"
+            direction_identifier = direction_identifier_df.iloc[idx]['direction_identifier']
             body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'DIRN':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{direction:>10s}"
             body.append(body_item_str)
+
+
+    def get_WFC_data(self, body, df_item, scaling):
+        for idx in range(0, len(df_item)):
+
+            direction_identifier = df_item.iloc[idx]['direction_identifier']
 
             Cx = f"{df_item.iloc[idx]['Cx'] * scaling['Cx']:.3e}"
             body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'WIFX':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cx:>10s}"
@@ -239,15 +248,12 @@ class AqwaDATFiles:
             body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'WIRZ':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cnz:>10s}"
             body.append(body_item_str)
             
-        return body, direction_index
+        return body
 
-    def get_CFC_data(self, body, direction_index, df_item, scaling):
+    def get_CFC_data(self, body, df_item, scaling):
         for idx in range(0, len(df_item)):
-            direction_index = direction_index + 1
-            direction_identifier = str(direction_index)
-            direction = f"{df_item.iloc[idx]['Direction']:.1f}"
-            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'DIRN':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{direction:>10s}"
-            body.append(body_item_str)
+
+            direction_identifier = df_item.iloc[idx]['direction_identifier']
 
             Cx = f"{df_item.iloc[idx]['Cx'] * scaling['Cx']:.3e}"
             body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'CUFX':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cx:>10s}"
@@ -273,7 +279,7 @@ class AqwaDATFiles:
             body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'CURZ':>4s}{direction_identifier:>5s}{direction_identifier:>5s}{Cnz:>10s}"
             body.append(body_item_str)
 
-        return body, direction_index
+        return body
 
     def get_dc_11_body(self, dc_cfg):
         raw_data = dc_cfg['data']['raw']
