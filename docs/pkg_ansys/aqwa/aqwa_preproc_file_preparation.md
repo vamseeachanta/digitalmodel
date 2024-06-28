@@ -90,16 +90,34 @@ on the restart analysis as well for the time being the best we can do is the one
 
 ### Key Files
 
-| File Extension | Description |
-| --- | --- |
+| File Extension | Description | Notes |
+| --- | --- |--- |
 | **INPUTS**|
-| .DAT | AQWA data file |
-| .LIN | AQWA Lines Plan |
-| ,MSD | AQWA Mass Distribution file |
+| .bat | input | Windows batch file |
+| .dat | AQWA, input |
+| .LIN | AQWA, input| Lines Plan
+| .MSD | AQWA, input | Mass Distribution file |
+| .yml | Python, input |
 | **OUTPUTS**|
-| .HYD | AQWA hydrodynamic database file |
-| .LIS | AQWA output file |
-| .PLT | AQWA plot file |
+| .HYD | AQWA hydrodynamic database file | Hydrodynamic Diffraction outputs |
+| .LIS | AQWA output file | Output file |
+| .PLT | AQWA plot file | File used for extracting output data by AqwaReader |
+| .cfg | AQWA, config | For running external force
+| .EQP | AQWA, output | Equilibrium file |
+| .HYD | AQWA, output | Hydrodynamic properties |
+| .LIS | AQWA, output | All output
+| .MES | AQWA, output | Error and warnings
+| .MQT | AQWA, output |
+| .PAC | AQWA, output |
+| .PAG | AQWA, output |
+| .PLD | AQWA, output |
+| .PLS | AQWA, output |
+| .PLT | AQWA, output | Used by AqwaReader for output
+| .POT | AQWA, output |
+| .RES | AQWA, output | Restart file for other analysis
+| AqwaServerLogFile.txt | AQWA, output | External force analysis logs
+| .USS | AQWA, output |
+| .VAC | AQWA, output |
 
 ## Batch Processing
 
