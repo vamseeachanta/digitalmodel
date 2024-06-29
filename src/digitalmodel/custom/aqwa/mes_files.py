@@ -54,9 +54,8 @@ def summarize_warnings_and_errors(warnings, errors):
     
     return warning_summary, error_summary
 
-def to_dataframe(summary, output_file):
-    df_columns = ['Type', 'Description', 'Frequency', 'File']
-    df = pd.DataFrame(summary, columns=df_columns)
+def to_dataframe(summary, output_file,columns):
+    df = pd.DataFrame(summary, columns=columns)
     df.to_csv(output_file, index=False)
     return df
 
@@ -65,7 +64,7 @@ def generate_file_status_table(file_status):
     statuses = ["Status"] + list(file_status.values())
     status_summary = [file_names, statuses]
     status_table = tabulate(status_summary, tablefmt="grid")
-    return status_table
+    return status_summary, status_table
 
 if __name__ == "__main__":
     directory = r'src\digitalmodel\tests\test_data\aqwa\mes_files' 
@@ -75,14 +74,16 @@ if __name__ == "__main__":
         
     warnings, errors,file_status = read_mes_files(dir)
     warning_summary, error_summary = summarize_warnings_and_errors(warnings, errors)
-    status_table = generate_file_status_table(file_status)
+    status_summary,status_table = generate_file_status_table(file_status)
 
-    warning_df = to_dataframe(warning_summary, 'warnings.csv')
-    error_df = to_dataframe(error_summary, 'errors.csv')
+    warning_df = to_dataframe(warning_summary, 'warnings.csv', ['Type', 'Description', 'Frequency', 'File'])
+    error_df = to_dataframe(error_summary, 'errors.csv', ['Type', 'Description', 'Frequency', 'File'])
+    status_df = pd.DataFrame(status_summary[1:], columns=status_summary[0])
+    status_df.to_csv('mes_files_status.csv', index=False)
 
     print("Warnings.csv :")
     print(warning_df)
     print("\nErrors.csv :")
     print(error_df)
     print("\nMES Files Comparison:")
-    print(status_table)
+    print(status_df)
