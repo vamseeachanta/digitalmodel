@@ -11,13 +11,15 @@ from tabulate import tabulate
 
 def read_mes_files(directory):
     mes_files = [f for f in os.listdir(directory) if f.endswith('.MES')]
-    warnings = defaultdict(Counter)
-    errors = defaultdict(Counter)
+    warnings = defaultdict(lambda: defaultdict(Counter))
+    errors = defaultdict(lambda: defaultdict(Counter))
+    file_status = {}
     
     warning_pattern = re.compile(r'\*\*\*\* (.+?) WARNING \*\*\*\* (.+)')
     error_pattern = re.compile(r'\*\*\*\* (.+?) ERROR \*\*\*\* (.+)')
     
     for mes_file in mes_files:
+        file_warnings_errors = 0
         with open(os.path.join(directory, mes_file), 'r') as file:
             for line in file:
                 warning_match = warning_pattern.search(line)
@@ -25,64 +27,62 @@ def read_mes_files(directory):
                 
                 if warning_match:
                     warning_type, warning_message = warning_match.groups()
-                    warnings[warning_type.strip()][warning_message.strip()] += 1
+                    warnings[warning_type.strip()][warning_message.strip()][mes_file] += 1
+                    file_warnings_errors += 1
                 elif error_match:
                     error_type, error_message = error_match.groups()
-                    errors[error_type.strip()][error_message.strip()] += 1
+                    errors[error_type.strip()][error_message.strip()][mes_file] += 1
+                    file_warnings_errors += 1
+        
+        file_status[mes_file] = "X" if file_warnings_errors > 0 else "-"
     
-    return warnings, errors
+    return warnings, errors, file_status
 
 def summarize_warnings_and_errors(warnings, errors):
     warning_summary = []
     error_summary = []
 
     for warning_type, warning_messages in warnings.items():
-        messages = []
-        for message, count in warning_messages.items():
-            messages.append(f"{message}: -- {count} time(s)")
-        warning_summary.append([warning_type, "\n".join(messages)])
-
+        for message, file_counts in warning_messages.items():
+            for file, count in file_counts.items():
+                warning_summary.append([warning_type, message, count, os.path.splitext(file)[0]])
+    
     for error_type, error_messages in errors.items():
-        messages = []
-        for message, count in error_messages.items():
-            messages.append(f"{message}: -- {count} time(s)")
-        error_summary.append([error_type, "\n".join(messages)])
+        for message, file_counts in error_messages.items():
+            for file, count in file_counts.items():
+                error_summary.append([error_type, message, count, os.path.splitext(file)[0]])
     
-    warning_table = tabulate(warning_summary, headers=["Type", "Messages"], tablefmt="grid")
-    error_table = tabulate(error_summary, headers=["Type", "Messages"], tablefmt="grid")
-    
-    return warning_table, error_table
+    return warning_summary, error_summary
 
-def to_dataframe():
-    df_columns = ['Type', 'Description', 'Frequency', 'Files']
-    df = pd.DataFrame(columns=df_columns)
-    Type = 'INPUT DATA'
-    Description = 'Requested number of cores, 12, is reduced to the number of available licenses'
-    Frequency = 5
-    Files = 'File1, File2, File3, ...'
-    
-    df.loc[len(df)] = [Type, Description, Frequency, Files]
-    
-    df.head()
-    df.to_csv('warnings.csv', index=False)
-    df.to_csv('errors.csv', index=False)
-
+def to_dataframe(summary, output_file):
+    df_columns = ['Type', 'Description', 'Frequency', 'File']
+    df = pd.DataFrame(summary, columns=df_columns)
+    df.to_csv(output_file, index=False)
     return df
 
+def generate_file_status_table(file_status):
+    file_names = ["File"] + [os.path.splitext(filename)[0] for filename in file_status.keys()]
+    statuses = ["Status"] + list(file_status.values())
+    status_summary = [file_names, statuses]
+    status_table = tabulate(status_summary, tablefmt="grid")
+    return status_table
+
 if __name__ == "__main__":
-    directory = r'src\digitalmodel\tests\test_data\aqwa\mes_files'  # Replace with the actual path to the .MES files directory
+    directory = r'src\digitalmodel\tests\test_data\aqwa\mes_files' 
     dir_is_valid, dir = is_dir_valid_func(directory)
     if not dir_is_valid:
         raise FileNotFoundError(f"Directory not found: {dir}")
         
-    warnings, errors = read_mes_files(dir)
-    warning_table, error_table = summarize_warnings_and_errors(warnings, errors)
-    
-    print("Summary of Warnings:")
-    print(warning_table)
-    print("\nSummary of Errors:")
-    print(error_table)
-    print("\nSummary of Errors:")
-    print(error_table)
-    print(error_table)
-    df = to_dataframe()
+    warnings, errors,file_status = read_mes_files(dir)
+    warning_summary, error_summary = summarize_warnings_and_errors(warnings, errors)
+    status_table = generate_file_status_table(file_status)
+
+    warning_df = to_dataframe(warning_summary, 'warnings.csv')
+    error_df = to_dataframe(error_summary, 'errors.csv')
+
+    print("Warnings.csv :")
+    print(warning_df)
+    print("\nErrors.csv :")
+    print(error_df)
+    print("\nMES Files Comparison:")
+    print(status_table)
