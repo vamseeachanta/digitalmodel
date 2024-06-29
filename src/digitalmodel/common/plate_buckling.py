@@ -55,7 +55,9 @@ class PlateBuckling():
         stress_bi_axial = self.get_bi_axial_direction(cfg,plate_properties,stress_longtudinal,stress_transverse,stress_shear,FEA_stress)
         dnv_rp_usage_factor = self.DNV_RP_C201_usage_factor(cfg,FEA_stress,stress_longtudinal,stress_transverse,stress_shear,stress_bi_axial)
 
-        plate_buckling_result = {'plate_properties':plate_properties,'FEA_stress':FEA_stress, 'characteristic_resistance':characteristic_resistance, 'dnv_rp_usage_factor': dnv_rp_usage_factor,}
+        plate_buckling_result = {'usage_factor_ultimate_check':usage_factor_ultimate_check,'usage_factor_serviceabilty':usage_factor_serviceabilty,
+                                 'usage_factor_serviceabilty_check':usage_factor_serviceabilty_check,'usage_factor_ultimate':usage_factor_ultimate,
+                                 'dnv_rp_usage_factor':dnv_rp_usage_factor}
 
         return plate_buckling_result
 
@@ -101,9 +103,9 @@ class PlateBuckling():
     def get_characteristic_resistance(self, cfg,plate_properties):
 
         normal_stress_kx = plate_properties['yield_strength']
-        normal_stress_τk = normal_stress_kx/math.sqrt(3) 
+        normal_stress_tk = normal_stress_kx/math.sqrt(3) 
         
-        characteristic_resistance = {'normal_stress_τk': round(normal_stress_τk,2),
+        characteristic_resistance = {'normal_stress_tk': round(normal_stress_tk,2),
                                      'normal_stress_kx':round(normal_stress_kx,2)}
         return characteristic_resistance
 
@@ -138,7 +140,7 @@ class PlateBuckling():
 
         longtudinal_direction = math.sqrt(characteristic_resistance['normal_stress_kx']/elastic_buckling_resistance['elastic_resistance_longtudinal_stress'])
         transverse_direction = math.sqrt(characteristic_resistance['normal_stress_kx']/elastic_buckling_resistance['elastic_resistance_transverse_stress'])
-        shear_direction = math.sqrt(characteristic_resistance['normal_stress_τk']/elastic_buckling_resistance['elastic_resistance_shear_stress'])
+        shear_direction = math.sqrt(characteristic_resistance['normal_stress_tk']/elastic_buckling_resistance['elastic_resistance_shear_stress'])
 
         equivalent_ratio = math.sqrt((plate_properties['yield_strength']/FEA_stress['vonmises_stress'])*((FEA_stress['longtudinal_stress']/
                                                elastic_buckling_resistance['elastic_resistance_longtudinal_stress'])** plate_properties['c']+
@@ -158,7 +160,7 @@ class PlateBuckling():
 
         transverse_direction = characteristic_resistance['normal_stress_kx']/math.sqrt(1+reduced_slender_ratio['reduced_ratio_transverse_direction'] **4)
 
-        shear_direction = characteristic_resistance['normal_stress_τk']/math.sqrt(1+reduced_slender_ratio['reduced_ratio_shear_direction'] **4)
+        shear_direction = characteristic_resistance['normal_stress_tk']/math.sqrt(1+reduced_slender_ratio['reduced_ratio_shear_direction'] **4)
 
         equivalent_stress = plate_properties['yield_strength']/math.sqrt(1+reduced_slender_ratio['equivalent_slenderness_ratio']**4)
 
@@ -200,9 +202,9 @@ class PlateBuckling():
             transverse_direction = characteristic_resistance['normal_stress_kx']/math.sqrt(2)/reduced_slender_ratio['reduced_ratio_transverse_direction']
         
         if reduced_slender_ratio['reduced_ratio_shear_direction']<1:
-            shear_direction = characteristic_resistance['normal_stress_τk']/math.sqrt(1+reduced_slender_ratio['reduced_ratio_shear_direction']**4)
+            shear_direction = characteristic_resistance['normal_stress_tk']/math.sqrt(1+reduced_slender_ratio['reduced_ratio_shear_direction']**4)
         else:
-            shear_direction = characteristic_resistance['normal_stress_τk']/math.sqrt(2)/reduced_slender_ratio['reduced_ratio_shear_direction']
+            shear_direction = characteristic_resistance['normal_stress_tk']/math.sqrt(2)/reduced_slender_ratio['reduced_ratio_shear_direction']
         
         if reduced_slender_ratio['equivalent_slenderness_ratio']<1:
             equivalent_direction = characteristic_resistance['normal_stress_kx']/(math.sqrt(1+reduced_slender_ratio['equivalent_slenderness_ratio']**4))
@@ -256,7 +258,7 @@ class PlateBuckling():
 
         longtudinal_direction = math.sqrt(characteristic_resistance['normal_stress_kx']/elastic_resistance['resistance_longtudinal_stress'])
         transverse_direction = math.sqrt(characteristic_resistance['normal_stress_kx']/elastic_resistance['resistance_transverse_stress'])
-        shear_direction = math.sqrt(characteristic_resistance['normal_stress_τk']/elastic_resistance['resistance_shear_stress'])
+        shear_direction = math.sqrt(characteristic_resistance['normal_stress_tk']/elastic_resistance['resistance_shear_stress'])
         equivalent_direction = math.sqrt((plate_properties['yield_strength']/FEA_stress['vonmises_stress'])*((FEA_stress['longtudinal_stress']/
                                                elastic_resistance['resistance_longtudinal_stress'])** plate_properties['c']+
                                                (FEA_stress['transverse_stress']/elastic_resistance['resistance_transverse_stress'])** plate_properties['c']+
@@ -271,7 +273,7 @@ class PlateBuckling():
 
         longtudinal_direction = characteristic_resistance['normal_stress_kx']/math.sqrt(1 + reduced_ratio['ratio_longtudinal_direction'] ** 4)
         transverse_direction = characteristic_resistance['normal_stress_kx']/math.sqrt(1 + reduced_ratio['ratio_transverse_direction'] ** 4)
-        shear_direction = characteristic_resistance['normal_stress_τk']/math.sqrt(1 + reduced_ratio['ratio_shear_direction'] ** 4)
+        shear_direction = characteristic_resistance['normal_stress_tk']/math.sqrt(1 + reduced_ratio['ratio_shear_direction'] ** 4)
         equialent_direction = plate_properties['yield_strength']/math.sqrt(1 + reduced_slender_ratio['equivalent_slenderness_ratio'] ** 4)
 
         characteristic_buckling_serviceabilty = {'resistance_longtudinal_direction':round(longtudinal_direction,2),
@@ -309,9 +311,9 @@ class PlateBuckling():
             transverse = characteristic_resistance['normal_stress_kx']/math.sqrt(2)/reduced_ratio['ratio_transverse_direction']
         
         if reduced_ratio['ratio_shear_direction']<1:
-            shear_direction = characteristic_resistance['normal_stress_τk']/(math.sqrt(1+ reduced_ratio['ratio_shear_direction']** 4))
+            shear_direction = characteristic_resistance['normal_stress_tk']/(math.sqrt(1+ reduced_ratio['ratio_shear_direction']** 4))
         else:
-            shear_direction = characteristic_resistance['normal_stress_τk']/math.sqrt(2)/reduced_ratio['ratio_shear_direction']
+            shear_direction = characteristic_resistance['normal_stress_tk']/math.sqrt(2)/reduced_ratio['ratio_shear_direction']
 
         if reduced_ratio['ratio_equivalent_direction']<1:
             equialent_direction = characteristic_resistance['normal_stress_kx']/(math.sqrt(1+ reduced_ratio['ratio_equivalent_direction']** 4))
