@@ -79,7 +79,7 @@ dictitems:
     file_name_for_overwrite: aqwa_pre_process_deck_10
     result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-06-28 15:14:41.790815
+    start_time: 2024-06-28 16:02:36.458676
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_pre_process_deck_10.yml

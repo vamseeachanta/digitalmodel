@@ -183,8 +183,10 @@ class AqwaDATFiles:
         
         directions = list(set(directions))
         direction_identifier_df = pd.DataFrame(columns=['Direction'], data=directions)
+        direction_identifier_df.sort_values(by=['Direction'], inplace=True)
         direction_identifier_df['direction_identifier'] = [str(item) for item in list(range(1,len(directions)+1))]
-        self. get_direction_data(body, direction_identifier_df)
+
+        self.get_direction_data(body, direction_identifier_df)
         
         for item in raw_data:
             element_type = item['element_type']
@@ -193,7 +195,6 @@ class AqwaDATFiles:
             if not is_file_valid:
                 logging.error(f"File {file_name} is not valid")
                 raise ValueError(f"File {file_name} is not valid")
-            
 
             df_item = pd.read_csv(file_name)
             res_df = pd.merge(df_item, direction_identifier_df, how='inner', on=['Direction'])
