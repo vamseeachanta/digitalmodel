@@ -5,18 +5,15 @@ skinparam titleBorderThickness 2
 skinparam titleBorderColor red
 skinparam titleBackgroundColor Tomato
 
-title AQWA Running
+title AQWA Post Process /n AqwaReader
 
 start
 
     note right
-        **(IN PROGRESS)**
-        Objective: Current running status with future developments
-        - #TODO: add logging for AQWA tools
-        Currently application very light on logging
+        Objective: AqwaReader output extraction
     end note
 
-    partition "Preprocess: Model Setup" {
+    partition "Input File Setup" {
 
         : prepare individual decks;
         : Prepare input files;

@@ -63,7 +63,7 @@ class AqwaReader:
                     if sheetname is None:
                         sheetname = Path(input_file).stem + '_' + result_item['label']
                     self.save_to_csv(df_item, result_item, cfg, sheetname)
-                    self.save_statistics(cfg, df_item, sheetname)
+                    # self.save_statistics(cfg, df_item, sheetname)
                     self.inject_to_excel(df_item, result_item, cfg)
 
                 # if result_category == 'equilibrium':

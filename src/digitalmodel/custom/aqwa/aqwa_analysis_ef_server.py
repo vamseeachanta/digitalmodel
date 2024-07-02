@@ -348,7 +348,7 @@ class AqwaEFServer:
 
         force_vector = [force_x['total'], force_y['total'], 0]
 
-        ExtraForce = Analysis.ApplyForceOnStructureAtPoint(Struct=0,
+        ExtraForce = Analysis.ApplyForceOnStructureAtPoint(Struct=Struct,
                                                         FX=force_vector[0],
                                                         FY=force_vector[1],
                                                         FZ=force_vector[2],
