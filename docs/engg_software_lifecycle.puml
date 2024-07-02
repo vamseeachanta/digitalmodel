@@ -1,0 +1,50 @@
+@startuml engg_software_lifecycle
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Engineering Software | LifeCycle
+
+start
+
+    note right
+        Objective: Engineering software lifecycle management
+        - New software
+        - New server setup
+        - software version upgrade etc.
+    end note
+
+    partition "Basic Tests" {
+
+        :Benchmark - Basic Analysis;
+            note right
+                Run basic models to benchmark the software
+                Test should pass prior to any further use
+                Eg: For AQWA the following analysis is done: 
+                - RAOs
+                - Stability
+                - Time Domain Analysis
+                - etc.
+            end note
+
+    }
+
+    partition "Results" {
+        :Visual results;
+            note right
+                Compare against versions
+                Compare against other software if possible
+            end note
+
+    }
+
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

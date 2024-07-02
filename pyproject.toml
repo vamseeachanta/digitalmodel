@@ -57,6 +57,10 @@ profile                   = "black"
 import_heading_stdlib     = "Standard library imports"
 import_heading_thirdparty = "Third party imports"
 import_heading_firstparty = "Reader imports"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+line_length = 88
 
 [tool.mypy]
 strict = true
@@ -64,3 +68,19 @@ strict = true
     [[tool.mypy.overrides]]
     module                 = "feedparser"
     ignore_missing_imports = true
+
+
+[tool.black]
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.tox
+  | venv
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''

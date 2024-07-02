@@ -1,0 +1,16 @@
+       DGDP                 10.       10.       10. 1.71887e9 4.0107e10  572.9578
+       *****                                                                     
+ **** INPUT DATA WARNING:LINE 30 The user-specified low frequency damping DGDP is being
+                                 withdrawn. Any damping should be specified using frequency
+                                 *INDEPENDENT* values i.e. using the FIDD card instead.
+ 
+                                 NB:AQWA-DRIFT ALREADY CALCULATES Wave Drift Damping, in
+                                 future it will also be calculated by AQWA-FER/LIBRIUM(DYN).
+                                 AQWA-NAUT does not use low frequency added mass/damping.
+ --------------------------------------------------------------------------------------------
+
+ **** INPUT DATA WARNING **** CURRENT-AT-DEPTH IGNORED FOR MORISON-TYPE HULL DRAG. CURRENT AT COG USED
+ ------------------------------------------------------------------------------------------------------
+
+ **** SYSTEM WARNING **** CABRUN:CURRENT WAVE SPECTRA GROUP# < 1
+ --------------------------------------------------------------------------------

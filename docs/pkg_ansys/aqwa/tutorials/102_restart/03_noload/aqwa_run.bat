@@ -1,0 +1,1 @@
+"C:\Program Files\ANSYS Inc\v222\aqwa\bin\winx64\aqwa.exe" /nowind .\AD010_FST2_L015_NOLD

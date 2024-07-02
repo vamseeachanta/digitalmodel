@@ -32,3 +32,8 @@ dependencies:
       - PyPDF2
       - xlsxwriter
       - rainflow
+      - pydantic
+      - black
+      - isort
+      - poetry
+      - tabulate

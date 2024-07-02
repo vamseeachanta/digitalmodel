@@ -1,0 +1,174 @@
+default:
+  Analysis:
+    AddMinimumToSummary: True
+    AddMaximumToSummary: True
+    AddMeanToSummary: True
+  config:
+    overwrite:
+      output: True
+
+Files:
+  -
+    Name: K:\0182\Extreme\Rev2\app_catenary_riser_SLWR_06OD_GI_SE0050_HE0200_TA08_20lbft3_SLWR_FE_No Load, No Offset.sim
+    Label: No Load, No Offset
+    ObjectName: SLWR
+  -
+    Name: K:\0182\Extreme\Rev2\app_catenary_riser_SLWR_06OD_GI_SE0050_HE0200_TA08_20lbft3_SLWR_FE_100yr Wave, Assoc Current.sim
+    Label: 100yr Wave, Associated Current
+    ObjectName: SLWR
+  -
+    Name: K:\0182\Extreme\Rev2\app_catenary_riser_SLWR_06OD_GI_SE0050_HE0200_TA08_20lbft3_SLWR_FE_100yr Wave, No Current.sim
+    Label: 100yr Wave, Associated Current
+    ObjectName: SLWR
+  -
+    Name: K:\0182\Extreme\Rev2\app_catenary_riser_SLWR_06OD_GI_SE0050_HE0200_TA08_20lbft3_SLWR_FE_100yr Current, Deep.sim
+    Label: 100yr Current, Deep Current
+    ObjectName: SLWR
+  -
+    Name: K:\0182\Extreme\Rev2\app_catenary_riser_SLWR_06OD_GI_SE0050_HE0200_TA08_20lbft3_SLWR_FE_100yr Current, Deep Reversal.sim
+    Label: 100yr Current, Deep Reversal
+    ObjectName: SLWR
+
+PlotSettings:
+  Name: SLWR_06OD_GI_SLWR_Post_Process
+  SupTitle: 6 inch SLWR Configuration, Top Angle of 8 deg
+  Title: 6 inch Gas Injection Riser
+
+RangeGraph:
+-
+  Command: Range Graph
+  ObjectName: SLWR
+  AdditionalData:
+    - Max
+  SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+  ArcLength:
+  Variable: Effective Tension
+  xlabel: Arc Length (m)
+  ylabel: Effective Tension (kN)
+  Title: Maximum Effective Tension
+  Subtitle: Entire Length
+  FileName: Effective_Tension_Max
+  axhline: NULL
+-
+  Command: Range Graph
+  ObjectName: SLWR
+  AdditionalData:
+    - Min
+  SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+  ArcLength:
+  Variable: Effective Tension
+  xlabel: Arc Length (m)
+  ylabel: Effective Tension (kN)
+  Title: Minimum Effective Tension
+  Subtitle: Entire Length
+  FileName: Effective_Tension_Min
+  axhline: NULL
+-
+  Command: Range Graph
+  ObjectName: SLWR
+  AdditionalData:
+    - Max
+  SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+  ArcLength:
+  Variable: API STD 2RD Method 1
+  xlabel: Arc Length (m)
+  ylabel: API STD 2RD Method 1
+  Title: API STD 2RD Method 1 Utilization
+  Subtitle: Entire Length
+  FileName: API STD 2RD Method 1
+  axhline: 1
+-
+  Command: Range Graph
+  ObjectName: SLWR
+  AdditionalData:
+    - Max
+  SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+  ArcLength:
+    - 0
+    - 50
+  Variable: API STD 2RD Method 1
+  xlabel: Arc Length (m)
+  ylabel: API STD 2RD Method 1
+  Title: API STD 2RD Method 1 Utilization, Top
+  Subtitle: Entire Length
+  FileName: API STD 2RD Method 1-Top
+  axhline: 1
+-
+  Command: Range Graph
+  ObjectName: SLWR
+  AdditionalData:
+    - Max
+  SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+  ArcLength:
+  Variable: Bend Moment
+  xlabel: Arc Length (m)
+  ylabel: Bend Moment (kN.m)
+  Title: Maximum Bending Moment Utilization
+  Subtitle: Entire Length
+  FileName: Maximum_Bending_Moment
+  axhline: NULL
+-
+  Command: Range Graph
+  ObjectName: SLWR
+  AdditionalData:
+    - Max
+  SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+  ArcLength:
+  Variable: Effective Tension
+  xlabel: Arc Length (m)
+  ylabel: Effective Tension (kN)
+  Title: Effective Tension at Top of Riser
+  Subtitle: All Riser
+  FileName: Effective_Tension
+  axhline: NULL
+
+Summary:
+-
+  SummaryFileName: Table_Top
+  Columns:
+    -
+      Command: Range Graph
+      ObjectName: SLWR
+      AdditionalData:
+        - Max
+      SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+      ArcLength:
+        - 0
+        - 50
+      Variable: Effective Tension
+      Label: Eff. Tension
+    -
+      Command: Range Graph
+      ObjectName: SLWR
+      AdditionalData:
+        - Max
+      SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+      ArcLength:
+        - 0
+        - 50
+      Variable: Bend Moment
+      Label: Bend. Moment
+    -
+      Command: Range Graph
+      ObjectName: SLWR
+      AdditionalData:
+        - Max
+      SimulationPeriod:  SpecifiedPeriod(30.0, 120.0)
+      ArcLength:
+        - 0
+        - 50
+      Variable: API STD 2RD Method 1
+      Label: API M1
+    -
+      Command: Range Graph
+      ObjectName: SLWR
+      AdditionalData:
+        - Max
+      SimulationPeriod:  SpecifiedPeriod(30.0, 120.0)
+      ArcLength:
+        - 0
+        - 50
+      Variable: Max von Mises Stress
+      Label: vM stress
+
+

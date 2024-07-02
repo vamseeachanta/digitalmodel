@@ -1,0 +1,184 @@
+basename: umbilical_analysis
+
+installation_phases: False
+line_properties: True
+
+inputs:
+  - output_filename: 06a_501_section1_def
+    output_dir: C:/Users/NSO2003338/github/saipem/yellowtail/code/rev2/06_07_Product
+    name: umbilical_section1
+    template: NULL
+    seawater_density: 1025
+    allowable:
+      tension: 988000
+      mbr: 7.1
+    OD: 0.215
+    ID: 0.0
+    mass:
+      air: 75.229
+      water: 37.920
+    stiffness:
+      bending: 210000
+      axial: 850000000
+      torsion: 160000
+
+  - output_filename: 06a_501_section2_def
+    output_dir: C:/Users/NSO2003338/github/saipem/yellowtail/code/rev2/06_07_Product
+    name: umbilical_section2
+    template: NULL
+    seawater_density: 1025
+    allowable:
+      tension: 988000
+      mbr: 7.1
+    OD: 0.215
+    ID: 0.0
+    mass:
+      air: 72.987
+      water: 35.576
+    stiffness:
+      bending: 190000
+      axial: 770000000
+      torsion: 143000
+
+  - output_filename: 06a_501_section3_def
+    output_dir: C:/Users/NSO2003338/github/saipem/yellowtail/code/rev2/06_07_Product
+    name: umbilical_section3
+    template: NULL
+    seawater_density: 1025
+    allowable:
+      tension: 988000
+      mbr: 7.1
+    OD: 0.215
+    ID: 0.0
+    mass:
+      air: 71.967
+      water: 34.557
+    stiffness:
+      bending: 180000
+      axial: 740000000
+      torsion: 138000
+
+  - output_filename: 06a_503_section1_def
+    output_dir: C:/Users/NSO2003338/github/saipem/yellowtail/code/rev2/06_07_Product
+    name: umbilical_section1
+    template: NULL
+    seawater_density: 1025
+    allowable:
+      tension: 988000
+      mbr: 7.1
+    OD: 0.215
+    ID: 0.0
+    mass:
+      air: 75.127
+      water: 37.717
+    stiffness:
+      bending: 210000
+      axial: 850000000
+      torsion: 144000
+
+  - output_filename: 06a_503_section2_def
+    output_dir: C:/Users/NSO2003338/github/saipem/yellowtail/code/rev2/06_07_Product
+    name: umbilical_section2
+    template: NULL
+    seawater_density: 1025
+    allowable:
+      tension: 988000
+      mbr: 7.1
+    OD: 0.215
+    ID: 0.0
+    mass:
+      air: 72.783
+      water: 35.372
+    stiffness:
+      bending: 190000
+      axial: 770000000
+      torsion: 158000
+
+  - output_filename: 06a_503_section3_def
+    output_dir: C:/Users/NSO2003338/github/saipem/yellowtail/code/rev2/06_07_Product
+    name: umbilical_section3
+    template: NULL
+    seawater_density: 1025
+    allowable:
+      tension: 988000
+      mbr: 7.1
+    OD: 0.215
+    ID: 0.0
+    mass:
+      air: 71.764
+      water: 34.353
+    stiffness:
+      bending: 180000
+      axial: 740000000
+      torsion: 138000
+
+  - output_filename: 06a_505_section1_def
+    output_dir: C:/Users/NSO2003338/github/saipem/yellowtail/code/rev2/06_07_Product
+    name: umbilical_section1
+    template: NULL
+    seawater_density: 1025
+    allowable:
+      tension: 988000
+      mbr: 7.1
+    OD: 0.215
+    ID: 0.0
+    mass:
+      air: 75.127
+      water: 37.717
+    stiffness:
+      bending: 210000
+      axial: 850000000
+      torsion: 144000
+
+  - output_filename: 06a_505_section2_def
+    output_dir: C:/Users/NSO2003338/github/saipem/yellowtail/code/rev2/06_07_Product
+    name: umbilical_section2
+    template: NULL
+    seawater_density: 1025
+    allowable:
+      tension: 988000
+      mbr: 7.1
+    OD: 0.215
+    ID: 0.0
+    mass:
+      air: 72.783
+      water: 35.372
+    stiffness:
+      bending: 190000
+      axial: 770000000
+      torsion: 158000
+
+  - output_filename: 06a_505_section3_def
+    output_dir: C:/Users/NSO2003338/github/saipem/yellowtail/code/rev2/06_07_Product
+    name: umbilical_section3
+    template: NULL
+    seawater_density: 1025
+    allowable:
+      tension: 988000
+      mbr: 7.1
+    OD: 0.215
+    ID: 0.0
+    mass:
+      air: 71.764
+      water: 34.353
+    stiffness:
+      bending: 180000
+      axial: 740000000
+      torsion: 138000
+
+default:
+  Constants:
+    g: 9.81
+  units:
+    OD: m
+    mass:
+      air: kg/m
+      water: kg/m
+    stiffness:
+      bending: N.m2
+      axial: N
+      torsional: N.m2
+    allowable:
+      tension: N
+      mbr: m
+    seawater_density: kg/m3

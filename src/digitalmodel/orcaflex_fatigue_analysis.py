@@ -1,4 +1,7 @@
-from digitalmodel.common.viv_fatigue_analysis_components import VIVFatigueAnalysisComponents
+from digitalmodel.common.viv_fatigue_analysis_components import (
+    VIVFatigueAnalysisComponents,
+)
+
 
 def fatigue_analysis(cfg):
     fatigue_components = VIVFatigueAnalysisComponents(cfg)
@@ -22,6 +25,6 @@ def fatigue_analysis(cfg):
         fatigue_components.get_wave_cummulative_histograms()
         fatigue_components.get_combined_histograms()
         fatigue_components.save_combined_histograms()
-
+ 
     return cfg
 

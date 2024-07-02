@@ -1,0 +1,110 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: aqwa
+  software:
+    version: []
+  type:
+    preprocess: true
+    analysis: false
+    results: false
+  result_method: lis
+  result:
+  - label: moorings
+    file_extension: LIS
+    search_cfg:
+      start:
+        keyword: M O O R I N G   F O R C E S   A N D   S T I F F N E S S
+        occurrence: 1
+      end:
+        keyword: '---------------------------------'
+        occurrence: 2
+      data_extraction:
+        keyword: COMP
+        scale: 1
+        shift: 0
+        line_idx: 4
+    inject_into:
+      flag: true
+      filename: output/aqwa_lis.xlsx
+      sheetname: m_f
+  file_management:
+    flag: true
+    update_unfinished:
+      flag: false
+    files:
+      files_in_current_directory:
+        flag: false
+        auto_read: true
+        directory: output/lis
+        filename_pattern: ~
+      output_directory: results
+    input_files: {}
+  default:
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+      cfg_sensitivities: false
+  pre_process_settings:
+    file_extension: dat
+  inputs:
+  - file_prefix: fst2_
+    file_extension: deck
+    data:
+      category: 10
+      raw:
+      - element_type: CFC
+        scaling:
+          Cx: 42500.0
+          Cy: 199000.0
+          Cz: 735000.0
+          Cnx: 8700000.0
+          Cny: 8700000.0
+          Cnz: 40700000.0
+        csv: src/digitalmodel/tests/test_data/aqwa/csv/FST2_L000_CFC.csv
+      - element_type: WFC
+        scaling:
+          Cx: 1678
+          Cy: 7811
+          Cz: 8949
+          Cnx: 298215
+          Cny: 32704
+          Cnz: 1598052
+        csv: src/digitalmodel/tests/test_data/aqwa/csv/od_fst-2_01_light_long_truss_wolngc.csv
+  Analysis:
+    basename: aqwa
+    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa
+    file_name: aqwa_pre_process_deck_10
+    file_name_for_overwrite: aqwa_pre_process_deck_10
+    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
+    start_time: 2024-06-28 16:02:36.458676
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_pre_process_deck_10.yml
+    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
+    - c:\
+    - Users
+    - vamseea
+    - github
+    - digitalmodel
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa
+    - output
+    - lis
+    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
+    - c:\
+    - Users
+    - vamseea
+    - github
+    - digitalmodel
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa
+    - results

@@ -1,0 +1,145 @@
+@startuml modular_analysis_basefile
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Modular Model Building \n OrcaFlex
+
+start
+
+    note right
+        Objective: modular file management and 
+        analysis for easy updates/maintenance/reruns
+    end note
+
+    note right
+        All files in .yml format
+        Each partition box is a unique group of .yml files
+    end note
+
+    partition "01.yml Analysis Parameters" {
+
+        :Analysis Parameters;
+            note right
+                Simulation time, time step, etc.
+                These parameters may be changed later if unconvergence occurs
+            end note
+
+    }
+
+    partition "02.yml field" {
+
+        :N-S Directions;
+            note right
+                North Direction per alignment sheet
+            end note
+
+        :Seabed and Water Depth;
+            note right
+                water depth
+                seabed profile (3D profile using 2D Alignment sheets)
+            end note
+
+        :Environment;
+            note right
+                environment - waves, current, wind etc.
+            end note
+
+    }
+
+    partition "03.yml Vessel Data" {
+
+    note right
+        Add Host vessel
+        Add installation vessel(s)
+        Repeat process for all vessels
+    end note
+
+        :Vessel Data;
+            note right
+                Vessel Data
+            end note
+
+        :Vessel Settings;
+            note right
+                Draft
+                Type of solution, etc.
+            end note
+
+        :Vessel Location;
+            note right
+                Location of vessel
+                Orientation of vessel
+            end note
+
+    }
+
+    partition "04.yml Structure - Vessel Assets" {
+
+        :Basic Structure properties;
+            note right
+                examples are:
+                 Host interface/FPSO Itube
+                 Moonpool flare/tulip etc.
+            end note
+
+        :Interface Data;
+            note right
+                Attachment relative to vessel
+            end note
+
+        :Variations & Parameters;
+            note right
+                TBA
+            end note
+
+    }
+
+
+    partition "05.yml Structure - Assets" {
+        :Basic Structures:
+        - Risers
+        - Flexibles
+        - Umbilical/UTH/Pots etc.;
+            note right
+                TBA
+            end note
+
+        :Attachment Definitions;
+            note right
+                UTH
+                Pots
+                Buoyancy modules
+                etc.
+            end note
+
+        :Variations & Parameters;
+            note right
+                TBA
+            end note
+
+    }
+
+    partition "06.yml Stucture Interface to Vessel" {
+        :Structure to Vessel;
+            note right
+                Rigging, Chutes, Tensioners etc.
+            end note
+
+        :Other interfaces;
+            note right
+                For modelling etc.
+            end note
+
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

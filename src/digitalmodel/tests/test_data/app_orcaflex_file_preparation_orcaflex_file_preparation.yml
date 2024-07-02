@@ -1,0 +1,54 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: orcaflex_file_preparation
+  operating_envelopes: true
+  inputs:
+  - output_dir: bm_step02
+    includefile: ../bm_step02.yml
+    general:
+      initial_load_factor: 2
+      analysis_load_factor: 5
+      output: LatestWave
+    loads:
+      wave:
+        no_of_waves: 1
+        WaveType: Airy
+        peakedness:
+          by_region: true
+          region: Gayana
+        hs:
+        - 2.75
+        - 2.5
+        tp:
+        - 13
+        WaveDirection:
+        - 255
+        - 270
+      current: []
+    offsets: []
+  default:
+    Constants:
+      g: 9.81
+    units:
+      loads:
+        wave:
+          hs: m
+          tp: s
+          heading: deg
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+      cfg_sensitivities: false
+  Analysis:
+    basename: orcaflex_file_preparation
+    analysis_root_folder: c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data
+    file_name: app_orcaflex_file_preparation_orcaflex_file_preparation
+    file_name_for_overwrite: app_orcaflex_file_preparation_orcaflex_file_preparation
+    result_folder: c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data\results
+    log_folder: c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data\logs
+    start_time: 2024-03-27 23:51:19.123640
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\no_license\../test_data/orcaflex_file_preparation.yml

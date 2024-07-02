@@ -1,0 +1,95 @@
+@startuml aqwa_no_load
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+
+title AQWA No Load \nWorkflow
+
+
+start
+
+    note right
+        Objective: To run No Load time domain Analysis
+    end note
+
+    partition "Diffraction Analysis" {
+            note right
+            Generate .HYD and .RES files
+            for further analysis
+            end note
+
+        :First pass Run;
+            note right
+                Limited number (<10) of frequencies
+                filename: F_F2_d10_SIMP.dat
+                <code>
+                OPTIONS GOON 
+                OPTIONS 
+                OPTIONS LHFR MQTF REST END
+                RESTART  1  5
+                </code>
+            end note
+
+        :Detailed Run;
+            note right
+                50 frequencies
+                filename: F_F2_d10_COMP.dat
+                <code>
+                OPTIONS GOON 
+                OPTIONS 
+                OPTIONS LHFR MQTF REST END
+                RESTART  2  3       F_F2_d10_SIMP
+                </code>
+            end note
+
+    }
+
+    partition "Equilibrium Analysis" {
+            note right
+            Generate .RES files
+            for further analysis
+            end note
+
+        :Equilibrium Analysis;
+            note right
+                Static/stability analysis
+                filename: S_F2L15HSMR.dat
+                <code>
+                OPTIONS PBIS PRST 
+                OPTIONS LSTF NASF
+                OPTIONS REST END
+                RESTART  4  5       F_F2_d10_COMP
+                </code>
+            end note
+
+    }
+
+    partition "Time Domain Analysis" {
+            note right
+            none
+            end note
+
+        :Time Domain Analysis;
+            note right
+                No load in DECK 13
+                filename: D_RES_4_5_HSMR.dat
+                <code>
+                OPTIONS CONV NASF NOST 
+                OPTIONS RDEP REST END
+                RESTART  4  5       S_F2L15HSMR
+                </code>
+            end note
+
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

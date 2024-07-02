@@ -1,0 +1,104 @@
+@startuml aqwa_running
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title AQWA Post Process /n AqwaReader
+
+start
+
+    note right
+        Objective: AqwaReader output extraction
+    end note
+
+    partition "Input File Setup" {
+
+        : prepare individual decks;
+        : Prepare input files;
+            note right
+            IN PROGRESS
+                - input files: aqwa_*.yml?
+                - run_pre.bat
+            end note
+
+    }
+
+    partition "Run AQWA" {
+            note right
+            Combine into aqwa.bat
+            end note
+
+        :Run AQWA in command line;
+            note right
+                run_script: aqwa_*.bat 
+            end note
+
+        : Run AQWA Force Server (Python);
+            note right
+                - input files: aqwa_efs_*.yml
+                - run_aqwa_efs.bat
+            end note
+
+    }
+
+    partition "QA Checks" {
+            note right
+            Perform basic and QA checks
+            qa.bat
+            end note
+
+        :Collect Errors & Warnings (#TODO);
+            note right
+             read from .MES
+             Collect errors and warnings 
+             from individual files
+             Summarize in a single file
+            end note
+
+        :Summarize key properties (#TODO);
+            note right
+             Mass
+             CoG position
+             Trends etc.
+            end note
+
+    }
+
+    partition "Postprocess" {
+            note right
+            post.bat
+            end note
+
+        :Data Extract - aqwareader;
+            note right
+             scripts:
+             - input files: aqr_*.yml
+             - post_dm.bat
+             - CoG for structure 1 (#TODO get COG for all structures)
+            end note
+
+        :Data Extract - .LIS;
+            note right
+             - input files: lis_*.yml
+             - post_dm.bat
+             - disp, vel, accln RAOs for given nodes
+            end note
+
+        :Visualizations - Python;
+            note right
+             - input files: post_au*.yml
+             - run_post_au
+            end note
+
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
