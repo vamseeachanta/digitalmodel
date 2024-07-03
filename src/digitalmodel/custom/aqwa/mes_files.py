@@ -94,7 +94,7 @@ def generate_id_file_matrix(warnings, errors, warning_id_map, error_id_map, file
     file_names = [os.path.splitext(filename)[0] for filename in file_status.keys()]
     
     matrix = []
-    matrix.append(["ID"] + file_names)
+    matrix.append(["File"] + file_names)
     
     for id in all_ids:
         row = [id]
