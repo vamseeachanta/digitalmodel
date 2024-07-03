@@ -57,20 +57,16 @@ def summarize_warnings_and_errors(warnings, errors, warning_id_map, error_id_map
     for warning_type, warning_messages in warnings.items():
         for message, file_counts in warning_messages.items():
             warning_id = warning_id_map[(warning_type, message)]
-            for idx, (file, count) in enumerate(file_counts.items()):
-                if idx == 0:
-                    warning_summary.append([warning_id, warning_type, message, count, os.path.splitext(file)[0]])
-                else:
-                    warning_summary.append(["", "", "", count, os.path.splitext(file)[0]])
+            files = ", ".join([os.path.splitext(file)[0] for file in file_counts.keys()])
+            total_count = sum(file_counts.values())
+            warning_summary.append([warning_id, warning_type, message, total_count, files])
     
     for error_type, error_messages in errors.items():
         for message, file_counts in error_messages.items():
             error_id = error_id_map[(error_type, message)]
-            for idx, (file, count) in enumerate(file_counts.items()):
-                if idx == 0:
-                    error_summary.append([error_id, error_type, message, count, os.path.splitext(file)[0]])
-                else:
-                    error_summary.append(["", "", "", count, os.path.splitext(file)[0]])
+            files = ", ".join([os.path.splitext(file)[0] for file in file_counts.keys()])
+            total_count = sum(file_counts.values())
+            error_summary.append([error_id, error_type, message, total_count, files])
     
     return warning_summary, error_summary
 
@@ -86,8 +82,14 @@ def to_dataframe(summary, output_file, columns):
     df.to_csv(output_file, index=False)
     return df
 
+def merge_cells(df):
+    df = df.copy()
+    for col in ['ID', 'Type', 'Description']:
+        df[col] = df[col].mask(df.duplicated(subset=[col]))
+    return df
+
 if __name__ == "__main__":
-    directory =  r'src\digitalmodel\tests\test_data\aqwa\mes_files' 
+    directory = r'src\digitalmodel\tests\test_data\aqwa\mes_files'
     warnings, errors, file_status = read_mes_files(directory)
     warning_id_map, error_id_map = assign_ids(warnings, errors)
     warning_summary, error_summary = summarize_warnings_and_errors(warnings, errors, warning_id_map, error_id_map)
@@ -98,10 +100,16 @@ if __name__ == "__main__":
     status_df = pd.DataFrame(status_summary[1:], columns=status_summary[0])
     status_df.to_csv('file_status.csv', index=False)
     
+    merged_warning_df = merge_cells(warning_df)
+    merged_error_df = merge_cells(error_df)
+    
+    merged_warning_df.to_csv('warnings.csv', index=False)
+    merged_error_df.to_csv('errors.csv', index=False)
+    
     print("Summary of Warnings:")
-    print(warning_df)
+    print(merged_warning_df)
     print("\nSummary of Errors:")
-    print(error_df)
+    print(merged_error_df)
     print("\nFile Status:")
     print(status_df)
     print(status_table)
