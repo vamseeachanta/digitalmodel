@@ -1,6 +1,6 @@
 import os
 import re
-from collections import Counter, defaultdict
+from collections import defaultdict, Counter
 from tabulate import tabulate
 import pandas as pd
 
@@ -28,7 +28,7 @@ def read_mes_files(directory):
                     error_type, error_message = error_match.groups()
                     errors[error_type.strip()][error_message.strip()][mes_file] += 1
                     file_warnings_errors += 1
-        file_status[mes_file] = "✘" if file_warnings_errors > 0 else "-"
+        file_status[mes_file] = "X" if file_warnings_errors > 0 else "-"
     
     return warnings, errors, file_status
 
@@ -86,7 +86,29 @@ def merge_cells(df):
     df = df.copy()
     for col in ['ID', 'Type', 'Description']:
         df[col] = df[col].mask(df.duplicated(subset=[col]))
+    df['Type'].fillna(method='ffill', inplace=True)
     return df
+
+def generate_id_file_matrix(warnings, errors, warning_id_map, error_id_map, file_status):
+    all_ids = list(warning_id_map.values()) + list(error_id_map.values())
+    file_names = [os.path.splitext(filename)[0] for filename in file_status.keys()]
+    
+    matrix = []
+    matrix.append(["ID"] + file_names)
+    
+    for id in all_ids:
+        row = [id]
+        for file in file_names:
+            if id in warning_id_map.values():
+                warning_key = list(warning_id_map.keys())[list(warning_id_map.values()).index(id)]
+                present = file in {os.path.splitext(f)[0] for f in warnings[warning_key[0]][warning_key[1]].keys()}
+            else:
+                error_key = list(error_id_map.keys())[list(error_id_map.values()).index(id)]
+                present = file in {os.path.splitext(f)[0] for f in errors[error_key[0]][error_key[1]].keys()}
+            row.append("X" if present else "-")
+        matrix.append(row)
+    
+    return matrix
 
 if __name__ == "__main__":
     directory = r'src\digitalmodel\tests\test_data\aqwa\mes_files'
@@ -98,7 +120,7 @@ if __name__ == "__main__":
     warning_df = to_dataframe(warning_summary, 'warnings.csv', ['ID', 'Type', 'Description', 'Frequency', 'Filename'])
     error_df = to_dataframe(error_summary, 'errors.csv', ['ID', 'Type', 'Description', 'Frequency', 'Filename'])
     status_df = pd.DataFrame(status_summary[1:], columns=status_summary[0])
-    status_df.to_csv('file_status.csv', index=False)
+    status_df.to_csv('mes_file_status.csv', index=False)
     
     merged_warning_df = merge_cells(warning_df)
     merged_error_df = merge_cells(error_df)
@@ -113,3 +135,10 @@ if __name__ == "__main__":
     print("\nFile Status:")
     print(status_df)
     print(status_table)
+    
+    id_file_matrix = generate_id_file_matrix(warnings, errors, warning_id_map, error_id_map, file_status)
+    id_file_df = pd.DataFrame(id_file_matrix[1:], columns=id_file_matrix[0])
+    id_file_df.to_csv('warning_error_map.csv', index=False)
+    
+    print("\nID File Matrix:")
+    print(id_file_df)
