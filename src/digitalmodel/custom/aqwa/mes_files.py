@@ -124,9 +124,12 @@ if __name__ == "__main__":
     
     merged_warning_df = merge_cells(warning_df)
     merged_error_df = merge_cells(error_df)
-    
-    merged_warning_df.to_csv('warnings.csv', index=False)
-    merged_error_df.to_csv('errors.csv', index=False)
+
+    merged_warning_df.index += 1
+    merged_error_df.index += 1
+
+    merged_warning_df.to_csv('warnings.csv')
+    merged_error_df.to_csv('errors.csv')
     
     print("Summary of Warnings:")
     print(merged_warning_df)
@@ -138,7 +141,8 @@ if __name__ == "__main__":
     
     id_file_matrix = generate_id_file_matrix(warnings, errors, warning_id_map, error_id_map, file_status)
     id_file_df = pd.DataFrame(id_file_matrix[1:], columns=id_file_matrix[0])
-    id_file_df.to_csv('warning_error_map.csv', index=False)
+    id_file_df.index += 1
+    id_file_df.to_csv('warning_error_map.csv')
     
     print("\nID File Matrix:")
     print(id_file_df)
