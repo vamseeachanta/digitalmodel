@@ -4,9 +4,11 @@ from assetutilities.common.update_deep import update_deep_dictionary
 # Reader imports
 from digitalmodel.custom.aqwa.aqwa_post_process import AqwaPostProcess
 from digitalmodel.custom.aqwa.aqwa_pre_process import AqwaPreProcess
+from digitalmodel.custom.aqwa.mes_files import MesFiles
 
 a_post = AqwaPostProcess()
 a_pre = AqwaPreProcess()
+mes_files = MesFiles()
 
 class Aqwa:
 
@@ -25,9 +27,14 @@ class Aqwa:
             from digitalmodel.custom.aqwa.aqwa_analysis import AqwaAnalysis
             a_analysis = AqwaAnalysis()
             a_analysis.analysis_router(cfg)
+                
 
+        mes_files.router(cfg)
+        
         if cfg['type']['results']:
             a_post.post_process_router(cfg)
+
+
 
         return cfg
 
@@ -54,6 +61,7 @@ class Aqwa:
                 cfg[keychain[0]][group_index] = update_deep_dictionary(cfg[keychain[0]][group_index], group.copy())
 
         return cfg
+
 
 
 
