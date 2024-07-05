@@ -56,21 +56,21 @@ dictitems:
       raw:
       - element_type: CFC
         scaling:
-          Cx: 42500.0
-          Cy: 199000.0
-          Cz: 735000.0
-          Cnx: 8700000.0
-          Cny: 8700000.0
-          Cnz: 40700000.0
+          Cx: 95271.2
+          Cy: 445622.6
+          Cz: 4586242.9
+          Cnx: 19491532.3
+          Cny: 19491532.3
+          Cnz: 91169926.5
         csv: src/digitalmodel/tests/test_data/aqwa/csv/FST2_L000_CFC.csv
       - element_type: WFC
         scaling:
-          Cx: 1678
-          Cy: 7811
-          Cz: 8949
-          Cnx: 298215
-          Cny: 32704
-          Cnz: 1598052
+          Cx: 1191.2
+          Cy: 5221.1
+          Cz: 5324.5
+          Cnx: 223937.5
+          Cny: 27171.0
+          Cnz: 1068190.0
         csv: src/digitalmodel/tests/test_data/aqwa/csv/od_fst-2_01_light_long_truss_wolngc.csv
   Analysis:
     basename: aqwa
@@ -79,10 +79,11 @@ dictitems:
     file_name_for_overwrite: aqwa_pre_process_deck_10
     result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-06-28 16:02:36.458676
+    start_time: 2024-07-05 14:51:39.791063
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_pre_process_deck_10.yml
+    fe_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
     - c:\
     - Users
