@@ -44,7 +44,8 @@ inputs:
     anode_voltage: -1.09
 
   design_current:
-    input: .csv
+      csv:
+          input: csv
 
 default:
   log_level: DEBUG
