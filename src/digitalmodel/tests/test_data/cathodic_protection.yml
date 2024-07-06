@@ -43,21 +43,21 @@ inputs:
 
 ABS_gn_ships_2018:
   v_ssc: # Protection potential (V) with respect to Ag/AgCl/seawater reference electrode, Section 2, Chapter 3.1, Table 1
-    material: steel
-      aerobic: -0.8
-      anaerobic: -0.9
-    material: iron
-      aerobic: -0.8
-      anaerobic: -0.9
-    material: high_strength_steel
-      aerobic: -0.8
-      anaerobic: -0.9
-    material: austenitic_stainless_steel_n_pre_10_to_1000
-      aerobic: -0.3
-      anaerobic: -0.3
-    material: austenitic_stainless_steel_n_pre_0_to_10
-      aerobic: -0.6
-      anaerobic: -0.6
+      - steel:
+          aerobic: -0.8
+          anaerobic: -0.9
+      - iron:
+          aerobic: -0.8
+          anaerobic: -0.9
+      - high_strength_steel:
+          aerobic: -0.8
+          anaerobic: -0.9
+      - austenitic_stainless_steel_n_pre_10_to_1000:
+          aerobic: -0.3
+          anaerobic: -0.3
+      - austenitic_stainless_steel_n_pre_0_to_10:
+          aerobic: -0.6
+          anaerobic: -0.6
 
 default:
   log_level: DEBUG
