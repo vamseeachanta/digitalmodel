@@ -8,6 +8,8 @@ class DNV_RP_F103():
     def router(self, cfg):
         if cfg['inputs']['calculation_type'] == 'DNV_RP_F103_2010':
             self.DNV_RP_F103_2010(cfg)
+        if cfg['inputs']['calculation_type'] == 'DNV_RP_F103_2019':
+            self.DNV_RP_F103_2019(cfg)
         else:
             raise (Exception(f"Calculation type: {cfg['inputs']['calculation_type']} not IMPLEMENTED. ... FAIL"))
 
