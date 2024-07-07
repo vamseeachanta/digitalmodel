@@ -110,6 +110,9 @@ def engine(inputfile: str = None, cfg: dict = None) -> dict:
     elif basename == "transformation":
         trans = Transformation()
         cfg_base = trans.router(cfg_base)
+    elif basename == "pipeline":
+        trans = Transformation()
+        cfg_base = trans.router(cfg_base)
 
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))

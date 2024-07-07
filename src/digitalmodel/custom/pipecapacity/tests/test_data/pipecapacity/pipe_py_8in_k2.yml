@@ -1,0 +1,35 @@
+Outer_Pipe:
+  Geometry:
+    Nominal_ID: NULL
+    Nominal_OD: 8.625
+    Design_WT : 1.406
+    Corrosion_Allowance: 0.0
+  Material:
+    Material: Steel
+    Material_Grade: ASTM A106 Grade C
+    WeldFactor:
+       Seamless: 1.0
+    Insulation: NULL
+    Buoyancy: NULL
+  Code:
+     - API RP 1111-2009 Risers
+Design:
+  -
+    Load Condition: {Outer_Pipe: internal_pressure}
+    InternalPressure: {Outer_Pipe: 10134}
+    InternalFluid: {Outer_Pipe: 0.03703047}
+    ExternalPressure: {Outer_Pipe: 0}
+    ExternalFluid: {Outer_Pipe: 0.03703047}
+    Temperature:
+      Ambient: {Outer_Pipe: 50}
+      Operating: {Outer_Pipe: 82}
+      Maximum: NULL
+    BendingMoment: 0
+    AxialForce: 0
+    Torsion: 0
+    Condition: Restrained
+    Code:
+       - {Outer_Pipe: API RP 1111-2009 Risers}
+
+Inner_Pipe: NULL
+
