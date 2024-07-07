@@ -1,0 +1,55 @@
+basename: pipeline
+
+code: NULL
+
+software:
+  version: []
+
+calculation:
+  name: lateral_buckling
+
+type:
+  preprocess: False
+  analysis: False
+  results: True
+
+result_method: lis # aqwareader
+
+result:
+  - label: moorings
+    file_extension: LIS
+    search_cfg:
+      start:
+        keyword: M O O R I N G   F O R C E S   A N D   S T I F F N E S S
+        occurrence: 1
+      end:
+        keyword: ---------------------------------
+        occurrence: 2
+      data_extraction:
+        keyword: COMP
+        scale: 1
+        shift: 0
+        line_idx: 4
+    inject_into:
+      flag: True
+      filename: output/aqwa_lis.xlsx
+      sheetname: m_f
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: output/lis
+      filename_pattern: 9MOORS
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
