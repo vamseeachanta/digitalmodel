@@ -26,6 +26,7 @@ from digitalmodel.custom.orcaflex_file_management import OrcaflexFileManagement
 from digitalmodel.custom.orcaflex_installation import OrcInstallation
 from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.custom.pipeline.pipeline import Pipeline
 from digitalmodel.custom.rao_analysis import RAOAnalysis
 from digitalmodel.custom.transformation import Transformation
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
@@ -111,8 +112,8 @@ def engine(inputfile: str = None, cfg: dict = None) -> dict:
         trans = Transformation()
         cfg_base = trans.router(cfg_base)
     elif basename == "pipeline":
-        trans = Transformation()
-        cfg_base = trans.router(cfg_base)
+        pl = Pipeline()
+        cfg_base = pl.router(cfg_base)
 
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))

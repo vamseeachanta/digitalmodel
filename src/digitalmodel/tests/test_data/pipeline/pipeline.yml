@@ -8,6 +8,63 @@ software:
 calculation:
   name: lateral_buckling
 
+inputs:
+  seawater_density: 1025
+
+pipeline:
+  length: 2737
+  water_depth:
+    length_percent: [0, 20, 40, 60, 80, 100]
+    unit: m
+    depth: [125, 124, 123, 122, 121, 121]
+  soil:
+    axial_breakout_friction_coeff: 0.21
+    lateral_breakout_friction_coeff: 0.27
+  tension:
+    unit: N
+    start: 0
+    end: 0
+    lay_tension: 0
+  route:
+    unit: m
+    curve_radius: 3000
+  crossection: #Inner to outer
+    - Nominal_ID: NULL
+      Nominal_OD: 8.625
+      Design_WT: 0.5
+      Corrosion_Allowance: 3.2
+      average_internal_metal_loss_percentage: 10
+      internal_fluid:
+        unit: kg/m^3
+        density: 614
+        internal_pressure:
+          unit: psi
+          pressure: 1095.2
+          top_side_elevation: 20 #m
+      temperature:
+        type: differential
+        unit: celsius
+        length_percent: [0, 20, 40, 60, 80, 100]
+        temperature: [30.4, 24.8, 21.5, 19.5, 18.4, 17.1]
+      Material: Steel
+      Material_Grade: API 5L X52
+      thermal_expansion_coefficient: 0.0000117
+      WeldFactor:
+        Seamless: 1.0
+      coatings: #Inner to outer
+        - material: Insulation
+          thickness: 0
+          density: 0
+        - material: Concrete
+          thickness: 0
+          density: 0
+          concrete_water_absorption_rate_percent: 0
+
+      Code:
+        - 30 CFR Part 250
+      Manufacturing:
+        Coupling Mass Ratio: 0.0
+
 type:
   preprocess: False
   analysis: False
