@@ -10,7 +10,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from assetutilities.common.data import ReadData, SaveData
-from assetutilities.common.data_exploration import DataExploration
 from assetutilities.common.file_management import FileManagement
 from assetutilities.common.update_deep import update_deep_dictionary
 
@@ -21,7 +20,6 @@ fm = FileManagement()
 rd = ReadData()
 save_data = SaveData()
 au = AqwaUtilities()
-de = DataExploration()
 
 class AqwaReader:
 
@@ -297,6 +295,9 @@ class AqwaReader:
         df.to_csv(csv_filename, index=False, header=True)
 
     def save_statistics(self, cfg, df, sheetname):
+        from assetutilities.common.data_exploration import DataExploration
+        de = DataExploration()
+        
         statistics_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '_statistics.csv')
         df_statistics = de.get_df_statistics(df)
         df_statistics.to_csv(statistics_filename, index=True, header=True)
