@@ -1,10 +1,10 @@
 # Reader imports
 
 from digitalmodel.custom.pipeline.lateral_buckling import LateralBuckling
-from digitalmodel.custom.pipe_properties import PipeProperties
+
 
 lb = LateralBuckling()
-pp = PipeProperties()
+
 
 class Pipeline:
     def __init__(self):
@@ -22,4 +22,7 @@ class Pipeline:
         return cfg
     
     def basic_properties(self, cfg):
+        from digitalmodel.custom.pipe_properties import PipeProperties
+        pp = PipeProperties()
+        
         pp.get_properties(cfg)
