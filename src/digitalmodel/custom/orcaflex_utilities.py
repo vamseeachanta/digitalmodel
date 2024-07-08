@@ -3,7 +3,7 @@ import os
 import glob
 import logging
 import math
-from assetutilities.common.utilities import is_dir_valid_func
+
 
 from assetutilities.common.yml_utilities import ymlInput
 from digitalmodel.common.orcaflex_model_utilities import OrcaflexModelUtilities
@@ -140,6 +140,8 @@ class OrcaflexUtilities:
         return cfg
 
     def get_files(self, cfg):
+        from assetutilities.common.utilities import is_dir_valid_func
+        
         file_management_directory = self.get_file_management_directory(cfg)
         if file_management_directory is not None:
             analysis_root_folder = cfg['Analysis']['analysis_root_folder']
