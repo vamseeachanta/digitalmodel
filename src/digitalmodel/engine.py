@@ -5,7 +5,6 @@ from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import CopyAndPasteFiles
-#from assetutilities.common.utilities import save_application_cfg
 
 from digitalmodel.catenary_riser import catenary_riser
 from digitalmodel.vertical_riser import vertical_riser
@@ -105,7 +104,9 @@ def engine(inputfile=None):
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
-    #save_application_cfg(cfg_base=cfg_base)
+    from assetutilities.common.utilities import save_application_cfg
+    
+    save_application_cfg(cfg_base=cfg_base)
 
     return cfg_base
 
