@@ -21,7 +21,7 @@ class DNV_RP_F103:
         """
         
         structure_area = self.get_structure_area(cfg)
-        breakdown_factor = self.assess_coating_breakdown(cfg)
+        breakdown_factor = self.assess_coating_breakdown(cfg) (DONE)
         current_density = self.get_design_current_density(cfg)
         current_demand = self.get_current_demand(cfg, structure_area, current_density)
 

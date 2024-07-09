@@ -21,13 +21,13 @@ inputs:
     internal_fluid:
       temperature: 40 #°C
 
-    length:
-      joint: 12.19 #m
-      cutback: 0.2 #m
-      total: 2975 #m
-
-    Nominal_OD: 12.75 #in
-    Nominal_WT: 0.5 #in
+    dimensions:
+      length:
+        joint: 12.19 #m
+        cutback: 0.2 #m
+        total: 2975 #m
+      Nominal_OD: 12.75 #in
+      Nominal_WT: 0.5 #in
 
     coating_properties:
       coatings:
