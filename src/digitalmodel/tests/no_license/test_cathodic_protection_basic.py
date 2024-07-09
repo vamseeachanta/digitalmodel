@@ -7,7 +7,7 @@ from assetutilities.common.yml_utilities import ymlInput
 
 from digitalmodel.engine import engine
 
-@pytest.mark.skip(reason="Not necessary to run.")
+
 def run_cathodic_protection(input_file, expected_result={}):
     if input_file is not None and not os.path.isfile(input_file):
         input_file = os.path.join(os.path.dirname(__file__), input_file)
@@ -21,7 +21,7 @@ def get_valid_pytest_output_file(pytest_output_file):
                                           pytest_output_file)
     return pytest_output_file
 
-@pytest.mark.skip(reason="not necessary to run.")
+
 def test_cathodic_protection():
     input_file = '../test_data/cathodic_protection.yml'
     pytest_output_file = None
