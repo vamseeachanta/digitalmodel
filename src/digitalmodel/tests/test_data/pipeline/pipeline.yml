@@ -15,13 +15,14 @@ pipeline:
   length: 2737
   water_depth:
     length_percent: [0, 20, 40, 60, 80, 100]
-    unit: m
-    depth: [125, 124, 123, 122, 121, 121]
+    unit: ft
+    depth: [410, 407, 404, 400, 397, 397]
+
   soil:
     axial_breakout_friction_coeff: 0.21
     lateral_breakout_friction_coeff: 0.27
   tension:
-    unit: N
+    unit: kip
     start: 0
     end: 0
     lay_tension: 0
@@ -30,37 +31,51 @@ pipeline:
     curve_radius: 3000
   crossection: #Inner to outer
     - Nominal_ID: NULL
-      Nominal_OD: 8.625
+      Nominal_OD: 12.75
       Design_WT: 0.5
-      Corrosion_Allowance: 3.2
+      Corrosion_Allowance: 0.126
       average_internal_metal_loss_percentage: 10
+      external_fluid:
+        unit: lb/inch^3
+        density: 0.03721
+        pressure:
+          unit: psi
+          pressure: NULL
+          reference_depth: 410 #ft
       internal_fluid:
-        unit: kg/m^3
-        density: 614
-        internal_pressure:
+        unit: lb/inch^3
+        density: 0.02218
+        pressure:
           unit: psi
           pressure: 1095.2
-          top_side_elevation: 20 #m
+          top_side_elevation: 65.62 #ft
+          reference_water_depth: 410 #ft
       temperature:
         type: differential
         unit: celsius
         length_percent: [0, 20, 40, 60, 80, 100]
         temperature: [30.4, 24.8, 21.5, 19.5, 18.4, 17.1]
-      Material: Steel
+      Material: steel
       Material_Grade: API 5L X52
       thermal_expansion_coefficient: 0.0000117
       WeldFactor:
         Seamless: 1.0
-      coatings: #Inner to outer
-        - material: Insulation
+      coatings: #Inner to outer, units, lb, inch
+        - material: NULL
+          purpose: insulation
           thickness: 0
           density: 0
-        - material: Concrete
+        - material: NULL
+          purpose: anti-corrosion
+          thickness: 0.122
+          density: 0.03396
+        - material: concrete
+          purpose: unknown
           thickness: 0
           density: 0
           concrete_water_absorption_rate_percent: 0
 
-      Code:
+      code:
         - 30 CFR Part 250
       Manufacturing:
         Coupling Mass Ratio: 0.0
