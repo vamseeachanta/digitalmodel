@@ -1,10 +1,11 @@
-import pytest
-import deepdiff
+# Standard library imports
 import os
 import sys
 
-from assetutilities.common.yml_utilities import ymlInput
+# Third party imports
+import deepdiff
 
+# Reader imports
 from digitalmodel.engine import engine
 
 
@@ -29,7 +30,7 @@ def get_valid_pytest_output_file(pytest_output_file):
 
 
 def test_cathodic_protection():
-    input_file = '../cathodic_protection.yml'
+    input_file = 'cathodic_protection_ABS_gn_ships_2018.yml'
     input_file = get_valid_pytest_output_file(input_file)
 
     pytest_output_file = None

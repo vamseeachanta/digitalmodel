@@ -3,48 +3,83 @@ basename: cathodic_protection
 inputs:
   calculation_type: DNV_RP_F103_2010 # DNV_rp_b401_2011, DNV_rp_b401_2021_05, ABS_gn_ships_2018
 
-  design_life: 5 # yr
+  design:
+    life: 20 # yr
+    factor: 1
+
   environment:
     seawater_resistivity:
-      input: 40 # float_value or csv. if csv, use temperature & salinity.
+      input: 0.23 # float_value or csv. if csv, use temperature & salinity.
       csv_filename: src/digitalmodel/tests/test_data/cathodic_protection/seawater_conductance_with_temperature.csv
       csv_reference: https://github.com/vamseeachanta/digitalmodel/blob/master/docs/cathodic_protection/literature/course_notes_Appendix_A_Cathodic_Protection_Design.pdf
-    temperature: 20 # Â°C
-    salinity: 10 # ppt
+    temperature: 15 #°C
+    salinity: 36 # ppt
 
   structure:
+    type: pipeline
     material: steel
-    area:
-      value: 10778 # m2
-      coat_percentage: 80 # %
-      coating_breakdown:
-        type: deterioration # deterioration or disbondment
-        year: [1, 2, 3, 3, 5] # year
-        percentage: [2, 2, 3, 3, 3] # % per year
+    internal_fluid:
+      temperature: 40 #°C
 
-  current_density:
-    initial: { coated: 13.5, uncoated: 200 } # mA/m2
+    length:
+      joint: 12.19 #m
+      cutback: 0.2 #m
+      total: 2975 #m
+
+    Nominal_OD: 12.75 #in
+    Nominal_WT: 0.5 #in
+
+    coating_properties:
+      coatings:
+        - type: FBE
+          thickness: 0.10 #in
+        - type: anti-corrosion
+          thickness: 0.022 #in
+      percentage: 100 # %
+      breakdown:
+        regular:
+          a: 0.001
+          b: 0.00003
+        field_joint:
+          a: 0.1
+          b: 0.01
+
+      type: deterioration # deterioration or disbondment
+    #   year: [1, 2, 3, 3, 5] # year
+    #   percentage: [2, 2, 3, 3, 3] # % per year
+
+    electrical:
+      resistivity: 0.2e-6 # ohm.m
+      material_protective_potential: -0.8
+      global_protective_potential: -0.95
+      anode_potential: -1.05
+
+      value: 10778 # m2
+
+    current_density:
+      initial: { coated: 60, uncoated: 200 } # mA/m2
+      mean: { coated: 60, uncoated: 200 } # mA/m2
 
   cathodic_protection: NULL
 
-  anode_capacity:
+  anode:
     material: aluminium #  aluminium or zinc
-    anode_current_capacity: 2500 # (Ca*N) , Q
-    anode_utilisation_factor: 0.825 # factor, u
+    type: bracelet # Bracelet or standoff
+    current_capacity: 2000 # (Ca*N) , Q
+    utilisation_factor: 0.8 # factor, u
+
     physical_properties:
+      density: 2723 # kg/m3
+      spacing_along_length: 304.8 # m
+      length: 16.75 # in
+      half_shell_gap: 1.5 # in
       mean_length: 0.650 # m
+      thickness: 1.5 # in
       width: 0.125 # m
       height: 0.130 # m
-      net_weight: 29.00 # kg
-      ratio_of_gross_to_net_weight: 1.0345 #
-      gross_weight: 30.00 # kg
-
-  anode_shape:
-    steel_iron_calomel_voltage: -0.8
-    anode_voltage: -1.09
-
-  design_current:
-    input: .csv
+      net_weight: 42.64 # kg
+      # ratio_of_gross_to_net_weight: 1.0345 #
+      # gross_weight: 30.00 # kg
 
 default:
   log_level: DEBUG

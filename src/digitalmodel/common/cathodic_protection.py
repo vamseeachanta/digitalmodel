@@ -1,10 +1,15 @@
-import os
+# Standard library imports
 import math
+import os
+
+# Third party imports
 import numpy as np
-from scipy.interpolate import interp1d
 import pandas as pd
 from scipy.interpolate import griddata
+
+# Reader imports
 from digitalmodel.common.cp_DNV_RP_F103_2010 import DNV_RP_F103
+
 dnv_rp_f103 = DNV_RP_F103()
 class CathodicProtection():
 
@@ -22,8 +27,8 @@ class CathodicProtection():
     def router(self, cfg):
         if cfg['inputs']['calculation_type'] == 'ABS_gn_ships_2018':
             self.ABS_gn_ships_2018(cfg)
-        elif cfg['inputs']['calculation_type'] in ['DNV_RP_F103_2010' 'DNV_RP_F103_2019']:
-            dnv_rp_f103(cfg)
+        elif cfg['inputs']['calculation_type'] in ['DNV_RP_F103_2010', 'DNV_RP_F103_2019']:
+            dnv_rp_f103.router(cfg)
         else:
             raise (Exception(f"Calculation type: {cfg['inputs']['calculation_type']} not IMPLEMENTED. ... FAIL"))
 
@@ -360,4 +365,5 @@ class CathodicProtection():
             resistivity = calculate_resistivity(temperature, salinity)
             return resistivity
         
+        return resistivity        
         return resistivity
