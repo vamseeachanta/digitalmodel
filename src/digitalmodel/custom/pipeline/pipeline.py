@@ -5,7 +5,7 @@ from digitalmodel.common.pipe_properties import PipeProperties
 from digitalmodel.custom.pipeline.lateral_buckling import LateralBuckling
 
 lb = LateralBuckling()
-pp = PipeProperties()
+
 
 class Pipeline:
     def __init__(self):
@@ -22,14 +22,5 @@ class Pipeline:
         
         return cfg
     
-    def get_pipe_properties(self, cfg):
-        crossection_cfg = cfg['pipeline']['crossection']
-        pipe_properties, system_properties = pp.get_properties(crossection_cfg)
-        
-        cfg['pipeline']['pipe_properties'] = pipe_properties
-        cfg['pipeline']['system_properties'] = system_properties
-        
-        return cfg
-        
-
-    
+    def basic_properties(self, cfg):
+        pp.get_properties(cfg)
