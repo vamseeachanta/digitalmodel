@@ -1,7 +1,8 @@
 # Reader imports
 
+# Reader imports
+from digitalmodel.common.pipe_properties import PipeProperties
 from digitalmodel.custom.pipeline.lateral_buckling import LateralBuckling
-from digitalmodel.custom.pipe_properties import PipeProperties
 
 lb = LateralBuckling()
 pp = PipeProperties()
@@ -11,7 +12,7 @@ class Pipeline:
         pass
 
     def router(self, cfg=None):
-        self.basic_properties(cfg)
+        cfg = self.get_pipe_properties(cfg)
         if cfg['calculation']['name'] == 'lateral_buckling':
             lb.run( cfg )
         elif cfg['calculation']['name'] == 'thermal_buckling':
@@ -21,5 +22,14 @@ class Pipeline:
         
         return cfg
     
-    def basic_properties(self, cfg):
-        pp.get_properties(cfg)
+    def get_pipe_properties(self, cfg):
+        crossection_cfg = cfg['pipeline']['crossection']
+        pipe_properties, system_properties = pp.get_properties(crossection_cfg)
+        
+        cfg['pipeline']['pipe_properties'] = pipe_properties
+        cfg['pipeline']['system_properties'] = system_properties
+        
+        return cfg
+        
+
+    
