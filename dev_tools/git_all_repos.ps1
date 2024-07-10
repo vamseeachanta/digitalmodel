@@ -10,6 +10,8 @@ foreach ($d in $dir){
     
     & $daily_routine_batch
     & echo "Running git push pull in folder      ... DONE"
+    & echo ""
+    & echo ""
 }
 
 Set-Location -Path $dir
