@@ -1,0 +1,13 @@
+pipeline:
+  lateral_buckling:
+    anchor_length:
+      start: 1368.5
+      end: 1368.5
+    min_critical_buckling_load: -64701.0454119312
+    effective_axial_load:
+      anchor_start: -33.26
+      anchor_end: -33.26
+    lateral_buckling_check: Fail
+    fully_restrained_axial_force:
+      L=0: -257.313
+      L=L: -169.658

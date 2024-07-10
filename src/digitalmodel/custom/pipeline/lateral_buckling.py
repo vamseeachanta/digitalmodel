@@ -88,22 +88,26 @@ class LateralBuckling:
         longitudinal_stress_cold_end = [item/A for item in longitudinal_force_cold_end]
         lateral_buckling_df['longitudinal_stress_cold_end'] = longitudinal_stress_cold_end
 
-        circumferential_stress = [2* pressure * Ai / A] * len(length_array)
-        lateral_buckling_df['circumferential_stress'] = circumferential_stress
+        circumferential_stress = 2* pressure * Ai / A
+        circumferential_stress_array = [circumferential_stress]* len(length_array)
+        lateral_buckling_df['circumferential_stress'] = circumferential_stress_array
 
         E = pipe_properties[0]['material']['E']
         ThermalExpansionCoefficient = pipe_properties[0]['material']['ThermalExpansionCoefficient']
         Poissonsratio = pipe_properties[0]['material']['Poissonsratio']
 
-        zipped_array = list(zip(longitudinal_stress_hot_end, circumferential_stress, differential_temperature))
+        zipped_array = list(zip(longitudinal_stress_hot_end, circumferential_stress_array, differential_temperature))
         longitudinal_strain_hot_end =  [(item[0] - item[1]*Poissonsratio)/E + ThermalExpansionCoefficient * item[2] for item in zipped_array]
         lateral_buckling_df['longitudinal_strain_hot_end'] = longitudinal_strain_hot_end
         
-        zipped_array = list(zip(longitudinal_stress_cold_end, circumferential_stress, differential_temperature))
+        zipped_array = list(zip(longitudinal_stress_cold_end, circumferential_stress_array, differential_temperature))
         longitudinal_strain_cold_end = [(item[0] - item[1]*Poissonsratio)/E + ThermalExpansionCoefficient * item[2] for item in zipped_array]
         lateral_buckling_df['longitudinal_strain_cold_end'] = longitudinal_strain_cold_end
 
-        zipped_array = list(zip(circumferential_stress, differential_temperature))
+        thermal_stress_array = [-E*ThermalExpansionCoefficient * item for item in differential_temperature]
+        lateral_buckling_df['thermal_stress'] = thermal_stress_array
+        
+        zipped_array = list(zip(circumferential_stress_array, differential_temperature))
         longitudinal_stress_mid_zone = [item[0]*Poissonsratio - E*ThermalExpansionCoefficient * item[1] for item in zipped_array]
         lateral_buckling_df['longitudinal_stress_mid_zone'] = longitudinal_stress_mid_zone
 
@@ -122,11 +126,27 @@ class LateralBuckling:
         anchor_length = {'start': anchor_length_start, 'end': anchor_length_end} 
 
 
-        reference_length = (friction['axial'] * length_array[-1] + tension_cfg['start'] - tension_cfg['end'])/(2*friction['axial'])
-        #TODO check certain conditions
+        y_values = length_array
+        zipped_array = list(zip(longitudinal_stress_hot_end, longitudinal_stress_mid_zone))
+        x_values = [item[0] - item[1] for item in zipped_array]
+        f = interpolate.interp1d(x_values, y_values, fill_value='extrapolate')
+        length_start_0 = round(float(f(0)),3)
+        zipped_array = list(zip(longitudinal_stress_cold_end, longitudinal_stress_mid_zone))
+        x_values = [item[0] - item[1] for item in zipped_array]
+        f = interpolate.interp1d(x_values, y_values, fill_value='extrapolate')
+        length_end_0 = round(float(f(0)),3)
 
-        length_start = reference_length
-        length_end = length_start
+
+        reference_length = (friction['axial'] * length_array[-1] + tension_cfg['start'] - tension_cfg['end'])/(2*friction['axial'])
+        if length_start_0 > length_array[-1] or length_start_0 < length_array[0]:
+            length_start = reference_length
+        else:
+            length_start = length_start_0
+        if length_end_0 < length_array[0] or length_end_0 > length_array[-1]:
+            length_end = length_start
+        else:
+            length_end = length_end_0
+        anchor_length = {'start': round(length_start*0.0254,1), 'end': round(length_end*0.0254,1)}
 
         #Buckling Check
         fully_restrained_axial_force_term1 = tension_cfg['lay_tension'] - pressure * Ai *(1-2*Poissonsratio) 
@@ -143,17 +163,36 @@ class LateralBuckling:
                 effective_axial_force = -friction['axial']*(length_array[-1] - length_array[idx]) + tension_cfg['end']
             effective_axial_force_array.append(effective_axial_force)
         lateral_buckling_df['effective_axial_force'] = effective_axial_force_array
-
+        x_values = length_array
+        y_values = effective_axial_force_array
+        f = interpolate.interp1d(x_values, y_values)
+        effective_axial_force_length_start = round(float(f(length_start)),3)
+        effective_axial_force_length_end = round(float(f(length_end)),3)
+        effective_axial_load = {'anchor_start': round(effective_axial_force_length_start/1000,3), 'anchor_end': round(effective_axial_force_length_end/1000,3)}
+        
         I = pipe_properties[0]['section']['I']
         critical_buckling_load = 0.65* 2.26* (E*A)**0.25 * (E*I)**0.25 * friction['lateral']**0.5
         
         route_curve_radius = cfg['pipeline']['route']['curve_radius'] /0.0254
         critical_buckling_load_for_route = friction['lateral'] * route_curve_radius
         min_critical_buckling_load = -min(critical_buckling_load, critical_buckling_load_for_route)
+        min_critical_buckling_load_array = [min_critical_buckling_load] * len(length_array)
+        lateral_buckling_df['min_critical_buckling_load'] = min_critical_buckling_load_array
 
-        logging.info(f"S Effective at L = L/2, {effective_axial_force_array[int(len(length_array)/2)]}")
-        logging.info(f"S Restrained at L = 0, {fully_restrained_axial_force[0]/1000}")
-        logging.info(f"S Critical at L = 0, {min_critical_buckling_load}")
+        if effective_axial_force_length_start <= min_critical_buckling_load and effective_axial_force_length_end <= min_critical_buckling_load:
+            lateral_buckling_check = 'Pass'
+        else:
+            lateral_buckling_check = 'Fail'
+
+
+        lateral_buckling = {'anchor_length': anchor_length, 'min_critical_buckling_load': min_critical_buckling_load, 
+                                    'effective_axial_load': effective_axial_load, 'lateral_buckling_check': lateral_buckling_check,
+                                    'fully_restrained_axial_force': {'L=0': round(fully_restrained_axial_force[0]/1000, 3), 'L=L': round(fully_restrained_axial_force[-1]/1000, 3)}}
+        cfg['pipeline']['lateral_buckling'] = lateral_buckling
+
+        logging.info(f'Lateral Buckling Check: {lateral_buckling_check}')
+        logging.info(f'Lateral Buckling summary: {lateral_buckling}')
+        
 
         return lateral_buckling_df
 
@@ -179,7 +218,7 @@ class LateralBuckling:
         differential_temperature_array = [round(float(f(item)),3) for item in length_factor_array]
 
         return differential_temperature_array
-                
+    
     def save_temperature_plot(self, cfg, csv_groups):
         plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
 
@@ -203,14 +242,15 @@ class LateralBuckling:
 
         plot_yml['data']['groups'] = csv_groups
 
-        columns= { 'x': ['length'], 'y': ['longitudinal_force_hot_end', 'longitudinal_force_cold_end', 'fully_restrained_axial_force', 'effective_axial_force'] }
+        columns= { 'x': ['length'], 'y': ['longitudinal_force_hot_end', 'longitudinal_force_cold_end', 'fully_restrained_axial_force', 'effective_axial_force', 'min_critical_buckling_load'] }
         plot_yml['master_settings']['groups']['columns'] = columns
 
         transform = [{ 'column': 'length', 'scale': 0.0254, 'shift': 0 },
                      { 'column': 'longitudinal_force_hot_end', 'scale': 0.001, 'shift': 0 },
                      { 'column': 'longitudinal_force_cold_end', 'scale': 0.001, 'shift': 0 },
                      { 'column': 'fully_restrained_axial_force', 'scale': 0.001, 'shift': 0 },
-                     { 'column': 'effective_axial_force', 'scale': 0.001, 'shift': 0 }
+                     { 'column': 'effective_axial_force', 'scale': 0.001, 'shift': 0 },
+                        { 'column': 'min_critical_buckling_load', 'scale': 0.001, 'shift': 0 }
                      ]
         plot_yml['master_settings']['groups']['transform'] = transform
 
@@ -226,14 +266,15 @@ class LateralBuckling:
 
         plot_yml['data']['groups'] = csv_groups
 
-        columns= { 'x': ['length'], 'y': ['longitudinal_force_hot_end', 'longitudinal_force_cold_end', 'fully_restrained_axial_force', 'effective_axial_force'] }
+        columns= { 'x': ['length'], 'y': ['longitudinal_force_hot_end', 'longitudinal_force_cold_end', 'fully_restrained_axial_force', 'effective_axial_force', 'min_critical_buckling_load'] }
         plot_yml['master_settings']['groups']['columns'] = columns
 
         transform = [{ 'column': 'length', 'scale': 0.0254, 'shift': 0 },
                      { 'column': 'longitudinal_force_hot_end', 'scale': 0.004449816, 'shift': 0 },
                      { 'column': 'longitudinal_force_cold_end', 'scale': 0.004449816, 'shift': 0 },
                      { 'column': 'fully_restrained_axial_force', 'scale': 0.004449816, 'shift': 0 },
-                     { 'column': 'effective_axial_force', 'scale': 0.004449816, 'shift': 0 }
+                     { 'column': 'effective_axial_force', 'scale': 0.004449816, 'shift': 0 },
+                        { 'column': 'min_critical_buckling_load', 'scale': 0.004449816, 'shift': 0 }
                      ]
         plot_yml['master_settings']['groups']['transform'] = transform
 
@@ -249,14 +290,17 @@ class LateralBuckling:
 
         plot_yml['data']['groups'] = csv_groups
 
-        columns= { 'x': ['length'], 'y': ['longitudinal_stress_hot_end', 'longitudinal_stress_cold_end', 'circumferential_stress', 'longitudinal_stress_mid_zone'] }
+        columns= { 'x': ['length'], 'y': ['longitudinal_stress_hot_end', 'longitudinal_stress_cold_end', 'circumferential_stress', 'thermal_stress', 'longitudinal_stress_mid_zone'] }
         plot_yml['master_settings']['groups']['columns'] = columns
 
-        transform = [{ 'column': 'length', 'scale': 0.0254, 'shift': 0 },
-                     { 'column': 'longitudinal_stress_hot_end', 'scale': 0.001, 'shift': 0 },
-                     { 'column': 'longitudinal_stress_cold_end', 'scale': 0.001, 'shift': 0 },
-                     { 'column': 'circumferential_stress', 'scale': 0.001, 'shift': 0 },
-                     { 'column': 'longitudinal_stress_mid_zone', 'scale': 0.001, 'shift': 0 }
+        length_in_to_m = 0.0254
+        stress_psi_to_ksi = 0.001
+        transform = [{ 'column': 'length', 'scale': length_in_to_m, 'shift': 0 },
+                     { 'column': 'longitudinal_stress_hot_end', 'scale': stress_psi_to_ksi, 'shift': 0 },
+                     { 'column': 'longitudinal_stress_cold_end', 'scale': stress_psi_to_ksi, 'shift': 0 },
+                     { 'column': 'circumferential_stress', 'scale': stress_psi_to_ksi, 'shift': 0 },
+                     { 'column': 'thermal_stress', 'scale': stress_psi_to_ksi, 'shift': 0 },
+                     { 'column': 'longitudinal_stress_mid_zone', 'scale': stress_psi_to_ksi, 'shift': 0 }
                      ]
         plot_yml['master_settings']['groups']['transform'] = transform
 
@@ -272,7 +316,7 @@ class LateralBuckling:
 
         plot_yml['data']['groups'] = csv_groups
 
-        columns= { 'x': ['length'], 'y': ['longitudinal_stress_hot_end', 'longitudinal_stress_cold_end', 'circumferential_stress', 'longitudinal_stress_mid_zone'] }
+        columns= { 'x': ['length'], 'y': ['longitudinal_stress_hot_end', 'longitudinal_stress_cold_end', 'circumferential_stress', 'thermal_stress', 'longitudinal_stress_mid_zone'] }
         plot_yml['master_settings']['groups']['columns'] = columns
 
         length_in_to_m = 0.0254
@@ -281,6 +325,7 @@ class LateralBuckling:
                      { 'column': 'longitudinal_stress_hot_end', 'scale': stress_psi_to_mpa, 'shift': 0 },
                      { 'column': 'longitudinal_stress_cold_end', 'scale': stress_psi_to_mpa, 'shift': 0 },
                      { 'column': 'circumferential_stress', 'scale': stress_psi_to_mpa, 'shift': 0 },
+                     { 'column': 'thermal_stress', 'scale': stress_psi_to_mpa, 'shift': 0},
                      { 'column': 'longitudinal_stress_mid_zone', 'scale': stress_psi_to_mpa, 'shift': 0 }
                      ]
         plot_yml['master_settings']['groups']['transform'] = transform
