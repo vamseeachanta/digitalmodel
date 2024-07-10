@@ -32,6 +32,18 @@ class LateralBuckling:
         
     def save_temperature_plot(self, cfg, lateral_buckling_df):
         plot_yml = viz_templates.get_xy_plot(cfg['Analysis'].copy())
+        x_sets = [list(lateral_buckling_df['length'])]
+        plot_yml['data']['groups'][0]['x'] = x_sets
+
+        y_sets = [list(lateral_buckling_df['differential_temperature'])]
+        plot_yml['data']['groups'][0]['y'] = y_sets
+        
+        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_temperature_plot', 
+                    'title': 'Temperature along length',
+                    'xlabel': 'Length (inch)',
+                    'ylabel': 'Differential Temperature (deg C)',
+}
+        plot_yml['settings'].update(settings)
         au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
 
     def get_friction_force(self, cfg):
