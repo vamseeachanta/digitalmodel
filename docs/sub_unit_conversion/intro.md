@@ -1,8 +1,10 @@
 # Introduction
 
-Need to figure out a good system to
+Need to figure out a good system to use for all engineering calculations.
 
 ## References
+
+<https://docs.astropy.org/en/stable/units/> (Is this top most?)
 
 <https://github.com/fjpereny/Engineering-Units-Conversion>
 

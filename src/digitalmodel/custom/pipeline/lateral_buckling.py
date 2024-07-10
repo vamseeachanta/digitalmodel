@@ -28,24 +28,14 @@ class LateralBuckling:
         file_name = os.path.join(cfg['Analysis']['result_folder'], file_name)
         lateral_buckling_df.to_csv(file_name, index=False)
         
-        self.save_temperature_plot(cfg, lateral_buckling_df)
+        csv_groups = [{'file_name': file_name, 'label': ''}]
+        self.save_temperature_plot(cfg, csv_groups.copy())
+        self.save_buckling_force_plot_imp(cfg, csv_groups.copy())
+        self.save_buckling_force_plot_met(cfg, csv_groups.copy())
+        self.save_buckling_stress_plot_imp(cfg, csv_groups.copy())
+        self.save_buckling_stress_plot_met(cfg, csv_groups.copy())
+        self.save_buckling_strain_plot(cfg, csv_groups.copy())
         
-    def save_temperature_plot(self, cfg, lateral_buckling_df):
-        plot_yml = viz_templates.get_xy_plot(cfg['Analysis'].copy())
-        x_sets = [list(lateral_buckling_df['length'])]
-        plot_yml['data']['groups'][0]['x'] = x_sets
-
-        y_sets = [list(lateral_buckling_df['differential_temperature'])]
-        plot_yml['data']['groups'][0]['y'] = y_sets
-        
-        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_temperature_plot', 
-                    'title': 'Temperature along length',
-                    'xlabel': 'Length (inch)',
-                    'ylabel': 'Differential Temperature (deg C)',
-}
-        plot_yml['settings'].update(settings)
-        au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
-
     def get_friction_force(self, cfg):
         pipe_properties = cfg['pipeline']['pipe_properties']
         system_properties = cfg['pipeline']['system_properties']
@@ -87,13 +77,15 @@ class LateralBuckling:
         Ai = pipe_properties[0]['section']['Ai']
 
         logitudinal_force_term1 = tension_cfg['start'] - tension_cfg['lay_tension'] + pressure * Ai
-        logitudinal_force = [logitudinal_force_term1 - friction['axial']*(item-length_array[0]) for item in length_array]
-        longitudinal_stress_hot_end = [item/A_system for item in logitudinal_force]
+        longitudinal_force_hot_end = [logitudinal_force_term1 - friction['axial']*(item-length_array[0]) for item in length_array]
+        lateral_buckling_df['longitudinal_force_hot_end'] = longitudinal_force_hot_end
+        longitudinal_stress_hot_end = [item/A_system for item in longitudinal_force_hot_end]
         lateral_buckling_df['longitudinal_stress_hot_end'] = longitudinal_stress_hot_end
 
         logitudinal_force_term1 = tension_cfg['end'] - tension_cfg['lay_tension'] + pressure * Ai
-        logitudinal_force = [logitudinal_force_term1 - friction['axial']*(length_array[-1]-item) for item in length_array]
-        longitudinal_stress_cold_end = [item/A for item in logitudinal_force]
+        longitudinal_force_cold_end = [logitudinal_force_term1 - friction['axial']*(length_array[-1]-item) for item in length_array]
+        lateral_buckling_df['longitudinal_force_cold_end'] = longitudinal_force_cold_end
+        longitudinal_stress_cold_end = [item/A for item in longitudinal_force_cold_end]
         lateral_buckling_df['longitudinal_stress_cold_end'] = longitudinal_stress_cold_end
 
         circumferential_stress = [2* pressure * Ai / A] * len(length_array)
@@ -188,3 +180,136 @@ class LateralBuckling:
 
         return differential_temperature_array
                 
+    def save_temperature_plot(self, cfg, csv_groups):
+        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+
+        plot_yml['data']['groups'] = csv_groups
+        columns= { 'x': ['length'], 'y': ['differential_temperature'] }
+        plot_yml['master_settings']['groups']['columns'] = columns
+
+        transform = [{ 'column': 'length', 'scale': 0.0254, 'shift': 0 }]
+        plot_yml['master_settings']['groups']['transform'] = transform
+
+        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_temperature', 
+                    'title': 'Temperature along length',
+                    'xlabel': 'Length (m)',
+                    'ylabel': 'Differential Temperature (deg C)',
+}
+        plot_yml['settings'].update(settings)
+        au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
+
+    def save_buckling_force_plot_imp(self, cfg, csv_groups):
+        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+
+        plot_yml['data']['groups'] = csv_groups
+
+        columns= { 'x': ['length'], 'y': ['longitudinal_force_hot_end', 'longitudinal_force_cold_end', 'fully_restrained_axial_force', 'effective_axial_force'] }
+        plot_yml['master_settings']['groups']['columns'] = columns
+
+        transform = [{ 'column': 'length', 'scale': 0.0254, 'shift': 0 },
+                     { 'column': 'longitudinal_force_hot_end', 'scale': 0.001, 'shift': 0 },
+                     { 'column': 'longitudinal_force_cold_end', 'scale': 0.001, 'shift': 0 },
+                     { 'column': 'fully_restrained_axial_force', 'scale': 0.001, 'shift': 0 },
+                     { 'column': 'effective_axial_force', 'scale': 0.001, 'shift': 0 }
+                     ]
+        plot_yml['master_settings']['groups']['transform'] = transform
+
+        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_lateral_buckling_force_imp', 
+                    'title': 'Force along length',
+                    'xlabel': 'Length (m)',
+                    'ylabel': 'Force (kips)'}
+        plot_yml['settings'].update(settings)
+        au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
+
+    def save_buckling_force_plot_met(self, cfg, csv_groups):
+        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+
+        plot_yml['data']['groups'] = csv_groups
+
+        columns= { 'x': ['length'], 'y': ['longitudinal_force_hot_end', 'longitudinal_force_cold_end', 'fully_restrained_axial_force', 'effective_axial_force'] }
+        plot_yml['master_settings']['groups']['columns'] = columns
+
+        transform = [{ 'column': 'length', 'scale': 0.0254, 'shift': 0 },
+                     { 'column': 'longitudinal_force_hot_end', 'scale': 0.004449816, 'shift': 0 },
+                     { 'column': 'longitudinal_force_cold_end', 'scale': 0.004449816, 'shift': 0 },
+                     { 'column': 'fully_restrained_axial_force', 'scale': 0.004449816, 'shift': 0 },
+                     { 'column': 'effective_axial_force', 'scale': 0.004449816, 'shift': 0 }
+                     ]
+        plot_yml['master_settings']['groups']['transform'] = transform
+
+        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_lateral_buckling_force_met', 
+                    'title': 'Force along length',
+                    'xlabel': 'Length (m)',
+                    'ylabel': 'Force (kN)'}
+        plot_yml['settings'].update(settings)
+        au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
+
+    def save_buckling_stress_plot_imp(self, cfg, csv_groups):
+        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+
+        plot_yml['data']['groups'] = csv_groups
+
+        columns= { 'x': ['length'], 'y': ['longitudinal_stress_hot_end', 'longitudinal_stress_cold_end', 'circumferential_stress', 'longitudinal_stress_mid_zone'] }
+        plot_yml['master_settings']['groups']['columns'] = columns
+
+        transform = [{ 'column': 'length', 'scale': 0.0254, 'shift': 0 },
+                     { 'column': 'longitudinal_stress_hot_end', 'scale': 0.001, 'shift': 0 },
+                     { 'column': 'longitudinal_stress_cold_end', 'scale': 0.001, 'shift': 0 },
+                     { 'column': 'circumferential_stress', 'scale': 0.001, 'shift': 0 },
+                     { 'column': 'longitudinal_stress_mid_zone', 'scale': 0.001, 'shift': 0 }
+                     ]
+        plot_yml['master_settings']['groups']['transform'] = transform
+
+        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_lateral_buckling_stress_imp', 
+                    'title': 'Stress along length',
+                    'xlabel': 'Length (m)',
+                    'ylabel': 'Stress (ksi)'}
+        plot_yml['settings'].update(settings)
+        au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
+
+    def save_buckling_stress_plot_met(self, cfg, csv_groups):
+        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+
+        plot_yml['data']['groups'] = csv_groups
+
+        columns= { 'x': ['length'], 'y': ['longitudinal_stress_hot_end', 'longitudinal_stress_cold_end', 'circumferential_stress', 'longitudinal_stress_mid_zone'] }
+        plot_yml['master_settings']['groups']['columns'] = columns
+
+        length_in_to_m = 0.0254
+        stress_psi_to_mpa = 0.00689476
+        transform = [{ 'column': 'length', 'scale': length_in_to_m, 'shift': 0 },
+                     { 'column': 'longitudinal_stress_hot_end', 'scale': stress_psi_to_mpa, 'shift': 0 },
+                     { 'column': 'longitudinal_stress_cold_end', 'scale': stress_psi_to_mpa, 'shift': 0 },
+                     { 'column': 'circumferential_stress', 'scale': stress_psi_to_mpa, 'shift': 0 },
+                     { 'column': 'longitudinal_stress_mid_zone', 'scale': stress_psi_to_mpa, 'shift': 0 }
+                     ]
+        plot_yml['master_settings']['groups']['transform'] = transform
+
+        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_lateral_buckling_stress_met', 
+                    'title': 'Stress along length',
+                    'xlabel': 'Length (m)',
+                    'ylabel': 'Stress (MPa)'}
+        plot_yml['settings'].update(settings)
+        au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
+        
+    def save_buckling_strain_plot(self, cfg, csv_groups):
+        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+
+        plot_yml['data']['groups'] = csv_groups
+
+        columns= { 'x': ['length'], 'y': ['longitudinal_strain_hot_end', 'longitudinal_strain_cold_end'] }
+        plot_yml['master_settings']['groups']['columns'] = columns
+
+        transform = [{ 'column': 'length', 'scale': 0.0254, 'shift': 0 },
+                     { 'column': 'longitudinal_strain_hot_end', 'scale': 1, 'shift': 0 },
+                     { 'column': 'longitudinal_strain_cold_end', 'scale': 1, 'shift': 0 }
+                     ]
+        plot_yml['master_settings']['groups']['transform'] = transform
+
+        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_lateral_buckling_strain', 
+                    'title': 'Strain along length',
+                    'xlabel': 'Length (m)',
+                    'ylabel': 'Strain'}
+        plot_yml['settings'].update(settings)
+        au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
+        
