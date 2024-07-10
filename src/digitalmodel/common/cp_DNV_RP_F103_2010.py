@@ -1,3 +1,4 @@
+import math
 
 class DNV_RP_F103:
 
@@ -9,7 +10,7 @@ class DNV_RP_F103:
 
         if cfg['inputs']['calculation_type'] == 'DNV_RP_F103_2010':
             self.DNV_RP_F103_2010(cfg)
-        if cfg['inputs']['calculation_type'] == 'DNV_RP_F103_2019':
+        elif cfg['inputs']['calculation_type'] == 'DNV_RP_F103_2019':
             self.DNV_RP_F103_2019(cfg)
         else:
             raise (Exception(f"Calculation type: {cfg['inputs']['calculation_type']} not IMPLEMENTED. ... FAIL"))
@@ -38,6 +39,9 @@ class DNV_RP_F103:
         """
 
         breakdown_factor = self.get_breakdown_factors(cfg)
+        
+        anode_mass = self.calculate_anode_mass(cfg)
+        surface_area_protected = self.get_surface_area(cfg)
 
     def get_breakdown_factors(self, cfg):
         design = cfg['inputs']['design']
@@ -54,8 +58,43 @@ class DNV_RP_F103:
         b = coating['breakdown']['field_joint']['b']
         fcm = a + 0.5*b*design['life']
         fcf = a + b*design['life']
-        breakdown_factor_field_joint = {'mean': fcm, 'final': fcf}
+        breakdown_factor_field_joint = {'mean': fcm, 'final': round(fcf,2)}
 
         breakdown_factor = {'regular': breakdown_factor_regular, 'field_joint': breakdown_factor_field_joint}
 
         return breakdown_factor
+    
+    def calculate_anode_mass(self,cfg):
+        """
+        Anode mass calculation
+        """
+        structure = cfg['inputs']['structure']
+        anode = cfg['inputs']['anode']
+        coating = structure['coating_properties']
+
+        outer_diameter = structure['dimensions']['Nominal_OD']+ 2*coating['coatings']['thickness']+2*anode['physical_properties']['thickness']
+        inner_diameter = structure['dimensions']['Nominal_OD']+ 2*coating['coatings']['thickness']  
+
+
+        mass = anode['physical_properties']['density']* anode['physical_properties']['length']* anode['physical_properties']['thickness']* (math.pi*(outer_diameter-anode['physical_properties']['thickness'])-2*anode['physical_properties']['half_shell_gap'])
+
+        anode_mass = {'anode_mass': round(mass,1), 'outer_diameter': outer_diameter, 'inner_diameter': inner_diameter}
+        
+        return anode_mass
+    
+    def get_surface_area(self, cfg):
+        structure = cfg['inputs']['structure']
+        
+        field_joint_length = 2 * structure['dimensions']['length']['cutback']*(structure['dimensions']['length']['total']/structure['dimensions']['length']['joint'])
+        field_joint_length = math.ceil(field_joint_length)
+
+        area_pipeline = math.pi * structure['dimensions']['Nominal_OD']*(structure['dimensions']['length']['total']-field_joint_length)
+
+        area_field_joint = math.pi * structure['dimensions']['Nominal_OD']*(field_joint_length)
+
+        surface_area = {'surface_area_pipeline': round(area_pipeline,2), 'surface_area_field_joint': round(area_field_joint,2)}
+        
+        return surface_area
+        
+         
+    

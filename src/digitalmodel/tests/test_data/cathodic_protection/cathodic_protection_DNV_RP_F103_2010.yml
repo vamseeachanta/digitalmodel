@@ -12,14 +12,14 @@ inputs:
       input: 0.23 # float_value or csv. if csv, use temperature & salinity.
       csv_filename: src/digitalmodel/tests/test_data/cathodic_protection/seawater_conductance_with_temperature.csv
       csv_reference: https://github.com/vamseeachanta/digitalmodel/blob/master/docs/cathodic_protection/literature/course_notes_Appendix_A_Cathodic_Protection_Design.pdf
-    temperature: 15 #°C
+    temperature: 15 #ï¿½C
     salinity: 36 # ppt
 
   structure:
     type: pipeline
     material: steel
     internal_fluid:
-      temperature: 40 #°C
+      temperature: 40 #ï¿½C
 
     dimensions:
       length:
@@ -31,10 +31,8 @@ inputs:
 
     coating_properties:
       coatings:
-        - type: FBE
-          thickness: 0.10 #in
-        - type: anti-corrosion
-          thickness: 0.022 #in
+        thickness: 0.122 #in
+        
       percentage: 100 # %
       breakdown:
         regular:
@@ -69,9 +67,10 @@ inputs:
     utilisation_factor: 0.8 # factor, u
 
     physical_properties:
-      density: 2723 # kg/m3
+      density: 2723.14 # kg/m3 # 170 in lb/ft3
       spacing_along_length: 304.8 # m
       length: 16.75 # in
+      
       half_shell_gap: 1.5 # in
       mean_length: 0.650 # m
       thickness: 1.5 # in
