@@ -4,9 +4,13 @@ import os
 
 # Third party imports
 import pandas as pd
+from assetutilities.common.visualization.visualization_templates import (
+    VisualizationTemplates,
+)
+from assetutilities.engine import engine as au_engine
 from scipy import interpolate
 
-
+viz_templates = VisualizationTemplates()
 class LateralBuckling:
     
     def __init__(self):
@@ -23,6 +27,12 @@ class LateralBuckling:
         file_name = cfg['Analysis']['file_name_for_overwrite'] + '_lateral_buckling.csv'
         file_name = os.path.join(cfg['Analysis']['result_folder'], file_name)
         lateral_buckling_df.to_csv(file_name, index=False)
+        
+        self.save_temperature_plot(cfg, lateral_buckling_df)
+        
+    def save_temperature_plot(self, cfg, lateral_buckling_df):
+        plot_yml = viz_templates.get_xy_plot(cfg['Analysis'].copy())
+        au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
 
     def get_friction_force(self, cfg):
         pipe_properties = cfg['pipeline']['pipe_properties']
@@ -165,4 +175,4 @@ class LateralBuckling:
         differential_temperature_array = [round(float(f(item)),3) for item in length_factor_array]
 
         return differential_temperature_array
-        
+                
