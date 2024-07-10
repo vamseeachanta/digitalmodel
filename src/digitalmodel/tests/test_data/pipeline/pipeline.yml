@@ -53,11 +53,12 @@ pipeline:
       temperature:
         type: differential
         unit: celsius
-        length_percent: [0, 20, 40, 60, 80, 100]
+        length_factor: [0, 0.2, 0.4, 0.6, 0.8, 1.0]
         temperature: [30.4, 24.8, 21.5, 19.5, 18.4, 17.1]
-      Material: steel
-      Material_Grade: API 5L X52
-      thermal_expansion_coefficient: 0.0000117
+      Material:
+        name: steel
+        grade: API 5L X52
+        ThermalExpansionCoefficient: 0.0000117
       WeldFactor:
         Seamless: 1.0
       coatings: #Inner to outer, units, lb, inch
