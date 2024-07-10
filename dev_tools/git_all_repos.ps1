@@ -3,7 +3,7 @@
 $dir = dir C:\github | ?{$_.PSISContainer}
 
 foreach ($d in $dir){
-    $daily_routine_batch = Join-Path -Path $d.FullName -ChildPath ("\dev_tools\daily_routine.bat")
+    $daily_routine_batch = Join-Path $d.FullName -ChildPath ("\dev_tools\daily_routine.bat")
     
     & $daily_routine_batch
 }
