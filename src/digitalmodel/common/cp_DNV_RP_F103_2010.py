@@ -1,4 +1,6 @@
+# Standard library imports
 import math
+
 
 class DNV_RP_F103:
 
@@ -40,12 +42,13 @@ class DNV_RP_F103:
 
         breakdown_factor = self.get_breakdown_factors(cfg)
         
-        anode_mass = self.calculate_anode_mass(cfg)
+        anode_mass = self.calculate_total_anode_mass(cfg)
         surface_area_protected = self.get_surface_area(cfg)
 
         current_demand = self.get_current_demand(cfg,breakdown_factor,surface_area_protected)
-        bracelet_anode_mass = self.get_required_anode_mass(cfg,current_demand,anode_mass)
+        bracelet_anode_mass = self.get_required_anode_mass_for_pipe_section(cfg,current_demand)
 
+        cfg['cathodic_protection'] = {'breakdown_factor': breakdown_factor, 'anode_mass': anode_mass, 'surface_area_protected': surface_area_protected, 'current_demand': current_demand, 'bracelet_anode_mass': bracelet_anode_mass}
 
     def get_breakdown_factors(self, cfg):
         design = cfg['inputs']['design']
@@ -68,7 +71,7 @@ class DNV_RP_F103:
 
         return breakdown_factor
     
-    def calculate_anode_mass(self,cfg):
+    def calculate_total_anode_mass(self,cfg):
         """
         Anode mass calculation
         """
@@ -125,19 +128,22 @@ class DNV_RP_F103:
 
         final = surface_area_protected['surface_area_pipeline']*breakdown_factor['regular']['final']*structure['electrical']['anode_mean_current_density']*design['factor']+surface_area_protected['surface_area_field_joint']*breakdown_factor['field_joint']['final']*structure['electrical']['anode_mean_current_density']*design['factor']
 
-        current_demand = {'mean_current_demand': round(mean,3), 'final_current_demand': round(final,3)}
+        current_demand = {'mean': round(mean,3), 'final': round(final,3)}
 
         return current_demand
     
-    def get_required_anode_mass(self, cfg,current_demand,anode_mass):
+    def get_required_anode_mass_for_pipe_section(self, cfg, current_demand):
         """
         this is used to calculate anode mass of 'bracelet type' 
         """
         design = cfg['inputs']['design']
-        anode = cfg['inputs']['anode']
+        anode_cfg = cfg['inputs']['anode']
+        design_life_in_years = design['life']
+        design_life_in_hours = design_life_in_years*8760
+        anode_net_weight = anode_cfg['physical_properties']['net_weight']
 
-        mass = current_demand['mean_current_demand']*design['life']/anode['utilisation_factor']*anode['current_capacity']
-        number = mass / anode_mass['anode_mass']
+        mass = current_demand['mean']*design_life_in_hours/(anode_cfg['utilisation_factor']*anode_cfg['current_capacity'])
+        number = int(math.ceil(mass / anode_net_weight))
 
         anode_mass = {'anode_mass_bracelet_type': round(mass,1),'anode_number': round(number,1)}
         return anode_mass
@@ -154,4 +160,5 @@ class DNV_RP_F103:
 
         
          
+    
     

@@ -64,7 +64,7 @@ inputs:
   anode:
     material: aluminium #  aluminium or zinc
     type: bracelet # Bracelet or standoff
-    current_capacity: 2000 # (Ca*N) , Q
+    current_capacity: 2000 # (Ca*N) , Q or A-hr/kg
     utilisation_factor: 0.8 # factor, u
 
     physical_properties:

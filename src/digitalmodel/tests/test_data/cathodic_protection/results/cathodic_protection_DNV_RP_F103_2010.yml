@@ -9,17 +9,17 @@ dictitems:
         output: true
       cfg_sensitivities: false
   Analysis:
-    fe_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\results
+    fe_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\results
     basename: cathodic_protection
-    analysis_root_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection
+    analysis_root_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection
     file_name: cathodic_protection_DNV_RP_F103_2010
     file_name_for_overwrite: cathodic_protection_DNV_RP_F103_2010
-    result_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\results
-    log_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\logs
-    start_time: 2024-07-11 10:32:29.584540
+    result_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\results
+    log_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\logs
+    start_time: 2024-07-11 11:32:11.199044
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\cathodic_protection_DNV_RP_F103_2010.yml
+    CustomInputFile: c:\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\cathodic_protection_DNV_RP_F103_2010.yml
   inputs:
     calculation_type: DNV_RP_F103_2010
     design:
@@ -86,3 +86,24 @@ dictitems:
         width: 0.125
         height: 0.13
         net_weight: 42.64
+  cathodic_protection:
+    breakdown_factor:
+      regular:
+        mean: 0.0013
+        final: 0.0016
+      field_joint:
+        mean: 0.2
+        final: 0.3
+    anode_mass:
+      anode_mass: 47.69
+      outer_diameter: 0.4062476
+      inner_diameter: 12.994
+    surface_area_protected:
+      surface_area_pipeline: 2927.07
+      surface_area_field_joint: 99.706
+    current_demand:
+      mean: 1.425
+      final: 2.076
+    bracelet_anode_mass:
+      anode_mass_bracelet_type: 156.0
+      anode_number: 4
