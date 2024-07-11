@@ -49,17 +49,33 @@ class CommonBucklingCaculations:
         df['length_factor'] = mesh['length_factor']
         length_array = mesh['length']
         df['length'] = mesh['length']
-        return mesh, df
+        return df
         
-    def get_differential_temp(self, cfg, mesh):
+    def get_differential_temp(self, cfg, df):
         temperature_cfg = cfg['pipeline']['crossection'][0]['temperature']
         
         x_values = temperature_cfg['length_factor']
         y_values = temperature_cfg['temperature']
         
         f = interpolate.interp1d(x_values, y_values)
-        length_factor_array = mesh['length_factor']
+        length_factor_array = list(df['length_factor'])
         differential_temperature_array = [round(float(f(item)),3) for item in length_factor_array]
 
         return differential_temperature_array
 
+    def get_circumferential_stress(self, cfg, df):
+
+        length_array = list(df['length'])
+
+        pipe_properties = cfg['pipeline']['pipe_properties']
+
+        pressure = pipe_properties[0]['internal_fluid']['pressure']
+
+        A = pipe_properties[0]['section']['A']
+        Ai = pipe_properties[0]['section']['Ai']
+
+        circumferential_stress = 2* pressure * Ai / A
+        circumferential_stress_array = [circumferential_stress]* len(length_array)
+        df['circumferential_stress'] = circumferential_stress_array
+
+        return df

@@ -204,8 +204,8 @@ dictitems:
         anchor_end: -33.26
       lateral_buckling_check: Fail
       fully_restrained_axial_force:
-        L=0: -257.313
-        L=L: -169.658
+        L=0: -253.575
+        L=L: -165.92
   type:
     preprocess: false
     analysis: false
@@ -222,7 +222,7 @@ dictitems:
     file_name_for_overwrite: pipeline_lateral_bucklng
     result_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\results
     log_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\logs
-    start_time: 2024-07-11 00:04:43.467215
+    start_time: 2024-07-11 07:43:46.597408
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\pipeline_lateral_bucklng.yml

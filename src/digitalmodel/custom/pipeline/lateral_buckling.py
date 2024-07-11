@@ -60,23 +60,18 @@ class LateralBuckling:
         length = cfg['pipeline']['length'] * 12 /0.3048
 
 
-        mesh, lateral_buckling_df = cbc.assign_mesh(lateral_buckling_df, length)
-        length_array = mesh['length']
+        lateral_buckling_df = cbc.assign_mesh(lateral_buckling_df, length)
         
-        differential_temperature = cbc.get_differential_temp(cfg, mesh)
+        differential_temperature = cbc.get_differential_temp(cfg, lateral_buckling_df)
         lateral_buckling_df['differential_temperature'] = differential_temperature
 
         lateral_buckling_df = self.get_longitudinal_force_and_stress(cfg, lateral_buckling_df)
-        longitudinal_stress_hot_end = lateral_buckling_df['longitudinal_stress_hot_end']
-        longitudinal_stress_cold_end = lateral_buckling_df['longitudinal_stress_cold_end']
 
-        lateral_buckling_df = self.get_circumferential_stress(cfg, lateral_buckling_df, length_array)
+        lateral_buckling_df = cbc.get_circumferential_stress(cfg, lateral_buckling_df)
 
         lateral_buckling_df = self.get_longitudinal_strain_and_thermal_stress(cfg, lateral_buckling_df)
 
         lateral_buckling_df = self.get_longitudinal_stress_mid_zone(cfg, lateral_buckling_df)
-
-        longitudinal_stress_mid_zone = list(lateral_buckling_df['longitudinal_stress_mid_zone'])
 
         lateral_buckling, lateral_buckling_df = self.calculateLateralBuckling(cfg, lateral_buckling_df)
         cfg['pipeline']['lateral_buckling'] = lateral_buckling
@@ -97,7 +92,6 @@ class LateralBuckling:
         tension_cfg  = cfg['pipeline']['tension']
 
         pressure = pipe_properties[0]['internal_fluid']['pressure']
-        pressure = 1307.6 # For benchmarking. Remove for future runs.
         A = pipe_properties[0]['section']['A']
         Ai = pipe_properties[0]['section']['Ai']
 
@@ -161,7 +155,6 @@ class LateralBuckling:
         tension_cfg  = cfg['pipeline']['tension']
 
         pressure = pipe_properties[0]['internal_fluid']['pressure']
-        pressure = 1307.6 # For benchmarking. Remove for future runs.
         A = pipe_properties[0]['section']['A']
         Ai = pipe_properties[0]['section']['Ai']
 
@@ -217,7 +210,6 @@ class LateralBuckling:
         tension_cfg  = cfg['pipeline']['tension']
 
         pressure = pipe_properties[0]['internal_fluid']['pressure']
-        pressure = 1307.6 # For benchmarking. Remove for future runs.
         A = pipe_properties[0]['section']['A']
         Ai = pipe_properties[0]['section']['Ai']
 
@@ -241,7 +233,6 @@ class LateralBuckling:
         tension_cfg  = cfg['pipeline']['tension']
 
         pressure = pipe_properties[0]['internal_fluid']['pressure']
-        pressure = 1307.6 # For benchmarking. Remove for future runs.
         A = pipe_properties[0]['section']['A']
         Ai = pipe_properties[0]['section']['Ai']
 
@@ -268,22 +259,6 @@ class LateralBuckling:
 
         return lateral_buckling_df
 
-    def get_circumferential_stress(self, cfg, lateral_buckling_df, length_array):
-
-        length_array = list(lateral_buckling_df['length'])
-
-        pipe_properties = cfg['pipeline']['pipe_properties']
-
-        pressure = pipe_properties[0]['internal_fluid']['pressure']
-        pressure = 1307.6 # For benchmarking. Remove for future runs.
-        A = pipe_properties[0]['section']['A']
-        Ai = pipe_properties[0]['section']['Ai']
-
-        circumferential_stress = 2* pressure * Ai / A
-        circumferential_stress_array = [circumferential_stress]* len(length_array)
-        lateral_buckling_df['circumferential_stress'] = circumferential_stress_array
-
-        return lateral_buckling_df
 
     def get_longitudinal_force_and_stress(self, cfg, lateral_buckling_df):
 
@@ -295,7 +270,6 @@ class LateralBuckling:
         tension_cfg  = cfg['pipeline']['tension']
 
         pressure = pipe_properties[0]['internal_fluid']['pressure']
-        pressure = 1307.6 # For benchmarking. Remove for future runs.
         A_system = system_properties['A']
         A = pipe_properties[0]['section']['A']
         Ai = pipe_properties[0]['section']['Ai']

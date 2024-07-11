@@ -53,14 +53,12 @@ class UpheavalBuckling:
         friction_force = cfg['pipeline']['friction_force']
         tension_cfg  = cfg['pipeline']['tension']
 
-        mesh, uphaeval_buckling_df = cbc.assign_mesh(uphaeval_buckling_df, length)
-        length_array = mesh['length']
+        uphaeval_buckling_df = cbc.assign_mesh(uphaeval_buckling_df, length)
 
-        differential_temperature = cbc.get_differential_temp(cfg, mesh)
+        differential_temperature = cbc.get_differential_temp(cfg, uphaeval_buckling_df)
         uphaeval_buckling_df['differential_temperature'] = differential_temperature
 
-        get_compression_at_fully_restrained_zone = self.get_compression_at_fully_restrained_zone(cfg, uphaeval_buckling_df)        
-        
+        get_compression_at_fully_restrained_zone = self.get_compression_at_fully_restrained_zone(cfg, uphaeval_buckling_df)
         water_depth_array = self.get_water_depth(cfg, mesh)
         uphaeval_buckling_df['water_depth'] = water_depth_array
 
@@ -70,12 +68,10 @@ class UpheavalBuckling:
         return uphaeval_buckling_df
 
     def get_compression_at_fully_restrained_zone(self, cfg, uphaeval_buckling_df):
-        
+
         avg_diff_temp_for_pipeline_section = self.get_avg_differential_temperature_for_pipeline_section(uphaeval_buckling_df)
-        
-        circumferential_stress = 
-        
-        
+
+        uphaeval_buckling_df = cbc.get_circumferential_stress(cfg, uphaeval_buckling_df)
 
 
     def get_avg_differential_temperature_for_pipeline_section(self, df):
