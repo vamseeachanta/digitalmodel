@@ -10,7 +10,11 @@ from assetutilities.common.visualization.visualization_templates import (
 from assetutilities.engine import engine as au_engine
 from scipy import interpolate
 
+# Reader imports
+from digitalmodel.custom.pipeline.buckling_common import CommonBucklingCaculations
+
 viz_templates = VisualizationTemplates()
+cbc = CommonBucklingCaculations()
 class LateralBuckling:
     
     def __init__(self):
@@ -55,63 +59,120 @@ class LateralBuckling:
         lateral_buckling_df = pd.DataFrame()
         length = cfg['pipeline']['length'] * 12 /0.3048
 
-        pipe_properties = cfg['pipeline']['pipe_properties']
-        system_properties = cfg['pipeline']['system_properties']
-        friction = self.get_friction_force(cfg)
-        tension_cfg  = cfg['pipeline']['tension']
 
-        mesh = self.get_mesh(length)
-        lateral_buckling_df['element'] = mesh['element']
-        lateral_buckling_df['length_factor'] = mesh['length_factor']
+        mesh, lateral_buckling_df = cbc.assign_mesh(lateral_buckling_df, length)
         length_array = mesh['length']
-        lateral_buckling_df['length'] = mesh['length']
         
-        differential_temperature = self.get_differential_temp(cfg, mesh)
-
+        differential_temperature = cbc.get_differential_temp(cfg, mesh)
         lateral_buckling_df['differential_temperature'] = differential_temperature
 
+        lateral_buckling_df = self.get_longitudinal_force_and_stress(cfg, lateral_buckling_df)
+        longitudinal_stress_hot_end = lateral_buckling_df['longitudinal_stress_hot_end']
+        longitudinal_stress_cold_end = lateral_buckling_df['longitudinal_stress_cold_end']
+
+        lateral_buckling_df = self.get_circumferential_stress(cfg, lateral_buckling_df, length_array)
+
+        lateral_buckling_df = self.get_longitudinal_strain_and_thermal_stress(cfg, lateral_buckling_df)
+
+        lateral_buckling_df = self.get_longitudinal_stress_mid_zone(cfg, lateral_buckling_df)
+
+        longitudinal_stress_mid_zone = list(lateral_buckling_df['longitudinal_stress_mid_zone'])
+
+        lateral_buckling, lateral_buckling_df = self.calculateLateralBuckling(cfg, lateral_buckling_df)
+        cfg['pipeline']['lateral_buckling'] = lateral_buckling
+
+        return lateral_buckling_df
+
+    def calculateLateralBuckling(self, cfg, lateral_buckling_df):
+        length_array = list(lateral_buckling_df['length'])
+
+        anchor_length = self.get_anchor_length(cfg, lateral_buckling_df)
+        anchor_length_start = anchor_length['start']/0.0254
+        anchor_length_end = anchor_length['end']/0.0254
+        
+        #Buckling Check
+        pipe_properties = cfg['pipeline']['pipe_properties']
+        system_properties = cfg['pipeline']['system_properties']
+        friction = cfg['pipeline']['friction_force']
+        tension_cfg  = cfg['pipeline']['tension']
+
         pressure = pipe_properties[0]['internal_fluid']['pressure']
-        pressure = 1307.6 # For benchmarking
-        A_system = system_properties['A']
+        pressure = 1307.6 # For benchmarking. Remove for future runs.
         A = pipe_properties[0]['section']['A']
         Ai = pipe_properties[0]['section']['Ai']
-
-        logitudinal_force_term1 = tension_cfg['start'] - tension_cfg['lay_tension'] + pressure * Ai
-        longitudinal_force_hot_end = [logitudinal_force_term1 - friction['axial']*(item-length_array[0]) for item in length_array]
-        lateral_buckling_df['longitudinal_force_hot_end'] = longitudinal_force_hot_end
-        longitudinal_stress_hot_end = [item/A_system for item in longitudinal_force_hot_end]
-        lateral_buckling_df['longitudinal_stress_hot_end'] = longitudinal_stress_hot_end
-
-        logitudinal_force_term1 = tension_cfg['end'] - tension_cfg['lay_tension'] + pressure * Ai
-        longitudinal_force_cold_end = [logitudinal_force_term1 - friction['axial']*(length_array[-1]-item) for item in length_array]
-        lateral_buckling_df['longitudinal_force_cold_end'] = longitudinal_force_cold_end
-        longitudinal_stress_cold_end = [item/A for item in longitudinal_force_cold_end]
-        lateral_buckling_df['longitudinal_stress_cold_end'] = longitudinal_stress_cold_end
-
-        circumferential_stress = 2* pressure * Ai / A
-        circumferential_stress_array = [circumferential_stress]* len(length_array)
-        lateral_buckling_df['circumferential_stress'] = circumferential_stress_array
 
         E = pipe_properties[0]['material']['E']
         ThermalExpansionCoefficient = pipe_properties[0]['material']['ThermalExpansionCoefficient']
         Poissonsratio = pipe_properties[0]['material']['Poissonsratio']
 
-        zipped_array = list(zip(longitudinal_stress_hot_end, circumferential_stress_array, differential_temperature))
-        longitudinal_strain_hot_end =  [(item[0] - item[1]*Poissonsratio)/E + ThermalExpansionCoefficient * item[2] for item in zipped_array]
-        lateral_buckling_df['longitudinal_strain_hot_end'] = longitudinal_strain_hot_end
-        
-        zipped_array = list(zip(longitudinal_stress_cold_end, circumferential_stress_array, differential_temperature))
-        longitudinal_strain_cold_end = [(item[0] - item[1]*Poissonsratio)/E + ThermalExpansionCoefficient * item[2] for item in zipped_array]
-        lateral_buckling_df['longitudinal_strain_cold_end'] = longitudinal_strain_cold_end
+        differential_temperature = lateral_buckling_df['differential_temperature']
 
-        thermal_stress_array = [-E*ThermalExpansionCoefficient * item for item in differential_temperature]
-        lateral_buckling_df['thermal_stress'] = thermal_stress_array
-        
-        zipped_array = list(zip(circumferential_stress_array, differential_temperature))
-        longitudinal_stress_mid_zone = [item[0]*Poissonsratio - E*ThermalExpansionCoefficient * item[1] for item in zipped_array]
-        lateral_buckling_df['longitudinal_stress_mid_zone'] = longitudinal_stress_mid_zone
+        fully_restrained_axial_force_term1 = tension_cfg['lay_tension'] - pressure * Ai *(1-2*Poissonsratio) 
+        fully_restrained_axial_force = [fully_restrained_axial_force_term1 - A *E*ThermalExpansionCoefficient* item for item in differential_temperature]
+        lateral_buckling_df['fully_restrained_axial_force'] = fully_restrained_axial_force
 
+        effective_axial_force_array = []
+        for idx in range(0, len(length_array)):
+            if length_array[idx] < anchor_length_start:
+                effective_axial_force = -friction['axial']*length_array[idx] + tension_cfg['start']
+            elif length_array[idx]< anchor_length_end:
+                effective_axial_force = fully_restrained_axial_force[idx]
+            else:
+                effective_axial_force = -friction['axial']*(length_array[-1] - length_array[idx]) + tension_cfg['end']
+            effective_axial_force_array.append(effective_axial_force)
+        lateral_buckling_df['effective_axial_force'] = effective_axial_force_array
+        x_values = length_array
+        y_values = effective_axial_force_array
+        f = interpolate.interp1d(x_values, y_values)
+        effective_axial_force_length_start = round(float(f(anchor_length_start)),3)
+        effective_axial_force_length_end = round(float(f(anchor_length_end)),3)
+        effective_axial_load = {'anchor_start': round(effective_axial_force_length_start/1000,3), 'anchor_end': round(effective_axial_force_length_end/1000,3)}
+        
+        I = pipe_properties[0]['section']['I']
+        critical_buckling_load = 0.65* 2.26* (E*A)**0.25 * (E*I)**0.25 * friction['lateral']**0.5
+        
+        route_curve_radius = cfg['pipeline']['route']['curve_radius'] /0.0254
+        critical_buckling_load_for_route = friction['lateral'] * route_curve_radius
+        min_critical_buckling_load = -min(critical_buckling_load, critical_buckling_load_for_route)
+        min_critical_buckling_load_array = [min_critical_buckling_load] * len(length_array)
+        lateral_buckling_df['min_critical_buckling_load'] = min_critical_buckling_load_array
+
+        if effective_axial_force_length_start <= min_critical_buckling_load and effective_axial_force_length_end <= min_critical_buckling_load:
+            lateral_buckling_check = 'Pass'
+        else:
+            lateral_buckling_check = 'Fail'
+
+        lateral_buckling = {'anchor_length': anchor_length, 'min_critical_buckling_load': min_critical_buckling_load, 
+                                    'effective_axial_load': effective_axial_load, 'lateral_buckling_check': lateral_buckling_check,
+                                    'fully_restrained_axial_force': {'L=0': round(fully_restrained_axial_force[0]/1000, 3), 'L=L': round(fully_restrained_axial_force[-1]/1000, 3)}}
+
+        logging.info(f'Lateral Buckling Check: {lateral_buckling_check}')
+        logging.info(f'Lateral Buckling summary: {lateral_buckling}')
+
+        return lateral_buckling, lateral_buckling_df
+
+    def get_anchor_length(self, cfg, lateral_buckling_df):
         #Anchor Length
+        length_array = list(lateral_buckling_df['length'])
+        
+        pipe_properties = cfg['pipeline']['pipe_properties']
+        system_properties = cfg['pipeline']['system_properties']
+        friction = cfg['pipeline']['friction_force']
+        tension_cfg  = cfg['pipeline']['tension']
+
+        pressure = pipe_properties[0]['internal_fluid']['pressure']
+        pressure = 1307.6 # For benchmarking. Remove for future runs.
+        A = pipe_properties[0]['section']['A']
+        Ai = pipe_properties[0]['section']['Ai']
+
+        E = pipe_properties[0]['material']['E']
+        ThermalExpansionCoefficient = pipe_properties[0]['material']['ThermalExpansionCoefficient']
+        Poissonsratio = pipe_properties[0]['material']['Poissonsratio']
+
+        longitudinal_stress_hot_end = lateral_buckling_df['longitudinal_stress_hot_end']
+        longitudinal_stress_cold_end = lateral_buckling_df['longitudinal_stress_cold_end']
+        longitudinal_stress_mid_zone = lateral_buckling_df['longitudinal_stress_mid_zone']
+
         for idx in range(0, len(length_array)):
             if longitudinal_stress_hot_end[idx] < longitudinal_stress_mid_zone[idx]:
                 anchor_length_start = length_array[idx]
@@ -136,7 +197,6 @@ class LateralBuckling:
         f = interpolate.interp1d(x_values, y_values, fill_value='extrapolate')
         length_end_0 = round(float(f(0)),3)
 
-
         reference_length = (friction['axial'] * length_array[-1] + tension_cfg['start'] - tension_cfg['end'])/(2*friction['axial'])
         if length_start_0 > length_array[-1] or length_start_0 < length_array[0]:
             length_start = reference_length
@@ -148,51 +208,109 @@ class LateralBuckling:
             length_end = length_end_0
         anchor_length = {'start': round(length_start*0.0254,1), 'end': round(length_end*0.0254,1)}
 
-        #Buckling Check
-        fully_restrained_axial_force_term1 = tension_cfg['lay_tension'] - pressure * Ai *(1-2*Poissonsratio) 
-        fully_restrained_axial_force = [fully_restrained_axial_force_term1 - A *E*ThermalExpansionCoefficient* item for item in differential_temperature]
-        lateral_buckling_df['fully_restrained_axial_force'] = fully_restrained_axial_force
+        return anchor_length
 
-        effective_axial_force_array = []
-        for idx in range(0, len(length_array)):
-            if length_array[idx] < length_start:
-                effective_axial_force = -friction['axial']*length_array[idx] + tension_cfg['start']
-            elif length_array[idx]< length_end:
-                effective_axial_force = fully_restrained_axial_force[idx]
-            else:
-                effective_axial_force = -friction['axial']*(length_array[-1] - length_array[idx]) + tension_cfg['end']
-            effective_axial_force_array.append(effective_axial_force)
-        lateral_buckling_df['effective_axial_force'] = effective_axial_force_array
-        x_values = length_array
-        y_values = effective_axial_force_array
-        f = interpolate.interp1d(x_values, y_values)
-        effective_axial_force_length_start = round(float(f(length_start)),3)
-        effective_axial_force_length_end = round(float(f(length_end)),3)
-        effective_axial_load = {'anchor_start': round(effective_axial_force_length_start/1000,3), 'anchor_end': round(effective_axial_force_length_end/1000,3)}
-        
-        I = pipe_properties[0]['section']['I']
-        critical_buckling_load = 0.65* 2.26* (E*A)**0.25 * (E*I)**0.25 * friction['lateral']**0.5
-        
-        route_curve_radius = cfg['pipeline']['route']['curve_radius'] /0.0254
-        critical_buckling_load_for_route = friction['lateral'] * route_curve_radius
-        min_critical_buckling_load = -min(critical_buckling_load, critical_buckling_load_for_route)
-        min_critical_buckling_load_array = [min_critical_buckling_load] * len(length_array)
-        lateral_buckling_df['min_critical_buckling_load'] = min_critical_buckling_load_array
+    def get_longitudinal_stress_mid_zone(self, cfg, lateral_buckling_df):
+        pipe_properties = cfg['pipeline']['pipe_properties']
+        system_properties = cfg['pipeline']['system_properties']
+        friction = cfg['pipeline']['friction_force']
+        tension_cfg  = cfg['pipeline']['tension']
 
-        if effective_axial_force_length_start <= min_critical_buckling_load and effective_axial_force_length_end <= min_critical_buckling_load:
-            lateral_buckling_check = 'Pass'
-        else:
-            lateral_buckling_check = 'Fail'
+        pressure = pipe_properties[0]['internal_fluid']['pressure']
+        pressure = 1307.6 # For benchmarking. Remove for future runs.
+        A = pipe_properties[0]['section']['A']
+        Ai = pipe_properties[0]['section']['Ai']
 
+        E = pipe_properties[0]['material']['E']
+        ThermalExpansionCoefficient = pipe_properties[0]['material']['ThermalExpansionCoefficient']
+        Poissonsratio = pipe_properties[0]['material']['Poissonsratio']
 
-        lateral_buckling = {'anchor_length': anchor_length, 'min_critical_buckling_load': min_critical_buckling_load, 
-                                    'effective_axial_load': effective_axial_load, 'lateral_buckling_check': lateral_buckling_check,
-                                    'fully_restrained_axial_force': {'L=0': round(fully_restrained_axial_force[0]/1000, 3), 'L=L': round(fully_restrained_axial_force[-1]/1000, 3)}}
-        cfg['pipeline']['lateral_buckling'] = lateral_buckling
+        differential_temperature = lateral_buckling_df['differential_temperature']
+        circumferential_stress_array = lateral_buckling_df['circumferential_stress']
 
-        logging.info(f'Lateral Buckling Check: {lateral_buckling_check}')
-        logging.info(f'Lateral Buckling summary: {lateral_buckling}')
-        
+        zipped_array = list(zip(circumferential_stress_array, differential_temperature))
+        longitudinal_stress_mid_zone = [item[0]*Poissonsratio - E*ThermalExpansionCoefficient * item[1] for item in zipped_array]
+        lateral_buckling_df['longitudinal_stress_mid_zone'] = longitudinal_stress_mid_zone
+
+        return lateral_buckling_df
+
+    def get_longitudinal_strain_and_thermal_stress(self, cfg, lateral_buckling_df):
+        pipe_properties = cfg['pipeline']['pipe_properties']
+        system_properties = cfg['pipeline']['system_properties']
+        friction = cfg['pipeline']['friction_force']
+        tension_cfg  = cfg['pipeline']['tension']
+
+        pressure = pipe_properties[0]['internal_fluid']['pressure']
+        pressure = 1307.6 # For benchmarking. Remove for future runs.
+        A = pipe_properties[0]['section']['A']
+        Ai = pipe_properties[0]['section']['Ai']
+
+        E = pipe_properties[0]['material']['E']
+        ThermalExpansionCoefficient = pipe_properties[0]['material']['ThermalExpansionCoefficient']
+        Poissonsratio = pipe_properties[0]['material']['Poissonsratio']
+
+        circumferential_stress_array = lateral_buckling_df['circumferential_stress']
+
+        differential_temperature = lateral_buckling_df['differential_temperature']
+        longitudinal_stress_hot_end = lateral_buckling_df['longitudinal_stress_hot_end']
+        longitudinal_stress_cold_end = lateral_buckling_df['longitudinal_stress_cold_end']
+
+        zipped_array = list(zip(longitudinal_stress_hot_end, circumferential_stress_array, differential_temperature))
+        longitudinal_strain_hot_end =  [(item[0] - item[1]*Poissonsratio)/E + ThermalExpansionCoefficient * item[2] for item in zipped_array]
+        lateral_buckling_df['longitudinal_strain_hot_end'] = longitudinal_strain_hot_end
+
+        zipped_array = list(zip(longitudinal_stress_cold_end, circumferential_stress_array, differential_temperature))
+        longitudinal_strain_cold_end = [(item[0] - item[1]*Poissonsratio)/E + ThermalExpansionCoefficient * item[2] for item in zipped_array]
+        lateral_buckling_df['longitudinal_strain_cold_end'] = longitudinal_strain_cold_end
+
+        thermal_stress_array = [-E*ThermalExpansionCoefficient * item for item in differential_temperature]
+        lateral_buckling_df['thermal_stress'] = thermal_stress_array
+
+        return lateral_buckling_df
+
+    def get_circumferential_stress(self, cfg, lateral_buckling_df, length_array):
+
+        length_array = list(lateral_buckling_df['length'])
+
+        pipe_properties = cfg['pipeline']['pipe_properties']
+
+        pressure = pipe_properties[0]['internal_fluid']['pressure']
+        pressure = 1307.6 # For benchmarking. Remove for future runs.
+        A = pipe_properties[0]['section']['A']
+        Ai = pipe_properties[0]['section']['Ai']
+
+        circumferential_stress = 2* pressure * Ai / A
+        circumferential_stress_array = [circumferential_stress]* len(length_array)
+        lateral_buckling_df['circumferential_stress'] = circumferential_stress_array
+
+        return lateral_buckling_df
+
+    def get_longitudinal_force_and_stress(self, cfg, lateral_buckling_df):
+
+        length_array = list(lateral_buckling_df['length'])
+
+        pipe_properties = cfg['pipeline']['pipe_properties']
+        system_properties = cfg['pipeline']['system_properties']
+        friction = cfg['pipeline']['friction_force']
+        tension_cfg  = cfg['pipeline']['tension']
+
+        pressure = pipe_properties[0]['internal_fluid']['pressure']
+        pressure = 1307.6 # For benchmarking. Remove for future runs.
+        A_system = system_properties['A']
+        A = pipe_properties[0]['section']['A']
+        Ai = pipe_properties[0]['section']['Ai']
+
+        logitudinal_force_term1 = tension_cfg['start'] - tension_cfg['lay_tension'] + pressure * Ai
+        longitudinal_force_hot_end = [logitudinal_force_term1 - friction['axial']*(item-length_array[0]) for item in length_array]
+        lateral_buckling_df['longitudinal_force_hot_end'] = longitudinal_force_hot_end
+        longitudinal_stress_hot_end = [item/A_system for item in longitudinal_force_hot_end]
+        lateral_buckling_df['longitudinal_stress_hot_end'] = longitudinal_stress_hot_end
+
+        logitudinal_force_term1 = tension_cfg['end'] - tension_cfg['lay_tension'] + pressure * Ai
+        longitudinal_force_cold_end = [logitudinal_force_term1 - friction['axial']*(length_array[-1]-item) for item in length_array]
+        lateral_buckling_df['longitudinal_force_cold_end'] = longitudinal_force_cold_end
+        longitudinal_stress_cold_end = [item/A for item in longitudinal_force_cold_end]
+        lateral_buckling_df['longitudinal_stress_cold_end'] = longitudinal_stress_cold_end
 
         return lateral_buckling_df
 

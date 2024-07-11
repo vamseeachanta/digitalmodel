@@ -3,8 +3,12 @@
 # Reader imports
 from digitalmodel.common.pipe_properties import PipeProperties
 from digitalmodel.custom.pipeline.lateral_buckling import LateralBuckling
+from digitalmodel.custom.pipeline.thermal_buckling import ThermalBuckling
+from digitalmodel.custom.pipeline.upheaval_buckling import UpheavalBuckling
 
 lb = LateralBuckling()
+tb = ThermalBuckling()
+ub = UpheavalBuckling()
 pp = PipeProperties()
 
 class Pipeline:
@@ -16,7 +20,9 @@ class Pipeline:
         if cfg['calculation']['name'] == 'lateral_buckling':
             lb.run( cfg )
         elif cfg['calculation']['name'] == 'thermal_buckling':
-            pass
+            tb.run( cfg )
+        elif cfg['calculation']['name'] == 'upheaval_buckling':
+            ub.run( cfg )
         else:
             raise ValueError("calculation not implemented")
         
