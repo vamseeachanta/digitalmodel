@@ -43,6 +43,10 @@ class DNV_RP_F103:
         anode_mass = self.calculate_anode_mass(cfg)
         surface_area_protected = self.get_surface_area(cfg)
 
+        current_demand = self.get_current_demand(cfg,breakdown_factor,surface_area_protected)
+        bracelet_anode_mass = self.get_required_anode_mass(cfg,current_demand,anode_mass)
+
+
     def get_breakdown_factors(self, cfg):
         design = cfg['inputs']['design']
         structure = cfg['inputs']['structure']
@@ -75,10 +79,20 @@ class DNV_RP_F103:
         outer_diameter = structure['dimensions']['Nominal_OD']+ 2*coating['coatings']['thickness']+2*anode['physical_properties']['thickness']
         inner_diameter = structure['dimensions']['Nominal_OD']+ 2*coating['coatings']['thickness']  
 
+        density = anode['physical_properties']['density']
+        
+        # convert to SI units
+        length = anode['physical_properties']['length']
+        length = length * 0.0254
+        thickness = anode['physical_properties']['thickness']
+        thickness = thickness * 0.0254
+        half_shell_gap = anode['physical_properties']['half_shell_gap']
+        half_shell_gap = half_shell_gap * 0.0254
+        outer_diameter = outer_diameter * 0.0254 
 
-        mass = anode['physical_properties']['density']* anode['physical_properties']['length']* anode['physical_properties']['thickness']* (math.pi*(outer_diameter-anode['physical_properties']['thickness'])-2*anode['physical_properties']['half_shell_gap'])
+        mass = density* length* thickness* (math.pi*(outer_diameter-thickness)-2*half_shell_gap)
 
-        anode_mass = {'anode_mass': round(mass,1), 'outer_diameter': outer_diameter, 'inner_diameter': inner_diameter}
+        anode_mass = {'anode_mass': round(mass,2), 'outer_diameter': outer_diameter, 'inner_diameter': inner_diameter}
         
         return anode_mass
     
@@ -88,13 +102,56 @@ class DNV_RP_F103:
         field_joint_length = 2 * structure['dimensions']['length']['cutback']*(structure['dimensions']['length']['total']/structure['dimensions']['length']['joint'])
         field_joint_length = math.ceil(field_joint_length)
 
-        area_pipeline = math.pi * structure['dimensions']['Nominal_OD']*(structure['dimensions']['length']['total']-field_joint_length)
+        # convert to SI units
+        OD = structure['dimensions']['Nominal_OD']
+        OD = OD * 0.0254
+        length = structure['dimensions']['length']['total']
+        area_pipeline = math.pi * OD *(length-field_joint_length)
 
-        area_field_joint = math.pi * structure['dimensions']['Nominal_OD']*(field_joint_length)
+        area_field_joint = math.pi * OD *(field_joint_length)
 
-        surface_area = {'surface_area_pipeline': round(area_pipeline,2), 'surface_area_field_joint': round(area_field_joint,2)}
+        surface_area = {'surface_area_pipeline': round(area_pipeline,2), 'surface_area_field_joint': round(area_field_joint,3)}
         
         return surface_area
+    
+    def get_current_demand(self, cfg,breakdown_factor,surface_area_protected):
+        """
+        Current demand calculation
+        """
+        structure = cfg['inputs']['structure']
+        design = cfg['inputs']['design']
+
+        mean = surface_area_protected['surface_area_pipeline']*breakdown_factor['regular']['mean']*structure['electrical']['anode_mean_current_density']*design['factor']+surface_area_protected['surface_area_field_joint']*breakdown_factor['field_joint']['mean']*structure['electrical']['anode_mean_current_density']*design['factor']
+
+        final = surface_area_protected['surface_area_pipeline']*breakdown_factor['regular']['final']*structure['electrical']['anode_mean_current_density']*design['factor']+surface_area_protected['surface_area_field_joint']*breakdown_factor['field_joint']['final']*structure['electrical']['anode_mean_current_density']*design['factor']
+
+        current_demand = {'mean_current_demand': round(mean,3), 'final_current_demand': round(final,3)}
+
+        return current_demand
+    
+    def get_required_anode_mass(self, cfg,current_demand,anode_mass):
+        """
+        this is used to calculate anode mass of 'bracelet type' 
+        """
+        design = cfg['inputs']['design']
+        anode = cfg['inputs']['anode']
+
+        mass = current_demand['mean_current_demand']*design['life']/anode['utilisation_factor']*anode['current_capacity']
+        number = mass / anode_mass['anode_mass']
+
+        anode_mass = {'anode_mass_bracelet_type': round(mass,1),'anode_number': round(number,1)}
+        return anode_mass
+
+    
+
+        
+
+        
+
+        
+        
+    
+
         
          
     

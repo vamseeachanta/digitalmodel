@@ -9,17 +9,17 @@ inputs:
 
   environment:
     seawater_resistivity:
-      input: 0.23 # float_value or csv. if csv, use temperature & salinity.
+      input: 0.23 # ohm-m
       csv_filename: src/digitalmodel/tests/test_data/cathodic_protection/seawater_conductance_with_temperature.csv
       csv_reference: https://github.com/vamseeachanta/digitalmodel/blob/master/docs/cathodic_protection/literature/course_notes_Appendix_A_Cathodic_Protection_Design.pdf
-    temperature: 15 #�C
+    temperature: 15 # °C
     salinity: 36 # ppt
 
   structure:
     type: pipeline
     material: steel
     internal_fluid:
-      temperature: 40 #�C
+      temperature: 40 # °C
 
     dimensions:
       length:
@@ -51,6 +51,7 @@ inputs:
       material_protective_potential: -0.8
       global_protective_potential: -0.95
       anode_potential: -1.05
+      anode_mean_current_density: 0.06 # A/m2
 
       value: 10778 # m2
 
