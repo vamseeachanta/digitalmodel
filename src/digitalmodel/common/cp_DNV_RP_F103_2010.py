@@ -42,11 +42,14 @@ class DNV_RP_F103:
 
         breakdown_factor = self.get_breakdown_factors(cfg)
         
-        anode_mass = self.calculate_total_anode_mass(cfg)
+        anode_mass = self.calculate_anode_mass(cfg)
         surface_area_protected = self.get_surface_area(cfg)
 
         current_demand = self.get_current_demand(cfg,breakdown_factor,surface_area_protected)
-        bracelet_anode_mass = self.get_required_anode_mass_for_pipe_section(cfg,current_demand)
+        bracelet_anode_mass = self.get_required_bracelet_anode_mass(cfg,current_demand)
+
+        final_current_requirement = self.get_final_current_requirement(cfg,anode_mass,current_demand)
+        max_pipe_length_check = self.max_pipe_length_check(cfg,breakdown_factor,final_current_requirement,current_demand)
 
         cfg['cathodic_protection'] = {'breakdown_factor': breakdown_factor, 'anode_mass': anode_mass, 'surface_area_protected': surface_area_protected, 'current_demand': current_demand, 'bracelet_anode_mass': bracelet_anode_mass}
 
@@ -71,7 +74,7 @@ class DNV_RP_F103:
 
         return breakdown_factor
     
-    def calculate_total_anode_mass(self,cfg):
+    def calculate_anode_mass(self,cfg):
         """
         Anode mass calculation
         """
@@ -132,21 +135,71 @@ class DNV_RP_F103:
 
         return current_demand
     
-    def get_required_anode_mass_for_pipe_section(self, cfg, current_demand):
+    def get_required_bracelet_anode_mass(self, cfg, current_demand):
         """
         this is used to calculate anode mass of 'bracelet type' 
         """
         design = cfg['inputs']['design']
         anode_cfg = cfg['inputs']['anode']
         design_life_in_years = design['life']
-        design_life_in_hours = design_life_in_years*8760
+        design_life_in_hours = design_life_in_years * 8760
         anode_net_weight = anode_cfg['physical_properties']['net_weight']
 
         mass = current_demand['mean']*design_life_in_hours/(anode_cfg['utilisation_factor']*anode_cfg['current_capacity'])
         number = int(math.ceil(mass / anode_net_weight))
 
-        anode_mass = {'anode_mass_bracelet_type': round(mass,1),'anode_number': round(number,1)}
-        return anode_mass
+        anode_mass_bracelet = {'anode_mass_bracelet_type': round(mass,1),'anode_number': round(number,1)}
+        return anode_mass_bracelet
+    
+    def get_final_current_requirement(self, cfg,anode_mass,current_demand):
+        
+        structure = cfg['inputs']['structure']
+        anode_cfg = cfg['inputs']['anode']
+        environment_cfg = cfg['inputs']['environment']
+
+        length_in_meters = anode_cfg['physical_properties']['length']*0.0254
+        inner_diameter_in_meters = anode_mass['inner_diameter']*0.0254
+        half_shell_gap_in_meters = anode_cfg['physical_properties']['half_shell_gap']*0.0254
+
+        surface_area = length_in_meters*(math.pi*inner_diameter_in_meters- 2* half_shell_gap_in_meters)
+
+        resistivity = round(0.315 * environment_cfg['seawater_resistivity']['input']/(math.sqrt(surface_area)),3)
+
+        anode_current = (structure['electrical']['material_protective_potential']-(structure['electrical']['anode_potential']))/resistivity
+
+        anode_number = anode_current/current_demand['final']
+
+        final_current_requirement = {'anode':{'surface_area': round(surface_area,3), 'resistivity':resistivity,'current_output':round(anode_current,3),'number': round(anode_number,2)}}
+
+        return final_current_requirement
+    
+    def max_pipe_length_check(self, cfg,breakdown_factor,final_current_requirement,current_demand):
+        
+        structure_cfg = cfg['inputs']['structure']
+        design_cfg = cfg['inputs']['design']
+        
+        # input values
+        d= structure_cfg['dimensions']['Nominal_WT']* 2.20462
+        D= structure_cfg['dimensions']['Nominal_OD']* 2.20462
+        Res = structure_cfg['electrical']['resistivity']
+        icm = structure_cfg['electrical']['anode_mean_current_density']
+        k = design_cfg['factor']
+        Raf_bracelet = final_current_requirement['anode']['resistivity']
+        Icf = current_demand['final']
+        L = structure_cfg['dimensions']['length']['total']
+        Ec = structure_cfg['electrical']['material_protective_potential']
+        Ea = structure_cfg['electrical']['anode_potential']
+
+
+
+        breakdown_factor = breakdown_factor['regular']['final']+ 2*structure_cfg['dimensions']['length']['cutback']/structure_cfg['dimensions']['length']['joint']*breakdown_factor['field_joint']['final']
+        max_pipe_length = (d * (D-d) / Res * D * breakdown_factor* icm * k)* ((Raf_bracelet* Icf / L)+ math.sqrt((Raf_bracelet*Icf/L)**2 )+(Res*icm*breakdown_factor*D/d*(D-d))*(Ec-Ea))
+
+        anode_number = L / max_pipe_length
+
+
+        
+      
 
     
 

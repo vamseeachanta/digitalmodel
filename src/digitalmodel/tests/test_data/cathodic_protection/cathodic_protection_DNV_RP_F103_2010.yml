@@ -48,9 +48,9 @@ inputs:
 
     electrical:
       resistivity: 0.2e-6 # ohm.m
-      material_protective_potential: -0.8
-      global_protective_potential: -0.95
-      anode_potential: -1.05
+      material_protective_potential: -0.8 # V
+      global_protective_potential: -0.95 # V
+      anode_potential: -1.05 # V
       anode_mean_current_density: 0.06 # A/m2
 
       value: 10778 # m2
