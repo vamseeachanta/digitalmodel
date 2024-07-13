@@ -49,7 +49,8 @@ class DNV_RP_F103:
         bracelet_anode_mass = self.get_required_bracelet_anode_mass(cfg,current_demand)
 
         final_current_requirement = self.get_final_current_requirement(cfg,anode_mass,current_demand)
-        max_pipe_length_check = self.max_pipe_length_check(cfg,breakdown_factor,final_current_requirement,current_demand)
+        max_pipe_length_check = self.max_pipe_length_check(cfg,breakdown_factor,final_current_requirement,current_demand,bracelet_anode_mass)
+        final_check = self.final_check(cfg,max_pipe_length_check,bracelet_anode_mass,final_current_requirement,current_demand)
 
         cfg['cathodic_protection'] = {'breakdown_factor': breakdown_factor, 'anode_mass': anode_mass, 'surface_area_protected': surface_area_protected, 'current_demand': current_demand, 'bracelet_anode_mass': bracelet_anode_mass}
 
@@ -148,7 +149,7 @@ class DNV_RP_F103:
         mass = current_demand['mean']*design_life_in_hours/(anode_cfg['utilisation_factor']*anode_cfg['current_capacity'])
         number = int(math.ceil(mass / anode_net_weight))
 
-        anode_mass_bracelet = {'anode_mass_bracelet_type': round(mass,1),'anode_number': round(number,1)}
+        anode_mass_bracelet = {'anode_mass': round(mass,1),'anode_number': round(number,1)}
         return anode_mass_bracelet
     
     def get_final_current_requirement(self, cfg,anode_mass,current_demand):
@@ -169,18 +170,18 @@ class DNV_RP_F103:
 
         anode_number = anode_current/current_demand['final']
 
-        final_current_requirement = {'anode':{'surface_area': round(surface_area,3), 'resistivity':resistivity,'current_output':round(anode_current,3),'number': round(anode_number,2)}}
+        final_current_requirement = {'anode':{'surface_area': round(surface_area,3), 'resistivity':resistivity,'current_output':round(anode_current,3),'number': round(anode_number,1)}}
 
         return final_current_requirement
     
-    def max_pipe_length_check(self, cfg,breakdown_factor,final_current_requirement,current_demand):
+    def max_pipe_length_check(self, cfg,breakdown_factor,final_current_requirement,current_demand,bracelet_anode_mass):
         
         structure_cfg = cfg['inputs']['structure']
         design_cfg = cfg['inputs']['design']
         
         # input values
-        d= structure_cfg['dimensions']['Nominal_WT']* 2.20462
-        D= structure_cfg['dimensions']['Nominal_OD']* 2.20462
+        d= structure_cfg['dimensions']['Nominal_WT']* 0.0254
+        D= round(structure_cfg['dimensions']['Nominal_OD']* 0.0254,4)
         Res = structure_cfg['electrical']['resistivity']
         icm = structure_cfg['electrical']['anode_mean_current_density']
         k = design_cfg['factor']
@@ -189,13 +190,52 @@ class DNV_RP_F103:
         L = structure_cfg['dimensions']['length']['total']
         Ec = structure_cfg['electrical']['material_protective_potential']
         Ea = structure_cfg['electrical']['anode_potential']
+        mass = bracelet_anode_mass['anode_number']
+        number = final_current_requirement['anode']['number']
 
+        breakdown_factor = round(breakdown_factor['regular']['final']+ 2*structure_cfg['dimensions']['length']['cutback']/structure_cfg['dimensions']['length']['joint']*breakdown_factor['field_joint']['final'],4)
+        
+        calc_1 = d * (D-d) / (Res * D * breakdown_factor* icm * k)
+        calc_2 = (Raf_bracelet* Icf) / L
+        calc_3 = ((Raf_bracelet*Icf)/L)**2
+        calc_4 = (((Res *icm *breakdown_factor* D)/(d*(D-d))) * (Ec-(Ea)))
+        calc_5 = math.sqrt((calc_3) + (calc_4))
+        
+        pipe_length = calc_1 * (calc_2 + calc_5)
+        anode_number = L / pipe_length
+        spacing = math.ceil(L /(max(anode_number,mass,number)))
 
+        spacing_joints = spacing/structure_cfg['dimensions']['length']['joint']
+        final_spacing = spacing_joints * structure_cfg['dimensions']['length']['joint']
+        final_number = math.ceil(L / final_spacing)
 
-        breakdown_factor = breakdown_factor['regular']['final']+ 2*structure_cfg['dimensions']['length']['cutback']/structure_cfg['dimensions']['length']['joint']*breakdown_factor['field_joint']['final']
-        max_pipe_length = (d * (D-d) / Res * D * breakdown_factor* icm * k)* ((Raf_bracelet* Icf / L)+ math.sqrt((Raf_bracelet*Icf/L)**2 )+(Res*icm*breakdown_factor*D/d*(D-d))*(Ec-Ea))
+        max_pipe_length_check = {'max_pipe_length': round(pipe_length,2), 'anode':{'final_spacing': round(final_spacing,1), 'final_number': round(final_number,1)}}
+        return max_pipe_length_check
+    
+    def final_check(self, cfg,max_pipe_length_check,bracelet_anode_mass,final_current_requirement,current_demand):
+        
+        anode_cfg = cfg['inputs']['anode']
 
-        anode_number = L / max_pipe_length
+        if max_pipe_length_check['anode']['final_number'] * anode_cfg['physical_properties']['net_weight'] > bracelet_anode_mass['anode_mass']:
+           mass_requirement = " Acceptable"
+        else:
+            mass_requirement = " Not Acceptable"
+        if max_pipe_length_check['anode']['final_number'] * final_current_requirement['anode']['current_output'] > current_demand['final']:
+            current_requirement = " Acceptable"
+        else:
+            current_requirement = " Not Acceptable"
+        if max_pipe_length_check['max_pipe_length'] > max_pipe_length_check['anode']['final_spacing']:
+            pipe_check_length = " Acceptable"
+        else:
+            pipe_check_length = " Not Acceptable"
+         
+        final_check = {'mass_requirement_check': mass_requirement, 'current_requirement_check': current_requirement, 'pipe_length_check': pipe_check_length}
+        
+        return final_check
+
+    
+
+    
 
 
         

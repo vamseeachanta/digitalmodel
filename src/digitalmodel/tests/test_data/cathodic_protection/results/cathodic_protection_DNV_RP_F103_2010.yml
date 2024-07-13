@@ -9,17 +9,17 @@ dictitems:
         output: true
       cfg_sensitivities: false
   Analysis:
-    fe_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\results
+    fe_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\results
     basename: cathodic_protection
-    analysis_root_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection
+    analysis_root_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection
     file_name: cathodic_protection_DNV_RP_F103_2010
     file_name_for_overwrite: cathodic_protection_DNV_RP_F103_2010
-    result_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\results
-    log_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\logs
-    start_time: 2024-07-11 11:32:11.199044
+    result_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\results
+    log_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\logs
+    start_time: 2024-07-13 10:33:29.476956
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: c:\github\digitalmodel\src\digitalmodel\tests\test_data\cathodic_protection\cathodic_protection_DNV_RP_F103_2010.yml
+    CustomInputFile: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\cathodic_protection_DNV_RP_F103_2010.yml
   inputs:
     calculation_type: DNV_RP_F103_2010
     design:
