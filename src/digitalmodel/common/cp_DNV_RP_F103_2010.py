@@ -178,6 +178,7 @@ class DNV_RP_F103:
         
         structure_cfg = cfg['inputs']['structure']
         design_cfg = cfg['inputs']['design']
+        anode_cfg = cfg['inputs']['anode']
         
         # input values
         d= structure_cfg['dimensions']['Nominal_WT']* 0.0254
@@ -190,8 +191,9 @@ class DNV_RP_F103:
         L = structure_cfg['dimensions']['length']['total']
         Ec = structure_cfg['electrical']['material_protective_potential']
         Ea = structure_cfg['electrical']['anode_potential']
-        mass = bracelet_anode_mass['anode_number']
+        mass_number = bracelet_anode_mass['anode_number']
         number = final_current_requirement['anode']['number']
+        spacing_user = anode_cfg['physical_properties']['spacing_along_length']
 
         breakdown_factor = round(breakdown_factor['regular']['final']+ 2*structure_cfg['dimensions']['length']['cutback']/structure_cfg['dimensions']['length']['joint']*breakdown_factor['field_joint']['final'],4)
         
@@ -203,9 +205,9 @@ class DNV_RP_F103:
         
         pipe_length = calc_1 * (calc_2 + calc_5)
         anode_number = L / pipe_length
-        spacing = math.ceil(L /(max(anode_number,mass,number)))
+        spacing = math.ceil(L /(max(anode_number,mass_number,number)))
 
-        spacing_joints = spacing/structure_cfg['dimensions']['length']['joint']
+        spacing_joints = math.floor(spacing_user/structure_cfg['dimensions']['length']['joint'])
         final_spacing = spacing_joints * structure_cfg['dimensions']['length']['joint']
         final_number = math.ceil(L / final_spacing)
 
