@@ -50,7 +50,7 @@ class DNV_RP_F103:
 
         final_current_requirement = self.get_final_current_requirement(cfg,anode_mass,current_demand)
         max_pipe_length_check = self.max_pipe_length_check(cfg,breakdown_factor,final_current_requirement,current_demand,bracelet_anode_mass)
-        final_check = self.final_check(cfg,max_pipe_length_check,bracelet_anode_mass,final_current_requirement,current_demand)
+        final_check = self.CP_final_check(cfg,max_pipe_length_check,bracelet_anode_mass,final_current_requirement,current_demand)
 
         cfg['cathodic_protection'] = {'breakdown_factor': breakdown_factor, 'anode_mass': anode_mass, 'surface_area_protected': surface_area_protected, 'current_demand': current_demand, 'bracelet_anode_mass': bracelet_anode_mass}
 
@@ -214,9 +214,14 @@ class DNV_RP_F103:
         max_pipe_length_check = {'max_pipe_length': round(pipe_length,2), 'anode':{'final_spacing': round(final_spacing,1), 'final_number': round(final_number,1)}}
         return max_pipe_length_check
     
-    def final_check(self, cfg,max_pipe_length_check,bracelet_anode_mass,final_current_requirement,current_demand):
+    def CP_final_check(self, cfg,max_pipe_length_check,bracelet_anode_mass,final_current_requirement,current_demand):
         
         anode_cfg = cfg['inputs']['anode']
+
+        total_mass = bracelet_anode_mass['anode_mass']
+        individual_mass = anode_cfg['physical_properties']['net_weight']
+        required_spacing = max_pipe_length_check['anode']['final_spacing']
+        number_of_anodes = max_pipe_length_check['anode']['final_number']
 
         if max_pipe_length_check['anode']['final_number'] * anode_cfg['physical_properties']['net_weight'] > bracelet_anode_mass['anode_mass']:
            mass_requirement = " Acceptable"
@@ -231,7 +236,8 @@ class DNV_RP_F103:
         else:
             pipe_check_length = " Not Acceptable"
          
-        final_check = {'mass_requirement_check': mass_requirement, 'current_requirement_check': current_requirement, 'pipe_length_check': pipe_check_length}
+        final_check = {'anode':{'total_mass': round(total_mass,2), 'individual_mass': round(individual_mass,2), 'required_spacing': round(required_spacing,1), 'number_of_required_anodes': round(number_of_anodes,1)},
+                       'mass_requirement_check': mass_requirement, 'current_requirement_check': current_requirement, 'pipe_length_check': pipe_check_length}
         
         return final_check
 
