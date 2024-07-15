@@ -28,8 +28,10 @@ class Aqwa:
             a_analysis = AqwaAnalysis()
             a_analysis.analysis_router(cfg)
                 
-
-        mes_files.router(cfg)
+        try:
+            mes_files.router(cfg)
+        except:
+            pass
         
         if cfg['type']['results']:
             a_post.post_process_router(cfg)

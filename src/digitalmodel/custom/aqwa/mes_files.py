@@ -16,7 +16,12 @@ class MesFiles:
 
 
     def read_mes_files(self, directory):
-        mes_files = [f for f in os.listdir(directory) if f.endswith('.MES')]
+        try:
+            mes_files = [f for f in os.listdir(directory) if f.endswith('.MES')]
+        except Exception as e:
+            logging.error(f"Error reading files from directory: {directory}")
+            logging.error(e)
+            return None, None, None
         warnings = defaultdict(lambda: defaultdict(Counter))
         errors = defaultdict(lambda: defaultdict(Counter))
         file_status = {}
