@@ -1,4 +1,6 @@
 basename: cathodic_protection
+inputs:
+  calculation_type: ABS_gn_ships_2018
 
 default:
   log_level: DEBUG

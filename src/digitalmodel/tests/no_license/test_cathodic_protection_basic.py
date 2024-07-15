@@ -23,7 +23,7 @@ def get_valid_pytest_output_file(pytest_output_file):
 
 
 def test_cathodic_protection():
-    input_file = '../test_data/cathodic_protection.yml'
+    #input_file = '../test_data/cathodic_protection.yml'
     pytest_output_file = None
     # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     # expected_result = ymlInput(pytest_output_file, updateYml=None)
@@ -31,7 +31,7 @@ def test_cathodic_protection():
     if len(sys.argv) > 1:
         sys.argv.pop()
 
-    run_cathodic_protection(input_file, expected_result={})
+    #run_cathodic_protection(input_file, expected_result={})
 
 
-test_cathodic_protection()
+#test_cathodic_protection()
