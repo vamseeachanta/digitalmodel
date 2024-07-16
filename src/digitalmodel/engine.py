@@ -32,6 +32,8 @@ from digitalmodel.custom.transformation import Transformation
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
 from digitalmodel.orcaflex_analysis import orcaflex_analysis
 from digitalmodel.vertical_riser import vertical_riser
+from digitalmodel.custom.viv.viv_analysis import VIVAnalysis
+
 
 save_data = SaveData()
 fm = FileManagement()
@@ -114,6 +116,9 @@ def engine(inputfile: str = None, cfg: dict = None) -> dict:
     elif basename == "pipeline":
         pl = Pipeline()
         cfg_base = pl.router(cfg_base)
+    elif basename == "viv_analysis":
+        viv = VIVAnalysis()
+        cfg_base = viv.router(cfg_base)
 
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))

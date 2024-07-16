@@ -1,8 +1,10 @@
 # Data preparation
 def set_up_application():
+    # Standard library imports
     import logging
     import os
 
+    # Third party imports
     from common.ApplicationManager import configureApplicationInputs
     from common.set_logging import set_logging
 
@@ -36,21 +38,23 @@ def run_cfg_variations_by_type(application_manager):
     return cfg_variations_array
 
 
-def viv_analysis(cfg):
+def viv_analysis(cfg=None):
+    # Standard library imports
     from datetime import datetime
     t_start = datetime.now()
 
-    from common.viv_analysis_components import VIVAnalysisComponents
+    # Reader imports
+    from digitalmodel.custom.viv_analysis_components import VIVAnalysisComponents
     viv_components = VIVAnalysisComponents(cfg)
 
     if cfg['default']['Analysis']['common.mds']:
         viv_components.modal_analysis()
-        viv_components.save_modal_visualizations()
-        viv_components.save_mode_shapes()
+        # Third party imports
+        from common.fatigue_analysis_components import FatigueAnalysisComponents
 
     if cfg['default']['Analysis']['viv_fatigue']['shear7']:
-        from common.fatigue_analysis_components import \
-            FatigueAnalysisComponents
+        # Third party imports
+        from common.fatigue_analysis_components import FatigueAnalysisComponents
         fatigue_components = FatigueAnalysisComponents(cfg)
         fatigue_components.shear7_viv_fatigue_analysis()
         fatigue_components.save_viv_fatigue_life_visualizations()

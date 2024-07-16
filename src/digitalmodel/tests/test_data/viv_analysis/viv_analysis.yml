@@ -1,20 +1,46 @@
-basename: pipeline
-
-code: NULL
-
-software:
-  version: []
+basename: viv_analysis
 
 calculation:
-  name: lateral_buckling
+  name: tubular
 
 inputs:
   seawater_density: 1025
 
+environment:
+  current:
+    - label: 1 yr
+      units: [depth: m, speed: m/s]
+      data:
+        [
+          { depth: 0, speed: 0.7 },
+          { depth: 25, speed: 0.5 },
+          { depth: 50, speed: 0.3 },
+          { depth: 75, speed: 0.3 },
+          { depth: 100, speed: 0.1 },
+        ]
+    - label: 100 yr
+      data:
+        [
+          { depth: 0, speed: 0.8 },
+          { depth: 25, speed: 0.6 },
+          { depth: 50, speed: 0.4 },
+          { depth: 75, speed: 0.3 },
+          { depth: 100, speed: 0.1 },
+        ]
+
+modes:
+  eigen_values:
+    simply_supported: [9.87, 39.50, 88.90]
+    clamped: [22.37, 61.70, 121.00]
+viv:
+  st: 0.2
+
 pipeline:
   length: 2737
+  span_length: 44 #ft
+
   water_depth:
-    length_factor: [0, 0.2, 0.4, 0.6, 0.8, 1]
+    length_percent: [0, 20, 40, 60, 80, 100]
     unit: ft
     depth: [410, 407, 404, 400, 397, 397]
 
@@ -31,20 +57,21 @@ pipeline:
     curve_radius: 3000
   crossection: #Inner to outer
     - Nominal_ID: NULL
-      Nominal_OD: 12.75
+      Nominal_OD: 10.75
       Design_WT: 0.5
-      Corrosion_Allowance: 0.126
-      average_internal_metal_loss_percentage: 10
+      Corrosion_Allowance: 0
+      average_internal_metal_loss_percentage: 0
       external_fluid:
         unit: lb/inch^3
         density: 0.03721
+        kinematic_viscosity: 1.14e-6 #m2/s
         pressure:
           unit: psi
           pressure: NULL
           reference_depth: 410 #ft
       internal_fluid:
         unit: lb/inch^3
-        density: 0.02218
+        density: 0.03721
         pressure:
           unit: psi
           pressure: 1095.2
@@ -80,14 +107,3 @@ pipeline:
         - 30 CFR Part 250
       Manufacturing:
         Coupling Mass Ratio: 0.0
-
-type:
-  preprocess: False
-  analysis: False
-  results: True
-
-default:
-  log_level: INFO
-  config:
-    overwrite:
-      output: True

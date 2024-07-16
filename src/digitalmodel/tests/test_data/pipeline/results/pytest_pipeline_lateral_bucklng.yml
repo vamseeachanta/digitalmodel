@@ -9,5 +9,5 @@ pipeline:
       anchor_end: -33.26
     lateral_buckling_check: Fail
     fully_restrained_axial_force:
-      L=0: -257.313
-      L=L: -169.658
+      L=0: -253.575
+      L=L: -165.92

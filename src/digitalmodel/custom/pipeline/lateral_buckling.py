@@ -56,27 +56,25 @@ class LateralBuckling:
     
     def get_lateral_buckling(self, cfg):
         
-        lateral_buckling_df = pd.DataFrame()
+        df = pd.DataFrame()
         length = cfg['pipeline']['length'] * 12 /0.3048
 
+        df = cbc.assign_mesh(df, length)
+        df = cbc.get_water_depth(cfg, df)
+        df = cbc.get_differential_temp(cfg, df)
 
-        lateral_buckling_df = cbc.assign_mesh(lateral_buckling_df, length)
-        
-        differential_temperature = cbc.get_differential_temp(cfg, lateral_buckling_df)
-        lateral_buckling_df['differential_temperature'] = differential_temperature
+        df = self.get_longitudinal_force_and_stress(cfg, df)
 
-        lateral_buckling_df = self.get_longitudinal_force_and_stress(cfg, lateral_buckling_df)
+        df = cbc.get_circumferential_stress(cfg, df)
 
-        lateral_buckling_df = cbc.get_circumferential_stress(cfg, lateral_buckling_df)
+        df = self.get_longitudinal_strain_and_thermal_stress(cfg, df)
 
-        lateral_buckling_df = self.get_longitudinal_strain_and_thermal_stress(cfg, lateral_buckling_df)
+        df = cbc.get_longitudinal_stress_fully_restrained(cfg, df)
 
-        lateral_buckling_df = self.get_longitudinal_stress_mid_zone(cfg, lateral_buckling_df)
-
-        lateral_buckling, lateral_buckling_df = self.calculateLateralBuckling(cfg, lateral_buckling_df)
+        lateral_buckling, df = self.calculateLateralBuckling(cfg, df)
         cfg['pipeline']['lateral_buckling'] = lateral_buckling
 
-        return lateral_buckling_df
+        return df
 
     def calculateLateralBuckling(self, cfg, lateral_buckling_df):
         length_array = list(lateral_buckling_df['length'])
@@ -203,28 +201,6 @@ class LateralBuckling:
 
         return anchor_length
 
-    def get_longitudinal_stress_mid_zone(self, cfg, lateral_buckling_df):
-        pipe_properties = cfg['pipeline']['pipe_properties']
-        system_properties = cfg['pipeline']['system_properties']
-        friction = cfg['pipeline']['friction_force']
-        tension_cfg  = cfg['pipeline']['tension']
-
-        pressure = pipe_properties[0]['internal_fluid']['pressure']
-        A = pipe_properties[0]['section']['A']
-        Ai = pipe_properties[0]['section']['Ai']
-
-        E = pipe_properties[0]['material']['E']
-        ThermalExpansionCoefficient = pipe_properties[0]['material']['ThermalExpansionCoefficient']
-        Poissonsratio = pipe_properties[0]['material']['Poissonsratio']
-
-        differential_temperature = lateral_buckling_df['differential_temperature']
-        circumferential_stress_array = lateral_buckling_df['circumferential_stress']
-
-        zipped_array = list(zip(circumferential_stress_array, differential_temperature))
-        longitudinal_stress_mid_zone = [item[0]*Poissonsratio - E*ThermalExpansionCoefficient * item[1] for item in zipped_array]
-        lateral_buckling_df['longitudinal_stress_mid_zone'] = longitudinal_stress_mid_zone
-
-        return lateral_buckling_df
 
     def get_longitudinal_strain_and_thermal_stress(self, cfg, lateral_buckling_df):
         pipe_properties = cfg['pipeline']['pipe_properties']

@@ -1,0 +1,16 @@
+basename: viv_analysis
+
+calculation:
+  name: lateral_buckling
+
+inputs:
+  seawater_density: 1025
+
+pipeline:
+  length: 2737
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True

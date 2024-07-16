@@ -14,18 +14,19 @@ inputs:
 pipeline:
   length: 3000 #m
   water_depth:
-    length_percent: [0, 2, 5, 33.33, 66.67, 100]
+    length_factor: [0, 0.02, 0.05, 0.3333, 0.6667, 1]
     unit: ft
     depth: [1200, 900, 800, 700, 600, 400]
 
   soil:
     friction_coefficient: 0.2
+    displacement_at_full_friction_mobilization: 2 #inch
     trench:
       burial_depth_to_pipe_center_line: 16.625 #inch
       burial_height_above_seabed: 6.625 #inch
       trench_depth_below_seabed: 4 #inch
       trench_angle: 30 #degree
-      friction_angle_of_burial_materail: 35 #degree
+      friction_angle_of_burial_material: 35 #degree
       density_of_burial_material: 0.0868056 #lb/inch^3
   tension:
     unit: kip

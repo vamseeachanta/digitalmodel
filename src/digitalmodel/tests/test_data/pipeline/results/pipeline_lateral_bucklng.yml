@@ -27,6 +27,13 @@ dictitems:
       - 400
       - 397
       - 397
+      length_factor:
+      - 0
+      - 0.2
+      - 0.4
+      - 0.6
+      - 0.8
+      - 1
     soil:
       axial_breakout_friction_coeff: 0.21
       lateral_breakout_friction_coeff: 0.27
@@ -222,7 +229,7 @@ dictitems:
     file_name_for_overwrite: pipeline_lateral_bucklng
     result_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\results
     log_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\logs
-    start_time: 2024-07-11 07:43:46.597408
+    start_time: 2024-07-12 10:28:17.392483
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\pipeline_lateral_bucklng.yml
