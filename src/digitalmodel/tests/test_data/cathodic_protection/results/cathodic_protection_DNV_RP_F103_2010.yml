@@ -2,24 +2,6 @@
 state: *id001
 dictitems:
   basename: cathodic_protection
-  default:
-    log_level: DEBUG
-    config:
-      overwrite:
-        output: true
-      cfg_sensitivities: false
-  Analysis:
-    fe_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\results
-    basename: cathodic_protection
-    analysis_root_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection
-    file_name: cathodic_protection_DNV_RP_F103_2010
-    file_name_for_overwrite: cathodic_protection_DNV_RP_F103_2010
-    result_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\results
-    log_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\logs
-    start_time: 2024-07-13 10:33:29.476956
-    cfg_array_file_names: ~
-    DefaultInputFile: ~
-    CustomInputFile: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\cathodic_protection_DNV_RP_F103_2010.yml
   inputs:
     calculation_type: DNV_RP_F103_2010
     design:
@@ -86,6 +68,24 @@ dictitems:
         width: 0.125
         height: 0.13
         net_weight: 42.64
+  default:
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+      cfg_sensitivities: false
+  Analysis:
+    fe_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\results
+    basename: cathodic_protection
+    analysis_root_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection
+    file_name: cathodic_protection_DNV_RP_F103_2010
+    file_name_for_overwrite: cathodic_protection_DNV_RP_F103_2010
+    result_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\results
+    log_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\logs
+    start_time: 2024-07-16 10:39:27.084401
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\cathodic_protection_DNV_RP_F103_2010.yml
   cathodic_protection:
     breakdown_factor:
       regular:
@@ -105,5 +105,5 @@ dictitems:
       mean: 1.425
       final: 2.076
     bracelet_anode_mass:
-      anode_mass_bracelet_type: 156.0
+      anode_mass: 156.0
       anode_number: 4

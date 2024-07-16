@@ -6,7 +6,7 @@ inputs:
   design_life: 5 # yr
   environment:
     seawater_resistivity:
-      input: 40 # float_value or csv. if csv, use temperature & salinity.
+      input: 0.2547 # float_value or csv. if csv, use temperature & salinity.
       csv_filename: src/digitalmodel/tests/test_data/cathodic_protection/seawater_conductance_with_temperature.csv
       csv_reference: https://github.com/vamseeachanta/digitalmodel/blob/master/docs/cathodic_protection/literature/course_notes_Appendix_A_Cathodic_Protection_Design.pdf
     temperature: 15 # °C
@@ -21,27 +21,25 @@ inputs:
         type: deterioration # deterioration or disbondment
         year: [1, 2, 3, 3, 5] # year
         percentage: [2, 2, 3, 3, 3] # % per year
-
-  current_density:
-    initial: { coated: 13.5, uncoated: 200 } # mA/m2
+    current_density:
+     initial: { coated: 13.5, uncoated: 200 } # mA/m2
 
   cathodic_protection: NULL
 
-  anode_capacity:
+  anode:
     material: aluminium #  aluminium or zinc
-    anode_current_capacity: 2500 # (Ca*N) , Q
-    anode_utilisation_factor: 0.825 # factor, u
+    current_capacity: 2500 # (Ca*N) , Q
+    utilisation_factor: 0.825 # factor, u
     physical_properties:
       mean_length: 0.650 # m
       width: 0.125 # m
       height: 0.130 # m
       net_weight: 29.00 # kg
-      ratio_of_gross_to_net_weight: 1.0345 #
+      gross_to_net_weight_ratio: 1.0345 #
       gross_weight: 30.00 # kg
-
-  anode_shape:
-    steel_iron_calomel_voltage: -0.8
-    anode_voltage: -1.09
+      voltage: -1.09
+      steel_iron_voltage: -0.8
+      
 
   design_current:
       csv:

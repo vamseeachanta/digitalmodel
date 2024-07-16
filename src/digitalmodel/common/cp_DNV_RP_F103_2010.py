@@ -191,8 +191,6 @@ class DNV_RP_F103:
         L = structure_cfg['dimensions']['length']['total']
         Ec = structure_cfg['electrical']['material_protective_potential']
         Ea = structure_cfg['electrical']['anode_potential']
-        mass_number = bracelet_anode_mass['anode_number']
-        number = final_current_requirement['anode']['number']
         spacing_user = anode_cfg['physical_properties']['spacing_along_length']
 
         breakdown_factor = round(breakdown_factor['regular']['final']+ 2*structure_cfg['dimensions']['length']['cutback']/structure_cfg['dimensions']['length']['joint']*breakdown_factor['field_joint']['final'],4)
@@ -204,8 +202,6 @@ class DNV_RP_F103:
         calc_5 = math.sqrt((calc_3) + (calc_4))
         
         pipe_length = calc_1 * (calc_2 + calc_5)
-        anode_number = L / pipe_length
-        spacing = math.ceil(L /(max(anode_number,mass_number,number)))
 
         spacing_joints = math.floor(spacing_user/structure_cfg['dimensions']['length']['joint'])
         final_spacing = spacing_joints * structure_cfg['dimensions']['length']['joint']
