@@ -1,0 +1,21 @@
+cathodic_protection:
+  breakdown_factor:
+    regular:
+      mean: 0.0013
+      final: 0.0016
+    field_joint:
+      mean: 0.2
+      final: 0.3
+  anode_mass:
+    anode_mass: 47.69
+    outer_diameter: 0.4062476
+    inner_diameter: 12.994
+  surface_area_protected:
+    surface_area_pipeline: 2927.07
+    surface_area_field_joint: 99.706
+  current_demand:
+    mean: 1.425
+    final: 2.076
+  bracelet_anode_mass:
+    anode_mass: 156.0
+    anode_number: 4
