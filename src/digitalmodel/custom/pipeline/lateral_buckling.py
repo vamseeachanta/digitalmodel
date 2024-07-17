@@ -8,10 +8,10 @@ from assetutilities.common.visualization.visualization_templates import (
     VisualizationTemplates,
 )
 from assetutilities.engine import engine as au_engine
-from scipy import interpolate
 
 # Reader imports
 from digitalmodel.custom.pipeline.buckling_common import CommonBucklingCaculations
+from scipy import interpolate
 
 viz_templates = VisualizationTemplates()
 cbc = CommonBucklingCaculations()
@@ -62,6 +62,8 @@ class LateralBuckling:
         df = cbc.assign_mesh(df, length)
         df = cbc.get_water_depth(cfg, df)
         df = cbc.get_differential_temp(cfg, df)
+        df = cbc.get_internal_pressure(cfg, df)
+        df = cbc.get_external_pressure(cfg, df)
 
         df = self.get_longitudinal_force_and_stress(cfg, df)
 
@@ -129,7 +131,7 @@ class LateralBuckling:
         min_critical_buckling_load_array = [min_critical_buckling_load] * len(length_array)
         lateral_buckling_df['min_critical_buckling_load'] = min_critical_buckling_load_array
 
-        if effective_axial_force_length_start <= min_critical_buckling_load and effective_axial_force_length_end <= min_critical_buckling_load:
+        if abs(effective_axial_force_length_start) <= abs(min_critical_buckling_load) and abs(effective_axial_force_length_end) <= abs(min_critical_buckling_load):
             lateral_buckling_check = 'Pass'
         else:
             lateral_buckling_check = 'Fail'
