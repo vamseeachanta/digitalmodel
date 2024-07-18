@@ -52,7 +52,7 @@ class DNV_RP_F103:
         max_pipe_length_check = self.max_pipe_length_check(cfg,breakdown_factor,final_current_requirement,current_demand,bracelet_anode_mass)
         final_check = self.CP_final_check(cfg,max_pipe_length_check,bracelet_anode_mass,final_current_requirement,current_demand)
 
-        cfg['cathodic_protection'] = {'breakdown_factor': breakdown_factor, 'anode_mass': anode_mass, 'surface_area_protected': surface_area_protected, 'current_demand': current_demand, 'bracelet_anode_mass': bracelet_anode_mass}
+        cfg['cathodic_protection'] = {'final_current_requirement':final_current_requirement,'max_pipe_length_check': max_pipe_length_check,'final_check':final_check}
 
     def get_breakdown_factors(self, cfg):
         design = cfg['inputs']['design']
