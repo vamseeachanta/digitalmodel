@@ -116,9 +116,8 @@ class VIVTubularMembers:
                 internal_fluid = nf_row['internal_fluid']
                 mode_1 = nf_row['mode 1']
                 safety_factor = mode_1 / shredding_frequency
-        
+
                 safety_factor_df.loc[len(safety_factor_df)] = [current_label, depth, current_speed, Re, shredding_frequency, KC, boundary_condition, internal_fluid, mode_1, safety_factor]
-    
+
         filename = os.path.join(cfg['Analysis']['result_folder'], cfg['Analysis']['file_name'] + '_safety_factors.csv')
         safety_factor_df.to_csv(filename)
-        
