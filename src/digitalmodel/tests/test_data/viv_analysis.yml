@@ -14,3 +14,6 @@ default:
   config:
     overwrite:
       output: True
+
+Analysis:
+  fe_folder: NULL

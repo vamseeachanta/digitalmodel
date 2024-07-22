@@ -1,0 +1,250 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: viv_analysis
+  calculation:
+    name: tubular
+  inputs:
+    seawater_density: 1025
+  pipeline:
+    length: 2737
+    span_length: 44
+    water_depth:
+      length_percent:
+      - 0
+      - 20
+      - 40
+      - 60
+      - 80
+      - 100
+      unit: ft
+      depth:
+      - 410
+      - 407
+      - 404
+      - 400
+      - 397
+      - 397
+    soil:
+      axial_breakout_friction_coeff: 0.21
+      lateral_breakout_friction_coeff: 0.27
+    tension:
+      unit: kip
+      start: 0
+      end: 0
+      lay_tension: 0
+    route:
+      unit: m
+      curve_radius: 3000
+    crossection:
+    - Nominal_ID: 9.75
+      Nominal_OD: 10.75
+      Design_WT: 0.5
+      Corrosion_Allowance: 0
+      average_internal_metal_loss_percentage: 0
+      external_fluid:
+        unit: lb/inch^3
+        density: 0.03721
+        kinematic_viscosity: 1.14e-06
+        pressure:
+          unit: psi
+          pressure: ~
+          reference_depth: 410
+      internal_fluid:
+        unit: lb/inch^3
+        density: 0.03721
+        pressure:
+          unit: psi
+          pressure: 1095.2
+          top_side_elevation: 65.62
+          reference_water_depth: 410
+      temperature:
+        type: differential
+        unit: celsius
+        length_factor:
+        - 0
+        - 0.2
+        - 0.4
+        - 0.6
+        - 0.8
+        - 1.0
+        temperature:
+        - 30.4
+        - 24.8
+        - 21.5
+        - 19.5
+        - 18.4
+        - 17.1
+      Material:
+        name: steel
+        grade: API 5L X52
+        ThermalExpansionCoefficient: 1.17e-05
+      WeldFactor:
+        Seamless: 1.0
+      coatings:
+      - &id002
+        material: ~
+        purpose: insulation
+        thickness: 0
+        density: 0
+        ID: 10.75
+        OD: 10.75
+        mass: 0.0
+        buoyancy: 0
+      - &id003
+        material: ~
+        purpose: anti-corrosion
+        thickness: 0.122
+        density: 0.03396
+        ID: 10.75
+        OD: 10.994
+        mass: 0.14150990149891765
+        buoyancy: 0
+      - &id004
+        material: concrete
+        purpose: unknown
+        thickness: 0
+        density: 0
+        concrete_water_absorption_rate_percent: 0
+        ID: 10.994
+        OD: 10.994
+        mass: 0.0
+        buoyancy: 0.0
+      code:
+      - 30 CFR Part 250
+      Manufacturing:
+        Coupling Mass Ratio: 0.0
+    pipe_properties:
+    - dimensions:
+        nominal:
+          OD: 10.75
+          ID: 9.75
+          WT: 0.5
+        with_corrosion:
+          OD: 10.75
+          ID: 9.75
+          WT: 0.5
+      material:
+        E: 30000000.0
+        G: 11538461.538461538
+        Poissonsratio: 0.3
+        Rho: 0.2817929
+        ThermalExpansionCoefficient: 1.17e-05
+        Reference: ~
+        SMUS: ~
+        SMYS: 52000
+        name: steel
+        grade: API 5L X52
+      section:
+        Ao: 90.76257525761761
+        Ai: 74.66191290796992
+        Io: 655.5468814505273
+        Ii: 443.5967559883682
+        Jo: 1311.0937629010546
+        Ji: 887.1935119767364
+        A: 16.100662349647692
+        I: 211.95012546215906
+        J: 423.90025092431813
+        mass: 4.537052335428037
+        EI: 6358503763.864772
+        EA: 483019870.4894308
+        GJ: 4891156741.43444
+      coating:
+      - *id002
+      - *id003
+      - *id004
+      internal_fluid:
+        mass: 2.7781697793055606
+        pressure: 1307.5738424
+      buoyancy:
+        mass: 3.532327941083146
+      equivalent:
+        mass:
+          air:
+            without_internal_fluid: 4.678562236926955
+            with_internal_fluid: 7.4567320162325155
+          water:
+            without_internal_fluid: 1.1462342958438088
+            with_internal_fluid: 3.9244040751493694
+          specific_density: 1.3244982671377703
+        EI: 6358503763.864772
+        EA: 483019870.4894308
+        GJ: 4891156741.43444
+        E: 30000000.0
+        SMYS: 52000
+        SMUS: ~
+        Poissonsratio: 0.3
+    system_properties:
+      mass:
+        air:
+          without_internal_fluid: 4.678562236926955
+          with_internal_fluid: 7.4567320162325155
+        water:
+          without_internal_fluid: 1.1462342958438088
+          with_internal_fluid: 3.9244040751493694
+      A: 16.100662349647692
+      EI: 6358503763.864772
+      EA: 483019870.4894308
+      GJ: 4891156741.43444
+      E: 30000000.0
+      SMYS: 52000
+      SMUS: ~
+      Poissonsratio: 0.3
+  default:
+    log_level: INFO
+    config:
+      overwrite:
+        output: true
+  Analysis:
+    fe_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\viv_analysis\results
+    basename: viv_analysis
+    analysis_root_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\viv_analysis
+    file_name: viv_analysis
+    file_name_for_overwrite: viv_analysis
+    result_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\viv_analysis\results
+    log_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\viv_analysis\logs
+    start_time: 2024-07-22 16:35:57.820245
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: k:\python\digitalmodel\src\digitalmodel\tests\test_data\viv_analysis\viv_analysis.yml
+  environment:
+    current:
+    - label: 1 yr
+      units:
+      - depth: m
+      - speed: m/s
+      data:
+      - depth: 0
+        speed: 0.7
+      - depth: 25
+        speed: 0.5
+      - depth: 50
+        speed: 0.3
+      - depth: 75
+        speed: 0.3
+      - depth: 100
+        speed: 0.1
+    - label: 100 yr
+      data:
+      - depth: 0
+        speed: 0.8
+      - depth: 25
+        speed: 0.6
+      - depth: 50
+        speed: 0.4
+      - depth: 75
+        speed: 0.3
+      - depth: 100
+        speed: 0.1
+  modes:
+    eigen_values:
+      simply_supported:
+      - 9.87
+      - 39.5
+      - 88.9
+      clamped:
+      - 22.37
+      - 61.7
+      - 121.0
+  viv:
+    st: 0.2
