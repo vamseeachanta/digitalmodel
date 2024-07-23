@@ -29,15 +29,19 @@ environment:
         ]
 
 modes:
+  analysis:
+    simply_supported: True
+    clamped_clamped: False
+    free_free: False
   eigen_values:
     simply_supported: [9.87, 39.50, 88.90]
-    clamped: [22.37, 61.70, 121.00]
+    clamped_clamped: [22.37, 61.70, 121.00]
 viv:
   st: 0.2
 
 pipeline:
   length: 2737
-  span_length: [44, 50, 60, 70, 80] #ft
+  span_length: [44, 80] #ft
 
   water_depth:
     length_percent: [0, 20, 40, 60, 80, 100]

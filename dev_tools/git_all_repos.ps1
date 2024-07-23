@@ -15,4 +15,5 @@ foreach ($d in $dir){
 }
 
 Set-Location -Path $dir
- 
+
+cd C:\github\digitalmodel\dev_tools

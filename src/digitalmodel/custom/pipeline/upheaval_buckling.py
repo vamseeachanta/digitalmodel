@@ -216,7 +216,7 @@ class UpheavalBuckling:
         self.save_buckling_strain_plot(cfg, csv_groups.copy())
 
     def save_temperature_plot(self, cfg, csv_groups):
-        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
 
         plot_yml['data']['groups'] = csv_groups
         columns= { 'x': ['length'], 'y': ['differential_temperature'] }
@@ -234,7 +234,7 @@ class UpheavalBuckling:
         au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
 
     def save_buckling_force_plot_imp(self, cfg, csv_groups):
-        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
 
         plot_yml['data']['groups'] = csv_groups
 
@@ -258,7 +258,7 @@ class UpheavalBuckling:
         au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
 
     def save_buckling_force_plot_met(self, cfg, csv_groups):
-        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
 
         plot_yml['data']['groups'] = csv_groups
 
@@ -282,7 +282,7 @@ class UpheavalBuckling:
         au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
 
     def save_buckling_stress_plot_imp(self, cfg, csv_groups):
-        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
 
         plot_yml['data']['groups'] = csv_groups
 
@@ -308,7 +308,7 @@ class UpheavalBuckling:
         au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
 
     def save_buckling_stress_plot_met(self, cfg, csv_groups):
-        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
 
         plot_yml['data']['groups'] = csv_groups
 
@@ -334,7 +334,7 @@ class UpheavalBuckling:
         au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
 
     def save_buckling_strain_plot(self, cfg, csv_groups):
-        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
 
         plot_yml['data']['groups'] = csv_groups
 

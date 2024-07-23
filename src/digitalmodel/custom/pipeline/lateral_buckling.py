@@ -8,10 +8,10 @@ from assetutilities.common.visualization.visualization_templates import (
     VisualizationTemplates,
 )
 from assetutilities.engine import engine as au_engine
+from scipy import interpolate
 
 # Reader imports
 from digitalmodel.custom.pipeline.buckling_common import CommonBucklingCaculations
-from scipy import interpolate
 
 viz_templates = VisualizationTemplates()
 cbc = CommonBucklingCaculations()
@@ -293,7 +293,7 @@ class LateralBuckling:
         return differential_temperature_array
     
     def save_temperature_plot(self, cfg, csv_groups):
-        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
 
         plot_yml['data']['groups'] = csv_groups
         columns= { 'x': ['length'], 'y': ['differential_temperature'] }
@@ -311,7 +311,7 @@ class LateralBuckling:
         au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
 
     def save_buckling_force_plot_imp(self, cfg, csv_groups):
-        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
 
         plot_yml['data']['groups'] = csv_groups
 
@@ -335,7 +335,7 @@ class LateralBuckling:
         au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
 
     def save_buckling_force_plot_met(self, cfg, csv_groups):
-        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
 
         plot_yml['data']['groups'] = csv_groups
 
@@ -359,7 +359,7 @@ class LateralBuckling:
         au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
 
     def save_buckling_stress_plot_imp(self, cfg, csv_groups):
-        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
 
         plot_yml['data']['groups'] = csv_groups
 
@@ -385,7 +385,7 @@ class LateralBuckling:
         au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
 
     def save_buckling_stress_plot_met(self, cfg, csv_groups):
-        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
 
         plot_yml['data']['groups'] = csv_groups
 
@@ -411,7 +411,7 @@ class LateralBuckling:
         au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
         
     def save_buckling_strain_plot(self, cfg, csv_groups):
-        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
 
         plot_yml['data']['groups'] = csv_groups
 
