@@ -33,6 +33,9 @@ class LateralBuckling:
         lateral_buckling_df.to_csv(file_name, index=False)
         
         csv_groups = [{'file_name': file_name, 'label': ''}]
+        self.save_plots(cfg, csv_groups)
+
+    def save_plots(self, cfg, csv_groups):
         self.save_temperature_plot(cfg, csv_groups.copy())
         self.save_buckling_force_plot_imp(cfg, csv_groups.copy())
         self.save_buckling_force_plot_met(cfg, csv_groups.copy())

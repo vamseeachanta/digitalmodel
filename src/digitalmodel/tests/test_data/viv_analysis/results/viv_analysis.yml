@@ -8,7 +8,12 @@ dictitems:
     seawater_density: 1025
   pipeline:
     length: 2737
-    span_length: 44
+    span_length:
+    - 44
+    - 50
+    - 60
+    - 70
+    - 80
     water_depth:
       length_percent:
       - 0
@@ -203,7 +208,7 @@ dictitems:
     file_name_for_overwrite: viv_analysis
     result_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\viv_analysis\results
     log_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\viv_analysis\logs
-    start_time: 2024-07-22 16:35:57.820245
+    start_time: 2024-07-23 06:49:44.056765
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: k:\python\digitalmodel\src\digitalmodel\tests\test_data\viv_analysis\viv_analysis.yml

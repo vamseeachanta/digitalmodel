@@ -37,7 +37,7 @@ viv:
 
 pipeline:
   length: 2737
-  span_length: 44 #ft
+  span_length: [44, 50, 60, 70, 80] #ft
 
   water_depth:
     length_percent: [0, 20, 40, 60, 80, 100]

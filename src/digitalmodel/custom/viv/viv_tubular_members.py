@@ -16,8 +16,21 @@ class VIVTubularMembers:
         natural_frequencies = self.get_natural_frequencies(cfg)
         vs_frequencies = self.get_vs_frequencies(cfg)
         safety_factors = self.get_safety_factors(cfg, natural_frequencies, vs_frequencies)
+        
+        cfg['viv']['natural_frequencies'] = natural_frequencies.to_json()
+        cfg['viv']['vs_frequencies'] = vs_frequencies.to_json()
+        cfg['viv']['safety_factors'] = safety_factors.to_json()
+
+        self.save_plots(cfg, safety_factors)
 
         return cfg
+
+    def save_plots(self, cfg, natural_frequencies, vs_frequencies, safety_factors):
+        self.save_natural_frequencies_plot(cfg, natural_frequencies)
+
+    def save_natural_frequencies_plot(self, cfg, natural_frequencies):
+        plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+
 
     def get_natural_frequencies(self, cfg):
 
@@ -30,46 +43,48 @@ class VIVTubularMembers:
         mass_without_internal_fluid = system_properties['mass']['air']['without_internal_fluid']
         mass_with_internal_fluid = system_properties['mass']['air']['with_internal_fluid']
         
-        span_length = cfg['pipeline']['span_length'] *12
+        span_length_array = cfg['pipeline']['span_length']
+        span_length_array = [item*12 for item in span_length_array]
 
-        natural_frequencies_df = pd.DataFrame(columns = ['boundary_condition', 'internal_fluid', 'mode 1', 'mode 2', 'mode 3'])
+        natural_frequencies_df = pd.DataFrame(columns = ['span_length', 'boundary_condition', 'internal_fluid', 'mode 1', 'mode 2', 'mode 3'])
 
-        simply_supported_ends_empty = []
-        for mode_number in list(range(1, 4)):
-            frequency = (1 / (2 * math.pi)) * (mode_number*math.pi/span_length)**2 * ((E * I) / (mass_without_internal_fluid/g_inch_per_second_squared)) ** 0.5
-            simply_supported_ends_empty.append(frequency)
-        natural_frequencies_df.loc[len(natural_frequencies_df)] = ['simply_supported', 'empty', simply_supported_ends_empty[0], simply_supported_ends_empty[1], simply_supported_ends_empty[2]]
+        for span_length in span_length_array:
+            simply_supported_ends_empty = []
+            for mode_number in list(range(1, 4)):
+                frequency = (1 / (2 * math.pi)) * (mode_number*math.pi/span_length)**2 * ((E * I) / (mass_without_internal_fluid/g_inch_per_second_squared)) ** 0.5
+                simply_supported_ends_empty.append(frequency)
+            natural_frequencies_df.loc[len(natural_frequencies_df)] = [span_length/12, 'simply_supported', 'empty', simply_supported_ends_empty[0], simply_supported_ends_empty[1], simply_supported_ends_empty[2]]
 
-        simply_supported_ends_flooded = []
-        for mode_number in list(range(1, 4)):
-            frequency = (1 / (2 * math.pi)) * (mode_number*math.pi/span_length)**2 * ((E * I) / (mass_with_internal_fluid/g_inch_per_second_squared)) ** 0.5
-            simply_supported_ends_flooded.append(frequency)
-        natural_frequencies_df.loc[len(natural_frequencies_df)] = ['simply_supported', 'flooded', simply_supported_ends_flooded[0], simply_supported_ends_flooded[1], simply_supported_ends_flooded[2]]
+            simply_supported_ends_flooded = []
+            for mode_number in list(range(1, 4)):
+                frequency = (1 / (2 * math.pi)) * (mode_number*math.pi/span_length)**2 * ((E * I) / (mass_with_internal_fluid/g_inch_per_second_squared)) ** 0.5
+                simply_supported_ends_flooded.append(frequency)
+            natural_frequencies_df.loc[len(natural_frequencies_df)] = [span_length/12, 'simply_supported', 'flooded', simply_supported_ends_flooded[0], simply_supported_ends_flooded[1], simply_supported_ends_flooded[2]]
 
-        eigen_values_clamped = cfg['modes']['eigen_values']['clamped']
-        clamped_clamped_empty = []
-        for mode_number in list(range(1, 4)):
-            frequency = (1 / (2 * math.pi)) * (eigen_values_clamped[mode_number-1]/span_length)**2 * ((E * I) / (mass_without_internal_fluid/g_inch_per_second_squared)) ** 0.5
-            clamped_clamped_empty.append(frequency)
-        natural_frequencies_df.loc[len(natural_frequencies_df)] = ['clamped_clamped', 'empty', clamped_clamped_empty[0], clamped_clamped_empty[1], clamped_clamped_empty[2]]
+            eigen_values_clamped = cfg['modes']['eigen_values']['clamped']
+            clamped_clamped_empty = []
+            for mode_number in list(range(1, 4)):
+                frequency = (1 / (2 * math.pi)) * (eigen_values_clamped[mode_number-1]/span_length)**2 * ((E * I) / (mass_without_internal_fluid/g_inch_per_second_squared)) ** 0.5
+                clamped_clamped_empty.append(frequency)
+            natural_frequencies_df.loc[len(natural_frequencies_df)] = [span_length/12, 'clamped_clamped', 'empty', clamped_clamped_empty[0], clamped_clamped_empty[1], clamped_clamped_empty[2]]
 
-        clamped_clamped_flooded = []
-        for mode_number in list(range(1, 4)):
-            frequency = (1 / (2 * math.pi)) * (eigen_values_clamped[mode_number-1]/span_length)**2 * ((E * I) / (mass_with_internal_fluid/g_inch_per_second_squared)) ** 0.5
-            clamped_clamped_flooded.append(frequency)
-        natural_frequencies_df.loc[len(natural_frequencies_df)] = ['clamped_clamped', 'flooded', clamped_clamped_flooded[0], clamped_clamped_flooded[1], clamped_clamped_flooded[2]]
+            clamped_clamped_flooded = []
+            for mode_number in list(range(1, 4)):
+                frequency = (1 / (2 * math.pi)) * (eigen_values_clamped[mode_number-1]/span_length)**2 * ((E * I) / (mass_with_internal_fluid/g_inch_per_second_squared)) ** 0.5
+                clamped_clamped_flooded.append(frequency)
+            natural_frequencies_df.loc[len(natural_frequencies_df)] = [span_length/12, 'clamped_clamped', 'flooded', clamped_clamped_flooded[0], clamped_clamped_flooded[1], clamped_clamped_flooded[2]]
 
-        free_free_empty = []
-        for mode_number in list(range(1, 4)):
-            frequency = (1 / (2 * math.pi)) * (22.373/span_length**2) * ((E * I) / (mass_without_internal_fluid/g_inch_per_second_squared)) ** 0.5
-            free_free_empty.append(frequency)
-        natural_frequencies_df.loc[len(natural_frequencies_df)] = ['free_free', 'empty', free_free_empty[0], free_free_empty[1], free_free_empty[2]]
+            free_free_empty = []
+            for mode_number in list(range(1, 4)):
+                frequency = (1 / (2 * math.pi)) * (22.373/span_length**2) * ((E * I) / (mass_without_internal_fluid/g_inch_per_second_squared)) ** 0.5
+                free_free_empty.append(frequency)
+            natural_frequencies_df.loc[len(natural_frequencies_df)] = [span_length/12, 'free_free', 'empty', free_free_empty[0], free_free_empty[1], free_free_empty[2]]
 
-        free_free_flooded = []
-        for mode_number in list(range(1, 4)):
-            frequency = (1 / (2 * math.pi)) * (22.373/span_length**2) * ((E * I) / (mass_with_internal_fluid/g_inch_per_second_squared)) ** 0.5
-            free_free_flooded.append(frequency)
-        natural_frequencies_df.loc[len(natural_frequencies_df)] = ['free_free', 'flooded', free_free_flooded[0], free_free_flooded[1], free_free_flooded[2]]
+            free_free_flooded = []
+            for mode_number in list(range(1, 4)):
+                frequency = (1 / (2 * math.pi)) * (22.373/span_length**2) * ((E * I) / (mass_with_internal_fluid/g_inch_per_second_squared)) ** 0.5
+                free_free_flooded.append(frequency)
+            natural_frequencies_df.loc[len(natural_frequencies_df)] = [span_length/12, 'free_free', 'flooded', free_free_flooded[0], free_free_flooded[1], free_free_flooded[2]]
 
         filename = os.path.join(cfg['Analysis']['result_folder'], cfg['Analysis']['file_name'] + '_natural_frequencies.csv')
         natural_frequencies_df.to_csv(filename)
@@ -101,7 +116,7 @@ class VIVTubularMembers:
         return viv_frequencies_df
     
     def get_safety_factors(self, cfg, natural_frequencies, vs_frequencies):
-        safety_factor_df = pd.DataFrame(columns = ['current_label', 'depth', 'current_speed',  'Re', 'shredding_frequency', 'KC', 'boundary_condition', 'internal_fluid', 'mode 1', 'safety_factor'])
+        safety_factor_df = pd.DataFrame(columns = ['span_length', 'current_label', 'depth', 'current_speed',  'Re', 'shredding_frequency', 'KC', 'boundary_condition', 'internal_fluid', 'mode 1', 'safety_factor'])
         
         for vs_index, vs_row in vs_frequencies.iterrows():
             current_label = vs_row['current_label']
@@ -112,12 +127,13 @@ class VIVTubularMembers:
             KC = vs_row['KC']
 
             for nf_index, nf_row in natural_frequencies.iterrows():
+                span_length = nf_row['span_length']
                 boundary_condition = nf_row['boundary_condition']
                 internal_fluid = nf_row['internal_fluid']
                 mode_1 = nf_row['mode 1']
                 safety_factor = mode_1 / shredding_frequency
 
-                safety_factor_df.loc[len(safety_factor_df)] = [current_label, depth, current_speed, Re, shredding_frequency, KC, boundary_condition, internal_fluid, mode_1, safety_factor]
+                safety_factor_df.loc[len(safety_factor_df)] = [span_length, current_label, depth, current_speed, Re, shredding_frequency, KC, boundary_condition, internal_fluid, mode_1, safety_factor]
 
         filename = os.path.join(cfg['Analysis']['result_folder'], cfg['Analysis']['file_name'] + '_safety_factors.csv')
         safety_factor_df.to_csv(filename)
