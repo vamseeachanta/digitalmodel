@@ -30,6 +30,11 @@ class VIVTubularMembers:
 
     def save_natural_frequencies_plot(self, cfg, natural_frequencies):
         plot_yml = viz_templates.get_xy_plot_line_csv(cfg['Analysis'].copy())
+        
+        csv_groups = [{'file_name': file_name, 'label': ''}]
+        plot_yml['data']['groups'] = csv_groups
+        columns = 
+        columns= { 'x': ['length'], 'y': ['differential_temperature'] }
 
 
     def get_natural_frequencies(self, cfg):
@@ -137,3 +142,5 @@ class VIVTubularMembers:
 
         filename = os.path.join(cfg['Analysis']['result_folder'], cfg['Analysis']['file_name'] + '_safety_factors.csv')
         safety_factor_df.to_csv(filename)
+        
+        return safety_factor_df
