@@ -7,7 +7,7 @@ dictitems:
     design_life: 5
     environment:
       seawater_resistivity:
-        input: 40
+        input: 0.2547
         csv_filename: src/digitalmodel/tests/test_data/cathodic_protection/seawater_conductance_with_temperature.csv
         csv_reference: https://github.com/vamseeachanta/digitalmodel/blob/master/docs/cathodic_protection/literature/course_notes_Appendix_A_Cathodic_Protection_Design.pdf
       temperature: 15
@@ -66,7 +66,7 @@ dictitems:
     file_name_for_overwrite: cathodic_protection_ABS_gn_ships_2018
     result_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\results
     log_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\logs
-    start_time: 2024-07-16 11:11:47.513023
+    start_time: 2024-07-24 12:09:57.521952
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\cathodic_protection\cathodic_protection_ABS_gn_ships_2018.yml
@@ -75,7 +75,7 @@ dictitems:
       coated: 10778.0
       uncoated: 0.0
     breakdown_factor:
-      resistivity: 40
+      resistivity: 0.2547
       fcm: 1.075
       fcf: 1.137
     current_density:
@@ -100,34 +100,30 @@ dictitems:
       anode_volume: 0.01056
       utilisation_factor: 0.825
     anodes_required:
-      mass:
-        initial: 106.55
-        mean: 113.851
-        final: 121.151
-      count:
-        initial: 107
-        mean: 114
-        final: 122
+      total_net_mass: 3301.68
+      total_gross_mass: 3415.6
+      total_gross_mass_in_MT: 3.4
+      Number_of_anodes_mean_current: 113.9
+      Number_of_anodes_initial_current: 106.6
+      Number_of_anodes_final_current: 121.2
     anode_initial_check:
       delta_E: 0.29
-      anode_resistance: 51.613
-      individual_anode_current: 0.006
-      total_anode_current: 0.64
+      anode_resistance: 0.329
+      individual_anode_current: 0.882
+      total_anode_current: 100.507
       initial_total_anode_output_check: 'No'
-      updated_anode_count: 25895.973
-      updated_anode-weight: 776.9
+      updated_anode_count: 164.893
+      updated_anode_weight: 4.9
     anode_final_check:
-      updated_anode_count: 31633.459
-      updated_anode_weight: 949.004
+      updated_anode_count: 201.426
+      updated_anode_weight: 6.043
       initial_total_current_output_check: 'No'
-      total_current_output: 0.595
-      individual_anode_output: 0.005
-      anode_resistance: 55.45
-    seawater_resistivity: 40.0
+      total_current_output: 93.552
+      individual_anode_output: 0.821
+      anode_resistance: 0.353
+    seawater_resistivity: 0.2547
     summary:
-      anode_count_initial_kg: 107
-      anode_count_mean_kg: 114
-      anode_count_final_kg: 122
-      anode_mass_initial_kg: 106.55
-      anode_mass_mean_kg: 113.851
-      anode_mass_final_kg: 121.151
+      Number_of_anodes_mean_current: 113.9
+      total_net_mass: 3301.68
+      Number_of_anodes_initial_current: 106.6
+      Number_of_anodes_final_current: 121.2

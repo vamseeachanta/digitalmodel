@@ -36,8 +36,9 @@ def test_cathodic_protection():
     pytest_output_file = None
     # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     # expected_result = ymlInput(pytest_output_file, updateYml=None)
-    expected_result = {'anode_count_initial_kg': 107, 'anode_count_mean_kg': 114, 'anode_count_final_kg': 122, 'anode_mass_initial_kg': 106.550, 'anode_mass_mean_kg': 113.851, 'anode_mass_final_kg': 121.151}
-
+    expected_result = {'Number_of_anodes_mean_current':113.9,'total_net_mass':3301.68,'Number_of_anodes_initial_current':106.6,
+                       'Number_of_anodes_final_current':121.2
+                       }
 
     if len(sys.argv) > 1:
         sys.argv.pop()

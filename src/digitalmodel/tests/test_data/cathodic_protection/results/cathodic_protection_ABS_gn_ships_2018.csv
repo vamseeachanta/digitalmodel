@@ -1,2 +1,2 @@
-anode_count_initial_kg,anode_count_mean_kg,anode_count_final_kg,anode_mass_initial_kg,anode_mass_mean_kg,anode_mass_final_kg
-107,114,122,106.55,113.851,121.151
+Number_of_anodes_mean_current,total_net_mass,Number_of_anodes_initial_current,Number_of_anodes_final_current
+113.9,3301.68,106.6,121.2

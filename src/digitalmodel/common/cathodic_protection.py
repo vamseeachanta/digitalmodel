@@ -72,17 +72,15 @@ class CathodicProtection():
     def save_csv_output(self, cfg):
         outputs_dict = cfg['outputs']
 
-        anode_count_initial_kg = outputs_dict['anodes_required']['count']['initial']
-        anode_count_mean_kg = outputs_dict['anodes_required']['count']['mean']
-        anode_count_final_kg = outputs_dict['anodes_required']['count']['final']
+        total_net_mass  = outputs_dict['anodes_required']['total_net_mass']            
+        Number_of_anodes_mean_current = outputs_dict['anodes_required']['Number_of_anodes_mean_current']                          
+        Number_of_anodes_initial_current = outputs_dict['anodes_required']['Number_of_anodes_initial_current']                          
+        Number_of_anodes_final_current = outputs_dict['anodes_required']['Number_of_anodes_final_current']
         
-        anode_mass_initial_kg = outputs_dict['anodes_required']['mass']['initial']
-        anode_mass_mean_kg = outputs_dict['anodes_required']['mass']['mean']
-        anode_mass_final_kg = outputs_dict['anodes_required']['mass']['final']
 
-        output_summary = {'anode_count_initial_kg': anode_count_initial_kg, 'anode_count_mean_kg': anode_count_mean_kg,
-                'anode_count_final_kg': anode_count_final_kg, 'anode_mass_initial_kg': anode_mass_initial_kg,
-                'anode_mass_mean_kg': anode_mass_mean_kg, 'anode_mass_final_kg': anode_mass_final_kg}
+        output_summary = {'Number_of_anodes_mean_current': Number_of_anodes_mean_current,
+                          'total_net_mass': total_net_mass, 'Number_of_anodes_initial_current': Number_of_anodes_initial_current,
+                          'Number_of_anodes_final_current': Number_of_anodes_final_current}
         df = pd.DataFrame(output_summary, index=[0])
 
         result_folder = cfg['Analysis']['result_folder']
@@ -102,7 +100,8 @@ class CathodicProtection():
         environment_cfg = cfg['inputs']['environment']
         coating_breakdown_cfg = cfg['inputs']['structure']['area']['coating_breakdown']
 
-        #TODO - implement yearly breakdown calculations using lookup from inputs
+        #TODO 
+        # - implement yearly breakdown calculations using lookup from inputs
         # for idx in range(0, math.ceil(10.3)):
         #     year = idx +1
         #     year_breakdown = 3
@@ -234,7 +233,7 @@ class CathodicProtection():
         anodes_required = {'total_net_mass':round(anode_mass_mean,2),'total_gross_mass':round(gross_mass_kg,1),
                            'total_gross_mass_in_MT':round(gross_mass_MT,1),
                            'Number_of_anodes_mean_current':round(number_of_anodes_mean,1),
-                           'Number_of_anodes_initial_current ':round(number_of_anodes_initial,1),
+                           'Number_of_anodes_initial_current':round(number_of_anodes_initial,1),
                            'Number_of_anodes_final_current':round(number_of_anodes_final,1)}
         
         return anodes_required
