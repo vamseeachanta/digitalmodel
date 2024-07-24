@@ -320,6 +320,11 @@ class AqwaEFServer:
         result_array = [round(item, 4) for item in result_array]
 
         result_array_idx = len(self.result_df_array[def_pos_idx])
+        if result_array_idx > 0:
+            last_time_in_df = self.result_df_array[def_pos_idx].iloc[-1]['time']
+            if round(float(Time), 3) == round(float(last_time_in_df), 3):
+                result_array_idx = result_array_idx - 1
+                
         self.result_df_array[def_pos_idx].loc[result_array_idx] = result_array
 
     def wsp_dampener_by_def_pos(self, Analysis, Time, def_pos):
