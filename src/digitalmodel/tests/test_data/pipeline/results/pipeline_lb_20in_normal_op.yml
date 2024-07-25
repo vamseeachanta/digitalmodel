@@ -38,9 +38,9 @@ dictitems:
       unit: m
       curve_radius: 3000
     crossection:
-    - Nominal_ID: 18.25
+    - Nominal_ID: 18.124
       Nominal_OD: 20
-      Design_WT: 0.875
+      Design_WT: 0.938
       Corrosion_Allowance: 0.126
       average_internal_metal_loss_percentage: 10
       external_fluid:
@@ -52,7 +52,7 @@ dictitems:
           reference_depth: 410
       internal_fluid:
         unit: lb/inch^3
-        density: 0.024205
+        density: 0.03721
         pressure:
           unit: psi
           pressure: 783.5
@@ -110,12 +110,12 @@ dictitems:
     - dimensions:
         nominal:
           OD: 20
-          ID: 18.25
-          WT: 0.875
+          ID: 18.124
+          WT: 0.938
         with_corrosion:
           OD: 20
-          ID: 18.2752
-          WT: 0.8623999999999992
+          ID: 18.1492
+          WT: 0.9253999999999998
       material:
         E: 30000000.0
         G: 11538461.538461538
@@ -129,39 +129,39 @@ dictitems:
         grade: API 5L X60
       section:
         Ao: 314.1592653589793
-        Ai: 262.30958378650536
+        Ai: 258.7050190217857
         Io: 7853.981633974483
-        Ii: 5475.432792633616
+        Ii: 5325.983843782688
         Jo: 15707.963267948966
-        Ji: 10950.865585267233
-        A: 51.84968157247397
-        I: 2378.5488413408666
-        J: 4757.097682681733
-        mass: 14.610872134384001
-        EI: 71356465240.226
-        EA: 1555490447.1742191
-        GJ: 54889588646.32769
+        Ji: 10651.967687565377
+        A: 55.45424633719364
+        I: 2527.9977901917946
+        J: 5055.995580383589
+        mass: 15.626612892672174
+        EI: 75839933705.75385
+        EA: 1663627390.1158092
+        GJ: 58338410542.887566
       coating:
       - *id002
       - *id003
       - *id004
       internal_fluid:
-        mass: 6.349203475552362
-        pressure: 972.1886252
+        mass: 9.626413757800645
+        pressure: 1073.5683224
       buoyancy:
         mass: 11.976838920544141
       equivalent:
         mass:
           air:
-            without_internal_fluid: 14.872779992916122
-            with_internal_fluid: 21.221983468468483
+            without_internal_fluid: 15.888520751204295
+            with_internal_fluid: 25.514934509004938
           water:
-            without_internal_fluid: 2.895941072371981
-            with_internal_fluid: 9.245144547924342
-          specific_density: 1.2417951090086474
-        EI: 71356465240.226
-        EA: 1555490447.1742191
-        GJ: 54889588646.32769
+            without_internal_fluid: 3.9116818306601537
+            with_internal_fluid: 13.538095588460797
+          specific_density: 1.3266038607190715
+        EI: 75839933705.75385
+        EA: 1663627390.1158092
+        GJ: 58338410542.887566
         E: 30000000.0
         SMYS: 60000
         SMUS: ~
@@ -169,34 +169,34 @@ dictitems:
     system_properties:
       mass:
         air:
-          without_internal_fluid: 14.872779992916122
-          with_internal_fluid: 21.221983468468483
+          without_internal_fluid: 15.888520751204295
+          with_internal_fluid: 25.514934509004938
         water:
-          without_internal_fluid: 2.895941072371981
-          with_internal_fluid: 9.245144547924342
-      A: 51.84968157247397
-      EI: 71356465240.226
-      EA: 1555490447.1742191
-      GJ: 54889588646.32769
+          without_internal_fluid: 3.9116818306601537
+          with_internal_fluid: 13.538095588460797
+      A: 55.45424633719364
+      EI: 75839933705.75385
+      EA: 1663627390.1158092
+      GJ: 58338410542.887566
       E: 30000000.0
       SMYS: 60000
       SMUS: ~
       Poissonsratio: 0.3
     friction_force:
-      axial: 5.547086728754605
-      lateral: 5.547086728754605
+      axial: 8.122857353076478
+      lateral: 8.122857353076478
     lateral_buckling:
       anchor_length:
         start: 1050.0
         end: 1050.0
-      min_critical_buckling_load: -355123.52510804415
+      min_critical_buckling_load: -443725.83032750775
       effective_axial_load:
-        anchor_start: -229.309
-        anchor_end: -229.309
+        anchor_start: -335.787
+        anchor_end: -335.787
       lateral_buckling_check: Pass
       fully_restrained_axial_force:
-        L=0: -1830.933
-        L=L: -1739.937
+        L=0: -1960.217
+        L=L: -1862.895
   type:
     preprocess: false
     analysis: false
@@ -208,13 +208,13 @@ dictitems:
         output: true
   Analysis:
     basename: pipeline
-    analysis_root_folder: C:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline
+    analysis_root_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline
     file_name: pipeline_lb_20in_normal_op
     file_name_for_overwrite: pipeline_lb_20in_normal_op
-    result_folder: C:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\results
-    log_folder: C:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\logs
-    start_time: 2024-07-17 14:20:59.406194
+    result_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\results
+    log_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\logs
+    start_time: 2024-07-24 23:17:53.501486
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: pipeline_lb_20in_normal_op.yml
-    fe_folder: C:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\results
+    CustomInputFile: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\pipeline_lb_20in_normal_op.yml
+    fe_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\results

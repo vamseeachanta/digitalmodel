@@ -32,7 +32,7 @@ pipeline:
   crossection: #Inner to outer
     - Nominal_ID: NULL
       Nominal_OD: 20
-      Design_WT: 0.875
+      Design_WT: 0.938
       Corrosion_Allowance: 0.126
       average_internal_metal_loss_percentage: 10
       external_fluid:
@@ -44,7 +44,7 @@ pipeline:
           reference_depth: 410 #ft
       internal_fluid:
         unit: lb/inch^3
-        density: 0.024205
+        density: 0.03721
         pressure:
           unit: psi
           pressure: 783.5
