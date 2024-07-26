@@ -3,7 +3,7 @@ import os
 import sys
 
 # Third party imports
-import deepdiff
+import deepdiff # noqa
 import pytest  # noqa
 from assetutilities.common.yml_utilities import ymlInput
 
