@@ -5,11 +5,13 @@ from digitalmodel.common.pipe_properties import PipeProperties
 from digitalmodel.custom.pipeline.lateral_buckling import LateralBuckling
 from digitalmodel.custom.pipeline.thermal_buckling import ThermalBuckling
 from digitalmodel.custom.pipeline.upheaval_buckling import UpheavalBuckling
+from digitalmodel.custom.pipeline.pressure_loss import Pressureloss
 
 lb = LateralBuckling()
 tb = ThermalBuckling()
 ub = UpheavalBuckling()
 pp = PipeProperties()
+pl = Pressureloss()
 
 class Pipeline:
     def __init__(self):
@@ -23,6 +25,8 @@ class Pipeline:
             tb.run( cfg )
         elif cfg['calculation']['name'] == 'upheaval_buckling':
             ub.run( cfg )
+        elif cfg['calculation']['name'] == 'pressure_loss':
+            pl.run( cfg )
         else:
             raise ValueError("calculation not implemented")
         
