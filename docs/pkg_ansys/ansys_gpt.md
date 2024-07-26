@@ -1,8 +1,9 @@
 First pass:
 
 ![alt text](ansysgpt_aqwa.png)
-
+<https://ansysgpt.ansys.com/>
 ======
+
 We are pleased to announce that your account has been selected for access to AnsysGPT, our innovative Ansys Virtual Support Assistant. AnsysGPT is designed to complement the existing support offerings and services provided by Ansys to all our active customers. A few important highlights are listed below:
 
  ? AnsysGPT is provided as part of the support offerings from Ansys. As such, you will need to maintain an active TECS to have access to AnsysGPT.
