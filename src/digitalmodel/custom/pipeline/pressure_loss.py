@@ -56,7 +56,10 @@ class Pressureloss():
         reynolds_number = U * fluid_properties['density'] * pipe_data['inner_diameter']/ fluid_properties['viscosity']
 
         friction_factor_laminar = 64 / reynolds_number
-        friction_factor_turbulent = (1/(-1.8 * math.log(6.9/ reynolds_number+ (pipe_data['e_by_D']/3.7) ** 1.11))) **2
+        factor_1 = math.log(6.9/ reynolds_number+ (pipe_data['e_by_D']/3.7) ** 1.11)
+        factor_2 = -1.8 * factor_1
+        friction_factor_turbulent =( 1 / factor_2 ) ** 2
+        
 
         if reynolds_number > 3000:
             friction_loss = friction_factor_turbulent * pipe_data['depth_in_meters'] / pipe_data['inner_diameter'] * U ** 2 /2 / pipe_data['acceleration']
