@@ -1,5 +1,6 @@
 # Standard library imports
 import math
+import sympy as sp
 
 # Third party imports
 from assetutilities.common.visualization.visualization_templates import (
@@ -53,12 +54,23 @@ class Pressureloss():
         
         flow_rate = cfg['pipe_data']['flow_rate'] * 0.1589873 / 60
         U = round(flow_rate / pipe_data['internal_area'],1)
-        reynolds_number = U * fluid_properties['density'] * pipe_data['inner_diameter']/ fluid_properties['viscosity']
+        reynolds_number = (U * fluid_properties['density'] * pipe_data['inner_diameter'])/ fluid_properties['viscosity']
 
         friction_factor_laminar = 64 / reynolds_number
-        factor_1 = math.log(6.9/ reynolds_number+ (pipe_data['e_by_D']/3.7) ** 1.11)
-        factor_2 = -1.8 * factor_1
-        friction_factor_turbulent =( 1 / factor_2 ) ** 2
+        
+        a = -1.8
+        b = 6.9
+        c = reynolds_number
+        d = pipe_data['inner_diameter']
+        e = 3.7
+        f = 1.11
+
+        ab = sp.log(b / c + (d / e) ** f)
+        cd = a * ab
+        expression = (1 / cd ) ** 2
+
+        simplified_expression = sp.simplify(expression)
+        friction_factor_turbulent = simplified_expression.evalf()
         
 
         if reynolds_number > 3000:
@@ -74,9 +86,9 @@ class Pressureloss():
         total_energy = kinetic_energy + potential_energy + friction_loss
 
         flow_parameters = {'flow_rate': round(flow_rate,3), 'U': U, 'reynolds_number': round(reynolds_number,2),
-                           'friction_loss': round(friction_loss,2), 'friction_loss_in_mpA': round(friction_loss_in_mpA,2),
-                           'kinetic_energy': round(kinetic_energy,2), 'potential_energy': potential_energy,
-                           'total_energy': round(total_energy,2)
+                           'friction_loss': round(friction_loss,2),'friction_factor_laminar':round(friction_factor_laminar,3),
+                           'friction_factor_turbulent':round(friction_factor_turbulent,3),'kinetic_energy': round(kinetic_energy,2),
+                           'potential_energy': potential_energy,'total_energy': round(total_energy,2)
                           }
         return flow_parameters
 

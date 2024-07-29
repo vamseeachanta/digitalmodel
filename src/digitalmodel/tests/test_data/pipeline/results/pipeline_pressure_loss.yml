@@ -217,7 +217,7 @@ dictitems:
     file_name_for_overwrite: pipeline_pressure_loss
     result_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\pipeline\results
     log_folder: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\pipeline\logs
-    start_time: 2024-07-29 09:55:41.707100
+    start_time: 2024-07-29 11:38:33.520803
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: c:\Users\Sk Samdan\Desktop\digitalmodel-1\src\digitalmodel\tests\test_data\pipeline\pipeline_pressure_loss.yml
