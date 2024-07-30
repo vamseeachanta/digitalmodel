@@ -60,12 +60,12 @@ class Pressureloss():
         
         a = -1.8
         b = 6.9
-        c = reynolds_number
-        d = pipe_data['inner_diameter']
+        c = round(reynolds_number,2)
+        d = pipe_data['e_by_D']
         e = 3.7
         f = 1.11
 
-        ab = sp.log(b / c + (d / e) ** f)
+        ab = sp.log((b / c) + (d / e) ** f)
         cd = a * ab
         expression = (1 / cd ) ** 2
 
