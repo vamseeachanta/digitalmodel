@@ -49,7 +49,7 @@ def run_yaml_files(root_directory,sub_folders):
 
 
 if __name__ == '__main__':
-    library = 'digitalmodel-1'
+    library = 'digitalmodel'
     root_directory = f'src/{library}/tests/test_data'
     sub_folders = ['6d_buoy','aqwa','catenary_riser','fatigue_analysis','fea_model','installation','orcaflex','orcaflex_analysis',
                    'orcaflex_file_preparation','orcaflex_post_process','pipeline','raos','rigging','shapes','ship_design',
