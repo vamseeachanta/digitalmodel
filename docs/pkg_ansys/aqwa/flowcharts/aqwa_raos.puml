@@ -1,4 +1,4 @@
-@startuml aqwa_dat_file
+@startuml aqwa_raos
 scale 3
 skinparam titleBorderRoundCorner 15
 skinparam titleBorderThickness 2
