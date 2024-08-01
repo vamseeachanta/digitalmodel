@@ -1,0 +1,131 @@
+@startuml aqwa_dat_file
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title AQWA RAOs \nProcedure
+
+start
+
+    note right
+        Objective: To run and automate RAO runs in AQWA
+        Notes:
+         - All files in ascii (.dat) format
+    end note
+
+    partition "Geometry" {
+            note right
+                Programs:
+                 - Rhino
+                 - SpaceClaim
+                 - Workbench
+            end note
+
+        :Prepare Geometry;
+            note right
+                All surfaces should connect
+                Should not have gaps or overlaps
+            end note
+
+        :Single Surface;
+            note right
+                Combine discrete hull faces into a single surface
+            end note
+
+        :Start Location;
+            note right
+                Approximate location (including draft)
+                Geometry should be in water (i.e. below z=0)
+            end note
+
+    }
+
+    partition "AQWA Frequency - Simple" {
+            note right
+                Objective: To create mesh model for AQWA
+                Programs:
+                 - Workbench
+            end note
+
+        :Frequency Range;
+            note right
+                Based on mesh size
+                RAO frequency range covers analysis frequencies
+                No of Frequencies = 5
+            end note
+
+    }
+
+    partition "AQWA Hydrostatics" {
+            note right
+                Objective: To create mesh model for AQWA
+                Programs:
+                 - Workbench
+            end note
+
+        :Correct Mass Definition;
+            note right
+                Equal to displaced mass
+            end note
+
+        :Correct CoG Definition;
+            note right
+                Ensure CoG is inline with CoB
+            end note
+
+    }
+
+    partition "AQWA Frequency - Comprehensive" {
+            note right
+                Programs:
+                 - AQWA Command Line
+            end note
+
+        :Mesh size;
+            note right
+                Frequency resolution to identify peaks
+                Frequency definition around peak
+            end note
+
+    }
+
+    partition "AQWA Postprocess" {
+            note right
+                Programs:
+                 - python digitalmodel
+                 Output: 
+                  - RAOs.xlsx
+                  - .png
+            end note
+
+        :QA;
+            note right
+                Model: Basic checks
+                RAOs: Amplitude and Phase checks
+            end note
+
+        :RAO Plot;
+            note right
+                DOF 1, 2, 3 (Headings 0, 45, 90)
+                DOF 4, 5, 6 (Headings 0, 45, 90)
+            end note
+
+        :RAOs Comparison;
+            note right
+                ?
+                ?
+            end note
+
+    }
+
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
