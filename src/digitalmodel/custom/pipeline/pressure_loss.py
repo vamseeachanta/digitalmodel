@@ -65,7 +65,7 @@ class Pressureloss():
         e = 3.7
         f = 1.11
 
-        ab = sp.log((b / c) + (d / e) ** f)
+        ab = sp.log((b / c) + (d / e) ** f, 10)
         cd = a * ab
         expression = (1 / cd ) ** 2
 
