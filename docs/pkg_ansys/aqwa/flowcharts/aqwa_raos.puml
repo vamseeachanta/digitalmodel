@@ -58,6 +58,25 @@ start
 
     }
 
+    partition "AQWA Damping" {
+            note right
+                Objective: Define appropriate additional damping:
+                Programs:
+                 - Workbench
+            end note
+
+        :Define ROll and Pitch Damping;
+            note right
+                For Typical ship-shaped structures:
+                    - Roll: 10%
+                    - Pitch: 8%
+                For TLP or SPAR:
+                    - Roll: 5%
+                    - Pitch: 5%
+            end note
+
+    }
+
     partition "AQWA Hydrostatics" {
             note right
                 Objective: To create mesh model for AQWA
