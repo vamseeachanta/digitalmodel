@@ -32,7 +32,11 @@ type:
   results: True
 
 default:
-  log_level: INFO
+  log_level: DEBUG
   config:
     overwrite:
       output: True
+    cfg_sensitivities: False
+
+analysis:
+  fe_folder: NULL

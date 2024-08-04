@@ -196,10 +196,11 @@ dictitems:
     analysis: false
     results: true
   default:
-    log_level: INFO
+    log_level: DEBUG
     config:
       overwrite:
         output: true
+      cfg_sensitivities: false
   pipe_data:
     water_depth: 10000
     acceleration: 9.81
@@ -210,15 +211,28 @@ dictitems:
     viscosity: 60.0
     type: turbulent
     flow_rate: 10.0
+  analysis:
+    fe_folder: ~
   Analysis:
     basename: pipeline
-    analysis_root_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline
+    analysis_root_folder: c:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\tests\test_data\pipeline
     file_name: pipeline_pressure_loss
     file_name_for_overwrite: pipeline_pressure_loss
-    result_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\results
-    log_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\logs
-    start_time: 2024-07-31 22:44:19.176461
+    result_folder: c:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\tests\test_data\pipeline\results
+    log_folder: c:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\tests\test_data\pipeline\logs
+    start_time: 2024-08-04 11:57:35.110508
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\pipeline_pressure_loss.yml
-    fe_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\pipeline\results
+    CustomInputFile: c:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\tests\test_data\pipeline\pipeline_pressure_loss.yml
+    fe_folder: c:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\tests\test_data\pipeline\results
+  pressure_loss:
+    flow_parameters:
+      flow_rate: 0.026
+      U: 2.6
+      reynolds_number: 8879.16
+      friction_loss: 294.79
+      friction_factor_laminar: 0.007
+      friction_factor_turbulent: 0.032
+      kinetic_energy: 0.34
+      potential_energy: 3048.0
+      total_energy: 3343.13
