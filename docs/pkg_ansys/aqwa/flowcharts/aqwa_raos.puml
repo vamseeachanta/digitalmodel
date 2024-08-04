@@ -42,22 +42,80 @@ start
 
     }
 
-    partition "AQWA Frequency - Simple" {
+    partition "Get Preliminary AQWA Mesh Model" {
+            note right
+                Objective: To create mesh model for AQWA
+                Programs:
+                 - Workbench
+                Output: 
+                 - F_keyname_WB.dat
+            end note
+
+        :ANSYS Geometry;
+            note right
+                Supress Unwanted bodies
+            end note
+
+        :Adjust Mesh for
+        Frequency Range;
+            note right
+                Based on mesh size
+                Check RAO frequency range covers analysis frequencies
+                No of Frequencies = 5
+            end note
+
+        :AQWA Solve;
+            note right
+                Get Analysis.dat file
+                Rename to F_keyname_WB.dat
+            end note
+
+    }
+
+    partition "Prepare Hydrodynamic Analysis" {
+            note right
+                Objective: To simple model for AQWA
+                Programs:
+                 - Workbench
+                Output:
+                 - F_keyname_SIMP.dat
+            end note
+
+        :Get Geometry & Mesh Decks;
+            note right
+                Supress Unwanted bodies
+            end note
+
+        :Add mass and intertia properties;
+            note right
+                TBA
+            end note
+
+    }
+
+    partition "AQWA Hydrostatics" {
             note right
                 Objective: To create mesh model for AQWA
                 Programs:
                  - Workbench
             end note
 
-        :Frequency Range;
+        :Solve Hydrostatics;
             note right
-                Based on mesh size
-                RAO frequency range covers analysis frequencies
-                No of Frequencies = 5
+                TBA
+            end note
+
+        :Correct Mass Definition;
+            note right
+                Equal to displaced mass
+            end note
+
+        :Correct CoG Definition;
+            note right
+                Ensure CoG is inline with CoB
             end note
 
     }
-
     partition "AQWA Damping" {
             note right
                 Objective: Define appropriate additional damping:
@@ -77,24 +135,7 @@ start
 
     }
 
-    partition "AQWA Hydrostatics" {
-            note right
-                Objective: To create mesh model for AQWA
-                Programs:
-                 - Workbench
-            end note
 
-        :Correct Mass Definition;
-            note right
-                Equal to displaced mass
-            end note
-
-        :Correct CoG Definition;
-            note right
-                Ensure CoG is inline with CoB
-            end note
-
-    }
 
     partition "AQWA Frequency - Comprehensive" {
             note right
