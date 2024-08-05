@@ -1,0 +1,91 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: aqwa
+  software:
+    version: []
+    ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
+  type:
+    preprocess: false
+    analysis: true
+    results: false
+  result_method: lis
+  result:
+  - label: moorings
+    file_extension: LIS
+    search_cfg:
+      start:
+        keyword: M O O R I N G   F O R C E S   A N D   S T I F F N E S S
+        occurrence: 1
+      end:
+        keyword: '---------------------------------'
+        occurrence: 2
+      data_extraction:
+        keyword: COMP
+        scale: 1
+        shift: 0
+        line_idx: 4
+    inject_into:
+      flag: true
+      filename: output/aqwa_lis.xlsx
+      sheetname: m_f
+  file_management:
+    flag: true
+    update_unfinished:
+      flag: false
+    files:
+      files_in_current_directory:
+        flag: false
+        auto_read: true
+        directory: raos
+        filename_pattern: ~
+        file_extensions:
+        - DAT
+    input_files:
+      DAT: []
+  default:
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+      cfg_sensitivities: false
+  analysis_settings:
+    method: raos
+    additional_damping:
+      flag: true
+      damping:
+        roll: 10
+        pitch: 8
+        unit: percentage
+      template: templates/aqwareader_raos_ad.yml
+  Analysis:
+    basename: aqwa
+    analysis_root_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa
+    file_name: aqwa_anl_raos
+    file_name_for_overwrite: aqwa_anl_raos
+    result_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    log_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
+    start_time: 2024-08-03 11:31:38.009299
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_anl_raos.yml
+    fe_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
+    - k:\
+    - python
+    - digitalmodel
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa
+    - raos
+    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
+    - k:\
+    - python
+    - digitalmodel
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa

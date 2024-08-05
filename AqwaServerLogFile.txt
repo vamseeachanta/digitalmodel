@@ -1,15 +1,18 @@
-OrcFxAPI not available
-Updating default values with contents in file k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_ef_run.yml
-Socket created
-# Server waiting for a connection from an AqwaClient on
-ACMA-ANSYS03:50219
-Now running user function UFFender
-Socket now listening
-Connected with 192.168.0.93:50236
-Latest interface version on Client is v0
-Input File Name is "K:\PYTHON\DIGITALMODEL\SRC\DIGITALMODEL\TESTS\TEST_DATA\AQWA\EF_SERVER\02_S04_HR_EXT_FORCE.DAT"
-I_Control = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-R_Control = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-Position of CoG of Aqwa structure #1 in the definition axis : (108.613930,-0.002139,8.500000)
-Position of CoG of Aqwa structure #2 in the definition axis : (100.000000,30.000000,0.000000)
-Backend TkAgg is interactive backend. Turning interactive mode on.
+K:\python\digitalmodel\src\digitalmodel\custom\aqwa\mes_files.py:105: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df['Type'].fillna(method='ffill', inplace=True)
+K:\python\digitalmodel\src\digitalmodel\custom\aqwa\mes_files.py:105: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df['Type'].fillna(method='ffill', inplace=True)
+K:\python\digitalmodel\src\digitalmodel\custom\aqwa\mes_files.py:105: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df['Type'].fillna(method='ffill', inplace=True)
+K:\python\digitalmodel\src\digitalmodel\custom\aqwa\mes_files.py:105: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df['Type'].fillna(method='ffill', inplace=True)

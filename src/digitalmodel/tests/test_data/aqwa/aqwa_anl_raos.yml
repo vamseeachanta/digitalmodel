@@ -1,0 +1,39 @@
+basename: aqwa
+
+software:
+  version: []
+  # ANSYSInstallDir: C:\Program Files\ANSYS Inc\v181
+  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
+  # "C:\Program Files\ANSYS Inc\v222\aisol\workbench.bat" -cmd "C:\Program Files\ANSYS Inc\v222\aisol\bin\winx64\AqwaReader.exe" --Type 2
+  # "C:\Program Files\ANSYS Inc\v222\aqwa\bin\winx64\aqwa.exe" /nowind .\02_s04_hr_ext_force
+type:
+  preprocess: False
+  analysis: True
+  results: false
+
+analysis_settings:
+  method: raos
+  additional_damping:
+    flag: True
+    damping: { roll: 10, pitch: 8, unit: percentage }
+    template: templates/aqwareader_raos_ad.yml
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: raos
+      file_extensions: [DAT]
+      filename_pattern: NULL
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
