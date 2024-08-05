@@ -51,12 +51,11 @@ class Pressureloss():
         i_in_meters = i *0.0254
         i_in_meters = round(float(i_in_meters),3)
         r_in_meters = r * 0.001
-        r_in_meters = round(float(r_in_meters))
 
         internal_area = sp.pi/4 * (i_in_meters)**2
         internal_area = round(float(internal_area),4)
         e_by_D = r_in_meters / i_in_meters
-        e_by_D = round(float(e_by_D),4)
+        e_by_D = round(float(e_by_D),5)
 
         pipe_data = { 'acceleration': round(a,2), 'depth_in_meters': w_in_meters,
                       'inner_diameter': i_in_meters,'internal_area':internal_area,
@@ -122,7 +121,6 @@ class Pressureloss():
         simplified_expression = sp.simplify(expression_3)
         friction_factor_turbulent = simplified_expression.evalf()
         friction_factor_turbulent = round(float(friction_factor_turbulent),3)
-        
 
         if reynolds_number > 3000:
             friction_loss = friction_factor_turbulent * dm / id * U ** 2 /2 / ac
@@ -145,6 +143,8 @@ class Pressureloss():
                            'potential_energy': potential_energy,'total_energy': total_energy
                           }
         return flow_parameters
+    
+
 
 
        
