@@ -1,7 +1,11 @@
 # Standard library imports
 import math
 import sympy as sp
+from sympy import init_printing
+init_printing()
 
+from sympy import init_session
+init_session()
 # Third party imports
 from assetutilities.common.visualization.visualization_templates import (
     VisualizationTemplates,
