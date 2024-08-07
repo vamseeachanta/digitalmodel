@@ -1,7 +1,9 @@
 # Standard library imports
 
 # Third party imports
+from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.yml_utilities import WorkingWithYAML
+from assetutilities.engine import engine as au_engine
 
 # Reader imports
 from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
@@ -9,7 +11,6 @@ from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
 wwy = WorkingWithYAML()
 
 au = AqwaUtilities()
-de = DataExploration()
 
 class AqwaRAOs: 
 
@@ -33,6 +34,11 @@ class AqwaRAOs:
     # Plot RAOs comparison
 
     def split_dat_to_decks(self, cfg: dict) -> None:
+        template_yaml = self.get_template_SplitToDeck(cfg)
+
+        au_engine(inputfile=None, cfg=template_yaml, config_flag=False)
+
+    def get_template_SplitToDeck(self, cfg):
         template_split_to_decks = cfg['analysis_settings']['split_to_decks']['template']
         
         library_name = 'digitalmodel'
@@ -41,13 +47,11 @@ class AqwaRAOs:
             'library_name': library_name
         }
 
-
-        template_yaml = wwy.get_library_yaml_file(library_yaml_cfg)
+        template_yaml = wwy.get_library_yaml_file(library_file_cfg)
+        
         # template_yaml ['Analysis'] = custom_analysis_dict
         template_yaml = AttributeDict(template_yaml )
-     
-        dat_files = cfg['file_management']['input_files']['DAT']
-        for dat_file in dat_files:
-            
-            decks = au.split_dat_to_decks(dat_file)
-            cfg['file_management']['input_files']['DECK'] = decks
+        template_yaml["Analysis"] = cfg["Analysis"].copy()
+        template_yaml["file_management"] = cfg["file_management"].copy()
+
+        return template_yaml
