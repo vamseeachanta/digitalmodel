@@ -1,0 +1,82 @@
+basename: file_edit
+edit_type: split
+
+split_settings:
+  - start:
+      line_number: NULL
+      key_words: [DECK  0]
+      transform: { scale: 1, shift: -1 }
+    end:
+      line_number: NULL
+      key_words: [DECK  1]
+      transform: { scale: 1, shift: -2 }
+    file_suffix: 00.deck
+  - start:
+      key_words: [DECK  1]
+      transform: { scale: 1, shift: -1 }
+    end:
+      key_words: [DECK  2]
+      transform: { scale: 1, shift: -2 }
+    file_suffix: 01.deck
+  - start:
+      key_words: [DECK  2]
+      transform: { scale: 1, shift: -1 }
+    end:
+      key_words: [DECK  3]
+      transform: { scale: 1, shift: -2 }
+    file_suffix: 02.deck
+  - start:
+      key_words: [DECK  3]
+      transform: { scale: 1, shift: -1 }
+    end:
+      key_words: [DECK  4]
+      transform: { scale: 1, shift: -2 }
+    file_suffix: 03.deck
+  - start:
+      key_words: [DECK  4]
+      transform: { scale: 1, shift: -1 }
+    end:
+      key_words: [DECK  5]
+      transform: { scale: 1, shift: -2 }
+    file_suffix: 04.deck
+  - start:
+      key_words: [DECK  5]
+      transform: { scale: 1, shift: -1 }
+    end:
+      key_words: [DECK  6]
+      transform: { scale: 1, shift: -2 }
+    file_suffix: 05.deck
+  - start:
+      key_words: [DECK  6]
+      transform: { scale: 1, shift: -1 }
+    end:
+      key_words: [DECK  7]
+      transform: { scale: 1, shift: -2 }
+    file_suffix: 06.deck
+  - start:
+      key_words: [DECK  7]
+      transform: { scale: 1, shift: -1 }
+    end:
+      key_words: [DECK  8]
+      transform: { scale: 1, shift: -2 }
+    file_suffix: 07.deck
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: split/wb
+      filename_pattern: NULL
+      file_extensions: [dat]
+    output_directory: split
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
