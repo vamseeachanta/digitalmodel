@@ -8,6 +8,16 @@ This document provides guidance to work between .dat and workbench files.
 
 ### Summary
 
+### Preparing Mesh in Workbench
+
+- Prepare geometry in Spaceclaim
+- Import geometry in Workbench
+- Prepare mesh in Workbench
+  - Size should be appropriate for the solution
+  - Define internal lid and external lid appropriately
+  - Define mesh size such that the range of frequency is captured.
+- Get the mesh from the .dat file
+
 ### Understanding Workbench
 
 Explanation

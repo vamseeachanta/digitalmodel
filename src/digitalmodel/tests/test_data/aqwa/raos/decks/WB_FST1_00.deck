@@ -1,10 +1,10 @@
 ********************************************************************************
 *********************************** DECK  0 ************************************
 ********************************************************************************
-JOB AQWA  LINE        28d01ad392e0c74918eacffe33bfe61cc5cfe6c
+JOB AQWA  LINE        d5ecc3a6d8801bd7483f76ddfab9b7763b32daf
 TITLE
 NUM_CORES        12
-OPTIONS AQTF CQTF
+OPTIONS AQTF GOON CQTF
 OPTIONS
 OPTIONS LHFR SFBM MQTF REST END
 RESTART  1  5

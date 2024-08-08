@@ -54,6 +54,28 @@ dictitems:
         - test_data
         - aqwa
         - raos
+        - WB_125K_LNGC.dat
+      - !!python/object/apply:pathlib.WindowsPath
+        - k:\
+        - python
+        - digitalmodel
+        - src
+        - digitalmodel
+        - tests
+        - test_data
+        - aqwa
+        - raos
+        - WB_180K_LNGC.dat
+      - !!python/object/apply:pathlib.WindowsPath
+        - k:\
+        - python
+        - digitalmodel
+        - src
+        - digitalmodel
+        - tests
+        - test_data
+        - aqwa
+        - raos
         - WB_FST1.dat
       - !!python/object/apply:pathlib.WindowsPath
         - k:\
@@ -66,17 +88,6 @@ dictitems:
         - aqwa
         - raos
         - WB_FST2.dat
-      - !!python/object/apply:pathlib.WindowsPath
-        - k:\
-        - python
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - raos
-        - WB_FST2_LID.dat
   default:
     log_level: DEBUG
     config:
@@ -101,7 +112,7 @@ dictitems:
     file_name_for_overwrite: aqwa_anl_raos
     result_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     log_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-08-08 00:57:10.312676
+    start_time: 2024-08-08 02:44:46.577710
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_anl_raos.yml
