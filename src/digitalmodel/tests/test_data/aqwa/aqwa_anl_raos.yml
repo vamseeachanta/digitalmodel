@@ -15,6 +15,23 @@ analysis_settings:
   method: raos
   split_to_decks:
     template: tests/test_data/aqwa/templates/aqwa_dat_split_to_decks.yml
+  drafts:
+    - label: L00
+      inputs:
+        - file_prefix: FST2_L00
+          file_extension: deck
+          data:
+            category: 3
+            raw: [{ node: 98000, mass: 3.894E+07 }]
+        - file_prefix: FST2_L00
+          file_extension: deck
+          data:
+            category: 4
+            element_type: PMAS
+            raw:
+              [{ node: 98000, Ixx: 8.083E+09, Iyy: 1.371E+11, Izz: 1.381E+11 }]
+
+    - label: L15
   additional_damping:
     flag: True
     damping: { roll: 10, pitch: 8, unit: percentage }

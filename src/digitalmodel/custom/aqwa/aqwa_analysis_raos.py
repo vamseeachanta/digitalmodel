@@ -23,7 +23,6 @@ class AqwaRAOs:
         self.split_dat_to_decks(cfg)
 
     #TODO
-    # SPlit .dat into DECKs (Status: manual_process)
     # Define weight, inertia, etc (DECK ?, Deck ??)
     # Run AQWA
     # Get hydrostatic output

@@ -112,7 +112,7 @@ dictitems:
     file_name_for_overwrite: aqwa_anl_raos
     result_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     log_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-08-08 02:44:46.577710
+    start_time: 2024-08-08 09:25:34.433635
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_anl_raos.yml
