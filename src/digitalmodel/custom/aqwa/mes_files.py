@@ -127,13 +127,12 @@ class MesFiles:
         return matrix
 
     def router(self, cfg=None):
-        
+
         if cfg is None:
             directory = r'src\digitalmodel\tests\test_data\aqwa\mes_files'
         else:
-            directory = r'src\digitalmodel\tests\test_data\aqwa\mes_files'
-            
-        
+            directory = cfg['Analysis']['file_management_input_directory']
+
         warnings, errors, file_status = self.read_mes_files(directory)
         warning_id_map, error_id_map = self.assign_ids(warnings, errors)
         warning_summary, error_summary = self.summarize_warnings_and_errors(warnings, errors, warning_id_map, error_id_map)

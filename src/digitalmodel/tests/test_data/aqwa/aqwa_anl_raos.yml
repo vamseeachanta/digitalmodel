@@ -32,6 +32,7 @@ file_management:
       directory: raos
       file_extensions: [DAT]
       filename_pattern: WB_
+    output_directory: NULL
 
 default:
   log_level: DEBUG

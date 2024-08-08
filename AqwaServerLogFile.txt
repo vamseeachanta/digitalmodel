@@ -1,64 +1,47 @@
-Updating default values with contents in file c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_anl_raos.yml
+Backend TkAgg is interactive backend. Turning interactive mode on.
+Updating default values with contents in file k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_anl_raos.yml
 Logging started successfully ...
-{'basename': 'aqwa', 'edit_type': 'concatenate', 'concatenate_type': 'array', 'default': {'log_level': 'DEBUG', 'config': {'overwrite': {'output': True}, 'cfg_sensitivities': False}}, 'input': [{'output_filename': '06a_501_section2_def', 'output_dir': None, 'filename': None, 'add_blank_file_in_between': False, 'input_files': []}], 'software': {'version': [], 'ANSYSInstallDir': 'C:\\Program Files\\ANSYS Inc\\v222'}, 'type': {'preprocess': False, 'analysis': True, 'results': False}, 'analysis_settings': {'method': 'raos', 'split_to_decks': {'template': 'tests/test_data/aqwa/templates/aqwa_dat_split_to_decks.yml'}, 'additional_damping': {'flag': True, 'damping': {'roll': 10, 'pitch': 8, 'unit': 'percentage'}, 'template': 'tests/test_data/aqwa/templates/aqwareader_raos_ad.yml'}}, 'file_management': {'flag': True, 'update_unfinished': {'flag': False}, 'files': {'files_in_current_directory': {'flag': False, 'auto_read': True, 'directory': 'raos', 'file_extensions': ['DAT'], 'filename_pattern': 'WB_'}}}, 'Analysis': {'basename': 'file_edit', 'analysis_root_folder': 'c:\\github\\digitalmodel\\src\\digitalmodel\\tests\\test_data\\aqwa', 'file_name': 'aqwa_anl_raos', 'file_name_for_overwrite': 'aqwa_anl_raos', 'result_folder': 'c:\\github\\digitalmodel\\src\\digitalmodel\\tests\\test_data\\aqwa\\results', 'log_folder': 'c:\\github\\digitalmodel\\src\\digitalmodel\\tests\\test_data\\aqwa\\logs', 'start_time': datetime.datetime(2024, 8, 7, 11, 15, 10, 194116), 'cfg_array_file_names': None, 'DefaultInputFile': None, 'CustomInputFile': 'c:\\github\\digitalmodel\\src\\digitalmodel\\tests\\test_data\\aqwa\\aqwa_anl_raos.yml', 'fe_folder': 'c:\\github\\digitalmodel\\src\\digitalmodel\\tests\\test_data\\aqwa\\results'}}
+{'basename': 'aqwa', 'edit_type': 'concatenate', 'concatenate_type': 'array', 'default': {'log_level': 'DEBUG', 'config': {'overwrite': {'output': True}, 'cfg_sensitivities': False}}, 'input': [{'output_filename': '06a_501_section2_def', 'output_dir': None, 'filename': None, 'add_blank_file_in_between': False, 'input_files': []}], 'software': {'version': [], 'ANSYSInstallDir': 'C:\\Program Files\\ANSYS Inc\\v222'}, 'type': {'preprocess': False, 'analysis': True, 'results': False}, 'analysis_settings': {'method': 'raos', 'split_to_decks': {'template': 'tests/test_data/aqwa/templates/aqwa_dat_split_to_decks.yml'}, 'additional_damping': {'flag': True, 'damping': {'roll': 10, 'pitch': 8, 'unit': 'percentage'}, 'template': 'tests/test_data/aqwa/templates/aqwareader_raos_ad.yml'}}, 'file_management': {'flag': True, 'update_unfinished': {'flag': False}, 'files': {'files_in_current_directory': {'flag': False, 'auto_read': True, 'directory': 'raos', 'file_extensions': ['DAT'], 'filename_pattern': 'WB_'}, 'output_directory': None}}, 'Analysis': {'basename': 'file_edit', 'analysis_root_folder': 'k:\\python\\digitalmodel\\src\\digitalmodel\\tests\\test_data\\aqwa', 'file_name': 'aqwa_anl_raos', 'file_name_for_overwrite': 'aqwa_anl_raos', 'result_folder': 'k:\\python\\digitalmodel\\src\\digitalmodel\\tests\\test_data\\aqwa\\results', 'log_folder': 'k:\\python\\digitalmodel\\src\\digitalmodel\\tests\\test_data\\aqwa\\logs', 'start_time': datetime.datetime(2024, 8, 8, 0, 57, 23, 899813), 'cfg_array_file_names': None, 'DefaultInputFile': None, 'CustomInputFile': 'k:\\python\\digitalmodel\\src\\digitalmodel\\tests\\test_data\\aqwa\\aqwa_anl_raos.yml', 'fe_folder': 'k:\\python\\digitalmodel\\src\\digitalmodel\\tests\\test_data\\aqwa\\results'}}
 file_edit, application ... START
 file_edit, application ... END
-C:\github\digitalmodel\src\digitalmodel\custom\aqwa\mes_files.py:105: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+K:\python\digitalmodel\src\digitalmodel\custom\aqwa\mes_files.py:105: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
 The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
 
 For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
 
 
   df['Type'].fillna(method='ffill', inplace=True)
-C:\github\digitalmodel\src\digitalmodel\custom\aqwa\mes_files.py:105: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+K:\python\digitalmodel\src\digitalmodel\custom\aqwa\mes_files.py:105: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
   df['Type'].fillna(method='ffill', inplace=True)
-C:\github\digitalmodel\src\digitalmodel\custom\aqwa\mes_files.py:105: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+K:\python\digitalmodel\src\digitalmodel\custom\aqwa\mes_files.py:105: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
 The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
 
 For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
 
 
   df['Type'].fillna(method='ffill', inplace=True)
-C:\github\digitalmodel\src\digitalmodel\custom\aqwa\mes_files.py:105: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+K:\python\digitalmodel\src\digitalmodel\custom\aqwa\mes_files.py:105: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
   df['Type'].fillna(method='ffill', inplace=True)
 Summary of Warnings:
-     ID        Type  ... Frequency                                           Filename
-1  WAR1  INPUT DATA  ...         5  AD010_FST1_L015, AD010_FST1_L050, AD010_FST1_L...
-2  WAR2  INPUT DATA  ...         5  D_F2L15_YPD_STAT_EF, D_F2L15_ZPD_EF, D_F2L15_Z...
-3  WAR3   MODELLING  ...         6  AD010_FST1_L015, AD010_FST1_L050, AD010_FST1_L...
-4  WAR4   MODELLING  ...         1                                    AD010_FST1_L015
-5  WAR5   MODELLING  ...         3  AD010_FST1_L015, AD010_FST1_L050, AD010_FST1_L095
-6  WAR6   MODELLING  ...         1                                   F_F2L15_D10_SIMP
-7  WAR7    ANALYSIS  ...         3  AD010_FST1_L015, AD010_FST1_L050, AD010_FST1_L095
-8  WAR8      SYSTEM  ...         5  D_F2L15_YPD_STAT_EF, D_F2L15_ZPD_EF, D_F2L15_Z...
-
-[8 rows x 5 columns]
+Empty DataFrame
+Columns: [ID, Type, Description, Frequency, Filename]
+Index: []
 
 Summary of Errors:
-     ID        Type                                        Description  Frequency         Filename
-1  ERR1  INPUT DATA  FAILED TO OPEN HYDRODYNAMIC DATA FILE. PLEASE ...          1  NO_LOAD_09MOORS
+Empty DataFrame
+Columns: [ID, Type, Description, Frequency, Filename]
+Index: []
 
 File Status:
-  Filename AD010_FST1_L015 AD010_FST1_L050 AD010_FST1_L095  ... LIBR_NE NO_LOAD_09MOORS S_F2L15 S_F2L15_000
-0   Status               X               X               X  ...       X               X       X           X
-
-[1 rows x 13 columns]
-+----------+-----------------+-----------------+-----------------+---------------------+----------------+---------------------+------------------+------------------+---------+-----------------+---------+-------------+
-| Filename | AD010_FST1_L015 | AD010_FST1_L050 | AD010_FST1_L095 | D_F2L15_YPD_STAT_EF | D_F2L15_ZPD_EF | D_F2L15_ZPD_STAT_EF | F_F2L15_D10_COMP | F_F2L15_D10_SIMP | LIBR_NE | NO_LOAD_09MOORS | S_F2L15 | S_F2L15_000 |
-+----------+-----------------+-----------------+-----------------+---------------------+----------------+---------------------+------------------+------------------+---------+-----------------+---------+-------------+
-| Status   | X               | X               | X               | X                   | X              | X                   | X                | X                | X       | X               | X       | X           |
-+----------+-----------------+-----------------+-----------------+---------------------+----------------+---------------------+------------------+------------------+---------+-----------------+---------+-------------+
+  Filename
+0   Status
++----------+
+| Filename |
++----------+
+| Status   |
++----------+
 
 ID File Matrix:
-   File AD010_FST1_L015 AD010_FST1_L050 AD010_FST1_L095  ... LIBR_NE NO_LOAD_09MOORS S_F2L15 S_F2L15_000
-1  WAR1               X               X               X  ...       -               -       -           -
-2  WAR2               -               -               -  ...       -               -       X           X
-3  WAR3               X               X               X  ...       X               X       -           -
-4  WAR4               X               -               -  ...       -               -       -           -
-5  WAR5               X               X               X  ...       -               -       -           -
-6  WAR6               -               -               -  ...       -               -       -           -
-7  WAR7               X               X               X  ...       -               -       -           -
-8  WAR8               -               -               -  ...       -               -       X           X
-9  ERR1               -               -               -  ...       -               X       -           -
-
-[9 rows x 13 columns]
+Empty DataFrame
+Columns: [File]
+Index: []
