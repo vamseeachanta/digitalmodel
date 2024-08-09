@@ -41,7 +41,7 @@ ou = OrcaflexUtilities()
 library_name = "digitalmodel"
 
 
-def engine(inputfile: str = None, cfg: dict = None) -> dict:
+def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
     fm = FileManagement()
     if cfg is None:
         inputfile = validate_arguments_run_methods(inputfile)
@@ -53,8 +53,12 @@ def engine(inputfile: str = None, cfg: dict = None) -> dict:
     basename = cfg["basename"]
     application_manager = ConfigureApplicationInputs(basename)
     application_manager.configure(cfg, library_name)
-    cfg_base = application_manager.cfg
-    cfg_base = fm.router(cfg_base)
+
+    if config_flag:
+        cfg_base = application_manager.cfg
+        cfg_base = fm.router(cfg_base)
+    else:
+        cfg_base = cfg
 
     logging.info(f"{basename}, application ... START")
 

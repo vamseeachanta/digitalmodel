@@ -1,0 +1,41 @@
+basename: file_edit
+edit_type: concatenate
+concatenate_type: array # 2d_array
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+input:
+  - output_filename: NULl
+    input_file_labels: [09moors, 10moors]
+    output_basename: no_load
+    output_dir: raos
+    file_extension: dat
+    filename:
+    input_files:
+      [
+        [
+          raos/decks/_0to9_static.deck,
+          raos/decks/_10_no_tug.deck,
+          raos/decks/_11_12.deck,
+          raos/decks/_13_000MPH000WD.deck,
+          raos/decks/_14_09moors.deck,
+          raos/decks/_15_.deck,
+        ],
+        [
+          raos/decks/_0to9_static.deck,
+          raos/decks/_10_no_tug.deck,
+          raos/decks/_11_12.deck,
+          raos/decks/_13_000MPH000WD.deck,
+          raos/decks/_14_09moors.deck,
+          raos/decks/_15_.deck,
+        ],
+      ]
+
+      batch:
+      flag: True
+      extension: no
+      content: C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe /nowind

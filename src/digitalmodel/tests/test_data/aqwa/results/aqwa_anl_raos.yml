@@ -98,6 +98,65 @@ dictitems:
     method: raos
     split_to_decks:
       template: tests/test_data/aqwa/templates/aqwa_dat_split_to_decks.yml
+    drafts:
+    - label: L00
+      template: tests/test_data/aqwa/templates/aqwa_pre_process_deck.yml
+      inputs:
+      - file_prefix: FST2_L00_
+        file_extension: deck
+        data:
+          category: 3
+          raw:
+          - node: 98000
+            mass: 38940000.0
+      - file_prefix: FST2_L00_
+        file_extension: deck
+        data:
+          category: 4
+          element_type: PMAS
+          raw:
+          - node: 98000
+            Ixx: 8083000000.0
+            Iyy: 137100000000.0
+            Izz: 138100000000.0
+      - file_prefix: FST2_L00_
+        file_extension: deck
+        data:
+          element_type: FIDP
+          category: 7
+          raw:
+            added_damping:
+              rxx: 5729.578
+              ryy: 5729.578
+    - label: L15
+      template: tests/test_data/aqwa/templates/aqwa_pre_process_deck.yml
+      inputs:
+      - file_prefix: FST2_L15_
+        file_extension: deck
+        data:
+          category: 3
+          raw:
+          - node: 98000
+            mass: 38940000.0
+      - file_prefix: FST2_L15_
+        file_extension: deck
+        data:
+          category: 4
+          element_type: PMAS
+          raw:
+          - node: 98000
+            Ixx: 8083000000.0
+            Iyy: 137100000000.0
+            Izz: 138100000000.0
+      - file_prefix: FST2_L15_
+        file_extension: deck
+        data:
+          element_type: FIDP
+          category: 7
+          raw:
+            added_damping:
+              rxx: 5729.578
+              ryy: 5729.578
     additional_damping:
       flag: true
       damping:
@@ -112,7 +171,7 @@ dictitems:
     file_name_for_overwrite: aqwa_anl_raos
     result_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     log_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-08-08 09:25:34.433635
+    start_time: 2024-08-08 12:13:25.368681
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_anl_raos.yml
