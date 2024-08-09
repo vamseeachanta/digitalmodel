@@ -63,9 +63,9 @@ analysis_settings:
   hydrostatic:
     template: tests/test_data/aqwa/templates/pre_process_hydrostatic_files.yml
     input:
-      - output_filename: NULl
+      - output_filename: NULL
         input_file_labels: [FST1_L00, FST1_L15]
-        output_basename: F_
+        output_basename: F
         output_dir: raos
         file_extension: dat
         input_files:

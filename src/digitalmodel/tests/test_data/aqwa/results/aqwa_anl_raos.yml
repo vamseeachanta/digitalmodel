@@ -160,11 +160,11 @@ dictitems:
     hydrostatic:
       template: tests/test_data/aqwa/templates/pre_process_hydrostatic_files.yml
       input:
-      - output_filename: NULl
+      - output_filename: ~
         input_file_labels:
         - FST1_L00
         - FST1_L15
-        output_basename: F_
+        output_basename: F
         output_dir: raos
         file_extension: dat
         input_files:
@@ -194,7 +194,7 @@ dictitems:
     file_name_for_overwrite: aqwa_anl_raos
     result_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     log_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-08-09 12:13:26.178533
+    start_time: 2024-08-09 12:47:13.914076
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_anl_raos.yml

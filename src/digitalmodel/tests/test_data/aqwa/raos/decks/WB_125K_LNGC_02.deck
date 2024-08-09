@@ -6,7 +6,7 @@
 *Element topology for part "125k_LNGC"
       SEAG          ( 81, 51,-119.00687, 425.01885,-220.00804, 120.00804)
       ZLWL          (        0.)
-     1ILID AUTO   84
+     1ILID AUTO   85
 * Group ID    68 is body named Surface
      1QPPL DIFF   68(1)(17832)(17835)(17837)(17840)  WB Elem Id:    1 Aqwa Elem No:    1
      1QPPL DIFF   68(1)(17845)(17846)(17849)(17852)  WB Elem Id:    2 Aqwa Elem No:    2
@@ -28657,6 +28657,7 @@
      1TPPL DIFF   68(1)(26707)(26712)(26745)  WB Elem Id:26537 Aqwa Elem No:28647
      1TPPL DIFF   68(1)(26824)(26745)(26902)  WB Elem Id:26600 Aqwa Elem No:28648
      1TPPL DIFF   68(1)(30408)(30401)(30547)  WB Elem Id:27225 Aqwa Elem No:28649
+     1PMAS        84(1)(98000)(98000)(98000)
  END
 ********************************************************************************
           FINI

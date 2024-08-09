@@ -6,7 +6,7 @@
 *Element topology for part "180k_LNGC"
       SEAG          ( 81, 51,-149.70684, 449.10899,-239.12993, 135.12996)
       ZLWL          (        0.)
-     1ILID AUTO   84
+     1ILID AUTO   85
 * Group ID    71 is body named Surface
      1QPPL DIFF   71(1)(35577)(35581)(38575)(38571)  WB Elem Id:    1 Aqwa Elem No:    1
      1QPPL DIFF   71(1)(17914)(    3)(    6)(17922)  WB Elem Id:    2 Aqwa Elem No:    2
@@ -28719,6 +28719,7 @@
      1TPPL        71(1)(29013)(29006)(29436)  WB Elem Id:18976 Aqwa Elem No:28709
      1TPPL        71(1)(44180)(44184)(44626)  WB Elem Id:21069 Aqwa Elem No:28710
      1TPPL        71(1)(27366)(27370)(27377)  WB Elem Id:25912 Aqwa Elem No:28711
+     1PMAS        84(1)(98000)(98000)(98000)
  END
 ********************************************************************************
           FINI
