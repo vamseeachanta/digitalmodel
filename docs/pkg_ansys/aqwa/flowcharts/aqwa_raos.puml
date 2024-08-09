@@ -21,6 +21,9 @@ start
                  - Rhino
                  - SpaceClaim
                  - Workbench
+                Output: 
+                 - keyname.ext
+                   - ext can be iges, scdoc etc.
             end note
 
         :Prepare Geometry;
@@ -48,12 +51,20 @@ start
                 Programs:
                  - Workbench
                 Output: 
-                 - F_keyname_WB.dat
+                 - WB_keyname.dat
             end note
 
         :ANSYS Geometry;
             note right
                 Supress Unwanted bodies
+            end note
+
+        :RAO analysis Options;
+            note right
+                - Add internal Lid. 
+                  - Mesh size is program controlled
+                - Ignore Modelling Errors (GOON)
+                - Add point mass and intertia properties
             end note
 
         :Adjust Mesh for
@@ -64,6 +75,7 @@ start
                 No of Frequencies = 5
             end note
 
+
         :AQWA Solve;
             note right
                 Get Analysis.dat file
@@ -72,7 +84,7 @@ start
 
     }
 
-    partition "Prepare Hydrodynamic Analysis" {
+    partition "Prepare RAO Analysis File" {
             note right
                 Objective: To simple model for AQWA
                 Programs:
@@ -81,9 +93,16 @@ start
                  - F_keyname_SIMP.dat
             end note
 
-        :Get Geometry & Mesh Decks;
+        : Prepare Deck Files;
             note right
-                Supress Unwanted bodies
+                au_engine; file_split
+                output: *.DECK files
+            end note
+
+        :Combine Deck Files;
+            note right
+                au_engine; file_edit, concatenate array
+                output: *.DECK files
             end note
 
         :Add mass and intertia properties;
