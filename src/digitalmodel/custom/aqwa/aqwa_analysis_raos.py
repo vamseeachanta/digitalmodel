@@ -3,12 +3,14 @@ import os
 
 # Third party imports
 from assetutilities.common.update_deep import AttributeDict
-from assetutilities.common.yml_utilities import WorkingWithYAML #noqa
+from assetutilities.common.yml_utilities import WorkingWithYAML  #noqa
 from assetutilities.engine import engine as au_engine
 
 # Reader imports
-from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities #noqa
+from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities  #noqa
 from digitalmodel.engine import engine as dm_engine
+
+
 wwy = WorkingWithYAML()
 
 au = AqwaUtilities()
@@ -93,7 +95,8 @@ class AqwaRAOs:
         return template_yaml
 
     def get_template_hydrostatic_runs(self, cfg):
-        template_file_name = cfg['template']
+        hydrostatic_cfg = cfg['analysis_settings']['hydrostatic'].copy()
+        template_file_name = hydrostatic_cfg['template']
 
         library_name = 'digitalmodel'
         library_file_cfg = {
@@ -103,7 +106,7 @@ class AqwaRAOs:
 
         template_yaml = wwy.get_library_yaml_file(library_file_cfg)
         template_yaml = AttributeDict(template_yaml )
-        template_yaml['inputs'] = draft['inputs'].copy()
+        template_yaml['input'] = hydrostatic_cfg['input'].copy()
         template_yaml["Analysis"] = cfg["Analysis"].copy()
         template_yaml["file_management"] = cfg["file_management"].copy()
 

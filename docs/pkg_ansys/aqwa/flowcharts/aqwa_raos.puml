@@ -72,7 +72,7 @@ start
 
     }
 
-    partition "Prepare Hydrodynamic Analysis" {
+    partition "Prepare Deck Files" {
             note right
                 Objective: To simple model for AQWA
                 Programs:
@@ -84,6 +84,12 @@ start
         :Get Geometry & Mesh Decks;
             note right
                 Supress Unwanted bodies
+            end note
+
+        :Add CoG node and additional Nodes;
+            note right
+                CoG node
+                Additional nodes for RAOs
             end note
 
         :Add mass and intertia properties;
