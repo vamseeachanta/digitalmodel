@@ -37,6 +37,51 @@ analysis_settings:
             element_type: FIDP
             category: 7
             raw: { added_damping: { rxx: 5729.578, ryy: 5729.578 } }
+        - file_prefix: _
+          file_extension: deck
+          data:
+            category: 6
+            element_type: HRTZ
+            raw:
+              {
+                period:
+                  [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    8.25,
+                    8.5,
+                    8.75,
+                    9,
+                    9.25,
+                    9.5,
+                    9.75,
+                    10,
+                    10.25,
+                    10.5,
+                    10.75,
+                    11,
+                    11.25,
+                    11.5,
+                    11.75,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    20,
+                    24,
+                    28,
+                  ],
+              }
+        - file_prefix: FST2_L15_
+          file_extension: deck
+          data:
+            element_type: FIDP
+            category: 7
+            raw: { added_damping: { rxx: 5729.578, ryy: 5729.578 } }
 
     - label: L15
       template: tests/test_data/aqwa/templates/pre_process_rao_decks.yml
@@ -77,6 +122,7 @@ analysis_settings:
               raos/decks/FST2_L00_03.deck,
               raos/decks/FST2_L00_04.deck,
               raos/decks/_05.deck,
+              raos/decks/_06.deck,
             ],
             [
               raos/decks/_S_00.deck,
@@ -85,8 +131,13 @@ analysis_settings:
               raos/decks/FST2_L15_03.deck,
               raos/decks/FST2_L15_04.deck,
               raos/decks/_05.deck,
+              raos/decks/_06.deck,
             ],
           ]
+        batch:
+          flag: True
+          extension: no
+          content: C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind
 
   additional_damping:
     flag: True

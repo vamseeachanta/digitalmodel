@@ -5,6 +5,7 @@ import os
 from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.yml_utilities import WorkingWithYAML  #noqa
 from assetutilities.engine import engine as au_engine
+from assetutilities.common.update_deep import update_deep_dictionary
 
 # Reader imports
 from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities  #noqa
@@ -27,9 +28,10 @@ class AqwaRAOs:
         self.prepare_hydrostatic_runs(cfg)
 
     #TODO
+    # Verify result change with change in Draft and coG Z definition(pending)
     # Define weight, inertia, etc (DONE)
-    # Combine files into .dat
-    # Run AQWA
+    # Combine files into .dat (DONE)
+    # Run AQWA (Ongoing)
     # Get hydrostatic output
     # Correct the CoG and other definitions
     # Get RAOs
@@ -105,8 +107,8 @@ class AqwaRAOs:
         }
 
         template_yaml = wwy.get_library_yaml_file(library_file_cfg)
-        template_yaml = AttributeDict(template_yaml )
-        template_yaml['input'] = hydrostatic_cfg['input'].copy()
+        template_yaml = AttributeDict(template_yaml)
+        template_yaml['input'] = hydrostatic_cfg['input']
         template_yaml["Analysis"] = cfg["Analysis"].copy()
         template_yaml["file_management"] = cfg["file_management"].copy()
 

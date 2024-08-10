@@ -17,23 +17,13 @@ input:
     filename:
     input_files:
       [
-        [
-          raos/decks/_0to9_static.deck,
-          raos/decks/_10_no_tug.deck,
-          raos/decks/_11_12.deck,
-          raos/decks/_13_000MPH000WD.deck,
-          raos/decks/_14_09moors.deck,
-          raos/decks/_15_.deck,
-        ],
-        [
-          raos/decks/_0to9_static.deck,
-          raos/decks/_10_no_tug.deck,
-          raos/decks/_11_12.deck,
-          raos/decks/_13_000MPH000WD.deck,
-          raos/decks/_14_09moors.deck,
-          raos/decks/_15_.deck,
-        ],
-      ]
+      [
+      raos/decks/_S_00.deck,
+    ],
+    [
+      raos/decks/_S_00.deck,
+    ],
+]
 
     batch:
       flag: True
