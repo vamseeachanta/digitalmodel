@@ -1,11 +1,12 @@
 # Third party imports
 import sympy as sp
 from sympy import init_printing
+#from sympy import init_session
 
 
 init_printing()
 
-# init_session()
+#init_session()
 # Third party imports
 from assetutilities.common.visualization.visualization_templates import (
     VisualizationTemplates,
@@ -140,6 +141,12 @@ class Pressureloss():
         potential_energy = dm
         total_energy = kinetic_energy + potential_energy + friction_loss
         total_energy = round(float(total_energy),2)
+
+        import matplotlib.pyplot as plt
+
+        plt.text(0.5, 0.5, r'$\cos(y) + 4y + y^3$', fontsize=15, ha='center')
+        plt.axis('off')
+        plt.show()
 
         flow_parameters = {'flow_rate': round(fr,3), 'U': U, 'reynolds_number': reynolds_number,
                            'friction_loss': friction_loss,'friction_factor_laminar':friction_factor_laminar,
