@@ -110,7 +110,7 @@ analysis_settings:
     input:
       - output_filename: NULL
         input_file_labels: [FST1_L00, FST1_L15]
-        output_basename: F
+        output_basename: S
         output_dir: raos
         file_extension: dat
         input_files:
@@ -123,6 +123,10 @@ analysis_settings:
               raos/decks/FST2_L00_04.deck,
               raos/decks/_05.deck,
               raos/decks/_06.deck,
+              raos/decks/FST2_L00_07.deck,
+              raos/decks/_08.deck,
+              raos/decks/_09_17.deck,
+              raos/decks/_18.deck,
             ],
             [
               raos/decks/_S_00.deck,
@@ -132,8 +136,52 @@ analysis_settings:
               raos/decks/FST2_L15_04.deck,
               raos/decks/_05.deck,
               raos/decks/_06.deck,
+              raos/decks/FST2_L15_07.deck,
+              raos/decks/_08.deck,
+              raos/decks/_09_17.deck,
+              raos/decks/_18.deck,
             ],
           ]
+        batch:
+          flag: True
+          extension: no
+          content: C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind
+
+      - output_filename: NULL
+        input_file_labels: [FST1_L00, FST1_L15]
+        output_basename: F
+        output_dir: raos
+        file_extension: dat
+        input_files:
+          [
+            [
+              raos/decks/_F_00.deck,
+              raos/decks/WB_FST2_01.deck,
+              raos/decks/WB_FST2_02.deck,
+              raos/decks/FST2_L00_03.deck,
+              raos/decks/FST2_L00_04.deck,
+              raos/decks/_05.deck,
+              raos/decks/_06.deck,
+              raos/decks/FST2_L00_07.deck,
+              raos/decks/_08.deck,
+              raos/decks/_09_17.deck,
+              raos/decks/_18.deck,
+            ],
+            [
+              raos/decks/_F_00.deck,
+              raos/decks/WB_FST2_01.deck,
+              raos/decks/WB_FST2_02.deck,
+              raos/decks/FST2_L15_03.deck,
+              raos/decks/FST2_L15_04.deck,
+              raos/decks/_05.deck,
+              raos/decks/_06.deck,
+              raos/decks/FST2_L15_07.deck,
+              raos/decks/_08.deck,
+              raos/decks/_09_17.deck,
+              raos/decks/_18.deck,
+            ],
+          ]
+
         batch:
           flag: True
           extension: no

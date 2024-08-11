@@ -163,6 +163,15 @@ dictitems:
             - 6
             - 5
             - 4
+      - file_prefix: FST2_L15_
+        file_extension: deck
+        data:
+          element_type: FIDP
+          category: 7
+          raw:
+            added_damping:
+              rxx: 5729.578
+              ryy: 5729.578
     - label: L15
       template: tests/test_data/aqwa/templates/pre_process_rao_decks.yml
       inputs:
@@ -199,7 +208,7 @@ dictitems:
         input_file_labels:
         - FST1_L00
         - FST1_L15
-        output_basename: F
+        output_basename: S
         output_dir: raos
         file_extension: dat
         input_files:
@@ -210,6 +219,10 @@ dictitems:
           - raos/decks/FST2_L00_04.deck
           - raos/decks/_05.deck
           - raos/decks/_06.deck
+          - raos/decks/FST2_L00_07.deck
+          - raos/decks/_08.deck
+          - raos/decks/_09_17.deck
+          - raos/decks/_18.deck
         - - raos/decks/_S_00.deck
           - raos/decks/WB_FST2_01.deck
           - raos/decks/WB_FST2_02.deck
@@ -217,6 +230,44 @@ dictitems:
           - raos/decks/FST2_L15_04.deck
           - raos/decks/_05.deck
           - raos/decks/_06.deck
+          - raos/decks/FST2_L15_07.deck
+          - raos/decks/_08.deck
+          - raos/decks/_09_17.deck
+          - raos/decks/_18.deck
+        batch:
+          flag: true
+          extension: false
+          content: C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind
+      - output_filename: ~
+        input_file_labels:
+        - FST1_L00
+        - FST1_L15
+        output_basename: F
+        output_dir: raos
+        file_extension: dat
+        input_files:
+        - - raos/decks/_F_00.deck
+          - raos/decks/WB_FST2_01.deck
+          - raos/decks/WB_FST2_02.deck
+          - raos/decks/FST2_L00_03.deck
+          - raos/decks/FST2_L00_04.deck
+          - raos/decks/_05.deck
+          - raos/decks/_06.deck
+          - raos/decks/FST2_L00_07.deck
+          - raos/decks/_08.deck
+          - raos/decks/_09_17.deck
+          - raos/decks/_18.deck
+        - - raos/decks/_F_00.deck
+          - raos/decks/WB_FST2_01.deck
+          - raos/decks/WB_FST2_02.deck
+          - raos/decks/FST2_L15_03.deck
+          - raos/decks/FST2_L15_04.deck
+          - raos/decks/_05.deck
+          - raos/decks/_06.deck
+          - raos/decks/FST2_L15_07.deck
+          - raos/decks/_08.deck
+          - raos/decks/_09_17.deck
+          - raos/decks/_18.deck
         batch:
           flag: true
           extension: false
@@ -235,7 +286,7 @@ dictitems:
     file_name_for_overwrite: aqwa_anl_raos
     result_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     log_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-08-09 19:49:35.207001
+    start_time: 2024-08-10 07:02:56.974460
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_anl_raos.yml

@@ -3,14 +3,12 @@ import os
 
 # Third party imports
 from assetutilities.common.update_deep import AttributeDict
-from assetutilities.common.yml_utilities import WorkingWithYAML  #noqa
+from assetutilities.common.yml_utilities import WorkingWithYAML  # noqa
 from assetutilities.engine import engine as au_engine
-from assetutilities.common.update_deep import update_deep_dictionary
 
 # Reader imports
-from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities  #noqa
+from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities  # noqa
 from digitalmodel.engine import engine as dm_engine
-
 
 wwy = WorkingWithYAML()
 
@@ -28,19 +26,19 @@ class AqwaRAOs:
         self.prepare_hydrostatic_runs(cfg)
 
     #TODO
-    # Verify result change with change in Draft and coG Z definition(pending)
-    # Define weight, inertia, etc (DONE)
+    # Verify result change with change in Draft and coG Z definition (Pending)
+    # Define CoG, weight, inertia, etc (DONE)
     # Combine files into .dat (DONE)
-    # Run AQWA (Ongoing)
-    # Get hydrostatic output
-    # Correct the CoG and other definitions
-    # Get RAOs
-    # Get RAOs output and identify peaks
+    # Run AQWA (DONE)
+    # Get hydrostatic output (Manual - no need?)
+    # Verify out-of-balance forces.  (Manual - no need?)
+    # Get RAOs (with no damping) (?)
+    # Get RAOs output and identify peaks (scipy routine?)
     # Ensure frequency resoultion is sufficient around peaks
     # Define frequency independent damping values
     # Rerun Diffraction analysis
     # Plot RAOs
-    # Plot RAOs comparison
+    # Plot RAO comparisons
 
     def split_dat_to_decks(self, cfg: dict) -> None:
         self.create_decks_directory(cfg)
@@ -59,8 +57,6 @@ class AqwaRAOs:
     def prepare_hydrostatic_runs(self, cfg: dict) -> None:
         template_yaml = self.get_template_hydrostatic_runs(cfg)
         au_engine(inputfile=None, cfg=template_yaml, config_flag=False)
-
-
 
     def get_template_SplitToDeck(self, cfg):
         template_file_name = cfg['analysis_settings']['split_to_decks']['template']
