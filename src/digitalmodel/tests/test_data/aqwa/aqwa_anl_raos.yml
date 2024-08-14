@@ -76,7 +76,7 @@ analysis_settings:
                     28,
                   ],
               }
-        - file_prefix: FST2_L15_
+        - file_prefix: FST2_L00_
           file_extension: deck
           data:
             element_type: FIDP
@@ -86,6 +86,11 @@ analysis_settings:
     - label: L15
       template: tests/test_data/aqwa/templates/pre_process_rao_decks.yml
       inputs:
+        - file_prefix: FST2_L15_cog
+          file_extension: deck
+          data:
+            category: 1
+            raw: [{ node: 98000, X: 109.9, Y: -0.3, Z: 10.2 }]
         - file_prefix: FST2_L15_
           file_extension: deck
           data:
