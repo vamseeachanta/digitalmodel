@@ -74,20 +74,18 @@ dictitems:
         csv: src/digitalmodel/tests/test_data/aqwa/csv/od_fst-2_01_light_long_truss_wolngc.csv
   Analysis:
     basename: aqwa
-    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa
+    analysis_root_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa
     file_name: aqwa_pre_process_deck_10
     file_name_for_overwrite: aqwa_pre_process_deck_10
-    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
-    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-07-05 14:51:39.791063
+    result_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    log_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
+    start_time: 2024-08-20 23:46:36.359469
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_pre_process_deck_10.yml
-    fe_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    CustomInputFile: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_pre_process_deck_10.yml
+    fe_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
     - c:\
-    - Users
-    - vamseea
     - github
     - digitalmodel
     - src
@@ -99,8 +97,6 @@ dictitems:
     - lis
     file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
     - c:\
-    - Users
-    - vamseea
     - github
     - digitalmodel
     - src
