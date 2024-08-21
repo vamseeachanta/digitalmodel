@@ -1,3 +1,4 @@
+import logging
 
 # Reader imports
 from digitalmodel.custom.aqwa.aqwa_analysis_ef_server import AqwaEFServer
@@ -13,11 +14,13 @@ class AqwaAnalysis:
 
     def analysis_router(self, cfg):
 
-        if cfg['analysis_settings']['method'] == 'ef_server':
-            aq_ef.ef_server_router(cfg)
-
-        elif cfg['analysis_settings']['method'] == 'raos':
-            cfg = aq_raos.rao_router(cfg)
-
+        if 'analysis_settings' in cfg:
+            if cfg['analysis_settings']['method'] == 'ef_server':
+                aq_ef.ef_server_router(cfg)
+            elif cfg['analysis_settings']['method'] == 'raos':
+                cfg = aq_raos.rao_router(cfg)
+        else:
+            logging.info('Analysis method not specified in the configuration file.')
+        
         return cfg
 

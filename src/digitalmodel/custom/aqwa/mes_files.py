@@ -132,7 +132,7 @@ class MesFiles:
     def router(self, cfg=None):
 
         if cfg is None:
-            directory = r'src\digitalmodel\tests\test_data\aqwa\mes_files'
+            directory = r'src\digitalmodel\tests\test_data\aqwa\output\mes'
         else:
             directory = cfg['Analysis']['file_management_input_directory']
 
@@ -152,8 +152,11 @@ class MesFiles:
         merged_warning_df.index += 1
         merged_error_df.index += 1
 
-        merged_warning_df.to_csv('warnings.csv')
-        merged_error_df.to_csv('errors.csv')
+        warnings_filename = os.path.join(directory, 'warnings.csv')
+        merged_warning_df.to_csv(warnings_filename)
+        
+        error_filename = os.path.join(directory, 'errors.csv')
+        merged_error_df.to_csv(error_filename)
         
         logging.info("Summary of Warnings:")
         logging.info(merged_warning_df)
@@ -166,7 +169,9 @@ class MesFiles:
         id_file_matrix = self.generate_id_file_matrix(warnings, errors, warning_id_map, error_id_map, file_status)
         id_file_df = pd.DataFrame(id_file_matrix[1:], columns=id_file_matrix[0])
         id_file_df.index += 1
-        id_file_df.to_csv('warning_error_map.csv')
+        
+        map_filename = os.path.join(directory, 'warning_error_map.csv')
+        id_file_df.to_csv(map_filename)
 
         logging.info("\nID File Matrix:")
         logging.info(id_file_df)

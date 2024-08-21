@@ -57,7 +57,7 @@ result:
 
     inject_into:
       flag: True
-      filename: output/aqwa_mooring.xlsx
+      filename: results/aqwa_mooring.xlsx
       sheetname: mooring
 
 file_management:
