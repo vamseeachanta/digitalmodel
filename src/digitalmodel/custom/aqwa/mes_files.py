@@ -18,6 +18,9 @@ class MesFiles:
     def read_mes_files(self, directory):
         try:
             mes_files = [f for f in os.listdir(directory) if f.endswith('.MES')]
+            if not mes_files: # checks if the directory is empty
+                logging.info(f"No MES files found in directory: {directory}") 
+                return None, None, None
         except Exception as e:
             logging.error(f"Error reading files from directory: {directory}")
             logging.error(e)
