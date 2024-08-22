@@ -6,11 +6,9 @@ from collections import Counter, defaultdict
 
 # Third party imports
 import pandas as pd
-from tabulate import tabulate
-
 from colorama import Fore, Style
 from colorama import init as colorama_init
-
+from tabulate import tabulate
 colorama_init()
 
 
@@ -197,7 +195,4 @@ class MesFiles:
             logging.info("\nID File Matrix:")
             logging.info(id_file_df)
 
-
-if __name__ == "__main__":
-    mes_files = MesFiles()
-    mes_files.router()
+        return warnings, errors, file_status
