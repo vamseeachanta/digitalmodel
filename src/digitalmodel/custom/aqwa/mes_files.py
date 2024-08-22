@@ -107,7 +107,11 @@ class MesFiles:
             df[col] = df[col].mask(df.duplicated(subset=[col]))
 
         col = 'Type'
-        df.fillna({'col': col}, inplace=True)
+        for row_idx in range(0, len(df)):
+            if pd.isna(df.loc[row_idx, col]):
+                df.loc[row_idx, col] = df.loc[row_idx - 1, col]
+
+        # df.fillna({'col': col}, inplace=True)
         # df['Type'].fillna(method='ffill', inplace=True)
         return df
 
@@ -161,10 +165,10 @@ class MesFiles:
         merged_error_df.index += 1
 
         warnings_filename = os.path.join(directory, 'mes_warnings.csv')
-        merged_warning_df.to_csv(warnings_filename)
+        merged_warning_df.to_csv(warnings_filename, index=False)
         
         error_filename = os.path.join(directory, 'mes_errors.csv')
-        merged_error_df.to_csv(error_filename)
+        merged_error_df.to_csv(error_filename, index=False)
         
         logging.info("Summary of Warnings:")
         logging.info(merged_warning_df)
@@ -179,7 +183,7 @@ class MesFiles:
         id_file_df.index += 1
 
         map_filename = os.path.join(directory, 'mes_warning_error_map.csv')
-        id_file_df.to_csv(map_filename)
+        id_file_df.to_csv(map_filename, index=False)
 
         logging.info("\nID File Matrix:")
         logging.info(id_file_df)
