@@ -21,3 +21,8 @@ kaleido
 pytest
 deepdiff
 rainflow
+pydantic
+black
+isort
+poetry
+tabulate

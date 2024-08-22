@@ -1,0 +1,72 @@
+@startuml aqwa_restart
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+
+title AQWA Restart \nWorkflow
+
+
+* RESTART
+    ' note right of RESTART
+    '     **(IN PROGRESS)**
+    '     Objective: Provide restart options with following
+    '     - usage guidelines
+    '     - minimum data requirements
+    ' end note
+
+** Stage 1: 
+*** Geometric Definition and Static Environment
+*** Input Decks: 1 to 5
+*** Command: RESTART  1  5
+
+** Stage 2: 
+*** Analysis: Radiation/Diffraction
+*** Input Decks: 6 to 8
+*** Frequency & direction data
+*** Command: RESTART  2  3       RESFILE
+
+** Stage 3: 
+*** Analysis: Radiation/Diffraction
+*** Input Decks: 6 to 8 as reqiuired
+*** Frequency & direction data
+*** Command: RESTART  4  5       RESFILE
+
+** Stage 4: 
+*** Analysis: Analysis Environment
+*** Input Decks: 9 to 18 as required
+*** Extensive analysis data
+*** Command: RESTART  4  5       RESFILE
+
+** Stage 5: 
+*** Analysis: Motion Analysis and Post-processing
+*** Input Decks: 9 to 18 as required
+*** TBA
+*** Command: RESTART  4  5       RESFILE
+
+** Stage 6: 
+*** Analysis: Post-processing of loads on TUBE elements
+*** Input Decks: 21
+*** Element and Nodal Loads using ENLD
+*** Command: ?
+
+** Stability
+*** Mooring Data & No Load
+*** Command: ?
+
+** Equilibrium
+*** Mooring Data & Wind Data
+*** Command: ?
+
+** Wave Analysis - Time Domain
+*** Mooring Data & Wave Data
+*** Command: ?
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@endwbs

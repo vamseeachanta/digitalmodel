@@ -21,6 +21,48 @@ class OrcaflexModelUtilities:
 
         return buoy_6d_template
 
+    def get_umbilical_LineType_template(self):
+        library_name = 'digitalmodel'
+        library_yaml_cfg = {
+            'filename': 'tests/test_data/umbilical_analysis/umbilical_LineType_template.yml',
+            'library_name': library_name
+        }
+        buoy_6d_template = wwy.get_library_yaml_file(library_yaml_cfg)
+
+        return buoy_6d_template
+
+    def get_wave_template(self):
+        library_name = 'digitalmodel'
+        library_yaml_cfg = {
+            'filename': 'tests/test_data/orcaflex_file_preparation/wave_template.yml',
+            'library_name': library_name
+        }
+        template = wwy.get_library_yaml_file(library_yaml_cfg)
+
+        return template
+
+
+    def get_current_template(self):
+        library_name = 'digitalmodel'
+        library_yaml_cfg = {
+            'filename': 'tests/test_data/orcaflex_file_preparation/current_template.yml',
+            'library_name': library_name
+        }
+        template = wwy.get_library_yaml_file(library_yaml_cfg)
+
+        return template
+
+
+
+    def get_wave_template_with_n_waves(self, n_waves):
+
+        wave_template = self.get_wave_template()
+        if n_waves != 1:
+            raise NotImplementedError('Other options not implemented yet.')
+
+        return wave_template
+
+
     def get_BaseFile_first(self, model):
         '''
         OrderDict to get BaseFile at top of model is not working efficiently.

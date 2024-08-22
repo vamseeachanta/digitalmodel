@@ -1,0 +1,14 @@
+Result:
+  Inner_Pipe: null
+  Outer_Pipe:
+    internal_pressure:
+      ASME B31.8-2016 Chapter VIII Pipeline:
+        Design_WT_Max_Pressure:
+          With Corrosion Allowance: 3756.521739130435
+          Zero Corrosion Allowance: 3756.521739130435
+        minimum_thickness:
+          With Corrosion Allowance: 0.45091401489505756
+          Zero Corrosion Allowance: 0.45091401489505756
+        thickness:
+          With Corrosion Allowance: 0.75
+          Zero Corrosion Allowance: 0.75

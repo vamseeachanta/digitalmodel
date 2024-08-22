@@ -2,17 +2,26 @@ import copy
 import os
 import glob
 import logging
+import math
+
+
+from assetutilities.common.yml_utilities import ymlInput
+from digitalmodel.common.orcaflex_model_utilities import OrcaflexModelUtilities
+
+from assetutilities.common.data import SaveData
+save_data = SaveData()
+
 try:
     import OrcFxAPI
 except:
     print("OrcFxAPI not available")
 from collections import OrderedDict
 
-from assetutilities.common.saveData import saveDataYaml
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.file_management import FileManagement
 
 fm = FileManagement()
+omu = OrcaflexModelUtilities()
 
 
 class OrcaflexUtilities:
@@ -43,9 +52,9 @@ class OrcaflexUtilities:
         model_file_updated['Lines']['Umbilical']['Length[7]'] = cfg[
             'variable_value']
 
-        saveDataYaml(model_file_updated,
+        save_data.saveDataYaml(model_file_updated,
                      os.path.splitext(cfg['model_file'])[0],
-                     default_flow_style='OrderedDumper')
+                     default_flow_style='OrderedDumper', sort_keys=False)
 
     def get_sim_file_finish_status(self, model):
         settime = model.general.StageEndTime[len(model.general.StageEndTime) -
@@ -131,16 +140,27 @@ class OrcaflexUtilities:
         return cfg
 
     def get_files(self, cfg):
+        from assetutilities.common.utilities import is_dir_valid_func
+        
         file_management_directory = self.get_file_management_directory(cfg)
+        if file_management_directory is not None:
+            analysis_root_folder = cfg['Analysis']['analysis_root_folder']
+            file_is_valid, file_management_directory = is_dir_valid_func(file_management_directory,
+                                                     analysis_root_folder)
+
 
         if cfg.file_management['files']['files_in_current_directory'][
-                'auto_read']:
+                'flag'] or cfg.file_management['files']['files_in_current_directory']['auto_read']:
             orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
             input_files = {}
 
             for file_ext in orcaflex_extensions:
-                raw_input_files_for_ext = glob.glob(file_management_directory +
-                                                    '/*.' + file_ext)
+                filename_pattern = cfg['file_management']['files']['files_in_current_directory'].get('filename_pattern', None)
+                if filename_pattern is None:
+                    glob_search = os.path.join(file_management_directory, f'*.{file_ext}')
+                else:
+                    glob_search = os.path.join(file_management_directory, f'*{filename_pattern}*.{file_ext}')
+                raw_input_files_for_ext = glob.glob(glob_search)
                 input_files.update({file_ext: raw_input_files_for_ext})
 
             cfg.file_management.update({'input_files': input_files})
@@ -266,3 +286,133 @@ class OrcaflexUtilities:
             self.simulation_filenames = []
 
         return cfg
+
+    def prepare_operating_window_definition(self, cfg):
+
+        # for include_file in cfg['includedfile']:
+        #     yaml_file.update({'includefile': include_file})
+        for input_set in cfg['inputs']:
+            self.prepare_operating_window_for_input_set(input_set, cfg)
+            
+        return cfg
+
+    def prepare_operating_window_for_input_set(self, input_set, cfg):
+        wave_yaml_file = omu.get_wave_template()
+        wave = input_set['loads']['wave']
+        hs = wave['hs']
+        tp = wave['tp']
+        WaveDirection = wave['WaveDirection']
+
+        current = input_set['loads']['current']
+        ActiveCurrent = current['ActiveCurrent']
+        RefCurrentDirection = current['RefCurrentDirection']
+        SurfaceCurrentFactor = current['SurfaceCurrentFactor']
+
+
+        if wave['WaveType'] == 'Airy':
+            for hs_item in hs:
+                for tp_item in tp:
+                    if input_set['loads']['wave']['peakedness']['by_region']:
+                        cfg_peakedness = {'region': wave['peakedness']['region'], 'hs': hs_item, 'tp': tp_item}
+                        peakedness = self.get_wave_peak_enhancement_factor_by_region(cfg_peakedness)
+                    hmax = self.get_theoretical_hmax({'hs': hs_item, 'tp': tp_item, 'peakedness': peakedness})
+                    tassociated = self.get_theoretical_tassociated({'tp': tp_item, 'peakedness': peakedness})
+
+                    for WaveDirection_item in WaveDirection:
+                        wave_yaml_variation = {'WaveType': wave['WaveType'], 'WaveDirection': WaveDirection_item, 'WaveHeight': hmax, 'WavePeriod': tassociated}
+                        wave_yaml_file['WaveTrains'][0].update(wave_yaml_variation)
+
+                        for ActiveCurrent_index in range(0, len(ActiveCurrent)):
+                            ActiveCurrent_item = ActiveCurrent[ActiveCurrent_index]
+                            current_type = current['current_type'][ActiveCurrent_index]
+                            for RefCurrentDirection_item in RefCurrentDirection:
+                                for SurfaceCurrentFactor_item in SurfaceCurrentFactor:
+                                    
+                                    current_yaml_file = {'ActiveCurrent': ActiveCurrent_item, 'Currents': {ActiveCurrent_item: {'RefCurrentDirection': RefCurrentDirection_item, 'CurrentFactor[1]': SurfaceCurrentFactor_item}}}
+
+                                    wave_file_name = f"Hs{'{:.2f}'.format(hs_item)}-WD{'{:03d}'.format(WaveDirection_item)}-Tp{'{:04.1f}'.format(tp_item)}"
+                                    current_file_name = f"-AC{current_type}-CD{'{:03d}'.format(RefCurrentDirection_item)}-CF{'{:02.1f}'.format(SurfaceCurrentFactor_item)}"
+                                    yml_file_name = wave_file_name + current_file_name
+                                    self.get_full_yaml_file_and_save(input_set, wave_yaml_file, current_yaml_file, yml_file_name, cfg)
+
+
+
+    def get_full_yaml_file_and_save(self, input_set, wave_yaml_file, current_yaml_file, yml_file_name, cfg):
+        if 'includefile' in input_set:
+            full_yml_file = {'includefile': input_set['includefile']}
+        elif 'BaseFile' in input_set:
+            full_yml_file = {'BaseFile': input_set['BaseFile']}
+
+        general_yml = self.get_general_yml(input_set, wave_yaml_file)
+        full_yml_file.update(general_yml)
+        full_yml_file.update({'Environment': wave_yaml_file})
+        full_yml_file['Environment'].update(current_yaml_file)
+
+        output_dir = input_set['output_dir']
+        full_output_dir_path = os.path.join(cfg['Analysis']['analysis_root_folder'], output_dir)
+        if not os.path.isdir(full_output_dir_path):
+            os.makedirs(full_output_dir_path)
+
+        save_data.saveDataYaml(full_yml_file, os.path.join(full_output_dir_path, yml_file_name), default_flow_style=False, sort_keys=False)
+
+    def get_general_yml(self, input_set, wave_yaml_file):
+        tperiod_factor = input_set['general']['initial_tperiod_factor'] + input_set['general']['analysis_tperiod_factor']
+        WavePeriod = wave_yaml_file['WaveTrains'][0]['WavePeriod']
+        StageDuration2 = round(tperiod_factor*WavePeriod, 0)
+        general_yml = {'General': {'StageDuration[2]': StageDuration2}}
+        return general_yml
+
+    def get_random_wave_seeds(self):
+        seeds = [123456, 234567, 345678, 456789, 567890, 678901, 789012, 890123, 901234, 12345, 19918, 51352, 64477, 42864, 89141, 82983, 34067, 65909, 54827, 48305]
+        return seeds
+
+    def get_wave_peak_enhancement_factor_by_region(self, cfg_peakedness):
+        cfg_tempate = {'region': 'Gayana', 'tp': 10}
+
+        peakedness = 0
+        if cfg_peakedness['region'] == "Gayana":
+            if cfg_peakedness['tp'] < 10:
+                peakedness = 2
+            else:
+                peakedness = 8
+
+        return peakedness
+
+    def get_theoretical_wave_peak_enhancement_factor(self, cfg_peakedness):
+        cfg_tempate = {'hs': 2.5, 'tp': 10}
+        tp_over_sqrt_hs = cfg_peakedness['tp']/cfg_peakedness['hs']**0.5
+        if tp_over_sqrt_hs > 5:
+            peakedness = 1
+        elif tp_over_sqrt_hs <3.6:
+            peakedness = 5
+        else:
+            peakedness = math.exp(5.75 - 1.15*tp_over_sqrt_hs)
+
+        peakedness = round(peakedness, 2)
+
+        return round(peakedness, 2)
+
+    def get_theoretical_tz(self, cfg_tz):
+        cfg_tempate = {'tp': 10, 'peakedness': 5}
+        tz = cfg_tz['tp']*(0.6673 + 0.05037*cfg_tz['peakedness'] - 0.00623*cfg_tz['peakedness']**2 + 0.0003341*cfg_tz['peakedness']**3)
+
+        return round(tz, 2)
+
+    def get_theoretical_hmax(self, cfg_hmax):
+        cfg_tempate = {'hs': 2.5, 'peakedness': 5}
+        hmax = cfg_hmax['hs']*cfg_hmax['peakedness']
+        tz= self.get_theoretical_tz({'tp': cfg_hmax['tp'], 'peakedness': cfg_hmax['peakedness']})
+        N = 10800/ tz
+        factor = (math.log(N)/2)**0.5
+        if factor > 1.86:
+            factor = 1.86
+        hmax = cfg_hmax['hs']*factor
+
+        return round(hmax, 2)
+
+    def get_theoretical_tassociated(self, cfg_tassociated):
+        cfg_tempate = {'tp': 10, 'peakedness': 5}
+        tz = self.get_theoretical_tz({'tp': cfg_tassociated['tp'], 'peakedness': cfg_tassociated['peakedness']})
+        tassociated = 1.05*tz
+
+        return round(tassociated, 2)

@@ -10,6 +10,7 @@ except:
 
 import logging
 from assetutilities.common.utilities import is_file_valid_func
+from assetutilities.common.update_deep import update_deep_dictionary
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 from digitalmodel.custom.orcaflex_analysis_components import OrcaFlexAnalysis
 
@@ -23,21 +24,47 @@ class orcaflex_post_process:
         pass
 
     def post_process_router(self, cfg):
+        
+        orcaflex_license_flag = ou.is_orcaflex_available()
+        assert (orcaflex_license_flag)
+        if not orcaflex_license_flag:
+            raise Exception("Orcaflex license not available.")
 
-        if cfg['orcaflex']['postprocess']['visualization']['flag'] or cfg[
-                'orcaflex']['postprocess']['summary']['flag'] or cfg[
+        cfg = self.get_cfg_with_master_data(cfg)
+        if cfg['orcaflex']['postprocess']['summary']['flag'] or cfg[
                     'orcaflex']['postprocess']['RangeGraph']['flag'] or cfg[
                         'orcaflex']['postprocess']['time_series'][
                             'flag'] or cfg['orcaflex']['postprocess'][
                                 'cummulative_histograms']['flag']:
-            post_process_flag = True
+            post_process_data_flag = True
+        else:
+            post_process_data_flag = False
 
-        if post_process_flag:
+        if cfg['orcaflex']['postprocess']['visualization']['flag']:
+            post_process_visualization_flag = True
+        else:
+            post_process_visualization_flag = False
+
+        if post_process_data_flag:
             cfg.update({cfg['basename']: {}})
             ofa.post_process(cfg)
             ofa.save_summary(cfg)
+        elif post_process_visualization_flag:
+            self.get_visualizations(cfg)
         else:
             logging.info("No postprocess option to run specified ... End Run.")
+
+        return cfg
+
+    def get_cfg_with_master_data(self, cfg):
+        if 'summary_settings_master' in cfg:
+            summary_settings_master = cfg['summary_settings_master'].copy()
+            summary_settings = cfg['summary_settings']
+
+            for group_index in range(0, len(summary_settings['groups'])):
+                group = summary_settings['groups'][group_index].copy()
+                group = update_deep_dictionary(summary_settings_master['groups'][0], group)
+                summary_settings['groups'][group_index] = group.copy()
 
         return cfg
 
@@ -267,11 +294,21 @@ class orcaflex_visualizations:
         model = OrcFxAPI.Model()
         combined_model = None
 
-        for file_index in range(0, len(cfg['Files']['data'])):
-            file_cfg = cfg['Files']['data'][file_index]
-            is_file_valid, file_name = self.is_file_valid(file_cfg['Name'])
-            if is_file_valid:
-                model.LoadData(file_name)
+        if cfg.file_management['files']['files_in_current_directory'][
+                'flag']:
+            orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
+
+        else:
+            orcaflex_extensions = cfg.file_management['input_files'].keys()
+
+        for file_ext in orcaflex_extensions:
+            raw_input_files_for_ext = cfg.file_management['input_files'][
+                file_ext]
+
+            for input_file_index in range(0, len(raw_input_files_for_ext)):
+                input_file = raw_input_files_for_ext[input_file_index]
+
+                model.LoadData(input_file)
 
                 if cfg['visualization_settings']['combined']:
                     print(f"Combined model code in library does not exist")
@@ -279,20 +316,16 @@ class orcaflex_visualizations:
 
                 model = self.set_general_visualization_settings(model, cfg)
                 model.CalculateStatics()
-                self.plan_view(model, file_name, cfg)
-                self.elevation_view(model, file_name, cfg)
+                self.save_all_views(model, input_file, cfg)
 
-        if cfg['visualization_settings']['combined']:
-            combined_model.CalculateStatics()
-            self.plan_view(combined_model,
-                           cfg['visualization_settings']['label'], cfg)
-            self.elevation_view(combined_model,
-                                cfg['visualization_settings']['label'], cfg)
-
+            #TODO 
+            # if cfg['visualization_settings']['combined']:
+            #     combined_model.CalculateStatics()
+                
     def set_general_visualization_settings(self, model, cfg):
-        # for TDP Colour change
-        line = model[cfg['visualization_settings']['tdp_line']]
-        line.ContactPenColour = 128 * 65536 + 128 * 256 + 128
+        #TODO for TDP Colour change
+        # line = model[cfg['visualization_settings']['tdp_line']]
+        # line.ContactPenColour = 128 * 65536 + 128 * 256 + 128
 
         env = model['Environment']
         # env.SeabedPenStyle = "Clear"
@@ -300,10 +333,11 @@ class orcaflex_visualizations:
         env.SeaSurfacePenStyle = "Clear"
         model.general.NorthDirectionDefined = "No"
 
-        vessel = model["SevenArctic"]
-        x_value = vessel.InitialX
-        y_value = vessel.InitialY
-        heading = vessel.InitialHeading
+        #TODO for vessel settings
+        # vessel = model["SevenArctic"]
+        # x_value = vessel.InitialX
+        # y_value = vessel.InitialY
+        # heading = vessel.InitialHeading
 
         hide_items = cfg['visualization_settings']['hide_items']
 
@@ -333,46 +367,42 @@ class orcaflex_visualizations:
         combined_model.SaveData("combined_model.dat")
         return combined_model
 
-    def plan_view(self, model, file_name, cfg):
-        '''        Plan View      '''
-        viewparams = self.assign_view_parameters(model, cfg, viewtype='plan')
+    def save_all_views(self, model, file_name, cfg):
 
-        self.save_image(model, file_name, viewparams, viewtype='plan')
+        viewparams_cfg = cfg['visualization_settings']['viewparams']
+        for view_label in list(viewparams_cfg.keys()):
+            viewparams = self.assign_view_parameters(model, cfg, view_label)
+            self.save_image(model, file_name, viewparams, view_label)
 
-    def assign_view_parameters(self, model, cfg, viewtype):
+    def assign_view_parameters(self, model, cfg, view_label):
+
+        viewparams_view_label_cfg = cfg['visualization_settings']['viewparams'][view_label]
         viewparams = model.defaultViewParameters
-        viewparams_cfg = cfg['visualization_settings']['viewparams'][viewtype]
-        for key in viewparams_cfg:
+
+        if 'SeaSurfacePenStyle' in viewparams_view_label_cfg:
+            env = model['Environment']
+            env.SeaSurfacePenStyle = viewparams_view_label_cfg['SeaSurfacePenStyle']
+
+        for key in viewparams_view_label_cfg:
             try:
                 if key == 'ViewCentre':
-                    ViewCentre = viewparams_cfg['ViewCentre']
+                    ViewCentre = viewparams_view_label_cfg['ViewCentre']
                     for i in range(0, len(ViewCentre)):
                         viewparams.ViewCentre[i] = ViewCentre[i]
                 elif key == 'RelativeToObject':
                     viewparams.RelativeToObject = model[
-                        viewparams_cfg['RelativeToObject']]
+                        viewparams_view_label_cfg['RelativeToObject']]
                 else:
-                    setattr(viewparams, key, viewparams_cfg[key])
+                    setattr(viewparams, key, viewparams_view_label_cfg[key])
             except Exception as e:
                 logging.error(str(e))
 
         return viewparams
 
-    def elevation_view(self, model, file_name, file_cfg):
-        '''        Elevation  View      '''
-        env = model['Environment']
-        env.SeaSurfacePenStyle = "Solid"
-
-        viewparams = self.assign_view_parameters(model,
-                                                 file_cfg,
-                                                 viewtype='elevation')
-
-        self.save_image(model, file_name, viewparams, viewtype='elevation')
-
-    def save_image(self, model, file_name, viewparams, viewtype):
+    def save_image(self, model, file_name, viewparams, view_label):
         file_location = os.path.split(file_name)[0]
         file_name_img = os.path.basename(file_name).split(
-            ".")[0] + "_" + viewtype + ".jpg"
+            ".")[0] + "_" + view_label + ".jpg"
         file_name_with_path = os.path.join(file_location, file_name_img)
         logging.info(f"Saving ...  {file_name_img}  view")
         model.SaveModelView(file_name_with_path, viewparams)

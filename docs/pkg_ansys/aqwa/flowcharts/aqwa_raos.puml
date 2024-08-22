@@ -1,0 +1,216 @@
+@startuml aqwa_raos
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title AQWA RAOs \nProcedure
+
+start
+
+    note right
+        Objective: To run and automate RAO runs in AQWA
+        Notes:
+         - All files in ascii (.dat) format
+    end note
+
+    partition "Geometry" {
+            note right
+                Programs:
+                 - Rhino
+                 - SpaceClaim
+                 - Workbench
+                Output: 
+                 - keyname.ext
+                   - ext can be iges, scdoc etc.
+            end note
+
+        :Prepare Geometry;
+            note right
+                All surfaces should connect
+                Should not have gaps or overlaps
+            end note
+
+        :Single Surface;
+            note right
+                Combine discrete hull faces into a single surface
+            end note
+
+        :Start Location;
+            note right
+                Approximate location (including draft)
+                Geometry should be in water (i.e. below z=0)
+            end note
+
+    }
+
+    partition "Get Preliminary AQWA Mesh Model" {
+            note right
+                Objective: To create mesh model for AQWA
+                Programs:
+                 - Workbench
+                Output: 
+                 - WB_keyname.dat
+            end note
+
+        :ANSYS Geometry;
+            note right
+                Supress Unwanted bodies
+            end note
+
+        :RAO analysis Options;
+            note right
+                - Add internal Lid. 
+                  - Mesh size is program controlled
+                - Ignore Modelling Errors (GOON)
+                - Add point mass and intertia properties
+            end note
+
+        :Adjust Mesh for
+        Frequency Range;
+            note right
+                Based on mesh size
+                Check RAO frequency range covers analysis frequencies
+                No of Frequencies = 5
+            end note
+
+
+        :AQWA Solve;
+            note right
+                Get Analysis.dat file
+                Rename to F_keyname_WB.dat
+            end note
+
+    }
+
+    partition "Prepare Deck Files" {
+            note right
+                Objective: To simple model for AQWA
+                Programs:
+                 - Workbench
+                Output:
+                 - F_keyname_SIMP.dat
+            end note
+
+        : Prepare Deck Files;
+            note right
+                au_engine; file_split
+                output: *.DECK files
+            end note
+
+        :Combine Deck Files;
+            note right
+                au_engine; file_edit, concatenate array
+                output: *.DECK files
+            end note
+
+        :Add CoG node and additional Nodes;
+            note right
+                CoG node
+                Additional nodes for RAOs
+            end note
+
+        :Add mass and intertia properties;
+            note right
+                TBA
+            end note
+
+    }
+
+    partition "AQWA Hydrostatics" {
+            note right
+                Objective: To create mesh model for AQWA
+                Programs:
+                 - Workbench
+            end note
+
+        :Solve Hydrostatics;
+            note right
+                TBA
+            end note
+
+        :Correct Mass Definition;
+            note right
+                Equal to displaced mass
+            end note
+
+        :Correct CoG Definition;
+            note right
+                Ensure CoG is inline with CoB
+            end note
+
+    }
+    partition "AQWA Damping" {
+            note right
+                Objective: Define appropriate additional damping:
+                Programs:
+                 - Workbench
+            end note
+
+        :Define ROll and Pitch Damping;
+            note right
+                For Typical ship-shaped structures:
+                    - Roll: 10%
+                    - Pitch: 8%
+                For TLP or SPAR:
+                    - Roll: 5%
+                    - Pitch: 5%
+            end note
+
+    }
+
+
+
+    partition "AQWA Frequency - Comprehensive" {
+            note right
+                Programs:
+                 - AQWA Command Line
+            end note
+
+        :Mesh size;
+            note right
+                Frequency resolution to identify peaks
+                Frequency definition around peak
+            end note
+
+    }
+
+    partition "AQWA Postprocess" {
+            note right
+                Programs:
+                 - python digitalmodel
+                 Output: 
+                  - RAOs.xlsx
+                  - .png
+            end note
+
+        :QA;
+            note right
+                Model: Basic checks
+                RAOs: Amplitude and Phase checks
+            end note
+
+        :RAO Plot;
+            note right
+                DOF 1, 2, 3 (Headings 0, 45, 90)
+                DOF 4, 5, 6 (Headings 0, 45, 90)
+            end note
+
+        :RAOs Comparison;
+            note right
+                ?
+                ?
+            end note
+
+    }
+
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
