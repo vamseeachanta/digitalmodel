@@ -105,7 +105,10 @@ class MesFiles:
         df = df.copy()
         for col in ['ID', 'Type', 'Description']:
             df[col] = df[col].mask(df.duplicated(subset=[col]))
-        df['Type'].fillna(method='ffill', inplace=True)
+
+        col = 'Type'
+        df.fillna({'col': col}, inplace=True)
+        # df['Type'].fillna(method='ffill', inplace=True)
         return df
 
     def generate_id_file_matrix(self, warnings, errors, warning_id_map, error_id_map, file_status):
@@ -140,22 +143,27 @@ class MesFiles:
         warning_id_map, error_id_map = self.assign_ids(warnings, errors)
         warning_summary, error_summary = self.summarize_warnings_and_errors(warnings, errors, warning_id_map, error_id_map)
         status_summary, status_table = self.generate_file_status_table(file_status)
-        
-        warning_df = self.to_dataframe(warning_summary, 'warnings.csv', ['ID', 'Type', 'Description', 'Frequency', 'Filename'])
-        error_df = self.to_dataframe(error_summary, 'errors.csv', ['ID', 'Type', 'Description', 'Frequency', 'Filename'])
+
+        warnings_filename = os.path.join(directory, 'mes_warnings.csv')
+        warning_df = self.to_dataframe(warning_summary, warnings_filename, ['ID', 'Type', 'Description', 'Frequency', 'Filename'])
+
+        error_filename = os.path.join(directory, 'mes_errors.csv')
+        error_df = self.to_dataframe(error_summary, error_filename, ['ID', 'Type', 'Description', 'Frequency', 'Filename'])
+
         status_df = pd.DataFrame(status_summary[1:], columns=status_summary[0])
-        status_df.to_csv('mes_file_status.csv', index=False)
-        
+        status_filename = os.path.join(directory, 'mes_status.csv')
+        status_df.to_csv(status_filename, index=False)
+
         merged_warning_df = self.merge_cells(warning_df)
         merged_error_df = self.merge_cells(error_df)
 
         merged_warning_df.index += 1
         merged_error_df.index += 1
 
-        warnings_filename = os.path.join(directory, 'warnings.csv')
+        warnings_filename = os.path.join(directory, 'mes_warnings.csv')
         merged_warning_df.to_csv(warnings_filename)
         
-        error_filename = os.path.join(directory, 'errors.csv')
+        error_filename = os.path.join(directory, 'mes_errors.csv')
         merged_error_df.to_csv(error_filename)
         
         logging.info("Summary of Warnings:")
@@ -165,12 +173,12 @@ class MesFiles:
         logging.info("\nFile Status:")
         logging.info(status_df)
         logging.info(status_table)
-        
+
         id_file_matrix = self.generate_id_file_matrix(warnings, errors, warning_id_map, error_id_map, file_status)
         id_file_df = pd.DataFrame(id_file_matrix[1:], columns=id_file_matrix[0])
         id_file_df.index += 1
-        
-        map_filename = os.path.join(directory, 'warning_error_map.csv')
+
+        map_filename = os.path.join(directory, 'mes_warning_error_map.csv')
         id_file_df.to_csv(map_filename)
 
         logging.info("\nID File Matrix:")
