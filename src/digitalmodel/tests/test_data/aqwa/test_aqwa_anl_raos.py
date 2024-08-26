@@ -24,4 +24,4 @@ def test_run_process():
 
     run_process(input_file, expected_result={})
 
-test_run_process()
+test_run_process()  
