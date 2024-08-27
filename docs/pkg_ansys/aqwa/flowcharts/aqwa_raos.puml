@@ -146,6 +146,9 @@ start
                 Objective: Define appropriate additional damping:
                 Programs:
                  - Workbench
+                 - Damping:
+                   - percent: AQR/LIS
+                   - absolute: AQR/LIS
             end note
 
         :Define ROll and Pitch Damping;
