@@ -1,11 +1,8 @@
 # Standard library imports
 import logging
-
-# Standard library imports
 import os
 import sys
 
-# Third party imports
 # Third party imports
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import CopyAndPasteFiles, SaveData
@@ -15,8 +12,6 @@ from assetutilities.common.yml_utilities import ymlInput
 
 # Reader imports
 from digitalmodel.aqwa import Aqwa
-
-# Reader imports
 from digitalmodel.catenary_riser import catenary_riser
 from digitalmodel.common.cathodic_protection import CathodicProtection
 from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
@@ -38,7 +33,9 @@ from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
 from digitalmodel.custom.viv.viv_analysis import VIVAnalysis
 from digitalmodel.orcaflex_analysis import orcaflex_analysis
 from digitalmodel.vertical_riser import vertical_riser
+
 ou = OrcaflexUtilities()
+
 library_name = "digitalmodel"
 save_data = SaveData()
 
@@ -54,12 +51,6 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     basename = cfg["basename"]
     application_manager = ConfigureApplicationInputs(basename)
     application_manager.configure(cfg, library_name)
-
-    if config_flag:
-        cfg_base = application_manager.cfg
-        cfg_base = fm.router(cfg_base)
-    else:
-        cfg_base = cfg
 
     if config_flag:
         cfg_base = application_manager.cfg

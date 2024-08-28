@@ -30,7 +30,9 @@ class AqwaReader:
         self.aqwareader_exe = au.get_aqwareader_exe(cfg)
         self.workbench_bat = au.get_workbench_bat(cfg)
         cfg = fm.router(cfg)
-        self.postprocess(cfg)
+        cfg = self.postprocess(cfg)
+
+        return cfg
 
     def postprocess(self, cfg):
 
@@ -57,10 +59,10 @@ class AqwaReader:
                 df_item['input_file'] = Path(input_file).stem
                 save_csv = result_item.get('save_csv', False)
                 if save_csv:
-                    sheetname = result_item['inject_into'].get('sheetname', None)
+                    sheetname = Path(input_file).stem + '_' + result_item['inject_into'].get('sheetname', None)
                     if sheetname is None:
                         sheetname = Path(input_file).stem + '_' + result_item['label']
-                    self.save_to_csv(df_item, result_item, cfg, sheetname)
+                    csv_filename = self.save_to_csv(df_item, result_item, cfg, sheetname)
                     # self.save_statistics(cfg, df_item, sheetname)
                     self.inject_to_excel(df_item, result_item, cfg)
 
@@ -68,9 +70,14 @@ class AqwaReader:
                 #     df = pd.DataFrame.from_dict(input_file_result)
                 #     master_df = pd.concat([master_df, df], axis=0)
 
-            sheetname = result_item['label']
-            self.save_to_csv(master_df, result_item, cfg, sheetname)
-            self.inject_to_excel(master_df, result_item, cfg)
+            sheetname = Path(input_file).stem + '_' + result_item['label']
+            if not master_df.empty:
+                csv_filename = self.save_to_csv(master_df, result_item, cfg, sheetname)
+                self.inject_to_excel(master_df, result_item, cfg)
+
+        cfg[cfg['basename']] = {'csv_filename': csv_filename}
+
+        return cfg
 
     def get_result_groups(self, input_file, cfg, result_item):
         result_item_dict = {}
@@ -293,8 +300,11 @@ class AqwaReader:
 
         csv_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '.csv')
         df.to_csv(csv_filename, index=False, header=True)
+        
+        return csv_filename
 
     def save_statistics(self, cfg, df, sheetname):
+        # Third party imports
         from assetutilities.common.data_exploration import DataExploration
         de = DataExploration()
         

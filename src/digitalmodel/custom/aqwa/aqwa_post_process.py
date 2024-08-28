@@ -19,7 +19,7 @@ class AqwaPostProcess:
 
         if cfg['type']['results']:
             if cfg['result_method'] == 'lis':
-                lis_files.router(cfg)
+                cfg = lis_files.router(cfg)
             elif cfg['result_method'] == 'aqwareader':
                 ar.router(cfg)
 

@@ -4,11 +4,13 @@ import logging
 import pandas as pd
 from pathlib import Path
 
+# Third party imports
 
 from assetutilities.common.file_management import FileManagement
 from assetutilities.common.data import ReadData
 from assetutilities.common.data import SaveData
 
+# Reader imports
 from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
 
 fm = FileManagement()
@@ -23,18 +25,24 @@ class AqwaLISFiles:
 
     def router(self, cfg):
         cfg = fm.router(cfg)
+        csv_filename_array = []
         for result_item in cfg['result']:
-            df = self.get_data(cfg, result_item)
+            df, input_file = self.get_data(cfg, result_item)
 
             df = self.get_sorted_dataframe(df, result_item)
             df = self.get_output_transformed_data(df, cfg)
 
-            self.save_to_csv(df, result_item, cfg)
+            csv_filename = self.save_to_csv(df, result_item, cfg, input_file)
+            csv_filename_array.append(csv_filename)
             self.injectSummaryToExcel(df, result_item, cfg)
+
+        cfg[cfg['basename']] = {'csv_filename': csv_filename_array}
+
+        return cfg
 
     def get_data(self, cfg, cfg_lis):
         input_files = cfg['file_management']['input_files']['LIS']
-        
+
         df_master = pd.DataFrame()
         for input_file in input_files:
             cfg_file = {'io': input_file, 'basename': os.path.basename(input_file)}
@@ -66,8 +74,10 @@ class AqwaLISFiles:
             df = self.get_refine_data_using_cfg(data, cfg_refine, cfg_lis_search_cfg)
             df['input_file'] = Path(input_file).stem
             df_master = pd.concat([df_master, df], axis=0)
+            
+            input_file = Path(input_file).stem
 
-        return df_master
+        return df_master, input_file
 
     def get_refine_data_using_cfg(self, data, cfg_refine, cfg_lis_search_cfg):
         refine_data_line_numbers = rd.get_array_rows_containing_keywords(data, cfg_refine['key_words'], cfg_refine)
@@ -149,12 +159,14 @@ class AqwaLISFiles:
 
             return df
 
-    def save_to_csv(self, df, result_item, cfg):
-        save_csv = result_item.get('save_csv', False)
+    def save_to_csv(self, df, result_item, cfg, input_file):
+        save_csv = result_item.get('save_csv', True)
         if save_csv:
             sheetname = result_item['inject_into']['sheetname']
-            csv_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '.csv')
+            csv_filename = os.path.join(cfg['Analysis']['result_folder'], input_file +'_' + sheetname + '.csv')
             df.to_csv(csv_filename, index=False, header=True)
+
+        return csv_filename
 
     def injectSummaryToExcel(self, df, result_item, cfg):
         if 'inject_into' in result_item and result_item[

@@ -30,7 +30,7 @@ class Aqwa:
             mes_files.router(cfg)
 
         if cfg['type']['results']:
-            a_post.post_process_router(cfg)
+            cfg = a_post.post_process_router(cfg)
 
 
 

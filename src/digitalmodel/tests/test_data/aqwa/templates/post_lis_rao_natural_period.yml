@@ -1,0 +1,67 @@
+basename: aqwa
+
+software:
+  version: []
+
+type:
+  preprocess: False
+  analysis: False
+  results: True
+
+result_method: lis # aqwareader
+
+result:
+  - label: natural_period
+    file_extension: LIS
+    search_cfg:
+      start:
+        line_number: NULL
+        key_words:
+          ["N A T U R A L   F R E Q U E N C I E S / P E R I O D S   F O R   S T R U C T U R E"]
+        occurrence: 1 # freq, period, critical damping, repeated data at end
+        transform: { scale: 1, shift: 0 }
+      end:
+        line_number: NULL
+        key_words: [FINISH DATE]
+        occurrence: 1
+        transform: { scale: 1, shift: -2 }
+
+      data_extraction:
+        key_words:
+          ["FREQUENCY  FREQUENCY                UNDAMPED  NATURAL  FREQUENCIES(RADIANS/SECOND)"]
+        occurrence: NULL
+        header:
+          transform:
+            scale: 1
+            shift: 2
+        data:
+          transform:
+            scale: 1
+            shift: 5
+
+    inject_into:
+      flag: False
+      filename: output/aqwa_damp.xlsx
+      sheetname: no_damp_np
+
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: raos
+      file_extensions: [LIS]
+      filename_pattern: F_
+    output_directory: NULL
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

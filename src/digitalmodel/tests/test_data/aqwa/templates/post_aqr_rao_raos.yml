@@ -14,47 +14,21 @@ type:
 result_method: aqwareader # lis
 
 result:
-  - label: raos_ad000
+  - label: ad000_raos
     structure: 1
     category: frequency
     save_csv: True
     save_aqwareader_csv: False
     inject_into:
-      flag: True
+      flag: False
       filename: results/raos.xlsx
-      sheetname: raos_ad000
+      sheetname: ad000_raos
     groups:
       - third_level_label: FREE FLOATING RAOS
         first_level: [1] # Frequency choice
         second_level: [1, 2, 3] # Direction(s)
         third_level: [1, 7] # Amplitude and Phase
         fourth_level: NULL
-
-  - label: damp_ad000
-    structure: 1
-    category: frequency
-    save_csv: True
-    save_aqwareader_csv: True
-    inject_into:
-      flag: True
-      filename: results/raos.xlsx
-      sheetname: damp_ad000
-    groups:
-      - third_level_label: RADIATION DAMPING
-        first_level: [3] # addedmass/damping choice
-        second_level: [1] # Direction Independent
-        third_level: [3] # DOF
-        fourth_level: [3] # DOF - Tensor
-      - third_level_label: RADIATION DAMPING
-        first_level: [3] # addedmass/damping choice
-        second_level: [1] # Direction Independent
-        third_level: [4] # DOF
-        fourth_level: [4]
-      - third_level_label: RADIATION DAMPING
-        first_level: [3] # addedmass/damping choice
-        second_level: [1] # Direction Independent
-        third_level: [5] # DOF
-        fourth_level: [5] # DOF - Tensor
 
 file_management:
   flag: True
@@ -65,8 +39,8 @@ file_management:
     files_in_current_directory:
       flag: False
       auto_read: True
-      directory: manual
-      filename_pattern: FST1_L015_AD000
+      directory: raos
+      filename_pattern: F_
       file_extensions: [PLT]
     output_directory: NULL
 
