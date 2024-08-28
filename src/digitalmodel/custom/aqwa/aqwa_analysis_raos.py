@@ -3,9 +3,9 @@ import os
 
 # Third party imports
 from assetutilities.common.update_deep import AttributeDict
+from assetutilities.common.utilities import is_file_valid_func
 from assetutilities.common.yml_utilities import WorkingWithYAML  # noqa
 from assetutilities.engine import engine as au_engine
-
 # Reader imports
 from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities  # noqa
 from digitalmodel.engine import engine as dm_engine
@@ -107,6 +107,28 @@ class AqwaRAOs:
         template_yaml['input'] = hydrostatic_cfg['input']
         template_yaml["Analysis"] = cfg["Analysis"].copy()
         template_yaml["file_management"] = cfg["file_management"].copy()
+        
+        input_cfg = template_yaml['input']
+        analysis_root_folder = cfg['Analysis']['analysis_root_folder']
+
+        for input in input_cfg:
+            input_files_cfg = input['input_files']
+            for input_files_array in input_files_cfg:
+                for file_idx in range(0, len(input_files_array)):
+                    input_file = input_files_array[file_idx]
+                    is_file_valid, relative_input_file = is_file_valid_func(input_file, analysis_root_folder)
+                    if is_file_valid:
+                        input_files_array[file_idx] = relative_input_file
+                    else:
+                        library_filename_cfg = {
+                            'filename': input_file,
+                            'library_name': library_name
+                        }
+                        library_filename = wwy.get_library_filename(library_filename_cfg)
+                        if os.path.isfile(library_filename):
+                            input_files_array[file_idx] = library_filename
+                        else:
+                            raise FileNotFoundError(f"File {input_file} not found in {analysis_root_folder} or {module_path}")
 
         return template_yaml
 

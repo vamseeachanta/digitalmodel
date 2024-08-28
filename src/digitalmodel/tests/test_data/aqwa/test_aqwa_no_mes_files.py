@@ -13,8 +13,9 @@ def run_process(input_file, expected_result={}):
     assert (True)
 
 def test_run_process():
-    input_file = 'aqwa_anl_raos.yml'
-
+    input_file = 'aqwa_no_mes_files.yml'
+    # input_file = 'aqwa_lis_rao_damp.yml'
+    # input_file = 'aqwa_lis_rao_at_node.yml'
     pytest_output_file = None
     # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     # expected_result = ymlInput(pytest_output_file, updateYml=None)
@@ -24,4 +25,5 @@ def test_run_process():
 
     run_process(input_file, expected_result={})
 
-test_run_process()  
+
+test_run_process()
