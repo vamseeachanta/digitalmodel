@@ -9,36 +9,64 @@ from colorama import init as colorama_init
 
 colorama_init()
 
-def run_yaml_files(root_directory,sub_folders):
+def run_yaml_files(root_directory):
     
     folders = []
     filenames = []
     statuses = []
+    processed_files = set()
 
-    for subfolder in sub_folders:
-        subfolder_path = os.path.join(root_directory, subfolder)
-        for root, _, files in os.walk(subfolder_path):
-            for filename in files:
-                if filename.endswith(('.yml', '.yaml')) and not filename.lower().startswith('app'):
-                    file_path = os.path.join(root, filename)
-                    try:
-                        result = subprocess.run(['python', '-m', library, file_path], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                        print(result.stdout.decode())  
-                        folders.append(os.path.relpath(root, root_directory))  
-                        filenames.append(filename)
-                        statuses.append('Success')
-                    except subprocess.CalledProcessError as e:
-                        print(e.stderr.decode())  
-                        folders.append(os.path.relpath(root, root_directory))  
-                        filenames.append(filename)
-                        statuses.append('Failed')
+    for root, dirs, files in os.walk(root_directory):
+        
+        # Skip files in the root directory
+        if root == root_directory:
+            continue
+        
+        for filename in files:
 
-            df = pd.DataFrame({'Folder': folders, 'Filename': filenames, 'Status': statuses})
+            if filename.endswith(('.yml', '.yaml')) and not filename.lower().startswith('app'):
+                
+                if filename in processed_files:
+                    continue
+                
+                file_path = os.path.join(root, filename)
+                try:
+                    result = subprocess.run(['python', '-m', library, file_path], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    print(result.stdout.decode())
+                    folders.append(os.path.relpath(root, root_directory))  
+                    filenames.append(filename)
+                    statuses.append('Success')
+                except subprocess.CalledProcessError as e:
+                    print(e.stderr.decode())  
+                    folders.append(os.path.relpath(root, root_directory)) 
+                    filenames.append(filename)
+                    statuses.append('Failed')
 
-            df = df.sort_values(by=['Status', 'Folder'], ascending=[False, True])
+                processed_files.add(filename)
 
-            output_csv = os.path.join(root_directory, 'yml_status.csv')
-            df.to_csv(output_csv, index=False)
+        df = pd.DataFrame({'Folder': folders, 'Filename': filenames, 'Status': statuses})
+
+        df = df.sort_values(by=['Status', 'Folder'], ascending=[False, True])
+
+        output_csv = os.path.join(root_directory, 'yml_file_status.csv')
+        df.to_csv(output_csv, index=False)
+
+    no_of_files = len(filenames)
+    tests_passed = len(df[df['Status'] == 'Success'])
+    tests_failed = len(df[df['Status'] == 'Failed'])
+
+    summary_output = (
+        f'Detailed output: {df}\n'
+        f'No. of files processed: {no_of_files}\n'
+        f"Tests passed: {tests_passed}\n"
+        f"Tests Failed: {tests_failed}\n"
+    )
+
+    os.makedirs(root_directory, exist_ok=True)
+
+    summary_file = summary_file = os.path.join(root_directory, 'yml_summary.txt')
+    with open(summary_file, 'w') as f:
+        f.write(summary_output)
 
 
     print(f'Detailed output: {df}')
@@ -50,8 +78,5 @@ def run_yaml_files(root_directory,sub_folders):
 
 if __name__ == '__main__':
     library = 'digitalmodel'
-    root_directory = f'src/{library}/tests/test_data'
-    sub_folders = ['6d_buoy','aqwa','catenary_riser','fatigue_analysis','fea_model','installation','orcaflex','orcaflex_analysis',
-                   'orcaflex_file_preparation','orcaflex_post_process','pipeline','raos','rigging','shapes','ship_design',
-                   'umbilical_analysis','vertical_riser','vessels','viv_analysis'] 
-    run_yaml_files(root_directory,sub_folders)
+    root_directory = f'src/{library}/tests/test_data' 
+    run_yaml_files(root_directory)

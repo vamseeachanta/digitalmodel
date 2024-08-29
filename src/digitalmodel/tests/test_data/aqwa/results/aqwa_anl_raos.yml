@@ -93,13 +93,10 @@ dictitems:
         filename_pattern: WB_
         file_extensions:
         - DAT
-      output_directory: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\raos\decks
+      output_directory: src\digitalmodel\tests\test_data\aqwa\raos\decks
     input_files:
       DAT:
       - !!python/object/apply:pathlib.WindowsPath
-        - k:\
-        - python
-        - digitalmodel
         - src
         - digitalmodel
         - tests
@@ -108,9 +105,6 @@ dictitems:
         - raos
         - WB_125K_LNGC.dat
       - !!python/object/apply:pathlib.WindowsPath
-        - k:\
-        - python
-        - digitalmodel
         - src
         - digitalmodel
         - tests
@@ -119,9 +113,6 @@ dictitems:
         - raos
         - WB_180K_LNGC.dat
       - !!python/object/apply:pathlib.WindowsPath
-        - k:\
-        - python
-        - digitalmodel
         - src
         - digitalmodel
         - tests
@@ -130,9 +121,6 @@ dictitems:
         - raos
         - WB_FST1.dat
       - !!python/object/apply:pathlib.WindowsPath
-        - k:\
-        - python
-        - digitalmodel
         - src
         - digitalmodel
         - tests
@@ -148,20 +136,17 @@ dictitems:
       cfg_sensitivities: false
   Analysis:
     basename: aqwa
-    analysis_root_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa
+    analysis_root_folder: src/digitalmodel/tests/test_data\aqwa
     file_name: aqwa_anl_raos
     file_name_for_overwrite: aqwa_anl_raos
-    result_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
-    log_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-08-24 20:19:28.526892
+    result_folder: src/digitalmodel/tests/test_data\aqwa\results
+    log_folder: src/digitalmodel/tests/test_data\aqwa\logs
+    start_time: 2024-08-29 15:12:51.541620
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_anl_raos.yml
-    fe_folder: k:\python\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_anl_raos.yml
+    fe_folder: src/digitalmodel/tests/test_data\aqwa\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - k:\
-    - python
-    - digitalmodel
     - src
     - digitalmodel
     - tests
@@ -169,9 +154,6 @@ dictitems:
     - aqwa
     - raos
     file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - k:\
-    - python
-    - digitalmodel
     - src
     - digitalmodel
     - tests

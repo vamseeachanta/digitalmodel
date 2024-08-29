@@ -198,17 +198,17 @@ dictitems:
       overwrite:
         output: true
   Analysis:
-    fe_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\viv_analysis\results
+    fe_folder: src/digitalmodel/tests/test_data\viv_analysis\results
     basename: viv_analysis
-    analysis_root_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\viv_analysis
+    analysis_root_folder: src/digitalmodel/tests/test_data\viv_analysis
     file_name: viv_analysis
     file_name_for_overwrite: viv_analysis
-    result_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\viv_analysis\results
-    log_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\viv_analysis\logs
-    start_time: 2024-07-23 16:33:57.945441
+    result_folder: src/digitalmodel/tests/test_data\viv_analysis\results
+    log_folder: src/digitalmodel/tests/test_data\viv_analysis\logs
+    start_time: 2024-08-29 16:03:02.484791
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: c:\github\digitalmodel\src\digitalmodel\tests\test_data\viv_analysis\viv_analysis.yml
+    CustomInputFile: src/digitalmodel/tests/test_data\viv_analysis\viv_analysis.yml
   environment:
     current:
     - label: 1 yr

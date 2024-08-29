@@ -1,0 +1,17 @@
+Detailed output:                    Folder                      Filename   Status
+29                   aqwa   aqwa_lis_rao_acc_at_CoG.yml  Success
+30                   aqwa      aqwa_lis_rao_at_node.yml  Success
+33                   aqwa     aqwa_pre_process_deck.yml  Success
+34                   aqwa  aqwa_pre_process_deck_10.yml  Success
+35                   aqwa  aqwa_pre_process_deck_11.yml  Success
+..                    ...                           ...      ...
+124               vessels         host_id_8_extreme.yml   Failed
+125               vessels         host_id_8_Fatigue.yml   Failed
+126               vessels   host_id_x_110000_Tanker.yml   Failed
+127               vessels         host_id_x_fatigue.yml   Failed
+129  viv_analysis\results       pytest_viv_analysis.yml   Failed
+
+[130 rows x 3 columns]
+No. of files processed: 130
+Tests passed: 15
+Tests Failed: 115

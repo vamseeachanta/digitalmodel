@@ -75,21 +75,17 @@ dictitems:
         direction: 22.8
   Analysis:
     basename: aqwa
-    analysis_root_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa
-    file_name: aqwa_pre_process_deck_10
-    file_name_for_overwrite: aqwa_pre_process_deck_10
-    result_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
-    log_folder: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-06-26 09:54:24.032483
+    analysis_root_folder: src/digitalmodel/tests/test_data\aqwa
+    file_name: aqwa_pre_process_deck_11
+    file_name_for_overwrite: aqwa_pre_process_deck_11
+    result_folder: src/digitalmodel/tests/test_data\aqwa\results
+    log_folder: src/digitalmodel/tests/test_data\aqwa\logs
+    start_time: 2024-08-29 15:16:38.827820
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: c:\Users\vamseea\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_pre_process_deck_10.yml
+    CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_pre_process_deck_11.yml
+    fe_folder: src/digitalmodel/tests/test_data\aqwa\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - c:\
-    - Users
-    - vamseea
-    - github
-    - digitalmodel
     - src
     - digitalmodel
     - tests
@@ -98,11 +94,6 @@ dictitems:
     - output
     - lis
     file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - c:\
-    - Users
-    - vamseea
-    - github
-    - digitalmodel
     - src
     - digitalmodel
     - tests

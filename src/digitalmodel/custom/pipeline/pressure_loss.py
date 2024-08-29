@@ -146,7 +146,7 @@ class Pressureloss():
 
         plt.text(0.5, 0.5, r'$\cos(y) + 4y + y^3$', fontsize=15, ha='center')
         plt.axis('off')
-        plt.show()
+        plt.savefig('docs/sub_pipelines/display_equation.png')
 
         flow_parameters = {'flow_rate': round(fr,3), 'U': U, 'reynolds_number': reynolds_number,
                            'friction_loss': friction_loss,'friction_factor_laminar':friction_factor_laminar,
