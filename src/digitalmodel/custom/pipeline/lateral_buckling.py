@@ -327,7 +327,7 @@ class LateralBuckling:
                      ]
         plot_yml['master_settings']['groups']['transform'] = transform
 
-        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_lateral_buckling_force_imp', 
+        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_force_imp', 
                     'title': 'Force along length',
                     'xlabel': 'Length (m)',
                     'ylabel': 'Force (kips)'}
@@ -351,7 +351,7 @@ class LateralBuckling:
                      ]
         plot_yml['master_settings']['groups']['transform'] = transform
 
-        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_lateral_buckling_force_met', 
+        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_force_met', 
                     'title': 'Force along length',
                     'xlabel': 'Length (m)',
                     'ylabel': 'Force (kN)'}
@@ -377,7 +377,7 @@ class LateralBuckling:
                      ]
         plot_yml['master_settings']['groups']['transform'] = transform
 
-        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_lateral_buckling_stress_imp', 
+        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_stress_imp', 
                     'title': 'Stress along length',
                     'xlabel': 'Length (m)',
                     'ylabel': 'Stress (ksi)'}
@@ -403,7 +403,7 @@ class LateralBuckling:
                      ]
         plot_yml['master_settings']['groups']['transform'] = transform
 
-        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_lateral_buckling_stress_met', 
+        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_stress_met', 
                     'title': 'Stress along length',
                     'xlabel': 'Length (m)',
                     'ylabel': 'Stress (MPa)'}
@@ -424,7 +424,7 @@ class LateralBuckling:
                      ]
         plot_yml['master_settings']['groups']['transform'] = transform
 
-        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_lateral_buckling_strain', 
+        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_strain', 
                     'title': 'Strain along length',
                     'xlabel': 'Length (m)',
                     'ylabel': 'Strain'}
