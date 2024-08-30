@@ -38,4 +38,4 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pytest src/digitalmodel/tests/no_license
+          pytest src/digitalmodel/tests/test_pipeline.py
