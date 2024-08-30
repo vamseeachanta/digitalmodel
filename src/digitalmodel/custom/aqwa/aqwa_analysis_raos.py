@@ -38,22 +38,6 @@ class AqwaRAOs:
         # cfg = self.prepare_damping_runs(cfg, additional_damping)
 
         return cfg
-    
-    #TODO
-    # Verify result change with change in Draft and coG Z definition (Pending)
-    # Define CoG, weight, inertia, etc (DONE)
-    # Combine files into .dat (DONE)
-    # Run AQWA (DONE)
-    # Get hydrostatic output (Manual - no need?)
-    # Verify out-of-balance forces.  (Manual - no need?)
-    # Get RAOs (with no damping) (BatchFile)
-    # Get RAOs output and identify peaks (scipy routine?)
-    # Extract damping values 
-    # Ensure frequency resoultion is sufficient around peaks
-    # Define frequency independent damping values
-    # Rerun Diffraction analysis
-    # Plot RAOs
-    # Plot RAO comparisons
 
     def split_dat_to_decks(self, cfg: dict) -> None:
         self.create_decks_directory(cfg)
@@ -373,8 +357,8 @@ class AqwaRAOs:
         self.create_decks_directory(cfg)
 
         deck_input = cfg['analysis_settings']['damping']['additional_damping']
-        deck_input['inputs'][0]['data']['raw']['added_damping']['rxx'] = additional_damping_values['roll']
-        deck_input['inputs'][0]['data']['raw']['added_damping']['ryy'] = additional_damping_values['pitch']
+        deck_input['inputs'][1]['data']['raw']['added_damping']['rxx'] = additional_damping_values['roll']
+        deck_input['inputs'][1]['data']['raw']['added_damping']['ryy'] = additional_damping_values['pitch']
 
         template_yaml = self.get_template_prepare_decks(cfg, deck_input)
         dm_engine(inputfile=None, cfg=template_yaml, config_flag=False)

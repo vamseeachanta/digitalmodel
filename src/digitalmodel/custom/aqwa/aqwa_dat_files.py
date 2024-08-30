@@ -101,10 +101,13 @@ class AqwaDATFiles:
             structure = body_item['structure']
             node = body_item['node']
             X = body_item['X']
+            X = f"{X:.3f}"
             Y = body_item['Y']
+            Y = f"{Y:.3f}"
             Z = body_item['Z']
+            Z = f"{Z:.3f}"
 
-            body_item_str = f"{white_space:>1s}{white_space:>3s}{structure:>2d}{node:>5d}{white_space:>4s}{white_space:>5s}{X:>10f} {Y:>10f} {Z:>10f}" 
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{structure:>2d}{node:>5d}{white_space:>4s}{white_space:>5s}{X:>10s}{Y:>10s}{Z:>10s}"
             body.append(body_item_str)
 
         return body
