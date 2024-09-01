@@ -50,7 +50,7 @@ dictitems:
     file_name_for_overwrite: installation_structure
     result_folder: src/digitalmodel/tests/test_data\installation\results
     log_folder: src/digitalmodel/tests/test_data\installation\logs
-    start_time: 2024-08-29 15:23:28.451376
+    start_time: 2024-09-01 11:56:42.479541
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: src/digitalmodel/tests/test_data\installation\installation_structure.yml

@@ -213,7 +213,7 @@ dictitems:
     file_name_for_overwrite: pipeline_lb_30in_normal_op
     result_folder: src/digitalmodel/tests/test_data\pipeline\results
     log_folder: src/digitalmodel/tests/test_data\pipeline\logs
-    start_time: 2024-08-29 15:50:21.924830
+    start_time: 2024-09-01 12:10:25.065473
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: src/digitalmodel/tests/test_data\pipeline\pipeline_lb_30in_normal_op.yml

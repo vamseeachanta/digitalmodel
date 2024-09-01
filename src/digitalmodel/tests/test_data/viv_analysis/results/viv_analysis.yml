@@ -205,7 +205,7 @@ dictitems:
     file_name_for_overwrite: viv_analysis
     result_folder: src/digitalmodel/tests/test_data\viv_analysis\results
     log_folder: src/digitalmodel/tests/test_data\viv_analysis\logs
-    start_time: 2024-08-29 16:03:02.484791
+    start_time: 2024-09-01 12:19:36.003766
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: src/digitalmodel/tests/test_data\viv_analysis\viv_analysis.yml

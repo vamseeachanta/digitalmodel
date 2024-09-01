@@ -224,13 +224,13 @@ dictitems:
         output: true
   Analysis:
     basename: pipeline
-    analysis_root_folder: c:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\tests\test_data\pipeline
+    analysis_root_folder: src/digitalmodel/tests/test_data\pipeline
     file_name: pipeline_lateral_bucklng
     file_name_for_overwrite: pipeline_lateral_bucklng
-    result_folder: c:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\tests\test_data\pipeline\results
-    log_folder: c:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\tests\test_data\pipeline\logs
-    start_time: 2024-08-30 11:20:07.341298
+    result_folder: src/digitalmodel/tests/test_data\pipeline\results
+    log_folder: src/digitalmodel/tests/test_data\pipeline\logs
+    start_time: 2024-09-01 12:09:09.635173
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: c:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\tests\test_data\pipeline\pipeline_lateral_bucklng.yml
-    fe_folder: c:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\tests\test_data\pipeline\results
+    CustomInputFile: src/digitalmodel/tests/test_data\pipeline\pipeline_lateral_bucklng.yml
+    fe_folder: src/digitalmodel/tests/test_data\pipeline\results

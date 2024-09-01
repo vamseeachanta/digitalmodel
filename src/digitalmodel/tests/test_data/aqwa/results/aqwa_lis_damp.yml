@@ -1,0 +1,163 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: aqwa
+  software:
+    version: []
+  type:
+    preprocess: false
+    analysis: false
+    results: true
+  result_method: lis
+  result:
+  - label: natural_period
+    file_extension: LIS
+    search_cfg:
+      start:
+        line_number: ~
+        key_words:
+        - N A T U R A L   F R E Q U E N C I E S / P E R I O D S   F O R   S T R U
+          C T U R E
+        occurrence: 4
+        transform:
+          scale: 1
+          shift: 0
+      end:
+        line_number: ~
+        key_words:
+        - FINISH DATE
+        occurrence: 1
+        transform:
+          scale: 1
+          shift: -2
+      data_extraction:
+        key_words:
+        - PERIOD     PERIOD                         UNDAMPED  NATURAL  PERIOD(SECONDS)
+        occurrence: ~
+        header:
+          transform:
+            scale: 1
+            shift: 2
+        data:
+          transform:
+            scale: 1
+            shift: 5
+    inject_into:
+      flag: true
+      filename: output/aqwa_damp.xlsx
+      sheetname: no_damp_np
+  - label: critical_damping
+    file_extension: LIS
+    search_cfg:
+      start:
+        line_number: ~
+        key_words:
+        - N A T U R A L   F R E Q U E N C I E S / P E R I O D S   F O R   S T R U
+          C T U R E
+        occurrence: 4
+        transform:
+          scale: 1
+          shift: 0
+      end:
+        line_number: ~
+        key_words:
+        - FINISH DATE
+        occurrence: 1
+        transform:
+          scale: 1
+          shift: -2
+      data_extraction:
+        key_words:
+        - FREQUENCY  FREQUENCY                  APPROXIMATE  PERCENTAGE  CRITICAL
+          DAMPING
+        occurrence: ~
+        header:
+          transform:
+            scale: 1
+            shift: 2
+        data:
+          transform:
+            scale: 1
+            shift: 5
+    inject_into:
+      flag: false
+      filename: output/aqwa_damp.xlsx
+      sheetname: no_damp_cdp
+  file_management:
+    flag: true
+    update_unfinished:
+      flag: false
+    files:
+      files_in_current_directory:
+        flag: false
+        auto_read: true
+        directory: output/lis
+        filename_pattern: NO_DAMP
+        file_extensions:
+        - LIS
+      output_directory: ~
+    input_files:
+      LIS:
+      - !!python/object/apply:pathlib.WindowsPath
+        - src
+        - digitalmodel
+        - tests
+        - test_data
+        - aqwa
+        - output
+        - lis
+        - NO_DAMP_FST1_L015.LIS
+      - !!python/object/apply:pathlib.WindowsPath
+        - src
+        - digitalmodel
+        - tests
+        - test_data
+        - aqwa
+        - output
+        - lis
+        - NO_DAMP_FST1_L050.LIS
+      - !!python/object/apply:pathlib.WindowsPath
+        - src
+        - digitalmodel
+        - tests
+        - test_data
+        - aqwa
+        - output
+        - lis
+        - NO_DAMP_FST1_L095.LIS
+  default:
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+      cfg_sensitivities: false
+  Analysis:
+    basename: aqwa
+    analysis_root_folder: src/digitalmodel/tests/test_data\aqwa
+    file_name: aqwa_lis_damp
+    file_name_for_overwrite: aqwa_lis_damp
+    result_folder: src/digitalmodel/tests/test_data\aqwa\results
+    log_folder: src/digitalmodel/tests/test_data\aqwa\logs
+    start_time: 2024-09-01 11:49:44.506920
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_lis_damp.yml
+    fe_folder: src/digitalmodel/tests/test_data\aqwa\results
+    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa
+    - output
+    - lis
+    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa
+  aqwa:
+    csv_filename:
+    - src/digitalmodel/tests/test_data\aqwa\results\NO_DAMP_FST1_L095_no_damp_np.csv
+    - src/digitalmodel/tests/test_data\aqwa\results\NO_DAMP_FST1_L095_no_damp_cdp.csv

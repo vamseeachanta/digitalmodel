@@ -271,7 +271,7 @@ dictitems:
     file_name_for_overwrite: aqwa_pre_process_deck
     result_folder: src/digitalmodel/tests/test_data\aqwa\results
     log_folder: src/digitalmodel/tests/test_data\aqwa\logs
-    start_time: 2024-08-29 15:16:04.149121
+    start_time: 2024-09-01 11:51:41.576700
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_pre_process_deck.yml
