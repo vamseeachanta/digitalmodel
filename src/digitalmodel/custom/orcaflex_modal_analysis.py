@@ -2,11 +2,12 @@ import os
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import logging
 
 try:
     import OrcFxAPI
 except:
-    print("OrcFxAPI not available")
+    logging.debug("OrcFxAPI not available")
 
 
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities

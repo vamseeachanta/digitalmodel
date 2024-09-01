@@ -42,7 +42,7 @@ result:
     inject_into:
       flag: False
       filename: output/aqwa_damp.xlsx
-      sheetname: no_damp_np
+      sheetname: np
 
 
 file_management:
@@ -60,7 +60,7 @@ file_management:
     output_directory: NULL
 
 default:
-  log_level: DEBUG
+  log_level: INFO
   config:
     overwrite:
       output: True

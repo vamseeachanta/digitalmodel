@@ -27,9 +27,9 @@ master_settings:
       fourth_level: NULL
 
 result:
-  - label: raos_ad000
+  - label: raos
     inject_into:
-      sheetname: raos_ad000
+      sheetname: raos
     filename_pattern: NULL
     directory: NULL
 

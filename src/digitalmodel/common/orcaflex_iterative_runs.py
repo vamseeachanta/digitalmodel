@@ -6,7 +6,7 @@ import pkgutil
 try:
     import OrcFxAPI
 except:
-    print("OrcFxAPI not available")
+    logging.debug("OrcFxAPI not available")
 import shutil
 
 from assetutilities.common.data import SaveData

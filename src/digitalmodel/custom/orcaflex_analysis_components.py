@@ -23,7 +23,7 @@ from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 try:
     import OrcFxAPI
 except:
-    print("OrcFxAPI not available")
+    logging.debug("OrcFxAPI not available")
 
 ou = OrcaflexUtilities()
 fm = FileManagement()

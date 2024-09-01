@@ -12,7 +12,7 @@ try:
     # Third party imports
     import OrcFxAPI
 except:
-    print("OrcFxAPI not available")
+    logging.debug("OrcFxAPI not available")
 
 # Third party imports
 from assetutilities.common.file_management import FileManagement

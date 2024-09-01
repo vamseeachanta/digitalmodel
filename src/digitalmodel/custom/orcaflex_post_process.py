@@ -1,14 +1,13 @@
 import os
 import math
 import pandas as pd
-
+import logging
 try:
     import OrcFxAPI
 except:
-    print("OrcFxAPI not available")
+    logging.debug("OrcFxAPI not available")
 
 
-import logging
 from assetutilities.common.utilities import is_file_valid_func
 from assetutilities.common.update_deep import update_deep_dictionary
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities

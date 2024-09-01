@@ -14,7 +14,7 @@ type:
 result_method: aqwareader # lis
 
 result:
-  - label: damp_ad000
+  - label: damp
     structure: 1
     category: frequency
     save_csv: True
@@ -22,7 +22,7 @@ result:
     inject_into:
       flag: False
       filename: results/raos.xlsx
-      sheetname: ad000_abs_damp
+      sheetname: abs_damp
     groups:
       - third_level_label: RADIATION DAMPING
         first_level: [3] # addedmass/damping choice

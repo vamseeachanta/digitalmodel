@@ -45,39 +45,43 @@ class AqwaLISFiles:
 
         df_master = pd.DataFrame()
         for input_file in input_files:
-            cfg_file = {'io': input_file, 'basename': os.path.basename(input_file)}
-            cfg_lis_search_cfg = cfg_lis['search_cfg']['start']
-            cfg_keyword_lines = {
-                'io': cfg_file['io'],
-                'line': cfg_lis['search_cfg']['start'].copy()
+            filename_pattern = Path(input_file).stem
+
+            try:
+                cfg_file = {'io': input_file, 'basename': os.path.basename(input_file)}
+                cfg_lis_search_cfg = cfg_lis['search_cfg']['start']
+                cfg_keyword_lines = {
+                    'io': cfg_file['io'],
+                    'line': cfg_lis['search_cfg']['start'].copy()
+                    }
+
+                start_keyword_lines = rd.from_ascii_file_get_line_number_containing_keywords(cfg_keyword_lines)
+                start_keyword_line = start_keyword_lines[cfg_lis['search_cfg']['start']['occurrence'] -1]
+
+                cfg_keyword_lines = {
+                    'io': cfg_file['io'],
+                    'line': cfg_lis['search_cfg']['end'].copy()
+                    }
+
+                end_keyword_lines = rd.from_ascii_file_get_line_number_containing_keywords(cfg_keyword_lines)
+                end_keyword_line = end_keyword_lines[cfg_lis['search_cfg']['end']['occurrence'] -1]
+
+                cfg_data_format = {
+                    'io': input_file,
+                    'start_line': start_keyword_line,
+                    'end_line': end_keyword_line
                 }
 
-            start_keyword_lines = rd.from_ascii_file_get_line_number_containing_keywords(cfg_keyword_lines)
-            start_keyword_line = start_keyword_lines[cfg_lis['search_cfg']['start']['occurrence'] -1]
+                data = rd.from_ascii_file_get_lines_as_string_arrays(cfg_data_format)
+                cfg_refine = cfg_lis['search_cfg']['data_extraction']
+                df = self.get_refine_data_using_cfg(data, cfg_refine, cfg_lis_search_cfg)
+                df['input_file'] = Path(input_file).stem
+                df_master = pd.concat([df_master, df], axis=0)
+            except Exception as e:
+                logging.error(f"Error in processing {input_file}: {e}")
 
-            cfg_keyword_lines = {
-                'io': cfg_file['io'],
-                'line': cfg_lis['search_cfg']['end'].copy()
-                }
 
-            end_keyword_lines = rd.from_ascii_file_get_line_number_containing_keywords(cfg_keyword_lines)
-            end_keyword_line = end_keyword_lines[cfg_lis['search_cfg']['end']['occurrence'] -1]
-
-            cfg_data_format = {
-                'io': input_file,
-                'start_line': start_keyword_line,
-                'end_line': end_keyword_line
-            }
-
-            data = rd.from_ascii_file_get_lines_as_string_arrays(cfg_data_format)
-            cfg_refine = cfg_lis['search_cfg']['data_extraction']
-            df = self.get_refine_data_using_cfg(data, cfg_refine, cfg_lis_search_cfg)
-            df['input_file'] = Path(input_file).stem
-            df_master = pd.concat([df_master, df], axis=0)
-            
-            input_file = Path(input_file).stem
-
-        return df_master, input_file
+        return df_master, filename_pattern
 
     def get_refine_data_using_cfg(self, data, cfg_refine, cfg_lis_search_cfg):
         refine_data_line_numbers = rd.get_array_rows_containing_keywords(data, cfg_refine['key_words'], cfg_refine)

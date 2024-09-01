@@ -8,6 +8,9 @@ import pandas as pd
 from assetutilities.common.file_management import FileManagement
 from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.utilities import is_file_valid_func
+from assetutilities.common.visualization.visualization_templates import (
+    VisualizationTemplates,
+)
 from assetutilities.common.yml_utilities import WorkingWithYAML  # noqa
 from assetutilities.engine import engine as au_engine
 from scipy import interpolate
@@ -16,6 +19,8 @@ from scipy import interpolate
 from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities  # noqa
 from digitalmodel.engine import engine as dm_engine
 
+
+viz_templates = VisualizationTemplates()
 
 wwy = WorkingWithYAML()
 
@@ -32,12 +37,16 @@ class AqwaRAOs:
         self.prepare_decks(cfg)
         cfg = self.prepare_no_damping_runs(cfg)
         self.run_raos(cfg)
-        damping_cfg = self.extract_damping(cfg)
-        self.prepare_damping(cfg, damping_cfg)
-
-        # cfg = self.prepare_damping_runs(cfg, additional_damping)
+        cfg, damping_cfg = self.derive_damping(cfg)
+        if damping_cfg['is_file_valid']:
+            cfg = self.prepare_damping(cfg, damping_cfg)
+            cfg = self.get_raos(cfg)
+            cfg = self.plot_raos(cfg)
+        else:
+            logging.error("No file found. Skipping damping preparation.")
 
         return cfg
+
 
     def split_dat_to_decks(self, cfg: dict) -> None:
         self.create_decks_directory(cfg)
@@ -190,72 +199,100 @@ class AqwaRAOs:
         print("Running AQWA RAO Runs manually.")
         pass
 
-
-    def extract_damping(self, cfg):
-        natural_period = self.get_natural_period(cfg)
-        percent_critical_damping = self.get_percent_critical_damping(cfg)
-        absolute_damping = self.get_absolute_damping(cfg)
-        no_damp_raos = self.get_no_damp_raos(cfg)
+    def derive_damping(self, cfg):
+        filename_pattern = cfg.analysis_settings['damp_no']['output']['filename']
+        natural_period, is_file_valid = self.get_natural_period_from_lis_file(cfg, filename_pattern)
+        percent_critical_damping, is_file_valid = self.get_percent_critical_damping(cfg, filename_pattern)
+        absolute_damping = self.get_absolute_damping(cfg, filename_pattern)
 
         damping_cfg = {
             'natural_period': natural_period, 
             'percent_critical_damping': percent_critical_damping,
             'absolute_damping': absolute_damping,
-            'no_damp_raos': no_damp_raos
+            'is_file_valid' : is_file_valid
         }
-        
-        return damping_cfg
 
-    def get_natural_period(self, cfg):
+        return cfg, damping_cfg
+
+    def get_natural_period_from_lis_file(self, cfg, filename_pattern):
         logging.info("Extracting natural period values")
         template_yaml = self.get_template_natural_period(cfg)
-        # template_yaml = fm.router(template_yaml)
-        
+        template_yaml['file_management']['files']['files_in_current_directory']['filename_pattern'] = filename_pattern
+
         cfg_temp = dm_engine(inputfile=None, cfg=template_yaml, config_flag=False)
         cfg['analysis_settings']['damping']['output'] = {'natural_period': cfg_temp[cfg_temp['basename']]}
-        
         csv_file = cfg['analysis_settings']['damping']['output']['natural_period']['csv_filename'][0]
-        natural_period = pd.read_csv(csv_file)
-        
-        return natural_period
 
-    def get_percent_critical_damping(self, cfg):
+        try:
+            is_file_valid = True
+            natural_period = pd.read_csv(csv_file)
+            no_of_frequencies = self.get_no_of_frequencies(cfg, filename_pattern)
+            if len(natural_period) >= no_of_frequencies:
+                natural_period = natural_period[:no_of_frequencies].copy()
+            else:
+                logging.error("Natural period values not found for all frequencies.")
+        except Exception:
+            is_file_valid = False
+            logging.error(f"File {csv_file} not found or empty.")
+            natural_period = pd.DataFrame()
+
+        return natural_period, is_file_valid
+
+    def get_no_of_frequencies(self, cfg, filename_pattern):
+        no_of_frequencies = None
+        input_array = cfg['analysis_settings']['drafts'][0]['inputs']
+        for input in input_array:
+            if input['data']['category'] == 6:
+                no_of_frequencies = len(input['data']['raw']['period'])
+
+        return no_of_frequencies
+
+    def get_directions_labels(self):
+        no_of_directions = [0, 45, 90, 135, 180, 225, 270, 315, 360]
+
+        return no_of_directions
+
+    def get_percent_critical_damping(self, cfg, filename_pattern):
         logging.info("Extracting critical damping values")
         template_yaml = self.get_template_critical_damping(cfg)
+        template_yaml['file_management']['files']['files_in_current_directory']['filename_pattern'] = filename_pattern
 
         cfg_temp = dm_engine(inputfile=None, cfg=template_yaml, config_flag=False)
         cfg['analysis_settings']['damping']['output'] = {'critical_damping': cfg_temp[cfg_temp['basename']]}
         
         csv_file = cfg['analysis_settings']['damping']['output']['critical_damping']['csv_filename'][0]
-        percent_critical_damping = pd.read_csv(csv_file)
-        
-        return percent_critical_damping
 
-    def get_absolute_damping(self, cfg):
+        try:
+            is_file_valid = True
+            percent_critical_damping = pd.read_csv(csv_file)
+            no_of_frequencies = self.get_no_of_frequencies(cfg, filename_pattern)
+            if len(percent_critical_damping) >= no_of_frequencies:
+                percent_critical_damping = percent_critical_damping[:no_of_frequencies].copy()
+            else:
+                logging.error("Natural period values not found for all frequencies.")
+        except Exception:
+            logging.error(f"File {csv_file} not found or empty.")
+            percent_critical_damping = pd.DataFrame()
+
+        return percent_critical_damping, is_file_valid
+
+    def get_absolute_damping(self, cfg, filename_pattern):
         logging.info("Extracting absolute damping values")
         template_yaml = self.get_template_absolute_damping(cfg)
-        
+        template_yaml['file_management']['files']['files_in_current_directory']['filename_pattern'] = filename_pattern
+
         cfg_temp = dm_engine(inputfile=None, cfg=template_yaml, config_flag=False)
         absolute_damping_cfg = {'absolute_damping': cfg_temp[cfg_temp['basename']]}
         cfg['analysis_settings']['damping']['output'].update(absolute_damping_cfg)
         
         csv_file = cfg['analysis_settings']['damping']['output']['absolute_damping']['csv_filename']
-        absolute_damping = pd.read_csv(csv_file)
+        try:
+            absolute_damping = pd.read_csv(csv_file)
+        except Exception:
+            logging.error(f"File {csv_file} not found or empty.")
+            absolute_damping = pd.DataFrame()
 
         return absolute_damping
-
-    def get_no_damp_raos(self, cfg):
-        logging.info("Extracting RAOs with no damping")
-        template_yaml = self.get_template_no_damp_raos(cfg)
-
-        cfg_temp = dm_engine(inputfile=None, cfg=template_yaml, config_flag=False)
-        raos_cfg = {'raos': cfg_temp[cfg_temp['basename']]}
-        cfg['analysis_settings']['damping']['output'].update(raos_cfg)
-
-        csv_file = cfg['analysis_settings']['damping']['output']['raos']['csv_filename']
-        no_damp_raos = pd.read_csv(csv_file)
-        
-        return no_damp_raos
 
     def get_template_natural_period(self, cfg):
         logging.info("Extracting natural period values")
@@ -294,7 +331,7 @@ class AqwaRAOs:
         template_yaml['file_management']['files']['files_in_current_directory']['directory'] = cfg['Analysis']['file_management_input_directory']
 
         return template_yaml
-    
+
     def get_template_absolute_damping(self, cfg):
         template_file_name = cfg['analysis_settings']['damping']['template']['absolute_damping']
 
@@ -312,8 +349,8 @@ class AqwaRAOs:
         template_yaml['file_management']['files']['files_in_current_directory']['directory'] = cfg['Analysis']['file_management_input_directory']
 
         return template_yaml
-    
-    def get_template_no_damp_raos(self, cfg):
+
+    def get_template_raos(self, cfg):
         template_file_name = cfg['analysis_settings']['damping']['template']['no_damp_raos']
 
         library_name = 'digitalmodel'
@@ -335,12 +372,13 @@ class AqwaRAOs:
         natural_period = damping_cfg['natural_period']
         percent_critical_damping = damping_cfg['percent_critical_damping']
         absolute_damping = damping_cfg['absolute_damping']
-        no_damp_raos = damping_cfg['no_damp_raos']
 
         peak_periods = self.get_natural_periods(natural_period)
         additional_damping_values = self.get_damping_values(cfg, percent_critical_damping, absolute_damping, peak_periods)
 
         self.prepare_damping_runs(cfg, additional_damping_values)
+        
+        return cfg
 
     def prepare_damping_runs(self, cfg, additional_damping_values):
         self.prepare_damping_decks(cfg, additional_damping_values)
@@ -368,6 +406,13 @@ class AqwaRAOs:
         pitch = round(float(natural_period['PITCH(RY)'].mean()), 3)
         heave = round(float(natural_period['HEAVE(Z)'].mean()), 3)
 
+        if roll == 0:
+            roll = 0.04
+        if pitch == 0:
+            pitch = 0.04
+        if heave == 0:
+            heave = 0.04
+
         omega = {
             'roll': roll,
             'pitch': pitch,
@@ -393,7 +438,8 @@ class AqwaRAOs:
         }
         return peak_response
 
-    def get_damping_values(self, cfg, percent_critical_damping, absolute_damping, peak_periods):
+    def get_damping_values(self, cfg, percent_critical_damping, 
+                           absolute_damping, peak_periods):
         roll_additional_damping = self.get_roll_additional_damping(cfg, percent_critical_damping, absolute_damping, peak_periods)
         pitch_additional_damping = self.get_pitch_additional_damping(cfg, percent_critical_damping, absolute_damping, peak_periods)
 
@@ -404,41 +450,154 @@ class AqwaRAOs:
 
         return damping_values
 
-    def get_roll_additional_damping(self, cfg, percent_critical_damping, absolute_damping, peak_periods):
+    def get_roll_additional_damping(self, cfg, percent_critical_damping, 
+                                    absolute_damping, peak_periods):
         roll_peak_omega = peak_periods['omega']['roll']
 
         x_values = percent_critical_damping['(RAD/S)']
         y_values = percent_critical_damping['ROLL(RX)']
         f = interpolate.interp1d(x_values, y_values, fill_value='extrapolate')
         roll_critical_damping = round(float(f(roll_peak_omega)), 3)
-    
+
         x_values = absolute_damping['frequency']
         y_values = absolute_damping['RADIATION DAMPING ROLL(X) _ROLL(X)']
         f = interpolate.interp1d(x_values, y_values, fill_value='extrapolate')
         roll_absolute_damping = round(float(f(roll_peak_omega)), 3)
 
         target_critical_damping = cfg['analysis_settings']['damping']['target_damping']['roll']
-        
+        if roll_critical_damping == 0:
+            if roll_absolute_damping < 0:
+                roll_critical_damping = -1
+            else:
+                roll_critical_damping = 1
+
         additional_damping = (target_critical_damping - roll_critical_damping)*roll_absolute_damping/roll_critical_damping*math.pi/180
-        
+
         return additional_damping
-    
-    def get_pitch_additional_damping(self, cfg, percent_critical_damping, absolute_damping, peak_periods):
+
+    def get_pitch_additional_damping(self, cfg, percent_critical_damping, 
+                                     absolute_damping, peak_periods):
         pitch_peak_omega = peak_periods['omega']['pitch']
 
         x_values = percent_critical_damping['(RAD/S)']
         y_values = percent_critical_damping['PITCH(RY)']
         f = interpolate.interp1d(x_values, y_values, fill_value='extrapolate')
-        pitch_critical_damping = round(float(f(pitch_peak_omega)), 3)
+        current_critical_damping = round(float(f(pitch_peak_omega)), 3)
 
         x_values = absolute_damping['frequency']
         y_values = absolute_damping['RADIATION DAMPING PITCH(Y) _PITCH(Y)']
         f = interpolate.interp1d(x_values, y_values, fill_value='extrapolate')
-        pitch_absolute_damping = round(float(f(pitch_peak_omega)), 3)
+        current_absolute_damping = round(float(f(pitch_peak_omega)), 3)
 
         target_critical_damping = cfg['analysis_settings']['damping']['target_damping']['pitch']
+        if current_critical_damping == 0:
+            if current_absolute_damping < 0:
+                current_critical_damping = -1
+            else:
+                current_critical_damping = 1
 
-        additional_damping = (target_critical_damping - pitch_critical_damping)*pitch_absolute_damping/pitch_critical_damping*math.pi/180
-
+        if target_critical_damping > current_critical_damping:
+            additional_damping = (target_critical_damping - current_critical_damping)*current_absolute_damping/current_critical_damping*math.pi/180
+        else:
+            additional_damping = 0
         return additional_damping
+
+    def get_raos(self, cfg):
+        rao_plot_cfg = {}
+        rao_plot_cfg['rao_key'] = 'damp_no'
+        rao_plot_cfg['title_text'] = 'No Damping'
+        cfg, no_damp_raos = self.get_raos_by_cfg(cfg, rao_plot_cfg)
+        rao_plot_cfg = {}
+        rao_plot_cfg['rao_key'] = 'damp_ad'
+        rao_plot_cfg['title_text'] = 'With Damping'
+        cfg, damp_raos = self.get_raos_by_cfg(cfg, rao_plot_cfg)
+
+        return cfg
+    
+    def get_raos_by_cfg(self, cfg, rao_plot_cfg):
+        rao_key = rao_plot_cfg['rao_key']
+        title_text = rao_plot_cfg['title_text']
+        filename_pattern = cfg.analysis_settings[rao_key]['output']['filename']
+        directions = cfg['analysis_settings'][rao_key]['directions']
+        logging.info(f"Extracting RAOs for: {title_text}")
+
+        template_yaml = self.get_template_raos(cfg)
+        sheetname_base = template_yaml['result'][0]['inject_into']['sheetname']
+        csv_file_dict = {}
+        for direction in directions:
+            template_yaml['file_management']['files']['files_in_current_directory']['filename_pattern'] = filename_pattern
+            template_yaml['result'][0]['groups'][0]['second_level'] = [direction]
+            template_yaml['result'][0]['inject_into']['sheetname'] = sheetname_base + '_' + str(direction)
+            cfg_temp = dm_engine(inputfile=None, cfg=template_yaml, config_flag=False)
+            raos_cfg = {'raos': cfg_temp[cfg_temp['basename']]}
+            cfg['analysis_settings']['damping']['output'].update(raos_cfg)
+
+            csv_file = cfg['analysis_settings']['damping']['output']['raos']['csv_filename']
+            try:
+                raos = pd.read_csv(csv_file)
+                no_damp_raos_keys = list(raos.keys())
+                renamed_columns = [no_damp_raos_keys[0]] + ['Surge', 'Sway', 'Heave', 'Roll', 'Pitch', 'Yaw'] + [no_damp_raos_keys[-1]]
+                rename_columns_dict = dict(zip(no_damp_raos_keys, renamed_columns))
+                raos.rename(columns=rename_columns_dict, inplace=True)
+                raos['Period'] = 1/raos['frequency']*2*math.pi
+                raos.to_csv(csv_file, index=False)
+            except Exception:
+                logging.error(f"File {csv_file} not found or empty.")
+                raos = pd.DataFrame()
+
+            csv_file_dict.update({direction: csv_file})
+
+        cfg['analysis_settings'][rao_key]['output'].update({'raos': {'csv_filename': csv_file_dict}})
+
+        return cfg, raos
+
+
+    def plot_raos(self, cfg):
+        rao_plot_cfg = {}
+        rao_plot_cfg['rao_key'] = 'damp_no'
+        rao_plot_cfg['title_text'] = 'No Damping'
+        self.plot_raos_by_cfg(cfg, rao_plot_cfg)
+
+        rao_plot_cfg = {}
+        rao_plot_cfg['rao_key'] = 'damp_ad'
+        rao_plot_cfg['title_text'] = 'With Damping'
+        self.plot_raos_by_cfg(cfg, rao_plot_cfg)
+
+        return cfg
+
+    def plot_raos_by_cfg(self, cfg, rao_plot_cfg):
+        rao_key = rao_plot_cfg['rao_key']
+        title_text = rao_plot_cfg['title_text']
+        directions_labels = self.get_directions_labels()
+        no_damp_csv_file_dict = cfg['analysis_settings'][rao_key]['output']['raos']['csv_filename']
+
+        csv_groups = []
+        for direction, csv_file in no_damp_csv_file_dict.items():
+            direction_value = directions_labels[direction-1]
+            csv_group = {'label': f'Heading: {direction_value}', 'file_name': csv_file}
+            csv_groups.append(csv_group)
+
+            plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
+            plot_yml['data']['groups'] = [csv_group]
+
+            columns= { 'x': ['Period'], 'y': ['Surge', 'Sway', 'Heave', 'Roll', 'Pitch', 'Yaw'] }
+            plot_yml['master_settings']['groups']['columns'] = columns
+
+            filename_prefix = cfg['analysis_settings'][rao_key]['output']['filename']
+            settings = {'file_name':  f'{filename_prefix}_{direction_value:03d}',
+                        'title': f'RAOs, {title_text}, Heading Dir: {direction_value}',
+                        'xlabel': 'Period (s)',
+                        'ylabel': 'm/m or deg/m'}
+            plot_yml['settings'].update(settings)
+            au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
+
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
+        plot_yml['data']['groups'] = csv_groups
+        plot_yml['master_settings']['groups']['columns'] = columns
+        settings = {'file_name':  f'{filename_prefix}_all_dir',
+                    'title': f'RAOs, {title_text}, Direction Comparison',
+                    'xlabel': 'Period (s)',
+                    'ylabel': 'm/m or deg/m'}
+        plot_yml['settings'].update(settings)
+        au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
 

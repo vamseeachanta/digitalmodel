@@ -14,7 +14,7 @@ save_data = SaveData()
 try:
     import OrcFxAPI
 except:
-    print("OrcFxAPI not available")
+    logging.debug("OrcFxAPI not available")
 from collections import OrderedDict
 
 from assetutilities.common.yml_utilities import ymlInput
