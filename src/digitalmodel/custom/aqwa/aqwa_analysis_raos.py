@@ -19,7 +19,6 @@ from scipy import interpolate
 from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities  # noqa
 from digitalmodel.engine import engine as dm_engine
 
-
 viz_templates = VisualizationTemplates()
 
 wwy = WorkingWithYAML()
@@ -440,8 +439,23 @@ class AqwaRAOs:
 
     def get_damping_values(self, cfg, percent_critical_damping, 
                            absolute_damping, peak_periods):
-        roll_additional_damping = self.get_roll_additional_damping(cfg, percent_critical_damping, absolute_damping, peak_periods)
-        pitch_additional_damping = self.get_pitch_additional_damping(cfg, percent_critical_damping, absolute_damping, peak_periods)
+
+        cfg_additional_damping = {}
+        cfg_additional_damping['peak_omega_key']  = 'roll'
+        critical_damping_dict = {'x': '(RAD/S)', 'y': 'ROLL(RX)'}
+        absolute_damping_dict = {'x': 'frequency', 'y': 'RADIATION DAMPING ROLL(X) _ROLL(X)'}
+        cfg_additional_damping['critical_damping'] = critical_damping_dict
+        cfg_additional_damping['absolute_damping'] = absolute_damping_dict
+
+        roll_additional_damping = self.get_additional_damping_by_cfg(cfg, cfg_additional_damping, percent_critical_damping, absolute_damping, peak_periods)
+        
+        cfg_additional_damping['peak_omega_key']  = 'pitch'
+        critical_damping_dict = {'x': '(RAD/S)', 'y': 'PITCH(RY)'}
+        absolute_damping_dict = {'x': 'frequency', 'y': 'RADIATION DAMPING PITCH(Y) _PITCH(Y)'}
+        cfg_additional_damping['critical_damping'] = critical_damping_dict
+        cfg_additional_damping['absolute_damping'] = absolute_damping_dict
+        
+        pitch_additional_damping = self.get_additional_damping_by_cfg(cfg, cfg_additional_damping, percent_critical_damping, absolute_damping, peak_periods)
 
         damping_values = {
             'roll': roll_additional_damping,
@@ -450,56 +464,50 @@ class AqwaRAOs:
 
         return damping_values
 
-    def get_roll_additional_damping(self, cfg, percent_critical_damping, 
-                                    absolute_damping, peak_periods):
-        roll_peak_omega = peak_periods['omega']['roll']
-
-        x_values = percent_critical_damping['(RAD/S)']
-        y_values = percent_critical_damping['ROLL(RX)']
-        f = interpolate.interp1d(x_values, y_values, fill_value='extrapolate')
-        roll_critical_damping = round(float(f(roll_peak_omega)), 3)
-
-        x_values = absolute_damping['frequency']
-        y_values = absolute_damping['RADIATION DAMPING ROLL(X) _ROLL(X)']
-        f = interpolate.interp1d(x_values, y_values, fill_value='extrapolate')
-        roll_absolute_damping = round(float(f(roll_peak_omega)), 3)
-
-        target_critical_damping = cfg['analysis_settings']['damping']['target_damping']['roll']
-        if roll_critical_damping == 0:
-            if roll_absolute_damping < 0:
-                roll_critical_damping = -1
-            else:
-                roll_critical_damping = 1
-
-        additional_damping = (target_critical_damping - roll_critical_damping)*roll_absolute_damping/roll_critical_damping*math.pi/180
-
-        return additional_damping
-
-    def get_pitch_additional_damping(self, cfg, percent_critical_damping, 
+    def get_additional_damping_by_cfg(self, cfg, cfg_additional_damping, percent_critical_damping, 
                                      absolute_damping, peak_periods):
-        pitch_peak_omega = peak_periods['omega']['pitch']
+        peak_omega_key = cfg_additional_damping['peak_omega_key']
+        critical_damping_dict = cfg_additional_damping['critical_damping']
+        absolute_damping_dict = cfg_additional_damping['absolute_damping']
 
-        x_values = percent_critical_damping['(RAD/S)']
-        y_values = percent_critical_damping['PITCH(RY)']
+        peak_omega = peak_periods['omega'][peak_omega_key]
+
+        x_values = percent_critical_damping[critical_damping_dict['x']]
+        y_values = percent_critical_damping[critical_damping_dict['y']]
         f = interpolate.interp1d(x_values, y_values, fill_value='extrapolate')
-        current_critical_damping = round(float(f(pitch_peak_omega)), 3)
+        current_critical_damping = round(float(f(peak_omega)), 3)
 
-        x_values = absolute_damping['frequency']
-        y_values = absolute_damping['RADIATION DAMPING PITCH(Y) _PITCH(Y)']
+        x_values = absolute_damping[absolute_damping_dict['x']]
+        y_values = absolute_damping[absolute_damping_dict['y']]
         f = interpolate.interp1d(x_values, y_values, fill_value='extrapolate')
-        current_absolute_damping = round(float(f(pitch_peak_omega)), 3)
+        current_absolute_damping = round(float(f(peak_omega)), 3)
 
-        target_critical_damping = cfg['analysis_settings']['damping']['target_damping']['pitch']
+        target_critical_damping = cfg['analysis_settings']['damping']['target_damping'][peak_omega_key]
+
         if current_critical_damping == 0:
             if current_absolute_damping < 0:
-                current_critical_damping = -1
+                current_absolute_damping = -current_absolute_damping
+            additional_damping = current_absolute_damping*math.pi/180
+        elif current_critical_damping < 0:
+            if current_absolute_damping > 0:
+                current_critical_damping = -current_critical_damping
+            if current_critical_damping < target_critical_damping:
+                additional_damping = (target_critical_damping - current_critical_damping)*current_absolute_damping/current_critical_damping*math.pi/180
             else:
-                current_critical_damping = 1
-
-        if target_critical_damping > current_critical_damping:
-            additional_damping = (target_critical_damping - current_critical_damping)*current_absolute_damping/current_critical_damping*math.pi/180
+                additional_damping = current_absolute_damping*math.pi/180
+        elif current_critical_damping > 0:
+            if current_absolute_damping < 0:
+                current_absolute_damping = -current_absolute_damping
+            if current_critical_damping < target_critical_damping:
+                additional_damping = (target_critical_damping - current_critical_damping)*current_absolute_damping/current_critical_damping*math.pi/180
+            else:
+                additional_damping = current_absolute_damping*math.pi/180
         else:
-            additional_damping = 0
+            if current_critical_damping < target_critical_damping:
+                additional_damping = (target_critical_damping - current_critical_damping)*current_absolute_damping/current_critical_damping*math.pi/180
+            else:
+                additional_damping = current_absolute_damping*math.pi/180
+
         return additional_damping
 
     def get_raos(self, cfg):
@@ -513,7 +521,7 @@ class AqwaRAOs:
         cfg, damp_raos = self.get_raos_by_cfg(cfg, rao_plot_cfg)
 
         return cfg
-    
+
     def get_raos_by_cfg(self, cfg, rao_plot_cfg):
         rao_key = rao_plot_cfg['rao_key']
         title_text = rao_plot_cfg['title_text']
