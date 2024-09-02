@@ -3,8 +3,10 @@ basename: aqwa
 software:
   version: []
 
+mes:
+  flag: True
+
 type:
-  mes: True
   preprocess: False
   analysis: False
   results: False
