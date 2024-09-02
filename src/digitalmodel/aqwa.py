@@ -27,6 +27,7 @@ class Aqwa:
             from digitalmodel.custom.aqwa.aqwa_analysis import AqwaAnalysis
             a_analysis = AqwaAnalysis()
             a_analysis.analysis_router(cfg)
+        if cfg['type']['mes']:
             mes_files.router(cfg)
 
         if cfg['type']['results']:

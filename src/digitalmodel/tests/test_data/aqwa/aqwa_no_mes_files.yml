@@ -4,8 +4,9 @@ software:
   version: []
 
 type:
+  mes: True
   preprocess: False
-  analysis: True
+  analysis: False
   results: False
 
 file_management:

@@ -64,7 +64,7 @@ def run_yaml_files(root_directory):
 
     os.makedirs(root_directory, exist_ok=True)
 
-    summary_file = summary_file = os.path.join(root_directory, 'yml_summary.txt')
+    summary_file = os.path.join(root_directory, 'yml_summary.txt')
     with open(summary_file, 'w') as f:
         f.write(summary_output)
 

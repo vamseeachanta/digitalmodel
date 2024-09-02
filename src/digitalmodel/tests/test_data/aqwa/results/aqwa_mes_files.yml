@@ -6,8 +6,9 @@ dictitems:
     version: []
   type:
     preprocess: false
-    analysis: true
+    analysis: false
     results: false
+    mes: true
   result_method: lis
   result:
   - label: moorings
@@ -44,146 +45,50 @@ dictitems:
     input_files:
       MES:
       - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
         - output
         - mes
         - AD010_FST1_L015.MES
       - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
         - output
         - mes
         - AD010_FST1_L050.MES
       - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
         - output
         - mes
         - AD010_FST1_L095.MES
       - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
         - output
         - mes
         - D_F2L15_YPD_STAT_EF.MES
       - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
         - output
         - mes
         - D_F2L15_ZPD_EF.MES
       - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
         - output
         - mes
         - D_F2L15_ZPD_STAT_EF.MES
       - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
         - output
         - mes
         - F_F2L15_D10_COMP.MES
       - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
         - output
         - mes
         - F_F2L15_D10_SIMP.MES
       - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
         - output
         - mes
         - LIBR_NE.MES
       - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
         - output
         - mes
         - NO_LOAD_09MOORS.MES
       - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
         - output
         - mes
         - S_F2L15.MES
       - !!python/object/apply:pathlib.WindowsPath
-        - c:\
-        - github
-        - digitalmodel
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
         - output
         - mes
         - S_F2L15_000.MES
@@ -195,30 +100,24 @@ dictitems:
       cfg_sensitivities: false
   Analysis:
     basename: aqwa
-    analysis_root_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa
+    analysis_root_folder: C:\Users\Sk Samdan\desktop\digitalmodel\src\digitalmodel\tests\test_data\aqwa
     file_name: aqwa_mes_files
     file_name_for_overwrite: aqwa_mes_files
-    result_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
-    log_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-08-21 21:16:15.281052
+    result_folder: C:\Users\Sk Samdan\desktop\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    log_folder: C:\Users\Sk Samdan\desktop\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
+    start_time: 2024-09-02 12:37:18.848030
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_mes_files.yml
-    fe_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    CustomInputFile: aqwa_mes_files.yml
+    fe_folder: C:\Users\Sk Samdan\desktop\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - c:\
-    - github
-    - digitalmodel
-    - src
-    - digitalmodel
-    - tests
-    - test_data
-    - aqwa
     - output
     - mes
     file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - c:\
-    - github
+    - C:\
+    - Users
+    - Sk Samdan
+    - desktop
     - digitalmodel
     - src
     - digitalmodel

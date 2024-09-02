@@ -6,8 +6,9 @@ dictitems:
     version: []
   type:
     preprocess: false
-    analysis: true
+    analysis: false
     results: false
+    mes: true
   result_method: lis
   result:
   - label: moorings
@@ -51,31 +52,25 @@ dictitems:
       cfg_sensitivities: false
   Analysis:
     basename: aqwa
-    analysis_root_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa
+    analysis_root_folder: C:\Users\Sk Samdan\desktop\digitalmodel\src\digitalmodel\tests\test_data\aqwa
     file_name: aqwa_no_mes_files
     file_name_for_overwrite: aqwa_no_mes_files
-    result_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
-    log_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-08-21 21:16:25.068301
+    result_folder: C:\Users\Sk Samdan\desktop\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    log_folder: C:\Users\Sk Samdan\desktop\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
+    start_time: 2024-09-02 12:37:38.863723
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_no_mes_files.yml
-    fe_folder: c:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    CustomInputFile: aqwa_no_mes_files.yml
+    fe_folder: C:\Users\Sk Samdan\desktop\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - c:\
-    - github
-    - digitalmodel
-    - src
-    - digitalmodel
-    - tests
-    - test_data
-    - aqwa
     - output
     - mes
     - no_mes
     file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - c:\
-    - github
+    - C:\
+    - Users
+    - Sk Samdan
+    - desktop
     - digitalmodel
     - src
     - digitalmodel
