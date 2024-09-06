@@ -6,18 +6,17 @@ import os
 # Third party imports
 import pandas as pd
 from assetutilities.common.file_management import FileManagement
-from assetutilities.common.update_deep import AttributeDict
+from assetutilities.common.update_deep import AttributeDict, update_deep_dictionary
 from assetutilities.common.utilities import is_file_valid_func
 from assetutilities.common.visualization.visualization_templates import (
     VisualizationTemplates,
 )
 from assetutilities.common.yml_utilities import WorkingWithYAML  # noqa
 from assetutilities.engine import engine as au_engine
-from assetutilities.common.update_deep import update_deep_dictionary
 
 # Reader imports
 from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities  # noqa
-from digitalmodel.engine import engine as dm_engine
+from digitalmodel.engine import engine as dm_engine  # noqa
 from scipy import interpolate
 
 viz_templates = VisualizationTemplates()
@@ -49,7 +48,6 @@ class AqwaRAOs:
             cfg = self.plot_raos(cfg)
         else:
             logging.error("No file found. Skipping damping preparation.")
-
         return cfg
 
 
@@ -231,11 +229,12 @@ class AqwaRAOs:
         try:
             is_file_valid = True
             natural_period = pd.read_csv(csv_file)
-            no_of_frequencies = self.get_no_of_frequencies(cfg, filename_pattern)
-            if len(natural_period) >= no_of_frequencies:
-                natural_period = natural_period[:no_of_frequencies].copy()
-            else:
-                logging.error("Natural period values not found for all frequencies.")
+            if 'drafts' in cfg['analysis_settings']:
+                no_of_frequencies = self.get_no_of_frequencies(cfg, filename_pattern)
+                if len(natural_period) >= no_of_frequencies:
+                    natural_period = natural_period[:no_of_frequencies].copy()
+                else:
+                    logging.error("Natural period values not found for all frequencies.")
         except Exception:
             is_file_valid = False
             logging.error(f"File {csv_file} not found or empty.")
@@ -270,11 +269,12 @@ class AqwaRAOs:
         try:
             is_file_valid = True
             percent_critical_damping = pd.read_csv(csv_file)
-            no_of_frequencies = self.get_no_of_frequencies(cfg, filename_pattern)
-            if len(percent_critical_damping) >= no_of_frequencies:
-                percent_critical_damping = percent_critical_damping[:no_of_frequencies].copy()
-            else:
-                logging.error("Natural period values not found for all frequencies.")
+            if 'drafts' in cfg['analysis_settings']:
+                no_of_frequencies = self.get_no_of_frequencies(cfg, filename_pattern)
+                if len(percent_critical_damping) >= no_of_frequencies:
+                    percent_critical_damping = percent_critical_damping[:no_of_frequencies].copy()
+                else:
+                    logging.error("Natural period values not found for all frequencies.")
         except Exception:
             logging.error(f"File {csv_file} not found or empty.")
             percent_critical_damping = pd.DataFrame()
@@ -378,9 +378,12 @@ class AqwaRAOs:
         percent_critical_damping = damping_cfg['percent_critical_damping']
         absolute_damping = damping_cfg['absolute_damping']
 
-        peak_periods = self.get_natural_periods(natural_period)
-        additional_damping_values = self.get_damping_values(cfg, percent_critical_damping, absolute_damping, peak_periods, analysis_settings_key)
-
+        additional_damping_values = {}
+        if natural_period.empty or percent_critical_damping.empty or absolute_damping.empty:
+            logging.error("One or more damping files are empty. Skipping damping preparation.")
+        else:
+            peak_periods = self.get_natural_periods(natural_period)
+            additional_damping_values = self.get_damping_values(cfg, percent_critical_damping, absolute_damping, peak_periods, analysis_settings_key)
 
         return cfg, additional_damping_values
 
@@ -480,25 +483,36 @@ class AqwaRAOs:
         peak_omega = peak_periods['omega'][peak_omega_key]
 
         x_values = percent_critical_damping[critical_damping_dict['x']]
+        if peak_omega > x_values.max():
+            peak_omega = x_values.max()
+        elif peak_omega < x_values.min():
+            peak_omega = x_values.min()
         y_values = percent_critical_damping[critical_damping_dict['y']]
-        f = interpolate.interp1d(x_values, y_values, fill_value='extrapolate')
+        f = interpolate.interp1d(x_values, y_values, fill_value='nearest')
+
         current_critical_damping = round(float(f(peak_omega)), 3)
 
         x_values = absolute_damping[absolute_damping_dict['x']]
+        if peak_omega > x_values.max():
+            peak_omega = x_values.max()
+        elif peak_omega < x_values.min():
+            peak_omega = x_values.min()
         y_values = absolute_damping[absolute_damping_dict['y']]
-        f = interpolate.interp1d(x_values, y_values, fill_value='extrapolate')
+        f = interpolate.interp1d(x_values, y_values, fill_value='nearest')
         current_absolute_damping = round(float(f(peak_omega)), 3)
 
         target_critical_damping = cfg['analysis_settings']['damping']['target_damping'][peak_omega_key]
 
-        if current_critical_damping > 0 and current_critical_damping < target_critical_damping:
+        if current_critical_damping > 0:
             additional_damping = self.get_additional_damping(current_critical_damping, current_absolute_damping, target_critical_damping)
-        else:
+        elif current_critical_damping == 0:
             additional_damping = current_absolute_damping
+        else:
+            raise NotImplementedError("Current critical damping is negative. No Logic implemented for negative damping.")
 
-        damping_output = {'current_critical_damping': current_critical_damping, 
-                        'current_absolute_damping': current_absolute_damping, 
-                        'target_critical_damping': target_critical_damping, 
+        damping_output = {'current_critical_damping': current_critical_damping,
+                        'current_absolute_damping': current_absolute_damping,
+                        'target_critical_damping': target_critical_damping,
                         'additional_damping': additional_damping}
 
         cfg['analysis_settings'][analysis_settings_key]['output'] = update_deep_dictionary(cfg['analysis_settings'][analysis_settings_key]['output'], {'damping': {peak_omega_key: damping_output}})
@@ -506,7 +520,7 @@ class AqwaRAOs:
         return additional_damping
 
     def get_additional_damping(self, current_critical_damping, current_absolute_damping, target_critical_damping):
-            additional_damping = target_critical_damping / current_critical_damping * current_absolute_damping * math.pi/180
+            additional_damping = target_critical_damping / current_critical_damping * current_absolute_damping - current_absolute_damping
             additional_damping = round(additional_damping, 1)
             return additional_damping
 

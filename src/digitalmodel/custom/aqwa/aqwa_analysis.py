@@ -2,9 +2,11 @@
 # Reader imports
 from digitalmodel.custom.aqwa.aqwa_analysis_ef_server import AqwaEFServer
 from digitalmodel.custom.aqwa.aqwa_analysis_raos import AqwaRAOs
+from digitalmodel.custom.aqwa.aqwa_analysis_damping import AqwaDamping
 
 aq_ef = AqwaEFServer()
 aq_raos = AqwaRAOs()
+aq_damping = AqwaDamping()
 
 class AqwaAnalysis:
 
@@ -18,6 +20,9 @@ class AqwaAnalysis:
 
         elif cfg['analysis_settings']['method'] == 'raos':
             cfg = aq_raos.rao_router(cfg)
+
+        elif cfg['analysis_settings']['method'] == 'damping':
+            cfg = aq_damping.router(cfg)
 
         return cfg
 

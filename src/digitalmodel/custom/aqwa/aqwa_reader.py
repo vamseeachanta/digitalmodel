@@ -43,41 +43,43 @@ class AqwaReader:
             master_df = pd.DataFrame()
             result_category = result_item['category'] 
 
-            for input_file in input_files:
-                input_file_result = []
-                result_item_dict = self.get_result_groups(input_file, cfg, result_item)
-                input_file_result.append(result_item_dict)
+            csv_filename = None
+            if len(input_files) > 0:
+                for input_file in input_files:
+                    input_file_result = []
+                    result_item_dict = self.get_result_groups(input_file, cfg, result_item)
+                    input_file_result.append(result_item_dict)
 
-                try:
-                    df_item = pd.DataFrame(result_item_dict)
-                except Exception as e:
-                    if 'you must pass an index' in str(e):
-                        df_item = pd.DataFrame(result_item_dict, index = [0])
-                    else:
-                        raise e
+                    try:
+                        df_item = pd.DataFrame(result_item_dict)
+                    except Exception as e:
+                        if 'you must pass an index' in str(e):
+                            df_item = pd.DataFrame(result_item_dict, index = [0])
+                        else:
+                            raise e
 
-                df_item['input_file'] = Path(input_file).stem
-                save_csv = result_item.get('save_csv', False)
-                if save_csv:
-                    sheetname_suffix = result_item['inject_into'].get('sheetname', None)
-                    if sheetname_suffix is None:
-                        sheetname_suffix = result_item.get('label', None)
+                    df_item['input_file'] = Path(input_file).stem
+                    save_csv = result_item.get('save_csv', False)
+                    if save_csv:
+                        sheetname_suffix = result_item['inject_into'].get('sheetname', None)
+                        if sheetname_suffix is None:
+                            sheetname_suffix = result_item.get('label', None)
 
-                    sheetname = Path(input_file).stem + '_' + sheetname_suffix
+                        sheetname = Path(input_file).stem + '_' + sheetname_suffix
 
-                    csv_filename = self.save_to_csv(df_item, result_item, cfg, sheetname)
-                    self.inject_to_excel(df_item, result_item, cfg)
+                        csv_filename = self.save_to_csv(df_item, result_item, cfg, sheetname)
+                        self.inject_to_excel(df_item, result_item, cfg)
 
-                # if result_category == 'equilibrium':
-                #     df = pd.DataFrame.from_dict(input_file_result)
-                #     master_df = pd.concat([master_df, df], axis=0)
+                    # if result_category == 'equilibrium':
+                    #     df = pd.DataFrame.from_dict(input_file_result)
+                    #     master_df = pd.concat([master_df, df], axis=0)
 
-            sheetname = Path(input_file).stem + '_' + result_item['label']
-            if not master_df.empty:
-                csv_filename = self.save_to_csv(master_df, result_item, cfg, sheetname)
-                self.inject_to_excel(master_df, result_item, cfg)
+                if result_category == 'equilibrium' and not master_df.empty:
+                    sheetname = Path(input_file).stem + '_' + result_item['label']
+                    csv_filename = self.save_to_csv(master_df, result_item, cfg, sheetname)
+                    self.inject_to_excel(master_df, result_item, cfg)
 
-        cfg[cfg['basename']] = {'csv_filename': csv_filename}
+            cfg[cfg['basename']] = {'csv_filename': csv_filename}
 
         return cfg
 

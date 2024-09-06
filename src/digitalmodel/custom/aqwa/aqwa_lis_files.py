@@ -42,7 +42,7 @@ class AqwaLISFiles:
 
     def get_data(self, cfg, cfg_lis):
         input_files = cfg['file_management']['input_files']['LIS']
-
+        filename_pattern = ''
         df_master = pd.DataFrame()
         for input_file in input_files:
             filename_pattern = Path(input_file).stem
