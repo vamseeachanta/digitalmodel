@@ -6,7 +6,7 @@ foreach ($d in $dir) {
     echo "Checking for changes in folder ... START"
     echo $d.FullName
     Set-Location -Path $d.FullName
-    **$changes = git status --porcelain # checks if there are changes in the working directory otherwise skips
+    $changes = git status --porcelain # checks if there are changes in the working directory otherwise skips
     
     if ($changes) {
         echo "Changes detected. Running git push pull in folder ... START "**
