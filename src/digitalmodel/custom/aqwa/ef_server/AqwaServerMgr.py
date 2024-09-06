@@ -326,7 +326,7 @@ class Analysis:
         DX = AppPtX - self.Pos[Struct][0]
         DY = AppPtY - self.Pos[Struct][1]
         DZ = AppPtZ - self.Pos[Struct][2]
-        
+
         Tx,Ty,Tz = ForceTorque(FX,FY,FZ,DX,DY,DZ)
 
         Force[Struct] = [FX,FY,FZ,Tx,Ty,Tz]

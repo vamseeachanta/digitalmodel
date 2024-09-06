@@ -412,4 +412,8 @@ class AqwaEFServer:
 
     def print_heartbeat(self, Time):
         if Time % 50 == 0:
+            # if self.heartbeat_count == 1:
             logging.info(f"analysis Time: {Time} s")
+            #     # self.heartbeat_count = 0
+            # else:
+            #     self.heartbeat_count += 1

@@ -59,9 +59,12 @@ class AqwaReader:
                 df_item['input_file'] = Path(input_file).stem
                 save_csv = result_item.get('save_csv', False)
                 if save_csv:
-                    sheetname = Path(input_file).stem + '_' + result_item['inject_into'].get('sheetname', None)
-                    if sheetname is None:
-                        sheetname = Path(input_file).stem + '_' + result_item['label']
+                    sheetname_suffix = result_item['inject_into'].get('sheetname', None)
+                    if sheetname_suffix is None:
+                        sheetname_suffix = result_item.get('label', None)
+
+                    sheetname = Path(input_file).stem + '_' + sheetname_suffix
+
                     csv_filename = self.save_to_csv(df_item, result_item, cfg, sheetname)
                     self.inject_to_excel(df_item, result_item, cfg)
 
