@@ -303,7 +303,19 @@ class AqwaEFServer:
             def_pos = def_pos_cfg[def_pos_idx]
             result_dict = self.wsp_dampener_by_def_pos(Analysis, Time, def_pos)
 
+            # struct_no = 3
+            # tuple = (Analysis.Pos[struct_no][0], Analysis.Pos[struct_no][1], Analysis.COGs[struct_no][2], 0, 0, 0)
+            # Analysis.Pos[struct_no] = tuple
+
+            # struct_no = 6
+            # tuple = (Analysis.Pos[struct_no][0], Analysis.Pos[struct_no][1], Analysis.COGs[struct_no][2], 0, 0, 0)
+            # Analysis.Pos[struct_no] = tuple
+
             Force = Force  + result_dict['Force']
+            # struct_no = 3
+            # Force[struct_no][2:] = [0]*4
+            # struct_no = 6
+            # Force[struct_no][2:] = [0]*4
             AddMass = AddMass + result_dict['AddMass']
             Error = result_dict['Error']
             self.assign_results_to_df(def_pos_idx, Time, result_dict)
@@ -356,6 +368,9 @@ class AqwaEFServer:
 
         force_vector = [force_x['total'], force_y['total'], 0]
 
+        # AQWA convergence troubleshooting - START
+        # Struct = 1
+        # AQWA convergence troubleshooting - START
         ExtraForce = Analysis.ApplyForceOnStructureAtPoint(Struct=Struct,
                                                         FX=force_vector[0],
                                                         FY=force_vector[1],

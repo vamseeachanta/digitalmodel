@@ -402,7 +402,7 @@ class AqwaUserForceServer(AqwaServerMgr):
 
             FlatForce = Force.Flat()
             FlatAddMass = AddMass.Flat()
-        
+
             self.Send(FlatForce)
             self.Send(FlatAddMass)
             self.Send(ErrorFlag)
