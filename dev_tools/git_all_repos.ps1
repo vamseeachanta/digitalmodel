@@ -1,6 +1,6 @@
 # https://stackoverflow.com/questions/17683368/running-a-command-on-each-directory-in-a-list-using-powershell
 
-$dir = dir K:\python | ? { $_.PSISContainer }
+$dir = dir C:\github | ? { $_.PSISContainer }
 
 foreach ($d in $dir) {
     echo "Checking for changes in folder ... START"
