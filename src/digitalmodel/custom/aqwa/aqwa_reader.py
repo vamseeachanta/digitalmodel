@@ -59,6 +59,14 @@ class AqwaReader:
                             raise e
 
                     df_item['input_file'] = Path(input_file).stem
+
+                    ramp_flag = False
+                    if 'ramp' in result_item:
+                        ramp_flag = result_item['ramp']['flag']
+                    if ramp_flag:
+                        ramp_time = result_item['ramp']['time']
+                        df_item = df_item[df_item['time'] >= ramp_time]
+
                     save_csv = result_item.get('save_csv', False)
                     if save_csv:
                         sheetname_suffix = result_item['inject_into'].get('sheetname', None)
@@ -252,7 +260,7 @@ class AqwaReader:
         iteration = [float(item) for item in list(df[5:-1]['column1'])]
         value = [float(item) for item in list(df[5:-1]['column2'])]
         value_label = third_level + '_'+ fourth_level
-        result = {'iteration': iteration, value_label: value}
+        result = {'time': iteration, value_label: value}
 
         return result
 
@@ -281,7 +289,7 @@ class AqwaReader:
         time_step = [float(item) for item in list(df[5:-1]['column1'])]
         value = [float(item) for item in list(df[5:-1]['column2'])]
         value_label = third_level + '_'+ fourth_level
-        result = {'time_step': time_step, value_label: value}
+        result = {'time': time_step, value_label: value}
         return result
 
     def inject_to_excel(self, df, result_item, cfg):
@@ -304,14 +312,14 @@ class AqwaReader:
 
         csv_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '.csv')
         df.to_csv(csv_filename, index=False, header=True)
-        
+
         return csv_filename
 
     def save_statistics(self, cfg, df, sheetname):
         # Third party imports
         from assetutilities.common.data_exploration import DataExploration
         de = DataExploration()
-        
+
         statistics_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '_statistics.csv')
         df_statistics = de.get_df_statistics(df)
         df_statistics.to_csv(statistics_filename, index=True, header=True)
