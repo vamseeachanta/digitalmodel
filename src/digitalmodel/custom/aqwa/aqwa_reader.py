@@ -311,7 +311,7 @@ class AqwaReader:
     def save_to_csv(self, df, result_item, cfg, sheetname):
 
         csv_filename = os.path.join(cfg['Analysis']['result_folder'], sheetname + '.csv')
-        df.to_csv(csv_filename, index=False, header=True)
+        df.to_csv(csv_filename, index=False, header=True, float_format='%.4E')
 
         return csv_filename
 

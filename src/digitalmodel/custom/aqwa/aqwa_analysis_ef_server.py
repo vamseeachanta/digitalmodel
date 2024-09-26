@@ -78,19 +78,11 @@ class AqwaEFServer:
         def_pos_cfg = cfg['analysis_settings']['ef_input']['def_pos']
         for def_pos_idx in range(0, len(def_pos_cfg)):
             df = self.result_df_array[def_pos_idx]
-            
+
             aqwa_client_directory = cfg['Analysis']['result_folder']
             filename = output_file_basename + '_' +str(def_pos_idx) + '_py_inputs.csv'
             filename_path = os.path.join(aqwa_client_directory , filename)
-            df.to_csv(filename_path , index=False)
-
-            # filename = output_file_basename + '_' +str(def_pos_idx) + '_py_inputs_statistics.csv'
-            # filename_path = os.path.join(aqwa_client_directory , filename)
-            # self.save_statistics(df, filename_path)
-
-    def save_statistics(self, df, statistics_filename):
-        df_statistics = de.get_df_statistics(df)
-        df_statistics.to_csv(statistics_filename, index=True, header=True)
+            df.to_csv(filename_path , index=False, float_format='%.4E')
 
     def UF1(self, Analysis,Mode,Stage,Time,TimeStep,Pos,Vel):
         ########################################################################################################
@@ -427,8 +419,8 @@ class AqwaEFServer:
 
     def print_heartbeat(self, Time):
         if Time % 50 == 0:
-            # if self.heartbeat_count == 1:
-            logging.info(f"analysis Time: {Time} s")
-            #     # self.heartbeat_count = 0
-            # else:
-            #     self.heartbeat_count += 1
+            self.heartbeat_count = getattr(self, 'heartbeat_count', 0)
+            self.heartbeat_count += 1
+            if self.heartbeat_count == 2:
+                logging.info(f"analysis Time: {Time} s")
+                setattr(self, 'heartbeat_count', 0)
