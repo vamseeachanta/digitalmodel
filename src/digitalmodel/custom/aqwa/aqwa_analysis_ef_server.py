@@ -1,3 +1,4 @@
+
 # Standard library imports
 import logging
 import os
@@ -6,11 +7,15 @@ import os
 import pandas as pd
 from assetutilities.common.data_exploration import DataExploration
 from assetutilities.common.file_management import FileManagement
+from colorama import Fore, Style
+from colorama import init as colorama_init
+
 
 # Reader imports
 from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
 from digitalmodel.custom.aqwa.ef_server.AqwaServerMgr import *
 
+colorama_init()
 fm = FileManagement()
 au = AqwaUtilities()
 de = DataExploration()
@@ -48,7 +53,7 @@ class AqwaEFServer:
 
         closing_function = cfg['analysis_settings']['ef_input']['closing_function']
         if closing_function is not None:
-            closing_function = getattr(self,cfg['analysis_settings']['ef_input']['closing_function'])
+            closing_function = getattr(self, closing_function)
 
         for run_idx in range(0, number_of_client_runs):
             try:
@@ -200,7 +205,6 @@ class AqwaEFServer:
 
         return Force,AddMass,Error
 
-
     def UFFender(self, Analysis,Mode,Stage,Time,TimeStep,Pos,Vel):
         ########################################################################################################
         # A Custom Function for Fender
@@ -295,19 +299,7 @@ class AqwaEFServer:
             def_pos = def_pos_cfg[def_pos_idx]
             result_dict = self.wsp_dampener_by_def_pos(Analysis, Time, def_pos)
 
-            # struct_no = 3
-            # tuple = (Analysis.Pos[struct_no][0], Analysis.Pos[struct_no][1], Analysis.COGs[struct_no][2], 0, 0, 0)
-            # Analysis.Pos[struct_no] = tuple
-
-            # struct_no = 6
-            # tuple = (Analysis.Pos[struct_no][0], Analysis.Pos[struct_no][1], Analysis.COGs[struct_no][2], 0, 0, 0)
-            # Analysis.Pos[struct_no] = tuple
-
             Force = Force  + result_dict['Force']
-            # struct_no = 3
-            # Force[struct_no][2:] = [0]*4
-            # struct_no = 6
-            # Force[struct_no][2:] = [0]*4
             AddMass = AddMass + result_dict['AddMass']
             Error = result_dict['Error']
             self.assign_results_to_df(def_pos_idx, Time, result_dict)
@@ -375,9 +367,38 @@ class AqwaEFServer:
         # (BlankForce and BlankAddedMass classes support algebraic operations (+, -, and scalar multiplication)
         Force += ExtraForce
 
+        AddMass, Error = self.get_numerical_added_mass(Analysis, AddMass, Time)
+
         result_dict = {'Force': Force, 'AddMass': AddMass, 'Error': Error, 'dl': dl, 'CurNodeVel': CurNodeVel, 'force_x': force_x, 'force_y': force_y}
         # Now return the results
         return result_dict
+
+    def get_numerical_added_mass(self, Analysis, AddMass, Time):
+        Error   = 0
+
+        numerical_added_mass_flag = False
+        if 'numerical_added_mass' in self.cfg['analysis_settings']['ef_input']:
+            numerical_added_mass_flag = self.cfg['analysis_settings']['ef_input']['numerical_added_mass']['flag']
+            added_mass = self.cfg['analysis_settings']['ef_input']['numerical_added_mass']['added_mass']
+            added_mass_factor = self.cfg['analysis_settings']['ef_input']['numerical_added_mass']['factor']
+            time = self.cfg['analysis_settings']['ef_input']['numerical_added_mass']['time']
+
+            if added_mass is None:
+                added_mass = [
+                    [100.0*added_mass_factor, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 100.0*added_mass_factor, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 100.0*added_mass_factor, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 10000.0*added_mass_factor, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 10000.0*added_mass_factor, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 10000.0*added_mass_factor]
+                    ]
+
+
+        if numerical_added_mass_flag and time['start']<= Time <= time['end']:
+            for s in range(Analysis.NOfStruct):
+                AddMass[s] = AddMass[s] + added_mass
+
+        return AddMass, Error
 
     def get_wsp_dampener_force(self, Time, dof_pos_delta, dof_vel, dir='X'):
         stiffness = {'X': {'dl': [0.15, 0.70, 10], 'k': [1, 7.03e6, 2.8e7]}, 
@@ -417,8 +438,10 @@ class AqwaEFServer:
         return force
 
 
-    def print_heartbeat(self, Time):
-        if Time % 50 == 0:
+    def print_heartbeat(self, Time, complete_flag=False):
+        if complete_flag:
+            logging.info(f"Run {Fore.GREEN}Complete at: {round(Time, 3)} s {Style.RESET_ALL}")
+        elif Time % 50 == 0:
             self.heartbeat_count = getattr(self, 'heartbeat_count', 0)
             self.heartbeat_count += 1
             if self.heartbeat_count == 2:

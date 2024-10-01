@@ -1,10 +1,10 @@
+# Standard library imports
 import os
-import pandas as pd
 import socket
-import sys
 import struct
-import time
+import sys
 from math import *
+
 
 # A simple set of classes for easy logging
 class LogStdOut(object):
@@ -390,7 +390,7 @@ class AqwaUserForceServer(AqwaServerMgr):
                 Vel.append(self.Receive("ffffff"))
 
             if (Mode==99):
-                break;
+                break
         
             self.Analysis.Pos=Pos
             self.Analysis.Vel=Vel
@@ -408,7 +408,7 @@ class AqwaUserForceServer(AqwaServerMgr):
             self.Send(ErrorFlag)
 
         if ClosingFuntion:
-            ClosingFuntion(self)
+            ClosingFuntion(Time, complete_flag=True)
 
 # A set of class for manipulating Forces and AddMass
 
@@ -426,8 +426,8 @@ class BlankForceAddMass(list):
             return BlankAddedMass(len(self))
         if (self.Name=="Force"):
             return BlankForce(len(self))
-        raise TypeError("Class BlankForceAddMass should not be used directly.")        
-        
+        raise TypeError("Class BlankForceAddMass should not be used directly.")
+
     def MyBinOp(self,other,op):
         Output = self.MakeNew()
         if (type(other)!=type(self)):

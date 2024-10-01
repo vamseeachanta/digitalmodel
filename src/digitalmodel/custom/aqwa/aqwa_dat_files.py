@@ -1,4 +1,5 @@
 # Standard library imports
+import glob
 import logging
 import os
 
@@ -331,6 +332,33 @@ class AqwaDATFiles:
 
         return body
 
+    def get_dc_15_body(self, dc_cfg):
+        raw_data = dc_cfg['data']['raw']
+        directory = raw_data['directory']
+        filename_pattern = raw_data['filename_pattern']
+        filenames = glob.glob(directory + '/' + filename_pattern)
+        position_columns = ['POSITION OF COG_in X direction', 'POSITION OF COG_in Y direction', 'POSITION OF COG_in Z direction', 'POSITION OF COG_about X axis', 'POSITION OF COG_about Y axis', 'POSITION OF COG_about Z axis']
+        all_structure_pos = []
+        for filename in filenames:
+            df = pd.read_csv(filename)
+            df.iloc[-1][position_columns]
+            structure_pos  = df.iloc[-1][position_columns].values.flatten().tolist()
+            all_structure_pos.append(structure_pos)
+
+        body = []
+        for pos_idx in range(0, len(all_structure_pos)):
+            structure_pos = all_structure_pos[pos_idx]
+            structure_tag = f"POS{pos_idx+1}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{structure_tag:>4s}{white_space:>5s}{white_space:>5s}{structure_pos[0]:>10.3f}{structure_pos[1]:>10.3f}{structure_pos[2]:>10.3f}{structure_pos[3]:>10.3f}{structure_pos[4]:>10.3f}{structure_pos[5]:>10.3f}"
+            body.append(body_item_str)
+
+        for pos_idx in range(0, len(all_structure_pos)):
+            structure_vel = [0]*6
+            structure_tag = f"VEL{pos_idx+1}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{structure_tag:>4s}{white_space:>5s}{white_space:>5s}{structure_vel[0]:>10.3f}{structure_vel[1]:>10.3f}{structure_vel[2]:>10.3f}{structure_vel[3]:>10.3f}{structure_vel[4]:>10.3f}{structure_vel[5]:>10.3f}"
+            body.append(body_item_str)
+
+        return body
 
     def get_dc_18_body(self, dc_cfg):
         raw_data = dc_cfg['data']['raw']

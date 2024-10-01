@@ -1,6 +1,8 @@
+# Standard library imports
 import os
 import sys
 
+# Reader imports
 from digitalmodel.engine import engine
 
 
@@ -12,7 +14,7 @@ def run_process(input_file, expected_result={}):
 
 
 def test_run_process():
-    input_file = 'aqwa_pre_process_deck.yml'
+    input_file = 'aqwa_pre_process_deck_15.yml'
     pytest_output_file = None
     # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     # expected_result = ymlInput(pytest_output_file, updateYml=None)
