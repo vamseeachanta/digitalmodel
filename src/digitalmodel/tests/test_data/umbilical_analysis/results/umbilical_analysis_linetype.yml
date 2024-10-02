@@ -301,7 +301,7 @@ dictitems:
     file_name_for_overwrite: umbilical_analysis_linetype
     result_folder: src/digitalmodel/tests/test_data\umbilical_analysis\results
     log_folder: src/digitalmodel/tests/test_data\umbilical_analysis\logs
-    start_time: 2024-09-02 16:39:19.006197
+    start_time: 2024-10-02 10:12:19.215324
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: src/digitalmodel/tests/test_data\umbilical_analysis\umbilical_analysis_linetype.yml

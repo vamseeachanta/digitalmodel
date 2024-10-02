@@ -58,20 +58,17 @@ dictitems:
         filename_pattern: D_NOL_F2L95_EHHWL_d_*_cog.csv
   Analysis:
     basename: aqwa
-    analysis_root_folder: k:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa
+    analysis_root_folder: src/digitalmodel/tests/test_data\aqwa
     file_name: aqwa_pre_process_deck_15
     file_name_for_overwrite: aqwa_pre_process_deck_15
-    result_folder: k:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
-    log_folder: k:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\logs
-    start_time: 2024-10-01 06:33:25.790242
+    result_folder: src/digitalmodel/tests/test_data\aqwa\results
+    log_folder: src/digitalmodel/tests/test_data\aqwa\logs
+    start_time: 2024-10-02 09:47:22.146568
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: k:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\aqwa_pre_process_deck_15.yml
-    fe_folder: k:\github\digitalmodel\src\digitalmodel\tests\test_data\aqwa\results
+    CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_pre_process_deck_15.yml
+    fe_folder: src/digitalmodel/tests/test_data\aqwa\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - k:\
-    - github
-    - digitalmodel
     - src
     - digitalmodel
     - tests
@@ -80,9 +77,6 @@ dictitems:
     - output
     - lis
     file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - k:\
-    - github
-    - digitalmodel
     - src
     - digitalmodel
     - tests

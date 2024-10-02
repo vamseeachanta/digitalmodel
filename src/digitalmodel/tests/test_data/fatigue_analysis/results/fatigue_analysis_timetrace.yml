@@ -67,7 +67,7 @@ dictitems:
     file_name_for_overwrite: fatigue_analysis_timetrace
     result_folder: src/digitalmodel/tests/test_data\fatigue_analysis\results
     log_folder: src/digitalmodel/tests/test_data\fatigue_analysis\logs
-    start_time: 2024-09-02 16:17:45.890577
+    start_time: 2024-10-02 09:51:25.847211
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: src/digitalmodel/tests/test_data\fatigue_analysis\fatigue_analysis_timetrace.yml

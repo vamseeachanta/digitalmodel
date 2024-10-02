@@ -166,7 +166,7 @@ dictitems:
     file_name_for_overwrite: aqwa_mes_files
     result_folder: src/digitalmodel/tests/test_data\aqwa\results
     log_folder: src/digitalmodel/tests/test_data\aqwa\logs
-    start_time: 2024-09-02 16:12:17.678515
+    start_time: 2024-10-02 09:45:56.422975
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_mes_files.yml
