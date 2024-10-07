@@ -2,7 +2,8 @@ basename: time_series
 
 analysis:
   basic:
-    sample: True
+    sample_fft: False
+    sample_window_average_fft: True
     statistics: True
     fft: False
     ifft: False
@@ -24,6 +25,16 @@ fft:
       flag: False
       frequency_minimum: NULL
       frequency_maximum: NULL
+  window:
+    size: 500
+    moving_average:
+      flag: False
+      window_size: 4
+  peaks:
+    flag: True
+    solver: find_peaks
+    min_height_percentage: 60
+    min_distance_index_percentage: 50
 
 master_settings:
   groups:

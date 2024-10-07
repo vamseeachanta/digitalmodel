@@ -20,35 +20,8 @@ filter:
 master_settings:
   groups:
     columns:
-      x: [time]
-      y:
-        [
-          REACTION AT ARTIC 1_in X direction,
-          REACTION AT ARTIC 2_in X direction,
-          REACTION AT ARTIC 7_in X direction,
-          REACTION AT ARTIC 6_in X direction,
-        ]
-    transform:
-      - {
-          column: REACTION AT ARTIC 1_in X direction,
-          scale: 1.0194E-04,
-          shift: 0,
-        }
-      - {
-          column: REACTION AT ARTIC 2_in X direction,
-          scale: 1.0194E-04,
-          shift: 0,
-        }
-      - {
-          column: REACTION AT ARTIC 7_in X direction,
-          scale: 1.0194E-04,
-          shift: 0,
-        }
-      - {
-          column: REACTION AT ARTIC 6_in X direction,
-          scale: 1.0194E-04,
-          shift: 0,
-        }
+      time: time
+      signal: POSITION OF COG_in Y direction
 
 data:
   type: csv
