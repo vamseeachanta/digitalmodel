@@ -33,6 +33,7 @@ from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
 from digitalmodel.custom.viv.viv_analysis import VIVAnalysis
 from digitalmodel.orcaflex_analysis import orcaflex_analysis
 from digitalmodel.vertical_riser import vertical_riser
+from digitalmodel.custom.time_series.time_series_analysis import TimeSeriesAnalysis
 
 ou = OrcaflexUtilities()
 
@@ -121,6 +122,9 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "viv_analysis":
         viv = VIVAnalysis()
         cfg_base = viv.router(cfg_base)
+    elif basename == "time_series":
+        tsa = TimeSeriesAnalysis()
+        cfg_base = tsa.router(cfg_base)
 
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))

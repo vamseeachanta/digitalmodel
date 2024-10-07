@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from assetutilities.common.yml_utilities import WorkingWithYAML
-from digitalmodel.common.time_series_analysis import TimeSeriesAnalysis
+from digitalmodel.custom.time_series.time_series_analysis import TimeSeriesAnalysis
 
 wwy = WorkingWithYAML()
 tsa = TimeSeriesAnalysis()

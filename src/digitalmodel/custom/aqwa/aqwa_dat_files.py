@@ -349,13 +349,13 @@ class AqwaDATFiles:
         for pos_idx in range(0, len(all_structure_pos)):
             structure_pos = all_structure_pos[pos_idx]
             structure_tag = f"POS{pos_idx+1}"
-            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{structure_tag:>4s}{white_space:>5s}{white_space:>5s}{structure_pos[0]:>10.3f}{structure_pos[1]:>10.3f}{structure_pos[2]:>10.3f}{structure_pos[3]:>10.3f}{structure_pos[4]:>10.3f}{structure_pos[5]:>10.3f}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{structure_tag:>4s}{white_space:>5s}{white_space:>5s}{structure_pos[0]:>10.4f}{structure_pos[1]:>10.4f}{structure_pos[2]:>10.4f}{structure_pos[3]:>10.4f}{structure_pos[4]:>10.4f}{structure_pos[5]:>10.4f}"
             body.append(body_item_str)
 
         for pos_idx in range(0, len(all_structure_pos)):
             structure_vel = [0]*6
             structure_tag = f"VEL{pos_idx+1}"
-            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{structure_tag:>4s}{white_space:>5s}{white_space:>5s}{structure_vel[0]:>10.3f}{structure_vel[1]:>10.3f}{structure_vel[2]:>10.3f}{structure_vel[3]:>10.3f}{structure_vel[4]:>10.3f}{structure_vel[5]:>10.3f}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{structure_tag:>4s}{white_space:>5s}{white_space:>5s}{structure_vel[0]:>10.4f}{structure_vel[1]:>10.4f}{structure_vel[2]:>10.4f}{structure_vel[3]:>10.4f}{structure_vel[4]:>10.4f}{structure_vel[5]:>10.4f}"
             body.append(body_item_str)
 
         return body

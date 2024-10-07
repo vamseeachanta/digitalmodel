@@ -16,7 +16,7 @@ from assetutilities.common.data import TransformData
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.file_management import FileManagement
 
-from digitalmodel.common.time_series_components import TimeSeriesComponents
+from digitalmodel.custom.time_series.time_series_components import TimeSeriesComponents
 from digitalmodel.common.ETL_components import ETL_components
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 

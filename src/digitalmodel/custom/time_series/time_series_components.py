@@ -1,4 +1,16 @@
+# Standard library imports
+import os
+import array
 import logging
+import numpy as np
+import pandas as pd
+import scipy.fftpack
+
+import rainflow
+from assetutilities.common.data import PandasChainedAssignent
+from assetutilities.engine import engine as au_engine
+
+from assetutilities.engine import engine as au_engine
 
 
 class TimeSeriesComponents():
@@ -6,7 +18,7 @@ class TimeSeriesComponents():
     # http://scipy-lectures.org/intro/scipy/auto_examples/plot_fftpack.html
     # https://dsp.stackexchange.com/questions/724/low-pass-filter-and-fft-for-beginners-with-python
 
-    def __init__(self, cfg):
+    def __init__(self, cfg=None):
         self.cfg = cfg
 
     def get_raw_data(self):
@@ -25,6 +37,7 @@ class TimeSeriesComponents():
                 except Exception as e:
                     print("Error getting input data in environment {0}, error {1}".format(self.env, e))
         else:
+            # Standard library imports
             import sys
             print("No data source specified")
             sys.exit()
@@ -38,6 +51,7 @@ class TimeSeriesComponents():
             print("Error Performing cfg analysis in environment {0}, error {1}".format(self.env, e))
 
     def write_db_analysis_results(self, db_analysis_result):
+        # Third party imports
         from common.data import SaveData
         save_data = SaveData()
 
@@ -77,6 +91,7 @@ class TimeSeriesComponents():
         self.environments = list(self.cfg.default['db'].keys())
 
     def set_up_db_connection(self, db_properties):
+        # Third party imports
         from common.database import Database
         self.dbe = Database(db_properties)
         try:
@@ -86,6 +101,51 @@ class TimeSeriesComponents():
             print("Error as {}".format(e))
             print("No connection for environment: {}".format(db_properties))
             return False
+
+    def sample_analysis(self, cfg):
+        '''
+        Sample analysis for time series
+        '''
+        time_vector, signal, time_step, peak_period = self.get_sample_time_series(cfg)
+        sig_fft, filtered_signal = self.run_simple_fft_example(cfg, signal, time_step)
+
+        self.save_fft_results(cfg, sig_fft, filtered_signal)
+        self.plot_signal_fft(time_vector, signal, sig_fft, filtered_signal)
+
+        file_name = cfg['Analysis']['file_name_for_overwrite'] + '_fft.csv'
+        file_name = os.path.join(cfg['Analysis']['result_folder'], file_name)
+        lateral_buckling_df.to_csv(file_name, index=False)
+
+        return sig_fft, filtered_signal
+
+    def save_fft_results(self, cfg, sig_fft, filtered_signal):
+        file_name = cfg['Analysis']['file_name_for_overwrite'] + '_sig_fft.csv'
+        file_name = os.path.join(cfg['Analysis']['result_folder'], file_name)
+        sig_fft.to_csv(file_name, index=False)
+
+        file_name = cfg['Analysis']['file_name_for_overwrite'] + '_filtered_signal.csv'
+        file_name = os.path.join(cfg['Analysis']['result_folder'], file_name)
+        filtered_signal.to_csv(file_name, index=False)
+
+
+    def plot_signal_fft(self, time_vector, signal, sig_fft, filtered_signal):
+
+        plot_yml = viz_templates.get_xy_line_csv(cfg['Analysis'].copy())
+
+        plot_yml['data']['groups'] = csv_groups
+        columns= { 'x': ['time_vector'], 'y': ['signal', 'filtered_signal'] }
+        plot_yml['master_settings']['groups']['columns'] = columns
+
+        transform = [{ 'column': 'length', 'scale': 0.0254, 'shift': 0 }]
+        plot_yml['master_settings']['groups']['transform'] = transform
+
+        settings = {'file_name':  cfg['Analysis']['file_name_for_overwrite'] + '_temperature', 
+                    'title': 'Temperature along length',
+                    'xlabel': 'Time [s]',
+                    'ylabel': 'Magnitude',
+}
+        plot_yml['settings'].update(settings)
+        au_engine(inputfile=None, cfg=plot_yml, config_flag=False)
 
     def perform_fft_analysis(self):
         '''
@@ -97,6 +157,7 @@ class TimeSeriesComponents():
             self.fft_analysis_for_df(df, set_info)
 
     def fft_analysis_for_df(self, df, set_info):
+        # Third party imports
         import pandas as pd
         columns = df.columns
         fft_filtered_signal_df = pd.DataFrame(columns=columns)
@@ -121,8 +182,10 @@ class TimeSeriesComponents():
         setattr(self, 'output_fft_filtered_signal_' + set_info['label'], fft_filtered_signal_df)
 
     def fft_window_analysis(self, signal, time_window=None):
+        # Standard library imports
         import math
 
+        # Third party imports
         import pandas as pd
         cfg_fft = self.cfg['default']['analysis']['fft'].copy()
         average_fft_df = pd.DataFrame()
@@ -157,12 +220,14 @@ class TimeSeriesComponents():
                     peak_indices = self.identify_signal_peaks(frequency, power, cfg_peaks)
 
                 average_fft_df['peak_flag'] = False
+                # Third party imports
                 from common.data import PandasChainedAssignent
                 with PandasChainedAssignent():
                     for peak_index in peak_indices:
                         average_fft_df['peak_flag'].iloc[peak_index] = True
 
             else:
+                # Standard library imports
                 import sys
                 print("No FFT Analysis performed. Check data")
                 sys.exit()
@@ -173,8 +238,10 @@ class TimeSeriesComponents():
         return average_fft_df
 
     def identify_signal_peaks(self, x_list, y_list, cfg_peaks):
+        # Standard library imports
         import math
 
+        # Third party imports
         import numpy as np
         import scipy.signal
         peak_indices = []
@@ -193,12 +260,15 @@ class TimeSeriesComponents():
 
         return peak_indices
 
-    def fft_analysis(self, signal, time_step=None):
-        import numpy as np
-        import pandas as pd
-        import scipy.fftpack
+    def fft_analysis(self, cfg, signal, time_step=None):
+        # Third party imports
 
-        cfg_fft = self.cfg['default']['analysis']['fft'].copy()
+        if cfg is None and self.cfg is None:
+            raise("Error: FFT Analysis configuration not available")
+        elif cfg is None:
+            cfg = self.cfg.copy()
+
+        cfg_fft = cfg['fft'].copy()
         if time_step is None:
             time_step = cfg_fft['time_step']
 
@@ -209,6 +279,16 @@ class TimeSeriesComponents():
         else:
             fft_freq = scipy.fftpack.fftfreq(signal.size, d=time_step)
 
+        fft_df['fft'] = sig_fft
+        fft_df['power'] = power
+        fft_df['fft_freq'] = fft_freq
+
+        fft_df_pos_freq, filtered_signal = self.get_filtered_signal(cfg_fft, fft_df)
+
+        return fft_df_pos_freq, filtered_signal
+
+    def get_filtered_signal(self, cfg_fft, fft_df):
+
         filtered_sig_fft = sig_fft.copy()
         if cfg_fft['filter'].__contains__('band_pass') and cfg_fft['filter']['band_pass']['flag']:
             min_freq = cfg_fft['filter']['band_pass']['frequency_minimum']
@@ -218,27 +298,27 @@ class TimeSeriesComponents():
         else:
             index_selected = None
 
+        sig_fft = fft_df['fft']
+        power = fft_df['power']
+        fft_freq = fft_df['fft_freq']
+
         columns = ['fft', 'power', 'fft_freq']
-        from common.data import PandasChainedAssignent
         with PandasChainedAssignent():
-            fft_df = pd.DataFrame(columns=columns)
-        if index_selected is None:
-            fft_df['fft'] = sig_fft
-            fft_df['power'] = power
-            fft_df['fft_freq'] = fft_freq
-        else:
-            fft_df['fft'] = sig_fft[index_selected]
-            fft_df['power'] = power[index_selected]
-            fft_df['fft_freq'] = fft_freq[index_selected]
+            filtered_fft_df = pd.DataFrame(columns=columns)
+        if index_selected is not None:
+            filtered_fft_df['fft'] = sig_fft[index_selected]
+            filtered_fft_df['power'] = power[index_selected]
+            filtered_fft_df['fft_freq'] = fft_freq[index_selected]
 
-        fft_df.fillna(value=0, inplace=True)
+        filtered_fft_df.fillna(value=0, inplace=True)
 
-        fft_df_pos_freq = fft_df[fft_df['fft_freq'] >= 0].copy()
+        fft_df_pos_freq = filtered_fft_df[filtered_fft_df['fft_freq'] >= 0].copy()
         filtered_signal = np.real(scipy.fftpack.ifft(filtered_sig_fft))
 
         return fft_df_pos_freq, filtered_signal
 
     def get_RAO(self, signal, excitation, cfg_rao=None):
+        # Third party imports
         import numpy as np
         import pandas as pd
         signal_fft_df = self.fft_window_analysis(signal)
@@ -250,6 +330,7 @@ class TimeSeriesComponents():
         RAO_raw['Re'] = 0
         RAO_raw['Im'] = 0
         for row_index in range(0, len(RAO_raw)):
+            # Third party imports
             from common.data import PandasChainedAssignent
             with PandasChainedAssignent():
                 RAO_raw['Re'].iloc[row_index] = RAO_raw.loc[row_index, 'complex'].real
@@ -269,6 +350,7 @@ class TimeSeriesComponents():
             max_power = excitation_fft_df['power'].max()
             min_power = max_power * cfg_rao['filter']['amplitude']['min_ratio']
 
+            # Third party imports
             from common.data import PandasChainedAssignent
             with PandasChainedAssignent():
                 RAO_filtered.loc[excitation_fft_df['power'] < min_power, 'complex'] = complex(0,0)
@@ -290,6 +372,7 @@ class TimeSeriesComponents():
         Simple moving average for a dataframe
         First column is assumed to be always time/index and is not processed
         '''
+        # Third party imports
         import pandas as pd
         cfg_moving_avg = self.cfg['default']['analysis']['moving_average'].copy()
         columns = df.columns
@@ -317,6 +400,7 @@ class TimeSeriesComponents():
             setattr(self, 'output_f_by_v_' + set_info['label'], df_filter_by_value)
 
     def filter_by_value_for_df(self, df, df_statistics):
+        # Third party imports
         import numpy as np
         cfg_filter = self.cfg['default']['analysis']['filter'].copy()
         columns = df.columns
@@ -343,6 +427,7 @@ class TimeSeriesComponents():
             setattr(self, 'output_stats_' + set_info['label'], self.get_statistics_for_df(df.copy()))
 
     def get_statistics_for_df(self, df):
+        # Third party imports
         import pandas as pd
         cfg_statistics = self.cfg['default']['analysis']['statistics'].copy()
         columns = df.columns
@@ -359,6 +444,7 @@ class TimeSeriesComponents():
         return statistics_df
 
     def prepare_visualizations(self):
+        # Third party imports
         from common.visualization_components import VisualizationComponents
         vc = VisualizationComponents(self.cfg)
         vc.prepare_visualizations(self)
@@ -380,6 +466,7 @@ class TimeSeriesComponents():
         '''
         Disys displacement from angle and also resultant displacement from orthogonal components.
         '''
+        # Standard library imports
         import math
         cfg_cus_calc = self.cfg['default']['analysis']['custom_calculation_2'].copy()
         for data_set_index in range(0, len(cfg_cus_calc['sets'])):
@@ -408,6 +495,7 @@ class TimeSeriesComponents():
 
     def integration_for_df(self, df, data_set_info):
         cfg_integration = self.cfg['default']['analysis']['integration'].copy()
+        # Third party imports
         from scipy import integrate
         columns = df.columns
         for column_index in range(1, len(columns)):
@@ -423,6 +511,7 @@ class TimeSeriesComponents():
         setattr(self, 'output_integration_' + data_set_info['label'], df)
 
     def get_sample_time_series(self, ts_cfg=None, plt_flag=False):
+        # Third party imports
         import numpy as np
         from matplotlib import pyplot as plt
 
@@ -448,8 +537,8 @@ class TimeSeriesComponents():
 
         return time_vector, signal, time_step, peak_period
 
-    def run_simple_fft_example(self, signal, time_step, plt_flag=False):
-        sig_fft, filtered_signal = self.fft_analysis(signal, time_step)
+    def run_simple_fft_example(self, cfg, signal, time_step, plt_flag=False):
+        sig_fft, filtered_signal = self.fft_analysis(cfg, signal, time_step)
 
         return sig_fft, filtered_signal
 
@@ -459,6 +548,7 @@ class TimeSeriesComponents():
     #     return average_fft_df
 
     def run_example_not_working(self, plt_flag=False):
+        # Third party imports
         import numpy as np
         from matplotlib import pyplot as plt
         from scipy import fftpack
@@ -501,3 +591,18 @@ class TimeSeriesComponents():
             plt.show()
 
         return sig_fft, filtered_signal
+
+    def get_rainflow_count_from_time_series(self, time_series: array) -> pd.DataFrame:
+        '''
+        https://pypi.org/project/rainflow/
+        ASTM E1049-85 rainflow cycle counting algorythm for fatigue analysis
+        '''
+        logging.debug("Rainflow count from time series ... BEGIN")
+
+        df_columns = ['range', 'mean', 'count', 'i_start', 'i_end']
+        df = pd.DataFrame(rainflow.extract_cycles(time_series), columns = df_columns)
+        dict = df.to_dict()
+
+        logging.debug("Rainflow count from time series ... END")
+    
+        return df, dict

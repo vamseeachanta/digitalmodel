@@ -1,9 +1,17 @@
 # Standard library imports
+import logging
 import os
 import socket
 import struct
 import sys
 from math import *
+
+# Third party imports
+from colorama import Fore, Style
+from colorama import init as colorama_init
+
+
+colorama_init()
 
 
 # A simple set of classes for easy logging
@@ -364,15 +372,16 @@ class AqwaUserForceServer(AqwaServerMgr):
         self.Analysis.NOfStruct =  self.Receive("i")[0]
         # The I_Control
         self.Analysis.I_Control = self.Receive(100*"i")
-        Log.write("I_Control = "+str(self.Analysis.I_Control)+"\n")
+        logging.debug("I_Control = "+str(self.Analysis.I_Control)+"\n")
         # The R_Control
         self.Analysis.R_Control = self.Receive(100*"f")
-        Log.write("R_Control = "+str(self.Analysis.R_Control)+"\n")
+        logging.debug("R_Control = "+str(self.Analysis.R_Control)+"\n")
         # The Cog positions for each structure
         self.Analysis.COGs = []
         for ns in range(self.Analysis.NOfStruct):
             self.Analysis.COGs.append(self.Receive("fff"))
             Log.write("Position of CoG of Aqwa structure #%d in the definition axis : (%f,%f,%f)\n" % (ns+1,self.Analysis.COGs[-1][0],self.Analysis.COGs[-1][1],self.Analysis.COGs[-1][2]))
+        Log.write(f"Analysis{Fore.GREEN} ... Start {Style.RESET_ALL}\n")
 
     def Run(self,UserForceFunction,ClosingFuntion=None):
 
@@ -409,6 +418,7 @@ class AqwaUserForceServer(AqwaServerMgr):
 
         if ClosingFuntion:
             ClosingFuntion(Time, complete_flag=True)
+            Log.write(f"Analysis{Fore.GREEN} ... Complete {Style.RESET_ALL}\n")
 
 # A set of class for manipulating Forces and AddMass
 

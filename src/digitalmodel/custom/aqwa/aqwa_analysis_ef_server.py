@@ -10,7 +10,6 @@ from assetutilities.common.file_management import FileManagement
 from colorama import Fore, Style
 from colorama import init as colorama_init
 
-
 # Reader imports
 from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
 from digitalmodel.custom.aqwa.ef_server.AqwaServerMgr import *
@@ -313,7 +312,7 @@ class AqwaEFServer:
         force_x = result_dict['force_x']
         force_y = result_dict['force_y']
         result_array = [Time, dl[0], dl[1], dl[2], CurNodeVel[0], CurNodeVel[1], CurNodeVel[2], force_x['stiffness'], force_x['dampener'] , force_x['total'], force_y['stiffness'], force_y['dampener'], force_y['total']]
-        result_array = [round(item, 4) for item in result_array]
+        result_array = [round(item, 5) for item in result_array]
 
         result_array_idx = len(self.result_df_array[def_pos_idx])
 
@@ -401,9 +400,12 @@ class AqwaEFServer:
         return AddMass, Error
 
     def get_wsp_dampener_force(self, Time, dof_pos_delta, dof_vel, dir='X'):
-        stiffness = {'X': {'dl': [0.15, 0.70, 10], 'k': [1, 7.03e6, 2.8e7]}, 
-                    'Y': {'dl': [0.15, 0.70, 10], 'k': [1, 14.06e6, 5.6e7]}}
-        c = {'X': 3.75E+06, 'Y': 7.51E+06}
+        stiffness = {'X': {'dl': [0.05, 0.15, 0.70, 10], 'k': [2e4, 1e5, 7.03e6, 2.8e7]}, 
+                    'Y': {'dl': [0.05, 0.15, 0.70, 10], 'k': [2e4, 2e5, 14.06e6, 5.6e7]}}
+        damping = {'X': {'v': [0.005, 0.01, 100], 'c': [3.75E+06, 3.75E+06, 3.75E+06]},
+                   'Y': {'v': [0.005, 0.01, 100], 'c': [7.51E+06, 7.51E+06, 7.51E+06]}}
+        damping_static = {'X': {'v': [0.005, 0.01, 100], 'c': [3.75E+03, 3.75E+05, 3.75E+06]},
+                   'Y': {'v': [0.005, 0.01, 100], 'c': [7.51E+03, 7.51E+05, 7.51E+06]}}
 
         stiffness_force = 0
         dof_pos_delta_abs = abs(dof_pos_delta)
@@ -412,15 +414,26 @@ class AqwaEFServer:
         elif dof_pos_delta_abs < stiffness[dir]['dl'][1]:
             stiffness_force = stiffness[dir]['k'][0] * stiffness[dir]['dl'][0]
             stiffness_force = stiffness_force + stiffness[dir]['k'][1] * (dof_pos_delta_abs - stiffness[dir]['dl'][0])
-        else:
+        elif dof_pos_delta_abs < stiffness[dir]['dl'][2]:
             stiffness_force = stiffness[dir]['k'][0] * stiffness[dir]['dl'][0]
             stiffness_force = stiffness_force + stiffness[dir]['k'][1] * (stiffness[dir]['dl'][1] - stiffness[dir]['dl'][0])
             stiffness_force = stiffness_force + stiffness[dir]['k'][2] * (dof_pos_delta_abs - stiffness[dir]['dl'][1])
+        else:
+            stiffness_force = stiffness[dir]['k'][0] * stiffness[dir]['dl'][0]
+            stiffness_force = stiffness_force + stiffness[dir]['k'][1] * (stiffness[dir]['dl'][1] - stiffness[dir]['dl'][0])
+            stiffness_force = stiffness_force + stiffness[dir]['k'][2] * (stiffness[dir]['dl'][2] - stiffness[dir]['dl'][1])
+            stiffness_force = stiffness_force + stiffness[dir]['k'][3] * (dof_pos_delta_abs - stiffness[dir]['dl'][2])
 
         if dof_pos_delta > 0:
             stiffness_force = -stiffness_force
 
-        dampener_force = c[dir] * (abs(dof_vel)**0.6)
+        dof_vel_abs = abs(dof_vel)
+        if dof_vel_abs < damping[dir]['v'][0]:
+            dampener_force = damping[dir]['c'][0] * (dof_vel_abs**0.6)
+        elif dof_vel_abs < damping[dir]['v'][1]:
+            dampener_force = damping[dir]['c'][1] * (dof_vel_abs**0.6)
+        else:
+            dampener_force = damping[dir]['c'][2] * (dof_vel_abs**0.6)
         if dof_vel > 0:
             dampener_force = -dampener_force
 
@@ -440,10 +453,10 @@ class AqwaEFServer:
 
     def print_heartbeat(self, Time, complete_flag=False):
         if complete_flag:
-            logging.info(f"Run {Fore.GREEN}Complete at: {round(Time, 3)} s {Style.RESET_ALL}")
+            logging.info(f"Analysis Complete time: {Fore.GREEN}{round(Time, 3)} s {Style.RESET_ALL}")
         elif Time % 50 == 0:
             self.heartbeat_count = getattr(self, 'heartbeat_count', 0)
             self.heartbeat_count += 1
             if self.heartbeat_count == 2:
-                logging.info(f"analysis Time: {Time} s")
+                logging.info(f"Analysis Run Time: {Time} s")
                 setattr(self, 'heartbeat_count', 0)
