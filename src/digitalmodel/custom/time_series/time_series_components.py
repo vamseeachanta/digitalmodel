@@ -223,7 +223,7 @@ class TimeSeriesComponents():
         # Third party imports
         with PandasChainedAssignent():
             for peak_index in peak_indices:
-                average_fft_df['peak_flag'].iloc[peak_index] = True
+                average_fft_df.loc[peak_index, 'peak_flag'] = True
 
         return average_fft_df
 
@@ -333,8 +333,8 @@ class TimeSeriesComponents():
             # Third party imports
             from common.data import PandasChainedAssignent
             with PandasChainedAssignent():
-                RAO_raw['Re'].iloc[row_index] = RAO_raw.loc[row_index, 'complex'].real
-                RAO_raw['Im'].iloc[row_index] = RAO_raw.loc[row_index, 'complex'].imag
+                RAO_raw.loc[row_index, 'Re'] = RAO_raw.loc[row_index, 'complex'].real
+                RAO_raw.loc[row_index,'Im'] = RAO_raw.loc[row_index, 'complex'].imag
 
         RAO_raw['amplitude'] = np.absolute(RAO_raw['complex'])
         if cfg_rao is not None and cfg_rao.__contains__('phase'):
