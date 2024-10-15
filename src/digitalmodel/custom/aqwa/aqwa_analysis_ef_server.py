@@ -400,40 +400,47 @@ class AqwaEFServer:
         return AddMass, Error
 
     def get_wsp_dampener_force(self, Time, dof_pos_delta, dof_vel, dir='X'):
-        stiffness = {'X': {'dl': [0.05, 0.15, 0.70, 10], 'k': [2e4, 1e5, 7.03e6, 2.8e7]}, 
+        stiffness = {'dynamic': {'X': {'dl': [0.05, 0.15, 0.70, 10], 'k': [2e4, 1e5, 7.03e6, 2.8e7]}, 
+                                'Y': {'dl': [0.05, 0.15, 0.70, 10], 'k': [2e4, 2e5, 14.06e6, 5.6e7]}},
+                    'static': {'X': {'dl': [0.05, 0.15, 0.70, 10], 'k': [7.03e4, 7.03e5, 7.03e5, 2.8e7]}, 
+                                'Y': {'dl': [0.05, 0.15, 0.70, 10], 'k': [14.06e4, 14.06e5, 14.06e5, 5.6e7]}}
+                    }
+        stiffness_anal_type = {'X': {'dl': [0.05, 0.15, 0.70, 10], 'k': [2e4, 1e5, 7.03e6, 2.8e7]}, 
                     'Y': {'dl': [0.05, 0.15, 0.70, 10], 'k': [2e4, 2e5, 14.06e6, 5.6e7]}}
-        damping = {'X': {'v': [0.005, 0.01, 100], 'c': [3.75E+06, 3.75E+06, 3.75E+06]},
-                   'Y': {'v': [0.005, 0.01, 100], 'c': [7.51E+06, 7.51E+06, 7.51E+06]}}
-        damping_static = {'X': {'v': [0.005, 0.01, 100], 'c': [3.75E+03, 3.75E+05, 3.75E+06]},
-                   'Y': {'v': [0.005, 0.01, 100], 'c': [7.51E+03, 7.51E+05, 7.51E+06]}}
+        damping = {'dynamic': {'X': {'v': [0.005, 0.01, 100], 'c': [3.75E+06, 3.75E+06, 3.75E+06]},
+                    'Y': {'v': [0.005, 0.01, 100], 'c': [7.51E+06, 7.51E+06, 7.51E+06]}},
+                    'static': {'X': {'v': [0.005, 0.1, 100], 'c': [3.75E+03, 3.75E+03, 3.75E+06]},
+                    'Y': {'v': [0.005, 0.1, 100], 'c': [7.51E+03, 7.51E+03, 7.51E+06]}}}
+        analysis_type = self.cfg['analysis_settings']['ef_input']['analysis_type']
 
         stiffness_force = 0
+        stiffness_anal_type = stiffness[analysis_type].copy()
         dof_pos_delta_abs = abs(dof_pos_delta)
-        if dof_pos_delta_abs < stiffness[dir]['dl'][0]:
-            stiffness_force = stiffness[dir]['k'][0] * dof_pos_delta_abs
-        elif dof_pos_delta_abs < stiffness[dir]['dl'][1]:
-            stiffness_force = stiffness[dir]['k'][0] * stiffness[dir]['dl'][0]
-            stiffness_force = stiffness_force + stiffness[dir]['k'][1] * (dof_pos_delta_abs - stiffness[dir]['dl'][0])
-        elif dof_pos_delta_abs < stiffness[dir]['dl'][2]:
-            stiffness_force = stiffness[dir]['k'][0] * stiffness[dir]['dl'][0]
-            stiffness_force = stiffness_force + stiffness[dir]['k'][1] * (stiffness[dir]['dl'][1] - stiffness[dir]['dl'][0])
-            stiffness_force = stiffness_force + stiffness[dir]['k'][2] * (dof_pos_delta_abs - stiffness[dir]['dl'][1])
+        if dof_pos_delta_abs < stiffness_anal_type[dir]['dl'][0]:
+            stiffness_force = stiffness_anal_type[dir]['k'][0] * dof_pos_delta_abs
+        elif dof_pos_delta_abs < stiffness_anal_type[dir]['dl'][1]:
+            stiffness_force = stiffness_anal_type[dir]['k'][0] * stiffness_anal_type[dir]['dl'][0]
+            stiffness_force = stiffness_force + stiffness_anal_type[dir]['k'][1] * (dof_pos_delta_abs - stiffness_anal_type[dir]['dl'][0])
+        elif dof_pos_delta_abs < stiffness_anal_type[dir]['dl'][2]:
+            stiffness_force = stiffness_anal_type[dir]['k'][0] * stiffness_anal_type[dir]['dl'][0]
+            stiffness_force = stiffness_force + stiffness_anal_type[dir]['k'][1] * (stiffness_anal_type[dir]['dl'][1] - stiffness_anal_type[dir]['dl'][0])
+            stiffness_force = stiffness_force + stiffness_anal_type[dir]['k'][2] * (dof_pos_delta_abs - stiffness_anal_type[dir]['dl'][1])
         else:
-            stiffness_force = stiffness[dir]['k'][0] * stiffness[dir]['dl'][0]
-            stiffness_force = stiffness_force + stiffness[dir]['k'][1] * (stiffness[dir]['dl'][1] - stiffness[dir]['dl'][0])
-            stiffness_force = stiffness_force + stiffness[dir]['k'][2] * (stiffness[dir]['dl'][2] - stiffness[dir]['dl'][1])
-            stiffness_force = stiffness_force + stiffness[dir]['k'][3] * (dof_pos_delta_abs - stiffness[dir]['dl'][2])
+            stiffness_force = stiffness_anal_type[dir]['k'][0] * stiffness_anal_type[dir]['dl'][0]
+            stiffness_force = stiffness_force + stiffness_anal_type[dir]['k'][1] * (stiffness_anal_type[dir]['dl'][1] - stiffness_anal_type[dir]['dl'][0])
+            stiffness_force = stiffness_force + stiffness_anal_type[dir]['k'][2] * (stiffness_anal_type[dir]['dl'][2] - stiffness_anal_type[dir]['dl'][1])
+            stiffness_force = stiffness_force + stiffness_anal_type[dir]['k'][3] * (dof_pos_delta_abs - stiffness_anal_type[dir]['dl'][2])
 
         if dof_pos_delta > 0:
             stiffness_force = -stiffness_force
 
         dof_vel_abs = abs(dof_vel)
-        if dof_vel_abs < damping[dir]['v'][0]:
-            dampener_force = damping[dir]['c'][0] * (dof_vel_abs**0.6)
-        elif dof_vel_abs < damping[dir]['v'][1]:
-            dampener_force = damping[dir]['c'][1] * (dof_vel_abs**0.6)
+        if dof_vel_abs < damping[analysis_type][dir]['v'][0]:
+            dampener_force = damping[analysis_type][dir]['c'][0] * (dof_vel_abs**0.6)
+        elif dof_vel_abs < damping[analysis_type][dir]['v'][1]:
+            dampener_force = damping[analysis_type][dir]['c'][1] * (dof_vel_abs**0.6)
         else:
-            dampener_force = damping[dir]['c'][2] * (dof_vel_abs**0.6)
+            dampener_force = damping[analysis_type][dir]['c'][2] * (dof_vel_abs**0.6)
         if dof_vel > 0:
             dampener_force = -dampener_force
 

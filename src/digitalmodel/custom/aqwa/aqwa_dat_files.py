@@ -34,16 +34,16 @@ class AqwaDATFiles:
         for dc_cfg in cfg['inputs']:
             data_category = str(dc_cfg['data']['category'])
             data_category = data_category.zfill(2)
-            dc_data = self.get_dc_data(dc_cfg, data_category)
+            dc_data = self.get_dc_data(cfg, dc_cfg, data_category)
             self.write_dc_data(dc_data, data_category, dc_cfg, cfg)
 
 
-    def get_dc_data(self, dc_cfg, data_category):
+    def get_dc_data(self, cfg, dc_cfg, data_category):
 
         dc_header = self.get_dc_header(data_category)
 
         dc_body_func = getattr(self, f"get_dc_{data_category}_body")
-        dc_body = dc_body_func(dc_cfg)
+        dc_body = dc_body_func(cfg, dc_cfg)
 
         dc_footer = self.get_dc_footer(data_category)
         dc_data = dc_header + dc_body + dc_footer
@@ -94,7 +94,7 @@ class AqwaDATFiles:
 
         return file_array
 
-    def get_dc_01_body(self, dc_cfg):
+    def get_dc_01_body(self, cfg, dc_cfg):
         raw_data = dc_cfg['data']['raw']
         body = []
         for body_item_idx in range(0, len(raw_data)):
@@ -113,7 +113,7 @@ class AqwaDATFiles:
 
         return body
 
-    def get_dc_03_body(self, dc_cfg):
+    def get_dc_03_body(self, cfg, dc_cfg):
         raw_data = dc_cfg['data']['raw']
         body = []
         for body_item_idx in range(0, len(raw_data)):
@@ -125,7 +125,7 @@ class AqwaDATFiles:
 
         return body
 
-    def get_dc_04_body(self, dc_cfg):
+    def get_dc_04_body(self, cfg, dc_cfg):
         raw_data = dc_cfg['data']['raw']
         element_type = dc_cfg['data']['element_type']
         body = []
@@ -150,7 +150,7 @@ class AqwaDATFiles:
         return body
 
 
-    def get_dc_06_body(self, dc_cfg):
+    def get_dc_06_body(self, cfg, dc_cfg):
         raw_data = dc_cfg['data']['raw']
         element_type = dc_cfg['data']['element_type']
         body = []
@@ -166,7 +166,7 @@ class AqwaDATFiles:
         return body
 
 
-    def get_dc_07_body(self, dc_cfg):
+    def get_dc_07_body(self, cfg, dc_cfg):
         raw_data = dc_cfg['data']['raw']
         element_type = dc_cfg['data']['element_type']
         body = []
@@ -185,7 +185,7 @@ class AqwaDATFiles:
         return body
 
 
-    def get_dc_10_body(self, dc_cfg):
+    def get_dc_10_body(self, cfg, dc_cfg):
         raw_data = dc_cfg['data']['raw']
         body = []
 
@@ -302,7 +302,7 @@ class AqwaDATFiles:
 
         return body
 
-    def get_dc_11_body(self, dc_cfg):
+    def get_dc_11_body(self, cfg, dc_cfg):
         raw_data = dc_cfg['data']['raw']
         body = []
         
@@ -332,11 +332,24 @@ class AqwaDATFiles:
 
         return body
 
-    def get_dc_15_body(self, dc_cfg):
+    def get_dc_15_body(self, cfg, dc_cfg):
+        if dc_cfg['function'] is None:
+            body = self.get_dc_15_body_generic(cfg, dc_cfg)
+        else:
+            dc_15_body_func = getattr(self, f"get_dc_15_{dc_cfg['function']}")
+            body = dc_15_body_func(cfg, dc_cfg)
+
+            body = self.get_dc_15_wlng(cfg, dc_cfg)
+
+        return body
+
+    def get_dc_15_body_generic(self, cfg, dc_cfg):
         raw_data = dc_cfg['data']['raw']
+        analysis_root_folder = cfg['Analysis']['analysis_root_folder']
         directory = raw_data['directory']
         filename_pattern = raw_data['filename_pattern']
-        filenames = glob.glob(directory + '/' + filename_pattern)
+        file_path = os.path.join(analysis_root_folder, directory)
+        filenames = glob.glob(file_path + '/' + filename_pattern)
         position_columns = ['POSITION OF COG_in X direction', 'POSITION OF COG_in Y direction', 'POSITION OF COG_in Z direction', 'POSITION OF COG_about X axis', 'POSITION OF COG_about Y axis', 'POSITION OF COG_about Z axis']
         all_structure_pos = []
         for filename in filenames:
@@ -360,7 +373,41 @@ class AqwaDATFiles:
 
         return body
 
-    def get_dc_18_body(self, dc_cfg):
+    def get_dc_15_wlng(self, cfg, dc_cfg):
+        custom_structures = ['d_4_cog', 'd_7_cog']
+        raw_data = dc_cfg['data']['raw']
+        analysis_root_folder = cfg['Analysis']['analysis_root_folder']
+        directory = raw_data['directory']
+        filename_pattern = raw_data['filename_pattern']
+        file_path = os.path.join(analysis_root_folder, directory)
+        filenames = glob.glob(file_path + '/' + filename_pattern)
+        position_columns = ['POSITION OF COG_in X direction', 'POSITION OF COG_in Y direction', 'POSITION OF COG_in Z direction', 'POSITION OF COG_about X axis', 'POSITION OF COG_about Y axis', 'POSITION OF COG_about Z axis']
+        all_structure_pos = []
+        for filename in filenames:
+            df = pd.read_csv(filename)
+            df.iloc[-1][position_columns]
+            structure_pos  = df.iloc[-1][position_columns].values.flatten().tolist()
+            basename = os.path.basename(filename)
+            if any(custom_structure in basename for custom_structure in custom_structures):
+                structure_pos = structure_pos[0:3] + [0]*3
+            all_structure_pos.append(structure_pos)
+
+        body = []
+        for pos_idx in range(0, len(all_structure_pos)):
+            structure_pos = all_structure_pos[pos_idx]
+            structure_tag = f"POS{pos_idx+1}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{structure_tag:>4s}{white_space:>5s}{white_space:>5s}{structure_pos[0]:>10.4f}{structure_pos[1]:>10.4f}{structure_pos[2]:>10.4f}{structure_pos[3]:>10.4f}{structure_pos[4]:>10.4f}{structure_pos[5]:>10.4f}"
+            body.append(body_item_str)
+
+        for pos_idx in range(0, len(all_structure_pos)):
+            structure_vel = [0]*6
+            structure_tag = f"VEL{pos_idx+1}"
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{structure_tag:>4s}{white_space:>5s}{white_space:>5s}{structure_vel[0]:>10.4f}{structure_vel[1]:>10.4f}{structure_vel[2]:>10.4f}{structure_vel[3]:>10.4f}{structure_vel[4]:>10.4f}{structure_vel[5]:>10.4f}"
+            body.append(body_item_str)
+
+        return body
+
+    def get_dc_18_body(self, cfg, dc_cfg):
         raw_data = dc_cfg['data']['raw']
         element_type = dc_cfg['data']['element_type']
         body = []
