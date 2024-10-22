@@ -37,7 +37,7 @@ start
             note right
                 Files saved as: 
                   - .yml or .dat
-                  
+
             end note
 
         :Prepare batch file;
@@ -47,23 +47,34 @@ start
     }
 
     partition "Post-Processing" {
-        :Visualizations;
+
             note right
-                Snapshots
-                range graphs
-                etc.
+                Python development for automated, consistent, timely outputs
+            end note
+
+        :detailed output;
+            note right
+                timetraces of motion, force etc. (.csv)
+                .json /.yml
             end note
 
         :summary;
             note right
                 key outputs
-                Including LinkedStatistics
+                - <font color=green>Statistics</font> (Min, Max, Mean etc.)
+                - LinkedStatistics (time dependent statistics)
             end note
 
-        :detailed data;
+        :Visualizations;
             note right
-                .csv
-                .json /.yml 
+                Snapshots (of the model)
+                range graphs
+                Timetrace plots
+            end note
+
+        :Frequency Analysis;
+            note right
+                FFT of time traces for in-depth analysis
             end note
 
     }
