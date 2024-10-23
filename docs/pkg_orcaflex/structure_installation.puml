@@ -1,4 +1,4 @@
-@startuml iterative_runs
+@startuml structure_installation
 scale 3
 skinparam titleBorderRoundCorner 15
 skinparam titleBorderThickness 2
