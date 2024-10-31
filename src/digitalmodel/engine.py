@@ -125,6 +125,9 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "time_series":
         tsa = TimeSeriesAnalysis()
         cfg_base = tsa.router(cfg_base)
+    elif basename == "gis":
+        tsa = TimeSeriesAnalysis()
+        cfg_base = tsa.router(cfg_base)
 
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
