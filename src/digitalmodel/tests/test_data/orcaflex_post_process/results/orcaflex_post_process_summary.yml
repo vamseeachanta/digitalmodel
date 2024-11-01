@@ -95,7 +95,7 @@ dictitems:
     AddMaximumToSummary: true
     AddMeanToSummary: true
     groups:
-    - SummaryFileName: Table_Top
+    - SummaryFileName: dynamics
       Columns:
       - Command: Range Graph
         ObjectName: SLWR
@@ -148,30 +148,36 @@ dictitems:
         auto_read: true
     input_files:
       yml:
-      - c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\app_orcaflex_post_process_orcaflex_post_process_summary.yml
-      - c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\app_orcaflex_post_process_visualization.yml
-      - c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process.yml
-      - c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process_summary.yml
-      - c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process_summary_pytest.yml
-      - c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.yml
-      - c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\summary_file_magement_auto_read_false.yml
+      - .\app_orcaflex_post_process_orcaflex_post_process_summary.yml
+      - .\app_orcaflex_post_process_visualization.yml
+      - .\orcaflex_post_process.yml
+      - .\orcaflex_post_process_summary.yml
+      - .\orcaflex_post_process_summary_pytest.yml
+      - .\orcaflex_test1.yml
+      - .\SLWR_06OD_GI_TA08_HE200_Post_Process.yml
+      - .\SLWR_06OD_GI_TA08_HE300_Post_Process.yml
+      - .\SLWR_06OD_GI_TA08_Post_Process.yml
+      - .\summary_file_magement_auto_read_false.yml
       yaml: []
       dat:
-      - c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.dat
+      - .\orcaflex_test2.dat
       sim:
-      - c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.sim
-      - c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.sim
+      - .\orcaflex_test1.sim
+      - .\orcaflex_test2.sim
       txt: []
   Analysis:
     basename: orcaflex_post_process
-    analysis_root_folder: c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process
-    file_name: app_orcaflex_post_process_orcaflex_post_process_summary
-    file_name_for_overwrite: app_orcaflex_post_process_orcaflex_post_process_summary
-    result_folder: c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\results
-    log_folder: c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\logs
-    start_time: 2024-03-28 00:43:13.929431
+    analysis_root_folder: .
+    file_name: orcaflex_post_process_summary
+    file_name_for_overwrite: orcaflex_post_process_summary
+    result_folder: .\results
+    log_folder: .\logs
+    start_time: 2024-11-01 12:33:29.587504
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: c:\Users\NSO2003338\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process_summary.yml
+    CustomInputFile: .\orcaflex_post_process_summary.yml
+    fe_folder: .\results
+    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath []
+    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath []
   orcaflex_post_process:
     summary_groups: 1
