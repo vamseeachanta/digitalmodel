@@ -9,8 +9,11 @@ opp = orcaflex_post_process()
 
 
 def orcaflex_analysis(cfg):
+    if "file_management" in cfg and cfg["file_management"]["flag"]:
+        cfg = ou.file_management(cfg)
+
     orcaFlex_analysis = OrcaFlexAnalysis(cfg)
-    orcaFlex_analysis.file_management(cfg)
+    orcaFlex_analysis.file_management(cfg) #TODO delete if redundant
 
     static_flag = cfg['orcaflex']['analysis']['static']
     simulation_flag = cfg['orcaflex']['analysis']['simulation']

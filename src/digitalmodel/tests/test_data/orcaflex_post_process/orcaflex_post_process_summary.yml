@@ -44,8 +44,7 @@ summary_settings:
       Columns:
         - Command: Range Graph
           ObjectName: SLWR
-          AdditionalData:
-            - Max
+          Statistic_Type: Max
           SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
           ArcLength:
             - 0
@@ -54,8 +53,7 @@ summary_settings:
           Label: Eff. Tension
         - Command: Range Graph
           ObjectName: SLWR
-          AdditionalData:
-            - Max
+          Statistic_Type: Max
           SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
           ArcLength:
             - 0
@@ -64,8 +62,7 @@ summary_settings:
           Label: Bend. Moment
         - Command: Range Graph
           ObjectName: SLWR
-          AdditionalData:
-            - Max
+          Statistic_Type: Max
           SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
           ArcLength:
             - 0
@@ -74,8 +71,7 @@ summary_settings:
           Label: API M1
         - Command: Range Graph
           ObjectName: SLWR
-          AdditionalData:
-            - Max
+          Statistic_Type: Max
           SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
           ArcLength:
             - 0

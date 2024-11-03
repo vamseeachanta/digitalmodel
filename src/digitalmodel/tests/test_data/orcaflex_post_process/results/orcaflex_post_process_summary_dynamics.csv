@@ -1,6 +1,6 @@
 fe_filename,RunStatus,FileName,Description,Eff. Tension,Bend. Moment,API M1,vM stress
-k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.sim,4,k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.sim,Description,,,,
-k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.sim,4,k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.sim,Description,,,,
-,,Mean,Mean,,,,
-,,Minimum,Minimum,,,,
-,,Maximum,Maximum,,,,
+k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.sim,4,k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.sim,Description,582.8916625976562,60.61454391479839,0.7723970872905513,229768.37231842172
+k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.sim,4,k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.sim,Description,582.8916625976562,60.61454391479839,0.7723970872905513,229768.37231842172
+,,Mean,Mean,582.8916625976562,60.61454391479839,0.7723970872905513,229768.37231842172
+,,Minimum,Minimum,582.8916625976562,60.61454391479839,0.7723970872905513,229768.37231842172
+,,Maximum,Maximum,582.8916625976562,60.61454391479839,0.7723970872905513,229768.37231842172

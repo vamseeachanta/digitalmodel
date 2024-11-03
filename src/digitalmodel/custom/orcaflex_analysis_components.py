@@ -1,26 +1,27 @@
-import os
-import re
-import logging
-import pandas as pd
-import numpy as np
-import math
+# Standard library imports
 import copy
-import scipy
+import logging
+import math
+import os
 from collections import OrderedDict
 
-from assetutilities.common.visualizations import Visualization
-from assetutilities.common.utilities import is_file_valid_func
-from assetutilities.common.data import SaveData
-from assetutilities.common.data import PandasChainedAssignent
-from assetutilities.common.data import TransformData
-from assetutilities.common.yml_utilities import ymlInput
+# Third party imports
+import numpy as np
+import pandas as pd
+import scipy
+from assetutilities.common.data import PandasChainedAssignent, SaveData, TransformData
 from assetutilities.common.file_management import FileManagement
+from assetutilities.common.utilities import is_file_valid_func
+from assetutilities.common.visualizations import Visualization
+from assetutilities.common.yml_utilities import ymlInput
 
-from digitalmodel.custom.time_series.time_series_components import TimeSeriesComponents
+# Reader imports
 from digitalmodel.common.ETL_components import ETL_components
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.custom.time_series.time_series_components import TimeSeriesComponents
 
 try:
+    # Third party imports
     import OrcFxAPI
 except:
     logging.debug("OrcFxAPI not available")
@@ -167,15 +168,15 @@ class OrcaFlexAnalysis():
     def run_static_analysis(self, filename_with_ext, model):
         print(f"Static analysis for {filename_with_ext} ... .... ")
         try:
-            print(f"First analysis ......")
+            print("First analysis ......")
             model.CalculateStatics()
-            print(f"First analysis ... PASS")
+            print("First analysis ... PASS")
             self.save_model_with_calculated_positions(filename_with_ext, model)
             model = self.analysis_with_calculated_positions(model)
             run_success_flag = True
         except:
             run_success_flag = False
-            print(f"First static analysis for ... FAIL")
+            print("First static analysis for ... FAIL")
 
         return model, run_success_flag
 
@@ -183,7 +184,7 @@ class OrcaFlexAnalysis():
         try:
             model.CalculateStatics()
         except:
-            print(f"Analysis with calculated positions ... FAIL")
+            print("Analysis with calculated positions ... FAIL")
 
         return model
 
@@ -673,7 +674,7 @@ class OrcaFlexAnalysis():
                 decimalArray = pd.Series([0, 0, 0, 2, 0],
                                          index=SummaryDF.columns.values)
                 SummaryDF = SummaryDF.round(decimalArray)
-            except Exception as e:
+            except Exception:
                 SummaryDF = SummaryDF.round(2)
 
         self.save_summary_to_csv(SummaryFileNameArray, cfg)
@@ -703,12 +704,18 @@ class OrcaFlexAnalysis():
                 save_data.df_to_sheet_in_existing_workbook(cfg_save_to_existing_workbook)
 
     def save_summary_to_csv(self, SummaryFileNameArray, cfg):
+        cfg[cfg['basename']].update({'summary': {}})
+
         for group_idx in range(0, len(SummaryFileNameArray)):
             df = self.SummaryDFAllFiles[group_idx]
             file_name = os.path.join(cfg['Analysis']['result_folder'],
                     cfg['Analysis']['file_name'] + '_' + SummaryFileNameArray[group_idx] + '.csv')
 
             df.to_csv(file_name, index=False)
+
+            result_dict = {SummaryFileNameArray[group_idx]: df.to_dict()}
+            cfg[cfg['basename']]['summary'].update(result_dict)
+
 
 
     def saveSummaryToNewExcel(self, SummaryFileNameArray, cfg):
