@@ -2,9 +2,9 @@
 import os
 import sys
 
+# Third party imports
 import deepdiff
 from assetutilities.common.yml_utilities import ymlInput
-from digitalmodel.engine import engine
 
 # Reader imports
 from digitalmodel.engine import engine
@@ -25,8 +25,8 @@ def run_process(input_file, expected_result={}):
 
 
 def test_process():
-    input_file = 'orcaflex_post_process_summary.yml'
-    pytest_output_file = 'results/orcaflex_post_process_summary_pytest.yml'
+    input_file = 'opp_summary2_group.yml'
+    pytest_output_file = 'results/opp_summary1_pytest.yml'
     pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     expected_result = ymlInput(pytest_output_file, updateYml=None)
 

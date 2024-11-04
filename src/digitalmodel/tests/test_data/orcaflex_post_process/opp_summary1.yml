@@ -42,10 +42,52 @@ summary_settings:
   groups:
     - SummaryFileName: dynamics
       Columns:
+        - Command: GetData
+          ObjectName: Vessel1
+          Variable:
+            - InitialHeading
+            - -1
+          Label: Vessel_Heading
+        - Command: GetData
+          ObjectName: Environment
+          Variable:
+            - WaveHeight
+            - -1
+          Label: Hmax
+        - Command: GetData
+          ObjectName: Environment
+          Variable:
+            - WavePeriod
+            - -1
+          Label: WavePeriod
+        - Command: GetData
+          ObjectName: Environment
+          Variable:
+            - WaveDirection
+            - -1
+          Label: WaveDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable:
+            - RefCurrentSpeed
+            - 0
+          Label: RefCurrentSpeed
+        - Command: GetData
+          ObjectName: Environment
+          Variable:
+            - CurrentFactor
+            - 0
+          Label: CurrentFactor[0]
+        - Command: GetData
+          ObjectName: Environment
+          Variable:
+            - RefCurrentDirection
+            - 0
+          Label: RefCurrentDirection
         - Command: Range Graph
           ObjectName: SLWR
           Statistic_Type: Max
-          SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+          SimulationPeriod: [0.0, 10.0]
           ArcLength:
             - 0
             - 50
@@ -54,7 +96,7 @@ summary_settings:
         - Command: Range Graph
           ObjectName: SLWR
           Statistic_Type: Max
-          SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+          SimulationPeriod: [0.0, 10.0]
           ArcLength:
             - 0
             - 50
@@ -63,7 +105,7 @@ summary_settings:
         - Command: Range Graph
           ObjectName: SLWR
           Statistic_Type: Max
-          SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+          SimulationPeriod: [0.0, 10.0]
           ArcLength:
             - 0
             - 50
@@ -72,12 +114,20 @@ summary_settings:
         - Command: Range Graph
           ObjectName: SLWR
           Statistic_Type: Max
-          SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+          SimulationPeriod: [0.0, 10.0]
           ArcLength:
             - 0
             - 50
           Variable: Max von Mises Stress
           Label: vM stress
+        - Command: TimeHistory
+          Statistic_Type: Max
+          ObjectName: SLWR
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Variable: Effective Tension
+          Label: TimeHistory_EndB_EffTension_Max
 
 RangeGraph_settings:
   add_effective_tension_to_cfg: False

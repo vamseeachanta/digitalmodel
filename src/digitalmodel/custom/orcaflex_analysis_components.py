@@ -1093,7 +1093,7 @@ class OrcaFlexAnalysis():
         elif len(SimulationPeriod) == 1:
             TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0])
         else:
-            TimePeriodObject = OrcFxAPI.SpecifiedPeriod()
+            raise ValueError("Could not specify time period for simulation")
 
         return TimePeriodObject
 

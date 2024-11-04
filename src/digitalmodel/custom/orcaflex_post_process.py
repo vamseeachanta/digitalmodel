@@ -1,17 +1,26 @@
-import os
-import math
-import pandas as pd
+# Standard library imports
+import copy
 import logging
+import math
+import os
+
+# Third party imports
+import pandas as pd
+
 try:
+    # Third party imports
     import OrcFxAPI
 except:
     logging.debug("OrcFxAPI not available")
 
 
-from assetutilities.common.utilities import is_file_valid_func
+# Third party imports
 from assetutilities.common.update_deep import update_deep_dictionary
-from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+from assetutilities.common.utilities import is_file_valid_func
+
+# Reader imports
 from digitalmodel.custom.orcaflex_analysis_components import OrcaFlexAnalysis
+from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 
 ou = OrcaflexUtilities()
 ofa = OrcaFlexAnalysis()
@@ -62,8 +71,16 @@ class orcaflex_post_process:
 
             for group_index in range(0, len(summary_settings['groups'])):
                 group = summary_settings['groups'][group_index].copy()
+
+                if 'Columns' in summary_settings_master['groups'][0]:
+                    for column_index in range(0, len(group['Columns'])):
+                        column = group['Columns'][column_index].copy()
+                        column = update_deep_dictionary(
+                            summary_settings_master['groups'][0]['Columns'][0], column)
+                        group['Columns'][column_index] = copy.deepcopy(column)
+
                 group = update_deep_dictionary(summary_settings_master['groups'][0], group)
-                summary_settings['groups'][group_index] = group.copy()
+                summary_settings['groups'][group_index] = copy.deepcopy(group)
 
         return cfg
 
@@ -310,7 +327,7 @@ class orcaflex_visualizations:
                 model.LoadData(input_file)
 
                 if cfg['visualization_settings']['combined']:
-                    print(f"Combined model code in library does not exist")
+                    print("Combined model code in library does not exist")
                     # combined_model = self.combine_models(combined_model, model)
 
                 model = self.set_general_visualization_settings(model, cfg)
