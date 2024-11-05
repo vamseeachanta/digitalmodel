@@ -20,10 +20,10 @@ ANSYS Elite Channel Partner
 Support: (918) 743-3013 x1 / <support@drd.com>
 Desk: (918) 743-3013 x602
 
-From: Vamsee Achanta <vamseea@acma-inc.com>
+From: Vamsee Achanta <vamseea@none.com>
 Sent: Friday, July 26, 2024 8:47 AM
 To: Duncan Staggs <dstaggs@drd.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+Cc: Scott McClure <scottm@none.com>
 Subject: RE: AQWA | Multiple Structure files imported into 1 model
 
 Thank you for the prompt responses Duncan.
@@ -32,8 +32,8 @@ Practical modular usage examples are few and far between anywhere in the AQWA do
 
 From: Duncan Staggs <dstaggs@drd.com>
 Sent: Friday, July 26, 2024 8:36 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+To: Vamsee Achanta <vamseea@none.com>
+Cc: Scott McClure <scottm@none.com>
 Subject: RE: AQWA | Multiple Structure files imported into 1 model
 
 (FYI, I just opened the new case with Ansys ? case #00093514 for reference. I?ll share what I get from Ansys on that as I receive it, of course.)
@@ -47,8 +47,8 @@ Desk: (918) 743-3013 x602
 
 From: Duncan Staggs
 Sent: Friday, July 26, 2024 8:25 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+To: Vamsee Achanta <vamseea@none.com>
+Cc: Scott McClure <scottm@none.com>
 Subject: RE: AQWA | Multiple Structure files imported into 1 model
 
 Hi Vamsee,
@@ -64,10 +64,10 @@ ANSYS Elite Channel Partner
 Support: (918) 743-3013 x1 / <support@drd.com>
 Desk: (918) 743-3013 x602
 
-From: Vamsee Achanta <vamseea@acma-inc.com>
+From: Vamsee Achanta <vamseea@none.com>
 Sent: Thursday, July 25, 2024 6:12 PM
 To: support <support@drd.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+Cc: Scott McClure <scottm@none.com>
 Subject: AQWA | Multiple Structure files imported into 1 model
 
 Dear Customer Service,

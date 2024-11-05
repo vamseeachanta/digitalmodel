@@ -2,8 +2,8 @@
 
 From: Orcina <orcina@orcina.com>
 Sent: Thursday, October 24, 2024 9:39 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+To: Vamsee Achanta <vamseea@none.com>
+Cc: Scott McClure <scottm@none.com>
 Subject: RE: OrcaFlex Vessel Data | AQWA vs. OrcaWave Interface
 
 Vamsee

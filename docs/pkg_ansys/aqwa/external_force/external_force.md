@@ -60,7 +60,7 @@ Vamsee
 
 From: Alex Austin <aaustin@drd.com>
 Sent: Friday, May 10, 2024 10:11 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
+To: Vamsee Achanta <vamseea@none.com>
 Subject: RE: ANSYS AQWA | External Force Calculation Python2 vs. Python 3
 
 Well, you are running an old version of the software. ?? R18.1 is considered old at this point? not quite ancient but getting there. ??
@@ -70,7 +70,7 @@ DRD Technology
 Technical Support: 918.743.3013 x 1
 Office: 918.743.3013 x 612
 
-From: Vamsee Achanta <vamseea@acma-inc.com>
+From: Vamsee Achanta <vamseea@none.com>
 Sent: Friday, May 10, 2024 10:10 AM
 To: Alex Austin <aaustin@drd.com>
 Subject: RE: ANSYS AQWA | External Force Calculation Python2 vs. Python 3
@@ -83,7 +83,7 @@ Vamsee
 
 From: Alex Austin <aaustin@drd.com>
 Sent: Thursday, May 9, 2024 2:07 PM
-To: Vamsee Achanta <vamseea@acma-inc.com>
+To: Vamsee Achanta <vamseea@none.com>
 Subject: RE: ANSYS AQWA | External Force Calculation Python2 vs. Python 3
 
 Vamsee,
@@ -99,7 +99,7 @@ DRD Technology
 Technical Support: 918.743.3013 x 1
 Office: 918.743.3013 x 612
 
-From: Vamsee Achanta <vamseea@acma-inc.com>
+From: Vamsee Achanta <vamseea@none.com>
 Sent: Thursday, May 9, 2024 1:03 PM
 To: support <support@drd.com>
 Subject: ANSYS AQWA | External Force Calculation Python2 vs. Python 3

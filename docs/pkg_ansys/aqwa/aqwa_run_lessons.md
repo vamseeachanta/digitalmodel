@@ -41,7 +41,7 @@ Either positions can be
 
 From: Alex Austin <aaustin@drd.com>
 Sent: Thursday, May 9, 2024 1:27 PM
-To: Bram Weisman <bramw@acma-inc.com>; Vamsee Achanta <vamseea@acma-inc.com>
+To: Bram Weisman <bramw@none.com>; Vamsee Achanta <vamseea@none.com>
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
 
 Aqwa does not have this Prime Mesh method functionality.
@@ -53,9 +53,9 @@ DRD Technology
 Technical Support: 918.743.3013 x 1
 Office: 918.743.3013 x 612
 
-From: Bram Weisman <bramw@acma-inc.com>
+From: Bram Weisman <bramw@none.com>
 Sent: Thursday, May 9, 2024 1:13 PM
-To: Vamsee Achanta <vamseea@acma-inc.com>; Alex Austin <aaustin@drd.com>
+To: Vamsee Achanta <vamseea@none.com>; Alex Austin <aaustin@drd.com>
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
 
 Vamsee,
@@ -70,10 +70,10 @@ Thanks,
 
 Bram
 
-From: Vamsee Achanta <vamseea@acma-inc.com>
+From: Vamsee Achanta <vamseea@none.com>
 Sent: Thursday, May 9, 2024 1:07 PM
 To: Alex Austin <aaustin@drd.com>
-Cc: Bram Weisman <bramw@acma-inc.com>
+Cc: Bram Weisman <bramw@none.com>
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
 
 Thank you ? like the confidence of the single line answer.
@@ -82,7 +82,7 @@ What does Share Topology really mean? Where do we get these high-level lessons f
 
 From: Alex Austin <aaustin@drd.com>
 Sent: Thursday, May 9, 2024 1:04 PM
-To: Vamsee Achanta <vamseea@acma-inc.com>
+To: Vamsee Achanta <vamseea@none.com>
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
 
 In the pier component entity in SpaceClaim, go to the properties panel and set Share Topology to Share. I will be in meetings through 2:30.
@@ -92,7 +92,7 @@ DRD Technology
 Technical Support: 918.743.3013 x 1
 Office: 918.743.3013 x 612
 
-From: Vamsee Achanta <vamseea@acma-inc.com>
+From: Vamsee Achanta <vamseea@none.com>
 Sent: Thursday, May 9, 2024 1:02 PM
 To: Alex Austin <aaustin@drd.com>
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
@@ -108,7 +108,7 @@ Vamsee
 
 From: Alex Austin <aaustin@drd.com>
 Sent: Thursday, May 9, 2024 11:49 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
+To: Vamsee Achanta <vamseea@none.com>
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
 
 Vamsee,
@@ -129,7 +129,7 @@ Vamsee
 
 From: Alex Austin <aaustin@drd.com>
 Sent: Friday, May 10, 2024 8:32 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
+To: Vamsee Achanta <vamseea@none.com>
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
 
 Vamsee,
