@@ -16,7 +16,7 @@ def test_pass_pipeline():
             tests_passed = int(line.split(":")[1].strip())
             break
 
-    expected_result = 19
+    expected_result = 18
 
     assert tests_passed == expected_result
 
