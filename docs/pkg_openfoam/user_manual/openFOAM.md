@@ -16,8 +16,8 @@ For the pre and post processing layers for OpenFOAM
 
 | Feature | HELYX |  OpenFOAM |  Additional comments |
 |---|---|---|---|
-| Preprocessing | HELYX-GUI | CAD/Blender | n/a |
-| CORE | HELYX-Core | FreeCAD or <br> Blender for Engineers | HELYX-Core is built on top of OpenFOAM |
+| Preprocessing | HELYX-GUI | CAD software <br> Blender for Engineers <br> FreeCAD | n/a |
+| CORE | HELYX-Core | openFOAM | HELYX-Core is built on top of OpenFOAM |
 | Hardware | Windows, Linux | Windows, Linux, MacOS | n/a |
 | Operating System | Windows, Linux | Windows, Linux, MacOS | n/a |
 | User Support | Help-line | - |  |
