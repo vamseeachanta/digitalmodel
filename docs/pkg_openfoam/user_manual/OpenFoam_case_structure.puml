@@ -17,7 +17,7 @@ component constant
 component system
 }
 
-CaseStudy --> 0 : initial & boundary conditions
+CaseStudy --> 0 : initial & boundary conditions 
 CaseStudy --> 1s: time directories
 CaseStudy --> constant : mesh & physical properties
 CaseStudy --> system: control & solver parameters

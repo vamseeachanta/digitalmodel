@@ -17,7 +17,7 @@ For the pre and post processing layers for OpenFOAM
 | Feature | HELYX |  OpenFOAM |  Additional comments |
 |---|---|---|---|
 | Preprocessing | HELYX-GUI | CAD/Blender | n/a |
-| CORE | HELYX-Core | FreeCAD | HELYX-Core is built on top of OpenFOAM |
+| CORE | HELYX-Core | FreeCAD or <br> Blender for Engineers | HELYX-Core is built on top of OpenFOAM |
 | Hardware | Windows, Linux | Windows, Linux, MacOS | n/a |
 | Operating System | Windows, Linux | Windows, Linux, MacOS | n/a |
 | User Support | Help-line | - |  |
@@ -79,7 +79,27 @@ Typical steps for running a case study:
 
 ### References
 
-**Marine Hydrodynamics**
+**Introduction to OpenFOAM**
+
+[Introduction to CFD using OpenFOAM](https://www.youtube.com/watch?v=mGSUIXye9j4&list=PLcOe4WUSsMkH6DLHpsYyveaqjKxnEnQqB)
+  
+[First Simulation in OpenFOAM - part-1](https://www.youtube.com/watch?v=KznljrgWSvo)
+
+[First Simulation in OpenFOAM - part-2](https://www.youtube.com/watch?v=bJTSKaxG58Y)
+
+**Marine Hydrodynamics - Meshing**
+
+- [Meshing STL Using snappyHexMesh in OpenFOAM
+](https://www.youtube.com/watch?v=ehDEcCVN2MI)
+
+- [Quick and dirty introduction to overset meshes in OpenFOAM-V2312
+](https://www.youtube.com/watch?v=jD5YkqCJajs)
+
+- [18th OpenFOAM Workshop - Naval hydrodynamics 1](https://www.youtube.com/watch?v=etn3Yi8BGV8&t=2389s&pp=ygUPb3BlbmZvYW0gbmF2YWwg)
+
+**Marine Hydrodynamics - Hull Form Design**
+
+- [Ship resistance prediction (Luofeng Huang, UCL)](https://www.youtube.com/watch?v=xcdq4CAw7BM)
 
 - [Wigley hull - VOF with free surface](<http://www.wolfdynamics.com/tutorials.html?id=149>)
   - [Wigley hull - VOF with free surface | input files](http://www.wolfdynamics.com/validations/wigleyhull/wigleyHull_LTS.tar.gz)
@@ -92,7 +112,21 @@ Typical steps for running a case study:
 
 - [Joint Research Project | Ship Energy Efficiency Solutions](<https://www.jores.net/>)
 
+- [Seakeeping (head wave) using OpenFOAM](<https://www.youtube.com/watch?v=k_qtcKA_nYQ&list=PLt4NwTlK-IVNogd4noiSHmlqmnJ16zGcJ>)
+
+- [Ship Hydrodynamics Lecture 16](https://youtu.be/uWcPtCTEI3c)
+
+**Marine Hydrodynamics - Diffraction Analysis**
+
+- [Floating Object Stability Modeling with OpenFOAM,  Tutorial Part 1](https://www.youtube.com/watch?v=4A2aWzRy1j4)
+
+- [Floating Object Stability Modeling with OpenFOAM,  Tutorial Part 2](https://www.youtube.com/watch?v=DvWNpVYx5xo)
+
+- [Floating Object Stability Modeling with OpenFOAM Tutorial - Animation](https://www.youtube.com/watch?app=desktop&v=QWCmDi1fw20)
+
 **OpenFOAM Workshop Videos**
+
+- [18th OpenFoam Workshop | Naval Hydrodynamics I](<https://youtu.be/etn3Yi8BGV8>)
 
 - [17th OpenFoam Workshop | Naval Hydrodynamics I](<https://www.youtube.com/watch?v=PDDRRz478fs>)
 - [17th OpenFoam Workshop | Naval Hydrodynamics I](<https://www.youtube.com/watch?v=Nr7tMtII-DU>)
@@ -106,6 +140,8 @@ Typical steps for running a case study:
 **Postprocessing**
 
 - [Using blender to visualize OpenFOAM outputs?](<https://www.youtube.com/watch?v=yp9khQtP1g8>)
+
+- [How to open OpenFOAM® results in ParaView](https://www.youtube.com/watch?v=8J59CpaYnVc)
 
 - [OpenFOAM Documentation | Getting Started](<https://www.openfoam.com/documentation/tutorial-guide/1-introduction/1.1-getting-started#x4-30001.1>)
 - [learn-openfoam](<https://holzmann-cfd.com/community/learn-openfoam>)
