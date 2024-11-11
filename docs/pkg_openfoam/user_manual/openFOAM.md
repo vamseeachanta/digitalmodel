@@ -89,6 +89,8 @@ Typical steps for running a case study:
 
 **Marine Hydrodynamics - Meshing**
 
+- [CFD Geometry WOrkflow Using Blender](https://www.youtube.com/watch?v=Asalec1dFR4)
+
 - [Meshing STL Using snappyHexMesh in OpenFOAM
 ](https://www.youtube.com/watch?v=ehDEcCVN2MI)
 
@@ -155,5 +157,12 @@ Typical steps for running a case study:
 
 **FoamPython**
 
-- [FoamPython, OpenFOAM utilizing python](<https://www.youtube.com/watch?v=EDAn2uFJ6jU>)s
+- [FoamPython, OpenFOAM utilizing python](<https://www.youtube.com/watch?v=EDAn2uFJ6jU>)
+
 - [FoamPython, Link not working](<https://gitlab.com/share-renderluh/foampython-1.0>)
+
+**UDEMY courses**
+
+<https://www.udemy.com/course/learn-openfoam-cfd-level-3/?couponCode=ST2MT110724ANEW>
+<https://www.udemy.com/course/learn-openfoam-cfd-level-2/?couponCode=ST2MT110724ANEW>
+<https://www.udemy.com/course/learn-openfoam-cfd-level-1/?couponCode=ST2MT110724ANEW>
