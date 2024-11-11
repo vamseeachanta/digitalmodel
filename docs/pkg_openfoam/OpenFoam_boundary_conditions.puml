@@ -1,0 +1,24 @@
+@startuml OpenFoam_boundary_conditions
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title OpenFoam | Boundary Conditions
+
+component boundaryField
+
+package Directories {
+component TBA
+}
+
+
+footer
+credits: https://maplekeylabs.com/understanding-the-openfoam-case-structure/
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

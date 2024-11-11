@@ -1,0 +1,137 @@
+@startuml OpenFoam_case_structure
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title OpenFoam | Case Structure \n Folders and Files
+
+component "Case Study" as CaseStudy
+
+package Directories {
+component 0
+component 1s
+component constant
+component system
+}
+
+CaseStudy --> 0 : initial & boundary conditions
+CaseStudy --> 1s: time directories
+CaseStudy --> constant : mesh & physical properties
+CaseStudy --> system: control & solver parameters
+
+package Subdirectories {
+    agent polyMesh
+}
+
+constant --> polyMesh
+
+package Files {
+
+    agent "U: velocity" as U
+    agent "p: pressure" as p
+
+    agent meshFiles
+    agent transportProperties
+    agent turbulenceProperties
+
+    agent fvSchemes
+    agent fvSolution
+    agent controlDict
+}
+
+0 --> U
+0 --> p
+
+1s --> U
+1s --> p
+
+polyMesh --> meshFiles
+constant --> transportProperties
+constant --> turbulenceProperties
+
+system --> fvSchemes
+system --> fvSolution
+system --> controlDict
+
+package Dictionaries {
+
+    agent "internalField \nboundaryField" as Field_Data
+
+    agent "points, \nedges, \nboundary, \nfaces, \nowner, \nneighbour etc." as Mesh_Data
+    agent "fluid properties" as transportProperties_Data
+    agent "simulationType, \nturbulence models" as turbulenceProperties_Data
+
+    agent "discretization schemes \nfor finite vol method" as fvSchemes_Data
+    agent "discretized equations \nsolution methods" as fvSolution_Data
+    agent "how solution \nshould progress" as controlDict_Data
+
+}
+
+U --> Field_Data
+p --> Field_Data
+
+meshFiles --> Mesh_Data
+transportProperties --> transportProperties_Data
+turbulenceProperties --> turbulenceProperties_Data
+
+fvSchemes --> fvSchemes_Data
+fvSolution --> fvSolution_Data
+controlDict --> controlDict_Data
+
+
+package "Meta Data" {
+
+    agent "type  \nvalue \nquantity \nunits" as Field_Meta
+
+    agent "transportModel, \nnu, rho, sigma" as transportProperties_Meta
+    agent "simulationType, \nturbulence models" as turbulenceProperties_Meta
+
+    agent "ddtSchemes \ngradSchemes \ndivSchemes \n laplacianSchemes \ninterpolationSchemes \nsnGradSchemes" as fvSchemes_Meta
+    agent "solvers \n associated parameters" as fvSolution_Meta
+    agent "deltaT \nendTime \nwriteInterval \npurgeWrite" as controlDict_Meta
+
+}
+
+Field_Data  --> Field_Meta
+
+transportProperties_Data  --> transportProperties_Meta
+turbulenceProperties_Data  --> turbulenceProperties_Meta
+
+fvSchemes_Data --> fvSchemes_Meta
+fvSolution_Data --> fvSolution_Meta
+controlDict_Data --> controlDict_Meta
+
+
+package "Sample Data" {
+
+    agent "uniform \nfixedValue  " as Field_Sample
+
+    agent "Newtonian \npowerLaw etc, \nproperty units & values " as transportProperties_Sample
+    agent "laminar (or) \nturbulence model: \nRAS (or) LES etc." as turbulenceProperties_Sample
+
+
+    agent "see tutorials/documentation" as documentation
+    agent "PIMPLE: \nnNonOrthogonalCorrectors \nnCorrectors \nnOuterCorrectors \npRefCell \npRefValue" as fvSolution_Sample
+
+}
+
+Field_Meta  --> Field_Sample
+
+transportProperties_Meta  --> transportProperties_Sample
+turbulenceProperties_Meta  --> turbulenceProperties_Sample
+
+
+fvSchemes_Meta --> documentation
+fvSolution_Meta --> fvSolution_Sample
+controlDict_Meta --> documentation
+
+footer
+credits: https://maplekeylabs.com/understanding-the-openfoam-case-structure/
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
