@@ -1,5 +1,5 @@
 
-class opp_range_graph():
+class OPPRangeGraph():
     
     def __init__(self) -> None:
         pass

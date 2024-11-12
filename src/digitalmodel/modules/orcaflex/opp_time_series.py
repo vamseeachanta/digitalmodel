@@ -1,5 +1,5 @@
 
-class opp_time_series():
+class OPPTimeseries():
     
     def __init__(self) -> None:
         pass

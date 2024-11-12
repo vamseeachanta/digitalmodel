@@ -20,17 +20,17 @@ from assetutilities.common.utilities import is_file_valid_func
 
 # Reader imports
 from digitalmodel.modules.orcaflex.opp import OrcaFlexAnalysis
-from digitalmodel.modules.orcaflex.opp_range_graph import opp_range_graph
-from digitalmodel.modules.orcaflex.opp_time_series import opp_time_series
-from digitalmodel.modules.orcaflex.opp_visualization import opp_visualization
+from digitalmodel.modules.orcaflex.opp_range_graph import OPPRangeGraph
+from digitalmodel.modules.orcaflex.opp_time_series import OPPTimeseries
+from digitalmodel.modules.orcaflex.opp_visualization import OPPVisualization
 from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
 
 ou = OrcaflexUtilities()
 ofa = OrcaFlexAnalysis()
 
-opp_ts = opp_time_series()
-opp_rg = opp_range_graph()
-opp_v = opp_visualization()
+opp_ts = OPPTimeseries()
+opp_rg = OPPRangeGraph()
+opp_v = OPPVisualization()
 
 
 class orcaflex_post_process:
