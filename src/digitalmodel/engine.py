@@ -22,9 +22,9 @@ from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
 )
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
-from digitalmodel.custom.orcaflex_file_management import OrcaflexFileManagement
-from digitalmodel.custom.orcaflex_installation import OrcInstallation
-from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
+from digitalmodel.modules.orcaflex.orcaflex_file_management import OrcaflexFileManagement
+from digitalmodel.modules.orcaflex.orcaflex_installation import OrcInstallation
+from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.pipeline.pipeline import Pipeline
 from digitalmodel.custom.rao_analysis import RAOAnalysis
 from digitalmodel.custom.transformation import Transformation

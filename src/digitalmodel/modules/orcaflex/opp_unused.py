@@ -17,8 +17,8 @@ from assetutilities.common.yml_utilities import ymlInput
 
 # Reader imports
 from digitalmodel.common.ETL_components import ETL_components
-from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 from digitalmodel.custom.time_series.time_series_components import TimeSeriesComponents
+from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
 
 try:
     # Third party imports

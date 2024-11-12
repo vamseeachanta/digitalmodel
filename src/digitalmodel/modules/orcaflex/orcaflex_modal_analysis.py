@@ -1,16 +1,21 @@
-import os
-import pandas as pd
-import numpy as np
-from pathlib import Path
 import logging
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+# Third party imports
+import numpy as np
+import pandas as pd
 
 try:
+    # Third party imports
     import OrcFxAPI
 except:
     logging.debug("OrcFxAPI not available")
 
 
-from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+# Reader imports
+from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
 
 ou = OrcaflexUtilities()
 
