@@ -10,7 +10,9 @@ from assetutilities.common.yml_utilities import ymlInput
 from digitalmodel.engine import engine
 
 
-def run_process(input_file, expected_result={}):
+from typing import Optional, Dict, Any
+
+def run_process(input_file: Optional[str], expected_result: Dict[str, Any] = {}) -> None:
     if input_file is not None and not os.path.isfile(input_file):
         input_file = os.path.join(os.path.dirname(__file__), input_file)
     cfg = engine(input_file)
@@ -36,9 +38,11 @@ def test_process():
 
     run_process(input_file, expected_result)
 
-def get_valid_pytest_output_file(pytest_output_file):
+def get_valid_pytest_output_file(pytest_output_file: str) -> str:
     if pytest_output_file is not None and not os.path.isfile(pytest_output_file):
-        pytest_output_file = os.path.join(os.path.dirname(__file__), pytest_output_file)
+        pytest_output_file = os.path.join(
+            os.path.dirname(__file__), pytest_output_file
+        )
     return pytest_output_file
 
 test_process()
