@@ -1,3 +1,4 @@
+#TODO Refactor
 
 class OPPTimeseries():
     

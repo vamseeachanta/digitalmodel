@@ -1,6 +1,5 @@
 #TODO Refactor
-
-class OPPRangeGraph():
+class OrcaFlexAnalysis():
     
     def __init__(self) -> None:
         pass
