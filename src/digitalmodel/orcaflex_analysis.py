@@ -1,4 +1,4 @@
-from digitalmodel.custom.orcaflex_analysis_components import OrcaFlexAnalysis
+from digitalmodel.modules.orcaflex.opp import OrcaFlexAnalysis
 from digitalmodel.common.orcaflex_iterative_runs import OrcaflexIterativeRuns
 from digitalmodel.custom.orcaflex_post_process import orcaflex_post_process
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities

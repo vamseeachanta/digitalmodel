@@ -19,7 +19,7 @@ from assetutilities.common.update_deep import update_deep_dictionary
 from assetutilities.common.utilities import is_file_valid_func
 
 # Reader imports
-from digitalmodel.custom.orcaflex_analysis_components import OrcaFlexAnalysis
+from digitalmodel.modules.orcaflex.opp import OrcaFlexAnalysis
 from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
 
 ou = OrcaflexUtilities()

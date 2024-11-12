@@ -1,0 +1,61 @@
+basename: orcaflex_post_process
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  analysis:
+    static: False
+    simulation: False
+    iterate:
+      flag: False
+    save_sim: False
+    save_dat: False
+
+  postprocess:
+    visualization:
+      flag: False
+    summary:
+      flag: False
+    RangeGraph:
+      flag: False
+    time_series:
+      flag: True
+    RAOs:
+      flag: False
+    cummulative_histograms:
+      flag: False
+    rain_flow:
+      bins: 10
+      range:
+        - 0
+        - 10
+
+time_series_settings:
+  histogram: False
+  summation: False
+  groups:
+    - SummaryFileName: time_history
+      Columns:
+        - Command: TimeHistory
+          Statistic_Type: Max
+          ObjectName: SLWR
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Variable: Effective Tension
+          Label: TimeHistory_EndB_EffTension_Max
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: True
+      directory: NULL
+      auto_read: True

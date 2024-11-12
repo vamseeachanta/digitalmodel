@@ -781,11 +781,12 @@ class OrcaFlexAnalysis():
         self.HistogramAllFiles = histogram_all_files
         self.RangeAllFiles = RangeAllFiles
 
-        SummaryDFAllFiles = self.process_summary_groups(cfg)
-        self.SummaryDFAllFiles = SummaryDFAllFiles
+        if 'summary_settings' in cfg: 
+            SummaryDFAllFiles = self.process_summary_groups(cfg)
+            self.SummaryDFAllFiles = SummaryDFAllFiles
 
     def process_summary_groups(self, cfg):
-        
+
         summary_cfg = cfg['summary_settings'].copy()
         SummaryDFAllFiles = [pd.DataFrame()] * len(
             summary_cfg['groups'])
@@ -824,7 +825,7 @@ class OrcaFlexAnalysis():
                 except Exception as e:
                     logging.info(str(e))
                     raise Exception("Error in post processing")
-            
+
         return SummaryDFAllFiles
 
     def get_model_from_filename(self, file_name):
