@@ -35,13 +35,13 @@ orcaflex:
         - 10
 
 time_series_settings:
+  data: True
   histogram: False
   summation: False
   groups:
-    - SummaryFileName: time_history
+    - Label: time_history
       Columns:
         - Command: TimeHistory
-          Statistic_Type: Max
           ObjectName: SLWR
           objectExtra:
             - End B
