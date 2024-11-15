@@ -18,6 +18,9 @@ from assetutilities.common.yml_utilities import ymlInput
 # Reader imports
 from digitalmodel.common.ETL_components import ETL_components
 from digitalmodel.custom.time_series.time_series_components import TimeSeriesComponents
+from digitalmodel.modules.orcaflex.opp_range_graph import OPPRangeGraph
+from digitalmodel.modules.orcaflex.opp_time_series import OPPTimeSeries
+from digitalmodel.modules.orcaflex.opp_visualization import OPPVisualization
 from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
 
 try:
@@ -29,6 +32,10 @@ except:
 ou = OrcaflexUtilities()
 fm = FileManagement()
 save_data = SaveData()
+
+opp_ts = OPPTimeSeries()
+opp_rg = OPPRangeGraph()
+opp_v = OPPVisualization()
 
 class OrcaFlexAnalysis():
 
@@ -322,7 +329,7 @@ class OrcaFlexAnalysis():
 
             cfg_time_series_reference = self.get_cfg_time_series_reference(
                 cfg_raos, rao_set)
-            reference_time_series = self.get_time_series_from_orcaflex_run(
+            reference_time_series = opp_ts.get_time_series_from_orcaflex_run(
                 model, cfg_time_series_reference)
 
             output_time_series_array = self.get_time_series_output(
@@ -419,7 +426,7 @@ class OrcaFlexAnalysis():
                     0, len(cfg_time_series_array[ArcLength_index])):
                 cfg_Variable = cfg_time_series_array[ArcLength_index][
                     Variable_index]
-                Variable_time_series = self.get_time_series_from_orcaflex_run(
+                Variable_time_series = opp_ts.get_time_series_from_orcaflex_run(
                     model, cfg_Variable)
                 output_ArcLength_time_series_array.append(Variable_time_series)
             output_time_series_array.append(output_ArcLength_time_series_array)
@@ -542,7 +549,7 @@ class OrcaFlexAnalysis():
     def get_SimulationPeriod(self, cfg):
         if 'SimulationPeriod' in cfg:
             SimulationPeriod = cfg['SimulationPeriod']
-            TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
+            TimePeriod = opp_ts.get_TimePeriodObject(SimulationPeriod)
         else:
             TimePeriod = None
         return TimePeriod
@@ -878,7 +885,7 @@ class OrcaFlexAnalysis():
 
             SimulationPeriod = cfg['RangeGraph'][RangeGraphIndex][
                 'SimulationPeriod']
-            TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
+            TimePeriod = opp_ts.get_TimePeriodObject(SimulationPeriod)
             VariableName = cfg['RangeGraph'][RangeGraphIndex]['Variable']
 
             try:
@@ -948,7 +955,7 @@ class OrcaFlexAnalysis():
         # Read Object
         OrcFXAPIObject = model[FileObjectName]
         SimulationPeriod = cfg_histogram['SimulationPeriod']
-        TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
+        TimePeriod = opp_ts.get_TimePeriodObject(SimulationPeriod)
         VariableName = cfg_histogram['Variable']
         ArcLength = cfg_histogram['ArcLength'][0]
         RadialPos_text = cfg_histogram['RadialPos']
@@ -970,35 +977,6 @@ class OrcaFlexAnalysis():
                                                rainflow_range[1]))
 
         return histogram_object[0]
-
-    def get_time_series_from_orcaflex_run(self, model, cfg_time_series):
-
-        time_series = None
-        ObjectName = cfg_time_series['ObjectName']
-        OrcFXAPIObject = model[ObjectName]
-        SimulationPeriod = cfg_time_series['SimulationPeriod']
-        TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
-        VariableName = cfg_time_series['Variable']
-        if cfg_time_series.__contains__('ArcLength'):
-            ArcLength = cfg_time_series['ArcLength'][0]
-            RadialPos_text = cfg_time_series['RadialPos']
-            if RadialPos_text == 'Outer':
-                RadialPos = 1
-            elif RadialPos_text == 'Inner':
-                RadialPos = 0
-            Theta = cfg_time_series['Theta']
-            objectExtra = OrcFxAPI.oeLine(ArcLength=ArcLength,
-                                          RadialPos=RadialPos,
-                                          Theta=Theta)
-        else:
-            Location = cfg_time_series['Location']
-            objectExtra = OrcFxAPI.oeEnvironment(Location[0], Location[1],
-                                                 Location[2])
-
-        time_series = OrcFXAPIObject.TimeHistory(VariableName,
-                                                 TimePeriod,
-                                                 objectExtra=objectExtra)
-        return time_series
 
     def add_result_to_cfg(self, RangeDF, VariableName):
         self.cfg['Analysis']['X'] = RangeDF['X'].tolist()
@@ -1081,22 +1059,6 @@ class OrcaFlexAnalysis():
                                                objectExtra=objectExtra, arclengthRange=arclengthRange)
         return output
 
-    def get_TimePeriodObject(self, SimulationPeriod):
-        if type(SimulationPeriod) is int:
-            TimePeriodObject = SimulationPeriod
-        elif SimulationPeriod == 'WhileSimulation':
-            TimePeriodObject = OrcFxAPI.PeriodNum.WholeSimulation
-        elif SimulationPeriod == 'LatestWave':
-            TimePeriodObject = OrcFxAPI.PeriodNum.LatestWave
-        elif len(SimulationPeriod) == 2:
-            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0],
-                                                        SimulationPeriod[1])
-        elif len(SimulationPeriod) == 1:
-            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0])
-        else:
-            raise ValueError("Could not specify time period for simulation")
-
-        return TimePeriodObject
 
     def get_ArcLengthObject(self, ArcLength, cfg):
 
@@ -1337,7 +1299,7 @@ class OrcaFlexAnalysis():
         arclengthRange = OrcFxAPI.oeArcLength(25.0)
         SimulationPeriod = cfg["PostProcess"]['Summary'][SummaryIndex][
             'SimulationPeriod']
-        TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
+        TimePeriod = opp_ts.get_TimePeriodObject(SimulationPeriod)
         stats = OrcFXAPIObject.LinkedStatistics(VariableName, TimePeriod,
                                                 arclengthRange)
         query = stats.Query('Effective Tension', 'Bend Moment')

@@ -1,1 +1,0 @@
-offshore riser design and installation guidelines. Refer api rp 2rd code.
