@@ -2,9 +2,11 @@
 import os
 import sys
 
+from colorama import Fore, Style
 import deepdiff
 from assetutilities.common.yml_utilities import ymlInput
 from digitalmodel.engine import engine
+
 
 # Reader imports
 from digitalmodel.engine import engine
@@ -22,7 +24,7 @@ def run_process(input_file, expected_result={}):
                                  expected_result,
                                  ignore_order=True,
                                  significant_digits=4)
-
+    print(Fore.GREEN + 'Orcaflex Summary test ... passed!')
 
 def test_process():
     input_file = 'opp_summary1.yml'

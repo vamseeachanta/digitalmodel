@@ -5,8 +5,6 @@ import logging
 from digitalmodel.common.ETL_components import ETL_components
 from digitalmodel.custom.time_series.time_series_components import TimeSeriesComponents
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
-
-
 try:
     # Third party imports
     import OrcFxAPI
@@ -48,8 +46,9 @@ class OPPTimeSeries:
             group_label = ts_group['Label']
             for ts_cfg in ts_group['Columns']:
                 ts_label = ts_cfg['Label']
-                ts_data = self.get_time_series_from_orcaflex_run(model, ts_cfg)
-                self.save_time_series_data(ts_data, ts_label)
+                time_series = self.get_time_series_from_orcaflex_run(model, ts_cfg)
+                
+                pass
 
 
     def get_time_series_from_orcaflex_run(self, model, cfg_time_series):
@@ -62,19 +61,25 @@ class OPPTimeSeries:
         Returns:
             Time series data from the OrcaFlex analysis
         """
-        time_series = None
-        ObjectName = cfg_time_series['ObjectName']
-        OrcFXAPIObject = model[ObjectName]
-        SimulationPeriod = cfg_time_series['SimulationPeriod']
-        TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
-        VariableName = cfg_time_series['Variable']
-
-        objectExtra = of_objects.get_objectExtra(cfg_time_series)
+        OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model, cfg_time_series)
 
         time_series = OrcFXAPIObject.TimeHistory(VariableName,
                                                TimePeriod,
                                                objectExtra=objectExtra)
         return time_series
+
+    def get_TimeHistory(self, OrcFXAPIObject, TimePeriod, objectExtra, VariableName):
+        output = None
+        try:
+            if objectExtra is None:
+                output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
+            else:
+                output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
+                                                   objectExtra)
+        except Exception as e:
+            logging.info(str(e))
+            raise Exception(f"Error in TimeHistory: {str(e)}")
+        return output
 
     def post_process_RAOs(self, model, FileObjectName):
         cfg_raos = self.cfg['RAOs'].copy()

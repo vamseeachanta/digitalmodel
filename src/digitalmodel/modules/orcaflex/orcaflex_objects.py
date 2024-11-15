@@ -1,9 +1,31 @@
 import OrcFxAPI
 
 class OrcaFlexObjects():
-    
+
     def __init__(self) -> None:
         pass
+
+    def get_orcaflex_objects(self, model, cfg):
+        OrcFXAPIObject = self.get_OrcFXAPIObject(model, cfg)
+
+        TimePeriod = self.get_SimulationPeriod(cfg)
+
+        ArcLengthArray, arclengthRange = self.get_arc_length_objects(cfg)
+
+        objectExtra, arclengthRange_objectExtra = self.get_objectExtra(cfg)
+        if arclengthRange is None:
+            arclengthRange = arclengthRange_objectExtra
+            
+        VariableName = None
+        if 'Variable' in cfg:
+            VariableName = cfg['Variable']
+
+        Statistic_Type = None
+        if 'Statistic_Type' in cfg:
+            Statistic_Type = cfg['Statistic_Type']
+
+        return OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type
+
 
     def get_arc_length_objects(self, cfg):
         ArcLengthArray = []

@@ -113,66 +113,34 @@ class OrcaFlexAnalysis():
             SummaryDFAllFiles = self.process_summary_groups(cfg)
             self.SummaryDFAllFiles = SummaryDFAllFiles
 
-
-
-    def process_range_graphs(self):
-        if self.cfg['default']['Analysis']['RangeGraph']['flag']:
-            vizualization = Visualization()
-            # vizualization.orcaflex_range_plot(RangeAllFiles, self.cfg)
-        else:
-            print("No postprocessing plots per user request")
-
-    def process_summary_by_model_and_cfg(self, model, cfg):
+    def process_summary_by_model_and_cfg_item(self, model, cfg_item):
         RangeDF = pd.DataFrame()
 
-        OrcFXAPIObject = of_objects.get_OrcFXAPIObject(model, cfg)
+        OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model, cfg_item)
 
-        TimePeriod = of_objects.get_SimulationPeriod(cfg)
-
-        ArcLengthArray, arclengthRange = of_objects.get_arc_length_objects(cfg)
-
-        objectExtra, arclengthRange_objectExtra = of_objects.get_objectExtra(cfg)
-        if arclengthRange is None:
-            arclengthRange = arclengthRange_objectExtra
-
-        VariableName = None
-        if 'Variable' in cfg:
-            VariableName = cfg['Variable']
-
-        Statistic_Type = None
-        if 'Statistic_Type' in cfg:
-            Statistic_Type = cfg['Statistic_Type']
-
-        if cfg['Command'] == 'Range Graph':
-            output = self.get_RangeGraph(OrcFXAPIObject, TimePeriod, VariableName,
+        if cfg_item['Command'] == 'Range Graph':
+            output = opp_rg.get_RangeGraph(OrcFXAPIObject, TimePeriod, VariableName,
                        arclengthRange, objectExtra)
 
             AdditionalDataName = 'X'
             RangeDF[AdditionalDataName] = output.X
 
-            output_value = self.get_additional_data(cfg, RangeDF, VariableName,
+            output_value = self.get_additional_data(cfg_item, RangeDF, VariableName,
                                                     output, Statistic_Type)
-        elif cfg['Command'] == 'TimeHistory':
-            try:
-                if objectExtra is None:
-                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
-                else:
-                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
-                                                   objectExtra)
-            except Exception as e:
-                logging.info(str(e))
-                raise Exception(f"Error in TimeHistory: {str(e)}")
+        elif cfg_item['Command'] == 'TimeHistory':
+            output = opp_ts.get_TimeHistory(OrcFXAPIObject, TimePeriod, objectExtra, VariableName)
 
-            output_value = self.get_additional_data(cfg, RangeDF, VariableName,
+            output_value = self.get_additional_data(cfg_item, RangeDF, VariableName,
                                                     output, Statistic_Type)
-        elif cfg['Command'] in ['Static Result', 'StaticResult']:
+        elif cfg_item['Command'] in ['Static Result', 'StaticResult']:
             output_value = self.get_StaticResult(OrcFXAPIObject, VariableName,
                                                  objectExtra)
-        elif cfg['Command'] in ['GetData', 'Get Data']:
+        elif cfg_item['Command'] in ['GetData', 'Get Data']:
             output_value = self.get_input_data(OrcFXAPIObject, VariableName,
                                                model)
 
         return output_value
+
 
     def get_input_data(self, OrcFXAPIObject, VariableName, model):
         if 'Current' in VariableName[0]:
@@ -405,77 +373,6 @@ class OrcaFlexAnalysis():
         model = OrcFxAPI.Model(FileName)
         return model
 
-    def postProcessRange(self, model, cfg, FileObjectName):
-
-        # Range Graphs for a simulation
-        RangeFile = []
-
-        for RangeGraphIndex in range(0, len(cfg['RangeGraph'])):
-            RangeDF = pd.DataFrame()
-            # Read Object
-            try:
-                objectName = cfg['RangeGraph'][RangeGraphIndex]['ObjectName']
-                OrcFXAPIObject = model[objectName]
-            except:
-                OrcFXAPIObject = model[FileObjectName]
-
-            SimulationPeriod = cfg['RangeGraph'][RangeGraphIndex][
-                'SimulationPeriod']
-            TimePeriod = of_objects.get_TimePeriodObject(SimulationPeriod)
-            VariableName = cfg['RangeGraph'][RangeGraphIndex]['Variable']
-
-            try:
-                if len(cfg['RangeGraph'][RangeGraphIndex]['ArcLength']) > 1:
-                    StartArcLength = cfg['RangeGraph'][RangeGraphIndex][
-                        'ArcLength'][0]
-                    EndArcLength = cfg['RangeGraph'][RangeGraphIndex][
-                        'ArcLength'][1]
-                    output = OrcFXAPIObject.RangeGraph(
-                        VariableName,
-                        TimePeriod,
-                        arclengthRange=OrcFxAPI.arSpecifiedArclengths(
-                            StartArcLength, EndArcLength))
-                else:
-                    StartArcLength = cfg['RangeGraph'][RangeGraphIndex][
-                        'ArcLength'][0]
-                    output = OrcFXAPIObject.RangeGraph(
-                        VariableName,
-                        TimePeriod,
-                        arclengthRange=OrcFxAPI.arSpecifiedArclengths(
-                            StartArcLength))
-                    # arclengthRange = OrcFxAPI.arSpecifiedArclengths(0, 100)
-            except:
-                arclengthRange = None
-                output = OrcFXAPIObject.RangeGraph(
-                    VariableName, TimePeriod, arclengthRange=arclengthRange)
-            # Assign Arc Length
-            AdditionalDataName = 'X'
-            RangeDF[AdditionalDataName] = output.X
-
-            for AdditionalDataIndex in range(
-                    0,
-                    len(cfg['RangeGraph'][RangeGraphIndex]['AdditionalData'])):
-                AdditionalDataName = cfg['RangeGraph'][RangeGraphIndex][
-                    'AdditionalData'][AdditionalDataIndex]
-                RangeDF[VariableName] = getattr(output, AdditionalDataName)
-
-                if VariableName == "API STD 2RD Method 1":
-                    RangeDF[VariableName] = [
-                        math.sqrt(x) for x in RangeDF[VariableName]
-                    ]
-            RangeFile.append(RangeDF)
-
-        if self.cfg['default']['Analysis']['RangeGraph']['flag'] and self.cfg[
-                'default']['Analysis']['RangeGraph'][
-                    'add_effective_tension_to_cfg']:
-            self.add_result_to_cfg(RangeDF, VariableName)
-
-        return RangeFile
-
-    def add_result_to_cfg(self, RangeDF, VariableName):
-        self.cfg['Analysis']['X'] = RangeDF['X'].tolist()
-        self.cfg['Analysis'][VariableName] = RangeDF[VariableName].tolist()
-        self.cfg_array.append(copy.deepcopy(self.cfg))
 
     def postProcessSummary(self, model, SummaryDF, SummaryIndex,
                            FileDescription, FileObjectName, FileName, fileIndex,
@@ -499,7 +396,7 @@ class OrcaFlexAnalysis():
                 summary_group_item_cfg = summary_group_cfg['Columns'][
                     SummaryColumnIndex]
                 try:
-                    output_value = self.process_summary_by_model_and_cfg(
+                    output_value = self.process_summary_by_model_and_cfg_item(
                         model, summary_group_item_cfg)
                     summary_from_sim_file.append(output_value)
                 except Exception as e:
@@ -540,19 +437,6 @@ class OrcaFlexAnalysis():
         pd.reset_option('mode.chained_assignment')
 
         return SummaryDF
-
-    def get_RangeGraph(self, OrcFXAPIObject, TimePeriod, VariableName,
-                       arclengthRange, objectExtra):
-        try:
-            output = OrcFXAPIObject.RangeGraph(VariableName,
-                                               TimePeriod,
-                                               arclengthRange=arclengthRange)
-        except:
-            output = OrcFXAPIObject.RangeGraph(VariableName,
-                                               TimePeriod,
-                                               objectExtra=objectExtra, arclengthRange=arclengthRange)
-        return output
-
 
 
     def get_loading_condition_array(self, file_index):
