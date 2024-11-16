@@ -47,7 +47,7 @@ time_series_settings:
             - End B
           SimulationPeriod: [0.0, 10.0]
           Variable: Effective Tension
-          Label: TimeHistory_EndB_EffTension_Max
+          Label: EndB_EffTension
 
 file_management:
   flag: True

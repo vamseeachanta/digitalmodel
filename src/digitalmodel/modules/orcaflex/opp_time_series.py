@@ -1,10 +1,13 @@
 # Standard library imports
 import logging
+import pandas as pd
 
 # Reader imports
 from digitalmodel.common.ETL_components import ETL_components
 from digitalmodel.custom.time_series.time_series_components import TimeSeriesComponents
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
+
+
 try:
     # Third party imports
     import OrcFxAPI
@@ -42,14 +45,14 @@ class OPPTimeSeries:
 
     def get_time_series_data(self, cfg, model):
         ts_groups = cfg['time_series_settings']['groups']
+        df = pd.DataFrame()
         for ts_group in ts_groups:
             group_label = ts_group['Label']
             for ts_cfg in ts_group['Columns']:
                 ts_label = ts_cfg['Label']
-                time_series = self.get_time_series_from_orcaflex_run(model, ts_cfg)
-                
-                pass
-
+                time_series, times = self.get_time_series_from_orcaflex_run(model, ts_cfg)
+                df['time']  = times
+                df[ts_label] = time_series
 
     def get_time_series_from_orcaflex_run(self, model, cfg_time_series):
         """Gets time series data from an OrcaFlex run
@@ -61,12 +64,15 @@ class OPPTimeSeries:
         Returns:
             Time series data from the OrcaFlex analysis
         """
+
         OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model, cfg_time_series)
 
+        times = model.SampleTimes(TimePeriod)
         time_series = OrcFXAPIObject.TimeHistory(VariableName,
                                                TimePeriod,
                                                objectExtra=objectExtra)
-        return time_series
+
+        return time_series, times
 
     def get_TimeHistory(self, OrcFXAPIObject, TimePeriod, objectExtra, VariableName):
         output = None

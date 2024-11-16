@@ -15,7 +15,7 @@ class OrcaFlexObjects():
         objectExtra, arclengthRange_objectExtra = self.get_objectExtra(cfg)
         if arclengthRange is None:
             arclengthRange = arclengthRange_objectExtra
-            
+
         VariableName = None
         if 'Variable' in cfg:
             VariableName = cfg['Variable']

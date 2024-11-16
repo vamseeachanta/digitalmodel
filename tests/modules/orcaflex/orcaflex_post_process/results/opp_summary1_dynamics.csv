@@ -1,6 +1,6 @@
 fe_filename,RunStatus,FileName,Description,Vessel_Heading,Hmax,WavePeriod,WaveDirection,RefCurrentSpeed,CurrentFactor[0],RefCurrentDirection,Eff. Tension,Bend. Moment,API M1,vM stress,TimeHistory_EndB_EffTension_Max
-k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim,4,k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim,Description,0.0,,,270.0,1.0,0.9,270.0,582.89501953125,60.61721801758462,0.7723983686400165,229768.91889126977,1.5344938039779663
-k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim,4,k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim,Description,0.0,,,270.0,1.0,0.9,270.0,582.89501953125,60.61721801758462,0.7723983686400165,229768.91889126977,1.5344938039779663
+.\orcaflex_test1.sim,4,.\orcaflex_test1.sim,Description,0.0,,,270.0,1.0,0.9,270.0,582.89501953125,60.61721801758462,0.7723983686400165,229768.91889126977,1.5344938039779663
+.\orcaflex_test2.sim,4,.\orcaflex_test2.sim,Description,0.0,,,270.0,1.0,0.9,270.0,582.89501953125,60.61721801758462,0.7723983686400165,229768.91889126977,1.5344938039779663
 ,,Mean,Mean,0.0,,,270.0,1.0,0.9,270.0,582.89501953125,60.61721801758462,0.7723983686400165,229768.91889126977,1.5344938039779663
 ,,Minimum,Minimum,0.0,,,270.0,1.0,0.9,270.0,582.89501953125,60.61721801758462,0.7723983686400165,229768.91889126977,1.5344938039779663
 ,,Maximum,Maximum,0.0,,,270.0,1.0,0.9,270.0,582.89501953125,60.61721801758462,0.7723983686400165,229768.91889126977,1.5344938039779663
