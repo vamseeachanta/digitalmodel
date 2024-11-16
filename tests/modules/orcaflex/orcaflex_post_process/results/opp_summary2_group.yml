@@ -96,7 +96,7 @@ dictitems:
     AddMeanToSummary: true
     groups:
     - SummaryFileName: dynamics
-      Columns: &id002
+      Columns:
       - Command: GetData
         ObjectName: Vessel1
         Variable:
@@ -196,7 +196,103 @@ dictitems:
   summary_settings:
     groups:
     - SummaryFileName: dynamics
-      Columns: *id002
+      Columns:
+      - Command: GetData
+        ObjectName: Vessel1
+        Variable:
+        - InitialHeading
+        - -1
+        Label: Vessel_Heading
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WaveHeight
+        - -1
+        Label: Hmax
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WavePeriod
+        - -1
+        Label: WavePeriod
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WaveDirection
+        - -1
+        Label: WaveDirection
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - RefCurrentSpeed
+        - 0
+        Label: RefCurrentSpeed
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - CurrentFactor
+        - 0
+        Label: CurrentFactor[0]
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - RefCurrentDirection
+        - 0
+        Label: RefCurrentDirection
+      - Command: Range Graph
+        ObjectName: SLWR
+        Statistic_Type: Max
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ArcLength:
+        - 0
+        - 50
+        Variable: Effective Tension
+        Label: Eff. Tension
+      - Command: Range Graph
+        ObjectName: SLWR
+        Statistic_Type: Max
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ArcLength:
+        - 0
+        - 50
+        Variable: Bend Moment
+        Label: Bend. Moment
+      - Command: Range Graph
+        ObjectName: SLWR
+        Statistic_Type: Max
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ArcLength:
+        - 0
+        - 50
+        Variable: API STD 2RD Method 1
+        Label: API M1
+      - Command: Range Graph
+        ObjectName: SLWR
+        Statistic_Type: Max
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ArcLength:
+        - 0
+        - 50
+        Variable: Max von Mises Stress
+        Label: vM stress
+      - Command: TimeHistory
+        Statistic_Type: Max
+        ObjectName: SLWR
+        objectExtra:
+        - End B
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable: Effective Tension
+        Label: TimeHistory_EndB_EffTension_Max
   file_management:
     flag: true
     update_unfinished:
@@ -208,64 +304,64 @@ dictitems:
         auto_read: true
     input_files:
       yml:
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\app_orcaflex_post_process_visualization.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\opp_summary1.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\opp_summary2_group.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\SLWR_06OD_GI_TA08_HE200_Post_Process.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\SLWR_06OD_GI_TA08_HE300_Post_Process.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\SLWR_06OD_GI_TA08_Post_Process.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\summary_file_magement_auto_read_false.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\app_orcaflex_post_process_visualization.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary1.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary2_group.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series1.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_post_process.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\SLWR_06OD_GI_TA08_HE200_Post_Process.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\SLWR_06OD_GI_TA08_HE300_Post_Process.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\SLWR_06OD_GI_TA08_Post_Process.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\summary_file_magement_auto_read_false.yml
       yaml: []
       dat:
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.dat
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.dat
       sim:
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.sim
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.sim
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
       txt: []
   Analysis:
     basename: orcaflex_post_process
-    analysis_root_folder: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process
+    analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
     file_name: opp_summary2_group
     file_name_for_overwrite: opp_summary2_group
-    result_folder: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\results
-    log_folder: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\logs
-    start_time: 2024-11-04 10:31:56.816821
+    result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
+    log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
+    start_time: 2024-11-15 23:27:42.727544
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\opp_summary2_group.yml
-    fe_folder: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\results
+    CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary2_group.yml
+    fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
     - k:\
     - github
     - digitalmodel
-    - src
-    - digitalmodel
     - tests
-    - test_data
+    - modules
+    - orcaflex
     - orcaflex_post_process
     file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
     - k:\
     - github
     - digitalmodel
-    - src
-    - digitalmodel
     - tests
-    - test_data
+    - modules
+    - orcaflex
     - orcaflex_post_process
   orcaflex_post_process:
+    time_series: []
     summary:
       dynamics:
         fe_filename:
-          0: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.sim
-          1: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.sim
+          0: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
+          1: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
         RunStatus:
           0: '4'
           1: '4'
         FileName:
-          0: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.sim
-          1: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.sim
+          0: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
+          1: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
         Description:
           0: Description
           1: Description

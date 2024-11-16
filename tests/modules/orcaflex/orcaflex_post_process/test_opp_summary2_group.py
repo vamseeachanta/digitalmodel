@@ -26,7 +26,7 @@ def run_process(input_file, expected_result={}):
 
 def test_process():
     input_file = 'opp_summary2_group.yml'
-    pytest_output_file = 'results/opp_summary1_pytest.yml'
+    pytest_output_file = 'results/opp_summary2_group_pytest.yml'
     pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     expected_result = ymlInput(pytest_output_file, updateYml=None)
 

@@ -1,4 +1,5 @@
 import OrcFxAPI
+import logging
 
 class OrcaFlexObjects():
 
