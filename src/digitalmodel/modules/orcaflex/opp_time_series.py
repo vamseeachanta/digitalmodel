@@ -1,12 +1,15 @@
 # Standard library imports
+import os
 import logging
+from pathlib import Path
+
+# Third party imports
 import pandas as pd
 
 # Reader imports
 from digitalmodel.common.ETL_components import ETL_components
 from digitalmodel.custom.time_series.time_series_components import TimeSeriesComponents
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
-
 
 try:
     # Third party imports
@@ -43,16 +46,26 @@ class OPPTimeSeries:
         if cfg['orcaflex']['postprocess']['RAOs']['flag']:
             self.post_process_RAOs(model, FileObjectName)
 
-    def get_time_series_data(self, cfg, model):
+    def get_time_series_data(self, cfg, model, file_name):
+        time_series_cfg_output = {"groups": []}
+
         ts_groups = cfg['time_series_settings']['groups']
-        df = pd.DataFrame()
         for ts_group in ts_groups:
             group_label = ts_group['Label']
+            df = pd.DataFrame()
             for ts_cfg in ts_group['Columns']:
                 ts_label = ts_cfg['Label']
                 time_series, times = self.get_time_series_from_orcaflex_run(model, ts_cfg)
-                df['time']  = times
+                if 'time' not in list(df.columns):
+                    df['time']  = times
                 df[ts_label] = time_series
+            # Save by filename
+            file_name_stem = Path(file_name).stem
+            output_file_name = os.path.join(cfg["Analysis"]['result_folder'], file_name_stem + '_' + group_label + '.csv')
+            df.to_csv(output_file_name, index=False)
+            time_series_cfg_output["groups"].append({"label": group_label, "data": output_file_name})
+
+        return time_series_cfg_output
 
     def get_time_series_from_orcaflex_run(self, model, cfg_time_series):
         """Gets time series data from an OrcaFlex run

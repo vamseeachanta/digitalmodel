@@ -1,5 +1,4 @@
 # Standard library imports
-import copy
 import logging
 import math
 import os
@@ -9,16 +8,13 @@ import numpy as np
 import pandas as pd
 from assetutilities.common.data import PandasChainedAssignent, SaveData, TransformData
 from assetutilities.common.file_management import FileManagement
-from assetutilities.common.visualizations import Visualization
 
 # Reader imports
 from digitalmodel.modules.orcaflex.opp_range_graph import OPPRangeGraph
 from digitalmodel.modules.orcaflex.opp_time_series import OPPTimeSeries
 from digitalmodel.modules.orcaflex.opp_visualization import OPPVisualization
-from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
-
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
-
+from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
 try:
     # Third party imports
     import OrcFxAPI
@@ -82,6 +78,7 @@ class OrcaFlexAnalysis():
         histogram_all_files = []
 
         sim_files = cfg.file_management['input_files']['sim']
+        cfg[cfg['basename']]['time_series'] = []
 
         for fileIndex in range(0, len(sim_files)):
             file_name = sim_files[fileIndex]
@@ -99,7 +96,9 @@ class OrcaFlexAnalysis():
                 RangeAllFiles.append(None)
             if cfg['orcaflex']['postprocess']['time_series']['flag']:
                 if cfg['time_series_settings']['data']: 
-                    opp_ts.get_time_series_data(cfg, model)
+                    time_series_cfg_output_for_file = opp_ts.get_time_series_data(cfg, model, file_name)
+                    cfg_output = {'time_series': time_series_cfg_output_for_file, 'file_name': file_name}
+                    cfg[cfg['basename']]['time_series'].append(cfg_output)
             else:
                 pass
 

@@ -84,10 +84,9 @@ dictitems:
     histogram: false
     summation: false
     groups:
-    - SummaryFileName: time_history
+    - Label: time_history_end_b
       Columns:
       - Command: TimeHistory
-        Statistic_Type: Max
         ObjectName: SLWR
         objectExtra:
         - End B
@@ -95,7 +94,19 @@ dictitems:
         - 0.0
         - 10.0
         Variable: Effective Tension
-        Label: TimeHistory_EndB_EffTension_Max
+        Label: EndB_EffTension
+    - Label: time_history_end_a
+      Columns:
+      - Command: TimeHistory
+        ObjectName: SLWR
+        objectExtra:
+        - End A
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable: Effective Tension
+        Label: EndA_EffTension
+    data: true
   Files:
     data_source: yml
     csv_filename: ''
@@ -137,7 +148,7 @@ dictitems:
     file_name_for_overwrite: opp_time_series1
     result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-11-15 15:41:47.045606
+    start_time: 2024-11-15 22:17:46.077849
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series1.yml
@@ -158,4 +169,19 @@ dictitems:
     - modules
     - orcaflex
     - orcaflex_post_process
-  orcaflex_post_process: {}
+  orcaflex_post_process:
+    time_series:
+    - time_series:
+        groups:
+        - label: time_history_end_b
+          data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_b.csv
+        - label: time_history_end_a
+          data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_a.csv
+      file_name: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
+    - time_series:
+        groups:
+        - label: time_history_end_b
+          data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_b.csv
+        - label: time_history_end_a
+          data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_a.csv
+      file_name: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim

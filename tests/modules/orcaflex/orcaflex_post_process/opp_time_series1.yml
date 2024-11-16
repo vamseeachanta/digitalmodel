@@ -39,7 +39,7 @@ time_series_settings:
   histogram: False
   summation: False
   groups:
-    - Label: time_history
+    - Label: time_history_end_b
       Columns:
         - Command: TimeHistory
           ObjectName: SLWR
@@ -48,6 +48,16 @@ time_series_settings:
           SimulationPeriod: [0.0, 10.0]
           Variable: Effective Tension
           Label: EndB_EffTension
+
+    - Label: time_history_end_a
+      Columns:
+        - Command: TimeHistory
+          ObjectName: SLWR
+          objectExtra:
+            - End A
+          SimulationPeriod: [0.0, 10.0]
+          Variable: Effective Tension
+          Label: EndA_EffTension
 
 file_management:
   flag: True
