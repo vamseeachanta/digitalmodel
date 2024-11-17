@@ -113,6 +113,33 @@ dictitems:
     input_files:
       yml:
       - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
+  time_series_settings_master:
+    data: true
+    histogram: false
+    summation: false
+    groups:
+    - Label: time_history_end_a
+      Columns:
+      - Command: TimeHistory
+        ObjectName: SLWR
+        objectExtra:
+        - End A
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable: Effective Tension
+        Label: EndA_EffTension
+    - Label: time_history_end_a
+      Columns:
+      - Command: TimeHistory
+        ObjectName: SLWR
+        objectExtra:
+        - End A
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable: Effective Tension
+        Label: EndA_EffTension
   file_management:
     flag: true
     update_unfinished:
@@ -128,7 +155,7 @@ dictitems:
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary1.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary2_group.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series1.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series2_group.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series2_master.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_post_process.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\SLWR_06OD_GI_TA08_HE200_Post_Process.yml
@@ -145,14 +172,14 @@ dictitems:
   Analysis:
     basename: orcaflex_post_process
     analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
-    file_name: opp_time_series2_group
-    file_name_for_overwrite: opp_time_series2_group
+    file_name: opp_time_series2_master
+    file_name_for_overwrite: opp_time_series2_master
     result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-11-15 23:29:36.904100
+    start_time: 2024-11-17 15:49:12.142966
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series2_group.yml
+    CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series2_master.yml
     fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
     - k:\

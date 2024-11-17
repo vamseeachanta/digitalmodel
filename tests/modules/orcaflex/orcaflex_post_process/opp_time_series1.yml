@@ -43,8 +43,7 @@ time_series_settings:
       Columns:
         - Command: TimeHistory
           ObjectName: SLWR
-          objectExtra:
-            - End B
+          objectExtra: [End B]
           SimulationPeriod: [0.0, 10.0]
           Variable: Effective Tension
           Label: EndB_EffTension
@@ -53,8 +52,7 @@ time_series_settings:
       Columns:
         - Command: TimeHistory
           ObjectName: SLWR
-          objectExtra:
-            - End A
+          objectExtra: [End A]
           SimulationPeriod: [0.0, 10.0]
           Variable: Effective Tension
           Label: EndA_EffTension

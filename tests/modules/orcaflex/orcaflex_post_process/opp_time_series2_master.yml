@@ -39,18 +39,18 @@ time_series_settings_master:
   histogram: False
   summation: False
   groups:
-    - Columns:
+    - Label: time_history_end_b
+      Columns:
         - Command: TimeHistory
           ObjectName: SLWR
-          objectExtra:
-            - End B
+          objectExtra: [End B]
           SimulationPeriod: [0.0, 10.0]
 
-    - Columns:
+    - Label: time_history_end_a
+      Columns:
         - Command: TimeHistory
           ObjectName: SLWR
-          objectExtra:
-            - End A
+          objectExtra: [End A]
           SimulationPeriod: [0.0, 10.0]
 
 time_series_settings:
