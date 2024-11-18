@@ -25,9 +25,9 @@ def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
         for group_index in range(0, len(obtained_result[file_index]['time_series']['groups'])):
             obtained_result_csv = obtained_result[file_index]['time_series']['groups'][group_index]['data']
             expected_result_csv = expected_result[file_index]['time_series']['groups'][group_index]['data']
-            
+
             file_match_result = check_csv_files_match(obtained_result_csv, expected_result_csv)
-            
+
             assert file_match_result
 
 

@@ -24,6 +24,7 @@ orcaflex:
       flag: False
     time_series:
       flag: True
+      csv_decimal: 6
     RAOs:
       flag: False
     cummulative_histograms:

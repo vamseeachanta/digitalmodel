@@ -21,6 +21,7 @@ dictitems:
         flag: true
         histogram: true
         summation: true
+        csv_decimal: 6
       cummulative_histograms:
         flag: false
       rain_flow:
@@ -126,7 +127,7 @@ dictitems:
       yml:
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\app_orcaflex_post_process_visualization.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary1.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary2_group.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary2_master.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series1.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series2_master.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_post_process.yml
@@ -149,7 +150,7 @@ dictitems:
     file_name_for_overwrite: opp_time_series1
     result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-11-17 15:35:46.575321
+    start_time: 2024-11-18 15:17:18.731569
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series1.yml
