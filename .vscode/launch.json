@@ -5,13 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
-            "type": "python",
+            "name": "digitalModel-orca-lic-test",
+            "type": "debugpy",
             "request": "launch",
-            "program": "${file}",
+            "module": "digitalmodel",
+            "args": [
+                "tests/modules/orcaflex/orcaflex_post_process/test_orcaflex_license.py"
+            ],
+            "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
-            "justMyCode": true,
-            "timeout": 30
+            "justMyCode": true
         }
     ]
 }
