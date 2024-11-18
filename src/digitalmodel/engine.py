@@ -22,10 +22,9 @@ from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
 )
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
-from digitalmodel.custom.orcaflex_file_management import OrcaflexFileManagement
-from digitalmodel.custom.orcaflex_installation import OrcInstallation
-from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
-from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.modules.orcaflex.orcaflex_file_management import OrcaflexFileManagement
+from digitalmodel.modules.orcaflex.orcaflex_installation import OrcInstallation
+from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.pipeline.pipeline import Pipeline
 from digitalmodel.custom.rao_analysis import RAOAnalysis
 from digitalmodel.custom.transformation import Transformation
@@ -35,7 +34,6 @@ from digitalmodel.orcaflex_analysis import orcaflex_analysis
 from digitalmodel.vertical_riser import vertical_riser
 from digitalmodel.custom.time_series.time_series_analysis import TimeSeriesAnalysis
 
-ou = OrcaflexUtilities()
 
 library_name = "digitalmodel"
 save_data = SaveData()
@@ -66,8 +64,6 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "vertical_riser":
         cfg_base = vertical_riser(cfg_base)
     elif basename in ["orcaflex_analysis", "orcaflex_post_process"]:
-        if "file_management" in cfg_base and cfg["file_management"]["flag"]:
-            cfg_base = ou.file_management(cfg_base)
         cfg_base = orcaflex_analysis(cfg_base)
     elif basename in ["aqwa"]:
         aqwa = Aqwa()
@@ -123,6 +119,9 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         viv = VIVAnalysis()
         cfg_base = viv.router(cfg_base)
     elif basename == "time_series":
+        tsa = TimeSeriesAnalysis()
+        cfg_base = tsa.router(cfg_base)
+    elif basename == "gis":
         tsa = TimeSeriesAnalysis()
         cfg_base = tsa.router(cfg_base)
 

@@ -1,0 +1,337 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: orcaflex_post_process
+  default:
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+  orcaflex:
+    postprocess:
+      visualization:
+        flag: false
+      summary:
+        flag: true
+      RangeGraph:
+        flag: false
+      RAOs:
+        flag: false
+      time_series:
+        flag: false
+        histogram: true
+        summation: true
+      cummulative_histograms:
+        flag: false
+      rain_flow:
+        bins: 10
+        range:
+        - 0
+        - 10
+    analysis:
+      static: false
+      simulation: false
+      iterate:
+        flag: false
+      save_sim: false
+      save_dat: false
+  visualization_settings:
+    label: ld_6_7_8
+    individual: true
+    combined: false
+    hide_items: []
+    add_items:
+    - Umbilical
+    - uta2-deep
+    views:
+    - Elevation
+    - Plan
+    tdp_line: Umbilical
+    viewparams:
+      elevation:
+        RelativeToObject: uth2-deep
+        ViewCentre:
+        - -17
+        - 0
+        - 12
+        ViewSize: 120
+        DrawViewAxes: false
+        DrawGlobalAxes: false
+        DrawScaleBar: false
+        ViewAzimuth: 270
+        ViewElevation: 0
+        ViewGamma: 71.89
+        Height: 1425
+        Width: 892
+      plan:
+        RelativeToObject: uth2-deep
+        ViewCentre:
+        - 10
+        - 0
+        - 8
+        ViewSize: 80
+        DrawViewAxes: false
+        DrawGlobalAxes: false
+        DrawScaleBar: false
+        ViewAzimuth: 270
+        ViewElevation: 90
+        ViewGamma: 0
+        Height: 1425
+        Width: 892
+  RangeGraph_settings:
+    add_effective_tension_to_cfg: false
+  time_series_settings:
+    histogram: true
+    summation: true
+    groups: []
+  Files:
+    data_source: yml
+    csv_filename: ''
+    input_files:
+      yml:
+      - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
+  summary_settings:
+    AddMinimumToSummary: true
+    AddMaximumToSummary: true
+    AddMeanToSummary: true
+    groups:
+    - SummaryFileName: dynamics
+      Columns:
+      - Command: GetData
+        ObjectName: Vessel1
+        Variable:
+        - InitialHeading
+        - -1
+        Label: Vessel_Heading
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WaveHeight
+        - -1
+        Label: Hmax
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WavePeriod
+        - -1
+        Label: WavePeriod
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WaveDirection
+        - -1
+        Label: WaveDirection
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - RefCurrentSpeed
+        - 0
+        Label: RefCurrentSpeed
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - CurrentFactor
+        - 0
+        Label: CurrentFactor[0]
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - RefCurrentDirection
+        - 0
+        Label: RefCurrentDirection
+      - Command: Range Graph
+        ObjectName: SLWR
+        Statistic_Type: Max
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ArcLength:
+        - 0
+        - 50
+        Variable: Effective Tension
+        Label: Eff. Tension
+      - Command: Range Graph
+        ObjectName: SLWR
+        Statistic_Type: Max
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ArcLength:
+        - 0
+        - 50
+        Variable: Bend Moment
+        Label: Bend. Moment
+      - Command: Range Graph
+        ObjectName: SLWR
+        Statistic_Type: Max
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ArcLength:
+        - 0
+        - 50
+        Variable: API STD 2RD Method 1
+        Label: API M1
+      - Command: Range Graph
+        ObjectName: SLWR
+        Statistic_Type: Max
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ArcLength:
+        - 0
+        - 50
+        Variable: Max von Mises Stress
+        Label: vM stress
+      - Command: TimeHistory
+        Statistic_Type: Max
+        ObjectName: SLWR
+        objectExtra:
+        - End B
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable: Effective Tension
+        Label: TimeHistory_EndB_EffTension_Max
+  file_management:
+    flag: true
+    update_unfinished:
+      flag: false
+    files:
+      files_in_current_directory:
+        flag: true
+        directory: ~
+        auto_read: true
+    input_files:
+      yml:
+      - .\app_orcaflex_post_process_visualization.yml
+      - .\opp_summary1.yml
+      - .\opp_summary2_group.yml
+      - .\opp_time_series1.yml
+      - .\orcaflex_post_process.yml
+      - .\orcaflex_test1.yml
+      - .\SLWR_06OD_GI_TA08_HE200_Post_Process.yml
+      - .\SLWR_06OD_GI_TA08_HE300_Post_Process.yml
+      - .\SLWR_06OD_GI_TA08_Post_Process.yml
+      - .\summary_file_magement_auto_read_false.yml
+      yaml: []
+      dat:
+      - .\orcaflex_test2.dat
+      sim:
+      - .\orcaflex_test1.sim
+      - .\orcaflex_test2.sim
+      txt: []
+  Analysis:
+    basename: orcaflex_post_process
+    analysis_root_folder: .
+    file_name: opp_summary1
+    file_name_for_overwrite: opp_summary1
+    result_folder: .\results
+    log_folder: .\logs
+    start_time: 2024-11-15 18:03:49.626676
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: .\opp_summary1.yml
+    fe_folder: .\results
+    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath []
+    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath []
+  orcaflex_post_process:
+    summary:
+      dynamics:
+        fe_filename:
+          0: .\orcaflex_test1.sim
+          1: .\orcaflex_test2.sim
+          2: ~
+          3: ~
+          4: ~
+        RunStatus:
+          0: '4'
+          1: '4'
+          2: ~
+          3: ~
+          4: ~
+        FileName:
+          0: .\orcaflex_test1.sim
+          1: .\orcaflex_test2.sim
+          2: Mean
+          3: Minimum
+          4: Maximum
+        Description:
+          0: Description
+          1: Description
+          2: Mean
+          3: Minimum
+          4: Maximum
+        Vessel_Heading:
+          0: 0.0
+          1: 0.0
+          2: 0.0
+          3: 0.0
+          4: 0.0
+        Hmax:
+          0: ~
+          1: ~
+          2: ~
+          3: ~
+          4: .nan
+        WavePeriod:
+          0: ~
+          1: ~
+          2: ~
+          3: ~
+          4: .nan
+        WaveDirection:
+          0: 270.0
+          1: 270.0
+          2: 270.0
+          3: 270.0
+          4: 270.0
+        RefCurrentSpeed:
+          0: 1.0
+          1: 1.0
+          2: 1.0
+          3: 1.0
+          4: 1.0
+        CurrentFactor[0]:
+          0: 0.9
+          1: 0.9
+          2: 0.9
+          3: 0.9
+          4: 0.9
+        RefCurrentDirection:
+          0: 270.0
+          1: 270.0
+          2: 270.0
+          3: 270.0
+          4: 270.0
+        Eff. Tension:
+          0: 582.89501953125
+          1: 582.89501953125
+          2: 582.89501953125
+          3: 582.89501953125
+          4: 582.89501953125
+        Bend. Moment:
+          0: 60.61721801758462
+          1: 60.61721801758462
+          2: 60.61721801758462
+          3: 60.61721801758462
+          4: 60.61721801758462
+        API M1:
+          0: 0.7723983686400165
+          1: 0.7723983686400165
+          2: 0.7723983686400165
+          3: 0.7723983686400165
+          4: 0.7723983686400165
+        vM stress:
+          0: 229768.91889126977
+          1: 229768.91889126977
+          2: 229768.91889126977
+          3: 229768.91889126977
+          4: 229768.91889126977
+        TimeHistory_EndB_EffTension_Max:
+          0: 1.5344938039779663
+          1: 1.5344938039779663
+          2: 1.5344938039779663
+          3: 1.5344938039779663
+          4: 1.5344938039779663
+    summary_groups: 1

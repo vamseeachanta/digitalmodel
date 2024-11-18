@@ -1,0 +1,53 @@
+orcaflex_post_process:
+  time_series: []
+  summary:
+    dynamics:
+      fe_filename:
+        0: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
+        1: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
+      RunStatus:
+        0: "4"
+        1: "4"
+      FileName:
+        0: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
+        1: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
+      Description:
+        0: Description
+        1: Description
+      Vessel_Heading:
+        0: 0.0
+        1: 0.0
+      Hmax:
+        0: ~
+        1: ~
+      WavePeriod:
+        0: ~
+        1: ~
+      WaveDirection:
+        0: 270.0
+        1: 270.0
+      RefCurrentSpeed:
+        0: 1.0
+        1: 1.0
+      CurrentFactor[0]:
+        0: 0.9
+        1: 0.9
+      RefCurrentDirection:
+        0: 270.0
+        1: 270.0
+      Eff. Tension:
+        0: 582.89501953125
+        1: 582.89501953125
+      Bend. Moment:
+        0: 60.61721801758462
+        1: 60.61721801758462
+      API M1:
+        0: 0.7723983686400165
+        1: 0.7723983686400165
+      vM stress:
+        0: 229768.91889126977
+        1: 229768.91889126977
+      TimeHistory_EndB_EffTension_Max:
+        0: 1.5344938039779663
+        1: 1.5344938039779663
+  summary_groups: 1

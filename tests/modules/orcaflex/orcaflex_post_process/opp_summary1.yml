@@ -1,0 +1,149 @@
+basename: orcaflex_post_process
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  analysis:
+    static: False
+    simulation: False
+    iterate:
+      flag: False
+    save_sim: False
+    save_dat: False
+
+  postprocess:
+    visualization:
+      flag: False
+    summary:
+      flag: True
+    RangeGraph:
+      flag: False
+    time_series:
+      flag: False
+    RAOs:
+      flag: False
+    cummulative_histograms:
+      flag: False
+    rain_flow:
+      bins: 10
+      range:
+        - 0
+        - 10
+
+summary_settings:
+  AddMinimumToSummary: True
+  AddMaximumToSummary: True
+  AddMeanToSummary: True
+
+  groups:
+    - SummaryFileName: dynamics
+      Columns:
+        - Command: GetData
+          ObjectName: Vessel1
+          Variable:
+            - InitialHeading
+            - -1
+          Label: Vessel_Heading
+        - Command: GetData
+          ObjectName: Environment
+          Variable:
+            - WaveHeight
+            - -1
+          Label: Hmax
+        - Command: GetData
+          ObjectName: Environment
+          Variable:
+            - WavePeriod
+            - -1
+          Label: WavePeriod
+        - Command: GetData
+          ObjectName: Environment
+          Variable:
+            - WaveDirection
+            - -1
+          Label: WaveDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable:
+            - RefCurrentSpeed
+            - 0
+          Label: RefCurrentSpeed
+        - Command: GetData
+          ObjectName: Environment
+          Variable:
+            - CurrentFactor
+            - 0
+          Label: CurrentFactor[0]
+        - Command: GetData
+          ObjectName: Environment
+          Variable:
+            - RefCurrentDirection
+            - 0
+          Label: RefCurrentDirection
+        - Command: Range Graph
+          ObjectName: SLWR
+          Statistic_Type: Max
+          SimulationPeriod: [0.0, 10.0]
+          ArcLength:
+            - 0
+            - 50
+          Variable: Effective Tension
+          Label: Eff. Tension
+        - Command: Range Graph
+          ObjectName: SLWR
+          Statistic_Type: Max
+          SimulationPeriod: [0.0, 10.0]
+          ArcLength:
+            - 0
+            - 50
+          Variable: Bend Moment
+          Label: Bend. Moment
+        - Command: Range Graph
+          ObjectName: SLWR
+          Statistic_Type: Max
+          SimulationPeriod: [0.0, 10.0]
+          ArcLength:
+            - 0
+            - 50
+          Variable: API STD 2RD Method 1
+          Label: API M1
+        - Command: Range Graph
+          ObjectName: SLWR
+          Statistic_Type: Max
+          SimulationPeriod: [0.0, 10.0]
+          ArcLength:
+            - 0
+            - 50
+          Variable: Max von Mises Stress
+          Label: vM stress
+        - Command: TimeHistory
+          Statistic_Type: Max
+          ObjectName: SLWR
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Variable: Effective Tension
+          Label: TimeHistory_EndB_EffTension_Max
+
+RangeGraph_settings:
+  add_effective_tension_to_cfg: False
+
+time_series_settings:
+  histogram: True
+  summation: True
+  groups: []
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: True
+      directory: NULL
+      auto_read: True

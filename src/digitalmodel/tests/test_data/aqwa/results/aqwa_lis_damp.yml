@@ -138,7 +138,7 @@ dictitems:
     file_name_for_overwrite: aqwa_lis_damp
     result_folder: src/digitalmodel/tests/test_data\aqwa\results
     log_folder: src/digitalmodel/tests/test_data\aqwa\logs
-    start_time: 2024-10-02 09:43:49.102096
+    start_time: 2024-11-11 10:32:19.355577
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_lis_damp.yml

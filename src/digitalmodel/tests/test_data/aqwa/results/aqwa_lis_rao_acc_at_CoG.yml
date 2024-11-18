@@ -116,7 +116,7 @@ dictitems:
     file_name_for_overwrite: aqwa_lis_rao_acc_at_CoG
     result_folder: src/digitalmodel/tests/test_data\aqwa\results
     log_folder: src/digitalmodel/tests/test_data\aqwa\logs
-    start_time: 2024-10-02 09:44:42.795973
+    start_time: 2024-11-11 10:32:29.213957
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_lis_rao_acc_at_CoG.yml
