@@ -5,6 +5,7 @@ import sys
 # Third party imports
 import deepdiff
 from assetutilities.common.yml_utilities import ymlInput
+from colorama import Fore
 
 # Reader imports
 from digitalmodel.engine import engine
@@ -23,10 +24,12 @@ def run_process(input_file, expected_result={}):
                                  ignore_order=True,
                                  significant_digits=4)
 
+    print(Fore.GREEN + 'Orcaflex Summary test ... passed!')
+
 
 def test_process():
-    input_file = 'opp_summary2_group.yml'
-    pytest_output_file = 'results/opp_summary2_group_pytest.yml'
+    input_file = 'opp_summary2_master.yml'
+    pytest_output_file = 'results/opp_summary2_master_pytest.yml'
     pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     expected_result = ymlInput(pytest_output_file, updateYml=None)
 

@@ -76,10 +76,10 @@ class orcaflex_post_process:
                     for column_index in range(0, len(group['Columns'])):
                         column = group['Columns'][column_index].copy()
                         column = update_deep_dictionary(
-                            summary_settings_master['groups'][group_index]['Columns'][column_index], column)
+                            summary_settings_master['groups'][group_index]['Columns'][0], column)
                         group['Columns'][column_index] = copy.deepcopy(column)
 
-                group = update_deep_dictionary(summary_settings_master['groups'][0], group)
+                group = update_deep_dictionary(summary_settings_master['groups'][group_index], group)
                 summary_settings['groups'][group_index] = copy.deepcopy(group)
 
             cfg['summary_settings'] = copy.deepcopy(summary_settings)
@@ -95,10 +95,10 @@ class orcaflex_post_process:
                     for column_index in range(0, len(group['Columns'])):
                         column = group['Columns'][column_index].copy()
                         column = update_deep_dictionary(
-                            time_series_settings_master['groups'][group_index]['Columns'][column_index], column)
+                            time_series_settings_master['groups'][group_index]['Columns'][0], column)
                         group['Columns'][column_index] = copy.deepcopy(column)
 
-                group = update_deep_dictionary(time_series_settings_master['groups'][0], group)
+                group = update_deep_dictionary(time_series_settings_master['groups'][group_index], group)
                 time_series_settings['groups'][group_index] = copy.deepcopy(group)
 
             cfg['time_series_settings'] = copy.deepcopy(time_series_settings)
