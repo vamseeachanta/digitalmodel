@@ -6,10 +6,13 @@ from typing import Any, Dict, Optional
 # Third party imports
 import pandas as pd
 from assetutilities.common.yml_utilities import ymlInput
-from colorama import Fore
+from colorama import Fore, Style
 
 # Reader imports
 from digitalmodel.engine import engine
+
+import colorama
+colorama.init(autoreset=True)
 
 def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
 
@@ -31,7 +34,7 @@ def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
             assert file_match_result
 
 
-    print(Fore.GREEN + 'Orcaflex Time series test ... passed!')
+    print(Fore.GREEN + 'Orcaflex time series test ... PASS' + Style.RESET_ALL)
 
 def check_csv_files_match(file1: str, file2: str) -> bool:
 

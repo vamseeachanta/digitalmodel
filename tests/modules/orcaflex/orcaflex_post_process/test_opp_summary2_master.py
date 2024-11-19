@@ -5,10 +5,13 @@ import sys
 # Third party imports
 import deepdiff
 from assetutilities.common.yml_utilities import ymlInput
-from colorama import Fore
+from colorama import Fore, Style
 
 # Reader imports
 from digitalmodel.engine import engine
+
+import colorama
+colorama.init(autoreset=True)
 
 
 def run_process(input_file, expected_result={}):
@@ -24,7 +27,7 @@ def run_process(input_file, expected_result={}):
                                  ignore_order=True,
                                  significant_digits=4)
 
-    print(Fore.GREEN + 'Orcaflex Summary test ... passed!')
+    print(Fore.GREEN + 'Orcaflex Summary test with master settings... PASS' + Style.RESET_ALL)
 
 
 def test_process():

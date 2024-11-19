@@ -5,9 +5,9 @@ import math
 import os
 
 # Third party imports
+import colorama
 from assetutilities.common.data import SaveData
 from assetutilities.common.yml_utilities import ymlInput
-import colorama
 from colorama import Fore, Style
 
 # Reader imports
@@ -39,8 +39,8 @@ class OrcaflexUtilities:
     def is_orcaflex_available(self):
         try:
             model = OrcFxAPI.Model()
-            logging.info(Fore.GREEN + "Orcaflex license is available" + Style.RESET_ALL)
-            print(Fore.GREEN + "Orcaflex license is available" + Style.RESET_ALL)
+            logging.info("Orcaflex license is available .... SUCCESS")
+            print(Fore.GREEN + "Orcaflex license is available .... SUCCESS" + Style.RESET_ALL)
             return True
         except:
             print("Orcaflex license is NOT available")

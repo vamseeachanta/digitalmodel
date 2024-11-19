@@ -2,15 +2,15 @@
 import os
 import sys
 
-from colorama import Fore, Style
 import deepdiff
 from assetutilities.common.yml_utilities import ymlInput
+from colorama import Fore, Style
 from digitalmodel.engine import engine
-
-
 # Reader imports
 from digitalmodel.engine import engine
 
+import colorama
+colorama.init(autoreset=True)
 
 def run_process(input_file, expected_result={}):
     if input_file is not None and not os.path.isfile(input_file):
@@ -24,7 +24,7 @@ def run_process(input_file, expected_result={}):
                                  expected_result,
                                  ignore_order=True,
                                  significant_digits=4)
-    print(Fore.GREEN + 'Orcaflex Summary test ... passed!')
+    print(Fore.GREEN + 'Orcaflex Summary test ... PASS!' + Style.RESET_ALL)
 
 def test_process():
     input_file = 'opp_summary1.yml'
