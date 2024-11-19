@@ -1,9 +1,12 @@
-import os
 import math
+import os
 
 from assetutilities.common.data import SaveData
 
-from digitalmodel.common.orcaflex_model_utilities import OrcaflexModelUtilities
+# Reader imports
+from digitalmodel.modules.orcaflex.orcaflex_model_utilities import (
+    OrcaflexModelUtilities,
+)
 
 save_data = SaveData()
 omu = OrcaflexModelUtilities()

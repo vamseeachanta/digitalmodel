@@ -3,7 +3,7 @@ state: *id001
 dictitems:
   basename: orcaflex_post_process
   default:
-    log_level: DEBUG
+    log_level: INFO
     config:
       overwrite:
         output: true
@@ -130,6 +130,7 @@ dictitems:
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary2_master.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series1.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series2_master.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_license.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_post_process.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\SLWR_06OD_GI_TA08_HE200_Post_Process.yml
@@ -150,7 +151,7 @@ dictitems:
     file_name_for_overwrite: opp_time_series1
     result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-11-18 15:17:18.731569
+    start_time: 2024-11-19 15:14:15.432604
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series1.yml

@@ -63,7 +63,10 @@ class OPPTimeSeries:
             file_name_stem = Path(file_name).stem
             output_file_name = os.path.join(cfg["Analysis"]['result_folder'], file_name_stem + '_' + group_label + '.csv')
 
-            csv_decimal = cfg.orcaflex['postprocess']['time_series']['csv_decimal']
+            csv_decimal = 6
+            if 'csv_decimal' in cfg.orcaflex['postprocess']['time_series']:
+                csv_decimal = cfg.orcaflex['postprocess']['time_series']['csv_decimal']
+
             df.round(csv_decimal).to_csv(output_file_name, index=False)
             # df.to_csv(output_file_name, index=False)
             time_series_cfg_output["groups"].append({"label": group_label, "data": output_file_name})

@@ -1,7 +1,7 @@
 basename: orcaflex_post_process
 
 default:
-  log_level: DEBUG
+  log_level: INFO
   config:
     overwrite:
       output: True
