@@ -1,8 +1,16 @@
 #! /bin/bash
 
-repo_name=$(basename $(git rev-parse --show-toplevel))
+# shell script to run python test scripts from
 repo_root=$(git rev-parse --show-toplevel)
+# get to repo root
+cd "$repo_root"
+
+repo_name=$(basename $(git rev-parse --show-toplevel))
 tests_home="tests/modules"
+bash_tools_home="dev_tools/bash_tools"
+
+source ${bash_tools_home}/common.sh
+
 yaml_file=${tests_home}"/orcaflex/orcaflex_post_process/test_orcaflex_license.py"
 
 cat << COM
@@ -18,3 +26,5 @@ cd "$repo_root"
 
 # run module using  specific test yaml file
 python -m ${repo_name} ${yaml_file}
+
+# backlog 
