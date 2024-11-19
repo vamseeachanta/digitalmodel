@@ -1,23 +1,30 @@
-import copy
-import os
+# Standard library imports
 import glob
 import logging
 import math
+import os
 
-
+# Third party imports
+from assetutilities.common.data import SaveData
 from assetutilities.common.yml_utilities import ymlInput
+import colorama
+from colorama import Fore, Style
+
+# Reader imports
 from digitalmodel.common.orcaflex_model_utilities import OrcaflexModelUtilities
 
-from assetutilities.common.data import SaveData
 save_data = SaveData()
+colorama.init()
 
 try:
+    # Third party imports
     import OrcFxAPI
 except:
     logging.debug("OrcFxAPI not available")
+# Standard library imports
 from collections import OrderedDict
 
-from assetutilities.common.yml_utilities import ymlInput
+# Third party imports
 from assetutilities.common.file_management import FileManagement
 
 fm = FileManagement()
@@ -32,7 +39,8 @@ class OrcaflexUtilities:
     def is_orcaflex_available(self):
         try:
             model = OrcFxAPI.Model()
-            print("Orcaflex license is available")
+            logging.info(Fore.GREEN + "Orcaflex license is available" + Style.RESET_ALL)
+            print(Fore.GREEN + "Orcaflex license is available" + Style.RESET_ALL)
             return True
         except:
             print("Orcaflex license is NOT available")
@@ -140,6 +148,7 @@ class OrcaflexUtilities:
         return cfg
 
     def get_files(self, cfg):
+        # Third party imports
         from assetutilities.common.utilities import is_dir_valid_func
         
         file_management_directory = self.get_file_management_directory(cfg)
@@ -268,6 +277,7 @@ class OrcaflexUtilities:
                     file_group['Label'] for file_group in cfg['Files']['data']
                 ]
         elif cfg['Files']['data_source'] == 'csv':
+            # Third party imports
             import pandas as pd
             self.load_matrix = pd.read_csv(cfg['Files']['csv_filename'])
             self.load_matrix['RunStatus'] = None
