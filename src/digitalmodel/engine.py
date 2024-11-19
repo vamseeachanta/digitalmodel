@@ -30,7 +30,7 @@ from digitalmodel.custom.rao_analysis import RAOAnalysis
 from digitalmodel.custom.transformation import Transformation
 from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
 from digitalmodel.custom.viv.viv_analysis import VIVAnalysis
-from digitalmodel.orcaflex_analysis import orcaflex_analysis
+from digitalmodel.modules.orcaflex.orcaflex_analysis import orcaflex_analysis
 from digitalmodel.vertical_riser import vertical_riser
 from digitalmodel.custom.time_series.time_series_analysis import TimeSeriesAnalysis
 
