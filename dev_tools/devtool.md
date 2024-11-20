@@ -13,3 +13,7 @@ This folder contains various bash scripts for running tests and common operation
 - `run-test-py.sh`: Shell script to run Python test scripts. It navigates to the repository root and executes a specified Python test script.
 - `run-test-yml.sh`: Shell script to run Python test scripts using a specific YAML file. It navigates to the repository root and executes a specified Python test script with a YAML configuration file.
 - `common.sh`: Contains common functions and variables used by other bash scripts in this folder.
+
+# references 
+
+- Refer this [orientation/tutorial](https://linuxconfig.org/bash-scripting-tutorial) if you have questions on shell scripting in bash 
