@@ -16,7 +16,7 @@ from digitalmodel.modules.orcaflex.orcaflex_model_utilities import (
 )
 
 save_data = SaveData()
-colorama.init(convert=True)
+colorama.init(strip=True, convert=False)
 
 try:
     # Third party imports
