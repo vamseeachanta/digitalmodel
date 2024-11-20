@@ -8,11 +8,11 @@ from assetutilities.common.data import SaveData
 
 from assetutilities.common.utilities import is_file_valid_func
 
-from digitalmodel.common.orcaflex_linetypes import OrcaflexLineTypes
+from digitalmodel.modules.orcaflex.orcaflex_linetypes import OrcaflexLineTypes
 save_data = SaveData()
 olt = OrcaflexLineTypes()
 
-class Lower2ndEnd():
+class InstallationVtoHost():
 
     def __init__(self):
         pass
@@ -28,7 +28,7 @@ class Lower2ndEnd():
 
         installation_step_dict = update_deep_dictionary(installation_step_dict, {"includefile": step['includefile']})
         for target_settings in step['target']:
-            target_dict = self.get_target_result(cfg, target_settings, step)
+            target_dict = self.get_target_result(cfg, target_settings)
             installation_step_dict = update_deep_dictionary(installation_step_dict, target_dict)
 
         # Write step file
@@ -36,11 +36,11 @@ class Lower2ndEnd():
         filename_path = os.path.join(analysis_root_folder, step['name'])
         save_data.saveDataYaml(installation_step_dict, filename_path, default_flow_style=False)
 
-    def get_target_result(self, cfg, target_settings, step_cfg):
+    def get_target_result(self, cfg, target_settings):
         if target_settings['type'] == 'line_length':
             return self.get_target_line_length(cfg, target_settings)
         elif target_settings['type'] == 'reference_distance':
-            return self.get_target_reference_distance(cfg, target_settings, step_cfg)
+            return self.get_target_reference_distance(cfg, target_settings)
         else:
             raise NotImplementedError("Target type not implemented.")
 
@@ -73,46 +73,25 @@ class Lower2ndEnd():
 
         return dict
 
-    def get_target_reference_distance(self, cfg, target_settings, step_cfg):
-
+    def get_target_reference_distance(self, cfg, target_settings):
         lay_direction = cfg['installation']['lay_direction']
-        reference_distance_definition = cfg['installation']['reference_distance_definition']
+        host_reference_location = cfg['installation']['host']['reference_location']
         installation_vessel_reference_location = cfg['installation']['installation_vessel']['reference_location']
         reference_distance = target_settings['value']
 
         keychain_target_vessel = target_settings['keychain_target_vessel']
 
         initial_heading = target_settings['initial_heading']
-        initial_x = reference_distance_definition[0] + reference_distance*math.cos(math.radians(lay_direction)) - installation_vessel_reference_location[0]*math.cos(math.radians(initial_heading))
-        initial_y = reference_distance_definition[1] + reference_distance*math.sin(math.radians(lay_direction)) - installation_vessel_reference_location[1]*math.sin(math.radians(initial_heading))
+        initial_x = host_reference_location[0] + reference_distance*math.cos(math.radians(lay_direction)) - installation_vessel_reference_location[0]*math.cos(math.radians(initial_heading)) - installation_vessel_reference_location[1]*math.sin(math.radians(initial_heading)) 
+        initial_y = host_reference_location[1] + reference_distance*math.sin(math.radians(lay_direction)) - installation_vessel_reference_location[0]*math.sin(math.radians(initial_heading)) - installation_vessel_reference_location[1]*math.cos(math.radians(initial_heading)) 
 
         dict  = {}
         dict = update_deep_dictionary(dict, {keychain_target_vessel[0]: {keychain_target_vessel[1]: {'InitialX': round(initial_x,1), 'InitialY': round(initial_y,1), 'InitialHeading': round(initial_heading,1)}}})
 
-        keychain_target_line = target_settings.get('keychain_target_line', None)
-        if keychain_target_line is not None:
-            endbx = initial_x
-            endby = initial_y
-            endbz = -20 - step_cfg['target'][0]['value']
-            for keychain_target_line_item in keychain_target_line:
-                dict = update_deep_dictionary(dict, {"Lines": {keychain_target_line_item[1]: {'EndBX': round(endbx,1), 'EndBY': round(endby,1), 'EndBZ': round(endbz,1)}}})
-
-
-        keychain_target_6DBuoys = target_settings.get('keychain_target_6DBuoys',None)
-        if keychain_target_6DBuoys is not None:
-            buoy_initial_x = initial_x
-            buoy_initial_y = initial_y
-            buoy_initial_z = -20 - step_cfg['target'][0]['value']
-            for keychain_target_6DBuoys_item in keychain_target_6DBuoys:
-                dict = update_deep_dictionary(dict, {"6DBuoys": {keychain_target_6DBuoys_item[1]: {'InitialX': round(buoy_initial_x,1), 'InitialY': round(buoy_initial_y,1), 'InitialZ': round(buoy_initial_z,1)}}})
-
-        keychain_target_3DBuoys = target_settings.get('keychain_target_3DBuoys', None)
-        if keychain_target_3DBuoys is not None:
-            buoy_initial_x = initial_x
-            buoy_initial_y = initial_y
-            buoy_initial_z = -20 - step_cfg['target'][0]['value']
-
-            for keychain_target_3DBuoys_item in keychain_target_3DBuoys:
-                dict = update_deep_dictionary(dict, {"3DBuoys": {keychain_target_3DBuoys_item[1]: {'InitialX': round(buoy_initial_x,1), 'InitialY': round(buoy_initial_y,1), 'InitialZ': round(buoy_initial_z,1)}}})
+        keychain_target_line = target_settings['keychain_target_line']
+        endbx = initial_x  + installation_vessel_reference_location[0]*math.cos(math.radians(initial_heading))
+        endby = initial_y  + installation_vessel_reference_location[0]*math.sin(math.radians(initial_heading))
+        for keychain_target_line_item in keychain_target_line:
+            dict = update_deep_dictionary(dict, {"Lines": {keychain_target_line_item[1]: {'EndBX': round(endbx,1), 'EndBY': round(endby,1)}}})
 
         return dict

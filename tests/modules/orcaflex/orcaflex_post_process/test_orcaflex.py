@@ -13,3 +13,11 @@ test_process()
 from test_opp_summary2_master import test_process
 
 test_process()
+
+from test_opp_time_series1 import test_process
+
+test_process()
+
+from test_opp_time_series2_master import test_process
+
+test_process()

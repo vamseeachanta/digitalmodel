@@ -1,18 +1,19 @@
-from digitalmodel.modules.orcaflex.opp import OrcaFlexAnalysis
-from digitalmodel.common.orcaflex_iterative_runs import OrcaflexIterativeRuns
-from digitalmodel.modules.orcaflex.orcaflex_post_process import orcaflex_post_process
+# Reader imports
+from digitalmodel.modules.orcaflex.opp import OrcaFlexPostProcess
+from digitalmodel.modules.orcaflex.orcaflex_iterative_runs import OrcaflexIterativeRuns
 from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.modules.orcaflex.opp import OrcaFlexPostProcess
 
 ou = OrcaflexUtilities()
 oir = OrcaflexIterativeRuns()
-opp = orcaflex_post_process()
+opp = OrcaFlexPostProcess()
 
 
 def orcaflex_analysis(cfg):
     if "file_management" in cfg and cfg["file_management"]["flag"]:
         cfg = ou.file_management(cfg)
 
-    orcaFlex_analysis = OrcaFlexAnalysis(cfg)
+    orcaFlex_analysis = OrcaFlexPostProcess(cfg)
     orcaFlex_analysis.file_management(cfg) #TODO delete if redundant
 
     static_flag = cfg['orcaflex']['analysis']['static']

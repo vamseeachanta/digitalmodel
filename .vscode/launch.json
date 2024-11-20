@@ -15,7 +15,7 @@
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": true
-        }, 
+        },
         {
             "name": "Python: Current File",
             "type": "python",
@@ -24,6 +24,18 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "timeout": 30
+        },
+        {
+            "name": "Execute Python File",
+            "type": "python",
+            "request": "launch",
+            "program": "tests/modules/orcaflex/orcaflex_post_process/test_orcaflex.py",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
         }
     ]
 }

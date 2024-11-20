@@ -11,10 +11,12 @@ from assetutilities.common.yml_utilities import ymlInput
 from colorama import Fore, Style
 
 # Reader imports
-from digitalmodel.common.orcaflex_model_utilities import OrcaflexModelUtilities
+from digitalmodel.modules.orcaflex.orcaflex_model_utilities import (
+    OrcaflexModelUtilities,
+)
 
 save_data = SaveData()
-colorama.init()
+colorama.init(convert=True)
 
 try:
     # Third party imports
@@ -39,11 +41,12 @@ class OrcaflexUtilities:
     def is_orcaflex_available(self):
         try:
             model = OrcFxAPI.Model()
-            logging.info("Orcaflex license is available .... SUCCESS")
-            print(Fore.GREEN + "Orcaflex license is available .... SUCCESS" + Style.RESET_ALL)
+            logging.info("Orcaflex license is available .... PASS")
+            print(f"{Fore.GREEN}Orcaflex license is available .... PASS{Style.RESET_ALL}")
             return True
         except:
-            print("Orcaflex license is NOT available")
+            print(f"{Fore.RED}Orcaflex license is NOT available .... FAIL{Style.RESET_ALL}")
+            print("")
             raise Exception("Orcaflex license is NOT available .... FAIL")
             return False
 

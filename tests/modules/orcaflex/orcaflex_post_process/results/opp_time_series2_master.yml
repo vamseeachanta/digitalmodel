@@ -3,7 +3,7 @@ state: *id001
 dictitems:
   basename: orcaflex_post_process
   default:
-    log_level: DEBUG
+    log_level: INFO
     config:
       overwrite:
         output: true
@@ -118,17 +118,17 @@ dictitems:
     histogram: false
     summation: false
     groups:
-    - Label: time_history_end_a
+    - Label: time_history_end_b
       Columns:
       - Command: TimeHistory
         ObjectName: SLWR
         objectExtra:
-        - End A
+        - End B
         SimulationPeriod:
         - 0.0
         - 10.0
         Variable: Effective Tension
-        Label: EndA_EffTension
+        Label: EndB_EffTension
     - Label: time_history_end_a
       Columns:
       - Command: TimeHistory
@@ -153,9 +153,10 @@ dictitems:
       yml:
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\app_orcaflex_post_process_visualization.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary1.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary2_group.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary2_master.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series1.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series2_master.yml
+      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_license.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_post_process.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.yml
       - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\SLWR_06OD_GI_TA08_HE200_Post_Process.yml
@@ -176,7 +177,7 @@ dictitems:
     file_name_for_overwrite: opp_time_series2_master
     result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-11-17 15:49:12.142966
+    start_time: 2024-11-19 15:47:31.840702
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series2_master.yml

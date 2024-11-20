@@ -1,13 +1,23 @@
 # Standard library imports
+import copy
 import logging
 import math
 import os
 
 # Third party imports
-import numpy as np
 import pandas as pd
+import numpy as np
+
+try:
+    # Third party imports
+    import OrcFxAPI
+except:
+    logging.debug("OrcFxAPI not available")
+
+
+# Third party imports
 from assetutilities.common.data import PandasChainedAssignent, SaveData, TransformData
-from assetutilities.common.file_management import FileManagement
+from assetutilities.common.update_deep import update_deep_dictionary
 
 # Reader imports
 from digitalmodel.modules.orcaflex.opp_range_graph import OPPRangeGraph
@@ -15,22 +25,15 @@ from digitalmodel.modules.orcaflex.opp_time_series import OPPTimeSeries
 from digitalmodel.modules.orcaflex.opp_visualization import OPPVisualization
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
 from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
-try:
-    # Third party imports
-    import OrcFxAPI
-except:
-    logging.debug("OrcFxAPI not available")
-
-fm = FileManagement()
 save_data = SaveData()
 
 ou = OrcaflexUtilities()
 of_objects = OrcaFlexObjects()
 opp_ts = OPPTimeSeries()
 opp_rg = OPPRangeGraph()
-opp_v = OPPVisualization()
+opp_visualization = OPPVisualization()
 
-class OrcaFlexAnalysis():
+class OrcaFlexPostProcess():
 
     def __init__(self, cfg=None):
         self.cfg = cfg
@@ -41,6 +44,79 @@ class OrcaFlexAnalysis():
         self.data_quality = {}
         self.RAO_df_array = []
 
+    def post_process_router(self, cfg):
+
+        orcaflex_license_flag = ou.is_orcaflex_available()
+        assert (orcaflex_license_flag)
+        if not orcaflex_license_flag:
+            raise Exception("Orcaflex license not available.")
+
+        cfg = self.get_cfg_with_master_data(cfg)
+        if cfg['orcaflex']['postprocess']['summary']['flag'] or cfg[
+                    'orcaflex']['postprocess']['RangeGraph']['flag'] or cfg[
+                        'orcaflex']['postprocess']['time_series'][
+                            'flag'] or cfg['orcaflex']['postprocess'][
+                                'cummulative_histograms']['flag']:
+            post_process_data_flag = True
+        else:
+            post_process_data_flag = False
+
+        if cfg['orcaflex']['postprocess']['visualization']['flag']:
+            post_process_visualization_flag = True
+        else:
+            post_process_visualization_flag = False
+
+        if post_process_data_flag:
+            cfg.update({cfg['basename']: {}})
+            self.post_process(cfg)
+            self.save_summary(cfg)
+        elif post_process_visualization_flag:
+            opp_visualization.get_visualizations(cfg)
+        else:
+            logging.info("No postprocess option to run specified ... End Run.")
+
+        return cfg
+
+    def get_cfg_with_master_data(self, cfg):
+        if 'summary_settings_master' in cfg:
+            summary_settings_master = cfg['summary_settings_master'].copy()
+            summary_settings = cfg['summary_settings']
+
+            for group_index in range(0, len(summary_settings['groups'])):
+                group = summary_settings['groups'][group_index].copy()
+
+                if 'Columns' in summary_settings_master['groups'][0]:
+                    for column_index in range(0, len(group['Columns'])):
+                        column = group['Columns'][column_index].copy()
+                        column = update_deep_dictionary(
+                            summary_settings_master['groups'][group_index]['Columns'][0], column)
+                        group['Columns'][column_index] = copy.deepcopy(column)
+
+                group = update_deep_dictionary(summary_settings_master['groups'][group_index], group)
+                summary_settings['groups'][group_index] = copy.deepcopy(group)
+
+            cfg['summary_settings'] = copy.deepcopy(summary_settings)
+
+        if 'time_series_settings_master' in cfg:
+            time_series_settings_master = cfg['time_series_settings_master'].copy()
+            time_series_settings = cfg['time_series_settings']
+
+            for group_index in range(0, len(time_series_settings['groups'])):
+                group = time_series_settings['groups'][group_index].copy()
+
+                if 'Columns' in time_series_settings_master['groups'][0]:
+                    for column_index in range(0, len(group['Columns'])):
+                        column = group['Columns'][column_index].copy()
+                        column = update_deep_dictionary(
+                            time_series_settings_master['groups'][group_index]['Columns'][0], column)
+                        group['Columns'][column_index] = copy.deepcopy(column)
+
+                group = update_deep_dictionary(time_series_settings_master['groups'][group_index], group)
+                time_series_settings['groups'][group_index] = copy.deepcopy(group)
+
+            cfg['time_series_settings'] = copy.deepcopy(time_series_settings)
+
+        return cfg
 
     def get_model_state_information(self):
         if self.cfg is not None and self.cfg['default'].__contains__(
@@ -492,22 +568,6 @@ class OrcaFlexAnalysis():
         return summary_columns
 
 
-    def LinkedStatistics(self):
-
-        # TODO LinkedStatistics using OrcaFlex. Code currently not working.
-        VariableName = 'Effective Tension', 'Bend Moment'
-        arclengthRange = OrcFxAPI.oeArcLength(25.0)
-        SimulationPeriod = cfg["PostProcess"]['Summary'][SummaryIndex][
-            'SimulationPeriod']
-        TimePeriod = of_objects.get_TimePeriodObject(SimulationPeriod)
-        stats = OrcFXAPIObject.LinkedStatistics(VariableName, TimePeriod,
-                                                arclengthRange)
-        query = stats.Query('Effective Tension', 'Bend Moment')
-        print(query.ValueAtMax)
-        print(query.ValueAtMin)
-
-    # Alternatively, use Range graphs for required quantities and obtain them using DFs. (easiest to customize)
-
 
     def save_cfg_files_from_multiple_files(self):
 
@@ -572,3 +632,4 @@ class OrcaFlexAnalysis():
                 True
         }
         save_data.DataFrameArray_To_xlsx_openpyxl(df_array, customdata)
+
