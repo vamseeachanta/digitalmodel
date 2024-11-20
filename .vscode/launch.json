@@ -26,7 +26,7 @@
             "timeout": 30
         },
         {
-            "name": "Execute Python File",
+            "name": "exec-test-orca-flex",
             "type": "python",
             "request": "launch",
             "program": "tests/modules/orcaflex/orcaflex_post_process/test_orcaflex.py",
