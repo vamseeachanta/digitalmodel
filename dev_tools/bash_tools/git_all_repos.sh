@@ -33,7 +33,7 @@ for dir in "$github_dir"/*/ ; do
         # Check if there are any changes
         if [ -n "$(git status --porcelain)" ]; then
             log_message2 "yellow" "Changes detected in $(basename "$dir")"
-            
+
             # Execute daily routine script if it exists
             # daily_routine_script="${dir}dev_tools/daily_routine.sh"
             daily_routine_script="${dir}/${daily_routine_script_rel_path}"
