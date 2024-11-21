@@ -3,10 +3,12 @@
 
 # - [ ] #todo #13_siva_AceEngineer #ae_au have to use this all over the place
 
-# Print colored output
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
+# Define ANSI color codes as static variables
+readonly RED="\033[31m"
+readonly GREEN="\033[32m"
+readonly YELLOW="\033[33m"
+readonly NORMAL="\033[37m"  # Normal/White Color
+readonly RESET="\033[0m"
 
 # freq-relative paths 
 test_module_home="test/modules"
@@ -14,17 +16,14 @@ test_common_home="test/common"
 
 # Print a message with timestamp
 log_message() {
-    echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
-}
-
-log_message2() {
     local color=$1
     local msg=$2
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     case $color in
-        "red") echo -e "\033[31m$msg\033[0m" ;;
-        "green") echo -e "\033[32m$msg\033[0m" ;;
-        "yellow") echo -e "\033[33m$msg\033[0m" ;;
+        "red") echo -e "${RED}$msg${RESET}" ;;
+        "green") echo -e "${GREEN}$msg${RESET}" ;;
+        "yellow") echo -e "${YELLOW}$msg${RESET}" ;;
+        "normal") echo -e "${NC}$msg${RESET}" ;;
     esac
     echo "[${timestamp}] ${msg}" # >> "${LOG_FILE}"
 }

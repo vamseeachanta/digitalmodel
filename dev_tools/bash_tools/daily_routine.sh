@@ -29,4 +29,7 @@ git add --all
 git commit -m "$today"
 git push
 
-log_message "Daily git operations completed"
+# todo convert this to green.
+# standardize the shell scripts in both assetutilities (2024-aug) and digitalmodel  (202409)
+# make changes or tag vamsee 
+log_message "green" "Repo : ${repo_name} : Daily git operations completed"
