@@ -5,3 +5,6 @@ This standard equipment list removes a lot of wasted effort from the bidding pro
 Thanks to Stephen Whitfield and Drilling Contractor, Official Magazine of IADC for sharing this information in this video. Click to go to the article and then click to view the newest rig equipment version.
 
 <https://drillingcontractor.org/iadc-releases-updated-standard-format-equipment-list-for-floating-units-70359>
+
+SPE Standardization initiative
+<https://d-wis.org/>
