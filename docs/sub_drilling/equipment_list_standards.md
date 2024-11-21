@@ -6,5 +6,5 @@ Thanks to Stephen Whitfield and Drilling Contractor, Official Magazine of IADC f
 
 <https://drillingcontractor.org/iadc-releases-updated-standard-format-equipment-list-for-floating-units-70359>
 
-SPE Standardization initiative
+SPE Standardization initiative:
 <https://d-wis.org/>
