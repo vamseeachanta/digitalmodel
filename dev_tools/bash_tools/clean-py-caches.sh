@@ -1,16 +1,22 @@
 #!/bin/bash
 
 # have to hard code this into each script
-# assumes git was used to clone the repo
-project_root=$(git rev-parse --show-toplevel)
-cd "$project_root"
+# assumes this IS a git repo
+repo_root=$(git rev-parse --show-toplevel)
+# get to repo root
+cd "$repo_root"
 
-# load common.sh 
-source dev_tools/bash_tools/common.sh
+repo_name=$(basename "${repo_root}")
+
+bash_tools_home="dev_tools/bash_tools"
+today=$(date '+%Y%m%d')
+
+# source common utilities
+source ${bash_tools_home}/common.sh
 
 # Function to clean Python cache
 clean_python_cache() {
-    log_message "green" "Starting Python cache cleanup..."
+    log_message "green" "Starting Python cache cleanup in repo ${repo_name}..."
     
     # Find and remove all __pycache__ directories
     log_message "normal" "Removing __pycache__ directories..."
@@ -28,12 +34,12 @@ clean_python_cache() {
     log_message "normal" "Removing .pyd files..."
     find . -type f -name "*.pyd" -delete
     
-    log_message "green" "Cache cleanup completed successfully!"
+    log_message "green" "Cache cleanup completed successfully in repo ${repo_name}!"
 }
 
 # Error handling
 if ! clean_python_cache; then
-    log_message "${RED}Error: Cache cleanup failed${NC}"
+    log_message "red" "Error: Cache cleanup failed in repo ${repo_name}"
     exit 1
 fi
 
