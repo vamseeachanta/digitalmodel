@@ -44,7 +44,6 @@ for dir in "$github_dir"/*/ ; do
             log_message "yellow" "Changes detected in $(basename "$dir")"
 
             # Execute daily routine script if it exists
-            # daily_routine_script="${dir}dev_tools/daily_routine.sh"
             daily_routine_script="${dir}/${daily_routine_script_rel_path}"
             if [ -f "$daily_routine_script" ]; then
                 log_message "green" "Running daily routine script in $(basename "$dir") ..."
