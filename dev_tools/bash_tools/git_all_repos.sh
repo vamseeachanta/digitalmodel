@@ -9,7 +9,7 @@ bash_tools_home="dev_tools/bash_tools"
 daily_routine_script_rel_path="${bash_tools_home}/daily_routine.sh"
 
 # having to hard code this as opposed to sourcing common.sh. 
-# since i have no guarantee on common.sh 
+# since i have no guarantee on common.sh
 log_message2() {
     local color=$1
     local msg=$2
