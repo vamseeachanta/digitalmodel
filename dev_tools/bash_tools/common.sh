@@ -25,7 +25,8 @@ log_message() {
         "yellow") echo -e "${YELLOW}$msg${RESET}" ;;
         "normal") echo -e "${NC}$msg${RESET}" ;;
     esac
-    echo "[${timestamp}] ${msg}" # >> "${LOG_FILE}"
+
+    echo "[${timestamp}] | $0 : ${msg}" 
 }
 
 pause_for_user() {
