@@ -17,16 +17,16 @@ test_common_home="test/common"
 # Print a message with timestamp
 log_message() {
     local color=$1
-    local msg=$2
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+
+    local msg=${timestamp}" | ${0} | "$2
+    # [${timestamp}] | $0 : 
     case $color in
         "red") echo -e "${RED}$msg${RESET}" ;;
         "green") echo -e "${GREEN}$msg${RESET}" ;;
         "yellow") echo -e "${YELLOW}$msg${RESET}" ;;
         "normal") echo -e "${NC}$msg${RESET}" ;;
     esac
-
-    echo "[${timestamp}] | $0 : ${msg}" 
 }
 
 pause_for_user() {
