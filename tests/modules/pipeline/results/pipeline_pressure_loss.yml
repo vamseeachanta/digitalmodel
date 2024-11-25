@@ -215,16 +215,16 @@ dictitems:
     fe_folder: ~
   Analysis:
     basename: pipeline
-    analysis_root_folder: src/digitalmodel/tests/test_data\pipeline
+    analysis_root_folder: c:\Users\Sk Samdan\Desktop\digitalmodel\tests\modules\pipeline
     file_name: pipeline_pressure_loss
     file_name_for_overwrite: pipeline_pressure_loss
-    result_folder: src/digitalmodel/tests/test_data\pipeline\results
-    log_folder: src/digitalmodel/tests/test_data\pipeline\logs
-    start_time: 2024-11-11 10:39:24.007496
+    result_folder: c:\Users\Sk Samdan\Desktop\digitalmodel\tests\modules\pipeline\results
+    log_folder: c:\Users\Sk Samdan\Desktop\digitalmodel\tests\modules\pipeline\logs
+    start_time: 2024-11-25 12:40:51.271612
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: src/digitalmodel/tests/test_data\pipeline\pipeline_pressure_loss.yml
-    fe_folder: src/digitalmodel/tests/test_data\pipeline\results
+    CustomInputFile: c:\Users\Sk Samdan\Desktop\digitalmodel\tests\modules\pipeline\pipeline_pressure_loss.yml
+    fe_folder: c:\Users\Sk Samdan\Desktop\digitalmodel\tests\modules\pipeline\results
   pressure_loss:
     flow_parameters:
       flow_rate: 0.026

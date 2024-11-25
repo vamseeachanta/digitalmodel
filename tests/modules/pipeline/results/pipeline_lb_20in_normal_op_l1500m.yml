@@ -208,13 +208,13 @@ dictitems:
         output: true
   Analysis:
     basename: pipeline
-    analysis_root_folder: src/digitalmodel/tests/test_data\pipeline
+    analysis_root_folder: tests\modules\pipeline
     file_name: pipeline_lb_20in_normal_op_l1500m
     file_name_for_overwrite: pipeline_lb_20in_normal_op_l1500m
-    result_folder: src/digitalmodel/tests/test_data\pipeline\results
-    log_folder: src/digitalmodel/tests/test_data\pipeline\logs
-    start_time: 2024-11-11 10:38:56.534310
+    result_folder: tests\modules\pipeline\results
+    log_folder: tests\modules\pipeline\logs
+    start_time: 2024-11-25 12:33:57.239105
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: src/digitalmodel/tests/test_data\pipeline\pipeline_lb_20in_normal_op_l1500m.yml
-    fe_folder: src/digitalmodel/tests/test_data\pipeline\results
+    CustomInputFile: tests\modules\pipeline\pipeline_lb_20in_normal_op_l1500m.yml
+    fe_folder: tests\modules\pipeline\results
