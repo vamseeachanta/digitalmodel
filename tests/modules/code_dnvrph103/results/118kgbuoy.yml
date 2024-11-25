@@ -9,17 +9,17 @@ dictitems:
         output: true
       cfg_sensitivities: false
   Analysis:
-    fe_folder: .\results
+    fe_folder: k:\github\digitalmodel\tests\modules\code_dnvrph103\results
     basename: code_dnvrph103
-    analysis_root_folder: .
+    analysis_root_folder: k:\github\digitalmodel\tests\modules\code_dnvrph103
     file_name: 118kgbuoy
     file_name_for_overwrite: 118kgbuoy
-    result_folder: .\results
-    log_folder: .\logs
-    start_time: 2024-11-21 06:19:05.847085
+    result_folder: k:\github\digitalmodel\tests\modules\code_dnvrph103\results
+    log_folder: k:\github\digitalmodel\tests\modules\code_dnvrph103\logs
+    start_time: 2024-11-21 10:17:49.300665
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: .\118kgbuoy.yml
+    CustomInputFile: k:\github\digitalmodel\tests\modules\code_dnvrph103\118kgbuoy.yml
   calculation_type: simplified
   rho_water: 1025
   look_up:
