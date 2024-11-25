@@ -39,7 +39,6 @@ library_name = "digitalmodel"
 save_data = SaveData()
 
 def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
-    fm = FileManagement()
     if cfg is None:
         inputfile = validate_arguments_run_methods(inputfile)
         cfg = ymlInput(inputfile, updateYml=None)
@@ -52,6 +51,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     application_manager.configure(cfg, library_name)
 
     if config_flag:
+        fm = FileManagement()
         cfg_base = application_manager.cfg
         cfg_base = fm.router(cfg_base)
     else:
