@@ -26,8 +26,8 @@ from digitalmodel.modules.orcaflex.orcaflex_file_management import OrcaflexFileM
 from digitalmodel.modules.orcaflex.orcaflex_installation import OrcInstallation
 from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
 from digitalmodel.custom.pipeline.pipeline import Pipeline
-from digitalmodel.custom.rao_analysis import RAOAnalysis
-from digitalmodel.custom.transformation import Transformation
+from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis
+from digitalmodel.modules.transformation.transformation import Transformation
 from digitalmodel.modules.orcaflex.umbilical_analysis_components import UmbilicalAnalysis
 from digitalmodel.custom.viv.viv_analysis import VIVAnalysis
 from digitalmodel.modules.orcaflex.orcaflex_analysis import orcaflex_analysis
