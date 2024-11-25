@@ -1,0 +1,17 @@
+Detailed output:                    Folder                     Filename  Status
+0              local_temp   lc_spire_project_lower.yml  Failed
+1              local_temp   lc_spire_project_upper.yml  Failed
+2              local_temp           transform_test.yml  Failed
+3            modules\aqwa      aqwareader_moorings.yml  Failed
+4            modules\aqwa          aqwareader_raos.yml  Failed
+..                    ...                          ...     ...
+140       modules\vessels        host_id_8_extreme.yml  Failed
+141       modules\vessels        host_id_8_Fatigue.yml  Failed
+142       modules\vessels  host_id_x_110000_Tanker.yml  Failed
+143       modules\vessels        host_id_x_fatigue.yml  Failed
+144  modules\viv_analysis             viv_analysis.yml  Failed
+
+[145 rows x 3 columns]
+No. of files processed: 145
+Tests passed: 0
+Tests Failed: 145

@@ -38,4 +38,5 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pytest src/digitalmodel/tests/test_pipeline.py
+          python tests/modules/all_yml_tests/test_all_yml.py
+          pytest tests/modules/test_pipeline_check.py
