@@ -21,15 +21,15 @@ dictitems:
         output: true
   Analysis:
     basename: fatigue_analysis
-    analysis_root_folder: src/digitalmodel/tests/test_data\fatigue_analysis
+    analysis_root_folder: tests\modules\fatigue_analysis
     file_name: fatigue_analysis_sn
     file_name_for_overwrite: fatigue_analysis_sn
-    result_folder: src/digitalmodel/tests/test_data\fatigue_analysis\results
-    log_folder: src/digitalmodel/tests/test_data\fatigue_analysis\logs
-    start_time: 2024-11-11 10:34:27.927503
+    result_folder: tests\modules\fatigue_analysis\results
+    log_folder: tests\modules\fatigue_analysis\logs
+    start_time: 2024-11-25 12:29:50.745241
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: src/digitalmodel/tests/test_data\fatigue_analysis\fatigue_analysis_sn.yml
-    fe_folder: src/digitalmodel/tests/test_data\fatigue_analysis\results
+    CustomInputFile: tests\modules\fatigue_analysis\fatigue_analysis_sn.yml
+    fe_folder: tests\modules\fatigue_analysis\results
   fatigue_analysis:
     damage: 1.570037454618595e-31

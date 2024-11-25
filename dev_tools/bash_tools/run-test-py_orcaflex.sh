@@ -1,6 +1,5 @@
 #! /bin/bash
 
-
 # shell script to run python test scripts from
 repo_name=$(basename $(git rev-parse --show-toplevel))
 repo_root=$(git rev-parse --show-toplevel)

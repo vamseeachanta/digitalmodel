@@ -48,8 +48,8 @@ def run_yaml_files(root_directory):
 
         df = df.sort_values(by=['Status', 'Folder'], ascending=[False, True])
 
-        output_csv = os.path.join(root_directory, 'yml_file_status.csv')
-        df.to_csv(output_csv, index=False)
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+        df.to_csv(f'{dir_path}/repo_yml_status.csv', index=False)
 
     no_of_files = len(filenames)
     tests_passed = len(df[df['Status'] == 'Success'])
@@ -62,9 +62,9 @@ def run_yaml_files(root_directory):
         f"Tests Failed: {tests_failed}\n"
     )
 
-    os.makedirs(root_directory, exist_ok=True)
+    os.makedirs(dir_path, exist_ok=True)
 
-    summary_file = os.path.join(root_directory, 'yml_summary.txt')
+    summary_file = os.path.join(dir_path, 'yml_summary_pytest.txt')
     with open(summary_file, 'w') as f:
         f.write(summary_output)
 
@@ -78,5 +78,5 @@ def run_yaml_files(root_directory):
 
 if __name__ == '__main__':
     library = 'digitalmodel'
-    root_directory = f'src/{library}/tests/test_data' 
+    root_directory = 'tests' 
     run_yaml_files(root_directory)

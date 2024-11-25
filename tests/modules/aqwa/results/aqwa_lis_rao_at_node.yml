@@ -229,15 +229,8 @@ dictitems:
       output_directory: ~
     input_files:
       LIS:
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - lis
-        - AD010_FST1_L015_node_raos.LIS
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\lis\AD010_FST1_L015_node_raos.LIS
   default:
     log_level: DEBUG
     config:
@@ -307,34 +300,24 @@ dictitems:
         - Heave Acc. AMP
   Analysis:
     basename: aqwa
-    analysis_root_folder: src/digitalmodel/tests/test_data\aqwa
+    analysis_root_folder: tests\modules\aqwa
     file_name: aqwa_lis_rao_at_node
     file_name_for_overwrite: aqwa_lis_rao_at_node
-    result_folder: src/digitalmodel/tests/test_data\aqwa\results
-    log_folder: src/digitalmodel/tests/test_data\aqwa\logs
-    start_time: 2024-11-11 10:32:36.174293
+    result_folder: tests\modules\aqwa\results
+    log_folder: tests\modules\aqwa\logs
+    start_time: 2024-11-25 12:27:01.225870
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_lis_rao_at_node.yml
-    fe_folder: src/digitalmodel/tests/test_data\aqwa\results
-    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - src
-    - digitalmodel
-    - tests
-    - test_data
-    - aqwa
-    - output
-    - lis
-    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - src
-    - digitalmodel
-    - tests
-    - test_data
-    - aqwa
+    CustomInputFile: tests\modules\aqwa\aqwa_lis_rao_at_node.yml
+    fe_folder: tests\modules\aqwa\results
+    file_management_input_directory: !!python/object/apply:pathlib._local.WindowsPath
+    - tests\modules\aqwa\output/lis
+    file_management_output_directory: !!python/object/apply:pathlib._local.WindowsPath
+    - tests\modules\aqwa
   aqwa:
     csv_filename:
-    - src/digitalmodel/tests/test_data\aqwa\results\AD010_FST1_L015_node_raos_00-T-7105.csv
-    - src/digitalmodel/tests/test_data\aqwa\results\AD010_FST1_L015_node_raos_00-T-7104.csv
-    - src/digitalmodel/tests/test_data\aqwa\results\AD010_FST1_L015_node_raos_00-T-7103.csv
-    - src/digitalmodel/tests/test_data\aqwa\results\AD010_FST1_L015_node_raos_00-T-7102.csv
-    - src/digitalmodel/tests/test_data\aqwa\results\AD010_FST1_L015_node_raos_00-T-7101.csv
+    - tests\modules\aqwa\results\AD010_FST1_L015_node_raos_00-T-7105.csv
+    - tests\modules\aqwa\results\AD010_FST1_L015_node_raos_00-T-7104.csv
+    - tests\modules\aqwa\results\AD010_FST1_L015_node_raos_00-T-7103.csv
+    - tests\modules\aqwa\results\AD010_FST1_L015_node_raos_00-T-7102.csv
+    - tests\modules\aqwa\results\AD010_FST1_L015_node_raos_00-T-7101.csv
