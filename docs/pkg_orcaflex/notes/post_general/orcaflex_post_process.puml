@@ -5,12 +5,13 @@ skinparam titleBorderThickness 2
 skinparam titleBorderColor red
 skinparam titleBackgroundColor Tomato
 
-title OrcaFlex Post Process
+title OrcaFlex Post Process (OPP)
 
 start
 
     note right
         Objective: To manage Orcaflex postprocess files
+        For consistent, automated, timely outputs
     end note
 
     partition "Specify Inputs" {
@@ -46,18 +47,7 @@ start
             end note
     }
 
-    partition "Post-Processing" {
-
-            note right
-                Python development for automated, consistent, timely outputs
-            end note
-
-        :detailed output;
-            note right
-                timetraces of motion, force etc. (.csv)
-                .json /.yml
-            end note
-
+    partition "OPP - Summary" {
         :summary;
             note right
                 key outputs
@@ -65,15 +55,52 @@ start
                 - LinkedStatistics (time dependent statistics)
             end note
 
+    }
+
+    partition "OPP - LinkedStatistics" {
+        :summary;
+            note right
+                Issue: #61 #TODO
+                key outputs
+                - LinkedStatistics (time dependent statistics)
+            end note
+
+    }
+
+    partition "OPP - Time Trace" {
+        :detailed output;
+            note right
+                timetraces of motion, force etc. (.csv)
+            end note
+
+    }
+
+    partition "OPP - Range Graphs" {
+        :detailed output;
+            note right
+                Issue: #61 #TODO
+                motion, force etc. (.csv)
+                Min and Max along length (.csv)
+            end note
+
+    }
+
+
+    partition "OPP - Visualizations" {
         :Visualizations;
             note right
+                Issue: #61 #TODO
                 Snapshots (of the model)
-                range graphs
+                range graphs plots
                 Timetrace plots
             end note
 
+    }
+
+    partition "OPP - Frequency Analysis" {
         :Frequency Analysis;
             note right
+                Issue: #61 #TODO
                 FFT of time traces for in-depth analysis
             end note
 
