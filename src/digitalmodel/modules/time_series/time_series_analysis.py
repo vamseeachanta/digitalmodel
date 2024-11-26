@@ -1,12 +1,12 @@
 # Standard library imports
-import logging
 import copy
+import logging
 
 # Third party imports
 from assetutilities.common.update_deep import update_deep_dictionary
-from digitalmodel.custom.time_series.time_series_components import TimeSeriesComponents
 
 # Reader imports
+from digitalmodel.modules.time_series.time_series_components import TimeSeriesComponents
 
 tca = TimeSeriesComponents()
 

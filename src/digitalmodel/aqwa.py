@@ -2,8 +2,8 @@
 from assetutilities.common.update_deep import update_deep_dictionary
 
 # Reader imports
-from digitalmodel.custom.aqwa.aqwa_post_process import AqwaPostProcess
-from digitalmodel.custom.aqwa.aqwa_pre_process import AqwaPreProcess
+from digitalmodel.modules.aqwa.aqwa_post_process import AqwaPostProcess
+from digitalmodel.modules.aqwa.aqwa_pre_process import AqwaPreProcess
 from digitalmodel.modules.aqwa.mes_files import MesFiles
 
 a_post = AqwaPostProcess()

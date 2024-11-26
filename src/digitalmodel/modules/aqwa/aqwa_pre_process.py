@@ -1,12 +1,9 @@
-import os
-import math
-import pandas as pd
 
-import logging
+# Third party imports
 from assetutilities.common.file_management import FileManagement
-from assetutilities.common.update_deep import update_deep_dictionary
 
-from digitalmodel.custom.aqwa.aqwa_dat_files import AqwaDATFiles
+# Reader imports
+from digitalmodel.modules.aqwa.aqwa_dat_files import AqwaDATFiles
 
 fm = FileManagement()
 adf = AqwaDATFiles()

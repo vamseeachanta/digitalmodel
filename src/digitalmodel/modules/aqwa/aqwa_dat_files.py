@@ -11,7 +11,7 @@ from assetutilities.common.utilities import is_file_valid_func
 from assetutilities.common.yml_utilities import WorkingWithYAML
 
 # Reader imports
-from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
+from digitalmodel.modules.aqwa.aqwa_utilities import AqwaUtilities
 
 wwy = WorkingWithYAML()
 

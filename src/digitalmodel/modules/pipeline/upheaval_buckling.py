@@ -10,7 +10,7 @@ from assetutilities.common.visualization.visualization_templates import (
 from assetutilities.engine import engine as au_engine
 
 # Reader imports
-from digitalmodel.custom.pipeline.buckling_common import CommonBucklingCaculations
+from digitalmodel.modules.pipeline.buckling_common import CommonBucklingCaculations
 
 viz_templates = VisualizationTemplates()
 cbc = CommonBucklingCaculations()

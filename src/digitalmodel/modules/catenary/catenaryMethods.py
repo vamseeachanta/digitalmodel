@@ -2,7 +2,7 @@ import math
 import pandas as pd
 
 import matplotlib.pyplot as plt
-from digitalmodel.custom.catenary.pipeProperties import pipeProperties
+from digitalmodel.modules.catenary.pipeProperties import pipeProperties
 
 
 def catenaryEquation(data):
