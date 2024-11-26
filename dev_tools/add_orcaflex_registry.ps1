@@ -8,6 +8,6 @@
 # hex values
 # 10 - 0x0000000a
 # 11 - 0x0000000b
-# 12 - 0000000c
+# 12 - 0000000c 
 
 reg add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Orcina\OrcaFlex /v DefaultThreadCount /t REG_DWORD /d 0000000a /f
