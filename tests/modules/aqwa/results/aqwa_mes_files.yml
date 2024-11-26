@@ -43,114 +43,30 @@ dictitems:
       output_directory: ~
     input_files:
       MES:
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - mes
-        - AD010_FST1_L015.MES
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - mes
-        - AD010_FST1_L050.MES
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - mes
-        - AD010_FST1_L095.MES
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - mes
-        - D_F2L15_YPD_STAT_EF.MES
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - mes
-        - D_F2L15_ZPD_EF.MES
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - mes
-        - D_F2L15_ZPD_STAT_EF.MES
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - mes
-        - F_F2L15_D10_COMP.MES
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - mes
-        - F_F2L15_D10_SIMP.MES
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - mes
-        - LIBR_NE.MES
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - mes
-        - NO_LOAD_09MOORS.MES
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - mes
-        - S_F2L15.MES
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - mes
-        - S_F2L15_000.MES
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\mes\AD010_FST1_L015.MES
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\mes\AD010_FST1_L050.MES
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\mes\AD010_FST1_L095.MES
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\mes\D_F2L15_YPD_STAT_EF.MES
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\mes\D_F2L15_ZPD_EF.MES
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\mes\D_F2L15_ZPD_STAT_EF.MES
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\mes\F_F2L15_D10_COMP.MES
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\mes\F_F2L15_D10_SIMP.MES
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\mes\LIBR_NE.MES
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\mes\NO_LOAD_09MOORS.MES
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\mes\S_F2L15.MES
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\mes\S_F2L15_000.MES
   default:
     log_level: DEBUG
     config:
@@ -161,27 +77,17 @@ dictitems:
     flag: true
   Analysis:
     basename: aqwa
-    analysis_root_folder: src/digitalmodel/tests/test_data\aqwa
+    analysis_root_folder: tests\modules\aqwa
     file_name: aqwa_mes_files
     file_name_for_overwrite: aqwa_mes_files
-    result_folder: src/digitalmodel/tests/test_data\aqwa\results
-    log_folder: src/digitalmodel/tests/test_data\aqwa\logs
-    start_time: 2024-11-11 10:32:49.935856
+    result_folder: tests\modules\aqwa\results
+    log_folder: tests\modules\aqwa\logs
+    start_time: 2024-11-25 12:27:13.611403
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_mes_files.yml
-    fe_folder: src/digitalmodel/tests/test_data\aqwa\results
-    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - src
-    - digitalmodel
-    - tests
-    - test_data
-    - aqwa
-    - output
-    - mes
-    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - src
-    - digitalmodel
-    - tests
-    - test_data
-    - aqwa
+    CustomInputFile: tests\modules\aqwa\aqwa_mes_files.yml
+    fe_folder: tests\modules\aqwa\results
+    file_management_input_directory: !!python/object/apply:pathlib._local.WindowsPath
+    - tests\modules\aqwa\output/mes
+    file_management_output_directory: !!python/object/apply:pathlib._local.WindowsPath
+    - tests\modules\aqwa

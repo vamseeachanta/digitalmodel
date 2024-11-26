@@ -1,33 +1,33 @@
 Traceback (most recent call last):
   File "c:\Users\Sk Samdan\.vscode\extensions\ms-python.debugpy-2024.12.0-win32-x64\bundled\libs\debugpy\_vendored\pydevd\pydevd.py", line 3713, in <module>
     main()
+    ~~~~^^
   File "c:\Users\Sk Samdan\.vscode\extensions\ms-python.debugpy-2024.12.0-win32-x64\bundled\libs\debugpy\_vendored\pydevd\pydevd.py", line 3706, in main
     globals = debugger.run(setup["file"], None, None, is_module)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "c:\Users\Sk Samdan\.vscode\extensions\ms-python.debugpy-2024.12.0-win32-x64\bundled\libs\debugpy\_vendored\pydevd\pydevd.py", line 2704, in run
     return self._exec(is_module, entry_point_fn, module_name, file, globals, locals)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "c:\Users\Sk Samdan\.vscode\extensions\ms-python.debugpy-2024.12.0-win32-x64\bundled\libs\debugpy\_vendored\pydevd\pydevd.py", line 2723, in _exec
     globals = pydevd_runpy._run_module_as_main(module_name, alter_argv=False)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "c:\Users\Sk Samdan\.vscode\extensions\ms-python.debugpy-2024.12.0-win32-x64\bundled\libs\debugpy\_vendored\pydevd\_pydevd_bundle\pydevd_runpy.py", line 228, in _run_module_as_main
     return _run_code(code, main_globals, None, "__main__", mod_spec)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "c:\Users\Sk Samdan\.vscode\extensions\ms-python.debugpy-2024.12.0-win32-x64\bundled\libs\debugpy\_vendored\pydevd\_pydevd_bundle\pydevd_runpy.py", line 118, in _run_code
     exec(code, run_globals)
-  File "C:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\__main__.py", line 25, in <module>
+    ~~~~^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Sk Samdan\miniconda3\envs\digitalmodel\Lib\site-packages\digitalmodel\__main__.py", line 25, in <module>
     engine()
-  File "C:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\engine.py", line 70, in engine
+    ~~~~~~^^
+  File "c:\Users\Sk Samdan\miniconda3\envs\digitalmodel\Lib\site-packages\digitalmodel\engine.py", line 74, in engine
     cfg_base = aqwa.router(cfg_base)
-               ^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\aqwa.py", line 29, in router
+  File "c:\Users\Sk Samdan\miniconda3\envs\digitalmodel\Lib\site-packages\digitalmodel\aqwa.py", line 29, in router
     a_analysis.analysis_router(cfg)
-  File "C:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\custom\aqwa\aqwa_analysis.py", line 25, in analysis_router
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "c:\Users\Sk Samdan\miniconda3\envs\digitalmodel\Lib\site-packages\digitalmodel\custom\aqwa\aqwa_analysis.py", line 25, in analysis_router
     cfg = aq_damping.router(cfg)
-          ^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\custom\aqwa\aqwa_analysis_damping.py", line 18, in router
+  File "c:\Users\Sk Samdan\miniconda3\envs\digitalmodel\Lib\site-packages\digitalmodel\custom\aqwa\aqwa_analysis_damping.py", line 18, in router
     self.run_all_files(cfg)
-  File "C:\Users\Sk Samdan\Desktop\digitalmodel\src\digitalmodel\custom\aqwa\aqwa_analysis_damping.py", line 35, in run_all_files
+    ~~~~~~~~~~~~~~~~~~^^^^^
+  File "c:\Users\Sk Samdan\miniconda3\envs\digitalmodel\Lib\site-packages\digitalmodel\custom\aqwa\aqwa_analysis_damping.py", line 35, in run_all_files
     cfg['analysis_settings'][analysis_settings_key]['output']['damping'] = damping_output
                              ^^^^^^^^^^^^^^^^^^^^^
 UnboundLocalError: cannot access local variable 'analysis_settings_key' where it is not associated with a value

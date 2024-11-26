@@ -76,33 +76,12 @@ dictitems:
       output_directory: ~
     input_files:
       LIS:
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - lis
-        - NO_DAMP_FST1_L015.LIS
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - lis
-        - NO_DAMP_FST1_L050.LIS
-      - !!python/object/apply:pathlib.WindowsPath
-        - src
-        - digitalmodel
-        - tests
-        - test_data
-        - aqwa
-        - output
-        - lis
-        - NO_DAMP_FST1_L095.LIS
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\lis\NO_DAMP_FST1_L015.LIS
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\lis\NO_DAMP_FST1_L050.LIS
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\lis\NO_DAMP_FST1_L095.LIS
   default:
     log_level: DEBUG
     config:
@@ -111,30 +90,20 @@ dictitems:
       cfg_sensitivities: false
   Analysis:
     basename: aqwa
-    analysis_root_folder: src/digitalmodel/tests/test_data\aqwa
+    analysis_root_folder: tests\modules\aqwa
     file_name: aqwa_lis_rao_acc_at_CoG
     file_name_for_overwrite: aqwa_lis_rao_acc_at_CoG
-    result_folder: src/digitalmodel/tests/test_data\aqwa\results
-    log_folder: src/digitalmodel/tests/test_data\aqwa\logs
-    start_time: 2024-11-11 10:32:29.213957
+    result_folder: tests\modules\aqwa\results
+    log_folder: tests\modules\aqwa\logs
+    start_time: 2024-11-25 12:26:55.515305
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_lis_rao_acc_at_CoG.yml
-    fe_folder: src/digitalmodel/tests/test_data\aqwa\results
-    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - src
-    - digitalmodel
-    - tests
-    - test_data
-    - aqwa
-    - output
-    - lis
-    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - src
-    - digitalmodel
-    - tests
-    - test_data
-    - aqwa
+    CustomInputFile: tests\modules\aqwa\aqwa_lis_rao_acc_at_CoG.yml
+    fe_folder: tests\modules\aqwa\results
+    file_management_input_directory: !!python/object/apply:pathlib._local.WindowsPath
+    - tests\modules\aqwa\output/lis
+    file_management_output_directory: !!python/object/apply:pathlib._local.WindowsPath
+    - tests\modules\aqwa
   aqwa:
     csv_filename:
-    - src/digitalmodel/tests/test_data\aqwa\results\NO_DAMP_FST1_L095_raos_acc.csv
+    - tests\modules\aqwa\results\NO_DAMP_FST1_L095_raos_acc.csv

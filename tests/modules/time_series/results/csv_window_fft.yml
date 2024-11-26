@@ -38,17 +38,17 @@ dictitems:
       overwrite:
         output: true
   Analysis:
-    fe_folder: src/digitalmodel/tests/test_data\time_series\results
+    fe_folder: tests\modules\time_series\results
     basename: time_series
-    analysis_root_folder: src/digitalmodel/tests/test_data\time_series
+    analysis_root_folder: tests\modules\time_series
     file_name: csv_window_fft
     file_name_for_overwrite: csv_window_fft
-    result_folder: src/digitalmodel/tests/test_data\time_series\results
-    log_folder: src/digitalmodel/tests/test_data\time_series\logs
-    start_time: 2024-11-11 10:40:39.073080
+    result_folder: tests\modules\time_series\results
+    log_folder: tests\modules\time_series\logs
+    start_time: 2024-11-25 12:35:19.164043
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: src/digitalmodel/tests/test_data\time_series\csv_window_fft.yml
+    CustomInputFile: tests\modules\time_series\csv_window_fft.yml
   analysis:
     basic:
       sample_fft: false

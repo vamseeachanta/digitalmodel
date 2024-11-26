@@ -296,13 +296,13 @@ dictitems:
       torsion: 138000
   Analysis:
     basename: umbilical_analysis
-    analysis_root_folder: src/digitalmodel/tests/test_data\umbilical_analysis
+    analysis_root_folder: tests\modules\umbilical_analysis
     file_name: umbilical_analysis_linetype
     file_name_for_overwrite: umbilical_analysis_linetype
-    result_folder: src/digitalmodel/tests/test_data\umbilical_analysis\results
-    log_folder: src/digitalmodel/tests/test_data\umbilical_analysis\logs
-    start_time: 2024-11-11 10:41:42.000536
+    result_folder: tests\modules\umbilical_analysis\results
+    log_folder: tests\modules\umbilical_analysis\logs
+    start_time: 2024-11-25 12:36:09.638641
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: src/digitalmodel/tests/test_data\umbilical_analysis\umbilical_analysis_linetype.yml
-    fe_folder: src/digitalmodel/tests/test_data\umbilical_analysis\results
+    CustomInputFile: tests\modules\umbilical_analysis\umbilical_analysis_linetype.yml
+    fe_folder: tests\modules\umbilical_analysis\results

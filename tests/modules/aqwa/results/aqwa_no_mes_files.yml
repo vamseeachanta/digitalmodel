@@ -53,28 +53,17 @@ dictitems:
     flag: true
   Analysis:
     basename: aqwa
-    analysis_root_folder: src/digitalmodel/tests/test_data\aqwa
+    analysis_root_folder: tests\modules\aqwa
     file_name: aqwa_no_mes_files
     file_name_for_overwrite: aqwa_no_mes_files
-    result_folder: src/digitalmodel/tests/test_data\aqwa\results
-    log_folder: src/digitalmodel/tests/test_data\aqwa\logs
-    start_time: 2024-11-11 10:32:54.999637
+    result_folder: tests\modules\aqwa\results
+    log_folder: tests\modules\aqwa\logs
+    start_time: 2024-11-25 12:27:17.635108
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_no_mes_files.yml
-    fe_folder: src/digitalmodel/tests/test_data\aqwa\results
-    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - src
-    - digitalmodel
-    - tests
-    - test_data
-    - aqwa
-    - output
-    - mes
-    - no_mes
-    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - src
-    - digitalmodel
-    - tests
-    - test_data
-    - aqwa
+    CustomInputFile: tests\modules\aqwa\aqwa_no_mes_files.yml
+    fe_folder: tests\modules\aqwa\results
+    file_management_input_directory: !!python/object/apply:pathlib._local.WindowsPath
+    - tests\modules\aqwa\output/mes/no_mes
+    file_management_output_directory: !!python/object/apply:pathlib._local.WindowsPath
+    - tests\modules\aqwa
