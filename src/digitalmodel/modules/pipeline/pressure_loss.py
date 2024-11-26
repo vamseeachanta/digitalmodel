@@ -13,7 +13,7 @@ from assetutilities.common.visualization.visualization_templates import (
 )
 
 # Reader imports
-from digitalmodel.custom.pipeline.buckling_common import CommonBucklingCaculations
+from digitalmodel.modules.pipeline.buckling_common import CommonBucklingCaculations
 
 viz_templates = VisualizationTemplates()
 cbc = CommonBucklingCaculations()

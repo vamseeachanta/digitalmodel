@@ -3,11 +3,10 @@ import logging
 
 # Reader imports
 from digitalmodel.common.pipe_properties import PipeProperties
-from digitalmodel.custom.viv.viv_analysis_legacy import (
+from digitalmodel.modules.viv_analysis.viv_analysis_legacy import (
     viv_analysis as VIVAnalysisLegacy,
 )
-
-from digitalmodel.custom.viv.viv_tubular_members import VIVTubularMembers
+from digitalmodel.modules.viv_analysis.viv_tubular_members import VIVTubularMembers
 
 viv_tubular = VIVTubularMembers()
 pp = PipeProperties()
