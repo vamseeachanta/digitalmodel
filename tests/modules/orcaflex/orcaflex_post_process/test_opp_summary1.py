@@ -12,7 +12,9 @@ from digitalmodel.engine import engine
 import colorama
 colorama.init(autoreset=True)
 
-def run_process(input_file, expected_result={}):
+from typing import Dict, Any
+
+def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
     if input_file is not None and not os.path.isfile(input_file):
         input_file = os.path.join(os.path.dirname(__file__), input_file)
     cfg = engine(input_file)
@@ -26,7 +28,7 @@ def run_process(input_file, expected_result={}):
                                  significant_digits=4)
     print(Fore.GREEN + 'Orcaflex Summary test ... PASS!' + Style.RESET_ALL)
 
-def test_process():
+def test_process() -> None:
     input_file = 'opp_summary1.yml'
     pytest_output_file = 'results/opp_summary1_pytest.yml'
     pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
@@ -37,7 +39,7 @@ def test_process():
 
     run_process(input_file, expected_result)
 
-def get_valid_pytest_output_file(pytest_output_file):
+def get_valid_pytest_output_file(pytest_output_file: str) -> str:
     if pytest_output_file is not None and not os.path.isfile(pytest_output_file):
         pytest_output_file = os.path.join(os.path.dirname(__file__), pytest_output_file)
     return pytest_output_file

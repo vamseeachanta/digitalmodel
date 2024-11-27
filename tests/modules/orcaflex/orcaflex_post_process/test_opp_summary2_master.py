@@ -32,7 +32,7 @@ def run_process(input_file: str, expected_result: Dict = {}) -> None:
     print(Fore.GREEN + 'Orcaflex Summary test with master settings... PASS' + Style.RESET_ALL)
 
 
-def test_process():
+def test_process() -> None:
     input_file = 'opp_summary2_master.yml'
 
     # Same behavior as input file without master settings.
@@ -47,7 +47,7 @@ def test_process():
 
     run_process(input_file, expected_result)
 
-def get_valid_pytest_output_file(pytest_output_file):
+def get_valid_pytest_output_file(pytest_output_file: str) -> str:
     if pytest_output_file is not None and not os.path.isfile(pytest_output_file):
         pytest_output_file = os.path.join(os.path.dirname(__file__), pytest_output_file)
     return pytest_output_file

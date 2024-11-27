@@ -125,24 +125,144 @@ dictitems:
         auto_read: true
     input_files:
       yml:
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/app_orcaflex_post_process_visualization.yml
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/opp_summary1.yml
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/opp_summary2_master.yml
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/opp_time_series1.yml
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/opp_time_series2_master.yml
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_license.yml
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_post_process.yml
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.yml
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/SLWR_06OD_GI_TA08_HE200_Post_Process.yml
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/SLWR_06OD_GI_TA08_HE300_Post_Process.yml
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/SLWR_06OD_GI_TA08_Post_Process.yml
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/summary_file_magement_auto_read_false.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - app_orcaflex_post_process_visualization.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - opp_summary1.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - opp_summary2_master.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - opp_time_series1.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - opp_time_series2_master.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - orcaflex_license.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - orcaflex_post_process.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - orcaflex_test1.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - SLWR_06OD_GI_TA08_HE200_Post_Process.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - SLWR_06OD_GI_TA08_HE300_Post_Process.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - SLWR_06OD_GI_TA08_Post_Process.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - summary_file_magement_auto_read_false.yml
       yaml: []
       dat:
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.dat
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - orcaflex_test2.dat
       sim:
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.sim
-      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.sim
+      - &id002 !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - orcaflex_test1.sim
+      - &id003 !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - orcaflex_test2.sim
       txt: []
   Analysis:
     basename: orcaflex_post_process
@@ -151,7 +271,7 @@ dictitems:
     file_name_for_overwrite: opp_time_series1
     result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-11-27 06:26:14.758760
+    start_time: 2024-11-27 10:28:11.981805
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series1.yml
@@ -180,11 +300,11 @@ dictitems:
           data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_b.csv
         - label: time_history_end_a
           data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_a.csv
-      file_name: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.sim
+      file_name: *id002
     - time_series:
         groups:
         - label: time_history_end_b
           data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_b.csv
         - label: time_history_end_a
           data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_a.csv
-      file_name: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.sim
+      file_name: *id003
