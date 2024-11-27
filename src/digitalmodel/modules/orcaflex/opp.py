@@ -13,6 +13,7 @@ from assetutilities.common.update_deep import update_deep_dictionary
 # Reader imports
 from digitalmodel.modules.orcaflex.opp_range_graph import OPPRangeGraph
 from digitalmodel.modules.orcaflex.opp_summary import OPPSummary
+from digitalmodel.modules.orcaflex.opp_linkedstatistics import OPPLinkedStatistics
 from digitalmodel.modules.orcaflex.opp_time_series import OPPTimeSeries
 from digitalmodel.modules.orcaflex.opp_visualization import OPPVisualization
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
@@ -21,6 +22,7 @@ from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
 ou = OrcaflexUtilities() #noqa
 of_objects = OrcaFlexObjects()
 opp_summary = OPPSummary()
+opp_ls = OPPLinkedStatistics()
 opp_ts = OPPTimeSeries()
 opp_rg = OPPRangeGraph()
 opp_visualization = OPPVisualization()
@@ -28,11 +30,7 @@ opp_visualization = OPPVisualization()
 class OrcaFlexPostProcess():
 
     def __init__(self, cfg=None):
-        self.cfg = cfg
-        self.cfg_array = []
-        self.get_model_state_information()
-        self.data_quality = {}
-        self.RAO_df_array = []
+        pass
 
     def post_process_router(self, cfg):
 
@@ -117,30 +115,6 @@ class OrcaFlexPostProcess():
 
         return cfg
 
-    def get_model_state_information(self):
-        if self.cfg is not None and self.cfg['default'].__contains__(
-                'model_state_information'):
-            if self.cfg['default']['model_state_information']['flag']:
-                if self.cfg['default']['model_state_information'].__contains__(
-                        'from_csv'):
-                    file_name = self.cfg['default']['model_state_information'][
-                        'from_csv']['io']
-                    attribute = self.cfg['default']['model_state_information'][
-                        'from_csv']['label']
-                    setattr(self, attribute, pd.read_csv(file_name))
-
-
-    def post_process_files(self, cfg):
-        self.post_process(cfg)
-        print("Successful post-process {0} sim files".format(
-            len(self.RangeAllFiles)))
-        if self.cfg.default['Analysis']['time_series']['flag']:
-            opp_ts.router(cfg)
-
-        self.save_summary(cfg)
-        self.process_range_graphs(cfg)
-        self.save_cfg_files_from_multiple_files(cfg)
-
     def post_process(self, cfg):
 
         self.load_matrix = ou.get_load_matrix_with_filenames(cfg)
@@ -170,6 +144,9 @@ class OrcaFlexPostProcess():
                     time_series_cfg_output_for_file = opp_ts.get_time_series_data(cfg, model, file_name)
                     cfg_output = {'time_series': time_series_cfg_output_for_file, 'file_name': file_name}
                     cfg[cfg['basename']]['time_series'].append(cfg_output)
+            if cfg['orcaflex']['postprocess']['linked_statistics']['flag']:
+                linked_statistics_for_file = opp_ls.get_linked_statistics(cfg, model)
+
             else:
                 pass
 
@@ -179,4 +156,17 @@ class OrcaFlexPostProcess():
         self.HistogramAllFiles = histogram_all_files
         self.RangeAllFiles = RangeAllFiles
 
+        #TODO integrate to file by file process to speed up post processing.
         opp_summary.process_summary(cfg)
+
+    def post_process_files_superseded(self, cfg):
+        self.post_process(cfg)
+        print("Successful post-process {0} sim files".format(
+            len(self.RangeAllFiles)))
+        if self.cfg.default['Analysis']['time_series']['flag']:
+            opp_ts.router(cfg)
+
+        self.save_summary(cfg)
+        self.process_range_graphs(cfg)
+        self.save_cfg_files_from_multiple_files(cfg)
+

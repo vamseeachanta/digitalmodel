@@ -1,11 +1,31 @@
+# Standard library imports
+from typing import Any, Dict
+
 
 class OPPLinkedStatistics():
     
     def __init__(self) -> None:
         pass
 
+    def get_linked_statistics(self, cfg: Dict[str, Any], model) -> Dict[str, Any]:
+        ls_groups = cfg['linked_statistics_settings']['groups']
+        for ls_group in ls_groups:
+            ls_group_label = ls_group['Label']
+            df = pd.DataFrame()
+            for ls_cfg in ls_group['Columns']:
+                ls_label = ls_cfg['Label']
+                linked_statistics = self.get_linked_statistics_from_orcaflex_run(model, ls_cfg)
 
+        return linked_statistics
 
+    def get_linked_statistics_from_orcaflex_run(self, model, ls_cfg) -> Dict[str, Any]:
+        # Get the linked statistics
+        linked_statistics = model.get_linked_statistics(ls_cfg['VariableName'], ls_cfg['TimePeriod'], ls_cfg['ArclengthRange'])
+        # Get the query
+        query = linked_statistics.Query(ls_cfg['VariableName'])
+        # Get the data
+        data = query.Data
+        return data
 
     def legacy_code(self):
 
