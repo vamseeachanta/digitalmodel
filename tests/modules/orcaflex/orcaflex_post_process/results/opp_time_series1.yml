@@ -266,18 +266,18 @@ dictitems:
       txt: []
   Analysis:
     basename: orcaflex_post_process
-    analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
+    analysis_root_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
     file_name: opp_time_series1
     file_name_for_overwrite: opp_time_series1
-    result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
-    log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-11-27 10:28:11.981805
+    result_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
+    log_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
+    start_time: 2024-11-27 10:30:24.541618
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series1.yml
-    fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
+    CustomInputFile: opp_time_series1.yml
+    fe_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - k:\
+    - K:\
     - github
     - digitalmodel
     - tests
@@ -285,7 +285,7 @@ dictitems:
     - orcaflex
     - orcaflex_post_process
     file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - k:\
+    - K:\
     - github
     - digitalmodel
     - tests
@@ -297,14 +297,14 @@ dictitems:
     - time_series:
         groups:
         - label: time_history_end_b
-          data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_b.csv
+          data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_b.csv
         - label: time_history_end_a
-          data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_a.csv
+          data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_a.csv
       file_name: *id002
     - time_series:
         groups:
         - label: time_history_end_b
-          data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_b.csv
+          data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_b.csv
         - label: time_history_end_a
-          data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_a.csv
+          data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_a.csv
       file_name: *id003

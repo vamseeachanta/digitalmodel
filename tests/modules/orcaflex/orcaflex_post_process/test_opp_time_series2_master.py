@@ -16,7 +16,9 @@ import colorama
 colorama.init(autoreset=True)
 
 
-def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
+def run_process(input_file: str, expected_result: Dict[str, Any] = None) -> None:
+    if expected_result is None:
+        expected_result = {}
 
     if input_file is not None and not os.path.isfile(input_file):
         input_file = os.path.join(os.path.dirname(__file__), input_file)
@@ -47,9 +49,12 @@ def check_csv_files_match(file1: str, file2: str) -> bool:
     
     return file_match_result
 
-def test_process():
+def test_process() -> None:
     input_file = 'opp_time_series2_master.yml'
+
+    # Same behavior as input file without master settings.
     pytest_output_file = 'results/opp_time_series1_pytest.yml'
+
     pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     expected_result = ymlInput(pytest_output_file, updateYml=None)
 
