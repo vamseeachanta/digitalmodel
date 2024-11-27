@@ -70,48 +70,11 @@ class OrcaFlexPostProcess():
         return cfg
 
     def get_cfg_with_master_data(self, cfg):
-        if 'summary_settings_master' in cfg:
-            summary_settings_master = cfg['summary_settings_master'].copy()
-            summary_settings_master_keys = summary_settings_master.keys()
-            summary_settings_master_non_groups = summary_settings_master.copy()
-            if 'groups' in summary_settings_master_keys:
-                summary_settings_master_non_groups.pop('groups')
-            cfg['summary_settings'] = update_deep_dictionary(summary_settings_master_non_groups, cfg['summary_settings'])
-            summary_settings = cfg['summary_settings']
+        self.get_cfg_with_summary_master_data(cfg)
 
-            for group_index in range(0, len(summary_settings['groups'])):
-                group = summary_settings['groups'][group_index].copy()
+        self.get_cfg_with_time_series_master_data(cfg)
 
-                if 'Columns' in summary_settings_master['groups'][0]:
-                    for column_index in range(0, len(group['Columns'])):
-                        column = group['Columns'][column_index].copy()
-                        column = update_deep_dictionary(
-                            summary_settings_master['groups'][group_index]['Columns'][0], column)
-                        group['Columns'][column_index] = copy.deepcopy(column)
-
-                group = update_deep_dictionary(summary_settings_master['groups'][group_index], group)
-                summary_settings['groups'][group_index] = copy.deepcopy(group)
-
-            cfg['summary_settings'] = copy.deepcopy(summary_settings)
-
-        if 'time_series_settings_master' in cfg:
-            time_series_settings_master = cfg['time_series_settings_master'].copy()
-            time_series_settings = cfg['time_series_settings']
-
-            for group_index in range(0, len(time_series_settings['groups'])):
-                group = time_series_settings['groups'][group_index].copy()
-
-                if 'Columns' in time_series_settings_master['groups'][0]:
-                    for column_index in range(0, len(group['Columns'])):
-                        column = group['Columns'][column_index].copy()
-                        column = update_deep_dictionary(
-                            time_series_settings_master['groups'][group_index]['Columns'][0], column)
-                        group['Columns'][column_index] = copy.deepcopy(column)
-
-                group = update_deep_dictionary(time_series_settings_master['groups'][group_index], group)
-                time_series_settings['groups'][group_index] = copy.deepcopy(group)
-
-            cfg['time_series_settings'] = copy.deepcopy(time_series_settings)
+        self.get_cfg_with_linked_statistics_master_data(cfg)
 
         return cfg
 
@@ -121,7 +84,8 @@ class OrcaFlexPostProcess():
         # Intialize output arrays
         RangeAllFiles = []
         histogram_all_files = []
-
+        linked_statistics = None
+        
         sim_files = cfg.file_management['input_files']['sim']
         cfg[cfg['basename']]['time_series'] = []
 
@@ -145,7 +109,8 @@ class OrcaFlexPostProcess():
                     cfg_output = {'time_series': time_series_cfg_output_for_file, 'file_name': file_name}
                     cfg[cfg['basename']]['time_series'].append(cfg_output)
             if cfg['orcaflex']['postprocess']['linked_statistics']['flag']:
-                linked_statistics_for_file = opp_ls.get_linked_statistics(cfg, model)
+                linked_statistics_for_file = opp_ls.get_linked_statistics(cfg, model, file_name)
+                linked_statistics = opp_ls.add_file_result(linked_statistics, linked_statistics_for_file)
 
             else:
                 pass
@@ -158,4 +123,70 @@ class OrcaFlexPostProcess():
 
         #TODO integrate to file by file process to speed up post processing.
         opp_summary.process_summary(cfg)
+        opp_ls.save_linked_statistics(linked_statistics, cfg)
+
+    def get_cfg_with_linked_statistics_master_data(self, cfg):
+        if 'linked_statistics_settings_master' in cfg:
+            linked_statistics_settings_master = cfg['linked_statistics_settings_master'].copy()
+            linked_statistics_settings = cfg['linked_statistics_settings']
+
+            for group_index in range(0, len(linked_statistics_settings['groups'])):
+                group = linked_statistics_settings['groups'][group_index].copy()
+
+                if 'Columns' in linked_statistics_settings_master['groups'][0]:
+                    for column_index in range(0, len(group['Columns'])):
+                        column = group['Columns'][column_index].copy()
+                        column = update_deep_dictionary(
+                            linked_statistics_settings_master['groups'][group_index]['Columns'][0], column)
+                        group['Columns'][column_index] = copy.deepcopy(column)
+
+                group = update_deep_dictionary(linked_statistics_settings_master['groups'][group_index], group)
+                linked_statistics_settings['groups'][group_index] = copy.deepcopy(group)
+
+            cfg['linked_statistics_settings'] = copy.deepcopy(linked_statistics_settings)
+
+    def get_cfg_with_time_series_master_data(self, cfg):
+        if 'time_series_settings_master' in cfg:
+            time_series_settings_master = cfg['time_series_settings_master'].copy()
+            time_series_settings = cfg['time_series_settings']
+
+            for group_index in range(0, len(time_series_settings['groups'])):
+                group = time_series_settings['groups'][group_index].copy()
+
+                if 'Columns' in time_series_settings_master['groups'][0]:
+                    for column_index in range(0, len(group['Columns'])):
+                        column = group['Columns'][column_index].copy()
+                        column = update_deep_dictionary(
+                            time_series_settings_master['groups'][group_index]['Columns'][0], column)
+                        group['Columns'][column_index] = copy.deepcopy(column)
+
+                group = update_deep_dictionary(time_series_settings_master['groups'][group_index], group)
+                time_series_settings['groups'][group_index] = copy.deepcopy(group)
+
+            cfg['time_series_settings'] = copy.deepcopy(time_series_settings)
+
+    def get_cfg_with_summary_master_data(self, cfg):
+        if 'summary_settings_master' in cfg:
+            summary_settings_master = cfg['summary_settings_master'].copy()
+            summary_settings_master_keys = summary_settings_master.keys()
+            summary_settings_master_non_groups = summary_settings_master.copy()
+            if 'groups' in summary_settings_master_keys:
+                summary_settings_master_non_groups.pop('groups')
+            cfg['summary_settings'] = update_deep_dictionary(summary_settings_master_non_groups, cfg['summary_settings'])
+            summary_settings = cfg['summary_settings']
+
+            for group_index in range(0, len(summary_settings['groups'])):
+                group = summary_settings['groups'][group_index].copy()
+
+                if 'Columns' in summary_settings_master['groups'][0]:
+                    for column_index in range(0, len(group['Columns'])):
+                        column = group['Columns'][column_index].copy()
+                        column = update_deep_dictionary(
+                            summary_settings_master['groups'][group_index]['Columns'][0], column)
+                        group['Columns'][column_index] = copy.deepcopy(column)
+
+                group = update_deep_dictionary(summary_settings_master['groups'][group_index], group)
+                summary_settings['groups'][group_index] = copy.deepcopy(group)
+
+            cfg['summary_settings'] = copy.deepcopy(summary_settings)
 

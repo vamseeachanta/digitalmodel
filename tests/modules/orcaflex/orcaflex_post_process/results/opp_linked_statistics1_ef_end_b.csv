@@ -1,0 +1,3 @@
+fe_filename,Label,Effective tension_ValueAtMax,Effective tension_TimeOfMax,Bend moment_LinkedValueAtMax,Curvature_LinkedValueAtMax,Effective tension_ValueAtMin,Effective tension_TimeOfMin,Bend moment_LinkedValueAtMin,Curvature_LinkedValueAtMin
+K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim,effective_tension,1.534494,7.3,0.0,0.0,1.534432,7.9,0.0,0.0
+K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim,effective_tension,1.534494,7.3,0.0,0.0,1.534432,7.9,0.0,0.0

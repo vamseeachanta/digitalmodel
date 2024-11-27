@@ -22,6 +22,7 @@ orcaflex:
       flag: False
     linked_statistics:
       flag: True
+      csv_decimal: 6
     RangeGraph:
       flag: False
     time_series:
@@ -41,17 +42,49 @@ linked_statistics_settings_master:
   AddMaximumToSummary: True
   AddMeanToSummary: True
   groups:
-    - Label: linked_statistics
+    - Label: ef_end_b
+      Columns:
+        - SimulationPeriod: [0.0, 10.0]
+
+    - Label: ef_end_a
+      Columns:
+        - SimulationPeriod: [0.0, 10.0]
+
+    - Label: bm_end_b
+      Columns:
+        - SimulationPeriod: [0.0, 10.0]
 
 linked_statistics_settings:
   groups:
-    - Columns:
-        - Command: GetData
-          ObjectName: Vessel1
-          Variable:
-            - InitialHeading
-            - -1
-          Label: Vessel_Heading
+    - Label: ef_end_b
+      Columns:
+        - ObjectType: line
+          ObjectName: SLWR
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Variable: [Effective tension, Bend moment, Curvature]
+          Label: effective_tension
+
+    - Label: ef_end_a
+      Columns:
+        - ObjectType: line
+          ObjectName: SLWR
+          objectExtra:
+            - End A
+          SimulationPeriod: [0.0, 10.0]
+          Variable: [Effective tension, Bend moment, Curvature]
+          Label: effective_tension
+
+    - Label: bm_end_b
+      Columns:
+        - ObjectType: line
+          ObjectName: SLWR
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Variable: [Bend moment, Effective tension, Curvature]
+          Label: bending_moment
 
 RangeGraph_settings:
   add_effective_tension_to_cfg: False

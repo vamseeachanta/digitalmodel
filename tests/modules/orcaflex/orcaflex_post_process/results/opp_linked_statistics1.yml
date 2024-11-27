@@ -14,13 +14,14 @@ dictitems:
       summary:
         flag: false
       linked_statistics:
-        flag: false
+        flag: true
+        csv_decimal: 6
       RangeGraph:
         flag: false
       RAOs:
         flag: false
       time_series:
-        flag: true
+        flag: false
         histogram: true
         summation: true
       cummulative_histograms:
@@ -83,65 +84,106 @@ dictitems:
   RangeGraph_settings:
     add_effective_tension_to_cfg: false
   time_series_settings:
-    histogram: false
-    summation: false
-    groups:
-    - Label: time_history_end_b
-      Columns:
-      - Command: TimeHistory
-        ObjectName: SLWR
-        objectExtra:
-        - End B
-        SimulationPeriod:
-        - 0.0
-        - 10.0
-        Variable: Effective Tension
-        Label: EndB_EffTension
-    - Label: time_history_end_a
-      Columns:
-      - Command: TimeHistory
-        ObjectName: SLWR
-        objectExtra:
-        - End A
-        SimulationPeriod:
-        - 0.0
-        - 10.0
-        Variable: Effective Tension
-        Label: EndA_EffTension
-    data: true
+    histogram: true
+    summation: true
+    groups: []
   Files:
     data_source: yml
     csv_filename: ''
     input_files:
       yml:
       - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
-  time_series_settings_master:
-    data: true
-    histogram: false
-    summation: false
+  linked_statistics_settings_master:
+    AddMinimumToSummary: true
+    AddMaximumToSummary: true
+    AddMeanToSummary: true
     groups:
-    - Label: time_history_end_b
+    - Label: ef_end_b
       Columns:
-      - Command: TimeHistory
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectType: line
         ObjectName: SLWR
         objectExtra:
         - End B
-        SimulationPeriod:
+        Variable:
+        - Effective tension
+        - Bend moment
+        - Curvature
+        Label: effective_tension
+    - Label: ef_end_a
+      Columns:
+      - SimulationPeriod:
         - 0.0
         - 10.0
-        Variable: Effective Tension
-        Label: EndB_EffTension
-    - Label: time_history_end_a
-      Columns:
-      - Command: TimeHistory
+        ObjectType: line
         ObjectName: SLWR
         objectExtra:
         - End A
-        SimulationPeriod:
+        Variable:
+        - Effective tension
+        - Bend moment
+        - Curvature
+        Label: effective_tension
+    - Label: bm_end_b
+      Columns:
+      - SimulationPeriod:
         - 0.0
         - 10.0
-        Variable: Effective Tension
-        Label: EndA_EffTension
+        ObjectType: line
+        ObjectName: SLWR
+        objectExtra:
+        - End B
+        Variable:
+        - Bend moment
+        - Effective tension
+        - Curvature
+        Label: bending_moment
+  linked_statistics_settings:
+    groups:
+    - Label: ef_end_b
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectType: line
+        ObjectName: SLWR
+        objectExtra:
+        - End B
+        Variable:
+        - Effective tension
+        - Bend moment
+        - Curvature
+        Label: effective_tension
+    - Label: ef_end_a
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectType: line
+        ObjectName: SLWR
+        objectExtra:
+        - End A
+        Variable:
+        - Effective tension
+        - Bend moment
+        - Curvature
+        Label: effective_tension
+    - Label: bm_end_b
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectType: line
+        ObjectName: SLWR
+        objectExtra:
+        - End B
+        Variable:
+        - Bend moment
+        - Effective tension
+        - Curvature
+        Label: bending_moment
   file_management:
     flag: true
     update_unfinished:
@@ -282,7 +324,7 @@ dictitems:
         - orcaflex_post_process
         - orcaflex_test2.dat
       sim:
-      - &id002 !!python/object/apply:pathlib.WindowsPath
+      - !!python/object/apply:pathlib.WindowsPath
         - K:\
         - github
         - digitalmodel
@@ -291,7 +333,7 @@ dictitems:
         - orcaflex
         - orcaflex_post_process
         - orcaflex_test1.sim
-      - &id003 !!python/object/apply:pathlib.WindowsPath
+      - !!python/object/apply:pathlib.WindowsPath
         - K:\
         - github
         - digitalmodel
@@ -304,14 +346,14 @@ dictitems:
   Analysis:
     basename: orcaflex_post_process
     analysis_root_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
-    file_name: opp_time_series2_master
-    file_name_for_overwrite: opp_time_series2_master
+    file_name: opp_linked_statistics1
+    file_name_for_overwrite: opp_linked_statistics1
     result_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     log_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-11-27 16:38:38.056469
+    start_time: 2024-11-27 16:38:39.725237
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: opp_time_series2_master.yml
+    CustomInputFile: opp_linked_statistics1.yml
     fe_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
     - K:\
@@ -330,18 +372,8 @@ dictitems:
     - orcaflex
     - orcaflex_post_process
   orcaflex_post_process:
-    time_series:
-    - time_series:
-        groups:
-        - label: time_history_end_b
-          data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_b.csv
-        - label: time_history_end_a
-          data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_a.csv
-      file_name: *id002
-    - time_series:
-        groups:
-        - label: time_history_end_b
-          data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_b.csv
-        - label: time_history_end_a
-          data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_a.csv
-      file_name: *id003
+    linked_statistics:
+      groups:
+      - data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_ef_end_b.csv
+      - data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_ef_end_a.csv
+      - data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_bm_end_b.csv
