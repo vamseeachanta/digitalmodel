@@ -14,7 +14,7 @@ def orcaflex_analysis(cfg):
         cfg = ou.file_management(cfg)
 
     orcaFlex_analysis = OrcaFlexPostProcess(cfg)
-    orcaFlex_analysis.file_management(cfg) #TODO delete if redundant
+    cfg = ou.file_management(cfg) #TODO delete if redundant
 
     static_flag = cfg['orcaflex']['analysis']['static']
     simulation_flag = cfg['orcaflex']['analysis']['simulation']

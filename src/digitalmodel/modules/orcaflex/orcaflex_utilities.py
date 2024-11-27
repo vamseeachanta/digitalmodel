@@ -6,7 +6,8 @@ import os
 
 # Third party imports
 import colorama
-from assetutilities.common.data import SaveData
+import pandas as pd
+from assetutilities.common.data import PandasChainedAssignent, SaveData, TransformData
 from assetutilities.common.yml_utilities import ymlInput
 from colorama import Fore, Style
 
@@ -429,3 +430,55 @@ class OrcaflexUtilities:
         tassociated = 1.05*tz
 
         return round(tassociated, 2)
+    
+    def get_load_matrix_with_filenames(self, cfg):
+        load_matrix_columns = ['fe_filename', 'RunStatus']
+        load_matrix = pd.DataFrame(columns=load_matrix_columns)
+
+        load_matrix['fe_filename'] = cfg.file_management['input_files'][
+            'sim']
+        load_matrix['RunStatus'] = None
+        return load_matrix
+
+    def get_model_from_filename(self, file_name, load_matrix=None):
+        SimulationFileName = self.get_SimulationFileName(file_name)
+        model = None
+        if os.path.isfile(SimulationFileName):
+            try:
+                model = self.loadSimulation(SimulationFileName)
+                RunStatus = str(model.state)
+
+                if load_matrix is not None:
+                    with PandasChainedAssignent():
+                        load_matrix.loc[(
+                            load_matrix['fe_filename'] == file_name),
+                                             'RunStatus'] = RunStatus
+                    if RunStatus not in [
+                            'Reset', 'InStaticState', 'SimulationStopped', '4'
+                    ]:
+                        model = None
+            except Exception as e:
+                logging.info(
+                    f"Model: {SimulationFileName} ... Error Loading File")
+                logging.info(str(e))
+
+        return model
+
+    def get_SimulationFileName(self, file_name):
+        get_filename_without_extension = self.get_filename_without_extension(
+            file_name)
+        SimulationFileName = get_filename_without_extension + '.sim'
+        return SimulationFileName
+
+    def get_filename_without_extension(self, filename):
+        filename_components = filename.split('.')
+        filename_without_extension = filename.replace(
+            '.' + filename_components[-1], "")
+
+        return filename_without_extension
+
+
+    def loadSimulation(self, FileName):
+        model = OrcFxAPI.Model(FileName)
+        return model
+
