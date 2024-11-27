@@ -43,7 +43,7 @@ class OrcaflexUtilities:
     def is_orcaflex_available(self):
         try:
             model = OrcFxAPI.Model()
-            logging.info("Orcaflex license is available .... PASS")
+            logging.debug("Orcaflex license is available .... PASS")
             print(f"{Fore.GREEN}Orcaflex license is available .... PASS{Style.RESET_ALL}")
             return True
         except:
