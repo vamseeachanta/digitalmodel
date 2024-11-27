@@ -3,6 +3,7 @@ import glob
 import logging
 import math
 import os
+from pathlib import Path
 
 # Third party imports
 import colorama
@@ -174,7 +175,7 @@ class OrcaflexUtilities:
                 else:
                     glob_search = os.path.join(file_management_directory, f'*{filename_pattern}*.{file_ext}')
                 raw_input_files_for_ext = glob.glob(glob_search)
-                raw_input_files_for_ext = [file.replace("\\","/") for file in raw_input_files_for_ext]
+                raw_input_files_for_ext = [Path(file).resolve() for file in raw_input_files_for_ext]
                 input_files.update({file_ext: raw_input_files_for_ext})
 
             cfg.file_management.update({'input_files': input_files})
@@ -436,8 +437,9 @@ class OrcaflexUtilities:
         load_matrix_columns = ['fe_filename', 'RunStatus']
         load_matrix = pd.DataFrame(columns=load_matrix_columns)
 
-        load_matrix['fe_filename'] = cfg.file_management['input_files'][
-            'sim']
+        sim_files = cfg.file_management['input_files']['sim']
+        sim_files = [str(file) for file in sim_files]
+        load_matrix['fe_filename'] = sim_files
         load_matrix['RunStatus'] = None
         return load_matrix
 
@@ -468,14 +470,16 @@ class OrcaflexUtilities:
     def get_SimulationFileName(self, file_name):
         get_filename_without_extension = self.get_filename_without_extension(
             file_name)
-        SimulationFileName = get_filename_without_extension + '.sim'
+        SimulationFileName = str(get_filename_without_extension) + '.sim'
         return SimulationFileName
 
     def get_filename_without_extension(self, filename):
-        filename_components = filename.split('.')
-        filename_without_extension = filename.replace(
-            '.' + filename_components[-1], "")
+        # filename_components = filename.split('.')
+        # filename_without_extension = filename.replace(
+        #     '.' + filename_components[-1], "")
 
+        filename_without_extension = Path(os.path.splitext(filename)[0]).resolve()
+        
         return filename_without_extension
 
 

@@ -1,189 +1,22 @@
-orcaflex:
-  postprocess:
-    visualization:
-      flag: false
-    summary:
-      flag: true
-    RangeGraph:
-      flag: false
-    RAOs:
-      flag: false
-    time_series:
-      flag: false
-      histogram: true
-      summation: true
-    cummulative_histograms:
-      flag: false
-    rain_flow:
-      bins: 10
-      range:
-        - 0
-        - 10
-  analysis:
-    static: false
-    simulation: false
-    iterate:
-      flag: false
-    save_sim: false
-    save_dat: false
-visualization_settings:
-  label: ld_6_7_8
-  individual: true
-  combined: false
-  hide_items: []
-  add_items:
-    - Umbilical
-    - uta2-deep
-  views:
-    - Elevation
-    - Plan
-  tdp_line: Umbilical
-  viewparams:
-    elevation:
-      RelativeToObject: uth2-deep
-      ViewCentre:
-        - -17
-        - 0
-        - 12
-      ViewSize: 120
-      DrawViewAxes: false
-      DrawGlobalAxes: false
-      DrawScaleBar: false
-      ViewAzimuth: 270
-      ViewElevation: 0
-      ViewGamma: 71.89
-      Height: 1425
-      Width: 892
-    plan:
-      RelativeToObject: uth2-deep
-      ViewCentre:
-        - 10
-        - 0
-        - 8
-      ViewSize: 80
-      DrawViewAxes: false
-      DrawGlobalAxes: false
-      DrawScaleBar: false
-      ViewAzimuth: 270
-      ViewElevation: 90
-      ViewGamma: 0
-      Height: 1425
-      Width: 892
-RangeGraph_settings:
-  add_effective_tension_to_cfg: false
-time_series_settings:
-  histogram: true
-  summation: true
-  groups: []
-Files:
-  data_source: yml
-  csv_filename: ""
-  input_files:
-    yml:
-      - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
-summary_settings:
-  AddMinimumToSummary: true
-  AddMaximumToSummary: true
-  AddMeanToSummary: true
-  groups:
-    - SummaryFileName: dynamics
-      Columns:
-        - Command: Range Graph
-          ObjectName: SLWR
-          Statistic_Type: Max
-          SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
-          ArcLength:
-            - 0
-            - 50
-          Variable: Effective Tension
-          Label: Eff. Tension
-        - Command: Range Graph
-          ObjectName: SLWR
-          Statistic_Type: Max
-          SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
-          ArcLength:
-            - 0
-            - 50
-          Variable: Bend Moment
-          Label: Bend. Moment
-        - Command: Range Graph
-          ObjectName: SLWR
-          Statistic_Type: Max
-          SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
-          ArcLength:
-            - 0
-            - 50
-          Variable: API STD 2RD Method 1
-          Label: API M1
-        - Command: Range Graph
-          ObjectName: SLWR
-          Statistic_Type: Max
-          SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
-          ArcLength:
-            - 0
-            - 50
-          Variable: Max von Mises Stress
-          Label: vM stress
-file_management:
-  flag: true
-  update_unfinished:
-    flag: false
-  files:
-    files_in_current_directory:
-      flag: true
-      directory: ~
-      auto_read: true
-  input_files:
-    yml:
-      - k:/github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\app_orcaflex_post_process_visualization.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process_summary.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process_summary_pytest.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\SLWR_06OD_GI_TA08_HE200_Post_Process.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\SLWR_06OD_GI_TA08_HE300_Post_Process.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\SLWR_06OD_GI_TA08_Post_Process.yml
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\summary_file_magement_auto_read_false.yml
-    yaml: []
-    dat:
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.dat
-    sim:
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.sim
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.sim
-    txt: []
-Analysis:
-  basename: orcaflex_post_process
-  analysis_root_folder: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process
-  file_name: orcaflex_post_process_summary
-  file_name_for_overwrite: orcaflex_post_process_summary
-  result_folder: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\results
-  log_folder: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\logs
-  start_time: 2024-11-03 15:18:36.181165
-  cfg_array_file_names: ~
-  DefaultInputFile: ~
-  CustomInputFile: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process_summary.yml
-  fe_folder: k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\results
-  file_management_input_directory: NULL
-  file_management_output_directory: NULL
 orcaflex_post_process:
   time_series: []
   summary:
     dynamics:
       fe_filename:
-        0: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.sim
-        1: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.sim
+        0: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
+        1: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
         2: ~
         3: ~
         4: ~
       RunStatus:
-        0: '4'
-        1: '4'
+        0: ~
+        1: ~
         2: ~
         3: ~
         4: ~
       FileName:
-        0: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.sim
-        1: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.sim
+        0: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
+        1: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
         2: Mean
         3: Minimum
         4: Maximum

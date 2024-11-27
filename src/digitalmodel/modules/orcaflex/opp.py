@@ -20,8 +20,8 @@ from assetutilities.common.data import PandasChainedAssignent, SaveData, Transfo
 from assetutilities.common.update_deep import update_deep_dictionary
 
 # Reader imports
-from digitalmodel.modules.orcaflex.opp_summary import OPPSummary
 from digitalmodel.modules.orcaflex.opp_range_graph import OPPRangeGraph
+from digitalmodel.modules.orcaflex.opp_summary import OPPSummary
 from digitalmodel.modules.orcaflex.opp_time_series import OPPTimeSeries
 from digitalmodel.modules.orcaflex.opp_visualization import OPPVisualization
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
@@ -79,6 +79,11 @@ class OrcaFlexPostProcess():
     def get_cfg_with_master_data(self, cfg):
         if 'summary_settings_master' in cfg:
             summary_settings_master = cfg['summary_settings_master'].copy()
+            summary_settings_master_keys = summary_settings_master.keys()
+            summary_settings_master_non_groups = summary_settings_master.copy()
+            if 'groups' in summary_settings_master_keys:
+                summary_settings_master_non_groups.pop('groups')
+            cfg['summary_settings'] = update_deep_dictionary(summary_settings_master_non_groups, cfg['summary_settings'])
             summary_settings = cfg['summary_settings']
 
             for group_index in range(0, len(summary_settings['groups'])):

@@ -14,7 +14,9 @@ import colorama
 colorama.init(autoreset=True)
 
 
-def run_process(input_file, expected_result={}):
+from typing import Dict
+
+def run_process(input_file: str, expected_result: Dict = {}) -> None:
     if input_file is not None and not os.path.isfile(input_file):
         input_file = os.path.join(os.path.dirname(__file__), input_file)
     cfg = engine(input_file)
@@ -32,7 +34,11 @@ def run_process(input_file, expected_result={}):
 
 def test_process():
     input_file = 'opp_summary2_master.yml'
-    pytest_output_file = 'results/opp_summary2_master_pytest.yml'
+
+    # Same behavior as input file without master settings.
+    pytest_output_file = 'results/opp_summary1_pytest.yml' 
+    # pytest_output_file = 'results/opp_summary2_master_pytest.yml' 
+
     pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
     expected_result = ymlInput(pytest_output_file, updateYml=None)
 
