@@ -63,7 +63,7 @@ class OrcaFlexPostProcess():
 
         if post_process_visualization_flag:
             opp_visualization.get_visualizations(cfg)
-        
+
         if not post_process_data_flag and not post_process_visualization_flag:
             logging.info("No postprocess option to run specified ... End Run.")
 
@@ -158,15 +158,4 @@ class OrcaFlexPostProcess():
 
         #TODO integrate to file by file process to speed up post processing.
         opp_summary.process_summary(cfg)
-
-    def post_process_files_superseded(self, cfg):
-        self.post_process(cfg)
-        print("Successful post-process {0} sim files".format(
-            len(self.RangeAllFiles)))
-        if self.cfg.default['Analysis']['time_series']['flag']:
-            opp_ts.router(cfg)
-
-        self.save_summary(cfg)
-        self.process_range_graphs(cfg)
-        self.save_cfg_files_from_multiple_files(cfg)
 
