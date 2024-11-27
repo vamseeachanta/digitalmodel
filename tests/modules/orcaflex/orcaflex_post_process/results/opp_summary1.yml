@@ -204,24 +204,24 @@ dictitems:
         auto_read: true
     input_files:
       yml:
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\app_orcaflex_post_process_visualization.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary1.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary2_master.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series1.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_time_series2_master.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_license.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_post_process.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\SLWR_06OD_GI_TA08_HE200_Post_Process.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\SLWR_06OD_GI_TA08_HE300_Post_Process.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\SLWR_06OD_GI_TA08_Post_Process.yml
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\summary_file_magement_auto_read_false.yml
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/app_orcaflex_post_process_visualization.yml
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/opp_summary1.yml
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/opp_summary2_master.yml
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/opp_time_series1.yml
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/opp_time_series2_master.yml
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_license.yml
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_post_process.yml
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.yml
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/SLWR_06OD_GI_TA08_HE200_Post_Process.yml
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/SLWR_06OD_GI_TA08_HE300_Post_Process.yml
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/SLWR_06OD_GI_TA08_Post_Process.yml
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/summary_file_magement_auto_read_false.yml
       yaml: []
       dat:
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.dat
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.dat
       sim:
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
-      - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.sim
+      - k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.sim
       txt: []
   Analysis:
     basename: orcaflex_post_process
@@ -230,7 +230,7 @@ dictitems:
     file_name_for_overwrite: opp_summary1
     result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-11-26 19:38:04.164574
+    start_time: 2024-11-27 06:26:03.376118
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary1.yml
@@ -256,8 +256,8 @@ dictitems:
     summary:
       dynamics:
         fe_filename:
-          0: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
-          1: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
+          0: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.sim
+          1: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.sim
           2: ~
           3: ~
           4: ~
@@ -268,8 +268,8 @@ dictitems:
           3: ~
           4: ~
         FileName:
-          0: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
-          1: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
+          0: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.sim
+          1: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.sim
           2: Mean
           3: Minimum
           4: Maximum

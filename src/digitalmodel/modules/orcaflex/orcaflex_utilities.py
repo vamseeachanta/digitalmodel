@@ -7,7 +7,7 @@ import os
 # Third party imports
 import colorama
 import pandas as pd
-from assetutilities.common.data import PandasChainedAssignent, SaveData, TransformData
+from assetutilities.common.data import PandasChainedAssignent, SaveData
 from assetutilities.common.yml_utilities import ymlInput
 from colorama import Fore, Style
 
@@ -174,6 +174,7 @@ class OrcaflexUtilities:
                 else:
                     glob_search = os.path.join(file_management_directory, f'*{filename_pattern}*.{file_ext}')
                 raw_input_files_for_ext = glob.glob(glob_search)
+                raw_input_files_for_ext = [file.replace("\\","/") for file in raw_input_files_for_ext]
                 input_files.update({file_ext: raw_input_files_for_ext})
 
             cfg.file_management.update({'input_files': input_files})
@@ -191,7 +192,7 @@ class OrcaflexUtilities:
                         raw_input_files_for_ext[
                             input_file_index] = os.path.join(
                                 cfg.Analysis['analysis_root_folder'],
-                                input_file)
+                                input_file).replace("\\","/")
                     if os.path.isfile(
                             raw_input_files_for_ext[input_file_index]):
                         valid_file_count = valid_file_count + 1
@@ -481,4 +482,87 @@ class OrcaflexUtilities:
     def loadSimulation(self, FileName):
         model = OrcFxAPI.Model(FileName)
         return model
+
+
+
+    def get_seastate_probability(self, file_index):
+        #TODO CLean up, unused
+        seastate_probability = self.simulation_ProbabilityRatio[file_index]
+        return seastate_probability
+
+    def get_SimulationDuration(self, file_index):
+        #TODO CLean up, unused
+        SimulationDuration = self.simulation_SimulationDuration[file_index]
+        return SimulationDuration
+
+    def get_AddSummary_array(self, SummaryDF, file_index,
+                             AddSummaryColumnsArray):
+        #TODO CLean up, unused
+        filename = self.simulation_filenames[file_index]
+        simulation_filename = self.get_filename_without_extension(
+            filename) + '.sim'
+
+        AddSummary_array = [None] * len(AddSummaryColumnsArray)
+        if (SummaryDF is not None) and (not SummaryDF.empty):
+            FileSummary_DF = SummaryDF[SummaryDF['FileName'] ==
+                                       simulation_filename].copy()
+            if not FileSummary_DF.empty:
+                AddSummary_array = list(
+                    FileSummary_DF[AddSummaryColumnsArray].values[0])
+
+        return AddSummary_array
+
+
+
+    def save_cfg_files_from_multiple_files(self):
+        #TODO CLean up, unused
+        for file_index in range(0, len(self.cfg_array)):
+            save_data.saveDataYaml(
+                self.cfg_array[file_index],
+                self.cfg['Analysis']['cfg_array_file_names']['with_path']
+                ['without_ext'][file_index], False)
+
+    def get_files_for_postprocess(self, analysis_type, fileIndex,
+                                  input_files_with_extension,
+                                  input_files_without_extension):
+        #TODO CLean up, unused
+        filename = self.simulation_filenames[fileIndex]
+        filename_components = filename.split('.')
+        filename_without_extension = filename.replace(
+            '.' + filename_components[-1], "")
+        if len(filename_components) > 1:
+            input_files_with_extension.append(filename)
+            input_files_without_extension.append(filename_without_extension)
+            if self.cfg['orcaflex']['analysis']['simulation']:
+                analysis_type.append('simulation')
+            if self.cfg['orcaflex']['analysis']['static']:
+                analysis_type.append('statics')
+        elif os.path.isfile(filename_without_extension + '.sim'):
+            input_files_without_extension.append(filename_without_extension)
+            input_files_with_extension.append(
+                input_files_without_extension[fileIndex] + '.yml')
+            if self.cfg['orcaflex']['analysis']['simulation']:
+                analysis_type.append('simulation')
+            if self.cfg['orcaflex']['analysis']['static']:
+                analysis_type.append('statics')
+        else:
+            print('File not found: {0}'.format(filename))
+
+
+    def save_RAOs(self):
+        #TODO CLean up, unused
+
+        df_array = [item['RAO_df'] for item in self.RAO_df_array]
+        df_label_array = [item['Label'] for item in self.RAO_df_array]
+
+        customdata = {
+            "FileName":
+                self.cfg['Analysis']['result_folder'] +
+                self.cfg['Analysis']['file_name'] + '_RAOs.xlsx',
+            "SheetNames":
+                df_label_array,
+            "thin_border":
+                True
+        }
+        save_data.DataFrameArray_To_xlsx_openpyxl(df_array, customdata)
 

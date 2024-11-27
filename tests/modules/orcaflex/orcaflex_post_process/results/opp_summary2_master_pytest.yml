@@ -3,14 +3,14 @@ orcaflex_post_process:
   summary:
     dynamics:
       fe_filename:
-        0: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
-        1: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
+        0: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.sim
+        1: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.sim
       RunStatus:
         0: "4"
         1: "4"
       FileName:
-        0: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
-        1: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
+        0: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.sim
+        1: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.sim
       Description:
         0: Description
         1: Description

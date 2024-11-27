@@ -135,7 +135,7 @@ file_management:
       auto_read: true
   input_files:
     yml:
-      - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\app_orcaflex_post_process_visualization.yml
+      - k:/github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\app_orcaflex_post_process_visualization.yml
       - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process.yml
       - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process_summary.yml
       - k:\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process_summary_pytest.yml
@@ -166,23 +166,24 @@ Analysis:
   file_management_input_directory: NULL
   file_management_output_directory: NULL
 orcaflex_post_process:
+  time_series: []
   summary:
     dynamics:
       fe_filename:
-        0: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
-        1: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
+        0: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.sim
+        1: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.sim
         2: ~
         3: ~
         4: ~
       RunStatus:
-        0: "4"
-        1: "4"
+        0: '4'
+        1: '4'
         2: ~
         3: ~
         4: ~
       FileName:
-        0: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
-        1: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
+        0: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.sim
+        1: k:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.sim
         2: Mean
         3: Minimum
         4: Maximum
