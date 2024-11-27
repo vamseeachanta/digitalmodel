@@ -13,6 +13,8 @@ dictitems:
         flag: false
       summary:
         flag: false
+      linked_statistics:
+        flag: false
       RangeGraph:
         flag: false
       RAOs:
@@ -168,6 +170,15 @@ dictitems:
         - modules
         - orcaflex
         - orcaflex_post_process
+        - opp_linked_statistics1.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
         - opp_summary1.yml
       - !!python/object/apply:pathlib.WindowsPath
         - K:\
@@ -297,7 +308,7 @@ dictitems:
     file_name_for_overwrite: opp_time_series2_master
     result_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     log_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-11-27 10:41:07.291966
+    start_time: 2024-11-27 12:12:57.626610
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: opp_time_series2_master.yml

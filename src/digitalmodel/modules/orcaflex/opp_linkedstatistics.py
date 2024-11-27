@@ -4,7 +4,10 @@ class OPPLinkedStatistics():
     def __init__(self) -> None:
         pass
 
-    def LinkedStatistics(self):
+
+
+
+    def legacy_code(self):
 
         # TODO LinkedStatistics using OrcaFlex. Code currently not working.
         VariableName = 'Effective Tension', 'Bend Moment'
