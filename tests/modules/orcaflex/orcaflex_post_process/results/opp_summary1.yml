@@ -364,7 +364,7 @@ dictitems:
     file_name_for_overwrite: opp_summary1
     result_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     log_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-11-28 14:03:12.295501
+    start_time: 2024-11-28 14:16:08.968759
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: opp_summary1.yml

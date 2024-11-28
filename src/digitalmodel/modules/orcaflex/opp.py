@@ -120,8 +120,6 @@ class OrcaFlexPostProcess():
         self.HistogramAllFiles = histogram_all_files
         self.RangeAllFiles = RangeAllFiles
 
-        #TODO integrate summary to file by file process to speed up post processing.
-        # opp_summary.process_summary(cfg)
         opp_summary.save_summary(summary, cfg)
 
         opp_ls.save_linked_statistics(linked_statistics, cfg)
