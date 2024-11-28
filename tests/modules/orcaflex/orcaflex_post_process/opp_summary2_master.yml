@@ -35,11 +35,8 @@ orcaflex:
         - 10
 
 summary_settings_master:
-  AddMinimumToSummary: True
-  AddMaximumToSummary: True
-  AddMeanToSummary: True
   groups:
-    - SummaryFileName: dynamics
+    - Label: dynamics
 
 summary_settings:
   groups:

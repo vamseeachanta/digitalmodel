@@ -13,8 +13,14 @@ dictitems:
         flag: false
       summary:
         flag: false
+        min: true
+        max: true
+        mean: true
       linked_statistics:
         flag: false
+        min: true
+        max: true
+        mean: true
       RangeGraph:
         flag: false
       RAOs:
@@ -282,7 +288,7 @@ dictitems:
         - orcaflex_post_process
         - orcaflex_test2.dat
       sim:
-      - &id002 !!python/object/apply:pathlib.WindowsPath
+      - !!python/object/apply:pathlib.WindowsPath
         - K:\
         - github
         - digitalmodel
@@ -291,7 +297,7 @@ dictitems:
         - orcaflex
         - orcaflex_post_process
         - orcaflex_test1.sim
-      - &id003 !!python/object/apply:pathlib.WindowsPath
+      - &id002 !!python/object/apply:pathlib.WindowsPath
         - K:\
         - github
         - digitalmodel
@@ -308,7 +314,7 @@ dictitems:
     file_name_for_overwrite: opp_time_series2_master
     result_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     log_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-11-28 06:04:18.697134
+    start_time: 2024-11-28 13:59:27.520083
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: opp_time_series2_master.yml
@@ -334,14 +340,7 @@ dictitems:
     - time_series:
         groups:
         - label: time_history_end_b
-          data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_b.csv
-        - label: time_history_end_a
-          data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_a.csv
-      file_name: *id002
-    - time_series:
-        groups:
-        - label: time_history_end_b
           data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_b.csv
         - label: time_history_end_a
           data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_a.csv
-      file_name: *id003
+      file_name: *id002

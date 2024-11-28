@@ -43,7 +43,6 @@ class OPPSummary():
                 summary = self.get_summary_from_orcaflex_run(model, summary_cfg)
                 df[summary['variables']] = summary['values']
 
-            df = ou.add_basic_statistics_to_df(df)
             summary_groups_for_file.update({summary_group_label: df})
 
         return summary_groups_for_file
@@ -82,13 +81,12 @@ class OPPSummary():
             file_name = os.path.join(cfg['Analysis']['result_folder'],
                     cfg['Analysis']['file_name'] + '_' + key + '.csv')
 
+            df = ou.add_basic_statistics_to_df(df)
             df.round(csv_decimal).to_csv(file_name, index=False)
 
-            summary_array.append({key: df.to_dict()})
+            summary_array.append({'data': file_name, 'label': key})
 
         cfg[cfg['basename']] = {'summary': {'groups': summary_array}}
-
-
 
     def process_summary(self, cfg):
         if 'summary_settings' in cfg: 

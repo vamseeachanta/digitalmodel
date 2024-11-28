@@ -7,8 +7,11 @@ from typing import Any, Dict
 import pandas as pd
 
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
+from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
+
 
 of_objects = OrcaFlexObjects()
+ou = OrcaflexUtilities()
 
 class OPPLinkedStatistics():
 
@@ -98,6 +101,8 @@ class OPPLinkedStatistics():
             file_name = cfg['Analysis']['file_name_for_overwrite'] + '_' + key + '.csv'
             file_name_with_path = os.path.join(cfg["Analysis"]['result_folder'], file_name)
             df = linked_statistics[key]
+
+            df = ou.add_basic_statistics_to_df(df)
             df.round(csv_decimal).to_csv(file_name_with_path, index=False)
 
             linked_statistics_array.append({'data':file_name_with_path})

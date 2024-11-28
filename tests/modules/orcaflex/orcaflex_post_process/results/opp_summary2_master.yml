@@ -13,8 +13,14 @@ dictitems:
         flag: false
       summary:
         flag: true
+        min: true
+        max: true
+        mean: true
       linked_statistics:
         flag: false
+        min: true
+        max: true
+        mean: true
       RangeGraph:
         flag: false
       RAOs:
@@ -93,11 +99,8 @@ dictitems:
       yml:
       - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
   summary_settings_master:
-    AddMinimumToSummary: true
-    AddMaximumToSummary: true
-    AddMeanToSummary: true
     groups:
-    - SummaryFileName: dynamics
+    - Label: dynamics
       Columns:
       - Command: GetData
         ObjectName: Vessel1
@@ -196,11 +199,8 @@ dictitems:
         Variable: Effective Tension
         Label: TimeHistory_EndB_EffTension_Max
   summary_settings:
-    AddMinimumToSummary: true
-    AddMaximumToSummary: true
-    AddMeanToSummary: true
     groups:
-    - SummaryFileName: dynamics
+    - Label: dynamics
       Columns:
       - Command: GetData
         ObjectName: Vessel1
@@ -464,7 +464,7 @@ dictitems:
     file_name_for_overwrite: opp_summary2_master
     result_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     log_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-11-28 06:04:13.888631
+    start_time: 2024-11-28 13:59:24.121626
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: opp_summary2_master.yml
@@ -486,103 +486,7 @@ dictitems:
     - orcaflex
     - orcaflex_post_process
   orcaflex_post_process:
-    time_series: []
     summary:
-      dynamics:
-        fe_filename:
-          0: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
-          1: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
-          2: ~
-          3: ~
-          4: ~
-        RunStatus:
-          0: ~
-          1: ~
-          2: ~
-          3: ~
-          4: ~
-        FileName:
-          0: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
-          1: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
-          2: Mean
-          3: Minimum
-          4: Maximum
-        Description:
-          0: Description
-          1: Description
-          2: Mean
-          3: Minimum
-          4: Maximum
-        Vessel_Heading:
-          0: 0.0
-          1: 0.0
-          2: 0.0
-          3: 0.0
-          4: 0.0
-        Hmax:
-          0: ~
-          1: ~
-          2: ~
-          3: ~
-          4: .nan
-        WavePeriod:
-          0: ~
-          1: ~
-          2: ~
-          3: ~
-          4: .nan
-        WaveDirection:
-          0: 270.0
-          1: 270.0
-          2: 270.0
-          3: 270.0
-          4: 270.0
-        RefCurrentSpeed:
-          0: 1.0
-          1: 1.0
-          2: 1.0
-          3: 1.0
-          4: 1.0
-        CurrentFactor[0]:
-          0: 0.9
-          1: 0.9
-          2: 0.9
-          3: 0.9
-          4: 0.9
-        RefCurrentDirection:
-          0: 270.0
-          1: 270.0
-          2: 270.0
-          3: 270.0
-          4: 270.0
-        Eff. Tension:
-          0: 582.89501953125
-          1: 582.89501953125
-          2: 582.89501953125
-          3: 582.89501953125
-          4: 582.89501953125
-        Bend. Moment:
-          0: 60.61721801758462
-          1: 60.61721801758462
-          2: 60.61721801758462
-          3: 60.61721801758462
-          4: 60.61721801758462
-        API M1:
-          0: 0.7723983686400165
-          1: 0.7723983686400165
-          2: 0.7723983686400165
-          3: 0.7723983686400165
-          4: 0.7723983686400165
-        vM stress:
-          0: 229768.91889126977
-          1: 229768.91889126977
-          2: 229768.91889126977
-          3: 229768.91889126977
-          4: 229768.91889126977
-        TimeHistory_EndB_EffTension_Max:
-          0: 1.5344938039779663
-          1: 1.5344938039779663
-          2: 1.5344938039779663
-          3: 1.5344938039779663
-          4: 1.5344938039779663
-    summary_groups: 1
+      groups:
+      - data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_summary2_master_dynamics.csv
+        label: dynamics

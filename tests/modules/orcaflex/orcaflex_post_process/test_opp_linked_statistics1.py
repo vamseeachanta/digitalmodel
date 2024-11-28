@@ -5,6 +5,7 @@ import pandas as pd
 # Reader imports
 import colorama
 from assetutilities.common.yml_utilities import ymlInput
+from assetutilities.modules.test_utilities.test_utilities import TestUtilities
 from colorama import Fore, Style
 from digitalmodel.engine import engine
 
@@ -12,6 +13,7 @@ colorama.init(autoreset=True)
 
 from typing import Any, Dict
 
+tu = TestUtilities()
 
 # Standard library imports
 from typing import Any, Dict
@@ -30,36 +32,23 @@ def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
         obtained_result_csv = obtained_result['groups'][group_index]['data']
         expected_result_csv = expected_result['groups'][group_index]['data']
 
-        file_match_result = check_csv_files_match(obtained_result_csv, expected_result_csv)
+        file_match_result = tu.check_csv_files_match(obtained_result_csv, expected_result_csv)
 
         assert file_match_result
 
     print(Fore.GREEN + 'Orcaflex Linked Statistic test ... PASS' + Style.RESET_ALL)
 
-def check_csv_files_match(file1: str, file2: str) -> bool:
-
-    df_file1 = pd.read_csv(file1)
-    df_file2 = pd.read_csv(file2)
-    
-    file_match_result = df_file1.equals(df_file2)
-    
-    return file_match_result
-
+    return cfg
 
 def test_process() -> None:
     input_file = 'opp_linked_statistics1.yml'
     pytest_output_file = 'results/opp_linked_statistics1_pytest.yml'
-    pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
+    pytest_output_file = tu.get_valid_pytest_output_file(os.path.dirname(__file__), pytest_output_file)
     expected_result = ymlInput(pytest_output_file, updateYml=None)
 
     if len(sys.argv) > 1:
         sys.argv.pop()
 
     run_process(input_file, expected_result)
-
-def get_valid_pytest_output_file(pytest_output_file: str) -> str:
-    if pytest_output_file is not None and not os.path.isfile(pytest_output_file):
-        pytest_output_file = os.path.join(os.path.dirname(__file__), pytest_output_file)
-    return pytest_output_file
 
 test_process()

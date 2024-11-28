@@ -573,7 +573,7 @@ class OrcaflexUtilities:
         save_data.DataFrameArray_To_xlsx_openpyxl(df_array, customdata)
 
     def add_basic_statistics_to_df(self, df):
-        cfg_df_basic_statistics = {'add_to_df': False}
-        df_statistics = de.get_df_with_basic_statistics(cfg_df_basic_statistics, df)
+        cfg_df_basic_statistics = {'add_to_df': True}
+        df = de.get_df_with_basic_statistics(cfg_df_basic_statistics, df)
 
         return df

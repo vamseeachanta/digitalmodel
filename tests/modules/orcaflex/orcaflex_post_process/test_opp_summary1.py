@@ -2,19 +2,18 @@
 import os
 import sys
 
-import deepdiff
+# Reader imports
+import colorama
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.modules.test_utilities.test_utilities import TestUtilities
-
 from colorama import Fore, Style
 from digitalmodel.engine import engine
-# Reader imports
-from digitalmodel.engine import engine
 
-import colorama
 colorama.init(autoreset=True)
 
-from typing import Dict, Any
+from typing import Any, Dict
+# Standard library imports
+from typing import Any, Dict
 
 tu = TestUtilities()
 
@@ -26,11 +25,18 @@ def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
     obtained_result = cfg[cfg['basename']]['summary']
     expected_result = expected_result[cfg['basename']]['summary'].copy()
 
-    assert not deepdiff.DeepDiff(obtained_result,
-                                 expected_result,
-                                 ignore_order=True,
-                                 significant_digits=4)
+    # Check csv files match
+    for group_index in range(0, len(obtained_result['groups'])):
+        obtained_result_csv = obtained_result['groups'][group_index]['data']
+        expected_result_csv = expected_result['groups'][group_index]['data']
+
+        file_match_result = tu.check_csv_files_match(obtained_result_csv, expected_result_csv)
+
+        assert file_match_result
+
     print(Fore.GREEN + 'Orcaflex Summary test ... PASS!' + Style.RESET_ALL)
+
+    return cfg
 
 def test_process() -> None:
     input_file = 'opp_summary1.yml'
@@ -42,7 +48,5 @@ def test_process() -> None:
         sys.argv.pop()
 
     run_process(input_file, expected_result)
-
-    return pytest_output_file
 
 test_process()

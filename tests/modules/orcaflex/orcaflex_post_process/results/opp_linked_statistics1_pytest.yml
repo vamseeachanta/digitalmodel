@@ -1,6 +1,6 @@
 orcaflex_post_process:
   linked_statistics:
     groups:
-      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_ef_end_b.csv
-      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_ef_end_a.csv
-      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_bm_end_b.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_ef_end_b_pytest.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_ef_end_a_pytest.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_bm_end_b_pytest.csv
