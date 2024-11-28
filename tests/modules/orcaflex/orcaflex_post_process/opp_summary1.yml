@@ -40,7 +40,7 @@ summary_settings:
   AddMeanToSummary: True
 
   groups:
-    - SummaryFileName: dynamics
+    - Label: dynamics
       Columns:
         - Command: GetData
           ObjectName: Vessel1

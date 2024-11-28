@@ -21,15 +21,49 @@ opp_ts = OPPTimeSeries()
 opp_rg = OPPRangeGraph()
 
 class OPPSummary():
-    
+
     def __init__(self) -> None:
         pass
+
+
+    def get_summary_for_file(self, cfg: dict, model: object, file_name: str) -> None:
+        summary_groups = cfg['summary_settings']['groups']
+        summary_groups_for_file = {}
+        for summary_group in summary_groups:
+            summary_group_label = summary_group['Label']
+            df_columns = ['fe_filename', 'Label']
+            df = pd.DataFrame()
+            for summary_cfg in summary_group['Columns']:
+                summary_label = summary_cfg['Label']
+                result_array = [file_name, summary_label]
+                summary = self.get_summary_from_orcaflex_run(model, summary_cfg)
+                df_columns = df_columns + summary['variables']
+                result_array = result_array + summary['values']
+                result_df = pd.DataFrame([result_array], columns=df_columns)
+                df = pd.concat([df, result_df], ignore_index=True)
+  
+            summary_groups_for_file.update({summary_group_label: df})
+
+    def get_summary_from_orcaflex_run(self, model, summary_cfg):
+        variables = []
+        values = []
+        value = self.process_summary_by_model_and_cfg_item(model, summary_cfg)
+        
+        variables.append(summary_cfg['Label'])
+        values.append(value)
+        summary = {'variables': variables, 'values': values}
+
+        return summary
+        
+        
+
 
     def process_summary(self, cfg):
         if 'summary_settings' in cfg: 
             SummaryDFAllFiles = self.process_summary_groups(cfg)
             self.SummaryDFAllFiles = SummaryDFAllFiles
-            self.save_summary(cfg)
+            self.save_summary(cfg, self.SummaryDFAllFiles, self.load_matrix)
+
 
 
     def process_summary_groups(self, cfg):
@@ -200,7 +234,7 @@ class OPPSummary():
         return summary_columns
 
 
-    def save_summary(self, cfg):
+    def save_summary(self, cfg, SummaryDFAllFiles, load_matrix):
         if not cfg.orcaflex['postprocess']['summary']['flag']:
             print("No analysis summary per user request")
             return None
@@ -214,14 +248,14 @@ class OPPSummary():
                 summary_group_cfg)
             summary_column_count = len(summary_value_columns)
             SummaryFileNameArray.append(SummaryFileName)
-            SummaryDF = self.SummaryDFAllFiles[SummaryIndex]
+            SummaryDF = SummaryDFAllFiles[SummaryIndex]
             summaryDF_temp = SummaryDF.iloc[:, (
                 len(SummaryDF.columns) -
                 summary_column_count):len(SummaryDF.columns)]
 
             loadng_condition_array = []
-            if self.load_matrix is not None:
-                loadng_condition_array = [None] * len(self.load_matrix.columns)
+            if load_matrix is not None:
+                loadng_condition_array = [None] * len(load_matrix.columns)
 
             if len(summaryDF_temp) > 0:
                 if 'AddMeanToSummary' in cfg['summary_settings'].keys():

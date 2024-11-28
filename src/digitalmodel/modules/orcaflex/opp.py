@@ -85,9 +85,9 @@ class OrcaFlexPostProcess():
         RangeAllFiles = []
         histogram_all_files = []
         linked_statistics = None
+        summary = None
         
         sim_files = cfg.file_management['input_files']['sim']
-        cfg[cfg['basename']]['time_series'] = []
 
         for fileIndex in range(0, len(sim_files)):
             file_name = sim_files[fileIndex]
@@ -103,11 +103,13 @@ class OrcaFlexPostProcess():
                     opp_rg.postProcessRange(model, self.cfg, FileObjectName))
             except:
                 RangeAllFiles.append(None)
+                
+            if cfg['orcaflex']['postprocess']['summary']['flag']:
+                summary_for_file = opp_summary.get_summary_for_file(cfg, model, file_name)
+                summary = opp_summary.add_file_result(summary, summary_for_file)
             if cfg['orcaflex']['postprocess']['time_series']['flag']:
                 if cfg['time_series_settings']['data']: 
                     time_series_cfg_output_for_file = opp_ts.get_time_series_data(cfg, model, file_name)
-                    cfg_output = {'time_series': time_series_cfg_output_for_file, 'file_name': file_name}
-                    cfg[cfg['basename']]['time_series'].append(cfg_output)
             if cfg['orcaflex']['postprocess']['linked_statistics']['flag']:
                 linked_statistics_for_file = opp_ls.get_linked_statistics(cfg, model, file_name)
                 linked_statistics = opp_ls.add_file_result(linked_statistics, linked_statistics_for_file)
@@ -121,8 +123,9 @@ class OrcaFlexPostProcess():
         self.HistogramAllFiles = histogram_all_files
         self.RangeAllFiles = RangeAllFiles
 
-        #TODO integrate to file by file process to speed up post processing.
-        opp_summary.process_summary(cfg)
+        #TODO integrate summary to file by file process to speed up post processing.
+        # opp_summary.process_summary(cfg)
+
         opp_ls.save_linked_statistics(linked_statistics, cfg)
 
     def get_cfg_with_linked_statistics_master_data(self, cfg):

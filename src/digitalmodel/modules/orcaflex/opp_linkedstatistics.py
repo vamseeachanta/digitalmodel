@@ -18,7 +18,7 @@ class OPPLinkedStatistics():
 
     def get_linked_statistics(self, cfg: Dict[str, Any], model, file_name) -> Dict[str, Any]:
         ls_groups = cfg['linked_statistics_settings']['groups']
-        
+
         linked_statistics_for_file = {}
         for ls_group in ls_groups:
             ls_group_label = ls_group['Label']

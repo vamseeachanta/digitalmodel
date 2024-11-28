@@ -68,10 +68,15 @@ class OPPTimeSeries:
                 csv_decimal = cfg.orcaflex['postprocess']['time_series']['csv_decimal']
 
             df.round(csv_decimal).to_csv(output_file_name, index=False)
-            # df.to_csv(output_file_name, index=False)
             time_series_cfg_output["groups"].append({"label": group_label, "data": output_file_name})
 
-        return time_series_cfg_output
+        cfg_output = {'time_series': time_series_cfg_output, 'file_name': file_name}
+        if 'time_series' not in cfg[cfg['basename']]:
+            cfg[cfg['basename']]['time_series'] = []
+        else:
+            cfg[cfg['basename']]['time_series'].append(cfg_output)
+
+
 
     def get_time_series_from_orcaflex_run(self, model, cfg_time_series):
         """Gets time series data from an OrcaFlex run
