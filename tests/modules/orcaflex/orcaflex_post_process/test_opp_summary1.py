@@ -4,6 +4,8 @@ import sys
 
 import deepdiff
 from assetutilities.common.yml_utilities import ymlInput
+from assetutilities.modules.test_utilities.test_utilities import TestUtilities
+
 from colorama import Fore, Style
 from digitalmodel.engine import engine
 # Reader imports
@@ -13,6 +15,8 @@ import colorama
 colorama.init(autoreset=True)
 
 from typing import Dict, Any
+
+tu = TestUtilities()
 
 def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
     if input_file is not None and not os.path.isfile(input_file):
@@ -31,7 +35,7 @@ def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
 def test_process() -> None:
     input_file = 'opp_summary1.yml'
     pytest_output_file = 'results/opp_summary1_pytest.yml'
-    pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
+    pytest_output_file = tu.get_valid_pytest_output_file(os.path.dirname(__file__), pytest_output_file)
     expected_result = ymlInput(pytest_output_file, updateYml=None)
 
     if len(sys.argv) > 1:
@@ -39,9 +43,6 @@ def test_process() -> None:
 
     run_process(input_file, expected_result)
 
-def get_valid_pytest_output_file(pytest_output_file: str) -> str:
-    if pytest_output_file is not None and not os.path.isfile(pytest_output_file):
-        pytest_output_file = os.path.join(os.path.dirname(__file__), pytest_output_file)
     return pytest_output_file
 
 test_process()

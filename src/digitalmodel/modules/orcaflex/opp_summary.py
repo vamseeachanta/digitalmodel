@@ -34,15 +34,16 @@ class OPPSummary():
         for summary_group in summary_groups:
             summary_group_label = summary_group['Label']
 
-            df_columns = ['fe_filename', 'run_status', 'description']
+            df_columns = ['fe_filename', 'run_status', 'description', 'statistic']
             file_name_for_output = str(Path(file_name).resolve()).replace('\\', '/')
-            result_array = [file_name_for_output, None, None]
+            result_array = [file_name_for_output, None, None, None]
             df = pd.DataFrame([result_array], columns=df_columns)
 
             for summary_cfg in summary_group['Columns']:
                 summary = self.get_summary_from_orcaflex_run(model, summary_cfg)
                 df[summary['variables']] = summary['values']
 
+            df = ou.add_basic_statistics_to_df(df)
             summary_groups_for_file.update({summary_group_label: df})
 
         return summary_groups_for_file

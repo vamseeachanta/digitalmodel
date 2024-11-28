@@ -10,6 +10,7 @@ import colorama
 import pandas as pd
 from assetutilities.common.data import PandasChainedAssignent, SaveData
 from assetutilities.common.yml_utilities import ymlInput
+from assetutilities.modules.data_exploration.data_exploration import DataExploration
 from colorama import Fore, Style
 
 # Reader imports
@@ -18,6 +19,7 @@ from digitalmodel.modules.orcaflex.orcaflex_model_utilities import (
 )
 
 save_data = SaveData()
+de = DataExploration()
 colorama.init(strip=True, convert=False)
 
 try:
@@ -570,3 +572,8 @@ class OrcaflexUtilities:
         }
         save_data.DataFrameArray_To_xlsx_openpyxl(df_array, customdata)
 
+    def add_basic_statistics_to_df(self, df):
+        cfg_df_basic_statistics = {'add_to_df': False}
+        df_statistics = de.get_df_with_basic_statistics(cfg_df_basic_statistics, df)
+
+        return df

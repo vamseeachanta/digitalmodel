@@ -21,11 +21,13 @@ class OPPLinkedStatistics():
         linked_statistics_for_file = {}
         for ls_group in ls_groups:
             ls_group_label = ls_group['Label']
-            df_columns = ['fe_filename', 'Label']
+            df_columns = ['fe_filename', 'Label', 'run_status', 'statistic']
+            run_status = None
+            statistic = None
             df = pd.DataFrame()
             for ls_cfg in ls_group['Columns']:
                 ls_label = ls_cfg['Label']
-                result_array = [file_name, ls_label]
+                result_array = [file_name, ls_label, run_status, statistic]
                 linked_statistics = self.get_linked_statistics_from_orcaflex_run(model, ls_cfg)
                 df_columns = df_columns + linked_statistics['variables']
                 result_array = result_array + linked_statistics['values']
