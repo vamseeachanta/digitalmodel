@@ -1,7 +1,9 @@
 # Standard library imports
+import copy
 import logging
 import math
 import os
+from pathlib import Path
 
 # Third party imports
 import numpy as np
@@ -31,40 +33,67 @@ class OPPSummary():
         summary_groups_for_file = {}
         for summary_group in summary_groups:
             summary_group_label = summary_group['Label']
-            df_columns = ['fe_filename', 'Label']
-            df = pd.DataFrame()
+
+            df_columns = ['fe_filename', 'run_status', 'description']
+            file_name_for_output = str(Path(file_name).resolve()).replace('\\', '/')
+            result_array = [file_name_for_output, None, None]
+            df = pd.DataFrame([result_array], columns=df_columns)
+
             for summary_cfg in summary_group['Columns']:
-                summary_label = summary_cfg['Label']
-                result_array = [file_name, summary_label]
                 summary = self.get_summary_from_orcaflex_run(model, summary_cfg)
-                df_columns = df_columns + summary['variables']
-                result_array = result_array + summary['values']
-                result_df = pd.DataFrame([result_array], columns=df_columns)
-                df = pd.concat([df, result_df], ignore_index=True)
-  
+                df[summary['variables']] = summary['values']
+
             summary_groups_for_file.update({summary_group_label: df})
+
+        return summary_groups_for_file
 
     def get_summary_from_orcaflex_run(self, model, summary_cfg):
         variables = []
         values = []
         value = self.process_summary_by_model_and_cfg_item(model, summary_cfg)
-        
+
         variables.append(summary_cfg['Label'])
         values.append(value)
         summary = {'variables': variables, 'values': values}
 
         return summary
-        
-        
+
+    def add_file_result_to_all_results(self, summary: dict, summary_groups_for_file: dict) -> None:
+        if not summary:
+            summary = copy.deepcopy(summary_groups_for_file)
+        else:
+            for key in summary_groups_for_file.keys():
+                summary[key] = pd.concat([summary[key], summary_groups_for_file[key]], ignore_index=True)
+
+        return summary
+
+    def save_summary(self, summary, cfg):
+        if not summary:
+            return
+
+        csv_decimal = 6
+        if 'csv_decimal' in cfg.orcaflex['postprocess']['summary']:
+            csv_decimal = cfg.orcaflex['postprocess']['summary']['csv_decimal']
+
+        summary_array = []
+        for key in summary.keys():
+            df = summary[key]
+            file_name = os.path.join(cfg['Analysis']['result_folder'],
+                    cfg['Analysis']['file_name'] + '_' + key + '.csv')
+
+            df.round(csv_decimal).to_csv(file_name, index=False)
+
+            summary_array.append({key: df.to_dict()})
+
+        cfg[cfg['basename']] = {'summary': {'groups': summary_array}}
+
 
 
     def process_summary(self, cfg):
         if 'summary_settings' in cfg: 
             SummaryDFAllFiles = self.process_summary_groups(cfg)
             self.SummaryDFAllFiles = SummaryDFAllFiles
-            self.save_summary(cfg, self.SummaryDFAllFiles, self.load_matrix)
-
-
+            self.save_summary_superseded(cfg, self.SummaryDFAllFiles, self.load_matrix)
 
     def process_summary_groups(self, cfg):
 
@@ -234,7 +263,7 @@ class OPPSummary():
         return summary_columns
 
 
-    def save_summary(self, cfg, SummaryDFAllFiles, load_matrix):
+    def save_summary_superseded(self, cfg, SummaryDFAllFiles, load_matrix):
         if not cfg.orcaflex['postprocess']['summary']['flag']:
             print("No analysis summary per user request")
             return None

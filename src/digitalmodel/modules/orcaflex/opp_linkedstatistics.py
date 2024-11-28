@@ -1,18 +1,17 @@
 # Standard library imports
 import os
+import copy
 from typing import Any, Dict
 
 # Third party imports
 import pandas as pd
 
-
-# Reader imports
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
 
 of_objects = OrcaFlexObjects()
 
 class OPPLinkedStatistics():
-    
+
     def __init__(self) -> None:
         pass
 
@@ -76,9 +75,9 @@ class OPPLinkedStatistics():
 
         return linked_statistics
 
-    def add_file_result(self, linked_statistics, linked_statistics_for_file):
+    def add_file_result_to_all_results(self, linked_statistics, linked_statistics_for_file):
         if not linked_statistics:
-            linked_statistics = linked_statistics_for_file
+            linked_statistics = copy.deepcopy(linked_statistics_for_file)
         else:
             for key in linked_statistics_for_file.keys():
                 linked_statistics[key] = pd.concat([linked_statistics[key], linked_statistics_for_file[key]], ignore_index=True)

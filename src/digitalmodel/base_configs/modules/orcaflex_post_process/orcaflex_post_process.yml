@@ -12,8 +12,14 @@ orcaflex:
       flag: True
     summary:
       flag: False
+      min: True
+      max: True
+      mean: True
     linked_statistics:
       flag: False
+      min: True
+      max: True
+      mean: True
     RangeGraph:
       flag: False
     RAOs:

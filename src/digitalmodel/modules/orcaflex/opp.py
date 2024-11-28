@@ -3,12 +3,9 @@ import copy
 import logging
 
 # Third party imports
-import pandas as pd
-
-
-
 # Third party imports
 from assetutilities.common.update_deep import update_deep_dictionary
+from digitalmodel.modules.orcaflex.opp_linkedstatistics import OPPLinkedStatistics
 
 # Reader imports
 from digitalmodel.modules.orcaflex.opp_range_graph import OPPRangeGraph
@@ -103,17 +100,17 @@ class OrcaFlexPostProcess():
                     opp_rg.postProcessRange(model, self.cfg, FileObjectName))
             except:
                 RangeAllFiles.append(None)
-                
+
             if cfg['orcaflex']['postprocess']['summary']['flag']:
-                summary_for_file = opp_summary.get_summary_for_file(cfg, model, file_name)
-                summary = opp_summary.add_file_result(summary, summary_for_file)
-            if cfg['orcaflex']['postprocess']['time_series']['flag']:
-                if cfg['time_series_settings']['data']: 
-                    time_series_cfg_output_for_file = opp_ts.get_time_series_data(cfg, model, file_name)
+                summary_groups_for_file = opp_summary.get_summary_for_file(cfg, model, file_name)
+                summary = opp_summary.add_file_result_to_all_results(summary, summary_groups_for_file)
             if cfg['orcaflex']['postprocess']['linked_statistics']['flag']:
                 linked_statistics_for_file = opp_ls.get_linked_statistics(cfg, model, file_name)
-                linked_statistics = opp_ls.add_file_result(linked_statistics, linked_statistics_for_file)
+                linked_statistics = opp_ls.add_file_result_to_all_results(linked_statistics, linked_statistics_for_file)
 
+            if cfg['orcaflex']['postprocess']['time_series']['flag']:
+                if cfg['time_series_settings']['data']: 
+                    opp_ts.get_time_series_data(cfg, model, file_name)
             else:
                 pass
 
@@ -125,6 +122,7 @@ class OrcaFlexPostProcess():
 
         #TODO integrate summary to file by file process to speed up post processing.
         # opp_summary.process_summary(cfg)
+        opp_summary.save_summary(summary, cfg)
 
         opp_ls.save_linked_statistics(linked_statistics, cfg)
 
