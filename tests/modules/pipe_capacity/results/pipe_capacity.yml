@@ -247,6 +247,23 @@ dictitems:
     Weld_Factor:
       Seamless: 1.0
   Result:
+    Outer_Pipe: ~
+    Inner_Pipe: ~
+  Analysis:
+    basename: pipe_capacity
+    analysis_root_folder: K:\github\digitalmodel\tests\modules\pipe_capacity
+    file_name: pipe_capacity
+    file_name_for_overwrite: pipe_capacity
+    result_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\results
+    log_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\logs
+    start_time: 2024-12-01 15:00:12.824704
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: pipe_capacity.yml
+    fe_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\results
+  equivalent_pipe:
+    section_properties: *id004
+  pipe_capacity:
     Outer_Pipe:
       internal_pressure:
         ASME B31.8-2016 Chapter VIII Pipeline:
@@ -259,18 +276,3 @@ dictitems:
           minimum_thickness:
             Zero Corrosion Allowance: 0.45091401489505756
             With Corrosion Allowance: 0.45091401489505756
-    Inner_Pipe: ~
-  Analysis:
-    basename: pipe_capacity
-    analysis_root_folder: k:\github\digitalmodel\tests\modules\pipe_capacity
-    file_name: pipe_capacity
-    file_name_for_overwrite: pipe_capacity
-    result_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\results
-    log_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\logs
-    start_time: 2024-12-01 12:45:55.937715
-    cfg_array_file_names: ~
-    DefaultInputFile: ~
-    CustomInputFile: k:\github\digitalmodel\tests\modules\pipe_capacity\pipe_capacity.yml
-    fe_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\results
-  equivalent_pipe:
-    section_properties: *id004

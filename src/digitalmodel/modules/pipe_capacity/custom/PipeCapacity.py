@@ -134,7 +134,7 @@ class PipeCapacity():
 
         update_deep_dictionary(
             self.cfg, {
-                "Result": {
+                self.cfg['basename']: {
                     pipe_flag: {
                         load_condition: {
                             specification_code: {
@@ -148,7 +148,7 @@ class PipeCapacity():
             })
         update_deep_dictionary(
             self.cfg, {
-                "Result": {
+                self.cfg['basename']: {
                     pipe_flag: {
                         load_condition: {
                             specification_code: {
@@ -162,7 +162,7 @@ class PipeCapacity():
             })
         update_deep_dictionary(
             self.cfg, {
-                "Result": {
+                self.cfg['basename']: {
                     pipe_flag: {
                         load_condition: {
                             specification_code: {

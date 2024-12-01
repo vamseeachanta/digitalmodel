@@ -1,17 +1,17 @@
 &id004 !!python/object/new:assetutilities.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: k:\github\digitalmodel\tests\modules\pipe_capacity\pipe_capacity.yml
+    CustomInputFile: pipe_capacity.yml
     DefaultInputFile: ~
-    analysis_root_folder: k:\github\digitalmodel\tests\modules\pipe_capacity
+    analysis_root_folder: K:\github\digitalmodel\tests\modules\pipe_capacity
     basename: pipe_capacity
     cfg_array_file_names: ~
-    fe_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\results
+    fe_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\results
     file_name: pipe_capacity
     file_name_for_overwrite: pipe_capacity
-    log_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\logs
-    result_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\results
-    start_time: 2024-12-01 12:45:55.937715
+    log_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\logs
+    result_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\results
+    start_time: 2024-12-01 15:00:12.824704
   Design:
   - AxialForce: 0
     BendingMoment: 0
@@ -221,18 +221,7 @@ dictitems:
         geometry: *id002
   Result:
     Inner_Pipe: ~
-    Outer_Pipe:
-      internal_pressure:
-        ASME B31.8-2016 Chapter VIII Pipeline:
-          Design_WT_Max_Pressure:
-            With Corrosion Allowance: 3756.521739130435
-            Zero Corrosion Allowance: 3756.521739130435
-          minimum_thickness:
-            With Corrosion Allowance: 0.45091401489505756
-            Zero Corrosion Allowance: 0.45091401489505756
-          thickness:
-            With Corrosion Allowance: 0.75
-            Zero Corrosion Allowance: 0.75
+    Outer_Pipe: ~
   basename: pipe_capacity
   default:
     Constants:
@@ -273,4 +262,17 @@ dictitems:
       declinationAngle: deg with vertical
   equivalent_pipe:
     section_properties: *id003
+  pipe_capacity:
+    Outer_Pipe:
+      internal_pressure:
+        ASME B31.8-2016 Chapter VIII Pipeline:
+          Design_WT_Max_Pressure:
+            With Corrosion Allowance: 3756.521739130435
+            Zero Corrosion Allowance: 3756.521739130435
+          minimum_thickness:
+            With Corrosion Allowance: 0.45091401489505756
+            Zero Corrosion Allowance: 0.45091401489505756
+          thickness:
+            With Corrosion Allowance: 0.75
+            Zero Corrosion Allowance: 0.75
 state: *id004
