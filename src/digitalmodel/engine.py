@@ -31,6 +31,7 @@ from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalys
 from digitalmodel.modules.orcaflex.umbilical_analysis_components import (
     UmbilicalAnalysis,
 )
+from digitalmodel.modules.pipe_capacity.pipe_capacity import PipeCapacity
 from digitalmodel.modules.pipeline.pipeline import Pipeline
 from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis
 from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis
@@ -118,6 +119,9 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "pipeline":
         pl = Pipeline()
         cfg_base = pl.router(cfg_base)
+    elif basename == "pipe_capacity":
+        pc = PipeCapacity()
+        cfg_base = pc.router(cfg_base)
     elif basename == "viv_analysis":
         viv = VIVAnalysis()
         cfg_base = viv.router(cfg_base)
