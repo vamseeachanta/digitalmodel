@@ -28,8 +28,8 @@ def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
                                  significant_digits=4)
 
 def test_process() -> None:
-    input_file = 'pipe_capacity.yml'
-    pytest_output_file = 'results/pipe_capacity_pytest.yml'
+    input_file = 'pipe_py_8in_k2.yml'
+    pytest_output_file = 'results/pipe_py_8in_k2_pytest.yml'
 
     pytest_output_file = tu.get_valid_pytest_output_file(os.path.dirname(__file__), pytest_output_file)
     expected_result = ymlInput(pytest_output_file, updateYml=None)

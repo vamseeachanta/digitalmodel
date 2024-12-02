@@ -43,13 +43,13 @@ dictitems:
     Water Depth: 2460.63
   Outer_Pipe:
     Geometry: &id002
-      Nominal_OD: 18
-      Nominal_ID: 16.5
-      Design_WT: 0.75
-      Corrosion_Allowance: 0.0
+      Nominal_OD: 6.625
+      Nominal_ID: 4.875
+      Design_WT: 0.875
+      Corrosion_Allowance: 0.118
     Material:
       Material: Steel
-      Material_Grade: API 5L X60
+      Material_Grade: API 5L X65
       WeldFactor:
         Seamless: 1.0
       Insulation: ~
@@ -95,36 +95,38 @@ dictitems:
           SMYS: 125000
           SMUS: 140000
           Reference: Assumed
-      SMYS: 60000
-      SMUS: ~
+      SMYS: 65300
+      SMUS: 77500
       Reference: ~
     Manufacturing:
       Coupling Mass Ratio: 0.1
+    Code:
+    - API STD 2RD-2013 Section 5
     section_properties: &id004
       pipe:
         geometry: *id002
-        Ao: 254.46900494077323
-        Ai: 213.8246499849553
-        Io: 5152.9973500506585
-        Ii: 3638.360059900255
-        Jo: 10305.994700101317
-        Ji: 7276.72011980051
-        A: 40.64435495581793
-        I: 1514.6372901504037
-        J: 3029.2745803008074
-        MassPerUnitLength: 11.453290651629308
-        EI: 45439118704.51211
-        EA: 1219330648.674538
-        GJ: 34953168234.24008
+        Ao: 34.47161626536613
+        Ai: 18.66547822699248
+        Io: 94.56129891544283
+        Ii: 27.724797249273013
+        Jo: 189.12259783088567
+        Ji: 55.44959449854603
+        A: 15.80613803837365
+        I: 66.83650166616982
+        J: 133.67300333233965
+        MassPerUnitLength: 4.454057475633622
+        EI: 2005095049.9850948
+        EA: 474184141.1512095
+        GJ: 1542380807.680842
         E: 30000000.0
-        SMYS: 60000
-        SMUS: ~
+        SMYS: 65300
+        SMUS: 77500
         PoissonRatio: 0.3
   Design:
   - Load Condition:
       Outer_Pipe: internal_pressure
     InternalPressure:
-      Outer_Pipe: 2220
+      Outer_Pipe: 9000
     InternalFluid:
       Outer_Pipe: 0.03703047
     ExternalPressure:
@@ -141,20 +143,87 @@ dictitems:
     AxialForce: 0
     Torsion: 0
     Condition: Restrained
-    Water_Depth: 2460.63
     Code:
-    - Outer_Pipe: ASME B31.8-2016 Chapter VIII Pipeline
+    - Outer_Pipe: API STD 2RD-2013 Section 5
     Material:
       temperature_derating:
         Outer_Pipe:
-          ASME B31.8-2016 Chapter VIII Pipeline: 1
+          API STD 2RD-2013 Section 5: 1
     mass:
-      pipe: 137.4394878195517
-      Coupling: 13.743948781955169
-      internal_fluid: 95.01632743834065
-      dry: 246.1997640398475
-      buoyancy: 113.07728224066986
-      wet: 133.12248179917765
+      pipe: 53.448689707603464
+      Coupling: 5.344868970760347
+      internal_fluid: 8.294297178243578
+      dry: 67.08785585660739
+      buoyancy: 15.31800182359383
+      wet: 51.76985403301356
+  - Load Condition:
+      Outer_Pipe: external_pressure
+    InternalPressure:
+      Outer_Pipe: 0
+    InternalFluid:
+      Outer_Pipe: 0.0
+    ExternalPressure:
+      Outer_Pipe: 0
+    ExternalFluid:
+      Outer_Pipe: 0.03703047
+    Temperature:
+      Ambient:
+        Outer_Pipe: 50
+      Operating:
+        Outer_Pipe: 82
+      Maximum: ~
+    BendingMoment: 0
+    AxialForce: 0
+    Torsion: 0
+    Condition: Restrained
+    Code:
+    - Outer_Pipe: API STD 2RD-2013 Section 5
+    Material:
+      temperature_derating:
+        Outer_Pipe:
+          API STD 2RD-2013 Section 5: 1
+    mass:
+      pipe: 53.448689707603464
+      Coupling: 5.344868970760347
+      internal_fluid: 0.0
+      dry: 58.79355867836381
+      buoyancy: 15.31800182359383
+      wet: 43.47555685476998
+  - Load Condition:
+      Outer_Pipe: collapse_propagation
+    InternalPressure:
+      Outer_Pipe: 0
+    ExternalFluid:
+      Outer_Pipe: 0.03703047
+    ExternalPressure:
+      Outer_Pipe:
+        pressure: ~
+        fluid_column: 2460.63
+        fluid_density: 0.03703047
+    InternalFluid:
+      Outer_Pipe: 0.03703047
+    Temperature:
+      Ambient:
+        Outer_Pipe: 50
+      Operating:
+        Outer_Pipe: 82
+      Maximum: ~
+    BendingMoment: 0
+    AxialForce: 0
+    Torsion: 0
+    Code:
+    - Outer_Pipe: API RP 1111-2009 Risers
+    Material:
+      temperature_derating:
+        Outer_Pipe:
+          API RP 1111-2009 Risers: 1
+    mass:
+      pipe: 53.448689707603464
+      Coupling: 5.344868970760347
+      internal_fluid: 8.294297178243578
+      dry: 67.08785585660739
+      buoyancy: 15.31800182359383
+      wet: 51.76985403301356
   Inner_Pipe: ~
   DesignFactors:
     ASME B31.4-2016 Chapter IX Pipeline:
@@ -251,28 +320,50 @@ dictitems:
     Inner_Pipe: ~
   Analysis:
     basename: pipe_capacity
-    analysis_root_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\asme_b318
-    file_name: pipe_capacity
-    file_name_for_overwrite: pipe_capacity
-    result_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\asme_b318\results
-    log_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\asme_b318\logs
-    start_time: 2024-12-01 15:22:20.941481
+    analysis_root_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\api_rp_1111
+    file_name: pipe_py_12in_GI_HammerHead
+    file_name_for_overwrite: pipe_py_12in_GI_HammerHead
+    result_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\api_rp_1111\results
+    log_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\api_rp_1111\logs
+    start_time: 2024-12-01 22:40:44.458863
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: pipe_capacity.yml
-    fe_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\asme_b318\results
+    CustomInputFile: k:\github\digitalmodel\tests\modules\pipe_capacity\api_rp_1111\pipe_py_12in_GI_HammerHead.yml
+    fe_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\api_rp_1111\results
   equivalent_pipe:
     section_properties: *id004
   pipe_capacity:
     Outer_Pipe:
       internal_pressure:
-        ASME B31.8-2016 Chapter VIII Pipeline:
+        API STD 2RD-2013 Section 5:
           thickness:
-            Zero Corrosion Allowance: 0.75
-            With Corrosion Allowance: 0.75
+            Zero Corrosion Allowance: 0.875
+            With Corrosion Allowance: 0.757
           Design_WT_Max_Pressure:
-            Zero Corrosion Allowance: 3756.521739130435
-            With Corrosion Allowance: 3756.521739130435
+            Zero Corrosion Allowance: 11826.292190740964
+            With Corrosion Allowance: 10003.558241673347
           minimum_thickness:
-            Zero Corrosion Allowance: 0.45091401489505756
-            With Corrosion Allowance: 0.45091401489505756
+            Zero Corrosion Allowance: 0.6896107239025375
+            With Corrosion Allowance: 0.8076107239025375
+      external_pressure:
+        API STD 2RD-2013 Section 5:
+          thickness:
+            Zero Corrosion Allowance: 0.875
+            With Corrosion Allowance: 0.757
+          Design_WT_Max_Pressure:
+            Zero Corrosion Allowance: 11997.24284721042
+            With Corrosion Allowance: 10327.852736515506
+          minimum_thickness:
+            Zero Corrosion Allowance: 100
+            With Corrosion Allowance: 100.118
+      collapse_propagation:
+        API RP 1111-2009 Risers:
+          thickness:
+            Zero Corrosion Allowance: 0.875
+            With Corrosion Allowance: 0.757
+          Design_WT_Max_Pressure:
+            Zero Corrosion Allowance: 9731.675497733773
+            With Corrosion Allowance: 6873.823911600564
+          minimum_thickness:
+            Zero Corrosion Allowance: 0.35190413677430427
+            With Corrosion Allowance: 0.46990413677430426

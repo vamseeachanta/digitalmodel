@@ -71,6 +71,3 @@ class PipeComponents:
         Pipe_Capacity: PipeCapacity = PipeCapacity(cfg)
         Pipe_Capacity.evaluate_pipe_wall()
 
-        saveDataYaml(
-            cfg, cfg['Analysis']['result_folder'] + cfg['Analysis']['file_name']
-        )

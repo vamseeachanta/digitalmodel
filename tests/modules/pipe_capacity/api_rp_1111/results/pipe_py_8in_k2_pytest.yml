@@ -1,0 +1,13 @@
+pipe_capacity:
+  Outer_Pipe:
+    internal_pressure:
+      API RP 1111-2009 Risers:
+        thickness:
+          Zero Corrosion Allowance: 1.406
+          With Corrosion Allowance: 1.406
+        Design_WT_Max_Pressure:
+          Zero Corrosion Allowance: 11718.674773686831
+          With Corrosion Allowance: 11718.674773686831
+        minimum_thickness:
+          Zero Corrosion Allowance: 1.246708846673552
+          With Corrosion Allowance: 1.246708846673552

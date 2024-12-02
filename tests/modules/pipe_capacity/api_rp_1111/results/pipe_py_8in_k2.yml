@@ -43,13 +43,13 @@ dictitems:
     Water Depth: 2460.63
   Outer_Pipe:
     Geometry: &id002
-      Nominal_OD: 18
-      Nominal_ID: 16.5
-      Design_WT: 0.75
+      Nominal_OD: 8.625
+      Nominal_ID: 5.813000000000001
+      Design_WT: 1.406
       Corrosion_Allowance: 0.0
     Material:
       Material: Steel
-      Material_Grade: API 5L X60
+      Material_Grade: ASTM A106 Grade C
       WeldFactor:
         Seamless: 1.0
       Insulation: ~
@@ -95,36 +95,38 @@ dictitems:
           SMYS: 125000
           SMUS: 140000
           Reference: Assumed
-      SMYS: 60000
-      SMUS: ~
-      Reference: ~
+      SMYS: 40000
+      SMUS: 70000
+      Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
     Manufacturing:
       Coupling Mass Ratio: 0.1
+    Code:
+    - API RP 1111-2009 Risers
     section_properties: &id004
       pipe:
         geometry: *id002
-        Ao: 254.46900494077323
-        Ai: 213.8246499849553
-        Io: 5152.9973500506585
-        Ii: 3638.360059900255
-        Jo: 10305.994700101317
-        Ji: 7276.72011980051
-        A: 40.64435495581793
-        I: 1514.6372901504037
-        J: 3029.2745803008074
-        MassPerUnitLength: 11.453290651629308
-        EI: 45439118704.51211
-        EA: 1219330648.674538
-        GJ: 34953168234.24008
+        Ao: 58.4262602489883
+        Ai: 26.53936499202011
+        Io: 271.64787602093094
+        Ii: 56.04942873281482
+        Jo: 543.2957520418619
+        Ji: 112.09885746562964
+        A: 31.886895256968188
+        I: 215.59844728811612
+        J: 431.19689457623224
+        MassPerUnitLength: 8.98550068645731
+        EI: 6467953418.643483
+        EA: 956606857.7090456
+        GJ: 4975348783.57191
         E: 30000000.0
-        SMYS: 60000
-        SMUS: ~
+        SMYS: 40000
+        SMUS: 70000
         PoissonRatio: 0.3
   Design:
   - Load Condition:
       Outer_Pipe: internal_pressure
     InternalPressure:
-      Outer_Pipe: 2220
+      Outer_Pipe: 10134
     InternalFluid:
       Outer_Pipe: 0.03703047
     ExternalPressure:
@@ -141,20 +143,19 @@ dictitems:
     AxialForce: 0
     Torsion: 0
     Condition: Restrained
-    Water_Depth: 2460.63
     Code:
-    - Outer_Pipe: ASME B31.8-2016 Chapter VIII Pipeline
+    - Outer_Pipe: API RP 1111-2009 Risers
     Material:
       temperature_derating:
         Outer_Pipe:
-          ASME B31.8-2016 Chapter VIII Pipeline: 1
+          API RP 1111-2009 Risers: 1
     mass:
-      pipe: 137.4394878195517
-      Coupling: 13.743948781955169
-      internal_fluid: 95.01632743834065
-      dry: 246.1997640398475
-      buoyancy: 113.07728224066986
-      wet: 133.12248179917765
+      pipe: 107.82600823748773
+      Coupling: 10.782600823748773
+      internal_fluid: 11.793181909872612
+      dry: 130.4017909711091
+      buoyancy: 25.96262252834825
+      wet: 104.43916844276086
   Inner_Pipe: ~
   DesignFactors:
     ASME B31.4-2016 Chapter IX Pipeline:
@@ -251,28 +252,28 @@ dictitems:
     Inner_Pipe: ~
   Analysis:
     basename: pipe_capacity
-    analysis_root_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\asme_b318
-    file_name: pipe_capacity
-    file_name_for_overwrite: pipe_capacity
-    result_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\asme_b318\results
-    log_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\asme_b318\logs
-    start_time: 2024-12-01 15:22:20.941481
+    analysis_root_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\api_rp_1111
+    file_name: pipe_py_8in_k2
+    file_name_for_overwrite: pipe_py_8in_k2
+    result_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\api_rp_1111\results
+    log_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\api_rp_1111\logs
+    start_time: 2024-12-01 22:39:19.976649
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: pipe_capacity.yml
-    fe_folder: K:\github\digitalmodel\tests\modules\pipe_capacity\asme_b318\results
+    CustomInputFile: k:\github\digitalmodel\tests\modules\pipe_capacity\api_rp_1111\pipe_py_8in_k2.yml
+    fe_folder: k:\github\digitalmodel\tests\modules\pipe_capacity\api_rp_1111\results
   equivalent_pipe:
     section_properties: *id004
   pipe_capacity:
     Outer_Pipe:
       internal_pressure:
-        ASME B31.8-2016 Chapter VIII Pipeline:
+        API RP 1111-2009 Risers:
           thickness:
-            Zero Corrosion Allowance: 0.75
-            With Corrosion Allowance: 0.75
+            Zero Corrosion Allowance: 1.406
+            With Corrosion Allowance: 1.406
           Design_WT_Max_Pressure:
-            Zero Corrosion Allowance: 3756.521739130435
-            With Corrosion Allowance: 3756.521739130435
+            Zero Corrosion Allowance: 11718.674773686831
+            With Corrosion Allowance: 11718.674773686831
           minimum_thickness:
-            Zero Corrosion Allowance: 0.45091401489505756
-            With Corrosion Allowance: 0.45091401489505756
+            Zero Corrosion Allowance: 1.246708846673552
+            With Corrosion Allowance: 1.246708846673552

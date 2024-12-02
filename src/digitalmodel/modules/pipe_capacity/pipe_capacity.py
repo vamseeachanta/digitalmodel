@@ -14,5 +14,3 @@ class PipeCapacity:
         pipe_comps.evaluate_pipe_capacity(cfg)
 
         return cfg
-
-

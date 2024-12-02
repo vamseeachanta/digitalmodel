@@ -1,3 +1,5 @@
+basename: pipe_capacity
+
 default:
   config:
     overwrite:

@@ -1,3 +1,5 @@
+basename: pipe_capacity
+
 Outer_Pipe:
   Geometry:
     Nominal_ID: NULL
