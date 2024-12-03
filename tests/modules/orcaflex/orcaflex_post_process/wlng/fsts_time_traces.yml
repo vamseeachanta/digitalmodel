@@ -810,5 +810,5 @@ file_management:
   files:
     files_in_current_directory:
       flag: False
-      directory: fsts
+      directory: analysis
       auto_read: True
