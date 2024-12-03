@@ -172,11 +172,6 @@ class OPPSummary():
         return output
 
     def get_input_data(self, OrcFXAPIObject, VariableName, model):
-        if 'Current' in VariableName[0]:
-            ActiveCurrent = OrcFXAPIObject.GetData('ActiveCurrent', -1)
-            model.environment.SelectedCurrent = ActiveCurrent
-            output_value = model.environment.GetData(VariableName[0], VariableName[1])
-        else:
-            output_value = OrcFXAPIObject.GetData(VariableName[0], VariableName[1])
+        output_value = OrcFXAPIObject.GetData(VariableName[0], VariableName[1])
 
         return output_value
