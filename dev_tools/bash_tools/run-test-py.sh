@@ -24,3 +24,5 @@ COM
 
 # run module using  specific test yaml file
 python ${python_script}
+
+# extra comment. just to test r-w permissions on k: 

@@ -47,6 +47,14 @@ summary_settings_master:
             - End A
           Variable: Effective Tension
 
+    - Label: static
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra:
+            - End A
+          Variable: Effective Tension
+
     - Label: inputs
       Columns:
         - Command: GetData
@@ -54,6 +62,57 @@ summary_settings_master:
 summary_settings:
   groups:
     - Label: strut_statistics
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_Body_eff_tension_min
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_Body_eff_tension_max
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_Body_eff_tension_min
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_Body_eff_tension_max
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_Body_eff_tension_min
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_Body_eff_tension_max
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_Body_eff_tension_min
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_Body_eff_tension_max
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_Body_eff_tension_min
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_Body_eff_tension_max
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_Body_eff_tension_min
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_Body_eff_tension_max
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_Body_eff_tension_min
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_Body_eff_tension_max
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_Body_eff_tension_min
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_Body_eff_tension_max
+
+    - Label: strut_static
       Columns:
         - ObjectName: Strut1_Body
           Statistic_Type: Min

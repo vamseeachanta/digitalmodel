@@ -1,5 +1,11 @@
-import OrcFxAPI
 import logging
+
+import OrcFxAPI
+
+
+# Third party imports
+import OrcFxAPI
+
 
 class OrcaFlexObjects():
 
@@ -111,7 +117,9 @@ class OrcaFlexObjects():
         """
         if type(SimulationPeriod) is int:
             TimePeriodObject = SimulationPeriod
-        elif SimulationPeriod == 'WhileSimulation':
+        elif SimulationPeriod == 'StaticState':
+            TimePeriodObject = OrcFxAPI.PeriodNum.StaticState
+        elif SimulationPeriod == 'WholeSimulation':
             TimePeriodObject = OrcFxAPI.PeriodNum.WholeSimulation
         elif SimulationPeriod == 'LatestWave':
             TimePeriodObject = OrcFxAPI.PeriodNum.LatestWave
