@@ -43,55 +43,55 @@ time_series_settings_master:
     - Columns:
         - Command: TimeHistory
           ObjectName: Strut1_Body
-          SimulationPeriod: [0.0, 10800]
+          SimulationPeriod: [0.0, 10]
     - Columns:
         - Command: TimeHistory
           ObjectName: Strut2_Body
-          SimulationPeriod: [0.0, 10800]
+          SimulationPeriod: [0.0, 10]
     - Columns:
         - Command: TimeHistory
           ObjectName: Strut3_Body
-          SimulationPeriod: [0.0, 10800]
+          SimulationPeriod: [0.0, 10]
     - Columns:
         - Command: TimeHistory
           ObjectName: Strut4_Body
-          SimulationPeriod: [0.0, 10800]
+          SimulationPeriod: [0.0, 10]
     - Columns:
         - Command: TimeHistory
           ObjectName: Strut5_Body
-          SimulationPeriod: [0.0, 10800]
+          SimulationPeriod: [0.0, 10]
     - Columns:
         - Command: TimeHistory
           ObjectName: Strut6_Body
-          SimulationPeriod: [0.0, 10800]
+          SimulationPeriod: [0.0, 10]
     - Columns:
         - Command: TimeHistory
           ObjectName: Strut7_Body
-          SimulationPeriod: [0.0, 10800]
+          SimulationPeriod: [0.0, 10]
     - Columns:
         - Command: TimeHistory
           ObjectName: Strut8_Body
-          SimulationPeriod: [0.0, 10800]
+          SimulationPeriod: [0.0, 10]
 
     - Columns:
         - Command: TimeHistory
           objectExtra: NULL
-          SimulationPeriod: [0.0, 10800]
+          SimulationPeriod: [0.0, 10]
 
     - Columns:
         - Command: TimeHistory
           objectExtra: NULL
-          SimulationPeriod: [0.0, 10800]
+          SimulationPeriod: [0.0, 10]
 
     - Columns:
         - Command: TimeHistory
           objectExtra: NULL
-          SimulationPeriod: [0.0, 10800]
+          SimulationPeriod: [0.0, 10]
 
     - Columns:
         - Command: TimeHistory
           objectExtra: NULL
-          SimulationPeriod: [0.0, 10800]
+          SimulationPeriod: [0.0, 10]
 
 time_series_settings:
   data: True
