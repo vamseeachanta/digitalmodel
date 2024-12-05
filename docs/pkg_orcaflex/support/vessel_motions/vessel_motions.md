@@ -4,7 +4,7 @@ OrcaFlex already does the rigid body transformations that you need, both from th
 
 From the GUI, when you select a motion result (position, velocity, acceleration) you are also asked for a results reporting position, relative to the body origin, and with respect to body axes. For example:
 
- 
+ ![alt text](image.png)
 
 This is documented here: https://www.orcina.com/webhelp/OrcaFlex/Redirector.htm?Results,Producingresults.htm
 
