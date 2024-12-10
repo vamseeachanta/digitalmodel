@@ -33,26 +33,13 @@ Key learnings:
 
 Current line settings:
 
-- invalid projection
-![alt text](image.png)
-
+![alt text](image-4.png)
 - Fields
 
 ![alt text](image-1.png)
 
 - Attributes Form
 ![alt text](image-2.png)
-
-#### TIN Interpolation
-
-- Using the bathymetry data provided, TIN interpoloation is performed to estabilish a grid of data.
-- Search for `TIN Interpolation` in the Processing Toolbox.
-  - Advanced settings:
-  - Select ignore errors and continue processing.
-  - Select the input layer as `Offshore and Onshore combined Bathymetry`.
-  - Select the attribute as `ELEVATION`.
-  - Select the output file as `TIN_interpolation.tif`.
-  - Click on `Run`.
 
 #### Profile Plot
 
