@@ -4,6 +4,19 @@
 Scope of work:
 Prepare profile plots for alignment sheets for the project for various lines.
 
+### Summary and Way Forward
+
+- Import 18inch lines using python script
+  - Confirm to Dave that it works
+
+- Provide profiles with out scale. Ask if scaling is needed?
+
+**Improvements** (if time permits):
+
+- Utilize Blender to view the files and scale it for project
+- Repeat process with more pixelated DEM data (i.e. 10)
+- Define scale for 
+
 ### Input files
 
 Key learnings:
@@ -34,6 +47,7 @@ Key learnings:
 Current line settings:
 
 ![alt text](image-4.png)
+
 - Fields
 
 ![alt text](image-1.png)
