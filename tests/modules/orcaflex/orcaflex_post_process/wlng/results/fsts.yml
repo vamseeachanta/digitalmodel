@@ -4830,7 +4830,7 @@ dictitems:
     file_name_for_overwrite: fsts
     result_folder: .\results
     log_folder: .\logs
-    start_time: 2024-12-03 18:33:18.043132
+    start_time: 2024-12-11 15:25:12.485057
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: .\fsts.yml

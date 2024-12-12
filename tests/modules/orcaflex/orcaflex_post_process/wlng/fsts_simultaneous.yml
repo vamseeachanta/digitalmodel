@@ -1,0 +1,97 @@
+basename: orcaflex_post_process
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  analysis:
+    static: False
+    simulation: False
+    iterate:
+      flag: False
+    save_sim: False
+    save_dat: False
+
+  postprocess:
+    visualization:
+      flag: False
+    linked_statistics:
+      flag: True
+    summary:
+      flag: False
+    RangeGraph:
+      flag: False
+    time_series:
+      flag: False
+    RAOs:
+      flag: False
+    cummulative_histograms:
+      flag: False
+    rain_flow:
+      bins: 10
+      range:
+        - 0
+        - 10
+
+linked_statistics_settings_master:
+  AddMinimumToSummary: True
+  AddMaximumToSummary: True
+  AddMeanToSummary: True
+  groups:
+    - Label: ef_end_b
+      Columns:
+        - SimulationPeriod: [0.0, 10.0]
+
+    - Label: ef_end_a
+      Columns:
+        - SimulationPeriod: [0.0, 10.0]
+
+    - Label: bm_end_b
+      Columns:
+        - SimulationPeriod: [0.0, 10.0]
+
+linked_statistics_settings:
+  groups:
+    - Label: ef_end_b
+      Columns:
+        - ObjectType: line
+          ObjectName: SLWR
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Variable: [Effective tension, Bend moment, Curvature]
+          Label: effective_tension
+
+    - Label: ef_end_a
+      Columns:
+        - ObjectType: line
+          ObjectName: SLWR
+          objectExtra:
+            - End A
+          SimulationPeriod: [0.0, 10.0]
+          Variable: [Effective tension, Bend moment, Curvature]
+          Label: effective_tension
+
+    - Label: bm_end_b
+      Columns:
+        - ObjectType: line
+          ObjectName: SLWR
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Variable: [Bend moment, Effective tension, Curvature]
+          Label: bending_moment
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      directory: analysis
+      auto_read: True

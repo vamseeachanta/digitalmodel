@@ -39,6 +39,10 @@ summary_settings_master:
   AddMaximumToSummary: True
   AddMeanToSummary: True
   groups:
+    - Label: inputs
+      Columns:
+        - Command: GetData
+
     - Label: strut_dynamics
       Columns:
         - Command: TimeHistory
@@ -55,114 +59,22 @@ summary_settings_master:
             - End A
           Variable: Effective Tension
 
-    - Label: inputs
+    - Label: fst_local_static
       Columns:
-        - Command: GetData
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra:
+            - End B
+
+    - Label: fst_local_dynamics
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          objectExtra:
+            - End B
 
 summary_settings:
   groups:
-    - Label: strut_dynamics
-      Columns:
-        - ObjectName: Strut1_Body
-          Statistic_Type: Min
-          Label: Strut1_Body_eff_tension_min
-        - ObjectName: Strut1_Body
-          Statistic_Type: Max
-          Label: Strut1_Body_eff_tension_max
-        - ObjectName: Strut2_Body
-          Statistic_Type: Min
-          Label: Strut2_Body_eff_tension_min
-        - ObjectName: Strut2_Body
-          Statistic_Type: Max
-          Label: Strut2_Body_eff_tension_max
-        - ObjectName: Strut3_Body
-          Statistic_Type: Min
-          Label: Strut3_Body_eff_tension_min
-        - ObjectName: Strut3_Body
-          Statistic_Type: Max
-          Label: Strut3_Body_eff_tension_max
-        - ObjectName: Strut4_Body
-          Statistic_Type: Min
-          Label: Strut4_Body_eff_tension_min
-        - ObjectName: Strut4_Body
-          Statistic_Type: Max
-          Label: Strut4_Body_eff_tension_max
-        - ObjectName: Strut5_Body
-          Statistic_Type: Min
-          Label: Strut5_Body_eff_tension_min
-        - ObjectName: Strut5_Body
-          Statistic_Type: Max
-          Label: Strut5_Body_eff_tension_max
-        - ObjectName: Strut6_Body
-          Statistic_Type: Min
-          Label: Strut6_Body_eff_tension_min
-        - ObjectName: Strut6_Body
-          Statistic_Type: Max
-          Label: Strut6_Body_eff_tension_max
-        - ObjectName: Strut7_Body
-          Statistic_Type: Min
-          Label: Strut7_Body_eff_tension_min
-        - ObjectName: Strut7_Body
-          Statistic_Type: Max
-          Label: Strut7_Body_eff_tension_max
-        - ObjectName: Strut8_Body
-          Statistic_Type: Min
-          Label: Strut8_Body_eff_tension_min
-        - ObjectName: Strut8_Body
-          Statistic_Type: Max
-          Label: Strut8_Body_eff_tension_max
-
-    - Label: strut_static
-      Columns:
-        - ObjectName: Strut1_Body
-          Statistic_Type: Min
-          Label: Strut1_Body_eff_tension_min
-        - ObjectName: Strut1_Body
-          Statistic_Type: Max
-          Label: Strut1_Body_eff_tension_max
-        - ObjectName: Strut2_Body
-          Statistic_Type: Min
-          Label: Strut2_Body_eff_tension_min
-        - ObjectName: Strut2_Body
-          Statistic_Type: Max
-          Label: Strut2_Body_eff_tension_max
-        - ObjectName: Strut3_Body
-          Statistic_Type: Min
-          Label: Strut3_Body_eff_tension_min
-        - ObjectName: Strut3_Body
-          Statistic_Type: Max
-          Label: Strut3_Body_eff_tension_max
-        - ObjectName: Strut4_Body
-          Statistic_Type: Min
-          Label: Strut4_Body_eff_tension_min
-        - ObjectName: Strut4_Body
-          Statistic_Type: Max
-          Label: Strut4_Body_eff_tension_max
-        - ObjectName: Strut5_Body
-          Statistic_Type: Min
-          Label: Strut5_Body_eff_tension_min
-        - ObjectName: Strut5_Body
-          Statistic_Type: Max
-          Label: Strut5_Body_eff_tension_max
-        - ObjectName: Strut6_Body
-          Statistic_Type: Min
-          Label: Strut6_Body_eff_tension_min
-        - ObjectName: Strut6_Body
-          Statistic_Type: Max
-          Label: Strut6_Body_eff_tension_max
-        - ObjectName: Strut7_Body
-          Statistic_Type: Min
-          Label: Strut7_Body_eff_tension_min
-        - ObjectName: Strut7_Body
-          Statistic_Type: Max
-          Label: Strut7_Body_eff_tension_max
-        - ObjectName: Strut8_Body
-          Statistic_Type: Min
-          Label: Strut8_Body_eff_tension_min
-        - ObjectName: Strut8_Body
-          Statistic_Type: Max
-          Label: Strut8_Body_eff_tension_max
-
     - Label: inputs
       Columns:
         - Command: GetData
@@ -209,6 +121,378 @@ summary_settings:
           ObjectName: Environment
           Variable: [CurrentFactor, 0]
           Label: CurrentFactor[0]
+
+    - Label: strut_dynamics
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_Body_eff_tension_min
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_Body_eff_tension_max
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_Body_eff_tension_min
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_Body_eff_tension_max
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_Body_eff_tension_min
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_Body_eff_tension_max
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_Body_eff_tension_min
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_Body_eff_tension_max
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_Body_eff_tension_min
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_Body_eff_tension_max
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_Body_eff_tension_min
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_Body_eff_tension_max
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_Body_eff_tension_min
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_Body_eff_tension_max
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_Body_eff_tension_min
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_Body_eff_tension_max
+
+    - Label: strut_static
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_Body_eff_tension_min
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_Body_eff_tension_min
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_Body_eff_tension_min
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_Body_eff_tension_min
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_Body_eff_tension_min
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_Body_eff_tension_min
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_Body_eff_tension_min
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_Body_eff_tension_min
+
+    - Label: fst_local_static
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Lz
+          Variable: End Lz force
+
+    - Label: fst_local_dynamic
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_FST_Lz_max
+          Variable: End Lz force
 
 time_series_settings_master:
   data: True
