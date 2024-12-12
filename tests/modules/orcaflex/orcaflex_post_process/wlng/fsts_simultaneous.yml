@@ -41,49 +41,31 @@ linked_statistics_settings_master:
   AddMaximumToSummary: True
   AddMeanToSummary: True
   groups:
-    - Label: ef_end_b
+    - Label: linked_Strut1_FST_Ly
       Columns:
         - SimulationPeriod: [0.0, 10.0]
+          Variable: [End Ly force, End Lx force, End Lz force]
 
     - Label: ef_end_a
       Columns:
         - SimulationPeriod: [0.0, 10.0]
+          Variable: [End Ly force, End Lx force, End Lz force]
 
     - Label: bm_end_b
       Columns:
         - SimulationPeriod: [0.0, 10.0]
+          Variable: [End Ly force, End Lx force, End Lz force]
 
 linked_statistics_settings:
   groups:
-    - Label: ef_end_b
+    - Label: linked_Strut1_FST_Ly
       Columns:
         - ObjectType: line
-          ObjectName: SLWR
+          ObjectName: Strut1_Body
           objectExtra:
             - End B
           SimulationPeriod: [0.0, 10.0]
-          Variable: [Effective tension, Bend moment, Curvature]
-          Label: effective_tension
-
-    - Label: ef_end_a
-      Columns:
-        - ObjectType: line
-          ObjectName: SLWR
-          objectExtra:
-            - End A
-          SimulationPeriod: [0.0, 10.0]
-          Variable: [Effective tension, Bend moment, Curvature]
-          Label: effective_tension
-
-    - Label: bm_end_b
-      Columns:
-        - ObjectType: line
-          ObjectName: SLWR
-          objectExtra:
-            - End B
-          SimulationPeriod: [0.0, 10.0]
-          Variable: [Bend moment, Effective tension, Curvature]
-          Label: bending_moment
+          Label: End Ly
 
 file_management:
   flag: True
