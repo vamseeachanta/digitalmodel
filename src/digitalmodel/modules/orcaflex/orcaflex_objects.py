@@ -1,7 +1,5 @@
+# Standard library imports
 import logging
-
-import OrcFxAPI
-
 
 # Third party imports
 import OrcFxAPI
@@ -95,6 +93,7 @@ class OrcaFlexObjects():
         except Exception as e:
             logging.info(str(e)) 
             raise Exception("Model does not have the objectName")
+
         return OrcFXAPIObject
 
     def get_SimulationPeriod(self, cfg):
@@ -147,6 +146,12 @@ class OrcaFlexObjects():
                 logging.info("SupportIndex not implemented fully. Edit definition to get acceptance.")
                 raise Exception("SupportIndex not implemented fully. Edit definition to get acceptance.")
 
+        if cfg['Variable'] == 'Rigid Pipe':
+            objectExtra = self.get_objectExtra_rigid_pipe(cfg)
+
+        if cfg['Variable'] == 'Line':
+            objectExtra = self.get_objectExtra_line(cfg)
+            
         if 'objectExtra' in cfg and cfg['objectExtra'] is not None and len(cfg['objectExtra']) > 0:
             if cfg['objectExtra'][0] == 'Section':
                 if len(cfg['objectExtra'][1]) == 1:
@@ -190,6 +195,23 @@ class OrcaFlexObjects():
             Location = cfg_time_series['Location']
             objectExtra = OrcFxAPI.oeEnvironment(Location[0], Location[1],
                                                Location[2])
-                                               
+
         return objectExtra
 
+    def get_input_data_variable_name(self, cfg, OrcFXAPIObject, VariableName):
+        if 'ObjectName' in cfg:
+            objectName = cfg['ObjectName']
+        else:
+            raise Exception("Model does not have the objectName")
+
+        if objectName == 'Environment':
+            if type(VariableName) is list:
+                VariableName_0 = VariableName[0]
+                if len(VariableName) == 1:
+                    SelectedCurrentIndex = 0
+                    if 'RefCurrent' in VariableName_0:
+                        # SelectedCurrentIndex = OrcFXAPIObject.SelectedCurrentIndex
+                        OrcFXAPIObject.SelectedCurrent = OrcFXAPIObject.ActiveCurrent
+                    VariableName.append(SelectedCurrentIndex)
+
+        return OrcFXAPIObject, VariableName

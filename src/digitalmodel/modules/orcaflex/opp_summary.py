@@ -1,14 +1,12 @@
 # Standard library imports
 import copy
-import logging
 import math
 import os
 from pathlib import Path
 
 # Third party imports
-import numpy as np
 import pandas as pd
-from assetutilities.common.data import SaveData, TransformData
+from assetutilities.common.data import SaveData
 
 # Reader imports
 from digitalmodel.modules.orcaflex.opp_range_graph import OPPRangeGraph
@@ -110,10 +108,11 @@ class OPPSummary():
             output_value = self.get_StaticResult(OrcFXAPIObject, VariableName,
                                                  objectExtra)
         elif cfg_item['Command'] in ['GetData', 'Get Data']:
-            output_value = self.get_input_data(OrcFXAPIObject, VariableName,
-                                               model)
+            OrcFXAPIObject, VariableName = of_objects.get_input_data_variable_name(cfg_item, OrcFXAPIObject, VariableName)
+            output_value = self.get_input_data(OrcFXAPIObject, VariableName)
 
         return output_value
+
 
     def get_summary_df_columns(self, summary_group_cfg):
         if self.load_matrix is None:
@@ -171,7 +170,11 @@ class OPPSummary():
 
         return output
 
-    def get_input_data(self, OrcFXAPIObject, VariableName, model):
-        output_value = OrcFXAPIObject.GetData(VariableName[0], VariableName[1])
+    def get_input_data(self, OrcFXAPIObject, VariableName):
+        if 'RefCurrent' in VariableName[0]:
+            output_value = getattr(OrcFXAPIObject, VariableName[0])
+        else:
+            output_value = OrcFXAPIObject.GetData(VariableName[0], VariableName[1])
 
         return output_value
+

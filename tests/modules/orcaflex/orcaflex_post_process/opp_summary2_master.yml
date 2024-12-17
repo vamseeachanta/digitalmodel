@@ -69,7 +69,6 @@ summary_settings:
           ObjectName: Environment
           Variable:
             - RefCurrentSpeed
-            - 0
           Label: RefCurrentSpeed
         - Command: GetData
           ObjectName: Environment
@@ -81,7 +80,6 @@ summary_settings:
           ObjectName: Environment
           Variable:
             - RefCurrentDirection
-            - 0
           Label: RefCurrentDirection
         - Command: Range Graph
           ObjectName: SLWR

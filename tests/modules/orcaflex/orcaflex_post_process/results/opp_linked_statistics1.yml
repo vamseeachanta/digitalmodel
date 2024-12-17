@@ -351,18 +351,18 @@ dictitems:
       txt: []
   Analysis:
     basename: orcaflex_post_process
-    analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
+    analysis_root_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
     file_name: opp_linked_statistics1
     file_name_for_overwrite: opp_linked_statistics1
-    result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
-    log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-12-13 22:07:51.746910
+    result_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
+    log_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
+    start_time: 2024-12-17 16:50:55.830011
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_linked_statistics1.yml
-    fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
+    CustomInputFile: opp_linked_statistics1.yml
+    fe_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - k:\
+    - K:\
     - github
     - digitalmodel
     - tests
@@ -370,7 +370,7 @@ dictitems:
     - orcaflex
     - orcaflex_post_process
     file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - k:\
+    - K:\
     - github
     - digitalmodel
     - tests
@@ -380,6 +380,6 @@ dictitems:
   orcaflex_post_process:
     linked_statistics:
       groups:
-      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_ef_end_b.csv
-      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_ef_end_a.csv
-      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_bm_end_b.csv
+      - data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_ef_end_b.csv
+      - data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_ef_end_a.csv
+      - data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_linked_statistics1_bm_end_b.csv
