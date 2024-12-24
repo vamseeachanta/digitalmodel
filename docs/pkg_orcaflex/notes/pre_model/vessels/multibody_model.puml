@@ -48,7 +48,8 @@ start
         - Software: OrcaFlex
         - Define multiple bodies, structures etc.
         - Define boundary conditions, constraints etc.
-        - Define wind, current coefficients etc.
+        - Define wind coeffs, current coefficients etc.
+        - Define: wind, wave and current <font color=red>Wood inputs</font>
         - Postprocess to get results
         - etc.
         - Status: <font color=green>On going</font>

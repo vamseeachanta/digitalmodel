@@ -10,4 +10,4 @@
 # 11 - 0x0000000b
 # 12 - 0000000c 
 
-reg add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Orcina\OrcaFlex /v DefaultThreadCount /t REG_DWORD /d 0000000a /f
+reg add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Orcina\OrcaFlex /v DefaultThreadCount /t REG_DWORD /d 0x0000000b /f

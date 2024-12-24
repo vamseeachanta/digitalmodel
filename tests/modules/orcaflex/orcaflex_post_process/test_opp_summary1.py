@@ -1,6 +1,7 @@
 # Standard library imports
 import os
 import sys
+from typing import Any, Dict
 
 # Reader imports
 import colorama
@@ -10,10 +11,6 @@ from colorama import Fore, Style
 from digitalmodel.engine import engine
 
 colorama.init(autoreset=True)
-
-from typing import Any, Dict
-# Standard library imports
-from typing import Any, Dict
 
 tu = TestUtilities()
 
