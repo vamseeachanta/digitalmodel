@@ -1,14 +1,12 @@
 # Standard library imports
-import os
 import copy
+import os
 from typing import Any, Dict
 
 # Third party imports
 import pandas as pd
-
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
 from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
-
 
 of_objects = OrcaFlexObjects()
 ou = OrcaflexUtilities()
@@ -22,9 +20,9 @@ class OPPLinkedStatistics():
         ls_groups = cfg['linked_statistics_settings']['groups']
 
         linked_statistics_for_file = {}
+        df_columns_basic = ['fe_filename', 'Label', 'run_status', 'statistic']
         for ls_group in ls_groups:
             ls_group_label = ls_group['Label']
-            df_columns = ['fe_filename', 'Label', 'run_status', 'statistic']
             run_status = None
             statistic = None
             df = pd.DataFrame()
@@ -32,12 +30,12 @@ class OPPLinkedStatistics():
                 ls_label = ls_cfg['Label']
                 result_array = [file_name, ls_label, run_status, statistic]
                 linked_statistics = self.get_linked_statistics_from_orcaflex_run(model, ls_cfg)
-                df_columns = df_columns + linked_statistics['variables']
+                df_columns = df_columns_basic + linked_statistics['variables']
                 result_array = result_array + linked_statistics['values']
                 result_df = pd.DataFrame([result_array], columns=df_columns)
                 df = pd.concat([df, result_df], ignore_index=True)
 
-            linked_statistics_for_file.update({ls_group_label: df})
+            linked_statistics_for_file.update({ls_group_label: df.copy()})
 
         return linked_statistics_for_file
 

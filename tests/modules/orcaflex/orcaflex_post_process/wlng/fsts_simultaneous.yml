@@ -41,27 +41,120 @@ linked_statistics_settings_master:
   AddMaximumToSummary: True
   AddMeanToSummary: True
   groups:
-    - Label: linked_Strut1_FST_Ly
+    - Label: strut1_FST_Ly
       Columns:
         - SimulationPeriod: [0.0, 10.0]
           Variable: [End Ly force, End Lx force, End Lz force]
 
-    - Label: ef_end_a
+    - Label: strut2_FST_Ly
       Columns:
         - SimulationPeriod: [0.0, 10.0]
           Variable: [End Ly force, End Lx force, End Lz force]
 
-    - Label: bm_end_b
+    - Label: strut3_FST_Ly
+      Columns:
+        - SimulationPeriod: [0.0, 10.0]
+          Variable: [End Ly force, End Lx force, End Lz force]
+
+    - Label: strut4_FST_Ly
+      Columns:
+        - SimulationPeriod: [0.0, 10.0]
+          Variable: [End Ly force, End Lx force, End Lz force]
+
+    - Label: strut4_FST_Ly
+      Columns:
+        - SimulationPeriod: [0.0, 10.0]
+          Variable: [End Ly force, End Lx force, End Lz force]
+
+    - Label: strut5_FST_Ly
+      Columns:
+        - SimulationPeriod: [0.0, 10.0]
+          Variable: [End Ly force, End Lx force, End Lz force]
+
+    - Label: strut6_FST_Ly
+      Columns:
+        - SimulationPeriod: [0.0, 10.0]
+          Variable: [End Ly force, End Lx force, End Lz force]
+
+    - Label: strut7_FST_Ly
+      Columns:
+        - SimulationPeriod: [0.0, 10.0]
+          Variable: [End Ly force, End Lx force, End Lz force]
+
+    - Label: strut8_FST_Ly
       Columns:
         - SimulationPeriod: [0.0, 10.0]
           Variable: [End Ly force, End Lx force, End Lz force]
 
 linked_statistics_settings:
   groups:
-    - Label: linked_Strut1_FST_Ly
+    - Label: strut1_FST_Ly
       Columns:
         - ObjectType: line
           ObjectName: Strut1_Body
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Label: End Ly
+
+    - Label: strut2_FST_Ly
+      Columns:
+        - ObjectType: line
+          ObjectName: Strut2_Body
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Label: End Ly
+
+    - Label: strut3_FST_Ly
+      Columns:
+        - ObjectType: line
+          ObjectName: Strut3_Body
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Label: End Ly
+
+    - Label: strut4_FST_Ly
+      Columns:
+        - ObjectType: line
+          ObjectName: Strut4_Body
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Label: End Ly
+
+    - Label: strut5_FST_Ly
+      Columns:
+        - ObjectType: line
+          ObjectName: Strut5_Body
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Label: End Ly
+
+    - Label: strut6_FST_Ly
+      Columns:
+        - ObjectType: line
+          ObjectName: Strut6_Body
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Label: End Ly
+
+    - Label: strut7_FST_Ly
+      Columns:
+        - ObjectType: line
+          ObjectName: Strut7_Body
+          objectExtra:
+            - End B
+          SimulationPeriod: [0.0, 10.0]
+          Label: End Ly
+
+    - Label: strut8_FST_Ly
+      Columns:
+        - ObjectType: line
+          ObjectName: Strut8_Body
           objectExtra:
             - End B
           SimulationPeriod: [0.0, 10.0]
