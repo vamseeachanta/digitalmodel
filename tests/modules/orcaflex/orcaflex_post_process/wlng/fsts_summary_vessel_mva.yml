@@ -39,22 +39,46 @@ summary_settings_master:
   AddMaximumToSummary: True
   AddMeanToSummary: True
   groups:
-    - Label: tank_roll
+    - Label: fsts_roll
       Columns:
         - Command: TimeHistory
           SimulationPeriod: [0.0, 10.0]
-          objectExtra:
-            - End B
 
 summary_settings:
   groups:
-    - Label: tank_roll
+    - Label: fsts_roll
       Columns:
         - ObjectName: FST1
           Statistic_Type: Min
-          Label: FST1_Ref
+          Label: FST1_Ref_Rx
           Position: [0, 0, 0]
           Variable: Dynamic Rx
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_Ref_Rx_vel
+          Position: [0, 0, 0]
+          Variable: Z Angular Velocity
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_Ref_Rx_acc
+          Position: [0, 0, 0]
+          Variable: Z Angular Acceleration
+
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_Ref_Rx
+          Position: [0, 0, 0]
+          Variable: Dynamic Rx
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_Ref_Rx_vel
+          Position: [0, 0, 0]
+          Variable: Z Angular Velocity
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_Ref_Rx_acc
+          Position: [0, 0, 0]
+          Variable: Z Angular Acceleration
 
 file_management:
   flag: True

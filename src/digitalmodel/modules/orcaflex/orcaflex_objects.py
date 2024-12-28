@@ -17,9 +17,10 @@ class OrcaFlexObjects():
 
         ArcLengthArray, arclengthRange = self.get_arc_length_objects(cfg)
 
-        objectExtra, arclengthRange_objectExtra = self.get_objectExtra(cfg)
+        objectExtra, arclengthRange_objectExtra = self.get_objectExtra(cfg, OrcFXAPIObject)
         if arclengthRange is None:
             arclengthRange = arclengthRange_objectExtra
+
 
         VariableName = None
         if 'Variable' in cfg:
@@ -132,9 +133,16 @@ class OrcaFlexObjects():
 
         return TimePeriodObject
 
-
-
-    def get_objectExtra(self, cfg):
+    def get_objectExtra(self, cfg, OrcFXAPIObject):
+        '''
+        There are 10s (84 or more) of object types in OrcaFlex. 
+        Example commands below:
+            List: list(OrcFxAPI.ObjectType.__dict__.keys())
+            Count: len(list(OrcFxAPI.ObjectType.__dict__.keys()))
+            Print: print(list(OrcFxAPI.ObjectType.__dict__.keys())
+            
+            #TODO update ObjectExtra to using OrcFxAPI native types rather than external input
+        '''
 
         objectExtra = None
         arclengthRange = None
@@ -151,7 +159,7 @@ class OrcaFlexObjects():
 
         if cfg['Variable'] == 'Line':
             objectExtra = self.get_objectExtra_line(cfg)
-            
+
         if 'objectExtra' in cfg and cfg['objectExtra'] is not None and len(cfg['objectExtra']) > 0:
             if cfg['objectExtra'][0] == 'Section':
                 if len(cfg['objectExtra'][1]) == 1:
@@ -175,9 +183,22 @@ class OrcaFlexObjects():
             else:
                 objectExtra = OrcFxAPI.oeLine([])
 
+        if OrcFXAPIObject.type == OrcFxAPI.ObjectType.Vessel:
+            objectExtra = self.get_objectExtra_vessel(cfg)
+
         return objectExtra, arclengthRange
 
-    
+    def get_objectExtra_vessel(self, cfg):
+        if 'Position' in cfg:
+            Position = cfg['Position']
+        else:
+            Position = [0, 0, 0]
+            logging.info("Position not defined. Defaulting to [0, 0, 0]")
+
+        objectExtra = OrcFxAPI.oeVessel(Position[0], Position[1], Position[2])
+
+        return objectExtra
+
     def get_objectExtra_rigid_pipe(self, cfg_time_series):
         objectExtra = None
         if cfg_time_series.__contains__('ArcLength'):

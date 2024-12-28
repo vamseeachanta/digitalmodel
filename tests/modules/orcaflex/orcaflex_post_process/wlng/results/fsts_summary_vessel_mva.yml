@@ -103,43 +103,159 @@ dictitems:
     AddMaximumToSummary: true
     AddMeanToSummary: true
     groups:
-    - Label: tank_roll
+    - Label: fsts_roll
       Columns:
       - Command: TimeHistory
         SimulationPeriod:
         - 0.0
         - 10.0
-        objectExtra:
-        - End B
         ObjectName: FST1
         Statistic_Type: Min
-        Label: FST1_Ref
+        Label: FST1_Ref_Rx
         Position:
         - 0
         - 0
         - 0
         Variable: Dynamic Rx
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectName: FST1
+        Statistic_Type: Min
+        Label: FST1_Ref_Rx_vel
+        Position:
+        - 0
+        - 0
+        - 0
+        Variable: Z Angular Velocity
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectName: FST1
+        Statistic_Type: Min
+        Label: FST1_Ref_Rx_acc
+        Position:
+        - 0
+        - 0
+        - 0
+        Variable: Z Angular Acceleration
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectName: FST2
+        Statistic_Type: Min
+        Label: FST2_Ref_Rx
+        Position:
+        - 0
+        - 0
+        - 0
+        Variable: Dynamic Rx
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectName: FST2
+        Statistic_Type: Min
+        Label: FST2_Ref_Rx_vel
+        Position:
+        - 0
+        - 0
+        - 0
+        Variable: Z Angular Velocity
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectName: FST2
+        Statistic_Type: Min
+        Label: FST2_Ref_Rx_acc
+        Position:
+        - 0
+        - 0
+        - 0
+        Variable: Z Angular Acceleration
   summary_settings:
     AddMinimumToSummary: true
     AddMaximumToSummary: true
     AddMeanToSummary: true
     groups:
-    - Label: tank_roll
+    - Label: fsts_roll
       Columns:
       - Command: TimeHistory
         SimulationPeriod:
         - 0.0
         - 10.0
-        objectExtra:
-        - End B
         ObjectName: FST1
         Statistic_Type: Min
-        Label: FST1_Ref
+        Label: FST1_Ref_Rx
         Position:
         - 0
         - 0
         - 0
         Variable: Dynamic Rx
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectName: FST1
+        Statistic_Type: Min
+        Label: FST1_Ref_Rx_vel
+        Position:
+        - 0
+        - 0
+        - 0
+        Variable: Z Angular Velocity
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectName: FST1
+        Statistic_Type: Min
+        Label: FST1_Ref_Rx_acc
+        Position:
+        - 0
+        - 0
+        - 0
+        Variable: Z Angular Acceleration
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectName: FST2
+        Statistic_Type: Min
+        Label: FST2_Ref_Rx
+        Position:
+        - 0
+        - 0
+        - 0
+        Variable: Dynamic Rx
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectName: FST2
+        Statistic_Type: Min
+        Label: FST2_Ref_Rx_vel
+        Position:
+        - 0
+        - 0
+        - 0
+        Variable: Z Angular Velocity
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        ObjectName: FST2
+        Statistic_Type: Min
+        Label: FST2_Ref_Rx_acc
+        Position:
+        - 0
+        - 0
+        - 0
+        Variable: Z Angular Acceleration
   file_management:
     flag: true
     update_unfinished:
@@ -179,37 +295,21 @@ dictitems:
       txt: []
   Analysis:
     basename: orcaflex_post_process
-    analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng
-    file_name: fsts_summary_tanks
-    file_name_for_overwrite: fsts_summary_tanks
-    result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results
-    log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\logs
-    start_time: 2024-12-27 12:19:10.664807
+    analysis_root_folder: .
+    file_name: fsts_summary_vessel_mva
+    file_name_for_overwrite: fsts_summary_vessel_mva
+    result_folder: .\results
+    log_folder: .\logs
+    start_time: 2024-12-28 06:24:00.790079
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\fsts_summary_tanks.yml
-    fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results
+    CustomInputFile: .\fsts_summary_vessel_mva.yml
+    fe_folder: .\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - k:\
-    - github
-    - digitalmodel
-    - tests
-    - modules
-    - orcaflex
-    - orcaflex_post_process
-    - wlng
     - analysis
-    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - k:\
-    - github
-    - digitalmodel
-    - tests
-    - modules
-    - orcaflex
-    - orcaflex_post_process
-    - wlng
+    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath []
   orcaflex_post_process:
     summary:
       groups:
-      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_summary_tanks_tank_roll.csv
-        label: tank_roll
+      - data: .\results\fsts_summary_vessel_mva_fsts_roll.csv
+        label: fsts_roll

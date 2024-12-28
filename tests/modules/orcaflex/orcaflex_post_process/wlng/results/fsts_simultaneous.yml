@@ -382,7 +382,7 @@ dictitems:
     file_name_for_overwrite: fsts_simultaneous
     result_folder: .\results
     log_folder: .\logs
-    start_time: 2024-12-26 20:24:56.282433
+    start_time: 2024-12-28 06:15:22.753002
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: .\fsts_simultaneous.yml
