@@ -1,0 +1,62 @@
+basename: aqwa
+
+software:
+  version: []
+  # ANSYSInstallDir: C:\Program Files\ANSYS Inc\v181
+  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
+  # "C:\Program Files\ANSYS Inc\v222\aisol\workbench.bat" -cmd "C:\Program Files\ANSYS Inc\v222\aisol\bin\winx64\AqwaReader.exe" --Type 2
+
+type:
+  preprocess: False
+  analysis: False
+  results: True
+
+result_method: aqwareader # lis
+
+result:
+  - label: damp
+    structure: 1
+    category: frequency
+    save_csv: True
+    save_aqwareader_csv: True
+    inject_into:
+      flag: False
+      filename: results/raos.xlsx
+      sheetname: abs_damp
+    groups:
+      - third_level_label: RADIATION DAMPING
+        first_level: [3] # addedmass/damping choice
+        second_level: [1] # Direction Independent
+        third_level: [3] # DOF
+        fourth_level: [3] # DOF - Tensor
+      - third_level_label: RADIATION DAMPING
+        first_level: [3] # addedmass/damping choice
+        second_level: [1] # Direction Independent
+        third_level: [4] # DOF
+        fourth_level: [4]
+      - third_level_label: RADIATION DAMPING
+        first_level: [3] # addedmass/damping choice
+        second_level: [1] # Direction Independent
+        third_level: [5] # DOF
+        fourth_level: [5] # DOF - Tensor
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: raos
+      filename_pattern: F_
+      file_extensions: [PLT]
+    output_directory: NULL
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

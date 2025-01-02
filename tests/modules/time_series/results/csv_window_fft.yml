@@ -1,0 +1,86 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: time_series
+  calculation:
+    statistics: true
+    fft: false
+    ifft: true
+  filter:
+    low_pass:
+      flag: false
+      frequency_maximum: ~
+    high_pass:
+      flag: false
+      frequency_minimum: ~
+    band_pass:
+      flag: false
+      frequency_minimum: ~
+      frequency_maximum: ~
+  master_settings:
+    groups:
+      columns:
+        time: time
+        signal: POSITION OF COG_in Y direction
+      label: FST CoG
+      file_name: K:/1522/ctr7/02_FST/04_ef_100yr/rev7/fatigue/results/D_D_F2L95_HWL_FAT05_D070_d_1_cog.csv
+  data:
+    type: csv
+    groups:
+    - columns:
+        time: time
+        signal: POSITION OF COG_in Y direction
+      label: FST CoG
+      file_name: K:/1522/ctr7/02_FST/04_ef_100yr/rev7/fatigue/results/D_D_F2L95_HWL_FAT05_D070_d_1_cog.csv
+  default:
+    log_level: INFO
+    config:
+      overwrite:
+        output: true
+  Analysis:
+    fe_folder: tests\modules\time_series\results
+    basename: time_series
+    analysis_root_folder: tests\modules\time_series
+    file_name: csv_window_fft
+    file_name_for_overwrite: csv_window_fft
+    result_folder: tests\modules\time_series\results
+    log_folder: tests\modules\time_series\logs
+    start_time: 2024-11-25 12:35:19.164043
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: tests\modules\time_series\csv_window_fft.yml
+  analysis:
+    basic:
+      sample_fft: false
+      sample_window_average_fft: false
+      window_average_fft: true
+      statistics: false
+      fft: false
+      ifft: false
+      rainflow: false
+      psd: NA
+    custom:
+      no_name: NA
+  fft:
+    filter:
+      flag: true
+      low_pass:
+        flag: false
+        frequency_maximum: ~
+      high_pass:
+        flag: false
+        frequency_minimum: ~
+      band_pass:
+        flag: false
+        frequency_minimum: ~
+        frequency_maximum: ~
+    window:
+      size: 500
+      moving_average:
+        flag: false
+        window_size: 4
+    peaks:
+      flag: true
+      solver: find_peaks
+      min_height_percentage: 60
+      min_distance_index_percentage: 50

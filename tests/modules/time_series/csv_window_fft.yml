@@ -1,0 +1,59 @@
+basename: time_series
+
+analysis:
+  basic:
+    sample_fft: False
+    sample_window_average_fft: False
+    window_average_fft: True
+    statistics: False
+    fft: False
+    ifft: False
+    rainflow: False
+    psd: NA
+  custom:
+    no_name: NA
+
+fft:
+  filter:
+    flag: True
+    low_pass:
+      flag: False
+      frequency_maximum: NULL
+    high_pass:
+      flag: False
+      frequency_minimum: NULL
+    band_pass:
+      flag: False
+      frequency_minimum: NULL
+      frequency_maximum: NULL
+  window:
+    size: 500
+    moving_average:
+      flag: False
+      window_size: 4
+  peaks:
+    flag: True
+    solver: find_peaks
+    min_height_percentage: 60
+    min_distance_index_percentage: 50
+
+master_settings:
+  groups:
+    columns:
+      time: time
+      signal: POSITION OF COG_in Y direction
+
+data:
+  type: csv
+  groups:
+    - label: FST CoG
+      file_name: K:/1522/ctr7/02_FST/04_ef_100yr/rev7/fatigue/results/D_D_F2L95_HWL_FAT05_D070_d_1_cog.csv
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+
+Analysis:
+  fe_folder: NULL

@@ -1,0 +1,109 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: aqwa
+  software:
+    version: []
+  type:
+    preprocess: false
+    analysis: false
+    results: true
+  result_method: lis
+  result:
+  - label: raos_acc
+    file_extension: LIS
+    search_cfg:
+      start:
+        line_number: ~
+        key_words:
+        - ACC R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY
+        occurrence: 1
+        transform:
+          scale: 1
+          shift: 0
+      end:
+        line_number: ~
+        key_words:
+        - ACC R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY
+        occurrence: 9
+        transform:
+          scale: 1
+          shift: 50
+      data_extraction:
+        key_words:
+        - ACC R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY
+        occurrence: ~
+        header:
+          columns:
+          - Period (SECS)
+          - Frequency (RAD/S)
+          - Direction (DEGREES)
+          - Surge Acc. AMP
+          - Surge PHASE
+          - Sway Acc. AMP
+          - Sway PHASE
+          - Heave Acc. AMP
+          - Heave PHASE
+          - Roll Acc. AMP
+          - Roll PHASE
+          - Pitch Acc. AMP
+          - Pitch PHASE
+          - Yaw Acc. AMP
+          - Yaw PHASE
+          transform:
+            scale: 1
+            shift: 4
+        data:
+          transform:
+            scale: 1
+            shift: 7
+    inject_into:
+      flag: true
+      filename: output/aqwa_raos.xlsx
+      sheetname: raos_acc
+  file_management:
+    flag: true
+    update_unfinished:
+      flag: false
+    files:
+      files_in_current_directory:
+        flag: false
+        auto_read: true
+        directory: output/lis
+        filename_pattern: NO_DAMP
+        file_extensions:
+        - LIS
+      output_directory: ~
+    input_files:
+      LIS:
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\lis\NO_DAMP_FST1_L015.LIS
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\lis\NO_DAMP_FST1_L050.LIS
+      - !!python/object/apply:pathlib._local.WindowsPath
+        - tests\modules\aqwa\output\lis\NO_DAMP_FST1_L095.LIS
+  default:
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+      cfg_sensitivities: false
+  Analysis:
+    basename: aqwa
+    analysis_root_folder: tests\modules\aqwa
+    file_name: aqwa_lis_rao_acc_at_CoG
+    file_name_for_overwrite: aqwa_lis_rao_acc_at_CoG
+    result_folder: tests\modules\aqwa\results
+    log_folder: tests\modules\aqwa\logs
+    start_time: 2024-11-25 12:26:55.515305
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: tests\modules\aqwa\aqwa_lis_rao_acc_at_CoG.yml
+    fe_folder: tests\modules\aqwa\results
+    file_management_input_directory: !!python/object/apply:pathlib._local.WindowsPath
+    - tests\modules\aqwa\output/lis
+    file_management_output_directory: !!python/object/apply:pathlib._local.WindowsPath
+    - tests\modules\aqwa
+  aqwa:
+    csv_filename:
+    - tests\modules\aqwa\results\NO_DAMP_FST1_L095_raos_acc.csv

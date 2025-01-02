@@ -1,0 +1,12 @@
+includefile: ../bm_step02.yml
+Environment:
+  WaveTrains:
+  - Name: Wave1
+    WaveType: Airy
+    WaveDirection: 270
+    WaveHeight: 5.11
+    WavePeriod: 11.5
+    WaveOrigin:
+    - 0
+    - 0
+    WaveTimeOrigin: 0

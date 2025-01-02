@@ -1,0 +1,133 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: cathodic_protection
+  inputs:
+    calculation_type: ABS_gn_ships_2018
+    design_life: 5
+    environment:
+      seawater_resistivity:
+        input: 40
+        csv_filename: src/digitalmodel/tests/test_data/cathodic_protection/seawater_conductance_with_temperature.csv
+        csv_reference: https://github.com/vamseeachanta/digitalmodel/blob/master/docs/cathodic_protection/literature/course_notes_Appendix_A_Cathodic_Protection_Design.pdf
+      temperature: 15
+      salinity: 2
+    structure:
+      material: steel
+      area:
+        value: 10778
+        coat_percentage: 100
+        coating_breakdown:
+          type: deterioration
+          year:
+          - 1
+          - 2
+          - 3
+          - 3
+          - 5
+          percentage:
+          - 2
+          - 2
+          - 3
+          - 3
+          - 3
+    current_density:
+      initial:
+        coated: 13.5
+        uncoated: 200
+    cathodic_protection: ~
+    anode_capacity:
+      material: aluminium
+      anode_current_capacity: 2500
+      anode_utilisation_factor: 0.825
+      physical_properties:
+        mean_length: 0.65
+        width: 0.125
+        height: 0.13
+        net_weight: 29.0
+        ratio_of_gross_to_net_weight: 1.0345
+        gross_weight: 30.0
+    anode_shape:
+      steel_iron_calomel_voltage: -0.8
+      anode_voltage: -1.09
+    design_current:
+      input: .csv
+  default:
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+      cfg_sensitivities: false
+  Analysis:
+    fe_folder: ..\results
+    basename: cathodic_protection
+    analysis_root_folder: ..
+    file_name: cathodic_protection
+    file_name_for_overwrite: cathodic_protection
+    result_folder: ..\results
+    log_folder: ..\logs
+    start_time: 2024-06-07 11:45:31.414596
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: ../cathodic_protection.yml
+  outputs:
+    structure_area:
+      coated: 10778.0
+      uncoated: 0.0
+    breakdown_factor:
+      resistivity: 40
+      fcm: 1.075
+      fcf: 1.137
+    current_density:
+      initial:
+        coated: 13.5
+        uncoated: 200
+      mean:
+        deterioration: 14.425
+        disbondment: 20.45
+      final:
+        deterioration: 15.35
+        disbondment: 27.4
+    current_demand:
+      initial: 145.503
+      mean: 155.473
+      final: 165.442
+    anode_capacity:
+      anode_length: 0.65
+      anode_width: 0.125
+      anode_height: 0.13
+      anode_gross_weight: 30.0
+      anode_volume: 0.01056
+      utilisation_factor: 0.825
+    anodes_required:
+      mass:
+        initial: 106.55
+        mean: 113.851
+        final: 121.151
+      count:
+        initial: 107
+        mean: 114
+        final: 122
+    anode_initial_check:
+      delta_E: 0.29
+      anode_resistance: 51.613
+      individual_anode_current: 0.006
+      total_anode_current: 0.64
+      initial_total_anode_output_check: 'No'
+      updated_anode_count: 25895.973
+      updated_anode-weight: 776.9
+    anode_final_check:
+      updated_anode_count: 31633.459
+      updated_anode_weight: 949.004
+      initial_total_current_output_check: 'No'
+      total_current_output: 0.595
+      individual_anode_output: 0.005
+      anode_resistance: 55.45
+    seawater_resistivity: 40.0
+    summary:
+      anode_count_initial_kg: 107
+      anode_count_mean_kg: 114
+      anode_count_final_kg: 122
+      anode_mass_initial_kg: 106.55
+      anode_mass_mean_kg: 113.851
+      anode_mass_final_kg: 121.151

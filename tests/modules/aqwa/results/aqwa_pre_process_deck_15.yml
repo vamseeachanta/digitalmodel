@@ -1,0 +1,85 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: aqwa
+  software:
+    version: []
+  type:
+    preprocess: true
+    analysis: false
+    results: false
+  result_method: lis
+  result:
+  - label: moorings
+    file_extension: LIS
+    search_cfg:
+      start:
+        keyword: M O O R I N G   F O R C E S   A N D   S T I F F N E S S
+        occurrence: 1
+      end:
+        keyword: '---------------------------------'
+        occurrence: 2
+      data_extraction:
+        keyword: COMP
+        scale: 1
+        shift: 0
+        line_idx: 4
+    inject_into:
+      flag: true
+      filename: output/aqwa_lis.xlsx
+      sheetname: m_f
+  file_management:
+    flag: true
+    update_unfinished:
+      flag: false
+    files:
+      files_in_current_directory:
+        flag: false
+        auto_read: true
+        directory: output/lis
+        filename_pattern: ~
+      output_directory: results
+    input_files: {}
+  default:
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+      cfg_sensitivities: false
+  pre_process_settings:
+    file_extension: dat
+  inputs:
+  - file_prefix: F2L95_EHHWL_
+    file_extension: deck
+    data:
+      category: 15
+      raw:
+        directory: K:/1522/ctr7/02_FST/04_ef_100yr/rev6/force/results
+        filename_pattern: D_NOL_F2L95_EHHWL_d_*_cog.csv
+  Analysis:
+    basename: aqwa
+    analysis_root_folder: src/digitalmodel/tests/test_data\aqwa
+    file_name: aqwa_pre_process_deck_15
+    file_name_for_overwrite: aqwa_pre_process_deck_15
+    result_folder: src/digitalmodel/tests/test_data\aqwa\results
+    log_folder: src/digitalmodel/tests/test_data\aqwa\logs
+    start_time: 2024-10-02 09:47:22.146568
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_pre_process_deck_15.yml
+    fe_folder: src/digitalmodel/tests/test_data\aqwa\results
+    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa
+    - output
+    - lis
+    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa
+    - results
