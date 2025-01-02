@@ -397,4 +397,3 @@ class CathodicProtection():
             return resistivity
         
         return resistivity        
-        return resistivity

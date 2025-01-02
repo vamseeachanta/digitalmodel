@@ -1,0 +1,22 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.4d
+# File: K:\1522\ctr7\orcaflex\anl\post_dev\FST2F_FST1F_LWL_000deg.yml
+# Created: 5:33 AM on 12/3/2024
+# User: vamseea
+# Machine: ACMA-ANSYS04
+---
+BaseFile: ../rev_a03/fst1_f_fst2_f_lwl.yml
+General:
+  StageDuration[1]: 1
+  StageDuration[2]: 10
+Environment:
+  WaveTrains:
+    Wave1:
+      WaveHs: 0.24
+      WaveTz: 0.8596565999999998
+      WaveGamma: 3
+  RefCurrentSpeed: 0.4
+  RefCurrentDirection: 357
+  WindSpeed: 29.4
+...

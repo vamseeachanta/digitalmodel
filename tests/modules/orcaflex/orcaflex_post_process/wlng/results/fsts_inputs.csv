@@ -1,0 +1,6 @@
+fe_filename,run_status,description,statistic,FST1_Heading,FST2_Heading,WindDirection,WindSpeed,WaveDirection,Hs,WaveTz,WaveGamma,RefCurrentSpeed,RefCurrentDirection,CurrentFactor[0]
+K:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/wlng/analysis/FST2F_FST1F_LWL_000deg.sim,,,,180.0,0.0,0.0,29.4,0.0,0.24,0.859657,3.0,0.4,357.0,1.0
+,,,min,180.0,0.0,0.0,29.4,0.0,0.24,0.859657,3.0,0.4,357.0,1.0
+,,,max,180.0,0.0,0.0,29.4,0.0,0.24,0.859657,3.0,0.4,357.0,1.0
+,,,mean,180.0,0.0,0.0,29.4,0.0,0.24,0.859657,3.0,0.4,357.0,1.0
+,,,stdev,,,,,,,,,,,

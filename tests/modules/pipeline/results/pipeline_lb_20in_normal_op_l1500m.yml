@@ -1,0 +1,220 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: pipeline
+  code: ~
+  software:
+    version: []
+  calculation:
+    name: lateral_buckling
+  inputs:
+    seawater_density: 1025
+  pipeline:
+    length: 1500
+    water_depth:
+      length_percent:
+      - 0
+      - 20
+      - 40
+      - 60
+      - 80
+      - 100
+      unit: ft
+      depth:
+      - 584
+      - 498.7
+      length_factor:
+      - 0
+      - 1
+    soil:
+      axial_breakout_friction_coeff: 0.6
+      lateral_breakout_friction_coeff: 0.6
+    tension:
+      unit: kip
+      start: 0
+      end: 0
+      lay_tension: 0
+    route:
+      unit: m
+      curve_radius: 3000
+    crossection:
+    - Nominal_ID: 18.25
+      Nominal_OD: 20
+      Design_WT: 0.875
+      Corrosion_Allowance: 0.126
+      average_internal_metal_loss_percentage: 10
+      external_fluid:
+        unit: lb/inch^3
+        density: 0.03721
+        pressure:
+          unit: psi
+          pressure: ~
+          reference_depth: 410
+      internal_fluid:
+        unit: lb/inch^3
+        density: 0.02218
+        pressure:
+          unit: psi
+          pressure: 783.5
+          top_side_elevation: 65.62
+          reference_water_depth: 584
+      temperature:
+        type: differential
+        unit: celsius
+        length_factor:
+        - 0
+        - 1.0
+        temperature:
+        - 95
+        - 90
+      Material:
+        name: steel
+        grade: API 5L X60
+        ThermalExpansionCoefficient: 1.17e-05
+      WeldFactor:
+        Seamless: 1.0
+      coatings:
+      - &id002
+        material: ~
+        purpose: insulation
+        thickness: 0
+        density: 0
+        ID: 20
+        OD: 20
+        mass: 0.0
+        buoyancy: 0
+      - &id003
+        material: ~
+        purpose: anti-corrosion
+        thickness: 0.122
+        density: 0.03396
+        ID: 20
+        OD: 20.244
+        mass: 0.2619078585321209
+        buoyancy: 0
+      - &id004
+        material: concrete
+        purpose: unknown
+        thickness: 0
+        density: 0
+        concrete_water_absorption_rate_percent: 0
+        ID: 20.244
+        OD: 20.244
+        mass: 0.0
+        buoyancy: 0.0
+      code:
+      - 30 CFR Part 250
+      Manufacturing:
+        Coupling Mass Ratio: 0.0
+    pipe_properties:
+    - dimensions:
+        nominal:
+          OD: 20
+          ID: 18.25
+          WT: 0.875
+        with_corrosion:
+          OD: 20
+          ID: 18.2752
+          WT: 0.8623999999999992
+      material:
+        E: 30000000.0
+        G: 11538461.538461538
+        Poissonsratio: 0.3
+        Rho: 0.2817929
+        ThermalExpansionCoefficient: 1.17e-05
+        Reference: ~
+        SMUS: ~
+        SMYS: 60000
+        name: steel
+        grade: API 5L X60
+      section:
+        Ao: 314.1592653589793
+        Ai: 262.30958378650536
+        Io: 7853.981633974483
+        Ii: 5475.432792633616
+        Jo: 15707.963267948966
+        Ji: 10950.865585267233
+        A: 51.84968157247397
+        I: 2378.5488413408666
+        J: 4757.097682681733
+        mass: 14.610872134384001
+        EI: 71356465240.226
+        EA: 1555490447.1742191
+        GJ: 54889588646.32769
+      coating:
+      - *id002
+      - *id003
+      - *id004
+      internal_fluid:
+        mass: 5.818026568384688
+        pressure: 956.4028592
+      buoyancy:
+        mass: 11.976838920544141
+      equivalent:
+        mass:
+          air:
+            without_internal_fluid: 14.872779992916122
+            with_internal_fluid: 20.69080656130081
+          water:
+            without_internal_fluid: 2.895941072371981
+            with_internal_fluid: 8.71396764075667
+          specific_density: 1.2417951090086474
+        EI: 71356465240.226
+        EA: 1555490447.1742191
+        GJ: 54889588646.32769
+        E: 30000000.0
+        SMYS: 60000
+        SMUS: ~
+        Poissonsratio: 0.3
+    system_properties:
+      mass:
+        air:
+          without_internal_fluid: 14.872779992916122
+          with_internal_fluid: 20.69080656130081
+        water:
+          without_internal_fluid: 2.895941072371981
+          with_internal_fluid: 8.71396764075667
+      A: 51.84968157247397
+      EI: 71356465240.226
+      EA: 1555490447.1742191
+      GJ: 54889588646.32769
+      E: 30000000.0
+      SMYS: 60000
+      SMUS: ~
+      Poissonsratio: 0.3
+    friction_force:
+      axial: 5.228380584454001
+      lateral: 5.228380584454001
+    lateral_buckling:
+      anchor_length:
+        start: 750.0
+        end: 750.0
+      min_critical_buckling_load: -344770.86746969656
+      effective_axial_load:
+        anchor_start: -154.381
+        anchor_end: -154.381
+      lateral_buckling_check: Pass
+      fully_restrained_axial_force:
+        L=0: -1829.277
+        L=L: -1738.281
+  type:
+    preprocess: false
+    analysis: false
+    results: true
+  default:
+    log_level: INFO
+    config:
+      overwrite:
+        output: true
+  Analysis:
+    basename: pipeline
+    analysis_root_folder: tests\modules\pipeline
+    file_name: pipeline_lb_20in_normal_op_l1500m
+    file_name_for_overwrite: pipeline_lb_20in_normal_op_l1500m
+    result_folder: tests\modules\pipeline\results
+    log_folder: tests\modules\pipeline\logs
+    start_time: 2024-11-25 12:33:57.239105
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: tests\modules\pipeline\pipeline_lb_20in_normal_op_l1500m.yml
+    fe_folder: tests\modules\pipeline\results

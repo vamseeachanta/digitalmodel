@@ -1,0 +1,8 @@
+﻿WaveTrains:
+  - Name: Wave1
+    WaveType: Airy
+    WaveDirection: 180
+    WaveHeight: 7
+    WavePeriod: 8
+    WaveOrigin: [0, 0]
+    WaveTimeOrigin: 0

@@ -16,12 +16,18 @@ Run instructions with:
  Rename Summary "Hangoff" to "HangOffToSag"
 '''
 
-from digitalmodel.custom.catenary.catenaryMethods import (
-    buoyancyProperties, catenaryEquation, catenaryForces,
-    lazyWaveCatenaryEquation, lazyWavePlot, simple_catenary_plot,
-    gethorizontalDistanceHangofftoTDPrange)
-from digitalmodel.custom.catenary.orcaflexModel import build_model
-from digitalmodel.custom.catenary.pipeProperties import pipeProperties
+from digitalmodel.modules.catenary.catenaryMethods import (
+    buoyancyProperties,
+    catenaryEquation,
+    catenaryForces,
+    gethorizontalDistanceHangofftoTDPrange,
+    lazyWaveCatenaryEquation,
+    lazyWavePlot,
+    simple_catenary_plot,
+)
+from digitalmodel.modules.catenary.orcaflexModel import build_model
+from digitalmodel.modules.catenary.pipeProperties import pipeProperties
+from digitalmodel.modules.catenary.pipeProperties import pipeProperties
 
 
 def catenary_riser(cfg):

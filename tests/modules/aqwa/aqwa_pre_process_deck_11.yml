@@ -1,0 +1,47 @@
+basename: aqwa
+
+software:
+  version: []
+
+type:
+  preprocess: True
+  analysis: False
+  results: False
+
+pre_process_settings:
+  file_extension: dat
+
+inputs:
+  - file_prefix: fst2_
+    file_extension: deck
+    data:
+      category: 11
+
+      raw:
+        [
+          { element_type: CPRF, depth: -40, speed: 0.3, direction: 75.5 },
+          { element_type: CPRF, depth: -30, speed: 0.4, direction: 75.5 },
+          { element_type: CPRF, depth: -15, speed: 0.45, direction: 75.5 },
+          { element_type: CPRF, depth: 0, speed: 0.5, direction: 75.5 },
+          { element_type: WIND, speed: 20.1, direction: 22.8 },
+        ]
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: output/lis
+      filename_pattern: NULL
+    output_directory: results
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

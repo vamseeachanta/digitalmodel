@@ -1,0 +1,59 @@
+﻿Groups:
+  Structure:
+    FST2: Model
+    FST1: Model
+    Jacket1: Model
+    Jacket1_Center: Jacket1
+    Jacket1_X_Springs: Jacket1
+    Jacket1_Y_Springs: Jacket1
+    Jacket1_Z_Springs: Jacket1
+    Strut1: Jacket1
+    Strut1_Body: Strut1
+    Strut2: Jacket1
+    Strut2_Body: Strut2
+    Jacket2: Model
+    Jacket2_Center: Jacket2
+    Jacket2_X_Springs: Jacket2
+    Jacket2_Y_Springs: Jacket2
+    Jacket2_Z_Springs: Jacket2
+    Strut3: Jacket2
+    Strut3_Body: Strut3
+    Strut4: Jacket2
+    Strut4_Body: Strut4
+    Jacket3: Model
+    Jacket3_Center: Jacket3
+    Jacket3_X_Springs: Jacket3
+    Jacket3_Y_Springs: Jacket3
+    Jacket3_Z_Springs: Jacket3
+    Strut5: Jacket3
+    Strut5_Body: Strut5
+    Strut6: Jacket3
+    Strut6_Body: Strut6
+    Jacket4: Model
+    Jacket4_Center: Jacket4
+    Jacket4_X_Springs: Jacket4
+    Jacket4_Y_Springs: Jacket4
+    Jacket4_Z_Springs: Jacket4
+    Strut7: Jacket4
+    Strut7_Body: Strut7
+    Strut8: Jacket4
+    Strut8_Body: Strut8
+    Contact: Model
+    FST2_Conact_Line_01: Contact
+    FST2_Conact_Line_02: Contact
+    FST2_Conact_Line_03: Contact
+    FST2_Conact_Line_04: Contact
+    FST1_Conact_Line_01: Contact
+    FST1_Conact_Line_02: Contact
+    FST1_Conact_Line_03: Contact
+    FST1_Conact_Line_04: Contact
+    FST2_Conact_Line_05: Contact
+    FST1_Conact_Line_05: Contact
+  State:
+    Collapsed:
+      - Variable data
+      - Jacket1
+      - Jacket2
+      - Jacket3
+      - Jacket4
+      - Contact

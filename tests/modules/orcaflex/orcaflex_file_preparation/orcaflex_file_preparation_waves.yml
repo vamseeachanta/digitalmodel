@@ -1,0 +1,51 @@
+basename: orcaflex_file_preparation
+
+operating_envelopes: True
+
+inputs:
+  - output_dir: bm_step02
+    includefile: ../bm_step02.yml
+    BaseFile: ../bm_step02.yml
+
+    general:
+      initial_tperiod_factor: 2
+      analysis_tperiod_factor: 5
+
+    output:
+      tperiod: LatestWave
+
+    loads:
+      wave:
+        no_of_waves: 1
+        WaveType: Airy
+        peakedness:
+          by_region: True
+          region: Gayana
+        hs: [2.75, 2.50]
+        tp: [13] # [6, 7, 8, 9, 10, 11, 12, 13]
+        WaveDirection: [255, 270] # [270, 180]
+      current:
+        []
+
+        # - name: NoCurrent
+        #   maginitude: 0
+        #   direction: 0
+
+    offsets: []
+
+    outputs: []
+
+default:
+  Constants:
+    g: 9.81
+  units:
+    loads:
+      wave:
+        hs: m
+        tp: s
+        heading: deg
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

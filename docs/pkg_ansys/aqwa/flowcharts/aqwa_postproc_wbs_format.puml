@@ -1,0 +1,36 @@
+@startwbs aqwa_postproc
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title AQWA post process
+
+* Postprocess
+
+' Post processing improvements:
+' Automatically run the scripts to generate the results
+' Automatically find number of structures and moorings
+' Automatically find the number of RAOs
+' Generate required tables, charts and plots
+
+** Mooring Analysis
+*** Structure CoG \n Method: AqwaReader \n Output: summary, iteration plots \n Dev Status: Done
+*** Mooring Forces \n Method: AqwaReader \n Output: summary, iteration plots \n Dev Status: Done
+
+
+** RAO Analysis
+*** Damping Values  \n Method: AqwaReader
+*** Damping in %  \n Method: LISFile
+*** RAOs-Motion(m)/Velocity(v), CoG  \n Method: AqwaReader
+*** RAOs-Acceleration(a), CoG  \n Method: LISFile
+*** RAOs-m/v/a, pre-defined Node  \n Method: LISFile
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@endwbs
