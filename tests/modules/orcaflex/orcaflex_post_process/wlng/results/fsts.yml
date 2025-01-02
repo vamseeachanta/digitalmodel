@@ -1,0 +1,6077 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: orcaflex_post_process
+  default:
+    log_level: INFO
+    config:
+      overwrite:
+        output: true
+  orcaflex:
+    postprocess:
+      visualization:
+        flag: false
+      summary:
+        flag: true
+        min: true
+        max: true
+        mean: true
+      linked_statistics:
+        flag: false
+        min: true
+        max: true
+        mean: true
+      RangeGraph:
+        flag: false
+      RAOs:
+        flag: false
+      time_series:
+        flag: true
+        histogram: true
+        summation: true
+      cummulative_histograms:
+        flag: false
+      rain_flow:
+        bins: 10
+        range:
+        - 0
+        - 10
+    analysis:
+      static: false
+      simulation: false
+      iterate:
+        flag: false
+      save_sim: false
+      save_dat: false
+  visualization_settings:
+    label: ld_6_7_8
+    individual: true
+    combined: false
+    hide_items: []
+    add_items:
+    - Umbilical
+    - uta2-deep
+    views:
+    - Elevation
+    - Plan
+    tdp_line: Umbilical
+    viewparams:
+      elevation:
+        RelativeToObject: uth2-deep
+        ViewCentre:
+        - -17
+        - 0
+        - 12
+        ViewSize: 120
+        DrawViewAxes: false
+        DrawGlobalAxes: false
+        DrawScaleBar: false
+        ViewAzimuth: 270
+        ViewElevation: 0
+        ViewGamma: 71.89
+        Height: 1425
+        Width: 892
+      plan:
+        RelativeToObject: uth2-deep
+        ViewCentre:
+        - 10
+        - 0
+        - 8
+        ViewSize: 80
+        DrawViewAxes: false
+        DrawGlobalAxes: false
+        DrawScaleBar: false
+        ViewAzimuth: 270
+        ViewElevation: 90
+        ViewGamma: 0
+        Height: 1425
+        Width: 892
+  RangeGraph_settings:
+    add_effective_tension_to_cfg: false
+  time_series_settings:
+    histogram: false
+    summation: false
+    groups:
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut1
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut2
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut3
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut4
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut5
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut6
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut7
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut8
+    - Columns:
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_X_Springs
+        Variable: x
+        Label: x displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_Y_Springs
+        Variable: y
+        Label: y displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_X_Springs
+        Variable: x velocity
+        Label: x velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_Y_Springs
+        Variable: y velocity
+        Label: y velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_X_Springs
+        Variable: In-frame connection GX force
+        Label: FX Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_Y_Springs
+        Variable: In-frame connection GY force
+        Label: FY Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_Z_Springs
+        Variable: In-frame connection GZ force
+        Label: FZ Force
+      Label: Jacket1
+    - Columns:
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_X_Springs
+        Variable: x
+        Label: x displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_Y_Springs
+        Variable: y
+        Label: y displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_X_Springs
+        Variable: x velocity
+        Label: x velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_Y_Springs
+        Variable: y velocity
+        Label: y velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_X_Springs
+        Variable: In-frame connection GX force
+        Label: FX Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_Y_Springs
+        Variable: In-frame connection GY force
+        Label: FY Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_Z_Springs
+        Variable: In-frame connection GZ force
+        Label: FZ Force
+      Label: Jacket2
+    - Columns:
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_X_Springs
+        Variable: x
+        Label: x displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_Y_Springs
+        Variable: y
+        Label: y displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_X_Springs
+        Variable: x velocity
+        Label: x velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_Y_Springs
+        Variable: y velocity
+        Label: y velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_X_Springs
+        Variable: In-frame connection GX force
+        Label: FX Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_Y_Springs
+        Variable: In-frame connection GY force
+        Label: FY Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_Z_Springs
+        Variable: In-frame connection GZ force
+        Label: FZ Force
+      Label: Jacket3
+    - Columns:
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_X_Springs
+        Variable: x
+        Label: x displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_Y_Springs
+        Variable: y
+        Label: y displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_X_Springs
+        Variable: x velocity
+        Label: x velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_Y_Springs
+        Variable: y velocity
+        Label: y velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_X_Springs
+        Variable: In-frame connection GX force
+        Label: FX Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_Y_Springs
+        Variable: In-frame connection GY force
+        Label: FY Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_Z_Springs
+        Variable: In-frame connection GZ force
+        Label: FZ Force
+      Label: Jacket4
+    data: true
+  Files:
+    data_source: yml
+    csv_filename: ''
+    input_files:
+      yml:
+      - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
+  summary_settings_master:
+    AddMinimumToSummary: true
+    AddMaximumToSummary: true
+    AddMeanToSummary: true
+    groups:
+    - Label: inputs
+      Columns:
+      - Command: GetData
+        ObjectName: FST1
+        Variable:
+        - InitialHeading
+        - -1
+        Label: FST1_Heading
+      - Command: GetData
+        ObjectName: FST2
+        Variable:
+        - InitialHeading
+        - -1
+        Label: FST2_Heading
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WindDirection
+        - -1
+        Label: WindDirection
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WindSpeed
+        - -1
+        Label: WindSpeed
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WaveDirection
+        - -1
+        Label: WaveDirection
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WaveHs
+        - -1
+        Label: Hs
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WaveTz
+        - -1
+        Label: WaveTz
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WaveGamma
+        - -1
+        Label: WaveGamma
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - RefCurrentSpeed
+        - 0
+        Label: RefCurrentSpeed
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - RefCurrentDirection
+        - 0
+        Label: RefCurrentDirection
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - CurrentFactor
+        - 0
+        Label: CurrentFactor[0]
+    - Label: strut_dynamics
+      Columns:
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut1_Body
+        Statistic_Type: Max
+        Label: Strut1_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut2_Body
+        Statistic_Type: Max
+        Label: Strut2_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut3_Body
+        Statistic_Type: Max
+        Label: Strut3_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut4_Body
+        Statistic_Type: Max
+        Label: Strut4_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut5_Body
+        Statistic_Type: Max
+        Label: Strut5_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut6_Body
+        Statistic_Type: Max
+        Label: Strut6_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut7_Body
+        Statistic_Type: Max
+        Label: Strut7_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut8_Body
+        Statistic_Type: Max
+        Label: Strut8_Body_eff_tension_max
+    - Label: strut_static
+      Columns:
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_Body_eff_tension_min
+    - Label: fst_local_static
+      Columns:
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_FST_Lz
+        Variable: End Lz force
+    - Label: fst_local_dynamic
+      Columns:
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Max
+        Label: Strut1_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Max
+        Label: Strut1_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Max
+        Label: Strut1_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Max
+        Label: Strut2_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Max
+        Label: Strut2_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Max
+        Label: Strut2_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Max
+        Label: Strut3_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Max
+        Label: Strut3_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Max
+        Label: Strut3_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Max
+        Label: Strut4_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Max
+        Label: Strut4_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Max
+        Label: Strut4_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Max
+        Label: Strut5_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Max
+        Label: Strut5_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Max
+        Label: Strut5_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Max
+        Label: Strut6_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Max
+        Label: Strut6_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Max
+        Label: Strut6_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Max
+        Label: Strut7_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Max
+        Label: Strut7_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Max
+        Label: Strut7_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Max
+        Label: Strut8_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Max
+        Label: Strut8_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Max
+        Label: Strut8_FST_Lz_max
+        Variable: End Lz force
+  summary_settings:
+    AddMinimumToSummary: true
+    AddMaximumToSummary: true
+    AddMeanToSummary: true
+    groups:
+    - Label: inputs
+      Columns:
+      - Command: GetData
+        ObjectName: FST1
+        Variable:
+        - InitialHeading
+        - -1
+        Label: FST1_Heading
+      - Command: GetData
+        ObjectName: FST2
+        Variable:
+        - InitialHeading
+        - -1
+        Label: FST2_Heading
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WindDirection
+        - -1
+        Label: WindDirection
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WindSpeed
+        - -1
+        Label: WindSpeed
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WaveDirection
+        - -1
+        Label: WaveDirection
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WaveHs
+        - -1
+        Label: Hs
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WaveTz
+        - -1
+        Label: WaveTz
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - WaveGamma
+        - -1
+        Label: WaveGamma
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - RefCurrentSpeed
+        - 0
+        Label: RefCurrentSpeed
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - RefCurrentDirection
+        - 0
+        Label: RefCurrentDirection
+      - Command: GetData
+        ObjectName: Environment
+        Variable:
+        - CurrentFactor
+        - 0
+        Label: CurrentFactor[0]
+    - Label: strut_dynamics
+      Columns:
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut1_Body
+        Statistic_Type: Max
+        Label: Strut1_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut2_Body
+        Statistic_Type: Max
+        Label: Strut2_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut3_Body
+        Statistic_Type: Max
+        Label: Strut3_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut4_Body
+        Statistic_Type: Max
+        Label: Strut4_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut5_Body
+        Statistic_Type: Max
+        Label: Strut5_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut6_Body
+        Statistic_Type: Max
+        Label: Strut6_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut7_Body
+        Statistic_Type: Max
+        Label: Strut7_Body_eff_tension_max
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut8_Body
+        Statistic_Type: Max
+        Label: Strut8_Body_eff_tension_max
+    - Label: strut_static
+      Columns:
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_Body_eff_tension_min
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End A
+        Variable: Effective Tension
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_Body_eff_tension_min
+    - Label: fst_local_static
+      Columns:
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_FST_Lz
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_FST_Lx
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_FST_Ly
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod: StaticState
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_FST_Lz
+        Variable: End Lz force
+    - Label: fst_local_dynamic
+      Columns:
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Max
+        Label: Strut1_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Max
+        Label: Strut1_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Min
+        Label: Strut1_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut1_Body
+        Statistic_Type: Max
+        Label: Strut1_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Max
+        Label: Strut2_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Max
+        Label: Strut2_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Min
+        Label: Strut2_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut2_Body
+        Statistic_Type: Max
+        Label: Strut2_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Max
+        Label: Strut3_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Max
+        Label: Strut3_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Min
+        Label: Strut3_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut3_Body
+        Statistic_Type: Max
+        Label: Strut3_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Max
+        Label: Strut4_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Max
+        Label: Strut4_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Min
+        Label: Strut4_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut4_Body
+        Statistic_Type: Max
+        Label: Strut4_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Max
+        Label: Strut5_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Max
+        Label: Strut5_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Min
+        Label: Strut5_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut5_Body
+        Statistic_Type: Max
+        Label: Strut5_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Max
+        Label: Strut6_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Max
+        Label: Strut6_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Min
+        Label: Strut6_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut6_Body
+        Statistic_Type: Max
+        Label: Strut6_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Max
+        Label: Strut7_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Max
+        Label: Strut7_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Min
+        Label: Strut7_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut7_Body
+        Statistic_Type: Max
+        Label: Strut7_FST_Lz_max
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_FST_Lx_min
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Max
+        Label: Strut8_FST_Lx_max
+        Variable: End Lx force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_FST_Ly_min
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Max
+        Label: Strut8_FST_Ly_max
+        Variable: End Ly force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Min
+        Label: Strut8_FST_Lz_min
+        Variable: End Lz force
+      - Command: TimeHistory
+        SimulationPeriod:
+        - 0.0
+        - 10.0
+        objectExtra:
+        - End B
+        ObjectName: Strut8_Body
+        Statistic_Type: Max
+        Label: Strut8_FST_Lz_max
+        Variable: End Lz force
+  time_series_settings_master:
+    data: true
+    histogram: false
+    summation: false
+    groups:
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut1_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut1
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut2_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut2
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut3_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut3
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut4_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut4
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut5_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut5
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut6_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut6
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut7_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut7
+    - Columns:
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End A
+        Label: Tension (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End A
+        Label: Shear (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End A
+        Label: Fx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End A
+        Label: Fy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End A
+        Label: Fz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End A
+        Label: X (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End A
+        Label: Y (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End A
+        Label: Z (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End A
+        Label: Vx (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End A
+        Label: Vy (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End A
+        Label: Vz (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End A
+        Label: Angle (Jacket End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Effective Tension
+        objectExtra:
+        - End B
+        Label: Tension (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Shear Force
+        objectExtra:
+        - End B
+        Label: Shear (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gx Force
+        objectExtra:
+        - End B
+        Label: Fx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gy Force
+        objectExtra:
+        - End B
+        Label: Fy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: End Gz Force
+        objectExtra:
+        - End B
+        Label: Fz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: X
+        objectExtra:
+        - End B
+        Label: X (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Y
+        objectExtra:
+        - End B
+        Label: Y (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: Z
+        objectExtra:
+        - End B
+        Label: Z (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GX velocity
+        objectExtra:
+        - End B
+        Label: Vx (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GY velocity
+        objectExtra:
+        - End B
+        Label: Vy (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: GZ velocity
+        objectExtra:
+        - End B
+        Label: Vz (Vessel End)
+      - Command: TimeHistory
+        ObjectName: Strut8_Body
+        SimulationPeriod:
+        - 0.0
+        - 10
+        Variable: EZ Angle
+        objectExtra:
+        - End B
+        Label: Angle (Vessel End)
+      Label: Strut8
+    - Columns:
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_X_Springs
+        Variable: x
+        Label: x displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_Y_Springs
+        Variable: y
+        Label: y displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_X_Springs
+        Variable: x velocity
+        Label: x velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_Y_Springs
+        Variable: y velocity
+        Label: y velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_X_Springs
+        Variable: In-frame connection GX force
+        Label: FX Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_Y_Springs
+        Variable: In-frame connection GY force
+        Label: FY Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket1_Z_Springs
+        Variable: In-frame connection GZ force
+        Label: FZ Force
+      Label: Jacket1
+    - Columns:
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_X_Springs
+        Variable: x
+        Label: x displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_Y_Springs
+        Variable: y
+        Label: y displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_X_Springs
+        Variable: x velocity
+        Label: x velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_Y_Springs
+        Variable: y velocity
+        Label: y velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_X_Springs
+        Variable: In-frame connection GX force
+        Label: FX Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_Y_Springs
+        Variable: In-frame connection GY force
+        Label: FY Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket2_Z_Springs
+        Variable: In-frame connection GZ force
+        Label: FZ Force
+      Label: Jacket2
+    - Columns:
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_X_Springs
+        Variable: x
+        Label: x displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_Y_Springs
+        Variable: y
+        Label: y displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_X_Springs
+        Variable: x velocity
+        Label: x velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_Y_Springs
+        Variable: y velocity
+        Label: y velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_X_Springs
+        Variable: In-frame connection GX force
+        Label: FX Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_Y_Springs
+        Variable: In-frame connection GY force
+        Label: FY Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket3_Z_Springs
+        Variable: In-frame connection GZ force
+        Label: FZ Force
+      Label: Jacket3
+    - Columns:
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_X_Springs
+        Variable: x
+        Label: x displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_Y_Springs
+        Variable: y
+        Label: y displacment
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_X_Springs
+        Variable: x velocity
+        Label: x velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_Y_Springs
+        Variable: y velocity
+        Label: y velocity
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_X_Springs
+        Variable: In-frame connection GX force
+        Label: FX Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_Y_Springs
+        Variable: In-frame connection GY force
+        Label: FY Force
+      - Command: TimeHistory
+        objectExtra: ~
+        SimulationPeriod:
+        - 0.0
+        - 10
+        ObjectName: Jacket4_Z_Springs
+        Variable: In-frame connection GZ force
+        Label: FZ Force
+      Label: Jacket4
+  file_management:
+    flag: true
+    update_unfinished:
+      flag: false
+    files:
+      files_in_current_directory:
+        flag: false
+        directory: analysis
+        auto_read: true
+    input_files:
+      yml:
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - wlng
+        - analysis
+        - FST2F_FST1F_LWL_000deg.yml
+      yaml: []
+      dat: []
+      sim:
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - wlng
+        - analysis
+        - FST2F_FST1F_LWL_000deg.sim
+      txt: []
+  Analysis:
+    basename: orcaflex_post_process
+    analysis_root_folder: .
+    file_name: fsts
+    file_name_for_overwrite: fsts
+    result_folder: .\results
+    log_folder: .\logs
+    start_time: 2024-12-11 19:59:56.251828
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: .\fsts.yml
+    fe_folder: .\results
+    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
+    - analysis
+    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath []
+  orcaflex_post_process:
+    summary:
+      groups:
+      - data: .\results\fsts_inputs.csv
+        label: inputs
+      - data: .\results\fsts_strut_dynamics.csv
+        label: strut_dynamics
+      - data: .\results\fsts_strut_static.csv
+        label: strut_static
+      - data: .\results\fsts_fst_local_static.csv
+        label: fst_local_static
+      - data: .\results\fsts_fst_local_dynamic.csv
+        label: fst_local_dynamic

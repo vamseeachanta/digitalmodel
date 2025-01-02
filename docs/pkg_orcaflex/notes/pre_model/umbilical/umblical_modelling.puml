@@ -1,0 +1,85 @@
+@startuml umblical_modelling
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Umbilical Modelling \n OrcaFlex
+
+start
+
+    note right
+        Objective: Different components of Umbilical to Model 
+    end note
+
+    note right
+        All files in .yml format
+        Each partition box is a unique group of .yml files
+    end note
+
+    partition "Umbilical Line Properties" {
+
+        :Physical properties;
+            note right
+                diameter
+                stiffness
+                weight etc.
+            end note
+
+
+    }
+
+    partition "Bend Stiffener or bend restricter" {
+
+        :Method 1: Equivalent pipe properties;
+            note right
+                Add properties of umbilical and bend stiffener
+            end note
+
+        :Method 2: Bend Stiffener as attachment;
+            note right
+                Add properties of bend stiffener
+            end note
+
+
+    }
+
+    partition "UTH" {
+
+        :Method 1: Clump Weight;
+            note right
+                TBA
+            end note
+
+        :Method 2: 6D Buoys;
+            note right
+                TBA
+            end note
+
+    }
+
+    partition "Buoyancy Modules" {
+
+        :Method 1: Clump Weight;
+            note right
+                TBA
+            end note
+
+        :Method 2: 6D Buoys;
+            note right
+                TBA
+            end note
+
+    }
+
+
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

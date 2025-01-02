@@ -1,0 +1,57 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: installation
+  structure:
+    flag: true
+    BaseFile: __03structure.yml
+    reference_model_file: src/digitalmodel/tests/test_data/installation/__03a_add_rigging.yml
+    reference_elevation_file: src/digitalmodel/tests/test_data/installation/__04a_calculated_positions.yml
+    delta_elevations:
+    - -100
+    6DBuoys:
+    - mudmat
+    3DBuoys:
+    - Masterlink
+    Lines:
+    - name: _02_main_crane_wire_bot
+      length_index: 1
+      TargetSegmentLength[1]: 10
+      TargetSegmentLength[2]: 2
+      EndBZ: ~
+  default:
+    log_level: DEBUG
+    config:
+      overwrite:
+        output: true
+    Constants:
+      g: 9.81
+    units:
+      verticalDistance: m
+      declinationAngle: deg with vertical
+      Temperature: deg F
+      Pressure: psi
+      EffectiveTension: kN
+      BendingMoment: kNm
+      YieldStrength: psi
+      E: psi
+      NominalID: inch
+      NominalOD: inch
+      NominalWT: inch
+      Rho: kg/m3
+      MassPerUnitLength: kg/m
+      WeightPerUnitLength: N/m
+      SoilStiffness: kN/m/m
+      BuoyancyCoverage: Percentage
+  Analysis:
+    basename: installation
+    analysis_root_folder: src/digitalmodel/tests/test_data\installation
+    file_name: installation_structure
+    file_name_for_overwrite: installation_structure
+    result_folder: src/digitalmodel/tests/test_data\installation\results
+    log_folder: src/digitalmodel/tests/test_data\installation\logs
+    start_time: 2024-11-11 10:34:53.757626
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: src/digitalmodel/tests/test_data\installation\installation_structure.yml
+    fe_folder: src/digitalmodel/tests/test_data\installation\results

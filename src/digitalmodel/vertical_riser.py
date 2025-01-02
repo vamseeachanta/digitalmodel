@@ -6,7 +6,7 @@ Objective: To generate vertical riser model and evaluate top tension
 Created on May 20 2019
 """
 
-from digitalmodel.custom.vertical_riser_components import VerticalRiser
+from digitalmodel.modules.vertical_riser.vertical_riser_components import VerticalRiser
 
 
 def vertical_riser(cfg):

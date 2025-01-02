@@ -1,0 +1,33 @@
+basename: aqwa
+
+software:
+  version: []
+
+mes:
+  flag: True
+
+type:
+  preprocess: False
+  analysis: False
+  results: False
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: output/mes
+      file_extensions: [MES]
+      filename_pattern: NULL
+    output_directory: NULL
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

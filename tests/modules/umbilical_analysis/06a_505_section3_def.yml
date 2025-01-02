@@ -1,0 +1,112 @@
+LineTypes:
+  New: umbilical_section3
+  umbilical_section3:
+    Category: General
+    OD: 0.2156
+    ID: 0.0
+    CentreOfMass:
+    - 0
+    - 0
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.07176
+    CompressionIsLimited: false
+    AllowableTension: 988
+    MinRadius:
+    - 7.1
+    - '~'
+    EI:
+    - 180.0
+    - '~'
+    EA: 740000.0
+    PoissonRatio: 0.5
+    ExpansionTable: None
+    GJ: 138.0
+    TensionTorqueCoupling: 0
+    OuterContactDiameter: 0.215
+    InnerContactDiameter: '~'
+    ClashStiffness: 200
+    Ca:
+    - 1
+    - '~'
+    - 0
+    Cm:
+    - '~'
+    - '~'
+    - '~'
+    Cs: 0
+    Ce: 0
+    Cd:
+    - 1.2
+    - '~'
+    - 0.008
+    Cl: 0
+    NormalDragLiftDiameter: 0.215
+    AxialDragLiftDiameter: 0.215
+    StressOD: '~'
+    StressID: '~'
+    AllowableStress: '~'
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    SeabedLateralFrictionCoefficient: 0.3
+    SeabedAxialFrictionCoefficient: 0.3
+    RayleighDampingCoefficients: (no damping)
+    APIRP2RDTcorr: 0
+    APIRP2RDSMYS: 360e3
+    APISTD2RDE: 0
+    APISTD2RDS: 0
+    APISTD2RDU: 0
+    APISTD2RDDelta: 0
+    APISTD2RDFd1: 0
+    APISTD2RDFd2: 0
+    APISTD2RDAlphaFab: 0
+    APISTD2RDk: 0
+    APISTD2RDTca: 0
+    APIRP1111E: 0
+    APIRP1111S: 0
+    APIRP1111U: 0
+    APIRP1111Delta: 0
+    APIRP1111Fa: 0
+    APIRP1111Fc: 0
+    APIRP1111Fbs: 0
+    APIRP1111SAF: 0
+    DNVSTF101Pmin: '~'
+    DNVSTF101T2: '~'
+    DNVSTF101Fy: 0
+    DNVSTF101Fu: 0
+    DNVSTF101E: 0
+    DNVSTF101AlphaH: 0
+    DNVSTF101O0: 0
+    DNVSTF101SimplifiedStrainLimit: 0
+    DNVSTF101GammaSCLB: 0
+    DNVSTF101GammaSCDC: 0
+    DNVSTF101GammaM: 0
+    DNVSTF101AlphaFab: 0
+    DNVSTF101AlphaGW: 0
+    DNVSTF101AlphaPm: 0
+    DNVSTF101AlphaEpsilonC: 0
+    DNVSTF101AlphaMat: '~'
+    DNVSTF101TCRA: 0
+    DNVSTF101FyCRA: 0
+    DNVSTF101FuCRA: 0
+    DNVOSF201Pmin: '~'
+    DNVOSF201T2: '~'
+    DNVOSF201Fy: 0
+    DNVOSF201Fu: 0
+    DNVOSF201E: 0
+    DNVOSF201F0: 0
+    DNVOSF201GammaSC: 0
+    DNVOSF201GammaM: 0
+    DNVOSF201AlphaFab: 0
+    DNVOSF201Eta: 0
+    PD8010Tcorr: 0
+    PD8010E: 0
+    PD8010SigmaY: 0
+    PD8010AlphaFab: 0
+    PD8010F0: 0
+    PD8010Fd: 0
+    Pen:
+    - 1
+    - Solid
+    - Yellow

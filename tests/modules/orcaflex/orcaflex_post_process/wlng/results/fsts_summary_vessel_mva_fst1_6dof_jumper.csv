@@ -1,0 +1,6 @@
+fe_filename,run_status,description,statistic,FST1_ja_x,FST1_ja_y,FST1_ja_z,FST1_ja_rx,FST1_ja_ry,FST1_ja_rz
+K:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/wlng/analysis/FST2F_FST1F_LWL_000deg.sim,,,,0.064425,0.000729,-4e-06,-1.2e-05,0.001753,-3.3e-05
+,,,min,0.064425,0.000729,-4e-06,-1.2e-05,0.001753,-3.3e-05
+,,,max,0.064425,0.000729,-4e-06,-1.2e-05,0.001753,-3.3e-05
+,,,mean,0.064425,0.000729,-4e-06,-1.2e-05,0.001753,-3.3e-05
+,,,stdev,,,,,,

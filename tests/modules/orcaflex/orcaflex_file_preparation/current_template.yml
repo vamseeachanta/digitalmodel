@@ -1,0 +1,5 @@
+﻿ActiveCurrent: Sur_Int_1yr
+Currents:
+  Sur_Int_1yr:
+    RefCurrentDirection: 26
+    CurrentFactor[1]: 1.2

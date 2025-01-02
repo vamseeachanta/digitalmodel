@@ -1,0 +1,219 @@
+basename: aqwa
+
+software:
+  version: []
+  # ANSYSInstallDir: C:\Program Files\ANSYS Inc\v181
+  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
+  # "C:\Program Files\ANSYS Inc\v222\aisol\workbench.bat" -cmd "C:\Program Files\ANSYS Inc\v222\aisol\bin\winx64\AqwaReader.exe" --Type 2
+  # "C:\Program Files\ANSYS Inc\v222\aqwa\bin\winx64\aqwa.exe" /nowind .\02_s04_hr_ext_force
+type:
+  preprocess: False
+  analysis: True
+  results: false
+
+analysis_settings:
+  method: raos
+  split_to_decks:
+    template: tests/test_data/aqwa/templates/aqwa_dat_split_to_decks.yml
+  drafts:
+    - label: L00
+      template: tests/test_data/aqwa/templates/pre_process_rao_decks.yml
+      inputs:
+        - file_prefix: FST2_L00_
+          file_extension: deck
+          data:
+            category: 3
+            raw: [{ node: 98000, mass: 3.894E+07 }]
+        - file_prefix: FST2_L00_
+          file_extension: deck
+          data:
+            category: 4
+            element_type: PMAS
+            raw:
+              [{ node: 98000, Ixx: 8.083E+09, Iyy: 1.371E+11, Izz: 1.381E+11 }]
+        - file_prefix: FST2_L00_
+          file_extension: deck
+          data:
+            element_type: FIDP
+            category: 7
+            raw: { added_damping: { rxx: 5729.578, ryy: 5729.578 } }
+        - file_prefix: _
+          file_extension: deck
+          data:
+            category: 6
+            element_type: HRTZ
+            raw:
+              {
+                period:
+                  [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    8.25,
+                    8.5,
+                    8.75,
+                    9,
+                    9.25,
+                    9.5,
+                    9.75,
+                    10,
+                    10.25,
+                    10.5,
+                    10.75,
+                    11,
+                    11.25,
+                    11.5,
+                    11.75,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    20,
+                    24,
+                    28,
+                  ],
+              }
+        - file_prefix: FST2_L00_
+          file_extension: deck
+          data:
+            element_type: FIDP
+            category: 7
+            raw: { added_damping: { rxx: 5729.578, ryy: 5729.578 } }
+
+    - label: L15
+      template: tests/test_data/aqwa/templates/pre_process_rao_decks.yml
+      inputs:
+        - file_prefix: FST2_L15_cog
+          file_extension: deck
+          data:
+            category: 1
+            raw: [{ node: 98000, X: 109.9, Y: -0.3, Z: 10.2 }]
+        - file_prefix: FST2_L15_
+          file_extension: deck
+          data:
+            category: 3
+            raw: [{ node: 98000, mass: 3.894E+07 }]
+        - file_prefix: FST2_L15_
+          file_extension: deck
+          data:
+            category: 4
+            element_type: PMAS
+            raw:
+              [{ node: 98000, Ixx: 8.083E+09, Iyy: 1.371E+11, Izz: 1.381E+11 }]
+        - file_prefix: FST2_L15_
+          file_extension: deck
+          data:
+            element_type: FIDP
+            category: 7
+            raw: { added_damping: { rxx: 5729.578, ryy: 5729.578 } }
+
+  hydrostatic:
+    template: tests/test_data/aqwa/templates/pre_process_hydrostatic_files.yml
+    input:
+      - output_filename: NULL
+        input_file_labels: [FST1_L00, FST1_L15]
+        output_basename: S
+        output_dir: raos
+        file_extension: dat
+        input_files:
+          [
+            [
+              raos/decks/_S_00.deck,
+              raos/decks/WB_FST2_01.deck,
+              raos/decks/WB_FST2_02.deck,
+              raos/decks/FST2_L00_03.deck,
+              raos/decks/FST2_L00_04.deck,
+              raos/decks/_05.deck,
+              raos/decks/_06.deck,
+              raos/decks/FST2_L00_07.deck,
+              raos/decks/_08.deck,
+              raos/decks/_09_17.deck,
+              raos/decks/_18.deck,
+            ],
+            [
+              raos/decks/_S_00.deck,
+              raos/decks/WB_FST2_01.deck,
+              raos/decks/WB_FST2_02.deck,
+              raos/decks/FST2_L15_03.deck,
+              raos/decks/FST2_L15_04.deck,
+              raos/decks/_05.deck,
+              raos/decks/_06.deck,
+              raos/decks/FST2_L15_07.deck,
+              raos/decks/_08.deck,
+              raos/decks/_09_17.deck,
+              raos/decks/_18.deck,
+            ],
+          ]
+        batch:
+          flag: True
+          extension: no
+          content: C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind
+
+      - output_filename: NULL
+        input_file_labels: [FST1_L00, FST1_L15]
+        output_basename: F
+        output_dir: raos
+        file_extension: dat
+        input_files:
+          [
+            [
+              raos/decks/_F_00.deck,
+              raos/decks/WB_FST2_01.deck,
+              raos/decks/WB_FST2_02.deck,
+              raos/decks/FST2_L00_03.deck,
+              raos/decks/FST2_L00_04.deck,
+              raos/decks/_05.deck,
+              raos/decks/_06.deck,
+              raos/decks/FST2_L00_07.deck,
+              raos/decks/_08.deck,
+              raos/decks/_09_17.deck,
+              raos/decks/_18.deck,
+            ],
+            [
+              raos/decks/_F_00.deck,
+              raos/decks/WB_FST2_01.deck,
+              raos/decks/WB_FST2_02.deck,
+              raos/decks/FST2_L15_03.deck,
+              raos/decks/FST2_L15_04.deck,
+              raos/decks/_05.deck,
+              raos/decks/_06.deck,
+              raos/decks/FST2_L15_07.deck,
+              raos/decks/_08.deck,
+              raos/decks/_09_17.deck,
+              raos/decks/_18.deck,
+            ],
+          ]
+
+        batch:
+          flag: True
+          extension: no
+          content: C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind
+
+  additional_damping:
+    flag: True
+    damping: { roll: 10, pitch: 8, unit: percentage }
+    template: tests/test_data/aqwa/templates/aqwareader_raos_ad.yml
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: raos
+      file_extensions: [DAT]
+      filename_pattern: WB_
+    output_directory: NULL
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

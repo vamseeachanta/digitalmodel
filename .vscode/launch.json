@@ -5,6 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "digitalModel-orca-lic-test",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "digitalmodel",
+            "args": [
+                "tests/modules/orcaflex/orcaflex_post_process/test_orcaflex_license.py"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
@@ -12,6 +24,18 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "timeout": 30
+        },
+        {
+            "name": "exec-test-orca-flex",
+            "type": "python",
+            "request": "launch",
+            "program": "tests/modules/orcaflex/orcaflex_post_process/test_orcaflex.py",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
         }
     ]
 }

@@ -1,0 +1,41 @@
+basename: aqwa
+
+software:
+  version: []
+
+type:
+  preprocess: True
+  analysis: False
+  results: False
+
+pre_process_settings:
+  file_extension: dat
+
+inputs:
+  - file_prefix: F2L95_EHHWL_
+    file_extension: deck
+    data:
+      category: 15
+      raw:
+        directory: K:/1522/ctr7/02_FST/04_ef_100yr/rev6/force/results
+        filename_pattern: D_NOL_F2L95_EHHWL_d_*_cog.csv
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: output/lis
+      filename_pattern: NULL
+    output_directory: results
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

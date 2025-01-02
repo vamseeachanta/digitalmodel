@@ -1,0 +1,35 @@
+﻿Constrainttranslationalstiffness:
+  - Name: Linear_Vertical_Stiffness
+    IndependentValue, DependentValue:
+      - [-100, -50e9]
+      - [0, 0]
+      - [100, 500]
+    Hysteretic: No
+  - Name: surge_stiffness
+    IndependentValue, DependentValue:
+      - [-2.300, -59850]
+      - [-1.750, -40600]
+      - [-0.850, -9100]
+      - [-0.700, -3850]
+      - [-0.150, -1]
+      - [0.000, 0]
+      - [0.150, 1]
+      - [0.700, 3850]
+      - [0.850, 9100]
+      - [1.750, 40600]
+      - [2.300, 59850]
+    Hysteretic: No
+  - Name: sway_stiffness
+    IndependentValue, DependentValue:
+      - [-2.300, -119700]
+      - [-1.750, -81200]
+      - [-0.850, -18200]
+      - [-0.700, -7700]
+      - [-0.150, -1]
+      - [0.000, 0]
+      - [0.150, 1]
+      - [0.700, 7700]
+      - [0.850, 18200]
+      - [1.750, 81200]
+      - [2.300, 119700]
+    Hysteretic: No
