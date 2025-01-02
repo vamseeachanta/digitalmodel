@@ -118,9 +118,13 @@ class AqwaDATFiles:
         body = []
         for body_item_idx in range(0, len(raw_data)):
             body_item = raw_data[body_item_idx]
+            structure = body_item['structure']
             node = body_item['node']
-            mass = int(body_item['mass'])
-            body_item_str = f"{white_space:>1s}{white_space:>3s}{body_item_idx+1:>2d}{white_space:>4s}{white_space:>5s}{node:>5d}{mass:>10d}"
+            X = body_item['X']
+            Y = body_item['Y']
+            Z = body_item['Z']
+
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{structure:>2d}{node:>5d}{white_space:>4s}{white_space:>5s}{X:>10f} {Y:>10f} {Z:>10f}" 
             body.append(body_item_str)
 
         return body

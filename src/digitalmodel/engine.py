@@ -1,10 +1,17 @@
 # Standard library imports
 import logging
+# Standard library imports
+import logging
 import os
 import sys
 
 # Third party imports
+# Third party imports
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
+from assetutilities.common.data import CopyAndPasteFiles, SaveData
+from assetutilities.common.file_management import FileManagement
+from assetutilities.common.update_deep import AttributeDict
+from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.data import CopyAndPasteFiles, SaveData
 from assetutilities.common.file_management import FileManagement
 from assetutilities.common.update_deep import AttributeDict
@@ -12,7 +19,13 @@ from assetutilities.common.yml_utilities import ymlInput
 
 # Reader imports
 from digitalmodel.aqwa import Aqwa
+# Reader imports
+from digitalmodel.aqwa import Aqwa
 from digitalmodel.catenary_riser import catenary_riser
+from digitalmodel.common.cathodic_protection import CathodicProtection
+from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
+    DNVRPH103_hydrodynamics_circular,
+)
 from digitalmodel.common.cathodic_protection import CathodicProtection
 from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
     DNVRPH103_hydrodynamics_circular,
@@ -20,6 +33,8 @@ from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
 from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
     DNVRPH103_hydrodynamics_rectangular,
 )
+from digitalmodel.common.fatigue_analysis import FatigueAnalysis
+from digitalmodel.common.ship_design import ShipDesign
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
 from digitalmodel.modules.orcaflex.orcaflex_analysis import orcaflex_analysis
@@ -38,10 +53,19 @@ from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnal
 from digitalmodel.modules.transformation.transformation import Transformation
 from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.vertical_riser import vertical_riser
+from digitalmodel.custom.viv.viv_analysis import VIVAnalysis
 
 library_name = "digitalmodel"
 save_data = SaveData()
 
+def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
+    fm = FileManagement()
+    if cfg is None:
+        inputfile = validate_arguments_run_methods(inputfile)
+        cfg = ymlInput(inputfile, updateYml=None)
+        cfg = AttributeDict(cfg)
+        if cfg is None:
+            raise ValueError("cfg is None")
 def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
     if cfg is None:
         inputfile = validate_arguments_run_methods(inputfile)
@@ -61,6 +85,14 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     else:
         cfg_base = cfg
 
+    if config_flag:
+        fm = FileManagement()
+        cfg_base = application_manager.cfg
+        cfg_base = fm.router(cfg_base)
+    else:
+        cfg_base = cfg
+
+    logging.info(f"{basename}, application ... START")
     logging.info(f"{basename}, application ... START")
 
     if basename in ["simple_catenary_riser", "catenary_riser"]:
@@ -68,7 +100,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "vertical_riser":
         cfg_base = vertical_riser(cfg_base)
     elif basename in ["orcaflex_analysis", "orcaflex_post_process"]:
+        if "file_management" in cfg_base and cfg["file_management"]["flag"]:
+            cfg_base = ou.file_management(cfg_base)
         cfg_base = orcaflex_analysis(cfg_base)
+    elif basename in ["aqwa"]:
+        aqwa = Aqwa()
+        cfg_base = aqwa.router(cfg_base)
     elif basename in ["aqwa"]:
         aqwa = Aqwa()
         cfg_base = aqwa.router(cfg_base)
@@ -79,12 +116,15 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         cpf = CopyAndPasteFiles()
         cfg_base = cpf.iterate_all_cfgs(cfg_base)
     elif basename == "umbilical_analysis":
+    elif basename == "umbilical_analysis":
         ua = UmbilicalAnalysis()
         cfg_base = ua.perform_analysis(cfg_base)
+    elif basename in ["orcaflex_file_management", "orcaflex_file_preparation"]:
     elif basename in ["orcaflex_file_management", "orcaflex_file_preparation"]:
         ofm = OrcaflexFileManagement()
         cfg_base = ofm.file_management(cfg_base)
     elif basename == "rigging":
+        # Reader imports
         # Reader imports
         # Reader imports
         from digitalmodel.custom.rigging import Rigging
@@ -153,6 +193,7 @@ def validate_arguments_run_methods(inputfile):
 
     if len(sys.argv) > 1 and inputfile is not None:
         raise (Exception("2 Input files provided via arguments & function. Please provide only 1 file ... FAIL"))
+        raise (Exception("2 Input files provided via arguments & function. Please provide only 1 file ... FAIL"))
 
     if len(sys.argv) > 1:
         if not os.path.isfile(sys.argv[1]):
@@ -172,6 +213,7 @@ def save_cfg(cfg_base):
     output_dir = cfg_base.Analysis["analysis_root_folder"]
 
     filename = cfg_base.Analysis["file_name"]
+    filename_path = os.path.join(output_dir, "results", filename)
     filename_path = os.path.join(output_dir, "results", filename)
 
     save_data.saveDataYaml(cfg_base, filename_path, default_flow_style=False)

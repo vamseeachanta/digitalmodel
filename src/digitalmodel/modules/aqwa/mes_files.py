@@ -6,11 +6,7 @@ from collections import Counter, defaultdict
 
 # Third party imports
 import pandas as pd
-from colorama import Fore, Style
-from colorama import init as colorama_init
 from tabulate import tabulate
-colorama_init()
-
 
 
 class MesFiles:
@@ -18,16 +14,15 @@ class MesFiles:
     def __init__(self) -> None:
         pass
 
+
     def read_mes_files(self, directory):
         try:
             mes_files = [f for f in os.listdir(directory) if f.endswith('.MES')]
             if not mes_files: # checks if the directory is empty
-                logging.info(f"{Fore.RED}No MES {Style.RESET_ALL} files found in directory for analysis: {directory}") 
-                logging.info(f"Analysis Directory: {Fore.GREEN}{directory}{Style.RESET_ALL}") 
+                logging.info(f"No MES files found in directory: {directory}") 
                 return None, None, None
         except Exception as e:
-            logging.error(f"{Fore.RED}Error reading files{Style.RESET_ALL} from analysis directory")
-            logging.info(f"Analysis Directory: {Fore.GREEN}{directory}{Style.RESET_ALL}") 
+            logging.error(f"Error reading files from directory: {directory}")
             logging.error(e)
             return None, None, None
         warnings = defaultdict(lambda: defaultdict(Counter))
@@ -149,50 +144,51 @@ class MesFiles:
             directory = cfg['Analysis']['file_management_input_directory']
 
         warnings, errors, file_status = self.read_mes_files(directory)
+        warning_id_map, error_id_map = self.assign_ids(warnings, errors)
+        warning_summary, error_summary = self.summarize_warnings_and_errors(warnings, errors, warning_id_map, error_id_map)
+        status_summary, status_table = self.generate_file_status_table(file_status)
+
+        warnings_filename = os.path.join(directory, 'mes_warnings.csv')
+        warning_df = self.to_dataframe(warning_summary, warnings_filename, ['ID', 'Type', 'Description', 'Frequency', 'Filename'])
+
+        error_filename = os.path.join(directory, 'mes_errors.csv')
+        error_df = self.to_dataframe(error_summary, error_filename, ['ID', 'Type', 'Description', 'Frequency', 'Filename'])
+
+        status_df = pd.DataFrame(status_summary[1:], columns=status_summary[0])
+        status_filename = os.path.join(directory, 'mes_status.csv')
+        status_df.to_csv(status_filename, index=False)
+
+        merged_warning_df = self.merge_cells(warning_df)
+        merged_error_df = self.merge_cells(error_df)
+
+        merged_warning_df.index += 1
+        merged_error_df.index += 1
+
+        warnings_filename = os.path.join(directory, 'mes_warnings.csv')
+        merged_warning_df.to_csv(warnings_filename, index=False)
         
-        if file_status is not None:
-            warning_id_map, error_id_map = self.assign_ids(warnings, errors)
-            warning_summary, error_summary = self.summarize_warnings_and_errors(warnings, errors, warning_id_map, error_id_map)
-            status_summary, status_table = self.generate_file_status_table(file_status)
+        error_filename = os.path.join(directory, 'mes_errors.csv')
+        merged_error_df.to_csv(error_filename, index=False)
+        
+        logging.info("Summary of Warnings:")
+        logging.info(merged_warning_df)
+        logging.info("\nSummary of Errors:")
+        logging.info(merged_error_df)
+        logging.info("\nFile Status:")
+        logging.info(status_df)
+        logging.info(status_table)
 
-            warnings_filename = os.path.join(directory, 'mes_warnings.csv')
-            warning_df = self.to_dataframe(warning_summary, warnings_filename, ['ID', 'Type', 'Description', 'Frequency', 'Filename'])
+        id_file_matrix = self.generate_id_file_matrix(warnings, errors, warning_id_map, error_id_map, file_status)
+        id_file_df = pd.DataFrame(id_file_matrix[1:], columns=id_file_matrix[0])
+        id_file_df.index += 1
 
-            error_filename = os.path.join(directory, 'mes_errors.csv')
-            error_df = self.to_dataframe(error_summary, error_filename, ['ID', 'Type', 'Description', 'Frequency', 'Filename'])
+        map_filename = os.path.join(directory, 'mes_warning_error_map.csv')
+        id_file_df.to_csv(map_filename, index=False)
 
-            status_df = pd.DataFrame(status_summary[1:], columns=status_summary[0])
-            status_filename = os.path.join(directory, 'mes_status.csv')
-            status_df.to_csv(status_filename, index=False)
+        logging.info("\nID File Matrix:")
+        logging.info(id_file_df)
 
-            merged_warning_df = self.merge_cells(warning_df)
-            merged_error_df = self.merge_cells(error_df)
 
-            merged_warning_df.index += 1
-            merged_error_df.index += 1
-
-            warnings_filename = os.path.join(directory, 'mes_warnings.csv')
-            merged_warning_df.to_csv(warnings_filename, index=False)
-            
-            error_filename = os.path.join(directory, 'mes_errors.csv')
-            merged_error_df.to_csv(error_filename, index=False)
-            
-            logging.info("Summary of Warnings:")
-            logging.info(merged_warning_df)
-            logging.info("\nSummary of Errors:")
-            logging.info(merged_error_df)
-            logging.info("\nFile Status:")
-            logging.info(status_df)
-            logging.info(status_table)
-
-            id_file_matrix = self.generate_id_file_matrix(warnings, errors, warning_id_map, error_id_map, file_status)
-            id_file_df = pd.DataFrame(id_file_matrix[1:], columns=id_file_matrix[0])
-            id_file_df.index += 1
-
-            map_filename = os.path.join(directory, 'mes_warning_error_map.csv')
-            id_file_df.to_csv(map_filename, index=False)
-
-            logging.info("\nID File Matrix:")
-            logging.info(id_file_df)
-
-        return warnings, errors, file_status
+if __name__ == "__main__":
+    mes_files = MesFiles()
+    mes_files.router()
