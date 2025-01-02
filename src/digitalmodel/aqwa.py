@@ -2,9 +2,9 @@
 from assetutilities.common.update_deep import update_deep_dictionary
 
 # Reader imports
-from digitalmodel.custom.aqwa.aqwa_post_process import AqwaPostProcess
-from digitalmodel.custom.aqwa.aqwa_pre_process import AqwaPreProcess
-from digitalmodel.custom.aqwa.mes_files import MesFiles
+from digitalmodel.modules.aqwa.aqwa_post_process import AqwaPostProcess
+from digitalmodel.modules.aqwa.aqwa_pre_process import AqwaPreProcess
+from digitalmodel.modules.aqwa.mes_files import MesFiles
 
 a_post = AqwaPostProcess()
 a_pre = AqwaPreProcess()
@@ -27,10 +27,11 @@ class Aqwa:
             from digitalmodel.custom.aqwa.aqwa_analysis import AqwaAnalysis
             a_analysis = AqwaAnalysis()
             a_analysis.analysis_router(cfg)
+        if "mes" in cfg and cfg['mes']['flag']: 
             mes_files.router(cfg)
 
         if cfg['type']['results']:
-            a_post.post_process_router(cfg)
+            cfg = a_post.post_process_router(cfg)
 
 
 

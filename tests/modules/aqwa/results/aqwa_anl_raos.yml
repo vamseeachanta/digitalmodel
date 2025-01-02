@@ -1,0 +1,163 @@
+&id001 !!python/object/new:assetutilities.common.update_deep.AttributeDict
+state: *id001
+dictitems:
+  basename: aqwa
+  software:
+    version: []
+  type:
+    preprocess: true
+    analysis: false
+    results: false
+  pre_process_settings:
+    file_extension: dat
+  inputs:
+  - file_prefix: FST2_L00_
+    file_extension: deck
+    data:
+      category: 3
+      raw:
+      - node: 98000
+        mass: 38940000.0
+  - file_prefix: FST2_L00_
+    file_extension: deck
+    data:
+      category: 4
+      element_type: PMAS
+      raw:
+      - node: 98000
+        Ixx: 8083000000.0
+        Iyy: 137100000000.0
+        Izz: 138100000000.0
+  - file_prefix: FST2_L00_
+    file_extension: deck
+    data:
+      element_type: FIDP
+      category: 7
+      raw:
+        added_damping:
+          rxx: 5729.578
+          ryy: 5729.578
+  - file_prefix: _
+    file_extension: deck
+    data:
+      category: 6
+      element_type: HRTZ
+      raw:
+        period:
+        - 28
+        - 24
+        - 20
+        - 16
+        - 15
+        - 14
+        - 13
+        - 12
+        - 11.75
+        - 11.5
+        - 11.25
+        - 11
+        - 10.75
+        - 10.5
+        - 10.25
+        - 10
+        - 9.75
+        - 9.5
+        - 9.25
+        - 9
+        - 8.75
+        - 8.5
+        - 8.25
+        - 8
+        - 7
+        - 6
+        - 5
+        - 4
+  - file_prefix: FST2_L00_
+    file_extension: deck
+    data:
+      element_type: FIDP
+      category: 7
+      raw:
+        added_damping:
+          rxx: 5729.578
+          ryy: 5729.578
+  file_management:
+    flag: true
+    update_unfinished:
+      flag: false
+    files:
+      files_in_current_directory:
+        flag: false
+        auto_read: true
+        directory: raos
+        filename_pattern: WB_
+        file_extensions:
+        - DAT
+      output_directory: src\digitalmodel\tests\test_data\aqwa\raos\decks
+    input_files:
+      DAT:
+      - !!python/object/apply:pathlib.WindowsPath
+        - src
+        - digitalmodel
+        - tests
+        - test_data
+        - aqwa
+        - raos
+        - WB_125K_LNGC.dat
+      - !!python/object/apply:pathlib.WindowsPath
+        - src
+        - digitalmodel
+        - tests
+        - test_data
+        - aqwa
+        - raos
+        - WB_180K_LNGC.dat
+      - !!python/object/apply:pathlib.WindowsPath
+        - src
+        - digitalmodel
+        - tests
+        - test_data
+        - aqwa
+        - raos
+        - WB_FST1.dat
+      - !!python/object/apply:pathlib.WindowsPath
+        - src
+        - digitalmodel
+        - tests
+        - test_data
+        - aqwa
+        - raos
+        - WB_FST2.dat
+  default:
+    log_level: INFO
+    config:
+      overwrite:
+        output: true
+      cfg_sensitivities: false
+  Analysis:
+    basename: aqwa
+    analysis_root_folder: src/digitalmodel/tests/test_data\aqwa
+    file_name: aqwa_anl_raos
+    file_name_for_overwrite: aqwa_anl_raos
+    result_folder: src/digitalmodel/tests/test_data\aqwa\results
+    log_folder: src/digitalmodel/tests/test_data\aqwa\logs
+    start_time: 2024-11-11 10:32:08.499117
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: src/digitalmodel/tests/test_data\aqwa\aqwa_anl_raos.yml
+    fe_folder: src/digitalmodel/tests/test_data\aqwa\results
+    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa
+    - raos
+    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
+    - src
+    - digitalmodel
+    - tests
+    - test_data
+    - aqwa
+    - raos
+    - decks

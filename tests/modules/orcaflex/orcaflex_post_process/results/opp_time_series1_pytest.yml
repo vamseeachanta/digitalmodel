@@ -1,0 +1,16 @@
+orcaflex_post_process:
+  time_series:
+    - time_series:
+        groups:
+          - label: time_history_end_b
+            data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_b_pytest.csv
+          - label: time_history_end_a
+            data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test1_time_history_end_a_pytest.csv
+      file_name: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
+    - time_series:
+        groups:
+          - label: time_history_end_b
+            data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_b_pytest.csv
+          - label: time_history_end_a
+            data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\orcaflex_test2_time_history_end_a_pytest.csv
+      file_name: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim

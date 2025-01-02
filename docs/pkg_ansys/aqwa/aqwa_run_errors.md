@@ -159,5 +159,13 @@ JOB AQWA  DRIF  WFRQ  c07a21bd1a5b2414c4c6f713d4d6cd2fbf73b23f
 ### Irregular Wave Group
 
 <code>
- More than one Irregular Wave Group exists, but only one is permitted. Suppress or delete surplus definitions.
+More than one Irregular Wave Group exists, but only one is permitted. Suppress or delete surplus definitions.
 </code>
+
+### Articulation Error
+
+<span style="color:red">
+**** ERROR **** ARTICULATION LOOP FAILED TO CONVERGE
+</span>
+
+Articulation loops are caused by redundant joints- they add extra constraints to a structure, leading to conflicting forces that can't be solved using standard multibody dynamics equations. In rigid bodies, these over constraints create an indeterminate system, making it unsuitable for analysis.

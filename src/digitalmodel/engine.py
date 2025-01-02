@@ -22,26 +22,27 @@ from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
 )
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
-from digitalmodel.custom.orcaflex_file_management import OrcaflexFileManagement
-from digitalmodel.custom.orcaflex_installation import OrcInstallation
-from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
-from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
-from digitalmodel.custom.pipeline.pipeline import Pipeline
-from digitalmodel.custom.rao_analysis import RAOAnalysis
-from digitalmodel.custom.transformation import Transformation
-from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
-from digitalmodel.orcaflex_analysis import orcaflex_analysis
+from digitalmodel.modules.orcaflex.orcaflex_analysis import orcaflex_analysis
+from digitalmodel.modules.orcaflex.orcaflex_file_management import (
+    OrcaflexFileManagement,
+)
+from digitalmodel.modules.orcaflex.orcaflex_installation import OrcInstallation
+from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
+from digitalmodel.modules.orcaflex.umbilical_analysis_components import (
+    UmbilicalAnalysis,
+)
+from digitalmodel.modules.pipe_capacity.pipe_capacity import PipeCapacity
+from digitalmodel.modules.pipeline.pipeline import Pipeline
+from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis
+from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis
+from digitalmodel.modules.transformation.transformation import Transformation
+from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.vertical_riser import vertical_riser
 
-
-save_data = SaveData()
-fm = FileManagement()
-ou = OrcaflexUtilities()
 library_name = "digitalmodel"
-
+save_data = SaveData()
 
 def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
-    fm = FileManagement()
     if cfg is None:
         inputfile = validate_arguments_run_methods(inputfile)
         cfg = ymlInput(inputfile, updateYml=None)
@@ -54,6 +55,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     application_manager.configure(cfg, library_name)
 
     if config_flag:
+        fm = FileManagement()
         cfg_base = application_manager.cfg
         cfg_base = fm.router(cfg_base)
     else:
@@ -66,8 +68,6 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "vertical_riser":
         cfg_base = vertical_riser(cfg_base)
     elif basename in ["orcaflex_analysis", "orcaflex_post_process"]:
-        if "file_management" in cfg_base and cfg["file_management"]["flag"]:
-            cfg_base = ou.file_management(cfg_base)
         cfg_base = orcaflex_analysis(cfg_base)
     elif basename in ["aqwa"]:
         aqwa = Aqwa()
@@ -86,6 +86,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         cfg_base = ofm.file_management(cfg_base)
     elif basename == "rigging":
         # Reader imports
+        # Reader imports
         from digitalmodel.custom.rigging import Rigging
 
         rigging = Rigging()
@@ -98,7 +99,6 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         cfg_base = code_dnvrph103.get_orcaflex_6dbuoy(cfg_base)
     elif basename == "rao_analysis":
         rao = RAOAnalysis()
-        cfg_base = rao.read_orcaflex_displacement_raos(cfg_base)
         cfg_base = rao.read_orcaflex_displacement_raos(cfg_base)
     elif basename == "installation":
         orc_install = OrcInstallation()
@@ -119,14 +119,23 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "pipeline":
         pl = Pipeline()
         cfg_base = pl.router(cfg_base)
+    elif basename == "pipe_capacity":
+        pc = PipeCapacity()
+        cfg_base = pc.router(cfg_base)
     elif basename == "viv_analysis":
-        from digitalmodel.custom.viv.viv_analysis import VIVAnalysis
         viv = VIVAnalysis()
         cfg_base = viv.router(cfg_base)
+    elif basename == "time_series":
+        tsa = TimeSeriesAnalysis()
+        cfg_base = tsa.router(cfg_base)
+    elif basename == "gis":
+        tsa = TimeSeriesAnalysis()
+        cfg_base = tsa.router(cfg_base)
 
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
+    logging.info(f"{basename}, application ... END")
     save_cfg(cfg_base=cfg_base)
 
     return cfg_base

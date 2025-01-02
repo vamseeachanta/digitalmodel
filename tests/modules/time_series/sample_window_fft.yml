@@ -1,0 +1,85 @@
+basename: time_series
+
+analysis:
+  basic:
+    sample_fft: False
+    sample_window_average_fft: True
+    statistics: True
+    fft: False
+    ifft: False
+    rainflow: False
+    psd: NA
+  custom:
+    no_name: NA
+
+fft:
+  filter:
+    flag: True
+    low_pass:
+      flag: False
+      frequency_maximum: NULL
+    high_pass:
+      flag: False
+      frequency_minimum: NULL
+    band_pass:
+      flag: False
+      frequency_minimum: NULL
+      frequency_maximum: NULL
+  window:
+    size: 500
+    moving_average:
+      flag: False
+      window_size: 4
+  peaks:
+    flag: True
+    solver: find_peaks
+    min_height_percentage: 60
+    min_distance_index_percentage: 50
+
+master_settings:
+  groups:
+    columns:
+      x: [time]
+      y:
+        [
+          REACTION AT ARTIC 1_in X direction,
+          REACTION AT ARTIC 2_in X direction,
+          REACTION AT ARTIC 7_in X direction,
+          REACTION AT ARTIC 6_in X direction,
+        ]
+    transform:
+      - {
+          column: REACTION AT ARTIC 1_in X direction,
+          scale: 1.0194E-04,
+          shift: 0,
+        }
+      - {
+          column: REACTION AT ARTIC 2_in X direction,
+          scale: 1.0194E-04,
+          shift: 0,
+        }
+      - {
+          column: REACTION AT ARTIC 7_in X direction,
+          scale: 1.0194E-04,
+          shift: 0,
+        }
+      - {
+          column: REACTION AT ARTIC 6_in X direction,
+          scale: 1.0194E-04,
+          shift: 0,
+        }
+
+data:
+  type: csv
+  groups:
+    - label: PMS1
+      file_name: results/D_D_F2L95_HWL_100Y_D060_strut_f.csv
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+
+Analysis:
+  fe_folder: NULL

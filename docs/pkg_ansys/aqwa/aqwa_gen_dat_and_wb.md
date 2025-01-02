@@ -71,7 +71,7 @@ Vamsee
 
 From: Alex Austin <aaustin@drd.com>
 Sent: Friday, May 31, 2024 8:03 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
+To: Vamsee Achanta <vamseea@none.com>
 Subject: RE: AQWA | .DAT and WB
 
 Vamsee,
@@ -87,7 +87,7 @@ DRD Technology
 Technical Support: 918.743.3013 x 1
 Office: 918.743.3013 x 612
 
-From: Vamsee Achanta <vamseea@acma-inc.com>
+From: Vamsee Achanta <vamseea@none.com>
 Sent: Friday, May 31, 2024 7:24 AM
 To: support <support@drd.com>
 Subject: AQWA | .DAT and WB
