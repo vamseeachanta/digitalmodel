@@ -1,0 +1,41 @@
+(defun read-coordinates-from-csv (filename / f line coords-list xyz x y z)
+  (setq coords-list '())
+  (setq f (open filename "r"))
+  (if f
+    (progn
+      (while (setq line (read-line f nil))
+        (setq xyz (vl-string-split "," line))
+        (if (= (length xyz) 3)
+          (progn
+            (setq x (atof (car xyz)))
+            (setq y (atof (cadr xyz)))
+            (setq z (atof (caddr xyz)))
+            (setq coords-list (append coords-list (list (list x y z))))
+          )
+        )
+      )
+      (close f)
+    )
+    (prompt (strcat "\nUnable to open file: " filename))
+  )
+  coords-list
+)
+
+(defun c:MAKE3DPOLYFROMCSV (/ coords filename)
+  ;; Specify the full path to your CSV file here:
+  (setq filename "raw\line_coordinates.csv")
+
+  (setq coords (read-coordinates-from-csv filename))
+  (if (and coords (> (length coords) 1))
+    (progn
+      (command "_.3DPOLY")
+      (foreach pt coords
+        (command (car pt) (cadr pt) (caddr pt))
+      )
+      (command "") ;; End the 3DPOLY command
+      (prompt "\n3D Polyline created successfully.")
+    )
+    (prompt "\nNo valid coordinates found or only one point in the file.")
+  )
+  (princ)
+)

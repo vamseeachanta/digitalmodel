@@ -1,0 +1,54 @@
+basename: aqwa
+
+software:
+  version: []
+  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v181
+
+type:
+  preprocess: False
+  analysis: False
+  results: True
+
+result_method: aqwareader # lis
+
+master_settings:
+  structure: 1
+  category: frequency
+  save_csv: True
+  save_aqwareader_csv: False
+  inject_into:
+    flag: True
+    filename: results/raos.xlsx
+  groups:
+    - third_level_label: FREE FLOATING RAOS
+      first_level: [1] # Frequency choice
+      second_level: [1, 2, 3] # Direction(s)
+      third_level: [1, 7] # Amplitude and Phase
+      fourth_level: NULL
+
+result:
+  - label: raos
+    inject_into:
+      sheetname: raos
+    filename_pattern: NULL
+    directory: NULL
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: output/plt
+      file_extensions: [PLT]
+      filename_pattern: NULL
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

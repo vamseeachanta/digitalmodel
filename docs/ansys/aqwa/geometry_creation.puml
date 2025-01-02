@@ -1,0 +1,58 @@
+@startuml geometry_creation
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Geometry
+
+start
+
+    note right
+        Objective: modular file management and 
+        analysis for easy updates/maintenance/reruns
+    end note
+
+    partition "Raw Geometry" {
+
+        :Raw Geometry;
+            note right
+                Get Raw Geometry
+            end note
+
+    }
+
+    partition "Edit Geometry" {
+
+        :Convert to Surface Geometry;
+            note right
+                Modify to surface body for AQWA
+                - Use SpaceCliam 
+                - copy the necessary surfaces
+                - 
+            end note
+
+        :Delete Unwanted Geometries;
+            note right
+                All lines, 3D bodies etc.
+            end note
+
+        :Move Hull to define ;
+            note right
+                Modify to surface body for AQWA
+            end note
+
+
+    }
+
+
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

@@ -1,0 +1,7 @@
+fe_filename,Label,run_status,statistic,Bend moment_ValueAtMax,Bend moment_TimeOfMax,Effective tension_LinkedValueAtMax,Curvature_LinkedValueAtMax,Bend moment_ValueAtMin,Bend moment_TimeOfMin,Effective tension_LinkedValueAtMin,Curvature_LinkedValueAtMin
+K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim,bending_moment,,,0.0,0.1,1.534464,0.0,0.0,0.1,1.534464,0.0
+K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim,bending_moment,,,0.0,0.1,1.534464,0.0,0.0,0.1,1.534464,0.0
+,,,min,0.0,0.1,1.534464,0.0,0.0,0.1,1.534464,0.0
+,,,max,0.0,0.1,1.534464,0.0,0.0,0.1,1.534464,0.0
+,,,mean,0.0,0.1,1.534464,0.0,0.0,0.1,1.534464,0.0
+,,,stdev,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0

@@ -3,8 +3,10 @@ requires      = ["setuptools>=61.0.0", "wheel", "pandas"]
 build-backend = "setuptools.build_meta"
 
 [project]
+dynamic = ["dependencies"]
+
 name = "digitalmodel"
-version = "0.0.7"
+version = "0.0.8"
 description = "engineering asset digital model(s) for life cycle analysis"
 readme = "README.md"
 authors = [{ name = "Vamsee Achanta", email = "vamsee.achanta@aceengineer.com" }]
@@ -15,7 +17,6 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 keywords=['finite element', 'asset representation', 'structural', 'physical', 'engineering', 'animation', 'lifecycle', 'lifecycle analysis', 'single source of truth', 'digital model', 'digital twin']
-dependencies = ["pyyaml", "plotly", "webcolors", "flask_wtf", "flask_httpauth", "flask_restful", "urllib3", 'tomli', 'dash','bumpver','matplotlib','scipy','pandas','xlrd','openpyxl','imgkit','xmltodict','OrcFxAPI; python_version < "3.10"','docx','deepdiff','pytest','sympy','kaleido','assetutilities']
 requires-python = ">=3.7"
 
     [project.optional-dependencies]
@@ -31,13 +32,17 @@ requires-python = ">=3.7"
 
 [tool.setuptools]
 include-package-data = true
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["dev_tools/requirements.txt"]}
+
 [tool.setuptools.packages.find]
 where = ["src"]
 [tool.setuptools.package-data]
 "*" = ["*.yml", "*.csv", "*.xlsx", "*.html", "*.txt"]
 
 [tool.bumpver]
-current_version = "0.0.7"
+current_version = "0.0.8"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message  = "bump version {old_version} -> {new_version}"
 commit          = true

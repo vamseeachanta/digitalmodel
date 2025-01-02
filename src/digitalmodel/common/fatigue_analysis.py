@@ -1,7 +1,9 @@
-import os
+# Third party imports
 import pandas as pd
 from assetutilities.common.yml_utilities import WorkingWithYAML
-from digitalmodel.common.time_series_analysis import TimeSeriesAnalysis
+
+# Reader imports
+from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis
 
 wwy = WorkingWithYAML()
 tsa = TimeSeriesAnalysis()

@@ -26,3 +26,6 @@ black
 isort
 poetry
 tabulate
+beautifulsoup4
+requests
+scrapy

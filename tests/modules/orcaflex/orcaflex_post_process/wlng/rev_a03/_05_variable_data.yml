@@ -1,0 +1,3 @@
+﻿VariableData:
+  includefile: 05_a_stiffness.yml
+  includefile: 05_b_damping.yml

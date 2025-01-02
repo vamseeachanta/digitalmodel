@@ -1,0 +1,755 @@
+﻿Lines:
+  - Name: Strut1_Body
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Jacket1_Z_Springs, -2.7257, -6.5, 0, 247.2486, 90, 0, ~]
+      - [FST2, 20.4755, 24.37, 16.744, 247.2486, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Strut_Bar, 43.787, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    # Full statics convergence
+    FullStaticsMaxDamping: 100
+  - Name: Strut2_Body
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Jacket1_Z_Springs, 2.7257, -6.5, 0, 292.7514, 90, 0, ~]
+      - [FST2, 59.7947, 24.37, 16.744, 292.7514, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Strut_Bar, 43.787, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    # Full statics convergence
+    FullStaticsMaxDamping: 100
+  - Name: Strut3_Body
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Jacket2_Z_Springs, -2.7257, -6.5, 0, 247.2486, 90, 0, ~]
+      - [FST2, 120.9579, 24.37, 16.744, 247.2486, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Strut_Bar, 43.787, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    # Full statics convergence
+    FullStaticsMaxDamping: 100
+  - Name: Strut4_Body
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Jacket2_Z_Springs, 2.7257, -6.5, 0, 292.7514, 90, 0, ~]
+      - [FST2, 160.27709, 24.37, 16.744, 292.7514, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Strut_Bar, 43.787, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    # Full statics convergence
+    FullStaticsMaxDamping: 100
+  - Name: Strut5_Body
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Jacket3_Z_Springs, -2.7257, -6.5, 0, 247.2486, 90, 0, ~]
+      - [FST1, 160.27709, -24.37, 16.744, 247.2486, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Strut_Bar, 43.787, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    # Full statics convergence
+    FullStaticsMaxDamping: 100
+  - Name: Strut6_Body
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Jacket3_Z_Springs, 2.7257, -6.5, 0, 292.7514, 90, 0, ~]
+      - [FST1, 120.9579, -24.37, 16.744, 292.7514, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Strut_Bar, 43.787, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    # Full statics convergence
+    FullStaticsMaxDamping: 100
+  - Name: Strut7_Body
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Jacket4_Z_Springs, -2.7257, -6.5, 0, 247.2486, 90, 0, ~]
+      - [FST1, 59.7947, -24.37, 16.744, 247.2486, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Strut_Bar, 43.787, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    # Full statics convergence
+    FullStaticsMaxDamping: 100
+  - Name: Strut8_Body
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Jacket4_Z_Springs, 2.7257, -6.5, 0, 292.7514, 90, 0, ~]
+      - [FST1, 20.4755, -24.37, 16.744, 292.7514, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Strut_Bar, 43.787, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    # Full statics convergence
+    FullStaticsMaxDamping: 100
+  - Name: FST2_Conact_Line_01
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [FST2, 204.592, -10, 0, 0, 0, 0, ~]
+      - [FST2, 204.592, 10, 0, 0, 0, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Contact_Line, 43.74, 100]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Quick
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+  - Name: FST2_Conact_Line_02
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [FST2, 204.592, -21.87, 25, 0, 0, 0, ~]
+      - [FST2, 204.592, 21.87, 25, 0, 0, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Contact_Line, 43.74, 100]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Quick
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+  - Name: FST2_Conact_Line_03
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [FST2, 204.592, -10, 0, 0, 0, 0, ~]
+      - [FST2, 204.592, -21.87, 25, 0, 0, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Contact_Line, 25, 100]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Quick
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+  - Name: FST2_Conact_Line_04
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [FST2, 204.592, 10, 0, 0, 0, 0, ~]
+      - [FST2, 204.592, 21.87, 25, 0, 0, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Contact_Line, 25, 100]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Quick
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+  - Name: FST1_Conact_Line_01
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [FST1, 204.592, -10, 0, 0, 0, -180, ~]
+      - [FST1, 204.592, 10, 0, 0, 0, -180, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Contact_Line, 43.74, 100]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Quick
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+  - Name: FST1_Conact_Line_02
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [FST1, 204.592, -21.87, 25, 0, 0, -180, ~]
+      - [FST1, 204.592, 21.87, 25, 0, 0, -180, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Contact_Line, 43.74, 100]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Quick
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+  - Name: FST1_Conact_Line_03
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [FST1, 204.592, -10, 0, 0, 0, -180, ~]
+      - [FST1, 204.592, -21.87, 25, 0, 0, -180, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Contact_Line, 25, 100]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Quick
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+  - Name: FST1_Conact_Line_04
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [FST1, 204.592, 10, 0, 0, 0, -180, ~]
+      - [FST1, 204.592, 21.87, 25, 0, 0, -180, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Contact_Line, 25, 100]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Quick
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+  - Name: FST2_Conact_Line_05
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [FST2, 0, -10, 0, 0, 0, 0, ~]
+      - [FST2, 0, 10, 0, 0, 0, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Contact_Line, 43.74, 100]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Quick
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+  - Name: FST1_Conact_Line_05
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [FST1, 30, -10, 0, 0, 0, -180, ~]
+      - [FST1, 30, 10, 0, 0, 0, -180, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Contact_Line, 43.74, 100]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Quick
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None

@@ -25,14 +25,10 @@ class CathodicProtection():
         """
         This method is used to calculate the anode current capacity
         """
-        cfg_anode = cfg['inputs']['anode']
-        seawater_max_temperature = cfg['inputs']['design_data']['seawater_max_temperature']
-        if cfg_anode['material'] == 'zinc':
+        if cfg['inputs']['anode'] == 'zinc':
             anode_current_capacity = 780
-        elif cfg_anode['material'] == 'aluminium':
-            anode_current_capacity = 2000 - 27*(cfg['inputs']['design_data']['seawater_max_temperature'] - 20)
-        else:
-            raise (Exception(f"Anode type: {cfg['inputs']['anode']} not IMPLEMENTED. ... FAIL"))
+        elif cfg['inputs']['anode'] == 'aluminium':
+            anode_current_capacity = 2000 - 27(cfg['inputs']['design_data']['seawater_max_temperature'] - 20)
     
         return anode_current_capacity
 
