@@ -1,30 +1,25 @@
-# Standard library imports
-import logging
-# Standard library imports
-import logging
 import os
 import sys
 
-# Third party imports
-# Third party imports
+from assetutilities.common.data import SaveData
+from assetutilities.common.yml_utilities import ymlInput
+from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
-from assetutilities.common.data import CopyAndPasteFiles, SaveData
-from assetutilities.common.file_management import FileManagement
-from assetutilities.common.update_deep import AttributeDict
-from assetutilities.common.yml_utilities import ymlInput
-from assetutilities.common.data import CopyAndPasteFiles, SaveData
-from assetutilities.common.file_management import FileManagement
-from assetutilities.common.update_deep import AttributeDict
-from assetutilities.common.yml_utilities import ymlInput
+from assetutilities.common.data import CopyAndPasteFiles
 
 # Reader imports
 from digitalmodel.aqwa import Aqwa
 # Reader imports
 from digitalmodel.aqwa import Aqwa
 from digitalmodel.catenary_riser import catenary_riser
-from digitalmodel.common.cathodic_protection import CathodicProtection
-from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
-    DNVRPH103_hydrodynamics_circular,
+from digitalmodel.vertical_riser import vertical_riser
+from digitalmodel.orcaflex_analysis import orcaflex_analysis
+from digitalmodel.custom.orcaflex_analysis_components import OrcaFlexAnalysis
+from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
+from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
+from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
+    DNVRPH103_hydrodynamics_rectangular,
 )
 from digitalmodel.common.cathodic_protection import CathodicProtection
 from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
@@ -76,6 +71,9 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
     basename = cfg["basename"]
     application_manager = ConfigureApplicationInputs(basename)
+    
+    logging.debug("cfg before configuring: %s", cfg)
+    
     application_manager.configure(cfg, library_name)
 
     if config_flag:
@@ -92,7 +90,6 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     else:
         cfg_base = cfg
 
-    logging.info(f"{basename}, application ... START")
     logging.info(f"{basename}, application ... START")
 
     if basename in ["simple_catenary_riser", "catenary_riser"]:
@@ -124,9 +121,6 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         ofm = OrcaflexFileManagement()
         cfg_base = ofm.file_management(cfg_base)
     elif basename == "rigging":
-        # Reader imports
-        # Reader imports
-        # Reader imports
         from digitalmodel.custom.rigging import Rigging
 
         rigging = Rigging()
@@ -175,6 +169,11 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         tsa = TimeSeriesAnalysis()
         cfg_base = tsa.router(cfg_base)
 
+    elif basename == "plate_buckling":
+        pb = PlateBuckling()
+        cfg_base = pb.router(cfg_base)
+    
+
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
@@ -210,10 +209,12 @@ def validate_arguments_run_methods(inputfile):
 
 
 def save_cfg(cfg_base):
-    output_dir = cfg_base.Analysis["analysis_root_folder"]
+    output_dir = cfg_base.Analysis["result_folder"] 
 
     filename = cfg_base.Analysis["file_name"]
     filename_path = os.path.join(output_dir, "results", filename)
     filename_path = os.path.join(output_dir, "results", filename)
 
     save_data.saveDataYaml(cfg_base, filename_path, default_flow_style=False)
+    logging.info(f"Saved data to: {filename_path}")
+    

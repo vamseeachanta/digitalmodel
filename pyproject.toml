@@ -73,19 +73,3 @@ strict = true
     [[tool.mypy.overrides]]
     module                 = "feedparser"
     ignore_missing_imports = true
-
-
-[tool.black]
-exclude = '''
-/(
-    \.git
-  | \.mypy_cache
-  | \.tox
-  | venv
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
