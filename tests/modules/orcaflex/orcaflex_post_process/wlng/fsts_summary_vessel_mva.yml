@@ -39,45 +39,303 @@ summary_settings_master:
   AddMaximumToSummary: True
   AddMeanToSummary: True
   groups:
-    - Label: fsts_roll
+    - Label: fst1_roll
       Columns:
         - Command: TimeHistory
           SimulationPeriod: [0.0, 10.0]
+          Position: [0, 0, 0]
+
+    - Label: fst2_roll
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          Position: [0, 0, 0]
+
+    - Label: fst1_6dof_jumper
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          Position: [104.981, 14.995, 20.000]
+
+    - Label: fst2_6dof_jumper
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          Position: [104.981, -14.995, 20.000]
+
+    - Label: fst1_topside_acc
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          Position: [0, 0, 0]
+
+    - Label: fst2_topside_acc
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          Position: [0, 0, 0]
 
 summary_settings:
   groups:
-    - Label: fsts_roll
+    - Label: fst1_roll
       Columns:
         - ObjectName: FST1
           Statistic_Type: Min
-          Label: FST1_Ref_Rx
-          Position: [0, 0, 0]
+          Label: FST1_Ref_Rx_min
           Variable: Dynamic Rx
         - ObjectName: FST1
-          Statistic_Type: Min
-          Label: FST1_Ref_Rx_vel
-          Position: [0, 0, 0]
-          Variable: Z Angular Velocity
+          Statistic_Type: Max
+          Label: FST1_Ref_Rx_max
+          Variable: Dynamic Rx
+
         - ObjectName: FST1
           Statistic_Type: Min
-          Label: FST1_Ref_Rx_acc
-          Position: [0, 0, 0]
+          Label: FST1_Ref_Rx_vel_min
+          Variable: Z Angular Velocity
+        - ObjectName: FST1
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_Ref_Rx_vel_max
+          Variable: Z Angular Velocity
+
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_Ref_Rx_acc_min
+          Variable: Z Angular Acceleration
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_Ref_Rx_acc_max
           Variable: Z Angular Acceleration
 
+    - Label: fst2_roll
+      Columns:
         - ObjectName: FST2
           Statistic_Type: Min
           Label: FST2_Ref_Rx
-          Position: [0, 0, 0]
+          Variable: Dynamic Rx
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST1_Ref_Rx_vel_max
           Variable: Dynamic Rx
         - ObjectName: FST2
           Statistic_Type: Min
-          Label: FST2_Ref_Rx_vel
-          Position: [0, 0, 0]
+          Label: FST2_Ref_Rx_vel_min
+          Variable: Z Angular Velocity
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_Ref_Rx_vel_max
           Variable: Z Angular Velocity
         - ObjectName: FST2
           Statistic_Type: Min
-          Label: FST2_Ref_Rx_acc
-          Position: [0, 0, 0]
+          Label: FST2_Ref_Rx_acc_min
+          Variable: Z Angular Acceleration
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_Ref_Rx_acc_max
+          Variable: Z Angular Acceleration
+
+    - Label: fst1_6dof_jumper
+      Columns:
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_ja_x
+          Variable: Dynamic x
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_ja_x
+          Variable: Dynamic x
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_ja_y
+          Variable: Dynamic y
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_ja_y
+          Variable: Dynamic y
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_ja_z
+          Variable: Dynamic z
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_ja_z
+          Variable: Dynamic z
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_ja_rx
+          Variable: Dynamic Rx
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_ja_rx
+          Variable: Dynamic Rx
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_ja_ry
+          Variable: Dynamic Ry
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_ja_ry
+          Variable: Dynamic Ry
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_ja_rz
+          Variable: Dynamic Rz
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_ja_rz
+          Variable: Dynamic Rz
+
+    - Label: fst2_6dof_jumper
+      Columns:
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_ja_x
+          Variable: Dynamic x
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_ja_x
+          Variable: Dynamic x
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_ja_y
+          Variable: Dynamic y
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_ja_y
+          Variable: Dynamic y
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_ja_z
+          Variable: Dynamic z
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_ja_z
+          Variable: Dynamic z
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_ja_rx
+          Variable: Dynamic Rx
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_ja_rx
+          Variable: Dynamic Rx
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_ja_ry
+          Variable: Dynamic Ry
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_ja_ry
+          Variable: Dynamic Ry
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_ja_rz
+          Variable: Dynamic Rz
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_ja_rz
+          Variable: Dynamic Rz
+
+    - Label: fst1_topside_acc
+      Columns:
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_ref_x_acc_min
+          Variable: X Acceleration
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_ref_x_acc_max
+          Variable: X Acceleration
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_ref_y_acc_min
+          Variable: Y Acceleration
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_ref_y_acc_max
+          Variable: Y Acceleration
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_ref_z_acc_min
+          Variable: Z Acceleration
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_ref_z_acc_max
+          Variable: Z Acceleration
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_ref_rx_acc_min
+          Variable: X Angular Acceleration
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_ref_rx_acc_max
+          Variable: X Angular Acceleration
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_ref_ry_acc_min
+          Variable: Y Angular Acceleration
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_ref_ry_acc_max
+          Variable: Y Angular Acceleration
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: FST1_ref_rz_acc_min
+          Variable: Z Angular Acceleration
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: FST1_ref_rz_acc_max
+          Variable: Z Angular Acceleration
+
+    - Label: fst2_topside_acc
+      Columns:
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_ref_x_acc_min
+          Variable: X Acceleration
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_ref_x_acc_max
+          Variable: X Acceleration
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_ref_y_acc_min
+          Variable: Y Acceleration
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_ref_y_acc_max
+          Variable: Y Acceleration
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_ref_z_acc_min
+          Variable: Z Acceleration
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_ref_z_acc_max
+          Variable: Z Acceleration
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_ref_rx_acc_min
+          Variable: X Angular Acceleration
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_ref_rx_acc_max
+          Variable: X Angular Acceleration
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_ref_ry_acc_min
+          Variable: Y Angular Acceleration
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_ref_ry_acc_max
+          Variable: Y Angular Acceleration
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: FST2_ref_rz_acc_min
+          Variable: Z Angular Acceleration
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: FST2_ref_rz_acc_max
           Variable: Z Angular Acceleration
 
 file_management:
