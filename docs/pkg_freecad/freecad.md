@@ -40,6 +40,10 @@ A file extension comparisons with features.
 
 Option 2:
 
+## Macro Resources
+
+https://github.com/FreeCAD/FreeCAD-macros
+
 ## References
 
 <https://all3dp.com/2/freecad-dwg-import-dwg-files/>
@@ -48,3 +52,4 @@ Option 2:
 [File Formats Supported for Exporting SOLIDWORKS Files](https://help.solidworks.com/2022/English/SWConnected/swdotworks/t_export_sw_non_sw_file.htm#:~:text=SLDASM%2C%20or%20*.,export%20options%20and%20click%20OK.)
 
 <https://mechnexus.com/category/freecad-articles/>
+
