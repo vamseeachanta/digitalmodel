@@ -1,26 +1,17 @@
 import os
 import sys
+import logging
 
 from assetutilities.common.data import SaveData
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import CopyAndPasteFiles
-
-# Reader imports
-from digitalmodel.aqwa import Aqwa
+from assetutilities.common.file_management import FileManagement
 # Reader imports
 from digitalmodel.aqwa import Aqwa
 from digitalmodel.catenary_riser import catenary_riser
-from digitalmodel.vertical_riser import vertical_riser
-from digitalmodel.orcaflex_analysis import orcaflex_analysis
-from digitalmodel.custom.orcaflex_analysis_components import OrcaFlexAnalysis
-from digitalmodel.custom.orcaflex_modal_analysis import OrcModalAnalysis
-from digitalmodel.custom.umbilical_analysis_components import UmbilicalAnalysis
-from digitalmodel.custom.orcaflex_utilities import OrcaflexUtilities
-from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
-    DNVRPH103_hydrodynamics_rectangular,
-)
+from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.common.cathodic_protection import CathodicProtection
 from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
     DNVRPH103_hydrodynamics_circular,
@@ -38,6 +29,7 @@ from digitalmodel.modules.orcaflex.orcaflex_file_management import (
 )
 from digitalmodel.modules.orcaflex.orcaflex_installation import OrcInstallation
 from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
+from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
 from digitalmodel.modules.orcaflex.umbilical_analysis_components import (
     UmbilicalAnalysis,
 )
@@ -47,8 +39,8 @@ from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis
 from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis
 from digitalmodel.modules.transformation.transformation import Transformation
 from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
-from digitalmodel.vertical_riser import vertical_riser
-from digitalmodel.custom.viv.viv_analysis import VIVAnalysis
+from digitalmodel.modules.vertical_riser import vertical_riser
+from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
 
 library_name = "digitalmodel"
 save_data = SaveData()
@@ -98,6 +90,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         cfg_base = vertical_riser(cfg_base)
     elif basename in ["orcaflex_analysis", "orcaflex_post_process"]:
         if "file_management" in cfg_base and cfg["file_management"]["flag"]:
+            ou = OrcaflexUtilities()
             cfg_base = ou.file_management(cfg_base)
         cfg_base = orcaflex_analysis(cfg_base)
     elif basename in ["aqwa"]:
@@ -113,10 +106,8 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         cpf = CopyAndPasteFiles()
         cfg_base = cpf.iterate_all_cfgs(cfg_base)
     elif basename == "umbilical_analysis":
-    elif basename == "umbilical_analysis":
         ua = UmbilicalAnalysis()
         cfg_base = ua.perform_analysis(cfg_base)
-    elif basename in ["orcaflex_file_management", "orcaflex_file_preparation"]:
     elif basename in ["orcaflex_file_management", "orcaflex_file_preparation"]:
         ofm = OrcaflexFileManagement()
         cfg_base = ofm.file_management(cfg_base)
@@ -172,7 +163,6 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "plate_buckling":
         pb = PlateBuckling()
         cfg_base = pb.router(cfg_base)
-    
 
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
