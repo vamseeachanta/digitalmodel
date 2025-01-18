@@ -3,8 +3,8 @@ import pandas as pd
 def test_pass_pipeline():
 
     root_directory = 'tests'
-    repo_yml_status_csv = f'{root_directory}/modules/all_yml_tests/repo_yml_status.csv'
-    summary_file = f'{root_directory}/modules/all_yml_tests/yml_summary_pytest.txt'
+    repo_yml_status_csv = f'{root_directory}/modules/all_yml/repo_yml_status.csv'
+    summary_file = f'{root_directory}/modules/all_yml/yml_summary_pytest.txt'
 
     df = pd.read_csv(repo_yml_status_csv)
     tests_expected = len(df[df['Status'] == 'Success']) # Number of tests passed
