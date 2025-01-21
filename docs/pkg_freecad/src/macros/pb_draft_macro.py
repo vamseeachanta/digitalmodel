@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
 # Macro Begin: C:\Users\CHINNI\AppData\Roaming\FreeCAD\Macro\Twisted part.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++
+# Third party imports
 import FreeCAD
-import PartDesign
-import PartDesignGui
 import Sketcher
-import Edit
 
 # Gui.runCommand('Std_DlgMacroRecord',0)
 ### Begin command PartDesign_NewSketch
