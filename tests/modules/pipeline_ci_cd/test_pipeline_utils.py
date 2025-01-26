@@ -1,6 +1,6 @@
 import pandas as pd
 
-def test_pass_pipeline():
+def test_pipeline():
 
     root_directory = 'tests'
     repo_yml_status_csv = f'{root_directory}/modules/all_yml/repo_yml_status.csv'
@@ -25,4 +25,4 @@ def test_pass_pipeline():
     print("Test passed successfully! expected and original tests match")
 
 
-test_pass_pipeline()
+test_pipeline()
