@@ -193,7 +193,7 @@ class OrcaFlexObjects():
             Position = cfg['Position']
         else:
             Position = [0, 0, 0]
-            logging.info("Position not defined. Defaulting to [0, 0, 0]")
+            logging.debug("Position not defined. Defaulting to [0, 0, 0]")
 
         objectExtra = OrcFxAPI.oeVessel(Position[0], Position[1], Position[2])
 

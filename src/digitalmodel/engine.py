@@ -202,8 +202,7 @@ def save_cfg(cfg_base):
     output_dir = cfg_base.Analysis["result_folder"] 
 
     filename = cfg_base.Analysis["file_name"]
-    filename_path = os.path.join(output_dir, "results", filename)
-    filename_path = os.path.join(output_dir, "results", filename)
+    filename_path = os.path.join(output_dir, filename)
 
     save_data.saveDataYaml(cfg_base, filename_path, default_flow_style=False)
     logging.info(f"Saved data to: {filename_path}")
