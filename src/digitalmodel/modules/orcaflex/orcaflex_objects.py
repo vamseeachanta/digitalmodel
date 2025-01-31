@@ -115,7 +115,12 @@ class OrcaFlexObjects():
         Returns:
             OrcaFlex time period object
         """
-        if type(SimulationPeriod) is int:
+        if len(SimulationPeriod) == 2:
+            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0],
+                                                      SimulationPeriod[1])
+        elif len(SimulationPeriod) == 1:
+            TimePeriodObject = SimulationPeriod[0]
+        elif type(SimulationPeriod) is int:
             TimePeriodObject = SimulationPeriod
         elif SimulationPeriod == 'StaticState':
             TimePeriodObject = OrcFxAPI.PeriodNum.StaticState
@@ -123,11 +128,6 @@ class OrcaFlexObjects():
             TimePeriodObject = OrcFxAPI.PeriodNum.WholeSimulation
         elif SimulationPeriod == 'LatestWave':
             TimePeriodObject = OrcFxAPI.PeriodNum.LatestWave
-        elif len(SimulationPeriod) == 2:
-            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0],
-                                                      SimulationPeriod[1])
-        elif len(SimulationPeriod) == 1:
-            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0])
         else:
             raise ValueError("Could not specify time period for simulation")
 
