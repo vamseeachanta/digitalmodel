@@ -119,9 +119,11 @@ class OrcaFlexObjects():
             TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0],
                                                       SimulationPeriod[1])
         elif len(SimulationPeriod) == 1:
-            TimePeriodObject = SimulationPeriod[0]
+            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0],
+                                                      SimulationPeriod[0])
         elif type(SimulationPeriod) is int:
-            TimePeriodObject = SimulationPeriod
+            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod,
+                                                      SimulationPeriod)
         elif SimulationPeriod == 'StaticState':
             TimePeriodObject = OrcFxAPI.PeriodNum.StaticState
         elif SimulationPeriod == 'WholeSimulation':
