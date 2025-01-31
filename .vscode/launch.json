@@ -4,6 +4,14 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+    {
+        "type": "attachlisp",
+        "request": "attach",
+        "name": "AutoLISP Debug: Attach",
+        "attributes": {
+            "//": "This configuration has been deprecated. Instead use the Debug: Attach Process setting of the AutoCAD AutoLISP Extension."
+        }
+    },
         {
             "name": "digitalModel-orca-lic-test",
             "type": "debugpy",
