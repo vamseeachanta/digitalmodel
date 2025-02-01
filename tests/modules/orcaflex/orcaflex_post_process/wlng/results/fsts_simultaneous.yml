@@ -377,27 +377,43 @@ dictitems:
       txt: []
   Analysis:
     basename: orcaflex_post_process
-    analysis_root_folder: .
+    analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng
     file_name: fsts_simultaneous
     file_name_for_overwrite: fsts_simultaneous
-    result_folder: .\results
-    log_folder: .\logs
-    start_time: 2024-12-28 06:15:22.753002
+    result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results
+    log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\logs
+    start_time: 2025-02-01 07:28:26.947185
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: .\fsts_simultaneous.yml
-    fe_folder: .\results
+    CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\fsts_simultaneous.yml
+    fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
+    - k:\
+    - github
+    - digitalmodel
+    - tests
+    - modules
+    - orcaflex
+    - orcaflex_post_process
+    - wlng
     - analysis
-    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath []
+    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
+    - k:\
+    - github
+    - digitalmodel
+    - tests
+    - modules
+    - orcaflex
+    - orcaflex_post_process
+    - wlng
   orcaflex_post_process:
     linked_statistics:
       groups:
-      - data: .\results\fsts_simultaneous_strut1_FST_Ly.csv
-      - data: .\results\fsts_simultaneous_strut2_FST_Ly.csv
-      - data: .\results\fsts_simultaneous_strut3_FST_Ly.csv
-      - data: .\results\fsts_simultaneous_strut4_FST_Ly.csv
-      - data: .\results\fsts_simultaneous_strut5_FST_Ly.csv
-      - data: .\results\fsts_simultaneous_strut6_FST_Ly.csv
-      - data: .\results\fsts_simultaneous_strut7_FST_Ly.csv
-      - data: .\results\fsts_simultaneous_strut8_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut1_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut2_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut3_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut4_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut5_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut6_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut7_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut8_FST_Ly.csv

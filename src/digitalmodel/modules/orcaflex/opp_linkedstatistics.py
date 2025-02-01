@@ -54,27 +54,28 @@ class OPPLinkedStatistics():
             query = stats.Query(VariableName[0], VariableName[idx+1])
 
             if idx == 0:
-                max_variables.append(VariableName[0] + '_' + 'ValueAtMax')
-                max_variables.append(VariableName[0] + '_' + 'TimeOfMax')
+                max_variables.append('ValueAtMax' + '_' + VariableName[0])
+                max_variables.append('TimeOfMax' + '_' + VariableName[0])
+                
                 max_values.append(query.ValueAtMax)
                 max_values.append(query.TimeOfMax)
 
-            max_variables.append(VariableName[idx+1] + '_' + 'LinkedValueAtMax')
+            max_variables.append('LinkedValueAtMax' + '_' + VariableName[idx+1])
             max_values.append(query.LinkedValueAtMax)
 
             if idx == 0:
-                min_variables.append(VariableName[0] + '_' + 'ValueAtMin')
-                min_variables.append(VariableName[0] + '_' + 'TimeOfMin')
+                min_variables.append('ValueAtMin' + '_' + VariableName[0])
+                min_variables.append('TimeOfMin' + '_' + VariableName[0])
                 min_values.append(query.ValueAtMin)
                 min_values.append(query.TimeOfMin)
 
-            min_variables.append(VariableName[idx+1] + '_' + 'LinkedValueAtMin')
+            min_variables.append('LinkedValueAtMin' + '_' + VariableName[idx+1])
             min_values.append(query.LinkedValueAtMin)
 
         variables = max_variables + min_variables
         values = max_values + min_values
 
-        linked_statistics =  { 'variables': variables, 'values': values }
+        linked_statistics = {'variables': variables, 'values': values}
 
         return linked_statistics
 
