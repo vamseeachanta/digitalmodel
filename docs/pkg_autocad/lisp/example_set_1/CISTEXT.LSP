@@ -1,0 +1,41 @@
+;Cisteni okoli textu (^v^) CAD Studio (Rev.9612 pro R12/R13)
+; pomoci: (setq clntol 0.1234) lze nastavit toleranci okoli textu
+;
+(defun C:CISTEXT ( / ss e ent bound bbox outerbox _ptl i n)
+ (setvar "OSMODE" 0)
+ (setvar "CMDECHO" 0)
+ (setvar "UCSFOLLOW" 0)
+ (setvar "BLIPMODE" 0)
+ (if (not clntol)(setq clntol 0.1))
+ (command "_ZOOM" "_E") ;vse musi byt on-screen
+ (prompt"\nVyber cistene texty:")
+ (setq ss (ssget '((0 . "TEXT")))) ;filtruj TEXTy (ne ATTRIB)
+ (setq i 0)
+ (command "_undo" "_g")
+ (if ss
+  (while (< i (sslength ss))
+   (setq ent (entget (setq e (ssname ss i))))
+   (setq bound (textbox ent))
+   (setq _ptl
+	(list (car bound) (list (caar bound)(cadadr bound)) (cadr bound) (list (caadr bound)(cadar bound)))
+   )
+   (command "_UCS" "_E" e)
+   (command "_PLINE")
+   (foreach n _ptl (command n))
+   (command "_C")
+   (setq bbox (entlast))
+;   (command "_OFFSET" clntol (car bound) "999999,999999" "")
+   (command "_OFFSET" clntol (cons bbox (list(car bound))) "999999,999999" "")
+   (entdel bbox)
+   (setq outerbox (entlast))
+   (command "_TRIM" outerbox "" "_fence")
+   (foreach n _ptl (command n))
+   (command "" "")
+   (entdel outerbox)
+   (command "_UCS" "_P")
+   (setq i (1+ i))
+  );endwhile
+ );endif
+ (command "_undo" "_e")
+ (princ)
+)
