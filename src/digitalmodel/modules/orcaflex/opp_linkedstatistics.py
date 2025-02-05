@@ -41,7 +41,7 @@ class OPPLinkedStatistics():
 
     def get_linked_statistics_from_orcaflex_run(self, model, ls_cfg) -> Dict[str, Any]:
 
-        OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model, ls_cfg)
+        OrcFXAPIObject, TimePeriod, arclengthRange, objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model, ls_cfg)
 
         stats = OrcFXAPIObject.LinkedStatistics(VariableName, TimePeriod, objectExtra)
 
