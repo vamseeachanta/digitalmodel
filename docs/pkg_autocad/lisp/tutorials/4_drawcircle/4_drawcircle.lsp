@@ -1,8 +1,8 @@
 (defun c:drawcircle ()
   (setq centrepoint (list 0 0) )
-  (setq diameter 200)
+  (setq radius 200)
   
-  (command "circle" centrepoint diameter"")
+  (command "circle" centrepoint radius"")
   )
 
   
