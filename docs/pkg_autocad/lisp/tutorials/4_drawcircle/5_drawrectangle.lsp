@@ -1,0 +1,7 @@
+(defun c:drawpolyline ()
+  (setq point 1 (list 0 0))
+  (setq point 2 (list 0 500))
+  (setq point 3 (list 500 500))
+  (setq point 4(list 500 0))
+  (command "pline" point 1 point 2 point 3 point 4 "c")
+  )
