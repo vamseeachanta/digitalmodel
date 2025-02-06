@@ -13,7 +13,7 @@ def run_process(input_file, expected_result={}):
 
 
 def test_process():
-    input_file = 'fsts_summary.yml'
+    input_file = 'fsts_simultaneous.yml'
 
     if len(sys.argv) > 1:
         sys.argv.pop()

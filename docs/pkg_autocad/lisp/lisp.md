@@ -24,6 +24,14 @@ https://www.youtube.com/watch?v=uqfunFua5dw
 
 ### Other References
 
+Overview:
+https://www.youtube.com/playlist?list=PLwqMD67__ep39iFjt1vBLs7MJMbKfnHz0
+
+Key Resources:
+https://www.theswamp.org/
+https://www.afralisp.net/
+
+
 Another training series - CyberCAD
 https://www.youtube.com/watch?v=bBep15gyTl0&list=PL-Uk9_AI5M32ZYUArh8ha9Dvujpn1WTUf
 
