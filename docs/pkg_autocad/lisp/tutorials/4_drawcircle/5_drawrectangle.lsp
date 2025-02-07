@@ -1,7 +1,11 @@
-(defun c:drawpolyline ()
-  (setq point 1 (list 0 0))
-  (setq point 2 (list 0 500))
-  (setq point 3 (list 500 500))
-  (setq point 4(list 500 0))
-  (command "pline" point 1 point 2 point 3 point 4 "c")
-  )
+; Draw Rectangle using polyline command
+
+(defun c:drawrectagle () 
+  (setq point_1 (list 0 0))
+  (setq point_2 (list 0 500))
+  (setq point_3 (list 500 500))
+  (setq point_4 (list 500 0))
+  (command "pline" point_1 point_2 point_3 point_4 "c")
+)
+
+(c:drawrectagle)
