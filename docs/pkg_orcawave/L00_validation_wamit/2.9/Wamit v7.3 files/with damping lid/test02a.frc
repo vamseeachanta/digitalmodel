@@ -1,0 +1,8 @@
+TEST02a.FRC
+ 1 1 1 2 0    0 0 0 0       IOPTN(1-9)
+ 0.0                        VCG
+ 0.5  0.0  0.0
+ 0.0  0.5  0.0
+ 0.0  0.0  0.5              XPRDCT
+ 0                          NBETAH
+ 0                          NFIELD
