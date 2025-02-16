@@ -115,19 +115,21 @@ class OrcaFlexObjects():
         Returns:
             OrcaFlex time period object
         """
-        if type(SimulationPeriod) is int:
-            TimePeriodObject = SimulationPeriod
+        if len(SimulationPeriod) == 2:
+            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0],
+                                                      SimulationPeriod[1])
+        elif len(SimulationPeriod) == 1:
+            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0],
+                                                      SimulationPeriod[0])
+        elif type(SimulationPeriod) is int:
+            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod,
+                                                      SimulationPeriod)
         elif SimulationPeriod == 'StaticState':
             TimePeriodObject = OrcFxAPI.PeriodNum.StaticState
         elif SimulationPeriod == 'WholeSimulation':
             TimePeriodObject = OrcFxAPI.PeriodNum.WholeSimulation
         elif SimulationPeriod == 'LatestWave':
             TimePeriodObject = OrcFxAPI.PeriodNum.LatestWave
-        elif len(SimulationPeriod) == 2:
-            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0],
-                                                      SimulationPeriod[1])
-        elif len(SimulationPeriod) == 1:
-            TimePeriodObject = OrcFxAPI.SpecifiedPeriod(SimulationPeriod[0])
         else:
             raise ValueError("Could not specify time period for simulation")
 
@@ -193,7 +195,7 @@ class OrcaFlexObjects():
             Position = cfg['Position']
         else:
             Position = [0, 0, 0]
-            logging.info("Position not defined. Defaulting to [0, 0, 0]")
+            logging.debug("Position not defined. Defaulting to [0, 0, 0]")
 
         objectExtra = OrcFxAPI.oeVessel(Position[0], Position[1], Position[2])
 
