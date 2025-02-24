@@ -3,6 +3,7 @@ Dear Vamsee,
 There are no scripts for these plots, they were created in Excel, after pasting into a spreadsheet the output from an OrcaFlex vessel response report:
 https://www.orcina.com/webhelp/OrcaFlex/Redirector.htm?Vesselresponsereports.htm
 
+
 If you still wish to proceed using Python, I can provide pointers into the documentation to assist you in starting your scripts, but we cannot write them for you.
 
 You can access results from OrcaWave directly using the API by following the guidance here:
@@ -26,11 +27,30 @@ There are also no separate input files for the water depth and damping cases. Ea
 For L01, the OrcaWave data for percentage critical damping was not used, that 36.01e3 value was entered directly instead. In the very first diffraction analysis of the OrcaFlex default vessel, which was done years before OrcaWave existed, that damping value is noted to be approximately 8% of critical, but that percentage might have changed as a result of the improvements to the diffraction mesh that OrcaWave makes possible.
 
 
+
 I hope that something here is useful.
 
 Regards,
 
 Colin Lewis.
+==============================
+
+
+Colin,
+
+I am currently working on the OrcaWave diffraction analysis and am learning the “L01 Default vessel”. 
+
+a/ Please can you let me know or provide brief guidance on how to create the RAOs and QTF plots (below) in the L01? Any existing starter scripts will help. Would like to create these comparisons in 2 workflows as follows:
+i/ In OrcaWave directly (before importing into OrcaFlex).
+ii/ In OrcaFlex to help compare between already existing models 
+
+b/ Also, can we get the OrcaWave input files for the water depth sensitivity (100 m vs. 400 m) and % roll critical damping? At minimum, please provide the % critical damping used so I can replicate on my end.
+
+
+![alt text](image.png)
+
+![alt text](image-1.png)
+
 ==============================
 
 Dear Vamsee,
