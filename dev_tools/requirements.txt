@@ -39,3 +39,5 @@ xlsxwriter
 beautifulsoup4
 requests
 scrapy
+
+loguru

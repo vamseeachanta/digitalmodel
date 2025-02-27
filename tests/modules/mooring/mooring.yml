@@ -1,0 +1,11 @@
+meta:
+  library: digitalmodel
+  basename: mooring
+
+default:
+  log_level: DEBUG
+  cfg_sensitivities: False
+
+data:
+  reference_model_file: src/digitalmodel/base_configs/mooring/orcaflex_mooring_template1.yml
+  orcaflex_ref: 

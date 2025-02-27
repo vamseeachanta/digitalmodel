@@ -41,6 +41,7 @@ from digitalmodel.modules.transformation.transformation import Transformation
 from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.modules.vertical_riser import vertical_riser
 from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
+from digitalmodel.modules.mooring.mooring import Mooring
 
 library_name = "digitalmodel"
 save_data = SaveData()
@@ -61,7 +62,13 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         if cfg is None:
             raise ValueError("cfg is None")
 
-    basename = cfg["basename"]
+    if 'basename' in cfg:
+        basename = cfg["basename"]
+    elif 'meta' in cfg:
+        basename = cfg["meta"]["basename"]
+    else:
+        raise ValueError("basename not found in cfg")
+    
     application_manager = ConfigureApplicationInputs(basename)
     
     logging.debug("cfg before configuring: %s", cfg)
@@ -163,6 +170,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "plate_buckling":
         pb = PlateBuckling()
         cfg_base = pb.router(cfg_base)
+
+    elif basename == "mooring":
+        mooring = Mooring()
+        cfg_base = mooring.router(cfg_base)
 
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))

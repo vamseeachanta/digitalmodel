@@ -11,3 +11,8 @@ Usage: Basic analysis
 outputs: 
 - Basic outputs
 - Software models (OrcaFlex, etc.)
+
+## Orcaflex
+
+Utilize LineSetup Wizard using below link
+https://www.orcina.com/webhelp/OrcaFlex/Content/html/Linesetupwizard.htm
