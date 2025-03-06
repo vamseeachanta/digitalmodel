@@ -15,3 +15,10 @@ The key design points to take away here are:
 3 .Finally, it’s better to be approximately correct than precisely wrong!  Search first for the load(s) that will drive each performance level. Then, ensure the design performs at all performance levels! No pun intended!
 
 ![capacity_curves]](capacity_curves.jpeg)
+
+
+Comments
+
+You can make coordinate transformations on those RAOs if both the amplitude and the phase are given. Sometimes we encounter situations where hydrodynamic coefficients such as added mass, damping and restoring matrices are also given at the undesired origin, which we can also perform coordinate transformations on.
+
+Such a pain to work with an Excel sheet with RAOs with conventions missing! Figuring out the origin, what's positive, and finally if it's phase leading/lagging. Sometimes it's just better to generate the RAOs yourself. 
