@@ -101,11 +101,12 @@ class OPPTimeSeries:
     def get_TimeHistory(self, OrcFXAPIObject, TimePeriod, objectExtra, VariableName):
         output = None
         try:
-            if objectExtra is None:
-                output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
-            else:
-                output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
-                                                   objectExtra)
+            if OrcFXAPIObject is not None:
+                if objectExtra is None:
+                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
+                else:
+                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
+                                                    objectExtra)
         except Exception as e:
             logging.info(str(e))
             raise Exception(f"Error in TimeHistory: {str(e)}")

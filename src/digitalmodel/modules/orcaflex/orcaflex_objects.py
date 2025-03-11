@@ -13,21 +13,24 @@ class OrcaFlexObjects():
     def get_orcaflex_objects(self, model, cfg):
         OrcFXAPIObject = self.get_OrcFXAPIObject(model, cfg)
 
+
         TimePeriod = self.get_SimulationPeriod(cfg)
 
         ArcLengthArray, arclengthRange = self.get_arc_length_objects(cfg)
 
-        objectExtra, arclengthRange_objectExtra = self.get_objectExtra(cfg, OrcFXAPIObject)
-        if arclengthRange is None:
-            arclengthRange = arclengthRange_objectExtra
+        objectExtra = None
+        if OrcFXAPIObject is not None:
+            objectExtra, arclengthRange_objectExtra = self.get_objectExtra(cfg, OrcFXAPIObject)
+            if arclengthRange is None:
+                arclengthRange = arclengthRange_objectExtra
 
 
         VariableName = None
-        if 'Variable' in cfg:
+        if 'Variable' in cfg and OrcFXAPIObject is not None:
             VariableName = cfg['Variable']
 
         Statistic_Type = None
-        if 'Statistic_Type' in cfg:
+        if 'Statistic_Type' in cfg and OrcFXAPIObject is not None:
             Statistic_Type = cfg['Statistic_Type']
 
         return OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type
@@ -84,16 +87,17 @@ class OrcaFlexObjects():
 
 
     def get_OrcFXAPIObject(self, model, cfg):
+        OrcFXAPIObject = None
         if 'ObjectName' in cfg:
             objectName = cfg['ObjectName']
         else:
             raise Exception("Model does not have the objectName")
 
+
         try:
             OrcFXAPIObject = model[objectName]
         except Exception as e:
             logging.info(str(e)) 
-            raise Exception("Model does not have the objectName")
 
         return OrcFXAPIObject
 

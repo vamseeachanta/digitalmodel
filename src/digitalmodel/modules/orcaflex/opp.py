@@ -89,33 +89,35 @@ class OrcaFlexPostProcess():
         for fileIndex in range(0, len(sim_files)):
             file_name = sim_files[fileIndex]
             model = ou.get_model_from_filename(file_name=file_name, load_matrix=self.load_matrix)
-            FileDescription = 'Description'
-            FileObjectName = 'Dummy_Object'
-            histogram_for_file = [[]] * len(cfg.time_series_settings['groups'])
 
-            self.fileIndex = fileIndex
-            print("Post-processing file: {}".format(file_name))
-            try:
-                RangeAllFiles.append(
-                    opp_rg.postProcessRange(model, self.cfg, FileObjectName))
-            except:
+            if model is not None:
+                FileDescription = 'Description'
+                FileObjectName = 'Dummy_Object'
+                histogram_for_file = [[]] * len(cfg.time_series_settings['groups'])
+
+                self.fileIndex = fileIndex
+                print("Post-processing file: {}".format(file_name))
+                try:
+                    RangeAllFiles.append(
+                        opp_rg.postProcessRange(model, self.cfg, FileObjectName))
+                except:
+                    RangeAllFiles.append(None)
+
+                if cfg['orcaflex']['postprocess']['summary']['flag']:
+                    summary_groups_for_file = opp_summary.get_summary_for_file(cfg, model, file_name)
+                    summary = opp_summary.add_file_result_to_all_results(summary, summary_groups_for_file)
+                if cfg['orcaflex']['postprocess']['linked_statistics']['flag']:
+                    linked_statistics_for_file = opp_ls.get_linked_statistics(cfg, model, file_name)
+                    linked_statistics = opp_ls.add_file_result_to_all_results(linked_statistics, linked_statistics_for_file)
+
+                if cfg['orcaflex']['postprocess']['time_series']['flag']:
+                    if cfg['time_series_settings']['data']: 
+                        opp_ts.get_time_series_data(cfg, model, file_name)
+                else:
+                    pass
+
+                histogram_all_files.append(histogram_for_file)
                 RangeAllFiles.append(None)
-
-            if cfg['orcaflex']['postprocess']['summary']['flag']:
-                summary_groups_for_file = opp_summary.get_summary_for_file(cfg, model, file_name)
-                summary = opp_summary.add_file_result_to_all_results(summary, summary_groups_for_file)
-            if cfg['orcaflex']['postprocess']['linked_statistics']['flag']:
-                linked_statistics_for_file = opp_ls.get_linked_statistics(cfg, model, file_name)
-                linked_statistics = opp_ls.add_file_result_to_all_results(linked_statistics, linked_statistics_for_file)
-
-            if cfg['orcaflex']['postprocess']['time_series']['flag']:
-                if cfg['time_series_settings']['data']: 
-                    opp_ts.get_time_series_data(cfg, model, file_name)
-            else:
-                pass
-
-            histogram_all_files.append(histogram_for_file)
-            RangeAllFiles.append(None)
 
         self.HistogramAllFiles = histogram_all_files
         self.RangeAllFiles = RangeAllFiles
