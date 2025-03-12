@@ -1,3 +1,16 @@
+## Summary
+
+
+https://realpython.com/python-yaml/
+
+Possible solution is to use a LoaderClass to identify the main keys.
+
+From there, we may need to resort to ascii encoding to read the file.
+
+
+
+## Communications
+
 Vamsee
 
 I'm not sure what is causing your issue, because I don't enough of your code. Just including a single line is often not sufficient for us to debug. Ideally we would like to see a cutdown, minimal, but complete program that demonstrates the issue. Then we know we are talking about the same thing.
