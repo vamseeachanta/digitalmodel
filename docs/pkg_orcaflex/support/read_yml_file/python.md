@@ -3,9 +3,13 @@
 
 https://realpython.com/python-yaml/
 
-Possible solution is to use a LoaderClass to identify the main keys.
+Possible solution is to use a LoaderClass (BaseLoader) to identify the main keys.
 
 From there, we may need to resort to ascii encoding to read the file.
+
+
+Also, with recent advances, we need to iimprove our yaml utilities and try to use the latest version of pyyaml and its best practices. Check link above.
+
 
 
 
