@@ -4,3 +4,9 @@ If you wish to disable current and wind from part of the simulation then you cou
 
 
 https://www.orcina.com/webhelp/OrcaFlex/Default_Left.htm#StartTopic=html/Restartanalyses.htm|SkinName=Web%20Help
+
+Detailed Method:
+
+- Parent file should have a time recorded for a time.
+- Child file can therefore use that time
+- 
