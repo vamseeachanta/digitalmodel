@@ -5,10 +5,13 @@ a/ Define approximate fixed length on 1 mooring. This single moooring should be 
 ![Picking a mooring](image.png)
 
 - Stage 1 analysis:
-    1/ Run the model with the reference mooring with set length. This will give you the reference tensions.
+    - Run the model with the 2 stabilizing mooring  with set length. This will help stabilize the vessel in translation and rotation (moment).
+    - This will set reference tensions in other lines via "Specified Tension".
 
 - Stage 2 analysis:
 
-    2/ Run the model with the reference mooring and the other moorings. This will give you the tensions on the other moorings.
-    3/ Run the model with the reference mooring and the other moorings. This will give you the tensions on the other moorings.
+    - Set all other moorings to payout 0.
+    - Set the 2 stabilizing moorings to target constant tension.
+    - Iterate to get as close to target tension in the stabilizing moorings across all stages. 
 
+- Stage 3 main analysis: Run with environment.
