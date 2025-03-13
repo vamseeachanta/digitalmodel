@@ -108,8 +108,8 @@ class OPPTimeSeries:
                     output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
                                                     objectExtra)
         except Exception as e:
-            logging.info(str(e))
-            raise Exception(f"Error in TimeHistory: {str(e)}")
+            logging.error(str(e))
+            # raise Exception(f"Error in TimeHistory: {str(e)}")
         return output
 
     def post_process_RAOs(self, model, FileObjectName):

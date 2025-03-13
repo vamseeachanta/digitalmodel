@@ -108,7 +108,7 @@ class OPPSummary():
         elif cfg_item['Command'] == 'TimeHistory':
             output = opp_ts.get_TimeHistory(OrcFXAPIObject, TimePeriod, objectExtra, VariableName)
 
-            if OrcFXAPIObject is not None:
+            if OrcFXAPIObject is not None and output is not None:
                 output_value = self.get_additional_data(cfg_item, RangeDF, VariableName,
                                                         output, Statistic_Type)
             else:
