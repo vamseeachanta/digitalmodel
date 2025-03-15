@@ -38,7 +38,5 @@ class OrcaflexAnalysis:
             if cfg['orcaflex']['iterate']['rerun']:
                 oir.run_iterative_simulations()
 
-        opp.post_process_router(cfg)
-
         return cfg
 

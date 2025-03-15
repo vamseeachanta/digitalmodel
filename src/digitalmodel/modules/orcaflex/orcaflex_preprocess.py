@@ -1,6 +1,5 @@
-from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
-
-ou = OrcaflexUtilities()
+import OrcFxAPI
+import logging
 
 
 class OrcaflexPreProcess:
@@ -16,7 +15,15 @@ class OrcaflexPreProcess:
         return cfg
 
     def check_yml_file(self, cfg):
-        
-        pass
+        model = OrcFxAPI.Model()
+
+        yml_files = cfg['file_management']['input_files']['yml']
+        for yml_file in yml_files:
+            try:
+                model.LoadData(yml_file)
+                logging.info(f'Load yml file: {yml_file} ... PASS')
+            except Exception as e:
+                logging.error(f'Load yml file: {yml_file} ... FAIL')
+                logging.error(e)
 
         return cfg

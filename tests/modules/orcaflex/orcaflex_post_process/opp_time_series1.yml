@@ -25,6 +25,11 @@ orcaflex:
     time_series:
       flag: True
       csv_decimal: 6
+      statistics:
+        Minimum: True
+        Maximum: True
+        Mean: True
+        StdDev: True
     RAOs:
       flag: False
     cummulative_histograms:

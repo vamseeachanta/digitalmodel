@@ -11,6 +11,9 @@ orcaflex:
     check_yml: True
     save_dat: True
 
+  postprocess:
+    visualization:
+      flag: False
 
 file_management:
   flag: True
@@ -19,7 +22,7 @@ file_management:
 
   files:
     files_in_current_directory:
-      flag: True
+      flag: False
       directory: data
       auto_read: True
       filename_pattern: NULL
