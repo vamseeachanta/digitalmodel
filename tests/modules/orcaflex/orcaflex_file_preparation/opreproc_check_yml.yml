@@ -1,0 +1,25 @@
+basename: orcaflex_post_process
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  preprocess:
+    check_yml: True
+    save_dat: True
+
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: True
+      directory: data
+      auto_read: True
+      filename_pattern: NULL

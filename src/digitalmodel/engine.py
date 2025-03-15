@@ -23,13 +23,13 @@ from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
-from digitalmodel.modules.orcaflex.orcaflex_analysis import orcaflex_analysis
+from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
+
 from digitalmodel.modules.orcaflex.orcaflex_file_management import (
     OrcaflexFileManagement,
 )
 from digitalmodel.modules.orcaflex.orcaflex_installation import OrcInstallation
 from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
-from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
 from digitalmodel.modules.orcaflex.umbilical_analysis_components import (
     UmbilicalAnalysis,
 )
@@ -96,10 +96,8 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "vertical_riser":
         cfg_base = vertical_riser(cfg_base)
     elif basename in ["orcaflex_analysis", "orcaflex_post_process"]:
-        if "file_management" in cfg_base and cfg["file_management"]["flag"]:
-            ou = OrcaflexUtilities()
-            cfg_base = ou.file_management(cfg_base)
-        cfg_base = orcaflex_analysis(cfg_base)
+        ofx = OrcaFlex()
+        cfg_base = ofx.router(cfg_base)
     elif basename in ["aqwa"]:
         aqwa = Aqwa()
         cfg_base = aqwa.router(cfg_base)
