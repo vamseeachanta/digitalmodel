@@ -41,3 +41,6 @@ requests
 scrapy
 
 loguru
+
+# ruamel.yaml<0.18.0
+ruamel.yaml
