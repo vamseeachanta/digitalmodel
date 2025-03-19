@@ -7,3 +7,9 @@ In order to compare results, you can generate the case in one solver, and conver
 ![BEMRosetta Program Steps](image.png)
 
 There are currently no open formats in place. To my liking HAMS and Nemoh have complicated formats, although Capytaine's .nc format could be promising, but it has not been promoted as a standard, so I only include it as read. BEMIO's .h5 format I include as read and write, but it is not a standard either. People tend to massively use the Wamit .1, .3, etc. format, which, although sparse, is complete. For my studies I use Wamit's .out format, which is compact, although unfortunately the excitation and diffraction are not broken down.
+
+Multiple bodies cannot be imported? 
+
+Waiting on response from Inaki
+
+![alt text](image-1.png)
