@@ -61,6 +61,9 @@ The requested data were imported, but with the following warnings:
 
 ## Missing FULL QTFs
 
+If using only .LIS file, the Full QTFs option is not available. To get the Full QTFs option, import the data from the AQWA analysis folder directly. OrcaFlex also seems to utilize the .QTF AQWA output file to import the data.
+
+![no-sumfreq-data](no-sumfreq-data.png)
 
 Alistair,
 

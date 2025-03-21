@@ -38,3 +38,13 @@ Continue to the "Save" tab.
 Data will be saved irrepective of the renaming of bodies in "Tab: Bodies".
 
 
+
+WLNG Example Model - 2 Bodies
+
+Body 1: Strt1_FST2type
+Body 2: Strt2_FST1type
+
+- 
+- Mesh did not import properly. Supply mesh in a different way? i.e. directly in wamit.gfd ofmrat
+- How to check the results obtained?
+- 
