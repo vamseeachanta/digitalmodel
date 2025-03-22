@@ -37,3 +37,9 @@ NRNM - Calculates Nodal RAOs With No Moorings
 egory 18. The run stages should be from 1 to 5.
 
 - An experiment is performed with an example RUn. Check it works or otherwise?
+
+
+### Preparing .dat file
+
+- Always check that the TCG may need to be zero (minor requirement)
+- THe mass based on displaced volume and given mass should not differ by more than 10%. Always correct the mass based on displaced volume. Utilize density of water to back calculate the mass and enter in input file
