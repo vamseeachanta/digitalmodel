@@ -1,6 +1,9 @@
 import OrcFxAPI
 import logging
 
+from digitalmodel.modules.orcaflex.preprocess.load_vessel import LoadVessel
+
+opreproc_vessel = LoadVessel()
 
 class OrcaflexPreProcess:
 
@@ -11,6 +14,8 @@ class OrcaflexPreProcess:
         if 'preprocess' in cfg['orcaflex']:
             if cfg['orcaflex']['preprocess']['check_yml']:
                 self.check_yml_file(cfg)
+            if cfg['orcaflex']['preprocess']['load_vessel']['flag']:
+                cfg = opreproc_vessel.router(cfg)
 
         return cfg
 
