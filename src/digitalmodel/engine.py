@@ -95,7 +95,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         cfg_base = catenary_riser(cfg_base)
     elif basename == "vertical_riser":
         cfg_base = vertical_riser(cfg_base)
-    elif basename in ["orcaflex_analysis", "orcaflex_post_process"]:
+    elif basename in ["orcaflex", "orcaflex_analysis", "orcaflex_post_process"]:
         ofx = OrcaFlex()
         cfg_base = ofx.router(cfg_base)
     elif basename in ["aqwa"]:

@@ -46,7 +46,8 @@ class OPPTimeSeries:
         if cfg['orcaflex']['postprocess']['RAOs']['flag']:
             self.post_process_RAOs(model, FileObjectName)
 
-    def get_time_series_data(self, cfg, model, file_name):
+    def get_time_series_data(self, cfg, model_dict, file_name):
+        model = model_dict['model']
         time_series_cfg_output = {"groups": []}
 
         ts_groups = cfg['time_series_settings']['groups']
@@ -54,8 +55,11 @@ class OPPTimeSeries:
             group_label = ts_group['Label']
             df = pd.DataFrame()
             for ts_cfg in ts_group['Columns']:
+                if ts_cfg['SimulationPeriod'][1] is None:
+                    ts_cfg['SimulationPeriod'][1] = model_dict['stop_time']
+                    logging.debug(f"SimulationPeriod[1] set to {model_dict['stop_time']}")
                 ts_label = ts_cfg['Label']
-                time_series, times = self.get_time_series_from_orcaflex_run(model, ts_cfg)
+                time_series, times = self.get_time_series_from_orcaflex_run(model_dict, ts_cfg)
                 if 'time' not in list(df.columns):
                     df['time']  = times
                 df[ts_label] = time_series
@@ -78,7 +82,7 @@ class OPPTimeSeries:
 
 
 
-    def get_time_series_from_orcaflex_run(self, model, cfg_time_series):
+    def get_time_series_from_orcaflex_run(self, model_dict, cfg_time_series):
         """Gets time series data from an OrcaFlex run
 
         Args:
@@ -89,8 +93,8 @@ class OPPTimeSeries:
             Time series data from the OrcaFlex analysis
         """
 
-        OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model, cfg_time_series)
-
+        OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model_dict, cfg_time_series)
+        model = model_dict['model']
         times = model.SampleTimes(TimePeriod)
         time_series = OrcFXAPIObject.TimeHistory(VariableName,
                                                TimePeriod,

@@ -10,11 +10,12 @@ class OrcaFlexObjects():
     def __init__(self) -> None:
         pass
 
-    def get_orcaflex_objects(self, model, cfg):
+    def get_orcaflex_objects(self, model_dict, cfg):
+        model = model_dict['model']
         OrcFXAPIObject = self.get_OrcFXAPIObject(model, cfg)
 
 
-        TimePeriod = self.get_SimulationPeriod(cfg)
+        TimePeriod = self.get_SimulationPeriod(cfg, model_dict)
 
         ArcLengthArray, arclengthRange = self.get_arc_length_objects(cfg)
 
@@ -101,9 +102,18 @@ class OrcaFlexObjects():
 
         return OrcFXAPIObject
 
-    def get_SimulationPeriod(self, cfg):
+    def get_SimulationPeriod(self, cfg, model_dict):
+        stop_time = model_dict['stop_time']
         if 'SimulationPeriod' in cfg:
             SimulationPeriod = cfg['SimulationPeriod']
+            if len(SimulationPeriod) == 2:
+                if SimulationPeriod[1] is None:
+                    SimulationPeriod[1] = stop_time
+                    logging.debug(f"SimulationPeriod[1] is None. Defaulting to stop_time: {stop_time}")
+                else:
+                    if SimulationPeriod[1] != stop_time:
+                        logging.warning(f"{SimulationPeriod[1]} is different stop_time: {stop_time}")
+
             TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
         else:
             TimePeriod = None

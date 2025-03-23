@@ -288,7 +288,7 @@ class OrcaflexUtilities:
             # Third party imports
             import pandas as pd
             self.load_matrix = pd.read_csv(cfg['Files']['csv_filename'])
-            self.load_matrix['RunStatus'] = None
+            self.load_matrix['run_status'] = None
             self.simulation_filenames = self.load_matrix['fe_filename']
             self.simulation_ObjectNames = self.load_matrix['ObjectName']
             self.simulation_SimulationDuration = self.load_matrix[
@@ -436,38 +436,34 @@ class OrcaflexUtilities:
         return round(tassociated, 2)
     
     def get_load_matrix_with_filenames(self, cfg):
-        load_matrix_columns = ['fe_filename', 'RunStatus']
+        load_matrix_columns = ['fe_filename', 'run_status', 'stop_time']
         load_matrix = pd.DataFrame(columns=load_matrix_columns)
 
         sim_files = cfg.file_management['input_files']['sim']
         sim_files = [str(file) for file in sim_files]
         load_matrix['fe_filename'] = sim_files
-        load_matrix['RunStatus'] = None
+        load_matrix['run_status'] = None
+
         return load_matrix
 
-    def get_model_from_filename(self, file_name, load_matrix=None):
+    def get_model_and_metadata(self, file_name):
         SimulationFileName = self.get_SimulationFileName(file_name)
         model = None
         if os.path.isfile(SimulationFileName):
             try:
                 model = self.loadSimulation(SimulationFileName)
-                RunStatus = str(model.state)
+                run_status = model.state.__dict__['_name_']
+                stop_time = model.simulationStopTime
 
-                if load_matrix is not None:
-                    with PandasChainedAssignent():
-                        load_matrix.loc[(
-                            load_matrix['fe_filename'] == file_name),
-                                             'RunStatus'] = RunStatus
-                    if RunStatus not in [
-                            'Reset', 'InStaticState', 'SimulationStopped', '4'
-                    ]:
-                        model = None
             except Exception as e:
+                model = None
                 logging.info(
                     f"Model: {SimulationFileName} ... Error Loading File")
                 logging.info(str(e))
 
-        return model
+        model_dict = {'model': model, 'run_status': run_status, 'stop_time': stop_time}
+
+        return model_dict
 
     def get_SimulationFileName(self, file_name):
         get_filename_without_extension = self.get_filename_without_extension(
