@@ -1,0 +1,146 @@
+meta:
+  library: digitalmodel
+  basename: orcaflex
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  unit:
+    pretension: kN
+    coordinates: m
+    length: m
+
+orcaflex:
+  preprocess:
+    check_yml:
+      flag: False
+      save_dat: True
+
+  analysis:
+    mooring:
+      flag: True
+      calculation: pretension
+
+  postprocess:
+    visualization:
+      flag: False
+
+analysis:
+  mooring:
+    groups:
+    - label: development
+      calculation: pretension
+      method: winch_to_mooring
+      stabilizing_lines: [Line08, Line10]
+      mooring_template: 
+      mooring_lines:
+        - name: Line01
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [FST2, 5.76, -21.10, 14.62]
+            - [LNGC, -13.44, 1.80, 17.50]
+          pretension: 20
+
+        - name: Line02
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [FST2, 6.92, -21.15, 14.62]
+            - [LNGC, -13.44, 3.63, 17.50]
+          pretension: 20
+
+        - name: Line03
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [LNGC, -13.44, 3.63, 17.50]
+            - [FST2, 8.10, -21.21, 14.62]
+          pretension: 20
+
+        - name: Line04
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [FST2, 40.70, -21.58, 14.62]
+            - [LNGC, -0.97, 15.12, 17.50]
+          pretension: 10
+
+        - name: Line05
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [FST2, 41.87, -21.58, 14.62]
+            - [LNGC, 1.51, 15.96, 17.50]
+          pretension: 10
+
+        - name: Line06
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [FST2, 43.04, -21.58, 14.62]
+            - [LNGC, 2.70, 16.34, 17.50]
+          pretension: 10
+
+        - name: Line07
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [FST2, 116.14, -21.58, 14.62]
+            - [LNGC, 22.36, 20.49, 17.50]
+          pretension: 25
+
+        - name: Line08
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+          - [FST2, 117.31, -21.58, 14.62]
+          - [LNGC, 26.41, 20.73, 17.50]
+          pretension: 25
+
+        - name: Line09
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [FST2, 195.82, -20.36, 14.62]
+            - [LNGC, 202.89, 19.97, 17.50]
+          pretension: 35
+
+        - name: Line10
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [FST2, 196.97, -20.19, 14.62]
+            - [LNGC, 204.06, 19.73, 17.50]
+          pretension: 35
+
+        - name: Line11
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [FST2, 198.13, -20.01, 14.62]
+            - [LNGC, 224.79, 15.60, 17.50]
+          pretension: 35
+
+        - name: Line12
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [FST1, 121.67, 21.83, 14.62]
+            - [LNGC, 230.22, 13.82, 17.50]
+          pretension: 10
+
+        - name: Line13
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [FST1, 120.51, 21.83, 14.62]
+            - [LNGC, 241.24, 9.30, 17.50]
+          pretension: 10
+
+        - name: Line14
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+          - [FST1, 119.34, 21.83, 14.62]
+          - [LNGC, 242.97, 8.47, 17.50]
+          pretension: 10
+
+        - name: Line15
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [FST1, 43.04, 21.83, 14.62]
+            - [LNGC, 258.08, -1.30, 17.50]
+          pretension: 15
+
+        - name: Line16
+          Connection, ConnectionX, ConnectionY, ConnectionZ:
+            - [FST1, 41.87, 21.83, 14.62]
+            - [LNGC, 258.08, -3.64, 17.50]
+          pretension: 15
+
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: True
+      directory: NULL
+      auto_read: True
+      filename_pattern: NULL

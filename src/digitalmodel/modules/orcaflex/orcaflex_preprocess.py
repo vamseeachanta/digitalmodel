@@ -12,9 +12,11 @@ class OrcaflexPreProcess:
 
     def router(self, cfg):
         if 'preprocess' in cfg['orcaflex']:
-            if cfg['orcaflex']['preprocess']['check_yml']:
+            check_yml_flag = cfg['orcaflex']['preprocess'].get('check_yml', {}).get('flag', False)
+            if check_yml_flag:
                 self.check_yml_file(cfg)
-            if cfg['orcaflex']['preprocess']['load_vessel']['flag']:
+            load_vessel_flag = cfg['orcaflex']['preprocess'].get('load_vessel', {}).get('flag', False)
+            if load_vessel_flag:
                 cfg = opreproc_vessel.router(cfg)
 
         return cfg

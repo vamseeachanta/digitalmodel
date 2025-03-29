@@ -8,8 +8,9 @@ default:
 
 orcaflex:
   preprocess:
-    check_yml: True
-    save_dat: True
+    check_yml:
+      flag: True
+      save_dat: True
 
   postprocess:
     visualization:
