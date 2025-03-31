@@ -1,13 +1,13 @@
 import os
 import sys
-import logging
+from loguru import logger
 
-from assetutilities.common.data import SaveData
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import CopyAndPasteFiles
 from assetutilities.common.file_management import FileManagement
+from assetutilities.common.yml_utilities import WorkingWithYAML
 # Reader imports
 from digitalmodel.aqwa import Aqwa
 from digitalmodel.catenary_riser import catenary_riser
@@ -44,20 +44,14 @@ from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.modules.mooring.mooring import Mooring
 
 library_name = "digitalmodel"
-save_data = SaveData()
+wwyaml = WorkingWithYAML()
+
+app_manager = ConfigureApplicationInputs()
 
 def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
-    fm = FileManagement()
     if cfg is None:
-        inputfile = validate_arguments_run_methods(inputfile)
-        cfg = ymlInput(inputfile, updateYml=None)
-        cfg = AttributeDict(cfg)
-        if cfg is None:
-            raise ValueError("cfg is None")
-def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
-    if cfg is None:
-        inputfile = validate_arguments_run_methods(inputfile)
-        cfg = ymlInput(inputfile, updateYml=None)
+        inputfile, cfg_argv_dict = app_manager.validate_arguments_run_methods(inputfile)
+        cfg = wwyaml.ymlInput(inputfile, updateYml=None)
         cfg = AttributeDict(cfg)
         if cfg is None:
             raise ValueError("cfg is None")
@@ -68,28 +62,15 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         basename = cfg["meta"]["basename"]
     else:
         raise ValueError("basename not found in cfg")
-    
-    application_manager = ConfigureApplicationInputs(basename)
-    
-    logging.debug("cfg before configuring: %s", cfg)
-    
-    application_manager.configure(cfg, library_name)
 
     if config_flag:
         fm = FileManagement()
-        cfg_base = application_manager.cfg
+        cfg_base = app_manager.configure(cfg, library_name, basename, cfg_argv_dict)
         cfg_base = fm.router(cfg_base)
     else:
         cfg_base = cfg
 
-    if config_flag:
-        fm = FileManagement()
-        cfg_base = application_manager.cfg
-        cfg_base = fm.router(cfg_base)
-    else:
-        cfg_base = cfg
-
-    logging.info(f"{basename}, application ... START")
+    logger.info(f"{basename}, application ... START")
 
     if basename in ["simple_catenary_riser", "catenary_riser"]:
         cfg_base = catenary_riser(cfg_base)
@@ -176,43 +157,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
-    logging.info(f"{basename}, application ... END")
-    save_cfg(cfg_base=cfg_base)
+    logger.info(f"{basename}, application ... END")
+    app_manager.save_cfg(cfg_base=cfg_base)
 
     return cfg_base
-
-
-def validate_arguments_run_methods(inputfile):
-    """
-    Validate inputs for following run methods:
-    - module (i.e. python -m digitalmodel input.yml)
-    - from python file (i.e. )
-    """
-
-    if len(sys.argv) > 1 and inputfile is not None:
-        raise (Exception("2 Input files provided via arguments & function. Please provide only 1 file ... FAIL"))
-        raise (Exception("2 Input files provided via arguments & function. Please provide only 1 file ... FAIL"))
-
-    if len(sys.argv) > 1:
-        if not os.path.isfile(sys.argv[1]):
-            raise (FileNotFoundError(f"Input file {sys.argv[1]} not found ... FAIL"))
-        else:
-            inputfile = sys.argv[1]
-
-    if len(sys.argv) <= 1:
-        if not os.path.isfile(inputfile):
-            raise (FileNotFoundError(f"Input file {inputfile} not found ... FAIL"))
-        else:
-            sys.argv.append(inputfile)
-    return inputfile
-
-
-def save_cfg(cfg_base):
-    output_dir = cfg_base.Analysis["result_folder"] 
-
-    filename = cfg_base.Analysis["file_name"]
-    filename_path = os.path.join(output_dir, filename)
-
-    save_data.saveDataYaml(cfg_base, filename_path, default_flow_style=False)
-    logging.info(f"Saved data to: {filename_path}")
-    

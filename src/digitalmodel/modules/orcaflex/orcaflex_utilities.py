@@ -4,6 +4,9 @@ import logging
 import math
 import os
 from pathlib import Path
+import pathlib
+
+
 
 # Third party imports
 import colorama
@@ -11,6 +14,7 @@ import pandas as pd
 from assetutilities.common.data import PandasChainedAssignent, SaveData
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.modules.data_exploration.data_exploration import DataExploration
+from assetutilities.common.utilities import is_dir_valid_func
 from colorama import Fore, Style
 
 # Reader imports
@@ -158,63 +162,69 @@ class OrcaflexUtilities:
         # Third party imports
         from assetutilities.common.utilities import is_dir_valid_func
         
-        file_management_directory = self.get_file_management_directory(cfg)
-        if file_management_directory is not None:
-            analysis_root_folder = cfg['Analysis']['analysis_root_folder']
-            file_is_valid, file_management_directory = is_dir_valid_func(file_management_directory,
-                                                     analysis_root_folder)
+        file_management_input_directory = self.get_file_management_input_directory(cfg)
 
+        orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
+        input_files = {}
 
-        if cfg.file_management['files']['files_in_current_directory'][
-                'flag'] or cfg.file_management['files']['files_in_current_directory']['auto_read']:
-            orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
-            input_files = {}
+        for file_ext in orcaflex_extensions:
+            filename_pattern = cfg['file_management']['filename'].get('pattern', None)
+            if filename_pattern is None:
+                glob_search = os.path.join(file_management_input_directory, f'*.{file_ext}')
+            else:
+                glob_search = os.path.join(file_management_input_directory, f'*{filename_pattern}*.{file_ext}')
+            raw_input_files_for_ext = glob.glob(glob_search)
+            raw_input_files_for_ext = [Path(file).resolve() for file in raw_input_files_for_ext]
+            input_files.update({file_ext: raw_input_files_for_ext})
 
-            for file_ext in orcaflex_extensions:
-                filename_pattern = cfg['file_management']['files']['files_in_current_directory'].get('filename_pattern', None)
-                if filename_pattern is None:
-                    glob_search = os.path.join(file_management_directory, f'*.{file_ext}')
-                else:
-                    glob_search = os.path.join(file_management_directory, f'*{filename_pattern}*.{file_ext}')
-                raw_input_files_for_ext = glob.glob(glob_search)
-                raw_input_files_for_ext = [Path(file).resolve() for file in raw_input_files_for_ext]
-                input_files.update({file_ext: raw_input_files_for_ext})
+        cfg.file_management.update({'input_files': input_files})
 
-            cfg.file_management.update({'input_files': input_files})
+        # else:
+        #     orcaflex_extensions = cfg.file_management['input_files'].keys()
+        #     for file_ext in orcaflex_extensions:
+        #         raw_input_files_for_ext = cfg.file_management['input_files'][
+        #             file_ext]
 
-        else:
-            orcaflex_extensions = cfg.file_management['input_files'].keys()
-            for file_ext in orcaflex_extensions:
-                raw_input_files_for_ext = cfg.file_management['input_files'][
-                    file_ext]
+        #         valid_file_count = 0
+        #         for input_file_index in range(0, len(raw_input_files_for_ext)):
+        #             input_file = raw_input_files_for_ext[input_file_index]
+        #             if not os.path.isfile(input_file):
+        #                 raw_input_files_for_ext[
+        #                     input_file_index] = os.path.join(
+        #                         cfg.Analysis['analysis_root_folder'],
+        #                         input_file).replace("\\","/")
+        #             if os.path.isfile(
+        #                     raw_input_files_for_ext[input_file_index]):
+        #                 valid_file_count = valid_file_count + 1
 
-                valid_file_count = 0
-                for input_file_index in range(0, len(raw_input_files_for_ext)):
-                    input_file = raw_input_files_for_ext[input_file_index]
-                    if not os.path.isfile(input_file):
-                        raw_input_files_for_ext[
-                            input_file_index] = os.path.join(
-                                cfg.Analysis['analysis_root_folder'],
-                                input_file).replace("\\","/")
-                    if os.path.isfile(
-                            raw_input_files_for_ext[input_file_index]):
-                        valid_file_count = valid_file_count + 1
-
-                logging.info(
-                    f"Number of '{file_ext}' input files : {len(raw_input_files_for_ext)} . Valid files are: {valid_file_count}."
-                )
+        #         logging.info(
+        #             f"Number of '{file_ext}' input files : {len(raw_input_files_for_ext)} . Valid files are: {valid_file_count}."
+        #         )
 
         return cfg
 
-    def get_file_management_directory(self, cfg):
+    def get_file_management_input_directory(self, cfg):
 
-        if cfg.file_management['files']['files_in_current_directory']['flag']:
-            file_management_directory = cfg.Analysis['analysis_root_folder']
+        file_management_input_directory = cfg.file_management["input_directory"]
+        if file_management_input_directory is None:
+            file_management_input_directory = cfg.Analysis["analysis_root_folder"]
+
+        analysis_root_folder = cfg["Analysis"]["analysis_root_folder"]
+        dir_is_valid, file_management_input_directory = is_dir_valid_func(
+            file_management_input_directory, analysis_root_folder
+        )
+
+        if not dir_is_valid:
+            raise ValueError(
+                f"Directory {file_management_input_directory} is not valid"
+            )
         else:
-            file_management_directory = cfg.file_management['files'][
-                'files_in_current_directory']['directory']
+            file_management_input_directory = pathlib.Path(
+                file_management_input_directory
+            )
 
-        return file_management_directory
+        return file_management_input_directory
+
 
     def sim_file_analysis_and_update(self, cfg):
         sim_files = cfg.file_management['input_files']['*.sim']
