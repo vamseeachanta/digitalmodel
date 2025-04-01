@@ -135,12 +135,12 @@ analysis:
 
 file_management:
   flag: True
-  update_unfinished:
-    flag: False
+  input_directory: fsts_lngc/01_qa
+  output_directory: NULL
 
-  files:
-    files_in_current_directory:
-      flag: True
-      directory: NULL
-      auto_read: True
-      filename_pattern: NULL
+  filename:
+    extension: [yml]
+    pattern: fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl
+    filters:
+      contains: []
+      not_contains: []

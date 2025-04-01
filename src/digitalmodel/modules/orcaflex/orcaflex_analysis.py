@@ -22,6 +22,7 @@ class OrcaflexAnalysis:
         static_flag = False
         simulation_flag = False
         iterate_flag = False
+        mooring_flag = False
         if 'analysis' in cfg['orcaflex']:
             static_flag = cfg['orcaflex']['analysis'].get('static', False)
             simulation_flag = cfg['orcaflex']['analysis'].get('simulation', False)

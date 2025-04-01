@@ -18,12 +18,12 @@ orcaflex:
 
 file_management:
   flag: True
-  update_unfinished:
-    flag: False
+  input_directory: data
+  output_directory: NULL
 
-  files:
-    files_in_current_directory:
-      flag: False
-      directory: data
-      auto_read: True
-      filename_pattern: NULL
+  filename:
+    extension: [yml]
+    pattern: NULL
+    filters:
+      contains: []
+      not_contains: []

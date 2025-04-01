@@ -22,15 +22,26 @@ class OrcaflexPreProcess:
         return cfg
 
     def check_yml_file(self, cfg):
-        model = OrcFxAPI.Model()
-
         yml_files = cfg['file_management']['input_files']['yml']
+        check_yml_dict =
         for yml_file in yml_files:
-            try:
-                model.LoadData(yml_file)
-                logging.info(f'Load yml file: {yml_file} ... PASS')
-            except Exception as e:
-                logging.error(f'Load yml file: {yml_file} ... FAIL')
-                logging.error(e)
+            check_yml_dict = self.check_1_yml_file(yml_file)
+
 
         return cfg
+
+    def check_1_yml_file(self, yml_file):
+        model = OrcFxAPI.Model()
+
+        check_yml_result = False
+        try:
+            model.LoadData(yml_file)
+            check_yml_result = True
+            logging.debug(f'Load yml file: {yml_file} ... PASS')
+        except Exception as e:
+            logging.error(f'Load yml file: {yml_file} ... FAIL')
+            logging.error(e)
+
+        check_yml_dict = {'check_yml_result': check_yml_result
+
+        return check_yml_dict
