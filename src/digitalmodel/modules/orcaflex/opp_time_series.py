@@ -95,11 +95,16 @@ class OPPTimeSeries:
 
         OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model_dict, cfg_time_series)
         model = model_dict['model']
-        times = model.SampleTimes(TimePeriod)
-        time_series = OrcFXAPIObject.TimeHistory(VariableName,
-                                               TimePeriod,
-                                               objectExtra=objectExtra)
-
+        
+        if OrcFXAPIObject is not None:
+            times = model.SampleTimes(TimePeriod)
+            time_series = OrcFXAPIObject.TimeHistory(VariableName,
+                                                TimePeriod,
+                                                objectExtra=objectExtra)
+        else:
+            time_series = []
+            times = []
+            
         return time_series, times
 
     def get_TimeHistory(self, OrcFXAPIObject, TimePeriod, objectExtra, VariableName):

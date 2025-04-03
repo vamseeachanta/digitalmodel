@@ -23,10 +23,12 @@ class OrcaflexPreProcess:
 
     def check_yml_file(self, cfg):
         yml_files = cfg['file_management']['input_files']['yml']
-        check_yml_dict =
+        check_yml_list = []
         for yml_file in yml_files:
             check_yml_dict = self.check_1_yml_file(yml_file)
+            check_yml_list.append(check_yml_dict['check_yml_result'])
 
+        cfg['file_management']['input_files'].update({'yml_orcaflex_check': check_yml_list})
 
         return cfg
 
@@ -42,6 +44,6 @@ class OrcaflexPreProcess:
             logging.error(f'Load yml file: {yml_file} ... FAIL')
             logging.error(e)
 
-        check_yml_dict = {'check_yml_result': check_yml_result
+        check_yml_dict = {'check_yml_result': check_yml_result}
 
         return check_yml_dict

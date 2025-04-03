@@ -1,0 +1,3 @@
+fe_filename,run_status,stop_time,description,statistic,FST1_Heading,FST2_Heading,WindDirection,WindSpeed,WaveDirection,Hs,WaveTz,WaveGamma,RefCurrentSpeed,RefCurrentDirection,CurrentFactor[0]
+K:/github/digitalmodel/docs/pkg_orcaflex/notes/pre_restarts/mooring/fsts_lngc/01_qa/fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_01.sim,SimulationStopped,100.0,,,180.0,0.0,0.0,0.0,0.0,0.0,7.773591,3.3,0.0,357.0,1.0
+K:/github/digitalmodel/docs/pkg_orcaflex/notes/pre_restarts/mooring/fsts_lngc/01_qa/fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.sim,SimulationStopped,310.0,,,180.0,0.0,0.0,0.0,0.0,0.0,7.773591,3.3,0.0,357.0,1.0

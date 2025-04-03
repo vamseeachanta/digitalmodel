@@ -1,0 +1,433 @@
+library: digitalmodel
+basename: orcaflex_post_process
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  analysis:
+    static: False
+    simulation: False
+    iterate:
+      flag: False
+    save_sim: False
+    save_dat: False
+
+  postprocess:
+    visualization:
+      flag: False
+    summary:
+      flag: True
+      statistics:
+        Minimum: False
+        Maximum: False
+        Mean: False
+        StdDev: False
+    RangeGraph:
+      flag: False
+    time_series:
+      flag: False
+    RAOs:
+      flag: False
+    cummulative_histograms:
+      flag: False
+    rain_flow:
+      bins: 10
+      range:
+        - 0
+        - 10
+
+summary_settings_master:
+  groups:
+
+    - Label: inputs
+      Columns:
+        - Command: GetData
+
+    - Label: strut_endB_static
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra:
+            - End B
+          Variable: Effective Tension
+
+    - Label: strut_endB_dynamics
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [NULL, NULL]
+          objectExtra:
+            - End B
+          Variable: Effective Tension
+    - Label: lngc_moorings_static
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra:
+            - End B
+          Variable: Tension
+
+    - Label: lngc_moorings_dynamic
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [NULL, NULL]
+          objectExtra:
+            - End B
+          Variable: Tension
+
+    - Label: lngc_moorings_length_dynamic
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [NULL, NULL]
+          objectExtra: NULL
+          Variable: Length
+
+    - Label: lngc_fenders_dynamic
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [NULL, NULL]
+          Variable: Solid Contact Force
+
+
+summary_settings:
+  groups:
+
+    - Label: inputs
+      Columns:
+        - Command: GetData
+          ObjectName: FST1
+          Variable: [InitialHeading, -1]
+          Label: FST1_Heading
+        - Command: GetData
+          ObjectName: FST2
+          Variable: [InitialHeading, -1]
+          Label: FST2_Heading
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WindDirection, -1]
+          Label: WindDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WindSpeed, -1]
+          Label: WindSpeed
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveDirection, -1]
+          Label: WaveDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveHs, -1]
+          Label: Hs
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveTz, -1]
+          Label: WaveTz
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveGamma, -1]
+          Label: WaveGamma
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [RefCurrentSpeed, 0]
+          Label: RefCurrentSpeed
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [RefCurrentDirection, 0]
+          Label: RefCurrentDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [CurrentFactor, 0]
+          Label: CurrentFactor[0]
+
+    - Label: strut_endB_static
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_Body_eff_tension_max
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_Body_eff_tension_max
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_Body_eff_tension_max
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_Body_eff_tension_max
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_Body_eff_tension_max
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_Body_eff_tension_max
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_Body_eff_tension_max
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_Body_eff_tension_max
+
+    - Label: strut_endB_dynamics
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_Body_eff_tension_min
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_Body_eff_tension_max
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_Body_eff_tension_min
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_Body_eff_tension_max
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_Body_eff_tension_min
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_Body_eff_tension_max
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_Body_eff_tension_min
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_Body_eff_tension_max
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_Body_eff_tension_min
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_Body_eff_tension_max
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_Body_eff_tension_min
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_Body_eff_tension_max
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_Body_eff_tension_min
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_Body_eff_tension_max
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_Body_eff_tension_min
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_Body_eff_tension_max
+
+    - Label: lngc_moorings_static
+      Columns:
+        - ObjectName: Line01
+          Statistic_Type: Max
+          Label: Line1_eff_tension_max
+        - ObjectName: Line02
+          Statistic_Type: Max
+          Label: Line2_eff_tension_max
+        - ObjectName: Line03
+          Statistic_Type: Max
+          Label: Line3_eff_tension_max
+        - ObjectName: Line04
+          Statistic_Type: Max
+          Label: Line4_eff_tension_max
+        - ObjectName: Line05
+          Statistic_Type: Max
+          Label: Line5_eff_tension_max
+        - ObjectName: Line06
+          Statistic_Type: Max
+          Label: Line6_eff_tension_max
+        - ObjectName: Line07
+          Statistic_Type: Max
+          Label: Line7_eff_tension_max
+        - ObjectName: Line08
+          Statistic_Type: Max
+          Label: Line8_eff_tension_max
+        - ObjectName: Line09
+          Statistic_Type: Max
+          Label: Line9_eff_tension_max
+        - ObjectName: Line10
+          Statistic_Type: Max
+          Label: Line10_eff_tension_max
+        - ObjectName: Line11
+          Statistic_Type: Max
+          Label: Line11_eff_tension_max
+        - ObjectName: Line12
+          Statistic_Type: Max
+          Label: Line12_eff_tension_max
+        - ObjectName: Line13
+          Statistic_Type: Max
+          Label: Line13_eff_tension_max
+        - ObjectName: Line14
+          Statistic_Type: Max
+          Label: Line14_eff_tension_max
+        - ObjectName: Line15
+          Statistic_Type: Max
+          Label: Line15_eff_tension_max
+        - ObjectName: Line16
+          Statistic_Type: Max
+          Label: Line16_eff_tension_max
+        - ObjectName: Line17
+          Statistic_Type: Max
+          Label: Line17_eff_tension_max
+        - ObjectName: Line18
+          Statistic_Type: Max
+          Label: Line18_eff_tension_max
+
+    - Label: lngc_moorings_dynamic
+      Columns:
+        - ObjectName: Line01
+          Statistic_Type: Max
+          Label: Line1_eff_tension_max
+        - ObjectName: Line02
+          Statistic_Type: Max
+          Label: Line2_eff_tension_max
+        - ObjectName: Line03
+          Statistic_Type: Max
+          Label: Line3_eff_tension_max
+        - ObjectName: Line04
+          Statistic_Type: Max
+          Label: Line4_eff_tension_max
+        - ObjectName: Line05
+          Statistic_Type: Max
+          Label: Line5_eff_tension_max
+        - ObjectName: Line06
+          Statistic_Type: Max
+          Label: Line6_eff_tension_max
+        - ObjectName: Line07
+          Statistic_Type: Max
+          Label: Line7_eff_tension_max
+        - ObjectName: Line08
+          Statistic_Type: Max
+          Label: Line8_eff_tension_max
+        - ObjectName: Line09
+          Statistic_Type: Max
+          Label: Line9_eff_tension_max
+        - ObjectName: Line10
+          Statistic_Type: Max
+          Label: Line10_eff_tension_max
+        - ObjectName: Line11
+          Statistic_Type: Max
+          Label: Line11_eff_tension_max
+        - ObjectName: Line12
+          Statistic_Type: Max
+          Label: Line12_eff_tension_max
+        - ObjectName: Line13
+          Statistic_Type: Max
+          Label: Line13_eff_tension_max
+        - ObjectName: Line14
+          Statistic_Type: Max
+          Label: Line14_eff_tension_max
+        - ObjectName: Line15
+          Statistic_Type: Max
+          Label: Line15_eff_tension_max
+        - ObjectName: Line16
+          Statistic_Type: Max
+          Label: Line16_eff_tension_max
+        - ObjectName: Line17
+          Statistic_Type: Max
+          Label: Line17_eff_tension_max
+        - ObjectName: Line18
+          Statistic_Type: Max
+          Label: Line18_eff_tension_max
+
+    - Label: lngc_moorings_length_dynamic
+      Columns:
+        - ObjectName: Line01
+          Statistic_Type: Max
+          Label: Line1_length_max
+        - ObjectName: Line02
+          Statistic_Type: Max
+          Label: Line2_length_max
+        - ObjectName: Line03
+          Statistic_Type: Max
+          Label: Line3_length_max
+        - ObjectName: Line04
+          Statistic_Type: Max
+          Label: Line4_length_max
+        - ObjectName: Line05
+          Statistic_Type: Max
+          Label: Line5_length_max
+        - ObjectName: Line06
+          Statistic_Type: Max
+          Label: Line6_length_max
+        - ObjectName: Line07
+          Statistic_Type: Max
+          Label: Line7_length_max
+        - ObjectName: Line08
+          Statistic_Type: Max
+          Label: Line8_length_max
+        - ObjectName: Line09
+          Statistic_Type: Max
+          Label: Line9_length_max
+        - ObjectName: Line10
+          Statistic_Type: Max
+          Label: Line10_length_max
+        - ObjectName: Line11
+          Statistic_Type: Max
+          Label: Line11_length_max
+        - ObjectName: Line12
+          Statistic_Type: Max
+          Label: Line12_length_max
+        - ObjectName: Line13
+          Statistic_Type: Max
+          Label: Line13_length_max
+        - ObjectName: Line14
+          Statistic_Type: Max
+          Label: Line14_length_max
+        - ObjectName: Line15
+          Statistic_Type: Max
+          Label: Line15_length_max
+        - ObjectName: Line16
+          Statistic_Type: Max
+          Label: Line16_length_max
+        - ObjectName: Line17
+          Statistic_Type: Max
+          Label: Line17_length_max
+        - ObjectName: Line18
+          Statistic_Type: Max
+          Label: Line18_length_max
+
+    - Label: lngc_fenders_dynamic
+      Columns:
+        - ObjectName: fenderFST2L1face
+          Statistic_Type: Max
+          Label: fenderFST2L1_contact_force_max
+        - ObjectName: fenderFST2L2face
+          Statistic_Type: Max
+          Label: fenderFST2L2_contact_force_max
+        - ObjectName: fenderFST2L3face
+          Statistic_Type: Max
+          Label: fenderFST2L3_contact_force_max
+        - ObjectName: fenderFST2L4face
+          Statistic_Type: Max
+          Label: fenderFST2L4_contact_force_max
+        - ObjectName: fenderFST1L1face
+          Statistic_Type: Max
+          Label: fenderFST1L1_contact_force_max
+        - ObjectName: fenderFST1L2face
+          Statistic_Type: Max
+          Label: fenderFST1L2_contact_force_max
+        - ObjectName: fenderFST1L3face
+          Statistic_Type: Max
+          Label: fenderFST1L3_contact_force_max
+
+RangeGraph_settings:
+  add_effective_tension_to_cfg: False
+
+file_management:
+  flag: True
+
+  input_directory: ../fsts_lngc/01_qa
+  output_directory: NULL
+
+  filename:
+    extension: []
+    pattern: NULL
+    filters:
+      contains: []
+      not_contains: []
+

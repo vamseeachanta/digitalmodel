@@ -444,7 +444,7 @@ class OrcaflexUtilities:
         tassociated = 1.05*tz
 
         return round(tassociated, 2)
-    
+
     def get_load_matrix_with_filenames(self, cfg):
         load_matrix_columns = ['fe_filename', 'run_status', 'stop_time']
         load_matrix = pd.DataFrame(columns=load_matrix_columns)
@@ -463,6 +463,7 @@ class OrcaflexUtilities:
             try:
                 model = self.loadSimulation(SimulationFileName)
                 run_status = model.state.__dict__['_name_']
+                start_time = model.simulationStartTime
                 stop_time = model.simulationStopTime
 
             except Exception as e:
@@ -471,7 +472,7 @@ class OrcaflexUtilities:
                     f"Model: {SimulationFileName} ... Error Loading File")
                 logging.info(str(e))
 
-        model_dict = {'model': model, 'run_status': run_status, 'stop_time': stop_time}
+        model_dict = {'model': model, 'run_status': run_status, 'stop_time': stop_time, 'start_time': start_time}
 
         return model_dict
 

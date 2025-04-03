@@ -92,31 +92,34 @@ class OrcaFlexObjects():
         if 'ObjectName' in cfg:
             objectName = cfg['ObjectName']
         else:
-            raise Exception("Model does not have the objectName")
-
+            logging.debug(f"function input configuration does not have objectName: {cfg}") 
+            raise Exception("function input configuration does not have objectName")
 
         try:
             OrcFXAPIObject = model[objectName]
         except Exception as e:
-            logging.info(str(e)) 
+            logging.debug(str(e)) 
 
         return OrcFXAPIObject
 
     def get_SimulationPeriod(self, cfg, model_dict):
+        start_time = model_dict['start_time']
         stop_time = model_dict['stop_time']
+
+        TimePeriod = None
         if 'SimulationPeriod' in cfg:
             SimulationPeriod = cfg['SimulationPeriod']
-            if len(SimulationPeriod) == 2:
-                if SimulationPeriod[1] is None:
-                    SimulationPeriod[1] = stop_time
-                    logging.debug(f"SimulationPeriod[1] is None. Defaulting to stop_time: {stop_time}")
-                else:
-                    if SimulationPeriod[1] != stop_time:
-                        logging.warning(f"{SimulationPeriod[1]} is different stop_time: {stop_time}")
 
-            TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
-        else:
-            TimePeriod = None
+            if len(SimulationPeriod) == 2:
+                if SimulationPeriod[0] is not None:
+                    start_time = SimulationPeriod[0]
+                if SimulationPeriod[1] is not None:
+                    stop_time = SimulationPeriod[1]
+
+                TimePeriod = self.get_TimePeriodObject([start_time, stop_time])
+            elif len(SimulationPeriod) == 1:
+                TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
+
         return TimePeriod
 
 
