@@ -1,6 +1,7 @@
 import pathlib
 import pandas as pd
 import OrcFxAPI
+import logging
 from digitalmodel.modules.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
 from assetutilities.common.utilities import is_file_valid_func
@@ -36,6 +37,29 @@ class Mooring():
             yml_file = yml_files[yml_file_idx]
             yml_file_stem = pathlib.Path(yml_file).stem
 
+            tension_df_file = tension_df[tension_df['fe_filename_stem']==yml_file_stem]
+            length_df_file = length_df[length_df['fe_filename_stem']==yml_file_stem]
+
+            model = OrcFxAPI.Model()
+            model.LoadData(yml_file)
+
+            if len(tension_df_file) == 1:
+                for item in target_pretension:
+                    pretension = item['pretension']
+                    ObjectName = item['name']
+                    ofx_object_cfg = {'ObjectName': ObjectName}
+                    ofx_object = orcaflex_objects.get_OrcFXAPIObject(model, ofx_object_cfg)
+                    if ofx_object is None:
+                        raise ValueError('Invalid object name. Code not implemented yet')
+                    
+                    current_tension = tension_df_file['tension'].values[0]
+                    current_length = length_df_file['length'].values[0]
+                    if current_tension == 0.0:
+                        raise ValueError('Tension cannot be zero')
+
+            else:
+                logging.debug(f"No output to perform analysis for yml file {yml_file_stem}.")
+                continue
 
             model = OrcFxAPI.Model()
             model.LoadData(yml_file)
@@ -46,9 +70,6 @@ class Mooring():
                 ofx_object = orcaflex_objects.get_OrcFXAPIObject(model, ofx_object_cfg)
                 if ofx_object is None:
                     raise ValueError('Invalid object name. Code not implemented yet')
-                
-                
-                
 
             model.SaveData(yml_file)
 

@@ -193,4 +193,4 @@ file_management:
     pattern: fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl
     filters:
       contains: []
-      not_contains: []
+      not_contains: [includefile]

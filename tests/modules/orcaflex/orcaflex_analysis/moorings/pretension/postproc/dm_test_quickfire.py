@@ -19,7 +19,7 @@ def test_process():
     # input_file = 'opp_fsts_mva.yml'
     # input_file = 'FST2L_FST1L_HWL_345deg.yml'
     # input_file = 'opp_fsts_simultaneous.yml'
-    input_file = 'dm_fsts_lngc.yml'
+    input_file = 'dm_fsts_lngc_pretension.yml'
 
     # pytest_output_file = 'results/orcaflex_post_process_summary_pytest.yml'
     # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
