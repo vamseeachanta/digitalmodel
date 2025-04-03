@@ -1816,11 +1816,12 @@ dictitems:
         - K:\
         - github
         - digitalmodel
-        - docs
-        - pkg_orcaflex
-        - notes
-        - pre_restarts
-        - mooring
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_analysis
+        - moorings
+        - pretension
         - fsts_lngc
         - 01_qa
         - fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl.yml
@@ -1828,11 +1829,12 @@ dictitems:
         - K:\
         - github
         - digitalmodel
-        - docs
-        - pkg_orcaflex
-        - notes
-        - pre_restarts
-        - mooring
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_analysis
+        - moorings
+        - pretension
         - fsts_lngc
         - 01_qa
         - fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_01.yml
@@ -1840,11 +1842,12 @@ dictitems:
         - K:\
         - github
         - digitalmodel
-        - docs
-        - pkg_orcaflex
-        - notes
-        - pre_restarts
-        - mooring
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_analysis
+        - moorings
+        - pretension
         - fsts_lngc
         - 01_qa
         - fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml
@@ -1852,11 +1855,12 @@ dictitems:
         - K:\
         - github
         - digitalmodel
-        - docs
-        - pkg_orcaflex
-        - notes
-        - pre_restarts
-        - mooring
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_analysis
+        - moorings
+        - pretension
         - fsts_lngc
         - 01_qa
         - includefile_fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_01.yml
@@ -1864,11 +1868,12 @@ dictitems:
         - K:\
         - github
         - digitalmodel
-        - docs
-        - pkg_orcaflex
-        - notes
-        - pre_restarts
-        - mooring
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_analysis
+        - moorings
+        - pretension
         - fsts_lngc
         - 01_qa
         - includefile_fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml
@@ -1879,11 +1884,12 @@ dictitems:
         - K:\
         - github
         - digitalmodel
-        - docs
-        - pkg_orcaflex
-        - notes
-        - pre_restarts
-        - mooring
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_analysis
+        - moorings
+        - pretension
         - fsts_lngc
         - 01_qa
         - fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_01.sim
@@ -1891,49 +1897,70 @@ dictitems:
         - K:\
         - github
         - digitalmodel
-        - docs
-        - pkg_orcaflex
-        - notes
-        - pre_restarts
-        - mooring
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_analysis
+        - moorings
+        - pretension
         - fsts_lngc
         - 01_qa
         - fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.sim
       txt: []
   Analysis:
     basename: orcaflex_post_process
-    analysis_root_folder: .
+    analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc
     file_name: dm_fsts_lngc
     file_name_for_overwrite: dm_fsts_lngc
-    log_folder: .\logs
-    start_time: 2025-04-02 19:36:18.991788
+    log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc\logs
+    start_time: 2025-04-03 07:08:12.115403
     cfg_array_file_names: ~
     DefaultInputFile: ~
-    CustomInputFile: .\dm_fsts_lngc.yml
-    result_folder: .\results
-    result_data_folder: .\results\Data
-    result_plot_folder: .\results\Plot
-    fe_folder: .\results
+    CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc\dm_fsts_lngc.yml
+    result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc\results
+    result_data_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc\results\Data
+    result_plot_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc\results\Plot
+    fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc\results
     file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
+    - k:\
+    - github
+    - digitalmodel
+    - tests
+    - modules
+    - orcaflex
+    - orcaflex_analysis
+    - moorings
+    - pretension
+    - postproc
     - ..
     - fsts_lngc
     - 01_qa
     file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
+    - k:\
+    - github
+    - digitalmodel
+    - tests
+    - modules
+    - orcaflex
+    - orcaflex_analysis
+    - moorings
+    - pretension
+    - postproc
     - results
   orcaflex_post_process:
     summary:
       groups:
-      - data: .\results\dm_fsts_lngc_inputs.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc\results\dm_fsts_lngc_inputs.csv
         label: inputs
-      - data: .\results\dm_fsts_lngc_strut_endB_static.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc\results\dm_fsts_lngc_strut_endB_static.csv
         label: strut_endB_static
-      - data: .\results\dm_fsts_lngc_strut_endB_dynamics.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc\results\dm_fsts_lngc_strut_endB_dynamics.csv
         label: strut_endB_dynamics
-      - data: .\results\dm_fsts_lngc_lngc_moorings_static.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc\results\dm_fsts_lngc_lngc_moorings_static.csv
         label: lngc_moorings_static
-      - data: .\results\dm_fsts_lngc_lngc_moorings_dynamic.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc\results\dm_fsts_lngc_lngc_moorings_dynamic.csv
         label: lngc_moorings_dynamic
-      - data: .\results\dm_fsts_lngc_lngc_moorings_length_dynamic.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc\results\dm_fsts_lngc_lngc_moorings_length_dynamic.csv
         label: lngc_moorings_length_dynamic
-      - data: .\results\dm_fsts_lngc_lngc_fenders_dynamic.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\postproc\results\dm_fsts_lngc_lngc_fenders_dynamic.csv
         label: lngc_fenders_dynamic

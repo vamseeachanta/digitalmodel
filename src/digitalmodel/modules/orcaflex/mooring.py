@@ -1,6 +1,10 @@
+import pathlib
+import pandas as pd
 import OrcFxAPI
 from digitalmodel.modules.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
+from assetutilities.common.utilities import is_file_valid_func
+
 
 orcaflex_preprocess = OrcaflexPreProcess()
 orcaflex_objects = OrcaFlexObjects()
@@ -22,9 +26,16 @@ class Mooring():
         # utilize winch commands to add pretensions
 
         yml_files = cfg['file_management']['input_files']['yml']
-        
+
+        tension_df = self.get_tension(cfg, group)
+        length_df = self.get_length(cfg, group)
+
+        target_pretension = group['target_pretension']
+
         for yml_file_idx in range(0, len(yml_files)):
             yml_file = yml_files[yml_file_idx]
+            yml_file_stem = pathlib.Path(yml_file).stem
+
 
             model = OrcFxAPI.Model()
             model.LoadData(yml_file)
@@ -40,5 +51,25 @@ class Mooring():
                 
 
             model.SaveData(yml_file)
-            
-        #TODO Aborted and changed to restart method
+
+    def get_tension(self, cfg, group):
+        tension_cfg = group['tension']
+        tension_filename = tension_cfg['filename']
+
+        analysis_root_folder = cfg['Analysis']['analysis_root_folder']
+        is_file_valid, tension_filename = is_file_valid_func(tension_filename, analysis_root_folder)
+
+                
+        tension_df = pd.read_csv(tension_filename)
+        return tension_df
+
+    def get_length(self, cfg, group):
+        length_cfg = group['length']
+        length_filename = length_cfg['filename']
+
+        analysis_root_folder = cfg['Analysis']['analysis_root_folder']
+        is_file_valid, length_filename = is_file_valid_func(length_filename, analysis_root_folder)
+
+                
+        length_df = pd.read_csv(length_filename)
+        return length_df

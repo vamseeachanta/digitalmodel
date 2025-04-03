@@ -446,12 +446,14 @@ class OrcaflexUtilities:
         return round(tassociated, 2)
 
     def get_load_matrix_with_filenames(self, cfg):
-        load_matrix_columns = ['fe_filename', 'run_status', 'stop_time']
+        load_matrix_columns = ['fe_filename', 'fe_filename_stem', 'run_status', 'start_time', 'stop_time']
         load_matrix = pd.DataFrame(columns=load_matrix_columns)
 
         sim_files = cfg.file_management['input_files']['sim']
-        sim_files = [str(file) for file in sim_files]
-        load_matrix['fe_filename'] = sim_files
+        sim_filenames = [str(file) for file in sim_files]
+        sim_files_stem = [pathlib.Path(file).stem for file in sim_files]
+        load_matrix['fe_filename'] = sim_filenames
+        load_matrix['fe_filename_stem'] = sim_files_stem
         load_matrix['run_status'] = None
 
         return load_matrix

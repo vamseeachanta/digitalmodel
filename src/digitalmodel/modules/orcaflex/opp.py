@@ -92,11 +92,15 @@ class OrcaFlexPostProcess():
             model_dict = ou.get_model_and_metadata(file_name=file_name)
             model = model_dict['model']
             run_status = model_dict['run_status']
+            start_time = model_dict['start_time']
             stop_time = model_dict['stop_time']
             with PandasChainedAssignent():
                 load_matrix.loc[(
                     load_matrix['fe_filename'] == file_name),
                                         'run_status'] = run_status
+                load_matrix.loc[(
+                    load_matrix['fe_filename'] == file_name),
+                                        'start_time'] = start_time
                 load_matrix.loc[(
                     load_matrix['fe_filename'] == file_name),
                                         'stop_time'] = stop_time

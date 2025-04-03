@@ -31,11 +31,14 @@ class OPPSummary():
         for summary_group in summary_groups:
             summary_group_label = summary_group['Label']
 
-            df_columns = ['fe_filename', 'run_status', 'stop_time', 'description', 'statistic']
+            df_columns = ['fe_filename', 'fe_filename_stem', 'run_status', 'start_time', 'stop_time', 'description', 'statistic']
             run_status = model_dict['run_status']
+            start_time = model_dict['start_time']
             stop_time = model_dict['stop_time']
             file_name_for_output = str(Path(file_name).resolve()).replace('\\', '/')
-            result_array = [file_name_for_output, run_status, stop_time, None, None]
+            file_name_stem = Path(file_name).stem
+
+            result_array = [file_name_for_output, file_name_stem, run_status, start_time, stop_time, None, None]
             df = pd.DataFrame([result_array], columns=df_columns)
 
             for summary_cfg in summary_group['Columns']:

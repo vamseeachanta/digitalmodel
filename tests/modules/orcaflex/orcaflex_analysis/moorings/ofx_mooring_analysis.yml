@@ -35,11 +35,11 @@ orcaflex_analysis:
       method: winch_to_mooring
       tension:
         type: csv
-        file: pretension/postproc/results/dm_fsts_lngc_lngc_moorings_dynamic.csv
+        filename: pretension/postproc/results/dm_fsts_lngc_lngc_moorings_dynamic.csv
 
       length:
         type: csv
-        file: pretension/postproc/results/dm_fsts_lngc_lngc_moorings_length_dynamic.csv
+        filename: pretension/postproc/results/dm_fsts_lngc_lngc_moorings_length_dynamic.csv
 
       target_pretension:
         - name: Line01
@@ -185,7 +185,7 @@ orcaflex_analysis:
 
 file_management:
   flag: True
-  input_directory: fsts_lngc/01_qa
+  input_directory: pretension/fsts_lngc/01_qa
   output_directory: NULL
 
   filename:
