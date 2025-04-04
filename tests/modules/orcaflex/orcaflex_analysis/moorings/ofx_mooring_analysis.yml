@@ -15,7 +15,7 @@ default:
 orcaflex:
   preprocess:
     check_yml:
-      flag: True
+      flag: False
       save_dat: True
 
   analysis:
@@ -32,14 +32,18 @@ orcaflex_analysis:
     groups:
     - label: development
       calculation: pretension
-      method: winch_to_mooring
       tension:
         type: csv
-        filename: pretension/postproc/results/dm_fsts_lngc_lngc_moorings_dynamic.csv
+        filename: pretension/postproc/results/dm_fsts_lngc_pretension_lngc_moorings_dynamic_eff_tension_max.csv
 
       length:
         type: csv
-        filename: pretension/postproc/results/dm_fsts_lngc_lngc_moorings_length_dynamic.csv
+        filename: pretension/postproc/results/dm_fsts_lngc_pretension_lngc_moorings_dynamic_length_max.csv
+
+      iteration_cfg:
+        calculation: pretension
+        label: iteration_02
+        tolerance_percent: 10
 
       target_pretension:
         - name: Line01
@@ -193,4 +197,4 @@ file_management:
     pattern: fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl
     filters:
       contains: []
-      not_contains: [includefile]
+      not_contains: [includefile, iteration_01]

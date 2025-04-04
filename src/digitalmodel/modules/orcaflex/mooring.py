@@ -1,3 +1,4 @@
+import os
 import pathlib
 import pandas as pd
 import OrcFxAPI
@@ -5,10 +6,12 @@ import logging
 from digitalmodel.modules.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
 from assetutilities.common.utilities import is_file_valid_func
+from assetutilities.common.file_management import FileManagement
 
 
 orcaflex_preprocess = OrcaflexPreProcess()
 orcaflex_objects = OrcaFlexObjects()
+fm = FileManagement()
 
 class Mooring():
     def __init__(self):
@@ -40,38 +43,56 @@ class Mooring():
             tension_df_file = tension_df[tension_df['fe_filename_stem']==yml_file_stem]
             length_df_file = length_df[length_df['fe_filename_stem']==yml_file_stem]
 
-            model = OrcFxAPI.Model()
-            model.LoadData(yml_file)
-
             if len(tension_df_file) == 1:
-                for item in target_pretension:
-                    pretension = item['pretension']
-                    ObjectName = item['name']
-                    ofx_object_cfg = {'ObjectName': ObjectName}
-                    ofx_object = orcaflex_objects.get_OrcFXAPIObject(model, ofx_object_cfg)
-                    if ofx_object is None:
-                        raise ValueError('Invalid object name. Code not implemented yet')
-                    
-                    current_tension = tension_df_file['tension'].values[0]
-                    current_length = length_df_file['length'].values[0]
-                    if current_tension == 0.0:
-                        raise ValueError('Tension cannot be zero')
+                pre_tension_analysis = self.pre_tension_analysis(cfg, target_pretension, tension_df_file, length_df_file, yml_file)
 
             else:
                 logging.debug(f"No output to perform analysis for yml file {yml_file_stem}.")
                 continue
 
-            model = OrcFxAPI.Model()
-            model.LoadData(yml_file)
-
-            mooring_lines = group['mooring_lines']
-            for mooring_line in mooring_lines:
-                ofx_object_cfg = {'ObjectName': mooring_line['name']}
-                ofx_object = orcaflex_objects.get_OrcFXAPIObject(model, ofx_object_cfg)
-                if ofx_object is None:
-                    raise ValueError('Invalid object name. Code not implemented yet')
-
             model.SaveData(yml_file)
+
+    def pre_tension_analysis(self, cfg, target_pretension, tension_df_file, length_df_file, yml_file):
+        
+        model = OrcFxAPI.Model()
+        model.LoadData(yml_file)
+
+        pretension_analysis = []
+        for item in target_pretension:
+            pretension = item['pretension']
+            object_name = item['name']
+            ofx_object_cfg = {'ObjectName': object_name}
+            ofx_object = orcaflex_objects.get_OrcFXAPIObject(model, ofx_object_cfg)
+            if ofx_object is None:
+                raise ValueError('Invalid object name. Code not implemented yet')
+
+            current_tension = tension_df_file[object_name].values[0]
+            current_length = length_df_file[object_name].values[0]
+
+            pretension_delta = pretension - current_tension
+            pretension_delta_percent = pretension_delta / current_tension * 100
+            pretension_delta_percent_abs = abs(pretension_delta_percent)
+
+            pre_tension_analysis_item = {
+                'object_name': object_name,
+                'current_tension': current_tension,
+                'current_length': current_length,
+                'pretension': pretension,
+                'pretension_delta': pretension_delta,
+                'pretension_delta_percent': pretension_delta_percent,
+                'pretension_delta_percent_abs': pretension_delta_percent_abs
+            }
+
+            pretension_analysis.append(pre_tension_analysis_item)
+
+        pretension_analysis_df = pd.DataFrame(pretension_analysis)
+        pretension_analysis_df = pretension_analysis_df.round(4)
+        filename_dir = fm.get_file_management_input_directory(cfg)
+        filename_stem = pathlib.Path(yml_file).stem
+        filename = os.path.join(filename_dir, filename_stem + '_pretension_analysis.csv')
+        pretension_analysis_df.to_csv(filename, index=False)
+
+        return pretension_analysis
 
     def get_tension(self, cfg, group):
         tension_cfg = group['tension']

@@ -15,7 +15,6 @@ def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
         input_file = os.path.join(os.path.dirname(__file__), input_file)
     cfg = engine(input_file)
 
-
     return cfg
 
 def test_process() -> None:
