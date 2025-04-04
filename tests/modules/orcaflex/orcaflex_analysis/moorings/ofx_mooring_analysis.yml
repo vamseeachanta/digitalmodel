@@ -3,7 +3,7 @@ meta:
   basename: orcaflex
 
 default:
-  log_level: DEBUG
+  log_level: INFO
   config:
     overwrite:
       output: True
@@ -43,6 +43,10 @@ orcaflex_analysis:
       iteration_cfg:
         calculation: pretension
         tolerance_percent: 10
+        stabilizing_lines:
+          object_name: [Line07, Line08, Line09, Line10, Line11, Line12]
+          number_of_lines: 3
+
 
       target_pretension:
         - name: Line01

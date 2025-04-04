@@ -2,7 +2,7 @@ meta:
   library: digitalmodel
   basename: orcaflex
 default:
-  log_level: DEBUG
+  log_level: INFO
   config:
     overwrite:
       output: true
@@ -115,6 +115,15 @@ orcaflex_analysis:
       iteration_cfg:
         calculation: pretension
         tolerance_percent: 10
+        stabilizing_lines:
+          object_name:
+          - Line07
+          - Line08
+          - Line09
+          - Line10
+          - Line11
+          - Line12
+          number_of_lines: 3
       target_pretension:
       - name: Line01
         pretension: 20
@@ -163,20 +172,20 @@ file_management:
       - iteration_01
   input_files:
     yml:
-    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml
+    - pretension\fsts_lngc\01_qa\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml
 Analysis:
   basename: orcaflex
-  analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings
+  analysis_root_folder: .
   file_name: ofx_mooring_analysis
   file_name_for_overwrite: ofx_mooring_analysis
-  log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\logs
-  start_time: 2025-04-04 05:46:31.325292
+  log_folder: .\logs
+  start_time: 2025-04-04 15:07:10.619395
   cfg_array_file_names: ~
   DefaultInputFile: ~
-  CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\ofx_mooring_analysis.yml
-  result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results
-  result_data_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results\Data
-  result_plot_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results\Plot
-  fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results
-  file_management_input_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa
-  file_management_output_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results
+  CustomInputFile: .\ofx_mooring_analysis.yml
+  result_folder: .\results
+  result_data_folder: .\results\Data
+  result_plot_folder: .\results\Plot
+  fe_folder: .\results
+  file_management_input_directory: pretension\fsts_lngc\01_qa
+  file_management_output_directory: results

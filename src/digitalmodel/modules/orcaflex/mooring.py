@@ -46,7 +46,7 @@ class Mooring():
             length_df_file = length_df[length_df['fe_filename_stem']==yml_file_stem]
 
             if len(tension_df_file) == 1:
-                pretension_analysis_dict = self.pre_tension_analysis(cfg, target_pretension, tension_df_file, length_df_file, yml_file)
+                pretension_analysis_dict = self.pre_tension_analysis(cfg, group, target_pretension, tension_df_file, length_df_file, yml_file)
                 self.prepare_includefile_for_analysis(cfg, group, yml_file, pretension_analysis_dict)
 
             else:
@@ -55,7 +55,7 @@ class Mooring():
 
         pass
 
-    def pre_tension_analysis(self, cfg, target_pretension, tension_df_file, length_df_file, yml_file):
+    def pre_tension_analysis(self, cfg, group, target_pretension, tension_df_file, length_df_file, yml_file):
 
         model = OrcFxAPI.Model()
         model.LoadData(yml_file)
@@ -73,7 +73,7 @@ class Mooring():
             current_length = length_df_file[object_name].values[0]
 
             pretension_delta = pretension - current_tension
-            pretension_delta_percent = pretension_delta / current_tension * 100
+            pretension_delta_percent = pretension_delta / pretension * 100
             pretension_delta_percent_abs = abs(pretension_delta_percent)
 
             pre_tension_analysis_item = {
@@ -97,7 +97,15 @@ class Mooring():
         pretension_analysis_df.to_csv(filename, index=False)
 
         pretension_analysis_df_sorted = pretension_analysis_df.sort_values(by=['pretension_delta_percent_abs'], ascending=True)
-        stabilizing_lines = pretension_analysis_df_sorted['object_name'][0:2].to_list()
+        stabilizing_lines_sorted = pretension_analysis_df_sorted['object_name'].to_list()
+        preferred_stabilizing_lines = group['iteration_cfg']['stabilizing_lines']['object_name']
+        no_of_preferred_stabilizing_lines = group['iteration_cfg']['stabilizing_lines']['number_of_lines']
+        stabilizing_lines = []
+        for item in stabilizing_lines_sorted:
+            if item in preferred_stabilizing_lines:
+                stabilizing_lines.append(item)
+
+        stabilizing_lines = stabilizing_lines[:no_of_preferred_stabilizing_lines]
         max_pretension = pretension_analysis_df_sorted['pretension_delta_percent_abs'].max()
 
         logging.info(f"For Filename: {filename}:")
@@ -126,11 +134,14 @@ class Mooring():
             stage_array_item = []
             if object_name in stabilizing_lines:
                 stage_array_item.append(['Specified length', current_length])
+            else:
                 stage_array_item.append(['Specified tension', pretension])
-                stage_array_item.append(['Specified payout', 0])
 
-                item = {object_name: {'StageMode, StageValue': stage_array_item}}
-                includefile_dict.update(item)
+            stage_array_item.append(['Specified tension', pretension])
+            stage_array_item.append(['Specified payout', 0])
+
+            item = {object_name: {'StageMode, StageValue': stage_array_item}}
+            includefile_dict.update(item)
 
         filename_dir = fm.get_file_management_input_directory(cfg)
         filename_stem = pathlib.Path(yml_file).stem

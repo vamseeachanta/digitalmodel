@@ -1241,33 +1241,33 @@ file_management:
       - iteration_01
   input_files:
     yml:
-    - ..\fsts_lngc\01_qa\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml
+    - pretension\postproc\..\fsts_lngc\01_qa\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml
     sim:
-    - ..\fsts_lngc\01_qa\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.sim
+    - pretension\postproc\..\fsts_lngc\01_qa\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.sim
 Analysis:
   basename: orcaflex_post_process
-  analysis_root_folder: .
+  analysis_root_folder: .\pretension\postproc
   file_name: dm_fsts_lngc_pretension
   file_name_for_overwrite: dm_fsts_lngc_pretension
-  log_folder: .\logs
-  start_time: 2025-04-04 05:54:28.032255
+  log_folder: .\pretension\postproc\logs
+  start_time: 2025-04-04 15:06:53.407153
   cfg_array_file_names: ~
   DefaultInputFile: ~
-  CustomInputFile: .\dm_fsts_lngc_pretension.yml
-  result_folder: .\results
-  result_data_folder: .\results\Data
-  result_plot_folder: .\results\Plot
-  fe_folder: .\results
-  file_management_input_directory: ..\fsts_lngc\01_qa
-  file_management_output_directory: results
+  CustomInputFile: .\pretension\postproc\dm_fsts_lngc_pretension.yml
+  result_folder: .\pretension\postproc\results
+  result_data_folder: .\pretension\postproc\results\Data
+  result_plot_folder: .\pretension\postproc\results\Plot
+  fe_folder: .\pretension\postproc\results
+  file_management_input_directory: pretension\postproc\..\fsts_lngc\01_qa
+  file_management_output_directory: pretension\postproc\results
 orcaflex_post_process:
   summary:
     groups:
-    - data: .\results\dm_fsts_lngc_pretension_inputs.csv
+    - data: .\pretension\postproc\results\dm_fsts_lngc_pretension_inputs.csv
       label: inputs
-    - data: .\results\dm_fsts_lngc_pretension_lngc_moorings_static_eff_tension_max.csv
+    - data: .\pretension\postproc\results\dm_fsts_lngc_pretension_lngc_moorings_static_eff_tension_max.csv
       label: lngc_moorings_static_eff_tension_max
-    - data: .\results\dm_fsts_lngc_pretension_lngc_moorings_dynamic_eff_tension_max.csv
+    - data: .\pretension\postproc\results\dm_fsts_lngc_pretension_lngc_moorings_dynamic_eff_tension_max.csv
       label: lngc_moorings_dynamic_eff_tension_max
-    - data: .\results\dm_fsts_lngc_pretension_lngc_moorings_dynamic_length_max.csv
+    - data: .\pretension\postproc\results\dm_fsts_lngc_pretension_lngc_moorings_dynamic_length_max.csv
       label: lngc_moorings_dynamic_length_max
