@@ -1,11 +1,16 @@
-﻿Line08:
+Line04:
   StageMode, StageValue:
-    - [Specified length, 64.6226]
-    - [Specified tension, 25]
-    - [Specified payout, 0]
-
-Line10:
+  - - Specified length
+    - 19.2692
+  - - Specified tension
+    - 10.0
+  - - Specified payout
+    - 0
+Line05:
   StageMode, StageValue:
-    - [Specified length, 36.3938]
-    - [Specified tension, 30]
-    - [Specified payout, 0]
+  - - Specified length
+    - 17.7715
+  - - Specified tension
+    - 10.0
+  - - Specified payout
+    - 0

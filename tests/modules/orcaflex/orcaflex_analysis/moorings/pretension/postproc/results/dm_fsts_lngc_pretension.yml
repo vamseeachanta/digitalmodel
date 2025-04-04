@@ -1,1368 +1,1273 @@
-&id001 !!python/object/new:assetutilities.common.data.AttributeDict
-state: *id001
-dictitems:
-  basename: orcaflex_post_process
-  default:
-    log_level: INFO
-    config:
-      overwrite:
-        output: true
-  orcaflex:
-    postprocess:
-      visualization:
-        flag: false
-      summary:
-        flag: true
-        statistics:
-          Minimum: false
-          Maximum: false
-          Mean: false
-          StdDev: false
-        min: true
-        max: true
-        mean: true
-      linked_statistics:
-        flag: false
-        min: true
-        max: true
-        mean: true
-      RangeGraph:
-        flag: false
-      RAOs:
-        flag: false
-      time_series:
-        flag: false
-        histogram: true
-        summation: true
-      cummulative_histograms:
-        flag: false
-      rain_flow:
-        bins: 10
-        range:
-        - 0
-        - 10
-    analysis:
-      static: false
-      simulation: false
-      iterate:
-        flag: false
-      save_sim: false
-      save_dat: false
-  visualization_settings:
-    label: ld_6_7_8
-    individual: true
-    combined: false
-    hide_items: []
-    add_items:
-    - Umbilical
-    - uta2-deep
-    views:
-    - Elevation
-    - Plan
-    tdp_line: Umbilical
-    viewparams:
-      elevation:
-        RelativeToObject: uth2-deep
-        ViewCentre:
-        - -17
-        - 0
-        - 12
-        ViewSize: 120
-        DrawViewAxes: false
-        DrawGlobalAxes: false
-        DrawScaleBar: false
-        ViewAzimuth: 270
-        ViewElevation: 0
-        ViewGamma: 71.89
-        Height: 1425
-        Width: 892
-      plan:
-        RelativeToObject: uth2-deep
-        ViewCentre:
-        - 10
-        - 0
-        - 8
-        ViewSize: 80
-        DrawViewAxes: false
-        DrawGlobalAxes: false
-        DrawScaleBar: false
-        ViewAzimuth: 270
-        ViewElevation: 90
-        ViewGamma: 0
-        Height: 1425
-        Width: 892
-  RangeGraph_settings:
-    add_effective_tension_to_cfg: false
-  time_series_settings:
-    histogram: true
-    summation: true
-    groups: []
-  Files:
-    data_source: yml
-    csv_filename: ''
-    input_files:
-      yml:
-      - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
-  library: digitalmodel
-  summary_settings_master:
-    groups:
-    - Label: inputs
-      Columns:
-      - Command: GetData
-        ObjectName: FST1
-        Variable:
-        - InitialHeading
-        - -1
-        Label: FST1_Heading
-      - Command: GetData
-        ObjectName: FST2
-        Variable:
-        - InitialHeading
-        - -1
-        Label: FST2_Heading
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WindDirection
-        - -1
-        Label: WindDirection
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WindSpeed
-        - -1
-        Label: WindSpeed
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WaveDirection
-        - -1
-        Label: WaveDirection
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WaveHs
-        - -1
-        Label: Hs
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WaveTz
-        - -1
-        Label: WaveTz
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WaveGamma
-        - -1
-        Label: WaveGamma
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - RefCurrentSpeed
-        - 0
-        Label: RefCurrentSpeed
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - RefCurrentDirection
-        - 0
-        Label: RefCurrentDirection
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - CurrentFactor
-        - 0
-        Label: CurrentFactor[0]
-    - Label: lngc_moorings_static_eff_tension_max
-      Columns:
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line01
-        Statistic_Type: Max
-        Label: Line01
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line02
-        Statistic_Type: Max
-        Label: Line02
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line03
-        Statistic_Type: Max
-        Label: Line03
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line04
-        Statistic_Type: Max
-        Label: Line04
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line05
-        Statistic_Type: Max
-        Label: Line05
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line06
-        Statistic_Type: Max
-        Label: Line06
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line07
-        Statistic_Type: Max
-        Label: Line07
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line08
-        Statistic_Type: Max
-        Label: Line08
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line09
-        Statistic_Type: Max
-        Label: Line09
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line10
-        Statistic_Type: Max
-        Label: Line10
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line11
-        Statistic_Type: Max
-        Label: Line11
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line12
-        Statistic_Type: Max
-        Label: Line12
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line13
-        Statistic_Type: Max
-        Label: Line13
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line14
-        Statistic_Type: Max
-        Label: Line14
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line15
-        Statistic_Type: Max
-        Label: Line15
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line16
-        Statistic_Type: Max
-        Label: Line16
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line17
-        Statistic_Type: Max
-        Label: Line17
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line18
-        Statistic_Type: Max
-        Label: Line18
-    - Label: lngc_moorings_dynamic_eff_tension_max
-      Columns:
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line01
-        Statistic_Type: Max
-        Label: Line01
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line02
-        Statistic_Type: Max
-        Label: Line02
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line03
-        Statistic_Type: Max
-        Label: Line03
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line04
-        Statistic_Type: Max
-        Label: Line04
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line05
-        Statistic_Type: Max
-        Label: Line05
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line06
-        Statistic_Type: Max
-        Label: Line06
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line07
-        Statistic_Type: Max
-        Label: Line07
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line08
-        Statistic_Type: Max
-        Label: Line08
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line09
-        Statistic_Type: Max
-        Label: Line09
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line10
-        Statistic_Type: Max
-        Label: Line10
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line11
-        Statistic_Type: Max
-        Label: Line11
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line12
-        Statistic_Type: Max
-        Label: Line12
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line13
-        Statistic_Type: Max
-        Label: Line13
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line14
-        Statistic_Type: Max
-        Label: Line14
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line15
-        Statistic_Type: Max
-        Label: Line15
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line16
-        Statistic_Type: Max
-        Label: Line16
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line17
-        Statistic_Type: Max
-        Label: Line17
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line18
-        Statistic_Type: Max
-        Label: Line18
-    - Label: lngc_moorings_dynamic_length_max
-      Columns:
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line01
-        Statistic_Type: Max
-        Label: Line01
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line02
-        Statistic_Type: Max
-        Label: Line02
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line03
-        Statistic_Type: Max
-        Label: Line03
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line04
-        Statistic_Type: Max
-        Label: Line04
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line05
-        Statistic_Type: Max
-        Label: Line05
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line06
-        Statistic_Type: Max
-        Label: Line06
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line07
-        Statistic_Type: Max
-        Label: Line07
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line08
-        Statistic_Type: Max
-        Label: Line08
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line09
-        Statistic_Type: Max
-        Label: Line09
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line10
-        Statistic_Type: Max
-        Label: Line10
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line11
-        Statistic_Type: Max
-        Label: Line11
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line12
-        Statistic_Type: Max
-        Label: Line12
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line13
-        Statistic_Type: Max
-        Label: Line13
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line14
-        Statistic_Type: Max
-        Label: Line14
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line15
-        Statistic_Type: Max
-        Label: Line15
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line16
-        Statistic_Type: Max
-        Label: Line16
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line17
-        Statistic_Type: Max
-        Label: Line17
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line18
-        Statistic_Type: Max
-        Label: Line18
-  summary_settings:
-    groups:
-    - Label: inputs
-      Columns:
-      - Command: GetData
-        ObjectName: FST1
-        Variable:
-        - InitialHeading
-        - -1
-        Label: FST1_Heading
-      - Command: GetData
-        ObjectName: FST2
-        Variable:
-        - InitialHeading
-        - -1
-        Label: FST2_Heading
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WindDirection
-        - -1
-        Label: WindDirection
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WindSpeed
-        - -1
-        Label: WindSpeed
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WaveDirection
-        - -1
-        Label: WaveDirection
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WaveHs
-        - -1
-        Label: Hs
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WaveTz
-        - -1
-        Label: WaveTz
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WaveGamma
-        - -1
-        Label: WaveGamma
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - RefCurrentSpeed
-        - 0
-        Label: RefCurrentSpeed
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - RefCurrentDirection
-        - 0
-        Label: RefCurrentDirection
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - CurrentFactor
-        - 0
-        Label: CurrentFactor[0]
-    - Label: lngc_moorings_static_eff_tension_max
-      Columns:
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line01
-        Statistic_Type: Max
-        Label: Line01
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line02
-        Statistic_Type: Max
-        Label: Line02
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line03
-        Statistic_Type: Max
-        Label: Line03
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line04
-        Statistic_Type: Max
-        Label: Line04
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line05
-        Statistic_Type: Max
-        Label: Line05
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line06
-        Statistic_Type: Max
-        Label: Line06
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line07
-        Statistic_Type: Max
-        Label: Line07
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line08
-        Statistic_Type: Max
-        Label: Line08
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line09
-        Statistic_Type: Max
-        Label: Line09
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line10
-        Statistic_Type: Max
-        Label: Line10
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line11
-        Statistic_Type: Max
-        Label: Line11
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line12
-        Statistic_Type: Max
-        Label: Line12
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line13
-        Statistic_Type: Max
-        Label: Line13
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line14
-        Statistic_Type: Max
-        Label: Line14
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line15
-        Statistic_Type: Max
-        Label: Line15
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line16
-        Statistic_Type: Max
-        Label: Line16
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line17
-        Statistic_Type: Max
-        Label: Line17
-      - Command: TimeHistory
-        SimulationPeriod: StaticState
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line18
-        Statistic_Type: Max
-        Label: Line18
-    - Label: lngc_moorings_dynamic_eff_tension_max
-      Columns:
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line01
-        Statistic_Type: Max
-        Label: Line01
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line02
-        Statistic_Type: Max
-        Label: Line02
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line03
-        Statistic_Type: Max
-        Label: Line03
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line04
-        Statistic_Type: Max
-        Label: Line04
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line05
-        Statistic_Type: Max
-        Label: Line05
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line06
-        Statistic_Type: Max
-        Label: Line06
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line07
-        Statistic_Type: Max
-        Label: Line07
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line08
-        Statistic_Type: Max
-        Label: Line08
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line09
-        Statistic_Type: Max
-        Label: Line09
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line10
-        Statistic_Type: Max
-        Label: Line10
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line11
-        Statistic_Type: Max
-        Label: Line11
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line12
-        Statistic_Type: Max
-        Label: Line12
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line13
-        Statistic_Type: Max
-        Label: Line13
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line14
-        Statistic_Type: Max
-        Label: Line14
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line15
-        Statistic_Type: Max
-        Label: Line15
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line16
-        Statistic_Type: Max
-        Label: Line16
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line17
-        Statistic_Type: Max
-        Label: Line17
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra:
-        - End B
-        Variable: Tension
-        ObjectName: Line18
-        Statistic_Type: Max
-        Label: Line18
-    - Label: lngc_moorings_dynamic_length_max
-      Columns:
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line01
-        Statistic_Type: Max
-        Label: Line01
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line02
-        Statistic_Type: Max
-        Label: Line02
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line03
-        Statistic_Type: Max
-        Label: Line03
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line04
-        Statistic_Type: Max
-        Label: Line04
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line05
-        Statistic_Type: Max
-        Label: Line05
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line06
-        Statistic_Type: Max
-        Label: Line06
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line07
-        Statistic_Type: Max
-        Label: Line07
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line08
-        Statistic_Type: Max
-        Label: Line08
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line09
-        Statistic_Type: Max
-        Label: Line09
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line10
-        Statistic_Type: Max
-        Label: Line10
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line11
-        Statistic_Type: Max
-        Label: Line11
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line12
-        Statistic_Type: Max
-        Label: Line12
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line13
-        Statistic_Type: Max
-        Label: Line13
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line14
-        Statistic_Type: Max
-        Label: Line14
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line15
-        Statistic_Type: Max
-        Label: Line15
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line16
-        Statistic_Type: Max
-        Label: Line16
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line17
-        Statistic_Type: Max
-        Label: Line17
-      - Command: TimeHistory
-        SimulationPeriod:
-        - ~
-        - ~
-        objectExtra: ~
-        Variable: Length
-        ObjectName: Line18
-        Statistic_Type: Max
-        Label: Line18
-  file_management:
-    flag: true
-    input_directory: ../fsts_lngc/01_qa
-    output_directory: ~
-    filename:
-      extension: []
-      pattern: ~
-      filters:
-        contains: []
-        not_contains: []
-    input_files:
-      yml:
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_analysis
-        - moorings
-        - pretension
-        - fsts_lngc
-        - 01_qa
-        - fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_analysis
-        - moorings
-        - pretension
-        - fsts_lngc
-        - 01_qa
-        - fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_01.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_analysis
-        - moorings
-        - pretension
-        - fsts_lngc
-        - 01_qa
-        - fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_analysis
-        - moorings
-        - pretension
-        - fsts_lngc
-        - 01_qa
-        - includefile_fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_01.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_analysis
-        - moorings
-        - pretension
-        - fsts_lngc
-        - 01_qa
-        - includefile_fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml
-      yaml: []
-      dat: []
-      sim:
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_analysis
-        - moorings
-        - pretension
-        - fsts_lngc
-        - 01_qa
-        - fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_01.sim
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_analysis
-        - moorings
-        - pretension
-        - fsts_lngc
-        - 01_qa
-        - fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.sim
-      txt: []
-  Analysis:
-    basename: orcaflex_post_process
-    analysis_root_folder: .
-    file_name: dm_fsts_lngc_pretension
-    file_name_for_overwrite: dm_fsts_lngc_pretension
-    log_folder: .\logs
-    start_time: 2025-04-03 15:57:15.295432
-    cfg_array_file_names: ~
-    DefaultInputFile: ~
-    CustomInputFile: .\dm_fsts_lngc_pretension.yml
-    result_folder: .\results
-    result_data_folder: .\results\Data
-    result_plot_folder: .\results\Plot
-    fe_folder: .\results
-    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - ..
-    - fsts_lngc
-    - 01_qa
-    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - results
-  orcaflex_post_process:
+basename: orcaflex_post_process
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+orcaflex:
+  postprocess:
+    visualization:
+      flag: false
     summary:
-      groups:
-      - data: .\results\dm_fsts_lngc_pretension_inputs.csv
-        label: inputs
-      - data: .\results\dm_fsts_lngc_pretension_lngc_moorings_static_eff_tension_max.csv
-        label: lngc_moorings_static_eff_tension_max
-      - data: .\results\dm_fsts_lngc_pretension_lngc_moorings_dynamic_eff_tension_max.csv
-        label: lngc_moorings_dynamic_eff_tension_max
-      - data: .\results\dm_fsts_lngc_pretension_lngc_moorings_dynamic_length_max.csv
-        label: lngc_moorings_dynamic_length_max
+      flag: true
+      statistics:
+        Minimum: false
+        Maximum: false
+        Mean: false
+        StdDev: false
+      min: true
+      max: true
+      mean: true
+    linked_statistics:
+      flag: false
+      min: true
+      max: true
+      mean: true
+    RangeGraph:
+      flag: false
+    RAOs:
+      flag: false
+    time_series:
+      flag: false
+      histogram: true
+      summation: true
+    cummulative_histograms:
+      flag: false
+    rain_flow:
+      bins: 10
+      range:
+      - 0
+      - 10
+  analysis:
+    static: false
+    simulation: false
+    iterate:
+      flag: false
+    save_sim: false
+    save_dat: false
+visualization_settings:
+  label: ld_6_7_8
+  individual: true
+  combined: false
+  hide_items: []
+  add_items:
+  - Umbilical
+  - uta2-deep
+  views:
+  - Elevation
+  - Plan
+  tdp_line: Umbilical
+  viewparams:
+    elevation:
+      RelativeToObject: uth2-deep
+      ViewCentre:
+      - -17
+      - 0
+      - 12
+      ViewSize: 120
+      DrawViewAxes: false
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      ViewAzimuth: 270
+      ViewElevation: 0
+      ViewGamma: 71.89
+      Height: 1425
+      Width: 892
+    plan:
+      RelativeToObject: uth2-deep
+      ViewCentre:
+      - 10
+      - 0
+      - 8
+      ViewSize: 80
+      DrawViewAxes: false
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      ViewAzimuth: 270
+      ViewElevation: 90
+      ViewGamma: 0
+      Height: 1425
+      Width: 892
+RangeGraph_settings:
+  add_effective_tension_to_cfg: false
+time_series_settings:
+  histogram: true
+  summation: true
+  groups: []
+Files:
+  data_source: yml
+  csv_filename: ''
+  input_files:
+    yml:
+    - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
+library: digitalmodel
+summary_settings_master:
+  groups:
+  - Label: inputs
+    Columns:
+    - Command: GetData
+      ObjectName: FST1
+      Variable:
+      - InitialHeading
+      - -1
+      Label: FST1_Heading
+    - Command: GetData
+      ObjectName: FST2
+      Variable:
+      - InitialHeading
+      - -1
+      Label: FST2_Heading
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WindDirection
+      - -1
+      Label: WindDirection
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WindSpeed
+      - -1
+      Label: WindSpeed
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WaveDirection
+      - -1
+      Label: WaveDirection
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WaveHs
+      - -1
+      Label: Hs
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WaveTz
+      - -1
+      Label: WaveTz
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WaveGamma
+      - -1
+      Label: WaveGamma
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - RefCurrentSpeed
+      - 0
+      Label: RefCurrentSpeed
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - RefCurrentDirection
+      - 0
+      Label: RefCurrentDirection
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - CurrentFactor
+      - 0
+      Label: CurrentFactor[0]
+  - Label: lngc_moorings_static_eff_tension_max
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line01
+      Statistic_Type: Max
+      Label: Line01
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line02
+      Statistic_Type: Max
+      Label: Line02
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line03
+      Statistic_Type: Max
+      Label: Line03
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line04
+      Statistic_Type: Max
+      Label: Line04
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line05
+      Statistic_Type: Max
+      Label: Line05
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line06
+      Statistic_Type: Max
+      Label: Line06
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line07
+      Statistic_Type: Max
+      Label: Line07
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line08
+      Statistic_Type: Max
+      Label: Line08
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line09
+      Statistic_Type: Max
+      Label: Line09
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line10
+      Statistic_Type: Max
+      Label: Line10
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line11
+      Statistic_Type: Max
+      Label: Line11
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line12
+      Statistic_Type: Max
+      Label: Line12
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line13
+      Statistic_Type: Max
+      Label: Line13
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line14
+      Statistic_Type: Max
+      Label: Line14
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line15
+      Statistic_Type: Max
+      Label: Line15
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line16
+      Statistic_Type: Max
+      Label: Line16
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line17
+      Statistic_Type: Max
+      Label: Line17
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line18
+      Statistic_Type: Max
+      Label: Line18
+  - Label: lngc_moorings_dynamic_eff_tension_max
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line01
+      Statistic_Type: Max
+      Label: Line01
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line02
+      Statistic_Type: Max
+      Label: Line02
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line03
+      Statistic_Type: Max
+      Label: Line03
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line04
+      Statistic_Type: Max
+      Label: Line04
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line05
+      Statistic_Type: Max
+      Label: Line05
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line06
+      Statistic_Type: Max
+      Label: Line06
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line07
+      Statistic_Type: Max
+      Label: Line07
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line08
+      Statistic_Type: Max
+      Label: Line08
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line09
+      Statistic_Type: Max
+      Label: Line09
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line10
+      Statistic_Type: Max
+      Label: Line10
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line11
+      Statistic_Type: Max
+      Label: Line11
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line12
+      Statistic_Type: Max
+      Label: Line12
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line13
+      Statistic_Type: Max
+      Label: Line13
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line14
+      Statistic_Type: Max
+      Label: Line14
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line15
+      Statistic_Type: Max
+      Label: Line15
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line16
+      Statistic_Type: Max
+      Label: Line16
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line17
+      Statistic_Type: Max
+      Label: Line17
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line18
+      Statistic_Type: Max
+      Label: Line18
+  - Label: lngc_moorings_dynamic_length_max
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line01
+      Statistic_Type: Max
+      Label: Line01
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line02
+      Statistic_Type: Max
+      Label: Line02
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line03
+      Statistic_Type: Max
+      Label: Line03
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line04
+      Statistic_Type: Max
+      Label: Line04
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line05
+      Statistic_Type: Max
+      Label: Line05
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line06
+      Statistic_Type: Max
+      Label: Line06
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line07
+      Statistic_Type: Max
+      Label: Line07
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line08
+      Statistic_Type: Max
+      Label: Line08
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line09
+      Statistic_Type: Max
+      Label: Line09
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line10
+      Statistic_Type: Max
+      Label: Line10
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line11
+      Statistic_Type: Max
+      Label: Line11
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line12
+      Statistic_Type: Max
+      Label: Line12
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line13
+      Statistic_Type: Max
+      Label: Line13
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line14
+      Statistic_Type: Max
+      Label: Line14
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line15
+      Statistic_Type: Max
+      Label: Line15
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line16
+      Statistic_Type: Max
+      Label: Line16
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line17
+      Statistic_Type: Max
+      Label: Line17
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line18
+      Statistic_Type: Max
+      Label: Line18
+summary_settings:
+  groups:
+  - Label: inputs
+    Columns:
+    - Command: GetData
+      ObjectName: FST1
+      Variable:
+      - InitialHeading
+      - -1
+      Label: FST1_Heading
+    - Command: GetData
+      ObjectName: FST2
+      Variable:
+      - InitialHeading
+      - -1
+      Label: FST2_Heading
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WindDirection
+      - -1
+      Label: WindDirection
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WindSpeed
+      - -1
+      Label: WindSpeed
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WaveDirection
+      - -1
+      Label: WaveDirection
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WaveHs
+      - -1
+      Label: Hs
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WaveTz
+      - -1
+      Label: WaveTz
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WaveGamma
+      - -1
+      Label: WaveGamma
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - RefCurrentSpeed
+      - 0
+      Label: RefCurrentSpeed
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - RefCurrentDirection
+      - 0
+      Label: RefCurrentDirection
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - CurrentFactor
+      - 0
+      Label: CurrentFactor[0]
+  - Label: lngc_moorings_static_eff_tension_max
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line01
+      Statistic_Type: Max
+      Label: Line01
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line02
+      Statistic_Type: Max
+      Label: Line02
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line03
+      Statistic_Type: Max
+      Label: Line03
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line04
+      Statistic_Type: Max
+      Label: Line04
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line05
+      Statistic_Type: Max
+      Label: Line05
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line06
+      Statistic_Type: Max
+      Label: Line06
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line07
+      Statistic_Type: Max
+      Label: Line07
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line08
+      Statistic_Type: Max
+      Label: Line08
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line09
+      Statistic_Type: Max
+      Label: Line09
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line10
+      Statistic_Type: Max
+      Label: Line10
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line11
+      Statistic_Type: Max
+      Label: Line11
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line12
+      Statistic_Type: Max
+      Label: Line12
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line13
+      Statistic_Type: Max
+      Label: Line13
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line14
+      Statistic_Type: Max
+      Label: Line14
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line15
+      Statistic_Type: Max
+      Label: Line15
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line16
+      Statistic_Type: Max
+      Label: Line16
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line17
+      Statistic_Type: Max
+      Label: Line17
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line18
+      Statistic_Type: Max
+      Label: Line18
+  - Label: lngc_moorings_dynamic_eff_tension_max
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line01
+      Statistic_Type: Max
+      Label: Line01
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line02
+      Statistic_Type: Max
+      Label: Line02
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line03
+      Statistic_Type: Max
+      Label: Line03
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line04
+      Statistic_Type: Max
+      Label: Line04
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line05
+      Statistic_Type: Max
+      Label: Line05
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line06
+      Statistic_Type: Max
+      Label: Line06
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line07
+      Statistic_Type: Max
+      Label: Line07
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line08
+      Statistic_Type: Max
+      Label: Line08
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line09
+      Statistic_Type: Max
+      Label: Line09
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line10
+      Statistic_Type: Max
+      Label: Line10
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line11
+      Statistic_Type: Max
+      Label: Line11
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line12
+      Statistic_Type: Max
+      Label: Line12
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line13
+      Statistic_Type: Max
+      Label: Line13
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line14
+      Statistic_Type: Max
+      Label: Line14
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line15
+      Statistic_Type: Max
+      Label: Line15
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line16
+      Statistic_Type: Max
+      Label: Line16
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line17
+      Statistic_Type: Max
+      Label: Line17
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra:
+      - End B
+      Variable: Tension
+      ObjectName: Line18
+      Statistic_Type: Max
+      Label: Line18
+  - Label: lngc_moorings_dynamic_length_max
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line01
+      Statistic_Type: Max
+      Label: Line01
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line02
+      Statistic_Type: Max
+      Label: Line02
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line03
+      Statistic_Type: Max
+      Label: Line03
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line04
+      Statistic_Type: Max
+      Label: Line04
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line05
+      Statistic_Type: Max
+      Label: Line05
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line06
+      Statistic_Type: Max
+      Label: Line06
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line07
+      Statistic_Type: Max
+      Label: Line07
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line08
+      Statistic_Type: Max
+      Label: Line08
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line09
+      Statistic_Type: Max
+      Label: Line09
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line10
+      Statistic_Type: Max
+      Label: Line10
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line11
+      Statistic_Type: Max
+      Label: Line11
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line12
+      Statistic_Type: Max
+      Label: Line12
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line13
+      Statistic_Type: Max
+      Label: Line13
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line14
+      Statistic_Type: Max
+      Label: Line14
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line15
+      Statistic_Type: Max
+      Label: Line15
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line16
+      Statistic_Type: Max
+      Label: Line16
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line17
+      Statistic_Type: Max
+      Label: Line17
+    - Command: TimeHistory
+      SimulationPeriod:
+      - ~
+      - ~
+      objectExtra: ~
+      Variable: Length
+      ObjectName: Line18
+      Statistic_Type: Max
+      Label: Line18
+file_management:
+  flag: true
+  input_directory: ../fsts_lngc/01_qa
+  output_directory: ~
+  filename:
+    extension:
+    - yml
+    - sim
+    pattern: ~
+    filters:
+      contains: []
+      not_contains:
+      - includefile
+      - iteration_01
+  input_files:
+    yml:
+    - ..\fsts_lngc\01_qa\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml
+    sim:
+    - ..\fsts_lngc\01_qa\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.sim
+Analysis:
+  basename: orcaflex_post_process
+  analysis_root_folder: .
+  file_name: dm_fsts_lngc_pretension
+  file_name_for_overwrite: dm_fsts_lngc_pretension
+  log_folder: .\logs
+  start_time: 2025-04-04 05:54:28.032255
+  cfg_array_file_names: ~
+  DefaultInputFile: ~
+  CustomInputFile: .\dm_fsts_lngc_pretension.yml
+  result_folder: .\results
+  result_data_folder: .\results\Data
+  result_plot_folder: .\results\Plot
+  fe_folder: .\results
+  file_management_input_directory: ..\fsts_lngc\01_qa
+  file_management_output_directory: results
+orcaflex_post_process:
+  summary:
+    groups:
+    - data: .\results\dm_fsts_lngc_pretension_inputs.csv
+      label: inputs
+    - data: .\results\dm_fsts_lngc_pretension_lngc_moorings_static_eff_tension_max.csv
+      label: lngc_moorings_static_eff_tension_max
+    - data: .\results\dm_fsts_lngc_pretension_lngc_moorings_dynamic_eff_tension_max.csv
+      label: lngc_moorings_dynamic_eff_tension_max
+    - data: .\results\dm_fsts_lngc_pretension_lngc_moorings_dynamic_length_max.csv
+      label: lngc_moorings_dynamic_length_max

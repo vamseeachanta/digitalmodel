@@ -1,0 +1,182 @@
+meta:
+  library: digitalmodel
+  basename: orcaflex
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: true
+  unit:
+    pretension: kN
+    coordinates: m
+    length: m
+orcaflex:
+  postprocess:
+    visualization:
+      flag: false
+    summary:
+      flag: false
+      statistics:
+        Minimum: false
+        Maximum: false
+        Mean: false
+        StdDev: false
+      min: true
+      max: true
+      mean: true
+    linked_statistics:
+      flag: false
+      min: true
+      max: true
+      mean: true
+    RangeGraph:
+      flag: false
+    RAOs:
+      flag: false
+    time_series:
+      flag: false
+      histogram: true
+      summation: true
+    cummulative_histograms:
+      flag: false
+    rain_flow:
+      bins: 10
+      range:
+      - 0
+      - 10
+  preprocess:
+    check_yml:
+      flag: false
+      save_dat: true
+  analysis:
+    mooring:
+      flag: true
+      calculation: pretension
+visualization_settings:
+  label: ld_6_7_8
+  individual: true
+  combined: false
+  hide_items: []
+  add_items:
+  - Umbilical
+  - uta2-deep
+  views:
+  - Elevation
+  - Plan
+  tdp_line: Umbilical
+  viewparams:
+    elevation:
+      RelativeToObject: uth2-deep
+      ViewCentre:
+      - -17
+      - 0
+      - 12
+      ViewSize: 120
+      DrawViewAxes: false
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      ViewAzimuth: 270
+      ViewElevation: 0
+      ViewGamma: 71.89
+      Height: 1425
+      Width: 892
+    plan:
+      RelativeToObject: uth2-deep
+      ViewCentre:
+      - 10
+      - 0
+      - 8
+      ViewSize: 80
+      DrawViewAxes: false
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      ViewAzimuth: 270
+      ViewElevation: 90
+      ViewGamma: 0
+      Height: 1425
+      Width: 892
+RangeGraph_settings:
+  add_effective_tension_to_cfg: false
+time_series_settings:
+  histogram: true
+  summation: true
+  groups: []
+orcaflex_analysis:
+  mooring:
+    groups:
+    - label: development
+      calculation: pretension
+      tension:
+        type: csv
+        filename: pretension/postproc/results/dm_fsts_lngc_pretension_lngc_moorings_dynamic_eff_tension_max.csv
+      length:
+        type: csv
+        filename: pretension/postproc/results/dm_fsts_lngc_pretension_lngc_moorings_dynamic_length_max.csv
+      iteration_cfg:
+        calculation: pretension
+        tolerance_percent: 10
+      target_pretension:
+      - name: Line01
+        pretension: 20
+      - name: Line02
+        pretension: 20
+      - name: Line03
+        pretension: 20
+      - name: Line04
+        pretension: 10
+      - name: Line05
+        pretension: 10
+      - name: Line06
+        pretension: 10
+      - name: Line07
+        pretension: 25
+      - name: Line08
+        pretension: 25
+      - name: Line09
+        pretension: 35
+      - name: Line10
+        pretension: 35
+      - name: Line11
+        pretension: 35
+      - name: Line12
+        pretension: 10
+      - name: Line13
+        pretension: 10
+      - name: Line14
+        pretension: 10
+      - name: Line15
+        pretension: 15
+      - name: Line16
+        pretension: 15
+file_management:
+  flag: true
+  input_directory: pretension/fsts_lngc/01_qa
+  output_directory: ~
+  filename:
+    extension:
+    - yml
+    pattern: fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl
+    filters:
+      contains: []
+      not_contains:
+      - includefile
+      - iteration_01
+  input_files:
+    yml:
+    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml
+Analysis:
+  basename: orcaflex
+  analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings
+  file_name: ofx_mooring_analysis
+  file_name_for_overwrite: ofx_mooring_analysis
+  log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\logs
+  start_time: 2025-04-04 05:46:31.325292
+  cfg_array_file_names: ~
+  DefaultInputFile: ~
+  CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\ofx_mooring_analysis.yml
+  result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results
+  result_data_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results\Data
+  result_plot_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results\Plot
+  fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results
+  file_management_input_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa
+  file_management_output_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results

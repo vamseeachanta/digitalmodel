@@ -301,9 +301,8 @@ file_management:
   output_directory: NULL
 
   filename:
-    extension: []
+    extension: [yml, sim]
     pattern: NULL
     filters:
       contains: []
-      not_contains: []
-
+      not_contains: [includefile, iteration_01]

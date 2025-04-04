@@ -18,8 +18,8 @@ class OrcaFlex:
 
     def router(self, cfg):
 
-        if "file_management" in cfg and cfg["file_management"]["flag"]:
-            cfg = ou.file_management(cfg)
+        # if "file_management" in cfg and cfg["file_management"]["flag"]:
+        #     cfg = ou.file_management(cfg)
 
         orcaflex_preprocess.router(cfg)
 
