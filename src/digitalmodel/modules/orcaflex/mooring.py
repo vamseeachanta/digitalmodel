@@ -8,13 +8,11 @@ from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
 from assetutilities.common.utilities import is_file_valid_func
 from assetutilities.common.file_management import FileManagement
 from assetutilities.common.data import SaveData
-from assetutilities.modules.yml_utilities.ruamel_yaml import RuamelYAML
 
 orcaflex_preprocess = OrcaflexPreProcess()
 orcaflex_objects = OrcaFlexObjects()
 fm = FileManagement()
 save_data = SaveData()
-ruemel_yu = RuamelYAML()
 
 class Mooring():
     def __init__(self):
@@ -49,6 +47,7 @@ class Mooring():
             if len(tension_df_file) == 1:
                 pretension_analysis_dict = self.pre_tension_analysis(cfg, group, target_pretension, tension_df_file, length_df_file, yml_file)
                 self.prepare_includefile_for_analysis(cfg, group, yml_file, pretension_analysis_dict)
+                self.prepare_includefile_for_all_lines(cfg, group, yml_file, pretension_analysis_dict)
 
             else:
                 logging.debug(f"No output to perform analysis for yml file {yml_file_stem}.")
@@ -148,8 +147,30 @@ class Mooring():
         filename_stem = pathlib.Path(yml_file).stem
         filename = 'includefile_' + filename_stem
         filename_path = os.path.join(filename_dir, filename)
-        save_data.saveDataYaml(includefile_dict, filename_path, default_flow_style=False)
-        ruemel_yu.save_to_file(includefile_dict, filename_path + '.yml')
+        save_data.saveDataYaml({'Winches': includefile_dict}, filename_path, default_flow_style=False)
+
+    def prepare_includefile_for_all_lines(self, cfg, group, yml_file, pretension_analysis_dict):
+        pretension_analysis_df = pretension_analysis_dict['pretension_analysis_df']
+
+        includefile_dict = {}
+        for row_idx in range(0, len(pretension_analysis_df)):
+            row = pretension_analysis_df.iloc[row_idx]
+            object_name = row['object_name']
+            current_length = float(row['current_length'])
+
+            stage_array_item = []
+            stage_array_item.append(['Specified length', current_length])
+            stage_array_item.append(['Specified payout', 0])
+            stage_array_item.append(['Specified payout', 0])
+
+            item = {object_name: {'StageMode, StageValue': stage_array_item}}
+            includefile_dict.update(item)
+
+        filename_dir = fm.get_file_management_input_directory(cfg)
+        filename_stem = pathlib.Path(yml_file).stem
+        filename = 'includefile_all_lines_' + filename_stem
+        filename_path = os.path.join(filename_dir, filename)
+        save_data.saveDataYaml({'Winches': includefile_dict}, filename_path, default_flow_style=False)
 
     def get_tension(self, cfg, group):
         tension_cfg = group['tension']
