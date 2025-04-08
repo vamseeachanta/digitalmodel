@@ -82,7 +82,7 @@ class LoadVessel:
             clearExistingData=False,
         )
 
-        logging.warning(f"Failed to import AQWA data: {messages}")
+        logging.warning(f"AQWA data import: {messages}")
 
         if success:
             output_file_name = os.path.join(analysis_root_folder, output_file)

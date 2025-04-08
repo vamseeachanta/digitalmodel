@@ -8,13 +8,13 @@ from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
 from assetutilities.common.utilities import is_file_valid_func
 from assetutilities.common.file_management import FileManagement
 from assetutilities.common.data import SaveData
-from assetutilities.modules.yml_utilities.ruamel_yaml import RuemelYAML
+from assetutilities.modules.yml_utilities.ruamel_yaml import RuamelYAML
 
 orcaflex_preprocess = OrcaflexPreProcess()
 orcaflex_objects = OrcaFlexObjects()
 fm = FileManagement()
 save_data = SaveData()
-ruemel_yu = RuemelYAML()
+ruemel_yu = RuamelYAML()
 
 class Mooring():
     def __init__(self):
@@ -111,7 +111,7 @@ class Mooring():
 
         logging.info(f"For Filename: {filename}:")
         logging.info(f"    ... Stabilizing lines: {stabilizing_lines}")
-        logging.info(f"    ... Max pretension %: {max_pretension}")
+        logging.info(f"    ... Max pretension difference %: {round(max_pretension,0)}")
         pretension_analysis_dict = {
             'pretension_analysis_df': pretension_analysis_df,
             'stabilizing_lines': stabilizing_lines,
@@ -149,7 +149,7 @@ class Mooring():
         filename = 'includefile_' + filename_stem
         filename_path = os.path.join(filename_dir, filename)
         save_data.saveDataYaml(includefile_dict, filename_path, default_flow_style=False)
-        ruemel_yu.save_to_file(includefile_dict, filename_path)
+        ruemel_yu.save_to_file(includefile_dict, filename_path + '.yml')
 
     def get_tension(self, cfg, group):
         tension_cfg = group['tension']
