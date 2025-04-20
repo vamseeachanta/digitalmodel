@@ -31,7 +31,135 @@ Intel® Xeon® Platinum 8562Y+ Processor 32-Core 2.80GHz 60MB Cache - 5th Gen
 ![alt text](xeon_12core.png)
 
 
+### OS Communication with SuperMicro
+
+
+Mark
+
+
+Name:
+Vamsee Achanta
+E-mail:
+vamsee.achanta@aceengineer.com
+What can we help you with?
+Configure/Quote for Server(s)
+Please Enter Your Supermicro Server/Chassis SKU#? (If Applicable)
+Supermicro 2U Mainstream SuperServer (SYS-621P-TR)
+
+Show more
+Mark 12:29 PM
+Hi there! We have recently added new GOLD systems that ship within 24 hours! You can view them here: https://store.supermicro.com/us_en/systems/gold-series.html
+Hi Vamsee
+Vamsee Achanta 12:30 PM
+hello...
+Mark 12:30 PM
+How can I help you today?
+Vamsee Achanta 12:30 PM
+I am looking for this configuration
+https://store.supermicro.com/us_en/configuration/view/index/?cid=1000339662&9803=
+Mark 12:31 PM
+Would like to know the ETA?
+Vamsee Achanta 12:32 PM
+does it come with a desktop OS that can be added to it
+The server OS seems to be going into the roof
+Mark 12:32 PM
+We only offer Windows server/
+Vamsee Achanta 12:32 PM
+if I want to buoy a desktop software, where do I get it from?
+Mark 12:32 PM
+Was there particular OS you would like to run?
+Vamsee Achanta 12:33 PM
+latest windows I guess...
+latest windows OS i guess.
+Mark 12:33 PM
+Windows 11 pro?
+Vamsee Achanta 12:33 PM
+yes..
+can you add it in?
+or does it already come with it?
+Mark 12:34 PM
+This system hasn't been certified with Windows 11 pro
+https://www.supermicro.com/en/support/resources/certification/SYS-621P-TR
+image.png
+but its possible it can work.
+I would need to verify with the PM.
+Vamsee Achanta 12:35 PM
+please can you quickly verify so that we can place the hardware order?
+Mark 12:35 PM
+Please give me a moment to do this.
+Vamsee Achanta 12:35 PM
+also find out if we can add the Windows 11 Pro OS to the order?
+it is easy/economical to buy as a OEM ware..
+why is the windows server software so costly at supermicro?
+Mark 12:40 PM
+I have reached out to PM, I am waiting on a update.
+Vamsee Achanta 12:40 PM
+sure...
+Mark 12:40 PM
+Unfortunately we don't have control over price. The price is set by the eStore configurator.
+Vamsee Achanta 12:40 PM
+I see...
+Mark 12:42 PM
+I am still waiting on a update.
+Vamsee Achanta 12:42 PM
+ok sure..
+Mark 12:42 PM
+Would you like for me to email you back?
+Vamsee Achanta 12:42 PM
+Can you send an email to me?
+yes please...
+Mark 12:42 PM
+at vamsee.achanta@aceengineer.com?
+Vamsee Achanta 12:42 PM
+yes Mark. Thank you.
+Mark 12:42 PM
+I can email you once i get an update.
+May i ask who soon do you wish to order?
+Vamsee Achanta 12:43 PM
+1/ compatibility and 2/ if I can buy the Windows 11 Pro OS from the store
+Mark 12:43 PM
+Yes i can do this for you.
+Vamsee Achanta 12:43 PM
+in 2 hours today..
+so that I can get the server ready end of next week
+should have done this homework 2 weeks ago.. Ohh well..
+Read
+Write a message…
+
+
+
+Powered by
+
+
+
+
+Powered by
+
+
 ### Communications - David Heffernan
+
+Vamsee
+
+I don't think you can get CPUs that only have 1 thread per core.
+
+OrcaFlex will not automatically disable hyperthreading. But it can be disabled in the machine BIOS. You might prefer to configure OrcaFlex to default to use only a set number of threads. There is a registry setting that controls this:
+
+Key: HKEY_LOCAL_MACHINE\Software\WOW6432Node\Orcina\OrcaFlex
+Name: DefaultThreadCount
+Type: DWORD
+
+If this is not specified then the total number of logical processors as reported by the machine will be used.
+
+Best regards,
+
+David Heffernan
+
+
+From: Vamsee Achanta <vamseea@acma-inc.com> 
+Sent: 18 April 2025 12:06
+To: Orcina <orcina@orcina.com>
+Cc: Scott McClure <scottm@acma-inc.com>; Bram Weisman <bramw@acma-inc.com>
+Subject: RE: Go-by Hardware Configurations
 
 Also is it better to directly get CPU which only allows 1 thread per core so it is a no brainer and no need to fiddle with anything?
 

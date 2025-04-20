@@ -49,6 +49,7 @@ wwyaml = WorkingWithYAML()
 app_manager = ConfigureApplicationInputs()
 
 def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
+    cfg_argv_dict = {}
     if cfg is None:
         inputfile, cfg_argv_dict = app_manager.validate_arguments_run_methods(inputfile)
         cfg = wwyaml.ymlInput(inputfile, updateYml=None)
@@ -67,6 +68,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         fm = FileManagement()
         cfg_base = app_manager.configure(cfg, library_name, basename, cfg_argv_dict)
         cfg_base = fm.router(cfg_base)
+        result_folder_dict, cfg_base = app_manager.configure_result_folder(None, cfg_base)
     else:
         cfg_base = cfg
 
