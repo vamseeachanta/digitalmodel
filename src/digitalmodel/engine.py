@@ -10,7 +10,6 @@ from assetutilities.common.file_management import FileManagement
 from assetutilities.common.yml_utilities import WorkingWithYAML
 # Reader imports
 from digitalmodel.aqwa import Aqwa
-from digitalmodel.catenary_riser import catenary_riser
 from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.common.cathodic_protection import CathodicProtection
 from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
@@ -74,8 +73,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
     logger.info(f"{basename}, application ... START")
 
-    if basename in ["simple_catenary_riser", "catenary_riser"]:
-        cfg_base = catenary_riser(cfg_base)
+    if "catenary" in basename:
+        from digitalmodel.modules.catenary.catenary import Catenary
+        catenary = Catenary()
+        cfg_base = catenary.router(cfg_base)
     elif basename == "vertical_riser":
         cfg_base = vertical_riser(cfg_base)
     elif basename in ["orcaflex", "orcaflex_analysis", "orcaflex_post_process"]:
