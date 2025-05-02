@@ -136,4 +136,3 @@ if __name__ == "__main__":
     plt.xlabel('x')
     plt.ylabel('y')
     plt.savefig('catenary_curve.png')
-    plt.show()

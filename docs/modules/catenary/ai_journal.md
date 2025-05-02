@@ -29,6 +29,9 @@ Provides advanced options for mooring line analysis.
 Can adapt to various configurations and constraints.
 Usage:
 Frequently used in offshore engineering and mooring line modeling.
+
+https://www.osti.gov/doecode/biblio/61138
+
 3. Math-Adventures
 Description: A basic implementation of the catenary equation in Python, aimed at educational purposes.
 Features:
@@ -68,7 +71,7 @@ If you need a robust and well-documented library, Pycatenary is the best choice.
 If you're working on mooring systems or offshore engineering, consider MoorPy or WISDEM.
 For educational or simple visualization purposes, use Math-Adventures or the Streamlit Example.
 
-### Claude3.7 Sonnet engine
+### Claude3.7 Sonnet Thinking
 
 Solving Catenary Equations in Python
 The catenary problem you've described - solving for a catenary curve given its length, two endpoints, and end angles - is a common challenge in engineering fields like cable design, suspension bridges, and overhead power lines.
