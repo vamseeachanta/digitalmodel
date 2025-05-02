@@ -1,65 +1,58 @@
-[build-system]
-requires      = ["setuptools>=61.0.0", "wheel", "pandas"]
-build-backend = "setuptools.build_meta"
-
-[project]
-dynamic = ["dependencies"]
-
+[tool.poetry]
 name = "digitalmodel"
 version = "0.0.8"
 description = "engineering asset digital model(s) for life cycle analysis"
+authors = ["Vamsee Achanta <vamsee.achanta@aceengineer.com>"]
+license = "MIT"
 readme = "README.md"
-authors = [{ name = "Vamsee Achanta", email = "vamsee.achanta@aceengineer.com" }]
-license = { file = "LICENSE" }
+keywords = ["finite element", "asset representation", "structural", "physical", "engineering", "animation", "lifecycle", "lifecycle analysis", "single source of truth", "digital model", "digital twin"]
+homepage = "https://github.com/vamseeachanta/digitalmodel"
+repository = "https://github.com/vamseeachanta/digitalmodel"
+documentation = "https://github.com/vamseeachanta/digitalmodel/blob/master/README.md"
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3"
 ]
-keywords=['finite element', 'asset representation', 'structural', 'physical', 'engineering', 'animation', 'lifecycle', 'lifecycle analysis', 'single source of truth', 'digital model', 'digital twin']
-requires-python = ">=3.7"
+packages = [{ include = "digitalmodel", from = "src" }]
+include = ["*.yml", "*.csv", "*.xlsx", "*.html", "*.txt"]
 
-    [project.optional-dependencies]
-    build = ["build", "twine"]
-    dev   = ["black", "bumpver", "isort", "pytest"]
+[tool.poetry.group.build.dependencies]
+build = "^1.0.0"
+twine = "^1.0.0"
 
-    [project.scripts]
-    digital_model = "digitalmodel:__main__"
+[tool.poetry.group.dev.dependencies]
+black = "^23.0"
+bumpver = "^2023.1129"
+isort = "^5.0.0"
+pytest = "^7.0.0"
 
-    [project.urls]
-    repository    = "https://github.com/vamseeachanta/digitalmodel"
-    documentation = "https://github.com/vamseeachanta/digitalmodel/blob/master/README.md"
+[tool.poetry.scripts]
+digital_model = "digitalmodel.__main__:main"
 
-[tool.setuptools]
-include-package-data = true
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["dev_tools/requirements.txt"]}
-
-[tool.setuptools.packages.find]
-where = ["src"]
-[tool.setuptools.package-data]
-"*" = ["*.yml", "*.csv", "*.xlsx", "*.html", "*.txt"]
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.bumpver]
 current_version = "0.0.8"
 version_pattern = "MAJOR.MINOR.PATCH"
-commit_message  = "bump version {old_version} -> {new_version}"
-commit          = true
-tag             = true
-push            = false
+commit_message = "bump version {old_version} -> {new_version}"
+commit = true
+tag = true
+push = false
 
-    [tool.bumpver.file_patterns]
-    "pyproject.toml" = [
-        'current_version = "{version}"',
-        'version = "{version}"',
-    ]
-    "src/digitalmodel/__init__.py" = ["{version}"]
-    "src/digitalmodel/__main__.py" = ["- digitalmodel v{version}"]
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    'current_version = "{version}"',
+    'version = "{version}"',
+]
+"src/digitalmodel/__init__.py" = ["{version}"]
+"src/digitalmodel/__main__.py" = ["- digitalmodel v{version}"]
 
 [tool.isort]
-profile                   = "black"
-import_heading_stdlib     = "Standard library imports"
+profile = "black"
+import_heading_stdlib = "Standard library imports"
 import_heading_thirdparty = "Third party imports"
 import_heading_firstparty = "Reader imports"
 multi_line_output = 3
@@ -70,6 +63,10 @@ line_length = 88
 [tool.mypy]
 strict = true
 
-    [[tool.mypy.overrides]]
-    module                 = "feedparser"
-    ignore_missing_imports = true
+[[tool.mypy.overrides]]
+module = "feedparser"
+ignore_missing_imports = true
+
+[tool.poetry.dependencies]
+python = "^3.11"
+assetutilities = { path = "../assetutilities", develop = true }
