@@ -100,8 +100,8 @@ if __name__ == "__main__":
     # Define constraints
     x1, y1 = 0, 10       # First endpoint
     x2, y2 = 30, 10      # Second endpoint
-    slope1 = -0.5        # Slope at first endpoint (negative means sloping down to the right)
-    slope2 = 0.5         # Slope at second endpoint (positive means sloping up to the right)
+    slope1 = -7        # Slope at first endpoint (negative means sloping down to the right)
+    slope2 = 7         # Slope at second endpoint (positive means sloping up to the right)
     target_length = 35   # Desired arc length
     
     # Solve for catenary parameters
