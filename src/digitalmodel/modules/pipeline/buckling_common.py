@@ -1,7 +1,7 @@
 # Standard library imports
 
 # Third party imports
-from assetutilities.common.visualization.visualization_templates import (
+from assetutilities.common.visualization.visualization_templates_matplotlib import (
     VisualizationTemplates,
 )
 from scipy import interpolate
