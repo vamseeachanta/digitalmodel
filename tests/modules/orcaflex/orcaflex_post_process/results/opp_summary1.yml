@@ -109,8 +109,8 @@ file_management:
       not_contains: []
   input_files:
     sim:
-    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
-    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
+    - K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
+    - K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
 summary_settings:
   groups:
   - Label: dynamics
@@ -213,22 +213,22 @@ summary_settings:
       Label: TimeHistory_EndB_EffTension_Max
 Analysis:
   basename: orcaflex_post_process
-  analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
+  analysis_root_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
   file_name: opp_summary1
   file_name_for_overwrite: opp_summary1
-  log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-  start_time: 2025-05-10 07:43:40.699896
+  log_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
+  start_time: 2025-05-10 07:52:04.385807
   cfg_array_file_names: ~
   DefaultInputFile: ~
-  CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary1.yml
-  result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
-  result_data_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\Data
-  result_plot_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\Plot
-  fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
-  file_management_input_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
-  file_management_output_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
+  CustomInputFile: opp_summary1.yml
+  result_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
+  result_data_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\Data
+  result_plot_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\Plot
+  fe_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
+  file_management_input_directory: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
+  file_management_output_directory: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
 orcaflex_post_process:
   summary:
     groups:
-    - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_summary1_dynamics.csv
+    - data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_summary1_dynamics.csv
       label: dynamics

@@ -4,13 +4,12 @@ import sys
 from typing import Any, Dict
 
 # Reader imports
-import colorama
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.modules.test_utilities.test_utilities import TestUtilities
-from colorama import Fore, Style
 from digitalmodel.engine import engine
 
-colorama.init(autoreset=True)
+from loguru import logger
+
 
 tu = TestUtilities()
 
@@ -31,7 +30,7 @@ def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
 
         assert file_match_result
 
-    print(Fore.GREEN + 'Orcaflex Summary test ... PASS!' + Style.RESET_ALL)
+    logger.info('Orcaflex Summary test ... PASS!')
 
     return cfg
 
