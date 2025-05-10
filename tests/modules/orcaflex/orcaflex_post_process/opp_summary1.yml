@@ -138,11 +138,14 @@ time_series_settings:
 
 file_management:
   flag: True
+  input_directory: NULL
+  output_directory: NULL
   update_unfinished:
     flag: False
 
-  files:
-    files_in_current_directory:
-      flag: True
-      directory: NULL
-      auto_read: True
+  filename:
+    extension: [sim]
+    pattern: NULL
+    filters:
+      contains: []
+      not_contains: []

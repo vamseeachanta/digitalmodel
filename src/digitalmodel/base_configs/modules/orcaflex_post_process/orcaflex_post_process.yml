@@ -83,11 +83,17 @@ time_series_settings:
   summation: True
   groups: []
 
-Files:
-  data_source: yml
-  csv_filename: ""
 
-  input_files:
-    yml:
-      - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
-      # - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test2.sim
+file_management:
+  flag: True
+  input_directory: NULL
+  output_directory: NULL
+  update_unfinished:
+    flag: False
+
+  filename:
+    extension: [sim]
+    pattern: NULL
+    filters:
+      contains: []
+      not_contains: []
