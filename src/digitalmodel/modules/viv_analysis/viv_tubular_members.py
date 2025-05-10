@@ -4,7 +4,7 @@ import os
 
 # Third party imports
 import pandas as pd
-from assetutilities.common.visualization.visualization_templates import (
+from assetutilities.common.visualization.visualization_templates_matplotlib import (
     VisualizationTemplates,
 )
 from assetutilities.engine import engine as au_engine

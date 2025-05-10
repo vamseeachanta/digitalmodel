@@ -12,7 +12,7 @@ import scipy.fftpack
 from assetutilities.common.data import PandasChainedAssignent
 from assetutilities.common.data_management import DataManagement
 from assetutilities.common.utilities import is_file_valid_func
-from assetutilities.common.visualization.visualization_templates import (
+from assetutilities.common.visualization.visualization_templates_matplotlib import (
     VisualizationTemplates,
 )
 from assetutilities.engine import engine as au_engine

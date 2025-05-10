@@ -8,7 +8,7 @@ import pandas as pd
 from assetutilities.common.file_management import FileManagement
 from assetutilities.common.update_deep import AttributeDict, update_deep_dictionary
 from assetutilities.common.utilities import is_file_valid_func
-from assetutilities.common.visualization.visualization_templates import (
+from assetutilities.common.visualization.visualization_templates_matplotlib import (
     VisualizationTemplates,
 )
 from assetutilities.common.yml_utilities import WorkingWithYAML  # noqa
