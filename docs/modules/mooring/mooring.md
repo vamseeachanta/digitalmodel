@@ -16,3 +16,12 @@ outputs:
 
 Utilize LineSetup Wizard using below link
 https://www.orcina.com/webhelp/OrcaFlex/Content/html/Linesetupwizard.htm
+
+
+### Mooring Analysis Literature
+
+https://support.dhigroup.com/download/MIKE-latest/
+
+Get a static solution in python prior to running OrcaFlex.
+https://github.com/NREL/MoorPy/issues/35
+
