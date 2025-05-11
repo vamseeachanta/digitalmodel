@@ -466,7 +466,7 @@ class OrcaflexUtilities:
         #     '.' + filename_components[-1], "")
 
         filename_without_extension = Path(os.path.splitext(filename)[0]).resolve()
-        
+
         return filename_without_extension
 
 
