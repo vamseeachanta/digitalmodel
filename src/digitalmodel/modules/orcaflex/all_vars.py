@@ -18,7 +18,8 @@ class AllVars():
 
     def router(self, cfg):
         analysis_flag = False
-        if cfg['orcaflex']['postprocess']['all_vars']['flag']:
+        if ('all_vars' in cfg['orcaflex']['postprocess'] and
+            cfg['orcaflex']['postprocess']['all_vars']['flag']):
             analysis_flag = True
         if not analysis_flag:
             return cfg
@@ -42,7 +43,8 @@ class AllVars():
             file_label, _ = os.path.splitext(base_name)
             object_dict = of_objects.get_model_objects(model)
             object_df = object_dict['object_df']
-            var_data_dict = self.get_var_data(cfg, model, object_df, file_label)
+            var_data_dict = self.get_var_data(
+                cfg, model, object_df, file_label)
             var_data_dict.update({'file_name': file_name})
             var_data_dict.update({'file_label': file_label})
 

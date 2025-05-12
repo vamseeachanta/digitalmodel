@@ -20,4 +20,8 @@ File Management:
 - Save the model in yml file with only BaseFile reference and no other data
  - Note that this .yml file will be iterated and overwritten
 
-
+Inputs:
+- Update the target_pretension and line properties .csv file
+  - Update mooring line lengths
+  - update line properties for calculations
+  - 
