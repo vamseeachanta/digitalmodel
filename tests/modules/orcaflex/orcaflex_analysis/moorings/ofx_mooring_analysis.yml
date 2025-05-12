@@ -89,8 +89,8 @@ file_management:
   output_directory: NULL
 
   filename:
-    extension: [yml]
-    pattern: fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl
+    extension: [yml, sim]
+    pattern: fsts_l095_mwl_125km3_l000_pb_pretension
     filters:
       contains: []
       not_contains: [includefile, iteration_01]
