@@ -5,6 +5,8 @@ import OrcFxAPI
 import logging
 from digitalmodel.modules.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
+from digitalmodel.modules.orcaflex.all_vars import AllVars
+
 from assetutilities.common.utilities import is_file_valid_func
 from assetutilities.common.file_management import FileManagement
 from assetutilities.common.data import SaveData
@@ -13,6 +15,8 @@ orcaflex_preprocess = OrcaflexPreProcess()
 orcaflex_objects = OrcaFlexObjects()
 fm = FileManagement()
 save_data = SaveData()
+all_vars = AllVars()  # noqa
+
 
 class Mooring():
     def __init__(self):
@@ -26,34 +30,23 @@ class Mooring():
             else:
                 raise ValueError('Invalid calculation type for mooring analysis')
 
+
     def pretension_analysis(self, cfg, group):
         # utilize model to add moorings
         # utilize winch commands to add pretensions
 
+        sim_files = cfg['file_management']['input_files']['sim']
         yml_files = cfg['file_management']['input_files']['yml']
 
-        tension_df = self.get_tension(cfg, group)
-        length_df = self.get_length(cfg, group)
+        for fileIndex in range(0, len(sim_files)):
+            file_name = sim_files[fileIndex]
 
-        target_pretension = group['target_pretension']
+            var_data_dict = all_vars.get_var_data_by_model(cfg, file_name)
+            
+            
 
-        for yml_file_idx in range(0, len(yml_files)):
-            yml_file = yml_files[yml_file_idx]
-            yml_file_stem = pathlib.Path(yml_file).stem
 
-            tension_df_file = tension_df[tension_df['fe_filename_stem']==yml_file_stem]
-            length_df_file = length_df[length_df['fe_filename_stem']==yml_file_stem]
-
-            if len(tension_df_file) == 1:
-                pretension_analysis_dict = self.pre_tension_analysis(cfg, group, target_pretension, tension_df_file, length_df_file, yml_file)
-                self.prepare_includefile_for_analysis(cfg, group, yml_file, pretension_analysis_dict)
-                self.prepare_includefile_for_all_lines(cfg, group, yml_file, pretension_analysis_dict)
-
-            else:
-                logging.debug(f"No output to perform analysis for yml file {yml_file_stem}.")
-                continue
-
-        pass
+        return 
 
     def pre_tension_analysis(self, cfg, group, target_pretension, tension_df_file, length_df_file, yml_file):
 

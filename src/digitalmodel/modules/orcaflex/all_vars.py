@@ -23,19 +23,30 @@ class AllVars():
         if not analysis_flag:
             return cfg
 
-        sim_files = cfg.file_management['input_files']['sim']
+        sim_files = cfg['file_management']['input_files']['sim']
+        var_data_all_files = []
         for fileIndex in range(0, len(sim_files)):
             file_name = sim_files[fileIndex]
+
+            var_data_dict = self.get_var_data_by_model(cfg, file_name)
+            var_data_all_files.append(var_data_dict)
+
+        return var_data_all_files
+
+    def get_var_data_by_model(self, cfg, file_name):
+        model_dict = ou.get_model_and_metadata(file_name=file_name)
+        model = model_dict['model']
+
+        if model is not None:
             base_name = os.path.basename(file_name)
             file_label, _ = os.path.splitext(base_name)
+            object_dict = of_objects.get_model_objects(model)
+            object_df = object_dict['object_df']
+            var_data_dict = self.get_var_data(cfg, model, object_df, file_label)
+            var_data_dict.update({'file_name': file_name})
+            var_data_dict.update({'file_label': file_label})
 
-            model_dict = ou.get_model_and_metadata(file_name=file_name)
-            model = model_dict['model']
-
-            if model is not None:
-                object_dict = of_objects.get_model_objects(model)
-                object_df = object_dict['object_df']
-                var_data_dict = self.get_var_data(cfg, model, object_df, file_label)
+        return var_data_dict
 
     def get_var_data(self, cfg, model, object_df, file_label):
         """
