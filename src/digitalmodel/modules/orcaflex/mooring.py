@@ -61,12 +61,13 @@ class Mooring():
     def mooring_pre_tension_analysis(self, cfg, group, file_meta_data, var_data_dict):
         output_dict = {}
         target_pre_tension_df = self.get_target_pretension(cfg, group)
-        columns = ['ObjectName', 'Effective tension', 'Arc length']
+        columns = ['ObjectName', 'Effective tension', 'Arc length', 'End GY force']
         current_var_df = var_data_dict['StaticResult']['Line'][columns]
 
         new_arc_length = []
         target_pre_tension_df['current_tension'] = None
         target_pre_tension_df['new_line_length'] = None
+        target_pre_tension_df['end_Gy_force'] = None
         for index, row in target_pre_tension_df.iterrows():
             object_name = row['ObjectName']
             mask = current_var_df['ObjectName'] == object_name
@@ -80,24 +81,13 @@ class Mooring():
             new_line_length = line_length.copy()
             line_ea = row['line_EA']
             target_tension = row['target_tension']
-            for i, length in enumerate(line_length):
-                if length is None:
-                    other_line_length = sum(filter(None, line_length))
-                    line_length[i] = arc_length - other_line_length
+            target_pre_tension_df.at[index, 'end_Gy_force'] = (
+                current_var_df_filtered['End GY force'].values[0]
+            )
 
-            delta_length = []
-            for i, length in enumerate(line_length):
-                delta = length / line_ea[i]
-                tension_diff = effective_tension - target_tension
-                delta_length_section = delta * tension_diff
-                delta_length.append(delta_length_section)
+            self.evaluate_line_length_current(arc_length, line_length)
 
-            new_arc_length = arc_length + sum(delta_length)
-            for i, length in enumerate(new_line_length):
-                if length is None:
-                    other_length = sum(filter(None, new_line_length))
-                    length_section = new_arc_length - other_length
-                    new_line_length[i] = round(float(length_section), 4)
+            self.evaluate_line_length_next_iteration(effective_tension, arc_length, line_length, new_line_length, line_ea, target_tension)
 
             target_pre_tension_df.at[index, 'new_line_length'] = (
                 new_line_length
@@ -120,6 +110,27 @@ class Mooring():
 
         return output_dict
 
+    def evaluate_line_length_next_iteration(self, effective_tension, arc_length, line_length, new_line_length, line_ea, target_tension):
+        delta_length = []
+        for i, length in enumerate(line_length):
+            delta = length / line_ea[i]
+            tension_diff = effective_tension - target_tension
+            delta_length_section = delta * tension_diff
+            delta_length.append(delta_length_section)
+
+        new_arc_length = arc_length + sum(delta_length)
+        for i, length in enumerate(new_line_length):
+            if length is None:
+                other_length = sum(filter(None, new_line_length))
+                length_section = new_arc_length - other_length
+                new_line_length[i] = round(float(length_section), 4)
+
+    def evaluate_line_length_current(self, arc_length, line_length):
+        for i, length in enumerate(line_length):
+            if length is None:
+                other_line_length = sum(filter(None, line_length))
+                line_length[i] = arc_length - other_line_length
+
     def fender_force_analysis(self, cfg, group, file_meta_data, var_data_dict):
         output_dict = {}
         fender_force_df = self.get_target_fender_force(cfg, group)
@@ -139,6 +150,10 @@ class Mooring():
 
             fender_force_df.at[index, 'current_fender_force'] = fender_force
             fender_force_df.at[index, 'compression'] = compression_x
+
+        output_dict = {
+            'fender_force_df': fender_force_df
+        }
 
         return output_dict
 
@@ -163,71 +178,6 @@ class Mooring():
             iteration_flag = True
 
         return iteration_flag
-
-    def pre_tension_analysis(self, cfg, group, target_pretension, tension_df_file, length_df_file, yml_file):
-
-        model = OrcFxAPI.Model()
-        model.LoadData(yml_file)
-
-        pretension_analysis = []
-        for item in target_pretension:
-            pretension = item['pretension']
-            object_name = item['name']
-            ofx_object_cfg = {'ObjectName': object_name}
-            ofx_object = orcaflex_objects.get_OrcFXAPIObject(model, ofx_object_cfg)
-            if ofx_object is None:
-                raise ValueError('Invalid object name. Code not implemented yet')
-
-            current_tension = tension_df_file[object_name].values[0]
-            current_length = length_df_file[object_name].values[0]
-
-            pretension_delta = pretension - current_tension
-            pretension_delta_percent = pretension_delta / pretension * 100
-            pretension_delta_percent_abs = abs(pretension_delta_percent)
-
-            pre_tension_analysis_item = {
-                'object_name': object_name,
-                'current_tension': current_tension,
-                'current_length': current_length,
-                'pretension': pretension,
-                'pretension_delta': pretension_delta,
-                'pretension_delta_percent': pretension_delta_percent,
-                'pretension_delta_percent_abs': pretension_delta_percent_abs
-            }
-
-            pretension_analysis.append(pre_tension_analysis_item)
-
-        pretension_analysis_df = pd.DataFrame(pretension_analysis)
-        pretension_analysis_df = pretension_analysis_df.round(4)
-
-        filename_dir = fm.get_file_management_input_directory(cfg)
-        filename_stem = pathlib.Path(yml_file).stem
-        filename = os.path.join(filename_dir, filename_stem + '_pretension_analysis.csv')
-        pretension_analysis_df.to_csv(filename, index=False)
-
-        pretension_analysis_df_sorted = pretension_analysis_df.sort_values(by=['pretension_delta_percent_abs'], ascending=True)
-        stabilizing_lines_sorted = pretension_analysis_df_sorted['object_name'].to_list()
-        preferred_stabilizing_lines = group['iteration_cfg']['stabilizing_lines']['object_name']
-        no_of_preferred_stabilizing_lines = group['iteration_cfg']['stabilizing_lines']['number_of_lines']
-        stabilizing_lines = []
-        for item in stabilizing_lines_sorted:
-            if item in preferred_stabilizing_lines:
-                stabilizing_lines.append(item)
-
-        stabilizing_lines = stabilizing_lines[:no_of_preferred_stabilizing_lines]
-        max_pretension = pretension_analysis_df_sorted['pretension_delta_percent_abs'].max()
-
-        logging.info(f"For Filename: {filename}:")
-        logging.info(f"    ... Stabilizing lines: {stabilizing_lines}")
-        logging.info(f"    ... Max pretension difference %: {round(max_pretension,0)}")
-        pretension_analysis_dict = {
-            'pretension_analysis_df': pretension_analysis_df,
-            'stabilizing_lines': stabilizing_lines,
-            'filename': filename,
-            'max_pretension': max_pretension,
-        }
-
-        return pretension_analysis_dict
 
     def prepare_includefile_for_analysis(self, cfg, group, yml_file, pretension_analysis_dict):
         pretension_analysis_df = pretension_analysis_dict['pretension_analysis_df']
@@ -331,3 +281,69 @@ class Mooring():
         ]
 
         return fender_force_df
+    
+    # def pre_tension_analysis(self, cfg, group, target_pretension, tension_df_file, length_df_file, yml_file):
+
+    #     model = OrcFxAPI.Model()
+    #     model.LoadData(yml_file)
+
+    #     pretension_analysis = []
+    #     for item in target_pretension:
+    #         pretension = item['pretension']
+    #         object_name = item['name']
+    #         ofx_object_cfg = {'ObjectName': object_name}
+    #         ofx_object = orcaflex_objects.get_OrcFXAPIObject(model, ofx_object_cfg)
+    #         if ofx_object is None:
+    #             raise ValueError('Invalid object name. Code not implemented yet')
+
+    #         current_tension = tension_df_file[object_name].values[0]
+    #         current_length = length_df_file[object_name].values[0]
+
+    #         pretension_delta = pretension - current_tension
+    #         pretension_delta_percent = pretension_delta / pretension * 100
+    #         pretension_delta_percent_abs = abs(pretension_delta_percent)
+
+    #         pre_tension_analysis_item = {
+    #             'object_name': object_name,
+    #             'current_tension': current_tension,
+    #             'current_length': current_length,
+    #             'pretension': pretension,
+    #             'pretension_delta': pretension_delta,
+    #             'pretension_delta_percent': pretension_delta_percent,
+    #             'pretension_delta_percent_abs': pretension_delta_percent_abs
+    #         }
+
+    #         pretension_analysis.append(pre_tension_analysis_item)
+
+    #     pretension_analysis_df = pd.DataFrame(pretension_analysis)
+    #     pretension_analysis_df = pretension_analysis_df.round(4)
+
+    #     filename_dir = fm.get_file_management_input_directory(cfg)
+    #     filename_stem = pathlib.Path(yml_file).stem
+    #     filename = os.path.join(filename_dir, filename_stem + '_pretension_analysis.csv')
+    #     pretension_analysis_df.to_csv(filename, index=False)
+
+    #     pretension_analysis_df_sorted = pretension_analysis_df.sort_values(by=['pretension_delta_percent_abs'], ascending=True)
+    #     stabilizing_lines_sorted = pretension_analysis_df_sorted['object_name'].to_list()
+    #     preferred_stabilizing_lines = group['iteration_cfg']['stabilizing_lines']['object_name']
+    #     no_of_preferred_stabilizing_lines = group['iteration_cfg']['stabilizing_lines']['number_of_lines']
+    #     stabilizing_lines = []
+    #     for item in stabilizing_lines_sorted:
+    #         if item in preferred_stabilizing_lines:
+    #             stabilizing_lines.append(item)
+
+    #     stabilizing_lines = stabilizing_lines[:no_of_preferred_stabilizing_lines]
+    #     max_pretension = pretension_analysis_df_sorted['pretension_delta_percent_abs'].max()
+
+    #     logging.info(f"For Filename: {filename}:")
+    #     logging.info(f"    ... Stabilizing lines: {stabilizing_lines}")
+    #     logging.info(f"    ... Max pretension difference %: {round(max_pretension,0)}")
+    #     pretension_analysis_dict = {
+    #         'pretension_analysis_df': pretension_analysis_df,
+    #         'stabilizing_lines': stabilizing_lines,
+    #         'filename': filename,
+    #         'max_pretension': max_pretension,
+    #     }
+
+    #     return pretension_analysis_dict
+
