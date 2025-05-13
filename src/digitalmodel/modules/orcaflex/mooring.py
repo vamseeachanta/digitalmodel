@@ -47,59 +47,98 @@ class Mooring():
 
             current_iteration = 0
             iteration_flag = True
-            if iteration_flag:
+            while iteration_flag:
                 sim_file = file_name
                 var_data_dict = all_vars.get_var_data_by_model(cfg, sim_file)
-                force_balance_analysis_dict = self.force_balance_analysis(cfg, group, file_meta_data, var_data_dict)
+                force_balance_analysis_dict = self.mooring_pre_tension_analysis(cfg, group, file_meta_data, var_data_dict)
+                fender_force_analysis_dict = self.fender_force_analysis(cfg, group, file_meta_data, var_data_dict)
+                status_flag = ou.file_run_and_save(cfg, file_meta_data)
                 current_iteration = current_iteration + 1
                 iteration_flag = self.get_iteration_flag(cfg, group, force_balance_analysis_dict, current_iteration)
 
         return cfg
 
-    def force_balance_analysis(self, cfg, group, file_meta_data, var_data_dict):
+    def mooring_pre_tension_analysis(self, cfg, group, file_meta_data, var_data_dict):
         output_dict = {}
         target_pre_tension_df = self.get_target_pretension(cfg, group)
-        current_var_df = var_data_dict['StaticResult']['Line'][['ObjectName', 'Effective tension', 'Arc length']]
+        columns = ['ObjectName', 'Effective tension', 'Arc length']
+        current_var_df = var_data_dict['StaticResult']['Line'][columns]
 
         new_arc_length = []
         target_pre_tension_df['current_tension'] = None
         target_pre_tension_df['new_line_length'] = None
         for index, row in target_pre_tension_df.iterrows():
             object_name = row['ObjectName']
-            current_var_df_filtered = current_var_df[current_var_df['ObjectName'] == object_name]
-            effective_tension = current_var_df_filtered['Effective tension'].values[0]
+            mask = current_var_df['ObjectName'] == object_name
+            current_var_df_filtered = current_var_df[mask]
+            effective_tension = (
+                current_var_df_filtered['Effective tension'].values[0]
+            )
             arc_length = current_var_df_filtered['Arc length'].values[0]
 
             line_length = row['line_length']
             new_line_length = line_length.copy()
-            line_EA = row['line_EA']
+            line_ea = row['line_EA']
             target_tension = row['target_tension']
-            for list_i in range(len(line_length)):
-                line_length_section = line_length[list_i]
-                if line_length_section is None:
+            for i, length in enumerate(line_length):
+                if length is None:
                     other_line_length = sum(filter(None, line_length))
-                    line_length[list_i] = arc_length - other_line_length
+                    line_length[i] = arc_length - other_line_length
 
             delta_length = []
-            for list_i in range(len(line_length)):
-                delta_length_section = line_length[list_i]/line_EA[list_i]*(effective_tension - target_tension)
+            for i, length in enumerate(line_length):
+                delta = length / line_ea[i]
+                tension_diff = effective_tension - target_tension
+                delta_length_section = delta * tension_diff
                 delta_length.append(delta_length_section)
 
             new_arc_length = arc_length + sum(delta_length)
-            for list_i in range(len(new_line_length)):
-                line_length_section = new_line_length[list_i]
-                if line_length_section is None:
-                    other_line_length = sum(filter(None, new_line_length))
-                    line_length_section = new_arc_length - other_line_length
-                    new_line_length[list_i] = round(float(line_length_section), 4)
-            target_pre_tension_df.at[index, 'new_line_length'] = new_line_length
-            target_pre_tension_df.at[index, 'current_tension'] = effective_tension
+            for i, length in enumerate(new_line_length):
+                if length is None:
+                    other_length = sum(filter(None, new_line_length))
+                    length_section = new_arc_length - other_length
+                    new_line_length[i] = round(float(length_section), 4)
 
-        tension_criteria_pass_flag = self.get_tension_criteria(cfg, group, target_pre_tension_df)
+            target_pre_tension_df.at[index, 'new_line_length'] = (
+                new_line_length
+            )
+            target_pre_tension_df.at[index, 'current_tension'] = (
+                effective_tension
+            )
 
-        self.prepare_includefile_for_all_lines(cfg, file_meta_data, target_pre_tension_df)
-        status_flag = ou.file_run_and_save(cfg, file_meta_data)
-        output_dict = {'status_flag': status_flag, 'tension_criteria_pass_flag': tension_criteria_pass_flag}
+        tension_criteria_pass_flag = self.get_tension_criteria(
+            cfg, group, target_pre_tension_df
+        )
+
+        self.prepare_includefile_for_all_lines(
+            cfg, file_meta_data, target_pre_tension_df
+        )
+        output_dict = {
+            'tension_criteria_pass_flag': tension_criteria_pass_flag,
+            'target_pre_tension_df': target_pre_tension_df
+        }
+
+        return output_dict
+
+    def fender_force_analysis(self, cfg, group, file_meta_data, var_data_dict):
+        output_dict = {}
+        fender_force_df = self.get_target_fender_force(cfg, group)
+        columns = ['ObjectName', 'Displacement', 'x', 'In-frame connection GY force', 'In-frame connection Ly force']
+        current_var_df = var_data_dict['StaticResult']['Constraint'][columns]
+
+        fender_force_df['current_fender_force'] = None
+        fender_force_df['compression'] = None
+        for index, row in fender_force_df.iterrows():
+            object_name = row['ObjectName']
+            mask = current_var_df['ObjectName'] == object_name
+            current_var_df_filtered = current_var_df[mask]
+            displacement = current_var_df_filtered['Displacement'].values[0]
+            compression_x = current_var_df_filtered['x'].values[0]
+            fender_force = current_var_df_filtered['In-frame connection GY force'].values[0]
+            fender_properties = row['fender_properties']
+
+            fender_force_df.at[index, 'current_fender_force'] = fender_force
+            fender_force_df.at[index, 'compression'] = compression_x
 
         return output_dict
 
@@ -242,6 +281,7 @@ class Mooring():
         filename = 'includefile_line_defintion_' + filename_stem
         filename_path = os.path.join(filename_dir, filename)
         save_data.saveDataYaml({'Lines': includefile_dict}, filename_path, default_flow_style=False)
+        target_pre_tension_df.to_csv(filename_path, index=False)
 
     def get_tension(self, cfg, group):
         tension_cfg = group['tension']
@@ -276,3 +316,18 @@ class Mooring():
         pre_tension_df['line_EA'] =[eval(item) for item in list(pre_tension_df['line_EA'])]
         
         return pre_tension_df
+
+    def get_target_fender_force(self, cfg, group):
+        fender_force_cfg = group['target_fender_force']
+        fender_force_filename = fender_force_cfg['filename']
+
+        analysis_root_folder = cfg['Analysis']['analysis_root_folder']
+        is_file_valid, fender_force_filename = is_file_valid_func(fender_force_filename, analysis_root_folder)
+
+        fender_force_df = pd.read_csv(fender_force_filename)
+        
+        fender_force_df['fender_properties'] = [
+            eval(item) for item in list(fender_force_df['fender_properties'])
+        ]
+
+        return fender_force_df

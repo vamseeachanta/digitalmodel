@@ -35,11 +35,17 @@ orcaflex_analysis:
         iterations: 10
         tolerance: 10 #%
         type: csv
-        filename: pretension/fsts_lngc/01_qa/6dof/fsts_l095_mwl_125km3_l000_pb_pretension.csv
+        filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_pretension.csv
+      target_fender_force:
+        iterations: 10
+        resultant_force: 1102
+        tolerance: 10 #%
+        type: csv
+        filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_fender_force.csv
 
 file_management:
   flag: True
-  input_directory: pretension/fsts_lngc/01_qa/6dof
+  input_directory: pretension/fsts_lngc/01_qa/dof_none
   output_directory: NULL
 
   filename:

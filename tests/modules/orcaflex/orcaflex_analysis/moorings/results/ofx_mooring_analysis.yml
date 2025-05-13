@@ -173,7 +173,7 @@ orcaflex_analysis:
         filename: pretension/fsts_lngc/01_qa/6dof/fsts_l095_mwl_125km3_l000_pb_pretension.csv
 file_management:
   flag: true
-  input_directory: pretension/fsts_lngc/01_qa
+  input_directory: pretension/fsts_lngc/01_qa/6dof
   output_directory: ~
   filename:
     extension:
@@ -186,15 +186,17 @@ file_management:
       - includefile
       - iteration_01
   input_files:
-    yml: []
-    sim: []
+    yml:
+    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\6dof\fsts_l095_mwl_125km3_l000_pb_pretension.yml
+    sim:
+    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\6dof\fsts_l095_mwl_125km3_l000_pb_pretension.sim
 Analysis:
   basename: orcaflex
   analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings
   file_name: ofx_mooring_analysis
   file_name_for_overwrite: ofx_mooring_analysis
   log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\logs
-  start_time: 2025-05-12 17:12:42.676652
+  start_time: 2025-05-12 17:55:08.111231
   cfg_array_file_names: ~
   DefaultInputFile: ~
   CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\ofx_mooring_analysis.yml
@@ -202,5 +204,5 @@ Analysis:
   result_data_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results\Data
   result_plot_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results\Plot
   fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results
-  file_management_input_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa
+  file_management_input_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\6dof
   file_management_output_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results
