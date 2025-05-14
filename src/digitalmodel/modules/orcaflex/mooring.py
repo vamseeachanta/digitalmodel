@@ -110,7 +110,7 @@ class Mooring():
             'target_pre_tension_df': target_pre_tension_df
         }
 
-        filename_dir = fm.get_file_management_input_directory(cfg)
+        filename_dir = cfg['Analysis']['result_folder']
         yml_file = file_meta_data['yml']
         filename_stem = pathlib.Path(yml_file).stem
         filename = filename_stem + '_pretension_analysis.csv'
@@ -163,7 +163,7 @@ class Mooring():
         self.prepare_includefile_for_fender_compression(
             cfg, file_meta_data, output_dict)
 
-        filename_dir = fm.get_file_management_input_directory(cfg)
+        filename_dir = cfg['Analysis']['result_folder']
         yml_file = file_meta_data['yml']
         filename_stem = pathlib.Path(yml_file).stem
         filename = filename_stem + '_fender_force_analysis.csv'
