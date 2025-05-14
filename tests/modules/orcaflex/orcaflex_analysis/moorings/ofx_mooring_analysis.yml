@@ -42,7 +42,7 @@ orcaflex_analysis:
         tolerance: 5 #%
         type: csv
         filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_fender_force.csv
-        vessel: LNGC
+        contact_vessel: LNGC
 
 file_management:
   flag: True

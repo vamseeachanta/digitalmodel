@@ -25,3 +25,10 @@ Inputs:
   - Update mooring line lengths
   - update line properties for calculations
   - 
+
+- Update the fender properties .csv file
+  - Update the fender properties
+
+Analysis Procedure:
+- Run the static analysis solved
+- Postprocess to find the mooring and fender forces

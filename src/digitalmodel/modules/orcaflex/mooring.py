@@ -53,6 +53,7 @@ class Mooring():
             var_data_dict = all_vars.get_var_data_by_model(cfg, sim_file)
             force_balance_analysis_dict = self.mooring_pre_tension_analysis(cfg, group, file_meta_data, var_data_dict)
             fender_force_analysis_dict = self.fender_force_analysis(cfg, group, file_meta_data, var_data_dict)
+            # Run the analysis is currently manual process
             # status_flag = ou.file_run_and_save(cfg, file_meta_data)
             current_iteration = current_iteration + 1
             iteration_flag = self.get_iteration_flag(cfg, group, force_balance_analysis_dict, current_iteration)
@@ -141,6 +142,37 @@ class Mooring():
 
     def fender_force_analysis(self, cfg, group, file_meta_data, var_data_dict):
         output_dict = {}
+
+        fender_force_df = self.evaluate_compression_current(cfg, group, var_data_dict)
+
+        delta_compression = self.evaluate_compression_next_iteration(group, fender_force_df)
+        
+        vessel_df = var_data_dict['StaticResult']['Vessel'][['ObjectName', 'X', 'Y', 'Z']]
+        fender_contact_vessel = group['target_fender_force']['contact_vessel']
+        vessel_df_filetered = vessel_df[vessel_df['ObjectName']==fender_contact_vessel].copy()
+        vessel_df_filetered['Y_next_iteration'] = vessel_df_filetered['Y'] - delta_compression
+
+        output_dict = {
+            'fender_force_df': fender_force_df, 'delta_compression': delta_compression, 'vessel_df_filetered': vessel_df_filetered,
+        }
+
+        fender_criteria_pass_flag = self.get_fender_criteria(
+            cfg, group, output_dict
+        )
+        output_dict.update({'fender_criteria_pass_flag': fender_criteria_pass_flag})
+        self.prepare_includefile_for_fender_compression(
+            cfg, file_meta_data, output_dict)
+
+        filename_dir = fm.get_file_management_input_directory(cfg)
+        yml_file = file_meta_data['yml']
+        filename_stem = pathlib.Path(yml_file).stem
+        filename = filename_stem + '_fender_force_analysis.csv'
+        filename_path = os.path.join(filename_dir, filename)
+        fender_force_df.to_csv(filename_path, index=False)
+
+        return output_dict
+
+    def evaluate_compression_current(self, cfg, group, var_data_dict):
         fender_force_df = self.get_target_fender_force(cfg, group)
         columns = ['ObjectName', 'Displacement', 'x', 'In-frame connection GY force', 'In-frame connection Ly force']
         current_var_df = var_data_dict['StaticResult']['Constraint'][columns]
@@ -160,25 +192,7 @@ class Mooring():
             fender_force_df.at[index, 'compression'] = compression_x
             fender_force_df.at[index, 'displacement'] = displacement
             fender_force_df.at[index, 'fender_properties'] = fender_properties
-
-        delta_compression = self.evaluate_compression_next_iteration(group, fender_force_df)
-
-        fender_criteria_pass_flag = self.get_fender_criteria(
-            cfg, group, fender_force_df
-        )
-
-        output_dict = {
-            'fender_force_df': fender_force_df, 'delta_compression': delta_compression
-        }
-
-        filename_dir = fm.get_file_management_input_directory(cfg)
-        yml_file = file_meta_data['yml']
-        filename_stem = pathlib.Path(yml_file).stem
-        filename = filename_stem + '_fender_force_analysis.csv'
-        filename_path = os.path.join(filename_dir, filename)
-        fender_force_df.to_csv(filename_path, index=False)
-
-        return output_dict
+        return fender_force_df
 
     def evaluate_compression_next_iteration(self, group, fender_force_df):
         total_force = -fender_force_df['current_fender_force'].sum()
@@ -207,8 +221,17 @@ class Mooring():
 
         return tension_criteria_pass_flag
 
-    def get_fender_criteria(self, cfg, group, fender_force_df):
-        pass
+    def get_fender_criteria(self, cfg, group, output_dict):
+        tolerance = group['target_fender_force']['tolerance']
+        fender_force_df = output_dict['fender_force_df']
+        fender_criteria_pass_flag = True
+        total_fender_force_current = fender_force_df['current_fender_force'].sum()
+        total_fender_force_target = group['target_fender_force']['resultant_force']
+        fender_force_difference = abs(abs(total_fender_force_current) - total_fender_force_target)/total_fender_force_target*100
+        if fender_force_difference > tolerance:
+            fender_criteria_pass_flag = False
+
+        return fender_criteria_pass_flag
 
     def get_iteration_flag(self, cfg, group, force_balance_analysis_dict, current_iteration):
         iteration_flag = False
@@ -240,12 +263,32 @@ class Mooring():
         filename_dir = fm.get_file_management_input_directory(cfg)
         yml_file = file_meta_data['yml']
         filename_stem = pathlib.Path(yml_file).stem
-        filename = 'includefile_line_defintion_' + filename_stem
+        filename = 'includefile_' + filename_stem + '_mooring_line_length'
         filename_path = os.path.join(filename_dir, filename)
         save_data.saveDataYaml({'Lines': includefile_dict}, filename_path, default_flow_style=False)
 
-    def prepare_includefile_for_vessel(self, cfg, file_meta_data, fender_force_df):
-        pass
+    def prepare_includefile_for_fender_compression(self, cfg, file_meta_data, output_dict):
+        vessel_df_filtered = output_dict['vessel_df_filetered']
+        includefile_dict = {}
+        for row_idx in range(0, len(vessel_df_filtered)):
+            row = vessel_df_filtered.iloc[row_idx]
+            object_name = row['ObjectName']
+
+            array_item = []
+
+            new_vessel_y = row['Y_next_iteration']
+            new_vessel_y = round(float(new_vessel_y), 4)
+            initial_y_next_iteration = {'InitialY': new_vessel_y}
+
+            array_item = {object_name: initial_y_next_iteration}
+            includefile_dict.update(array_item)
+
+        filename_dir = fm.get_file_management_input_directory(cfg)
+        yml_file = file_meta_data['yml']
+        filename_stem = pathlib.Path(yml_file).stem
+        filename = 'includefile_' + filename_stem + '_fender_compression'
+        filename_path = os.path.join(filename_dir, filename)
+        save_data.saveDataYaml({'Vessels': includefile_dict}, filename_path, default_flow_style=False)
 
     def get_tension(self, cfg, group):
         tension_cfg = group['tension']
