@@ -64,7 +64,7 @@ class OrcaFlexPostProcess():
             opp_visualization.get_visualizations(cfg)
 
         if not post_process_data_flag and not post_process_visualization_flag:
-            logging.info("No postprocess option to run specified ... End Run.")
+            logging.info("No postprocess specified ... End Run.")
 
         return cfg
 

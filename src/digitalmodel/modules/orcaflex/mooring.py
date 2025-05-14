@@ -105,6 +105,8 @@ class Mooring():
         self.prepare_includefile_for_all_lines(
             cfg, file_meta_data, target_pre_tension_df
         )
+        
+        target_pre_tension_df = target_pre_tension_df.apply(pd.to_numeric, errors='ignore').round(4)
         output_dict = {
             'tension_criteria_pass_flag': tension_criteria_pass_flag,
             'target_pre_tension_df': target_pre_tension_df
@@ -152,6 +154,7 @@ class Mooring():
         vessel_df_filetered = vessel_df[vessel_df['ObjectName']==fender_contact_vessel].copy()
         vessel_df_filetered['Y_next_iteration'] = vessel_df_filetered['Y'] - delta_compression
 
+        fender_force_df = fender_force_df.apply(pd.to_numeric, errors='ignore').round(4)
         output_dict = {
             'fender_force_df': fender_force_df, 'delta_compression': delta_compression, 'vessel_df_filetered': vessel_df_filetered,
         }
