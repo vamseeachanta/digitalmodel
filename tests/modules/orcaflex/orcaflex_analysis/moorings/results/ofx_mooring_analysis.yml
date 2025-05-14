@@ -170,10 +170,17 @@ orcaflex_analysis:
         iterations: 10
         tolerance: 10
         type: csv
-        filename: pretension/fsts_lngc/01_qa/6dof/fsts_l095_mwl_125km3_l000_pb_pretension.csv
+        filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_pretension.csv
+      target_fender_force:
+        iterations: 10
+        resultant_force: 138.5
+        tolerance: 5
+        type: csv
+        filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_fender_force.csv
+        vessel: LNGC
 file_management:
   flag: true
-  input_directory: pretension/fsts_lngc/01_qa/6dof
+  input_directory: pretension/fsts_lngc/01_qa/dof_none
   output_directory: ~
   filename:
     extension:
@@ -187,16 +194,16 @@ file_management:
       - iteration_01
   input_files:
     yml:
-    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\6dof\fsts_l095_mwl_125km3_l000_pb_pretension.yml
+    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\dof_none\fsts_l095_mwl_125km3_l000_pb_pretension.yml
     sim:
-    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\6dof\fsts_l095_mwl_125km3_l000_pb_pretension.sim
+    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\dof_none\fsts_l095_mwl_125km3_l000_pb_pretension.sim
 Analysis:
   basename: orcaflex
   analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings
   file_name: ofx_mooring_analysis
   file_name_for_overwrite: ofx_mooring_analysis
   log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\logs
-  start_time: 2025-05-12 17:55:08.111231
+  start_time: 2025-05-13 15:25:34.781907
   cfg_array_file_names: ~
   DefaultInputFile: ~
   CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\ofx_mooring_analysis.yml
@@ -204,5 +211,5 @@ Analysis:
   result_data_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results\Data
   result_plot_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results\Plot
   fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results
-  file_management_input_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\6dof
+  file_management_input_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\dof_none
   file_management_output_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results

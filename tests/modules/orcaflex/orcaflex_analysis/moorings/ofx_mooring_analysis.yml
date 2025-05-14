@@ -38,10 +38,11 @@ orcaflex_analysis:
         filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_pretension.csv
       target_fender_force:
         iterations: 10
-        resultant_force: 1102
-        tolerance: 10 #%
+        resultant_force: 138.5 #kN
+        tolerance: 5 #%
         type: csv
         filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_fender_force.csv
+        vessel: LNGC
 
 file_management:
   flag: True

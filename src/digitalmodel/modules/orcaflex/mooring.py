@@ -1,6 +1,7 @@
 import os
 import pathlib
 import pandas as pd
+import numpy as np
 import OrcFxAPI
 import logging
 from digitalmodel.modules.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
@@ -47,14 +48,14 @@ class Mooring():
 
             current_iteration = 0
             iteration_flag = True
-            while iteration_flag:
-                sim_file = file_name
-                var_data_dict = all_vars.get_var_data_by_model(cfg, sim_file)
-                force_balance_analysis_dict = self.mooring_pre_tension_analysis(cfg, group, file_meta_data, var_data_dict)
-                fender_force_analysis_dict = self.fender_force_analysis(cfg, group, file_meta_data, var_data_dict)
-                status_flag = ou.file_run_and_save(cfg, file_meta_data)
-                current_iteration = current_iteration + 1
-                iteration_flag = self.get_iteration_flag(cfg, group, force_balance_analysis_dict, current_iteration)
+            # while iteration_flag:
+            sim_file = file_name
+            var_data_dict = all_vars.get_var_data_by_model(cfg, sim_file)
+            force_balance_analysis_dict = self.mooring_pre_tension_analysis(cfg, group, file_meta_data, var_data_dict)
+            fender_force_analysis_dict = self.fender_force_analysis(cfg, group, file_meta_data, var_data_dict)
+            # status_flag = ou.file_run_and_save(cfg, file_meta_data)
+            current_iteration = current_iteration + 1
+            iteration_flag = self.get_iteration_flag(cfg, group, force_balance_analysis_dict, current_iteration)
 
         return cfg
 
@@ -108,6 +109,13 @@ class Mooring():
             'target_pre_tension_df': target_pre_tension_df
         }
 
+        filename_dir = fm.get_file_management_input_directory(cfg)
+        yml_file = file_meta_data['yml']
+        filename_stem = pathlib.Path(yml_file).stem
+        filename = filename_stem + '_pretension_analysis.csv'
+        filename_path = os.path.join(filename_dir, filename)
+        target_pre_tension_df.to_csv(filename_path, index=False)
+
         return output_dict
 
     def evaluate_line_length_next_iteration(self, effective_tension, arc_length, line_length, new_line_length, line_ea, target_tension):
@@ -150,12 +158,42 @@ class Mooring():
 
             fender_force_df.at[index, 'current_fender_force'] = fender_force
             fender_force_df.at[index, 'compression'] = compression_x
+            fender_force_df.at[index, 'displacement'] = displacement
+            fender_force_df.at[index, 'fender_properties'] = fender_properties
+
+        delta_compression = self.evaluate_compression_next_iteration(group, fender_force_df)
+
+        fender_criteria_pass_flag = self.get_fender_criteria(
+            cfg, group, fender_force_df
+        )
 
         output_dict = {
-            'fender_force_df': fender_force_df
+            'fender_force_df': fender_force_df, 'delta_compression': delta_compression
         }
 
+        filename_dir = fm.get_file_management_input_directory(cfg)
+        yml_file = file_meta_data['yml']
+        filename_stem = pathlib.Path(yml_file).stem
+        filename = filename_stem + '_fender_force_analysis.csv'
+        filename_path = os.path.join(filename_dir, filename)
+        fender_force_df.to_csv(filename_path, index=False)
+
         return output_dict
+
+    def evaluate_compression_next_iteration(self, group, fender_force_df):
+        total_force = -fender_force_df['current_fender_force'].sum()
+        total_target_force = group['target_fender_force']['resultant_force']
+        fender_force_df['new_fender_force'] = total_target_force/total_force * fender_force_df['current_fender_force']
+        for index, row in fender_force_df.iterrows():
+            fender_properties = row['fender_properties']
+            fender_properties_df = pd.DataFrame(fender_properties, columns=['compression', 'force'])
+            new_fender_force = row['new_fender_force']
+            new_compression = np.interp(-new_fender_force, fender_properties_df['force'], fender_properties_df['compression'])
+            fender_force_df.at[index, 'new_compression'] = new_compression
+            fender_force_df.at[index, 'new_fender_force'] = new_fender_force
+            fender_force_df.at[index, 'delta_compression'] = new_compression - row['compression']
+        delta_compression = fender_force_df['compression'].iloc[3] - fender_force_df['new_compression'].iloc[3]
+        return delta_compression
 
     def get_tension_criteria(self, cfg, group, target_pre_tension_df):
         tolerance = group['target_pretension']['tolerance']
@@ -169,6 +207,9 @@ class Mooring():
 
         return tension_criteria_pass_flag
 
+    def get_fender_criteria(self, cfg, group, fender_force_df):
+        pass
+
     def get_iteration_flag(self, cfg, group, force_balance_analysis_dict, current_iteration):
         iteration_flag = False
         max_iterations = group['target_pretension']['iterations']
@@ -179,37 +220,7 @@ class Mooring():
 
         return iteration_flag
 
-    def prepare_includefile_for_analysis(self, cfg, group, yml_file, pretension_analysis_dict):
-        pretension_analysis_df = pretension_analysis_dict['pretension_analysis_df']
-        stabilizing_lines = pretension_analysis_dict['stabilizing_lines']
-
-        includefile_dict = {}
-        for row_idx in range(0, len(pretension_analysis_df)):
-            row = pretension_analysis_df.iloc[row_idx]
-            object_name = row['object_name']
-            current_length = float(row['current_length'])
-            pretension = float(row['pretension'])
-
-            stage_array_item = []
-            if object_name in stabilizing_lines:
-                stage_array_item.append(['Specified length', current_length])
-            else:
-                stage_array_item.append(['Specified tension', pretension])
-
-            stage_array_item.append(['Specified tension', pretension])
-            stage_array_item.append(['Specified payout', 0])
-
-            item = {object_name: {'StageMode, StageValue': stage_array_item}}
-            includefile_dict.update(item)
-
-        filename_dir = fm.get_file_management_input_directory(cfg)
-        filename_stem = pathlib.Path(yml_file).stem
-        filename = 'includefile_' + filename_stem
-        filename_path = os.path.join(filename_dir, filename)
-        save_data.saveDataYaml({'Lines': includefile_dict}, filename_path, default_flow_style=False)
-
     def prepare_includefile_for_all_lines(self, cfg, file_meta_data, target_pre_tension_df):
-        yml_file = file_meta_data['yml']
         includefile_dict = {}
         for row_idx in range(0, len(target_pre_tension_df)):
             row = target_pre_tension_df.iloc[row_idx]
@@ -227,11 +238,14 @@ class Mooring():
             includefile_dict.update(array_item)
 
         filename_dir = fm.get_file_management_input_directory(cfg)
+        yml_file = file_meta_data['yml']
         filename_stem = pathlib.Path(yml_file).stem
         filename = 'includefile_line_defintion_' + filename_stem
         filename_path = os.path.join(filename_dir, filename)
         save_data.saveDataYaml({'Lines': includefile_dict}, filename_path, default_flow_style=False)
-        target_pre_tension_df.to_csv(filename_path, index=False)
+
+    def prepare_includefile_for_vessel(self, cfg, file_meta_data, fender_force_df):
+        pass
 
     def get_tension(self, cfg, group):
         tension_cfg = group['tension']
@@ -250,10 +264,10 @@ class Mooring():
         analysis_root_folder = cfg['Analysis']['analysis_root_folder']
         is_file_valid, length_filename = is_file_valid_func(length_filename, analysis_root_folder)
 
-                
+
         length_df = pd.read_csv(length_filename)
         return length_df
-    
+
     def get_target_pretension(self, cfg, group):
         tension_cfg = group['target_pretension']
         tension_filename = tension_cfg['filename']
@@ -281,69 +295,4 @@ class Mooring():
         ]
 
         return fender_force_df
-    
-    # def pre_tension_analysis(self, cfg, group, target_pretension, tension_df_file, length_df_file, yml_file):
-
-    #     model = OrcFxAPI.Model()
-    #     model.LoadData(yml_file)
-
-    #     pretension_analysis = []
-    #     for item in target_pretension:
-    #         pretension = item['pretension']
-    #         object_name = item['name']
-    #         ofx_object_cfg = {'ObjectName': object_name}
-    #         ofx_object = orcaflex_objects.get_OrcFXAPIObject(model, ofx_object_cfg)
-    #         if ofx_object is None:
-    #             raise ValueError('Invalid object name. Code not implemented yet')
-
-    #         current_tension = tension_df_file[object_name].values[0]
-    #         current_length = length_df_file[object_name].values[0]
-
-    #         pretension_delta = pretension - current_tension
-    #         pretension_delta_percent = pretension_delta / pretension * 100
-    #         pretension_delta_percent_abs = abs(pretension_delta_percent)
-
-    #         pre_tension_analysis_item = {
-    #             'object_name': object_name,
-    #             'current_tension': current_tension,
-    #             'current_length': current_length,
-    #             'pretension': pretension,
-    #             'pretension_delta': pretension_delta,
-    #             'pretension_delta_percent': pretension_delta_percent,
-    #             'pretension_delta_percent_abs': pretension_delta_percent_abs
-    #         }
-
-    #         pretension_analysis.append(pre_tension_analysis_item)
-
-    #     pretension_analysis_df = pd.DataFrame(pretension_analysis)
-    #     pretension_analysis_df = pretension_analysis_df.round(4)
-
-    #     filename_dir = fm.get_file_management_input_directory(cfg)
-    #     filename_stem = pathlib.Path(yml_file).stem
-    #     filename = os.path.join(filename_dir, filename_stem + '_pretension_analysis.csv')
-    #     pretension_analysis_df.to_csv(filename, index=False)
-
-    #     pretension_analysis_df_sorted = pretension_analysis_df.sort_values(by=['pretension_delta_percent_abs'], ascending=True)
-    #     stabilizing_lines_sorted = pretension_analysis_df_sorted['object_name'].to_list()
-    #     preferred_stabilizing_lines = group['iteration_cfg']['stabilizing_lines']['object_name']
-    #     no_of_preferred_stabilizing_lines = group['iteration_cfg']['stabilizing_lines']['number_of_lines']
-    #     stabilizing_lines = []
-    #     for item in stabilizing_lines_sorted:
-    #         if item in preferred_stabilizing_lines:
-    #             stabilizing_lines.append(item)
-
-    #     stabilizing_lines = stabilizing_lines[:no_of_preferred_stabilizing_lines]
-    #     max_pretension = pretension_analysis_df_sorted['pretension_delta_percent_abs'].max()
-
-    #     logging.info(f"For Filename: {filename}:")
-    #     logging.info(f"    ... Stabilizing lines: {stabilizing_lines}")
-    #     logging.info(f"    ... Max pretension difference %: {round(max_pretension,0)}")
-    #     pretension_analysis_dict = {
-    #         'pretension_analysis_df': pretension_analysis_df,
-    #         'stabilizing_lines': stabilizing_lines,
-    #         'filename': filename,
-    #         'max_pretension': max_pretension,
-    #     }
-
-    #     return pretension_analysis_dict
 

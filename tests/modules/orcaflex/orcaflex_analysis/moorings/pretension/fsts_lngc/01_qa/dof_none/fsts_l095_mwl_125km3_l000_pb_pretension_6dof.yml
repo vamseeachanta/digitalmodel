@@ -1,0 +1,22 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.5b
+# File: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\dof_none\fsts_l095_mwl_125km3_l000_pb_pretension_6dof.yml
+# Created: 3:30 PM on 5/13/2025
+# User: vamseea
+# Machine: ACMA-ANSYS04
+---
+BaseFile: fsts_l095_mwl_125km3_l000_pb.dat
+
+General:
+  StageDuration:
+    - 1000
+    - 10
+
+
+includefile: includefile_line_defintion_fsts_l095_mwl_125km3_l000_pb_pretension.yml
+
+includefile: includefile_vessel_fsts_l095_mwl_125km3_l000_pb_fender.yml
+
+includefile: includefile_vessel_fsts_6dof.yml
+

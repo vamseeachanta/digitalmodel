@@ -9,3 +9,6 @@
 BaseFile: fsts_l095_mwl_125km3_l000_pb.dat
 
 includefile: includefile_line_defintion_fsts_l095_mwl_125km3_l000_pb_pretension.yml
+
+includefile: includefile_vessel_fsts_l095_mwl_125km3_l000_pb_fender.yml
+
