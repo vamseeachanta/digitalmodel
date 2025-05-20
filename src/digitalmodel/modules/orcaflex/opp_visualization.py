@@ -20,12 +20,7 @@ class OPPVisualization():
         model = OrcFxAPI.Model()
         combined_model = None
 
-        if cfg.file_management['files']['files_in_current_directory'][
-                'flag']:
-            orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
-
-        else:
-            orcaflex_extensions = cfg.file_management['input_files'].keys()
+        orcaflex_extensions = cfg.file_management['input_files'].keys()
 
         for file_ext in orcaflex_extensions:
             raw_input_files_for_ext = cfg.file_management['input_files'][
@@ -34,7 +29,11 @@ class OPPVisualization():
             for input_file_index in range(0, len(raw_input_files_for_ext)):
                 input_file = raw_input_files_for_ext[input_file_index]
 
-                model.LoadData(input_file)
+                try:
+                    model.LoadData(input_file)
+                except:
+                    logging.error(f"Error loading file: {input_file}")
+                    continue
 
                 if cfg['visualization_settings']['combined']:
                     print("Combined model code in library does not exist")
@@ -42,7 +41,7 @@ class OPPVisualization():
 
                 model = self.set_general_visualization_settings(model, cfg)
                 model.CalculateStatics()
-                self.save_all_views(model, input_file, cfg)
+                self.save_all_views(cfg, model, input_file)
 
             #TODO 
             # if cfg['visualization_settings']['combined']:
@@ -93,12 +92,12 @@ class OPPVisualization():
         combined_model.SaveData("combined_model.dat")
         return combined_model
 
-    def save_all_views(self, model, file_name, cfg):
+    def save_all_views(self, cfg, model, file_name):
 
         viewparams_cfg = cfg['visualization_settings']['viewparams']
         for view_label in list(viewparams_cfg.keys()):
             viewparams = self.assign_view_parameters(model, cfg, view_label)
-            self.save_image(model, file_name, viewparams, view_label)
+            self.save_image(cfg, model, file_name, viewparams, view_label)
 
     def assign_view_parameters(self, model, cfg, view_label):
 
@@ -125,10 +124,10 @@ class OPPVisualization():
 
         return viewparams
 
-    def save_image(self, model, file_name, viewparams, view_label):
-        file_location = os.path.split(file_name)[0]
+    def save_image(self, cfg, model, file_name, viewparams, view_label):
+        result_plot_folder = cfg['Analysis']['result_plot_folder']
         file_name_img = os.path.basename(file_name).split(
             ".")[0] + "_" + view_label + ".jpg"
-        file_name_with_path = os.path.join(file_location, file_name_img)
+        file_name_with_path = os.path.join(result_plot_folder, file_name_img)
         logging.info(f"Saving ...  {file_name_img}  view")
         model.SaveModelView(file_name_with_path, viewparams)
