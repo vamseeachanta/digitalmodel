@@ -56,8 +56,9 @@ class OrcaFlexPostProcess():
         if cfg['orcaflex']['postprocess']['visualization']['flag']:
             post_process_visualization_flag = True
 
+        app_basename = cfg['meta']['basename']
         if post_process_data_flag:
-            cfg.update({cfg['basename']: {}})
+            cfg.update({app_basename: {}})
             self.post_process(cfg)
 
         if post_process_visualization_flag:
