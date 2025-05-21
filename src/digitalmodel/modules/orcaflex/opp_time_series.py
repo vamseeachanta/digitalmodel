@@ -59,10 +59,16 @@ class OPPTimeSeries:
                     ts_cfg['SimulationPeriod'][1] = model_dict['stop_time']
                     logging.debug(f"SimulationPeriod[1] set to {model_dict['stop_time']}")
                 ts_label = ts_cfg['Label']
-                time_series, times = self.get_time_series_from_orcaflex_run(model_dict, ts_cfg)
-                if 'time' not in list(df.columns):
-                    df['time']  = times
-                df[ts_label] = time_series
+                try:
+                    time_series, times = self.get_time_series_from_orcaflex_run(model_dict, ts_cfg)
+                    if 'time' not in list(df.columns):
+                        df['time']  = times
+                    df[ts_label] = time_series
+                except:
+                    logging.error(f"Error getting time series data for {ts_label} in group {group_label}")
+                    df['time']  = []
+                    df[ts_label] = []
+                    continue
             # Save by filename
             file_name_stem = Path(file_name).stem
             output_file_name = os.path.join(cfg["Analysis"]['result_folder'], file_name_stem + '_' + group_label + '.csv')
