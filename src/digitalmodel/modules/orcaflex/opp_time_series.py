@@ -80,11 +80,12 @@ class OPPTimeSeries:
             df.round(csv_decimal).to_csv(output_file_name, index=False)
             time_series_cfg_output["groups"].append({"label": group_label, "data": output_file_name})
 
+        basename = cfg['meta']['basename']
         cfg_output = {'time_series': time_series_cfg_output, 'file_name': file_name}
-        if 'time_series' not in cfg[cfg['basename']]:
-            cfg[cfg['basename']]['time_series'] = []
+        if 'time_series' not in cfg[basename]:
+            cfg[basename]['time_series'] = []
         else:
-            cfg[cfg['basename']]['time_series'].append(cfg_output)
+            cfg[basename]['time_series'].append(cfg_output)
 
 
 
