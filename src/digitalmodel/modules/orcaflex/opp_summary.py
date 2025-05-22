@@ -35,7 +35,7 @@ class OPPSummary():
             df_columns = ['fe_filename', 'fe_filename_stem', 'run_status', 'start_time', 'stop_time', 'description', 'statistic']
             run_status = model_dict['run_status']
             start_time = model_dict['start_time']
-            stop_time = model_dict['stop_time']
+            stop_time = model_dict['current_time']
             file_name_for_output = str(Path(file_name).resolve()).replace('\\', '/')
             file_name_stem = Path(file_name).stem
 
