@@ -1,4 +1,5 @@
 # Standard library imports
+import logging
 import copy
 import math
 import os
@@ -118,7 +119,7 @@ class OPPSummary():
                                                         output, Statistic_Type)
             else:
                 output_value = None
-        elif cfg_item['Command'] in ['Static Result', 'StaticResult']:
+        elif cfg_item['Command'] in ['Static Result', 'StaticResult'] or cfg_item['SimulationPeriod'] == 'StaticState':
             output_value = self.get_StaticResult(OrcFXAPIObject, VariableName,
                                                  objectExtra)
         elif cfg_item['Command'] in ['GetData', 'Get Data']:
@@ -180,7 +181,11 @@ class OPPSummary():
         return output_value
 
     def get_StaticResult(self, OrcFXAPIObject, VariableName, objectExtra=None):
-        output = OrcFXAPIObject.StaticResult(VariableName, objectExtra)
+        try:
+            output = OrcFXAPIObject.StaticResult(VariableName, objectExtra)
+        except:
+            logging.debug(f"StaticResult failed for {VariableName} with objectExtra {objectExtra}")
+            output = None
 
         return output
 
