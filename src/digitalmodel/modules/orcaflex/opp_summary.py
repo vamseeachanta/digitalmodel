@@ -119,7 +119,7 @@ class OPPSummary():
                                                         output, Statistic_Type)
             else:
                 output_value = None
-        elif cfg_item['Command'] in ['Static Result', 'StaticResult'] or cfg_item['SimulationPeriod'] == 'StaticState':
+        elif cfg_item['Command'] in ['Static Result', 'StaticResult']:
             output_value = self.get_StaticResult(OrcFXAPIObject, VariableName,
                                                  objectExtra)
         elif cfg_item['Command'] in ['GetData', 'Get Data']:
