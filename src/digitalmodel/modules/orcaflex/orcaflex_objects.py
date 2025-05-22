@@ -103,21 +103,31 @@ class OrcaFlexObjects():
 
     def get_SimulationPeriod(self, cfg, model_dict):
         start_time = model_dict['start_time']
-        stop_time = model_dict['stop_time']
+        termination_time = model_dict['current_time']
 
         TimePeriod = None
         if 'SimulationPeriod' in cfg:
             SimulationPeriod = cfg['SimulationPeriod']
 
-            if len(SimulationPeriod) == 2:
-                if SimulationPeriod[0] is not None:
-                    start_time = SimulationPeriod[0]
-                if SimulationPeriod[1] is not None:
-                    stop_time = SimulationPeriod[1]
+            if type(SimulationPeriod) is str:
+                if SimulationPeriod == 'StaticState':
+                    TimePeriod = OrcFxAPI.PeriodNum.StaticState
+                elif SimulationPeriod == 'WholeSimulation':
+                    TimePeriod = OrcFxAPI.PeriodNum.WholeSimulation
+                elif SimulationPeriod == 'LatestWave':
+                    TimePeriod = OrcFxAPI.PeriodNum.LatestWave
+                else:
+                    raise ValueError("Could not specify time period for simulation")
+            elif type(SimulationPeriod) is list:
+                if len(SimulationPeriod) == 2:
+                    if SimulationPeriod[0] is not None:
+                        start_time = SimulationPeriod[0]
+                    if SimulationPeriod[1] is not None:
+                        termination_time = SimulationPeriod[1]
 
-                TimePeriod = self.get_TimePeriodObject([start_time, stop_time])
-            elif len(SimulationPeriod) == 1:
-                TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
+                    TimePeriod = self.get_TimePeriodObject([start_time, termination_time])
+                elif len(SimulationPeriod) == 1:
+                    TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
 
         return TimePeriod
 

@@ -432,6 +432,7 @@ class OrcaflexUtilities:
                 run_status = model.state.__dict__['_name_']
                 start_time = model.simulationStartTime
                 stop_time = model.simulationStopTime
+                current_time = model.simulationTimeStatus.CurrentTime
 
             except Exception as e:
                 model = None
@@ -439,7 +440,7 @@ class OrcaflexUtilities:
                     f"Model: {SimulationFileName} ... Error Loading File")
                 logging.info(str(e))
 
-        model_dict = {'model': model, 'run_status': run_status, 'stop_time': stop_time, 'start_time': start_time}
+        model_dict = {'model': model, 'run_status': run_status, 'stop_time': stop_time, 'start_time': start_time, 'current_time': current_time}
 
         return model_dict
 
