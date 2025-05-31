@@ -96,6 +96,8 @@ class OrcaFlexPostProcess():
             run_status = model_dict['run_status']
             start_time = model_dict['start_time']
             stop_time = model_dict['stop_time']
+            current_time = model_dict['current_time']
+            simulation_complete = model_dict['simulation_complete']
             with PandasChainedAssignent():
                 load_matrix.loc[(
                     load_matrix['fe_filename'] == file_name),

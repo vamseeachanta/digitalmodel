@@ -429,6 +429,7 @@ class OrcaflexUtilities:
         if os.path.isfile(SimulationFileName):
             try:
                 model = self.loadSimulation(SimulationFileName)
+                simulation_complete = model.simulationComplete
                 run_status = model.state.__dict__['_name_']
                 start_time = model.simulationStartTime
                 stop_time = model.simulationStopTime
@@ -440,7 +441,7 @@ class OrcaflexUtilities:
                     f"Model: {SimulationFileName} ... Error Loading File")
                 logging.info(str(e))
 
-        model_dict = {'model': model, 'run_status': run_status, 'stop_time': stop_time, 'start_time': start_time, 'current_time': current_time}
+        model_dict = {'model': model, 'simulation_complete': simulation_complete, 'run_status': run_status, 'stop_time': stop_time, 'start_time': start_time, 'current_time': current_time}
 
         return model_dict
 
