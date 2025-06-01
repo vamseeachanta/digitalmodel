@@ -14,8 +14,6 @@ Should be turned off
 
 ## Conclusions
 
-https://www.perplexity.ai/search/summarize-both-files-for-speed-2QZspwK1SJ6r2S4_E8nnmw#0
-
 Summary of Speed Test Results
 Below is a concise summary comparing the speed and scaling performance from both log files, focusing on simulation run times and parallel scaling.
 

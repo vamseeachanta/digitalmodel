@@ -1,3 +1,5 @@
+REM OrcaFlex 
+
 For 12 cores:
 <code>
 reg add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Orcina\OrcaFlex /v DefaultThreadCount /t REG_DWORD /d 12 /f
@@ -11,3 +13,8 @@ reg add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Orcina\OrcaFlex /v DefaultThread
 or in UI:
 [HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Orcina\OrcaFlex]
 "DefaultThreadCount"=dword:0000000c
+
+
+REM OrcaWave
+
+reg add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Orcina\OrcaWave /v DefaultThreadCount /t REG_DWORD /d 60 /f
