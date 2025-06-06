@@ -47,7 +47,3 @@ def run_orcaflex():
 if __name__ == "__main__":
     run_orcaflex()
 ```
-## Package as a Youtube video and course
-
-https://pythonforstructuralengineers.com/
-

@@ -10,12 +10,8 @@
 https://moorpy.readthedocs.io/en/latest/
 
 <code>
-write catenary class function using moorpy library. Inputs are 2 end coordinates,  catenary length, weight per unit length, bending stiffness
-
+write simple python code to calculate catenary shape using moorpy library
 </code>
-
-
-### GPT-4o engine
 
 <code>
 solve catenary equation using:
@@ -27,6 +23,7 @@ share existing python libraries.
 arrange libraries in decending order of usage
 </code>
 
+### GPT-4o engine
 
 Below are Python libraries and code references for solving the catenary equation using the length of the catenary, two endpoints, and the end angle at these points. The libraries are arranged in descending order of their usage and popularity.
 

@@ -24,7 +24,7 @@ class AqwaPostProcess:
                 aqr.router(cfg)
 
         else:
-            logging.info("No option specified ... End Run.")
+            logging.info("No option to run specified ... End Run.")
 
         return cfg
 

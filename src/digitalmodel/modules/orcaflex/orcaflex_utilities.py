@@ -1,4 +1,3 @@
-import OrcFxAPI
 # Standard library imports
 import glob
 import logging
@@ -62,19 +61,6 @@ class OrcaflexUtilities:
     def save_sim_file(self, model, model_file_name):
         sim_filename = os.path.splitext(model_file_name)[0] + '.sim'
         model.SaveSimulation(sim_filename)
-
-    def file_run_and_save(self, model, file_meta_data):
-        yml_file = file_meta_data['yml']
-        sim_file = file_meta_data['sim']
-        model = OrcFxAPI.Model()
-        model.LoadData(yml_file)
-
-        model.RunSimulation()
-
-        model.SaveSimulation(sim_file)
-
-        status_flag = True
-        return status_flag
 
     def update_model(self, cfg=None):
         if cfg is None or cfg['model_file'] is None:
@@ -192,6 +178,29 @@ class OrcaflexUtilities:
         cfg.file_management.update({'input_files': input_files})
 
         return cfg
+
+    # def get_file_management_input_directory(self, cfg):
+
+    #     file_management_input_directory = cfg.file_management["input_directory"]
+    #     if file_management_input_directory is None:
+    #         file_management_input_directory = cfg.Analysis["analysis_root_folder"]
+
+    #     analysis_root_folder = cfg["Analysis"]["analysis_root_folder"]
+    #     dir_is_valid, file_management_input_directory = is_dir_valid_func(
+    #         file_management_input_directory, analysis_root_folder
+    #     )
+
+    #     if not dir_is_valid:
+    #         raise ValueError(
+    #             f"Directory {file_management_input_directory} is not valid"
+    #         )
+    #     else:
+    #         file_management_input_directory = pathlib.Path(
+    #             file_management_input_directory
+    #         )
+
+    #     return file_management_input_directory
+
 
     def sim_file_analysis_and_update(self, cfg):
         sim_files = cfg.file_management['input_files']['*.sim']
@@ -330,6 +339,8 @@ class OrcaflexUtilities:
                                     yml_file_name = wave_file_name + current_file_name
                                     self.get_full_yaml_file_and_save(input_set, wave_yaml_file, current_yaml_file, yml_file_name, cfg)
 
+
+
     def get_full_yaml_file_and_save(self, input_set, wave_yaml_file, current_yaml_file, yml_file_name, cfg):
         if 'includefile' in input_set:
             full_yml_file = {'includefile': input_set['includefile']}
@@ -429,11 +440,9 @@ class OrcaflexUtilities:
         if os.path.isfile(SimulationFileName):
             try:
                 model = self.loadSimulation(SimulationFileName)
-                simulation_complete = model.simulationComplete
                 run_status = model.state.__dict__['_name_']
                 start_time = model.simulationStartTime
                 stop_time = model.simulationStopTime
-                current_time = model.simulationTimeStatus.CurrentTime
 
             except Exception as e:
                 model = None
@@ -441,7 +450,7 @@ class OrcaflexUtilities:
                     f"Model: {SimulationFileName} ... Error Loading File")
                 logging.info(str(e))
 
-        model_dict = {'model': model, 'simulation_complete': simulation_complete, 'run_status': run_status, 'stop_time': stop_time, 'start_time': start_time, 'current_time': current_time}
+        model_dict = {'model': model, 'run_status': run_status, 'stop_time': stop_time, 'start_time': start_time}
 
         return model_dict
 
@@ -457,12 +466,15 @@ class OrcaflexUtilities:
         #     '.' + filename_components[-1], "")
 
         filename_without_extension = Path(os.path.splitext(filename)[0]).resolve()
-
+        
         return filename_without_extension
+
 
     def loadSimulation(self, FileName):
         model = OrcFxAPI.Model(FileName)
         return model
+
+
 
     def get_seastate_probability(self, file_index):
         #TODO CLean up, unused
@@ -490,6 +502,8 @@ class OrcaflexUtilities:
                     FileSummary_DF[AddSummaryColumnsArray].values[0])
 
         return AddSummary_array
+
+
 
     def save_cfg_files_from_multiple_files(self):
         #TODO CLean up, unused
@@ -524,6 +538,7 @@ class OrcaflexUtilities:
                 analysis_type.append('statics')
         else:
             print('File not found: {0}'.format(filename))
+
 
     def save_RAOs(self):
         #TODO CLean up, unused

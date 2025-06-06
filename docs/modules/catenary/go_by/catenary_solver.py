@@ -1,6 +1,3 @@
-## #TODO Resolve length. Cannot understand function to resolve 2025-05-03
-
-import os
 import numpy as np
 from scipy.optimize import minimize
 from scipy.integrate import quad
@@ -138,5 +135,4 @@ if __name__ == "__main__":
     plt.title('Catenary Curve Solution')
     plt.xlabel('x')
     plt.ylabel('y')
-    filename = os.path.basename(__file__) + '.png'
-    plt.savefig(filename)
+    plt.savefig('catenary_curve.png')

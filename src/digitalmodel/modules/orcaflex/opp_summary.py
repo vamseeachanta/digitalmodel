@@ -1,5 +1,4 @@
 # Standard library imports
-import logging
 import copy
 import math
 import os
@@ -35,7 +34,7 @@ class OPPSummary():
             df_columns = ['fe_filename', 'fe_filename_stem', 'run_status', 'start_time', 'stop_time', 'description', 'statistic']
             run_status = model_dict['run_status']
             start_time = model_dict['start_time']
-            stop_time = model_dict['current_time']
+            stop_time = model_dict['stop_time']
             file_name_for_output = str(Path(file_name).resolve()).replace('\\', '/')
             file_name_stem = Path(file_name).stem
 
@@ -181,11 +180,7 @@ class OPPSummary():
         return output_value
 
     def get_StaticResult(self, OrcFXAPIObject, VariableName, objectExtra=None):
-        try:
-            output = OrcFXAPIObject.StaticResult(VariableName, objectExtra)
-        except:
-            logging.debug(f"StaticResult failed for {VariableName} with objectExtra {objectExtra}")
-            output = None
+        output = OrcFXAPIObject.StaticResult(VariableName, objectExtra)
 
         return output
 

@@ -31,27 +31,66 @@ orcaflex_analysis:
   mooring:
     groups:
     - label: development
+      calculation: pretension
+      tension:
+        type: csv
+        filename: pretension/postproc/results/dm_fsts_lngc_pretension_lngc_moorings_dynamic_eff_tension_max.csv
+
+      length:
+        type: csv
+        filename: pretension/postproc/results/dm_fsts_lngc_pretension_lngc_moorings_dynamic_length_max.csv
+
+      iteration_cfg:
+        calculation: pretension
+        tolerance_percent: 10
+        stabilizing_lines:
+          object_name: [Line07, Line08, Line09, Line10, Line11, Line12]
+          number_of_lines: 3
+
+
       target_pretension:
-        iterations: 10
-        tolerance: 10 #%
-        type: csv
-        filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_pretension.csv
-      target_fender_force:
-        iterations: 10
-        resultant_force: 138.5 #kN
-        tolerance: 5 #%
-        type: csv
-        filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_fender_force.csv
-        contact_vessel: LNGC
+        - name: Line01
+          pretension: 20
+        - name: Line02
+          pretension: 20
+        - name: Line03
+          pretension: 20
+        - name: Line04
+          pretension: 10
+        - name: Line05
+          pretension: 10
+        - name: Line06
+          pretension: 10
+        - name: Line07
+          pretension: 25
+        - name: Line08
+          pretension: 25
+        - name: Line09
+          pretension: 35
+        - name: Line10
+          pretension: 35
+        - name: Line11
+          pretension: 35
+        - name: Line12
+          pretension: 10
+        - name: Line13
+          pretension: 10
+        - name: Line14
+          pretension: 10
+        - name: Line15
+          pretension: 15
+        - name: Line16
+          pretension: 15
+
 
 file_management:
   flag: True
-  input_directory: pretension/fsts_lngc/01_qa/dof_none
+  input_directory: pretension/fsts_lngc/01_qa
   output_directory: NULL
 
   filename:
-    extension: [yml, sim]
-    pattern: fsts_l095_mwl_125km3_l000_pb_pretension
+    extension: [yml]
+    pattern: fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl
     filters:
       contains: []
       not_contains: [includefile, iteration_01]

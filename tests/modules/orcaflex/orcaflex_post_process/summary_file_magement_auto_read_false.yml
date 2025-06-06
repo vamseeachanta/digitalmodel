@@ -1,0 +1,405 @@
+basename: orcaflex_post_process
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  postprocess:
+    visualization: 
+      flag: False
+    summary:
+      flag: True
+    RangeGraph:
+      flag: False
+    time_series:
+      flag: False
+    RAOs:
+      flag: False
+    cummulative_histograms:
+      flag: False
+    rain_flow:
+      bins: 10
+      range:
+        - 0
+        - 10
+
+summary_settings:
+  AddMinimumToSummary: True
+  AddMaximumToSummary: True
+  AddMeanToSummary: True
+
+  groups:
+  -
+    SummaryFileName: Table_Top
+    Columns:
+      -
+        Command: GetData
+        ObjectName: Environment
+        AdditionalData: NULL
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: WaterDepth
+        Label: WaterDepth
+      -
+        Command: GetData
+        ObjectName: Environment
+        AdditionalData: NULL
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: WavePeriod
+        Label: WavePeriod
+      -
+        Command: GetData
+        ObjectName: Environment
+        AdditionalData: NULL
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: WaveHeight
+        Label: WaveHeight
+      -
+        Command: GetData
+        ObjectName: Environment
+        AdditionalData: NULL
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: WaveDirection
+        Label: WaveDirection
+      -
+        Command: GetData
+        ObjectName: Environment
+        AdditionalData: NULL
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: RefCurrentSpeed
+        Label: RefCurrentSpeed
+      -
+        Command: GetData
+        ObjectName: Environment
+        AdditionalData: NULL
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: CurrentDirection
+        Label: CurrentDirection
+
+      -
+        Command: GetData
+        ObjectName: SevenArctic
+        AdditionalData: NULL
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: InitialX
+        Label: SevenArctic_InitialX
+      -
+        Command: GetData
+        ObjectName: SevenArctic
+        AdditionalData: NULL
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: InitialHeading
+        Label: SevenArctic_InitialHeading
+
+      -
+        Command: Range Graph
+        ObjectName: Umbilical
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: EndA
+        Variable: Effective Tension
+        Label: Umbilical_Eff._Tension_EndA_max
+      -
+        Command: Range Graph
+        ObjectName: Umbilical
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: EndA
+        Variable: Declination
+        Label: Umbilical_Declination_max
+      -
+        Command: Range Graph
+        ObjectName: Umbilical
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: EndA
+        Variable: Ezy-Angle
+        Label: Umbilical_Ezy-Angle_max
+      -
+        Command: Range Graph
+        ObjectName: Umbilical
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: EndA
+        Variable: Ezx-Angle
+        Label: Umbilical_Ezx-Angle_max
+      -
+        Command: Range Graph
+        ObjectName: rigging_cw
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: EndA
+        Variable: Effective Tension
+        Label: rigging_cw_Eff._Tension_Max
+
+      -
+        Command: TimeHistory
+        ObjectName: UTA
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: Z
+        Label: UTA_Z_Max
+      -
+        Command: TimeHistory
+        ObjectName: UTA
+        AdditionalData:
+          - Min
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: Z
+        Label: UTA_Z_Max
+      -
+        Command: TimeHistory
+        ObjectName: UTA
+        AdditionalData:
+          - Min
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: GZ-Velocity
+        Label: UTA_GZ-Velocity_Max
+      -
+        Command: TimeHistory
+        ObjectName: UTA
+        AdditionalData:
+          - Min
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: GZ-Acceleration
+        Label: UTA_GZ-Acceleration_Max
+
+      -
+        Command: Range Graph
+        ObjectName: Umbilical
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: EndB
+        Variable: Effective Tension
+        Label: Umbilical_Eff._Tension_EndB_max
+
+      -
+        Command: Range Graph
+        ObjectName: Stiffener1
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: Bend Moment
+        Label: Stiffener1_Bend_Moment_max
+      -
+        Command: Range Graph
+        ObjectName: Stiffener1
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: Shear Force
+        Label: Stiffener1_Shear_Force_max
+      -
+        Command: Range Graph
+        ObjectName: Stiffener1
+        AdditionalData:
+          - Min
+        SimulationPeriod: 1
+        ArcLength: NULL
+        Variable: Bend Radius
+        Label: Stiffener1_Bend Radius_min
+
+      -
+        Command: Range Graph
+        ObjectName: Umbilical
+        AdditionalData:
+          - Min
+        SimulationPeriod: 1
+        ArcLength: [9, 929.6]
+        Variable: Bend Radius
+        Label: Umbilical_Bend Radius_length_min
+      -
+        Command: Range Graph
+        ObjectName: Umbilical
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: [9, 929.6]
+        Variable: Effective Tension
+        Label: Umbilical_Effective Tension_length_max
+      -
+        Command: Range Graph
+        ObjectName: Umbilical
+        AdditionalData:
+          - Min
+        SimulationPeriod: 1
+        ArcLength: [9, 929.6]
+        Variable: Effective Tension
+        Label: Umbilical_Effective Tension_length_min
+      -
+        Command: Range Graph
+        ObjectName: Umbilical
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: Touchdown
+        Variable: Effective Tension
+        Label: Umbilical_Effective Tension_tdz_max
+      -
+        Command: Range Graph
+        ObjectName: Umbilical
+        AdditionalData:
+          - Min
+        SimulationPeriod: 1
+        ArcLength: EndA
+        Variable: Ezy-Angle
+        Label: Umbilical_Ezy-Angle_length_min
+      -
+        Command: Range Graph
+        ObjectName: Umbilical
+        AdditionalData:
+          - Min
+        SimulationPeriod: 1
+        ArcLength: EndA
+        Variable: Ezx-Angle
+        Label: Umbilical_Ezx-Angle_length_min
+      -
+        Command: Range Graph
+        ObjectName: Umbilical
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: [936, 936.6]
+        Variable: Bend Moment
+        Label: Umbilical_Bend Moment_length_min
+      -
+        Command: Range Graph
+        ObjectName: Umbilical
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: [936, 936.6]
+        Variable: Shear Force
+        Label: Umbilical_Shear Force_length_min
+
+      -
+        Command: Range Graph
+        ObjectName: rigging_buoyancy1
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: EndA
+        Variable: Effective Tension
+        Label: Umbilical_Effective Tension_length_max
+
+      -
+        Command: Range Graph
+        ObjectName: rigging_cw
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: EndB
+        Variable: Effective Tension
+        Label: rigging_cw_Eff._Tension_max
+      -
+        Command: Range Graph
+        ObjectName: rigging_cw
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: EndB
+        Variable: Node Declination
+        Label: rigging_cw_Node_Declination_Max
+      -
+        Command: Range Graph
+        ObjectName: rigging_cw
+        AdditionalData:
+          - Min
+        SimulationPeriod: 1
+        ArcLength: EndB
+        Variable: Node Declination
+        Label: rigging_cw_Node_Declination_Min
+      -
+        Command: TimeHistory
+        ObjectName: rigging_cw
+        AdditionalData:
+          - Min
+        SimulationPeriod: 1
+        ArcLength: EndB
+        Variable: End GX force
+        Label: rigging_cw_GX_Min
+      -
+        Command: TimeHistory
+        ObjectName: rigging_cw
+        AdditionalData:
+          - Min
+        SimulationPeriod: 1
+        ArcLength: EndB
+        Variable: End GY force
+        Label: rigging_cw_GY_Min
+      -
+        Command: TimeHistory
+        ObjectName: rigging_cw
+        AdditionalData:
+          - Min
+        SimulationPeriod: 1
+        ArcLength: EndB
+        Variable: End GZ force
+        Label: rigging_cw_GZ_Min
+      -
+        Command: TimeHistory
+        ObjectName: rigging_cw
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: EndB
+        Variable: End GX force
+        Label: rigging_cw_GX_Max
+      -
+        Command: TimeHistory
+        ObjectName: rigging_cw
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: EndB
+        Variable: End GY force
+        Label: rigging_cw_GY_Max
+      -
+        Command: TimeHistory
+        ObjectName: rigging_cw
+        AdditionalData:
+          - Max
+        SimulationPeriod: 1
+        ArcLength: EndB
+        Variable: End GZ force
+        Label: rigging_cw_GZ_Max
+
+
+
+file_management:
+  flag: True
+  update_unfinished: 
+    flag: False
+
+  files:
+    files_in_current_directory: 
+      flag: True
+      auto_read: False
+      directory: NULL
+  input_files:
+    sim: 
+      - 1Step6-925m-80H1.00P7C180.sim
+      - 2Step6-925m-80H1.50P7C180.sim

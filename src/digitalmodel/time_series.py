@@ -3,11 +3,11 @@ def set_up_application():
     import logging
     import os
 
-    from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
+    from common.ApplicationManager import configureApplicationInputs
     from common.set_logging import set_logging
 
     basename = os.path.basename(__file__).split('.')[0]
-    application_manager = ConfigureApplicationInputs(basename)
+    application_manager = configureApplicationInputs(basename)
     application_manager.configure()
 
     # Set logging
