@@ -8,9 +8,10 @@ To run dynamic analysis
   - The fender should be set to the correct compression
   - The mooring lines should be set to the correct pretension
 - The wind and current should be ramped from zero
-- The analysis should be converged using vessel 6 DOF.
-  - If absolutely necessary, 3 DOF or none can be used
-
+- The analysis does not converge using vessel 6 DOF in static. The vessel may end up in a very wrong direction.
+  - If necessary, use 3 DOF or none in static analysis to force the correct static position of the vessel at the start of the simulation.
+  - Alternatively, also utilize the 6 DOF from static no load and use it for the main analysis. However, this will involve a bit of effort
+  - So, an initial settling period of 1000 s is used to ensure the vessel mooring tensions are achieved before main dynamics are underway. This initial period is ignored  for postprocessing of the results.
 
 # Static Analysis
 
