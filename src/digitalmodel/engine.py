@@ -1,8 +1,5 @@
-import os
-import sys
-from loguru import logger
+import logging
 
-from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import CopyAndPasteFiles
@@ -71,7 +68,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     else:
         cfg_base = cfg
 
-    logger.info(f"{basename}, application ... START")
+    logging.info(f"{basename}, application ... START")
 
     if "catenary" in basename:
         from digitalmodel.modules.catenary.catenary import Catenary
@@ -160,7 +157,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
-    logger.info(f"{basename}, application ... END")
+    logging.info(f"{basename}, application ... END")
     app_manager.save_cfg(cfg_base=cfg_base)
 
     return cfg_base

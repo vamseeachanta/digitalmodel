@@ -30,6 +30,7 @@ class OrcaFlexPostProcess():
     def __init__(self, cfg=None):
         pass
 
+
     def post_process_router(self, cfg):
 
         orcaflex_license_flag = ou.is_orcaflex_available()
@@ -55,15 +56,16 @@ class OrcaFlexPostProcess():
         if cfg['orcaflex']['postprocess']['visualization']['flag']:
             post_process_visualization_flag = True
 
+        app_basename = cfg['meta']['basename']
         if post_process_data_flag:
-            cfg.update({cfg['basename']: {}})
+            cfg.update({app_basename: {}})
             self.post_process(cfg)
 
         if post_process_visualization_flag:
             opp_visualization.get_visualizations(cfg)
 
         if not post_process_data_flag and not post_process_visualization_flag:
-            logging.info("No postprocess option to run specified ... End Run.")
+            logging.info("No postprocess specified ... End Run.")
 
         return cfg
 
@@ -94,6 +96,8 @@ class OrcaFlexPostProcess():
             run_status = model_dict['run_status']
             start_time = model_dict['start_time']
             stop_time = model_dict['stop_time']
+            current_time = model_dict['current_time']
+            simulation_complete = model_dict['simulation_complete']
             with PandasChainedAssignent():
                 load_matrix.loc[(
                     load_matrix['fe_filename'] == file_name),
