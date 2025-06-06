@@ -20,6 +20,11 @@ orcaflex:
       flag: False
     summary:
       flag: True
+      statistics:
+        Minimum: True
+        Maximum: True
+        Mean: True
+        StdDev: True
     RangeGraph:
       flag: False
     time_series:

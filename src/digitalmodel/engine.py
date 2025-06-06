@@ -1,16 +1,15 @@
 import os
 import sys
-import logging
+from loguru import logger
 
-from assetutilities.common.data import SaveData
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import CopyAndPasteFiles
 from assetutilities.common.file_management import FileManagement
+from assetutilities.common.yml_utilities import WorkingWithYAML
 # Reader imports
 from digitalmodel.aqwa import Aqwa
-from digitalmodel.catenary_riser import catenary_riser
 from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.common.cathodic_protection import CathodicProtection
 from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
@@ -23,13 +22,13 @@ from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
-from digitalmodel.modules.orcaflex.orcaflex_analysis import orcaflex_analysis
+from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
+
 from digitalmodel.modules.orcaflex.orcaflex_file_management import (
     OrcaflexFileManagement,
 )
 from digitalmodel.modules.orcaflex.orcaflex_installation import OrcInstallation
 from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
-from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
 from digitalmodel.modules.orcaflex.umbilical_analysis_components import (
     UmbilicalAnalysis,
 )
@@ -41,58 +40,48 @@ from digitalmodel.modules.transformation.transformation import Transformation
 from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.modules.vertical_riser import vertical_riser
 from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
+from digitalmodel.modules.mooring.mooring import Mooring
 
 library_name = "digitalmodel"
-save_data = SaveData()
+wwyaml = WorkingWithYAML()
+
+app_manager = ConfigureApplicationInputs()
 
 def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
-    fm = FileManagement()
+    cfg_argv_dict = {}
     if cfg is None:
-        inputfile = validate_arguments_run_methods(inputfile)
-        cfg = ymlInput(inputfile, updateYml=None)
-        cfg = AttributeDict(cfg)
-        if cfg is None:
-            raise ValueError("cfg is None")
-def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
-    if cfg is None:
-        inputfile = validate_arguments_run_methods(inputfile)
-        cfg = ymlInput(inputfile, updateYml=None)
+        inputfile, cfg_argv_dict = app_manager.validate_arguments_run_methods(inputfile)
+        cfg = wwyaml.ymlInput(inputfile, updateYml=None)
         cfg = AttributeDict(cfg)
         if cfg is None:
             raise ValueError("cfg is None")
 
-    basename = cfg["basename"]
-    application_manager = ConfigureApplicationInputs(basename)
-    
-    logging.debug("cfg before configuring: %s", cfg)
-    
-    application_manager.configure(cfg, library_name)
+    if 'basename' in cfg:
+        basename = cfg["basename"]
+    elif 'meta' in cfg:
+        basename = cfg["meta"]["basename"]
+    else:
+        raise ValueError("basename not found in cfg")
 
     if config_flag:
         fm = FileManagement()
-        cfg_base = application_manager.cfg
+        cfg_base = app_manager.configure(cfg, library_name, basename, cfg_argv_dict)
         cfg_base = fm.router(cfg_base)
+        result_folder_dict, cfg_base = app_manager.configure_result_folder(None, cfg_base)
     else:
         cfg_base = cfg
 
-    if config_flag:
-        fm = FileManagement()
-        cfg_base = application_manager.cfg
-        cfg_base = fm.router(cfg_base)
-    else:
-        cfg_base = cfg
+    logger.info(f"{basename}, application ... START")
 
-    logging.info(f"{basename}, application ... START")
-
-    if basename in ["simple_catenary_riser", "catenary_riser"]:
-        cfg_base = catenary_riser(cfg_base)
+    if "catenary" in basename:
+        from digitalmodel.modules.catenary.catenary import Catenary
+        catenary = Catenary()
+        cfg_base = catenary.router(cfg_base)
     elif basename == "vertical_riser":
         cfg_base = vertical_riser(cfg_base)
-    elif basename in ["orcaflex_analysis", "orcaflex_post_process"]:
-        if "file_management" in cfg_base and cfg["file_management"]["flag"]:
-            ou = OrcaflexUtilities()
-            cfg_base = ou.file_management(cfg_base)
-        cfg_base = orcaflex_analysis(cfg_base)
+    elif basename in ["orcaflex", "orcaflex_analysis", "orcaflex_post_process"]:
+        ofx = OrcaFlex()
+        cfg_base = ofx.router(cfg_base)
     elif basename in ["aqwa"]:
         aqwa = Aqwa()
         cfg_base = aqwa.router(cfg_base)
@@ -164,46 +153,14 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         pb = PlateBuckling()
         cfg_base = pb.router(cfg_base)
 
+    elif basename == "mooring":
+        mooring = Mooring()
+        cfg_base = mooring.router(cfg_base)
+
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
-    logging.info(f"{basename}, application ... END")
-    save_cfg(cfg_base=cfg_base)
+    logger.info(f"{basename}, application ... END")
+    app_manager.save_cfg(cfg_base=cfg_base)
 
     return cfg_base
-
-
-def validate_arguments_run_methods(inputfile):
-    """
-    Validate inputs for following run methods:
-    - module (i.e. python -m digitalmodel input.yml)
-    - from python file (i.e. )
-    """
-
-    if len(sys.argv) > 1 and inputfile is not None:
-        raise (Exception("2 Input files provided via arguments & function. Please provide only 1 file ... FAIL"))
-        raise (Exception("2 Input files provided via arguments & function. Please provide only 1 file ... FAIL"))
-
-    if len(sys.argv) > 1:
-        if not os.path.isfile(sys.argv[1]):
-            raise (FileNotFoundError(f"Input file {sys.argv[1]} not found ... FAIL"))
-        else:
-            inputfile = sys.argv[1]
-
-    if len(sys.argv) <= 1:
-        if not os.path.isfile(inputfile):
-            raise (FileNotFoundError(f"Input file {inputfile} not found ... FAIL"))
-        else:
-            sys.argv.append(inputfile)
-    return inputfile
-
-
-def save_cfg(cfg_base):
-    output_dir = cfg_base.Analysis["result_folder"] 
-
-    filename = cfg_base.Analysis["file_name"]
-    filename_path = os.path.join(output_dir, filename)
-
-    save_data.saveDataYaml(cfg_base, filename_path, default_flow_style=False)
-    logging.info(f"Saved data to: {filename_path}")
-    

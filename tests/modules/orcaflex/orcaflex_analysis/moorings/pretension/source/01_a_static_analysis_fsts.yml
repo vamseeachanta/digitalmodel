@@ -1,0 +1,13 @@
+# Units
+UnitsSystem: SI
+# Analysis data
+JacobianBufferingPolicy: 01
+JacobianPerturbationFactor: 0
+# Statics
+BuoysIncludedInStatics: All
+LineStaticsStep1Policy: All lines included
+LineStaticsStep2Policy: Solve coupled systems
+WholeSystemStaticsEnabled: Yes
+StaticsMaxIterations: 26000
+StaticsMinDamping: 10
+StaticsMaxDamping: 100

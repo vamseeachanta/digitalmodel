@@ -12,6 +12,11 @@ orcaflex:
       flag: True
     summary:
       flag: False
+      statistics:
+        Minimum: False
+        Maximum: False
+        Mean: False
+        StdDev: False
       min: True
       max: True
       mean: True

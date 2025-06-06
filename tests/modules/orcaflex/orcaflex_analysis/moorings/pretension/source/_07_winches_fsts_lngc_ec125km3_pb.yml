@@ -1,0 +1,22 @@
+﻿Lines:
+  includefile: 07_a_lines_fst_contact_lines.yml
+  includefile: 07_b_lines_fst_struts.yml
+
+Winches:
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line01.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line02.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line03.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line04.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line05.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line06.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line07.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line08.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line09.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line10.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line11.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line12.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line13.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line14.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line15.yml
+  includefile: winches/07_c_lines_lngc_ec125km3_pb_line16.yml
+

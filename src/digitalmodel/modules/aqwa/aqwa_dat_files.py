@@ -68,7 +68,7 @@ class AqwaDATFiles:
 
         library_name = 'digitalmodel'
         library_file_cfg = {
-            'filename': f"tests/test_data/aqwa/decks/{file_name}",
+            'filename': f"base_configs/modules/aqwa/template_decks/{file_name}",
             'library_name': library_name
         }
 
@@ -84,7 +84,7 @@ class AqwaDATFiles:
 
         library_name = 'digitalmodel'
         library_file_cfg = {
-            'filename': f"tests/test_data/aqwa/decks/{file_name}",
+            'filename': f"base_configs/modules/aqwa/template_decks/{file_name}",
             'library_name': library_name
         }
 
@@ -118,14 +118,26 @@ class AqwaDATFiles:
         body = []
         for body_item_idx in range(0, len(raw_data)):
             body_item = raw_data[body_item_idx]
-            structure = body_item['structure']
-            node = body_item['node']
-            X = body_item['X']
-            Y = body_item['Y']
-            Z = body_item['Z']
 
-            body_item_str = f"{white_space:>1s}{white_space:>3s}{structure:>2d}{node:>5d}{white_space:>4s}{white_space:>5s}{X:>10f} {Y:>10f} {Z:>10f}" 
+            structure = body_item['structure']
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'STRC':>4s}{white_space:>5s}{structure:>5d}" 
             body.append(body_item_str)
+
+            node = body_item['node']
+            mass = body_item['mass']
+            mass = f"{mass:.1f}"
+
+            # For units of mass, the unit is in kg?
+            # mass = f"{mass:.3e}"
+
+
+            # For units of mass, the unit is in mT?
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{1:>2d}{white_space:>4s}{white_space:>5s}{node:>5d}{mass:>10s}" 
+            body.append(body_item_str)
+
+            # For units of mass, the unit is in kg?
+            # body_item_str = f"{white_space:>1s}{white_space:>3s}{body_item_idx+1:>2d}{white_space:>4s}{white_space:>5s}{node:>5d}{white_space:>4s}{white_space:>5s}{mass:>10s}" 
+            # body.append(body_item_str)
 
         return body
 
@@ -135,6 +147,11 @@ class AqwaDATFiles:
         body = []
         for body_item_idx in range(0, len(raw_data)):
             body_item = raw_data[body_item_idx]
+
+            structure = body_item['structure']
+            body_item_str = f"{white_space:>1s}{white_space:>3s}{white_space:>2s}{'STRC':>4s}{white_space:>5s}{structure:>5d}" 
+            body.append(body_item_str)
+
             node = body_item['node']
             Ixx = body_item.get('Ixx', 0)
             Ixx = f"{Ixx:.3e}"
@@ -148,6 +165,7 @@ class AqwaDATFiles:
             Iyz = f"{Iyz:.3e}"
             Izz = body_item.get('Izz', 0)
             Izz = f"{Izz:.3e}"
+
             body_item_str = f"{white_space:>1s}{white_space:>3s}{body_item_idx+1:>2d}{element_type:>4s}{white_space:>5s}{node:>5d}{Ixx:>10s}{Ixy:>10s}{Ixz:>10s}{Iyy:>10s}{Iyz:>10s}{Izz:>10s}"
             body.append(body_item_str)
 

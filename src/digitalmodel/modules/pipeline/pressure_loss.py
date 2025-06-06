@@ -8,7 +8,7 @@ init_printing()
 
 #init_session()
 # Third party imports
-from assetutilities.common.visualization.visualization_templates import (
+from assetutilities.common.visualization.visualization_templates_matplotlib import (
     VisualizationTemplates,
 )
 

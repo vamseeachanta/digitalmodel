@@ -16,6 +16,11 @@ dictitems:
         min: true
         max: true
         mean: true
+        statistics:
+          Minimum: true
+          Maximum: true
+          Mean: true
+          StdDev: true
       linked_statistics:
         flag: false
         min: true
@@ -226,6 +231,15 @@ dictitems:
         - modules
         - orcaflex
         - orcaflex_post_process
+        - cathodic_protection.yml
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
         - opp_linked_statistics1.yml
       - !!python/object/apply:pathlib.WindowsPath
         - K:\
@@ -364,7 +378,7 @@ dictitems:
     file_name_for_overwrite: opp_summary1
     result_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
     log_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-12-17 16:50:52.035691
+    start_time: 2025-03-15 03:36:01.387446
     cfg_array_file_names: ~
     DefaultInputFile: ~
     CustomInputFile: opp_summary1.yml

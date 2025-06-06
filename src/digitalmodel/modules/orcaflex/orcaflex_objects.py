@@ -10,24 +10,28 @@ class OrcaFlexObjects():
     def __init__(self) -> None:
         pass
 
-    def get_orcaflex_objects(self, model, cfg):
+    def get_orcaflex_objects(self, model_dict, cfg):
+        model = model_dict['model']
         OrcFXAPIObject = self.get_OrcFXAPIObject(model, cfg)
 
-        TimePeriod = self.get_SimulationPeriod(cfg)
+
+        TimePeriod = self.get_SimulationPeriod(cfg, model_dict)
 
         ArcLengthArray, arclengthRange = self.get_arc_length_objects(cfg)
 
-        objectExtra, arclengthRange_objectExtra = self.get_objectExtra(cfg, OrcFXAPIObject)
-        if arclengthRange is None:
-            arclengthRange = arclengthRange_objectExtra
+        objectExtra = None
+        if OrcFXAPIObject is not None:
+            objectExtra, arclengthRange_objectExtra = self.get_objectExtra(cfg, OrcFXAPIObject)
+            if arclengthRange is None:
+                arclengthRange = arclengthRange_objectExtra
 
 
         VariableName = None
-        if 'Variable' in cfg:
+        if 'Variable' in cfg and OrcFXAPIObject is not None:
             VariableName = cfg['Variable']
 
         Statistic_Type = None
-        if 'Statistic_Type' in cfg:
+        if 'Statistic_Type' in cfg and OrcFXAPIObject is not None:
             Statistic_Type = cfg['Statistic_Type']
 
         return OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type
@@ -84,25 +88,38 @@ class OrcaFlexObjects():
 
 
     def get_OrcFXAPIObject(self, model, cfg):
+        OrcFXAPIObject = None
         if 'ObjectName' in cfg:
             objectName = cfg['ObjectName']
         else:
-            raise Exception("Model does not have the objectName")
+            logging.debug(f"function input configuration does not have objectName: {cfg}") 
+            raise Exception("function input configuration does not have objectName")
 
         try:
             OrcFXAPIObject = model[objectName]
         except Exception as e:
-            logging.info(str(e)) 
-            raise Exception("Model does not have the objectName")
+            logging.debug(str(e)) 
 
         return OrcFXAPIObject
 
-    def get_SimulationPeriod(self, cfg):
+    def get_SimulationPeriod(self, cfg, model_dict):
+        start_time = model_dict['start_time']
+        stop_time = model_dict['stop_time']
+
+        TimePeriod = None
         if 'SimulationPeriod' in cfg:
             SimulationPeriod = cfg['SimulationPeriod']
-            TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
-        else:
-            TimePeriod = None
+
+            if len(SimulationPeriod) == 2:
+                if SimulationPeriod[0] is not None:
+                    start_time = SimulationPeriod[0]
+                if SimulationPeriod[1] is not None:
+                    stop_time = SimulationPeriod[1]
+
+                TimePeriod = self.get_TimePeriodObject([start_time, stop_time])
+            elif len(SimulationPeriod) == 1:
+                TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
+
         return TimePeriod
 
 

@@ -4,6 +4,9 @@ import logging
 import math
 import os
 from pathlib import Path
+import pathlib
+
+
 
 # Third party imports
 import colorama
@@ -11,6 +14,7 @@ import pandas as pd
 from assetutilities.common.data import PandasChainedAssignent, SaveData
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.modules.data_exploration.data_exploration import DataExploration
+from assetutilities.common.utilities import is_dir_valid_func
 from colorama import Fore, Style
 
 # Reader imports
@@ -155,66 +159,48 @@ class OrcaflexUtilities:
         return cfg
 
     def get_files(self, cfg):
-        # Third party imports
-        from assetutilities.common.utilities import is_dir_valid_func
-        
-        file_management_directory = self.get_file_management_directory(cfg)
-        if file_management_directory is not None:
-            analysis_root_folder = cfg['Analysis']['analysis_root_folder']
-            file_is_valid, file_management_directory = is_dir_valid_func(file_management_directory,
-                                                     analysis_root_folder)
 
+        file_management_input_directory = self.get_file_management_input_directory(cfg)
 
-        if cfg.file_management['files']['files_in_current_directory'][
-                'flag'] or cfg.file_management['files']['files_in_current_directory']['auto_read']:
-            orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
-            input_files = {}
+        orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
+        input_files = {}
 
-            for file_ext in orcaflex_extensions:
-                filename_pattern = cfg['file_management']['files']['files_in_current_directory'].get('filename_pattern', None)
-                if filename_pattern is None:
-                    glob_search = os.path.join(file_management_directory, f'*.{file_ext}')
-                else:
-                    glob_search = os.path.join(file_management_directory, f'*{filename_pattern}*.{file_ext}')
-                raw_input_files_for_ext = glob.glob(glob_search)
-                raw_input_files_for_ext = [Path(file).resolve() for file in raw_input_files_for_ext]
-                input_files.update({file_ext: raw_input_files_for_ext})
+        for file_ext in orcaflex_extensions:
+            filename_pattern = cfg['file_management']['filename'].get('pattern', None)
+            if filename_pattern is None:
+                glob_search = os.path.join(file_management_input_directory, f'*.{file_ext}')
+            else:
+                glob_search = os.path.join(file_management_input_directory, f'*{filename_pattern}*.{file_ext}')
+            raw_input_files_for_ext = glob.glob(glob_search)
+            raw_input_files_for_ext = [Path(file).resolve() for file in raw_input_files_for_ext]
+            input_files.update({file_ext: raw_input_files_for_ext})
 
-            cfg.file_management.update({'input_files': input_files})
-
-        else:
-            orcaflex_extensions = cfg.file_management['input_files'].keys()
-            for file_ext in orcaflex_extensions:
-                raw_input_files_for_ext = cfg.file_management['input_files'][
-                    file_ext]
-
-                valid_file_count = 0
-                for input_file_index in range(0, len(raw_input_files_for_ext)):
-                    input_file = raw_input_files_for_ext[input_file_index]
-                    if not os.path.isfile(input_file):
-                        raw_input_files_for_ext[
-                            input_file_index] = os.path.join(
-                                cfg.Analysis['analysis_root_folder'],
-                                input_file).replace("\\","/")
-                    if os.path.isfile(
-                            raw_input_files_for_ext[input_file_index]):
-                        valid_file_count = valid_file_count + 1
-
-                logging.info(
-                    f"Number of '{file_ext}' input files : {len(raw_input_files_for_ext)} . Valid files are: {valid_file_count}."
-                )
+        cfg.file_management.update({'input_files': input_files})
 
         return cfg
 
-    def get_file_management_directory(self, cfg):
+    # def get_file_management_input_directory(self, cfg):
 
-        if cfg.file_management['files']['files_in_current_directory']['flag']:
-            file_management_directory = cfg.Analysis['analysis_root_folder']
-        else:
-            file_management_directory = cfg.file_management['files'][
-                'files_in_current_directory']['directory']
+    #     file_management_input_directory = cfg.file_management["input_directory"]
+    #     if file_management_input_directory is None:
+    #         file_management_input_directory = cfg.Analysis["analysis_root_folder"]
 
-        return file_management_directory
+    #     analysis_root_folder = cfg["Analysis"]["analysis_root_folder"]
+    #     dir_is_valid, file_management_input_directory = is_dir_valid_func(
+    #         file_management_input_directory, analysis_root_folder
+    #     )
+
+    #     if not dir_is_valid:
+    #         raise ValueError(
+    #             f"Directory {file_management_input_directory} is not valid"
+    #         )
+    #     else:
+    #         file_management_input_directory = pathlib.Path(
+    #             file_management_input_directory
+    #         )
+
+    #     return file_management_input_directory
+
 
     def sim_file_analysis_and_update(self, cfg):
         sim_files = cfg.file_management['input_files']['*.sim']
@@ -288,7 +274,7 @@ class OrcaflexUtilities:
             # Third party imports
             import pandas as pd
             self.load_matrix = pd.read_csv(cfg['Files']['csv_filename'])
-            self.load_matrix['RunStatus'] = None
+            self.load_matrix['run_status'] = None
             self.simulation_filenames = self.load_matrix['fe_filename']
             self.simulation_ObjectNames = self.load_matrix['ObjectName']
             self.simulation_SimulationDuration = self.load_matrix[
@@ -434,40 +420,39 @@ class OrcaflexUtilities:
         tassociated = 1.05*tz
 
         return round(tassociated, 2)
-    
+
     def get_load_matrix_with_filenames(self, cfg):
-        load_matrix_columns = ['fe_filename', 'RunStatus']
+        load_matrix_columns = ['fe_filename', 'fe_filename_stem', 'run_status', 'start_time', 'stop_time']
         load_matrix = pd.DataFrame(columns=load_matrix_columns)
 
         sim_files = cfg.file_management['input_files']['sim']
-        sim_files = [str(file) for file in sim_files]
-        load_matrix['fe_filename'] = sim_files
-        load_matrix['RunStatus'] = None
+        sim_filenames = [str(file) for file in sim_files]
+        sim_files_stem = [pathlib.Path(file).stem for file in sim_files]
+        load_matrix['fe_filename'] = sim_filenames
+        load_matrix['fe_filename_stem'] = sim_files_stem
+        load_matrix['run_status'] = None
+
         return load_matrix
 
-    def get_model_from_filename(self, file_name, load_matrix=None):
+    def get_model_and_metadata(self, file_name):
         SimulationFileName = self.get_SimulationFileName(file_name)
         model = None
         if os.path.isfile(SimulationFileName):
             try:
                 model = self.loadSimulation(SimulationFileName)
-                RunStatus = str(model.state)
+                run_status = model.state.__dict__['_name_']
+                start_time = model.simulationStartTime
+                stop_time = model.simulationStopTime
 
-                if load_matrix is not None:
-                    with PandasChainedAssignent():
-                        load_matrix.loc[(
-                            load_matrix['fe_filename'] == file_name),
-                                             'RunStatus'] = RunStatus
-                    if RunStatus not in [
-                            'Reset', 'InStaticState', 'SimulationStopped', '4'
-                    ]:
-                        model = None
             except Exception as e:
+                model = None
                 logging.info(
                     f"Model: {SimulationFileName} ... Error Loading File")
                 logging.info(str(e))
 
-        return model
+        model_dict = {'model': model, 'run_status': run_status, 'stop_time': stop_time, 'start_time': start_time}
+
+        return model_dict
 
     def get_SimulationFileName(self, file_name):
         get_filename_without_extension = self.get_filename_without_extension(
