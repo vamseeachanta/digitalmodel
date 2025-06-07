@@ -28,7 +28,6 @@ class OPPSummary():
         pass
 
     def get_summary_for_file(self, cfg: dict, model_dict: dict, file_name: str) -> None:
-    def get_summary_for_file(self, cfg: dict, model_dict: dict, file_name: str) -> None:
         summary_groups = cfg['summary_settings']['groups']
         summary_groups_for_file = {}
         for summary_group in summary_groups:
@@ -56,7 +55,6 @@ class OPPSummary():
 
         return summary_groups_for_file
 
-    def get_summary_from_orcaflex_run(self, model_dict, summary_cfg):
     def get_summary_from_orcaflex_run(self, model_dict, summary_cfg):
         variables = []
         values = []
@@ -112,7 +110,6 @@ class OPPSummary():
 
         cfg[cfg['basename']] = {'summary': {'groups': summary_array}}
 
-    def process_summary_by_model_and_cfg_item(self, model_dict, cfg_item):
     def process_summary_by_model_and_cfg_item(self, model_dict, cfg_item):
         RangeDF = pd.DataFrame()
 

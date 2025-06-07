@@ -6,7 +6,6 @@ import logging
 # Third party imports
 from assetutilities.common.update_deep import update_deep_dictionary
 from assetutilities.common.data import PandasChainedAssignent
-from assetutilities.common.data import PandasChainedAssignent
 from digitalmodel.modules.orcaflex.opp_linkedstatistics import OPPLinkedStatistics
 
 # Reader imports
