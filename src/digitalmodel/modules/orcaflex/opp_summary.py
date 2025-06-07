@@ -139,7 +139,7 @@ class OPPSummary():
             else:
                 output_value = None
         elif cfg_item['Command'] in ['Static Result', 'StaticResult']:
-            output_value = self.get_StaticResult(OrcFXAPIObject, VariableName,
+            output_value = self.get_StaticResult(model_dict, OrcFXAPIObject, VariableName,
                                                  objectExtra)
         elif cfg_item['Command'] in ['GetData', 'Get Data']:
             OrcFXAPIObject, VariableName = of_objects.get_input_data_variable_name(cfg_item, OrcFXAPIObject, VariableName)
@@ -199,12 +199,15 @@ class OPPSummary():
 
         return output_value
 
-    def get_StaticResult(self, OrcFXAPIObject, VariableName, objectExtra=None):
-        try:
-            output = OrcFXAPIObject.StaticResult(VariableName, objectExtra)
-        except Exception as e:
-            logger.warning(f"Error getting StaticResult for {VariableName}: {e}")
-            output = None
+    def get_StaticResult(self, model_dict, OrcFXAPIObject, VariableName, objectExtra=None):
+        output = None
+        model_objects = of_objects.get_model_objects(model_dict['model'])
+        object_df = model_objects['object_df']
+        if OrcFXAPIObject in list(object_df['ObjectName']):
+            try:
+                output = OrcFXAPIObject.StaticResult(VariableName, objectExtra)
+            except Exception as e:
+                logger.warning(f"Error getting StaticResult for {VariableName}: {e}")
 
         return output
 
