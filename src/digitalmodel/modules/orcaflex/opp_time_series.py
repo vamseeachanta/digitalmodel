@@ -119,18 +119,21 @@ class OPPTimeSeries:
             
         return time_series, times
 
-    def get_TimeHistory(self, OrcFXAPIObject, TimePeriod, objectExtra, VariableName):
+    def get_TimeHistory(self, model_dict, OrcFXAPIObject, TimePeriod, objectExtra, VariableName):
         output = None
-        try:
-            if OrcFXAPIObject is not None:
-                if objectExtra is None:
-                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
-                else:
-                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
-                                                    objectExtra)
-        except Exception as e:
-            logging.error(str(e))
-            # raise Exception(f"Error in TimeHistory: {str(e)}")
+        model_objects = of_objects.get_model_objects(model_dict['model'])
+        object_df = model_objects['object_df']
+        if OrcFXAPIObject in list(object_df['ObjectName']):
+            try:
+                if OrcFXAPIObject is not None:
+                    if objectExtra is None:
+                        output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
+                    else:
+                        output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
+                                                        objectExtra)
+            except Exception as e:
+                logging.error(str(e))
+                # raise Exception(f"Error in TimeHistory: {str(e)}")
         return output
 
     def post_process_RAOs(self, model, FileObjectName):
