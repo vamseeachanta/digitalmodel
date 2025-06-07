@@ -6,6 +6,7 @@ import logging
 # Third party imports
 from assetutilities.common.update_deep import update_deep_dictionary
 from assetutilities.common.data import PandasChainedAssignent
+from assetutilities.common.data import PandasChainedAssignent
 from digitalmodel.modules.orcaflex.opp_linkedstatistics import OPPLinkedStatistics
 
 # Reader imports
@@ -29,6 +30,7 @@ class OrcaFlexPostProcess():
 
     def __init__(self, cfg=None):
         pass
+
 
     def post_process_router(self, cfg):
 
@@ -55,15 +57,16 @@ class OrcaFlexPostProcess():
         if cfg['orcaflex']['postprocess']['visualization']['flag']:
             post_process_visualization_flag = True
 
+        app_basename = cfg['meta']['basename']
         if post_process_data_flag:
-            cfg.update({cfg['basename']: {}})
+            cfg.update({app_basename: {}})
             self.post_process(cfg)
 
         if post_process_visualization_flag:
             opp_visualization.get_visualizations(cfg)
 
         if not post_process_data_flag and not post_process_visualization_flag:
-            logging.info("No postprocess option to run specified ... End Run.")
+            logging.info("No postprocess specified ... End Run.")
 
         return cfg
 
@@ -78,6 +81,7 @@ class OrcaFlexPostProcess():
 
     def post_process(self, cfg):
 
+        load_matrix = ou.get_load_matrix_with_filenames(cfg)
         load_matrix = ou.get_load_matrix_with_filenames(cfg)
         # Intialize output arrays
         RangeAllFiles = []
@@ -94,6 +98,8 @@ class OrcaFlexPostProcess():
             run_status = model_dict['run_status']
             start_time = model_dict['start_time']
             stop_time = model_dict['stop_time']
+            current_time = model_dict['current_time']
+            simulation_complete = model_dict['simulation_complete']
             with PandasChainedAssignent():
                 load_matrix.loc[(
                     load_matrix['fe_filename'] == file_name),
@@ -117,7 +123,20 @@ class OrcaFlexPostProcess():
                         opp_rg.postProcessRange(model, self.cfg, FileObjectName))
                 except:
                     RangeAllFiles.append(None)
+                self.fileIndex = fileIndex
+                print("Post-processing file: {}".format(file_name))
+                try:
+                    RangeAllFiles.append(
+                        opp_rg.postProcessRange(model, self.cfg, FileObjectName))
+                except:
+                    RangeAllFiles.append(None)
 
+                if cfg['orcaflex']['postprocess']['summary']['flag']:
+                    summary_groups_for_file = opp_summary.get_summary_for_file(cfg, model_dict, file_name)
+                    summary = opp_summary.add_file_result_to_all_results(summary, summary_groups_for_file)
+                if cfg['orcaflex']['postprocess']['linked_statistics']['flag']:
+                    linked_statistics_for_file = opp_ls.get_linked_statistics(cfg, model, file_name)
+                    linked_statistics = opp_ls.add_file_result_to_all_results(linked_statistics, linked_statistics_for_file)
                 if cfg['orcaflex']['postprocess']['summary']['flag']:
                     summary_groups_for_file = opp_summary.get_summary_for_file(cfg, model_dict, file_name)
                     summary = opp_summary.add_file_result_to_all_results(summary, summary_groups_for_file)
@@ -130,7 +149,14 @@ class OrcaFlexPostProcess():
                         opp_ts.get_time_series_data(cfg, model_dict, file_name)
                 else:
                     pass
+                if cfg['orcaflex']['postprocess']['time_series']['flag']:
+                    if cfg['time_series_settings']['data']: 
+                        opp_ts.get_time_series_data(cfg, model_dict, file_name)
+                else:
+                    pass
 
+                histogram_all_files.append(histogram_for_file)
+                RangeAllFiles.append(None)
                 histogram_all_files.append(histogram_for_file)
                 RangeAllFiles.append(None)
 

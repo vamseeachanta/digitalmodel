@@ -1,9 +1,13 @@
+import OrcFxAPI
 # Standard library imports
 import glob
 import logging
 import math
 import os
 from pathlib import Path
+import pathlib
+
+
 import pathlib
 
 
@@ -14,6 +18,7 @@ import pandas as pd
 from assetutilities.common.data import PandasChainedAssignent, SaveData
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.modules.data_exploration.data_exploration import DataExploration
+from assetutilities.common.utilities import is_dir_valid_func
 from assetutilities.common.utilities import is_dir_valid_func
 from colorama import Fore, Style
 
@@ -61,6 +66,19 @@ class OrcaflexUtilities:
     def save_sim_file(self, model, model_file_name):
         sim_filename = os.path.splitext(model_file_name)[0] + '.sim'
         model.SaveSimulation(sim_filename)
+
+    def file_run_and_save(self, model, file_meta_data):
+        yml_file = file_meta_data['yml']
+        sim_file = file_meta_data['sim']
+        model = OrcFxAPI.Model()
+        model.LoadData(yml_file)
+
+        model.RunSimulation()
+
+        model.SaveSimulation(sim_file)
+
+        status_flag = True
+        return status_flag
 
     def update_model(self, cfg=None):
         if cfg is None or cfg['model_file'] is None:
@@ -165,6 +183,20 @@ class OrcaflexUtilities:
         orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
         input_files = {}
 
+        file_management_input_directory = self.get_file_management_input_directory(cfg)
+
+        orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
+        input_files = {}
+
+        for file_ext in orcaflex_extensions:
+            filename_pattern = cfg['file_management']['filename'].get('pattern', None)
+            if filename_pattern is None:
+                glob_search = os.path.join(file_management_input_directory, f'*.{file_ext}')
+            else:
+                glob_search = os.path.join(file_management_input_directory, f'*{filename_pattern}*.{file_ext}')
+            raw_input_files_for_ext = glob.glob(glob_search)
+            raw_input_files_for_ext = [Path(file).resolve() for file in raw_input_files_for_ext]
+            input_files.update({file_ext: raw_input_files_for_ext})
         for file_ext in orcaflex_extensions:
             filename_pattern = cfg['file_management']['filename'].get('pattern', None)
             if filename_pattern is None:
@@ -176,31 +208,9 @@ class OrcaflexUtilities:
             input_files.update({file_ext: raw_input_files_for_ext})
 
         cfg.file_management.update({'input_files': input_files})
+        cfg.file_management.update({'input_files': input_files})
 
         return cfg
-
-    # def get_file_management_input_directory(self, cfg):
-
-    #     file_management_input_directory = cfg.file_management["input_directory"]
-    #     if file_management_input_directory is None:
-    #         file_management_input_directory = cfg.Analysis["analysis_root_folder"]
-
-    #     analysis_root_folder = cfg["Analysis"]["analysis_root_folder"]
-    #     dir_is_valid, file_management_input_directory = is_dir_valid_func(
-    #         file_management_input_directory, analysis_root_folder
-    #     )
-
-    #     if not dir_is_valid:
-    #         raise ValueError(
-    #             f"Directory {file_management_input_directory} is not valid"
-    #         )
-    #     else:
-    #         file_management_input_directory = pathlib.Path(
-    #             file_management_input_directory
-    #         )
-
-    #     return file_management_input_directory
-
 
     def sim_file_analysis_and_update(self, cfg):
         sim_files = cfg.file_management['input_files']['*.sim']
@@ -275,6 +285,7 @@ class OrcaflexUtilities:
             import pandas as pd
             self.load_matrix = pd.read_csv(cfg['Files']['csv_filename'])
             self.load_matrix['run_status'] = None
+            self.load_matrix['run_status'] = None
             self.simulation_filenames = self.load_matrix['fe_filename']
             self.simulation_ObjectNames = self.load_matrix['ObjectName']
             self.simulation_SimulationDuration = self.load_matrix[
@@ -338,8 +349,6 @@ class OrcaflexUtilities:
                                     current_file_name = f"-AC{current_type}-CD{'{:03d}'.format(RefCurrentDirection_item)}-CF{'{:02.1f}'.format(SurfaceCurrentFactor_item)}"
                                     yml_file_name = wave_file_name + current_file_name
                                     self.get_full_yaml_file_and_save(input_set, wave_yaml_file, current_yaml_file, yml_file_name, cfg)
-
-
 
     def get_full_yaml_file_and_save(self, input_set, wave_yaml_file, current_yaml_file, yml_file_name, cfg):
         if 'includefile' in input_set:
@@ -421,7 +430,9 @@ class OrcaflexUtilities:
 
         return round(tassociated, 2)
 
+
     def get_load_matrix_with_filenames(self, cfg):
+        load_matrix_columns = ['fe_filename', 'fe_filename_stem', 'run_status', 'start_time', 'stop_time']
         load_matrix_columns = ['fe_filename', 'fe_filename_stem', 'run_status', 'start_time', 'stop_time']
         load_matrix = pd.DataFrame(columns=load_matrix_columns)
 
@@ -432,25 +443,35 @@ class OrcaflexUtilities:
         load_matrix['fe_filename_stem'] = sim_files_stem
         load_matrix['run_status'] = None
 
+        sim_filenames = [str(file) for file in sim_files]
+        sim_files_stem = [pathlib.Path(file).stem for file in sim_files]
+        load_matrix['fe_filename'] = sim_filenames
+        load_matrix['fe_filename_stem'] = sim_files_stem
+        load_matrix['run_status'] = None
+
         return load_matrix
 
+    def get_model_and_metadata(self, file_name):
     def get_model_and_metadata(self, file_name):
         SimulationFileName = self.get_SimulationFileName(file_name)
         model = None
         if os.path.isfile(SimulationFileName):
             try:
                 model = self.loadSimulation(SimulationFileName)
+                simulation_complete = model.simulationComplete
                 run_status = model.state.__dict__['_name_']
                 start_time = model.simulationStartTime
                 stop_time = model.simulationStopTime
+                current_time = model.simulationTimeStatus.CurrentTime
 
             except Exception as e:
+                model = None
                 model = None
                 logging.info(
                     f"Model: {SimulationFileName} ... Error Loading File")
                 logging.info(str(e))
 
-        model_dict = {'model': model, 'run_status': run_status, 'stop_time': stop_time, 'start_time': start_time}
+        model_dict = {'model': model, 'simulation_complete': simulation_complete, 'run_status': run_status, 'stop_time': stop_time, 'start_time': start_time, 'current_time': current_time}
 
         return model_dict
 
@@ -466,15 +487,12 @@ class OrcaflexUtilities:
         #     '.' + filename_components[-1], "")
 
         filename_without_extension = Path(os.path.splitext(filename)[0]).resolve()
-        
-        return filename_without_extension
 
+        return filename_without_extension
 
     def loadSimulation(self, FileName):
         model = OrcFxAPI.Model(FileName)
         return model
-
-
 
     def get_seastate_probability(self, file_index):
         #TODO CLean up, unused
@@ -502,8 +520,6 @@ class OrcaflexUtilities:
                     FileSummary_DF[AddSummaryColumnsArray].values[0])
 
         return AddSummary_array
-
-
 
     def save_cfg_files_from_multiple_files(self):
         #TODO CLean up, unused
@@ -538,7 +554,6 @@ class OrcaflexUtilities:
                 analysis_type.append('statics')
         else:
             print('File not found: {0}'.format(filename))
-
 
     def save_RAOs(self):
         #TODO CLean up, unused

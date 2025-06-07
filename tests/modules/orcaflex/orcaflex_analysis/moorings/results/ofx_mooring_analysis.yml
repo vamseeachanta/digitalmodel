@@ -1,6 +1,67 @@
 meta:
   library: digitalmodel
   basename: orcaflex
+parameters:
+  VarNames:
+    Line:
+    - End force
+    - End moment
+    - End Ex force
+    - End Ey force
+    - End Ez force
+    - End Ex moment
+    - End Ey moment
+    - End Ez moment
+    - End Lx force
+    - End Ly force
+    - End Lz force
+    - End Lx moment
+    - End Ly moment
+    - End Lz moment
+    - End GX force
+    - End GY force
+    - End GZ force
+    - End GX moment
+    - End GY moment
+    - End GZ moment
+    - X
+    - Y
+    - Z
+    - Dynamic x
+    - Dynamic y
+    - Dynamic z
+    - Layback
+    - Effective tension
+    - Wall tension
+    - Normalised tension
+    - Sidewall pressure
+    - Bend moment
+    - x bend moment
+    - y bend moment
+    - Bend moment component
+    - In plane bend moment
+    - Out of plane bend moment
+    - Curvature
+    - Normalised curvature
+    - x curvature
+    - y curvature
+    - Curvature component
+    - In plane curvature
+    - Out of plane curvature
+    - Bend radius
+    - x bend radius
+    - y bend radius
+    - Bend radius component
+    - In plane bend radius
+    - Out of plane bend radius
+    - Shear force
+    - x shear force
+    - y shear force
+    - Shear force component
+    - In plane shear force
+    - Out of plane shear force
+    - Arc length
+    - Expansion factor
 default:
   log_level: INFO
   config:
@@ -105,66 +166,27 @@ orcaflex_analysis:
   mooring:
     groups:
     - label: development
-      calculation: pretension
-      tension:
-        type: csv
-        filename: pretension/postproc/results/dm_fsts_lngc_pretension_lngc_moorings_dynamic_eff_tension_max.csv
-      length:
-        type: csv
-        filename: pretension/postproc/results/dm_fsts_lngc_pretension_lngc_moorings_dynamic_length_max.csv
-      iteration_cfg:
-        calculation: pretension
-        tolerance_percent: 10
-        stabilizing_lines:
-          object_name:
-          - Line07
-          - Line08
-          - Line09
-          - Line10
-          - Line11
-          - Line12
-          number_of_lines: 3
       target_pretension:
-      - name: Line01
-        pretension: 20
-      - name: Line02
-        pretension: 20
-      - name: Line03
-        pretension: 20
-      - name: Line04
-        pretension: 10
-      - name: Line05
-        pretension: 10
-      - name: Line06
-        pretension: 10
-      - name: Line07
-        pretension: 25
-      - name: Line08
-        pretension: 25
-      - name: Line09
-        pretension: 35
-      - name: Line10
-        pretension: 35
-      - name: Line11
-        pretension: 35
-      - name: Line12
-        pretension: 10
-      - name: Line13
-        pretension: 10
-      - name: Line14
-        pretension: 10
-      - name: Line15
-        pretension: 15
-      - name: Line16
-        pretension: 15
+        iterations: 10
+        tolerance: 10
+        type: csv
+        filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_pretension.csv
+      target_fender_force:
+        iterations: 10
+        resultant_force: 138.5
+        tolerance: 5
+        type: csv
+        filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_fender_force.csv
+        contact_vessel: LNGC
 file_management:
   flag: true
-  input_directory: pretension/fsts_lngc/01_qa
+  input_directory: pretension/fsts_lngc/01_qa/dof_none
   output_directory: ~
   filename:
     extension:
     - yml
-    pattern: fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl
+    - sim
+    pattern: fsts_l095_mwl_125km3_l000_pb_pretension
     filters:
       contains: []
       not_contains:
@@ -172,14 +194,16 @@ file_management:
       - iteration_01
   input_files:
     yml:
-    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml
+    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\dof_none\fsts_l095_mwl_125km3_l000_pb_pretension.yml
+    sim:
+    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\dof_none\fsts_l095_mwl_125km3_l000_pb_pretension.sim
 Analysis:
   basename: orcaflex
   analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings
   file_name: ofx_mooring_analysis
   file_name_for_overwrite: ofx_mooring_analysis
   log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\logs
-  start_time: 2025-04-04 16:27:27.827215
+  start_time: 2025-05-14 06:22:10.557914
   cfg_array_file_names: ~
   DefaultInputFile: ~
   CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\ofx_mooring_analysis.yml
@@ -187,5 +211,5 @@ Analysis:
   result_data_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results\Data
   result_plot_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results\Plot
   fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results
-  file_management_input_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa
+  file_management_input_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\dof_none
   file_management_output_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results

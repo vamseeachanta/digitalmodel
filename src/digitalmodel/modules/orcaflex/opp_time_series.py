@@ -48,6 +48,8 @@ class OPPTimeSeries:
 
     def get_time_series_data(self, cfg, model_dict, file_name):
         model = model_dict['model']
+    def get_time_series_data(self, cfg, model_dict, file_name):
+        model = model_dict['model']
         time_series_cfg_output = {"groups": []}
 
         ts_groups = cfg['time_series_settings']['groups']
@@ -58,11 +60,20 @@ class OPPTimeSeries:
                 if ts_cfg['SimulationPeriod'][1] is None:
                     ts_cfg['SimulationPeriod'][1] = model_dict['stop_time']
                     logging.debug(f"SimulationPeriod[1] set to {model_dict['stop_time']}")
+                if ts_cfg['SimulationPeriod'][1] is None:
+                    ts_cfg['SimulationPeriod'][1] = model_dict['stop_time']
+                    logging.debug(f"SimulationPeriod[1] set to {model_dict['stop_time']}")
                 ts_label = ts_cfg['Label']
-                time_series, times = self.get_time_series_from_orcaflex_run(model_dict, ts_cfg)
-                if 'time' not in list(df.columns):
-                    df['time']  = times
-                df[ts_label] = time_series
+                try:
+                    time_series, times = self.get_time_series_from_orcaflex_run(model_dict, ts_cfg)
+                    if 'time' not in list(df.columns):
+                        df['time']  = times
+                    df[ts_label] = time_series
+                except:
+                    logging.error(f"Error getting time series data for {ts_label} in group {group_label}")
+                    df['time']  = []
+                    df[ts_label] = []
+                    continue
             # Save by filename
             file_name_stem = Path(file_name).stem
             output_file_name = os.path.join(cfg["Analysis"]['result_folder'], file_name_stem + '_' + group_label + '.csv')
@@ -74,14 +85,16 @@ class OPPTimeSeries:
             df.round(csv_decimal).to_csv(output_file_name, index=False)
             time_series_cfg_output["groups"].append({"label": group_label, "data": output_file_name})
 
+        basename = cfg['meta']['basename']
         cfg_output = {'time_series': time_series_cfg_output, 'file_name': file_name}
-        if 'time_series' not in cfg[cfg['basename']]:
-            cfg[cfg['basename']]['time_series'] = []
+        if 'time_series' not in cfg[basename]:
+            cfg[basename]['time_series'] = []
         else:
-            cfg[cfg['basename']]['time_series'].append(cfg_output)
+            cfg[basename]['time_series'].append(cfg_output)
 
 
 
+    def get_time_series_from_orcaflex_run(self, model_dict, cfg_time_series):
     def get_time_series_from_orcaflex_run(self, model_dict, cfg_time_series):
         """Gets time series data from an OrcaFlex run
 
@@ -105,6 +118,18 @@ class OPPTimeSeries:
             time_series = []
             times = []
             
+        OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model_dict, cfg_time_series)
+        model = model_dict['model']
+        
+        if OrcFXAPIObject is not None:
+            times = model.SampleTimes(TimePeriod)
+            time_series = OrcFXAPIObject.TimeHistory(VariableName,
+                                                TimePeriod,
+                                                objectExtra=objectExtra)
+        else:
+            time_series = []
+            times = []
+            
         return time_series, times
 
     def get_TimeHistory(self, OrcFXAPIObject, TimePeriod, objectExtra, VariableName):
@@ -116,7 +141,15 @@ class OPPTimeSeries:
                 else:
                     output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
                                                     objectExtra)
+            if OrcFXAPIObject is not None:
+                if objectExtra is None:
+                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
+                else:
+                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
+                                                    objectExtra)
         except Exception as e:
+            logging.error(str(e))
+            # raise Exception(f"Error in TimeHistory: {str(e)}")
             logging.error(str(e))
             # raise Exception(f"Error in TimeHistory: {str(e)}")
         return output

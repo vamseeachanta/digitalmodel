@@ -1,5 +1,6 @@
 # Standard library imports
 import logging
+import pandas as pd
 
 # Third party imports
 import OrcFxAPI
@@ -12,8 +13,12 @@ class OrcaFlexObjects():
 
     def get_orcaflex_objects(self, model_dict, cfg):
         model = model_dict['model']
+    def get_orcaflex_objects(self, model_dict, cfg):
+        model = model_dict['model']
         OrcFXAPIObject = self.get_OrcFXAPIObject(model, cfg)
 
+
+        TimePeriod = self.get_SimulationPeriod(cfg, model_dict)
 
         TimePeriod = self.get_SimulationPeriod(cfg, model_dict)
 
@@ -24,18 +29,24 @@ class OrcaFlexObjects():
             objectExtra, arclengthRange_objectExtra = self.get_objectExtra(cfg, OrcFXAPIObject)
             if arclengthRange is None:
                 arclengthRange = arclengthRange_objectExtra
+        objectExtra = None
+        if OrcFXAPIObject is not None:
+            objectExtra, arclengthRange_objectExtra = self.get_objectExtra(cfg, OrcFXAPIObject)
+            if arclengthRange is None:
+                arclengthRange = arclengthRange_objectExtra
 
 
         VariableName = None
+        if 'Variable' in cfg and OrcFXAPIObject is not None:
         if 'Variable' in cfg and OrcFXAPIObject is not None:
             VariableName = cfg['Variable']
 
         Statistic_Type = None
         if 'Statistic_Type' in cfg and OrcFXAPIObject is not None:
+        if 'Statistic_Type' in cfg and OrcFXAPIObject is not None:
             Statistic_Type = cfg['Statistic_Type']
 
         return OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type
-
 
     def get_arc_length_objects(self, cfg):
         ArcLengthArray = []
@@ -86,12 +97,14 @@ class OrcaFlexObjects():
 
         return arclengthRange
 
-
     def get_OrcFXAPIObject(self, model, cfg):
+        OrcFXAPIObject = None
         OrcFXAPIObject = None
         if 'ObjectName' in cfg:
             objectName = cfg['ObjectName']
         else:
+            logging.debug(f"function input configuration does not have objectName: {cfg}") 
+            raise Exception("function input configuration does not have objectName")
             logging.debug(f"function input configuration does not have objectName: {cfg}") 
             raise Exception("function input configuration does not have objectName")
 
@@ -99,29 +112,39 @@ class OrcaFlexObjects():
             OrcFXAPIObject = model[objectName]
         except Exception as e:
             logging.debug(str(e)) 
+            logging.debug(str(e)) 
 
         return OrcFXAPIObject
 
     def get_SimulationPeriod(self, cfg, model_dict):
         start_time = model_dict['start_time']
-        stop_time = model_dict['stop_time']
+        termination_time = model_dict['current_time']
 
         TimePeriod = None
         if 'SimulationPeriod' in cfg:
             SimulationPeriod = cfg['SimulationPeriod']
 
-            if len(SimulationPeriod) == 2:
-                if SimulationPeriod[0] is not None:
-                    start_time = SimulationPeriod[0]
-                if SimulationPeriod[1] is not None:
-                    stop_time = SimulationPeriod[1]
+            if type(SimulationPeriod) is str:
+                if SimulationPeriod == 'StaticState':
+                    TimePeriod = OrcFxAPI.PeriodNum.StaticState
+                elif SimulationPeriod == 'WholeSimulation':
+                    TimePeriod = OrcFxAPI.PeriodNum.WholeSimulation
+                elif SimulationPeriod == 'LatestWave':
+                    TimePeriod = OrcFxAPI.PeriodNum.LatestWave
+                else:
+                    raise ValueError("Could not specify time period for simulation")
+            elif type(SimulationPeriod) is list:
+                if len(SimulationPeriod) == 2:
+                    if SimulationPeriod[0] is not None:
+                        start_time = SimulationPeriod[0]
+                    if SimulationPeriod[1] is not None:
+                        termination_time = SimulationPeriod[1]
 
-                TimePeriod = self.get_TimePeriodObject([start_time, stop_time])
-            elif len(SimulationPeriod) == 1:
-                TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
+                    TimePeriod = self.get_TimePeriodObject([start_time, termination_time])
+                elif len(SimulationPeriod) == 1:
+                    TimePeriod = self.get_TimePeriodObject(SimulationPeriod)
 
         return TimePeriod
-
 
     def get_TimePeriodObject(self, SimulationPeriod):
         """Gets an OrcaFlex time period object based on simulation period settings
@@ -255,3 +278,44 @@ class OrcaFlexObjects():
                     VariableName.append(SelectedCurrentIndex)
 
         return OrcFXAPIObject, VariableName
+
+    def get_model_objects(self, model):
+        object_df = pd.DataFrame(columns=['ObjectType', 'ObjectName', 'ObjectTypeName'])
+        objects = model.objects
+        object_df['ObjectType'] = [int(object.type) for object in objects]
+        object_df['ObjectName'] = [object.name for object in objects]
+        object_df['ObjectTypeName'] = [object.type.name for object in objects]
+
+        output_dict = {'object_df': object_df} 
+
+        return output_dict
+    
+    def get_object_vars(self, cfg, model, object, objectExtra, ResultType):
+        """
+        Get the variable data for an object.
+        """
+
+
+        output_dict = {}
+        var_df = pd.DataFrame(columns=['VarName', 'VarUnits', 'FullName'])
+
+        try:
+            vardetails = object.varDetails(objectExtra=objectExtra)
+            var_df['VarName'] = [vardetail.VarName for vardetail in vardetails]
+            var_df['VarUnits'] = [vardetail.VarUnits for vardetail in vardetails]
+            var_df['FullName'] = [vardetail.FullName for vardetail in vardetails]
+        except Exception as e:
+            logging.debug(f"Error getting variable details: {e}")
+
+        output_dict['var_df'] = var_df
+
+        VarNames_parameter_keys = list(cfg['parameters']['VarNames'].keys())
+        VarNames = []
+        if object.type.name in VarNames_parameter_keys:
+            VarNames = cfg['parameters']['VarNames'][object.type.name]
+        else:
+            VarNames = list(var_df['VarName'])
+
+        output_dict['VarNames'] = VarNames
+
+        return output_dict

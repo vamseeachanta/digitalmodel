@@ -1,3 +1,5 @@
+## #TODO Test
+
 import math
 
 def catenaryEquation(data):
@@ -74,3 +76,15 @@ def catenaryEquation(data):
 
     else:
         raise ValueError("Insufficient or invalid input parameters for catenary calculation.")
+    
+    
+# Example usage
+if __name__ == "__main__":
+    data = {
+        "F": 1000,  # Horizontal tension component
+        "w": 50,    # Weight per unit length
+        "d": 10     # Vertical distance
+    }
+
+    result = catenaryEquation(data)
+    print(result)
