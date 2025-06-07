@@ -48,6 +48,8 @@ class OPPTimeSeries:
 
     def get_time_series_data(self, cfg, model_dict, file_name):
         model = model_dict['model']
+    def get_time_series_data(self, cfg, model_dict, file_name):
+        model = model_dict['model']
         time_series_cfg_output = {"groups": []}
 
         ts_groups = cfg['time_series_settings']['groups']
@@ -55,6 +57,9 @@ class OPPTimeSeries:
             group_label = ts_group['Label']
             df = pd.DataFrame()
             for ts_cfg in ts_group['Columns']:
+                if ts_cfg['SimulationPeriod'][1] is None:
+                    ts_cfg['SimulationPeriod'][1] = model_dict['stop_time']
+                    logging.debug(f"SimulationPeriod[1] set to {model_dict['stop_time']}")
                 if ts_cfg['SimulationPeriod'][1] is None:
                     ts_cfg['SimulationPeriod'][1] = model_dict['stop_time']
                     logging.debug(f"SimulationPeriod[1] set to {model_dict['stop_time']}")
@@ -90,6 +95,7 @@ class OPPTimeSeries:
 
 
     def get_time_series_from_orcaflex_run(self, model_dict, cfg_time_series):
+    def get_time_series_from_orcaflex_run(self, model_dict, cfg_time_series):
         """Gets time series data from an OrcaFlex run
 
         Args:
@@ -100,6 +106,18 @@ class OPPTimeSeries:
             Time series data from the OrcaFlex analysis
         """
 
+        OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model_dict, cfg_time_series)
+        model = model_dict['model']
+        
+        if OrcFXAPIObject is not None:
+            times = model.SampleTimes(TimePeriod)
+            time_series = OrcFXAPIObject.TimeHistory(VariableName,
+                                                TimePeriod,
+                                                objectExtra=objectExtra)
+        else:
+            time_series = []
+            times = []
+            
         OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model_dict, cfg_time_series)
         model = model_dict['model']
         
@@ -123,7 +141,15 @@ class OPPTimeSeries:
                 else:
                     output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
                                                     objectExtra)
+            if OrcFXAPIObject is not None:
+                if objectExtra is None:
+                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
+                else:
+                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
+                                                    objectExtra)
         except Exception as e:
+            logging.error(str(e))
+            # raise Exception(f"Error in TimeHistory: {str(e)}")
             logging.error(str(e))
             # raise Exception(f"Error in TimeHistory: {str(e)}")
         return output

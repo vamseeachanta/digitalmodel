@@ -5,6 +5,7 @@ from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import CopyAndPasteFiles
 from assetutilities.common.file_management import FileManagement
 from assetutilities.common.yml_utilities import WorkingWithYAML
+from assetutilities.common.yml_utilities import WorkingWithYAML
 # Reader imports
 from digitalmodel.aqwa import Aqwa
 from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser
@@ -19,6 +20,8 @@ from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
+from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
+
 from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
 
 from digitalmodel.modules.orcaflex.orcaflex_file_management import (
@@ -38,15 +41,22 @@ from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.modules.vertical_riser import vertical_riser
 from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.modules.mooring.mooring import Mooring
+from digitalmodel.modules.mooring.mooring import Mooring
 
 library_name = "digitalmodel"
+wwyaml = WorkingWithYAML()
+
+app_manager = ConfigureApplicationInputs()
 wwyaml = WorkingWithYAML()
 
 app_manager = ConfigureApplicationInputs()
 
 def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
     cfg_argv_dict = {}
+    cfg_argv_dict = {}
     if cfg is None:
+        inputfile, cfg_argv_dict = app_manager.validate_arguments_run_methods(inputfile)
+        cfg = wwyaml.ymlInput(inputfile, updateYml=None)
         inputfile, cfg_argv_dict = app_manager.validate_arguments_run_methods(inputfile)
         cfg = wwyaml.ymlInput(inputfile, updateYml=None)
         cfg = AttributeDict(cfg)
@@ -57,25 +67,39 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         basename = cfg["basename"]
     elif 'meta' in cfg:
         basename = cfg["meta"]["basename"]
+    if 'basename' in cfg:
+        basename = cfg["basename"]
+    elif 'meta' in cfg:
+        basename = cfg["meta"]["basename"]
     else:
+        raise ValueError("basename not found in cfg")
         raise ValueError("basename not found in cfg")
 
     if config_flag:
         fm = FileManagement()
         cfg_base = app_manager.configure(cfg, library_name, basename, cfg_argv_dict)
+        cfg_base = app_manager.configure(cfg, library_name, basename, cfg_argv_dict)
         cfg_base = fm.router(cfg_base)
+        result_folder_dict, cfg_base = app_manager.configure_result_folder(None, cfg_base)
         result_folder_dict, cfg_base = app_manager.configure_result_folder(None, cfg_base)
     else:
         cfg_base = cfg
 
-    logging.info(f"{basename}, application ... START")
+    logger.info(f"{basename}, application ... START")
 
+    if "catenary" in basename:
+        from digitalmodel.modules.catenary.catenary import Catenary
+        catenary = Catenary()
+        cfg_base = catenary.router(cfg_base)
     if "catenary" in basename:
         from digitalmodel.modules.catenary.catenary import Catenary
         catenary = Catenary()
         cfg_base = catenary.router(cfg_base)
     elif basename == "vertical_riser":
         cfg_base = vertical_riser(cfg_base)
+    elif basename in ["orcaflex", "orcaflex_analysis", "orcaflex_post_process"]:
+        ofx = OrcaFlex()
+        cfg_base = ofx.router(cfg_base)
     elif basename in ["orcaflex", "orcaflex_analysis", "orcaflex_post_process"]:
         ofx = OrcaFlex()
         cfg_base = ofx.router(cfg_base)
@@ -154,6 +178,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         mooring = Mooring()
         cfg_base = mooring.router(cfg_base)
 
+    elif basename == "mooring":
+        mooring = Mooring()
+        cfg_base = mooring.router(cfg_base)
+
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
@@ -161,3 +189,4 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     app_manager.save_cfg(cfg_base=cfg_base)
 
     return cfg_base
+

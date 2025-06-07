@@ -8,6 +8,9 @@ from pathlib import Path
 import pathlib
 
 
+import pathlib
+
+
 
 # Third party imports
 import colorama
@@ -15,6 +18,7 @@ import pandas as pd
 from assetutilities.common.data import PandasChainedAssignent, SaveData
 from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.modules.data_exploration.data_exploration import DataExploration
+from assetutilities.common.utilities import is_dir_valid_func
 from assetutilities.common.utilities import is_dir_valid_func
 from colorama import Fore, Style
 
@@ -179,6 +183,20 @@ class OrcaflexUtilities:
         orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
         input_files = {}
 
+        file_management_input_directory = self.get_file_management_input_directory(cfg)
+
+        orcaflex_extensions = ['yml', 'yaml', 'dat', 'sim', 'txt']
+        input_files = {}
+
+        for file_ext in orcaflex_extensions:
+            filename_pattern = cfg['file_management']['filename'].get('pattern', None)
+            if filename_pattern is None:
+                glob_search = os.path.join(file_management_input_directory, f'*.{file_ext}')
+            else:
+                glob_search = os.path.join(file_management_input_directory, f'*{filename_pattern}*.{file_ext}')
+            raw_input_files_for_ext = glob.glob(glob_search)
+            raw_input_files_for_ext = [Path(file).resolve() for file in raw_input_files_for_ext]
+            input_files.update({file_ext: raw_input_files_for_ext})
         for file_ext in orcaflex_extensions:
             filename_pattern = cfg['file_management']['filename'].get('pattern', None)
             if filename_pattern is None:
@@ -189,6 +207,7 @@ class OrcaflexUtilities:
             raw_input_files_for_ext = [Path(file).resolve() for file in raw_input_files_for_ext]
             input_files.update({file_ext: raw_input_files_for_ext})
 
+        cfg.file_management.update({'input_files': input_files})
         cfg.file_management.update({'input_files': input_files})
 
         return cfg
@@ -265,6 +284,7 @@ class OrcaflexUtilities:
             # Third party imports
             import pandas as pd
             self.load_matrix = pd.read_csv(cfg['Files']['csv_filename'])
+            self.load_matrix['run_status'] = None
             self.load_matrix['run_status'] = None
             self.simulation_filenames = self.load_matrix['fe_filename']
             self.simulation_ObjectNames = self.load_matrix['ObjectName']
@@ -410,7 +430,9 @@ class OrcaflexUtilities:
 
         return round(tassociated, 2)
 
+
     def get_load_matrix_with_filenames(self, cfg):
+        load_matrix_columns = ['fe_filename', 'fe_filename_stem', 'run_status', 'start_time', 'stop_time']
         load_matrix_columns = ['fe_filename', 'fe_filename_stem', 'run_status', 'start_time', 'stop_time']
         load_matrix = pd.DataFrame(columns=load_matrix_columns)
 
@@ -421,8 +443,15 @@ class OrcaflexUtilities:
         load_matrix['fe_filename_stem'] = sim_files_stem
         load_matrix['run_status'] = None
 
+        sim_filenames = [str(file) for file in sim_files]
+        sim_files_stem = [pathlib.Path(file).stem for file in sim_files]
+        load_matrix['fe_filename'] = sim_filenames
+        load_matrix['fe_filename_stem'] = sim_files_stem
+        load_matrix['run_status'] = None
+
         return load_matrix
 
+    def get_model_and_metadata(self, file_name):
     def get_model_and_metadata(self, file_name):
         SimulationFileName = self.get_SimulationFileName(file_name)
         model = None
@@ -436,6 +465,7 @@ class OrcaflexUtilities:
                 current_time = model.simulationTimeStatus.CurrentTime
 
             except Exception as e:
+                model = None
                 model = None
                 logging.info(
                     f"Model: {SimulationFileName} ... Error Loading File")
