@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 # Third party imports
+from loguru import logger
 import pandas as pd
 from assetutilities.common.data import SaveData
 
@@ -180,7 +181,11 @@ class OPPSummary():
         return output_value
 
     def get_StaticResult(self, OrcFXAPIObject, VariableName, objectExtra=None):
-        output = OrcFXAPIObject.StaticResult(VariableName, objectExtra)
+        try:
+            output = OrcFXAPIObject.StaticResult(VariableName, objectExtra)
+        except Exception as e:
+            logger.warning(f"Error getting StaticResult for {VariableName}: {e}")
+            output = None
 
         return output
 
