@@ -1,0 +1,58 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileVertical
+
+[2]
+FormType=View
+Minimized=False
+CentreX=-80.64155086436003
+CentreY=0
+CentreZ=43.0139541766276
+Azimuth=270
+Elevation=0
+Gamma=0
+Size=90.92897330144903
+Shaded=False
+
+[1]
+FormType=Values
+Minimized=False
+ResultType=TimeHistory
+Period=StaticState
+
+[1_Var0]
+ObjectType=6D Buoy
+ObjectName=Top Buoy1
+VarName=Connection z force
+
+[1_Var1]
+ObjectType=Link
+ObjectName=Link1
+VarName=Tension
+
+[0]
+FormType=Values
+Minimized=False
+ResultType=TimeHistory
+Period=StaticState
+
+[0_Var0]
+ObjectType=Constraint
+ObjectName=Constraint1
+VarName=Out-frame connection Lz force
+
+[0_Var1]
+ObjectType=Constraint
+ObjectName=Constraint1
+VarName=In-frame connection Lz force
+
+[0_Var2]
+ObjectType=6D Buoy
+ObjectName=Bottom Buoy
+VarName=Connection z force
+
+[0_Var3]
+ObjectType=6D Buoy
+ObjectName=Top Buoy
+VarName=Connection z force
+
