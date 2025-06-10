@@ -1,6 +1,10 @@
 Key checks
 - Mesh checks
   - In "Calculation & output" tab, check the "Perform validation of panel arrangement" box.
+    - 3 parameters are available as follows
+     - Min body volume
+     - Max panel aspect ratio
+     - min panels per wavelength
     - Details TBA
   - Mesh panel normals. 
     - Typically they should point into the hull 

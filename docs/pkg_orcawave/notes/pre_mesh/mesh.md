@@ -1,8 +1,14 @@
 ### Summary
 
+Simple vesssel hydrodynamic analysis
 - Vessel mesh
-- Control surface mesh (Mostly rectangular? - easy to replicate or program or find a public mesh program)
+- Control surface mesh
+  -  mostly rectangular? 
+  -  easy to replicate or 
+  -  generate in Orcawave program (no control on boundaries)
 
+Multibody hydrodynamic analysis
+- Vessel mesh
 
 ### References
 
