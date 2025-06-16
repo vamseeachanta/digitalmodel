@@ -132,7 +132,7 @@ class OrcaFlexPostProcess():
                     linked_statistics = opp_ls.add_file_result_to_all_results(linked_statistics, linked_statistics_for_file)
 
                 if cfg['orcaflex']['postprocess']['time_series']['flag']:
-                    if cfg['time_series_settings']['data']: 
+                    if 'time_series_settings' in cfg and cfg['time_series_settings']['data']: 
                         opp_ts.get_time_series_data(cfg, model_dict, file_name)
                 else:
                     pass
