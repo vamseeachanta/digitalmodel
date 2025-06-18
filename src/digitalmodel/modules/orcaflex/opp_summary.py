@@ -103,7 +103,9 @@ class OPPSummary():
 
             summary_array.append({'data': file_name, 'label': key})
 
-        cfg[cfg['meta']['basename']] = {'summary': {'groups': summary_array}}
+        updated_cfg = copy.deepcopy(cfg)
+        updated_cfg[cfg['meta']['basename']] = {'summary': {'groups': summary_array}}
+        return updated_cfg
 
     def process_summary_by_model_and_cfg_item(self, model_dict, cfg_item):
         RangeDF = pd.DataFrame()
