@@ -1,7 +1,7 @@
 ### Introduction
 
 An example to transform coefficient data from port side to starboard side.
-- The ship data conssits of neighbouring structures on port (and/or starboard) side.
+- The ship data consists of neighbouring structures on port (and/or starboard) side.
 - Model test is done for port berthing side only to obtain wind and current coefficients.
 - Wind Coefficient data is required for starboard berthing side.
 - Wind Coefficient data is Cx, Cy, Cz, Cnx, Cny, Cnz
