@@ -12,8 +12,8 @@ Key checks
 
 - Mesh correction by OrcaFlex
  - Non planar mesh elements. Orcaflex can correct these. 
-   - traingular elements with 3 points are in the same plane
-   - quadrilateral elements with 4 points will be converted to traingular elements to be in plane. 
+   - triangular elements with 3 points are in the same plane
+   - quadrilateral elements with 4 points will be converted to triangular elements to be in plane. 
 
 - Mesh Addition by OrcaFlex
   - Add interior surface panels to remove irregular frequency effects
