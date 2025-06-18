@@ -13,8 +13,6 @@ class OrcaFlexObjects():
 
     def get_orcaflex_objects(self, model_dict, cfg):
         model = model_dict['model']
-    def get_orcaflex_objects(self, model_dict, cfg):
-        model = model_dict['model']
         OrcFXAPIObject = self.get_OrcFXAPIObject(model, cfg)
 
 
@@ -38,11 +36,9 @@ class OrcaFlexObjects():
 
         VariableName = None
         if 'Variable' in cfg and OrcFXAPIObject is not None:
-        if 'Variable' in cfg and OrcFXAPIObject is not None:
             VariableName = cfg['Variable']
 
         Statistic_Type = None
-        if 'Statistic_Type' in cfg and OrcFXAPIObject is not None:
         if 'Statistic_Type' in cfg and OrcFXAPIObject is not None:
             Statistic_Type = cfg['Statistic_Type']
 

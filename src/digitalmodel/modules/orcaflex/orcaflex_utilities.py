@@ -452,7 +452,6 @@ class OrcaflexUtilities:
         return load_matrix
 
     def get_model_and_metadata(self, file_name):
-    def get_model_and_metadata(self, file_name):
         SimulationFileName = self.get_SimulationFileName(file_name)
         model = None
         if os.path.isfile(SimulationFileName):

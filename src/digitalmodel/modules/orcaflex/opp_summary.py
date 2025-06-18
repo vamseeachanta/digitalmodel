@@ -28,7 +28,6 @@ class OPPSummary():
         pass
 
     def get_summary_for_file(self, cfg: dict, model_dict: dict, file_name: str) -> None:
-    def get_summary_for_file(self, cfg: dict, model_dict: dict, file_name: str) -> None:
         summary_groups = cfg['summary_settings']['groups']
         summary_groups_for_file = {}
         for summary_group in summary_groups:
@@ -42,13 +41,9 @@ class OPPSummary():
             file_name_stem = Path(file_name).stem
 
             result_array = [file_name_for_output, file_name_stem, run_status, start_time, stop_time, None, None]
-            file_name_stem = Path(file_name).stem
-
-            result_array = [file_name_for_output, file_name_stem, run_status, start_time, stop_time, None, None]
             df = pd.DataFrame([result_array], columns=df_columns)
 
             for summary_cfg in summary_group['Columns']:
-                summary = self.get_summary_from_orcaflex_run(model_dict, summary_cfg)
                 summary = self.get_summary_from_orcaflex_run(model_dict, summary_cfg)
                 df[summary['variables']] = summary['values']
 
@@ -57,10 +52,8 @@ class OPPSummary():
         return summary_groups_for_file
 
     def get_summary_from_orcaflex_run(self, model_dict, summary_cfg):
-    def get_summary_from_orcaflex_run(self, model_dict, summary_cfg):
         variables = []
         values = []
-        value = self.process_summary_by_model_and_cfg_item(model_dict, summary_cfg)
         value = self.process_summary_by_model_and_cfg_item(model_dict, summary_cfg)
 
         variables.append(summary_cfg['Label'])
@@ -110,13 +103,13 @@ class OPPSummary():
 
             summary_array.append({'data': file_name, 'label': key})
 
-        cfg[cfg['basename']] = {'summary': {'groups': summary_array}}
+        updated_cfg = copy.deepcopy(cfg)
+        updated_cfg[cfg['meta']['basename']] = {'summary': {'groups': summary_array}}
+        return updated_cfg
 
-    def process_summary_by_model_and_cfg_item(self, model_dict, cfg_item):
     def process_summary_by_model_and_cfg_item(self, model_dict, cfg_item):
         RangeDF = pd.DataFrame()
 
-        OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model_dict, cfg_item)
         OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model_dict, cfg_item)
 
         if cfg_item['Command'] == 'Range Graph':
@@ -129,20 +122,16 @@ class OPPSummary():
             output_value = self.get_additional_data(cfg_item, RangeDF, VariableName,
                                                     output, Statistic_Type)
         elif cfg_item['Command'] == 'TimeHistory':
-            output = opp_ts.get_TimeHistory(OrcFXAPIObject, TimePeriod, objectExtra, VariableName)
+            output = opp_ts.get_TimeHistory(model_dict, OrcFXAPIObject, TimePeriod, objectExtra, VariableName)
 
             if OrcFXAPIObject is not None and output is not None:
                 output_value = self.get_additional_data(cfg_item, RangeDF, VariableName,
                                                         output, Statistic_Type)
             else:
                 output_value = None
-            if OrcFXAPIObject is not None and output is not None:
-                output_value = self.get_additional_data(cfg_item, RangeDF, VariableName,
-                                                        output, Statistic_Type)
-            else:
-                output_value = None
+
         elif cfg_item['Command'] in ['Static Result', 'StaticResult']:
-            output_value = self.get_StaticResult(OrcFXAPIObject, VariableName,
+            output_value = self.get_StaticResult(model_dict, OrcFXAPIObject, VariableName,
                                                  objectExtra)
         elif cfg_item['Command'] in ['GetData', 'Get Data']:
             OrcFXAPIObject, VariableName = of_objects.get_input_data_variable_name(cfg_item, OrcFXAPIObject, VariableName)
@@ -202,12 +191,15 @@ class OPPSummary():
 
         return output_value
 
-    def get_StaticResult(self, OrcFXAPIObject, VariableName, objectExtra=None):
-        try:
-            output = OrcFXAPIObject.StaticResult(VariableName, objectExtra)
-        except Exception as e:
-            logger.warning(f"Error getting StaticResult for {VariableName}: {e}")
-            output = None
+    def get_StaticResult(self, model_dict, OrcFXAPIObject, VariableName, objectExtra=None):
+        output = None
+        model_objects = of_objects.get_model_objects(model_dict['model'])
+        object_df = model_objects['object_df']
+        if OrcFXAPIObject.name in list(object_df['ObjectName']):
+            try:
+                output = OrcFXAPIObject.StaticResult(VariableName, objectExtra)
+            except Exception as e:
+                logger.warning(f"Error getting StaticResult for {VariableName}: {e}")
 
         return output
 

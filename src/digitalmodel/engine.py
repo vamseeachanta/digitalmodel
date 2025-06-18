@@ -1,5 +1,6 @@
 import logging
 
+from loguru import logger
 from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import CopyAndPasteFiles
@@ -53,10 +54,7 @@ app_manager = ConfigureApplicationInputs()
 
 def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
     cfg_argv_dict = {}
-    cfg_argv_dict = {}
     if cfg is None:
-        inputfile, cfg_argv_dict = app_manager.validate_arguments_run_methods(inputfile)
-        cfg = wwyaml.ymlInput(inputfile, updateYml=None)
         inputfile, cfg_argv_dict = app_manager.validate_arguments_run_methods(inputfile)
         cfg = wwyaml.ymlInput(inputfile, updateYml=None)
         cfg = AttributeDict(cfg)
@@ -67,20 +65,13 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         basename = cfg["basename"]
     elif 'meta' in cfg:
         basename = cfg["meta"]["basename"]
-    if 'basename' in cfg:
-        basename = cfg["basename"]
-    elif 'meta' in cfg:
-        basename = cfg["meta"]["basename"]
     else:
-        raise ValueError("basename not found in cfg")
         raise ValueError("basename not found in cfg")
 
     if config_flag:
         fm = FileManagement()
         cfg_base = app_manager.configure(cfg, library_name, basename, cfg_argv_dict)
-        cfg_base = app_manager.configure(cfg, library_name, basename, cfg_argv_dict)
         cfg_base = fm.router(cfg_base)
-        result_folder_dict, cfg_base = app_manager.configure_result_folder(None, cfg_base)
         result_folder_dict, cfg_base = app_manager.configure_result_folder(None, cfg_base)
     else:
         cfg_base = cfg

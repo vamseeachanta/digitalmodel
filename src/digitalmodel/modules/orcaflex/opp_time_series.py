@@ -46,8 +46,7 @@ class OPPTimeSeries:
         if cfg['orcaflex']['postprocess']['RAOs']['flag']:
             self.post_process_RAOs(model, FileObjectName)
 
-    def get_time_series_data(self, cfg, model_dict, file_name):
-        model = model_dict['model']
+
     def get_time_series_data(self, cfg, model_dict, file_name):
         model = model_dict['model']
         time_series_cfg_output = {"groups": []}
@@ -95,7 +94,6 @@ class OPPTimeSeries:
 
 
     def get_time_series_from_orcaflex_run(self, model_dict, cfg_time_series):
-    def get_time_series_from_orcaflex_run(self, model_dict, cfg_time_series):
         """Gets time series data from an OrcaFlex run
 
         Args:
@@ -118,40 +116,23 @@ class OPPTimeSeries:
             time_series = []
             times = []
             
-        OrcFXAPIObject,TimePeriod,arclengthRange,objectExtra, VariableName, Statistic_Type = of_objects.get_orcaflex_objects(model_dict, cfg_time_series)
-        model = model_dict['model']
-        
-        if OrcFXAPIObject is not None:
-            times = model.SampleTimes(TimePeriod)
-            time_series = OrcFXAPIObject.TimeHistory(VariableName,
-                                                TimePeriod,
-                                                objectExtra=objectExtra)
-        else:
-            time_series = []
-            times = []
-            
         return time_series, times
 
-    def get_TimeHistory(self, OrcFXAPIObject, TimePeriod, objectExtra, VariableName):
+    def get_TimeHistory(self, model_dict, OrcFXAPIObject, TimePeriod, objectExtra, VariableName):
         output = None
-        try:
-            if OrcFXAPIObject is not None:
-                if objectExtra is None:
-                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
-                else:
-                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
-                                                    objectExtra)
-            if OrcFXAPIObject is not None:
-                if objectExtra is None:
-                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
-                else:
-                    output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
-                                                    objectExtra)
-        except Exception as e:
-            logging.error(str(e))
-            # raise Exception(f"Error in TimeHistory: {str(e)}")
-            logging.error(str(e))
-            # raise Exception(f"Error in TimeHistory: {str(e)}")
+        model_objects = of_objects.get_model_objects(model_dict['model'])
+        object_df = model_objects['object_df']
+        if OrcFXAPIObject.name in list(object_df['ObjectName']):
+            try:
+                if OrcFXAPIObject is not None:
+                    if objectExtra is None:
+                        output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod)
+                    else:
+                        output = OrcFXAPIObject.TimeHistory(VariableName, TimePeriod,
+                                                        objectExtra)
+            except Exception as e:
+                logging.error(str(e))
+                # raise Exception(f"Error in TimeHistory: {str(e)}")
         return output
 
     def post_process_RAOs(self, model, FileObjectName):
