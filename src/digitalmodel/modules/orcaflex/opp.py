@@ -134,8 +134,6 @@ class OrcaFlexPostProcess():
                 if cfg['orcaflex']['postprocess']['time_series']['flag']:
                     if 'time_series_settings' in cfg and cfg['time_series_settings']['data']: 
                         opp_ts.get_time_series_data(cfg, model_dict, file_name)
-                else:
-                    pass
 
                 histogram_all_files.append(histogram_for_file)
                 RangeAllFiles.append(None)
