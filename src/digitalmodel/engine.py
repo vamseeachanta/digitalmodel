@@ -54,7 +54,6 @@ app_manager = ConfigureApplicationInputs()
 
 def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
     cfg_argv_dict = {}
-    cfg_argv_dict = {}
     if cfg is None:
         inputfile, cfg_argv_dict = app_manager.validate_arguments_run_methods(inputfile)
         cfg = wwyaml.ymlInput(inputfile, updateYml=None)
