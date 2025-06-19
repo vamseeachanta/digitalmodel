@@ -35,6 +35,8 @@ https://www.reddit.com/r/FSAE/comments/7d1k9v/surface_panels_in_solidworks/
 ![alt text](image-1.png)
 
 - Test mesh in OrcaFlex (or OpenFOAM etc.)
+  - show normals (pointing in -Y direction)
+  - Can we change to +Y Direction.
 
 ![Orcaflex mesh screenshot](image.png)
 
