@@ -17,7 +17,13 @@ To verify the change, you can enable "Backface Culling" in the Gmsh GUI (Options
 This will display one side of the mesh in a different color (e.g., gray), allowing you to visually check the normal direction. 
 
 
+Before reversing:
 
+![alt text](image-1.png)
+
+After reversing:
+
+![alt text](image-2.png)
 
 
 
