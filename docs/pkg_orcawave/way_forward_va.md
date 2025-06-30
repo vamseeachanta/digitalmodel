@@ -3,4 +3,13 @@
 
 
 - Can we run analysis with 1 body mesh. Do we need mesh for surrounding water.
-- 
+
+
+
+## AQWA vs. OrcaWave
+
+
+OrcaWave
+![alt text](image.png)
+
+AQWA
