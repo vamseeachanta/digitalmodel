@@ -9,6 +9,10 @@ An example to transform coefficient data from port side to starboard side.
   - Cx, Cy, Cnz are non-zero and asymmetric.
 
 - Current Coefficient data is Cx, Cy, Cz, Cnx, Cny, Cnz
+
+  - Cz data is close to zero
+  - Cnx, Cny data is close to zero (for WLNG project)
+=======
   - Cz, Cnx, Cny are close to zero and are equated to zero ? (untouched for WLNG project - check?)
   - Cx, Cy, Cnz are non-zero and asymmetric.
 
@@ -18,6 +22,11 @@ An example to transform coefficient data from port side to starboard side.
 
 - Transformation is only done for **non-zero** coefficients as follows:
   - LNGC rotated by 180 deg
+    - The vessel local environment incident angles are rotated by 180 deg
+  - The Surge coefficients are multiplied by -1 
+  - The Sway coefficients are multiplied by -1 
+  - The non-zero pitch coefficient is multiplied by -1
+  - The non-zero roll coefficient is multiplied by -1
     - The local angles are rotated by 180 deg
   - The Surge coefficients are multiplied by -1 
   - The Sway coefficients are multiplied by -1 
