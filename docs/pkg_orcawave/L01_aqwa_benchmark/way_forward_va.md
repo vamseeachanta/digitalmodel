@@ -12,11 +12,13 @@
 
 ### AQWA
 
-![alt text](aqwa_raos.png)
+![alt text](aqwa_raos_max_15s.png)
+
+<!-- ![alt text](aqwa_raos.png) -->
 
 ### OrcaWave
 
 ![imported to orcaflex](orcawave_in_orcaflex_raos.png)
 
-Orcawave RAOs As displayed in Orcawave
-![alt text](orcawave_in_orcawave_raos.png)
+<!-- Orcawave RAOs As displayed in Orcawave
+![alt text](orcawave_in_orcawave_raos.png) -->
