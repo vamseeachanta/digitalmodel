@@ -1,3 +1,4 @@
+
 ## Reverse Normals
 
 
@@ -26,8 +27,7 @@ After reversing:
 ![alt text](image-2.png)
 
 
-
-
+References
 
 https://gmsh.info/
 
@@ -42,5 +42,4 @@ https://gitlab.com/MatejB/PrePoMax-Models
 https://grabcad.com/library/pneumatic-gripper-11
 
 https://grabcad.com/dashboard
-
 

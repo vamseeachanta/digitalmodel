@@ -1,5 +1,6 @@
 
 
+
 ## Summary
 
 Method 1, Geometry & Mesh in CAD program:
@@ -76,3 +77,13 @@ Converting Solids to Surfaces:
 .
 You can also convert a solid body to a surface body using the Delete Face command. 
 By understanding these different surface tools and techniques, you can effectively create surfaces from your sketches in SolidWorks. 
+=======
+
+
+https://www.youtube.com/watch?v=9OGv9QzVW0E&t=149s
+
+
+
+https://gmsh.info/
+
+# Exporting Meshes from SolidWorks
