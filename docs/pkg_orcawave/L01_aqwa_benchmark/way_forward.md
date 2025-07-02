@@ -5,15 +5,22 @@
 - Can we run analysis with 1 body mesh. Do we need mesh for surrounding water.
 
 
+## Input Data
 
-## AQWA vs. OrcaWave
+
+
+
+## Hydrostatics
+
+## RAO Comparison
 
 
 
 ### AQWA
 
-![alt text](aqwa_raos_max_15s.png)
+![alt text](aqwa_raos_max_22s.png)
 
+<!-- ![alt text](aqwa_raos_max_15s.png) -->
 <!-- ![alt text](aqwa_raos.png) -->
 
 ### OrcaWave
