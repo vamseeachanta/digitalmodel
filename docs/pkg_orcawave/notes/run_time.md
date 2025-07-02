@@ -20,6 +20,7 @@ flowchart TD
 
 
 ### 2025-06-24 Recommendations
+
 I have taken a look at your model and I can make the following suggestions:
 •	Are you using the latest version of OrcaWave? Some recent updates (notably in version 11.3) have improved performance and reduced the amount of memory needed (as reported on the Validation page) per thread. Obviously if you can reduce the memory you can increase the thread count. When I open your model in the latest version, the requirement is only 13GB per thread.
 •	You can further reduce the memory requirement, and also speed up the calculation, by unchecking the box to divide non-planar panels on the Calculation page. If you do this, I recommend you also increase the waterline gap tolerance (e.g. to 0.02m), which will ensure that the waterline is closed (which means OrcaWave is able to add interior surface panels and create a control surface, as your model currently does). This reduces the memory to 4.3GB per thread.
