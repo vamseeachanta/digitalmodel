@@ -11,10 +11,7 @@ The comparison of input data between aqwa and orcawave is summarized in table be
 
 | Parameter |  Unit | OrcaWave | AQWA |
 |-----------|-------|----------|------|
-| Mass | kg | 1.0e6 | 1.0e6 |
-| Inertia | kg.m^2 | 1.0e9 | 1.0e9 |
-| Added Mass | kg.s^2 | 1.0e6 | 1.0e6 |
-| Damping | kg.s | 1.0e6 | 1.0e6 |
+| Mass | Te | 40000 | 40000 |
 
 
 
