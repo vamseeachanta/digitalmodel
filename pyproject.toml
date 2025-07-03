@@ -26,6 +26,7 @@ black = "^23.0"
 bumpver = "^2023.1129"
 isort = "^5.0.0"
 pytest = "^7.0.0"
+assetutilities = { path = "../assetutilities", develop = true }
 
 [tool.poetry.scripts]
 digital_model = "digitalmodel.__main__:main"
@@ -69,4 +70,3 @@ ignore_missing_imports = true
 
 [tool.poetry.dependencies]
 python = "^3.11"
-assetutilities = { path = "../assetutilities", develop = true }
