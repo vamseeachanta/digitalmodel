@@ -26,6 +26,8 @@ black = "^23.0"
 bumpver = "^2023.1129"
 isort = "^5.0.0"
 pytest = "^7.0.0"
+
+[tool.poetry.group.local.dependencies]
 assetutilities = { path = "../assetutilities", develop = true }
 
 [tool.poetry.scripts]
