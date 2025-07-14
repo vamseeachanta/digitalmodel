@@ -1,41 +1,50 @@
-[tool.poetry]
+
+[project]
 name = "digitalmodel"
 version = "0.0.8"
 description = "engineering asset digital model(s) for life cycle analysis"
-authors = ["Vamsee Achanta <vamsee.achanta@aceengineer.com>"]
-license = "MIT"
+authors = [{ name = "Vamsee Achanta", email = "vamsee.achanta@aceengineer.com" }]
+license = {text = "MIT"}
 readme = "README.md"
 keywords = ["finite element", "asset representation", "structural", "physical", "engineering", "animation", "lifecycle", "lifecycle analysis", "single source of truth", "digital model", "digital twin"]
-homepage = "https://github.com/vamseeachanta/digitalmodel"
-repository = "https://github.com/vamseeachanta/digitalmodel"
-documentation = "https://github.com/vamseeachanta/digitalmodel/blob/master/README.md"
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3"
 ]
-packages = [{ include = "digitalmodel", from = "src" }]
-include = ["*.yml", "*.csv", "*.xlsx", "*.html", "*.txt"]
 
-[tool.poetry.group.build.dependencies]
-build = "^1.0.0"
-twine = "^1.0.0"
+requires-python = ">=3.8"
+# Dependencies are managed in scripts/requirements.txt. Keep this file in sync for all environments.
+[project.urls]
+Homepage = "https://github.com/vamseeachanta/digitalmodel"
+Repository = "https://github.com/vamseeachanta/digitalmodel"
+Documentation = "https://github.com/vamseeachanta/digitalmodel/blob/master/README.md"
 
-[tool.poetry.group.dev.dependencies]
-black = "^23.0"
-bumpver = "^2023.1129"
-isort = "^5.0.0"
-pytest = "^7.0.0"
+[project.optional-dependencies]
+dev = [
+    "black>=23.0",
+    "bumpver>=2023.1129",
+    "isort>=5.0.0",
+    "pytest>=7.0.0"
+]
+deploy = [
+    "twine>=1.0.0",
+    "build>=1.0.0"
+]
 
-[tool.poetry.group.local.dependencies]
-assetutilities = { path = "../assetutilities", develop = true }
-
-[tool.poetry.scripts]
+[project.scripts]
 digital_model = "digitalmodel.__main__:main"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[setuptools]
+include-package-data = true
+
+[setuptools.dynamic]
+dependencies = {file = ["scripts/requirements.txt"]}
+
 
 [tool.bumpver]
 current_version = "0.0.8"
@@ -70,5 +79,7 @@ strict = true
 module = "feedparser"
 ignore_missing_imports = true
 
-[tool.poetry.dependencies]
-python = "^3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

@@ -2,7 +2,10 @@ import os
 import pathlib
 import pandas as pd
 import numpy as np
-import OrcFxAPI
+try:
+    import OrcFxAPI
+except Exception:
+    raise RuntimeError("OrcaFlex license not available. Run on different computer")
 import logging
 from digitalmodel.modules.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects

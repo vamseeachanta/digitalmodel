@@ -1,7 +1,10 @@
 import pandas as pd
 import math
 import copy
-import OrcFxAPI
+try:
+    import OrcFxAPI
+except Exception:
+    raise RuntimeError("OrcaFlex license not available. Run on different computer")
 
 class OPPRangeGraph():
     

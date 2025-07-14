@@ -1,4 +1,7 @@
-import OrcFxAPI
+try:
+    import OrcFxAPI
+except Exception:
+    raise RuntimeError("OrcaFlex license not available. Run on different computer")
 import logging
 
 from digitalmodel.modules.orcaflex.preprocess.load_vessel import LoadVessel

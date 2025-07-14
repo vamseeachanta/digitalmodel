@@ -4,7 +4,10 @@ import sys
 
 import matplotlib.pyplot as pyplot
 import matplotlib.pyplot as plt
-import OrcFxAPI
+try:
+    import OrcFxAPI
+except Exception:
+    raise RuntimeError("OrcaFlex license not available. Run on different computer")
 from matplotlib import rc
 
 rc('mathtext', default='regular')

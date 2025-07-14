@@ -1,6 +1,9 @@
 import os
 import argparse
-import OrcFxAPI
+try:
+    import OrcFxAPI
+except Exception:
+    raise RuntimeError("OrcaFlex license not available. Run on different computer")
 import logging
 
 from assetutilities.common.utilities import is_file_valid_func

@@ -1,7 +1,10 @@
 import math
 import sys
 
-import OrcFxAPI
+try:
+    import OrcFxAPI
+except Exception:
+    raise RuntimeError("OrcaFlex license not available. Run on different computer")
 import pandas as pd
 
 ''' 

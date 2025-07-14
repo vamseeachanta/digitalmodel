@@ -1,4 +1,7 @@
-import OrcFxAPI
+try:
+    import OrcFxAPI
+except Exception:
+    raise RuntimeError("OrcaFlex license not available. Run on different computer")
 import os
 import logging
 from assetutilities.common.yml_utilities import is_file_valid_func
