@@ -1,7 +1,4 @@
-try:
-    import OrcFxAPI
-except Exception:
-    raise RuntimeError("OrcaFlex license not available. Run on different computer")
+import logging
 import logging
 
 from digitalmodel.modules.orcaflex.preprocess.load_vessel import LoadVessel
@@ -36,8 +33,12 @@ class OrcaflexPreProcess:
         return cfg
 
     def check_1_yml_file(self, yml_file):
-        model = OrcFxAPI.Model()
+        try:
+            import OrcFxAPI
+        except Exception:
+            raise RuntimeError("OrcaFlex license not available. Run on different computer")
 
+        model = OrcFxAPI.Model()
         check_yml_result = False
         try:
             model.LoadData(yml_file)
@@ -48,5 +49,4 @@ class OrcaflexPreProcess:
             logging.error(e)
 
         check_yml_dict = {'check_yml_result': check_yml_result}
-
         return check_yml_dict
