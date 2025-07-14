@@ -6,7 +6,7 @@ try:
     import OrcFxAPI
 except Exception:
     raise RuntimeError("OrcaFlex license not available. Run on different computer")
-import logging
+from loguru import logger
 from digitalmodel.modules.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
 from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
@@ -49,6 +49,7 @@ class Mooring():
             yml_file = filename_wo_ext.with_suffix('.yml')
             file_meta_data = {'sim': file_name, 'yml': yml_file}
 
+            logger.info(f"Mooring analysis started for {file_name}")
             current_iteration = 0
             iteration_flag = True
             # while iteration_flag:
@@ -184,7 +185,7 @@ class Mooring():
         current_var_df = var_data_dict['StaticResult']['Constraint'][columns]
 
         fender_force_df['current_fender_force'] = None
-        fender_force_df['compression'] = None
+            logger.error(f"Error in mooring analysis: {e}")
         for index, row in fender_force_df.iterrows():
             object_name = row['ObjectName']
             mask = current_var_df['ObjectName'] == object_name

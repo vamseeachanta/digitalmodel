@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 import os
 import sys
 
@@ -35,10 +35,10 @@ defaultYml = "dataManager\\OrcaFlex_Post\\OrcaFlex.yml"
 try:
     if (sys.argv[1] != None):
         updateYml = "dataManager\\OrcaFlex_Post\\" + sys.argv[1]
-        logging.critical("Updating default values with contents in file {0}" .format(updateYml) )
+        logger.critical("Updating default values with contents in file {0}" .format(updateYml) )
 except:
     updateYml = None
-    logging.critical("No update values file is provided. Running program default values")
+    logger.critical("No update values file is provided. Running program default values")
 
 # Get updated configuration file for Analysis
 cfg = ymlInput(defaultYml, updateYml)

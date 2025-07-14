@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 
 from loguru import logger
 from assetutilities.common.update_deep import AttributeDict
