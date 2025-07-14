@@ -1,5 +1,4 @@
-import logging
-import logging
+from loguru import logger
 
 from digitalmodel.modules.orcaflex.preprocess.load_vessel import LoadVessel
 
@@ -43,10 +42,10 @@ class OrcaflexPreProcess:
         try:
             model.LoadData(yml_file)
             check_yml_result = True
-            logging.debug(f'Load yml file: {yml_file} ... PASS')
+            logger.debug(f'Load yml file: {yml_file} ... PASS')
         except Exception as e:
-            logging.error(f'Load yml file: {yml_file} ... FAIL')
-            logging.error(e)
+            logger.error(f'Load yml file: {yml_file} ... FAIL')
+            logger.error(e)
 
         check_yml_dict = {'check_yml_result': check_yml_result}
         return check_yml_dict

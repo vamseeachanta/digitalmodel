@@ -3,7 +3,7 @@ try:
 except Exception:
     raise RuntimeError("OrcaFlex license not available. Run on different computer")
 import os
-import logging
+from loguru import logger
 from assetutilities.common.yml_utilities import is_file_valid_func
 
 class OPPVisualization():
@@ -35,7 +35,7 @@ class OPPVisualization():
                 try:
                     model.LoadData(input_file)
                 except:
-                    logging.error(f"Error loading file: {input_file}")
+                    logger.error(f"Error loading file: {input_file}")
                     continue
 
                 if cfg['visualization_settings']['combined']:

@@ -1,10 +1,6 @@
 import os
 import argparse
-try:
-    import OrcFxAPI
-except Exception:
-    raise RuntimeError("OrcaFlex license not available. Run on different computer")
-import logging
+from loguru import logger
 
 from assetutilities.common.utilities import is_file_valid_func
 
@@ -45,14 +41,16 @@ class LoadVessel:
             raise Exception(f"File not found: {file_name}")
 
         file_is_valid, output_template = is_file_valid_func(output_template, analysis_root_folder)
-        
         if not file_is_valid:
             raise Exception(f"Output Template for vessel import not found: {file_name}")
-        
-        model = OrcFxAPI.Model(output_template, threadCount=1)
 
+        try:
+            import OrcFxAPI
+        except Exception:
+            raise RuntimeError("OrcaFlex license not available. Run on different computer")
+
+        model = OrcFxAPI.Model(output_template, threadCount=1)
         importFileType = OrcFxAPI.iftAQWA
-        # vt = model.CreateObject(OrcFxAPI.otVesselType)
         vt_names = group['vt_names']
 
         bodyMaps = []
@@ -85,12 +83,12 @@ class LoadVessel:
             clearExistingData=False,
         )
 
-        logging.warning(f"AQWA data import: {messages}")
+        logger.warning(f"AQWA data import: {messages}")
 
         if success:
             output_file_name = os.path.join(analysis_root_folder, output_file)
             # model.SaveData(args.filePath.replace(".lis", ".dat"))
             model.SaveData(output_file_name)
         else:
-            logging.error(f"Failed to import AQWA data: {messages}")
+            logger.error(f"Failed to import AQWA data: {messages}")
             raise Exception(f"Failed to import AQWA data: {input_file}")

@@ -4,7 +4,7 @@ except Exception:
     raise RuntimeError("OrcaFlex license not available. Run on different computer")
 # Standard library imports
 import glob
-import logging
+from loguru import logger
 import math
 import os
 from pathlib import Path
@@ -38,7 +38,7 @@ try:
     # Third party imports
     import OrcFxAPI
 except:
-    logging.debug("OrcFxAPI not available")
+    logger.debug("OrcFxAPI not available")
 # Standard library imports
 from collections import OrderedDict
 
@@ -57,7 +57,7 @@ class OrcaflexUtilities:
     def is_orcaflex_available(self):
         try:
             model = OrcFxAPI.Model()
-            logging.debug("Orcaflex license is available .... PASS")
+            logger.debug("Orcaflex license is available .... PASS")
             print(f"{Fore.GREEN}Orcaflex license is available .... PASS{Style.RESET_ALL}")
             return True
         except:
@@ -131,7 +131,7 @@ class OrcaflexUtilities:
         # new_value = 'Implicit time domain'
         # if old_value != new_value:
         #     model.DynamicSolutionMethod = new_value
-        #     logging.info(
+        #     logger.info(
         #         f"      DynamicSolutionMethod... old: {old_value} to new: {new_value}"
         #     )
 
@@ -141,7 +141,7 @@ class OrcaflexUtilities:
             new_value = general_properties['ImplicitUseVariableTimeStep']
             if old_value != new_value:
                 model.general.ImplicitUseVariableTimeStep = new_value
-                logging.info(
+                logger.info(
                     f"      ImplicitUseVariableTimeStep... changed from : '{old_value}' to '{new_value}'"
                 )
 
@@ -149,7 +149,7 @@ class OrcaflexUtilities:
             new_value = general_properties['TimeStep']
             if old_value != new_value:
                 model.general.ImplicitConstantTimeStep = new_value
-                logging.info(
+                logger.info(
                     f"      ImplicitConstantTimeStep... changed from : '{old_value}' to '{new_value}'"
                 )
 
@@ -158,7 +158,7 @@ class OrcaflexUtilities:
             new_value = general_properties['ImplicitUseVariableTimeStep']
             if old_value != new_value:
                 model.general.ImplicitUseVariableTimeStep = new_value
-                logging.info(
+                logger.info(
                     f"      ImplicitUseVariableTimeStep... changed from : '{old_value}' to '{new_value}'"
                 )
 
@@ -166,7 +166,7 @@ class OrcaflexUtilities:
             new_value = general_properties['TimeStep']
             if old_value != new_value:
                 model.general.ImplicitVariableMaxTimeStep = new_value
-                logging.info(
+                logger.info(
                     f"      ImplicitVaribaleMaxTimeStep... changed from : '{old_value}' to '{new_value}'"
                 )
 
@@ -221,7 +221,7 @@ class OrcaflexUtilities:
         update_unfinished_cfg = cfg['file_management'][
             'update_unfinished'].copy()
         for sim_file in sim_files:
-            logging.info(
+            logger.info(
                 f"Simulation file analysis for : {sim_file} .... START")
             model = OrcFxAPI.Model(sim_file)
             sim_status = {'file': sim_file}
@@ -232,12 +232,12 @@ class OrcaflexUtilities:
                 try:
                     self.update_input_file(update_unfinished_cfg)
                 except Exception as e:
-                    logging.info(e)
-                    logging.info(
+                    logger.info(e)
+                    logger.info(
                         f"Version incompatibility for file: {sim_file}.")
 
             sim_status_cfg.append(sim_status)
-            logging.info(f"Simulation file analysis for : {sim_file} .... End")
+            logger.info(f"Simulation file analysis for : {sim_file} .... End")
 
         cfg[cfg['basename']].update({'sim_status': sim_status_cfg})
 
@@ -469,9 +469,9 @@ class OrcaflexUtilities:
             except Exception as e:
                 model = None
                 model = None
-                logging.info(
+                logger.info(
                     f"Model: {SimulationFileName} ... Error Loading File")
-                logging.info(str(e))
+                logger.info(str(e))
 
         model_dict = {'model': model, 'simulation_complete': simulation_complete, 'run_status': run_status, 'stop_time': stop_time, 'start_time': start_time, 'current_time': current_time}
 
