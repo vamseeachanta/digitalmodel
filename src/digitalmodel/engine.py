@@ -1,55 +1,32 @@
 from loguru import logger
-
-from loguru import logger
 from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import CopyAndPasteFiles
 from assetutilities.common.file_management import FileManagement
 from assetutilities.common.yml_utilities import WorkingWithYAML
-from assetutilities.common.yml_utilities import WorkingWithYAML
 # Reader imports
 from digitalmodel.aqwa import Aqwa
 from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.common.cathodic_protection import CathodicProtection
-from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
-    DNVRPH103_hydrodynamics_circular,
-)
-from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
-    DNVRPH103_hydrodynamics_rectangular,
-)
-from digitalmodel.common.fatigue_analysis import FatigueAnalysis
-from digitalmodel.common.ship_design import ShipDesign
+from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import DNVRPH103_hydrodynamics_circular
+from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import DNVRPH103_hydrodynamics_rectangular
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
 from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
-
-from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
-
-from digitalmodel.modules.orcaflex.orcaflex_file_management import (
-    OrcaflexFileManagement,
-)
+from digitalmodel.modules.orcaflex.orcaflex_file_management import OrcaflexFileManagement
 from digitalmodel.modules.orcaflex.orcaflex_installation import OrcInstallation
 from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
-from digitalmodel.modules.orcaflex.umbilical_analysis_components import (
-    UmbilicalAnalysis,
-)
+from digitalmodel.modules.orcaflex.umbilical_analysis_components import UmbilicalAnalysis
 from digitalmodel.modules.pipe_capacity.pipe_capacity import PipeCapacity
 from digitalmodel.modules.pipeline.pipeline import Pipeline
 from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis
 from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis
 from digitalmodel.modules.transformation.transformation import Transformation
 from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
-from digitalmodel.modules.vertical_riser import vertical_riser
-from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
-from digitalmodel.modules.mooring.mooring import Mooring
 from digitalmodel.modules.mooring.mooring import Mooring
 
 library_name = "digitalmodel"
 wwyaml = WorkingWithYAML()
-
-app_manager = ConfigureApplicationInputs()
-wwyaml = WorkingWithYAML()
-
 app_manager = ConfigureApplicationInputs()
 
 def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
