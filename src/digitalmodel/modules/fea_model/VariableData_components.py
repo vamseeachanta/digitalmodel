@@ -1,5 +1,4 @@
-class VariableData():
-
+class VariableData:
     def __init__(self, cfg):
         self.cfg = cfg
 
@@ -15,14 +14,14 @@ class VariableData():
         return variable_data
 
     def get_general(self):
-        general = {
-            "Name": "AxialStiffnessProfile"
-        }
+        general = {"Name": "AxialStiffnessProfile"}
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_general_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_general_"
         property_group = general
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return general
 
@@ -31,18 +30,22 @@ class VariableData():
         data = []
         relationData = {"IndependentValue, DependentValue": data}
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_relationData_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_relationData_"
         property_group = relationData
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return relationData
 
     def update_property_group(self, calculate_function_prefix, property_group, cfg):
         for key_item in property_group.keys():
             if key_item in cfg and cfg[key_item] is not None:
-                if cfg[key_item] != 'Calculated':
+                if cfg[key_item] != "Calculated":
                     property_group[key_item] = cfg[key_item]
                 else:
-                    calculate_function = getattr(self, calculate_function_prefix + key_item)
+                    calculate_function = getattr(
+                        self, calculate_function_prefix + key_item
+                    )
                     property_group[key_item] = calculate_function(cfg)

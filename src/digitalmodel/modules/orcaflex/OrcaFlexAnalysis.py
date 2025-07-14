@@ -4,13 +4,14 @@ import sys
 
 import matplotlib.pyplot as pyplot
 import matplotlib.pyplot as plt
+
 try:
     import OrcFxAPI
 except Exception:
     raise RuntimeError("OrcaFlex license not available. Run on different computer")
 from matplotlib import rc
 
-rc('mathtext', default='regular')
+rc("mathtext", default="regular")
 import csv
 import json
 
@@ -25,7 +26,7 @@ from custom.OrcaFlex_Post.postProcessPlotting import postProcessPlotting
 from dataManager.OrcaFlex_Post.ymlInput import ymlInput
 
 try:
-    user_paths = os.environ['PYTHONPATH']
+    user_paths = os.environ["PYTHONPATH"]
 except KeyError:
     user_paths = []
 
@@ -33,9 +34,11 @@ except KeyError:
 defaultYml = "dataManager\\OrcaFlex_Post\\OrcaFlex.yml"
 # Get updateYML file
 try:
-    if (sys.argv[1] != None):
+    if sys.argv[1] != None:
         updateYml = "dataManager\\OrcaFlex_Post\\" + sys.argv[1]
-        logger.critical("Updating default values with contents in file {0}" .format(updateYml) )
+        logger.critical(
+            "Updating default values with contents in file {0}".format(updateYml)
+        )
 except:
     updateYml = None
     logger.critical("No update values file is provided. Running program default values")
@@ -43,15 +46,15 @@ except:
 # Get updated configuration file for Analysis
 cfg = ymlInput(defaultYml, updateYml)
 try:
-    cfg['FileName'] = updateYml.split('\\')[1].split('.')[0]
+    cfg["FileName"] = updateYml.split("\\")[1].split(".")[0]
 except:
-    cfg['FileName'] = defaultYml.split('\\')[1].split('.')[0]
+    cfg["FileName"] = defaultYml.split("\\")[1].split(".")[0]
 
 # cfg = customUpdate(cfg)
 # print(cfg)
 
 # Set logging
-setLogging(cfg['default']['logLevel'])
+setLogging(cfg["default"]["logLevel"])
 
 # Analysis (code under development)
 # for fileIndex in range(0, len(cfg['Analyze'])):
@@ -73,25 +76,37 @@ setLogging(cfg['default']['logLevel'])
 
 #  Postprocessing
 RangeAllFiles, SummaryDF = postProcess(cfg)
-print("Successful process {0} sim files" .format(len(RangeAllFiles)))
+print("Successful process {0} sim files".format(len(RangeAllFiles)))
 # Plot Range Data
 postProcessPlotting(RangeAllFiles, cfg)
 
 SummaryFileNameArray = []
-for SummaryIndex in range(0, len(cfg['Summary'])):
-    SummaryFileName = cfg['Summary'][SummaryIndex]['SummaryFileName']
+for SummaryIndex in range(0, len(cfg["Summary"])):
+    SummaryFileName = cfg["Summary"][SummaryIndex]["SummaryFileName"]
     SummaryFileNameArray.append(SummaryFileName)
-    if cfg['default']['Analysis']['AddMinimumToSummary']:
-        SummaryDF[SummaryIndex].loc[len(SummaryDF[SummaryIndex])] = SummaryDF[SummaryIndex].min(axis=0).tolist()
-        SummaryDF[SummaryIndex].loc[len(SummaryDF[SummaryIndex])-1, 'Description'] = 'Minimum'
-    if cfg['default']['Analysis']['AddMaximumToSummary']:
-        SummaryDF[SummaryIndex].loc[len(SummaryDF[SummaryIndex])] = SummaryDF[SummaryIndex].max(axis=0).tolist()
-        SummaryDF[SummaryIndex].loc[len(SummaryDF[SummaryIndex])-1, 'Description'] = 'Maximum'
-    if cfg['default']['Analysis']['AddMeanToSummary']:
-        SummaryDF[SummaryIndex].loc[len(SummaryDF[SummaryIndex])] = ['Mean'] + SummaryDF[SummaryIndex].mean(axis=0).tolist()
+    if cfg["default"]["Analysis"]["AddMinimumToSummary"]:
+        SummaryDF[SummaryIndex].loc[len(SummaryDF[SummaryIndex])] = (
+            SummaryDF[SummaryIndex].min(axis=0).tolist()
+        )
+        SummaryDF[SummaryIndex].loc[
+            len(SummaryDF[SummaryIndex]) - 1, "Description"
+        ] = "Minimum"
+    if cfg["default"]["Analysis"]["AddMaximumToSummary"]:
+        SummaryDF[SummaryIndex].loc[len(SummaryDF[SummaryIndex])] = (
+            SummaryDF[SummaryIndex].max(axis=0).tolist()
+        )
+        SummaryDF[SummaryIndex].loc[
+            len(SummaryDF[SummaryIndex]) - 1, "Description"
+        ] = "Maximum"
+    if cfg["default"]["Analysis"]["AddMeanToSummary"]:
+        SummaryDF[SummaryIndex].loc[len(SummaryDF[SummaryIndex])] = [
+            "Mean"
+        ] + SummaryDF[SummaryIndex].mean(axis=0).tolist()
 
     try:
-        decimalArray = pd.Series([0, 0, 0, 2, 0], index=SummaryDF[SummaryIndex].columns.values)
+        decimalArray = pd.Series(
+            [0, 0, 0, 2, 0], index=SummaryDF[SummaryIndex].columns.values
+        )
         SummaryDF[SummaryIndex] = SummaryDF[SummaryIndex].round(decimalArray)
     except:
         SummaryDF[SummaryIndex] = SummaryDF[SummaryIndex].round(2)
@@ -99,9 +114,11 @@ for SummaryIndex in range(0, len(cfg['Summary'])):
     # DataFrame_To_Image(SummaryDF[SummaryIndex], SummaryFileName + '.png')
 
 #  Send LML Data to Excel Sheet
-customdata = {"FileName" : 'results\\OrcaFlex_Post\\data\\' + cfg['FileName'] + '.xlsx',
-        "SheetNames": SummaryFileNameArray,
-        "thin_border" : True}
+customdata = {
+    "FileName": "results\\OrcaFlex_Post\\data\\" + cfg["FileName"] + ".xlsx",
+    "SheetNames": SummaryFileNameArray,
+    "thin_border": True,
+}
 DataFrameArray_To_xlsx_openpyxl(SummaryDF, customdata)
 
-print("Processed {0} summary files" .format(len(cfg['Summary'])))
+print("Processed {0} summary files".format(len(cfg["Summary"])))

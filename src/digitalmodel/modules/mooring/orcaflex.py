@@ -1,5 +1,6 @@
 from loguru import logger as logging
 
+
 class Mooring:
     def __init__(self):
         pass
@@ -8,4 +9,3 @@ class Mooring:
         logging.info(f"mooring, application ... START")
         if "mooring" in cfg_base and cfg_base["mooring"]["flag"]:
             cfg_base = mooring(cfg_base)
-

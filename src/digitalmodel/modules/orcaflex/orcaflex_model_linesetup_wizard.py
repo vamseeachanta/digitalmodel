@@ -7,7 +7,6 @@ wwy = WorkingWithYAML()
 
 
 class LineSetUpWizard:
-
     def __init__(self):
         pass
 
@@ -27,5 +26,3 @@ class LineSetUpWizard:
         model["Line2"].LineSetupIncluded = "No"
 
         model.InvokeLineSetupWizard()
-        
-        

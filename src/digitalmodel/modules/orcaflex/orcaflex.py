@@ -11,8 +11,8 @@ orcaflex_analysis = OrcaflexAnalysis()
 opp = OrcaFlexPostProcess()
 all_vars = AllVars()  # noqa
 
-class OrcaFlex:
 
+class OrcaFlex:
     def __init__(self):
         pass
 
@@ -30,4 +30,3 @@ class OrcaFlex:
         all_vars.router(cfg)
 
         return cfg
-

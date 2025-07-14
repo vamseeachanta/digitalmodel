@@ -1,5 +1,4 @@
-class LineType():
-
+class LineType:
     def __init__(self, cfg):
         self.cfg = cfg
 
@@ -47,10 +46,12 @@ class LineType():
             "Category": "General",
         }
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_general_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_general_"
         property_group = general
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return general
 
@@ -63,10 +64,12 @@ class LineType():
             "MassPerUnitLength": 0.1795975,
         }
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_geometryMass_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_geometryMass_"
         property_group = geometryMass
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return geometryMass
 
@@ -77,25 +80,29 @@ class LineType():
             "MinRadius": ["~", "~"],
         }
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_limits_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_limits_"
         property_group = limits
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return limits
 
     def get_structure(self):
         structure = {
             "EI": [0, "~"],
-            "EA": 770.735E3,
+            "EA": 770.735e3,
             "PoissonRatio": 0,
             "GJ": 10,
         }
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_structure_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_structure_"
         property_group = structure
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return structure
 
@@ -106,10 +113,12 @@ class LineType():
             "ClashStiffness": 0,
         }
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_contact_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_contact_"
         property_group = contact
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return contact
 
@@ -121,34 +130,45 @@ class LineType():
             "Ce": 0,
         }
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_addedProperties_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_addedProperties_"
         property_group = addedProperties
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return addedProperties
 
     def get_dragAndLift(self):
         import math
+
         dragAndLift = {
             "Cd": [2.4, "~", 1.15],
             "Cl": 0,
-            "NormalDragLiftDiameter": self.cfg['cfg']['OD'],
-            "AxialDragLiftDiameter": self.cfg['cfg']['OD'],
+            "NormalDragLiftDiameter": self.cfg["cfg"]["OD"],
+            "AxialDragLiftDiameter": self.cfg["cfg"]["OD"],
         }
 
-        MarineGrowthThickness = self.cfg['cfg'].get('MarineGrowthThickness', 0)
+        MarineGrowthThickness = self.cfg["cfg"].get("MarineGrowthThickness", 0)
 
-        if self.cfg['cfg'].__contains__('Material') and self.cfg['cfg']['Material'] == 'steel':
-            HydrodynamicOD = (((self.cfg['cfg']['MassPerUnitLength'] * 0.13) * 4 / math.pi / 1025)**0.5 +
-                              2 * MarineGrowthThickness).__round__(3)
-            dragAndLift['NormalDragLiftDiameter'] = HydrodynamicOD
-            dragAndLift['AxialDragLiftDiameter'] = HydrodynamicOD
+        if (
+            self.cfg["cfg"].__contains__("Material")
+            and self.cfg["cfg"]["Material"] == "steel"
+        ):
+            HydrodynamicOD = (
+                ((self.cfg["cfg"]["MassPerUnitLength"] * 0.13) * 4 / math.pi / 1025)
+                ** 0.5
+                + 2 * MarineGrowthThickness
+            ).__round__(3)
+            dragAndLift["NormalDragLiftDiameter"] = HydrodynamicOD
+            dragAndLift["AxialDragLiftDiameter"] = HydrodynamicOD
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_dragAndLift_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_dragAndLift_"
         property_group = dragAndLift
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return dragAndLift
 
@@ -163,10 +183,12 @@ class LineType():
             "TorsionalStressLoadingFactor": 1,
         }
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_stress_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_stress_"
         property_group = stress
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return stress
 
@@ -177,10 +199,12 @@ class LineType():
             "SeabedAxialFrictionCoefficient": "~",
         }
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_friction_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_friction_"
         property_group = friction
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return friction
 
@@ -190,10 +214,12 @@ class LineType():
             "RayleighDampingCoefficients": "(no damping)",
         }
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_damping_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_damping_"
         property_group = damping
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return damping
 
@@ -206,8 +232,10 @@ class LineType():
     def update_property_group(self, calculate_function_prefix, property_group, cfg):
         for key_item in property_group.keys():
             if key_item in cfg and cfg[key_item] is not None:
-                if cfg[key_item] != 'Calculated':
+                if cfg[key_item] != "Calculated":
                     property_group[key_item] = cfg[key_item]
                 else:
-                    calculate_function = getattr(self, calculate_function_prefix + key_item)
+                    calculate_function = getattr(
+                        self, calculate_function_prefix + key_item
+                    )
                     property_group[key_item] = calculate_function(cfg)

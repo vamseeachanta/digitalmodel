@@ -1,5 +1,4 @@
-class Constraint():
-
+class Constraint:
     def __init__(self, cfg):
         self.cfg = cfg
 
@@ -31,13 +30,15 @@ class Constraint():
             "InitialAttitude": [0, 0, 0],
             "ConstraintType": "Calculated DOFs",
             "CalculatedModelType": "Cartesian",
-            "OutFrameReleaseStage": "~"
+            "OutFrameReleaseStage": "~",
         }
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_general_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_general_"
         property_group = general
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return general
 
@@ -46,10 +47,12 @@ class Constraint():
         DoF_data = []
         DoFs = {"DOFFree, DOFInitialValue": DoF_data}
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_DoFs_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_DoFs_"
         property_group = DoFs
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return DoFs
 
@@ -58,18 +61,23 @@ class Constraint():
             "TranslationalStiffness": 0,
             "RotationalStiffness": 0,
             "TranslationalDamping": 0,
-            "RotationalDamping": 0
+            "RotationalDamping": 0,
         }
 
         return connectionStiffness
 
     def get_CharacteristicProperties(self):
-        CharacteristicProperties = {"CharacteristicLength": "~", "CharacteristicForce": "~"}
+        CharacteristicProperties = {
+            "CharacteristicLength": "~",
+            "CharacteristicForce": "~",
+        }
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_CharacteristicProperties_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_CharacteristicProperties_"
         property_group = CharacteristicProperties
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return CharacteristicProperties
 
@@ -81,8 +89,10 @@ class Constraint():
     def update_property_group(self, calculate_function_prefix, property_group, cfg):
         for key_item in property_group.keys():
             if key_item in cfg and cfg[key_item] is not None:
-                if cfg[key_item] != 'Calculated':
+                if cfg[key_item] != "Calculated":
                     property_group[key_item] = cfg[key_item]
                 else:
-                    calculate_function = getattr(self, calculate_function_prefix + key_item)
+                    calculate_function = getattr(
+                        self, calculate_function_prefix + key_item
+                    )
                     property_group[key_item] = calculate_function(cfg)

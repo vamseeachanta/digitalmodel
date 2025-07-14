@@ -5,10 +5,12 @@ from digitalmodel.modules.catenary.catenary_riser import catenary_riser
 
 catenary_calculator = CatenaryCalculator()
 
+
 class Catenary:
     """
     Class for handling catenary calculations and routing operations.
     """
+
     def __init__(self):
         pass
 
@@ -19,7 +21,9 @@ class Catenary:
         Args:
             cfg (Dict[str, Any], optional): Configuration dictionary
         """
-        calculation = cfg.get('calculation', cfg.get('meta', {}).get('calculation', None))
+        calculation = cfg.get(
+            "calculation", cfg.get("meta", {}).get("calculation", None)
+        )
         if not calculation:
             return cfg
 

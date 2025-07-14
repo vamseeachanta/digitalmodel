@@ -43,23 +43,22 @@ class PipeComponents:
     #     df = self.dbe.get_df_from_query(query)
     #     self.last_witsml = df
 
-
     def evaluate_pipe_capacity(self, cfg: dict) -> None:
-        pipe_flag = 'Outer_Pipe'
+        pipe_flag = "Outer_Pipe"
         if cfg.__contains__(pipe_flag):
-            material = cfg[pipe_flag]['Material']['Material']
-            material_grade = cfg[pipe_flag]['Material']['Material_Grade']
-            cfg[pipe_flag]['Material'].update(cfg['Material'][material])
-            cfg[pipe_flag]['Material'].update(
-                cfg['Material'][material]['Grades'][material_grade]
+            material = cfg[pipe_flag]["Material"]["Material"]
+            material_grade = cfg[pipe_flag]["Material"]["Material_Grade"]
+            cfg[pipe_flag]["Material"].update(cfg["Material"][material])
+            cfg[pipe_flag]["Material"].update(
+                cfg["Material"][material]["Grades"][material_grade]
             )
-        pipe_flag = 'Inner_Pipe'
+        pipe_flag = "Inner_Pipe"
         if cfg.__contains__(pipe_flag) and cfg[pipe_flag] is not None:
-            material = cfg[pipe_flag]['Material']['Material']
-            material_grade = cfg[pipe_flag]['Material']['Material_Grade']
-            cfg[pipe_flag]['Material'].update(cfg['Material'][material])
-            cfg[pipe_flag]['Material'].update(
-                cfg['Material'][material]['Grades'][material_grade]
+            material = cfg[pipe_flag]["Material"]["Material"]
+            material_grade = cfg[pipe_flag]["Material"]["Material_Grade"]
+            cfg[pipe_flag]["Material"].update(cfg["Material"][material])
+            cfg[pipe_flag]["Material"].update(
+                cfg["Material"][material]["Grades"][material_grade]
             )
 
         Pipe: PipeSizing = PipeSizing(cfg)
@@ -70,4 +69,3 @@ class PipeComponents:
         # Evaluate Pipe Capacity
         Pipe_Capacity: PipeCapacity = PipeCapacity(cfg)
         Pipe_Capacity.evaluate_pipe_wall()
-

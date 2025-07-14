@@ -1,4 +1,3 @@
-
 # Third party imports
 from assetutilities.common.file_management import FileManagement
 
@@ -8,8 +7,8 @@ from digitalmodel.modules.aqwa.aqwa_dat_files import AqwaDATFiles
 fm = FileManagement()
 adf = AqwaDATFiles()
 
-class AqwaPreProcess:
 
+class AqwaPreProcess:
     def __init__(self):
         pass
 
@@ -18,19 +17,21 @@ class AqwaPreProcess:
         cfg = fm.router(cfg)
         cfg = self.get_cfg_with_master_data(cfg)
 
-        if cfg['type']['preprocess']:
+        if cfg["type"]["preprocess"]:
             adf.router(cfg)
 
         return cfg
 
     def get_cfg_with_master_data(self, cfg):
-        if 'summary_settings_master' in cfg:
-            summary_settings_master = cfg['summary_settings_master'].copy()
-            summary_settings = cfg['summary_settings']
+        if "summary_settings_master" in cfg:
+            summary_settings_master = cfg["summary_settings_master"].copy()
+            summary_settings = cfg["summary_settings"]
 
-            for group_index in range(0, len(summary_settings['groups'])):
-                group = summary_settings['groups'][group_index].copy()
-                group = update_deep_dictionary(summary_settings_master['groups'][0], group)
-                summary_settings['groups'][group_index] = group.copy()
+            for group_index in range(0, len(summary_settings["groups"])):
+                group = summary_settings["groups"][group_index].copy()
+                group = update_deep_dictionary(
+                    summary_settings_master["groups"][0], group
+                )
+                summary_settings["groups"][group_index] = group.copy()
 
         return cfg

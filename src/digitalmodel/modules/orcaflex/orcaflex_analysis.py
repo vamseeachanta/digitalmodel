@@ -11,9 +11,8 @@ ou = OrcaflexUtilities()
 oir = OrcaflexIterativeRuns()
 opp = OrcaFlexPostProcess()
 
+
 class OrcaflexAnalysis:
-
-
     def __init__(self):
         pass
 
@@ -23,15 +22,19 @@ class OrcaflexAnalysis:
         simulation_flag = False
         iterate_flag = False
         mooring_flag = False
-        if 'analysis' in cfg['orcaflex']:
-            static_flag = cfg['orcaflex']['analysis'].get('static', False)
-            simulation_flag = cfg['orcaflex']['analysis'].get('simulation', False)
-            iterate_flag = cfg['orcaflex']['analysis'].get('iterate', {}).get('flag', False)
-            mooring_flag = cfg['orcaflex']['analysis'].get('mooring', {}).get('flag', False)
+        if "analysis" in cfg["orcaflex"]:
+            static_flag = cfg["orcaflex"]["analysis"].get("static", False)
+            simulation_flag = cfg["orcaflex"]["analysis"].get("simulation", False)
+            iterate_flag = (
+                cfg["orcaflex"]["analysis"].get("iterate", {}).get("flag", False)
+            )
+            mooring_flag = (
+                cfg["orcaflex"]["analysis"].get("mooring", {}).get("flag", False)
+            )
 
         if static_flag or simulation_flag or iterate_flag:
             orcaflex_license_flag = ou.is_orcaflex_available()
-            assert (orcaflex_license_flag)
+            assert orcaflex_license_flag
 
         if static_flag or simulation_flag:
             orcaFlex_analysis = OrcaFlexPostProcess(cfg)
@@ -39,12 +42,10 @@ class OrcaflexAnalysis:
 
         if iterate_flag:
             oir.prepare_iterative_runs(cfg)
-            if cfg['orcaflex']['iterate']['rerun']:
+            if cfg["orcaflex"]["iterate"]["rerun"]:
                 oir.run_iterative_simulations()
 
         if mooring_flag:
             mooring.router(cfg)
 
-
         return cfg
-
