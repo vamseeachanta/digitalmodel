@@ -11,7 +11,8 @@
       "Bash(uv run pytest:*)",
       "Bash(uv run:*)",
       "Bash(mkdir:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
