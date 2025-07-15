@@ -1,5 +1,4 @@
-class Group():
-
+class Group:
     def __init__(self, cfg):
         self.cfg = cfg
 
@@ -18,7 +17,7 @@ class Group():
             "Base1": "Without Torsion",
             "Inner String": "Model",
             "Outer String": "Model",
-            "FloatingBuoy": "Model"
+            "FloatingBuoy": "Model",
         }
         group.update({"Structure": structure})
 

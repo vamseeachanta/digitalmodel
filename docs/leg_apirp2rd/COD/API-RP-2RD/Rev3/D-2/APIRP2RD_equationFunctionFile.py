@@ -1,7 +1,5 @@
 import math
 import matplotlib.pyplot as plt
-from scipy.interpolate import spline
-import numpy as np
 
 from math import *
 from dataManager.loadConfiguration import loadConfiguration

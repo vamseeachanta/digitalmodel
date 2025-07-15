@@ -2,14 +2,11 @@ import os
 import logging
 import math
 import statistics
-import logging
 import pandas as pd
 import numpy as np
 
 from assetutilities.common.utilities import add_cwd_to_filename
 from assetutilities.common.data import ReadData
-from assetutilities.common.data import SaveData
-from assetutilities.common.visualizations import Visualization
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 
 read_data = ReadData()
@@ -24,8 +21,10 @@ class ShipFatigueAnalysis:
         if cfg["inputs"]["files"]["lcf"]["file_type"] == "seasam_xtract":
             cfg, stress_output = self.get_fatigue_states_and_stress_timetrace(cfg)
         if cfg["inputs"]["calculation"] == "abs_combined_fatigue":
-            if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
-                df = self.get_lcf_timetrace_rainflow_and_fatigue_damage_P1_fast(cfg, stress_output)
+            if cfg["inputs"]["sesam_extract_type"] == "fast_optimum":
+                df = self.get_lcf_timetrace_rainflow_and_fatigue_damage_P1_fast(
+                    cfg, stress_output
+                )
             else:
                 df = self.get_lcf_timetrace_rainflow_and_fatigue_damage(cfg)
                 df = self.get_abs_combined_fatigue(df)
@@ -63,19 +62,29 @@ class ShipFatigueAnalysis:
         return df
 
     def get_lcf_timetrace_rainflow_and_fatigue_damage_P1_fast(self, cfg, stress_output):
-        logging.info("Calculating LCF fatigue damage by Timetraces ... START    P1 Fast")
+        logging.info(
+            "Calculating LCF fatigue damage by Timetraces ... START    P1 Fast"
+        )
         stress_df = self.get_stress_output_df_P1_fast(stress_output, cfg)
         df = pd.DataFrame(columns=["element", "lcf_damage"])
-        df['element'] = stress_df['element']
+        df["element"] = stress_df["element"]
 
-        fatigue_curve = cfg['inputs']['files']['locations']['element']['settings']['fatigue_curve']
-        n_traces = cfg['inputs']['files']['locations']['element']['settings']['n_traces']
-        thickness = cfg['inputs']['files']['locations']['element']['settings']['thickness']
-        
+        fatigue_curve = cfg["inputs"]["files"]["locations"]["element"]["settings"][
+            "fatigue_curve"
+        ]
+        n_traces = cfg["inputs"]["files"]["locations"]["element"]["settings"][
+            "n_traces"
+        ]
+        thickness = cfg["inputs"]["files"]["locations"]["element"]["settings"][
+            "thickness"
+        ]
+
         for idx in range(0, len(stress_df)):
 
             if idx % 5000 == 0:
-                logging.info(f"   Calculating LCF fatigue damage for elements: {idx} to {idx+1000} ...")
+                logging.info(
+                    f"   Calculating LCF fatigue damage for elements: {idx} to {idx+1000} ..."
+                )
 
             cfg_fat_dam = fatigue_analysis.get_default_timetrace_cfg()
             cfg_fat_dam["inputs"].update(
@@ -109,11 +118,19 @@ class ShipFatigueAnalysis:
 
         for idx in range(0, len(df)):
             if idx % 1000 == 0:
-                logging.info(f"   Calculating LCF fatigue damage for elements: {idx} to {idx+1000} ...")
-            if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
-                fatigue_curve = cfg['inputs']['files']['locations']['element']['settings']['fatigue_curve']
-                n_traces = cfg['inputs']['files']['locations']['element']['settings']['n_traces']
-                thickness = cfg['inputs']['files']['locations']['element']['settings']['thickness']
+                logging.info(
+                    f"   Calculating LCF fatigue damage for elements: {idx} to {idx+1000} ..."
+                )
+            if cfg["inputs"]["sesam_extract_type"] == "fast_optimum":
+                fatigue_curve = cfg["inputs"]["files"]["locations"]["element"][
+                    "settings"
+                ]["fatigue_curve"]
+                n_traces = cfg["inputs"]["files"]["locations"]["element"]["settings"][
+                    "n_traces"
+                ]
+                thickness = cfg["inputs"]["files"]["locations"]["element"]["settings"][
+                    "thickness"
+                ]
             else:
                 df.loc[idx, "fatigue_curve"] = fatigue_curve
                 n_traces = df.iloc[idx]["n_traces"]
@@ -138,8 +155,8 @@ class ShipFatigueAnalysis:
                 for timetrace in cfg_fat_dam["fatigue_analysis"]["timetraces"]
             ]
             df.loc[idx, "rainflow"] = rainflow
-            
-            if not cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+
+            if not cfg["inputs"]["sesam_extract_type"] == "fast_optimum":
                 cfg.update({"fatigue_analysis": cfg_fat_dam["fatigue_analysis"]})
 
         logging.info("Calculating LCF fatigue damage  by Timetraces ... COMPLETE")
@@ -177,9 +194,7 @@ class ShipFatigueAnalysis:
             cfg["Analysis"]["result_folder"],
             cfg["Analysis"]["file_name"] + "_combined_fatigue_summary.csv",
         )
-        df_summary = df[
-            ["element", "lcf_damage"]
-        ].copy()
+        df_summary = df[["element", "lcf_damage"]].copy()
         df_summary.to_csv(file_name, index=False)
 
     def get_fatigue_states_and_stress_timetrace(self, cfg):
@@ -196,7 +211,7 @@ class ShipFatigueAnalysis:
         stress_output = self.get_stress_timetrace(cfg, fatigue_states_analysis)
 
         self.save_stress_output_as_csv(cfg, stress_output)
-        if not cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+        if not cfg["inputs"]["sesam_extract_type"] == "fast_optimum":
             cfg.update({"ship_design": {"stress_output": stress_output}})
 
         return cfg, stress_output
@@ -266,7 +281,7 @@ class ShipFatigueAnalysis:
 
     def save_stress_output_as_csv(self, cfg, stress_output):
         logging.info("Saving stress output as csv ... START")
-        if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
+        if cfg["inputs"]["sesam_extract_type"] == "fast_optimum":
             df = self.get_stress_output_df_P1_fast(stress_output, cfg)
         else:
             df = self.get_stress_output_df(stress_output, cfg)
@@ -275,7 +290,7 @@ class ShipFatigueAnalysis:
             cfg["Analysis"]["file_name"] + "_stress_output.csv",
         )
         df.to_csv(sress_output_file_name, index=False)
-        
+
         logging.info("Saving stress output as csv ... COMPLETE")
 
     def get_fatigue_damage_output_df_for_timetrace(self, stress_output, cfg):
@@ -375,7 +390,7 @@ class ShipFatigueAnalysis:
 
     def get_stress_output_df_P1_fast(self, stress_output, cfg):
 
-        df = pd.DataFrame(stress_output[0][None]['element'])
+        df = pd.DataFrame(stress_output[0][None]["element"])
 
         return df
 
@@ -481,10 +496,14 @@ class ShipFatigueAnalysis:
                 fatigue_state_set = self.read_files_and_get_data_as_df(
                     fatigue_state_set, cfg
                 )
-                if cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
-                    stress_data_by_set = self.get_stress_data_by_set_P1_fast(cfg, fatigue_state_set)
+                if cfg["inputs"]["sesam_extract_type"] == "fast_optimum":
+                    stress_data_by_set = self.get_stress_data_by_set_P1_fast(
+                        cfg, fatigue_state_set
+                    )
                 else:
-                    stress_data_by_set = self.get_stress_data_by_set(cfg, fatigue_state_set)
+                    stress_data_by_set = self.get_stress_data_by_set(
+                        cfg, fatigue_state_set
+                    )
                 status = "Pass"
 
             except Exception as e:
@@ -527,7 +546,7 @@ class ShipFatigueAnalysis:
                 stress_timetrace.append(stress_output["S"])
 
             element_output.update({"stress_timetrace": stress_timetrace})
-            element_output.update({"element": element_dict['element']})
+            element_output.update({"element": element_dict["element"]})
             element_output_array.append(element_output)
 
         stress_data_output_by_pair.update({"element": element_output_array})
@@ -650,11 +669,13 @@ class ShipFatigueAnalysis:
 
         df_filter = df[df["Element"] == element_dict["element"]]
 
-        stress_output = {'S': round(float(df_filter["S"].mean()), 0), 'Element': element_dict["element"]}
+        stress_output = {
+            "S": round(float(df_filter["S"].mean()), 0),
+            "Element": element_dict["element"],
+        }
         stress_output.update({"element": element_dict.copy()})
 
         return stress_output
-
 
     def get_stress_data_for_element(self, element_dict, df, label):
         logging.info(
@@ -686,10 +707,17 @@ class ShipFatigueAnalysis:
         status = {}
         for state_file in fatigue_state_pair["state_files"]:
             state_df = self.read_seasam_xtract(state_file["state_file"])
-            if 'sesam_extract_type' in cfg['inputs'] and cfg['inputs']['sesam_extract_type'] == 'fast_optimum':
-                transformed_df = self.transform_df_for_P1_stress_fast_process(state_df, state_file, cfg)
+            if (
+                "sesam_extract_type" in cfg["inputs"]
+                and cfg["inputs"]["sesam_extract_type"] == "fast_optimum"
+            ):
+                transformed_df = self.transform_df_for_P1_stress_fast_process(
+                    state_df, state_file, cfg
+                )
             else:
-                transformed_df = self.transform_df_for_stress_analysis(state_df, state_file)
+                transformed_df = self.transform_df_for_stress_analysis(
+                    state_df, state_file
+                )
             fatigue_state_pair.update({(state_file["label"] + "_df"): transformed_df})
             if len(transformed_df) > 0:
                 status.update({state_file["label"]: "Pass"})
@@ -712,25 +740,32 @@ class ShipFatigueAnalysis:
                 logging.debug(f"      Could not convert column {column} to float")
 
         stress_nomenclature = "P1"
-        stress_method = cfg['inputs']['files']['locations']['element']['settings']['stress_method']
+        stress_method = cfg["inputs"]["files"]["locations"]["element"]["settings"][
+            "stress_method"
+        ]
 
-        df_stress = df[[stress_nomenclature + "(1)", stress_nomenclature + "(2)", stress_nomenclature + "(3)", stress_nomenclature + "(4)"]]
+        df_stress = df[
+            [
+                stress_nomenclature + "(1)",
+                stress_nomenclature + "(2)",
+                stress_nomenclature + "(3)",
+                stress_nomenclature + "(4)",
+            ]
+        ]
         if stress_method == "mean":
-            df['S'] = round(df_stress.mean(axis=1), 0)
+            df["S"] = round(df_stress.mean(axis=1), 0)
         elif stress_method == "max":
-            df['S'] = round(df_stress.max(axis=1), 0)
+            df["S"] = round(df_stress.max(axis=1), 0)
         elif stress_method == "min":
-            df['S'] = round(df_stress.min(axis=1), 0)
+            df["S"] = round(df_stress.min(axis=1), 0)
         else:
             raise ValueError(f"Stress summary method NOT implemented: {stress_method}")
 
-        df = df[['Element', 'S']]
+        df = df[["Element", "S"]]
 
         logging.info(f"      Transforming data for: {state_file['state_file']} ... END")
-        
+
         return df
-
-
 
     def transform_df_for_stress_analysis(self, df, state_file):
         logging.info(

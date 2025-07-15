@@ -1,15 +1,11 @@
-import logging
-
-from loguru import logger
-from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import CopyAndPasteFiles
 from assetutilities.common.file_management import FileManagement
+from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.yml_utilities import WorkingWithYAML
-from assetutilities.common.yml_utilities import WorkingWithYAML
+
 # Reader imports
 from digitalmodel.aqwa import Aqwa
-from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.common.cathodic_protection import CathodicProtection
 from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
     DNVRPH103_hydrodynamics_circular,
@@ -19,12 +15,8 @@ from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
 )
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
-from digitalmodel.common.fatigue_analysis import FatigueAnalysis
-from digitalmodel.common.ship_design import ShipDesign
+from digitalmodel.modules.mooring.mooring import Mooring
 from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
-
-from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
-
 from digitalmodel.modules.orcaflex.orcaflex_file_management import (
     OrcaflexFileManagement,
 )
@@ -38,19 +30,14 @@ from digitalmodel.modules.pipeline.pipeline import Pipeline
 from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis
 from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis
 from digitalmodel.modules.transformation.transformation import Transformation
+from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
-from digitalmodel.modules.vertical_riser import vertical_riser
-from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
-from digitalmodel.modules.mooring.mooring import Mooring
-from digitalmodel.modules.mooring.mooring import Mooring
+from loguru import logger
 
 library_name = "digitalmodel"
 wwyaml = WorkingWithYAML()
-
 app_manager = ConfigureApplicationInputs()
-wwyaml = WorkingWithYAML()
 
-app_manager = ConfigureApplicationInputs()
 
 def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
     cfg_argv_dict = {}
@@ -61,9 +48,9 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         if cfg is None:
             raise ValueError("cfg is None")
 
-    if 'basename' in cfg:
+    if "basename" in cfg:
         basename = cfg["basename"]
-    elif 'meta' in cfg:
+    elif "meta" in cfg:
         basename = cfg["meta"]["basename"]
     else:
         raise ValueError("basename not found in cfg")
@@ -72,7 +59,9 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         fm = FileManagement()
         cfg_base = app_manager.configure(cfg, library_name, basename, cfg_argv_dict)
         cfg_base = fm.router(cfg_base)
-        result_folder_dict, cfg_base = app_manager.configure_result_folder(None, cfg_base)
+        result_folder_dict, cfg_base = app_manager.configure_result_folder(
+            None, cfg_base
+        )
     else:
         cfg_base = cfg
 
@@ -80,10 +69,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
     if "catenary" in basename:
         from digitalmodel.modules.catenary.catenary import Catenary
+
         catenary = Catenary()
         cfg_base = catenary.router(cfg_base)
     if "catenary" in basename:
         from digitalmodel.modules.catenary.catenary import Catenary
+
         catenary = Catenary()
         cfg_base = catenary.router(cfg_base)
     elif basename == "vertical_riser":
@@ -180,4 +171,3 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     app_manager.save_cfg(cfg_base=cfg_base)
 
     return cfg_base
-

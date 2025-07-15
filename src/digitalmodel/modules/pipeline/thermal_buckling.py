@@ -7,14 +7,13 @@ from assetutilities.common.visualization.visualization_templates_matplotlib impo
 
 viz_templates = VisualizationTemplates()
 
+
 class ThermalBuckling:
-    
     def __init__(self):
         pass
 
     def run(self, cfg):
 
         friction_force = self.get_friction_force(cfg)
-        cfg['pipeline']['friction_force'] = friction_force
+        cfg["pipeline"]["friction_force"] = friction_force
         lateral_buckling_df = self.get_upheaval_buckling(cfg)
-        

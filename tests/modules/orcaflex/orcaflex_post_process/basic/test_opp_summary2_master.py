@@ -13,7 +13,6 @@ colorama.init(autoreset=True)
 
 from typing import Any, Dict
 # Standard library imports
-from typing import Any, Dict
 
 tu = TestUtilities()
 

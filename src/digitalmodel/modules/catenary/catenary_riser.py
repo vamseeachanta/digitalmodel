@@ -2,7 +2,7 @@
 """
 Created on September 20 2018
 """
-'''
+"""
 Author: Vamsee Achanta
 Date Updated: 2018-09-20
 Objective: To generate catenary riser shape and evaluate static configuration
@@ -14,7 +14,7 @@ Run instructions with:
  UPDATES:
  Input YML: Relocate Spacing to PlotSettings
  Rename Summary "Hangoff" to "HangOffToSag"
-'''
+"""
 
 from digitalmodel.modules.catenary.catenaryMethods import (
     buoyancyProperties,
@@ -27,152 +27,141 @@ from digitalmodel.modules.catenary.catenaryMethods import (
 )
 from digitalmodel.modules.catenary.orcaflexModel import build_model
 from digitalmodel.modules.catenary.pipeProperties import pipeProperties
-from digitalmodel.modules.catenary.pipeProperties import pipeProperties
 
 
 def catenary_riser(cfg):
 
-    if cfg['default']['Analysis']['SCR']:
+    if cfg["default"]["Analysis"]["SCR"]:
 
         catenaryEquation_cfg = {
-            "d":
-                cfg["simpleCatenaryDefinition"]["verticalDistance"],
-            "F":
-                cfg["simpleCatenaryDefinition"]["axialLineForce"],
-            "q":
-                cfg["simpleCatenaryDefinition"]["declinationAngle"],
-            "X":
-                cfg["simpleCatenaryDefinition"]
-                ["horizontalDistanceHangofftoTDP"]['value']
+            "d": cfg["simpleCatenaryDefinition"]["verticalDistance"],
+            "F": cfg["simpleCatenaryDefinition"]["axialLineForce"],
+            "q": cfg["simpleCatenaryDefinition"]["declinationAngle"],
+            "X": cfg["simpleCatenaryDefinition"]["horizontalDistanceHangofftoTDP"][
+                "value"
+            ],
         }
 
         catenaryResult = catenaryEquation(catenaryEquation_cfg)
-        cfg['catenaryResult'] = catenaryResult
-        cfg = simple_catenary_plot(cfg, cfg['commonDefinition']['Spacing'])
-
-        cfg = pipeProperties(cfg,
-                             FluidDensity=cfg['Material']['Fluid']['Rho'],
-                             Buoyancy=False)
-        WeightPerUnitLengthWithOutBuoyancy = cfg['equivalentPipe'][
-            'WithoutBuoyancy']['weightPerUnitLength']
-        inputData = {
-            'weightPerUnitLength':
-                cfg['equivalentPipe']['WithoutBuoyancy']['weightPerUnitLength'],
-            'S':
-                cfg['catenaryResult']['S'],
-            'q':
-                cfg['catenaryResult']['q']
-        }
-        catenary_force = catenaryForces(inputData)
-        cfg['catenaryResult']['FluidFilled'] = catenary_force
+        cfg["catenaryResult"] = catenaryResult
+        cfg = simple_catenary_plot(cfg, cfg["commonDefinition"]["Spacing"])
 
         cfg = pipeProperties(
-            cfg,
-            FluidDensity=cfg['Material']['Reference_Fluid']['Rho'],
-            Buoyancy=False)
-        WeightPerUnitLengthWithOutBuoyancy = cfg['equivalentPipe'][
-            'WithoutBuoyancy']['weightPerUnitLength']
+            cfg, FluidDensity=cfg["Material"]["Fluid"]["Rho"], Buoyancy=False
+        )
+        WeightPerUnitLengthWithOutBuoyancy = cfg["equivalentPipe"]["WithoutBuoyancy"][
+            "weightPerUnitLength"
+        ]
         inputData = {
-            'weightPerUnitLength':
-                cfg['equivalentPipe']['WithoutBuoyancy']['weightPerUnitLength'],
-            'S':
-                cfg['catenaryResult']['S'],
-            'q':
-                cfg['catenaryResult']['q']
+            "weightPerUnitLength": cfg["equivalentPipe"]["WithoutBuoyancy"][
+                "weightPerUnitLength"
+            ],
+            "S": cfg["catenaryResult"]["S"],
+            "q": cfg["catenaryResult"]["q"],
         }
         catenary_force = catenaryForces(inputData)
-        cfg['catenaryResult']['Reference_FluidFilled'] = catenary_force
+        cfg["catenaryResult"]["FluidFilled"] = catenary_force
 
-        cfg = pipeProperties(cfg,
-                             FluidDensity=cfg['Material']['SeaWater']['Rho'],
-                             Buoyancy=False)
-
+        cfg = pipeProperties(
+            cfg, FluidDensity=cfg["Material"]["Reference_Fluid"]["Rho"], Buoyancy=False
+        )
+        WeightPerUnitLengthWithOutBuoyancy = cfg["equivalentPipe"]["WithoutBuoyancy"][
+            "weightPerUnitLength"
+        ]
         inputData = {
-            'weightPerUnitLength':
-                cfg['equivalentPipe']['WithoutBuoyancy']['weightPerUnitLength'],
-            'S':
-                cfg['catenaryResult']['S'],
-            'q':
-                cfg['catenaryResult']['q']
+            "weightPerUnitLength": cfg["equivalentPipe"]["WithoutBuoyancy"][
+                "weightPerUnitLength"
+            ],
+            "S": cfg["catenaryResult"]["S"],
+            "q": cfg["catenaryResult"]["q"],
         }
         catenary_force = catenaryForces(inputData)
-        cfg['catenaryResult']['SeaWaterFilled'] = catenary_force
+        cfg["catenaryResult"]["Reference_FluidFilled"] = catenary_force
+
+        cfg = pipeProperties(
+            cfg, FluidDensity=cfg["Material"]["SeaWater"]["Rho"], Buoyancy=False
+        )
+
+        inputData = {
+            "weightPerUnitLength": cfg["equivalentPipe"]["WithoutBuoyancy"][
+                "weightPerUnitLength"
+            ],
+            "S": cfg["catenaryResult"]["S"],
+            "q": cfg["catenaryResult"]["q"],
+        }
+        catenary_force = catenaryForces(inputData)
+        cfg["catenaryResult"]["SeaWaterFilled"] = catenary_force
 
         cfg = pipeProperties(cfg, FluidDensity=0, Buoyancy=False)
         inputData = {
-            'weightPerUnitLength':
-                cfg['equivalentPipe']['WithoutBuoyancy']['weightPerUnitLength'],
-            'S':
-                cfg['catenaryResult']['S'],
-            'q':
-                cfg['catenaryResult']['q']
+            "weightPerUnitLength": cfg["equivalentPipe"]["WithoutBuoyancy"][
+                "weightPerUnitLength"
+            ],
+            "S": cfg["catenaryResult"]["S"],
+            "q": cfg["catenaryResult"]["q"],
         }
         catenary_force = catenaryForces(inputData)
-        cfg['catenaryResult']['Empty'] = catenary_force
+        cfg["catenaryResult"]["Empty"] = catenary_force
 
         rangeresult = gethorizontalDistanceHangofftoTDPrange(cfg)
-        cfg['simpleCatenaryDefinition']['rangeresult'] = rangeresult
+        cfg["simpleCatenaryDefinition"]["rangeresult"] = rangeresult
 
         cfg = buoyancyProperties(cfg, WeightPerUnitLengthWithOutBuoyancy)
 
     # Lazy Wave Analysis
-    if cfg['default']['Analysis']['SLWR']:
+    if cfg["default"]["Analysis"]["SLWR"]:
 
         lazyWaveInputs = {
-            "WeightPerUnitLengthWithBuoyancy":
-                cfg['lazyWaveCatenaryResult']
-                ['WeightPerUnitLengthWithBuoyancy'],
-            "WeightPerUnitLengthWithOutBuoyancy":
-                cfg['lazyWaveCatenaryResult']
-                ['WeightPerUnitLengthWithOutBuoyancy'],
-            "SagBendElevationAboveSeabed":
-                cfg['LazyWaveCatenaryDefinition']
-                ['SagBendElevationAboveSeabed'],
-            "HogBendAboveSeabed":
-                cfg['LazyWaveCatenaryDefinition']['HogBendAboveSeabed'],
+            "WeightPerUnitLengthWithBuoyancy": cfg["lazyWaveCatenaryResult"][
+                "WeightPerUnitLengthWithBuoyancy"
+            ],
+            "WeightPerUnitLengthWithOutBuoyancy": cfg["lazyWaveCatenaryResult"][
+                "WeightPerUnitLengthWithOutBuoyancy"
+            ],
+            "SagBendElevationAboveSeabed": cfg["LazyWaveCatenaryDefinition"][
+                "SagBendElevationAboveSeabed"
+            ],
+            "HogBendAboveSeabed": cfg["LazyWaveCatenaryDefinition"][
+                "HogBendAboveSeabed"
+            ],
             "HangOff": {
-                "d":
-                    cfg['LazyWaveCatenaryDefinition']['VerticalDistance'] -
-                    cfg['LazyWaveCatenaryDefinition']
-                    ['SagBendElevationAboveSeabed'],
-                "q":
-                    cfg["LazyWaveCatenaryDefinition"]["declinationAngle"],
-                "F":
-                    None
+                "d": cfg["LazyWaveCatenaryDefinition"]["VerticalDistance"]
+                - cfg["LazyWaveCatenaryDefinition"]["SagBendElevationAboveSeabed"],
+                "q": cfg["LazyWaveCatenaryDefinition"]["declinationAngle"],
+                "F": None,
             },
         }
 
-        cfg['lazyWaveCatenaryResult'].update(
-            lazyWaveCatenaryEquation(lazyWaveInputs))
-        cfg['lazyWaveCatenaryResult']['TotalBuoyancy'] = (
-            cfg['lazyWaveCatenaryResult']['WeightPerUnitLengthWithBuoyancy'] -
-            cfg['lazyWaveCatenaryResult']['WeightPerUnitLengthWithOutBuoyancy']
-        ) * cfg['lazyWaveCatenaryResult']['Summary']['Buoyancy']['S']
+        cfg["lazyWaveCatenaryResult"].update(lazyWaveCatenaryEquation(lazyWaveInputs))
+        cfg["lazyWaveCatenaryResult"]["TotalBuoyancy"] = (
+            cfg["lazyWaveCatenaryResult"]["WeightPerUnitLengthWithBuoyancy"]
+            - cfg["lazyWaveCatenaryResult"]["WeightPerUnitLengthWithOutBuoyancy"]
+        ) * cfg["lazyWaveCatenaryResult"]["Summary"]["Buoyancy"]["S"]
 
-        cfg = lazyWavePlot(cfg, cfg['LazyWaveCatenaryDefinition']['Spacing'])
+        cfg = lazyWavePlot(cfg, cfg["LazyWaveCatenaryDefinition"]["Spacing"])
 
     # Construct FEA Model
     cfg = pipeProperties(cfg, FluidDensity=0, Buoyancy=False)
-    cfg['MainPipe'] = {
-        'SteelSection': cfg['SteelSection'],
-        'BuoyancySection': cfg['BuoyancySection'],
-        'InsulationSection': cfg['InsulationSection'],
-        'equivalentPipe': cfg['equivalentPipe']
+    cfg["MainPipe"] = {
+        "SteelSection": cfg["SteelSection"],
+        "BuoyancySection": cfg["BuoyancySection"],
+        "InsulationSection": cfg["InsulationSection"],
+        "equivalentPipe": cfg["equivalentPipe"],
     }
 
     cfg = pipeProperties(cfg, FluidDensity=0, Buoyancy=True)
-    cfg['BuoyPipe'] = {
-        'SteelSection': cfg['SteelSection'],
-        'BuoyancySection': cfg['BuoyancySection'],
-        'InsulationSection': cfg['InsulationSection'],
-        'equivalentPipe': cfg['equivalentPipe']
+    cfg["BuoyPipe"] = {
+        "SteelSection": cfg["SteelSection"],
+        "BuoyancySection": cfg["BuoyancySection"],
+        "InsulationSection": cfg["InsulationSection"],
+        "equivalentPipe": cfg["equivalentPipe"],
     }
 
-    if cfg['default']['Analysis']['Extreme']:
-        FEAType = 'Extreme'
+    if cfg["default"]["Analysis"]["Extreme"]:
+        FEAType = "Extreme"
         build_model(FEAType, cfg)
-    if cfg['default']['Analysis']['Fatigue']:
-        FEAType = 'Fatigue'
+    if cfg["default"]["Analysis"]["Fatigue"]:
+        FEAType = "Fatigue"
         build_model(FEAType, cfg)
 
     return cfg

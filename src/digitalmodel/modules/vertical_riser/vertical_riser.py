@@ -17,10 +17,9 @@ def vertical_riser(cfg):
     riser_model.build_fea_model()
     riser_model.prepare_plots_and_save_data()
 
-    if cfg['default']['analysis']['loading_type']['VIV']:
+    if cfg["default"]["analysis"]["loading_type"]["VIV"]:
         riser_model.alter_properties_for_Shear7_software()
         riser_model.prepare_fea_model()
         riser_model.build_fea_model(shear7_flag=True)
         riser_model.prepare_shear7_model()
     return cfg
-

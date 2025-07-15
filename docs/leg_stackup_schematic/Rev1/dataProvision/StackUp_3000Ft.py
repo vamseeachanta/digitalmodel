@@ -151,9 +151,7 @@ def main():
     pygame.image.save(DISPLAY, "Riser Stack-up_3000ft.png")  # Save Output as Png
     
     
-import os
-import xlrd
-import pygame, sys
+import pygame
 from pygame.locals import *
 
 DISPLAY=pygame.display.set_mode((800,800),0,32)

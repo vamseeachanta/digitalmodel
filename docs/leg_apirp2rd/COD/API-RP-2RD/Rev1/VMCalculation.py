@@ -7,8 +7,6 @@ Running Program:
 python VMCalculation.py --log DEBUG
 '''
 
-import math
-import matplotlib.pyplot as pyplot
 import munch
 
 from data_manager.argumentParseFunction import *

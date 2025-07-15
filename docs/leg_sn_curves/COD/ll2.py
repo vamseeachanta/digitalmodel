@@ -1,4 +1,3 @@
-import FatigueBasiccurve
 from FatigueBasiccurve import*
 linearslopeData = fatigueRawdata.loc[:, 'Curve Type':'m1']
 pd.DataFrame(linearslopeData)

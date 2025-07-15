@@ -1,4 +1,3 @@
-import os
 import xlrd  
 import numpy as np
 import math

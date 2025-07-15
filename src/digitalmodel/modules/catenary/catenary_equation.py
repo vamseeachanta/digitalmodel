@@ -16,15 +16,20 @@ class CatenaryCalculator:
         Returns:
             dict: Updated data dictionary with computed values
         """
-        if (data.get("F") is not None and data.get("w") is not None
-            and data.get("d") is not None):
+        if (
+            data.get("F") is not None
+            and data.get("w") is not None
+            and data.get("d") is not None
+        ):
             return self._calculate_from_force(data)
         elif data.get("X") is not None:
             return self._calculate_from_x(data)
         elif data.get("q") is not None and data.get("d") is not None:
             return self._calculate_from_angle(data)
         else:
-            raise ValueError("Insufficient or invalid input parameters for calculation.")
+            raise ValueError(
+                "Insufficient or invalid input parameters for calculation."
+            )
 
     def _calculate_from_force(self, data):
         """Calculate catenary properties using force parameters."""
@@ -33,25 +38,27 @@ class CatenaryCalculator:
         distance = data["d"]
 
         length = distance * (2 * force / weight - distance)
-        horiz_dist = (((force / weight) - distance) * math.log(
-            (length + (force / weight)) / ((force / weight) - distance)))
+        horiz_dist = ((force / weight) - distance) * math.log(
+            (length + (force / weight)) / ((force / weight) - distance)
+        )
         t_horiz = force * horiz_dist / math.sqrt(length**2 + horiz_dist**2)
         t_horizontal = force * horiz_dist / math.sqrt(length**2 + horiz_dist**2)
         shape_param = weight * 9.81 / t_horizontal
 
-        data.update({
-            "S": length,
-            "X": horiz_dist,
-            "THorizontal": t_horiz,
-            "THorizontal": t_horizontal,
-            "b": shape_param
-        })
+        data.update(
+            {
+                "S": length,
+                "X": horiz_dist,
+                "THorizontal": t_horiz,
+                "THorizontal": t_horizontal,
+                "b": shape_param,
+            }
+        )
         return data
 
     def _calculate_from_x(self, data):
         """Calculate catenary properties using X parameter."""
-        raise NotImplementedError(
-            "Calculation based on X is not implemented yet.")
+        raise NotImplementedError("Calculation based on X is not implemented yet.")
 
     def _calculate_from_angle(self, data):
         """Calculate catenary properties using angle parameters."""
@@ -70,9 +77,5 @@ class CatenaryCalculator:
         length = bend_radius * tan_q
         horiz_dist = bend_radius * math.asinh(tan_q)
 
-        data.update({
-            "S": length,
-            "X": horiz_dist,
-            "BendRadius": bend_radius
-        })
+        data.update({"S": length, "X": horiz_dist, "BendRadius": bend_radius})
         return data

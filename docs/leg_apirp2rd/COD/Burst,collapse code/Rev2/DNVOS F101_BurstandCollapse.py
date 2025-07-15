@@ -1,6 +1,5 @@
 
 #import scipy as spy
-import numpy as npy
 from math import *
 from DataProvision.burst_DNVOSF101 import *
 

@@ -1,10 +1,7 @@
-import pytest
-import deepdiff
 import os
 import sys
 
 from digitalmodel.engine import engine
-from digitalmodel.common.yml_utilities import ymlInput
 
 
 def run_umbilical_end(input_file, expected_result={}):

@@ -1,4 +1,3 @@
-import pytest
 import deepdiff
 import os
 import sys

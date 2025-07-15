@@ -13,7 +13,6 @@ Run instructions with:
 '''
 import sys
 import logging
-import numpy as np
 
 from APISTD2RDMethods import variableWTBurst, nominalWTAPISTD2RDMethod1
 from dataManager.ymlInput import ymlInput

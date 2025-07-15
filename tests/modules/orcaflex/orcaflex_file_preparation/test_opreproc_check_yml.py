@@ -5,7 +5,6 @@ from typing import Any, Dict
 
 # Reader imports
 import colorama
-from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.modules.test_utilities.test_utilities import TestUtilities
 from colorama import Fore, Style
 from digitalmodel.engine import engine

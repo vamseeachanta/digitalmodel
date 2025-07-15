@@ -1,5 +1,4 @@
-class Line():
-
+class Line:
     def __init__(self, cfg):
         self.cfg = cfg
 
@@ -18,7 +17,6 @@ class Line():
         connectionFeeding = self.get_connectionFeeding()
         line.update(connectionFeeding)
 
-
         sections = self.get_sections()
         line.update(sections)
 
@@ -30,7 +28,6 @@ class Line():
 
         results = self.get_results()
         line.update(results)
-
 
         drawing = self.get_drawing()
         line.update(drawing)
@@ -48,13 +45,15 @@ class Line():
             "DragFormulation": "Standard",
             "StaticsVIV": "None",
             "DynamicsVIV": "None",
-            "WaveCalculationMethod": "Specified by Environment"
+            "WaveCalculationMethod": "Specified by Environment",
         }
 
-        update_cfg = self.cfg['cfg'].copy()
-        calculate_function_prefix = 'get_general_'
+        update_cfg = self.cfg["cfg"].copy()
+        calculate_function_prefix = "get_general_"
         property_group = general
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return general
 
@@ -62,34 +61,44 @@ class Line():
 
         connectionsData = []
         connections = {
-            "Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec, ConnectionGamma, ReleaseStage, ConnectionzRelativeTo":
-                connectionsData
+            "Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec, ConnectionGamma, ReleaseStage, ConnectionzRelativeTo": connectionsData
         }
 
-        update_cfg = self.cfg['cfg']['connectionData'].copy()
-        calculate_function_prefix = 'get_connections_'
+        update_cfg = self.cfg["cfg"]["connectionData"].copy()
+        calculate_function_prefix = "get_connections_"
         property_group = connections
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return connections
 
     def get_connectionStiffness(self):
-        connectionStiffness = {'ConnectionStiffnessX, ConnectionStiffnessY': [[0, "~"], [0, "~"]]}
+        connectionStiffness = {
+            "ConnectionStiffnessX, ConnectionStiffnessY": [[0, "~"], [0, "~"]]
+        }
 
         return connectionStiffness
 
     def get_connectionFeeding(self):
-        connectionFeeding = {'ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth': [["~", 0, 0.001], ["~", 0, 0.001]]}
+        connectionFeeding = {
+            "ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth": [
+                ["~", 0, 0.001],
+                ["~", 0, 0.001],
+            ]
+        }
 
         return connectionFeeding
 
     def get_sections(self):
-        sections = {'LineType, Length, TargetSegmentLength': [["Chain", 11.8, 1]]}
+        sections = {"LineType, Length, TargetSegmentLength": [["Chain", 11.8, 1]]}
 
-        update_cfg = self.cfg['cfg']['sections'].copy()
-        calculate_function_prefix = 'get_sections_'
+        update_cfg = self.cfg["cfg"]["sections"].copy()
+        calculate_function_prefix = "get_sections_"
         property_group = sections
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return sections
 
@@ -100,7 +109,7 @@ class Line():
             "ContentsDensity": 1,
             "ContentsPressureRefZ": "~",
             "ContentsPressure": 0,
-            "ContentsFlowRate": 0
+            "ContentsFlowRate": 0,
         }
 
         return contents
@@ -112,28 +121,30 @@ class Line():
             "StaticsStep2": "None",
             "IncludeSeabedFrictionInStatics": "Yes",
             "LayAzimuth": 330,
-            "AsLaidTension": 0
+            "AsLaidTension": 0,
         }
 
-        update_cfg = self.cfg['cfg']['statics'].copy()
-        calculate_function_prefix = 'get_statics_'
+        update_cfg = self.cfg["cfg"]["statics"].copy()
+        calculate_function_prefix = "get_statics_"
         property_group = statics
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return statics
 
     def get_results(self):
-        results = {
-            "LogAcceleration": "No"
-        }
+        results = {"LogAcceleration": "No"}
 
-        if 'results' in self.cfg['cfg']:
-            update_cfg = self.cfg['cfg']['results'].copy()
+        if "results" in self.cfg["cfg"]:
+            update_cfg = self.cfg["cfg"]["results"].copy()
         else:
             update_cfg = {}
-        calculate_function_prefix = 'get_results_'
+        calculate_function_prefix = "get_results_"
         property_group = results
-        self.update_property_group(calculate_function_prefix, property_group, update_cfg)
+        self.update_property_group(
+            calculate_function_prefix, property_group, update_cfg
+        )
 
         return results
 
@@ -142,7 +153,7 @@ class Line():
             "SegmentPenMode": "Use Segment Pen",
             "DrawShadedNodesAsSpheres": "Yes",
             "SegmentPen": [1, "Solid", "Lime"],
-            "ContactPen": [5, "Solid", "White"]
+            "ContactPen": [5, "Solid", "White"],
         }
 
         return drawing
@@ -150,8 +161,10 @@ class Line():
     def update_property_group(self, calculate_function_prefix, property_group, cfg):
         for key_item in property_group.keys():
             if key_item in cfg and cfg[key_item] is not None:
-                if cfg[key_item] != 'Calculated':
+                if cfg[key_item] != "Calculated":
                     property_group[key_item] = cfg[key_item]
                 else:
-                    calculate_function = getattr(self, calculate_function_prefix + key_item)
+                    calculate_function = getattr(
+                        self, calculate_function_prefix + key_item
+                    )
                     property_group[key_item] = calculate_function(cfg)

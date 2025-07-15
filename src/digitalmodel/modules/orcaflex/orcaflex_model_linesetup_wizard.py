@@ -1,13 +1,10 @@
-from collections import OrderedDict
 
 from assetutilities.common.yml_utilities import WorkingWithYAML
-from modulefinder import ModuleFinder
 
 wwy = WorkingWithYAML()
 
 
 class LineSetUpWizard:
-
     def __init__(self):
         pass
 
@@ -27,5 +24,3 @@ class LineSetUpWizard:
         model["Line2"].LineSetupIncluded = "No"
 
         model.InvokeLineSetupWizard()
-        
-        

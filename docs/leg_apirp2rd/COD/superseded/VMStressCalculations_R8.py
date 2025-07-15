@@ -1,5 +1,4 @@
 
-from VMCalculationsFunctionFile_R3 import VMStress
 
 class MainPipe:
     def __init__(self):

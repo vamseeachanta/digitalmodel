@@ -9,7 +9,6 @@ python plateBuckling.py
 
 from DataProvision.parameters_stiffnerbuckling import *
 from math import sqrt
-import matplotlib.pyplot as plt
 
 Ik1=L_G*1 # Assuming no Lateral Load
 Ik2=LG_G

@@ -4,7 +4,6 @@ import sys
 from typing import Any, Dict
 
 # Reader imports
-from assetutilities.common.yml_utilities import ymlInput
 from assetutilities.modules.test_utilities.test_utilities import TestUtilities
 from digitalmodel.engine import engine
 

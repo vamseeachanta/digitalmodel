@@ -5,7 +5,6 @@ DesignCaseFac = 1.5 #Cf #Taken from Section4.4 Table-2 under Load Category-Survi
    
 def VMStress(pipe1):
     ## Importing class properties from VMStressCalculations_R7,py file
-    from VMStressCalculations_R7 import ClassPipe
     
     pipeNominalID = pipe1.pipeNominalOD_m - 2*pipe1.pipeNominalWT_m  # inside diameter
     print("pipeNominalInsideDiameter : ","{:.4e}".format(pipeNominalID))

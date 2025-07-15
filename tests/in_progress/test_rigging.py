@@ -1,5 +1,4 @@
 import os
-import sys
 
 from digitalmodel.engine import engine
 

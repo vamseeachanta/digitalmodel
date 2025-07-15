@@ -1,4 +1,3 @@
-import yaml
 from temperatureDerating import temperatureDerating 
 
 def customUpdate(cfg):

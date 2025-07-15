@@ -13,9 +13,8 @@ Run instructions with:
 '''
 import sys
 import logging
-import numpy as np
 
-from APISTD2RDMethods import variableWTBurst, nominalWTAPISTD2RDMethod1, APISTD2RDMethod1Utilization
+from APISTD2RDMethods import variableWTBurst, nominalWTAPISTD2RDMethod1
 from dataManager.ymlInput import ymlInput
 from dataManager.customUpdate import customUpdate
 from logs.setLogging import setLogging

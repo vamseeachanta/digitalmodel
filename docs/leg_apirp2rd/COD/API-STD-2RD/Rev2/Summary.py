@@ -15,7 +15,6 @@ Run instructions with:
 
 '''
 import sys
-import math
 import logging
 
 from math import *

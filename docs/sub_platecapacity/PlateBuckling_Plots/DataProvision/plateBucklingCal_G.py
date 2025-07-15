@@ -9,7 +9,6 @@ python plateBuckling.py
 
 from DataProvision.parameters_Col_All import *
 from math import sqrt
-import matplotlib.pyplot as plt
 # How to access objects from above dictionaries (also same for JSON format files)
 
 
