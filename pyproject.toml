@@ -1,7 +1,7 @@
 
 [project]
 name = "digitalmodel"
-version = "0.0.8"
+version = "0.0.9"
 description = "engineering asset digital model(s) for life cycle analysis"
 authors = [{ name = "Vamsee Achanta", email = "vamsee.achanta@aceengineer.com" }]
 license = {text = "MIT"}
@@ -81,7 +81,7 @@ dependencies = {file = ["scripts/requirements.txt"]}
 
 
 [tool.bumpver]
-current_version = "0.0.8"
+current_version = "0.0.9"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
