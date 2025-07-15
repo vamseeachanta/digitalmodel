@@ -16,7 +16,11 @@
       "Bash(git remote:*)",
       "Bash(git branch:*)",
       "Bash(git fetch:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(uv build:*)",
+      "Bash(uv publish:*)",
+      "Bash(env)",
+      "Bash(echo \"Token length: $#PYPI_TOKEN\")"
     ],
     "deny": []
   }

@@ -929,7 +929,7 @@ wheels = [
 
 [[package]]
 name = "digitalmodel"
-version = "0.0.8"
+version = "0.0.9"
 source = { editable = "." }
 dependencies = [
     { name = "assetutilities" },
@@ -1000,6 +1000,7 @@ dev = [
 [package.dev-dependencies]
 dev = [
     { name = "ruff" },
+    { name = "twine" },
 ]
 
 [package.metadata]
@@ -1046,7 +1047,10 @@ requires-dist = [
 provides-extras = ["dev", "deploy"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "ruff", specifier = ">=0.12.3" }]
+dev = [
+    { name = "ruff", specifier = ">=0.12.3" },
+    { name = "twine", specifier = ">=6.1.0" },
+]
 
 [[package]]
 name = "distlib"

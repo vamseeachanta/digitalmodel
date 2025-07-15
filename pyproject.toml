@@ -121,4 +121,5 @@ addopts = "-ra"
 [dependency-groups]
 dev = [
     "ruff>=0.12.3",
+    "twine>=6.1.0",
 ]
