@@ -1,5 +1,4 @@
 import math
-import sys
 
 try:
     import OrcFxAPI

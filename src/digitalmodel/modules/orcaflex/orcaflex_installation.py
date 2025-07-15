@@ -1,6 +1,5 @@
 import copy
 import os
-import re
 from collections import OrderedDict
 
 from assetutilities.common.saveData import saveDataYaml

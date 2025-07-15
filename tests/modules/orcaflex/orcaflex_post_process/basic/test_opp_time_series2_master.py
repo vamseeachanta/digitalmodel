@@ -12,7 +12,6 @@ from colorama import Fore, Style
 # Reader imports
 from digitalmodel.engine import engine
 
-import colorama
 colorama.init(autoreset=True)
 
 

@@ -3,8 +3,6 @@ import logging
 
 from digitalmodel.modules.aqwa.aqwa_lis_files import AqwaLISFiles
 from digitalmodel.modules.aqwa.aqwa_reader import AqwaReader
-from digitalmodel.modules.aqwa.aqwa_lis_files import AqwaLISFiles
-from digitalmodel.modules.aqwa.aqwa_reader import AqwaReader
 
 lis_files = AqwaLISFiles()
 aqr = AqwaReader()

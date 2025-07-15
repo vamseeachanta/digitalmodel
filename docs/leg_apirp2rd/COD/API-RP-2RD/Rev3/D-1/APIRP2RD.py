@@ -1,6 +1,4 @@
 import math
-import ast
-import logging
 
 from ConfigurationManager import ConfigurationManager
 configuration_manager = ConfigurationManager('API-RD-2RD.ini')

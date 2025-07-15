@@ -1,10 +1,7 @@
-import pytest
-import deepdiff
 import os
 import sys
 
 from digitalmodel.engine import engine
-from digitalmodel.common.yml_utilities import ymlInput
 
 
 def get_valid_pytest_output_file(pytest_output_file):

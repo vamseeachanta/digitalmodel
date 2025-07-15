@@ -4,7 +4,6 @@ import subprocess
 
 from assetutilities.common.data import SaveData
 
-from assetutilities.common.data import SaveData
 
 save_data = SaveData()
 

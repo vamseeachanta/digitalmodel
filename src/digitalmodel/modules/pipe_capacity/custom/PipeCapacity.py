@@ -1130,7 +1130,6 @@ class VonMises_Pipe:
 
 class CFR_30_Part_250:
     def __init__(self, cfg):
-        import datetime
 
         self.cfg = cfg
         self.specification_code = "30 CFR Part 250"

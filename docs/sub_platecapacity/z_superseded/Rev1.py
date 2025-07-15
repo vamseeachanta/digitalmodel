@@ -1,4 +1,3 @@
-import xlrd
 import pandas as pd
 sheet1=pd.read_excel("C:/Users/AceEngineer-002/Desktop/PB/pandas/ParametricInputs.xlsx",sheetname='Locations')
 sheet2=pd.read_excel("C:/Users/AceEngineer-002/Desktop/PB/pandas/ParametricInputs.xlsx",sheetname='Stress')

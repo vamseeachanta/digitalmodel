@@ -3,7 +3,6 @@ import pandas as pd
 import socket
 import sys
 import struct
-import time
 from math import *
 
 # A simple set of classes for easy logging
@@ -398,7 +397,7 @@ class AqwaUserForceServer(AqwaServerMgr):
 
             if (Mode==99):
                 self.save_result_df()
-                break;
+                break
         
             self.Analysis.Pos=Pos
             self.Analysis.Vel=Vel

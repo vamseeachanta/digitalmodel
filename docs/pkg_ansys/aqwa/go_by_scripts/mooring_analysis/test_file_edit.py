@@ -1,12 +1,8 @@
 # TODO fix the code
-import pytest
-import deepdiff
 import os
 import sys
-import numpy as np
 
 from assetutilities.engine import engine
-from assetutilities.common.yml_utilities import ymlInput
 
 
 def run_file(input_file, expected_result={}):

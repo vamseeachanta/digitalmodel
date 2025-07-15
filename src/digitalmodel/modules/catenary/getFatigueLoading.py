@@ -9,9 +9,7 @@ Objective: To generate pipe properties
 """
 import copy
 import logging
-import math
 import sys
-from collections import OrderedDict
 
 import numpy as np
 import pandas as pd

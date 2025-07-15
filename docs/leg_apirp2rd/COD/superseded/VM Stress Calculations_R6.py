@@ -1,4 +1,3 @@
-import math
 from VMCalculationsFunctionFile import VMStress
 
 pipe1 = dict(pipeNominalOD_m = 0.24765,  # Outside diameter

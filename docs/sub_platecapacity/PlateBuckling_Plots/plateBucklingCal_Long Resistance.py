@@ -6,7 +6,6 @@ from DataProvision.plateBucklingCal_K import *
 
 
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 box = dict(facecolor='Blue', pad=5, alpha=0.2)
 fig=plt.figure(1)
 ax1=fig.add_subplot(511)

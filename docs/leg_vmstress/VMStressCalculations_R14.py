@@ -1,5 +1,4 @@
 
-from VMCalculationsFunctionFile_R9 import VMStress
 from cProfileFunction import profrun
 class MainPipe:
     def __init__(self,pipeNominalOD_m,pipeNominalWT_m,pipeMinimumWT_m,

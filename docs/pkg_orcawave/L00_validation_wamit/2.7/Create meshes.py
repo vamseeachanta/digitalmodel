@@ -1,6 +1,6 @@
 from __future__ import print_function
 import numpy
-from numpy import pi, sin, cos, linspace, array, ceil
+from numpy import pi, cos, linspace, array
 
 
 def MakePyramidPanels(zCount, sCountAtFreeSurface, UseCosineSpacing, Nadir, SurfaceVertices):

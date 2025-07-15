@@ -5,7 +5,9 @@
       "Bash(python -m black:*)",
       "Bash(python -m isort:*)",
       "Bash(pip install:*)",
-      "Bash(python -m pip install:*)"
+      "Bash(python -m pip install:*)",
+      "Bash(uv run ruff:*)",
+      "Bash(uv add:*)"
     ],
     "deny": []
   }

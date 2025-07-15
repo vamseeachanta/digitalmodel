@@ -1,6 +1,4 @@
-import matplotlib.pyplot as pyplot
 import matplotlib.pyplot as plt
-import oyaml as yml
 from matplotlib import rc
 
 rc("mathtext", default="regular")

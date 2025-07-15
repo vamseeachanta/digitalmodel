@@ -27,7 +27,6 @@ from digitalmodel.modules.catenary.catenaryMethods import (
 )
 from digitalmodel.modules.catenary.orcaflexModel import build_model
 from digitalmodel.modules.catenary.pipeProperties import pipeProperties
-from digitalmodel.modules.catenary.pipeProperties import pipeProperties
 
 
 def catenary_riser(cfg):

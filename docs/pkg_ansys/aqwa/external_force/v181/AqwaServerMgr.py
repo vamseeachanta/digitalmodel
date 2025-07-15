@@ -1,7 +1,6 @@
 import socket
 import sys
 import struct
-import time
 from math import *
 
 # A simple set of classes for easy logging
@@ -353,7 +352,7 @@ class AqwaUserForceServer(AqwaServerMgr):
                 Vel.append(self.Receive("ffffff"))
 
             if (Mode==99):
-                break;
+                break
         
             self.Analysis.Pos=Pos
             self.Analysis.Vel=Vel

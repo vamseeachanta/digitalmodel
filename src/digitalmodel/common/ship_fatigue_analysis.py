@@ -2,14 +2,11 @@ import os
 import logging
 import math
 import statistics
-import logging
 import pandas as pd
 import numpy as np
 
 from assetutilities.common.utilities import add_cwd_to_filename
 from assetutilities.common.data import ReadData
-from assetutilities.common.data import SaveData
-from assetutilities.common.visualizations import Visualization
 from digitalmodel.common.fatigue_analysis import FatigueAnalysis
 
 read_data = ReadData()

@@ -11,7 +11,6 @@ from digitalmodel.modules.orcaflex.opp_linkedstatistics import OPPLinkedStatisti
 # Reader imports
 from digitalmodel.modules.orcaflex.opp_range_graph import OPPRangeGraph
 from digitalmodel.modules.orcaflex.opp_summary import OPPSummary
-from digitalmodel.modules.orcaflex.opp_linkedstatistics import OPPLinkedStatistics
 from digitalmodel.modules.orcaflex.opp_time_series import OPPTimeSeries
 from digitalmodel.modules.orcaflex.opp_visualization import OPPVisualization
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects

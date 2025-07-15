@@ -1,6 +1,5 @@
 ## NOT WORKING
 
-import numpy as np
 from moorpy.helpers import CatenaryError, dsolve2
 
 class CatenaryCalculator:

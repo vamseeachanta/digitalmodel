@@ -1,6 +1,4 @@
-import os
 import pkgutil
-import pandas as pd
 
 from assetutilities.common.data import ReadFromExcel
 from digitalmodel.custom.fea_model.LineType_components import LineType

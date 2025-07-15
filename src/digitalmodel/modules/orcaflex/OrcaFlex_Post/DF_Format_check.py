@@ -1,7 +1,4 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
-import six
 
 df = pd.DataFrame()
 df["date"] = ["2016-04-01", "2016-04-02", "2016-04-03"]

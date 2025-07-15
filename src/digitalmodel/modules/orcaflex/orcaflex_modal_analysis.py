@@ -5,8 +5,6 @@ import numpy as np
 import pandas as pd
 
 # Third party imports
-import numpy as np
-import pandas as pd
 
 try:
     # Third party imports

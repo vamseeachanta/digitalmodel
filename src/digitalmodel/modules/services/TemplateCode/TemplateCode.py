@@ -1,8 +1,8 @@
 import os
 
-from flask import Blueprint, abort, jsonify, make_response, request, url_for
+from flask import Blueprint, jsonify, make_response
 from flask_httpauth import HTTPBasicAuth
-from flask_restful import Api, Resource, fields, marshal, marshal_with, reqparse
+from flask_restful import Api, Resource
 
 auth = HTTPBasicAuth()
 

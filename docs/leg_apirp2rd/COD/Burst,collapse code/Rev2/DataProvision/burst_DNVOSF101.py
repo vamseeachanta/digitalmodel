@@ -1,6 +1,5 @@
 # DNV OS F101
 
-import math
 
 # pipe Proprties
 

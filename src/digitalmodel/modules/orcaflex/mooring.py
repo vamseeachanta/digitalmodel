@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 try:
-    import OrcFxAPI
+    pass
 except Exception:
     raise RuntimeError("OrcaFlex license not available. Run on different computer")
 from loguru import logger

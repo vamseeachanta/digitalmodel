@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, render_template
-from jinja2 import TemplateNotFound
 
 example_SPA = Blueprint("example_SPA", __name__, template_folder="templates")
 

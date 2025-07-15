@@ -1,7 +1,6 @@
 # Standard library imports
 import os
 import sys
-import pandas as pd
 # Reader imports
 import colorama
 from assetutilities.common.yml_utilities import ymlInput
@@ -16,7 +15,6 @@ from typing import Any, Dict
 tu = TestUtilities()
 
 # Standard library imports
-from typing import Any, Dict
 
 
 def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:

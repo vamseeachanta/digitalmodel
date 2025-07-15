@@ -1,6 +1,4 @@
 import configparser
-import os
-from os.path import dirname, abspath
 
 from dataManager.AttributeDict import AttributeDict
 

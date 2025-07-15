@@ -10,7 +10,6 @@ class VisualizationComponents:
         self.cfg = cfg
 
     def get_raw_data(self):
-        import logging
 
         if self.cfg.default["input_data"]["source"] == "db":
             self.get_environments()

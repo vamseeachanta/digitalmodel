@@ -1,4 +1,3 @@
-import logging
 from assetutilities.common.data import SaveData
 
 

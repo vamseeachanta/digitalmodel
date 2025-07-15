@@ -1,6 +1,5 @@
 class Visualization:
     def __init__(self, plt_settings=None):
-        import matplotlib
 
         # matplotlib.use('Agg')
         import matplotlib.pyplot as plt
@@ -26,7 +25,6 @@ class Visualization:
         author: sukhbinder
         date 5/6/2018
         """
-        import matplotlib
 
         # matplotlib.use('Agg')
         import matplotlib.dates as mdates
@@ -81,7 +79,6 @@ class Visualization:
         return ax
 
     def from_df_array(self, df_array, plt_settings=None):
-        import matplotlib
 
         # matplotlib.use('Agg')
         import matplotlib.pyplot as plt
@@ -262,7 +259,6 @@ class Visualization:
 
     def from_df_get_plot(self, df, plt_settings):
         # TODO Rename function to 'from_df'
-        import matplotlib
 
         # matplotlib.use('Agg')
         import matplotlib.pyplot as plt
@@ -654,7 +650,6 @@ class Visualization:
         return colors
 
     def orcaflex_range_plot(self, RangeAllFiles, cfg):
-        import matplotlib
 
         # matplotlib.use('Agg')
         import matplotlib.pyplot as plt
@@ -791,7 +786,6 @@ class Visualization:
         plt.show()
 
     def plotCustomFatigue(self, DF, data):
-        import matplotlib
 
         # matplotlib.use('Agg')
         import matplotlib.pyplot as plt
@@ -840,7 +834,6 @@ class Visualization:
         plt.close()
 
     def plotCustomFatigueComparison(self, DFArray, data, cfg):
-        import matplotlib
 
         # matplotlib.use('Agg')
         import matplotlib.pyplot as plt

@@ -1,6 +1,4 @@
 import configparser
-import os
-from os.path import abspath, dirname
 
 from custom.DNV_OS_F101.AttributeDict import AttributeDict
 

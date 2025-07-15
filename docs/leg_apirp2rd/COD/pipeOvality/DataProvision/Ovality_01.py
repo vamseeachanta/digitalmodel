@@ -1,7 +1,6 @@
 # Plate1 data is obtained from workbook: "0116-CAL-0003-01 (Pipe Geometry with Ovality) ";
 # worksheet: "Ovality" ; Column C
 
-import munch
 
 Diameter1 = {'x6': 20, 'x6_unit'   : 'inch',
             'x7' : 22, 'x7_unit'   : 'inch',

@@ -1,4 +1,3 @@
-import FatigueBasiccurve
 from FatigueBasiccurve import*
 fatigueBasicurve = pd.read_excel("C:\\Users\\AceEngineer-04\\Dropbox\\0119 Programming\\017 Fatigue Curves\\Cal\\FatiguebasicurveCal.xlsx")
 shear7Data = fatigueBasicurve.loc[:, 'Curve Type':'S0 (Mpa)']

@@ -2,17 +2,11 @@ import logging
 import os
 import sys
 
-import matplotlib.pyplot as pyplot
-import matplotlib.pyplot as plt
 from matplotlib import rc
 
 rc("mathtext", default="regular")
-import csv
-import json
 
-import numpy as np
 import pandas as pd
-from dataManager.customInputs import ExcelRead
 
 # from DataFrame_To_Image import DataFrame_To_Image
 from results.plotCustomFatigue import plotCustomFatigue, plotCustomFatigueComparison

@@ -5,7 +5,6 @@ from openpyxl import load_workbook
 https://xlsxwriter.readthedocs.io/working_with_pandas.html
 """
 def DataFrame_To_xlsx_xlsxwriter(df, data):
-    import xlrd
     writer = pd.ExcelWriter(data['FileName'], engine='xlsxwriter')
 
     try:

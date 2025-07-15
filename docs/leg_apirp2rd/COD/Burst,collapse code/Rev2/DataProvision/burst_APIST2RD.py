@@ -1,5 +1,4 @@
 # Grade API H40 Pipe Data
-import math
 
 D = 14.9 #Diameter of pipe for outer riser (Units:Inch)
 #Di = 11.9 #Diameter of pipe for inner riser (Units:Inch)

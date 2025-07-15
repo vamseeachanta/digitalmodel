@@ -30,9 +30,7 @@ def main():
         pygame.draw.rect(DISPLAY,aceColors.black,(355,652.32,70,3.12))    # BOP
         pygame.draw.rect(DISPLAY,aceColors.blue,(355,655.44,70,100.0))    # Wellhead
         pygame.display.flip()
-import os
-import xlrd
-import pygame, sys
+import pygame
 from pygame.locals import *
 from colors import aceColors
 DISPLAY=pygame.display.set_mode((800,800),0,32)

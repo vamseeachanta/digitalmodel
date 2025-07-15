@@ -1,7 +1,6 @@
 from collections import OrderedDict
 
 from assetutilities.common.yml_utilities import WorkingWithYAML
-from modulefinder import ModuleFinder
 
 wwy = WorkingWithYAML()
 

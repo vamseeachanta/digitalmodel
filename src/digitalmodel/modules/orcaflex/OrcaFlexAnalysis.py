@@ -2,23 +2,17 @@ from loguru import logger
 import os
 import sys
 
-import matplotlib.pyplot as pyplot
-import matplotlib.pyplot as plt
 
 try:
-    import OrcFxAPI
+    pass
 except Exception:
     raise RuntimeError("OrcaFlex license not available. Run on different computer")
 from matplotlib import rc
 
 rc("mathtext", default="regular")
-import csv
-import json
 
-import numpy as np
 import pandas as pd
 
-from common.DataFrame_To_Image import DataFrame_To_Image
 from common.DataFrame_To_xlsx import DataFrameArray_To_xlsx_openpyxl
 from common.set_logging import setLogging
 from custom.OrcaFlex_Post.postProcess import postProcess

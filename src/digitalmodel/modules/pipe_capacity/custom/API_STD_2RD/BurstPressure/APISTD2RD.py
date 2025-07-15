@@ -14,7 +14,6 @@ Run instructions with:
 import logging
 import sys
 
-import numpy as np
 from APISTD2RDMethods import variableWTBurst
 from dataManager.customUpdate import customUpdate
 from dataManager.ymlInput import ymlInput

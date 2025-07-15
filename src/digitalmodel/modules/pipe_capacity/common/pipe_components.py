@@ -3,13 +3,9 @@ from digitalmodel.modules.pipe_capacity.custom.MaterialProperties import (
 )
 from digitalmodel.modules.pipe_capacity.custom.PipeCapacity import PipeCapacity
 from digitalmodel.modules.pipe_capacity.custom.PipeSizing import PipeSizing
-from digitalmodel.modules.pipe_capacity.custom.saveData import saveDataYaml
 
 
 # Reader imports
-from digitalmodel.modules.pipe_capacity.custom.MaterialProperties import (
-    MaterialProperties,
-)
 
 
 class PipeComponents:
