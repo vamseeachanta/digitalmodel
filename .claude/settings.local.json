@@ -8,7 +8,10 @@
       "Bash(python -m pip install:*)",
       "Bash(uv run ruff:*)",
       "Bash(uv add:*)",
-      "Bash(uv run pytest:*)"
+      "Bash(uv run pytest:*)",
+      "Bash(uv run:*)",
+      "Bash(mkdir:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

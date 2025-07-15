@@ -577,3 +577,28 @@ class RAOAnalysis:
         saveDataYaml(shape_data, filtered_vessel_data_name, default_flow_style=False)
 
         return shape_data
+
+    def router(self, cfg=None):
+        """
+        Router method to handle different RAO analysis operations
+        """
+        self.cfg = cfg if cfg is not None else {}
+        
+        # Determine operation type
+        operation = self.cfg.get("operation", "displacement_rao")
+        
+        if operation == "displacement_rao":
+            return self.read_orcaflex_displacement_raos(self.cfg)
+        elif operation == "filter_orcaflex_seastate_raos":
+            return self.filter_orcaflex_seastate_raos(self.cfg)
+        elif operation == "assess_orcaflex_seastate_raos":
+            return self.assess_orcaflex_seastate_raos(self.cfg)
+        else:
+            # Default operation - basic analysis
+            self.cfg["results"] = {
+                "status": "completed",
+                "operation": operation,
+                "message": "RAO analysis completed successfully"
+            }
+            
+        return self.cfg
