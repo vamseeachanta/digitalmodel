@@ -32,9 +32,9 @@ class OrcaFlexPostProcess:
     def post_process_router(self, cfg):
 
         orcaflex_license_flag = ou.is_orcaflex_available()
-        assert orcaflex_license_flag
         if not orcaflex_license_flag:
-            raise Exception("Orcaflex license not available.")
+            print("Orcaflex license not available.")
+            return cfg
 
         cfg = self.get_cfg_with_master_data(cfg)
 

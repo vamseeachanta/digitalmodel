@@ -30,7 +30,7 @@ orcaflex:
     time_series:
       flag: False
     RAOs:
-      flag: False
+      flag: True
     cummulative_histograms:
       flag: False
     rain_flow:
@@ -138,13 +138,13 @@ time_series_settings:
 
 file_management:
   flag: True
-  input_directory: NULL
+  input_directory: yml
   output_directory: NULL
   update_unfinished:
     flag: False
 
   filename:
-    extension: [sim]
+    extension: [yml]
     pattern: NULL
     filters:
       contains: []

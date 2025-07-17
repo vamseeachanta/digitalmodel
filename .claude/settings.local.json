@@ -20,7 +20,9 @@
       "Bash(uv build:*)",
       "Bash(uv publish:*)",
       "Bash(env)",
-      "Bash(echo \"Token length: $#PYPI_TOKEN\")"
+      "Bash(echo \"Token length: $#PYPI_TOKEN\")",
+      "Bash(find:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

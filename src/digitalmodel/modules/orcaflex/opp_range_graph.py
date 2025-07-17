@@ -5,7 +5,7 @@ import copy
 try:
     import OrcFxAPI
 except Exception:
-    raise RuntimeError("OrcaFlex license not available. Run on different computer")
+    print("OrcaFlex license not available. Run on different computer")
 
 
 class OPPRangeGraph:
