@@ -24,6 +24,7 @@ assetutilities/
 │   │   ├── README.md              # Session index
 │   │   └── YYYY-MM-DD_topic.md    # Timestamped sessions
 │   ├── modules/
+│       └── [module-name].md       # Module-specific specifications
 │   └── workflows/                 # Development workflows
 
 │
@@ -31,16 +32,19 @@ assetutilities/
 │   ├── templates/                  # Reusable specification templates
 │   │   └── spec_base.md           # Base template structure
 │   └── [feature-name].md          # Generated specifications
-│
+│   └── modules/
+│       └── [module-name].md       # Module-specific specifications
 ├── src/
 │   └── assetutilities/              # Main source code
 │   └── base_configs
 │       └── modules/
 │   └── modules/
+│       └── [module-name].md       # Module-specific specifications
 │
 ├── tests/                          # Test scripts and modules
 │   ├── __init__.py
 │   └── modules/
+│       └── [module-name].md       # Module-specific specifications
 │
 └── .github/                        # GitHub workflows
 
