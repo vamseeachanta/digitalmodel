@@ -1,52 +1,45 @@
 # AI Guidelines
 
-Please follow [AI Guidelines directory](https://github.com/vamseeachanta/pyproject-starter/tree/master/.ai) 
-for all development work.
+This file provides comprehensive guidance for AI assistants working with this repository.
 
-## Specific Sections
-- [Python programming](https://github.com/vamseeachanta/pyproject-starter/blob/master/.ai/code-guidance/AI_ASSISTANT-PYTHON-BASIC.md)
+## Quick Reference
+- Follow specifications in `specs/` directory
+- Use configuration files in `src/digitalmodel/base_configs/modules/`
+- Reference detailed guidance in `.ai/code-guidance/`
+- Follow development process in `.ai/workflows/`
 
+## Project Architecture
 
-## Project Specific Directory Structure
+### Directory Structure
+```
+digitalmodel/
+├── .ai/                           # AI assistant configuration
+│   ├── code-guidance/            # Code standards and patterns
+│   ├── commands/                 # Automation commands
+│   ├── workflows/                # Development processes
+│   ├── settings.json             # AI assistant settings
+│   └── project-context.md        # Project overview
+├── specs/                         # Feature specifications
+│   ├── templates/                # Specification templates
+│   ├── modules/                  # Module specifications
+│   ├── enhancements/             # Enhancement specifications
+│   └── bugfixes/                 # Bug fix specifications
+├── src/digitalmodel/             # Main source code
+│   ├── modules/                  # Analysis modules (vertical slices)
+│   ├── base_configs/modules/     # YAML configuration templates
+│   └── common/                   # Shared utilities
+├── tests/                        # Test suite
+│   └── modules/                  # Tests organized by module
+└── docs/                         # Domain-specific documentation
+```
 
-Follow strict vertical slice architecture
-
-assetutilities/
-│
-├── .ai/                            # AI assistant configuration
-│   ├── commands/                   # Custom automation commands
-│   │   ├── generate-spec.md        # Specification generation logic
-│   │   └── execute-spec.md         # Specification execution logic
-│   │── settings.json              # AI assistant permissions and preferences
-│   └── AI_GUIDELINES.md            # Global AI assistant rules │
-├── docs/                           # Documentation and reference materials
-│   ├── chat-history/              # AI conversation logs
-│   │   ├── README.md              # Session index
-│   │   └── YYYY-MM-DD_topic.md    # Timestamped sessions
-│   ├── modules/
-│       └── [module-name].md       # Module-specific specifications
-│   └── workflows/                 # Development workflows
-
-│
-├── specs/                          # Project Specification Documents
-│   ├── templates/                  # Reusable specification templates
-│   │   └── spec_base.md           # Base template structure
-│   └── [feature-name].md          # Generated specifications
-│   └── modules/
-│       └── [module-name].md       # Module-specific specifications
-├── src/
-│   └── assetutilities/              # Main source code
-│   └── base_configs
-│       └── modules/
-│   └── modules/
-│       └── [module-name].md       # Module-specific specifications
-│
-├── tests/                          # Test scripts and modules
-│   ├── __init__.py
-│   └── modules/
-│       └── [module-name].md       # Module-specific specifications
-│
-└── .github/                        # GitHub workflows
+### Vertical Slice Architecture
+Organize by engineering domain/feature:
+- `aqwa/` - ANSYS AQWA hydrodynamic analysis
+- `orcaflex/` - OrcaFlex simulation and post-processing
+- `catenary/` - Catenary riser analysis
+- `ship_design/` - Vessel design and analysis
+- `pipe_capacity/` - Pipeline capacity calculations
 
 ## OrcaFlex Testing
 
