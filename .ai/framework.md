@@ -1,0 +1,49 @@
+- .ai (give as much context into our project to ai-agent as possible)
+	- agent-personas
+		- assigned-engineer :
+			- any time a artifact needs to be updates  (for example.py file), analyze recommend appropriate changes to other supporting artifacts (test cases, test data sets, module specific, product wide documentation, keep mind all personas [.ai/requirements/personas] and identify impacts to all personas that are part of this project )
+		- assigned-product-manager
+		- assigned-product-owner
+	- requirements (assign every element a unique id - e.g. L1-header=section, L2-header= section.subsection and so on)
+		- product management - overall purpose, what are the high level functional non functional goals etc  
+		- product structure
+			- modules - purpose - objectives - features - capabilities etc
+				- functional 
+				- non-functional
+		- plans-roadmaps
+			- 
+		- personas - customers, users, operational owner, tech ops owner 
+		- technical details 
+			- app architecture
+			- dev ops specs
+				- build
+				- testing 
+	- app-overview-mapping (may only be 1 MD)
+		- dev-ops tools
+		- build tools
+		- deployment
+		- testing tools 
+	- workflow (maintain workflow specs here. 1 md or multiple )
+		- epic-workflow.md
+		- feature-workflow.md
+		- userStory-workflow.md - as an assigned-engineer 
+			- understand feature as written in gh-issue
+			- analyze code + current .ai/requirements
+			- recommend changes to be made
+			- review with recommendations with lead , get approval
+			- implement change, run build pipeline
+			- if build pipeline successful generate PR
+			- if build pipeline fails 
+				- analyze failure
+				- share impelmentation + failure analysis 
+				- review with lead engineer for next steps 
+		- bug-workflow.md 
+		- sotu-workflow.md (state of the union)
+			- review all codebase outside of .ai 
+			- compare the actual code base to the summaries/data in .ai folder for following aspects 
+				- does code base still align .ai/requirements sections 
+				- does code base still align to 
+	- implementation-attempts
+		- epic-issue-123.md
+		- feature-issue-456.md
+		- bug-issue-789.md 
