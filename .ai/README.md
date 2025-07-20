@@ -25,4 +25,8 @@ This project follows specification-driven development:
 - All features start with specifications in `../specs/`
 - AI assistants should reference specifications before implementing
 - Keep documentation and code in sync with specifications
-- Any prompt or context or feature iterations with ai assistants should be added to the `specs/` directory in the appropriate module file.
+- Document AI assistant interactions in `../specs/` using appropriate templates:
+  - New features: Create specification using `../specs/templates/module-template.md` or `../specs/templates/enhancement-template.md`
+  - Bug fixes: Use `../specs/templates/bugfix-template.md`
+  - Infrastructure changes: Use `../specs/templates/infrastructure-template.md`
+  - Save in relevant subdirectory: `modules/`, `enhancements/`, `bugfixes/`, or `infrastructure/`

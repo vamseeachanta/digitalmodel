@@ -90,6 +90,20 @@ twine upload dist/*
 - Integration testing
 - Documentation review
 
+## GitHub Issue Implementation Workflow
+
+### Issue-Driven Development
+1. **Issue Analysis**: Use `.ai/workflows/implementation/issue-planning.md`
+2. **Implementation Tracking**: Follow `.ai/workflows/implementation/implementation-tracking.md`
+3. **Change Documentation**: Apply `.ai/workflows/implementation/change-documentation.md`
+4. **Implementation Summary**: Create using `.ai/workflows/implementation/implementation-summary.md`
+
+### Integration with Specifications
+- Link GitHub issues to relevant specifications
+- Create new specifications for significant features
+- Update existing specifications based on implementation learnings
+- Maintain traceability from issue → spec → implementation
+
 ## Continuous Integration
 
 ### Pre-commit Hooks
