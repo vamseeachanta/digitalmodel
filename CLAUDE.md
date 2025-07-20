@@ -10,7 +10,7 @@ This file provides guidance to AI assistants when working with code in this repo
 - **Development Process**: `.ai/workflows/development-process.md`
 - **Code Standards**: `.ai/code-guidance/`
 - **AI Settings**: `.ai/settings.json`
-- **Specifications**: `specs/` directory
+- **Specifications**: `.ai/specs/` directory
 - **Automation Commands**: `.ai/commands/`
 
 ## Getting Started

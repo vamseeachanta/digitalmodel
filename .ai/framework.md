@@ -11,7 +11,6 @@
 				- functional 
 				- non-functional
 		- plans-roadmaps
-			- 
 		- personas - customers, users, operational owner, tech ops owner 
 		- technical details 
 			- app architecture

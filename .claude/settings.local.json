@@ -24,7 +24,9 @@
       "Bash(find:*)",
       "Bash(ls:*)",
       "WebFetch(domain:docs.anthropic.com)",
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Bash(rm:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }
