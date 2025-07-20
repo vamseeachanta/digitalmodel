@@ -58,7 +58,7 @@ Documentation Files: 100% of changes
 - **Added**: `.ai/specs/infrastructure/` - Epic and feature specifications (3 files)
 - **Modified**: `CLAUDE.md` - Streamlined to reference .ai directory
 - **Modified**: `.ai/AI_GUIDELINES.md` - Updated with new structure
-- **Modified**: `.ai/framework-v2.md` - Enhanced with implementation details
+- **Modified**: `.ai/framework.md` - Enhanced with implementation details
 
 ## User Story Implementation Results
 
@@ -163,7 +163,7 @@ Framework Architecture:
 │   └── templates/            # Epic, Feature, Story templates
 ├── project-context.md        # High-level project context
 ├── settings.json            # AI assistant configuration
-└── framework-v2.md          # Framework design principles
+└── framework.md             # Framework design principles
 
 .ai/specs/infrastructure/     # Specifications (3 files)
 ├── epic-ai-framework-implementation-2025.md

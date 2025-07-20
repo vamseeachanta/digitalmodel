@@ -269,7 +269,7 @@ Epic Phase 3 (Implementation History): 15% of total effort
 
 ### Related Specifications
 - `specs/infrastructure/ai-assistant-repository-restructure-2025-01-20.md` - Foundation restructure
-- `.ai/framework-v2.md` - Framework design principles
+- `.ai/framework.md` - Framework design principles
 - `.ai/workflows/development-process.md` - Current development process
 
 ### External References

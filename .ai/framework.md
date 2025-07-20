@@ -1,48 +1,156 @@
-- .ai (give as much context into our project to ai-agent as possible)
-	- agent-personas
-		- assigned-engineer :
-			- any time a artifact needs to be updates  (for example.py file), analyze recommend appropriate changes to other supporting artifacts (test cases, test data sets, module specific, product wide documentation, keep mind all personas [.ai/requirements/personas] and identify impacts to all personas that are part of this project )
-		- assigned-product-manager
-		- assigned-product-owner
-	- requirements (assign every element a unique id - e.g. L1-header=section, L2-header= section.subsection and so on)
-		- product management - overall purpose, what are the high level functional non functional goals etc  
-		- product structure
-			- modules - purpose - objectives - features - capabilities etc
-				- functional 
-				- non-functional
-		- plans-roadmaps
-		- personas - customers, users, operational owner, tech ops owner 
-		- technical details 
-			- app architecture
-			- dev ops specs
-				- build
-				- testing 
-	- app-overview-mapping (may only be 1 MD)
-		- dev-ops tools
-		- build tools
-		- deployment
-		- testing tools 
-	- workflow (maintain workflow specs here. 1 md or multiple )
-		- epic-workflow.md
-		- feature-workflow.md
-		- userStory-workflow.md - as an assigned-engineer 
-			- understand feature as written in gh-issue
-			- analyze code + current .ai/requirements
-			- recommend changes to be made
-			- review with recommendations with lead , get approval
-			- implement change, run build pipeline
-			- if build pipeline successful generate PR
-			- if build pipeline fails 
-				- analyze failure
-				- share impelmentation + failure analysis 
-				- review with lead engineer for next steps 
-		- bug-workflow.md 
-		- sotu-workflow.md (state of the union)
-			- review all codebase outside of .ai 
-			- compare the actual code base to the summaries/data in .ai folder for following aspects 
-				- does code base still align .ai/requirements sections 
-				- does code base still align to 
-	- implementation-attempts
-		- epic-issue-123.md
-		- feature-issue-456.md
-		- bug-issue-789.md 
+# AI Assistant Framework v2.0
+
+## Directory Structure
+
+```
+.ai/
+├── agent-personas/                 # AI agent role definitions
+│   ├── README.md                  # Overview of personas and responsibilities
+│   ├── assigned-engineer.md       # Engineering agent persona
+│   ├── assigned-product-manager.md # Product management agent persona
+│   ├── assigned-product-owner.md  # Product owner agent persona
+│   └── templates/                 # Persona templates
+│       └── persona-template.md
+│
+├── requirements/                   # Comprehensive requirements documentation
+│   ├── README.md                  # Requirements overview and ID system
+│   ├── R001-product-management.md # Overall purpose and high-level goals
+│   ├── R002-product-structure.md  # Modules, features, capabilities
+│   ├── R003-plans-roadmaps.md     # Development plans and roadmaps
+│   ├── R004-personas.md           # User personas and stakeholders
+│   ├── R005-technical-architecture.md # Application architecture
+│   └── R006-devops-specifications.md # Build, testing, deployment specs
+│
+├── system-overview/               # System mapping and tool overview
+│   ├── README.md                  # System overview guide
+│   ├── devops-tools.md           # DevOps toolchain mapping
+│   ├── build-pipeline.md         # Build system overview
+│   ├── deployment-strategy.md    # Deployment processes
+│   ├── testing-framework.md      # Testing tools and strategies
+│   └── architecture-diagram.md   # System architecture visualization
+│
+├── workflows/                     # Workflow specifications
+│   ├── README.md                  # Workflow overview and standards
+│   ├── epic-workflow.md           # Epic management workflow
+│   ├── feature-workflow.md        # Feature development workflow
+│   ├── user-story-workflow.md     # User story implementation workflow
+│   ├── bug-workflow.md            # Bug fixing workflow
+│   ├── state-of-union-workflow.md # Codebase alignment review workflow
+│   └── implementation/            # Existing implementation workflows
+│       ├── issue-planning.md
+│       ├── implementation-tracking.md
+│       └── ... (existing files)
+│
+├── implementation-history/        # Historical implementation tracking
+│   ├── README.md                  # Implementation history overview
+│   ├── 2025/                      # Year-based organization
+│   │   ├── epics/
+│   │   │   ├── epic-issue-123.md
+│   │   │   └── epic-issue-456.md
+│   │   ├── features/
+│   │   │   ├── feature-issue-789.md
+│   │   │   └── feature-issue-101.md
+│   │   ├── bugs/
+│   │   │   ├── bug-issue-112.md
+│   │   │   └── bug-issue-131.md
+│   │   └── infrastructure/
+│   │       ├── infra-issue-415.md
+│   │       └── infra-issue-161.md
+│   └── templates/
+│       ├── epic-implementation-template.md
+│       ├── feature-implementation-template.md
+│       ├── bug-implementation-template.md
+│       └── infrastructure-implementation-template.md
+│
+├── project-context.md             # High-level project context (existing)
+├── settings.json                  # AI assistant settings (existing)
+└── AI_GUIDELINES.md               # Main AI guidelines (existing)
+```
+
+## Framework Principles
+
+### 1. Comprehensive Context
+Provide AI agents with maximum context about:
+- Project purpose and objectives
+- Technical architecture and constraints
+- User personas and requirements
+- Development processes and standards
+- Historical implementation patterns
+
+### 2. Role-Based Personas
+Define specific AI agent personas with:
+- Clear responsibilities and scope
+- Decision-making authority
+- Interaction patterns with other personas
+- Quality gates and validation criteria
+
+### 3. Systematic Workflows
+Establish structured workflows for:
+- Epic and feature development
+- Bug fixing and maintenance
+- Code review and quality assurance
+- Documentation and knowledge transfer
+
+### 4. Traceability and History
+Maintain comprehensive records of:
+- Implementation decisions and rationale
+- Code changes and their impacts
+- Requirements evolution
+- Architecture decisions
+
+### 5. Continuous Alignment
+Regular validation that:
+- Code aligns with documented requirements
+- Architecture matches current implementation
+- Documentation reflects actual system behavior
+- Workflows remain effective and relevant
+
+## Implementation Guidelines
+
+### Requirement IDs
+All requirements use hierarchical IDs:
+- `R001` - Top-level requirement
+- `R001.1` - Sub-requirement
+- `R001.1.1` - Detailed requirement
+- `R001.1.1.a` - Implementation detail
+
+### File Naming Conventions
+- Requirements: `R###-descriptive-name.md`
+- Workflows: `descriptive-workflow.md`
+- Personas: `assigned-role-name.md`
+- Implementation History: `type-issue-###.md`
+- System Overview: `component-name.md`
+
+### Cross-Reference Standards
+- Link requirements to implementations
+- Reference personas in workflows
+- Connect issues to requirements
+- Maintain bidirectional traceability
+
+## Implementation Epic
+
+**Implementation Plan**: This framework is being implemented according to the epic specification:
+`.ai/specs/infrastructure/epic-ai-framework-implementation-2025.md`
+
+The epic defines a 9-month implementation plan with three phases:
+1. **Framework Foundation** (Q1 2025) - Core structure and documentation
+2. **Workflow Implementation** (Q2 2025) - Operational processes
+3. **Implementation History** (Q3 2025) - Learning and improvement system
+
+See the epic specification for detailed timeline, resource allocation, and success metrics.
+
+
+## Example Implementation Structure
+
+📊 EPIC (Months/Quarters)
+├── 🎯 Feature (Weeks/Sprints)
+│   ├── 📝 User Story (Hours/Days)
+│   ├── 📝 User Story (Hours/Days)
+│   └── 📝 User Story (Hours/Days)
+├── 🎯 Feature (Weeks/Sprints)
+│   ├── 📝 User Story (Hours/Days)
+│   └── 📝 User Story (Hours/Days)
+└── 🎯 Feature (Weeks/Sprints)
+    ├── 📝 User Story (Hours/Days)
+    ├── 📝 User Story (Hours/Days)
+    └── 📝 User Story (Hours/Days)
