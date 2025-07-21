@@ -376,3 +376,51 @@ class AQWAEnhancedParser:
                     expanded_lines.append(line)
         
         return '\n'.join(expanded_lines)
+    
+    def export_to_csv(self, rao_data: Dict[str, Any], output_format: str = 'step2') -> str:
+        """Export RAO data to CSV format.
+        
+        Args:
+            rao_data: RAO data dictionary from parse_lis_file
+            output_format: 'step1' (abbreviated - empty period/freq) or 'step2' (full - all period/freq)
+            
+        Returns:
+            CSV formatted string
+        """
+        frequencies = rao_data['frequencies']
+        headings = rao_data['headings'] 
+        raos = rao_data['raos']
+        
+        # Create header
+        header = "Period,Frequency,Direction,Surge Amplitude,Surge Phase,Sway Amplitude,Sway Phase,Heave Amplitude,Heave Phase,Roll Amplitude,Roll Phase,Pitch Amplitude,Pitch Phase,Yaw Amplitude,Yaw Phase"
+        
+        lines = [header]
+        
+        for i, freq in enumerate(frequencies):
+            period = 2 * np.pi / freq if freq > 0 else 0
+            
+            for j, heading in enumerate(headings):
+                # Get RAO values for this frequency/heading
+                surge_amp = raos['surge']['amplitude'][i, j]
+                surge_phase = raos['surge']['phase'][i, j]
+                sway_amp = raos['sway']['amplitude'][i, j] 
+                sway_phase = raos['sway']['phase'][i, j]
+                heave_amp = raos['heave']['amplitude'][i, j]
+                heave_phase = raos['heave']['phase'][i, j]
+                roll_amp = raos['roll']['amplitude'][i, j]
+                roll_phase = raos['roll']['phase'][i, j]
+                pitch_amp = raos['pitch']['amplitude'][i, j]
+                pitch_phase = raos['pitch']['phase'][i, j]
+                yaw_amp = raos['yaw']['amplitude'][i, j]
+                yaw_phase = raos['yaw']['phase'][i, j]
+                
+                if output_format == 'step1' and j > 0:
+                    # Abbreviated format - empty period and frequency after first heading
+                    line = f",,{heading},{surge_amp},{surge_phase},{sway_amp},{sway_phase},{heave_amp},{heave_phase},{roll_amp},{roll_phase},{pitch_amp},{pitch_phase},{yaw_amp},{yaw_phase}"
+                else:
+                    # Full format - include period and frequency on every line
+                    line = f"{period},{freq},{heading},{surge_amp},{surge_phase},{sway_amp},{sway_phase},{heave_amp},{heave_phase},{roll_amp},{roll_phase},{pitch_amp},{pitch_phase},{yaw_amp},{yaw_phase}"
+                
+                lines.append(line)
+        
+        return '\n'.join(lines)

@@ -1,11 +1,17 @@
-# User Story Specification: RAO Data Import and Processing
+# User Story Specification: RAO Data Import and Processing (Parent Story)
 
 **Story ID**: US-2025-201  
 **Feature**: `.ai/specs/modules/feature-6dof-motion-analysis-2025.md`  
 **Epic**: `.ai/specs/modules/epic-marine-analysis-ship-design-dynamics-2025.md`  
 **Implementation Date**: TBD  
 **Effort**: 5 days (Estimated)  
-**Status**: Draft
+**Status**: Split into Sub-Stories
+
+## Sub-Stories
+This parent story has been split into focused sub-stories for better management:
+
+- **US-2025-201-A**: [AQWA RAO Data Import](./user-story-aqwa-rao-data-import-2025.md) - 3 days
+- **US-2025-201-B**: [OrcaFlex RAO Data Import](./user-story-orcaflex-rao-data-import-2025.md) - 2 days
 
 ## User Story Definition
 
@@ -29,25 +35,9 @@
 ## Acceptance Criteria
 
 ### Primary Acceptance Criteria
-- [ ] AC-201.1.1: Read Displacement RAO data from 2 categories: OrcaFlex and AQWA
-  - [ ] AC-201.1.1.1: OrcaFlex datafile support
-    - [ ] Read YAML format: `tests\modules\rao_analysis\SS_Off_0_8P.yml`
-    - [ ] Parse YAML structure: VesselTypes > Name: Vessel Type1 > Draughts > Name: Draught1 > DisplacementRAOs: RAOs
-    - [ ] Extract headings from file content
-  - [ ] AC-201.1.1.2: AQWA datafile support  
-    - [ ] Read ASCII format: `tests\modules\rao_analysis\NO_DAMP_FST1_L015.LIS`
-    - [ ] Search for "R.A.O.S-VARIATION WITH WAVE DIRECTION" pattern
-      - [ ] Each pattern will contain multiple sets of frequency blocks
-      - [ ] Each frequency block should be parced as below:
-        - First line: period, freq, direction, and data
-        - Following lines: just direction, and data (no period/freq repeats)
-        - Last line: either empty or 1
-        - Suggested step 1: Example block as csv: tests/modules/rao_analysis/NO_DAMP_FST1_L015_frequency1_block_step1.csv
-        - Suggested step 2: Example block as csv: tests/modules/rao_analysis/NO_DAMP_FST1_L015_frequency1_block_step2.csv
-    - [ ] If multiple data sets exist (due to analysis file inherent iterations), take the last set
-    - [ ] Extract headings from file content
-    - [ ] Use Fortran fixed character delimiter parsing similar to body_item_str format in aqwa_dat_files.py
-    - [ ] If data is missing, use previous row data
+- [ ] AC-201.1.1: Read Displacement RAO data from multiple sources (see sub-stories for detailed requirements)
+  - [ ] AC-201.1.1.1: OrcaFlex datafile support (see US-2025-201-B)
+  - [ ] AC-201.1.1.2: AQWA datafile support (see US-2025-201-A)
 - [ ] AC-201.1.2: Process experimental RAO data from CSV and Excel formats with flexible column mapping
 - [ ] AC-201.1.3: Validate RAO data quality including frequency range, heading coverage, and physical reasonableness
 - [ ] AC-201.1.4: Interpolate RAO data to user-defined frequency and heading grids with cubic spline interpolation

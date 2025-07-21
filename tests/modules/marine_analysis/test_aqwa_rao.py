@@ -58,8 +58,8 @@ class TestAQWARAOParsing(unittest.TestCase):
             self.assertIsInstance(result['headings'], np.ndarray)
             self.assertIsInstance(result['raos'], dict)
             
-            print(f"✓ AQWA Enhanced Parser - Frequencies: {len(result['frequencies'])}")
-            print(f"✓ AQWA Enhanced Parser - Headings: {len(result['headings'])}")
+            print(f"AQWA Enhanced Parser - Frequencies: {len(result['frequencies'])}")
+            print(f"AQWA Enhanced Parser - Headings: {len(result['headings'])}")
             
         except Exception as e:
             self.fail(f"AQWA enhanced parsing failed: {str(e)}")
@@ -78,8 +78,8 @@ class TestAQWARAOParsing(unittest.TestCase):
             self.assertIn('headings', result)
             self.assertIn('raos', result)
             
-            print(f"✓ AQWA Fixed Parser - Frequencies: {len(result['frequencies'])}")
-            print(f"✓ AQWA Fixed Parser - Headings: {len(result['headings'])}")
+            print(f"AQWA Fixed Parser - Frequencies: {len(result['frequencies'])}")
+            print(f"AQWA Fixed Parser - Headings: {len(result['headings'])}")
             
         except Exception as e:
             self.fail(f"AQWA fixed parsing failed: {str(e)}")
@@ -226,11 +226,139 @@ R.A.O.S-VARIATION WITH WAVE DIRECTION
             self.assertIn('frequencies', enhanced_result)
             self.assertIn('frequencies', fixed_result)
             
-            print(f"✓ Enhanced parser frequencies: {len(enhanced_result['frequencies'])}")
-            print(f"✓ Fixed parser frequencies: {len(fixed_result['frequencies'])}")
+            print(f"Enhanced parser frequencies: {len(enhanced_result['frequencies'])}")
+            print(f"Fixed parser frequencies: {len(fixed_result['frequencies'])}")
             
         except Exception as e:
             print(f"Parser comparison failed: {str(e)}")
+
+    def test_csv_export_step1_format(self):
+        """Test CSV export in step1 format (abbreviated - empty period/freq)."""
+        if not self.aqwa_file.exists():
+            self.skipTest(f"Test file {self.aqwa_file} not found")
+        
+        try:
+            # Parse RAO data
+            rao_data = self.aqwa_reader.parse_lis_file(str(self.aqwa_file))
+            
+            # Export to CSV in step1 format
+            csv_output = self.enhanced_parser.export_to_csv(rao_data, output_format='step1')
+            
+            # Verify CSV structure
+            lines = csv_output.strip().split('\n')
+            self.assertGreater(len(lines), 1)  # At least header + data
+            
+            # Check header
+            header = lines[0]
+            expected_columns = ["Period", "Frequency", "Direction", "Surge Amplitude", "Surge Phase"]
+            for col in expected_columns:
+                self.assertIn(col, header)
+            
+            # Check data lines for step1 format
+            data_lines = lines[1:]
+            frequencies_found = set()
+            
+            for line in data_lines:
+                parts = line.split(',')
+                period_str = parts[0]
+                freq_str = parts[1]
+                
+                if period_str and freq_str:  # Full line
+                    freq = float(freq_str)
+                    frequencies_found.add(freq)
+                else:  # Abbreviated line
+                    self.assertEqual(period_str, '')  # Should be empty
+                    self.assertEqual(freq_str, '')    # Should be empty
+            
+            print(f"Step1 CSV export - Found {len(frequencies_found)} unique frequencies")
+            
+        except Exception as e:
+            self.fail(f"CSV step1 export failed: {str(e)}")
+
+    def test_csv_export_step2_format(self):
+        """Test CSV export in step2 format (full - all period/freq)."""
+        if not self.aqwa_file.exists():
+            self.skipTest(f"Test file {self.aqwa_file} not found")
+        
+        try:
+            # Parse RAO data
+            rao_data = self.aqwa_reader.parse_lis_file(str(self.aqwa_file))
+            
+            # Export to CSV in step2 format  
+            csv_output = self.enhanced_parser.export_to_csv(rao_data, output_format='step2')
+            
+            # Verify CSV structure
+            lines = csv_output.strip().split('\n')
+            self.assertGreater(len(lines), 1)  # At least header + data
+            
+            # Check header
+            header = lines[0]
+            expected_columns = ["Period", "Frequency", "Direction", "Surge Amplitude", "Surge Phase"]
+            for col in expected_columns:
+                self.assertIn(col, header)
+            
+            # Check data lines for step2 format - all should have period/freq
+            data_lines = lines[1:]
+            
+            for line in data_lines:
+                parts = line.split(',')
+                period_str = parts[0]
+                freq_str = parts[1]
+                
+                # All lines should have period and frequency
+                self.assertNotEqual(period_str, '')
+                self.assertNotEqual(freq_str, '')
+                
+                period = float(period_str)
+                freq = float(freq_str)
+                self.assertGreater(period, 0)
+                self.assertGreater(freq, 0)
+            
+            print(f"Step2 CSV export - All {len(data_lines)} lines have period/freq")
+            
+        except Exception as e:
+            self.fail(f"CSV step2 export failed: {str(e)}")
+
+    def test_csv_validation_against_step_files(self):
+        """Validate CSV export against provided step1 and step2 files."""
+        step1_file = self.test_data_dir / "NO_DAMP_FST1_L015_frequency1_block_step1.csv"
+        step2_file = self.test_data_dir / "NO_DAMP_FST1_L015_frequency1_block_step2.csv"
+        
+        if not step1_file.exists() or not step2_file.exists():
+            self.skipTest("Step validation files not found")
+        
+        # Read expected formats
+        with open(step1_file, 'r') as f:
+            step1_expected = f.read().strip()
+        
+        with open(step2_file, 'r') as f:
+            step2_expected = f.read().strip()
+        
+        # Parse the expected data to understand the format
+        step1_lines = step1_expected.split('\n')
+        step2_lines = step2_expected.split('\n')
+        
+        # Verify step1 has empty period/freq after first row
+        if len(step1_lines) > 2:
+            step1_data_lines = step1_lines[1:]  # Skip header
+            for i, line in enumerate(step1_data_lines):
+                parts = line.split(',')
+                if i == 0:  # First data line should have period/freq
+                    self.assertNotEqual(parts[0], '')  # Period
+                    self.assertNotEqual(parts[1], '')  # Frequency
+                else:  # Subsequent lines should be empty
+                    self.assertEqual(parts[0], '')  # Period should be empty
+                    self.assertEqual(parts[1], '')  # Frequency should be empty
+        
+        # Verify step2 has period/freq on all rows
+        if len(step2_lines) > 1:
+            step2_data_lines = step2_lines[1:]  # Skip header
+            for line in step2_data_lines:
+                parts = line.split(',')
+                self.assertNotEqual(parts[0], '')  # Period
+                self.assertNotEqual(parts[1], '')  # Frequency
+        
+        print(f"Step validation files - Step1: {len(step1_lines)} lines, Step2: {len(step2_lines)} lines")
 
 
 if __name__ == '__main__':
