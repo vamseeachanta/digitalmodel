@@ -1,0 +1,112 @@
+@startuml yaml_edit_save_in_orcaflex
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Edit and Save .YML Files\n OrcaFlex
+
+    participant "analysis \nparameters" as analysis_params
+    participant "vessel \ndata" as vessel_data
+    participant "structure \neg: riser, Mudmat etc" as structure
+    participant Environment
+    participant "save as \n.dat" as save_dat
+    participant "save as \n.yml" as save_yml
+    participant "Parametric \nAnalysis" as parametric_analysis
+    participant "run as \nyml" as run_yml
+    participant "run as \ndat" as run_dat
+    
+    activate analysis_params
+    activate vessel_data
+    activate structure
+    activate Environment
+
+    alt .dat & (>1) .yml run
+    
+        analysis_params-> vessel_data:.dat
+        vessel_data-> structure:.yml
+        structure-> Environment:.yml
+        Environment-> run_yml:.yml
+        note right run_yml
+        - modular to a great extent
+        - all .yml files can be modified in NotePad++
+        - OrcaFlex license required to edit .dat files
+        end note
+
+        note over structure: (or)
+        analysis_params-> vessel_data:.dat
+        vessel_data-> structure:.yml
+        structure-> Environment:.yml
+        Environment-> save_dat:.yml
+        save_dat-> run_dat:.dat
+
+        note right save_dat
+            - Use OrcaFlex to save .yml as .dat files
+            - Save as .dat in last stage breaks connections 
+              with all upstream input files and combined into 1 file
+        end note
+
+        note right save_dat
+        <b>Consequence of Editing .dat:</b>
+        - Does not update upstream input (.dat and .yml) files
+        Saving the edited .dat file will contain all data
+        end note
+
+        save_dat-> save_yml:.dat
+        note right save_yml
+        <b>Save as .yml :</b>
+        - will reference the last upstream .yml file
+        - Edits (from all upstream files) are saved with 
+          appropriate keyword-value pairs in this latest .yml file
+        end note
+
+
+    end group
+
+
+    alt .yml: all yml run
+   
+        analysis_params-> vessel_data:.yml
+        vessel_data-> structure:.yml
+        structure-> Environment:.yml
+        Environment-> run_yml:.yml
+
+        note right Environment
+            Opening the file in OrcaFlex GUI
+            will display red cells to show 
+            changes from the preceding .yml file
+        end note
+
+        note right run_yml
+            <b>Advantages:</b> modular design
+            - individual files can be modified in NotePad++
+            - no OrcaFlex license required
+            - compare each .yml in NotePad++ 
+              to review changes
+        end note
+
+
+        note over structure: (or)
+        analysis_params-> vessel_data:.yml
+        vessel_data-> structure:.yml
+        structure-> Environment:.yml
+        Environment-> parametric_analysis:.yml
+        note right parametric_analysis
+            <b>Advantages:</b>
+            - For sensitivity analysis
+            - Ability to inject parameters 
+              eg. Drag sensitivity etc.
+        end note
+
+        parametric_analysis-> run_yml:.yml
+
+
+    end group
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

@@ -1,0 +1,139 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\file_management_finished.yml
+    DefaultInputFile: null
+    analysis_root_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process
+    basename: orcaflex_post_process
+    cfg_array_file_names: null
+    file_name: app_orcaflex_post_process_file_management_finished
+    file_name_for_overwrite: app_orcaflex_post_process_file_management_finished
+    log_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\logs\
+    result_folder: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\results\
+    start_time: 2023-11-07 14:27:45.164684
+  Files:
+    csv_filename: ''
+    data:
+    - Name: C:\Users\ss7a2365\Documents\github\rock-oil-field\s7\talos_venice\infield\5.ld\step06.sim
+    - Name: C:\Users\ss7a2365\Documents\github\rock-oil-field\s7\talos_venice\infield\5.ld\step07.sim
+    data_source: yml
+  basename: orcaflex_post_process
+  default:
+    config:
+      overwrite:
+        output: true
+    log_level: DEBUG
+  file_management:
+    files:
+      csv_filename: ''
+      data:
+      - Name: step06.sim
+      - Name: step07.sim
+      data_source: yml
+      files_in_folder:
+        flag: true
+        folder: None
+    flag: true
+    update_unfinished:
+      cfg:
+        general:
+          ImplicitConstantTimeStep: 0.05
+          ImplicitUseVariableTimeStep: false
+        prepare_rerun_batch: true
+        save_as: .yml
+      flag: true
+  orcaflex:
+    postprocess:
+      RangeGraph:
+        add_effective_tension_to_cfg: false
+        flag: false
+      Summary:
+        AddMaximumToSummary: true
+        AddMeanToSummary: true
+        AddMinimumToSummary: true
+        flag: false
+      cummulative_histograms:
+        flag: false
+      rain_flow:
+        bins: 10
+        range:
+        - 0
+        - 10
+      time_series:
+        flag: false
+        histogram: true
+        summation: true
+      visualization:
+        flag: false
+  orcaflex_post_process:
+    input_files:
+      '*.dat':
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.dat
+      '*.sim':
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.sim
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.sim
+      '*.txt': []
+      '*.yaml': []
+      '*.yml':
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\app_orcaflex_post_process_file_management_finished.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\app_orcaflex_post_process_file_management_unfinished.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\file_management_finished.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\file_management_unfinished.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_post_process.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.yml
+      - c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\visualization.yml
+    sim_status:
+    - file: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test1.sim
+      finish_flag: true
+      run_time:
+        last: 10.0
+        set: 10.0
+    - file: c:\Users\ss7a2365\Documents\github\digitalmodel\src\digitalmodel\tests\test_data\orcaflex_post_process\orcaflex_test2.sim
+      finish_flag: true
+      run_time:
+        last: 10.0
+        set: 10.0
+  visualization_settings:
+    add_items:
+    - Umbilical
+    - uta2-deep
+    combined: false
+    hide_items: []
+    individual: true
+    label: ld_6_7_8
+    tdp_line: Umbilical
+    viewparams:
+      elevation:
+        DrawGlobalAxes: false
+        DrawScaleBar: false
+        DrawViewAxes: false
+        Height: 1425
+        RelativeToObject: uth2-deep
+        ViewAzimuth: 270
+        ViewCentre:
+        - -17
+        - 0
+        - 12
+        ViewElevation: 0
+        ViewGamma: 71.89
+        ViewSize: 120
+        Width: 892
+      plan:
+        DrawGlobalAxes: false
+        DrawScaleBar: false
+        DrawViewAxes: false
+        Height: 1425
+        RelativeToObject: uth2-deep
+        ViewAzimuth: 270
+        ViewCentre:
+        - 10
+        - 0
+        - 8
+        ViewElevation: 90
+        ViewGamma: 0
+        ViewSize: 80
+        Width: 892
+    views:
+    - Elevation
+    - Plan
+state: *id001

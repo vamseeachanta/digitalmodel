@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(isort:*)",
+      "Bash(python -m black:*)",
+      "Bash(python -m isort:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m pip install:*)",
+      "Bash(uv run ruff:*)",
+      "Bash(uv add:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run:*)",
+      "Bash(mkdir:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git remote:*)",
+      "Bash(git branch:*)",
+      "Bash(git fetch:*)",
+      "Bash(git checkout:*)",
+      "Bash(uv build:*)",
+      "Bash(uv publish:*)",
+      "Bash(env)",
+      "Bash(echo \"Token length: $#PYPI_TOKEN\")",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(gh auth:*)",
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(python -m pytest ../../../../tests/modules/marine_analysis/test_rao_processor.py -v)",
+      "Bash(python:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)"
+    ],
+    "deny": []
+  }
+}
