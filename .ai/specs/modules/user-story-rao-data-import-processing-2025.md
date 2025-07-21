@@ -29,7 +29,22 @@
 ## Acceptance Criteria
 
 ### Primary Acceptance Criteria
-- [ ] AC-201.1.1: Import RAO data from ANSYS AQWA .lis output files with complete 6-DOF data extraction
+- [ ] AC-201.1.1: Read Displacement RAO data from 2 categories: OrcaFlex and AQWA
+  - [ ] AC-201.1.1.1: OrcaFlex datafile support
+    - [ ] Read YAML format: `tests\modules\rao_analysis\SS_Off_0_8P.yml`
+    - [ ] Parse YAML structure: VesselTypes > Name: Vessel Type1 > Draughts > Name: Draught1 > DisplacementRAOs: RAOs
+    - [ ] Extract headings from file content
+  - [ ] AC-201.1.1.2: AQWA datafile support  
+    - [ ] Read ASCII format: `tests\modules\rao_analysis\NO_DAMP_FST1_L015.LIS`
+    - [ ] Search for "R.A.O.S-VARIATION WITH WAVE DIRECTION" pattern
+    - [ ] If multiple sets exist, take the last set
+    - [ ] Extract headings from file content
+    - [ ] Use Fortran fixed character delimiter parsing similar to body_item_str format in aqwa_dat_files.py
+    - [ ] For every block of repeating data the pattern is:
+      - First line: period, freq, direction, and data
+      - Following lines: just direction, and data (no period/freq repeats)
+      - Last line: either empty or 1
+    - [ ] If data is missing, use previous row data
 - [ ] AC-201.1.2: Process experimental RAO data from CSV and Excel formats with flexible column mapping
 - [ ] AC-201.1.3: Validate RAO data quality including frequency range, heading coverage, and physical reasonableness
 - [ ] AC-201.1.4: Interpolate RAO data to user-defined frequency and heading grids with cubic spline interpolation
@@ -54,6 +69,11 @@
 - [ ] Performance tests validating processing time requirements
 - [ ] Documentation complete with data format specifications
 - [ ] Validation against known benchmark RAO datasets
+- [ ] Manual verification of DataFrame outputs completed:
+  - [ ] Visual inspection of amplitude values for physical reasonableness
+  - [ ] Phase continuity check across frequencies
+  - [ ] Spot check against source file values
+  - [ ] Symmetry verification for appropriate headings
 
 ## GitHub Integration
 
@@ -168,10 +188,105 @@ class RAODataProcessor:
         phase_df = pd.DataFrame(phase_data, index=freq_index)
         phase_df.columns = pd.MultiIndex.from_tuples(phase_df.columns, names=['DOF', 'Heading'])
         
+        # Add manual verification metadata
+        verification_info = {
+            'generated_timestamp': pd.Timestamp.now(),
+            'source_file': rao_data.source_file,
+            'requires_manual_verification': True,
+            'verification_checklist': [
+                'Amplitude values physical reasonableness',
+                'Phase continuity across frequencies',
+                'Spot check against source values',
+                'Symmetry verification for appropriate headings'
+            ]
+        }
+        
         return {
             'amplitude': amplitude_df,
-            'phase': phase_df
+            'phase': phase_df,
+            'verification_info': verification_info
         }
+    
+    def create_verification_report(self, df_dict: Dict) -> VerificationReport:
+        """Create manual verification report for DataFrame outputs.
+        
+        Returns:
+            VerificationReport with checks and recommendations
+        """
+        report = VerificationReport()
+        
+        # Analyze amplitude values for reasonableness
+        amp_df = df_dict['amplitude']
+        report.amplitude_check_required = self._check_amplitude_ranges(amp_df)
+        
+        # Check phase continuity
+        phase_df = df_dict['phase']
+        report.phase_continuity_check_required = self._check_phase_continuity(phase_df)
+        
+        # Generate spot check locations
+        report.spot_check_locations = self._generate_spot_check_locations(amp_df)
+        
+        # Identify symmetry pairs for verification
+        report.symmetry_pairs = self._identify_symmetry_pairs(amp_df.columns)
+        
+        return report
+    
+    def generate_spot_check_values(self, df: pd.DataFrame, n_samples: int = 10) -> List[Dict]:
+        """Generate random spot check values for manual verification.
+        
+        Returns:
+            List of dictionaries with location and value for manual checking
+        """
+        import random
+        
+        spot_checks = []
+        frequencies = df.index.tolist()
+        columns = df.columns.tolist()
+        
+        for _ in range(n_samples):
+            freq = random.choice(frequencies)
+            col = random.choice(columns)
+            value = df.loc[freq, col]
+            
+            spot_checks.append({
+                'frequency': freq,
+                'dof': col[0],
+                'heading': col[1],
+                'value': value,
+                'location_in_source': f"Freq={freq:.3f}, {col[0]} @ {col[1]}"
+            })
+        
+        return spot_checks
+    
+    def check_phase_continuity(self, phase_df: pd.DataFrame, threshold: float = 180.0) -> List[Dict]:
+        """Check for phase discontinuities that may indicate errors.
+        
+        Args:
+            phase_df: DataFrame with phase values in degrees
+            threshold: Maximum allowed phase jump between frequencies
+            
+        Returns:
+            List of locations with potential phase discontinuities
+        """
+        discontinuities = []
+        
+        for col in phase_df.columns:
+            phase_values = phase_df[col].values
+            phase_diff = np.diff(phase_values)
+            
+            # Find jumps larger than threshold
+            jump_indices = np.where(np.abs(phase_diff) > threshold)[0]
+            
+            for idx in jump_indices:
+                discontinuities.append({
+                    'dof': col[0],
+                    'heading': col[1],
+                    'frequency_index': idx,
+                    'phase_jump': phase_diff[idx],
+                    'requires_manual_check': True
+                })
+        
+        return discontinuities
     
     def import_experimental_data(self, file_path: str, format_config: Dict) -> RAOData:
         """Import experimental RAO data from CSV/Excel formats.
@@ -217,43 +332,50 @@ class RAODataProcessor:
 
 # ANSYS AQWA File Parser
 class AQWAReader:
-    """Parser for ANSYS AQWA .lis output files."""
+    """Parser for ANSYS AQWA .lis output files using Fortran fixed-width format."""
     
     def parse_lis_file(self, file_path: str) -> Dict[str, Any]:
-        """Parse AQWA .lis file and extract RAO data.
+        """Parse AQWA .lis file and extract RAO data using fixed-width parsing.
+        
+        Uses Fortran-style fixed character positions:
+        - Period: columns 1-8
+        - Frequency: columns 9-16  
+        - Direction: columns 17-27 (full lines) or 20-27 (continuation lines)
+        - Data starts at column 28 with 9-character wide fields
+        
+        For every block of repeating data:
+        - First line: period, freq, direction, and data
+        - Following lines: just direction, and data (no period/freq repeats)
+        - Last line: either empty or 1
         
         Returns:
             Dictionary with frequency, heading, and RAO arrays
         """
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             content = f.read()
         
-        # Extract displacement RAO section
-        rao_section = self._extract_rao_section(content)
+        # Extract displacement RAO section (last occurrence)
+        rao_sections = self._find_all_rao_sections(content)
+        if not rao_sections:
+            raise AQWAFileError("No displacement RAO sections found")
         
-        # Parse frequency and heading arrays
-        frequencies = self._parse_frequencies(rao_section)
-        headings = self._parse_headings(rao_section)
+        last_rao_section = rao_sections[-1]
         
-        # Parse 6-DOF RAO data
-        surge_raos = self._parse_dof_raos(rao_section, dof=1)
-        sway_raos = self._parse_dof_raos(rao_section, dof=2)
-        heave_raos = self._parse_dof_raos(rao_section, dof=3)
-        roll_raos = self._parse_dof_raos(rao_section, dof=4)
-        pitch_raos = self._parse_dof_raos(rao_section, dof=5)
-        yaw_raos = self._parse_dof_raos(rao_section, dof=6)
+        # Parse using fixed-width format
+        rao_data = self._parse_rao_section_fixed(last_rao_section)
         
+        # Extract unique frequencies and headings
+        frequencies = sorted(list(rao_data.keys()))
+        all_headings = set()
+        for freq_data in rao_data.values():
+            all_headings.update(freq_data.keys())
+        headings = sorted(list(all_headings))
+        
+        # Organize into arrays
         return {
-            'frequencies': frequencies,
-            'headings': headings,
-            'raos': {
-                'surge': surge_raos,
-                'sway': sway_raos,
-                'heave': heave_raos,
-                'roll': roll_raos,
-                'pitch': pitch_raos,
-                'yaw': yaw_raos
-            }
+            'frequencies': np.array(frequencies),
+            'headings': np.array(headings),
+            'raos': self._organize_rao_data(rao_data, frequencies, headings)
         }
     
     def _extract_rao_amplitudes_phases(self, rao_section: str) -> Tuple[Dict, Dict]:
@@ -370,6 +492,11 @@ rao_data_processing:
 - **Data Quality Dashboard**: Visual validation results and quality metrics
 - **Interactive RAO Viewer**: 3D plots of RAO magnitude and phase vs frequency/heading
 - **Data Management Interface**: RAO dataset library with search and filtering
+- **Manual Verification Interface**: 
+  - Side-by-side comparison of source data and imported values
+  - Visual highlighting of suspicious values
+  - Checkbox system for verification steps
+  - Engineer sign-off capability
 
 ### Interaction Design
 - **Drag-and-Drop Import**: Simple file drop interface with automatic format detection
@@ -470,6 +597,11 @@ class TestRAODataProcessing:
         # Validate all DOFs and headings present
         dofs_in_df = amp_df.columns.get_level_values('DOF').unique()
         assert all(dof in dofs_in_df for dof in ['surge', 'sway', 'heave', 'roll', 'pitch', 'yaw'])
+        
+        # Validate verification info present
+        assert 'verification_info' in df_dict
+        assert df_dict['verification_info']['requires_manual_verification'] == True
+        assert len(df_dict['verification_info']['verification_checklist']) == 4
     
     def test_experimental_data_import(self, experimental_rao_data):
         """Test experimental RAO data import from CSV."""
@@ -543,6 +675,30 @@ class TestRAODataProcessing:
             # Compare with reference results
             errors = calculate_benchmark_errors(rao_data, case.reference)
             assert all(error < 0.05 for error in errors)  # <5% error
+    
+    def test_manual_verification_workflow(self):
+        """Test manual verification workflow and metadata."""
+        processor = RAODataProcessor()
+        rao_data = processor.import_orcaflex_yml_file("tests/modules/rao_analysis/SS_Off_0_8P.yml")
+        
+        # Get DataFrames with verification info
+        df_dict = processor.get_rao_dataframes(rao_data)
+        
+        # Create verification report
+        verification_report = processor.create_verification_report(df_dict)
+        
+        # Test verification report contains required checks
+        assert verification_report.amplitude_check_required
+        assert verification_report.phase_continuity_check_required
+        assert verification_report.spot_check_locations is not None
+        assert verification_report.symmetry_pairs is not None
+        
+        # Test manual verification helper functions
+        spot_checks = processor.generate_spot_check_values(df_dict['amplitude'], n_samples=10)
+        assert len(spot_checks) == 10
+        
+        phase_issues = processor.check_phase_continuity(df_dict['phase'])
+        assert isinstance(phase_issues, list)
 ```
 
 ### Validation Datasets
@@ -551,6 +707,7 @@ class TestRAODataProcessing:
 - **Ship Hull Forms**: Various ship types (tanker, container, bulk carrier)
 - **Experimental Data**: Model test results for validation
 - **ANSYS AQWA Cases**: Verified AQWA analysis results
+- **Manual Verification Set**: Curated dataset with known values for spot checking
 
 ## Implementation Timeline
 
@@ -594,6 +751,7 @@ class TestRAODataProcessing:
 - **Quality Improvement**: Eliminate manual data transcription errors
 - **Capability Enhancement**: Support industry-standard RAO data workflows
 - **Competitive Advantage**: Seamless integration with major marine analysis tools
+- **Engineering Confidence**: Manual verification ensures data integrity for critical analyses
 
 ## Future Considerations
 

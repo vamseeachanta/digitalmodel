@@ -26,7 +26,11 @@
       "WebFetch(domain:docs.anthropic.com)",
       "Bash(gh auth:*)",
       "Bash(rm:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(python -m pytest ../../../../tests/modules/marine_analysis/test_rao_processor.py -v)",
+      "Bash(python:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }
