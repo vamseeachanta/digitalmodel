@@ -1,7 +1,7 @@
 try:
     import OrcFxAPI
 except Exception:
-    raise RuntimeError("OrcaFlex license not available. Run on different computer")
+    print("OrcaFlex license not available. Run on different computer")
 from loguru import logger
 import os
 import pandas as pd
@@ -15,9 +15,8 @@ of_objects = OrcaFlexObjects()  # noqa
 class AllVars:
     def __init__(self, cfg=None):
         orcaflex_license_flag = ou.is_orcaflex_available()
-        assert orcaflex_license_flag
         if not orcaflex_license_flag:
-            raise Exception("Orcaflex license not available.")
+            print("Orcaflex license not available.")
 
     def router(self, cfg):
         analysis_flag = False

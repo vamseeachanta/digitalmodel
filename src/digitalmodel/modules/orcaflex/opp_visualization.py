@@ -1,7 +1,7 @@
 try:
     import OrcFxAPI
 except Exception:
-    raise RuntimeError("OrcaFlex license not available. Run on different computer")
+    print("OrcaFlex license not available. Run on different computer")
 import os
 from loguru import logger
 from assetutilities.common.yml_utilities import is_file_valid_func

@@ -6,7 +6,7 @@ import numpy as np
 try:
     pass
 except Exception:
-    raise RuntimeError("OrcaFlex license not available. Run on different computer")
+    print("OrcaFlex license not available. Run on different computer")
 from loguru import logger
 from digitalmodel.modules.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects

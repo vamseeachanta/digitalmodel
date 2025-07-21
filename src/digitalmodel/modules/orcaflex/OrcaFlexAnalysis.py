@@ -6,7 +6,7 @@ import sys
 try:
     pass
 except Exception:
-    raise RuntimeError("OrcaFlex license not available. Run on different computer")
+    print("OrcaFlex license not available. Run on different computer")
 from matplotlib import rc
 
 rc("mathtext", default="regular")

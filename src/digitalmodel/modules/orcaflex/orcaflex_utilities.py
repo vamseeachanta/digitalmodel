@@ -1,7 +1,7 @@
 try:
     import OrcFxAPI
 except Exception:
-    raise RuntimeError("OrcaFlex license not available. Run on different computer")
+    print("OrcaFlex license not available. Run on different computer")
 # Standard library imports
 import glob
 from loguru import logger
@@ -61,8 +61,7 @@ class OrcaflexUtilities:
             print(
                 f"{Fore.RED}Orcaflex license is NOT available .... FAIL{Style.RESET_ALL}"
             )
-            print("")
-            raise Exception("Orcaflex license is NOT available .... FAIL")
+            print("Orcaflex license is NOT available .... FAIL")
             return False
 
     def save_sim_file(self, model, model_file_name):

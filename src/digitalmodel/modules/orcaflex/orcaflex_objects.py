@@ -3,7 +3,10 @@ import logging
 import pandas as pd
 
 # Third party imports
-import OrcFxAPI
+try:
+    import OrcFxAPI
+except Exception:
+    print("OrcaFlex license not available. Run on different computer")
 
 
 class OrcaFlexObjects:
