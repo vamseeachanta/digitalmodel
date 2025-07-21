@@ -8,7 +8,7 @@ This module provides interpolation functionality for RAO data including:
 
 from typing import Optional, Tuple
 import numpy as np
-from scipy.interpolate import interp2d, RectBivariateSpline, griddata
+from scipy.interpolate import RectBivariateSpline, griddata, RegularGridInterpolator
 from scipy.interpolate import UnivariateSpline
 import warnings
 
@@ -134,10 +134,29 @@ class RAOInterpolator:
         method = self.settings['method']
         
         if method == 'linear':
-            # Use linear interpolation
-            f = interp2d(source_head, source_freq, source_data, kind='linear',
-                        bounds_error=False, fill_value=0.0)
-            return f(target_head, target_freq)
+            # Use RegularGridInterpolator for linear interpolation
+            # Note: RegularGridInterpolator expects (freq, head) order and strictly monotonic data
+            try:
+                f = RegularGridInterpolator(
+                    (source_freq, source_head), source_data,
+                    method='linear', bounds_error=False, fill_value=0.0
+                )
+                # Create mesh grid for target points
+                target_freq_mesh, target_head_mesh = np.meshgrid(target_freq, target_head, indexing='ij')
+                points = np.column_stack([target_freq_mesh.ravel(), target_head_mesh.ravel()])
+                result = f(points).reshape(len(target_freq), len(target_head))
+                return result
+            except ValueError:
+                # Fall back to griddata for non-regular grids
+                freq_mesh, head_mesh = np.meshgrid(source_freq, source_head, indexing='ij')
+                points = np.column_stack([freq_mesh.ravel(), head_mesh.ravel()])
+                values = source_data.ravel()
+                
+                target_freq_mesh, target_head_mesh = np.meshgrid(target_freq, target_head, indexing='ij')
+                target_points = np.column_stack([target_freq_mesh.ravel(), target_head_mesh.ravel()])
+                
+                result = griddata(points, values, target_points, method='linear', fill_value=0.0)
+                return result.reshape(len(target_freq), len(target_head))
         
         elif method == 'cubic_spline':
             # Use cubic spline interpolation
@@ -150,15 +169,49 @@ class RAOInterpolator:
             except Exception:
                 # Fall back to linear if cubic fails
                 warnings.warn("Cubic spline failed, falling back to linear interpolation")
-                f = interp2d(source_head, source_freq, source_data, kind='linear',
-                           bounds_error=False, fill_value=0.0)
-                return f(target_head, target_freq)
+                try:
+                    f = RegularGridInterpolator(
+                        (source_freq, source_head), source_data,
+                        method='linear', bounds_error=False, fill_value=0.0
+                    )
+                    target_freq_mesh, target_head_mesh = np.meshgrid(target_freq, target_head, indexing='ij')
+                    points = np.column_stack([target_freq_mesh.ravel(), target_head_mesh.ravel()])
+                    result = f(points).reshape(len(target_freq), len(target_head))
+                    return result
+                except ValueError:
+                    # Use griddata for irregular grids
+                    freq_mesh, head_mesh = np.meshgrid(source_freq, source_head, indexing='ij')
+                    points = np.column_stack([freq_mesh.ravel(), head_mesh.ravel()])
+                    values = source_data.ravel()
+                    
+                    target_freq_mesh, target_head_mesh = np.meshgrid(target_freq, target_head, indexing='ij')
+                    target_points = np.column_stack([target_freq_mesh.ravel(), target_head_mesh.ravel()])
+                    
+                    result = griddata(points, values, target_points, method='linear', fill_value=0.0)
+                    return result.reshape(len(target_freq), len(target_head))
         
         else:
             # Default to linear
-            f = interp2d(source_head, source_freq, source_data, kind='linear',
-                        bounds_error=False, fill_value=0.0)
-            return f(target_head, target_freq)
+            try:
+                f = RegularGridInterpolator(
+                    (source_freq, source_head), source_data,
+                    method='linear', bounds_error=False, fill_value=0.0
+                )
+                target_freq_mesh, target_head_mesh = np.meshgrid(target_freq, target_head, indexing='ij')
+                points = np.column_stack([target_freq_mesh.ravel(), target_head_mesh.ravel()])
+                result = f(points).reshape(len(target_freq), len(target_head))
+                return result
+            except ValueError:
+                # Use griddata for irregular grids
+                freq_mesh, head_mesh = np.meshgrid(source_freq, source_head, indexing='ij')
+                points = np.column_stack([freq_mesh.ravel(), head_mesh.ravel()])
+                values = source_data.ravel()
+                
+                target_freq_mesh, target_head_mesh = np.meshgrid(target_freq, target_head, indexing='ij')
+                target_points = np.column_stack([target_freq_mesh.ravel(), target_head_mesh.ravel()])
+                
+                result = griddata(points, values, target_points, method='linear', fill_value=0.0)
+                return result.reshape(len(target_freq), len(target_head))
     
     def _interpolate_phase(self, source_freq: np.ndarray, source_head: np.ndarray,
                           source_data: np.ndarray, target_freq: np.ndarray,

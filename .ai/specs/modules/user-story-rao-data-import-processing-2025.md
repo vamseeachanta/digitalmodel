@@ -37,13 +37,16 @@
   - [ ] AC-201.1.1.2: AQWA datafile support  
     - [ ] Read ASCII format: `tests\modules\rao_analysis\NO_DAMP_FST1_L015.LIS`
     - [ ] Search for "R.A.O.S-VARIATION WITH WAVE DIRECTION" pattern
-    - [ ] If multiple sets exist, take the last set
+      - [ ] Each pattern will contain multiple sets of frequency blocks
+      - [ ] Each frequency block should be parced as below:
+        - First line: period, freq, direction, and data
+        - Following lines: just direction, and data (no period/freq repeats)
+        - Last line: either empty or 1
+        - Suggested step 1: Example block as csv: tests/modules/rao_analysis/NO_DAMP_FST1_L015_frequency1_block_step1.csv
+        - Suggested step 2: Example block as csv: tests/modules/rao_analysis/NO_DAMP_FST1_L015_frequency1_block_step2.csv
+    - [ ] If multiple data sets exist (due to analysis file inherent iterations), take the last set
     - [ ] Extract headings from file content
     - [ ] Use Fortran fixed character delimiter parsing similar to body_item_str format in aqwa_dat_files.py
-    - [ ] For every block of repeating data the pattern is:
-      - First line: period, freq, direction, and data
-      - Following lines: just direction, and data (no period/freq repeats)
-      - Last line: either empty or 1
     - [ ] If data is missing, use previous row data
 - [ ] AC-201.1.2: Process experimental RAO data from CSV and Excel formats with flexible column mapping
 - [ ] AC-201.1.3: Validate RAO data quality including frequency range, heading coverage, and physical reasonableness
@@ -299,6 +302,10 @@ RAO data import and processing feature implemented with file reorganization and 
 **Enhanced AQWA Parser**: Created `AQWAEnhancedParser` class to handle abbreviated AQWA format. See data transformation examples in `tests/modules/marine_analysis/test_data_interpretation.py`.
 
 **Integration**: Added optional enhanced parsing to existing API with backward compatibility via `use_enhanced_parser` parameter.
+
+**Dedicated Testing**: Created focused test suites for specific RAO parsers:
+- `tests/modules/marine_analysis/test_aqwa_rao.py` - AQWA-specific parsing and data interpretation tests
+- `tests/modules/marine_analysis/test_orcaflex_rao.py` - OrcaFlex-specific YAML parsing tests
 
 ### Lessons Learned
 

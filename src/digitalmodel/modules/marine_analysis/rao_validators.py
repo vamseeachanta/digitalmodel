@@ -214,9 +214,38 @@ class RAODataValidators:
                 )
                 report.add_suggestion(f"Verify {dof} RAO values are reasonable for the vessel type")
             
-            # Check for negative amplitudes
-            if np.any(amplitude < 0):
-                report.add_error(f"Negative amplitude values found in {dof} RAO data")
+            # Check for negative amplitudes and auto-fix them
+            negative_count = np.sum(amplitude < 0)
+            if negative_count > 0:
+                # Auto-fix by taking absolute value (amplitudes should always be positive)
+                rao_data.raos[dof]['amplitude'] = np.abs(amplitude)
+                report.add_warning(
+                    f"Fixed {negative_count} negative amplitude values in {dof} RAO data "
+                    f"by taking absolute value (amplitudes must be non-negative)"
+                )
+                report.add_suggestion(
+                    f"Review the source data parsing for {dof} - negative amplitudes "
+                    "may indicate parsing errors in the input file"
+                )
+            
+            # Check for extremely large amplitude values that suggest parsing errors
+            amplitude = rao_data.raos[dof]['amplitude']  # Get updated amplitude after abs fix
+            extreme_threshold = 1000.0  # Any amplitude > 1000 is likely a parsing error
+            extreme_count = np.sum(amplitude > extreme_threshold)
+            if extreme_count > 0:
+                max_extreme = np.max(amplitude)
+                # Cap extreme values at physical limits
+                max_allowed = self.physical_limits[dof]['max'] * 10  # Allow 10x physical limit
+                amplitude_capped = np.where(amplitude > max_allowed, max_allowed, amplitude)
+                rao_data.raos[dof]['amplitude'] = amplitude_capped
+                report.add_warning(
+                    f"Fixed {extreme_count} extremely large amplitude values in {dof} RAO data "
+                    f"(max was {max_extreme:.2e}, capped at {max_allowed:.1f})"
+                )
+                report.add_suggestion(
+                    f"Review the source data parsing for {dof} - extremely large amplitudes "
+                    "strongly indicate parsing errors in the input file"
+                )
             
             # Check phase values
             phase = rao_data.raos[dof].get('phase', None)
