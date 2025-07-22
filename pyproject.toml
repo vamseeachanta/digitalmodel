@@ -14,41 +14,8 @@ classifiers = [
 ]
 
 requires-python = ">=3.8"
-dependencies = [
-    "assetutilities>=0.0.7",
-    "beautifulsoup4>=4.13.4",
-    "black>=24.8.0",
-    "bumpver>=2025.1131",
-    "dash>=3.1.1",
-    "deepdiff>=8.4.2",
-    "docx>=0.2.4",
-    "imgkit>=1.2.3",
-    "isort>=5.13.2",
-    "kaleido>=1.0.0",
-    "loguru>=0.7.3",
-    "matplotlib>=3.7.5",
-    "openpyxl>=3.1.5",
-    "pandas>=2.0.3",
-    "plotly>=6.2.0",
-    "poetry>=1.8.5",
-    "pydantic>=2.10.6",
-    "pypdf2>=3.0.1",
-    "pytest>=8.3.5",
-    "pyyaml>=6.0.2",
-    "rainflow>=3.2.0",
-    "requests>=2.32.4",
-    "ruamel-yaml>=0.18.14",
-    "scipy>=1.10.1",
-    "scrapy>=2.11.2",
-    "sympy>=1.13.3",
-    "tabula>=1.0.5",
-    "tabulate>=0.9.0",
-    "webcolors>=24.8.0",
-    "xlrd>=2.0.2",
-    "xlsxwriter>=3.2.5",
-    "xmltodict>=0.14.2",
-]
-# Dependencies are managed in scripts/requirements.txt. Keep this file in sync for all environments.
+# Dependencies are managed in scripts/requirements.txt
+dynamic = ["dependencies"]
 [project.urls]
 Homepage = "https://github.com/vamseeachanta/digitalmodel"
 Repository = "https://github.com/vamseeachanta/digitalmodel"

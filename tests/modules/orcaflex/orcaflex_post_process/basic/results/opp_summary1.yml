@@ -1,4 +1,73 @@
-basename: orcaflex_post_process
+meta:
+  basename: orcaflex_post_process
+  library: digitalmodel
+  description: Post-process OrcaFlex results
+parameters:
+  VarNames:
+    Line:
+    - End force
+    - End moment
+    - End Ex force
+    - End Ey force
+    - End Ez force
+    - End Ex moment
+    - End Ey moment
+    - End Ez moment
+    - End Lx force
+    - End Ly force
+    - End Lz force
+    - End Lx moment
+    - End Ly moment
+    - End Lz moment
+    - End GX force
+    - End GY force
+    - End GZ force
+    - End GX moment
+    - End GY moment
+    - End GZ moment
+    - X
+    - Y
+    - Z
+    - Dynamic x
+    - Dynamic y
+    - Dynamic z
+    - Layback
+    - Effective tension
+    - Wall tension
+    - Normalised tension
+    - Sidewall pressure
+    - Bend moment
+    - x bend moment
+    - y bend moment
+    - Bend moment component
+    - In plane bend moment
+    - Out of plane bend moment
+    - Curvature
+    - Normalised curvature
+    - x curvature
+    - y curvature
+    - Curvature component
+    - In plane curvature
+    - Out of plane curvature
+    - Bend radius
+    - x bend radius
+    - y bend radius
+    - Bend radius component
+    - In plane bend radius
+    - Out of plane bend radius
+    - Shear force
+    - x shear force
+    - y shear force
+    - Shear force component
+    - In plane shear force
+    - Out of plane shear force
+    - Arc length
+    - Expansion factor
+time_series_settings:
+  histogram: true
+  summation: true
+  groups: []
+orcaflex_post_process: {}
 default:
   log_level: INFO
   config:
@@ -90,10 +159,6 @@ visualization_settings:
       Width: 892
 RangeGraph_settings:
   add_effective_tension_to_cfg: false
-time_series_settings:
-  histogram: true
-  summation: true
-  groups: []
 file_management:
   flag: true
   input_directory: ~
@@ -109,8 +174,15 @@ file_management:
       not_contains: []
   input_files:
     sim:
-    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
-    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
+    - D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\orcaflex_test1.sim
+    - D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\orcaflex_test2.sim
+parallel_processing:
+  enabled: true
+  max_workers: 20
+  timeout_per_file: 300
+  save_error_reports: true
+  progress_reporting: true
+basename: orcaflex_post_process
 summary_settings:
   groups:
   - Label: dynamics
@@ -143,7 +215,6 @@ summary_settings:
       ObjectName: Environment
       Variable:
       - RefCurrentSpeed
-      - 0
       Label: RefCurrentSpeed
     - Command: GetData
       ObjectName: Environment
@@ -155,7 +226,6 @@ summary_settings:
       ObjectName: Environment
       Variable:
       - RefCurrentDirection
-      - 0
       Label: RefCurrentDirection
     - Command: Range Graph
       ObjectName: SLWR
@@ -213,22 +283,17 @@ summary_settings:
       Label: TimeHistory_EndB_EffTension_Max
 Analysis:
   basename: orcaflex_post_process
-  analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
+  analysis_root_folder: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic
   file_name: opp_summary1
   file_name_for_overwrite: opp_summary1
-  log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-  start_time: 2025-05-10 14:08:17.743356
+  log_folder: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\logs
+  start_time: 2025-07-21 23:42:06.606959
   cfg_array_file_names: ~
   DefaultInputFile: ~
-  CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary1.yml
-  result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
-  result_data_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\Data
-  result_plot_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\Plot
-  fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
-  file_management_input_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
-  file_management_output_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
-orcaflex_post_process:
-  summary:
-    groups:
-    - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_summary1_dynamics.csv
-      label: dynamics
+  CustomInputFile: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\opp_summary1.yml
+  result_folder: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results
+  result_data_folder: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results\Data
+  result_plot_folder: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results\Plot
+  fe_folder: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results
+  file_management_input_directory: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic
+  file_management_output_directory: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results
