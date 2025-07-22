@@ -174,8 +174,8 @@ file_management:
       not_contains: []
   input_files:
     sim:
-    - D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\orcaflex_test1.sim
-    - D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\orcaflex_test2.sim
+    - d:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\orcaflex_test1.sim
+    - d:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\orcaflex_test2.sim
 parallel_processing:
   enabled: true
   max_workers: 20
@@ -283,17 +283,17 @@ summary_settings:
       Label: TimeHistory_EndB_EffTension_Max
 Analysis:
   basename: orcaflex_post_process
-  analysis_root_folder: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic
+  analysis_root_folder: d:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic
   file_name: opp_summary1
   file_name_for_overwrite: opp_summary1
-  log_folder: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\logs
-  start_time: 2025-07-21 23:42:06.606959
+  log_folder: d:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\logs
+  start_time: 2025-07-22 15:35:02.837815
   cfg_array_file_names: ~
   DefaultInputFile: ~
-  CustomInputFile: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\opp_summary1.yml
-  result_folder: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results
-  result_data_folder: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results\Data
-  result_plot_folder: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results\Plot
-  fe_folder: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results
-  file_management_input_directory: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic
-  file_management_output_directory: D:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results
+  CustomInputFile: d:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\opp_summary1.yml
+  result_folder: d:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results
+  result_data_folder: d:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results\Data
+  result_plot_folder: d:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results\Plot
+  fe_folder: d:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results
+  file_management_input_directory: d:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic
+  file_management_output_directory: d:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\basic\results

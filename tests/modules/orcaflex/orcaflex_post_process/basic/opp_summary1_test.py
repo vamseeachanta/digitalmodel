@@ -49,4 +49,5 @@ def test_process() -> None:
 
     run_process(input_file, expected_result)
 
-test_process()
+if __name__ == '__main__':
+    test_process()
