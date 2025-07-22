@@ -48,3 +48,5 @@ def test_process() -> None:
         sys.argv.pop()
 
     run_process(input_file, expected_result)
+
+test_process()
