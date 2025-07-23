@@ -1,0 +1,27 @@
+# Development dependencies
+-r requirements_improved.txt
+
+# Testing
+pytest>=8.0.0,<9.0.0
+pytest-cov>=4.1.0,<5.0.0
+pytest-mock>=3.12.0,<4.0.0
+pytest-xdist>=3.5.0,<4.0.0  # For parallel test execution
+
+# Code quality
+black>=24.0.0,<25.0.0
+isort>=5.13.0,<6.0.0
+ruff>=0.3.0,<1.0.0  # Fast Python linter
+mypy>=1.8.0,<2.0.0  # Type checking
+
+# Documentation
+sphinx>=7.0.0,<8.0.0
+sphinx-rtd-theme>=2.0.0,<3.0.0
+
+# Build and deployment
+build>=1.0.0
+twine>=4.0.0
+bumpver>=2023.1129
+
+# Development tools
+ipython>=8.0.0  # Enhanced Python shell
+poetry>=1.7.0,<2.0.0  # If using Poetry

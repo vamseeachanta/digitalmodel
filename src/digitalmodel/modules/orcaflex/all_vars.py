@@ -14,11 +14,13 @@ of_objects = OrcaFlexObjects()  # noqa
 
 class AllVars:
     def __init__(self, cfg=None):
+        pass
+
+    def router(self, cfg):
         orcaflex_license_flag = ou.is_orcaflex_available()
         if not orcaflex_license_flag:
             print("Orcaflex license not available.")
 
-    def router(self, cfg):
         analysis_flag = False
         if (
             "all_vars" in cfg["orcaflex"]["postprocess"]

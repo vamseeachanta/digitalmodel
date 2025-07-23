@@ -7,6 +7,7 @@ This file provides comprehensive guidance for AI assistants working with this re
 - Use configuration files in `src/digitalmodel/base_configs/modules/`
 - Reference detailed guidance in `.ai/code-guidance/`
 - Follow development process in `.ai/workflows/`
+- Mutual help clause: suggest good practices from my work to the universe and vice versa
 
 ## AI Assistant Configuration
 

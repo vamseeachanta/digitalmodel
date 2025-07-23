@@ -1,0 +1,40 @@
+# Core dependencies
+assetutilities>=0.0.7
+pandas>=2.0.0,<3.0.0
+numpy>=1.24.0,<2.0.0  # Usually needed with pandas
+plotly>=5.0.0,<6.0.0
+dash>=3.1.0,<4.0.0
+
+# Data formats and I/O
+pyyaml>=6.0.0,<7.0.0
+openpyxl>=3.1.0,<4.0.0
+xlrd>=2.0.0,<3.0.0
+xlsxwriter>=3.1.0,<4.0.0
+python-docx>=0.8.0
+pypdf2>=3.0.0,<4.0.0
+xmltodict>=0.13.0,<1.0.0
+ruamel.yaml>=0.18.0,<1.0.0
+
+# Scientific computing
+scipy>=1.10.0,<2.0.0
+sympy>=1.12.0,<2.0.0
+matplotlib>=3.7.0,<4.0.0
+
+# Engineering specific
+OrcFxAPI  # Note: Check if version constraints are available
+rainflow>=3.2.0,<4.0.0
+
+# Web and scraping
+beautifulsoup4>=4.13.0,<5.0.0
+requests>=2.31.0,<3.0.0
+scrapy>=2.11.0,<3.0.0
+
+# Utilities
+deepdiff>=8.0.0,<9.0.0
+pydantic>=2.0.0,<3.0.0
+tabulate>=0.9.0,<1.0.0
+loguru>=0.7.0,<1.0.0
+webcolors>=1.13,<2.0
+imgkit>=1.2.0,<2.0.0
+kaleido>=0.2.0
+tabula-py>=2.8.0
