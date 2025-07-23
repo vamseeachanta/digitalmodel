@@ -51,6 +51,48 @@ DigitalModel is a comprehensive Python-based engineering analysis platform focus
 - **Version Control**: Git
 - **Documentation**: Markdown, YAML configurations
 
+## Development Workflow
+
+### Specification-First Development
+All features follow this structured approach:
+1. **Specification First**: Features start with specs in `.agent-os/projects/` or `.ai/specs/`
+2. **Configuration Templates**: Create/modify YAML configs in `base_configs/modules/`
+3. **Module Implementation**: Implement analysis logic in `modules/`
+4. **Testing**: Create comprehensive tests with mock APIs where needed
+5. **Documentation**: Update relevant docs in `docs/` directory
+
+### Configuration-Driven Architecture
+- **YAML files** drive most analysis workflows
+- **Single source of truth**: ASCII inputs generate multiple output types
+- **Modularity**: Engineering assets imported via .yml files
+- **Reusability**: Components designed for cross-project use
+
+### Special Considerations
+
+#### OrcaFlex Integration
+- Requires commercial license for full functionality
+- Use mock API patterns for testing without license
+- Graceful fallback mechanisms when license unavailable
+- Comprehensive error handling for license issues
+
+#### Domain Expertise Requirements
+- Code contains deep offshore engineering knowledge
+- Follow API, DNV, ABS industry standards
+- Maintain traceability to engineering specifications
+- Include references to relevant codes in comments
+
+#### YAML Configuration Primacy
+- Primary interface for most functionality
+- Extensive configuration validation required
+- Template configs for common analysis patterns
+- User configs extend base configuration templates
+
+#### Result Format Standards
+- Typically CSV, Excel formats for data exchange
+- PNG/PDF for visualization outputs
+- HTML reports for comprehensive results
+- Pandas DataFrames for internal processing
+
 ## Project Structure
 
 The codebase is organized into:
@@ -58,3 +100,12 @@ The codebase is organized into:
 - `tests/`: Test suites for various modules
 - `docs/`: Technical documentation and references
 - `.ai/` & `.agent-os/`: AI agent guidance and specifications
+- `base_configs/modules/`: YAML configuration templates
+
+### Engineering Domain Organization
+- `aqwa/` - ANSYS AQWA hydrodynamic analysis
+- `orcaflex/` - OrcaFlex simulation and post-processing
+- `catenary/` - Catenary riser analysis
+- `ship_design/` - Vessel design and analysis
+- `pipe_capacity/` - Pipeline capacity calculations
+- `mooring/` - Mooring system analysis
