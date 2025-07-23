@@ -114,7 +114,7 @@ file_management:
 
 parallel_processing:
   enabled: true
-  max_workers: 20  # or "auto" for cpu_count()
-  timeout_per_file: 300  # seconds
+  max_workers: 30  # or "auto" for cpu_count()
+  timeout_per_file: 1200  # seconds
   save_error_reports: true
   progress_reporting: true
