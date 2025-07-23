@@ -111,3 +111,10 @@ file_management:
     filters:
       contains: []
       not_contains: []
+
+parallel_processing:
+  enabled: true
+  max_workers: 30  # or "auto" for cpu_count()
+  timeout_per_file: 1200  # seconds
+  save_error_reports: true
+  progress_reporting: true

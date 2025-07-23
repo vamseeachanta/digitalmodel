@@ -56,4 +56,5 @@ def get_valid_pytest_output_file(pytest_output_file: str) -> str:
         )
     return pytest_output_file
 
-test_process()
+if __name__ == '__main__':
+    test_process()
