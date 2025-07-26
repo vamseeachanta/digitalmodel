@@ -1,0 +1,47 @@
+geometry:
+   NominalID: NULL
+   NominalOD: 10.75
+   DesignWT: 1.24
+   NominalWT:
+     - 1.0
+     - 1.1
+     - 1.2
+     - 1.3
+     - 1.4
+     - 1.5
+     - 1.6
+     - 1.7
+     - 1.8
+     - 1.9
+     - 2.0
+
+   CorrosionAllowance: 0.236
+   AllowableStressFac: 0.667
+   
+load:
+   externalPressure: 0
+   internalPressure: 750
+   bendingMoment: 0
+
+LoadingConditionResults:
+  -
+    Label: LC1, Normal Operating, SLS
+    InternalPressure: 750
+    ExternalPressure: 0
+    Tension: 1118
+    BendingMoment: 0
+    LoadCategory: SLS
+  -
+    Label: LC, Installation, Flooded, ALS
+    InternalPressure: 0
+    ExternalPressure: 0
+    Tension: 1339
+    BendingMoment: 0
+    LoadCategory: ALS
+  -
+    Label: LC, Normal Operating, Design Pressure, ALS
+    InternalPressure: 8000
+    ExternalPressure: 0
+    Tension: 1118
+    BendingMoment: 0
+    LoadCategory: ALS

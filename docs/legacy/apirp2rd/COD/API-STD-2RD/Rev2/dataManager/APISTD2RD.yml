@@ -1,0 +1,178 @@
+default:
+  units:
+    Temperature: deg F
+    Pressure: psi
+    EffectiveTension: kN
+    BendingMoment: kNm
+    YieldStrength: psi
+    E: psi
+    NominalID: inch
+    NominalOD: inch
+    NominalWT: inch
+  logLevel: DEBUG
+  Analysis:
+    variableWTBurst : True
+    variableWTCollapse : True
+    nominalWTAPISTD2RDMethod1 : True
+    nominalWTAPISTD2RDMethod2 : False
+    nominalWTAPISTD2RDMethod4 : False
+
+geometry:
+   NominalID: NULL
+   NominalOD: 16
+   DesignWT : 1.9
+   NominalWT:
+     - 1.0
+     - 1.1
+     - 1.2
+     - 1.3
+     - 1.4
+     - 1.5
+     - 1.6
+     - 1.7
+     - 1.8
+     - 1.9
+     - 2.0
+
+   CorrosionAllowance: 0.236
+   AllowableStressFac: 0.667
+
+load:
+   externalPressure: 0
+   internalPressure: 8000
+   bendingMoment: 0
+
+material:
+   E: 30000000.00
+   rho: 7800
+   Poissionsratio: 0.30
+   SMYS: 65300
+   SMUS: 77600
+   k: 0.45
+   alphafab: 1
+   ovality: 0.01
+   materialFabrication:
+      Seamless: 1.0
+      UOE: 0.850
+      UO:  0.925
+      TRB: 0.925
+   materialStrengthFactor:
+      Normal: 0.96
+      SupplementaryRequirementU: 1
+
+designFactors:
+   collapse:
+      SLS: 0.8
+      ULS: 0.8
+      ALS: 1.0
+      coldExpandedPipe: 0.8
+      SeamlessPipe :    0.7
+   internalPressure :
+      SLS: 0.8
+      ULS: 0.8
+      ALS: 1.0
+      productionCasingWithTubingLeak:   0.81
+      drillingRiserWithExtremePressure: 0.81
+      design:                           0.600
+      incidentalPressure:               0.675
+      hydroStaticTest:                  0.750
+   externalPressure:
+      SLS: 0.6
+      ULS: 0.6
+      ALS: 1.0
+
+fatigueAnalysis:
+   serviceLife:    0.1
+   singleULSEvent: 0.1
+   singleALSEvent: 1.0
+
+design:
+   pressure: 8000
+   temperature: 250
+   wallThickness: 1.9
+
+plotSettings:
+  variableWTBurst:
+    pltXLabel : 'Thickness (inch)'
+    pltYLabel : 'Pressure (psi)'
+    pltSupTitle : 'Design Pressure With Thickness'
+    pltTitle: API STD 2RD, X-65, {2} of {0} inch, Corrosion Allowance {1} inch
+    label: Design Pressure Limit
+    plotFileName: Burst_Pressure_{0}_{1}_CA{2}
+    yLim:
+    - 0
+    - 12500
+
+nominalWTAPISTD2RDMethod1:
+   pltXLabel : 'Tension (kN)'
+   pltYLabel : 'Resultant Bending Moment (kN.m)'
+   pltSupTitle : 'Pipe Utilization, API STD 2RD, X-65, Method 1' 
+   pltTitle: OD {0} inch, WT {1} inch
+   label3: Method 4 AxialLimit@Pr=
+   data:
+   -
+      LimitState: ULS
+      InternalPressure: 750
+      ExternalPressure: 0
+      Label: Utilization {0}, Internal Pressure {1}
+      CorrosionAllowance: 0.236
+      PlotSettings:
+         Color: 'blue'
+         LineStyle: '-'
+   -
+      LimitState: ALS
+      InternalPressure: 8000
+      ExternalPressure: 0
+      Label: Utilization {0}, Internal Pressure {1}
+      CorrosionAllowance: 0.236
+      PlotSettings:
+         Color: 'red'
+         LineStyle: '-'
+   -
+      LimitState: ALS
+      InternalPressure: 10000
+      ExternalPressure: 0
+      Label: Utilization {0}, Internal Pressure {1}
+      CorrosionAllowance: 0.0
+      PlotSettings:
+         Color: 'green'
+         LineStyle: '-'
+
+LoadingConditionResults:
+  -
+    Label: 100 yr Wave, 10yr Current, 750 psi
+    DataLabels: [Near, Far, Cross, Transverse]
+    Tension: [10578, 12635, 11558, 10838]
+    BendingMoment: [216, 406, 641, 594]
+    PlotSettings:
+      Color: 'blue'
+      Marker: "o"
+      Markerfillstyle: 'blue'
+  -
+    Label: 100 yr Current, 10yr Wave, 750 psi
+    DataLabels: [Near, Far, Cross, Transverse]
+    Tension: 1674
+    Tension: [12598, 10427, 9937, 12633]
+    BendingMoment: [181, 195, 441, 449]
+    PlotSettings:
+      Color: 'blue'
+      Marker: "D"
+      Markerfillstyle: 'none'
+  -
+    Label: 100 yr Wave, 10yr Current, 8000 psi
+    DataLabels: [Far]
+    Tension: [12633]
+    BendingMoment: [406]
+    PlotSettings:
+      Color: 'red'
+      Marker: "o"
+      Markerfillstyle: 'none'
+  -
+    Label: 1 yr Wave, 10000 psi
+    DataLabels: [Far]
+    Tension: [13762]
+    BendingMoment: [322]
+    PlotSettings:
+      Color: 'green'
+      Marker: "v"
+      Markerfillstyle: 'green'

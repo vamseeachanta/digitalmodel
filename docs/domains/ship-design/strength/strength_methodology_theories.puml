@@ -1,0 +1,49 @@
+@startuml strength_methodology_theories
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Hull | Strength Analysis \n Methodologies
+
+component "Strength Analysis" as strength_analysis
+
+note right of strength_analysis
+    Notes:
+        1/ Manhours, mh ?
+        2/ Other notes ?
+end note
+
+package "Structures" {
+component Plates
+component "Panel - Stiffened, Reg. Geom." as p_stiff_reg_geom
+component "Panel - Stiffened, Non-Reg. Geom." as p_stiff_nonreg_geom
+component "Plate - UnStiffened" as p_unstiff
+component Girders
+}
+
+strength_analysis <-- Plates
+strength_analysis <-- p_stiff
+strength_analysis <-- p_unstiff
+
+package "Tools" {
+component "Sesam PULS" as sesam_puls
+component "Hand Calc. Excel" as hc_excel
+component other
+}
+
+package "Methods" {
+component "Common Str. Rules" as csr
+component "Panel Ult. Lim. State" as puls
+component other
+}
+
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
