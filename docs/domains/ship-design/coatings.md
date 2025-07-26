@@ -1,0 +1,1 @@
+https://www.marinelink.com/videos/video/meet-the-cto-talking-marine-coatings-with-christer-pstad-102329?utm_source=MR-ENews-Weekdays-2025-02-12&utm_medium=email&utm_campaign=MR-ENews&utm_content=video
