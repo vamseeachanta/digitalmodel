@@ -1,0 +1,806 @@
+{
+  "analysis": {
+    "total_directories": 83,
+    "total_files": 3040,
+    "prefix_distribution": {
+      "no_prefix": 11,
+      "leg_": 6,
+      "pkg_": 14,
+      "sub_": 52
+    },
+    "file_type_distribution": {
+      ".md": 266,
+      ".pdf": 364,
+      ".png": 270,
+      ".puml": 47,
+      ".svg": 19,
+      ".xlsx": 57,
+      ".xls": 3,
+      ".iml": 2,
+      ".xml": 7,
+      ".py": 307,
+      ".ini": 7,
+      ".yml": 118,
+      ".txt": 17,
+      ".json": 64,
+      ".bat": 88,
+      ".csv": 80,
+      ".docx": 10,
+      ".lnk": 2,
+      ".pptx": 10,
+      ".m": 3,
+      ".jpg": 14,
+      ".dat": 76,
+      ".lis": 8,
+      ".db": 24,
+      ".out": 1,
+      ".deck": 99,
+      ".pyc": 4,
+      ".hyd": 13,
+      ".doc": 1,
+      ".igs": 4,
+      ".zip": 12,
+      ".scdoc": 8,
+      ".wbpz": 6,
+      ".mes": 1,
+      ".res": 2,
+      ".eqp": 2,
+      ".mfk": 1,
+      ".pld": 1,
+      ".pls": 1,
+      ".plt": 1,
+      ".sim": 5,
+      ".jfif": 10,
+      ".qtf": 2,
+      ".gdf": 35,
+      ".jpeg": 16,
+      ".wrk": 8,
+      ".sh": 1,
+      ".owd": 15,
+      ".wam": 86,
+      ".cfg": 43,
+      ".frc": 47,
+      ".csf": 6,
+      ".dmp": 1,
+      ".fdf": 6,
+      ".pt2": 3,
+      ".owr": 1,
+      ".js": 1,
+      ".wbjn": 1,
+      ".lsp": 624,
+      ".actm": 3,
+      ".cuix": 1,
+      ".ctb": 2,
+      ".mnu": 3,
+      ".dwg": 8,
+      ".shx": 4,
+      ".dwt": 1,
+      ".vlx": 17,
+      ".cui": 3,
+      ".mnr": 1,
+      ".lin": 3,
+      ".dcl": 1,
+      ".fas": 1,
+      ".fcstd": 9,
+      ".fcmacro": 1,
+      ".3dm": 3,
+      ".xlsm": 5,
+      "": 2,
+      ".gz": 1,
+      ".ods": 1,
+      ".qgz": 1,
+      ".dxf": 24,
+      ".cpg": 1,
+      ".dbf": 1,
+      ".prj": 2,
+      ".shp": 1,
+      ".tif": 1,
+      ".ppt": 1,
+      ".sldprt": 2,
+      ".msh": 1,
+      ".stl": 1,
+      ".avif": 1,
+      ".gif": 2
+    },
+    "depth_analysis": {
+      "4": 4,
+      "1": 8,
+      "0": 59,
+      "5": 1,
+      "2": 7,
+      "6": 1,
+      "3": 3
+    },
+    "content_categories": {
+      "guides": [
+        {
+          "name": "ansys",
+          "file_count": 19,
+          "max_depth": 4
+        },
+        {
+          "name": "cathodic_protection",
+          "file_count": 5,
+          "max_depth": 1
+        },
+        {
+          "name": "domains",
+          "file_count": 0,
+          "max_depth": 0
+        },
+        {
+          "name": "guides",
+          "file_count": 0,
+          "max_depth": 0
+        },
+        {
+          "name": "legacy",
+          "file_count": 0,
+          "max_depth": 0
+        },
+        {
+          "name": "lighting",
+          "file_count": 6,
+          "max_depth": 0
+        },
+        {
+          "name": "references",
+          "file_count": 0,
+          "max_depth": 0
+        },
+        {
+          "name": "software",
+          "file_count": 0,
+          "max_depth": 0
+        },
+        {
+          "name": "user_stories",
+          "file_count": 2,
+          "max_depth": 0
+        },
+        {
+          "name": "_lib",
+          "file_count": 12,
+          "max_depth": 2
+        }
+      ],
+      "legacy": [
+        {
+          "name": "leg_apirp2rd",
+          "file_count": 443,
+          "max_depth": 5
+        },
+        {
+          "name": "leg_apistd2rd",
+          "file_count": 23,
+          "max_depth": 2
+        },
+        {
+          "name": "leg_nl_stress",
+          "file_count": 3,
+          "max_depth": 0
+        },
+        {
+          "name": "leg_sn_curves",
+          "file_count": 12,
+          "max_depth": 1
+        },
+        {
+          "name": "leg_stackup_schematic",
+          "file_count": 21,
+          "max_depth": 2
+        },
+        {
+          "name": "leg_vmstress",
+          "file_count": 2,
+          "max_depth": 0
+        }
+      ],
+      "modules": [
+        {
+          "name": "modules",
+          "file_count": 1063,
+          "max_depth": 6
+        }
+      ],
+      "software": [
+        {
+          "name": "pkg_ansys",
+          "file_count": 38,
+          "max_depth": 3
+        },
+        {
+          "name": "pkg_autocad",
+          "file_count": 684,
+          "max_depth": 4
+        },
+        {
+          "name": "pkg_blender",
+          "file_count": 7,
+          "max_depth": 0
+        },
+        {
+          "name": "pkg_dave",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "pkg_davelab",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "pkg_freecad",
+          "file_count": 38,
+          "max_depth": 2
+        },
+        {
+          "name": "pkg_ghs",
+          "file_count": 5,
+          "max_depth": 1
+        },
+        {
+          "name": "pkg_gmsh",
+          "file_count": 5,
+          "max_depth": 0
+        },
+        {
+          "name": "pkg_nastran",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "pkg_naviworks",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "pkg_openfoam",
+          "file_count": 32,
+          "max_depth": 2
+        },
+        {
+          "name": "pkg_qgis",
+          "file_count": 75,
+          "max_depth": 4
+        },
+        {
+          "name": "pkg_solidworks",
+          "file_count": 4,
+          "max_depth": 0
+        },
+        {
+          "name": "pkg_zoo",
+          "file_count": 1,
+          "max_depth": 0
+        }
+      ],
+      "domains": [
+        {
+          "name": "sub_ai",
+          "file_count": 3,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_biomedical",
+          "file_count": 2,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_cathodic_protection",
+          "file_count": 30,
+          "max_depth": 1
+        },
+        {
+          "name": "sub_coiled_tubing",
+          "file_count": 24,
+          "max_depth": 3
+        },
+        {
+          "name": "sub_connections",
+          "file_count": 4,
+          "max_depth": 1
+        },
+        {
+          "name": "sub_cranes",
+          "file_count": 3,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_design",
+          "file_count": 11,
+          "max_depth": 3
+        },
+        {
+          "name": "sub_digitaltwin",
+          "file_count": 3,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_drilling",
+          "file_count": 34,
+          "max_depth": 2
+        },
+        {
+          "name": "sub_engineering",
+          "file_count": 3,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_fatigue",
+          "file_count": 9,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_fem",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_gas_turbines",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_hydrodynamics",
+          "file_count": 3,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_installation",
+          "file_count": 25,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_interventions",
+          "file_count": 3,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_lighting",
+          "file_count": 6,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_lng",
+          "file_count": 2,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_marine_growth",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_mathcad",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_metocean",
+          "file_count": 9,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_modal_analysis",
+          "file_count": 3,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_moorings",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_nde",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_osi_pi",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_pipe",
+          "file_count": 9,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_pipecapacity",
+          "file_count": 10,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_pipelines",
+          "file_count": 34,
+          "max_depth": 1
+        },
+        {
+          "name": "sub_platecapacity",
+          "file_count": 56,
+          "max_depth": 2
+        },
+        {
+          "name": "sub_plate_buckling",
+          "file_count": 9,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_pressure_vessels",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_process_engineering",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_production",
+          "file_count": 3,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_project_management",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_pumps",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_reservoir",
+          "file_count": 3,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_rigging",
+          "file_count": 22,
+          "max_depth": 1
+        },
+        {
+          "name": "sub_risers",
+          "file_count": 3,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_risk",
+          "file_count": 5,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_ship_design",
+          "file_count": 89,
+          "max_depth": 4
+        },
+        {
+          "name": "sub_spm",
+          "file_count": 3,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_submarine_cables",
+          "file_count": 4,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_tcp",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_thermodynamics",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_time_series",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_umbilical",
+          "file_count": 8,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_unit_conversion",
+          "file_count": 1,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_vibrations",
+          "file_count": 2,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_viv",
+          "file_count": 2,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_wec",
+          "file_count": 3,
+          "max_depth": 0
+        },
+        {
+          "name": "sub_welding",
+          "file_count": 69,
+          "max_depth": 1
+        },
+        {
+          "name": "sub_wind",
+          "file_count": 10,
+          "max_depth": 0
+        }
+      ]
+    },
+    "engineering_domains": [
+      "ai",
+      "biomedical",
+      "cathodic_protection",
+      "coiled_tubing",
+      "connections",
+      "cranes",
+      "design",
+      "digitaltwin",
+      "drilling",
+      "engineering",
+      "fatigue",
+      "fem",
+      "gas_turbines",
+      "hydrodynamics",
+      "installation",
+      "interventions",
+      "lighting",
+      "lng",
+      "marine_growth",
+      "mathcad",
+      "metocean",
+      "modal_analysis",
+      "moorings",
+      "nde",
+      "osi_pi",
+      "pipe",
+      "pipecapacity",
+      "pipelines",
+      "platecapacity",
+      "plate_buckling",
+      "pressure_vessels",
+      "process_engineering",
+      "production",
+      "project_management",
+      "pumps",
+      "reservoir",
+      "rigging",
+      "risers",
+      "risk",
+      "ship_design",
+      "spm",
+      "submarine_cables",
+      "tcp",
+      "thermodynamics",
+      "time_series",
+      "umbilical",
+      "unit_conversion",
+      "vibrations",
+      "viv",
+      "wec",
+      "welding",
+      "wind"
+    ],
+    "software_tools": [
+      "ansys",
+      "autocad",
+      "blender",
+      "dave",
+      "davelab",
+      "freecad",
+      "ghs",
+      "gmsh",
+      "nastran",
+      "naviworks",
+      "openfoam",
+      "qgis",
+      "solidworks",
+      "zoo"
+    ],
+    "legacy_modules": [
+      "apirp2rd",
+      "apistd2rd",
+      "nl_stress",
+      "sn_curves",
+      "stackup_schematic",
+      "vmstress"
+    ],
+    "avg_files_per_directory": 36.626506024096386
+  },
+  "mapping": {
+    "ansys": "software/ansys",
+    "cathodic_protection": "domains/cathodic-protection",
+    "domains": "guides/domains",
+    "guides": "guides/guides",
+    "legacy": "guides/legacy",
+    "leg_apirp2rd": "legacy/apirp2rd",
+    "leg_apistd2rd": "legacy/apistd2rd",
+    "leg_nl_stress": "legacy/nl_stress",
+    "leg_sn_curves": "legacy/sn_curves",
+    "leg_stackup_schematic": "legacy/stackup_schematic",
+    "leg_vmstress": "legacy/vmstress",
+    "lighting": "domains/lighting",
+    "modules": "modules",
+    "pkg_ansys": "software/ansys",
+    "pkg_autocad": "software/autocad",
+    "pkg_blender": "software/blender",
+    "pkg_dave": "software/dave",
+    "pkg_davelab": "software/davelab",
+    "pkg_freecad": "software/freecad",
+    "pkg_ghs": "software/ghs",
+    "pkg_gmsh": "software/gmsh",
+    "pkg_nastran": "software/nastran",
+    "pkg_naviworks": "software/naviworks",
+    "pkg_openfoam": "software/openfoam",
+    "pkg_qgis": "software/qgis",
+    "pkg_solidworks": "software/solidworks",
+    "pkg_zoo": "software/zoo",
+    "references": "guides/references",
+    "software": "guides/software",
+    "sub_ai": "domains/ai",
+    "sub_biomedical": "domains/biomedical",
+    "sub_cathodic_protection": "domains/cathodic-protection",
+    "sub_coiled_tubing": "domains/coiled-tubing",
+    "sub_connections": "domains/connections",
+    "sub_cranes": "domains/cranes",
+    "sub_design": "domains/design",
+    "sub_digitaltwin": "domains/digitaltwin",
+    "sub_drilling": "domains/drilling",
+    "sub_engineering": "domains/engineering",
+    "sub_fatigue": "domains/fatigue",
+    "sub_fem": "domains/fem",
+    "sub_gas_turbines": "domains/gas-turbines",
+    "sub_hydrodynamics": "domains/hydrodynamics",
+    "sub_installation": "domains/installation",
+    "sub_interventions": "domains/interventions",
+    "sub_lighting": "domains/lighting",
+    "sub_lng": "domains/lng",
+    "sub_marine_growth": "domains/marine-growth",
+    "sub_mathcad": "domains/mathcad",
+    "sub_metocean": "domains/metocean",
+    "sub_modal_analysis": "domains/modal-analysis",
+    "sub_moorings": "domains/moorings",
+    "sub_nde": "domains/nde",
+    "sub_osi_pi": "domains/osi-pi",
+    "sub_pipe": "domains/pipe",
+    "sub_pipecapacity": "domains/pipecapacity",
+    "sub_pipelines": "domains/pipelines",
+    "sub_platecapacity": "domains/platecapacity",
+    "sub_plate_buckling": "domains/plate-buckling",
+    "sub_pressure_vessels": "domains/pressure-vessels",
+    "sub_process_engineering": "domains/process-engineering",
+    "sub_production": "domains/production",
+    "sub_project_management": "domains/project-management",
+    "sub_pumps": "domains/pumps",
+    "sub_reservoir": "domains/reservoir",
+    "sub_rigging": "domains/rigging",
+    "sub_risers": "domains/risers",
+    "sub_risk": "domains/risk",
+    "sub_ship_design": "domains/ship-design",
+    "sub_spm": "domains/spm",
+    "sub_submarine_cables": "domains/submarine-cables",
+    "sub_tcp": "domains/tcp",
+    "sub_thermodynamics": "domains/thermodynamics",
+    "sub_time_series": "domains/time-series",
+    "sub_umbilical": "domains/umbilical",
+    "sub_unit_conversion": "domains/unit-conversion",
+    "sub_vibrations": "domains/vibrations",
+    "sub_viv": "domains/viv",
+    "sub_wec": "domains/wec",
+    "sub_welding": "domains/welding",
+    "sub_wind": "domains/wind",
+    "user_stories": "guides/user_stories",
+    "_lib": "guides/_lib"
+  },
+  "domain_structure": {
+    "software": [
+      "ansys",
+      "ansys",
+      "autocad",
+      "blender",
+      "dave",
+      "davelab",
+      "freecad",
+      "ghs",
+      "gmsh",
+      "nastran",
+      "naviworks",
+      "openfoam",
+      "qgis",
+      "solidworks",
+      "zoo"
+    ],
+    "domains": [
+      "cathodic-protection",
+      "lighting",
+      "ai",
+      "biomedical",
+      "coiled-tubing",
+      "connections",
+      "cranes",
+      "design",
+      "digitaltwin",
+      "drilling",
+      "engineering",
+      "fatigue",
+      "fem",
+      "gas-turbines",
+      "hydrodynamics",
+      "installation",
+      "interventions",
+      "lng",
+      "marine-growth",
+      "mathcad",
+      "metocean",
+      "modal-analysis",
+      "moorings",
+      "nde",
+      "osi-pi",
+      "pipe",
+      "pipecapacity",
+      "pipelines",
+      "platecapacity",
+      "plate-buckling",
+      "pressure-vessels",
+      "process-engineering",
+      "production",
+      "project-management",
+      "pumps",
+      "reservoir",
+      "rigging",
+      "risers",
+      "risk",
+      "ship-design",
+      "spm",
+      "submarine-cables",
+      "tcp",
+      "thermodynamics",
+      "time-series",
+      "umbilical",
+      "unit-conversion",
+      "vibrations",
+      "viv",
+      "wec",
+      "welding",
+      "wind"
+    ],
+    "legacy": [
+      "apirp2rd",
+      "apistd2rd",
+      "nl_stress",
+      "sn_curves",
+      "stackup_schematic",
+      "vmstress"
+    ],
+    "modules": [
+      "aqwa",
+      "orcaflex",
+      "orcawave",
+      "catenary",
+      "mooring",
+      "rao-analysis",
+      "ship-design"
+    ],
+    "references": [
+      "standards",
+      "papers",
+      "manuals"
+    ],
+    "guides": [
+      "procedures",
+      "workflows",
+      "best-practices"
+    ]
+  }
+}

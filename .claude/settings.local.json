@@ -66,7 +66,8 @@
       "Bash(\"D:\\github\\digitalmodel\\.venv\\Scripts\\python.exe\" -c \"import sys; sys.path.insert(0, r''D:\\github\\digitalmodel\\src''); from opp_summary1_test import test_process; test_process()\")",
       "Bash(\"D:\\github\\digitalmodel\\.venv\\Scripts\\python.exe\" \"c:\\Users\\ansystech\\.vscode\\extensions\\ms-python.debugpy-2025.8.0-win32-x64\\bundled\\libs\\debugpy\\launcher\" \"53978\" \"--\" \"D:\\github\\digitalmodel\\tests\\modules\\orcaflex\\orcaflex_post_process\\basic\\opp_summary1_test.py\")",
       "Bash(git commit:*)",
-      "Bash(git rebase:*)"
+      "Bash(git rebase:*)",
+      "WebFetch(domain:www.linkedin.com)"
     ],
     "deny": []
   }
