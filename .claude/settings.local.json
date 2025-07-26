@@ -68,7 +68,8 @@
       "Bash(git commit:*)",
       "Bash(git rebase:*)",
       "WebFetch(domain:www.linkedin.com)",
-      "Bash(gh pr create:*)"
+      "Bash(gh pr create:*)",
+      "Bash(afplay:*)"
     ],
     "deny": []
   }

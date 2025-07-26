@@ -1,15 +1,15 @@
 {
   "analysis": {
-    "total_directories": 83,
-    "total_files": 3040,
+    "total_directories": 84,
+    "total_files": 3048,
     "prefix_distribution": {
-      "no_prefix": 11,
+      "no_prefix": 12,
       "leg_": 6,
       "pkg_": 14,
       "sub_": 52
     },
     "file_type_distribution": {
-      ".md": 266,
+      ".md": 272,
       ".pdf": 364,
       ".png": 270,
       ".puml": 47,
@@ -35,7 +35,7 @@
       ".db": 24,
       ".out": 1,
       ".deck": 99,
-      ".pyc": 4,
+      ".pyc": 6,
       ".hyd": 13,
       ".doc": 1,
       ".igs": 4,
@@ -105,7 +105,7 @@
     "depth_analysis": {
       "4": 4,
       "1": 8,
-      "0": 59,
+      "0": 60,
       "5": 1,
       "2": 7,
       "6": 1,
@@ -125,17 +125,17 @@
         },
         {
           "name": "domains",
-          "file_count": 0,
+          "file_count": 1,
           "max_depth": 0
         },
         {
           "name": "guides",
-          "file_count": 0,
+          "file_count": 1,
           "max_depth": 0
         },
         {
           "name": "legacy",
-          "file_count": 0,
+          "file_count": 1,
           "max_depth": 0
         },
         {
@@ -145,12 +145,12 @@
         },
         {
           "name": "references",
-          "file_count": 0,
+          "file_count": 1,
           "max_depth": 0
         },
         {
           "name": "software",
-          "file_count": 0,
+          "file_count": 1,
           "max_depth": 0
         },
         {
@@ -162,6 +162,11 @@
           "name": "_lib",
           "file_count": 12,
           "max_depth": 2
+        },
+        {
+          "name": "__pycache__",
+          "file_count": 2,
+          "max_depth": 0
         }
       ],
       "legacy": [
@@ -199,7 +204,7 @@
       "modules": [
         {
           "name": "modules",
-          "file_count": 1063,
+          "file_count": 1064,
           "max_depth": 6
         }
       ],
@@ -616,7 +621,7 @@
       "stackup_schematic",
       "vmstress"
     ],
-    "avg_files_per_directory": 36.626506024096386
+    "avg_files_per_directory": 36.285714285714285
   },
   "mapping": {
     "ansys": "software/ansys",
@@ -701,7 +706,8 @@
     "sub_welding": "domains/welding",
     "sub_wind": "domains/wind",
     "user_stories": "guides/user_stories",
-    "_lib": "guides/_lib"
+    "_lib": "guides/_lib",
+    "__pycache__": "guides/__pycache__"
   },
   "domain_structure": {
     "software": [
