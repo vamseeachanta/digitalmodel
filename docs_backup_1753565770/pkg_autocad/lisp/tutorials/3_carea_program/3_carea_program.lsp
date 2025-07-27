@@ -1,6 +1,0 @@
-(defun c:carea()
-(setq rad (getreal "enter radius"))
-(setq carea (* 3.14159 rad rad))
-(princ carea)
-(princ)
-)
