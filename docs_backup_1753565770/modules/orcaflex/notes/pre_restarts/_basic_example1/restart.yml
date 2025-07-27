@@ -1,0 +1,5 @@
+# child.yml
+RestartingFrom: parent.yml
+3DBuoys:
+  Blob:
+    InitialX: 50

@@ -1,0 +1,31 @@
+OrcFxAPI not available
+Updating default values with contents in file .\preproc_winch_dat_files.yml
+Traceback (most recent call last):
+  File "C:\Users\vamseea\github\assetutilities\src\assetutilities\common\ApplicationManager.py", line 172, in unify_application_and_default_and_custom_yamls
+    data = pkgutil.get_data(library_name, self.ApplicationInputFile)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\vamseea\AppData\Local\miniconda3\envs\digitalmodel\Lib\pkgutil.py", line 640, in get_data
+    return loader.get_data(resource_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 1130, in get_data
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\vamseea\\github\\digitalmodel\\src\\digitalmodel\\tests\\test_data\\file_edit\\file_edit.yml'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\vamseea\github\digitalmodel\src\digitalmodel\__main__.py", line 25, in <module>
+    engine()
+  File "C:\Users\vamseea\github\digitalmodel\src\digitalmodel\engine.py", line 46, in engine
+    application_manager.configure(cfg, library_name)
+  File "C:\Users\vamseea\github\assetutilities\src\assetutilities\common\ApplicationManager.py", line 152, in configure
+    self.unify_application_and_default_and_custom_yamls(
+  File "C:\Users\vamseea\github\assetutilities\src\assetutilities\common\ApplicationManager.py", line 175, in unify_application_and_default_and_custom_yamls
+    data = pkgutil.get_data(library_name, self.ApplicationInputFile)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\vamseea\AppData\Local\miniconda3\envs\digitalmodel\Lib\pkgutil.py", line 640, in get_data
+    return loader.get_data(resource_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 1130, in get_data
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\vamseea\\github\\digitalmodel\\src\\digitalmodel\\tests\\test_data\\file_edit.yml'
