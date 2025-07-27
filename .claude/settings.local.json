@@ -69,7 +69,8 @@
       "Bash(git rebase:*)",
       "WebFetch(domain:www.linkedin.com)",
       "Bash(gh pr create:*)",
-      "Bash(afplay:*)"
+      "Bash(afplay:*)",
+      "Bash(git clean:*)"
     ],
     "deny": []
   }
