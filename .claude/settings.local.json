@@ -70,7 +70,9 @@
       "WebFetch(domain:www.linkedin.com)",
       "Bash(gh pr create:*)",
       "Bash(afplay:*)",
-      "Bash(git clean:*)"
+      "Bash(git clean:*)",
+      "Bash(touch:*)",
+      "Bash(git --version)"
     ],
     "deny": []
   }
