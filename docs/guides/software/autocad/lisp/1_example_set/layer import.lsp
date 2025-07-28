@@ -1,0 +1,18 @@
+;;; this will import layers from drawing file
+;
+(defun c:importla()
+(setq fname(getstring "\nFile name for Importing layer<with extension>: "))
+(setq opf(open fname "r"))
+(SETQ COUNTER 1)
+(while (setq f1 (read-line opf))
+(princ (strcat "\rProcessing line number: " (itoa counter)))
+(setq f2(strcat "(" f1 ")"))
+(setq f2(read f2))
+(setq lan(CAR F2))
+(setq col(cadr f2))
+(command "layer" "N" LAN "C" COL LAN "")
+(SETQ COUNTER(1+ COUNTER))
+)
+(close opf)
+(princ))
+(c:importla)

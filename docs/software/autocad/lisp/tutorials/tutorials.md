@@ -1,0 +1,11 @@
+- Load program 
+ - drag and drop the LISP file into the drawing 
+ - Other methods?
+- draw an object 
+  - TBA
+- carea
+ - calculate area of a selected circle.
+- drawcircle
+ - drawcircle (working)
+ - drawrectangle (working)
+ - 
