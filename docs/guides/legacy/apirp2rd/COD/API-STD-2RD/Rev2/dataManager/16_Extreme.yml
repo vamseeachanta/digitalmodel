@@ -1,0 +1,97 @@
+geometry:
+   NominalID: NULL
+   NominalOD: 16
+   DesignWT: 1.73
+   NominalWT:
+     - 1.0
+     - 1.1
+     - 1.2
+     - 1.3
+     - 1.4
+     - 1.5
+     - 1.6
+     - 1.7
+     - 1.8
+     - 1.9
+     - 2.0
+
+   CorrosionAllowance: 0.236
+   AllowableStressFac: 0.667
+   
+load:
+   externalPressure: 0
+   internalPressure: 750
+   bendingMoment: 0
+   
+LoadingConditionResults:
+  -
+    Label: 100yr Wave 10yr Current Near Direction
+    InternalPressure: 750
+    ExternalPressure: 0
+    Tension: 10578
+    BendingMoment: 216
+    LoadCategory: SLS
+  -
+    Label: 100yr Wave 10yr Current Far Direction
+    InternalPressure: 750
+    ExternalPressure: 0
+    Tension: 12635
+    BendingMoment: 406
+    LoadCategory: SLS
+  -
+    Label: 100yr Wave 10yr Current Cross Direction
+    InternalPressure: 750
+    ExternalPressure: 0
+    Tension: 11558
+    BendingMoment: 641
+    LoadCategory: SLS
+  -
+    Label: 100yr Wave 10yr Current Transverse Direction
+    InternalPressure: 750
+    ExternalPressure: 0
+    Tension: 10838
+    BendingMoment: 594
+    LoadCategory: SLS
+  -
+    Label: 10yr Wave 100yr Current Near Direction
+    InternalPressure: 750
+    ExternalPressure: 0
+    Tension: 12598
+    BendingMoment: 181
+    LoadCategory: SLS
+  -
+    Label: 10yr Wave 100yr Current Far Direction
+    InternalPressure: 750
+    ExternalPressure: 0
+    Tension: 10427
+    BendingMoment: 195
+    LoadCategory: SLS
+  -
+    Label: 10yr Wave 100yr Current Cross Direction
+    InternalPressure: 750
+    ExternalPressure: 0
+    Tension: 9937
+    BendingMoment: 441
+    LoadCategory: SLS
+  -
+    Label: 10yr Wave 100yr Current Transverse Direction
+    InternalPressure: 750
+    ExternalPressure: 0
+    Tension: 12633
+    BendingMoment: 449
+    LoadCategory: SLS
+  -
+    Label: 1yr Wave TestPressure
+    InternalPressure: 10000
+    ExternalPressure: 0
+    Tension: 13762
+    BendingMoment: 322
+    LoadCategory: ALS
+  -
+    Label: 100yr Wave 10yr Current, Far Direction
+    InternalPressure: 8000
+    ExternalPressure: 0
+    Tension: 12633
+    BendingMoment: 406
+    LoadCategory: ALS
+
