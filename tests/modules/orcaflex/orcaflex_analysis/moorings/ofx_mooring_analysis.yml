@@ -1,0 +1,57 @@
+meta:
+  library: digitalmodel
+  basename: orcaflex
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+  unit:
+    pretension: kN
+    coordinates: m
+    length: m
+
+orcaflex:
+  preprocess:
+    check_yml:
+      flag: False
+      save_dat: True
+
+  analysis:
+    mooring:
+      flag: True
+      calculation: pretension
+
+  postprocess:
+    visualization:
+      flag: False
+
+orcaflex_analysis:
+  mooring:
+    groups:
+    - label: development
+      target_pretension:
+        iterations: 10
+        tolerance: 10 #%
+        type: csv
+        filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_pretension.csv
+      target_fender_force:
+        iterations: 10
+        resultant_force: 138.5 #kN
+        tolerance: 5 #%
+        type: csv
+        filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_fender_force.csv
+        contact_vessel: LNGC
+
+file_management:
+  flag: True
+  input_directory: pretension/fsts_lngc/01_qa/dof_none
+  output_directory: NULL
+
+  filename:
+    extension: [yml, sim]
+    pattern: fsts_l095_mwl_125km3_l000_pb_pretension
+    filters:
+      contains: []
+      not_contains: [includefile, iteration_01]

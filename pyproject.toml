@@ -1,65 +1,71 @@
-[build-system]
-requires      = ["setuptools>=61.0.0", "wheel", "pandas"]
-build-backend = "setuptools.build_meta"
 
 [project]
-dynamic = ["dependencies"]
-
 name = "digitalmodel"
-version = "0.0.8"
+version = "0.0.9"
 description = "engineering asset digital model(s) for life cycle analysis"
-readme = "README.md"
 authors = [{ name = "Vamsee Achanta", email = "vamsee.achanta@aceengineer.com" }]
-license = { file = "LICENSE" }
+license = {text = "MIT"}
+readme = "README.md"
+keywords = ["finite element", "asset representation", "structural", "physical", "engineering", "animation", "lifecycle", "lifecycle analysis", "single source of truth", "digital model", "digital twin"]
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3"
 ]
-keywords=['finite element', 'asset representation', 'structural', 'physical', 'engineering', 'animation', 'lifecycle', 'lifecycle analysis', 'single source of truth', 'digital model', 'digital twin']
-requires-python = ">=3.7"
 
-    [project.optional-dependencies]
-    build = ["build", "twine"]
-    dev   = ["black", "bumpver", "isort", "pytest"]
+requires-python = ">=3.8"
+# Dependencies are managed in scripts/requirements.txt
+dynamic = ["dependencies"]
+[project.urls]
+Homepage = "https://github.com/vamseeachanta/digitalmodel"
+Repository = "https://github.com/vamseeachanta/digitalmodel"
+Documentation = "https://github.com/vamseeachanta/digitalmodel/blob/master/README.md"
 
-    [project.scripts]
-    digital_model = "digitalmodel:__main__"
+[project.optional-dependencies]
+dev = [
+    "black>=23.0",
+    "bumpver>=2023.1129",
+    "isort>=5.0.0",
+    "pytest>=7.0.0"
+]
+deploy = [
+    "twine>=1.0.0",
+    "build>=1.0.0"
+]
 
-    [project.urls]
-    repository    = "https://github.com/vamseeachanta/digitalmodel"
-    documentation = "https://github.com/vamseeachanta/digitalmodel/blob/master/README.md"
+[project.scripts]
+digital_model = "digitalmodel.__main__:main"
 
-[tool.setuptools]
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[setuptools]
 include-package-data = true
 
-[tool.setuptools.dynamic]
-dependencies = {file = ["dev_tools/requirements.txt"]}
+[setuptools.dynamic]
+dependencies = {file = ["scripts/requirements.txt"]}
 
-[tool.setuptools.packages.find]
-where = ["src"]
-[tool.setuptools.package-data]
-"*" = ["*.yml", "*.csv", "*.xlsx", "*.html", "*.txt"]
 
 [tool.bumpver]
-current_version = "0.0.8"
+current_version = "0.0.9"
 version_pattern = "MAJOR.MINOR.PATCH"
-commit_message  = "bump version {old_version} -> {new_version}"
-commit          = true
-tag             = true
-push            = false
+commit_message = "bump version {old_version} -> {new_version}"
+commit = true
+tag = true
+push = false
 
-    [tool.bumpver.file_patterns]
-    "pyproject.toml" = [
-        'current_version = "{version}"',
-        'version = "{version}"',
-    ]
-    "src/digitalmodel/__init__.py" = ["{version}"]
-    "src/digitalmodel/__main__.py" = ["- digitalmodel v{version}"]
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    'current_version = "{version}"',
+    'version = "{version}"',
+]
+"src/digitalmodel/__init__.py" = ["{version}"]
+"src/digitalmodel/__main__.py" = ["- digitalmodel v{version}"]
 
 [tool.isort]
-profile                   = "black"
-import_heading_stdlib     = "Standard library imports"
+profile = "black"
+import_heading_stdlib = "Standard library imports"
 import_heading_thirdparty = "Third party imports"
 import_heading_firstparty = "Reader imports"
 multi_line_output = 3
@@ -70,6 +76,17 @@ line_length = 88
 [tool.mypy]
 strict = true
 
-    [[tool.mypy.overrides]]
-    module                 = "feedparser"
-    ignore_missing_imports = true
+[[tool.mypy.overrides]]
+module = "feedparser"
+ignore_missing_imports = true
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12.3",
+    "twine>=6.1.0",
+]

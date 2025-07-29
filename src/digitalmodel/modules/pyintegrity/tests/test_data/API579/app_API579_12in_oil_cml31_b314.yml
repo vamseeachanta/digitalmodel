@@ -1,0 +1,350 @@
+&id001 !!python/object/new:pyintegrity.common.update_deep.AttributeDict
+dictitems:
+  API579Parameters:
+    Age: 15
+    FCARateFloor: 0.00118
+    FoliasFactor:
+      FlawParameter:
+      - 0.0
+      - 0.5
+      - 1.0
+      - 1.5
+      - 2.0
+      - 2.5
+      - 3.0
+      - 3.5
+      - 4.0
+      - 4.5
+      - 5.0
+      - 5.5
+      - 6.0
+      - 6.5
+      - 7.0
+      - 7.5
+      - 8.0
+      - 8.5
+      - 9.0
+      - 9.5
+      - 10.0
+      Mt:
+        Conical:
+        - 1.001
+        - 1.056
+        - 1.199
+        - 1.394
+        - 1.618
+        - 1.857
+        - 2.103
+        - 2.351
+        - 2.6
+        - 2.847
+        - 3.091
+        - 3.331
+        - 3.568
+        - 3.801
+        - 4.032
+        - 4.262
+        - 4.492
+        - 4.727
+        - 4.97
+        - 5.225
+        - 5.497
+        Cylindrical:
+        - 1.001
+        - 1.056
+        - 1.199
+        - 1.394
+        - 1.618
+        - 1.857
+        - 2.103
+        - 2.351
+        - 2.6
+        - 2.847
+        - 3.091
+        - 3.331
+        - 3.568
+        - 3.801
+        - 4.032
+        - 4.262
+        - 4.492
+        - 4.727
+        - 4.97
+        - 5.225
+        - 5.497
+        Spherical: []
+    RSFa: 0.9
+  Analysis:
+    CustomInputFile: test_data/API579/12in_oil_cml31_b314.yml
+    DefaultInputFile: null
+    analysis_root_folder: test_data/API579
+    basename: API579
+    cfg_array_file_names: null
+    file_name: app_API579_12in_oil_cml31_b314
+    file_name_for_overwrite: app_API579_12in_oil_cml31_b314
+    log_folder: test_data/API579\logs\
+    result_folder: test_data/API579\results\
+    start_time: 2023-10-16 23:44:53.450764
+  Default:
+    Analysis:
+      GML:
+        Circumference: true
+        Length: false
+      LML: true
+    Units: inch
+  Design:
+  - AxialForce: 0
+    BendingMoment: 0
+    Code:
+    - Outer_Pipe: ASME B31.4-2016 Chapter IX Platform Piping
+    Condition: Restrained
+    ExternalFluid:
+      Outer_Pipe: 0.03703047
+    ExternalPressure:
+      Outer_Pipe: 0
+    InternalFluid:
+      Outer_Pipe: 0.03703047
+    InternalPressure:
+      Outer_Pipe: 285
+    Load Condition:
+      Outer_Pipe: internal_pressure
+    Temperature:
+      Ambient:
+        Outer_Pipe: 50
+      Maximum: null
+      Operating:
+        Outer_Pipe: 82
+    Torsion: 0
+    Water_Depth: 2460.63
+  DesignFactors:
+    30 CFR Part 250:
+      2019: null
+      release_date: 2019
+      internal_pressure:
+        Fd: 0.6
+    API RP 1111-2009 Pipelines:
+      D_over_T_Trasition_Ratio: 30
+      collapse_propagation:
+        Fp: 0.8
+      internal_pressure:
+        Fd: 0.72
+    API RP 1111-2009 Risers:
+      D_over_T_Trasition_Ratio: 15
+      collapse_propagation:
+        Fp: 0.8
+      internal_pressure:
+        Fd: 0.6
+    API RP 16Q:
+      1993: null
+      release_date: 1993
+      external_pressure:
+        Fd: null
+        cross_reference: API TR 5C3-2018
+        section: 5.5
+    API RP 16Q-1993:
+      external_pressure:
+        Fd: null
+        cross_reference: API TR 5C3-2018
+        section: 5.5
+    API RP 16Q-2017:
+      internal_pressure:
+        Fd: 0.67
+    API STD 2RD-2013 Section 5:
+      external_pressure:
+        Fd: 0.7
+      internal_pressure:
+        Fd: 0.6
+        k:
+          API 5CT: 0.45
+          API 5L: 0.45
+          ASME: 0.45
+    API TR 5C3-2018:
+      internal_pressure:
+        Fd: 0.67
+    ASME B31.4-2016 Chapter IX Pipeline:
+      D_over_T_Trasition_Ratio: 30
+      EquivalentStress: 0.9
+      Longitudinal: 0.8
+      internal_pressure: 0.72
+    ASME B31.4-2016 Chapter IX Platform Piping:
+      D_over_T_Trasition_Ratio: 30
+      EquivalentStress: 0.9
+      Longitudinal: 0.8
+      internal_pressure: 0.6
+    ASME B31.4-2016 Chapter IX Risers:
+      D_over_T_Trasition_Ratio: 30
+      EquivalentStress: 0.9
+      Longitudinal: 0.8
+      internal_pressure: 0.6
+    ASME B31.8-2016 Chapter VIII Pipeline:
+      D_over_T_Trasition_Ratio: 30
+      EquivalentStress: 0.9
+      Longitudinal: 0.8
+      internal_pressure: 0.72
+    ASME B31.8-2016 Chapter VIII Platform Piping:
+      D_over_T_Trasition_Ratio: 30
+      EquivalentStress: 0.9
+      Longitudinal: 0.8
+      internal_pressure: 0.5
+    ASME B31.8-2016 Chapter VIII Risers:
+      D_over_T_Trasition_Ratio: 30
+      EquivalentStress: 0.9
+      Longitudinal: 0.8
+      internal_pressure: 0.5
+    EquivalentStress: 0.9
+    Logitudinal: 0.8
+    Longitudinal: 0.8
+    Pressure: 0.6
+    TemperatureDerating: 1.0
+  Geometry:
+    AssessmentLengthCeilingFactor_Circumference: null
+    AssessmentLengthCeilingFactor_Length: 0.5
+    CorrosionAllowance: 0.0
+    DesignWT: 0.35
+    NominalID: null
+    NominalOD: 12.75
+    StartWTFactor: 1
+    tmin: 0.1
+  Inner_Pipe: null
+  LML:
+    LTA:
+    - Contour:
+        xlim: null
+        ylim: null
+        zlim:
+        - 0.538
+        - 0.75
+      DataCorrectionFactor: 1.0
+      FCA:
+      - 0.0
+      - 0.02
+      - 0.04
+      - 0.06
+      FCANonFlawRatio: 0.25
+      FCAc: null
+      FCAs: null
+      Label: cml28
+      Lmsd: 1.45
+      MtType: Cylindrical
+      c: null
+      cIndex:
+      - 4
+      - 8
+      index_col: 0
+      io: tests/test_data/API579/12in_oil_cml31.xlsx
+      s: null
+      sIndex:
+      - 4
+      - 8
+      sheet_name: Sheet1
+      skipfooter: 0
+      skiprows: 0
+  Material:
+    E: 30000000.0
+    Poissionsratio: 0.3
+    SMUS: null
+    SMYS: 30000
+    Steel:
+      E: 30000000.0
+      Grades:
+        API 5L X65:
+          Reference: null
+          SMUS: 77500
+          SMYS: 65300
+        API 5L X70:
+          Reference: null
+          SMUS: null
+          SMYS: 70300
+      Poissionsratio: 0.3
+      Rho: 0.2817929
+      ThermalExpansionCoefficient: 6.5e-06
+    ThermalExpansionCoefficient: 6.5e-06
+    WeldFactor:
+      Seamless: 1.0
+    rho: 7800
+  Outer_Pipe:
+    Code:
+    - ASME B31.8-2016 Chapter VIII Risers_custom
+    Geometry:
+      Corrosion_Allowance: 0
+      Design_WT: 1.28
+      Nominal_ID: 5.130000000000001
+      Nominal_OD: 7.69
+      tmin: 0.97
+    Manufacturing:
+      Coupling Mass Ratio: 0.0
+    Material:
+      Buoyancy: null
+      Insulation: null
+      Material: Steel
+      Material_Grade: API 5L X65
+      WeldFactor:
+        Seamless: 1.0
+  PlotSettings:
+    Data:
+      PltSupTitle: Client Asset Oil Piping FFS
+      PltTitle: Depth Probe Wall Thickness
+      PltXLabel: Circumference (inch)
+      PltYLabel: Length (inch)
+    GML:
+      PltSupTitle: Caesar Tonga, Pipe-in-Pipe Flowline FFS
+      PltTitle: General Metal Loss, Level 2
+      PltXLabel: Future Corrosion Allowance (inch)
+      PltYLabel: Maximum Allowable Working Pressure (psi)
+      ylim:
+      - 8000
+      - 20000
+    LML:
+      PltSupTitle: Client Asset Oil Piping FFS
+      PltTitle: Local Metal Loss, Levels 1 & 2
+      PltXLabel: Future Corrosion Allowance (inch)
+      PltYLabel: Maximum Allowable Working Pressure (psi)
+      ylim:
+      - 8000
+      - 20000
+  ReadingSets:
+  - Contour:
+      xlim: null
+      ylim: null
+      zlim:
+      - 0.0
+      - 0.3
+    DataCorrectionFactor: 1.0
+    FCA:
+    - 0.0
+    - 0.02
+    - 0.04
+    - 0.06
+    FCARate: Historical
+    Label: cml28
+    index_col: 0
+    io: tests/test_data/API579/12in_oil_cml31.xlsx
+    sheet_name: Sheet1
+    skipfooter: 0
+    skiprows: 0
+  Result:
+    Exception: LML Level 1 and 2 are failed.
+  basename: API579
+  default:
+    Analysis:
+      B31G: false
+      GML:
+        Circumference: true
+        FCA:
+        - 0.0
+        - 0.04
+        - 0.08
+        FCARate: Historical
+        Length: false
+        data_source: xlsx
+      LML: true
+    Units: inch
+    config:
+      overwrite:
+        output: true
+    log_level: DEBUG
+    settings:
+      AssessmentLengthCeilingFactor_Circumference: null
+      AssessmentLengthCeilingFactor_Length: 1.0
+      CorrosionAllowance: 0.0
+      StartWTFactor: 1
+state: *id001

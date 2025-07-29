@@ -1,0 +1,195 @@
+basename: API579
+
+Default:
+  Analysis:
+    GML:
+      Circumference: True
+      Length: False
+    LML: True
+  Units: inch
+
+ReadingSets: # Used for GML
+  - io: tests/test_data/API579/12in_oil_cml31.xlsx
+    sheet_name: Sheet1
+    index_col: 0
+    skiprows: 0
+    skipfooter: 0
+    DataCorrectionFactor: 1.00
+    Label: cml28
+    Contour:
+      xlim: NULL
+      ylim: NULL
+      zlim: [0.0, 0.3]
+    FCARate: Historical
+    FCA:
+      - 0.00
+      - 0.02
+      - 0.04
+      - 0.06
+
+API579Parameters:
+  RSFa: 0.9
+  Age: 15
+  FCARateFloor: 0.00118
+  FoliasFactor:
+    FlawParameter:
+      [
+        0.0,
+        0.5,
+        1.0,
+        1.5,
+        2.0,
+        2.5,
+        3.0,
+        3.5,
+        4.0,
+        4.5,
+        5.0,
+        5.5,
+        6.0,
+        6.5,
+        7.0,
+        7.5,
+        8.0,
+        8.5,
+        9.0,
+        9.5,
+        10.0,
+      ]
+    Mt:
+      Cylindrical:
+        [
+          1.001,
+          1.056,
+          1.199,
+          1.394,
+          1.618,
+          1.857,
+          2.103,
+          2.351,
+          2.600,
+          2.847,
+          3.091,
+          3.331,
+          3.568,
+          3.801,
+          4.032,
+          4.262,
+          4.492,
+          4.727,
+          4.970,
+          5.225,
+          5.497,
+        ]
+      Conical:
+        [
+          1.001,
+          1.056,
+          1.199,
+          1.394,
+          1.618,
+          1.857,
+          2.103,
+          2.351,
+          2.600,
+          2.847,
+          3.091,
+          3.331,
+          3.568,
+          3.801,
+          4.032,
+          4.262,
+          4.492,
+          4.727,
+          4.970,
+          5.225,
+          5.497,
+        ]
+      Spherical: []
+Geometry:
+  NominalID: NULL
+  NominalOD: 12.75
+  DesignWT: 0.350
+  StartWTFactor: 1
+  tmin: 0.100
+  AssessmentLengthCeilingFactor_Circumference: NULL
+  AssessmentLengthCeilingFactor_Length: 0.5
+  CorrosionAllowance: 0.0
+
+Design:
+  - Load Condition: { Outer_Pipe: internal_pressure }
+    InternalPressure: { Outer_Pipe: 285 }
+    InternalFluid: { Outer_Pipe: 0.03703047 }
+    ExternalPressure: { Outer_Pipe: 0 }
+    ExternalFluid: { Outer_Pipe: 0.03703047 }
+    Temperature:
+      Ambient: { Outer_Pipe: 50 }
+      Operating: { Outer_Pipe: 82 }
+      Maximum: NULL
+    BendingMoment: 0
+    AxialForce: 0
+    Torsion: 0
+    Condition: Restrained
+    Water_Depth: 2460.63
+    Code:
+      - { Outer_Pipe: ASME B31.4-2016 Chapter IX Platform Piping }
+
+Material:
+  E: 30000000.0
+  rho: 7800
+  Poissionsratio: 0.3
+  SMYS: 30000
+  SMUS: null
+  ThermalExpansionCoefficient: 6.5e-06
+  WeldFactor:
+    Seamless: 1.0
+DesignFactors:
+  Pressure: 0.6
+  Longitudinal: 0.8
+  EquivalentStress: 0.9
+  Logitudinal: 0.8
+  TemperatureDerating: 1.0
+
+LML:
+  LTA:
+    - io: tests/test_data/API579/12in_oil_cml31.xlsx
+      sheet_name: Sheet1
+      index_col: 0
+      skiprows: 0
+      skipfooter: 0
+      DataCorrectionFactor: 1.00
+      Label: cml28
+      sIndex:
+        - 4
+        - 8
+      cIndex:
+        - 4
+        - 8
+      s: NULL
+      c: NULL
+      Contour:
+        xlim: NULL
+        ylim: NULL
+        zlim: [0.538, 0.75]
+      FCA:
+        - 0.00
+        - 0.02
+        - 0.04
+        - 0.06
+      Lmsd: 1.45
+      MtType: Cylindrical
+      FCAs: NULL
+      FCAc: NULL
+      FCANonFlawRatio: 0.25
+
+PlotSettings:
+  Data:
+    PltSupTitle: Client Asset Oil Piping FFS
+    PltTitle: Depth Probe Wall Thickness
+    PltXLabel: Circumference (inch)
+    PltYLabel: Length (inch)
+  LML:
+    PltSupTitle: Client Asset Oil Piping FFS
+    PltTitle: Local Metal Loss, Levels 1 & 2
+    PltXLabel: Future Corrosion Allowance (inch)
+    PltYLabel: Maximum Allowable Working Pressure (psi)

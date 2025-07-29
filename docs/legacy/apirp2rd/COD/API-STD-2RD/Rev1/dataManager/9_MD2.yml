@@ -1,0 +1,22 @@
+geometry: 
+   NominalID: NULL
+   NominalOD: 9.625
+   NominalWT:
+     - 1.0
+     - 1.1
+     - 1.2
+     - 1.3
+     - 1.4
+     - 1.5
+     - 1.6
+     - 1.7
+     - 1.8
+     - 1.9
+     - 2.0
+ 
+   CorrosionAllowance: 0.1969
+
+plotSettings:
+   pltTitle: API STD 2RD, X-65, ID of {0} inch, Corrosion Allowance {1} inch
+   label: Design Pressure Limit
+   plotFileName: Burst Pressure With Thickness_CA100_ID_{0}

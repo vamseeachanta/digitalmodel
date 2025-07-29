@@ -10,33 +10,34 @@ from digitalmodel.modules.time_series.time_series_components import TimeSeriesCo
 
 tca = TimeSeriesComponents()
 
-class TimeSeriesAnalysis():
 
+class TimeSeriesAnalysis:
     def __init__(self):
         pass
-    
+
     def router(self, cfg: dict) -> dict:
         logging.debug("Time series analysis ... BEGIN")
 
         cfg = self.get_cfg_with_master_data(cfg)
 
-
-        if cfg["analysis"]['basic']["sample_fft"]:
+        if cfg["analysis"]["basic"]["sample_fft"]:
             sig_fft, filtered_signal = tca.sample_fft(cfg)
 
-        if cfg["analysis"]['basic']["sample_window_average_fft"]:
+        if cfg["analysis"]["basic"]["sample_window_average_fft"]:
             sig_fft, filtered_signal = tca.sample_window_average_fft(cfg)
 
-        if cfg["analysis"]['basic']["window_average_fft"]:
+        if cfg["analysis"]["basic"]["window_average_fft"]:
             tca.window_average_fft(cfg)
-        
-        if cfg["analysis"]['basic']["rainflow"]:
-            rainflow_df, rainflow_dict = tca.get_rainflow_count_from_time_series(time_series)
-        
+
+        if cfg["analysis"]["basic"]["rainflow"]:
+            rainflow_df, rainflow_dict = tca.get_rainflow_count_from_time_series(
+                time_series
+            )
+
         logging.debug("Time series analysis ... END")
 
         return cfg
-    
+
     def get_cfg_with_master_data(self, cfg):
         if "master_settings" in cfg:
             master_settings = cfg["master_settings"].copy()
@@ -48,4 +49,3 @@ class TimeSeriesAnalysis():
                 data_settings["groups"][group_index] = copy.deepcopy(group)
 
         return cfg
-

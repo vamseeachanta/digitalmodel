@@ -1,5 +1,4 @@
 import math
-import matplotlib.pyplot as plt
 from dataManager.loadConfiguration import loadConfiguration
 
 configParams = loadConfiguration('dataManager//APISTD2RD.ini')

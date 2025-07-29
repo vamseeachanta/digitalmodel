@@ -1,0 +1,12 @@
+(DEFUN C:CL()
+(COMMAND "OSNAP" "NODE")
+(while (SETQ PT (GETPOINT"\nSelect Point:"))
+(setq elv (getreal"\nEnter Elevation:"))
+(command "erase" pt "")
+(setq x (car pt))
+(setq y (cadr pt))
+(setq z (caddr pt))
+(setq ptn (list x y elv))
+(command "point" ptn)
+)
+)

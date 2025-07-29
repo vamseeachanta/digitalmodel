@@ -1,0 +1,308 @@
+basename: API579
+
+Default:
+  Analysis:
+    GML:
+      Circumference: True
+      Length: False
+    LML: True
+  Units: inch
+ReadingSets:
+  - io: tests/test_data/API579/16in_gas_wt_grid.xlsx
+    sheet_name: Sheet1
+    index_col: 0
+    skiprows: 0
+    skipfooter: 0
+    DataCorrectionFactor: 1.00
+    Label: UT, Feature 1
+    Contour:
+      xlim: NULL
+      ylim: NULL
+      zlim: [0.526, 0.625]
+    FCARate: Historical
+    FCA:
+      - 0.00
+      - 0.02
+      - 0.04
+      - 0.06
+      - 0.08
+      - 0.10
+      - 0.12
+      - 0.14
+      - 0.16
+      - 0.18
+      - 0.20
+
+API579Parameters:
+  RSFa: 0.9
+  Age: 15
+  FCARateFloor: 0.00118
+  FoliasFactor:
+    FlawParameter:
+      [
+        0.0,
+        0.5,
+        1.0,
+        1.5,
+        2.0,
+        2.5,
+        3.0,
+        3.5,
+        4.0,
+        4.5,
+        5.0,
+        5.5,
+        6.0,
+        6.5,
+        7.0,
+        7.5,
+        8.0,
+        8.5,
+        9.0,
+        9.5,
+        10.0,
+      ]
+    Mt:
+      Cylindrical:
+        [
+          1.001,
+          1.056,
+          1.199,
+          1.394,
+          1.618,
+          1.857,
+          2.103,
+          2.351,
+          2.600,
+          2.847,
+          3.091,
+          3.331,
+          3.568,
+          3.801,
+          4.032,
+          4.262,
+          4.492,
+          4.727,
+          4.970,
+          5.225,
+          5.497,
+        ]
+      Conical:
+        [
+          1.001,
+          1.056,
+          1.199,
+          1.394,
+          1.618,
+          1.857,
+          2.103,
+          2.351,
+          2.600,
+          2.847,
+          3.091,
+          3.331,
+          3.568,
+          3.801,
+          4.032,
+          4.262,
+          4.492,
+          4.727,
+          4.970,
+          5.225,
+          5.497,
+        ]
+      Spherical: []
+Geometry:
+  NominalID: NULL
+  NominalOD: 16
+  DesignWT: 0.625
+  StartWTFactor: 1
+  tmin: 0.526
+  AssessmentLengthCeilingFactor_Circumference: NULL
+  AssessmentLengthCeilingFactor_Length: 0.5
+  CorrosionAllowance: 0.0
+
+Design:
+  - Load Condition: { Outer_Pipe: internal_pressure }
+    InternalPressure: { Outer_Pipe: 2220 }
+    InternalFluid: { Outer_Pipe: 0.03703047 }
+    ExternalPressure: { Outer_Pipe: 0 }
+    ExternalFluid: { Outer_Pipe: 0.03703047 }
+    Temperature:
+      Ambient: { Outer_Pipe: 50 }
+      Operating: { Outer_Pipe: 82 }
+      Maximum: NULL
+    BendingMoment: 0
+    AxialForce: 0
+    Torsion: 0
+    Condition: Restrained
+    Water_Depth: 2460.63
+    Code:
+      - { Outer_Pipe: ASME B31.8-2016 Chapter VIII Pipeline }
+
+Material:
+  E: 30000000.0
+  rho: 7800
+  Poissionsratio: 0.3
+  SMYS: 65000
+  SMUS: null
+  ThermalExpansionCoefficient: 6.5e-06
+  WeldFactor:
+    Seamless: 1.0
+DesignFactors:
+  Pressure: 0.5
+  Longitudinal: 0.9
+  EquivalentStress: 0.9
+  Logitudinal: 0.9
+  TemperatureDerating: 1.0
+
+LML:
+  LTA:
+    - io: tests/test_data/API579/16in_gas_wt_grid.xlsx
+      sheet_name: Sheet1
+      index_col: 0
+      skiprows: 0
+      skipfooter: 0
+      DataCorrectionFactor: 1.00
+      Label: Feature 3, Flaw Size1
+      sIndex:
+        - 8
+        - 14
+      cIndex:
+        - 47
+        - 52
+      s: NULL
+      c: NULL
+      Contour:
+        xlim: NULL
+        ylim: NULL
+        zlim: [0.538, 0.75]
+      FCA:
+        - 0.00
+        - 0.02
+        - 0.04
+        - 0.06
+        - 0.08
+        - 0.10
+        - 0.12
+        - 0.14
+        - 0.16
+      Lmsd: 15
+      MtType: Cylindrical
+      FCAs: NULL
+      FCAc: NULL
+      FCANonFlawRatio: 0.25
+    - io: tests/test_data/API579/16in_gas_wt_grid.xlsx
+      sheet_name: Sheet1
+      index_col: 0
+      skiprows: 0
+      skipfooter: 0
+      DataCorrectionFactor: 1.00
+      Label: Feature 3, Flaw Size2
+      sIndex:
+        - 7
+        - 17
+      cIndex:
+        - 48
+        - 53
+      s: NULL
+      c: NULL
+      Contour:
+        xlim: NULL
+        ylim: NULL
+        zlim: [0.538, 0.75]
+      FCA:
+        - 0.00
+        - 0.02
+        - 0.04
+        - 0.06
+        - 0.08
+        - 0.10
+        - 0.12
+        - 0.14
+        - 0.16
+      Lmsd: 15
+      MtType: Cylindrical
+      FCAs: NULL
+      FCAc: NULL
+      FCANonFlawRatio: 0.25
+    - io: tests/test_data/API579/16in_gas_wt_grid.xlsx
+      sheet_name: Sheet1
+      index_col: 0
+      skiprows: 0
+      skipfooter: 0
+      DataCorrectionFactor: 1.00
+      Label: Feature 3, Flaw Size1
+      sIndex:
+        - 8
+        - 14
+      cIndex:
+        - 47
+        - 52
+      s: NULL
+      c: NULL
+      Contour:
+        xlim: NULL
+        ylim: NULL
+        zlim: [0.538, 0.75]
+      FCA:
+        - 0.00
+        - 0.02
+        - 0.04
+        - 0.06
+        - 0.08
+        - 0.10
+        - 0.12
+        - 0.14
+        - 0.16
+      Lmsd: 15
+      MtType: Cylindrical
+      FCAs: NULL
+      FCAc: NULL
+      FCANonFlawRatio: 1.00
+    - io: tests/test_data/API579/16in_gas_wt_grid.xlsx
+      sheet_name: Sheet1
+      index_col: 0
+      skiprows: 0
+      skipfooter: 0
+      DataCorrectionFactor: 1.00
+      Label: Feature 3, Flaw Size2
+      sIndex:
+        - 7
+        - 17
+      cIndex:
+        - 48
+        - 53
+      s: NULL
+      c: NULL
+      Contour:
+        xlim: NULL
+        ylim: NULL
+        zlim: [0.538, 0.75]
+      FCA:
+        - 0.00
+        - 0.02
+        - 0.04
+        - 0.06
+        - 0.08
+        - 0.10
+        - 0.12
+        - 0.14
+        - 0.16
+      Lmsd: 15
+      MtType: Cylindrical
+      FCAs: NULL
+      FCAc: NULL
+      FCANonFlawRatio: 1.00
+
+PlotSettings:
+  Data:
+    PltSupTitle: Client Asset, Gas Export Riser FFS
+    PltTitle: UT Measured Wall Thickness
+    PltXLabel: Circumference (inch)
+    PltYLabel: Length (inch)
+  LML:
+    PltSupTitle: Client Asset, Gas Export Riser FFS
+    PltTitle: Local Metal Loss, Levels 1 & 2
+    PltXLabel: Future Corrosion Allowance (inch)
+    PltYLabel: Maximum Allowable Working Pressure (psi)

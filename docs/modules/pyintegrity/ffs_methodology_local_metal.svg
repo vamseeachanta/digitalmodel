@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="926px" preserveAspectRatio="none" style="width:482px;height:926px;background:#FFFFFF;" version="1.1" viewBox="0 0 482 926" width="482px" zoomAndPan="magnify"><defs/><g><rect fill="#FF6347" height="62.8281" id="_title" rx="7.5" ry="7.5" style="stroke:#FF0000;stroke-width:2.0;" width="160" x="154.25" y="5"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="123" x="170.75" y="24.5332">FFS Methodology</text><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="128" x="170.25" y="42.1426">Corrosion/Erosion</text><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="146" x="163.25" y="59.752">Localized Metal Loss</text><g id="elem_GMN2"><path d="M154,79.8281 L154,97.3281 L134.12,101.3281 L154,105.3281 L154,122.5313 A0,0 0 0 0 154,122.5313 L464,122.5313 A0,0 0 0 0 464,122.5313 L464,89.8281 L454,79.8281 L154,79.8281 A0,0 0 0 0 154,79.8281 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><path d="M454,79.8281 L454,89.8281 L464,89.8281 L454,79.8281 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="289" x="160" y="98.3232">Performed when Average Wall Thickness is closer</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="276" x="160" y="114.6748">to minimum wall (tmin) than nominal wall (tnom)</text></g><ellipse cx="124" cy="101.3281" fill="#222222" rx="10" ry="10" style="stroke:none;stroke-width:1.0;"/><rect fill="#F1F1F1" height="35.0938" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="132" x="58" y="199.3281"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="112" x="68" y="221.7852">Review Design Data</text><g id="elem_GMN8"><path d="M210,162.8281 L210,212.8281 L190.27,216.8281 L210,220.8281 L210,270.9375 A0,0 0 0 0 210,270.9375 L428,270.9375 A0,0 0 0 0 428,270.9375 L428,172.8281 L418,162.8281 L210,162.8281 A0,0 0 0 0 210,162.8281 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><path d="M418,162.8281 L418,172.8281 L428,172.8281 L418,162.8281 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="55" x="216" y="181.3232">Pipe data</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="112" x="216" y="197.6748">Operating Pressure</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="107" x="216" y="214.0264">Design Code, tmin</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="129" x="232" y="230.3779">See pyprespipe library</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="197" x="216" y="246.7295">FCA (Future Corrosion Allowance)</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="22" x="216" y="263.0811">etc.</text></g><rect fill="#F1F1F1" height="35.0938" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="234" x="7" y="339.3281"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="214" x="17" y="361.7852">Review Measured Wall Thickness Data</text><g id="elem_GMN13"><path d="M261.5,310.8281 L261.5,352.8281 L241.4,356.8281 L261.5,360.8281 L261.5,402.5859 A0,0 0 0 0 261.5,402.5859 L420.5,402.5859 A0,0 0 0 0 420.5,402.5859 L420.5,320.8281 L410.5,310.8281 L261.5,310.8281 A0,0 0 0 0 261.5,310.8281 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><path d="M410.5,310.8281 L410.5,320.8281 L420.5,320.8281 L410.5,310.8281 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="82" x="267.5" y="329.3232">Methods used</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="138" x="267.5" y="345.6748">Critical thickness profile</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="87" x="267.5" y="362.0264">Data resolution</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="84" x="267.5" y="378.3779">Data accuracy</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="22" x="267.5" y="394.7295">etc.</text></g><rect fill="#F1F1F1" height="35.0938" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="144" x="52" y="442.8281"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="124" x="62" y="465.2852">Perform Level 1, Part 5</text><g id="elem_#18"><polygon fill="#F1F1F1" points="124,517.8281,136,529.8281,124,541.8281,112,529.8281,124,517.8281" style="stroke:#181818;stroke-width:0.5;"/></g><rect fill="#F1F1F1" height="35.0938" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="229" x="9.5" y="581.8281"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="209" x="19.5" y="604.2852">Adjust FCA (or) Perform Level 2, Part 5</text><g id="elem_#23"><polygon fill="#F1F1F1" points="124,656.8281,136,668.8281,124,680.8281,112,668.8281,124,656.8281" style="stroke:#181818;stroke-width:0.5;"/></g><rect fill="#F1F1F1" height="35.0938" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="221" x="13.5" y="720.8281"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="201" x="23.5" y="743.2852">Adjust FCA or Perform Level 3, Part 5</text><rect fill="#F1F1F1" height="35.0938" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="112" x="68" y="824.3281"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="92" x="78" y="846.7852">Analysis Results</text><g id="elem_GMN30"><path d="M200.5,795.8281 L200.5,837.8281 L180.01,841.8281 L200.5,845.8281 L200.5,887.5859 A0,0 0 0 0 200.5,887.5859 L475.5,887.5859 A0,0 0 0 0 475.5,887.5859 L475.5,805.8281 L465.5,795.8281 L200.5,795.8281 A0,0 0 0 0 200.5,795.8281 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><path d="M465.5,795.8281 L465.5,805.8281 L475.5,805.8281 L465.5,795.8281 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="197" x="206.5" y="814.3232">Future Corrosion Allowance (FCA)</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="112" x="206.5" y="830.6748">Recommendations:</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="238" x="222.5" y="847.0264">Repairs and remediations inline with FCA</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="90" x="222.5" y="863.3779">Next inspection</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="180" x="222.5" y="879.7295">Future monitoring requirements</text></g><!--MD5=[7b1dc7405ab5d93b9bcd1e6a9d3bd4a1]
+link start to Review Design Data--><g id="link_start_Review Design Data"><path d="M124,111.6181 C124,129.5081 124,169.1881 124,194.0881 " fill="none" id="start-to-Review Design Data" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="124,199.1681,128,190.1681,124,194.1681,120,190.1681,124,199.1681" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[985b27011948e94d991b5aa7876d8910]
+link Review Design Data to Review Measured Wall Thickness Data--><g id="link_Review Design Data_Review Measured Wall Thickness Data"><path d="M124,234.4781 C124,259.3381 124,306.2181 124,333.8581 " fill="none" id="Review Design Data-to-Review Measured Wall Thickness Data" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="124,339.1181,128,330.1181,124,334.1181,120,330.1181,124,339.1181" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[0b843f3565d6f537fdfc75cd3e228862]
+link Review Measured Wall Thickness Data to Perform Level 1, Part 5--><g id="link_Review Measured Wall Thickness Data_Perform Level 1, Part 5"><path d="M124,374.5881 C124,391.7781 124,418.5981 124,437.4481 " fill="none" id="Review Measured Wall Thickness Data-to-Perform Level 1, Part 5" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="124,442.5381,128,433.5381,124,437.5381,120,433.5381,124,442.5381" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[4b67d1f34a87f77e2c0c6ea2c86779bc]
+link Perform Level 1, Part 5 to #18--><g id="link_Perform Level 1, Part 5_#18"><path d="M124,478.0181 C124,488.5181 124,502.0181 124,512.4581 " fill="none" id="Perform Level 1, Part 5-to-#18" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="124,517.6181,128,508.6181,124,512.6181,120,508.6181,124,517.6181" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="97" x="6.9937" y="508.4916">FCA not Acceptable</text></g><!--MD5=[794a360545a709097472131947102d13]
+link #18 to Adjust FCA (or) Perform Level 2, Part 5--><g id="link_#18_Adjust FCA (or) Perform Level 2, Part 5"><path d="M124,541.9781 C124,551.3281 124,564.9681 124,576.4781 " fill="none" id="#18-to-Adjust FCA (or) Perform Level 2, Part 5" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="124,581.5981,128,572.5981,124,576.5981,120,572.5981,124,581.5981" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[30417bcc2a548dce85751297f28bc6af]
+link Adjust FCA (or) Perform Level 2, Part 5 to #23--><g id="link_Adjust FCA (or) Perform Level 2, Part 5_#23"><path d="M124,617.0181 C124,627.5181 124,641.0181 124,651.4581 " fill="none" id="Adjust FCA (or) Perform Level 2, Part 5-to-#23" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="124,656.6181,128,647.6181,124,651.6181,120,647.6181,124,656.6181" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="97" x="6.9937" y="647.4916">FCA not Acceptable</text></g><!--MD5=[53db981070bfb09cc2391187c4430eef]
+link #23 to Adjust FCA or Perform Level 3, Part 5--><g id="link_#23_Adjust FCA or Perform Level 3, Part 5"><path d="M124,680.9781 C124,690.3281 124,703.9681 124,715.4781 " fill="none" id="#23-to-Adjust FCA or Perform Level 3, Part 5" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="124,720.5981,128,711.5981,124,715.5981,120,711.5981,124,720.5981" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[56a591619b509d3f8378a66caffa5692]
+link Adjust FCA or Perform Level 3, Part 5 to Analysis Results--><g id="link_Adjust FCA or Perform Level 3, Part 5_Analysis Results"><path d="M124,756.0881 C124,773.2781 124,800.0981 124,818.9481 " fill="none" id="Adjust FCA or Perform Level 3, Part 5-to-Analysis Results" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="124,824.0381,128,815.0381,124,819.0381,120,815.0381,124,824.0381" style="stroke:#181818;stroke-width:1.0;"/></g><rect fill="none" height="25.1563" style="stroke:none;stroke-width:1.0;" width="168" x="150.25" y="893.5859"/><text fill="#888888" font-family="sans-serif" font-size="10" lengthAdjust="spacing" textLength="96" x="186.25" y="903.9668">2022.10.31 at 11:10</text><text fill="#888888" font-family="sans-serif" font-size="10" lengthAdjust="spacing" textLength="168" x="150.25" y="916.5449">ffs_methodology_local_metal.puml</text><!--MD5=[3a796add03d2cd9e8417bc3e5588af52]
+@startuml ffs_methodology_local_metal
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title FFS Methodology \n Corrosion/Erosion \n Localized Metal Loss
+        note right
+            Performed when Average Wall Thickness is closer
+            to minimum wall (tmin) than nominal wall (tnom)
+        end note
+
+(*) - -> Review Design Data
+        note right
+            Pipe data
+            Operating Pressure
+            Design Code, tmin
+                See pyprespipe library
+            FCA (Future Corrosion Allowance)
+            etc.
+        end note
+
+    - -> Review Measured Wall Thickness Data
+        note right
+            Methods used
+            Critical thickness profile
+            Data resolution
+            Data accuracy
+            etc.
+        end note
+
+    - -> Perform Level 1, Part 5
+        if "FCA not Acceptable" then
+        - -> Adjust FCA (or) Perform Level 2, Part 5
+        if "FCA not Acceptable" then
+            - -> Adjust FCA or Perform Level 3, Part 5
+
+    - -> Analysis Results
+        note right
+            Future Corrosion Allowance (FCA)
+            Recommendations: 
+                Repairs and remediations inline with FCA
+                Next inspection
+                Future monitoring requirements
+        end note
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
+
+@startuml ffs_methodology_local_metal
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title FFS Methodology \n Corrosion/Erosion \n Localized Metal Loss
+        note right
+            Performed when Average Wall Thickness is closer
+            to minimum wall (tmin) than nominal wall (tnom)
+        end note
+
+(*) - -> Review Design Data
+        note right
+            Pipe data
+            Operating Pressure
+            Design Code, tmin
+                See pyprespipe library
+            FCA (Future Corrosion Allowance)
+            etc.
+        end note
+
+    - -> Review Measured Wall Thickness Data
+        note right
+            Methods used
+            Critical thickness profile
+            Data resolution
+            Data accuracy
+            etc.
+        end note
+
+    - -> Perform Level 1, Part 5
+        if "FCA not Acceptable" then
+        - -> Adjust FCA (or) Perform Level 2, Part 5
+        if "FCA not Acceptable" then
+            - -> Adjust FCA or Perform Level 3, Part 5
+
+    - -> Analysis Results
+        note right
+            Future Corrosion Allowance (FCA)
+            Recommendations: 
+                Repairs and remediations inline with FCA
+                Next inspection
+                Future monitoring requirements
+        end note
+
+footer
+2022.10.31 at 11:10
+ffs_methodology_local_metal.puml
+end footer
+
+@enduml
+
+PlantUML version 1.2022.8(Sun Sep 25 04:00:33 CDT 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

@@ -20,12 +20,12 @@ class FatigueAnalysis:
             elif cfg["inputs"]["software"] == "abaqus":
                 raise NotImplementedError
         if cfg["inputs"]["calculation_type"] == "damage":
-            if cfg['inputs']['stress_input'] == 'timetrace':
-                cfg = self.damage_from_timetrace(cfg) 
-            elif cfg['inputs']['stress_input'] == 'sn':
-                cfg = self.damage_from_sn_data(cfg) 
+            if cfg["inputs"]["stress_input"] == "timetrace":
+                cfg = self.damage_from_timetrace(cfg)
+            elif cfg["inputs"]["stress_input"] == "sn":
+                cfg = self.damage_from_sn_data(cfg)
             else:
-                raise Exception("Only SN and timetrace data inputs are supported")   
+                raise Exception("Only SN and timetrace data inputs are supported")
 
         return cfg
 
@@ -33,10 +33,10 @@ class FatigueAnalysis:
         fatigue_curve = self.get_fatigue_curve(cfg)
         damage = 0
         for sn in cfg["inputs"]["SN"]:
-            s = sn['s']
-            n = sn['n_cycles']
+            s = sn["s"]
+            n = sn["n_cycles"]
             N = self.get_cycles_to_failure(fatigue_curve, s)
-            damage += n/N
+            damage += n / N
 
         cfg.update({"fatigue_analysis": {"damage": damage}})
 
@@ -58,18 +58,34 @@ class FatigueAnalysis:
         damage = 0
         cfg_timetraces = cfg["inputs"]["timetraces"].copy()
         for timetrace in cfg_timetraces:
-            s_trace = timetrace['s_trace']
-            n_traces = timetrace['n_traces']
+            s_trace = timetrace["s_trace"]
+            n_traces = timetrace["n_traces"]
             rainflow_df, rainflow_dict = self.get_rainflow_from_timetrace(s_trace)
-            timetrace.update({'rainflow': rainflow_dict})
+            timetrace.update({"rainflow": rainflow_dict})
 
-            damage_timetrace = self.damage_from_rainflow_cycles(rainflow_df, fatigue_curve)
+            damage_timetrace = self.damage_from_rainflow_cycles(
+                rainflow_df, fatigue_curve
+            )
             damage_n_timetraces = damage_timetrace * n_traces
-            timetrace.update({'damage': {'timetrace': float(damage_timetrace), 'n_timetraces': float(damage_n_timetraces)}})
+            timetrace.update(
+                {
+                    "damage": {
+                        "timetrace": float(damage_timetrace),
+                        "n_timetraces": float(damage_n_timetraces),
+                    }
+                }
+            )
 
             damage += damage_n_timetraces
 
-        cfg.update({"fatigue_analysis": {"total_damage": float(damage), "timetraces": cfg_timetraces.copy()}})
+        cfg.update(
+            {
+                "fatigue_analysis": {
+                    "total_damage": float(damage),
+                    "timetraces": cfg_timetraces.copy(),
+                }
+            }
+        )
 
         return cfg
 
@@ -91,11 +107,8 @@ class FatigueAnalysis:
         if cfg["fatigue_data"]["csv"]:
             fatigue_data_file = cfg["fatigue_data"]["io"]
 
-        library_name = 'digitalmodel'
-        library_cfg = {
-            'filename': fatigue_data_file,
-            'library_name': library_name
-        }
+        library_name = "digitalmodel"
+        library_cfg = {"filename": fatigue_data_file, "library_name": library_name}
 
         fatigue_data_file = wwy.get_library_filename(library_cfg)
         fatigue_curve_data = pd.read_csv(fatigue_data_file)
@@ -107,7 +120,7 @@ class FatigueAnalysis:
             "basename": "fatigue_analysis",
             "inputs": {
                 "calculation_type": "damage",
-                "stress_input": 'sn',
+                "stress_input": "sn",
                 "SN": [{"s": 2000000, "n_cycles": 1, "thickness": 15}],
                 "fatigue_curve": "DnV 2005 C2 Seawater CP",
             },
@@ -124,10 +137,10 @@ class FatigueAnalysis:
             "basename": "fatigue_analysis",
             "inputs": {
                 "calculation_type": "damage",
-                "stress_input": 'timetrace',
-                "timetraces":[{
-                        's_trace':
-                        [
+                "stress_input": "timetrace",
+                "timetraces": [
+                    {
+                        "s_trace": [
                             -7565518.75,
                             23879775.0,
                             -7565518.75,
@@ -135,9 +148,10 @@ class FatigueAnalysis:
                             -7565518.75,
                             23879775.0,
                         ],
-                        'n_traces': 1,
-                        'thickness': 15,
-                    }],
+                        "n_traces": 1,
+                        "thickness": 15,
+                    }
+                ],
                 "fatigue_curve": "DnV 2005 C2 Seawater CP",
             },
             "fatigue_data": {

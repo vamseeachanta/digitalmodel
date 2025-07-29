@@ -2,8 +2,8 @@ from digitalmodel.common.ship_fatigue_analysis import ShipFatigueAnalysis
 
 sfa = ShipFatigueAnalysis()
 
-class ShipDesign():
 
+class ShipDesign:
     def __init__(self):
         pass
 

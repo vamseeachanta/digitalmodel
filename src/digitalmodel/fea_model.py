@@ -12,4 +12,3 @@ def fea_model(cfg):
     # fea.prepare_visualizations()
 
     return cfg
-
