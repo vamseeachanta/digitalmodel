@@ -1,0 +1,32 @@
+@startwbs work_etiquette
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Engineering \n Work Etiquette
+
+* Engineering 
+
+** Data | Github
+*** rep: digitalmodel \ndes:engineering tools \ndir: docs, src(or code)
+*** rep: assetutilities \ndes: general tools \ndir: docs, src(or code)
+*** rep: company-repo \ndes:Company/project data \ndir: project \ntypically private repo
+
+** rep-src  | Working
+*** cod: create new branch \n:follow good practices
+*** use: start with test \ndes: ensure test works \n project example
+
+** rep-proj : Working
+*** git: [git guidance in assetutilites]
+*** info: General programming \nconcepts in assetutilites
+*** info: General engineering \nconcepts in digitalmodel
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@endwbs

@@ -1,0 +1,215 @@
+meta:
+  library: digitalmodel
+  basename: orcaflex
+parameters:
+  VarNames:
+    Line:
+    - End force
+    - End moment
+    - End Ex force
+    - End Ey force
+    - End Ez force
+    - End Ex moment
+    - End Ey moment
+    - End Ez moment
+    - End Lx force
+    - End Ly force
+    - End Lz force
+    - End Lx moment
+    - End Ly moment
+    - End Lz moment
+    - End GX force
+    - End GY force
+    - End GZ force
+    - End GX moment
+    - End GY moment
+    - End GZ moment
+    - X
+    - Y
+    - Z
+    - Dynamic x
+    - Dynamic y
+    - Dynamic z
+    - Layback
+    - Effective tension
+    - Wall tension
+    - Normalised tension
+    - Sidewall pressure
+    - Bend moment
+    - x bend moment
+    - y bend moment
+    - Bend moment component
+    - In plane bend moment
+    - Out of plane bend moment
+    - Curvature
+    - Normalised curvature
+    - x curvature
+    - y curvature
+    - Curvature component
+    - In plane curvature
+    - Out of plane curvature
+    - Bend radius
+    - x bend radius
+    - y bend radius
+    - Bend radius component
+    - In plane bend radius
+    - Out of plane bend radius
+    - Shear force
+    - x shear force
+    - y shear force
+    - Shear force component
+    - In plane shear force
+    - Out of plane shear force
+    - Arc length
+    - Expansion factor
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+  unit:
+    pretension: kN
+    coordinates: m
+    length: m
+orcaflex:
+  postprocess:
+    visualization:
+      flag: false
+    summary:
+      flag: false
+      statistics:
+        Minimum: false
+        Maximum: false
+        Mean: false
+        StdDev: false
+      min: true
+      max: true
+      mean: true
+    linked_statistics:
+      flag: false
+      min: true
+      max: true
+      mean: true
+    RangeGraph:
+      flag: false
+    RAOs:
+      flag: false
+    time_series:
+      flag: false
+      histogram: true
+      summation: true
+    cummulative_histograms:
+      flag: false
+    rain_flow:
+      bins: 10
+      range:
+      - 0
+      - 10
+  preprocess:
+    check_yml:
+      flag: false
+      save_dat: true
+  analysis:
+    mooring:
+      flag: true
+      calculation: pretension
+visualization_settings:
+  label: ld_6_7_8
+  individual: true
+  combined: false
+  hide_items: []
+  add_items:
+  - Umbilical
+  - uta2-deep
+  views:
+  - Elevation
+  - Plan
+  tdp_line: Umbilical
+  viewparams:
+    elevation:
+      RelativeToObject: uth2-deep
+      ViewCentre:
+      - -17
+      - 0
+      - 12
+      ViewSize: 120
+      DrawViewAxes: false
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      ViewAzimuth: 270
+      ViewElevation: 0
+      ViewGamma: 71.89
+      Height: 1425
+      Width: 892
+    plan:
+      RelativeToObject: uth2-deep
+      ViewCentre:
+      - 10
+      - 0
+      - 8
+      ViewSize: 80
+      DrawViewAxes: false
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      ViewAzimuth: 270
+      ViewElevation: 90
+      ViewGamma: 0
+      Height: 1425
+      Width: 892
+RangeGraph_settings:
+  add_effective_tension_to_cfg: false
+time_series_settings:
+  histogram: true
+  summation: true
+  groups: []
+orcaflex_analysis:
+  mooring:
+    groups:
+    - label: development
+      target_pretension:
+        iterations: 10
+        tolerance: 10
+        type: csv
+        filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_pretension.csv
+      target_fender_force:
+        iterations: 10
+        resultant_force: 138.5
+        tolerance: 5
+        type: csv
+        filename: pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_fender_force.csv
+        contact_vessel: LNGC
+file_management:
+  flag: true
+  input_directory: pretension/fsts_lngc/01_qa/dof_none
+  output_directory: ~
+  filename:
+    extension:
+    - yml
+    - sim
+    pattern: fsts_l095_mwl_125km3_l000_pb_pretension
+    filters:
+      contains: []
+      not_contains:
+      - includefile
+      - iteration_01
+  input_files:
+    yml:
+    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\dof_none\fsts_l095_mwl_125km3_l000_pb_pretension.yml
+    sim:
+    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\dof_none\fsts_l095_mwl_125km3_l000_pb_pretension.sim
+Analysis:
+  basename: orcaflex
+  analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings
+  file_name: ofx_mooring_analysis
+  file_name_for_overwrite: ofx_mooring_analysis
+  log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\logs
+  start_time: 2025-05-14 06:22:10.557914
+  cfg_array_file_names: ~
+  DefaultInputFile: ~
+  CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\ofx_mooring_analysis.yml
+  result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results
+  result_data_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results\Data
+  result_plot_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results\Plot
+  fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results
+  file_management_input_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\01_qa\dof_none
+  file_management_output_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_analysis\moorings\results

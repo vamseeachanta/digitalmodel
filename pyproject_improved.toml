@@ -1,0 +1,155 @@
+[project]
+name = "digitalmodel"
+version = "0.0.9"
+description = "engineering asset digital model(s) for life cycle analysis"
+authors = [{ name = "Vamsee Achanta", email = "vamsee.achanta@aceengineer.com" }]
+license = {text = "MIT"}
+readme = "README.md"
+keywords = ["finite element", "asset representation", "structural", "physical", "engineering", "animation", "lifecycle", "lifecycle analysis", "single source of truth", "digital model", "digital twin"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3"
+]
+
+requires-python = ">=3.8"
+dependencies = [
+    "assetutilities>=0.0.7",
+    "beautifulsoup4>=4.13.0,<5.0.0",
+    "dash>=3.1.0,<4.0.0",
+    "deepdiff>=8.0.0,<9.0.0",
+    "python-docx>=0.8.0",  # Note: 'docx' package name corrected
+    "imgkit>=1.2.0,<2.0.0",
+    "kaleido>=0.2.0",
+    "loguru>=0.7.0,<1.0.0",
+    "matplotlib>=3.7.0,<4.0.0",
+    "openpyxl>=3.1.0,<4.0.0",
+    "pandas>=2.0.0,<3.0.0",
+    "plotly>=5.0.0,<6.0.0",
+    "pydantic>=2.0.0,<3.0.0",
+    "pypdf2>=3.0.0,<4.0.0",
+    "pyyaml>=6.0.0,<7.0.0",
+    "rainflow>=3.2.0,<4.0.0",
+    "requests>=2.31.0,<3.0.0",
+    "ruamel.yaml>=0.18.0,<1.0.0",
+    "scipy>=1.10.0,<2.0.0",
+    "scrapy>=2.11.0,<3.0.0",
+    "sympy>=1.12.0,<2.0.0",
+    "tabula-py>=2.8.0",  # Note: 'tabula' package name corrected
+    "tabulate>=0.9.0,<1.0.0",
+    "webcolors>=1.13,<2.0",
+    "xlrd>=2.0.0,<3.0.0",
+    "xlsxwriter>=3.1.0,<4.0.0",
+    "xmltodict>=0.13.0,<1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.0.0,<25.0.0",
+    "bumpver>=2023.1129",
+    "isort>=5.13.0,<6.0.0",
+    "pytest>=8.0.0,<9.0.0",
+    "ruff>=0.3.0,<1.0.0",
+]
+test = [
+    "pytest>=8.0.0,<9.0.0",
+    "pytest-cov>=4.1.0,<5.0.0",
+    "pytest-mock>=3.12.0,<4.0.0",
+]
+docs = [
+    "sphinx>=7.0.0,<8.0.0",
+    "sphinx-rtd-theme>=2.0.0,<3.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/vamseeachanta/digitalmodel"
+Repository = "https://github.com/vamseeachanta/digitalmodel"
+Documentation = "https://github.com/vamseeachanta/digitalmodel/blob/master/README.md"
+"Bug Tracker" = "https://github.com/vamseeachanta/digitalmodel/issues"
+
+[project.scripts]
+digital_model = "digitalmodel.__main__:main"
+
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.bumpver]
+current_version = "0.0.9"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message = "bump version {old_version} -> {new_version}"
+commit = true
+tag = true
+push = false
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    'current_version = "{version}"',
+    'version = "{version}"',
+]
+"src/digitalmodel/__init__.py" = ["{version}"]
+"src/digitalmodel/__main__.py" = ["- digitalmodel v{version}"]
+
+[tool.isort]
+profile = "black"
+import_heading_stdlib = "Standard library imports"
+import_heading_thirdparty = "Third party imports"
+import_heading_firstparty = "Reader imports"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+line_length = 88
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311']
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --cov=digitalmodel"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+namespace_packages = true
+exclude = [
+    "tests/",
+    "build/",
+    "dist/",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "pandas.*",
+    "plotly.*",
+    "scipy.*",
+]
+ignore_missing_imports = true

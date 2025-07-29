@@ -1,0 +1,345 @@
+&id004 !!python/object/new:pyintegrity.common.data.AttributeDict
+dictitems:
+  Analysis:
+    CustomInputFile: test_data/fracture_mechanics/fracture_mechanics_py_axial_single_process.yml
+    DefaultInputFile: null
+    analysis_root_folder: test_data/fracture_mechanics
+    basename: fracture_mechanics
+    cfg_array_file_names: null
+    file_name: app_fracture_mechanics_fracture_mechanics_py_axial_single_process
+    file_name_for_overwrite: app_fracture_mechanics_fracture_mechanics_py_axial_single_process
+    log_folder: test_data/fracture_mechanics\logs\
+    result_folder: test_data/fracture_mechanics\results\
+    start_time: 2023-10-17 13:36:16.994666
+  Inner_Pipe: null
+  Material:
+    Steel:
+      E: 30000000.0
+      G: 11538461.538461538
+      Grades:
+        API 5L X80:
+          Reference: Assumed
+          SMUS: 95000
+          SMYS: 80000
+      Poissionsratio: 0.3
+      Rho: 0.2817929
+      ThermalExpansionCoefficient: 6.5e-06
+      cov:
+        E: 0.05
+        SMUS: 0.05
+        SMYS: 0.07
+  Outer_Pipe:
+    Geometry: &id001
+      Corrosion_Allowance: 0.0
+      Design_WT: 1.0
+      Nominal_ID: 19.0
+      Nominal_OD: 21
+    Manufacturing:
+      Coupling Mass Ratio: 0.1
+    Material:
+      Buoyancy: null
+      Insulation: null
+      Material: Steel
+      Material_Grade: API 5L X80
+      WeldFactor:
+        Seamless: 1.0
+    section_properties: &id002
+      pipe: &id003
+        A: 62.83185307179588
+        Ai: 283.5287369864788
+        Ao: 346.3605900582747
+        E: 30000000.0
+        EA: 1884955592.1538763
+        EI: 94483399056.71301
+        GJ: 72679537735.93307
+        I: 3149.446635223767
+        Ii: 6397.117128257429
+        Io: 9546.563763481196
+        J: 6298.893270447534
+        Ji: 12794.234256514857
+        Jo: 19093.12752696239
+        MassPerUnitLength: 17.70557008947527
+        PoissonRatio: 0.3
+        SMUS: 95000
+        SMYS: 80000
+        geometry: *id001
+  basename: fracture_mechanics
+  default:
+    Analysis:
+      fracture_mechanics:
+        flaw_growth: true
+        flaw_limits: true
+    config:
+      overwrite:
+        output: true
+    fracture_resistance:
+      option_1: true
+      option_2: false
+      option_3: false
+    geometry:
+      curved_shells: false
+      cylinder: false
+      deep_notched_plates: false
+      plates: false
+      round_bars_and_bolts: false
+      sphere: false
+      thin_pipe: true
+      tubular_joints: false
+      welded_joints: false
+    log_level: DEBUG
+    settings:
+      a_array:
+        end: 25
+        start: 0.5
+        step: 0.1
+      approximate_initial_flaw_properties_columns:
+      - component
+      - service_life
+      - flaw_geometry
+      - flaw_orientation
+      - flaw_location
+      - flaw_theta
+      - initial_flaw_depth
+      - initial_flaw_length
+      - final_flaw_depth
+      - final_flaw_length
+      - K_r
+      - L_r
+      - K_r_allowable
+      c_array:
+      - 5
+      - 20
+      - 100
+      - 200
+      ctod: 0.254
+      factor_of_safety: 3
+      fad_properties_columns:
+      - flaw_geometry
+      - flaw_orientation
+      - flaw_location
+      - flaw_theta
+      - flaw_depth
+      - flaw_length
+      - K_r
+      - L_r
+      - K_r_allowable
+      flaw_growth_properties_columns:
+      - component
+      - service_life
+      - flaw_geometry
+      - flaw_orientation
+      - flaw_location
+      - flaw_theta
+      - final_flaw_depth
+      - final_flaw_length
+      - K_r
+      - L_r
+      - K_r_allowable
+      location_array:
+      - external_surface
+      multi_process: false
+      orientation_array:
+      - axial
+      save_detailed_results: false
+      scf_bending: 1.1
+      service_life:
+        solution_step: 0.1
+        values:
+        - 5
+      stress_intensity_factor_solution: table
+      theta_array:
+      - 90
+      yield_discontinuity: false
+    stress_intensity_factor_solution_tables:
+      from_xlsx:
+      - io: C:\Users\ss7a2365\Documents\github\pyintegrity\src\pyintegrity\tests/test_data/fracture_mechanics/bs7910_stress_intensity_solutions.xlsx
+        label: bs7910_stress_intensity_tables
+    units:
+      a: mm
+      c: mm
+      ctod: mm
+      stress: psi
+      theta: degrees
+  equivalent_pipe:
+    section_properties: *id002
+  flaw:
+    dimensions:
+      a: !!python/object/apply:numpy.core.multiarray.scalar
+      - !!python/object/apply:numpy.dtype
+        args:
+        - f8
+        - false
+        - true
+        state: !!python/tuple
+        - 3
+        - <
+        - null
+        - null
+        - null
+        - -1
+        - -1
+        - 0
+      - !!binary |
+        vYrqw2CnH0A=
+      c: 200
+      p: 1
+    geometry: thin_pipe
+    location: internal_surface
+    orientation: axial
+    theta: 90
+  loading:
+    histograms:
+      from_xlsx:
+      - bending_factor: 1.0
+        column_to_analyze: null
+        columns: null
+        component_index:
+        - 10
+        component_label:
+        - Buoyancy Jt. at Bottom
+        index_col: null
+        io: C:\Users\ss7a2365\Documents\github\pyintegrity\src\pyintegrity\tests\test_data\histograms\2500ft_WT0750_064pcf_combined_histograms.xlsx
+        label: combined_histograms
+        replace: null
+        sheet_name: combined_fatigue
+        skipfooter: 0
+        skiprows: 0
+    primary_membrane_stress:
+      bending_factor: 0.5
+      membrane_factor: 0.5
+      value: 64000
+    secondary_membrane_stress:
+      bending_factor: 0
+      membrane_factor: 1
+      stress_to_yield:
+        axial: 0.3
+        circumferential: 0.2
+  paris_curve:
+    A_1: 4.8e-18
+    A_2: 6.0e-12
+    label: Steel In Marine Environment With CP at -850 mV (Ag/AgCl)
+    m_1: 5.1
+    m_2: 2.67
+    transfer_delta_K: 323
+  pipe_properties: *id003
+  plot_settings:
+  - file_name: test_data/fracture_mechanics\results\app_fracture_mechanics_fracture_mechanics_py_axial_single_process_FAD.png
+    file_name_extension: FAD
+    grid: true
+    label:
+    - Option 1
+    legend: true
+    legend_location: outside
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Fatigue Assessment Diagram
+    text_fields:
+    - color: g
+      text: Acceptable
+      x: 0.4
+      y: 0.4
+    - color: r
+      text: Unacceptable
+      x: 0.8
+      y: 1.0
+    title: BS 7910, Option 1
+    x:
+    - L_r
+    xlabel: Lr (Load Ratio)
+    xlim:
+    - 0
+    - 1.6
+    xscale:
+      log: false
+    xticklabels: null
+    y:
+    - K_r
+    ylabel: Kr (Fracture Ratio)
+    ylim:
+    - 0
+    - 1.6
+  - file_name: test_data/fracture_mechanics\results\app_fracture_mechanics_fracture_mechanics_py_axial_single_process_unstable_fracture_limits.png
+    file_name_extension: unstable_fracture_limits
+    grid: true
+    label:
+    - external_surface flaw, axial
+    legend: true
+    legend_location: best
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Unstable Fracture Limits
+    title: BS 7910, Fracture Load at End of Life = 0.8 Yield
+    x:
+    - flaw_length
+    xlabel: Flaw Length, 2c (mm)
+    xlim: null
+    xscale:
+      log: false
+    xticklabels: null
+    y:
+    - flaw_depth
+    ylabel: Flaw Depth, a (mm)
+    ylim:
+    - 0
+    - 16
+  - file_name_extension: minimum_initial_flaw
+    grid: true
+    label:
+    - Option 1
+    legend: true
+    legend_location: best
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Minimum Allowable Initial Flaw
+    title: BS 7910, {}
+    x:
+    - final_flaw_length
+    xlabel: Flaw Length, 2c (mm)
+    xlim: null
+    xscale:
+      log: false
+    xticklabels: null
+    y:
+    - final_flaw_depth
+    ylabel: Flaw Depth, a (mm)
+    ylim:
+    - 0
+    - 16
+  - file_name_extension: flaw_growth_rate
+    grid: true
+    label:
+    - Option 1
+    legend: true
+    legend_location: best
+    marker: null
+    orientation: portrait
+    plt_kind: line
+    size: half_letter
+    suptitle: Flaw Growth Profiles
+    title: BS 7910, {}, {}, {}
+    x:
+    - service_life
+    xlabel: Service Life (years)
+    xlim: null
+    xscale:
+      log: false
+    xticklabels: null
+    y:
+    - final_flaw_depth
+    ylabel: Flaw Depth, a (mm)
+    ylim:
+    - 0
+    - 25
+  weld:
+    Steel:
+      cov:
+        E: 0.05
+        SMUS: 0.1
+        SMYS: 0.1
+state: *id004

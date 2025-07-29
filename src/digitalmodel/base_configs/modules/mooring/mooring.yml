@@ -1,0 +1,11 @@
+meta:
+  library: digitalmodel
+  basename: mooring
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  cfg_sensitivities: False
+

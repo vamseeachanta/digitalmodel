@@ -1,0 +1,68 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File (uv env)",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "timeout": 300
+        }
+    ]
+}
+
+
+// {
+//     // Use IntelliSense to learn about possible attributes.
+//     // Hover to view descriptions of existing attributes.
+//     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+//     "version": "0.2.0",
+//     "configurations": [
+//     {
+//         "type": "attachlisp",
+//         "request": "attach",
+//         "name": "AutoLISP Debug: Attach",
+//         "attributes": {
+//             "//": "This configuration has been deprecated. Instead use the Debug: Attach Process setting of the AutoCAD AutoLISP Extension."
+//         }
+//     },
+//         {
+//             "name": "digitalModel-orca-lic-test",
+//             "type": "debugpy",
+//             "request": "launch",
+//             "module": "digitalmodel",
+//             "args": [
+//                 "tests/modules/orcaflex/orcaflex_post_process/test_orcaflex_license.py"
+//             ],
+//             "cwd": "${workspaceFolder}",
+//             "console": "integratedTerminal",
+//             "justMyCode": true
+//         },
+//         {
+//             "name": "Python: Current File",
+//             "type": "python",
+//             "request": "launch",
+//             "program": "${file}",
+//             "console": "integratedTerminal",
+//             "justMyCode": true,
+//             "timeout": 30
+//         },
+//         {
+//             "name": "exec-test-orca-flex",
+//             "type": "python",
+//             "request": "launch",
+//             "program": "tests/modules/orcaflex/orcaflex_post_process/test_orcaflex.py",
+//             "args": [],
+//             "cwd": "${workspaceFolder}",
+//             "console": "integratedTerminal",
+//             "env": {
+//                 "PYTHONPATH": "${workspaceFolder}"
+//             }
+//         }
+//     ]
+// }

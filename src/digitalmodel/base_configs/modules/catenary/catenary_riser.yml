@@ -1,0 +1,442 @@
+basename: catenary_riser
+
+default:
+  Constants:
+    g: 9.81
+  units:
+    verticalDistance: m
+    declinationAngle: deg with vertical
+    Temperature: deg F
+    Pressure: psi
+    EffectiveTension: kN
+    BendingMoment: kNm
+    YieldStrength: psi
+    E: psi
+    NominalID: inch
+    NominalOD: inch
+    NominalWT: inch
+    Rho: kg/m3
+    MassPerUnitLength: kg/m
+    WeightPerUnitLength: N/m
+    SoilStiffness: kN/m/m
+    BuoyancyCoverage: Percentage
+  log_level: DEBUG
+  Analysis:
+    SCR: False
+    Jumper: False
+    SLWR: True
+    Extreme: True
+    Fatigue: False
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
+
+Analysis:
+  fe_folder: NULL
+
+simpleCatenaryDefinition:
+  axialLineForce: NULL
+  verticalDistance: 1874.64
+  declinationAngle: 8
+  horizontalDistanceHangofftoTDP: 
+    value: NULL
+    range: [50, 100, 150, 200, 250, 300]
+    rangeresult: {}
+   
+
+LazyWaveCatenaryDefinition:
+  VerticalDistance: 1874.64
+  SagBendElevationAboveSeabed: 731.52
+  HogBendAboveSeabed: 1097.28
+  declinationAngle: 8
+  lay_azimuth_to_vessel: 90
+
+commonDefinition:
+  UniformBuoyancy:
+    Thickness: NULL
+    BuoyancyFactor: 2
+  DiscreteBuoyancy:
+    Thickness: NULL
+    BuoyancyFactor: NULL
+    BuoyancyCoverage: 100
+  Spacing: 10
+  TaperJoint:
+    L: 3.66
+    ThickendThickness: 2.5
+  HangoffBelowMeanSeaLevel: 0
+  Hangoff:
+    above_keel: 11.21
+    from_midship: 80
+    from_centerline: 32
+  LengthBeforeHangoff: 9.8
+  TDPToAnchor: 
+    SCR: 500
+    SLWR: 1500
+  lay_azimuth_to_vessel: 90
+
+geometry:
+  waterDepth: 1347.2
+  NominalID: NULL
+  NominalOD: 8.625
+  DesignWT: 1.000
+  Material: Steel
+  ExternalCoating:
+    Thickness: 2.953
+  Strakes:
+    BaseThickness: 0.5906
+    Area: NULL
+  MarineGrowth:
+    Thickness: NULL
+
+Material:
+  Steel:
+    Rho: 7850
+    PoissionsRatio: 0.30
+    SMYS: 65300
+    SMUS: 77600
+    E: 30000000.00
+    G: 11538461.54
+  Fluid:
+    Rho: 400.4616
+  Reference_Fluid:
+    Rho: 400.4616
+  SeaWater:
+    Rho: 1025
+  ExternalCoating:
+    Rho: 800.9
+  Buoyancy:
+    Rho: 650
+  Strakes:
+    MassPerUnitLength: 21.5787
+    WeightPerUnitLength: -42.3375
+    Density: NULL
+  MarineGrowth:
+    Density: NULL
+
+plotSettings:
+  pltXLabel: "Thickness (inch)"
+  pltYLabel: "Pressure (psi)"
+  pltSupTitle: "Design Pressure With Thickness"
+  pltTitle: API STD 2RD, X-65, {2} of {0} inch, Corrosion Allowance {1} inch
+  label: Design Pressure Limit
+  plotFileName: OD_{0}
+  yLim:
+    - 0
+    - 12500
+
+FEASettings:
+  AnchorAdjustment:
+    SLWR: 25
+    SCR: 10
+  EndOrientation:
+    SLWR:
+      A: { Azimuth: calculated, Declination: calculated, Gamma: 0 }
+      B: { Azimuth: calculated, Declination: 90, Gamma: 0 }
+    SCR:
+      A: { Azimuth: calculated, Declination: calculated, Gamma: 0 }
+      B: { Azimuth: calculated, Declination: 90, Gamma: 0 }
+  Seabed:
+    FrictionCoefficient:
+      Normal: 0.6
+      Axial: 0.45
+    Stiffness:
+      Extreme: 10000
+      Fatigue: 1000
+  DesignPressure:
+    Surface: 750
+    TDP: NULL
+  Hydrodynamic:
+    Extreme:
+      MainPipe:
+        Ca: [1.5, "~", 0]
+        Cd: [1.5, "~", 0.008]
+      BuoyPipe:
+        Ca: [1, "~", 0.001]
+        Cd: [1, "~", 0.001]
+      BuoyPipeStartEnd:
+        Ca: [1, "~", 0.053570901]
+        Cd: [1, "~", 0.080356352]
+    Fatigue:
+      MainPipe:
+        Ca: [1.5, "~", 0]
+        Cd: [1.35, "~", 0.008]
+      BuoyPipe:
+        Ca: [1, "~", 0.001]
+        Cd: [0.9, "~", 0.001]
+      BuoyPipeStartEnd:
+        Ca: [1, "~", 0.053570901]
+        Cd: [1, "~", 0.080356352]
+  CorrosionAllowance:
+    Extreme: 0.236
+    Fatigue: 0.118
+  Damping:
+    Extreme:
+      Name: SteelDamping
+      Mode: Stiffness Proportional
+      DampingRatio: 0.5
+      Period1: "~"
+      ApplyToGeometricStiffness: No
+    Fatigue:
+      Name: SteelDamping
+      Mode: Stiffness Proportional
+      DampingRatio: 0.5
+      Period1: "~"
+      ApplyToGeometricStiffness: No
+  Mesh:
+    Top:
+      L: 25
+      Size: 0.5
+    Buoyancy:
+      L: NULL
+      Size: 2
+    BeforeTDP:
+      L: 250
+      Size: 1
+    AfterTDP:
+      L: 250
+      Size: 1
+  Stage:
+    Extreme:
+      Duration:
+        - 8
+        - 120
+      TargetLogSampleInterval: 0.3
+      ImplicitConstantTimeStep: 0.02
+    Fatigue:
+      Duration:
+        - 8
+        - 600
+      TargetLogSampleInterval: 0.3
+      ImplicitConstantTimeStep: 0.2
+  FlexJointStiffness:
+    ConnectionLabel: FJProfile
+    Extreme:
+      - [0.00, 0.00]
+      - [0.01, 7.36]
+      - [0.02, 11.40]
+      - [0.03, 14.72]
+      - [0.04, 17.65]
+      - [0.05, 20.33]
+      - [0.06, 22.81]
+      - [0.07, 25.14]
+      - [0.08, 27.35]
+      - [0.09, 29.46]
+      - [0.10, 31.49]
+      - [0.20, 48.78]
+      - [0.30, 63.01]
+      - [0.40, 75.56]
+      - [0.50, 87.00]
+      - [0.60, 97.61]
+      - [0.70, 107.59]
+      - [0.80, 117.05]
+      - [0.90, 126.10]
+      - [1.00, 134.77]
+      - [1.50, 174.10]
+      - [2.00, 208.77]
+      - [3.00, 269.67]
+      - [4.00, 323.41]
+      - [6.00, 417.78]
+      - [8.00, 501.02]
+      - [10.00, 576.77]
+      - [12.00, 647.16]
+      - [13.25, 688.96]
+      - [22.00, 1143.94]
+    Fatigue:
+      - [0.00, 0.00]
+      - [0.01, 4.28]
+      - [0.02, 6.77]
+      - [0.03, 8.85]
+      - [0.04, 10.70]
+      - [0.05, 12.40]
+      - [0.06, 13.99]
+      - [0.07, 15.49]
+      - [0.08, 16.91]
+      - [0.09, 18.28]
+      - [0.10, 19.60]
+      - [0.20, 30.99]
+      - [0.30, 40.51]
+      - [0.40, 48.99]
+      - [0.50, 56.77]
+      - [0.60, 64.04]
+      - [0.70, 70.91]
+      - [0.80, 77.44]
+      - [0.90, 83.71]
+      - [1.00, 89.75]
+      - [1.50, 117.31]
+      - [2.00, 141.87]
+      - [3.00, 185.49]
+      - [4.00, 224.33]
+      - [6.00, 293.27]
+      - [8.00, 354.54]
+      - [10.00, 410.96]
+      - [11.80, 458.33]
+
+EnvironmentLoad:
+  Extreme:
+    - Wave:
+        SimulationTimeOrigin: 6595.1
+        KinematicStretchingMethod: Vertical Stretching
+        UserSpecifiedRandomWaveSeeds: Yes
+        WaveFrequencySpectrumDiscretisationMethod: Equal energy
+        WaveTrains:
+          - Name: Wave1
+            WaveType: Ochi-Hubble
+            WaveDirection: 270
+            WaveOrigin: [0, 0]
+            WaveTimeOrigin: 0
+            WaveNumberOfSpectralDirections: 1
+            WaveOchiHubbleParameters: Specified
+            WaveHs1: 0.0001
+            Wavefm1: 0.05235602
+            WaveLambda1: 8
+            WaveHs2: 0.0001
+            Wavefm2: 0.0892857143
+            WaveLambda2: 2
+            WaveSeed: 848251
+            WaveNumberOfComponents: 500
+            WaveSpectrumMinRelFrequency: 0.5
+            WaveSpectrumMaxRelFrequency: 10
+            WaveSpectrumMaxComponentFrequencyRange: 0.05
+        WaveKinematicsCutoffDepth: 200
+        WaveCalculationMethod: Instantaneous Position (exact)
+        WaveCalculationTimeInterval: 0
+        WaveCalculationSpatialInterval: 0
+      Vessel:
+        Orientation: [0, 0, 0]
+        Draft: Ballast
+        InitialPosition: [0, 0, -11.89]
+        Offset: None
+        OffsetPercentWD: 6
+      # Current
+      MultipleCurrentDataCanBeDefined: Yes
+      Currents:
+        - Name: Current1
+          CurrentRamp: No
+          HorizontalCurrentFactor: "~"
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 0
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 1, 0]
+            - [100, 1, 0]
+        - Name: Zero_Current
+          CurrentRamp: No
+          HorizontalCurrentFactor: "~"
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 0
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 1, 0]
+            - [100, 1, 0]
+        - Name: Current2
+          CurrentRamp: No
+          HorizontalCurrentFactor: "~"
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 0
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 1, 0]
+            - [100, 1, 0]
+        - Name: N10
+          CurrentRamp: No
+          HorizontalCurrentFactor: "~"
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 90
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 0.9, 0]
+            - [10, 0.9, 0]
+            - [20, 0.81, 0]
+            - [50, 0.9, 0]
+            - [100, 0.738, 0]
+            - [125, 0.702, 0]
+            - [150, 0.603, 0]
+            - [200, 0.54, 0]
+            - [300, 0.711, 0]
+            - [400, 0.522, 0]
+            - [450, 0.459, 0]
+            - [500, 0.423, 0]
+            - [627, 0.477, 0]
+            - [746, 0.343, 0]
+            - [750, 0.2, 0]
+        - Name: NNW100
+          CurrentRamp: No
+          HorizontalCurrentFactor: "~"
+          CurrentMethod: Interpolated
+          RefCurrentSpeed: 1
+          RefCurrentDirection: 180
+          CurrentDepth, CurrentFactor, CurrentRotation:
+            - [0, 2.1, 0]
+            - [10, 2.1, 0]
+            - [20, 1.91, 0]
+            - [50, 1.88, 0]
+            - [100, 1.56, 0]
+            - [125, 1.49, 0]
+            - [150, 1.49, 0]
+            - [200, 1.47, 0]
+            - [300, 0.59, 0]
+            - [310, 0.58, 0]
+            - [400, 0.4, 0]
+            - [442, 0.35, 0]
+            - [500, 0.31, 0]
+            - [746, 0.31, 0]
+            - [750, 0.18, 0]
+      ActiveCurrent: S10
+      CodeChecks:
+        APISTD2RDFd1: 0.8
+        APISTD2RDFd2: 0.8
+        APISTD2RDDelta: 0.01
+        APISTD2RDAlphaFab: 1
+        APISTD2RDk: 0.45
+
+  Fatigue:
+    - Wave:
+        SimulationTimeOrigin: 0
+        KinematicStretchingMethod: Vertical Stretching
+        UserSpecifiedRandomWaveSeeds: Yes
+        WaveFrequencySpectrumDiscretisationMethod: Equal energy
+        WaveTrains:
+          - Name: Wave1
+            WaveType: JONSWAP
+            WaveDirection: 45
+            WaveHs: 0.5
+            WaveOrigin: [0, 0]
+            WaveTimeOrigin: 0
+            WaveNumberOfSpectralDirections: 1
+            WaveJONSWAPParameters: Partially Specified
+            WaveGamma: 2.2
+            WaveTp: 3.0
+            WaveNumberOfComponents: 300
+            WaveSpectrumMinRelFrequency: 0.5
+            WaveSpectrumMaxRelFrequency: 10
+            WaveSpectrumMaxComponentFrequencyRange: 0.05
+        WaveKinematicsCutoffDepth: 200
+        WaveCalculationMethod: Instantaneous Position (exact)
+        WaveCalculationTimeInterval: 0
+        WaveCalculationSpatialInterval: 0
+      Vessel:
+        Orientation: [0, 0, 0]
+        Draft: Ballast
+        InitialPosition: [0, 0, -11.89]
+        Offset: None
+        OffsetPercentWD: 0
+      MultipleCurrentDataCanBeDefined: No
+      Current:
+        RefCurrentSpeed: 0
+        RefCurrentDirection: 180
+        CurrentDepth, CurrentFactor, CurrentRotation:
+          - [0, 1.0, 0]
+          - [36.5, 1.0, 0]
+          - [64.5, 0.95, 0]
+          - [100, 0.77, -45]
+          - [400, 0.51, -45]
+          - [750, 0.4, -157.5]
+      CodeChecks:
+        {
+          APISTD2RDFd1: 0.8,
+          APISTD2RDFd2: 0.8,
+          APISTD2RDDelta: 0.01,
+          APISTD2RDAlphaFab: 1,
+          APISTD2RDk: 0.45,
+        }
