@@ -1,392 +1,234 @@
-&id001 !!python/object/new:assetutilities.common.data.AttributeDict
-state: *id001
-dictitems:
-  basename: orcaflex_post_process
-  default:
-    log_level: INFO
-    config:
-      overwrite:
-        output: true
-  orcaflex:
-    postprocess:
-      visualization:
-        flag: false
-      summary:
-        flag: true
-        min: true
-        max: true
-        mean: true
-      linked_statistics:
-        flag: false
-        min: true
-        max: true
-        mean: true
-      RangeGraph:
-        flag: false
-      RAOs:
-        flag: false
-      time_series:
-        flag: false
-        histogram: true
-        summation: true
-      cummulative_histograms:
-        flag: false
-      rain_flow:
-        bins: 10
-        range:
-        - 0
-        - 10
-    analysis:
-      static: false
-      simulation: false
-      iterate:
-        flag: false
-      save_sim: false
-      save_dat: false
-  visualization_settings:
-    label: ld_6_7_8
-    individual: true
-    combined: false
-    hide_items: []
-    add_items:
-    - Umbilical
-    - uta2-deep
-    views:
-    - Elevation
-    - Plan
-    tdp_line: Umbilical
-    viewparams:
-      elevation:
-        RelativeToObject: uth2-deep
-        ViewCentre:
-        - -17
-        - 0
-        - 12
-        ViewSize: 120
-        DrawViewAxes: false
-        DrawGlobalAxes: false
-        DrawScaleBar: false
-        ViewAzimuth: 270
-        ViewElevation: 0
-        ViewGamma: 71.89
-        Height: 1425
-        Width: 892
-      plan:
-        RelativeToObject: uth2-deep
-        ViewCentre:
-        - 10
-        - 0
-        - 8
-        ViewSize: 80
-        DrawViewAxes: false
-        DrawGlobalAxes: false
-        DrawScaleBar: false
-        ViewAzimuth: 270
-        ViewElevation: 90
-        ViewGamma: 0
-        Height: 1425
-        Width: 892
-  RangeGraph_settings:
-    add_effective_tension_to_cfg: false
-  time_series_settings:
-    histogram: true
-    summation: true
-    groups: []
-  Files:
-    data_source: yml
-    csv_filename: ''
-    input_files:
-      yml:
-      - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
-  summary_settings:
-    groups:
-    - Label: dynamics
-      Columns:
-      - Command: GetData
-        ObjectName: Vessel1
-        Variable:
-        - InitialHeading
-        - -1
-        Label: Vessel_Heading
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WaveHeight
-        - -1
-        Label: Hmax
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WavePeriod
-        - -1
-        Label: WavePeriod
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - WaveDirection
-        - -1
-        Label: WaveDirection
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - RefCurrentSpeed
-        - 0
-        Label: RefCurrentSpeed
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - CurrentFactor
-        - 0
-        Label: CurrentFactor[0]
-      - Command: GetData
-        ObjectName: Environment
-        Variable:
-        - RefCurrentDirection
-        - 0
-        Label: RefCurrentDirection
-      - Command: Range Graph
-        ObjectName: SLWR
-        Statistic_Type: Max
-        SimulationPeriod:
-        - 0.0
-        - 10.0
-        ArcLength:
-        - 0
-        - 50
-        Variable: Effective Tension
-        Label: Eff. Tension
-      - Command: Range Graph
-        ObjectName: SLWR
-        Statistic_Type: Max
-        SimulationPeriod:
-        - 0.0
-        - 10.0
-        ArcLength:
-        - 0
-        - 50
-        Variable: Bend Moment
-        Label: Bend. Moment
-      - Command: Range Graph
-        ObjectName: SLWR
-        Statistic_Type: Max
-        SimulationPeriod:
-        - 0.0
-        - 10.0
-        ArcLength:
-        - 0
-        - 50
-        Variable: API STD 2RD Method 1
-        Label: API M1
-      - Command: Range Graph
-        ObjectName: SLWR
-        Statistic_Type: Max
-        SimulationPeriod:
-        - 0.0
-        - 10.0
-        ArcLength:
-        - 0
-        - 50
-        Variable: Max von Mises Stress
-        Label: vM stress
-      - Command: TimeHistory
-        Statistic_Type: Max
-        ObjectName: SLWR
-        objectExtra:
-        - End B
-        SimulationPeriod:
-        - 0.0
-        - 10.0
-        Variable: Effective Tension
-        Label: TimeHistory_EndB_EffTension_Max
-  file_management:
-    flag: true
-    update_unfinished:
+basename: orcaflex_post_process
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+orcaflex:
+  postprocess:
+    visualization:
       flag: false
-    files:
-      files_in_current_directory:
-        flag: true
-        directory: ~
-        auto_read: true
-    input_files:
-      yml:
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - app_orcaflex_post_process_visualization.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - opp_linked_statistics1.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - opp_summary1.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - opp_summary2_master.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - opp_time_series1.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - opp_time_series2_master.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - orcaflex_license.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - orcaflex_post_process.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - orcaflex_test1.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - SLWR_06OD_GI_TA08_HE200_Post_Process.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - SLWR_06OD_GI_TA08_HE300_Post_Process.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - SLWR_06OD_GI_TA08_Post_Process.yml
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - summary_file_magement_auto_read_false.yml
-      yaml: []
-      dat:
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - orcaflex_test2.dat
-      sim:
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - orcaflex_test1.sim
-      - !!python/object/apply:pathlib.WindowsPath
-        - K:\
-        - github
-        - digitalmodel
-        - tests
-        - modules
-        - orcaflex
-        - orcaflex_post_process
-        - orcaflex_test2.sim
-      txt: []
-  Analysis:
-    basename: orcaflex_post_process
-    analysis_root_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
-    file_name: opp_summary1
-    file_name_for_overwrite: opp_summary1
-    result_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
-    log_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
-    start_time: 2024-12-17 16:50:52.035691
-    cfg_array_file_names: ~
-    DefaultInputFile: ~
-    CustomInputFile: opp_summary1.yml
-    fe_folder: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
-    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
-    - K:\
-    - github
-    - digitalmodel
-    - tests
-    - modules
-    - orcaflex
-    - orcaflex_post_process
-    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
-    - K:\
-    - github
-    - digitalmodel
-    - tests
-    - modules
-    - orcaflex
-    - orcaflex_post_process
-  orcaflex_post_process:
     summary:
-      groups:
-      - data: K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_summary1_dynamics.csv
-        label: dynamics
+      flag: true
+      statistics:
+        Minimum: true
+        Maximum: true
+        Mean: true
+        StdDev: true
+      min: true
+      max: true
+      mean: true
+    linked_statistics:
+      flag: false
+      min: true
+      max: true
+      mean: true
+    RangeGraph:
+      flag: false
+    RAOs:
+      flag: false
+    time_series:
+      flag: false
+      histogram: true
+      summation: true
+    cummulative_histograms:
+      flag: false
+    rain_flow:
+      bins: 10
+      range:
+      - 0
+      - 10
+  analysis:
+    static: false
+    simulation: false
+    iterate:
+      flag: false
+    save_sim: false
+    save_dat: false
+visualization_settings:
+  label: ld_6_7_8
+  individual: true
+  combined: false
+  hide_items: []
+  add_items:
+  - Umbilical
+  - uta2-deep
+  views:
+  - Elevation
+  - Plan
+  tdp_line: Umbilical
+  viewparams:
+    elevation:
+      RelativeToObject: uth2-deep
+      ViewCentre:
+      - -17
+      - 0
+      - 12
+      ViewSize: 120
+      DrawViewAxes: false
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      ViewAzimuth: 270
+      ViewElevation: 0
+      ViewGamma: 71.89
+      Height: 1425
+      Width: 892
+    plan:
+      RelativeToObject: uth2-deep
+      ViewCentre:
+      - 10
+      - 0
+      - 8
+      ViewSize: 80
+      DrawViewAxes: false
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      ViewAzimuth: 270
+      ViewElevation: 90
+      ViewGamma: 0
+      Height: 1425
+      Width: 892
+RangeGraph_settings:
+  add_effective_tension_to_cfg: false
+time_series_settings:
+  histogram: true
+  summation: true
+  groups: []
+file_management:
+  flag: true
+  input_directory: ~
+  output_directory: ~
+  update_unfinished:
+    flag: false
+  filename:
+    extension:
+    - sim
+    pattern: ~
+    filters:
+      contains: []
+      not_contains: []
+  input_files:
+    sim:
+    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test1.sim
+    - k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\orcaflex_test2.sim
+summary_settings:
+  groups:
+  - Label: dynamics
+    Columns:
+    - Command: GetData
+      ObjectName: Vessel1
+      Variable:
+      - InitialHeading
+      - -1
+      Label: Vessel_Heading
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WaveHeight
+      - -1
+      Label: Hmax
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WavePeriod
+      - -1
+      Label: WavePeriod
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - WaveDirection
+      - -1
+      Label: WaveDirection
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - RefCurrentSpeed
+      - 0
+      Label: RefCurrentSpeed
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - CurrentFactor
+      - 0
+      Label: CurrentFactor[0]
+    - Command: GetData
+      ObjectName: Environment
+      Variable:
+      - RefCurrentDirection
+      - 0
+      Label: RefCurrentDirection
+    - Command: Range Graph
+      ObjectName: SLWR
+      Statistic_Type: Max
+      SimulationPeriod:
+      - 0.0
+      - 10.0
+      ArcLength:
+      - 0
+      - 50
+      Variable: Effective Tension
+      Label: Eff. Tension
+    - Command: Range Graph
+      ObjectName: SLWR
+      Statistic_Type: Max
+      SimulationPeriod:
+      - 0.0
+      - 10.0
+      ArcLength:
+      - 0
+      - 50
+      Variable: Bend Moment
+      Label: Bend. Moment
+    - Command: Range Graph
+      ObjectName: SLWR
+      Statistic_Type: Max
+      SimulationPeriod:
+      - 0.0
+      - 10.0
+      ArcLength:
+      - 0
+      - 50
+      Variable: API STD 2RD Method 1
+      Label: API M1
+    - Command: Range Graph
+      ObjectName: SLWR
+      Statistic_Type: Max
+      SimulationPeriod:
+      - 0.0
+      - 10.0
+      ArcLength:
+      - 0
+      - 50
+      Variable: Max von Mises Stress
+      Label: vM stress
+    - Command: TimeHistory
+      Statistic_Type: Max
+      ObjectName: SLWR
+      objectExtra:
+      - End B
+      SimulationPeriod:
+      - 0.0
+      - 10.0
+      Variable: Effective Tension
+      Label: TimeHistory_EndB_EffTension_Max
+Analysis:
+  basename: orcaflex_post_process
+  analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
+  file_name: opp_summary1
+  file_name_for_overwrite: opp_summary1
+  log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\logs
+  start_time: 2025-05-10 14:08:17.743356
+  cfg_array_file_names: ~
+  DefaultInputFile: ~
+  CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\opp_summary1.yml
+  result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
+  result_data_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\Data
+  result_plot_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\Plot
+  fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
+  file_management_input_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process
+  file_management_output_directory: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results
+orcaflex_post_process:
+  summary:
+    groups:
+    - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_summary1_dynamics.csv
+      label: dynamics

@@ -1,8 +1,4 @@
-import pytest
 import deepdiff
-import os
-import sys
-import numpy as np
 
 
 from digitalmodel.common.basic_statistics import BasicStatistics
