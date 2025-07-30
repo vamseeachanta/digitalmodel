@@ -1,0 +1,419 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: orcaflex_post_process
+  default:
+    log_level: INFO
+    config:
+      overwrite:
+        output: true
+  orcaflex:
+    postprocess:
+      visualization:
+        flag: false
+      summary:
+        flag: false
+        min: true
+        max: true
+        mean: true
+      linked_statistics:
+        flag: true
+        min: true
+        max: true
+        mean: true
+      RangeGraph:
+        flag: false
+      RAOs:
+        flag: false
+      time_series:
+        flag: false
+        histogram: true
+        summation: true
+      cummulative_histograms:
+        flag: false
+      rain_flow:
+        bins: 10
+        range:
+        - 0
+        - 10
+    analysis:
+      static: false
+      simulation: false
+      iterate:
+        flag: false
+      save_sim: false
+      save_dat: false
+  visualization_settings:
+    label: ld_6_7_8
+    individual: true
+    combined: false
+    hide_items: []
+    add_items:
+    - Umbilical
+    - uta2-deep
+    views:
+    - Elevation
+    - Plan
+    tdp_line: Umbilical
+    viewparams:
+      elevation:
+        RelativeToObject: uth2-deep
+        ViewCentre:
+        - -17
+        - 0
+        - 12
+        ViewSize: 120
+        DrawViewAxes: false
+        DrawGlobalAxes: false
+        DrawScaleBar: false
+        ViewAzimuth: 270
+        ViewElevation: 0
+        ViewGamma: 71.89
+        Height: 1425
+        Width: 892
+      plan:
+        RelativeToObject: uth2-deep
+        ViewCentre:
+        - 10
+        - 0
+        - 8
+        ViewSize: 80
+        DrawViewAxes: false
+        DrawGlobalAxes: false
+        DrawScaleBar: false
+        ViewAzimuth: 270
+        ViewElevation: 90
+        ViewGamma: 0
+        Height: 1425
+        Width: 892
+  RangeGraph_settings:
+    add_effective_tension_to_cfg: false
+  time_series_settings:
+    histogram: true
+    summation: true
+    groups: []
+  Files:
+    data_source: yml
+    csv_filename: ''
+    input_files:
+      yml:
+      - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
+  linked_statistics_settings_master:
+    AddMinimumToSummary: true
+    AddMaximumToSummary: true
+    AddMeanToSummary: true
+    groups:
+    - Label: strut1_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut1_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut2_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut2_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut3_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut3_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut4_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut4_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut5_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut5_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut6_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut6_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut7_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut7_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut8_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut8_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut8_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+  linked_statistics_settings:
+    groups:
+    - Label: strut1_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut1_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut2_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut2_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut3_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut3_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut4_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut4_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut5_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut5_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut6_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut6_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut7_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut7_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+    - Label: strut8_FST_Ly
+      Columns:
+      - SimulationPeriod:
+        - 0.0
+        - 10.0
+        Variable:
+        - End Ly force
+        - End Lx force
+        - End Lz force
+        ObjectType: line
+        ObjectName: Strut8_Body
+        objectExtra:
+        - End B
+        Label: End Ly
+  file_management:
+    flag: true
+    update_unfinished:
+      flag: false
+    files:
+      files_in_current_directory:
+        flag: false
+        directory: analysis
+        auto_read: true
+    input_files:
+      yml:
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - wlng
+        - analysis
+        - FST2F_FST1F_LWL_000deg.yml
+      yaml: []
+      dat: []
+      sim:
+      - !!python/object/apply:pathlib.WindowsPath
+        - K:\
+        - github
+        - digitalmodel
+        - tests
+        - modules
+        - orcaflex
+        - orcaflex_post_process
+        - wlng
+        - analysis
+        - FST2F_FST1F_LWL_000deg.sim
+      txt: []
+  Analysis:
+    basename: orcaflex_post_process
+    analysis_root_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng
+    file_name: fsts_simultaneous
+    file_name_for_overwrite: fsts_simultaneous
+    result_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results
+    log_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\logs
+    start_time: 2025-02-01 07:35:29.966898
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\fsts_simultaneous.yml
+    fe_folder: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results
+    file_management_input_directory: !!python/object/apply:pathlib.WindowsPath
+    - k:\
+    - github
+    - digitalmodel
+    - tests
+    - modules
+    - orcaflex
+    - orcaflex_post_process
+    - wlng
+    - analysis
+    file_management_output_directory: !!python/object/apply:pathlib.WindowsPath
+    - k:\
+    - github
+    - digitalmodel
+    - tests
+    - modules
+    - orcaflex
+    - orcaflex_post_process
+    - wlng
+  orcaflex_post_process:
+    linked_statistics:
+      groups:
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut1_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut2_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut3_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut4_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut5_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut6_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut7_FST_Ly.csv
+      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\results\fsts_simultaneous_strut8_FST_Ly.csv

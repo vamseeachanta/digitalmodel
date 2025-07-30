@@ -1,0 +1,1910 @@
+basename: orcaflex_post_process
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  analysis:
+    static: False
+    simulation: False
+    iterate:
+      flag: False
+    save_sim: False
+    save_dat: False
+
+  postprocess:
+    visualization:
+      flag: False
+    summary:
+      flag: True
+    RangeGraph:
+      flag: False
+    time_series:
+      flag: False
+    RAOs:
+      flag: False
+    cummulative_histograms:
+      flag: False
+    rain_flow:
+      bins: 10
+      range:
+        - 0
+        - 10
+
+summary_settings_master:
+  AddMinimumToSummary: True
+  AddMaximumToSummary: True
+  AddMeanToSummary: True
+  groups:
+    - Label: inputs
+      Columns:
+        - Command: GetData
+
+    - Label: strut_dynamics
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          objectExtra:
+            - End A
+          Variable: Effective Tension
+
+    - Label: strut_static
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra:
+            - End A
+          Variable: Effective Tension
+
+    - Label: strut_fst_local_static
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra:
+            - End B
+
+    - Label: strut_fst_local_dynamics
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          objectExtra:
+            - End B
+
+    - Label: strut_jacket_local_static
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra:
+            - End A
+
+    - Label: strut_jacket_local_dynamics
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          objectExtra:
+            - End A
+
+    - Label: jacket_local_static
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra: NULL
+
+    - Label: jacket_local_dynamics
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          objectExtra: NULL
+
+    - Label: fst1_local_static
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra: NULL
+
+    - Label: fst1_local_dynamics
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          objectExtra: NULL
+
+    - Label: fst2_local_static
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra: NULL
+
+    - Label: fst2_local_dynamics
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          objectExtra: NULL
+
+    - Label: fst1_motions_static
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra: NULL
+    - Label: fst1_motions_dynamics
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          objectExtra: NULL
+
+    - Label: fst2_motions_static
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra: NULL
+    - Label: fst2_motions_dynamics
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: [0.0, 10.0]
+          objectExtra: NULL
+
+summary_settings:
+  groups:
+    - Label: inputs
+      Columns:
+        - Command: GetData
+          ObjectName: FST1
+          Variable: [InitialHeading, -1]
+          Label: FST1_Heading
+        - Command: GetData
+          ObjectName: FST2
+          Variable: [InitialHeading, -1]
+          Label: FST2_Heading
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WindDirection, -1]
+          Label: WindDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WindSpeed, -1]
+          Label: WindSpeed
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveDirection, -1]
+          Label: WaveDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveHs, -1]
+          Label: Hs
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveTz, -1]
+          Label: WaveTz
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveGamma, -1]
+          Label: WaveGamma
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [RefCurrentSpeed, 0]
+          Label: RefCurrentSpeed
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [RefCurrentDirection, 0]
+          Label: RefCurrentDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [CurrentFactor, 0]
+          Label: CurrentFactor[0]
+
+    - Label: strut_dynamics
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_Body_eff_tension_min
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_Body_eff_tension_max
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_Body_eff_tension_min
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_Body_eff_tension_max
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_Body_eff_tension_min
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_Body_eff_tension_max
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_Body_eff_tension_min
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_Body_eff_tension_max
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_Body_eff_tension_min
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_Body_eff_tension_max
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_Body_eff_tension_min
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_Body_eff_tension_max
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_Body_eff_tension_min
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_Body_eff_tension_max
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_Body_eff_tension_min
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_Body_eff_tension_max
+
+    - Label: strut_static
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_Body_eff_tension_min
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_Body_eff_tension_min
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_Body_eff_tension_min
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_Body_eff_tension_min
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_Body_eff_tension_min
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_Body_eff_tension_min
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_Body_eff_tension_min
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_Body_eff_tension_min
+
+    - Label: strut_fst_local_static
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Lz
+          Variable: End Lz force
+
+    - Label: strut_fst_local_dynamic
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_FST_Lz_max
+          Variable: End Lz force
+
+    - Label: strut_jacket_local_static
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_jacket_Lx
+          Variable: End Lx force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_jacket_Ly
+          Variable: End Ly force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_jacket_Lz
+          Variable: End Lz force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_jacket_Lx
+          Variable: End Lx force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_jacket_Ly
+          Variable: End Ly force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_jacket_Lz
+          Variable: End Lz force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_jacket_Lx
+          Variable: End Lx force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_jacket_Ly
+          Variable: End Ly force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_jacket_Lz
+          Variable: End Lz force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_jacket_Lx
+          Variable: End Lx force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_jacket_Ly
+          Variable: End Ly force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_jacket_Lz
+          Variable: End Lz force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_jacket_Lx
+          Variable: End Lx force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_jacket_Ly
+          Variable: End Ly force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_jacket_Lz
+          Variable: End Lz force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_jacket_Lx
+          Variable: End Lx force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_jacket_Ly
+          Variable: End Ly force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_jacket_Lz
+          Variable: End Lz force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_jacket_Lx
+          Variable: End Lx force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_jacket_Ly
+          Variable: End Ly force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_jacket_Lz
+          Variable: End Lz force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_jacket_Lx
+          Variable: End Lx force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_jacket_Ly
+          Variable: End Ly force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_jacket_Lz
+          Variable: End Lz force
+
+    - Label: strut_jacket_local_dynamic
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_jacket_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_jacket_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_jacket_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_jacket_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_jacket_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_jacket_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_jacket_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_jacket_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_jacket_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_jacket_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_jacket_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_jacket_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_jacket_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_jacket_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_jacket_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_jacket_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_jacket_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_jacket_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_jacket_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_jacket_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_jacket_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_jacket_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_jacket_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_jacket_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_jacket_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_jacket_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_jacket_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_jacket_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_jacket_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_jacket_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_jacket_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_jacket_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_jacket_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_jacket_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_jacket_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_jacket_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_jacket_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_jacket_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_jacket_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_jacket_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_jacket_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_jacket_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_jacket_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_jacket_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_jacket_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_jacket_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_jacket_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_jacket_Lz_max
+          Variable: End Lz force
+
+    - Label: jacket_local_static
+      Columns:
+        - ObjectName: Jacket1_Center
+          Statistic_Type: Min
+          Label: jacket1_Gx
+          Variable: In-frame connection GX force
+        - ObjectName: Jacket1_Center
+          Statistic_Type: Min
+          Label: jacket1_Gy
+          Variable: In-frame connection GY force
+        - ObjectName: Jacket1_Center
+          Statistic_Type: Min
+          Label: jacket1_Gz
+          Variable: In-frame connection GZ force
+        - ObjectName: Jacket2_Center
+          Statistic_Type: Min
+          Label: jacket2_Gx
+          Variable: In-frame connection GX force
+        - ObjectName: Jacket2_Center
+          Statistic_Type: Min
+          Label: jacket2_Gy
+          Variable: In-frame connection GY force
+        - ObjectName: Jacket2_Center
+          Statistic_Type: Min
+          Label: jacket2_Gz
+          Variable: In-frame connection GZ force
+        - ObjectName: Jacket3_Center
+          Statistic_Type: Min
+          Label: jacket3_Gx
+          Variable: In-frame connection GX force
+        - ObjectName: Jacket3_Center
+          Statistic_Type: Min
+          Label: jacket3_Gy
+          Variable: In-frame connection GY force
+        - ObjectName: Jacket3_Center
+          Statistic_Type: Min
+          Label: jacket3_Gz
+          Variable: In-frame connection GZ force
+        - ObjectName: Jacket4_Center
+          Statistic_Type: Min
+          Label: jacket4_Gx
+          Variable: In-frame connection GX force
+        - ObjectName: Jacket4_Center
+          Statistic_Type: Min
+          Label: jacket4_Gy
+          Variable: In-frame connection GY force
+        - ObjectName: Jacket4_Center
+          Statistic_Type: Min
+          Label: jacket4_Gz
+          Variable: In-frame connection GZ force
+
+    - Label: jacket_local_dynamics
+      Columns:
+        - ObjectName: Jacket1_Center
+          Statistic_Type: Min
+          Label: jacket1_Gx_min
+          Variable: In-frame connection GX force
+        - ObjectName: Jacket1_Center
+          Statistic_Type: Max
+          Label: jacket1_Gx_max
+          Variable: In-frame connection GX force
+        - ObjectName: Jacket1_Center
+          Statistic_Type: Min
+          Label: jacket1_Gy_min
+          Variable: In-frame connection GY force
+        - ObjectName: Jacket1_Center
+          Statistic_Type: Max
+          Label: jacket1_Gy_max
+          Variable: In-frame connection GY force
+        - ObjectName: Jacket1_Center
+          Statistic_Type: Min
+          Label: jacket1_Gz_min
+          Variable: In-frame connection GZ force
+        - ObjectName: Jacket1_Center
+          Statistic_Type: Max
+          Label: jacket1_Gz_max
+          Variable: In-frame connection GZ force
+        - ObjectName: Jacket2_Center
+          Statistic_Type: Min
+          Label: jacket2_Gx_min
+          Variable: In-frame connection GX force
+        - ObjectName: Jacket2_Center
+          Statistic_Type: Max
+          Label: jacket2_Gx_max
+          Variable: In-frame connection GX force
+        - ObjectName: Jacket2_Center
+          Statistic_Type: Min
+          Label: jacket2_Gy_min
+          Variable: In-frame connection GY force
+        - ObjectName: Jacket2_Center
+          Statistic_Type: Max
+          Label: jacket2_Gy_max
+          Variable: In-frame connection GY force
+        - ObjectName: Jacket2_Center
+          Statistic_Type: Min
+          Label: jacket2_Gz_min
+          Variable: In-frame connection GZ force
+        - ObjectName: Jacket2_Center
+          Statistic_Type: Max
+          Label: jacket2_Gz_max
+          Variable: In-frame connection GZ force
+        - ObjectName: Jacket3_Center
+          Statistic_Type: Min
+          Label: jacket3_Gx_min
+          Variable: In-frame connection GX force
+        - ObjectName: Jacket3_Center
+          Statistic_Type: Max
+          Label: jacket3_Gx_max
+          Variable: In-frame connection GX force
+        - ObjectName: Jacket3_Center
+          Statistic_Type: Min
+          Label: jacket3_Gy_min
+          Variable: In-frame connection GY force
+        - ObjectName: Jacket3_Center
+          Statistic_Type: Max
+          Label: jacket3_Gy_max
+          Variable: In-frame connection GY force
+        - ObjectName: Jacket3_Center
+          Statistic_Type: Min
+          Label: jacket3_Gz_min
+          Variable: In-frame connection GZ force
+        - ObjectName: Jacket3_Center
+          Statistic_Type: Max
+          Label: jacket3_Gz_max
+          Variable: In-frame connection GZ force
+        - ObjectName: Jacket4_Center
+          Statistic_Type: Min
+          Label: jacket4_Gx_min
+          Variable: In-frame connection GX force
+        - ObjectName: Jacket4_Center
+          Statistic_Type: Max
+          Label: jacket4_Gx_max
+          Variable: In-frame connection GX force
+        - ObjectName: Jacket4_Center
+          Statistic_Type: Min
+          Label: jacket4_Gy_min
+          Variable: In-frame connection GY force
+        - ObjectName: Jacket4_Center
+          Statistic_Type: Max
+          Label: jacket4_Gy_max
+          Variable: In-frame connection GY force
+        - ObjectName: Jacket4_Center
+          Statistic_Type: Min
+          Label: jacket4_Gz_min
+          Variable: In-frame connection GZ force
+        - ObjectName: Jacket4_Center
+          Statistic_Type: Max
+          Label: jacket4_Gz_max
+          Variable: In-frame connection GZ force
+
+    - Label: fst1_local_static
+      Columns:
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_total_Lx
+          Variable: Total Lx force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_total_Ly
+          Variable: Total Ly force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_total_Lz
+          Variable: Total Lz force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Connections Lx force
+          Label: fst1_connections_Lx
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Connections Ly force
+          Label: fst1_connections_Ly
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Connections Lz force
+          Label: fst1_connections_Lz
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Hydrostatic stiffness Lx force
+          Label: fst1_hydrostatic_stiffness_Lx
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Hydrostatic stiffness Ly force
+          Label: fst1_hydrostatic_stiffness_Ly
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Hydrostatic stiffness Lz force
+          Label: fst1_hydrostatic_stiffness_Lz
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Applied Lx force
+          Label: fst1_applied_Lx
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Applied Ly force
+          Label: fst1_applied_Ly
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Applied Lz force
+          Label: fst1_applied_Lz
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Wave (1st order) Lx force
+          Label: fst1_wave_1st_order_Lx
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Wave (1st order) Ly force
+          Label: fst1_wave_1st_order_Ly
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Wave (1st order) Lz force
+          Label: fst1_wave_1st_order_Lz
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Wave drift (2nd order) Lx force
+          Label: fst1_wave_2nd_order_Lx
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Wave drift (2nd order) Ly force
+          Label: fst1_wave_2nd_order_Ly
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Wave drift (2nd order) Lz force
+          Label: fst1_wave_2nd_order_Lz
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Added mass & damping Lx force
+          Label: fst1_added_mass_damping_Lx
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Added mass & damping Ly force
+          Label: fst1_added_mass_damping_Ly
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Added mass & damping Lz force
+          Label: fst1_added_mass_damping_Lz
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Other damping Lx force
+          Label: fst1_other_damping_Lx
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Other damping Ly force
+          Label: fst1_other_damping_Ly
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Other damping Lz force
+          Label: fst1_other_damping_Lz
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Current Lx force
+          Label: fst1_current_Lx
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Current Ly force
+          Label: fst1_current_Ly
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Current Lz force
+          Label: fst1_current_Lz
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Wind Lx force
+          Label: fst1_wind_Lx
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Wind Ly force
+          Label: fst1_wind_Ly
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Wind Lz force
+          Label: fst1_wind_Lz
+
+    - Label: fst1_local_dynamic
+      Columns:
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_total_Lx_min
+          Variable: Total Lx force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_total_Lx_max
+          Variable: Total Lx force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_total_Ly_min
+          Variable: Total Ly force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_total_Ly_max
+          Variable: Total Ly force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_total_Lz_min
+          Variable: Total Lz force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_total_Lz_max
+          Variable: Total Lz force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_connections_Lx_min
+          Variable: Connections Lx force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_connections_Lx_max
+          Variable: Connections Lx force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_connections_Ly_min
+          Variable: Connections Ly force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_connections_Ly_max
+          Variable: Connections Ly force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_connections_Lz_min
+          Variable: Connections Lz force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_connections_Lz_max
+          Variable: Connections Lz force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_hydrostatic_stiffness_Lx_min
+          Variable: Hydrostatic stiffness Lx force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_hydrostatic_stiffness_Lx_max
+          Variable: Hydrostatic stiffness Lx force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_hydrostatic_stiffness_Ly_min
+          Variable: Hydrostatic stiffness Ly force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_hydrostatic_stiffness_Ly_max
+          Variable: Hydrostatic stiffness Ly force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_hydrostatic_stiffness_Lz_min
+          Variable: Hydrostatic stiffness Lz force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_hydrostatic_stiffness_Lz_max
+          Variable: Hydrostatic stiffness Lz force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_applied_Lx_min
+          Variable: Applied Lx force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_applied_Lx_max
+          Variable: Applied Lx force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_applied_Ly_min
+          Variable: Applied Ly force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_applied_Ly_max
+          Variable: Applied Ly force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_applied_Lz_min
+          Variable: Applied Lz force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_applied_Lz_max
+          Variable: Applied Lz force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_wave_1st_order_Lx_min
+          Variable: Wave (1st order) Lx force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_wave_1st_order_Lx_max
+          Variable: Wave (1st order) Lx force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_wave_1st_order_Ly_min
+          Variable: Wave (1st order) Ly force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_wave_1st_order_Ly_max
+          Variable: Wave (1st order) Ly force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_wave_1st_order_Lz_min
+          Variable: Wave (1st order) Lz force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_wave_1st_order_Lz_max
+          Variable: Wave (1st order) Lz force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_wave_2nd_order_Lx_min
+          Variable: Wave drift (2nd order) Lx force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_wave_2nd_order_Lx_max
+          Variable: Wave drift (2nd order) Lx force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_wave_2nd_order_Ly_min
+          Variable: Wave drift (2nd order) Ly force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_wave_2nd_order_Ly_max
+          Variable: Wave drift (2nd order) Ly force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_wave_2nd_order_Lz_min
+          Variable: Wave drift (2nd order) Lz force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_wave_2nd_order_Lz_max
+          Variable: Wave drift (2nd order) Lz force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_added_mass_damping_Lx_min
+          Variable: Added mass & damping Lx force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_added_mass_damping_Lx_max
+          Variable: Added mass & damping Lx force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_added_mass_damping_Ly_min
+          Variable: Added mass & damping Ly force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_added_mass_damping_Ly_max
+          Variable: Added mass & damping Ly force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_added_mass_damping_Lz_min
+          Variable: Added mass & damping Lz force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_added_mass_damping_Lz_max
+          Variable: Added mass & damping Lz force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_other_damping_Lx_min
+          Variable: Other damping Lx force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_other_damping_Lx_max
+          Variable: Other damping Lx force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_other_damping_Ly_min
+          Variable: Other damping Ly force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_other_damping_Ly_max
+          Variable: Other damping Ly force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_other_damping_Lz_min
+          Variable: Other damping Lz force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_other_damping_Lz_max
+          Variable: Other damping Lz force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_current_Lx_min
+          Variable: Current Lx force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_current_Lx_max
+          Variable: Current Lx force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_current_Ly_min
+          Variable: Current Ly force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_current_Ly_max
+          Variable: Current Ly force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_current_Lz_min
+          Variable: Current Lz force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_current_Lz_max
+          Variable: Current Lz force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_wind_Lx_min
+          Variable: Wind Lx force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_wind_Lx_max
+          Variable: Wind Lx force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_wind_Ly_min
+          Variable: Wind Ly force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_wind_Ly_max
+          Variable: Wind Ly force
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Label: fst1_wind_Lz_min
+          Variable: Wind Lz force
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Label: fst1_wind_Lz_max
+          Variable: Wind Lz force
+
+    - Label: fst2_local_static
+      Columns:
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_total_Lx
+          Variable: Total Lx force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_total_Ly
+          Variable: Total Ly force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_total_Lz
+          Variable: Total Lz force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Connections Lx force
+          Label: fst2_connections_Lx
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Connections Ly force
+          Label: fst2_connections_Ly
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Connections Lz force
+          Label: fst2_connections_Lz
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Hydrostatic stiffness Lx force
+          Label: fst2_hydrostatic_stiffness_Lx
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Hydrostatic stiffness Ly force
+          Label: fst2_hydrostatic_stiffness_Ly
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Hydrostatic stiffness Lz force
+          Label: fst2_hydrostatic_stiffness_Lz
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Applied Lx force
+          Label: fst2_applied_Lx
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Applied Ly force
+          Label: fst2_applied_Ly
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Applied Lz force
+          Label: fst2_applied_Lz
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Wave (1st order) Lx force
+          Label: fst2_wave_1st_order_Lx
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Wave (1st order) Ly force
+          Label: fst2_wave_1st_order_Ly
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Wave (1st order) Lz force
+          Label: fst2_wave_1st_order_Lz
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Wave drift (2nd order) Lx force
+          Label: fst2_wave_2nd_order_Lx
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Wave drift (2nd order) Ly force
+          Label: fst2_wave_2nd_order_Ly
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Wave drift (2nd order) Lz force
+          Label: fst2_wave_2nd_order_Lz
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Added mass & damping Lx force
+          Label: fst2_added_mass_damping_Lx
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Added mass & damping Ly force
+          Label: fst2_added_mass_damping_Ly
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Added mass & damping Lz force
+          Label: fst2_added_mass_damping_Lz
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Other damping Lx force
+          Label: fst2_other_damping_Lx
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Other damping Ly force
+          Label: fst2_other_damping_Ly
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Other damping Lz force
+          Label: fst2_other_damping_Lz
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Current Lx force
+          Label: fst2_current_Lx
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Current Ly force
+          Label: fst2_current_Ly
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Current Lz force
+          Label: fst2_current_Lz
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Wind Lx force
+          Label: fst2_wind_Lx
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Wind Ly force
+          Label: fst2_wind_Ly
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Wind Lz force
+          Label: fst2_wind_Lz
+
+    - Label: fst2_local_dynamic
+      Columns:
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_total_Lx_min
+          Variable: Total Lx force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_total_Lx_max
+          Variable: Total Lx force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_total_Ly_min
+          Variable: Total Ly force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_total_Ly_max
+          Variable: Total Ly force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_total_Lz_min
+          Variable: Total Lz force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_total_Lz_max
+          Variable: Total Lz force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_connections_Lx_min
+          Variable: Connections Lx force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_connections_Lx_max
+          Variable: Connections Lx force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_connections_Ly_min
+          Variable: Connections Ly force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_connections_Ly_max
+          Variable: Connections Ly force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_connections_Lz_min
+          Variable: Connections Lz force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_connections_Lz_max
+          Variable: Connections Lz force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_hydrostatic_stiffness_Lx_min
+          Variable: Hydrostatic stiffness Lx force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_hydrostatic_stiffness_Lx_max
+          Variable: Hydrostatic stiffness Lx force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_hydrostatic_stiffness_Ly_min
+          Variable: Hydrostatic stiffness Ly force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_hydrostatic_stiffness_Ly_max
+          Variable: Hydrostatic stiffness Ly force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_hydrostatic_stiffness_Lz_min
+          Variable: Hydrostatic stiffness Lz force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_hydrostatic_stiffness_Lz_max
+          Variable: Hydrostatic stiffness Lz force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_applied_Lx_min
+          Variable: Applied Lx force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_applied_Lx_max
+          Variable: Applied Lx force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_applied_Ly_min
+          Variable: Applied Ly force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_applied_Ly_max
+          Variable: Applied Ly force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_applied_Lz_min
+          Variable: Applied Lz force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_applied_Lz_max
+          Variable: Applied Lz force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_wave_1st_order_Lx_min
+          Variable: Wave (1st order) Lx force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_wave_1st_order_Lx_max
+          Variable: Wave (1st order) Lx force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_wave_1st_order_Ly_min
+          Variable: Wave (1st order) Ly force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_wave_1st_order_Ly_max
+          Variable: Wave (1st order) Ly force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_wave_1st_order_Lz_min
+          Variable: Wave (1st order) Lz force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_wave_1st_order_Lz_max
+          Variable: Wave (1st order) Lz force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_wave_2nd_order_Lx_min
+          Variable: Wave drift (2nd order) Lx force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_wave_2nd_order_Lx_max
+          Variable: Wave drift (2nd order) Lx force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_wave_2nd_order_Ly_min
+          Variable: Wave drift (2nd order) Ly force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_wave_2nd_order_Ly_max
+          Variable: Wave drift (2nd order) Ly force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_wave_2nd_order_Lz_min
+          Variable: Wave drift (2nd order) Lz force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_wave_2nd_order_Lz_max
+          Variable: Wave drift (2nd order) Lz force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_added_mass_damping_Lx_min
+          Variable: Added mass & damping Lx force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_added_mass_damping_Lx_max
+          Variable: Added mass & damping Lx force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_added_mass_damping_Ly_min
+          Variable: Added mass & damping Ly force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_added_mass_damping_Ly_max
+          Variable: Added mass & damping Ly force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_added_mass_damping_Lz_min
+          Variable: Added mass & damping Lz force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_added_mass_damping_Lz_max
+          Variable: Added mass & damping Lz force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_other_damping_Lx_min
+          Variable: Other damping Lx force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_other_damping_Lx_max
+          Variable: Other damping Lx force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_other_damping_Ly_min
+          Variable: Other damping Ly force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_other_damping_Ly_max
+          Variable: Other damping Ly force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_other_damping_Lz_min
+          Variable: Other damping Lz force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_other_damping_Lz_max
+          Variable: Other damping Lz force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_current_Lx_min
+          Variable: Current Lx force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_current_Lx_max
+          Variable: Current Lx force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_current_Ly_min
+          Variable: Current Ly force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_current_Ly_max
+          Variable: Current Ly force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_current_Lz_min
+          Variable: Current Lz force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_current_Lz_max
+          Variable: Current Lz force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_wind_Lx_min
+          Variable: Wind Lx force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_wind_Lx_max
+          Variable: Wind Lx force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_wind_Ly_min
+          Variable: Wind Ly force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_wind_Ly_max
+          Variable: Wind Ly force
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Label: fst2_wind_Lz_min
+          Variable: Wind Lz force
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Label: fst2_wind_Lz_max
+          Variable: Wind Lz force
+
+    - Label: fst1_motions_static
+      Columns:
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: X
+          Label: fst1_X
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Y
+          Label: fst1_Y
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Z
+          Label: fst1_Z
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Rotation 1
+          Label: fst1_R1
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Rotation 2
+          Label: fst1_R2
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Rotation 3
+          Label: fst1_R3
+
+    - Label: fst1_motions_dynamics
+      Columns:
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Dynamic x
+          Label: fst1_dynamic_x_min
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Variable: Dynamic x
+          Label: fst1_dynamic_x_max
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Dynamic y
+          Label: fst1_dynamic_y_min
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Variable: Dynamic y
+          Label: fst1_dynamic_y_max
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Dynamic z
+          Label: fst1_dynamic_z_min
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Variable: Dynamic z
+          Label: fst1_dynamic_z_max
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Dynamic Rx
+          Label: fst1_dynamic_Rx_min
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Variable: Dynamic Rx
+          Label: fst1_dynamic_Rx_max
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Dynamic Ry
+          Label: fst1_dynamic_Ry_min
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Variable: Dynamic Ry
+          Label: fst1_dynamic_Ry_max
+        - ObjectName: FST1
+          Statistic_Type: Min
+          Variable: Dynamic Rz
+          Label: fst1_dynamic_Rz_min
+        - ObjectName: FST1
+          Statistic_Type: Max
+          Variable: Dynamic Rz
+          Label: fst1_dynamic_Rz_max
+
+    - Label: fst2_motions_static
+      Columns:
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: X
+          Label: fst2_X
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Y
+          Label: fst2_Y
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Z
+          Label: fst2_Z
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Rotation 1
+          Label: fst2_R1
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Rotation 2
+          Label: fst2_R2
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Rotation 3
+          Label: fst2_R3
+
+    - Label: fst2_motions_dynamics
+      Columns:
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Dynamic x
+          Label: fst2_dynamic_x_min
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Variable: Dynamic x
+          Label: fst2_dynamic_x_max
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Dynamic y
+          Label: fst2_dynamic_y_min
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Variable: Dynamic y
+          Label: fst2_dynamic_y_max
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Dynamic z
+          Label: fst2_dynamic_z_min
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Variable: Dynamic z
+          Label: fst2_dynamic_z_max
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Dynamic Rx
+          Label: fst2_dynamic_Rx_min
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Variable: Dynamic Rx
+          Label: fst2_dynamic_Rx_max
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Dynamic Ry
+          Label: fst2_dynamic_Ry_min
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Variable: Dynamic Ry
+          Label: fst2_dynamic_Ry_max
+        - ObjectName: FST2
+          Statistic_Type: Min
+          Variable: Dynamic Rz
+          Label: fst2_dynamic_Rz_min
+        - ObjectName: FST2
+          Statistic_Type: Max
+          Variable: Dynamic Rz
+          Label: fst2_dynamic_Rz_max
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      directory: analysis
+      auto_read: True
