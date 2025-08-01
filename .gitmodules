@@ -1,0 +1,4 @@
+[submodule "src/external/assetutilities"]
+	path = src/external/assetutilities
+	url = https://github.com/vamseeachanta/assetutilities.git
+	branch = main

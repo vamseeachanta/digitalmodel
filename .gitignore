@@ -138,3 +138,21 @@ dmypy.json
 
 # siva adding private workspace 
 _dev-private/
+
+
+# Agent OS
+.agent-os/cache/
+.agent-os/temp/
+.cross-repo-cache/
+.fallback-cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# UV
+.venv/
