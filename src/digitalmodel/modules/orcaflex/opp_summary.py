@@ -237,6 +237,10 @@ class OPPSummary:
         self, model_dict, OrcFXAPIObject, VariableName, objectExtra=None
     ):
         output = None
+        if OrcFXAPIObject is None:
+            logger.warning(f"OrcFXAPIObject is None for StaticResult with VariableName: {VariableName}")
+            return output
+        
         model_objects = of_objects.get_model_objects(model_dict["model"])
         object_df = model_objects["object_df"]
         if OrcFXAPIObject.name in list(object_df["ObjectName"]):

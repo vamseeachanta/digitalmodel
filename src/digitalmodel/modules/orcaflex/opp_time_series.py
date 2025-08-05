@@ -137,6 +137,10 @@ class OPPTimeSeries:
         self, model_dict, OrcFXAPIObject, TimePeriod, objectExtra, VariableName
     ):
         output = None
+        if OrcFXAPIObject is None:
+            logging.warning(f"OrcFXAPIObject is None for TimeHistory with VariableName: {VariableName}")
+            return output
+        
         model_objects = of_objects.get_model_objects(model_dict["model"])
         object_df = model_objects["object_df"]
         if OrcFXAPIObject.name in list(object_df["ObjectName"]):

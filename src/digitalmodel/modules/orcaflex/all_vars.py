@@ -88,9 +88,17 @@ class AllVars:
             # Get the variable names
             objectExtra = None
             objectExtraName = None
-            if object.type.name == "Line":
-                objectExtra = OrcFxAPI.oeEndB
-                objectExtraName = "EndB"
+            
+            # Handle missing or None object.type.name gracefully
+            try:
+                if object is not None and hasattr(object, 'type') and object.type is not None and hasattr(object.type, 'name'):
+                    if object.type.name == "Line":
+                        objectExtra = OrcFxAPI.oeEndB
+                        objectExtraName = "EndB"
+                else:
+                    print(f"Warning: Object {ObjectName} has invalid type, skipping Line-specific settings")
+            except Exception as e:
+                print(f"Warning: Error accessing object.type.name for {ObjectName}: {str(e)}")
 
             var_df_dict = of_objects.get_object_vars(
                 cfg, model, object, objectExtra, ResultType=None
