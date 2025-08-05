@@ -4,15 +4,15 @@ import logging
 import traceback
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import cpu_count
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
+
+from assetutilities.common.data import PandasChainedAssignent
 
 # Third party imports
 # Third party imports
 from assetutilities.common.update_deep import update_deep_dictionary
-from assetutilities.common.data import PandasChainedAssignent
-from digitalmodel.modules.orcaflex.opp_linkedstatistics import OPPLinkedStatistics
-
 # Reader imports
+from digitalmodel.modules.orcaflex.opp_linkedstatistics import OPPLinkedStatistics
 from digitalmodel.modules.orcaflex.opp_range_graph import OPPRangeGraph
 from digitalmodel.modules.orcaflex.opp_summary import OPPSummary
 from digitalmodel.modules.orcaflex.opp_time_series import OPPTimeSeries
@@ -278,6 +278,7 @@ class OrcaFlexPostProcess:
                         'error': str(e)
                     })
         
+                
         # Aggregate results
         aggregated = aggregate_results(results, cfg)
         
@@ -295,83 +296,49 @@ class OrcaFlexPostProcess:
         return cfg
 
     def _post_process_sequential(self, cfg):
-
+        """Process simulation files sequentially using the same process_single_file function."""
+        
         load_matrix = ou.get_load_matrix_with_filenames(cfg)
-        load_matrix = ou.get_load_matrix_with_filenames(cfg)
-        # Intialize output arrays
-        RangeAllFiles = []
-        histogram_all_files = []
-        linked_statistics = None
-        summary = None
-
         sim_files = cfg.file_management["input_files"]["sim"]
-
-        for fileIndex in range(0, len(sim_files)):
-            file_name = sim_files[fileIndex]
-            model_dict = ou.get_model_and_metadata(file_name=file_name)
-            model = model_dict["model"]
-            run_status = model_dict["run_status"]
-            start_time = model_dict["start_time"]
-            stop_time = model_dict["stop_time"]
-            current_time = model_dict["current_time"]
-            simulation_complete = model_dict["simulation_complete"]
-            with PandasChainedAssignent():
-                load_matrix.loc[
-                    (load_matrix["fe_filename"] == file_name), "run_status"
-                ] = run_status
-                load_matrix.loc[
-                    (load_matrix["fe_filename"] == file_name), "start_time"
-                ] = start_time
-                load_matrix.loc[
-                    (load_matrix["fe_filename"] == file_name), "stop_time"
-                ] = stop_time
-
-            if model is not None:
-                FileDescription = "Description"
-                FileObjectName = "Dummy_Object"
-                histogram_for_file = [[]] * len(cfg.time_series_settings["groups"])
-
-                self.fileIndex = fileIndex
-                print("Post-processing file: {}".format(file_name))
-                try:
-                    RangeAllFiles.append(
-                        opp_rg.postProcessRange(model, cfg, FileObjectName)
-                    )
-                except:
-                    RangeAllFiles.append(None)
-                self.fileIndex = fileIndex
-
-                if cfg["orcaflex"]["postprocess"]["summary"]["flag"]:
-                    summary_groups_for_file = opp_summary.get_summary_for_file(
-                        cfg, model_dict, file_name
-                    )
-                    summary = opp_summary.add_file_result_to_all_results(
-                        summary, summary_groups_for_file
-                    )
-                if cfg["orcaflex"]["postprocess"]["linked_statistics"]["flag"]:
-                    linked_statistics_for_file = opp_ls.get_linked_statistics(
-                        cfg, model, file_name
-                    )
-                    linked_statistics = opp_ls.add_file_result_to_all_results(
-                        linked_statistics, linked_statistics_for_file
-                    )
-
-                if cfg["orcaflex"]["postprocess"]["time_series"]["flag"]:
-                    if (
-                        "time_series_settings" in cfg
-                        and cfg["time_series_settings"]["data"]
-                    ):
-                        opp_ts.get_time_series_data(cfg, model_dict, file_name)
-
-                histogram_all_files.append(histogram_for_file)
-                RangeAllFiles.append(None)
-
-        self.HistogramAllFiles = histogram_all_files
-        self.RangeAllFiles = RangeAllFiles
-
-        opp_summary.save_summary(summary, cfg)
-
-        opp_ls.save_linked_statistics(linked_statistics, cfg)
+        
+        print(f"Processing {len(sim_files)} files sequentially")
+        
+        # Process files sequentially
+        results = []
+        for file_index, file_name in enumerate(sim_files):
+            try:
+                # Use the same process_single_file function as parallel processing
+                result = process_single_file((file_name, file_index, cfg))
+                results.append(result)
+                
+                if result.get('error'):
+                    print(f"Failed: {file_name} - {result['error']}")
+                    self._handle_process_error(file_name, Exception(result['error']), cfg)
+                else:
+                    print(f"Completed: {file_name}")
+                    
+            except Exception as e:
+                logging.error(f"Failed to process {file_name}: {str(e)}")
+                self._handle_process_error(file_name, e, cfg)
+                results.append({
+                    'file_name': file_name,
+                    'file_index': file_index,
+                    'error': str(e)
+                })
+        
+        # Use the same aggregation function as parallel processing
+        aggregated = aggregate_results(results, cfg)
+        
+        # Update load matrix
+        self._update_load_matrix(load_matrix, aggregated['load_matrix_updates'])
+        
+        # Save results
+        opp_summary.save_summary(aggregated['summary'], cfg)
+        opp_ls.save_linked_statistics(aggregated['linked_statistics'], cfg)
+        
+        # Store for later use
+        self.RangeAllFiles = aggregated['RangeAllFiles']
+        self.HistogramAllFiles = aggregated['histogram_all_files']
         
         return cfg
 

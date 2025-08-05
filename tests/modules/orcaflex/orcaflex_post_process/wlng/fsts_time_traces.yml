@@ -809,6 +809,10 @@ file_management:
 
   files:
     files_in_current_directory:
-      flag: False
+      flag: True
       directory: analysis
       auto_read: True
+      
+  input_files:
+    sim:
+      - analysis/FST2F_FST1F_LWL_000deg.sim
