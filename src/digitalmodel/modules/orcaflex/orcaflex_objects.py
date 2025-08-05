@@ -124,8 +124,7 @@ class OrcaFlexObjects:
         try:
             OrcFXAPIObject = model[objectName]
         except Exception as e:
-            logging.debug(str(e))
-            logging.debug(str(e))
+            logging.warning(f"Object '{objectName}' not found in model: {str(e)}")
 
         return OrcFXAPIObject
 
@@ -313,9 +312,29 @@ class OrcaFlexObjects:
     def get_model_objects(self, model):
         object_df = pd.DataFrame(columns=["ObjectType", "ObjectName", "ObjectTypeName"])
         objects = model.objects
-        object_df["ObjectType"] = [int(object.type) for object in objects]
-        object_df["ObjectName"] = [object.name for object in objects]
-        object_df["ObjectTypeName"] = [object.type.name for object in objects]
+        
+        # Handle missing or None objects gracefully
+        object_types = []
+        object_names = []
+        object_type_names = []
+        
+        for object in objects:
+            try:
+                if object is not None and hasattr(object, 'type') and object.type is not None:
+                    object_types.append(int(object.type))
+                    object_names.append(object.name if object.name is not None else "Unknown")
+                    object_type_names.append(object.type.name if hasattr(object.type, 'name') and object.type.name is not None else "Unknown")
+                else:
+                    # Skip objects that are None or have invalid type
+                    print(f"Warning: Skipping invalid object: {object}")
+                    continue
+            except Exception as e:
+                print(f"Warning: Error processing object {object}: {str(e)}")
+                continue
+        
+        object_df["ObjectType"] = object_types
+        object_df["ObjectName"] = object_names
+        object_df["ObjectTypeName"] = object_type_names
 
         output_dict = {"object_df": object_df}
 
@@ -341,9 +360,20 @@ class OrcaFlexObjects:
 
         VarNames_parameter_keys = list(cfg["parameters"]["VarNames"].keys())
         VarNames = []
-        if object.type.name in VarNames_parameter_keys:
-            VarNames = cfg["parameters"]["VarNames"][object.type.name]
-        else:
+        
+        # Handle missing or None object.type.name gracefully
+        try:
+            if object is not None and hasattr(object, 'type') and object.type is not None and hasattr(object.type, 'name'):
+                object_type_name = object.type.name
+                if object_type_name in VarNames_parameter_keys:
+                    VarNames = cfg["parameters"]["VarNames"][object_type_name]
+                else:
+                    VarNames = list(var_df["VarName"])
+            else:
+                print(f"Warning: Object has invalid type, using default VarNames from var_df")
+                VarNames = list(var_df["VarName"])
+        except Exception as e:
+            print(f"Warning: Error accessing object.type.name: {str(e)}, using default VarNames")
             VarNames = list(var_df["VarName"])
 
         output_dict["VarNames"] = VarNames

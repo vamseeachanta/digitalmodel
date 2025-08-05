@@ -6,7 +6,12 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(cat:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(ls:*)",
+      "Bash(python -m pytest fsts_time_traces_test.py::test_process -v)",
+      "Bash(python -m pytest fsts_time_traces_test.py::test_process -v -s)",
+      "Bash(python:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }
