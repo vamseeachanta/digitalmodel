@@ -65,7 +65,6 @@ parallel_processing:
 ```
 
 ### Step 7: Sequential Processing Fallback
-Preserve original sequential logic as `_post_process_sequential()` for:
 - Single file processing
 - When parallel processing is disabled
 - Debugging and comparison purposes
@@ -76,6 +75,11 @@ Preserve original sequential logic as `_post_process_sequential()` for:
 3. Error handling tests with simulated failures
 4. Resource monitoring for memory/CPU usage
 5. Edge cases: empty files, corrupt files, very large files
+6. Time traces test validation:
+   - Test file: `tests/modules/orcaflex/orcaflex_post_process/wlng/fsts_time_traces_test.py`
+   - Must produce time traces results as output
+   - Verify that both sequential and parallel processing generate identical time traces data
+   - Ensure time series data extraction works correctly in parallel mode
 
 ## Benefits
 - **Performance**: Process N files in approximately 1/N time (depending on CPU cores)
