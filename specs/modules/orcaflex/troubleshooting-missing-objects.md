@@ -1,7 +1,32 @@
 # OrcaFlex Missing Objects Troubleshooting Spec
 
+## Original Problem Context
+**Initial Request**: 
+```
+prepare input files for digitalmodel using the below commands:
+/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel dm_fsts.yml "{'meta': {'label': '06c_tsumani'}, 'file_management': {'input_directory': '../06c_0500yr_tsunami', 'output_directory': '../output/csv/06c_0500yr_tsunami', 'filename': {'pattern': '_'}}}"
+
+/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel dm_fsts.yml "{'meta': {'label': '08c_dsh1_l015_hwl'}, 'file_management': {'input_directory': '../08c_0100yr_damaged', 'output_directory': '../output/csv/08c_0100yr_damaged', 'filename': {'pattern': 'fsts_l015_dsh1_hwl_'}}}"
+
+Name them as dm_fsts_<label_name>.yml and save them in postproc
+```
+
+**Follow-up Issue**:
+```
+run the 2 individual files and identify what is the key difference while running them. one of them produces below error and want to debug/troubleshoot the error and fix. It may be sim file related or digitalmodel code related. Identify this first:
+
+ERROR:root:Error processing ..\08c_0100yr_damaged\fsts_l015_dsh1_hwl_ncl_000deg.sim: 'NoneType' object has no attribute 'name'
+Failed: ..\08c_0100yr_damaged\fsts_l015_dsh1_hwl_ncl_000deg.sim - 'NoneType' object has no attribute 'name'
+Error processing ..\08c_0100yr_damaged\fsts_l015_dsh1_hwl_ncl_000deg.sim: 'NoneType' object has no attribute 'name'
+```
+
+**Key Insight**: 
+```
+the key difference between both files is that a line item is missing. Can we put the fix in digitalmodel code located in D:\github\digitalmodel\src\digitalmodel\modules\orcaflex
+```
+
 ## Overview
-This spec provides a systematic approach to troubleshoot and fix "NoneType object has no attribute 'name'" errors when processing OrcaFlex models with missing or damaged objects.
+This spec provides a systematic approach to troubleshoot and fix "NoneType object has no attribute 'name'" errors when processing OrcaFlex models with missing or damaged objects. The methodology was developed from a real case where 06c tsunami models worked fine but 08c damaged models failed due to missing line objects.
 
 ## Problem Statement
 - **Error Type**: `'NoneType' object has no attribute 'name'`
@@ -187,6 +212,31 @@ orcaflex:
 - [Any specific model characteristics]
 - [Performance implications]
 - [Future enhancements needed]
+
+## Original Case Study (2025-08-05)
+**Context**: Sequential processing setup for OrcaFlex post-processing
+**Model Types**: 06c tsunami vs 08c damaged scenarios
+**Key Findings**:
+- 06c tsunami models: Complete line objects, processing successful
+- 08c damaged models: Missing line objects causing NoneType errors
+- Error occurred in digitalmodel code accessing object.type.name without null checks
+- Configuration issues masked the real problem initially
+
+**Command Examples Used**:
+```bash
+# Working case
+/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel dm_fsts_06c_tsumani.yml
+
+# Failing case  
+/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel dm_fsts_08c_dsh1_l015_hwl.yml
+```
+
+**Files Modified**:
+- `orcaflex_objects.py:get_model_objects()` - Lines 312-341
+- `orcaflex_objects.py:get_object_vars()` - Lines 361-378  
+- `all_vars.py` - Lines 88-101
+
+**Solution Validation**: Both model types now process successfully with warning messages for missing objects
 
 ## File References
 - **Error Logs**: `[path]/[filename].sim_error.log`
