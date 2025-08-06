@@ -1,0 +1,20 @@
+context_optimization:
+  cache_ttl: 3600
+  embedding_model: sentence-transformers/all-MiniLM-L6-v2
+  enabled: true
+created_at: '2025-08-05T22:59:22.311383'
+description: AI agent for orcaflex module
+documentation:
+  auto_refresh: true
+  external_sources: []
+  internal_sources: []
+name: orcaflex
+repositories: []
+templates: []
+type: offshore-engineering
+version: 1.0.0
+workflows:
+  enhanced_specs:
+    auto_update: true
+    enabled: true
+    learning: true
