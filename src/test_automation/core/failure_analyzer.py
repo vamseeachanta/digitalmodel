@@ -46,6 +46,7 @@ class FailurePattern:
     auto_fixable: bool = False
     fix_description: str = ""
     fix_function: Optional[str] = None  # Name of fix function to call
+    manual_review_required: bool = False  # Whether manual review is needed
 
 
 @dataclass 
