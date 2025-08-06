@@ -50,29 +50,3 @@ When guidance conflicts:
 ## Available Commands
 
 - **Create-Module-Agent:** Available via `/create-module-agent` command
-
-## Enhanced Features Available
-
-This project supports enhanced Agent OS workflows including:
-- **Enhanced Spec Creation**: Prompt summaries, executive summaries, mermaid diagrams, module organization
-- **Cross-Repository Integration**: Shared components from AssetUtilities hub (@assetutilities: references)
-- **Enhanced Task Execution**: Task summaries, performance tracking, real-time documentation
-- **Template Variants**: minimal, standard, enhanced, api_focused, research
-- **Visual Documentation**: Auto-generated system architecture and workflow diagrams
-
-### Command Examples
-```bash
-# Enhanced spec creation
-/create-spec feature-name module-name enhanced
-
-# Traditional spec creation (backward compatible)  
-/create-spec feature-name
-
-# Enhanced task execution with summaries
-/execute-tasks @specs/modules/module-name/spec-folder/tasks.md
-```
-
-### Cross-Repository References
-- Shared components: @assetutilities:src/modules/agent-os/enhanced-create-specs/
-- Sub-agent registry: @assetutilities:agents/registry/sub-agents/workflow-automation
-- Hub configuration: @assetutilities:hub-config.yaml
