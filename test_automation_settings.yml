@@ -1,0 +1,33 @@
+# Test Automation Configuration
+# This file configures the behavior of the test automation system
+
+# Test path configuration
+paths:
+  base_dir: "tests"
+  modules_dir: "tests/modules"
+  in_progress_dir: "tests/in_progress"
+  no_license_dir: "tests/no_license"
+  local_temp_dir: "tests/local_temp"
+
+# Test execution configuration
+execution:
+  parallel: true
+  max_workers: 4
+  timeout_seconds: 300
+  licensed_software_limit: 2  # Max concurrent tests requiring licenses
+  retry_count: 1
+
+# Reporting configuration
+reporting:
+  output_dir: "test_automation_reports"
+  formats: ["html", "json"]
+  include_trends: true
+  archive_days: 30
+
+# Auto-fix configuration
+autofix:
+  enabled: true
+  backup_enabled: true
+  backup_dir: "test_automation_backups"
+  confidence_threshold: 0.8  # Only apply fixes with >80% confidence
+  max_fixes_per_run: 50

@@ -32,9 +32,19 @@ deploy = [
     "twine>=1.0.0",
     "build>=1.0.0"
 ]
+test-automation = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-html>=3.1.0",
+    "pytest-xdist>=3.0.0",
+    "pyyaml>=6.0",
+    "jinja2>=3.0.0",
+    "psutil>=5.8.0"
+]
 
 [project.scripts]
 digital_model = "digitalmodel.__main__:main"
+test-automation = "test_automation.__main__:main"
 
 [build-system]
 requires = ["setuptools>=61.0.0", "wheel"]
