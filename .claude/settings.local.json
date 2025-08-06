@@ -12,7 +12,9 @@
       "Bash(python -m pytest fsts_time_traces_test.py::test_process -v -s)",
       "Bash(python:*)",
       "Bash(rm:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(ren:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }
