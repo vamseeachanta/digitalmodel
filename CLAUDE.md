@@ -76,3 +76,21 @@ This project supports enhanced Agent OS workflows including:
 - Shared components: @assetutilities:src/modules/agent-os/enhanced-create-specs/
 - Sub-agent registry: @assetutilities:agents/registry/sub-agents/workflow-automation
 - Hub configuration: @assetutilities:hub-config.yaml
+
+
+## Self-Contained Agent OS
+
+This repository includes a complete, self-contained Agent OS framework. All slash commands work immediately after `git clone` with no additional setup required.
+
+### Available Slash Commands
+- `/create-spec <spec-name>` - Create detailed specification documents
+- `/execute-tasks <tasks-file>` - Execute tasks from specification
+- `/create-module-agent <agent-name>` - Create specialized AI agents
+
+### Local Agent OS Structure
+- **Standards**: @.agent-os/standards/ (code style, best practices)
+- **Instructions**: @.agent-os/instructions/ (workflow guidance)
+- **Product Context**: @.agent-os/product/ (mission, roadmap, decisions)
+- **Specifications**: @.agent-os/specs/ (feature specifications and tasks)
+
+All references are local to this repository - no external dependencies required.
