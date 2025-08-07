@@ -16,17 +16,16 @@ This directory contains the Agent OS configuration for the DigitalModel project.
 │   ├── code-style.md  # Code formatting and style guide
 │   ├── testing.md     # Testing requirements
 │   └── git.md         # Git workflow and commit conventions
-└── projects/          # Project specs organized by date
-    └── YYYY-MM-DD-feature-name/
-        ├── spec.md    # Feature specification
-        └── tasks.md   # Implementation tasks
+└── instructions/      # Instructions for AI workflows
+    └── create-spec.md  # /create-spec command guidelines
 ```
 
 ## Getting Started
 
 1. Review the product documentation in `./product/`
 2. Familiarize yourself with standards in `./standards/`
-3. Check active projects in `./projects/`
+3. Follow workflow instructions in `./instructions/`
+4. All specifications are now in `specs/modules/<module>/` following repository pattern
 
 ## Quick Start for AI Agents
 
@@ -36,11 +35,11 @@ This directory contains the Agent OS configuration for the DigitalModel project.
 3. **Communication Standards**: Follow `./standards/ai-communication.md` strictly
 4. **Code Standards**: Apply `./standards/code-style.md` and `./standards/testing.md`
 5. **Agent Personas**: Select appropriate persona from `./standards/agent-personas.md`
-6. **Active Projects**: Check active specs in `./projects/` directory
+6. **Active Specifications**: Check current specs in `specs/modules/<module>/` directories
 
 ### For Feature Development
-1. **Specification First**: Create spec in `./projects/YYYY-MM-DD-feature-name/`
-2. **Follow Templates**: Use `./projects/example-template/` as guide
+1. **Specification First**: Create spec in `specs/modules/<module>/` following repository pattern
+2. **Follow Instructions**: Use `./instructions/create-spec.md` guidelines
 3. **Reference Standards**: Apply all standards from `./standards/`
 4. **Test Comprehensively**: Include licensed software mock patterns
 5. **Document Changes**: Update relevant product documentation
@@ -63,9 +62,8 @@ This directory contains the Agent OS configuration for the DigitalModel project.
 │   ├── testing.md               # Testing requirements and patterns
 │   ├── git.md                   # Git workflow and conventions
 │   └── agent-personas.md        # Standardized AI agent roles
-└── projects/                     # Feature specifications
-    ├── example-template/         # Template for new features
-    └── YYYY-MM-DD-feature-name/  # Active and completed projects
+└── instructions/                 # AI workflow instructions
+    └── create-spec.md            # /create-spec command guidelines
 ```
 
 ## AI Agent Workflow

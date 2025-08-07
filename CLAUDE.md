@@ -89,15 +89,22 @@ This project supports enhanced Agent OS workflows including:
 
 ### Command Examples
 ```bash
-# Enhanced spec creation
+# Enhanced spec creation (MUST include prompt.md)
 /create-spec feature-name module-name enhanced
 
-# Traditional spec creation (backward compatible)  
+# Traditional spec creation (MUST include prompt.md)
 /create-spec feature-name
 
 # Enhanced task execution with summaries (MUST use module pattern)
 /execute-tasks @specs/modules/module-name/spec-folder/tasks.md
 ```
+
+### /create-spec MANDATORY Requirements
+**EVERY /create-spec command MUST:**
+1. **Repository Pattern**: Create specs in `specs/modules/<module>/` structure
+2. **Prompt Documentation**: Create `prompt.md` with complete prompt history and curated reuse prompt
+3. **Template Compliance**: Follow all established templates and patterns
+4. **Module Integration**: Update relevant module READMEs and cross-references
 
 ### Cross-Repository References
 - Shared components: @assetutilities:src/modules/agent-os/enhanced-create-specs/
