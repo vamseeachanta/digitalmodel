@@ -2,6 +2,32 @@
 
 This file provides guidance to AI assistants when working with code in this repository.
 
+## 🏗️ CRITICAL REPOSITORY ORGANIZATION PATTERN
+
+**THIS REPOSITORY USES MODULE-BASED ORGANIZATION - ENFORCE ACROSS ALL SESSIONS/USERS/SYSTEMS**
+
+All directory groups MUST follow this structure:
+```
+<group_name>/modules/<module_name>/
+```
+
+**Examples:**
+- ✅ `specs/modules/agent-os/` 
+- ✅ `specs/modules/marine-engineering/`
+- ✅ `src/modules/hydrodynamics/`
+- ✅ `docs/modules/installation/`
+- ❌ `specs/agent-os/` (WRONG - missing modules/ level)
+- ❌ `marine-specs/` (WRONG - not following pattern)
+
+**This pattern applies to ALL directory groups:**
+- `specs/modules/<module>/` - All specifications
+- `src/modules/<module>/` - All source code  
+- `docs/modules/<module>/` - All documentation
+- `tests/modules/<module>/` - All test files
+- `configs/modules/<module>/` - All configurations
+
+**ENFORCE THIS PATTERN in every session, for every user, across all systems. Never create or accept directory structures that violate this pattern.**
+
 ## Primary Guidance Sources
 
 **Start with Agent OS structure:**
@@ -12,10 +38,10 @@ This file provides guidance to AI assistants when working with code in this repo
    - Use appropriate persona from `.agent-os/standards/agent-personas.md`
 
 **Supplement with project-specific guidance:**
-2. **`.ai/`** - Project-specific configurations and module documentation
-   - Refer to `.ai/specs/modules/` for detailed module specifications
-   - Use `.ai/commands/` for project automation
-   - Reference `.ai/` files for historical context and implementation details
+2. **`specs/modules/`** - Module-based specifications following repository pattern
+   - Refer to `specs/modules/<module>/` for detailed module specifications
+   - All specifications MUST be located in `specs/modules/<module>/` structure
+   - Legacy `.ai/` files are for historical context only
 
 ## Quick Reference
 
@@ -27,17 +53,18 @@ This file provides guidance to AI assistants when working with code in this repo
 5. **Personas**: Use Technical Implementation Specialist from `.agent-os/standards/agent-personas.md`
 
 ### For Feature Development
-1. **Specification**: Create in `.agent-os/projects/YYYY-MM-DD-feature-name/`
+1. **Specification**: Create in `specs/modules/<module>/` following repository pattern
 2. **Templates**: Use `.agent-os/projects/example-template/` as guide
 3. **Product Context**: Reference `.agent-os/product/overview.md` and `.agent-os/product/architecture.md`
 4. **Domain Knowledge**: Apply offshore engineering patterns and industry standards
 
 ### Priority Order
 When guidance conflicts:
-1. `.agent-os/standards/` - Primary authority for AI behavior
-2. `.agent-os/product/` - Primary authority for product knowledge  
-3. `.ai/specs/modules/` - Authority for module-specific implementation details
-4. Other `.ai/` files - Supporting reference materials
+1. **Repository Organization**: `<group>/modules/<module>/` pattern is MANDATORY
+2. `.agent-os/standards/` - Primary authority for AI behavior
+3. `.agent-os/product/` - Primary authority for product knowledge  
+4. `specs/modules/<module>/` - Authority for module-specific implementation details
+5. Legacy `.ai/` files - Supporting reference materials only
 
 ## Engineering Domain Essentials
 
@@ -68,7 +95,7 @@ This project supports enhanced Agent OS workflows including:
 # Traditional spec creation (backward compatible)  
 /create-spec feature-name
 
-# Enhanced task execution with summaries
+# Enhanced task execution with summaries (MUST use module pattern)
 /execute-tasks @specs/modules/module-name/spec-folder/tasks.md
 ```
 

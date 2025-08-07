@@ -12,6 +12,7 @@ This directory contains the Agent OS configuration for the DigitalModel project.
 │   ├── stack.md       # Technology stack details
 │   └── roadmap.md     # Product roadmap
 ├── standards/         # Coding standards and conventions
+│   ├── repository-organization.md # MANDATORY module-based directory pattern
 │   ├── code-style.md  # Code formatting and style guide
 │   ├── testing.md     # Testing requirements
 │   └── git.md         # Git workflow and commit conventions
@@ -56,6 +57,7 @@ This directory contains the Agent OS configuration for the DigitalModel project.
 │   ├── stack.md                 # Technology choices and tools
 │   └── roadmap.md               # Product roadmap and priorities
 ├── standards/                    # AI agent standards
+│   ├── repository-organization.md # MANDATORY module-based directory pattern
 │   ├── ai-communication.md      # Communication style requirements
 │   ├── code-style.md            # Python coding standards
 │   ├── testing.md               # Testing requirements and patterns
@@ -69,17 +71,19 @@ This directory contains the Agent OS configuration for the DigitalModel project.
 ## AI Agent Workflow
 
 ### Standard Operating Procedure
-1. **Communication Check**: Verify you're following ai-communication.md standards
-2. **Persona Selection**: Choose appropriate persona from agent-personas.md
-3. **Product Context**: Reference product/ docs for domain knowledge
-4. **Code Standards**: Apply code-style.md and testing.md requirements
-5. **Specification**: Create or reference project specification
-6. **Implementation**: Follow architecture patterns and best practices
-7. **Validation**: Test comprehensively including mock patterns
-8. **Documentation**: Update relevant docs and cross-references
+1. **Repository Organization**: ALWAYS enforce `<group>/modules/<module>/` pattern from repository-organization.md
+2. **Communication Check**: Verify you're following ai-communication.md standards
+3. **Persona Selection**: Choose appropriate persona from agent-personas.md
+4. **Product Context**: Reference product/ docs for domain knowledge
+5. **Code Standards**: Apply code-style.md and testing.md requirements
+6. **Specification**: Create or reference project specification in `specs/modules/<module>/`
+7. **Implementation**: Follow architecture patterns and best practices
+8. **Validation**: Test comprehensively including mock patterns
+9. **Documentation**: Update relevant docs and cross-references
 
 ### Quality Checklist
 Before completing any task:
+- [ ] **Repository organization enforced** - All directories follow `<group>/modules/<module>/` pattern
 - [ ] Communication follows no-sycophancy guidelines
 - [ ] Code follows Python standards with type hints
 - [ ] Tests include mock patterns for licensed software
@@ -107,10 +111,11 @@ This project maintains both Agent OS and legacy AI configurations:
 
 ### Reference Priority
 When guidance conflicts, use this priority:
-1. `.agent-os/standards/` - Primary authority for AI behavior
-2. `.agent-os/product/` - Primary authority for product knowledge
-3. `.ai/specs/modules/` - Authority for module-specific details
-4. `.ai/` other files - Supporting reference materials
+1. **Repository Organization**: `<group>/modules/<module>/` pattern from `.agent-os/standards/repository-organization.md` - MANDATORY
+2. `.agent-os/standards/` - Primary authority for AI behavior
+3. `.agent-os/product/` - Primary authority for product knowledge
+4. `specs/modules/<module>/` - Authority for module-specific details (MUST follow pattern)
+5. Legacy `.ai/` files - Supporting reference materials only
 
 ## Engineering Domain Context
 
