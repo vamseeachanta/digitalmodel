@@ -19,6 +19,10 @@ agent-os/
 │   ├── spec.md             # Python-specific integration
 │   ├── sub-specs/          # Technical details and tests
 │   └── tasks.md            # Implementation tasks
+├── modular-agent-management/ # Modular agent management system
+│   ├── spec.md             # Main system specification
+│   ├── sub-specs/          # Technical details and tests
+│   └── tasks.md            # Implementation tasks
 └── slash-commands/          # Command implementations
     ├── create-module-agent/ # Agent creation command
     └── create-spec/        # Specification generation command
@@ -108,6 +112,30 @@ Implements the `/create-spec` command for generating comprehensive specification
 - Cross-reference management
 - Documentation automation
 
+## Modular Agent Management System
+
+### Agent Management Framework
+**Location**: `modular-agent-management/`
+**Status**: Planning 📋
+
+Comprehensive system for creating specialized AI agents for each module and submodule:
+- Module-specific agent creation
+- Dynamic agent refresh capabilities
+- Context optimization and performance enhancement
+- Integration with existing slash commands
+
+**Key Features**:
+- Specialized agents for faster, focused assistance
+- `/refresh-agent` command for knowledge updates
+- Automatic agent references in task generation
+- Cross-module agent collaboration patterns
+
+**Files**:
+- `spec.md` - Complete system specification and architecture
+- `sub-specs/technical-spec.md` - Detailed implementation framework
+- `sub-specs/tests.md` - Comprehensive testing strategy
+- `tasks.md` - 4-phase implementation plan (16 detailed tasks)
+
 ## Development Status
 
 | Component | Status | Priority | Next Steps |
@@ -115,6 +143,7 @@ Implements the `/create-spec` command for generating comprehensive specification
 | Foundation | 🚧 Active | High | Complete framework setup |
 | General Integration | 🚧 Active | High | Cross-platform compatibility |
 | Python Integration | 🚧 Active | High | Testing framework integration |
+| Modular Agent Management | 📋 Planning | High | Begin Phase 1 implementation |
 | Slash Commands | ✅ Complete | Medium | Performance optimization |
 | Documentation | 🚧 Active | Medium | Complete API documentation |
 
