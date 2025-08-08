@@ -14,6 +14,7 @@ This instruction set guides the creation of detailed specification documents for
 - Create spec folder in `specs/modules/<module>/` following repository pattern
 - Generate main spec.md with all required sections
 - **MANDATORY**: Create prompt.md with prompt history and curated reuse prompt
+- **MANDATORY**: Create task_summary.md with executive summary, findings, and way forward
 - Create sub-specifications as needed
 
 ### Step 3: Document Technical Approach
@@ -31,6 +32,7 @@ This instruction set guides the creation of detailed specification documents for
 specs/modules/<module>/spec-name/
 ├── spec.md
 ├── prompt.md              # MANDATORY - prompt history and reuse prompt
+├── task_summary.md        # MANDATORY - executive summary, updated as spec progresses
 ├── tasks.md
 └── sub-specs/
     ├── technical-spec.md
@@ -119,7 +121,59 @@ Every spec MUST include a `prompt.md` file with this structure:
 ### For Every /create-spec Command
 1. **Repository Pattern**: Spec MUST be created in `specs/modules/<module>/`
 2. **Prompt Documentation**: MUST create prompt.md with complete history
-3. **Template Compliance**: All files must follow established templates
-4. **Cross-References**: Update relevant module READMEs and indices
+3. **Task Summary**: MUST create task_summary.md with executive summary, findings, and way forward
+4. **Template Compliance**: All files must follow established templates
+5. **Cross-References**: Update relevant module READMEs and indices
+6. **Progress Updates**: MUST update task_summary.md as specification progresses
 
-This creates a comprehensive specification with reusable prompt intelligence for future work.
+### MANDATORY Task Summary Template
+Every spec MUST include a `task_summary.md` file with this structure:
+```markdown
+# Task Summary
+
+> Spec: [SPEC_NAME]  
+> Created: [DATE]  
+> Last Updated: [DATE]  
+> Status: [Planning/In Progress/Complete/On Hold]  
+> Progress: [X]% Complete
+
+## Executive Summary
+[Concise overview of the specification purpose, scope, and current status]
+
+## Key Findings
+[Major discoveries, insights, or conclusions from research/analysis]
+
+## Current Status
+### Completed
+- [List of completed tasks/deliverables]
+
+### In Progress  
+- [Current active work items]
+
+### Pending
+- [Upcoming tasks/dependencies]
+
+## Way Forward
+### Next Steps
+1. [Immediate next actions]
+2. [Follow-up tasks]
+3. [Future considerations]
+
+### Decisions Required
+- [Key decisions needed from stakeholders]
+- [Resource allocation needs]
+- [Timeline considerations]
+
+### Success Criteria
+- [Measurable outcomes for completion]
+- [Quality gates and validation criteria]
+```
+
+**Update Requirements**: task_summary.md MUST be updated whenever:
+- Spec status changes
+- Major milestones are completed
+- Key findings or insights are discovered
+- Decisions are made that affect scope or approach
+- Implementation begins or completes
+
+This creates a comprehensive specification with reusable prompt intelligence and continuous progress tracking for stakeholder visibility.
