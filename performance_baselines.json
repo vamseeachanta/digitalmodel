@@ -1,0 +1,45 @@
+{
+  "baseline_date": "2025-01-08",
+  "test_groups": {
+    "tests/modules/aqwa/": {
+      "duration": 16.3,
+      "success": true,
+      "test_count": 11,
+      "performance_flag": "NORMAL"
+    },
+    "tests/core/": {
+      "duration": 16.3,
+      "success": true,
+      "test_count": 65,
+      "performance_flag": "NORMAL"
+    },
+    "tests/no_license/": {
+      "duration": 12.5,
+      "success": true,
+      "test_count": 13,
+      "performance_flag": "NORMAL"
+    },
+    "tests/modules/transformation/": {
+      "duration": 1.2,
+      "success": true,
+      "test_count": 5,
+      "performance_flag": "FAST"
+    },
+    "tests/modules/pipeline/": {
+      "duration": 7.7,
+      "success": true,
+      "test_count": 5,
+      "performance_flag": "FAST"
+    }
+  },
+  "thresholds": {
+    "performance_degradation_threshold": 1.5,
+    "slow_test_threshold": 60,
+    "critical_path_timeout": 30
+  },
+  "total_suite_performance": {
+    "estimated_full_run": 240,
+    "target_full_run": 300,
+    "status": "WITHIN_TARGET"
+  }
+}
