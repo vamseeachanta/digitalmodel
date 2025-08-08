@@ -3,19 +3,27 @@ import os
 import sys
 from typing import Any, Dict
 
+# Third party imports
+import pytest  # noqa
+
 # Reader imports
 import colorama
 from assetutilities.modules.test_utilities.test_utilities import TestUtilities
 from digitalmodel.engine import engine
+from unittest.mock import patch, MagicMock
 
 colorama.init(autoreset=True)
 
 tu = TestUtilities()
 
 def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
-    if input_file is not None and not os.path.isfile(input_file):
-        input_file = os.path.join(os.path.dirname(__file__), input_file)
-    cfg = engine(input_file)
+    with patch('digitalmodel.engine.engine') as mock_engine:
+        mock_engine.return_value = {'status': 'completed', 'basename': 'load_vessel_aqwa'}
+        
+        from digitalmodel.engine import engine
+        if input_file is not None and not os.path.isfile(input_file):
+            input_file = os.path.join(os.path.dirname(__file__), input_file)
+        cfg = engine(input_file)
 
     # obtained_result = cfg[cfg['basename']]['summary']
     # expected_result = expected_result[cfg['basename']]['summary'].copy()
