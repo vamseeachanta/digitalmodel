@@ -1,0 +1,91 @@
+[run]
+# Source code to measure
+source = src/digitalmodel
+
+# Files to omit from coverage
+omit = 
+    */tests/*
+    */test_*
+    */__pycache__/*
+    */migrations/*
+    */venv/*
+    */.venv/*
+    */site-packages/*
+    */dist-packages/*
+    */node_modules/*
+    setup.py
+    */conftest.py
+    */config.py
+    */settings.py
+
+# Enable branch coverage
+branch = True
+
+# Parallel coverage collection
+parallel = True
+
+# Context for coverage collection
+context = test
+
+[report]
+# Reporting options
+precision = 2
+show_missing = True
+skip_covered = False
+sort = Cover
+
+# Exclude patterns
+exclude_lines =
+    # Standard pragma
+    pragma: no cover
+    
+    # Debug code
+    def __repr__
+    def __str__
+    
+    # Defensive programming
+    raise AssertionError
+    raise NotImplementedError
+    
+    # Non-runnable code
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstract
+    @abstractmethod
+    
+    # Logging
+    logger.debug
+    logger.info
+    logger.warning
+    logger.error
+    logger.critical
+
+# Ignore errors when trying to find source files
+ignore_errors = True
+
+[html]
+# HTML report settings
+directory = htmlcov
+title = DigitalModel Test Coverage Report
+show_contexts = True
+
+[xml]
+# XML report for CI/CD integration
+output = coverage.xml
+
+[json]
+# JSON report for programmatic access
+output = coverage.json
+pretty_print = True
+show_contexts = True
+
+[lcov]
+# LCOV format for compatibility with other tools
+output = coverage.lcov
+
+[paths]
+# Path mappings for different environments
+source =
+    src/digitalmodel
+    */digitalmodel
+    */site-packages/digitalmodel
