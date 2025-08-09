@@ -1,0 +1,44 @@
+# Production dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic[email]==2.5.0
+pydantic-settings==2.1.0
+
+# Database and storage
+sqlalchemy==2.0.23
+alembic==1.13.1
+redis==5.0.1
+
+# Data processing
+numpy==1.24.3
+pandas==2.0.3
+scipy==1.11.4
+
+# HTTP client
+httpx==0.25.2
+aiofiles==23.2.1
+
+# Monitoring and observability
+psutil==5.9.6
+structlog==23.2.0
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# Testing dependencies (dev)
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+httpx==0.25.2
+
+# Code quality (dev)
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Documentation (dev)
+mkdocs==1.5.3
+mkdocs-material==9.4.8
