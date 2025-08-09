@@ -54,6 +54,13 @@ This specification outlines comprehensive research into AI-native Computer Aided
    - Integration considerations
    - Risk assessment and mitigation
 
+4. **Open Source AI CAD Agent/Sub-Agent**
+   - Development of reusable AI agent for CAD automation
+   - Python-based sub-agent compatible with Agent OS framework
+   - Natural language interface for design commands
+   - Integration with FreeCAD and Blender workflows
+   - Publishable as open source contribution to community
+
 ### Success Criteria
 - Complete analysis of all major AI-native CAD platforms
 - Clear decision matrix enabling informed software selection

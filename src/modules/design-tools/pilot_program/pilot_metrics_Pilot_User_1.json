@@ -1,0 +1,51 @@
+{
+  "user": "Pilot User 1",
+  "start_date": "2025-08-09T00:43:13.616678",
+  "sessions": [
+    {
+      "session_id": 1,
+      "start_time": "2025-08-09T00:43:13.616801",
+      "end_time": "2025-08-09T00:43:13.618774",
+      "tasks_completed": [
+        {
+          "type": "pressure_vessel",
+          "specifications": {
+            "diameter": 2000,
+            "length": 4000,
+            "thickness": 15
+          },
+          "time_minutes": 30,
+          "traditional_time_estimate": 75.0
+        }
+      ],
+      "commands": [
+        {
+          "command": "create vessel 2m diameter",
+          "result": "success",
+          "time_seconds": 2.5,
+          "timestamp": "2025-08-09T00:43:13.617871"
+        }
+      ],
+      "time_traditional_cad": 75.0,
+      "time_ai_cad": 30,
+      "quality_rating": 8,
+      "ease_rating": 9,
+      "notes": [
+        "Very intuitive natural language interface"
+      ]
+    }
+  ],
+  "designs_created": 1,
+  "commands_executed": 1,
+  "time_saved_hours": 0.75,
+  "satisfaction_ratings": [
+    {
+      "quality": 8,
+      "ease": 9,
+      "session_id": 1,
+      "date": "2025-08-09T00:43:13.618329"
+    }
+  ],
+  "issues_encountered": [],
+  "feature_requests": []
+}
