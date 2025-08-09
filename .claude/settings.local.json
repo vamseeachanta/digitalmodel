@@ -14,7 +14,10 @@
       "Bash(rm:*)",
       "Bash(git branch:*)",
       "Bash(ren:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(dir \"\\Acma-ansys05\\d\\1522\\ctr7\\orcaflex\\rev_a08\\output\\csv\\02c_005yr\" \")",
+      "Bash(find:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

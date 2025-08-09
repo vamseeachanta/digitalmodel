@@ -105,6 +105,16 @@ This project supports enhanced Agent OS workflows including:
 2. **Prompt Documentation**: Create `prompt.md` with complete prompt history and curated reuse prompt
 3. **Template Compliance**: Follow all established templates and patterns
 4. **Module Integration**: Update relevant module READMEs and cross-references
+5. **Markdown Compatibility**: Ensure ALL generated documents use markdown-compatible characters:
+   - Escape angle brackets: `&lt;` `&gt;` instead of `<` `>`
+   - Escape ampersands in text: `&amp;` instead of `&`
+   - Escape Windows paths: `D:\\path\\file` instead of `D:\path\file`
+   - Validate all special characters render properly in markdown processors
+6. **Mathematical Expressions**: When technical specifications include formulas, equations, or mathematical notation:
+   - Use KaTeX/LaTeX blocks for complex equations: `$$equation$$` for display mode, `$equation$` for inline
+   - Simple format for AI: `$$F = ma$$` or `$\sigma = \frac{F}{A}$`
+   - Include units in LaTeX format: `$$P_{wind} = \frac{1}{2}\rho C_d A v^2 \text{ [N]}$$`
+   - Use for engineering calculations, statistical formulas, and mathematical relationships
 
 ### Cross-Repository References
 - Shared components: @assetutilities:src/modules/agent-os/enhanced-create-specs/
