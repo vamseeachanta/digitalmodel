@@ -27,18 +27,20 @@ The specification provides complete decision framework including weighted compar
 | 🥇 1 | **Autodesk Fusion 360** | Commercial | $1,020 | 4.5/5 | **4.25/5** | Manufacturing, Automotive, Aerospace | ⭐⭐⭐⭐ High - Pipeline design, equipment modeling, facility layout | Generative design, simulation, cloud collaboration |
 | 🥈 2 | **FreeCAD** | Open Source | $0 | 3.0/5 | **4.15/5** | Engineering, Research, Education | ⭐⭐⭐ Medium - Custom tools, research projects, cost-sensitive projects | Python extensible, growing AI plugin ecosystem |
 | 🥉 3 | **Spline.design** | AI-Native | $108 | 5.0/5 | **4.05/5** | Marketing, Gaming, Web Design | ⭐ Low - Presentation models, concept visualization only | Text-to-3D, real-time collaboration, browser-based |
-| 4 | **Sloyd AI** | AI-Native | $180 | 5.0/5 | **3.85/5** | Gaming, Entertainment, VR/AR | ⭐ Low - Training simulations, virtual facility tours | Procedural generation, game engine integration |
-| 5 | **CadQuery** | Open Source | $0 | 3.5/5 | **3.80/5** | Software Dev, Research, Automation | ⭐⭐⭐ Medium - Custom automation tools, parametric components | Python-based, perfect for AI integration |
-| 6 | **Onshape** | Cloud | $1,500 | 4.0/5 | **3.75/5** | Manufacturing, Startups, Remote Teams | ⭐⭐⭐ Medium - Collaborative projects, equipment design | Cloud-native, AI assistant, version control |
-| 7 | **AutoCAD 2025** | Commercial | $2,640 | 3.5/5 | **3.45/5** | Architecture, Construction, Infrastructure | ⭐⭐⭐⭐⭐ Very High - P&ID diagrams, facility drawings, site plans | Industry standard, AI-enhanced drafting, DWG format |
-| 8 | **SOLIDWORKS 2025** | Premium | $4,200+ | 4.0/5 | **3.35/5** | Aerospace, Automotive, Heavy Industry | ⭐⭐⭐⭐⭐ Very High - Pressure vessels, complex assemblies, FEA | Advanced simulation, industry compliance, enterprise |
-| 9 | **Tinkercad** | Educational | $0 | 2.0/5 | **3.20/5** | Education, Prototyping, Makers | ⭐ Low - Basic training, concept models only | Free, browser-based, very simple interface |
-| 10 | **OpenSCAD** | Open Source | $0 | 3.0/5 | **3.15/5** | Research, Parametric Design, 3D Printing | ⭐⭐ Low-Medium - Custom fixtures, parametric components | Code-based design, version control friendly |
+| 4 | **Blender** | Open Source | $0 | 4.0/5 | **3.90/5** | Animation, VFX, Architecture, Product Design | ⭐⭐⭐ Medium - 3D facility visualization, equipment rendering, VR training | Geometry Nodes AI, massive plugin ecosystem, professional 3D capabilities |
+| 5 | **Sloyd AI** | AI-Native | $180 | 5.0/5 | **3.85/5** | Gaming, Entertainment, VR/AR | ⭐ Low - Training simulations, virtual facility tours | Procedural generation, game engine integration |
+| 6 | **CadQuery** | Open Source | $0 | 3.5/5 | **3.80/5** | Software Dev, Research, Automation | ⭐⭐⭐ Medium - Custom automation tools, parametric components | Python-based, perfect for AI integration |
+| 7 | **Onshape** | Cloud | $1,500 | 4.0/5 | **3.75/5** | Manufacturing, Startups, Remote Teams | ⭐⭐⭐ Medium - Collaborative projects, equipment design | Cloud-native, AI assistant, version control |
+| 8 | **AutoCAD 2025** | Commercial | $2,640 | 3.5/5 | **3.45/5** | Architecture, Construction, Infrastructure | ⭐⭐⭐⭐⭐ Very High - P&ID diagrams, facility drawings, site plans | Industry standard, AI-enhanced drafting, DWG format |
+| 9 | **SOLIDWORKS 2025** | Premium | $4,200+ | 4.0/5 | **3.35/5** | Aerospace, Automotive, Heavy Industry | ⭐⭐⭐⭐⭐ Very High - Pressure vessels, complex assemblies, FEA | Advanced simulation, industry compliance, enterprise |
+| 10 | **Tinkercad** | Educational | $0 | 2.0/5 | **3.20/5** | Education, Prototyping, Makers | ⭐ Low - Basic training, concept models only | Free, browser-based, very simple interface |
+| 11 | **OpenSCAD** | Open Source | $0 | 3.0/5 | **3.15/5** | Research, Parametric Design, 3D Printing | ⭐⭐ Low-Medium - Custom fixtures, parametric components | Code-based design, version control friendly |
 
-### Top Software Recommendations
-1. **Autodesk Fusion 360** (4.25/5) - Best overall balance of AI features, professional capabilities, and cost
-2. **FreeCAD** (4.15/5) - Leading open source option with growing AI plugin ecosystem  
+### 🏆 **NEW BASE CASE: FreeCAD + Blender Workflow**
+1. **FreeCAD + Blender** (4.50/5) - **RECOMMENDED BASE CASE** - Zero cost, full capability, AI-extensible
+2. **Autodesk Fusion 360** (4.25/5) - Commercial alternative with built-in AI features
 3. **Spline.design** (4.05/5) - Most AI-native with text-to-3D generation capabilities
+4. **Pure Blender** (3.90/5) - Powerful 3D-focused solution with emerging AI capabilities
 
 ### Oil & Gas Industry Insights
 - **AutoCAD Dominance**: 95% market penetration for P&ID and facility drawings in oil & gas
@@ -77,12 +79,23 @@ The specification provides complete decision framework including weighted compar
 
 ## Way Forward
 
+### Integrated Workflow Analysis
+**NEW: 5 Engineering + Visualization Workflows** have been designed and documented with mermaid diagrams:
+
+1. **Premium Commercial** ($8-12K/year) - SOLIDWORKS + AutoCAD + Professional rendering
+2. **🏆 Fusion + Blender Hybrid** ($1K/year) - **RECOMMENDED** best value with professional results
+3. **Pure Open Source** ($0/year) - FreeCAD + Blender + Python AI integration
+4. **Web-Native AI** ($2.6K/year) - Spline.design + Onshape + modern AI tools  
+5. **Oil & Gas Specialist** ($15-25K/year) - Full industry compliance stack
+
+**🏆 UPDATED RECOMMENDATION**: **FreeCAD + Blender Open Source Workflow** provides optimal balance of engineering precision, visualization excellence, AI extensibility, and **zero cost** - making it the ideal base case for all organizations.
+
 ### Next Steps
-1. **Stakeholder Decision** - Present findings for software selection approval
-2. **Pilot Implementation** - Deploy selected solution with small user group 
-3. **Training Development** - Create onboarding materials for chosen platform
-4. **Integration Testing** - Validate compatibility with existing workflows
-5. **Rollout Planning** - Scale implementation based on pilot results
+1. **Stakeholder Decision** - Present findings including new workflow analysis for selection approval
+2. **Pilot Implementation** - Deploy recommended FreeCAD + Blender workflow with small user group 
+3. **Training Development** - Create onboarding materials for open source workflow platform
+4. **Integration Testing** - Validate workflow compatibility with existing oil & gas processes  
+5. **Rollout Planning** - Scale implementation based on pilot results and workflow efficiency gains
 
 ### Oil & Gas Industry Specific Recommendations
 
@@ -98,7 +111,7 @@ The specification provides complete decision framework including weighted compar
 
 | Budget Range | Recommended Software | Annual Cost | Rationale | Oil & Gas Fit |
 |--------------|---------------------|-------------|-----------|---------------|
-| **$0 (Free)** | FreeCAD + CadQuery | $0 | Best open source combo with AI potential | Good for research, custom tools |
+| **$0 (Free)** | FreeCAD + Blender | $0 | Best open source combo: CAD precision + 3D visualization | Good for research, facility visualization |
 | **<$200** | Spline.design Pro | $108 | AI-native web solution with text-to-3D | Limited - concept visualization only |
 | **<$1,500** | Autodesk Fusion 360 | $1,020 | Professional grade with excellent AI features | High - equipment design, facilities |
 | **<$3,000** | AutoCAD 2025 | $2,640 | Industry standard for 2D with AI enhancements | Very High - P&ID, facility drawings |
