@@ -1,0 +1,83 @@
+graph TB
+    subgraph "User Interface Layer"
+        UI[Configuration Interface]
+        REP[Results Reporting]
+    end
+    
+    subgraph "Core Algorithm Engine"
+        IE[Iteration Engine<br/>MooringTensionIterator]
+        CM[Configuration Manager<br/>IterationConfig]
+        VH[Validation Handler]
+    end
+    
+    subgraph "Analysis Components"
+        TA[Tension Analyzer<br/>TensionAnalyzer]
+        LM[Line Modifier<br/>LinePropertyManager]
+        JC[Jacobian Calculator]
+    end
+    
+    subgraph "OrcaFlex Integration"
+        OFA[OrcaFlex API Interface]
+        SA[Static Analysis Engine]
+        MP[Model Property Manager]
+    end
+    
+    subgraph "Mathematical Solver"
+        NR[Newton-Raphson Solver]
+        LS[Linear System Solver]
+        CG[Convergence Checker]
+    end
+    
+    subgraph "Data Management"
+        BC[Backup Controller]
+        RL[Results Logger]
+        VM[Validation Metrics]
+    end
+    
+    %% User interactions
+    UI --> CM
+    REP --> RL
+    
+    %% Main algorithm flow
+    CM --> IE
+    IE --> TA
+    IE --> LM
+    IE --> VH
+    
+    %% Analysis components
+    TA --> OFA
+    TA --> SA
+    LM --> MP
+    LM --> BC
+    
+    %% Mathematical processing
+    IE --> JC
+    JC --> NR
+    NR --> LS
+    IE --> CG
+    
+    %% OrcaFlex operations
+    OFA --> SA
+    SA --> MP
+    MP --> BC
+    
+    %% Data flow
+    TA --> RL
+    CG --> VM
+    VM --> REP
+    BC --> VH
+    
+    %% Styling
+    classDef userLayer fill:#e1f5fe
+    classDef coreLayer fill:#f3e5f5
+    classDef analysisLayer fill:#e8f5e8
+    classDef orcaflexLayer fill:#fff3e0
+    classDef mathLayer fill:#fce4ec
+    classDef dataLayer fill:#f1f8e9
+    
+    class UI,REP userLayer
+    class IE,CM,VH coreLayer
+    class TA,LM,JC analysisLayer
+    class OFA,SA,MP orcaflexLayer
+    class NR,LS,CG mathLayer
+    class BC,RL,VM dataLayer
