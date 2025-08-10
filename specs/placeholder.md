@@ -19,4 +19,8 @@ objetive is to iterate the mooring tensions for the model to a target values in 
 Relevant orcaflex agent: agents\orcaflex
 
 
-/create-spec research on how to create an agent 
+/create-spec research on how to create an agent from mixed documentation as below
+i.e. ascii files, markdown files, text files, readable PDF, scanned PDFs, excel workbooks, regulatory codes, user manuals, etc.
+Create a good phased plan on how to create an agent from mixed documentation. Utilize the context generation tools (contex7, n8n etc.) as needed. Also, plan on how persist the generated context so as to not redo the work along with tracking etc.
+Also create a plan on how to add additional documentation to the agent in the future. analyze and create a good plan. 
+Add this plan to /create-module-agent slash command
