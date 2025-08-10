@@ -1,0 +1,123 @@
+@startuml modular_analysis
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Modular Model Building \n AQWA
+
+start
+
+    note right
+        Objective: modular file management and 
+        analysis for easy updates/maintenance/reruns
+    end note
+
+    note right
+        All files in ascii (.dat) format
+    end note
+
+    partition "Analysis Parameters" {
+
+        :Analysis Parameters;
+            note right
+                Simulation time, time step, etc.
+                These parameters may be changed later if unconvergence occurs
+            end note
+
+    }
+
+    partition "field" {
+
+        :N-S Directions;
+            note right
+                North Direction per alignment sheet
+            end note
+
+        :Seabed and Water Depth;
+            note right
+                water depth
+                seabed profile/bathymetry (3D profile)
+            end note
+
+        :Environment;
+            note right
+                Define project data in files i.e waves, current, wind etc.
+            end note
+
+    }
+
+    partition "Vessel Data" {
+
+    note right
+        Add Host vessel
+        Add installation vessel(s)
+        Repeat process for all vessels
+    end note
+
+        :Vessel Data;
+            note right
+                Vessel Data
+            end note
+
+        :Vessel Settings;
+            note right
+                Draft
+                Type of solution, etc.
+            end note
+
+        :Vessel Location;
+            note right
+                Location of vessel
+                Orientation of vessel
+            end note
+
+    }
+
+    partition "Structure - Vessel Assets" {
+
+        :Basic Structure properties;
+            note right
+                examples are:
+                 Add additional weights
+                 structures etc.
+            end note
+
+        :Interface Data;
+            note right
+                Moorings
+            end note
+
+
+    }
+
+
+    partition "Structure - Assets" {
+        :Basic Structures:
+        - jumpers/arms
+        - other structures
+
+    }
+
+    partition "Stucture Interface to Vessel" {
+        :Structure to Vessel;
+            note right
+                Rigging, Chutes, Tensioners etc.
+            end note
+
+        :Other interfaces;
+            note right
+                For modelling etc.
+            end note
+
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
