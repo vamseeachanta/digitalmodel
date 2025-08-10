@@ -1,0 +1,12 @@
+agents:
+  web-test-module:
+    created: '2025-08-10T17:55:47.703228'
+    path: agents/web-test-module
+    specialization: general-purpose
+    status: active
+metrics: {}
+modules:
+  web-test-module:
+    agents:
+    - web-test-module
+    coverage: 0.0
