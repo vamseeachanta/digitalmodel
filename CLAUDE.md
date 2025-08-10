@@ -76,7 +76,7 @@ When guidance conflicts:
 
 ## Available Commands
 
-- **Create-Module-Agent:** Available via `/create-module-agent` command
+- **Create-Module-Agent:** Available via `python tools/create-module-agent.py` command
 
 ## Enhanced Features Available
 
@@ -90,13 +90,13 @@ This project supports enhanced Agent OS workflows including:
 ### Command Examples
 ```bash
 # Enhanced spec creation (MUST include prompt.md)
-/create-spec feature-name module-name enhanced
+python tools/create-spec-enhanced.py feature-name module-name enhanced
 
 # Traditional spec creation (MUST include prompt.md)
-/create-spec feature-name
+python tools/create-spec.py feature-name
 
 # Enhanced task execution with summaries (MUST use module pattern)
-/execute-tasks @specs/modules/module-name/spec-folder/tasks.md
+python tools/execute-tasks.py @specs/modules/module-name/spec-folder/tasks.md
 ```
 
 ### /create-spec MANDATORY Requirements
@@ -129,13 +129,13 @@ This repository includes an enhanced create-spec command with advanced features:
 
 ```bash
 # Enhanced spec with executive summaries and diagrams
-python create-spec-enhanced.py feature-name module-name enhanced
+python tools/create-spec-enhanced.py feature-name module-name enhanced
 
 # Research-focused specification
-python create-spec-enhanced.py research-topic research
+python tools/create-spec-enhanced.py research-topic research
 
 # Quick minimal specification
-python create-spec-enhanced.py quick-fix minimal
+python tools/create-spec-enhanced.py quick-fix minimal
 ```
 
 Features:
