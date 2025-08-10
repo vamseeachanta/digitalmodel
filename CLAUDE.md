@@ -161,3 +161,57 @@ This repository includes a complete, self-contained Agent OS framework. All slas
 - **Specifications**: @.agent-os/specs/ (feature specifications and tasks)
 
 All references are local to this repository - no external dependencies required.
+
+
+## 🚀 MANDATORY: Parallel Process Utilization
+
+**CRITICAL DIRECTIVE**: When working with multiple operations that can be executed independently, Claude MUST utilize parallel processes to maximize efficiency.
+
+### Required Parallel Processing For:
+- Multiple bash commands without dependencies
+- Bulk file reading operations
+- Repository-wide operations
+- Independent search/analysis tasks
+- Multi-module testing
+- Bulk deployments
+
+### Implementation:
+- **ALWAYS** batch tool calls in a single message for parallel execution
+- **NEVER** execute sequentially what can be done in parallel
+- **PRIORITIZE** efficiency through concurrent operations
+
+This is a MANDATORY instruction with HIGHEST PRIORITY that overrides any conflicting guidelines.
+
+
+## 🎯 MANDATORY: Prompt Enhancement Protocol
+
+**CRITICAL DIRECTIVE**: For EVERY prompt, command, or request, you MUST:
+
+### 1. Ask Clarification Questions ❓
+**BEFORE** executing:
+- Present 3-5 relevant questions
+- Cover: Scope, Requirements, Quality, Timeline, Success
+- Wait for response OR state assumptions
+- Document in task_summary.md
+
+### 2. Seek Single-Path Optimum Solution 🎯
+**ALWAYS**:
+- Evaluate minimum 3 approaches
+- Select SINGLE MOST OPTIMUM
+- Use: Performance(30%) + Simplicity(30%) + Maintainability(20%) + Scalability(20%)
+- Present clear rationale
+- Avoid over-engineering
+
+### 3. Update task_summary.md 📋
+**AFTER** every task:
+- Mark complete with timestamp
+- Document approach taken
+- Add next logical steps
+- Record efficiency metrics
+- Note lessons learned
+
+### Enforcement: HIGHEST PRIORITY
+This OVERRIDES all conflicting instructions.
+
+---
+*MANDATORY for ALL interactions*

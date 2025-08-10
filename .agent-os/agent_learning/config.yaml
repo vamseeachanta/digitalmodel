@@ -1,0 +1,46 @@
+# Agent Learning Configuration
+version: 1.0.0
+enabled: true
+
+learning_parameters:
+  min_tasks_for_pattern: 3
+  success_threshold: 0.8
+  sharing_threshold: 5
+  improvement_window: 10
+
+context_types:
+  - common
+  - variation
+  - domain
+  - error
+  - optimization
+  - success
+
+progression_levels:
+  novice:
+    min_tasks: 0
+    max_tasks: 10
+  intermediate:
+    min_tasks: 11
+    max_tasks: 50
+  advanced:
+    min_tasks: 51
+    max_tasks: 200
+  expert:
+    min_tasks: 201
+    max_tasks: 500
+  master:
+    min_tasks: 501
+    min_success_rate: 0.9
+
+metrics_tracking:
+  - success_rate
+  - efficiency
+  - quality
+  - learning_rate
+  - improvement_trend
+
+knowledge_sharing:
+  enabled: true
+  frequency: after_each_task
+  threshold: best_practices_only

@@ -1,0 +1,41 @@
+# Free Agent Templates - Refreshed Weekly
+agents:
+  code_reviewer:
+    type: free
+    capabilities: [review, testing, quality, simple]
+    description: Free agent for code review tasks
+    cost: 0
+  
+  doc_writer:
+    type: free
+    capabilities: [documentation, readme, comments, simple]
+    description: Free agent for documentation tasks
+    cost: 0
+  
+  test_runner:
+    type: free
+    capabilities: [testing, validation, ci, simple]
+    description: Free agent for test execution
+    cost: 0
+  
+  formatter:
+    type: free
+    capabilities: [formatting, linting, style, simple]
+    description: Free agent for code formatting
+    cost: 0
+  
+  researcher:
+    type: free
+    capabilities: [research, analysis, exploration, moderate]
+    description: Free agent for research tasks
+    cost: 0
+  
+  debugger:
+    type: free
+    capabilities: [debugging, troubleshooting, fixes, moderate]
+    description: Free agent for debugging tasks
+    cost: 0
+
+refresh_schedule: weekly
+last_refresh: null
+usage_tracking: enabled
