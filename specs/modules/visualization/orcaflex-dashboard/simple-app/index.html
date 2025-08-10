@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrcaFlex Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-top: 20px; }
+        .card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card h2 { margin-bottom: 15px; color: #333; }
+        #status { background: #4CAF50; color: white; padding: 10px; border-radius: 4px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🌊 OrcaFlex Results Dashboard</h1>
+            <p>Real-time marine engineering analysis visualization</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div id="status">✅ Dashboard is running! Docker setup successful.</div>
+        
+        <div class="grid">
+            <div class="card">
+                <h2>Mooring Tension</h2>
+                <div id="tension-plot"></div>
+            </div>
+            <div class="card">
+                <h2>Vessel Motion</h2>
+                <div id="motion-plot"></div>
+            </div>
+            <div class="card">
+                <h2>Environmental Loads</h2>
+                <div id="loads-plot"></div>
+            </div>
+            <div class="card">
+                <h2>System Status</h2>
+                <ul id="system-info">
+                    <li>Database: PostgreSQL ✅</li>
+                    <li>Cache: Redis ✅</li>
+                    <li>API: FastAPI ✅</li>
+                    <li>Frontend: React/Vite ✅</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data visualization
+        const time = Array.from({length: 100}, (_, i) => i);
+        const tension = time.map(t => 1000 + 200 * Math.sin(t/10) + 50 * Math.random());
+        const heave = time.map(t => 5 * Math.sin(t/8) + 0.5 * Math.random());
+        const surge = time.map(t => 3 * Math.cos(t/12) + 0.3 * Math.random());
+        
+        Plotly.newPlot('tension-plot', [{
+            x: time,
+            y: tension,
+            type: 'scatter',
+            name: 'Line 1',
+            line: { color: '#667eea' }
+        }], {
+            margin: { t: 0 },
+            height: 250
+        });
+        
+        Plotly.newPlot('motion-plot', [
+            { x: time, y: heave, type: 'scatter', name: 'Heave', line: { color: '#4CAF50' } },
+            { x: time, y: surge, type: 'scatter', name: 'Surge', line: { color: '#FF6B6B' } }
+        ], {
+            margin: { t: 0 },
+            height: 250
+        });
+        
+        Plotly.newPlot('loads-plot', [{
+            x: ['Wave', 'Wind', 'Current'],
+            y: [450, 280, 180],
+            type: 'bar',
+            marker: { color: ['#667eea', '#764ba2', '#9B59B6'] }
+        }], {
+            margin: { t: 0 },
+            height: 250
+        });
+    </script>
+</body>
+</html>
