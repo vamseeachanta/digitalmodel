@@ -1,0 +1,13 @@
+cache_settings:
+  max_age_days: 7
+  max_size_mb: 100
+enabled: true
+search_history: []
+sources: []
+user_added_links:
+- added_by: user
+  date_added: '2025-08-10T17:55:51.723885'
+  notes: Python official documentation
+  title: https://docs.python.org
+  type: user_added
+  url: https://docs.python.org
