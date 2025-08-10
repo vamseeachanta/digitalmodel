@@ -1,241 +1,488 @@
-/**
- * React hooks for analysis operations
- */
+// Custom hook for analysis operations
+// Provides state management, CRUD operations, and real-time updates for analyses
 
-import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { toast } from 'react-toastify';
-
-import { analysisService } from '@/services/analysisService';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   Analysis,
-  AnalysisRequest,
-  AnalysisSummary,
-  AnalysisResult,
-  AnalysisProgress,
-  AnalysisFilters,
-  AnalysisPagination,
-  FileUploadResponse,
-} from '@/types/analysis';
+  AnalysisStatus,
+  CreateAnalysisRequest,
+  UpdateAnalysisRequest,
+  RunAnalysisRequest,
+  GetAnalysesRequest,
+  LoadingState,
+  AnalysisStatusUpdate,
+  AnalysisProgressUpdate
+} from '../types/api';
+import { apiClient, wsClient } from '../services/api';
+import {
+  fetchAnalyses,
+  fetchAnalysis,
+  createAnalysis,
+  updateAnalysis,
+  deleteAnalysis,
+  runAnalysis,
+  cancelAnalysis,
+  updateAnalysisStatus,
+  updateAnalysisProgress,
+  selectAnalyses,
+  selectAnalysisById,
+  selectAnalysesLoading,
+  selectAnalysesError
+} from '../store/slices/analysisSlice';
+import type { RootState, AppDispatch } from '../store';
 
-// Query keys for cache management
-export const analysisQueryKeys = {
-  all: ['analyses'] as const,
-  lists: () => [...analysisQueryKeys.all, 'list'] as const,
-  list: (filters: AnalysisFilters, pagination: AnalysisPagination) =>
-    [...analysisQueryKeys.lists(), filters, pagination] as const,
-  details: () => [...analysisQueryKeys.all, 'detail'] as const,
-  detail: (id: string) => [...analysisQueryKeys.details(), id] as const,
-  results: (id: string) => [...analysisQueryKeys.detail(id), 'results'] as const,
-  progress: (id: string) => [...analysisQueryKeys.detail(id), 'progress'] as const,
-  logs: (id: string) => [...analysisQueryKeys.detail(id), 'logs'] as const,
-};
+export interface UseAnalysesOptions {
+  autoRefresh?: boolean;
+  refreshInterval?: number;
+  subscribeToUpdates?: boolean;
+  initialFilters?: Partial<GetAnalysesRequest>;
+}
 
-// Get list of analyses
-export const useAnalyses = (
-  filters: AnalysisFilters = {},
-  pagination: AnalysisPagination = { limit: 50, offset: 0 }
-) => {
-  return useQuery({
-    queryKey: analysisQueryKeys.list(filters, pagination),
-    queryFn: () => analysisService.getAnalyses(filters, pagination),
-    staleTime: 30000, // 30 seconds
-    cacheTime: 300000, // 5 minutes
-    keepPreviousData: true,
-  });
-};
-
-// Get single analysis
-export const useAnalysis = (id: string) => {
-  return useQuery({
-    queryKey: analysisQueryKeys.detail(id),
-    queryFn: () => analysisService.getAnalysis(id),
-    enabled: !!id,
-    staleTime: 60000, // 1 minute
-    cacheTime: 300000, // 5 minutes
-  });
-};
-
-// Get analysis results
-export const useAnalysisResults = (id: string) => {
-  return useQuery({
-    queryKey: analysisQueryKeys.results(id),
-    queryFn: () => analysisService.getAnalysisResults(id),
-    enabled: !!id,
-    staleTime: 60000, // 1 minute
-    cacheTime: 600000, // 10 minutes
-  });
-};
-
-// Get analysis progress (for running analyses)
-export const useAnalysisProgress = (id: string, enabled: boolean = false) => {
-  return useQuery({
-    queryKey: analysisQueryKeys.progress(id),
-    queryFn: () => analysisService.getAnalysisProgress(id),
-    enabled: enabled && !!id,
-    refetchInterval: enabled ? 2000 : false, // Poll every 2 seconds when enabled
-    staleTime: 0, // Always fresh for progress updates
-    cacheTime: 0, // Don't cache progress data
-  });
-};
-
-// Get analysis logs
-export const useAnalysisLogs = (id: string, lines: number = 100) => {
-  return useQuery({
-    queryKey: [...analysisQueryKeys.logs(id), lines],
-    queryFn: () => analysisService.getAnalysisLogs(id, lines),
-    enabled: !!id,
-    staleTime: 10000, // 10 seconds
-    cacheTime: 60000, // 1 minute
-  });
-};
-
-// Create new analysis
-export const useCreateAnalysis = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (request: AnalysisRequest) => analysisService.createAnalysis(request),
-    onSuccess: (data: Analysis) => {
-      // Invalidate analyses list
-      queryClient.invalidateQueries(analysisQueryKeys.lists());
-      
-      // Add to cache
-      queryClient.setQueryData(analysisQueryKeys.detail(data.id), data);
-      
-      toast.success('Analysis created successfully');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to create analysis: ${error.message}`);
-    },
-  });
-};
-
-// Update analysis
-export const useUpdateAnalysis = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, request }: { id: string; request: AnalysisRequest }) =>
-      analysisService.updateAnalysis(id, request),
-    onSuccess: (data: Analysis) => {
-      // Update cache
-      queryClient.setQueryData(analysisQueryKeys.detail(data.id), data);
-      
-      // Invalidate lists
-      queryClient.invalidateQueries(analysisQueryKeys.lists());
-      
-      toast.success('Analysis updated successfully');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to update analysis: ${error.message}`);
-    },
-  });
-};
-
-// Delete analysis
-export const useDeleteAnalysis = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => analysisService.deleteAnalysis(id),
-    onSuccess: (_, id) => {
-      // Remove from cache
-      queryClient.removeQueries(analysisQueryKeys.detail(id));
-      
-      // Invalidate lists
-      queryClient.invalidateQueries(analysisQueryKeys.lists());
-      
-      toast.success('Analysis deleted successfully');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to delete analysis: ${error.message}`);
-    },
-  });
-};
-
-// Run analysis
-export const useRunAnalysis = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => analysisService.runAnalysis(id),
-    onSuccess: (_, id) => {
-      // Invalidate analysis detail to get updated status
-      queryClient.invalidateQueries(analysisQueryKeys.detail(id));
-      
-      // Invalidate lists
-      queryClient.invalidateQueries(analysisQueryKeys.lists());
-      
-      toast.success('Analysis started successfully');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to start analysis: ${error.message}`);
-    },
-  });
-};
-
-// Cancel analysis
-export const useCancelAnalysis = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => analysisService.cancelAnalysis(id),
-    onSuccess: (_, id) => {
-      // Invalidate analysis detail
-      queryClient.invalidateQueries(analysisQueryKeys.detail(id));
-      
-      // Invalidate lists
-      queryClient.invalidateQueries(analysisQueryKeys.lists());
-      
-      toast.success('Analysis cancelled successfully');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to cancel analysis: ${error.message}`);
-    },
-  });
-};
-
-// Upload file
-export const useUploadFile = () => {
-  return useMutation({
-    mutationFn: (file: File) => analysisService.uploadFile(file),
-    onSuccess: (data: FileUploadResponse) => {
-      toast.success(`File uploaded: ${data.filename}`);
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to upload file: ${error.message}`);
-    },
-  });
-};
-
-// Custom hook for managing analysis lifecycle
-export const useAnalysisLifecycle = (id: string) => {
-  const { data: analysis } = useAnalysis(id);
-  const { data: progress } = useAnalysisProgress(
-    id, 
-    analysis?.status === 'running'
-  );
-  const { data: results } = useAnalysisResults(id);
+export interface UseAnalysesReturn {
+  // Data
+  analyses: Analysis[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
   
-  const runMutation = useRunAnalysis();
-  const cancelMutation = useCancelAnalysis();
+  // Loading states
+  loading: LoadingState;
+  creating: boolean;
+  updating: boolean;
+  deleting: boolean;
+  running: boolean;
   
-  const canRun = analysis?.status === 'pending' || analysis?.status === 'failed';
-  const canCancel = analysis?.status === 'running';
-  const isCompleted = analysis?.status === 'completed';
-  const hasResults = isCompleted && !!results;
+  // Error states
+  error: string | null;
   
+  // Filter and pagination
+  filters: GetAnalysesRequest;
+  setFilters: (filters: Partial<GetAnalysesRequest>) => void;
+  resetFilters: () => void;
+  
+  // CRUD operations
+  loadAnalyses: (params?: GetAnalysesRequest) => Promise<void>;
+  loadAnalysis: (id: string) => Promise<Analysis | null>;
+  createNewAnalysis: (data: CreateAnalysisRequest) => Promise<Analysis | null>;
+  updateExistingAnalysis: (id: string, data: UpdateAnalysisRequest) => Promise<Analysis | null>;
+  deleteExistingAnalysis: (id: string) => Promise<boolean>;
+  
+  // Analysis control operations
+  runExistingAnalysis: (id: string, options?: RunAnalysisRequest) => Promise<boolean>;
+  cancelExistingAnalysis: (id: string) => Promise<boolean>;
+  
+  // Utility functions
+  refreshAnalyses: () => Promise<void>;
+  getAnalysisByStatus: (status: AnalysisStatus) => Analysis[];
+  getRunningAnalyses: () => Analysis[];
+  getCompletedAnalyses: () => Analysis[];
+  getFailedAnalyses: () => Analysis[];
+  
+  // Pagination
+  goToPage: (page: number) => void;
+  goToNextPage: () => void;
+  goToPreviousPage: () => void;
+  
+  // Search and sorting
+  searchAnalyses: (query: string) => void;
+  sortAnalyses: (field: string, direction?: 'asc' | 'desc') => void;
+  
+  // Real-time updates
+  isConnected: boolean;
+  connectionError: string | null;
+}
+
+const DEFAULT_FILTERS: GetAnalysesRequest = {
+  page: 1,
+  limit: 20,
+  sort_by: 'updated_at',
+  sort_order: 'desc'
+};
+
+export const useAnalyses = (options: UseAnalysesOptions = {}): UseAnalysesReturn => {
+  const {
+    autoRefresh = false,
+    refreshInterval = 30000, // 30 seconds
+    subscribeToUpdates = true,
+    initialFilters = {}
+  } = options;
+
+  const dispatch = useDispatch<AppDispatch>();
+  
+  // Redux selectors
+  const analyses = useSelector((state: RootState) => selectAnalyses(state));
+  const loading = useSelector((state: RootState) => selectAnalysesLoading(state));
+  const error = useSelector((state: RootState) => selectAnalysesError(state));
+
+  // Local state
+  const [filters, setFiltersState] = useState<GetAnalysesRequest>({
+    ...DEFAULT_FILTERS,
+    ...initialFilters
+  });
+  const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  // Computed values
+  const totalCount = useSelector((state: RootState) => state.analyses.totalCount);
+  const currentPage = filters.page || 1;
+  const totalPages = Math.ceil(totalCount / (filters.limit || 20));
+
+  // Filter management
+  const setFilters = useCallback((newFilters: Partial<GetAnalysesRequest>) => {
+    setFiltersState(prev => ({
+      ...prev,
+      ...newFilters,
+      page: newFilters.page !== undefined ? newFilters.page : 1 // Reset to page 1 unless explicitly set
+    }));
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setFiltersState({ ...DEFAULT_FILTERS, ...initialFilters });
+  }, [initialFilters]);
+
+  // Load analyses
+  const loadAnalyses = useCallback(async (params?: GetAnalysesRequest) => {
+    const finalParams = { ...filters, ...params };
+    try {
+      await dispatch(fetchAnalyses(finalParams)).unwrap();
+    } catch (err) {
+      console.error('Failed to load analyses:', err);
+    }
+  }, [dispatch, filters]);
+
+  // Load single analysis
+  const loadAnalysis = useCallback(async (id: string): Promise<Analysis | null> => {
+    try {
+      const result = await dispatch(fetchAnalysis(id)).unwrap();
+      return result;
+    } catch (err) {
+      console.error('Failed to load analysis:', err);
+      return null;
+    }
+  }, [dispatch]);
+
+  // Create analysis
+  const createNewAnalysis = useCallback(async (data: CreateAnalysisRequest): Promise<Analysis | null> => {
+    setCreating(true);
+    try {
+      const result = await dispatch(createAnalysis(data)).unwrap();
+      await loadAnalyses(); // Refresh the list
+      return result;
+    } catch (err) {
+      console.error('Failed to create analysis:', err);
+      return null;
+    } finally {
+      setCreating(false);
+    }
+  }, [dispatch, loadAnalyses]);
+
+  // Update analysis
+  const updateExistingAnalysis = useCallback(async (id: string, data: UpdateAnalysisRequest): Promise<Analysis | null> => {
+    setUpdating(true);
+    try {
+      const result = await dispatch(updateAnalysis({ id, data })).unwrap();
+      return result;
+    } catch (err) {
+      console.error('Failed to update analysis:', err);
+      return null;
+    } finally {
+      setUpdating(false);
+    }
+  }, [dispatch]);
+
+  // Delete analysis
+  const deleteExistingAnalysis = useCallback(async (id: string): Promise<boolean> => {
+    setDeleting(true);
+    try {
+      await dispatch(deleteAnalysis(id)).unwrap();
+      await loadAnalyses(); // Refresh the list
+      return true;
+    } catch (err) {
+      console.error('Failed to delete analysis:', err);
+      return false;
+    } finally {
+      setDeleting(false);
+    }
+  }, [dispatch, loadAnalyses]);
+
+  // Run analysis
+  const runExistingAnalysis = useCallback(async (id: string, options?: RunAnalysisRequest): Promise<boolean> => {
+    setRunning(true);
+    try {
+      await dispatch(runAnalysis({ id, options })).unwrap();
+      return true;
+    } catch (err) {
+      console.error('Failed to run analysis:', err);
+      return false;
+    } finally {
+      setRunning(false);
+    }
+  }, [dispatch]);
+
+  // Cancel analysis
+  const cancelExistingAnalysis = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      await dispatch(cancelAnalysis(id)).unwrap();
+      return true;
+    } catch (err) {
+      console.error('Failed to cancel analysis:', err);
+      return false;
+    }
+  }, [dispatch]);
+
+  // Refresh analyses
+  const refreshAnalyses = useCallback(async () => {
+    await loadAnalyses();
+  }, [loadAnalyses]);
+
+  // Utility functions
+  const getAnalysisByStatus = useCallback((status: AnalysisStatus): Analysis[] => {
+    return analyses.filter(analysis => analysis.status === status);
+  }, [analyses]);
+
+  const getRunningAnalyses = useCallback((): Analysis[] => {
+    return analyses.filter(analysis => 
+      analysis.status === 'running' || analysis.status === 'queued'
+    );
+  }, [analyses]);
+
+  const getCompletedAnalyses = useCallback((): Analysis[] => {
+    return getAnalysisByStatus('completed');
+  }, [getAnalysisByStatus]);
+
+  const getFailedAnalyses = useCallback((): Analysis[] => {
+    return getAnalysisByStatus('failed');
+  }, [getAnalysisByStatus]);
+
+  // Pagination functions
+  const goToPage = useCallback((page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setFilters({ page });
+    }
+  }, [totalPages, setFilters]);
+
+  const goToNextPage = useCallback(() => {
+    if (currentPage < totalPages) {
+      goToPage(currentPage + 1);
+    }
+  }, [currentPage, totalPages, goToPage]);
+
+  const goToPreviousPage = useCallback(() => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1);
+    }
+  }, [currentPage, goToPage]);
+
+  // Search and sorting
+  const searchAnalyses = useCallback((query: string) => {
+    setFilters({ search: query, page: 1 });
+  }, [setFilters]);
+
+  const sortAnalyses = useCallback((field: string, direction: 'asc' | 'desc' = 'desc') => {
+    setFilters({ 
+      sort_by: field as any,
+      sort_order: direction,
+      page: 1
+    });
+  }, [setFilters]);
+
+  // WebSocket subscription for real-time updates
+  useEffect(() => {
+    if (!subscribeToUpdates) return;
+
+    const unsubscribeStatus = wsClient.subscribe('analysis_status_update', (data: AnalysisStatusUpdate) => {
+      dispatch(updateAnalysisStatus(data));
+    });
+
+    const unsubscribeProgress = wsClient.subscribe('analysis_progress_update', (data: AnalysisProgressUpdate) => {
+      dispatch(updateAnalysisProgress(data));
+    });
+
+    const unsubscribeConnection = wsClient.subscribe('connection_status', (data: { connected: boolean }) => {
+      setIsConnected(data.connected);
+      setConnectionError(data.connected ? null : 'WebSocket connection lost');
+    });
+
+    const unsubscribeError = wsClient.subscribe('error', (data: { error: string }) => {
+      setConnectionError(data.error);
+    });
+
+    // Connect WebSocket
+    wsClient.connect();
+
+    return () => {
+      unsubscribeStatus();
+      unsubscribeProgress();
+      unsubscribeConnection();
+      unsubscribeError();
+    };
+  }, [subscribeToUpdates, dispatch]);
+
+  // Auto-refresh effect
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const interval = setInterval(() => {
+      // Only refresh if not currently loading
+      if (loading !== 'loading') {
+        refreshAnalyses();
+      }
+    }, refreshInterval);
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshInterval, loading, refreshAnalyses]);
+
+  // Load analyses when filters change
+  useEffect(() => {
+    loadAnalyses(filters);
+  }, [filters, loadAnalyses]);
+
+  // Initial load
+  useEffect(() => {
+    loadAnalyses();
+  }, []);
+
+  return {
+    // Data
+    analyses,
+    totalCount,
+    currentPage,
+    totalPages,
+    
+    // Loading states
+    loading,
+    creating,
+    updating,
+    deleting,
+    running,
+    
+    // Error states
+    error,
+    
+    // Filter and pagination
+    filters,
+    setFilters,
+    resetFilters,
+    
+    // CRUD operations
+    loadAnalyses,
+    loadAnalysis,
+    createNewAnalysis,
+    updateExistingAnalysis,
+    deleteExistingAnalysis,
+    
+    // Analysis control operations
+    runExistingAnalysis,
+    cancelExistingAnalysis,
+    
+    // Utility functions
+    refreshAnalyses,
+    getAnalysisByStatus,
+    getRunningAnalyses,
+    getCompletedAnalyses,
+    getFailedAnalyses,
+    
+    // Pagination
+    goToPage,
+    goToNextPage,
+    goToPreviousPage,
+    
+    // Search and sorting
+    searchAnalyses,
+    sortAnalyses,
+    
+    // Real-time updates
+    isConnected,
+    connectionError
+  };
+};
+
+// Specialized hook for single analysis
+export interface UseSingleAnalysisOptions {
+  analysisId: string;
+  subscribeToUpdates?: boolean;
+  autoRefresh?: boolean;
+  refreshInterval?: number;
+}
+
+export const useSingleAnalysis = (options: UseSingleAnalysisOptions) => {
+  const { analysisId, subscribeToUpdates = true, autoRefresh = false, refreshInterval = 30000 } = options;
+  
+  const dispatch = useDispatch<AppDispatch>();
+  const analysis = useSelector((state: RootState) => selectAnalysisById(state, analysisId));
+  
+  const [loading, setLoading] = useState<LoadingState>('idle');
+  const [error, setError] = useState<string | null>(null);
+
+  const loadAnalysis = useCallback(async () => {
+    if (!analysisId) return;
+    
+    setLoading('loading');
+    try {
+      await dispatch(fetchAnalysis(analysisId)).unwrap();
+      setError(null);
+      setLoading('succeeded');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load analysis');
+      setLoading('failed');
+    }
+  }, [dispatch, analysisId]);
+
+  // WebSocket subscription for this specific analysis
+  useEffect(() => {
+    if (!subscribeToUpdates || !analysisId) return;
+
+    const unsubscribeStatus = wsClient.subscribe('analysis_status_update', (data: AnalysisStatusUpdate) => {
+      if (data.analysis_id === analysisId) {
+        dispatch(updateAnalysisStatus(data));
+      }
+    });
+
+    const unsubscribeProgress = wsClient.subscribe('analysis_progress_update', (data: AnalysisProgressUpdate) => {
+      if (data.analysis_id === analysisId) {
+        dispatch(updateAnalysisProgress(data));
+      }
+    });
+
+    return () => {
+      unsubscribeStatus();
+      unsubscribeProgress();
+    };
+  }, [subscribeToUpdates, analysisId, dispatch]);
+
+  // Auto-refresh effect
+  useEffect(() => {
+    if (!autoRefresh || !analysisId) return;
+
+    const interval = setInterval(() => {
+      if (loading !== 'loading') {
+        loadAnalysis();
+      }
+    }, refreshInterval);
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshInterval, loading, loadAnalysis, analysisId]);
+
+  // Initial load
+  useEffect(() => {
+    if (analysisId) {
+      loadAnalysis();
+    }
+  }, [analysisId, loadAnalysis]);
+
   return {
     analysis,
-    progress,
-    results,
-    canRun,
-    canCancel,
-    isCompleted,
-    hasResults,
-    run: () => runMutation.mutate(id),
-    cancel: () => cancelMutation.mutate(id),
-    isRunning: runMutation.isLoading,
-    isCancelling: cancelMutation.isLoading,
+    loading,
+    error,
+    refresh: loadAnalysis,
+    isRunning: analysis?.status === 'running' || analysis?.status === 'queued',
+    isCompleted: analysis?.status === 'completed',
+    isFailed: analysis?.status === 'failed',
+    progress: analysis?.progress || 0
   };
 };
