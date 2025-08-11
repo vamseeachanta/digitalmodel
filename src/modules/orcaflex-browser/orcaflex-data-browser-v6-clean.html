@@ -292,6 +292,47 @@
             100% { transform: rotate(360deg); }
         }
         
+        /* Busy state styles */
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #999 !important;
+        }
+        
+        .busy-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .busy-indicator {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        
+        .busy-indicator .spinner {
+            width: 60px;
+            height: 60px;
+            border-width: 4px;
+        }
+        
+        .busy-indicator p {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+        
         /* Vessel type selector styles */
         .vessel-tabs {
             display: flex;
@@ -521,14 +562,40 @@
         <div id="charts" class="charts-container"></div>
     </div>
     
+    <!-- Busy Overlay -->
+    <div id="busyOverlay" class="busy-overlay" style="display: none;">
+        <div class="busy-indicator">
+            <div class="spinner"></div>
+            <p id="busyMessage">Processing data...</p>
+        </div>
+    </div>
+    
     <script>
         const API_BASE = 'http://localhost:5000/api';
         let currentVesselType = 'FST';
+        let isLoading = false;
         
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', async () => {
             await loadSubfolders();
         });
+        
+        // Busy state management
+        function setBusyState(busy, message = 'Processing data...') {
+            isLoading = busy;
+            const overlay = document.getElementById('busyOverlay');
+            const busyMessage = document.getElementById('busyMessage');
+            const buttons = document.querySelectorAll('button');
+            
+            if (busy) {
+                overlay.style.display = 'flex';
+                busyMessage.textContent = message;
+                buttons.forEach(btn => btn.disabled = true);
+            } else {
+                overlay.style.display = 'none';
+                buttons.forEach(btn => btn.disabled = false);
+            }
+        }
         
         function selectVesselType(type) {
             // Update tabs
@@ -570,19 +637,37 @@
         }
         
         async function refreshAll() {
+            if (isLoading) {
+                showStatus('Already processing, please wait...', 'info');
+                return;
+            }
+            
+            setBusyState(true, 'Refreshing configuration...');
             showStatus('Refreshing configuration...', 'info');
-            await loadSubfolders();
-            showStatus('Configuration refreshed', 'success');
+            
+            try {
+                await loadSubfolders();
+                showStatus('Configuration refreshed', 'success');
+            } catch (error) {
+                showStatus('Refresh failed', 'error');
+            } finally {
+                setBusyState(false);
+            }
         }
         
         async function loadData() {
+            if (isLoading) {
+                showStatus('Already processing, please wait...', 'info');
+                return;
+            }
+            
             const subfolder = document.getElementById('subfolderSelect').value;
             if (!subfolder) {
                 showStatus('Please select a folder', 'error');
                 return;
             }
             
-            document.getElementById('loadingIndicator').style.display = 'block';
+            setBusyState(true, 'Scanning for maximum strut force...');
             document.getElementById('charts').innerHTML = '';
             
             showStatus('Scanning for maximum strut force...', 'info');
@@ -627,6 +712,7 @@
                 chartsDiv.appendChild(infoDiv);
                 
                 // Load data for this configuration
+                setBusyState(true, 'Loading all data for maximum force configuration...');
                 showStatus('Loading all data for maximum force configuration...', 'info');
                 
                 let params = {
@@ -657,16 +743,23 @@
                 console.error('Error loading data:', error);
                 showStatus(`Error: ${error.message}`, 'error');
             } finally {
-                document.getElementById('loadingIndicator').style.display = 'none';
+                setBusyState(false);
             }
         }
         
         async function loadDataManual() {
+            if (isLoading) {
+                showStatus('Already processing, please wait...', 'info');
+                return;
+            }
+            
             const subfolder = document.getElementById('subfolderSelect').value;
             if (!subfolder) {
                 showStatus('Please select a folder', 'error');
                 return;
             }
+            
+            setBusyState(true, 'Loading data with manual configuration...');
             
             let params = {
                 subfolder: subfolder,
@@ -687,8 +780,6 @@
             }
             
             const queryString = new URLSearchParams(params).toString();
-            
-            document.getElementById('loadingIndicator').style.display = 'block';
             document.getElementById('charts').innerHTML = '';
             
             try {
@@ -705,7 +796,7 @@
                 console.error('Error loading data:', error);
                 showStatus(`Error: ${error.message}`, 'error');
             } finally {
-                document.getElementById('loadingIndicator').style.display = 'none';
+                setBusyState(false);
             }
         }
         
