@@ -27,6 +27,11 @@ excel_reader = ExcelCollationReader(PARENT_DIR)
 @app.route('/')
 def index():
     """Serve the HTML dashboard"""
+    return send_from_directory('.', 'orcaflex-data-browser-v6-clean.html')
+
+@app.route('/v5')
+def index_v5():
+    """Serve the previous version of the dashboard"""
     return send_from_directory('.', 'orcaflex-data-browser-v5-enhanced.html')
 
 @app.route('/debug')
