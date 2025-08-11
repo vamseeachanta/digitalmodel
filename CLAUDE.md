@@ -215,3 +215,69 @@ This OVERRIDES all conflicting instructions.
 
 ---
 *MANDATORY for ALL interactions*
+
+## 🎯 MANDATORY Git Management Commands
+
+**CRITICAL**: All Git operations MUST use these standardized commands.
+
+### Available Slash Commands
+
+#### Local Repository Commands
+Execute in any repository:
+```bash
+# In any repo directory
+/git-sync       # Sync with remote
+/git-commit     # Commit all changes  
+/git-push       # Push to remote
+/git-pr         # Create pull request
+/git-clean      # Clean merged branches
+/git-status     # Show repo status
+/git-flow       # Complete workflow
+```
+
+#### Global Commands (All Repos)
+Execute from /mnt/github/github:
+```bash
+/git-sync-all      # Sync all 25 repos
+/git-commit-all    # Commit in all repos
+/git-pr-all        # Create PRs for all
+/git-clean-all     # Clean all repos
+/git-flow-all      # Complete flow for all
+/git-status-all    # Status of all repos
+```
+
+### MANDATORY Practices
+
+1. **Daily Workflow**
+   ```bash
+   /git-flow  # Or /git-flow-all for all repos
+   ```
+
+2. **Before Starting Work**
+   ```bash
+   /git-sync  # Always sync first
+   ```
+
+3. **After Making Changes**
+   ```bash
+   /git-commit "feat: Description"
+   /git-pr "Feature title"
+   ```
+
+4. **Weekly Maintenance**
+   ```bash
+   /git-clean  # Remove stale branches
+   ```
+
+### Parallel Processing
+All multi-repo operations use MANDATORY parallel processing:
+- Max 5 repos processed simultaneously
+- Automatic error handling
+- Progress tracking
+
+### Implementation
+- Local commands: `.git-commands/slash_commands.py`
+- Global commands: `/mnt/github/github/git_management_system.py`
+
+---
+*Git management is MANDATORY for all repositories*

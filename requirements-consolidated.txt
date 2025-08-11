@@ -1,0 +1,280 @@
+# Consolidated Requirements
+# Generated from all requirements.txt files in repository
+# This file is now replaced by pyproject.toml
+# Kept for reference only
+
+# From: config/requirements-dev.txt
+# Development dependencies
+-r requirements_improved.txt
+
+# Testing
+pytest>=8.0.0,<9.0.0
+pytest-cov>=4.1.0,<5.0.0
+pytest-mock>=3.12.0,<4.0.0
+pytest-xdist>=3.5.0,<4.0.0  # For parallel test execution
+
+# Code quality
+black>=24.0.0,<25.0.0
+isort>=5.13.0,<6.0.0
+ruff>=0.3.0,<1.0.0  # Fast Python linter
+mypy>=1.8.0,<2.0.0  # Type checking
+
+# Documentation
+sphinx>=7.0.0,<8.0.0
+sphinx-rtd-theme>=2.0.0,<3.0.0
+
+# Build and deployment
+build>=1.0.0
+twine>=4.0.0
+bumpver>=2023.1129
+
+# Development tools
+ipython>=8.0.0  # Enhanced Python shell
+poetry>=1.7.0,<2.0.0  # If using Poetry
+# From: config/requirements_improved.txt
+# Core dependencies
+assetutilities>=0.0.7
+pandas>=2.0.0,<3.0.0
+numpy>=1.24.0,<2.0.0  # Usually needed with pandas
+plotly>=5.0.0,<6.0.0
+dash>=3.1.0,<4.0.0
+
+# Data formats and I/O
+pyyaml>=6.0.0,<7.0.0
+openpyxl>=3.1.0,<4.0.0
+xlrd>=2.0.0,<3.0.0
+xlsxwriter>=3.1.0,<4.0.0
+python-docx>=0.8.0
+pypdf2>=3.0.0,<4.0.0
+xmltodict>=0.13.0,<1.0.0
+ruamel.yaml>=0.18.0,<1.0.0
+
+# Scientific computing
+scipy>=1.10.0,<2.0.0
+sympy>=1.12.0,<2.0.0
+matplotlib>=3.7.0,<4.0.0
+
+# Engineering specific
+OrcFxAPI  # Note: Check if version constraints are available
+rainflow>=3.2.0,<4.0.0
+
+# Web and scraping
+beautifulsoup4>=4.13.0,<5.0.0
+requests>=2.31.0,<3.0.0
+scrapy>=2.11.0,<3.0.0
+
+# Utilities
+deepdiff>=8.0.0,<9.0.0
+pydantic>=2.0.0,<3.0.0
+tabulate>=0.9.0,<1.0.0
+loguru>=0.7.0,<1.0.0
+webcolors>=1.13,<2.0
+imgkit>=1.2.0,<2.0.0
+kaleido>=0.2.0
+tabula-py>=2.8.0
+# From: docs/domains/platecapacity/StiffnerBuckling_Cal/Python_Environment/requirements.txt
+cx-Oracle==6.3.1
+pymssql==2.1.3
+sqlalchemy==1.2.8
+pandas==0.23.0
+
+# From: docs/guides/legacy/apirp2rd/COD/DNV-OS-F101/Rev2/Python_Environment/requirements.txt
+numpy
+
+# From: docs/legacy/apirp2rd/COD/DNV-OS-F101/Rev2/Python_Environment/requirements.txt
+numpy
+
+# From: docs/leg_apirp2rd/COD/DNV-OS-F101/Rev2/Python_Environment/requirements.txt
+numpy
+
+# From: docs/sub_platecapacity/StiffnerBuckling_Cal/Python_Environment/requirements.txt
+cx-Oracle==6.3.1
+pymssql==2.1.3
+sqlalchemy==1.2.8
+pandas==0.23.0
+
+# From: scripts/requirements.txt
+digitalmodel
+assetutilities
+pandas
+plotly
+dash
+pyyaml
+bumpver
+webcolors
+matplotlib
+scipy
+xlrd
+openpyxl
+imgkit
+xmltodict
+OrcFxAPI
+docx
+deepdiff
+pytest
+sympy
+kaleido
+tabula
+pytest
+deepdiff
+rainflow
+pydantic
+black
+isort
+poetry
+tabulate
+PyPDF2
+xlsxwriter
+beautifulsoup4
+requests
+scrapy
+loguru
+ruamel.yaml
+# From: src/modules/visualization/orcaflex-dashboard/backend/requirements.txt
+# FastAPI Backend Requirements for OrcaFlex Results Visualization Dashboard
+# Production-ready implementation with performance optimization and security
+
+# Core FastAPI and ASGI
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Database and ORM
+sqlalchemy==2.0.23
+alembic==1.12.1
+asyncpg==0.29.0  # PostgreSQL async driver
+aiosqlite==0.19.0  # SQLite async driver for development
+
+# Redis and Caching
+redis[hiredis]==5.0.1
+hiredis==2.2.3
+
+# Authentication and Security
+pyjwt==2.8.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+cryptography==41.0.8
+
+# HTTP Client for external APIs
+httpx==0.25.2
+aiofiles==23.2.1
+
+# Data Processing and Analysis
+pandas==2.1.4
+numpy==1.25.2
+scipy==1.11.4
+scikit-learn==1.3.2
+
+# Data Export and Serialization
+openpyxl==3.1.2  # Excel export
+xlsxwriter==3.1.9  # Excel with formatting
+pyarrow==14.0.1  # Parquet format
+h5py==3.10.0  # HDF5 format
+
+# Visualization and Charts (for export)
+matplotlib==3.8.2
+plotly==5.17.0
+pillow==10.1.0  # Image processing
+
+# Configuration and Environment
+python-dotenv==1.0.0
+pyyaml==6.0.1
+
+# Validation and Parsing
+python-dateutil==2.8.2
+validators==0.22.0
+
+# Logging and Monitoring
+structlog==23.2.0
+prometheus-client==0.19.0
+
+# Testing (development)
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-mock==3.12.0
+httpx==0.25.2  # For testing HTTP clients
+
+# Development Tools
+black==23.11.0
+flake8==6.1.0
+mypy==1.7.1
+pre-commit==3.6.0
+
+# Performance and Profiling
+psutil==5.9.6  # System monitoring
+memory-profiler==0.61.0  # Memory profiling
+
+# File Processing
+chardet==5.2.0  # Character encoding detection
+magic==0.4.27  # File type detection (python-magic)
+
+# Compression
+gzip==1.0  # Built-in, but ensuring availability
+brotli==1.1.0  # Additional compression
+
+# Task Queue (for background processing)
+celery==5.3.4
+redis==5.0.1  # Already included above for caching
+
+# Rate Limiting Dependencies
+slowapi==0.1.9  # Additional rate limiting utilities
+
+# Engineering and Scientific Computing
+sympy==1.12  # Symbolic mathematics
+uncertainties==3.1.7  # Error propagation
+
+# Development and Testing Dependencies (optional)
+factory-boy==3.3.0  # Test data factories
+faker==20.1.0  # Fake data generation
+coverage==7.3.2  # Code coverage
+
+# Production WSGI/ASGI Server Options
+gunicorn==21.2.0  # Alternative to uvicorn
+hypercorn==0.15.0  # Alternative ASGI server
+
+# Additional FastAPI Extensions
+fastapi-limiter==0.1.5  # Additional rate limiting
+fastapi-pagination==0.12.13  # Pagination utilities
+fastapi-users==12.1.2  # User management (if needed)
+
+# Async Database Session Management
+asyncio-mqtt==0.16.1  # MQTT support if needed
+websockets==12.0  # WebSocket support
+
+# Additional Security
+argon2-cffi==23.1.0  # Alternative password hashing
+python-jose[cryptography]==3.3.0  # Additional JWT support
+
+# Data Validation and Sanitization
+bleach==6.1.0  # HTML sanitization
+marshmallow==3.20.1  # Additional serialization
+
+# File Upload and Storage
+python-magic==0.4.27  # File type detection
+boto3==1.34.0  # AWS S3 if cloud storage needed
+
+# Performance Monitoring
+sentry-sdk[fastapi]==1.38.0  # Error tracking
+newrelic==9.2.0  # Performance monitoring (optional)
+
+# Additional Engineering Libraries
+pyproj==3.6.1  # Coordinate transformations
+geopy==2.4.1  # Geographic calculations (if needed)
+
+# Time Series and Engineering Data
+statsmodels==0.14.0  # Advanced statistical models
+pykalman==0.9.5  # Kalman filters for time series
+
+# Additional Export Formats
+lxml==4.9.3  # XML processing
+defusedxml==0.7.1  # Secure XML processing
+
+# Async Context Managers
+async-timeout==4.0.3  # Timeout handling
+asyncio-extras==1.3.2  # Additional async utilities
+
+# Development Quality Tools
+isort==5.12.0  # Import sorting
+bandit==1.7.5  # Security linting
+safety==2.3.5  # Dependency vulnerability checking

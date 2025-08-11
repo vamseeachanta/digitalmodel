@@ -120,3 +120,54 @@ This ensures systematic and quality-focused task execution.
 </instructions>
 
 </step>
+
+## Enhanced Progress Tracking Features
+
+<step number="0" name="progress_initialization">
+
+### Step 0: Initialize Progress Tracking
+
+<step_metadata>
+  <initializes>real-time progress tracking</initializes>
+  <displays>visual task overview</displays>
+  <updates>all spec documents</updates>
+</step_metadata>
+
+<progress_system>
+  **MANDATORY**: All task execution includes:
+  
+  1. **Visual Progress Display**
+     - Clear on-screen task status
+     - Progress bars with percentages
+     - Milestone celebrations
+     - Time estimates
+  
+  2. **Automatic Updates**
+     - tasks.md updated after each subtask
+     - progress.md with detailed tracking
+     - spec.md annotated with notes
+     - AI prompts/responses logged
+  
+  3. **Session Continuity**
+     - Resume from interruption point
+     - Persistent progress tracking
+     - Historical metrics
+</progress_system>
+
+<display_format>
+  Before proceeding with each task:
+  - SHOW current progress overview
+  - DISPLAY completed vs remaining
+  - UPDATE visual progress bar
+  - LOG AI decisions
+</display_format>
+
+<instructions>
+  ACTION: Initialize progress tracking
+  DISPLAY: Visual task overview
+  UPDATE: All documents in real-time
+  TRACK: Every AI interaction
+  CELEBRATE: Milestones achieved
+</instructions>
+
+</step>
