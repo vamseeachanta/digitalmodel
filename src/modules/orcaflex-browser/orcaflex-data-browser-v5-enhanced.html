@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrcaFlex Data Browser v5 - Enhanced with Vessel Types</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .vessel-selector {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .vessel-selector h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .vessel-options {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .vessel-option {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .vessel-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        
+        .vessel-option.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .vessel-option input[type="radio"] {
+            margin-right: 10px;
+        }
+        
+        .vessel-option label {
+            cursor: pointer;
+            display: block;
+            font-weight: 600;
+        }
+        
+        .vessel-option .description {
+            font-size: 12px;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+        
+        .controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .control-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #495057;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .control-group select,
+        .control-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        /* Vessel-specific controls */
+        .fst-controls,
+        .lngc-controls,
+        .custom-controls {
+            display: none;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .fst-controls.active,
+        .lngc-controls.active,
+        .custom-controls.active {
+            display: block;
+        }
+        
+        .control-section-title {
+            color: #6c757d;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-refresh {
+            background: #28a745;
+        }
+        
+        .btn-refresh:hover {
+            background: #218838;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        .chart-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .status-message {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <span style="font-size: 30px;">🌊</span>
+            OrcaFlex Data Browser v5
+        </h1>
+        <div class="subtitle">Enhanced with Excel-driven vessel type configuration</div>
+        
+        <!-- Vessel Type Selector -->
+        <div class="vessel-selector">
+            <h3>Select Vessel Type</h3>
+            <div class="vessel-options" id="vesselOptions">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+        
+        <!-- Main Controls -->
+        <div class="controls">
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="subfolderSelect">Select Analysis Folder:</label>
+                    <select id="subfolderSelect">
+                        <option value="">Loading folders...</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="envType">Environment Type:</label>
+                    <select id="envType">
+                        <option value="colinear">Colinear</option>
+                        <option value="non-colinear">Non-colinear</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="returnPeriod">Return Period:</label>
+                    <select id="returnPeriod">
+                        <option value="5yr">5 Year</option>
+                        <option value="10yr">10 Year</option>
+                        <option value="100yr">100 Year</option>
+                        <option value="1000yr">1000 Year</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- FST-specific controls -->
+            <div class="fst-controls" id="fstControls">
+                <div class="control-section-title">FST Configuration</div>
+                <div class="control-row">
+                    <div class="control-group">
+                        <label for="fst1Loading">FST1 Loading:</label>
+                        <select id="fst1Loading">
+                            <option value="15">15% LNG</option>
+                            <option value="95">95% LNG</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="fst2Loading">FST2 Loading:</label>
+                        <select id="fst2Loading">
+                            <option value="15">15% LNG</option>
+                            <option value="95">95% LNG</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="mooringStatus">Mooring Status:</label>
+                        <select id="mooringStatus">
+                            <option value="intact">Intact</option>
+                            <option value="damaged">Damaged</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- LNGC-specific controls -->
+            <div class="lngc-controls" id="lngcControls">
+                <div class="control-section-title">LNGC Configuration</div>
+                <div class="control-row">
+                    <div class="control-group">
+                        <label for="lngcCapacity">Vessel Capacity:</label>
+                        <select id="lngcCapacity">
+                            <option value="125000">125,000 m³</option>
+                            <option value="180000">180,000 m³</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="lngcLoading">Loading Condition:</label>
+                        <select id="lngcLoading">
+                            <option value="ballast">Ballast (10%)</option>
+                            <option value="partial">Partial (50%)</option>
+                            <option value="laden">Laden (95%)</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="lngcBerthing">Berthing Side:</label>
+                        <select id="lngcBerthing">
+                            <option value="port">Port</option>
+                            <option value="starboard">Starboard</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="control-row" id="customLoadingRow" style="display: none;">
+                    <div class="control-group">
+                        <label for="customLoadingPercent">Custom Loading (%):</label>
+                        <input type="number" id="customLoadingPercent" min="0" max="100" placeholder="Enter percentage">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Custom controls -->
+            <div class="custom-controls" id="customControls">
+                <div class="control-section-title">Custom Configuration</div>
+                <div class="control-row">
+                    <div class="control-group">
+                        <label for="customPattern">File Pattern:</label>
+                        <input type="text" id="customPattern" placeholder="Enter custom file pattern">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Common controls -->
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="tide">Tide:</label>
+                    <select id="tide">
+                        <option value="hwl">HWL (High Water Level)</option>
+                        <option value="lwl">LWL (Low Water Level)</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="heading">Environment Heading:</label>
+                    <select id="heading">
+                        <option value="0">0°</option>
+                        <option value="30">30°</option>
+                        <option value="60">60°</option>
+                        <option value="90">90°</option>
+                        <option value="120">120°</option>
+                        <option value="150">150°</option>
+                        <option value="180">180°</option>
+                        <option value="210">210°</option>
+                        <option value="240">240°</option>
+                        <option value="270">270°</option>
+                        <option value="300">300°</option>
+                        <option value="330">330°</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-primary" onclick="loadData()">
+                    📊 Load Data
+                </button>
+                <button class="btn-refresh" onclick="refreshAll()">
+                    🔄 Refresh
+                </button>
+                <button class="btn-secondary" onclick="clearCharts()">
+                    🗑️ Clear
+                </button>
+            </div>
+            
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+        
+        <div id="loadingIndicator" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading data...</p>
+        </div>
+        
+        <div id="charts"></div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let currentVesselType = 'FST';
+        let vesselConfig = {};
+        
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadVesselTypes();
+            await loadSubfolders();
+            await loadExcelConfig();
+        });
+        
+        async function loadVesselTypes() {
+            try {
+                const response = await fetch(`${API_BASE}/vessel_types`);
+                const vesselTypes = await response.json();
+                
+                const container = document.getElementById('vesselOptions');
+                container.innerHTML = '';
+                
+                vesselTypes.forEach((type, index) => {
+                    const option = document.createElement('div');
+                    option.className = 'vessel-option';
+                    if (index === 0) option.classList.add('selected');
+                    
+                    option.innerHTML = `
+                        <label>
+                            <input type="radio" name="vesselType" value="${type.value}" 
+                                   ${index === 0 ? 'checked' : ''}>
+                            ${type.label}
+                            ${type.description ? `<div class="description">${type.description}</div>` : ''}
+                        </label>
+                    `;
+                    
+                    option.addEventListener('click', () => selectVesselType(type.value, option));
+                    container.appendChild(option);
+                });
+                
+                // Set initial vessel type
+                if (vesselTypes.length > 0) {
+                    selectVesselType(vesselTypes[0].value);
+                }
+            } catch (error) {
+                console.error('Error loading vessel types:', error);
+                showStatus('Failed to load vessel types', 'error');
+            }
+        }
+        
+        function selectVesselType(vesselType, element) {
+            currentVesselType = vesselType;
+            
+            // Update visual selection
+            if (element) {
+                document.querySelectorAll('.vessel-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                element.classList.add('selected');
+                element.querySelector('input[type="radio"]').checked = true;
+            }
+            
+            // Show/hide vessel-specific controls
+            document.getElementById('fstControls').classList.toggle('active', vesselType === 'FST');
+            document.getElementById('lngcControls').classList.toggle('active', vesselType === 'LNGC');
+            document.getElementById('customControls').classList.toggle('active', vesselType === 'CUSTOM');
+            
+            // Load vessel-specific configuration
+            loadVesselConfig(vesselType);
+        }
+        
+        async function loadVesselConfig(vesselType) {
+            try {
+                const response = await fetch(`${API_BASE}/vessel_config/${vesselType}`);
+                vesselConfig = await response.json();
+                
+                // Update dropdowns based on configuration
+                updateVesselDropdowns(vesselType, vesselConfig);
+            } catch (error) {
+                console.error('Error loading vessel config:', error);
+            }
+        }
+        
+        function updateVesselDropdowns(vesselType, config) {
+            if (vesselType === 'FST' && config.fst_loadings) {
+                // Update FST dropdowns if needed
+                // Config will provide available options from Excel
+            } else if (vesselType === 'LNGC' && config.lngc_capacities) {
+                // Update LNGC dropdowns based on Excel config
+                updateSelectOptions('lngcCapacity', config.lngc_capacities);
+                updateSelectOptions('lngcBerthing', config.berthings);
+            }
+        }
+        
+        function updateSelectOptions(selectId, options) {
+            const select = document.getElementById(selectId);
+            if (!select || !options || options.length === 0) return;
+            
+            // Preserve current selection if possible
+            const currentValue = select.value;
+            
+            // Clear and repopulate
+            select.innerHTML = '';
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                select.appendChild(option);
+            });
+            
+            // Restore selection if it still exists
+            if (options.includes(currentValue)) {
+                select.value = currentValue;
+            }
+        }
+        
+        async function loadExcelConfig() {
+            try {
+                const response = await fetch(`${API_BASE}/excel_config`);
+                const config = await response.json();
+                console.log('Excel configuration loaded:', config);
+                
+                // Store for later use
+                window.excelConfig = config;
+            } catch (error) {
+                console.error('Error loading Excel config:', error);
+            }
+        }
+        
+        async function loadSubfolders() {
+            try {
+                const response = await fetch(`${API_BASE}/subfolders`);
+                const data = await response.json();
+                
+                const select = document.getElementById('subfolderSelect');
+                select.innerHTML = '<option value="">Select a folder...</option>';
+                
+                if (data.subfolders && data.subfolders.length > 0) {
+                    data.subfolders.forEach(folder => {
+                        const option = document.createElement('option');
+                        option.value = folder;
+                        option.textContent = folder;
+                        select.appendChild(option);
+                    });
+                    showStatus(`Loaded ${data.subfolders.length} folders`, 'success');
+                } else {
+                    showStatus('No subfolders found', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading subfolders:', error);
+                showStatus('Failed to load folders', 'error');
+            }
+        }
+        
+        async function refreshAll() {
+            showStatus('Refreshing configuration...', 'info');
+            
+            // Refresh Excel configuration
+            try {
+                await fetch(`${API_BASE}/refresh_config`, { method: 'POST' });
+            } catch (error) {
+                console.error('Error refreshing config:', error);
+            }
+            
+            // Reload everything
+            await loadVesselTypes();
+            await loadSubfolders();
+            await loadExcelConfig();
+            
+            showStatus('Configuration refreshed', 'success');
+        }
+        
+        async function loadData() {
+            const subfolder = document.getElementById('subfolderSelect').value;
+            if (!subfolder) {
+                showStatus('Please select a folder', 'error');
+                return;
+            }
+            
+            // Build parameters based on vessel type
+            let params = {
+                subfolder: subfolder,
+                tide: document.getElementById('tide').value,
+                heading: document.getElementById('heading').value,
+                envType: document.getElementById('envType').value,
+                vesselType: currentVesselType
+            };
+            
+            // Add vessel-specific parameters
+            if (currentVesselType === 'FST') {
+                params.fst1 = document.getElementById('fst1Loading').value;
+                params.fst2 = document.getElementById('fst2Loading').value;
+                params.mooring = document.getElementById('mooringStatus').value;
+            } else if (currentVesselType === 'LNGC') {
+                params.capacity = document.getElementById('lngcCapacity').value;
+                params.loading = document.getElementById('lngcLoading').value;
+                params.berthing = document.getElementById('lngcBerthing').value;
+                
+                if (params.loading === 'custom') {
+                    params.customLoading = document.getElementById('customLoadingPercent').value;
+                }
+            } else if (currentVesselType === 'CUSTOM') {
+                params.pattern = document.getElementById('customPattern').value;
+            }
+            
+            const queryString = new URLSearchParams(params).toString();
+            
+            document.getElementById('loadingIndicator').style.display = 'block';
+            document.getElementById('charts').innerHTML = '';
+            
+            try {
+                const response = await fetch(`${API_BASE}/data?${queryString}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                plotData(data);
+                showStatus(`Loaded data from ${data.filename}`, 'success');
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+        }
+        
+        function plotData(data) {
+            const chartsDiv = document.getElementById('charts');
+            chartsDiv.innerHTML = '';
+            
+            // Create charts based on vessel type
+            if (currentVesselType === 'FST' || currentVesselType === 'CUSTOM') {
+                // Strut Forces Charts
+                if (data.struts && Object.keys(data.struts).length > 0) {
+                    createStrutCharts(data);
+                }
+                
+                // Jacket Forces Chart
+                if (data.jacket && Object.keys(data.jacket).length > 0) {
+                    createJacketChart(data);
+                }
+            }
+            
+            // Mooring Tensions (common to all vessel types)
+            if (data.lines && Object.keys(data.lines).length > 0) {
+                createMooringChart(data);
+            }
+        }
+        
+        function createStrutCharts(data) {
+            const strutKeys = Object.keys(data.struts);
+            if (strutKeys.length === 0) return;
+            
+            // Group struts 1-4 and 5-8
+            const struts1to4 = strutKeys.filter(key => {
+                const num = parseInt(key.match(/\d+/)?.[0] || 0);
+                return num >= 1 && num <= 4;
+            });
+            
+            const struts5to8 = strutKeys.filter(key => {
+                const num = parseInt(key.match(/\d+/)?.[0] || 0);
+                return num >= 5 && num <= 8;
+            });
+            
+            if (struts1to4.length > 0) {
+                createChart('Strut Forces (1-4)', data.time, struts1to4, data.struts, 'struts1to4');
+            }
+            
+            if (struts5to8.length > 0) {
+                createChart('Strut Forces (5-8)', data.time, struts5to8, data.struts, 'struts5to8');
+            }
+        }
+        
+        function createJacketChart(data) {
+            const jacketKeys = Object.keys(data.jacket);
+            if (jacketKeys.length > 0) {
+                createChart('Jacket Forces', data.time, jacketKeys, data.jacket, 'jacket');
+            }
+        }
+        
+        function createMooringChart(data) {
+            const lineKeys = Object.keys(data.lines);
+            if (lineKeys.length > 0) {
+                createChart('Mooring Line Tensions', data.time, lineKeys, data.lines, 'mooring');
+            }
+        }
+        
+        function createChart(title, time, keys, dataObj, chartId) {
+            const container = document.createElement('div');
+            container.className = 'chart-container';
+            container.innerHTML = `<div class="chart-title">${title}</div>`;
+            
+            const plotDiv = document.createElement('div');
+            plotDiv.id = chartId;
+            container.appendChild(plotDiv);
+            
+            document.getElementById('charts').appendChild(container);
+            
+            const traces = keys.map(key => ({
+                x: time,
+                y: dataObj[key],
+                type: 'scatter',
+                mode: 'lines',
+                name: key,
+                line: { width: 2 }
+            }));
+            
+            const layout = {
+                height: 400,
+                xaxis: {
+                    title: 'Time (s)',
+                    gridcolor: '#e9ecef'
+                },
+                yaxis: {
+                    title: 'Force (kN)',
+                    gridcolor: '#e9ecef'
+                },
+                plot_bgcolor: '#fafafa',
+                paper_bgcolor: 'white',
+                font: { family: 'Segoe UI, sans-serif' },
+                hovermode: 'x unified'
+            };
+            
+            Plotly.newPlot(plotDiv, traces, layout, { responsive: true });
+        }
+        
+        function clearCharts() {
+            document.getElementById('charts').innerHTML = '';
+            showStatus('Charts cleared', 'info');
+        }
+        
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Handle LNGC custom loading
+        document.getElementById('lngcLoading')?.addEventListener('change', (e) => {
+            const customRow = document.getElementById('customLoadingRow');
+            if (customRow) {
+                customRow.style.display = e.target.value === 'custom' ? 'block' : 'none';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -632,3 +632,171 @@
 - **Budget**: Approximately $200,000-$300,000 including infrastructure and personnel
 
 This comprehensive task breakdown provides the detailed implementation roadmap for the mixed documentation agent creation system, with clear deliverables, success criteria, and testing requirements for each phase.
+
+---
+
+## Phase 5: OrcaFlex Data Browsing Tab Implementation (1 week)
+
+### Task 5.1: Core Data Processing Infrastructure
+**Duration**: 2 days  
+**Priority**: Critical  
+**Dependencies**: None  
+
+**Subtasks**:
+- [ ] **5.1.1** Create OrcaFlex data browser module structure
+  - Set up directory structure: `src/modules/orcaflex-browser/`
+  - Create base classes for data processing
+  - Implement CSV file discovery and cataloging
+  - Design data caching architecture
+  
+- [ ] **5.1.2** Implement filename parsing and metadata extraction
+  - Create regex patterns for FST configurations (FST1_F/E, FST2_F/E)
+  - Parse tide level indicators (HWL, MWL, LWL)
+  - Extract environment heading (000deg, 045deg, etc.)
+  - Build simulation metadata catalog
+  
+- [ ] **5.1.3** Develop CSV data loading and caching system
+  - Implement lazy loading for large CSV files
+  - Create DataCache class with 500MB default limit
+  - Build cache invalidation on file changes
+  - Add memory management and cleanup
+  
+- [ ] **5.1.4** Create data validation and quality checks
+  - Validate CSV structure and column consistency
+  - Check for missing or corrupted data
+  - Implement unit conversion if needed
+  - Generate data quality reports
+
+**Deliverables**:
+- OrcaFlex data processing module with CSV support
+- Filename parsing system with metadata extraction
+- Efficient caching system with memory management
+- Data validation framework
+
+---
+
+### Task 5.2: User Interface Components
+**Duration**: 2 days  
+**Priority**: Critical  
+**Dependencies**: Task 5.1  
+
+**Subtasks**:
+- [ ] **5.2.1** Build simulation case filter panel
+  - Create dropdown components for FST status selection
+  - Add tide level filter (HWL/MWL/LWL)
+  - Implement environment heading selector (0-360° in 45° increments)
+  - Add case comparison selector (2 runs side-by-side)
+  
+- [ ] **5.2.2** Develop time series visualization panel
+  - Integrate Plotly.js for interactive charts
+  - Implement multi-line display (up to 16 lines)
+  - Add individual line toggle controls
+  - Create min/max envelope visualization
+  
+- [ ] **5.2.3** Create statistical summary panel
+  - Build tabular display for line statistics
+  - Calculate min/max values for each line
+  - Compute utilization percentages
+  - Add comparison metrics between cases
+  
+- [ ] **5.2.4** Implement automated insights panel
+  - Create insight generation algorithms
+  - Identify critical lines based on max tension
+  - Calculate FST flooding impact percentages
+  - Generate 3-4 key engineering conclusions
+
+**Deliverables**:
+- Interactive filter panel with all parameters
+- Time series visualization with Plotly charts
+- Statistical summary tables
+- Automated insights generation
+
+---
+
+### Task 5.3: Integration and Data Flow
+**Duration**: 1 day  
+**Priority**: High  
+**Dependencies**: Task 5.2  
+
+**Subtasks**:
+- [ ] **5.3.1** Implement dynamic data loading on filter changes
+  - Watch for filter selection changes
+  - Load corresponding CSV files automatically
+  - Update visualizations in real-time
+  - Handle loading states and progress indicators
+  
+- [ ] **5.3.2** Create comparison mode functionality
+  - Enable side-by-side case comparison
+  - Synchronize time axes between plots
+  - Calculate difference metrics
+  - Highlight significant variations
+  
+- [ ] **5.3.3** Build pattern learning system
+  - Extract naming patterns from filenames
+  - Store patterns for future automation
+  - Create pattern matching algorithms
+  - Generate pattern documentation
+  
+- [ ] **5.3.4** Integrate with document processing pipeline
+  - Connect to existing knowledge extraction framework
+  - Enable CSV data as knowledge source
+  - Create data export interfaces
+  - Build API endpoints for data access
+
+**Deliverables**:
+- Dynamic data loading system
+- Case comparison functionality
+- Pattern learning and storage
+- Pipeline integration interfaces
+
+---
+
+### Task 5.4: Testing and Documentation
+**Duration**: 1 day  
+**Priority**: Medium  
+**Dependencies**: Task 5.3  
+
+**Subtasks**:
+- [ ] **5.4.1** Create comprehensive test suite
+  - Unit tests for filename parsing
+  - Integration tests for data loading
+  - UI component tests
+  - Performance tests with large datasets
+  
+- [ ] **5.4.2** Develop user documentation
+  - Create user guide for the browsing tab
+  - Document filter options and parameters
+  - Explain visualization features
+  - Provide troubleshooting guide
+  
+- [ ] **5.4.3** Build example datasets and demos
+  - Create sample CSV files with various patterns
+  - Build demo scenarios for stakeholders
+  - Generate example insights and reports
+  - Prepare presentation materials
+  
+- [ ] **5.4.4** Performance optimization and tuning
+  - Profile data loading performance
+  - Optimize visualization rendering
+  - Tune cache parameters
+  - Minimize memory footprint
+
+**Deliverables**:
+- Complete test suite with >80% coverage
+- User documentation and guides
+- Demo datasets and scenarios
+- Performance-optimized implementation
+
+---
+
+## Immediate Execution Tasks for OrcaFlex Tab
+
+### Quick Start Tasks (Execute Now)
+- [ ] **NOW.1** Create basic project structure
+- [ ] **NOW.2** Implement CSV file reader with pandas
+- [ ] **NOW.3** Build filename parser for metadata extraction  
+- [ ] **NOW.4** Create simple HTML dashboard with Plotly
+- [ ] **NOW.5** Add filter dropdowns for FST/Tide/Heading
+- [ ] **NOW.6** Generate sample visualizations
+- [ ] **NOW.7** Create statistical summary table
+- [ ] **NOW.8** Generate automated insights
