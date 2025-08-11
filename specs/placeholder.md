@@ -4,7 +4,7 @@ upon selecting the analysis folder, refresh the data display strategy as follows
   - File basename selected should be displayed for confirmation
   - Following this, the data display should be refreshed to show all other data based on abs(maximum) strut force
 
-- Following statistics should be obtained from the excel folder:
+- The abs(maximum) run identification from a given folder should be added to a csv as calculating and takes a lot of time. :
 
 
 add strut forces (1 to 4) for FST1 in one chart, strut forces (5 to 8) for FST 2 in another chart
