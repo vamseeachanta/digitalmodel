@@ -673,6 +673,12 @@
                     throw new Error(data.error);
                 }
                 
+                console.log('Data received from API:', data);
+                console.log('Data type:', data.data_type);
+                console.log('Time points:', data.time ? data.time.length : 0);
+                console.log('Forces data:', Object.keys(data.forces || {}));
+                console.log('Motion data:', Object.keys(data.motion || {}));
+                
                 plotData(data);
                 showStatus(`Loaded data from ${data.filename}`, 'success');
             } catch (error) {
@@ -687,22 +693,250 @@
             const chartsDiv = document.getElementById('charts');
             chartsDiv.innerHTML = '';
             
-            // Create charts based on vessel type
-            if (currentVesselType === 'FST' || currentVesselType === 'CUSTOM') {
+            console.log('plotData called with:', {
+                dataType: data.data_type,
+                hasForces: data.forces && Object.keys(data.forces).length > 0,
+                hasMotion: data.motion && Object.keys(data.motion).length > 0,
+                hasLines: data.lines && Object.keys(data.lines).length > 0,
+                hasStruts: data.struts && Object.keys(data.struts).length > 0
+            });
+            
+            // Check if this is summary data
+            if (data.data_type === 'summary' || data.metadata?.is_summary) {
+                // Show summary statistics
+                showStatus('Displaying summary statistics from ' + data.filename, 'info');
+                createSummaryCharts(data);
+            } else {
+                // Create time series charts
+                let chartsCreated = false;
+                
+                // Forces Chart
+                if (data.forces && Object.keys(data.forces).length > 0) {
+                    console.log('Creating forces chart...');
+                    createChart('Forces', data.time, Object.keys(data.forces), data.forces, 'forcesChart');
+                    chartsCreated = true;
+                }
+                
+                // Motion Chart
+                if (data.motion && Object.keys(data.motion).length > 0) {
+                    console.log('Creating motion chart...');
+                    createChart('Motion/Velocity', data.time, Object.keys(data.motion), data.motion, 'motionChart');
+                    chartsCreated = true;
+                }
+                
                 // Strut Forces Charts
                 if (data.struts && Object.keys(data.struts).length > 0) {
+                    console.log('Creating strut charts...');
                     createStrutCharts(data);
+                    chartsCreated = true;
                 }
                 
                 // Jacket Forces Chart
                 if (data.jacket && Object.keys(data.jacket).length > 0) {
+                    console.log('Creating jacket chart...');
                     createJacketChart(data);
+                    chartsCreated = true;
+                }
+                
+                // Mooring Tensions
+                if (data.lines && Object.keys(data.lines).length > 0) {
+                    console.log('Creating mooring chart...');
+                    createMooringChart(data);
+                    chartsCreated = true;
+                }
+                
+                // Other data
+                if (data.other && Object.keys(data.other).length > 0) {
+                    console.log('Creating other data chart...');
+                    createChart('Other Data', data.time, Object.keys(data.other), data.other, 'otherChart');
+                    chartsCreated = true;
+                }
+                
+                if (!chartsCreated) {
+                    console.warn('No charts created - no recognized data categories found');
+                    showStatus('Warning: No data to display. Check console for details.', 'warning');
                 }
             }
+        }
+        
+        function createSummaryCharts(data) {
+            // For summary data, show available statistics and create visualizations
+            const chartsDiv = document.getElementById('charts');
             
-            // Mooring Tensions (common to all vessel types)
-            if (data.lines && Object.keys(data.lines).length > 0) {
-                createMooringChart(data);
+            // Create info panel
+            const infoPanel = document.createElement('div');
+            infoPanel.className = 'chart-container';
+            infoPanel.innerHTML = `
+                <div class="chart-title">📊 Summary Data Analysis</div>
+                <p style="color: #666; padding: 10px;">
+                    File: <strong>${data.filename}</strong><br>
+                    Type: Summary statistics (${data.metadata.rows} analysis cases)
+                </p>
+            `;
+            chartsDiv.appendChild(infoPanel);
+            
+            // Check if we have summary_data
+            if (data.summary_data && Object.keys(data.summary_data).length > 0) {
+                console.log('Summary data categories:', Object.keys(data.summary_data));
+                
+                // Create charts for each category with data
+                if (data.summary_data.fst1) {
+                    createFSTChart('FST1', data.summary_data.fst1, 'fst1Chart');
+                }
+                
+                if (data.summary_data.fst2) {
+                    createFSTChart('FST2', data.summary_data.fst2, 'fst2Chart');
+                }
+                
+                if (data.summary_data.mooring) {
+                    createCategoryChart('Mooring Lines', data.summary_data.mooring, 'mooringChart');
+                }
+                
+                if (data.summary_data.struts) {
+                    createCategoryChart('Struts', data.summary_data.struts, 'strutsChart');
+                }
+                
+                if (data.summary_data.jacket) {
+                    createCategoryChart('Jacket', data.summary_data.jacket, 'jacketChart');
+                }
+                
+            } else {
+                // Fallback: Show column information
+                showColumnInfo(data);
+            }
+        }
+        
+        function createFSTChart(title, fstData, chartId) {
+            // Extract motion data for FST
+            const motionTypes = ['x', 'y', 'z', 'Rx', 'Ry', 'Rz'];
+            const traces = [];
+            
+            motionTypes.forEach(motion => {
+                const minKey = Object.keys(fstData).find(k => k.includes(`_${motion}_min`));
+                const maxKey = Object.keys(fstData).find(k => k.includes(`_${motion}_max`));
+                
+                if (minKey && maxKey && fstData[minKey] && fstData[maxKey]) {
+                    // Get the first value (or average if multiple)
+                    const minVal = Array.isArray(fstData[minKey]) ? fstData[minKey][0] : fstData[minKey];
+                    const maxVal = Array.isArray(fstData[maxKey]) ? fstData[maxKey][0] : fstData[maxKey];
+                    
+                    traces.push({
+                        name: motion,
+                        x: ['Min', 'Max'],
+                        y: [minVal, maxVal],
+                        type: 'bar'
+                    });
+                }
+            });
+            
+            if (traces.length > 0) {
+                const container = document.createElement('div');
+                container.className = 'chart-container';
+                container.innerHTML = `<div class="chart-title">${title} Dynamic Motion Range</div>`;
+                
+                const plotDiv = document.createElement('div');
+                plotDiv.id = chartId;
+                container.appendChild(plotDiv);
+                
+                document.getElementById('charts').appendChild(container);
+                
+                const layout = {
+                    barmode: 'group',
+                    height: 400,
+                    xaxis: { title: 'Statistic' },
+                    yaxis: { title: 'Value' }
+                };
+                
+                Plotly.newPlot(plotDiv, traces, layout, { responsive: true });
+            }
+        }
+        
+        function createCategoryChart(title, categoryData, chartId) {
+            const container = document.createElement('div');
+            container.className = 'chart-container';
+            container.innerHTML = `<div class="chart-title">${title}</div>`;
+            
+            const plotDiv = document.createElement('div');
+            plotDiv.id = chartId;
+            container.appendChild(plotDiv);
+            
+            document.getElementById('charts').appendChild(container);
+            
+            // Create traces for available data
+            const traces = [];
+            let xLabels = [];
+            
+            Object.entries(categoryData).forEach(([key, values]) => {
+                if (Array.isArray(values) && values.length > 0) {
+                    // Use the key as label
+                    const label = key.replace(/_/g, ' ').substring(0, 30);
+                    xLabels.push(label);
+                    
+                    traces.push({
+                        x: [label],
+                        y: [values[0]], // Use first value
+                        type: 'bar',
+                        name: label
+                    });
+                }
+            });
+            
+            if (traces.length > 0) {
+                const layout = {
+                    height: 400,
+                    showlegend: false,
+                    xaxis: { 
+                        title: 'Parameter',
+                        tickangle: -45
+                    },
+                    yaxis: { title: 'Value' }
+                };
+                
+                Plotly.newPlot(plotDiv, traces, layout, { responsive: true });
+            }
+        }
+        
+        function showColumnInfo(data) {
+            // Fallback display for column information
+            if (data.columns && data.columns.length > 0) {
+                const container = document.createElement('div');
+                container.className = 'chart-container';
+                container.innerHTML = '<div class="chart-title">Available Data Columns</div>';
+                
+                const table = document.createElement('div');
+                table.style.cssText = 'max-height: 400px; overflow-y: auto; padding: 10px;';
+                
+                // Group columns by type
+                const groups = {
+                    'FST1 Motion': data.columns.filter(c => c.includes('fst1')),
+                    'FST2 Motion': data.columns.filter(c => c.includes('fst2')),
+                    'Mooring/Lines': data.columns.filter(c => c.includes('mooring') || c.includes('line')),
+                    'Struts': data.columns.filter(c => c.includes('strut')),
+                    'Jacket': data.columns.filter(c => c.includes('jacket') || c.includes('jkt')),
+                    'LNGC': data.columns.filter(c => c.includes('lngc')),
+                    'Other': data.columns.filter(c => 
+                        !c.includes('fst1') && !c.includes('fst2') && 
+                        !c.includes('mooring') && !c.includes('line') &&
+                        !c.includes('strut') && !c.includes('jacket') &&
+                        !c.includes('jkt') && !c.includes('lngc'))
+                };
+                
+                for (const [groupName, cols] of Object.entries(groups)) {
+                    if (cols.length > 0) {
+                        const groupDiv = document.createElement('div');
+                        groupDiv.style.cssText = 'margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;';
+                        groupDiv.innerHTML = `
+                            <strong style="color: #495057;">${groupName} (${cols.length} columns)</strong>
+                            <div style="margin-top: 5px; font-size: 12px; color: #6c757d;">
+                                ${cols.slice(0, 5).join(', ')}${cols.length > 5 ? ', ...' : ''}
+                            </div>
+                        `;
+                        table.appendChild(groupDiv);
+                    }
+                }
+                
+                container.appendChild(table);
+                document.getElementById('charts').appendChild(container);
             }
         }
         
