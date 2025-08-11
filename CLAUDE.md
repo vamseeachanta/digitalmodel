@@ -281,3 +281,53 @@ All multi-repo operations use MANDATORY parallel processing:
 
 ---
 *Git management is MANDATORY for all repositories*
+
+## 🚨 MANDATORY: AssetUtilities Central Commands
+
+**CRITICAL DIRECTIVE**: ALL slash commands MUST be fetched from AssetUtilities repository on GitHub.
+
+### Central Command System
+- **Source of Truth**: @assetutilities:.common-commands/
+- **GitHub URL**: https://github.com/username/assetutilities
+- **Real-time Fetching**: Commands are fetched from GitHub when executed
+- **No Local Copies**: Local implementations are DEPRECATED
+
+### Command Execution
+```bash
+# All commands now route through central system
+./slash /git-sync          # Fetches from AssetUtilities
+./slash /git-commit         # Fetches from AssetUtilities
+./slash /create-spec        # Fetches from AssetUtilities
+./slash /execute-tasks      # Fetches from AssetUtilities
+```
+
+### Why This Is MANDATORY
+1. **Consistency**: All repos use EXACT same command implementations
+2. **Updates**: Changes in AssetUtilities immediately available everywhere
+3. **Maintenance**: Single point of maintenance for all commands
+4. **Quality**: Centralized testing and validation
+5. **Security**: Controlled command distribution
+
+### Cross-Repository References
+```yaml
+# Always reference AssetUtilities for common code
+@assetutilities:.common-commands/modules/git_manager.py
+@assetutilities:.common-commands/modules/agent_learning.py
+@assetutilities:.common-commands/utilities/parallel_utils.py
+```
+
+### Command Registry
+View all available commands:
+```bash
+./slash --list              # Lists all commands from AssetUtilities
+./slash /update-from-central # Updates command cache
+```
+
+### Enforcement
+- Local command implementations are DEPRECATED
+- All repos MUST use the central system
+- AssetUtilities is the ONLY source of truth
+- This is verified during CI/CD
+
+---
+*This is MANDATORY and overrides any local command implementations*
