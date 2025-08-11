@@ -13,6 +13,9 @@ from flask_cors import CORS
 from pathlib import Path
 import re
 from excel_reader import ExcelCollationReader, get_excel_config, DEFAULT_CONFIG
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import multiprocessing
+import time
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -613,10 +616,87 @@ def get_file_patterns(vessel_type):
         print(f"Error getting file patterns: {e}")
         return jsonify({'vessel_type': vessel_type, 'patterns': []})
 
+def process_single_strut_file(file_path):
+    """Process a single strut file to find max force - used for parallel processing"""
+    try:
+        df = pd.read_csv(file_path)
+        filename = os.path.basename(file_path)
+        
+        # Find force columns
+        force_cols = []
+        for col in df.columns:
+            col_lower = col.lower()
+            if 'force' in col_lower or 'fx' in col_lower or 'fy' in col_lower or 'fz' in col_lower:
+                if df[col].dtype in ['float64', 'int64']:
+                    force_cols.append(col)
+        
+        max_force = 0
+        max_col = None
+        
+        # Get max absolute force across all force columns
+        for col in force_cols:
+            col_max = df[col].abs().max()
+            if col_max > max_force:
+                max_force = col_max
+                max_col = col
+        
+        if max_force > 0:
+            # Extract configuration from filename
+            parts = filename.upper().replace('.CSV', '').split('_')
+            config = {
+                'filename': filename,
+                'basename': filename.split('_')[0] if '_' in filename else filename.replace('.csv', ''),
+                'max_force': float(max_force),
+                'force_column': max_col,
+                'file_path': file_path
+            }
+            
+            # Extract FST configuration
+            if 'FST1' in filename.upper():
+                fst1_match = re.search(r'FST1_([EF])', filename.upper())
+                fst2_match = re.search(r'FST2_([EF])', filename.upper())
+                if fst1_match:
+                    config['fst1'] = '15' if fst1_match.group(1) == 'E' else '95'
+                if fst2_match:
+                    config['fst2'] = '15' if fst2_match.group(1) == 'E' else '95'
+            
+            # Extract tide level
+            for tide in ['HWL', 'MWL', 'LWL']:
+                if tide in filename.upper():
+                    config['tide'] = tide.lower()
+                    break
+            
+            # Extract heading
+            heading_match = re.search(r'(\d{3})deg', filename, re.IGNORECASE)
+            if heading_match:
+                config['heading'] = heading_match.group(1).lstrip('0') or '0'
+            
+            # Extract environment type
+            if 'non' in filename.lower() and 'colinear' in filename.lower():
+                config['envType'] = 'non-colinear'
+            elif 'colinear' in filename.lower():
+                config['envType'] = 'colinear'
+            
+            # Detect vessel type from filename
+            if 'FST' in filename.upper():
+                config['vesselType'] = 'FST'
+            elif 'LNGC' in filename.upper():
+                config['vesselType'] = 'LNGC'
+            
+            return config
+        
+        return None
+        
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}")
+        return None
+
 @app.route('/api/max_strut_force')
 def get_max_strut_force_config():
-    """Find the configuration with maximum absolute strut force in a folder"""
+    """Find the configuration with maximum absolute strut force using parallel processing"""
     try:
+        start_time = time.time()
+        
         subfolder = request.args.get('subfolder')
         if not subfolder:
             return jsonify({'error': 'Missing subfolder parameter'}), 400
@@ -636,81 +716,30 @@ def get_max_strut_force_config():
         if not strut_files:
             return jsonify({'error': 'No strut or jacket force files found in folder'}), 404
         
+        print(f"Processing {len(strut_files)} files in parallel...")
+        
+        # Use parallel processing to scan all files simultaneously
+        max_workers = min(multiprocessing.cpu_count(), len(strut_files))
+        max_config = None
         max_force = 0
-        max_file = None
-        max_config = {}
         
-        # Scan all strut files to find maximum force
-        for file_path in strut_files:
-            try:
-                df = pd.read_csv(file_path)
-                filename = os.path.basename(file_path)
-                
-                # Find force columns
-                force_cols = []
-                for col in df.columns:
-                    col_lower = col.lower()
-                    if 'force' in col_lower or 'fx' in col_lower or 'fy' in col_lower or 'fz' in col_lower:
-                        if df[col].dtype in ['float64', 'int64']:
-                            force_cols.append(col)
-                
-                # Get max absolute force across all force columns
-                if force_cols:
-                    for col in force_cols:
-                        col_max = df[col].abs().max()
-                        if col_max > max_force:
-                            max_force = col_max
-                            max_file = file_path
-                            
-                            # Extract configuration from filename
-                            parts = filename.upper().replace('.CSV', '').split('_')
-                            config = {
-                                'filename': filename,
-                                'basename': filename.split('_')[0] if '_' in filename else filename.replace('.csv', ''),
-                                'max_force': float(col_max),
-                                'force_column': col,
-                                'file_path': file_path
-                            }
-                            
-                            # Extract FST configuration
-                            if 'FST1' in filename.upper():
-                                fst1_match = re.search(r'FST1_([EF])', filename.upper())
-                                fst2_match = re.search(r'FST2_([EF])', filename.upper())
-                                if fst1_match:
-                                    config['fst1'] = '15' if fst1_match.group(1) == 'E' else '95'
-                                if fst2_match:
-                                    config['fst2'] = '15' if fst2_match.group(1) == 'E' else '95'
-                            
-                            # Extract tide level
-                            for tide in ['HWL', 'MWL', 'LWL']:
-                                if tide in filename.upper():
-                                    config['tide'] = tide.lower()
-                                    break
-                            
-                            # Extract heading
-                            heading_match = re.search(r'(\d{3})deg', filename, re.IGNORECASE)
-                            if heading_match:
-                                config['heading'] = heading_match.group(1).lstrip('0') or '0'
-                            
-                            # Extract environment type
-                            if 'non' in filename.lower() and 'colinear' in filename.lower():
-                                config['envType'] = 'non-colinear'
-                            elif 'colinear' in filename.lower():
-                                config['envType'] = 'colinear'
-                            
-                            # Detect vessel type from filename
-                            if 'FST' in filename.upper():
-                                config['vesselType'] = 'FST'
-                            elif 'LNGC' in filename.upper():
-                                config['vesselType'] = 'LNGC'
-                            
-                            max_config = config
-                            
-            except Exception as e:
-                print(f"Error reading {file_path}: {e}")
-                continue
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all files for processing
+            future_to_file = {executor.submit(process_single_strut_file, file_path): file_path 
+                             for file_path in strut_files}
+            
+            # Collect results as they complete
+            for future in as_completed(future_to_file):
+                file_path = future_to_file[future]
+                try:
+                    result = future.result()
+                    if result and result['max_force'] > max_force:
+                        max_force = result['max_force']
+                        max_config = result
+                except Exception as e:
+                    print(f"Error processing {file_path}: {e}")
         
-        if max_file:
+        if max_config:
             # Now find all related files with the same configuration
             related_files = []
             base_pattern = max_config.get('basename', '')
@@ -752,6 +781,11 @@ def get_max_strut_force_config():
             
             max_config['related_files'] = related_files
             max_config['total_files'] = len(related_files)
+            
+            # Add processing time
+            processing_time = time.time() - start_time
+            max_config['processing_time'] = f"{processing_time:.2f} seconds"
+            print(f"Parallel processing completed in {processing_time:.2f} seconds")
             
             return jsonify(max_config)
         else:

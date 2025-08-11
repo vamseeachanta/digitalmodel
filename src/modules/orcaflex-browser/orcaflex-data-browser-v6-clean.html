@@ -620,6 +620,7 @@
                     <p><strong>Max Force:</strong> ${maxConfig.max_force.toFixed(2)} N</p>
                     <p><strong>Force Column:</strong> ${maxConfig.force_column}</p>
                     <p><strong>Related Files:</strong> ${maxConfig.total_files || 0} files found</p>
+                    <p><strong>Processing Time:</strong> ${maxConfig.processing_time || 'N/A'}</p>
                 `;
                 
                 const chartsDiv = document.getElementById('charts');
@@ -846,6 +847,11 @@
             document.getElementById('charts').appendChild(wrapper);
             
             const traces = [];
+            let maxValue = -Infinity;
+            let maxKey = '';
+            let maxIndex = 0;
+            
+            // First pass: create traces and find maximum value
             Object.entries(dataDict).forEach(([key, values]) => {
                 traces.push({
                     x: time,
@@ -854,14 +860,72 @@
                     type: 'scatter',
                     mode: 'lines'
                 });
+                
+                // Find max value in this series
+                values.forEach((val, idx) => {
+                    if (Math.abs(val) > Math.abs(maxValue)) {
+                        maxValue = val;
+                        maxKey = key;
+                        maxIndex = idx;
+                    }
+                });
             });
+            
+            // Add marker for maximum value if this is a force chart
+            if (title.toLowerCase().includes('force') && maxValue !== -Infinity) {
+                traces.push({
+                    x: [time[maxIndex]],
+                    y: [maxValue],
+                    name: `Max: ${maxKey}`,
+                    mode: 'markers',
+                    type: 'scatter',
+                    marker: {
+                        size: 12,
+                        color: 'red',
+                        symbol: 'star',
+                        line: {
+                            color: 'darkred',
+                            width: 2
+                        }
+                    },
+                    showlegend: true,
+                    hovertemplate: `<b>Maximum Value</b><br>` +
+                                  `Series: ${maxKey}<br>` +
+                                  `Time: %{x:.2f} s<br>` +
+                                  `Value: %{y:.2f}<br>` +
+                                  `<extra></extra>`
+                });
+            }
             
             const layout = {
                 xaxis: { title: 'Time (s)' },
                 yaxis: { title: 'Value' },
                 height: 400,
-                margin: { t: 20, r: 20, b: 50, l: 60 }
+                margin: { t: 20, r: 20, b: 50, l: 60 },
+                hovermode: 'closest'
             };
+            
+            // Add annotation for max value if it's a force chart
+            if (title.toLowerCase().includes('force') && maxValue !== -Infinity) {
+                layout.annotations = [{
+                    x: time[maxIndex],
+                    y: maxValue,
+                    xref: 'x',
+                    yref: 'y',
+                    text: `Max: ${Math.abs(maxValue).toFixed(2)}`,
+                    showarrow: true,
+                    arrowhead: 2,
+                    ax: 30,
+                    ay: -30,
+                    bgcolor: 'rgba(255, 0, 0, 0.1)',
+                    bordercolor: 'red',
+                    borderwidth: 1,
+                    font: {
+                        color: 'darkred',
+                        size: 11
+                    }
+                }];
+            }
             
             Plotly.newPlot(divId, traces, layout);
         }
