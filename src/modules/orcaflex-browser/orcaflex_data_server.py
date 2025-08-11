@@ -627,23 +627,39 @@ def process_single_strut_file(file_path):
         df = pd.read_csv(file_path)
         filename = os.path.basename(file_path)
         
-        # Find force columns
-        force_cols = []
-        for col in df.columns:
-            col_lower = col.lower()
-            if 'force' in col_lower or 'fx' in col_lower or 'fy' in col_lower or 'fz' in col_lower:
-                if df[col].dtype in ['float64', 'int64']:
-                    force_cols.append(col)
+        # Check if this is a summary file (dm* prefix)
+        is_summary = filename.lower().startswith('dm')
         
+        # Find force columns - for summary files, look for 'max' columns
+        force_cols = []
         max_force = 0
         max_col = None
         
-        # Get max absolute force across all force columns
-        for col in force_cols:
-            col_max = df[col].abs().max()
-            if col_max > max_force:
-                max_force = col_max
-                max_col = col
+        if is_summary:
+            # For summary files, look for columns with 'max' in the name
+            for col in df.columns:
+                col_lower = col.lower()
+                if 'max' in col_lower and ('force' in col_lower or 'fx' in col_lower or 'fy' in col_lower or 'fz' in col_lower or 'strut' in col_lower):
+                    if df[col].dtype in ['float64', 'int64']:
+                        # For summary files, the max is already calculated
+                        col_value = df[col].abs().max()  # Get the maximum from the max column
+                        if col_value > max_force:
+                            max_force = col_value
+                            max_col = col
+        else:
+            # For time series files, scan all force columns
+            for col in df.columns:
+                col_lower = col.lower()
+                if 'force' in col_lower or 'fx' in col_lower or 'fy' in col_lower or 'fz' in col_lower:
+                    if df[col].dtype in ['float64', 'int64']:
+                        force_cols.append(col)
+            
+            # Get max absolute force across all force columns
+            for col in force_cols:
+                col_max = df[col].abs().max()
+                if col_max > max_force:
+                    max_force = col_max
+                    max_col = col
         
         if max_force > 0:
             # Extract configuration from filename
@@ -710,18 +726,40 @@ def get_max_strut_force_config():
         if not os.path.exists(folder_path):
             return jsonify({'error': f'Folder not found: {subfolder}'}), 404
         
-        # Find all strut force files
+        # Find all strut force files (including summary files dm*strut*.csv)
         csv_files = glob.glob(os.path.join(folder_path, "*.csv"))
+        
+        # Look for strut files - including dm* summary files
         strut_files = [f for f in csv_files if 'strut' in os.path.basename(f).lower()]
+        
+        # Also specifically look for dm*strut* pattern (summary files with max/min values)
+        dm_strut_files = [f for f in csv_files if os.path.basename(f).lower().startswith('dm') and 'strut' in os.path.basename(f).lower()]
+        
+        # Prioritize dm*strut* files as they contain summary statistics
+        if dm_strut_files:
+            print(f"Found {len(dm_strut_files)} summary strut files (dm*strut*.csv)")
+            strut_files = dm_strut_files + [f for f in strut_files if f not in dm_strut_files]
         
         if not strut_files:
             # No strut files, find any jacket files as fallback
             strut_files = [f for f in csv_files if 'jacket' in os.path.basename(f).lower()]
+            
+            # Also check for dm*jacket* files
+            dm_jacket_files = [f for f in csv_files if os.path.basename(f).lower().startswith('dm') and 'jacket' in os.path.basename(f).lower()]
+            if dm_jacket_files:
+                print(f"Found {len(dm_jacket_files)} summary jacket files (dm*jacket*.csv)")
+                strut_files = dm_jacket_files + [f for f in strut_files if f not in dm_jacket_files]
         
         if not strut_files:
             return jsonify({'error': 'No strut or jacket force files found in folder'}), 404
         
+        # Count summary vs time series files
+        summary_count = len([f for f in strut_files if os.path.basename(f).lower().startswith('dm')])
+        timeseries_count = len(strut_files) - summary_count
+        
         print(f"Processing {len(strut_files)} files in parallel...")
+        print(f"  Summary files (dm*): {summary_count} (fast processing)")
+        print(f"  Time series files: {timeseries_count} (full scan required)")
         
         # Use parallel processing to scan all files simultaneously
         # Use up to 20 cores for maximum performance
