@@ -29,6 +29,11 @@ def index():
     """Serve the HTML dashboard"""
     return send_from_directory('.', 'orcaflex-data-browser-v5-enhanced.html')
 
+@app.route('/debug')
+def debug():
+    """Serve the debug dashboard"""
+    return send_from_directory('.', 'debug-dashboard.html')
+
 @app.route('/api/subfolders')
 def get_subfolders():
     """Get list of actual subfolders in the base directory"""
@@ -267,6 +272,273 @@ def load_csv():
         
         return jsonify(data)
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/data')
+def get_data():
+    """Load data based on vessel type and configuration"""
+    try:
+        subfolder = request.args.get('subfolder')
+        vessel_type = request.args.get('vesselType', 'FST')
+        tide = request.args.get('tide', 'hwl')
+        heading = request.args.get('heading', '0')
+        env_type = request.args.get('envType', 'colinear')
+        
+        if not subfolder:
+            return jsonify({'error': 'Missing subfolder parameter'}), 400
+        
+        folder_path = os.path.join(BASE_DIR, subfolder)
+        if not os.path.exists(folder_path):
+            return jsonify({'error': f'Folder not found: {subfolder}'}), 404
+        
+        # Build file pattern based on vessel type
+        pattern_parts = []
+        
+        if vessel_type == 'FST':
+            fst1 = request.args.get('fst1', '15')
+            fst2 = request.args.get('fst2', '15')
+            mooring = request.args.get('mooring', 'intact')
+            
+            # Map percentage to E/F notation
+            fst1_code = 'E' if fst1 == '15' else 'F'
+            fst2_code = 'E' if fst2 == '15' else 'F'
+            
+            pattern_parts.extend([f'FST1_{fst1_code}', f'FST2_{fst2_code}'])
+            
+        elif vessel_type == 'LNGC':
+            capacity = request.args.get('capacity', '125000')
+            loading = request.args.get('loading', 'ballast')
+            berthing = request.args.get('berthing', 'port')
+            
+            # Add LNGC-specific pattern parts
+            pattern_parts.append('LNGC')
+            
+        # Find matching CSV file - prioritize time series over summary files
+        csv_files = glob.glob(os.path.join(folder_path, "*.csv"))
+        
+        # Separate time series from summary files
+        time_series_files = [f for f in csv_files if not os.path.basename(f).startswith('dm_')]
+        summary_files = [f for f in csv_files if os.path.basename(f).startswith('dm_')]
+        
+        # Prefer time series files
+        search_files = time_series_files if time_series_files else summary_files
+        
+        # Try to find best match
+        matching_file = None
+        best_score = 0
+        
+        for csv_file in search_files:
+            filename = os.path.basename(csv_file).upper()
+            score = 0
+            
+            # Score based on pattern matches
+            for part in pattern_parts:
+                if part.upper() in filename:
+                    score += 1
+            
+            # Check tide
+            if tide.upper() in filename:
+                score += 1
+            
+            # Check heading
+            if f'HDG{heading.zfill(3)}' in filename or f'H{heading.zfill(3)}' in filename:
+                score += 1
+            
+            # Check environment type
+            if env_type == 'colinear' and 'NON' not in filename:
+                score += 0.5
+            elif env_type == 'non-colinear' and 'NON' in filename:
+                score += 1
+            
+            if score > best_score:
+                best_score = score
+                matching_file = csv_file
+        
+        if not matching_file and csv_files:
+            # Fallback to first CSV file
+            matching_file = csv_files[0]
+            print(f"Warning: No good match found, using {os.path.basename(matching_file)}")
+        
+        if not matching_file:
+            return jsonify({'error': 'No CSV files found in folder'}), 404
+        
+        # Read CSV file
+        df = pd.read_csv(matching_file)
+        filename = os.path.basename(matching_file)
+        
+        # Determine if this is a summary file or time series
+        is_summary = filename.startswith('dm_')
+        
+        # Determine data category from filename
+        filename_lower = filename.lower()
+        file_category = None
+        if 'jacket' in filename_lower:
+            file_category = 'jacket'
+        elif 'strut' in filename_lower:
+            file_category = 'strut'
+        elif 'mooring' in filename_lower or 'line' in filename_lower:
+            file_category = 'mooring'
+        elif 'fst1' in filename_lower:
+            file_category = 'fst1'
+        elif 'fst2' in filename_lower:
+            file_category = 'fst2'
+        
+        # Prepare response data
+        data = {
+            'filename': filename,
+            'columns': df.columns.tolist(),
+            'data_type': 'summary' if is_summary else 'time_series',
+            'time': None,
+            'lines': {},
+            'struts': {},
+            'jacket': {},
+            'summary_data': {},
+            'metadata': {
+                'rows': len(df),
+                'vessel_type': vessel_type,
+                'parameters': request.args.to_dict(),
+                'is_summary': is_summary
+            }
+        }
+        
+        if is_summary:
+            # Handle summary data - extract all numeric columns
+            # For summary files, we'll send all the data organized by category
+            data['summary_data'] = {}
+            
+            # Convert DataFrame to dictionary for easier access in frontend
+            for col in df.columns:
+                col_lower = col.lower()
+                
+                # Skip non-numeric columns
+                if df[col].dtype in ['object', 'string']:
+                    continue
+                    
+                # Categorize columns
+                if 'fst1' in col_lower:
+                    if 'fst1' not in data['summary_data']:
+                        data['summary_data']['fst1'] = {}
+                    data['summary_data']['fst1'][col] = df[col].tolist()
+                elif 'fst2' in col_lower:
+                    if 'fst2' not in data['summary_data']:
+                        data['summary_data']['fst2'] = {}
+                    data['summary_data']['fst2'][col] = df[col].tolist()
+                elif 'mooring' in col_lower or 'line' in col_lower:
+                    if 'mooring' not in data['summary_data']:
+                        data['summary_data']['mooring'] = {}
+                    data['summary_data']['mooring'][col] = df[col].tolist()
+                elif 'strut' in col_lower:
+                    if 'struts' not in data['summary_data']:
+                        data['summary_data']['struts'] = {}
+                    data['summary_data']['struts'][col] = df[col].tolist()
+                elif 'jacket' in col_lower or 'jkt' in col_lower:
+                    if 'jacket' not in data['summary_data']:
+                        data['summary_data']['jacket'] = {}
+                    data['summary_data']['jacket'][col] = df[col].tolist()
+                elif 'lngc' in col_lower:
+                    if 'lngc' not in data['summary_data']:
+                        data['summary_data']['lngc'] = {}
+                    data['summary_data']['lngc'][col] = df[col].tolist()
+                else:
+                    if 'other' not in data['summary_data']:
+                        data['summary_data']['other'] = {}
+                    data['summary_data']['other'][col] = df[col].tolist()
+            
+            # For summary data, create synthetic time axis if needed
+            data['time'] = list(range(len(df)))
+            data['metadata']['duration'] = len(df)
+            data['metadata']['summary_categories'] = list(data['summary_data'].keys())
+            
+        else:
+            # Handle time series data
+            # Find time column
+            time_cols = [col for col in df.columns if 'time' in col.lower()]
+            if time_cols:
+                data['time'] = df[time_cols[0]].tolist()
+            elif df.columns[0].lower() in ['t', 'time', 'seconds']:
+                data['time'] = df.iloc[:, 0].tolist()
+            else:
+                data['time'] = df.iloc[:, 0].tolist()
+            
+            # If we know the file category from the filename, put all data in that category
+            if file_category:
+                # Skip time column and put all other columns in the appropriate category
+                data_cols = [col for col in df.columns if col.lower() not in ['time', 't', 'seconds']]
+                
+                if file_category == 'jacket':
+                    for col in data_cols:
+                        data['jacket'][col] = df[col].tolist()
+                elif file_category == 'strut':
+                    for col in data_cols:
+                        data['struts'][col] = df[col].tolist()
+                elif file_category == 'mooring':
+                    for col in data_cols:
+                        data['lines'][col] = df[col].tolist()
+                elif file_category in ['fst1', 'fst2']:
+                    # For FST files, categorize by data type
+                    for col in data_cols:
+                        col_lower = col.lower()
+                        if 'force' in col_lower or 'fx' in col_lower or 'fy' in col_lower or 'fz' in col_lower:
+                            if 'forces' not in data:
+                                data['forces'] = {}
+                            data['forces'][col] = df[col].tolist()
+                        elif 'displace' in col_lower or 'velocity' in col_lower or 'position' in col_lower:
+                            if 'motion' not in data:
+                                data['motion'] = {}
+                            data['motion'][col] = df[col].tolist()
+                        else:
+                            if 'other' not in data:
+                                data['other'] = {}
+                            data['other'][col] = df[col].tolist()
+            else:
+                # Original logic for files without clear category in filename
+                # Extract mooring line data
+                line_cols = [col for col in df.columns if 'line' in col.lower() or 'mooring' in col.lower()]
+                for col in line_cols:
+                    data['lines'][col] = df[col].tolist()
+                
+                # Extract strut data  
+                strut_cols = [col for col in df.columns if 'strut' in col.lower()]
+                for col in strut_cols:
+                    data['struts'][col] = df[col].tolist()
+                
+                # Extract jacket data
+                jacket_cols = [col for col in df.columns if 'jacket' in col.lower()]
+                for col in jacket_cols:
+                    data['jacket'][col] = df[col].tolist()
+                
+                # Extract force data
+                force_cols = [col for col in df.columns if 'force' in col.lower() or 'fx' in col.lower() or 'fy' in col.lower() or 'fz' in col.lower()]
+                if force_cols:
+                    data['forces'] = {}
+                    for col in force_cols:
+                        data['forces'][col] = df[col].tolist()
+                
+                # Extract displacement/motion data
+                motion_cols = [col for col in df.columns if 'displace' in col.lower() or 'velocity' in col.lower() or 'position' in col.lower()]
+                if motion_cols:
+                    data['motion'] = {}
+                    for col in motion_cols:
+                        data['motion'][col] = df[col].tolist()
+                
+                # If we still don't have categorized data, put all numeric columns in 'other'
+                if not any([data['lines'], data['struts'], data['jacket'], data.get('forces'), data.get('motion')]):
+                    data['other'] = {}
+                    for col in df.columns:
+                        if col not in ['time', time_cols[0] if time_cols else ''] and df[col].dtype in ['float64', 'int64']:
+                            data['other'][col] = df[col].tolist()
+            
+            # Add metadata about data duration
+            if data['time']:
+                data['metadata']['duration'] = data['time'][-1] if data['time'] else 0
+                data['metadata']['dt'] = data['time'][1] - data['time'][0] if len(data['time']) > 1 else 0.1
+        
+        return jsonify(data)
+        
+    except Exception as e:
+        print(f"Error in /api/data: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/test')
