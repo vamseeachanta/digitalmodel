@@ -672,37 +672,81 @@ def process_single_strut_file(file_path):
                 'file_path': file_path
             }
             
-            # Extract FST configuration
-            if 'FST1' in filename.upper():
-                fst1_match = re.search(r'FST1_([EF])', filename.upper())
-                fst2_match = re.search(r'FST2_([EF])', filename.upper())
-                if fst1_match:
-                    config['fst1'] = '15' if fst1_match.group(1) == 'E' else '95'
-                if fst2_match:
-                    config['fst2'] = '15' if fst2_match.group(1) == 'E' else '95'
-            
-            # Extract tide level
-            for tide in ['HWL', 'MWL', 'LWL']:
-                if tide in filename.upper():
-                    config['tide'] = tide.lower()
-                    break
-            
-            # Extract heading
-            heading_match = re.search(r'(\d{3})deg', filename, re.IGNORECASE)
-            if heading_match:
-                config['heading'] = heading_match.group(1).lstrip('0') or '0'
-            
-            # Extract environment type
-            if 'non' in filename.lower() and 'colinear' in filename.lower():
-                config['envType'] = 'non-colinear'
-            elif 'colinear' in filename.lower():
-                config['envType'] = 'colinear'
-            
-            # Detect vessel type from filename
-            if 'FST' in filename.upper():
+            # Special handling for dm* summary files
+            # Example: dm_fsts_03c_0100yr_l015_hwl_strut_dyn.csv
+            if is_summary and filename.lower().startswith('dm'):
+                # Parse dm* filename pattern
+                # Pattern: dm_fsts_XXc_YYYYyr_lZZZ_TTT_...
+                
+                # Extract loading configuration (l015 = 15% LNG, l095 = 95% LNG)
+                loading_match = re.search(r'_l(\d{3})_', filename.lower())
+                if loading_match:
+                    loading = loading_match.group(1)
+                    if loading == '015':
+                        config['fst1'] = '15'
+                        config['fst2'] = '15'
+                    elif loading == '095':
+                        config['fst1'] = '95'
+                        config['fst2'] = '95'
+                    
+                    # Build the base configuration identifier
+                    # This will be used to find matching time series files
+                    config['base_config'] = f"l{loading}"
+                
+                # For dm files, extract configuration elements
+                if '_hwl_' in filename.lower():
+                    config['tide'] = 'hwl'
+                elif '_mwl_' in filename.lower():
+                    config['tide'] = 'mwl'
+                elif '_lwl_' in filename.lower():
+                    config['tide'] = 'lwl'
+                
+                # Extract environment details
+                if '_col_' in filename.lower() or 'colinear' in filename.lower():
+                    config['envType'] = 'colinear'
+                elif '_ncl_' in filename.lower() or 'non' in filename.lower():
+                    config['envType'] = 'non-colinear'
+                
+                # Extract heading if present
+                heading_match = re.search(r'_(\d{3})deg', filename.lower())
+                if heading_match:
+                    config['heading'] = heading_match.group(1).lstrip('0') or '0'
+                
                 config['vesselType'] = 'FST'
-            elif 'LNGC' in filename.upper():
-                config['vesselType'] = 'LNGC'
+                
+            else:
+                # Original parsing for non-dm files
+                # Extract FST configuration
+                if 'FST1' in filename.upper():
+                    fst1_match = re.search(r'FST1_([EF])', filename.upper())
+                    fst2_match = re.search(r'FST2_([EF])', filename.upper())
+                    if fst1_match:
+                        config['fst1'] = '15' if fst1_match.group(1) == 'E' else '95'
+                    if fst2_match:
+                        config['fst2'] = '15' if fst2_match.group(1) == 'E' else '95'
+                
+                # Extract tide level
+                for tide in ['HWL', 'MWL', 'LWL']:
+                    if tide in filename.upper():
+                        config['tide'] = tide.lower()
+                        break
+                
+                # Extract heading
+                heading_match = re.search(r'(\d{3})deg', filename, re.IGNORECASE)
+                if heading_match:
+                    config['heading'] = heading_match.group(1).lstrip('0') or '0'
+                
+                # Extract environment type
+                if 'non' in filename.lower() and 'colinear' in filename.lower():
+                    config['envType'] = 'non-colinear'
+                elif 'colinear' in filename.lower():
+                    config['envType'] = 'colinear'
+                
+                # Detect vessel type from filename
+                if 'FST' in filename.upper():
+                    config['vesselType'] = 'FST'
+                elif 'LNGC' in filename.upper():
+                    config['vesselType'] = 'LNGC'
             
             return config
         
@@ -792,38 +836,79 @@ def get_max_strut_force_config():
             
             # Build pattern from extracted config
             pattern_parts = []
-            if 'fst1' in max_config and 'fst2' in max_config:
-                fst1_code = 'E' if max_config['fst1'] == '15' else 'F'
-                fst2_code = 'E' if max_config['fst2'] == '15' else 'F'
-                pattern_parts.extend([f'FST1_{fst1_code}', f'FST2_{fst2_code}'])
             
-            # Find all files matching this configuration
-            for csv_file in csv_files:
-                filename = os.path.basename(csv_file)
-                matches = True
+            # Check if this is from a dm* file with base_config
+            if 'base_config' in max_config:
+                # For dm* files, look for files with the loading configuration (l015 or l095)
+                base_cfg = max_config['base_config']
                 
-                for part in pattern_parts:
-                    if part not in filename.upper():
-                        matches = False
-                        break
-                
-                if 'tide' in max_config and max_config['tide'].upper() not in filename.upper():
+                # Find all files matching this loading configuration
+                for csv_file in csv_files:
+                    filename = os.path.basename(csv_file).lower()
                     matches = False
+                    
+                    # Check for loading configuration in filename
+                    if base_cfg in filename:
+                        matches = True
+                    # Also check for FST1_E/F pattern for backward compatibility
+                    elif base_cfg == 'l015' and ('fst1_e' in filename.lower() or 'fsts_l015' in filename.lower()):
+                        matches = True
+                    elif base_cfg == 'l095' and ('fst1_f' in filename.lower() or 'fsts_l095' in filename.lower()):
+                        matches = True
+                    
+                    # Additional checks for tide and heading if specified
+                    if matches and 'tide' in max_config:
+                        if max_config['tide'] not in filename:
+                            matches = False
+                    
+                    if matches and 'heading' in max_config:
+                        heading_pattern = f"{max_config['heading'].zfill(3)}deg"
+                        if heading_pattern not in filename:
+                            matches = False
+                    
+                    if matches:
+                        related_files.append({
+                            'filename': os.path.basename(csv_file),
+                            'path': csv_file,
+                            'category': 'jacket' if 'jacket' in filename else
+                                       'strut' if 'strut' in filename else
+                                       'mooring' if 'mooring' in filename or 'line' in filename else
+                                       'fst' if 'fst' in filename else 'other'
+                        })
+            else:
+                # Original pattern matching for non-dm files
+                if 'fst1' in max_config and 'fst2' in max_config:
+                    fst1_code = 'E' if max_config['fst1'] == '15' else 'F'
+                    fst2_code = 'E' if max_config['fst2'] == '15' else 'F'
+                    pattern_parts.extend([f'FST1_{fst1_code}', f'FST2_{fst2_code}'])
                 
-                if 'heading' in max_config:
-                    heading_pattern = f"{max_config['heading'].zfill(3)}deg"
-                    if heading_pattern not in filename.lower():
+                # Find all files matching this configuration
+                for csv_file in csv_files:
+                    filename = os.path.basename(csv_file)
+                    matches = True
+                    
+                    for part in pattern_parts:
+                        if part not in filename.upper():
+                            matches = False
+                            break
+                    
+                    if 'tide' in max_config and max_config['tide'].upper() not in filename.upper():
                         matches = False
-                
-                if matches:
-                    related_files.append({
-                        'filename': filename,
-                        'path': csv_file,
-                        'category': 'jacket' if 'jacket' in filename.lower() else
-                                   'strut' if 'strut' in filename.lower() else
-                                   'mooring' if 'mooring' in filename.lower() or 'line' in filename.lower() else
-                                   'fst' if 'fst' in filename.lower() else 'other'
-                    })
+                    
+                    if 'heading' in max_config:
+                        heading_pattern = f"{max_config['heading'].zfill(3)}deg"
+                        if heading_pattern not in filename.lower():
+                            matches = False
+                    
+                    if matches:
+                        related_files.append({
+                            'filename': filename,
+                            'path': csv_file,
+                            'category': 'jacket' if 'jacket' in filename.lower() else
+                                       'strut' if 'strut' in filename.lower() else
+                                       'mooring' if 'mooring' in filename.lower() or 'line' in filename.lower() else
+                                       'fst' if 'fst' in filename.lower() else 'other'
+                        })
             
             max_config['related_files'] = related_files
             max_config['total_files'] = len(related_files)
@@ -831,7 +916,22 @@ def get_max_strut_force_config():
             # Add processing time
             processing_time = time.time() - start_time
             max_config['processing_time'] = f"{processing_time:.2f} seconds"
+            
+            # Add information about the identified configuration
             print(f"Parallel processing completed in {processing_time:.2f} seconds")
+            print(f"Max force found in: {max_config['filename']}")
+            print(f"Configuration: FST1={max_config.get('fst1', 'N/A')}%, FST2={max_config.get('fst2', 'N/A')}%")
+            print(f"Tide: {max_config.get('tide', 'N/A')}, Heading: {max_config.get('heading', 'N/A')}°")
+            print(f"Found {len(related_files)} related files with this configuration")
+            
+            # Add source file indicator
+            max_config['source_type'] = 'summary' if max_config['filename'].lower().startswith('dm') else 'time_series'
+            max_config['configuration_summary'] = {
+                'loading': f"{max_config.get('fst1', 'N/A')}% LNG",
+                'tide': max_config.get('tide', 'N/A').upper(),
+                'heading': f"{max_config.get('heading', '0')}°",
+                'environment': max_config.get('envType', 'N/A')
+            }
             
             return jsonify(max_config)
         else:
