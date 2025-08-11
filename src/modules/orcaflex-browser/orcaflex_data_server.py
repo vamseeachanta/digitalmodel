@@ -42,6 +42,11 @@ def debug():
     """Serve the debug dashboard"""
     return send_from_directory('.', 'debug-dashboard.html')
 
+@app.route('/debug-enhanced')
+def debug_enhanced():
+    """Serve the enhanced debug dashboard"""
+    return send_from_directory('.', 'debug-dashboard-enhanced.html')
+
 @app.route('/api/subfolders')
 def get_subfolders():
     """Get list of actual subfolders in the base directory"""
