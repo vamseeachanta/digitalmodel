@@ -1,0 +1,10 @@
+{
+    "central_repository": "assetutilities",
+    "github_url": "https://github.com/username/assetutilities",
+    "raw_url": "https://raw.githubusercontent.com/username/assetutilities/main",
+    "command_path": ".common-commands",
+    "last_sync": "2025-08-11T14:36:02-05:00",
+    "mandatory": true,
+    "auto_update": true,
+    "version": "1.0.0"
+}
