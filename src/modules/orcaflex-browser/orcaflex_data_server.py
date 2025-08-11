@@ -719,9 +719,12 @@ def get_max_strut_force_config():
         print(f"Processing {len(strut_files)} files in parallel...")
         
         # Use parallel processing to scan all files simultaneously
-        max_workers = min(multiprocessing.cpu_count(), len(strut_files))
+        # Use up to 20 cores for maximum performance
+        max_workers = min(20, len(strut_files))
         max_config = None
         max_force = 0
+        
+        print(f"Using {max_workers} parallel workers (available cores: {multiprocessing.cpu_count()})")
         
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             # Submit all files for processing
