@@ -1,4 +1,9 @@
 agents:
+  aqwa:
+    created: '2025-08-10T23:01:50.292693'
+    path: agents/aqwa
+    specialization: general-purpose
+    status: active
   web-test-module:
     created: '2025-08-10T17:55:47.703228'
     path: agents/web-test-module
@@ -6,6 +11,10 @@ agents:
     status: active
 metrics: {}
 modules:
+  aqwa:
+    agents:
+    - aqwa
+    coverage: 0.0
   web-test-module:
     agents:
     - web-test-module

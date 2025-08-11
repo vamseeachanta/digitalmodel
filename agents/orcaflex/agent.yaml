@@ -3,18 +3,55 @@ context_optimization:
   embedding_model: sentence-transformers/all-MiniLM-L6-v2
   enabled: true
 created_at: '2025-08-05T22:59:22.311383'
-description: AI agent for orcaflex module
+updated_at: '2025-08-10T18:00:00.000000'
+description: Specialized AI agent for OrcaFlex hydrodynamic analysis and offshore engineering simulations
 documentation:
   auto_refresh: true
-  external_sources: []
-  internal_sources: []
+  external_sources:
+    - https://www.orcina.com/webhelp/OrcaFlex/
+    - https://www.orcina.com/resources/examples/
+    - https://www.dnv.com/rules-standards/
+  internal_sources:
+    - src/modules/hydrodynamics/
+    - specs/modules/marine-engineering/
+  web_resources:
+    enabled: true
+    refresh_schedule:
+      official_docs: "1w"
+      standards: "1m"
+      examples: "2w"
 name: orcaflex
-repositories: []
-templates: []
+repositories:
+  - digitalmodel
+  - frontierdeepwater
+specialization:
+  domain: offshore-engineering
+  tools:
+    - OrcaFlex
+    - OrcaWave
+  expertise:
+    - Hydrodynamic analysis
+    - Mooring system design
+    - Riser analysis
+    - Installation analysis
+    - Fatigue assessment
+  standards:
+    - DNV-ST-F201
+    - API RP 2SK
+    - ISO 19901-7
+templates:
+  - orcaflex_model_setup
+  - mooring_analysis
+  - riser_analysis
+  - installation_sequence
 type: offshore-engineering
-version: 1.0.0
+version: 2.0.0
 workflows:
   enhanced_specs:
     auto_update: true
     enabled: true
     learning: true
+  analysis_automation:
+    enabled: true
+    batch_processing: true
+    result_extraction: true

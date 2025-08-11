@@ -1,102 +1,290 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "digitalmodel"
-version = "0.0.9"
-description = "engineering asset digital model(s) for life cycle analysis"
-authors = [{ name = "Vamsee Achanta", email = "vamsee.achanta@aceengineer.com" }]
-license = {text = "MIT"}
+version = "0.1.0"
+description = "Standardized project configuration for digitalmodel"
 readme = "README.md"
-keywords = ["finite element", "asset representation", "structural", "physical", "engineering", "animation", "lifecycle", "lifecycle analysis", "single source of truth", "digital model", "digital twin"]
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Development Team", email = "dev@example.com"}
+]
 classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3"
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 
-requires-python = ">=3.8"
-# Dependencies are managed in scripts/requirements.txt
-dynamic = ["dependencies"]
-[project.urls]
-Homepage = "https://github.com/vamseeachanta/digitalmodel"
-Repository = "https://github.com/vamseeachanta/digitalmodel"
-Documentation = "https://github.com/vamseeachanta/digitalmodel/blob/master/README.md"
+dependencies = [
+    "aiofiles==23.2.1"
+    "aiosqlite==0.19.0  # SQLite async driver for development"
+    "alembic==1.12.1"
+    "argon2-cffi==23.1.0  # Alternative password hashing"
+    "assetutilities"
+    "assetutilities>=0.0.7"
+    "asyncio-extras==1.3.2  # Additional async utilities"
+    "asyncio-mqtt==0.16.1  # MQTT support if needed"
+    "asyncpg==0.29.0  # PostgreSQL async driver"
+    "async-timeout==4.0.3  # Timeout handling"
+    "bandit==1.7.5  # Security linting"
+    "beautifulsoup4"
+    "beautifulsoup4>=4.13.0,<5.0.0"
+    "black"
+    "black==23.11.0"
+    "black>=24.0.0,<25.0.0"
+    "bleach==6.1.0  # HTML sanitization"
+    "boto3==1.34.0  # AWS S3 if cloud storage needed"
+    "brotli==1.1.0  # Additional compression"
+    "build>=1.0.0"
+    "bumpver"
+    "bumpver>=2023.1129"
+    "celery==5.3.4"
+    "chardet==5.2.0  # Character encoding detection"
+    "coverage==7.3.2  # Code coverage"
+    "cryptography==41.0.8"
+    "cx-Oracle==6.3.1"
+    "dash"
+    "dash>=3.1.0,<4.0.0"
+    "deepdiff"
+    "deepdiff>=8.0.0,<9.0.0"
+    "defusedxml==0.7.1  # Secure XML processing"
+    "digitalmodel"
+    "docx"
+    "factory-boy==3.3.0  # Test data factories"
+    "faker==20.1.0  # Fake data generation"
+    "fastapi==0.104.1"
+    "fastapi-limiter==0.1.5  # Additional rate limiting"
+    "fastapi-pagination==0.12.13  # Pagination utilities"
+    "fastapi-users==12.1.2  # User management (if needed)"
+    "flake8==6.1.0"
+    "geopy==2.4.1  # Geographic calculations (if needed)"
+    "gunicorn==21.2.0  # Alternative to uvicorn"
+    "gzip==1.0  # Built-in, but ensuring availability"
+    "h5py==3.10.0  # HDF5 format"
+    "hiredis==2.2.3"
+    "httpx==0.25.2"
+    "httpx==0.25.2  # For testing HTTP clients"
+    "hypercorn==0.15.0  # Alternative ASGI server"
+    "imgkit"
+    "imgkit>=1.2.0,<2.0.0"
+    "ipython>=8.0.0  # Enhanced Python shell"
+    "isort"
+    "isort==5.12.0  # Import sorting"
+    "isort>=5.13.0,<6.0.0"
+    "kaleido"
+    "kaleido>=0.2.0"
+    "loguru"
+    "loguru>=0.7.0,<1.0.0"
+    "lxml==4.9.3  # XML processing"
+    "magic==0.4.27  # File type detection (python-magic)"
+    "marshmallow==3.20.1  # Additional serialization"
+    "matplotlib"
+    "matplotlib>=3.7.0,<4.0.0"
+    "matplotlib==3.8.2"
+    "memory-profiler==0.61.0  # Memory profiling"
+    "mypy==1.7.1"
+    "mypy>=1.8.0,<2.0.0  # Type checking"
+    "newrelic==9.2.0  # Performance monitoring (optional)"
+    "numpy"
+    "numpy>=1.24.0,<2.0.0  # Usually needed with pandas"
+    "numpy==1.25.2"
+    "openpyxl"
+    "openpyxl>=3.1.0,<4.0.0"
+    "openpyxl==3.1.2  # Excel export"
+    "OrcFxAPI"
+    "OrcFxAPI  # Note: Check if version constraints are available"
+    "pandas"
+    "pandas==0.23.0"
+    "pandas>=2.0.0,<3.0.0"
+    "pandas==2.1.4"
+    "passlib[bcrypt]==1.7.4"
+    "pillow==10.1.0  # Image processing"
+    "plotly"
+    "plotly>=5.0.0,<6.0.0"
+    "plotly==5.17.0"
+    "poetry"
+    "pre-commit==3.6.0"
+    "prometheus-client==0.19.0"
+    "psutil==5.9.6  # System monitoring"
+    "pyarrow==14.0.1  # Parquet format"
+    "pydantic"
+    "pydantic>=2.0.0,<3.0.0"
+    "pydantic==2.5.0"
+    "pydantic-settings==2.1.0"
+    "pyjwt==2.8.0"
+    "pykalman==0.9.5  # Kalman filters for time series"
+    "pymssql==2.1.3"
+    "PyPDF2"
+    "pypdf2>=3.0.0,<4.0.0"
+    "pyproj==3.6.1  # Coordinate transformations"
+    "pytest"
+    "pytest==7.4.3"
+    "pytest>=8.0.0,<9.0.0"
+    "pytest-asyncio==0.21.1"
+    "pytest-cov>=4.1.0,<5.0.0"
+    "pytest-mock==3.12.0"
+    "pytest-mock>=3.12.0,<4.0.0"
+    "pytest-xdist>=3.5.0,<4.0.0  # For parallel test execution"
+    "python-dateutil==2.8.2"
+    "python-docx>=0.8.0"
+    "python-dotenv==1.0.0"
+    "python-jose[cryptography]==3.3.0  # Additional JWT support"
+    "python-magic==0.4.27  # File type detection"
+    "python-multipart==0.0.6"
+    "pyyaml"
+    "pyyaml>=6.0.0,<7.0.0"
+    "pyyaml==6.0.1"
+    "rainflow"
+    "rainflow>=3.2.0,<4.0.0"
+    "redis==5.0.1  # Already included above for caching"
+    "redis[hiredis]==5.0.1"
+    "requests"
+    "requests>=2.31.0,<3.0.0"
+    "-r requirements_improved.txt"
+    "ruamel.yaml>=0.18.0,<1.0.0"
+    "ruff>=0.3.0,<1.0.0  # Fast Python linter"
+    "scikit-learn==1.3.2"
+    "scipy"
+    "scipy>=1.10.0,<2.0.0"
+    "scipy==1.11.4"
+    "scrapy"
+    "scrapy>=2.11.0,<3.0.0"
+    "sentry-sdk[fastapi]==1.38.0  # Error tracking"
+    "slowapi==0.1.9  # Additional rate limiting utilities"
+    "sphinx>=7.0.0,<8.0.0"
+    "sphinx-rtd-theme>=2.0.0,<3.0.0"
+    "sqlalchemy==1.2.8"
+    "sqlalchemy==2.0.23"
+    "statsmodels==0.14.0  # Advanced statistical models"
+    "structlog==23.2.0"
+    "sympy"
+    "sympy>=1.12.0,<2.0.0"
+    "sympy==1.12  # Symbolic mathematics"
+    "tabula"
+    "tabulate"
+    "tabulate>=0.9.0,<1.0.0"
+    "twine>=4.0.0"
+    "uncertainties==3.1.7  # Error propagation"
+    "uvicorn[standard]==0.24.0"
+    "validators==0.22.0"
+    "webcolors"
+    "webcolors>=1.13,<2.0"
+    "websockets==12.0  # WebSocket support"
+    "xlrd"
+    "xlrd>=2.0.0,<3.0.0"
+    "xlsxwriter"
+    "xlsxwriter>=3.1.0,<4.0.0"
+    "xlsxwriter==3.1.9  # Excel with formatting"
+    "xmltodict"
+    "xmltodict>=0.13.0,<1.0.0"
+]
 
 [project.optional-dependencies]
 dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
     "black>=23.0",
-    "bumpver>=2023.1129",
-    "isort>=5.0.0",
-    "pytest>=7.0.0"
+    "flake8>=6.0",
+    "mypy>=1.0",
+    "pre-commit>=3.0",
 ]
-deploy = [
-    "twine>=1.0.0",
-    "build>=1.0.0"
+test = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-mock>=3.0",
 ]
-test-automation = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "pytest-html>=3.1.0",
-    "pytest-xdist>=3.0.0",
-    "pyyaml>=6.0",
-    "jinja2>=3.0.0",
-    "psutil>=5.8.0"
+docs = [
+    "sphinx>=6.0",
+    "sphinx-rtd-theme>=1.0",
 ]
 
-[project.scripts]
-digital_model = "digitalmodel.__main__:main"
-test-automation = "test_automation.__main__:main"
+[project.urls]
+"Homepage" = "https://github.com/username/digitalmodel"
+"Bug Tracker" = "https://github.com/username/digitalmodel/issues"
+"Documentation" = "https://github.com/username/digitalmodel#readme"
 
-[build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
+[tool.setuptools]
+packages = ["src"]
 
-[setuptools]
-include-package-data = true
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*"]
+exclude = ["tests*", "docs*"]
 
-[setuptools.dynamic]
-dependencies = {file = ["scripts/requirements.txt"]}
-
-
-[tool.bumpver]
-current_version = "0.0.9"
-version_pattern = "MAJOR.MINOR.PATCH"
-commit_message = "bump version {old_version} -> {new_version}"
-commit = true
-tag = true
-push = false
-
-[tool.bumpver.file_patterns]
-"pyproject.toml" = [
-    'current_version = "{version}"',
-    'version = "{version}"',
-]
-"src/digitalmodel/__init__.py" = ["{version}"]
-"src/digitalmodel/__main__.py" = ["- digitalmodel v{version}"]
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
-import_heading_stdlib = "Standard library imports"
-import_heading_thirdparty = "Third party imports"
-import_heading_firstparty = "Reader imports"
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
 line_length = 88
 
 [tool.mypy]
-strict = true
-
-[[tool.mypy.overrides]]
-module = "feedparser"
-ignore_missing_imports = true
-
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+python_files = ["test_*.py", "*_test.py"]
+addopts = "--cov=src --cov-report=term-missing --cov-report=html"
 
-[dependency-groups]
-dev = [
-    "ruff>=0.12.3",
-    "twine>=6.1.0",
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/test_*.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
 ]
+
+[tool.uv]
+# UV environment configuration
+python = "3.11"
+system = false
+seed = true
+compile = true
+
+[tool.uv.pip]
+index-url = "https://pypi.org/simple"
+extra-index-url = []
+no-cache = false
+pre = false
+
+# MANDATORY: Parallel Processing Configuration
+[tool.parallel]
+enabled = true
+max_workers = 5
+use_threading = false  # Use multiprocessing for CPU-bound tasks
+use_asyncio = true     # Use asyncio for I/O-bound tasks
+batch_size = 10
+
+[tool.parallel.rules]
+# Define when to use parallel processing
+file_operations = "always"      # File reading/writing
+http_requests = "always"        # API calls
+data_processing = "threshold"   # Based on data size
+threshold_size = 1000           # Items before parallel kicks in
+
+[tool.scripts]
+# Common scripts that use parallel processing
+test = "pytest -n auto"
+format = "black . && isort ."
+lint = "flake8 . & mypy . & pylint ."
+install = "uv pip install -e ."
+dev-install = "uv pip install -e .[dev]"
