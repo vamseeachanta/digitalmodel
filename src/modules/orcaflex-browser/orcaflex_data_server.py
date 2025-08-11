@@ -627,25 +627,38 @@ def process_single_strut_file(file_path):
         df = pd.read_csv(file_path)
         filename = os.path.basename(file_path)
         
-        # Check if this is a summary file (dm* prefix)
+        # Check if this is a summary file (dm* prefix) - particularly *strut_dyn.csv files
         is_summary = filename.lower().startswith('dm')
+        is_strut_dyn = 'strut_dyn' in filename.lower()
         
         # Find force columns - for summary files, look for 'max' columns
         force_cols = []
         max_force = 0
         max_col = None
+        max_row_idx = None
+        fe_filename = None
         
         if is_summary:
             # For summary files, look for columns with 'max' in the name
             for col in df.columns:
                 col_lower = col.lower()
-                if 'max' in col_lower and ('force' in col_lower or 'fx' in col_lower or 'fy' in col_lower or 'fz' in col_lower or 'strut' in col_lower):
+                if 'max' in col_lower and ('force' in col_lower or 'fx' in col_lower or 'fy' in col_lower or 'fz' in col_lower or 'strut' in col_lower or 'tension' in col_lower):
                     if df[col].dtype in ['float64', 'int64']:
-                        # For summary files, the max is already calculated
-                        col_value = df[col].abs().max()  # Get the maximum from the max column
+                        # Find the row with the maximum value
+                        col_max_idx = df[col].abs().idxmax()
+                        col_value = df[col].abs().iloc[col_max_idx]
+                        
                         if col_value > max_force:
                             max_force = col_value
                             max_col = col
+                            max_row_idx = col_max_idx
+            
+            # If we found a max and this is a strut_dyn file, get the fe_filename
+            if max_row_idx is not None and is_strut_dyn:
+                # Look for fe_filename column which contains the .sim basename
+                if 'fe_filename' in df.columns:
+                    fe_filename = df.loc[max_row_idx, 'fe_filename']
+                    print(f"Found max force in row {max_row_idx}, fe_filename: {fe_filename}")
         else:
             # For time series files, scan all force columns
             for col in df.columns:
@@ -671,6 +684,12 @@ def process_single_strut_file(file_path):
                 'force_column': max_col,
                 'file_path': file_path
             }
+            
+            # Add fe_filename if available (from strut_dyn files)
+            if fe_filename:
+                config['fe_filename'] = fe_filename
+                config['sim_basename'] = os.path.splitext(fe_filename)[0] if fe_filename else None
+                print(f"Configuration includes sim basename: {config['sim_basename']}")
             
             # Special handling for dm* summary files
             # Example: dm_fsts_03c_0100yr_l015_hwl_strut_dyn.csv
@@ -837,8 +856,27 @@ def get_max_strut_force_config():
             # Build pattern from extracted config
             pattern_parts = []
             
-            # Check if this is from a dm* file with base_config
-            if 'base_config' in max_config:
+            # Check if we have a sim_basename from fe_filename column
+            if 'sim_basename' in max_config and max_config['sim_basename']:
+                # Use the sim_basename to find exact matching files
+                sim_base = max_config['sim_basename']
+                print(f"Looking for files matching sim basename: {sim_base}")
+                
+                for csv_file in csv_files:
+                    filename = os.path.basename(csv_file)
+                    # Check if this file starts with the sim_basename
+                    if filename.lower().startswith(sim_base.lower()):
+                        related_files.append({
+                            'filename': filename,
+                            'path': csv_file,
+                            'category': 'jacket' if 'jacket' in filename.lower() else
+                                       'strut' if 'strut' in filename.lower() else
+                                       'mooring' if 'mooring' in filename.lower() or 'line' in filename.lower() else
+                                       'fst' if 'fst' in filename.lower() else 'other'
+                        })
+                        
+            # Fallback to configuration-based matching if no sim_basename or no files found
+            elif 'base_config' in max_config:
                 # For dm* files, look for files with the loading configuration (l015 or l095)
                 base_cfg = max_config['base_config']
                 
@@ -920,6 +958,9 @@ def get_max_strut_force_config():
             # Add information about the identified configuration
             print(f"Parallel processing completed in {processing_time:.2f} seconds")
             print(f"Max force found in: {max_config['filename']}")
+            if 'fe_filename' in max_config:
+                print(f"FE filename from strut_dyn: {max_config['fe_filename']}")
+                print(f"Will load data from sim basename: {max_config.get('sim_basename', 'N/A')}")
             print(f"Configuration: FST1={max_config.get('fst1', 'N/A')}%, FST2={max_config.get('fst2', 'N/A')}%")
             print(f"Tide: {max_config.get('tide', 'N/A')}, Heading: {max_config.get('heading', 'N/A')}°")
             print(f"Found {len(related_files)} related files with this configuration")
