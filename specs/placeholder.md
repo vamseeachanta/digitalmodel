@@ -4,11 +4,14 @@ upon selecting the analysis folder, refresh the data display strategy as follows
   - File basename selected should be displayed for confirmation
   - Following this, the data display should be refreshed to show all other data based on abs(maximum) strut force
 
-- The abs(maximum) run identification from a given folder should be added to a csv as calculating and takes a lot of time. :
+- The abs(maximum) run identification from a given folder takes a lot of time. Utilize parallel process and speed up this process to identify the run
 
+- For each run
+- Display strut forces (1 to 4) for FST1 in one chart, 
+- strut forces (5 to 8) for FST 2 in another chart. show the maximum with a bubble or highlighter
+- Display jacket forces in another chart at the top of the page before mooring tensions.
+- display vessel motions
 
-add strut forces (1 to 4) for FST1 in one chart, strut forces (5 to 8) for FST 2 in another chart
-jacket forces in another.. at the top of the page before mooring tensions.
 
 Change labels flooded and empty to 95% LNG, and 15% LNG respectively.
 Also add an option for the folders D:\1522\ctr7\orcaflex\rev_a08\output\csv to select then allow user to select other options
