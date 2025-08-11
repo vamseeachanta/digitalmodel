@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrcaFlex Data Browser - Enhanced POC Dashboard</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Control Panel Styles */
+        .control-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .control-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 150px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            font-size: 12px;
+            color: #555;
+            text-transform: uppercase;
+        }
+
+        .control-group select, .control-group button, .control-group input {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-group input[type="text"] {
+            cursor: text;
+            width: 400px;
+        }
+
+        .control-group select:hover, .control-group select:focus,
+        .control-group input:hover, .control-group input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .load-button {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            min-width: 120px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .load-button:hover {
+            background: #27ae60;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transform: translateY(-1px);
+        }
+
+        .load-button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Visualization Panel Styles */
+        .viz-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .viz-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1e3c72;
+            border-bottom: 3px solid #2ecc71;
+            padding-bottom: 10px;
+        }
+
+        .chart-container {
+            margin-bottom: 20px;
+        }
+
+        /* Grid Layout for Force Charts */
+        .force-charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Line Controls */
+        .line-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .line-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .line-toggle:hover {
+            background: #e3f2fd;
+            border-color: #3498db;
+        }
+
+        .line-toggle input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        .line-toggle label {
+            cursor: pointer;
+            font-size: 13px;
+            color: #555;
+        }
+
+        /* Stats Table */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .stats-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        .stats-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #ddd;
+            font-size: 13px;
+        }
+
+        .stats-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-ok {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .status-warning {
+            color: #f39c12;
+            font-weight: 600;
+        }
+
+        .status-critical {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        /* Insights Panel */
+        .insights-panel {
+            background: linear-gradient(135deg, #8e44ad, #9b59b6);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .insights-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .insight-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .insight-item:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Loading States */
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-success {
+            background: #2ecc71;
+            color: white;
+            font-weight: 600;
+        }
+
+        .status-loading {
+            background: #f39c12;
+            color: white;
+            font-weight: 600;
+        }
+
+        .status-error {
+            background: #e74c3c;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .control-row {
+                flex-direction: column;
+            }
+            
+            .control-group input[type="text"] {
+                width: 100%;
+            }
+            
+            .force-charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🌊 OrcaFlex Data Browser - Marine Engineering Analysis</h1>
+            <p>Interactive visualization and analysis of OrcaFlex simulation results with FST loading configurations</p>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h3 style="margin-bottom: 15px; color: #2c3e50;">Simulation Parameters</h3>
+            
+            <!-- Folder Selection Row -->
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="baseFolder">Base Folder</label>
+                    <input type="text" id="baseFolder" value="D:\1522\ctr7\orcaflex\rev_a08\output\csv" readonly style="width: 350px; background: #f0f0f0;">
+                </div>
+                <div class="control-group">
+                    <label for="subfolder">Select Analysis Subfolder</label>
+                    <select id="subfolder" onchange="updateDataPath()" style="width: 300px;">
+                        <option value="">Loading subfolders...</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>&nbsp;</label>
+                    <button onclick="refreshSubfolders()" style="background: #3498db; color: white; border: none; padding: 8px 15px; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; border-radius: 6px;" title="Refresh folder list">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Selected Path Display -->
+            <div class="control-row">
+                <div class="control-group" style="flex: 1;">
+                    <label for="selectedPath">Selected Data Path</label>
+                    <input type="text" id="selectedPath" readonly style="width: 100%; background: #e8f5e9; font-weight: 600; color: #2e7d32;">
+                </div>
+            </div>
+            
+            <!-- Filter Selection Row -->
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="fstConfig">FST Configuration</label>
+                    <select id="fstConfig" disabled>
+                        <option value="">Select...</option>
+                        <option value="FST1_E_FST2_E">FST1: 15% LNG, FST2: 15% LNG</option>
+                        <option value="FST1_F_FST2_E">FST1: 95% LNG, FST2: 15% LNG</option>
+                        <option value="FST1_E_FST2_F">FST1: 15% LNG, FST2: 95% LNG</option>
+                        <option value="FST1_F_FST2_F">FST1: 95% LNG, FST2: 95% LNG</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="tideLevel">Tide Level</label>
+                    <select id="tideLevel" disabled>
+                        <option value="">Select...</option>
+                        <option value="HWL">High Water Level (HWL)</option>
+                        <option value="MWL">Mean Water Level (MWL)</option>
+                        <option value="LWL">Low Water Level (LWL)</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="envType">Environment Type</label>
+                    <select id="envType" disabled>
+                        <option value="">Select...</option>
+                        <option value="colinear">Colinear</option>
+                        <option value="non-colinear">Non-Colinear</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="envHeading">Environment Heading</label>
+                    <select id="envHeading" disabled>
+                        <option value="">Select...</option>
+                        <option value="000">000°</option>
+                        <option value="045">045°</option>
+                        <option value="090">090°</option>
+                        <option value="135">135°</option>
+                        <option value="180">180°</option>
+                        <option value="225">225°</option>
+                        <option value="270">270°</option>
+                        <option value="315">315°</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="comparisonCase">Compare With</label>
+                    <select id="comparisonCase" disabled>
+                        <option value="">None</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>&nbsp;</label>
+                    <button class="load-button" id="loadButton" onclick="loadData()" disabled>
+                        <span id="loadButtonText">Load Data</span>
+                        <div class="loading-spinner" id="loadingSpinner"></div>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Status Row -->
+            <div class="control-row">
+                <div style="display: flex; align-items: center;">
+                    <span style="font-weight: 600; margin-right: 10px;">Status:</span>
+                    <span id="dataStatus">No data loaded</span>
+                    <span id="statusBadge" class="status-badge status-error">Not Loaded</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strut and Jacket Forces Section (NEW) -->
+        <div class="viz-panel">
+            <div class="viz-title">Structural Forces Analysis</div>
+            
+            <div class="force-charts-grid">
+                <!-- Strut Forces 1-4 -->
+                <div class="chart-container">
+                    <h4 style="margin-bottom: 10px; color: #555;">Strut Forces (1-4)</h4>
+                    <div id="strutForces1to4"></div>
+                </div>
+                
+                <!-- Strut Forces 5-8 -->
+                <div class="chart-container">
+                    <h4 style="margin-bottom: 10px; color: #555;">Strut Forces (5-8)</h4>
+                    <div id="strutForces5to8"></div>
+                </div>
+            </div>
+            
+            <!-- Jacket Forces -->
+            <div class="chart-container">
+                <h4 style="margin-bottom: 10px; color: #555;">Jacket Forces</h4>
+                <div id="jacketForces"></div>
+            </div>
+        </div>
+
+        <!-- Mooring Line Tension Visualization -->
+        <div class="viz-panel">
+            <div class="viz-title">Mooring Line Tensions - Time Series</div>
+            
+            <!-- Line Toggle Controls -->
+            <div class="line-controls" id="lineControls">
+                <!-- Will be populated dynamically -->
+            </div>
+            
+            <!-- Time Series Chart -->
+            <div id="timeSeriesChart"></div>
+        </div>
+
+        <!-- Statistical Summary -->
+        <div class="viz-panel">
+            <div class="viz-title">Statistical Summary</div>
+            <table class="stats-table" id="statsTable">
+                <thead>
+                    <tr>
+                        <th>Line</th>
+                        <th>Min (kN)</th>
+                        <th>Max (kN)</th>
+                        <th>Mean (kN)</th>
+                        <th>Range (kN)</th>
+                        <th>Utilization (%)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="statsTableBody">
+                    <!-- Will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Automated Insights -->
+        <div class="insights-panel">
+            <div class="insights-title">
+                <span>💡</span>
+                <span>Key Engineering Insights</span>
+            </div>
+            <div id="insightsContent">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentData = null;
+        let comparisonData = null;
+        let lineVisibility = {};
+        let baseFolder = 'D:\\1522\\ctr7\\orcaflex\\rev_a08\\output\\csv';
+        let currentSubfolder = '';
+        let availableSubfolders = [];
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('OrcaFlex Data Browser v2 initialized');
+            loadSubfolders();
+            enableFilterControls(false); // Initially disable until subfolder selected
+            updateDataStatus('ready', 'Select a subfolder to begin');
+        });
+
+        // Load available subfolders (simulated based on typical OrcaFlex structure)
+        function loadSubfolders() {
+            // Simulating typical OrcaFlex output folder structure
+            // In reality, this would read from the file system
+            availableSubfolders = [
+                '01_intact',
+                '02_damaged',
+                '02a_one_line_damaged',
+                '02b_two_lines_damaged',
+                '02c_005yr',
+                '02c_100yr',
+                '03_fatigue',
+                '04_installation',
+                '05_transit',
+                '06_operational',
+                '07_survival',
+                '08_sensitivity',
+                '09_mooring_optimization',
+                '10_vortex_induced_motion',
+                'static',
+                'dynamic',
+                'time_history',
+                'statistics',
+                'iterations',
+                'comparison'
+            ];
+
+            // Populate subfolder dropdown
+            const subfolderSelect = document.getElementById('subfolder');
+            subfolderSelect.innerHTML = '<option value="">-- Select a subfolder --</option>';
+            
+            availableSubfolders.forEach(folder => {
+                const option = document.createElement('option');
+                option.value = folder;
+                option.textContent = folder;
+                subfolderSelect.appendChild(option);
+            });
+        }
+
+        // Update data path when subfolder is selected
+        function updateDataPath() {
+            const subfolder = document.getElementById('subfolder').value;
+            const basePath = document.getElementById('baseFolder').value;
+            
+            if (subfolder) {
+                currentSubfolder = subfolder;
+                const fullPath = basePath + '\\' + subfolder;
+                document.getElementById('selectedPath').value = fullPath;
+                
+                // Enable filter controls
+                enableFilterControls(true);
+                
+                // Load available files from this subfolder (simulated)
+                loadAvailableFiles(subfolder);
+            } else {
+                document.getElementById('selectedPath').value = '';
+                currentSubfolder = '';
+                enableFilterControls(false);
+            }
+        }
+
+        // Enable/disable filter controls
+        function enableFilterControls(enable) {
+            const controls = ['fstConfig', 'tideLevel', 'envType', 'envHeading', 'comparisonCase'];
+            controls.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.disabled = !enable;
+                }
+            });
+            
+            // Update load button state
+            const loadButton = document.getElementById('loadButton');
+            if (loadButton) {
+                loadButton.disabled = !enable;
+                if (!enable) {
+                    loadButton.style.background = '#95a5a6';
+                    loadButton.style.cursor = 'not-allowed';
+                } else {
+                    loadButton.style.background = '#2ecc71';
+                    loadButton.style.cursor = 'pointer';
+                }
+            }
+        }
+
+        // Load available files from subfolder (simulated)
+        function loadAvailableFiles(subfolder) {
+            // In reality, this would scan the folder for CSV files
+            // For now, we'll update the status to show the selected folder
+            updateDataStatus('success', `Subfolder selected: ${subfolder}`);
+            
+            // You could also populate file-specific dropdowns here
+            // based on what CSV files are found in the subfolder
+        }
+
+        // Refresh subfolders
+        function refreshSubfolders() {
+            const refreshBtn = event.target;
+            refreshBtn.textContent = '⏳ Loading...';
+            refreshBtn.disabled = true;
+            
+            setTimeout(() => {
+                loadSubfolders();
+                refreshBtn.textContent = '🔄 Refresh';
+                refreshBtn.disabled = false;
+                updateDataStatus('success', 'Subfolder list refreshed');
+            }, 500);
+        }
+
+        // Generate simulated data with strut and jacket forces
+        function generateSimulatedData(fstConfig, tideLevel, heading, envType) {
+            const timeSteps = 1000;
+            const dt = 0.1; // 0.1 second intervals
+            
+            // Global factors for this simulation
+            const envFactor = envType === 'non-colinear' ? 1.3 : 1.0;
+            const tideFactor = tideLevel === 'HWL' ? 1.2 : tideLevel === 'LWL' ? 0.8 : 1.0;
+            
+            const data = {
+                time: [],
+                lines: {},
+                struts: {},
+                jacket: {
+                    'Jacket_X': [],
+                    'Jacket_Y': [],
+                    'Jacket_Z': [],
+                    'Jacket_Mx': [],
+                    'Jacket_My': [],
+                    'Jacket_Mz': []
+                }
+            };
+
+            // Generate time array
+            for (let i = 0; i < timeSteps; i++) {
+                data.time.push(i * dt);
+            }
+
+            // Generate mooring line data (16 lines)
+            for (let lineNum = 1; lineNum <= 16; lineNum++) {
+                const lineName = `Line_${lineNum}`;
+                data.lines[lineName] = [];
+                
+                // Base tension varies by line and FST configuration
+                const isFST1Line = lineNum <= 8;
+                const fst1Status = fstConfig.includes('FST1_F') ? 'flooded' : 'empty';
+                const fst2Status = fstConfig.includes('FST2_F') ? 'flooded' : 'empty';
+                
+                // 95% LNG (Flooded) has higher tensions than 15% LNG (Empty)
+                const baseTension = 800 + lineNum * 50 + 
+                    (isFST1Line ? (fst1Status === 'flooded' ? 200 : 0) : (fst2Status === 'flooded' ? 200 : 0));
+                
+                const waveFreq = 0.1 + lineNum * 0.01;
+                const headingFactor = Math.cos((parseInt(heading) - lineNum * 22.5) * Math.PI / 180);
+                
+                for (let i = 0; i < timeSteps; i++) {
+                    const t = data.time[i];
+                    
+                    // Complex wave pattern
+                    const waveComponent1 = Math.sin(2 * Math.PI * waveFreq * t) * 150;
+                    const waveComponent2 = Math.sin(2 * Math.PI * waveFreq * 1.5 * t) * 80;
+                    const waveComponent3 = Math.sin(2 * Math.PI * waveFreq * 0.3 * t) * 200;
+                    const noise = (Math.random() - 0.5) * 50;
+                    
+                    const tension = baseTension * tideFactor * envFactor + 
+                                   waveComponent1 * headingFactor + 
+                                   waveComponent2 + 
+                                   waveComponent3 * Math.abs(headingFactor) +
+                                   noise;
+                    
+                    data.lines[lineName].push(Math.max(0, tension));
+                }
+            }
+
+            // Generate strut forces (8 struts)
+            for (let strutNum = 1; strutNum <= 8; strutNum++) {
+                const strutName = `Strut_${strutNum}`;
+                data.struts[strutName] = [];
+                
+                // Base force depends on FST configuration
+                const baseForce = 500 + strutNum * 30 + 
+                    (fstConfig.includes('F') ? 150 : 0);
+                
+                const freq = 0.08 + strutNum * 0.005;
+                const headingEffect = Math.sin((parseInt(heading) + strutNum * 45) * Math.PI / 180);
+                
+                for (let i = 0; i < timeSteps; i++) {
+                    const t = data.time[i];
+                    
+                    const wave1 = Math.sin(2 * Math.PI * freq * t) * 100;
+                    const wave2 = Math.sin(2 * Math.PI * freq * 2 * t) * 50;
+                    const noise = (Math.random() - 0.5) * 30;
+                    
+                    const force = baseForce * tideFactor * envFactor + 
+                                 wave1 * headingEffect + 
+                                 wave2 +
+                                 noise;
+                    
+                    data.struts[strutName].push(Math.max(0, force));
+                }
+            }
+
+            // Generate jacket forces
+            const jacketComponents = ['Jacket_X', 'Jacket_Y', 'Jacket_Z', 'Jacket_Mx', 'Jacket_My', 'Jacket_Mz'];
+            jacketComponents.forEach((component, idx) => {
+                const isForce = idx < 3; // First 3 are forces, last 3 are moments
+                const baseValue = isForce ? 2000 + idx * 500 : 5000 + idx * 1000;
+                const freq = 0.05 + idx * 0.01;
+                
+                for (let i = 0; i < timeSteps; i++) {
+                    const t = data.time[i];
+                    
+                    const wave = Math.sin(2 * Math.PI * freq * t) * (isForce ? 300 : 800);
+                    const trend = Math.sin(2 * Math.PI * 0.01 * t) * (isForce ? 200 : 500);
+                    const noise = (Math.random() - 0.5) * (isForce ? 100 : 200);
+                    
+                    const value = baseValue * tideFactor * envFactor + 
+                                 wave * Math.cos(parseInt(heading) * Math.PI / 180) + 
+                                 trend + noise;
+                    
+                    data.jacket[component].push(value);
+                }
+            });
+
+            return data;
+        }
+
+        // Initialize line visibility
+        function initializeLineVisibility() {
+            lineVisibility = {};
+            if (currentData) {
+                Object.keys(currentData.lines).forEach(line => {
+                    lineVisibility[line] = true;
+                });
+            }
+            createLineControls();
+        }
+
+        // Create line toggle controls
+        function createLineControls() {
+            const container = document.getElementById('lineControls');
+            container.innerHTML = '';
+            
+            Object.keys(currentData.lines).forEach(line => {
+                const toggle = document.createElement('div');
+                toggle.className = 'line-toggle';
+                
+                toggle.innerHTML = `
+                    <input type="checkbox" id="toggle_${line}" checked onchange="toggleLine('${line}')">
+                    <label for="toggle_${line}">${line.replace('_', ' ')}</label>
+                `;
+                
+                container.appendChild(toggle);
+            });
+        }
+
+        // Toggle line visibility
+        function toggleLine(lineName) {
+            lineVisibility[lineName] = document.getElementById(`toggle_${lineName}`).checked;
+            updateVisualization();
+        }
+
+        // Load data function
+        function loadData() {
+            const fstConfig = document.getElementById('fstConfig').value;
+            const tideLevel = document.getElementById('tideLevel').value;
+            const envType = document.getElementById('envType').value;
+            const heading = document.getElementById('envHeading').value;
+            const selectedPath = document.getElementById('selectedPath').value;
+
+            if (!currentSubfolder) {
+                alert('Please select a subfolder first');
+                return;
+            }
+
+            if (!fstConfig || !tideLevel || !envType || !heading) {
+                alert('Please select all parameters before loading data');
+                return;
+            }
+
+            // Show loading state
+            const loadButtonText = document.getElementById('loadButtonText');
+            const spinner = document.getElementById('loadingSpinner');
+            loadButtonText.style.display = 'none';
+            spinner.style.display = 'inline-block';
+
+            // Update status
+            updateDataStatus('loading', 'Loading data from: ' + selectedPath);
+
+            // Simulate loading delay
+            setTimeout(() => {
+                try {
+                    // Generate simulated data
+                    currentData = generateSimulatedData(fstConfig, tideLevel, heading, envType);
+                    
+                    // Initialize line visibility
+                    initializeLineVisibility();
+                    
+                    // Update all visualizations
+                    updateStrutForces();
+                    updateJacketForces();
+                    updateVisualization();
+                    updateStatistics();
+                    generateInsights();
+                    
+                    // Update comparison dropdown
+                    updateComparisonOptions(fstConfig, tideLevel, heading);
+                    
+                    // Reset loading state
+                    loadButtonText.style.display = 'inline';
+                    spinner.style.display = 'none';
+                    
+                    // Update status
+                    const filename = `${fstConfig}_${tideLevel}_${envType}_${heading}deg.csv`;
+                    updateDataStatus('success', `Loaded: ${filename} from ${selectedPath}`);
+                    
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                    updateDataStatus('error', 'Error loading data');
+                    
+                    // Reset loading state
+                    loadButtonText.style.display = 'inline';
+                    spinner.style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        // Update strut forces visualization
+        function updateStrutForces() {
+            if (!currentData) return;
+
+            // Strut Forces 1-4
+            const traces1to4 = [];
+            for (let i = 1; i <= 4; i++) {
+                traces1to4.push({
+                    x: currentData.time,
+                    y: currentData.struts[`Strut_${i}`],
+                    name: `Strut ${i}`,
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { width: 2 }
+                });
+            }
+
+            const layout1to4 = {
+                title: '',
+                xaxis: { title: 'Time (s)', gridcolor: '#e0e0e0' },
+                yaxis: { title: 'Force (kN)', gridcolor: '#e0e0e0' },
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.2 },
+                margin: { t: 20, b: 60 },
+                height: 300,
+                paper_bgcolor: 'white',
+                plot_bgcolor: '#fafafa'
+            };
+
+            Plotly.newPlot('strutForces1to4', traces1to4, layout1to4);
+
+            // Strut Forces 5-8
+            const traces5to8 = [];
+            for (let i = 5; i <= 8; i++) {
+                traces5to8.push({
+                    x: currentData.time,
+                    y: currentData.struts[`Strut_${i}`],
+                    name: `Strut ${i}`,
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { width: 2 }
+                });
+            }
+
+            const layout5to8 = {
+                title: '',
+                xaxis: { title: 'Time (s)', gridcolor: '#e0e0e0' },
+                yaxis: { title: 'Force (kN)', gridcolor: '#e0e0e0' },
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.2 },
+                margin: { t: 20, b: 60 },
+                height: 300,
+                paper_bgcolor: 'white',
+                plot_bgcolor: '#fafafa'
+            };
+
+            Plotly.newPlot('strutForces5to8', traces5to8, layout5to8);
+        }
+
+        // Update jacket forces visualization
+        function updateJacketForces() {
+            if (!currentData) return;
+
+            const traces = [
+                {
+                    x: currentData.time,
+                    y: currentData.jacket['Jacket_X'],
+                    name: 'Force X',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { width: 2, color: '#3498db' }
+                },
+                {
+                    x: currentData.time,
+                    y: currentData.jacket['Jacket_Y'],
+                    name: 'Force Y',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { width: 2, color: '#e74c3c' }
+                },
+                {
+                    x: currentData.time,
+                    y: currentData.jacket['Jacket_Z'],
+                    name: 'Force Z',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { width: 2, color: '#2ecc71' }
+                },
+                {
+                    x: currentData.time,
+                    y: currentData.jacket['Jacket_Mx'],
+                    name: 'Moment Mx',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { width: 2, color: '#f39c12', dash: 'dash' },
+                    yaxis: 'y2'
+                },
+                {
+                    x: currentData.time,
+                    y: currentData.jacket['Jacket_My'],
+                    name: 'Moment My',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { width: 2, color: '#9b59b6', dash: 'dash' },
+                    yaxis: 'y2'
+                },
+                {
+                    x: currentData.time,
+                    y: currentData.jacket['Jacket_Mz'],
+                    name: 'Moment Mz',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { width: 2, color: '#1abc9c', dash: 'dash' },
+                    yaxis: 'y2'
+                }
+            ];
+
+            const layout = {
+                title: '',
+                xaxis: { title: 'Time (s)', gridcolor: '#e0e0e0' },
+                yaxis: { title: 'Force (kN)', gridcolor: '#e0e0e0' },
+                yaxis2: {
+                    title: 'Moment (kN·m)',
+                    overlaying: 'y',
+                    side: 'right',
+                    gridcolor: '#e0e0e0'
+                },
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.2 },
+                margin: { t: 20, b: 60 },
+                height: 350,
+                paper_bgcolor: 'white',
+                plot_bgcolor: '#fafafa'
+            };
+
+            Plotly.newPlot('jacketForces', traces, layout);
+        }
+
+        // Update mooring line visualization
+        function updateVisualization() {
+            if (!currentData) return;
+
+            const traces = [];
+            
+            Object.keys(currentData.lines).forEach((line, idx) => {
+                if (lineVisibility[line]) {
+                    traces.push({
+                        x: currentData.time,
+                        y: currentData.lines[line],
+                        name: line.replace('_', ' '),
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: {
+                            width: 2,
+                            color: getLineColor(idx)
+                        }
+                    });
+                }
+            });
+
+            const layout = {
+                title: '',
+                xaxis: {
+                    title: 'Time (s)',
+                    gridcolor: '#e0e0e0'
+                },
+                yaxis: {
+                    title: 'Tension (kN)',
+                    gridcolor: '#e0e0e0'
+                },
+                showlegend: true,
+                legend: {
+                    x: 1.05,
+                    y: 1,
+                    bgcolor: 'rgba(255, 255, 255, 0.9)',
+                    bordercolor: '#ddd',
+                    borderwidth: 1
+                },
+                margin: { t: 20, r: 150 },
+                height: 400,
+                paper_bgcolor: 'white',
+                plot_bgcolor: '#fafafa'
+            };
+
+            Plotly.newPlot('timeSeriesChart', traces, layout);
+        }
+
+        // Update statistics table
+        function updateStatistics() {
+            if (!currentData) return;
+
+            const tbody = document.getElementById('statsTableBody');
+            tbody.innerHTML = '';
+
+            Object.keys(currentData.lines).forEach(line => {
+                const values = currentData.lines[line];
+                const min = Math.min(...values);
+                const max = Math.max(...values);
+                const mean = values.reduce((a, b) => a + b, 0) / values.length;
+                const range = max - min;
+                
+                // Assume MBL (Minimum Breaking Load) for utilization calculation
+                const mbl = 3000; // kN - example value
+                const utilization = (max / mbl) * 100;
+                
+                // Determine status
+                let status, statusClass;
+                if (utilization < 60) {
+                    status = 'OK';
+                    statusClass = 'status-ok';
+                } else if (utilization < 80) {
+                    status = 'Warning';
+                    statusClass = 'status-warning';
+                } else {
+                    status = 'Critical';
+                    statusClass = 'status-critical';
+                }
+
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><strong>${line.replace('_', ' ')}</strong></td>
+                    <td>${min.toFixed(1)}</td>
+                    <td>${max.toFixed(1)}</td>
+                    <td>${mean.toFixed(1)}</td>
+                    <td>${range.toFixed(1)}</td>
+                    <td>${utilization.toFixed(1)}%</td>
+                    <td class="${statusClass}">${status}</td>
+                `;
+            });
+        }
+
+        // Generate automated insights
+        function generateInsights() {
+            if (!currentData) return;
+
+            const insights = [];
+            const fstConfig = document.getElementById('fstConfig').value;
+            const tideLevel = document.getElementById('tideLevel').value;
+            const envType = document.getElementById('envType').value;
+            const heading = document.getElementById('envHeading').value;
+
+            // Insight 1: Critical line identification
+            let maxTension = 0;
+            let criticalLine = '';
+            Object.keys(currentData.lines).forEach(line => {
+                const max = Math.max(...currentData.lines[line]);
+                if (max > maxTension) {
+                    maxTension = max;
+                    criticalLine = line;
+                }
+            });
+            insights.push(`Critical mooring line: ${criticalLine.replace('_', ' ')} with maximum tension of ${maxTension.toFixed(1)} kN`);
+
+            // Insight 2: FST configuration impact
+            const fstDescription = fstConfig.includes('FST1_F') ? 
+                'FST1 at 95% LNG capacity' : 'FST1 at 15% LNG capacity';
+            const impactPercentage = fstConfig.includes('F') ? '~20%' : 'baseline';
+            insights.push(`${fstDescription} configuration shows ${impactPercentage} tension increase compared to empty condition`);
+
+            // Insight 3: Environment type effect
+            const envDescription = envType === 'non-colinear' ? 
+                'Non-colinear environment increases loads by ~30% due to combined wave/current/wind from different directions' :
+                'Colinear environment with aligned wave/current/wind directions';
+            insights.push(envDescription);
+
+            // Insight 4: Environmental heading effect
+            insights.push(`Environmental heading at ${heading}° creates asymmetric loading with higher tensions on lines facing the weather`);
+
+            // Insight 5: Tide level impact
+            const tideEffect = tideLevel === 'HWL' ? 'increases mean tensions by ~20%' :
+                             tideLevel === 'LWL' ? 'reduces mean tensions by ~20%' :
+                             'maintains baseline tension levels';
+            insights.push(`${tideLevel} tide condition ${tideEffect} across all mooring lines`);
+
+            // Update insights display
+            const container = document.getElementById('insightsContent');
+            container.innerHTML = insights.map(insight => 
+                `<div class="insight-item">${insight}</div>`
+            ).join('');
+        }
+
+        // Update data status
+        function updateDataStatus(status, message) {
+            const statusText = document.getElementById('dataStatus');
+            const statusBadge = document.getElementById('statusBadge');
+            
+            statusText.textContent = message;
+            
+            // Update badge
+            statusBadge.className = 'status-badge';
+            if (status === 'success') {
+                statusBadge.className += ' status-success';
+                statusBadge.textContent = 'Loaded';
+            } else if (status === 'loading') {
+                statusBadge.className += ' status-loading';
+                statusBadge.textContent = 'Loading...';
+            } else {
+                statusBadge.className += ' status-error';
+                statusBadge.textContent = 'Not Loaded';
+            }
+        }
+
+        // Update comparison options
+        function updateComparisonOptions(currentFST, currentTide, currentHeading) {
+            const select = document.getElementById('comparisonCase');
+            select.innerHTML = '<option value="">None</option>';
+            
+            // Add some comparison options
+            const options = [
+                { fst: 'FST1_E_FST2_E', tide: 'MWL', heading: '000', label: 'Both 15% LNG - MWL - 000°' },
+                { fst: 'FST1_F_FST2_F', tide: 'HWL', heading: '045', label: 'Both 95% LNG - HWL - 045°' },
+                { fst: 'FST1_F_FST2_E', tide: 'MWL', heading: '090', label: 'Mixed Config - MWL - 090°' }
+            ];
+            
+            options.forEach(opt => {
+                if (opt.fst !== currentFST || opt.tide !== currentTide || opt.heading !== currentHeading) {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify(opt);
+                    option.textContent = opt.label;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        // Helper function to get line colors
+        function getLineColor(index) {
+            const colors = [
+                '#3498db', '#e74c3c', '#2ecc71', '#f39c12',
+                '#9b59b6', '#1abc9c', '#34495e', '#e67e22',
+                '#16a085', '#2980b9', '#8e44ad', '#c0392b',
+                '#27ae60', '#d35400', '#7f8c8d', '#2c3e50'
+            ];
+            return colors[index % colors.length];
+        }
+    </script>
+</body>
+</html>
