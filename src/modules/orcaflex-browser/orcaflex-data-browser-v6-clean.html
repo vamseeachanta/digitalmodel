@@ -696,16 +696,26 @@
                 if (maxConfig.heading) document.getElementById('heading').value = maxConfig.heading;
                 if (maxConfig.envType) document.getElementById('envType').value = maxConfig.envType;
                 
-                // Display info panel
+                // Display info panel with enhanced visibility
                 const infoDiv = document.createElement('div');
                 infoDiv.className = 'max-force-info';
+                infoDiv.style.cssText = 'background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 5px solid #1976d2; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
                 infoDiv.innerHTML = `
-                    <h3>Maximum Strut Force Configuration</h3>
-                    <p><strong>File:</strong> ${maxConfig.filename}</p>
-                    <p><strong>Max Force:</strong> ${maxConfig.max_force.toFixed(2)} N</p>
-                    <p><strong>Force Column:</strong> ${maxConfig.force_column}</p>
-                    <p><strong>Related Files:</strong> ${maxConfig.total_files || 0} files found</p>
-                    <p><strong>Processing Time:</strong> ${maxConfig.processing_time || 'N/A'}</p>
+                    <h3 style="color: #1565c0; margin-bottom: 15px; font-size: 18px;">📊 Maximum Strut Force Configuration Identified</h3>
+                    <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 10px;">
+                        <p style="font-size: 16px; font-weight: bold; color: #d32f2f; margin-bottom: 10px;">
+                            🎯 Selected File: <span style="background: #ffeb3b; padding: 3px 8px; border-radius: 4px; color: #333;">${maxConfig.filename}</span>
+                        </p>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px;">
+                            <p style="margin: 5px 0;"><strong>Max Force:</strong> <span style="color: #d32f2f; font-size: 18px; font-weight: bold;">${maxConfig.max_force.toFixed(2)} N</span></p>
+                            <p style="margin: 5px 0;"><strong>Force Column:</strong> ${maxConfig.force_column}</p>
+                            <p style="margin: 5px 0;"><strong>Related Files:</strong> ${maxConfig.total_files || 0} files</p>
+                            <p style="margin: 5px 0;"><strong>Processing Time:</strong> ${maxConfig.processing_time || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <p style="color: #555; font-size: 13px; margin-top: 10px; font-style: italic;">
+                        ℹ️ The charts below show all data from this maximum force configuration
+                    </p>
                 `;
                 
                 const chartsDiv = document.getElementById('charts');
@@ -738,7 +748,7 @@
                 }
                 
                 plotData(data);
-                showStatus(`Loaded data from ${data.filename} (max strut force configuration)`, 'success');
+                showStatus(`✅ Successfully loaded: ${data.filename} (Maximum force configuration)`, 'success');
             } catch (error) {
                 console.error('Error loading data:', error);
                 showStatus(`Error: ${error.message}`, 'error');
@@ -791,7 +801,7 @@
                 }
                 
                 plotData(data);
-                showStatus(`Loaded data from ${data.filename} (manual configuration)`, 'success');
+                showStatus(`✅ Successfully loaded: ${data.filename} (Manual configuration)`, 'success');
             } catch (error) {
                 console.error('Error loading data:', error);
                 showStatus(`Error: ${error.message}`, 'error');
@@ -805,6 +815,25 @@
             const infoDiv = chartsDiv.querySelector('.max-force-info');
             if (!infoDiv) {
                 chartsDiv.innerHTML = '';
+            }
+            
+            // Add a header showing which file's data is being displayed
+            if (data.filename) {
+                const dataHeader = document.createElement('div');
+                dataHeader.style.cssText = 'background: #f5f5f5; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #4caf50;';
+                dataHeader.innerHTML = `
+                    <h3 style="color: #2e7d32; margin: 0; font-size: 16px;">
+                        📈 Currently Displaying: <span style="background: white; padding: 4px 10px; border-radius: 4px; font-family: monospace;">${data.filename}</span>
+                    </h3>
+                    ${data.metadata ? `
+                        <p style="color: #666; margin: 8px 0 0 0; font-size: 13px;">
+                            Data Points: ${data.metadata.rows || 0} | 
+                            Duration: ${data.metadata.duration ? data.metadata.duration.toFixed(1) + 's' : 'N/A'} | 
+                            Type: ${data.data_type || 'Time Series'}
+                        </p>
+                    ` : ''}
+                `;
+                chartsDiv.appendChild(dataHeader);
             }
             
             let chartsCreated = false;
@@ -926,9 +955,16 @@
             const wrapper = document.createElement('div');
             wrapper.className = 'chart-wrapper';
             
+            // Enhanced title with data source indicator
             const titleDiv = document.createElement('div');
             titleDiv.className = 'chart-title';
-            titleDiv.textContent = title;
+            titleDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
+            titleDiv.innerHTML = `
+                <span>${title}</span>
+                <span style="font-size: 11px; color: #666; font-weight: normal;">
+                    ${Object.keys(dataDict).length} series | ${time ? time.length + ' points' : ''}
+                </span>
+            `;
             wrapper.appendChild(titleDiv);
             
             const chartDiv = document.createElement('div');
