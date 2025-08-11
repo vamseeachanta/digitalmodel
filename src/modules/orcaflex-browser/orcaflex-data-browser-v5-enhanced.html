@@ -436,7 +436,10 @@
             
             <div class="button-group">
                 <button class="btn-primary" onclick="loadData()">
-                    📊 Load Data
+                    📊 Load Data (Auto Max Strut)
+                </button>
+                <button class="btn-primary" onclick="loadDataManual()" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);">
+                    🎯 Load Data (Manual Config)
                 </button>
                 <button class="btn-refresh" onclick="refreshAll()">
                     🔄 Refresh
@@ -627,14 +630,15 @@
             showStatus('Configuration refreshed', 'success');
         }
         
-        async function loadData() {
+        async function loadDataManual() {
+            // Manual load without max strut force strategy
             const subfolder = document.getElementById('subfolderSelect').value;
             if (!subfolder) {
                 showStatus('Please select a folder', 'error');
                 return;
             }
             
-            // Build parameters based on vessel type
+            // Build parameters based on current UI selections
             let params = {
                 subfolder: subfolder,
                 tide: document.getElementById('tide').value,
@@ -673,6 +677,116 @@
                     throw new Error(data.error);
                 }
                 
+                console.log('Manual data load:', data);
+                
+                plotData(data);
+                showStatus(`Loaded data from ${data.filename} (manual configuration)`, 'success');
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+        }
+        
+        async function loadData() {
+            const subfolder = document.getElementById('subfolderSelect').value;
+            if (!subfolder) {
+                showStatus('Please select a folder', 'error');
+                return;
+            }
+            
+            document.getElementById('loadingIndicator').style.display = 'block';
+            document.getElementById('charts').innerHTML = '';
+            
+            // First, find the configuration with maximum strut force
+            showStatus('Scanning for maximum strut force...', 'info');
+            
+            try {
+                // Call the max strut force API
+                const maxResponse = await fetch(`${API_BASE}/max_strut_force?subfolder=${subfolder}`);
+                const maxConfig = await maxResponse.json();
+                
+                if (maxConfig.error) {
+                    throw new Error(maxConfig.error);
+                }
+                
+                console.log('Max strut force configuration:', maxConfig);
+                
+                // Update UI to show the selected configuration
+                showStatus(`Found max strut force: ${maxConfig.max_force.toFixed(2)} N in ${maxConfig.filename}`, 'success');
+                
+                // Update the UI controls to highlight the selected configuration
+                if (maxConfig.vesselType) {
+                    // Select the vessel type
+                    const vesselRadios = document.querySelectorAll('input[name="vesselType"]');
+                    vesselRadios.forEach(radio => {
+                        if (radio.value === maxConfig.vesselType) {
+                            radio.checked = true;
+                            radio.closest('.vessel-option').classList.add('selected');
+                        } else {
+                            radio.closest('.vessel-option').classList.remove('selected');
+                        }
+                    });
+                    currentVesselType = maxConfig.vesselType;
+                    updateVesselControls();
+                }
+                
+                // Update FST controls if applicable
+                if (maxConfig.vesselType === 'FST') {
+                    if (maxConfig.fst1) document.getElementById('fst1Loading').value = maxConfig.fst1;
+                    if (maxConfig.fst2) document.getElementById('fst2Loading').value = maxConfig.fst2;
+                }
+                
+                // Update environmental controls
+                if (maxConfig.tide) document.getElementById('tide').value = maxConfig.tide;
+                if (maxConfig.heading) document.getElementById('heading').value = maxConfig.heading;
+                if (maxConfig.envType) document.getElementById('envType').value = maxConfig.envType;
+                
+                // Display the selected file information
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'max-force-info';
+                infoDiv.style.cssText = 'background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;';
+                infoDiv.innerHTML = `
+                    <h3 style="color: #2e7d32; margin-bottom: 10px;">Maximum Strut Force Configuration</h3>
+                    <p><strong>File:</strong> ${maxConfig.filename}</p>
+                    <p><strong>Max Force:</strong> ${maxConfig.max_force.toFixed(2)} N</p>
+                    <p><strong>Force Column:</strong> ${maxConfig.force_column}</p>
+                    <p><strong>Related Files:</strong> ${maxConfig.total_files || 0} files found</p>
+                `;
+                
+                const chartsDiv = document.getElementById('charts');
+                chartsDiv.appendChild(infoDiv);
+                
+                // Now load all data for this configuration
+                showStatus('Loading all data for maximum force configuration...', 'info');
+                
+                // Build parameters from the max configuration
+                let params = {
+                    subfolder: subfolder,
+                    tide: maxConfig.tide || document.getElementById('tide').value,
+                    heading: maxConfig.heading || document.getElementById('heading').value,
+                    envType: maxConfig.envType || document.getElementById('envType').value,
+                    vesselType: maxConfig.vesselType || currentVesselType
+                };
+                
+                // Add vessel-specific parameters
+                if (maxConfig.vesselType === 'FST') {
+                    params.fst1 = maxConfig.fst1 || document.getElementById('fst1Loading').value;
+                    params.fst2 = maxConfig.fst2 || document.getElementById('fst2Loading').value;
+                    params.mooring = document.getElementById('mooringStatus').value;
+                }
+                
+                const queryString = new URLSearchParams(params).toString();
+                
+                // Load the actual data
+                const response = await fetch(`${API_BASE}/data?${queryString}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
                 console.log('Data received from API:', data);
                 console.log('Data type:', data.data_type);
                 console.log('Time points:', data.time ? data.time.length : 0);
@@ -680,7 +794,7 @@
                 console.log('Motion data:', Object.keys(data.motion || {}));
                 
                 plotData(data);
-                showStatus(`Loaded data from ${data.filename}`, 'success');
+                showStatus(`Loaded data from ${data.filename} (max strut force configuration)`, 'success');
             } catch (error) {
                 console.error('Error loading data:', error);
                 showStatus(`Error: ${error.message}`, 'error');
@@ -691,7 +805,12 @@
         
         function plotData(data) {
             const chartsDiv = document.getElementById('charts');
+            // Preserve the max-force-info div if it exists
+            const infoDiv = chartsDiv.querySelector('.max-force-info');
             chartsDiv.innerHTML = '';
+            if (infoDiv) {
+                chartsDiv.appendChild(infoDiv);
+            }
             
             console.log('plotData called with:', {
                 dataType: data.data_type,

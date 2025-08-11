@@ -1,3 +1,20 @@
+upon selecting the analysis folder, refresh the data display strategy as follows:
+- Identify the minimum and maximum strut force among all the folder strut force files and display the abs(maximum) run
+  - Selected options should be highlighted according to this run
+  - File basename selected should be displayed for confirmation
+  - Following this, the data display should be refreshed to show all other data based on abs(maximum) strut force
+
+- Following statistics should be obtained from the excel folder:
+
+
+add strut forces (1 to 4) for FST1 in one chart, strut forces (5 to 8) for FST 2 in another chart
+jacket forces in another.. at the top of the page before mooring tensions.
+
+Change labels flooded and empty to 95% LNG, and 15% LNG respectively.
+Also add an option for the folders D:\1522\ctr7\orcaflex\rev_a08\output\csv to select then allow user to select other options
+
+
+
 /create-spec iterate mooring tensions for the model to a target values
 
 The mooring lines are Line1, Line2, etc. The target tensions are defined as below:
