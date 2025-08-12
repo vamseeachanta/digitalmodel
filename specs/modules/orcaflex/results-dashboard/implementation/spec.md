@@ -193,10 +193,10 @@ The system will serve as the primary tool for marine engineers analyzing offshor
 
 ## Spec Documentation
 
-- Architecture: @specs/modules/visualization/orcaflex-dashboard/architecture.md
-- Data Analysis: @specs/modules/visualization/orcaflex-dashboard/data-analysis.md
-- Tasks: @specs/modules/visualization/orcaflex-dashboard/tasks.md
-- Implementation Prompt: @specs/modules/visualization/orcaflex-dashboard/prompt.md
+- Architecture: @specs/modules/orcaflex/results-dashboard/implementation/architecture.md
+- Data Analysis: @specs/modules/orcaflex/results-dashboard/implementation/data-analysis.md
+- Tasks: @specs/modules/orcaflex/results-dashboard/implementation/tasks.md
+- Implementation Prompt: @specs/modules/orcaflex/results-dashboard/implementation/prompt.md
 
 ---
 
