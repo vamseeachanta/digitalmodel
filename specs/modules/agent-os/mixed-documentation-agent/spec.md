@@ -522,6 +522,440 @@ The system integrates with existing Agent OS infrastructure through:
 - Seamless integration with existing Agent OS workflows
 - Complete documentation enabling independent agent creation
 
+## Integration with Visualization Modules
+
+### OrcaFlex Dashboard Integration
+
+> The OrcaFlex Dashboard has been separated into its own visualization module.
+> See: `specs/modules/visualization/orcaflex-dashboard/` for complete specification.
+
+The mixed documentation agent can process OrcaFlex-related documents and generate agents that understand:
+- Simulation output formats (CSV, time series data)
+- Marine engineering terminology and concepts
+- Mooring line analysis and structural responses
+- Environmental loading conditions
+
+These agents can then provide context and insights to the visualization dashboard through:
+1. Automated insight generation from processed documents
+2. Pattern recognition in file naming conventions
+3. Domain-specific knowledge for data interpretation
+4. Engineering standards compliance checking
+
+## Context Generation Tools Integration
+
+### Primary Tools Assessment
+- **CSV Exports**: Primary data format for time series and statistical results
+- **Excel Collation Files**: Master configuration files (`wlng_dm_fsts*.xlsx`) containing:
+  - Complete file paths and directory mappings
+  - Worksheet descriptions (inputs, r_inputs tabs)
+  - Parameter definitions and metadata
+  - Analysis case configurations
+  - File naming patterns and conventions
+
+#### Naming Convention Recognition
+Automatic parsing of simulation metadata from filenames with support for multiple vessel types:
+
+**FST Configurations**:
+- Pattern: `FST1_[F/E]_FST2_[F/E]_[tide]_[env]_[heading].csv`
+- F = Flooded (95% LNG capacity)
+- E = Empty (15% LNG capacity)
+
+**LNGC Configurations**:
+- Pattern: `LNGC_[capacity]_[berthing]_[condition]_[tide]_[env]_[heading].csv`
+- Capacity: 125000 m³ / 180000 m³
+- Berthing: port / starboard
+- Condition: ballast / laden / partial
+- Additional parameters from Excel collation
+
+**Environmental Parameters**:
+- Tide levels: HWL (High Water Level), MWL (Mean Water Level), LWL (Low Water Level)
+- Environment type: colinear / non-colinear
+- Headings: 000deg to 315deg in 45° increments
+- Wave conditions: operational / survival / extreme
+
+#### Excel Integration Pipeline
+```python
+class ExcelCollationReader:
+    """Read and parse wlng_dm_fsts*.xlsx configuration files"""
+    
+    def __init__(self, excel_path: Path):
+        self.excel_path = excel_path
+        self.config = self.parse_excel_config()
+        
+    def parse_excel_config(self) -> Dict:
+        """Extract configuration from Excel worksheets"""
+        config = {
+            'file_patterns': [],
+            'parameters': {},
+            'case_matrix': []
+        }
+        
+        # Read inputs worksheet
+        inputs_df = pd.read_excel(self.excel_path, sheet_name='inputs')
+        config['parameters'] = self.extract_parameters(inputs_df)
+        
+        # Read r_inputs worksheet  
+        r_inputs_df = pd.read_excel(self.excel_path, sheet_name='r_inputs')
+        config['file_patterns'] = self.extract_file_patterns(r_inputs_df)
+        
+        return config
+        
+    def extract_parameters(self, df: pd.DataFrame) -> Dict:
+        """Extract parameter definitions from inputs sheet"""
+        params = {
+            'vessel_types': [],
+            'capacities': [],
+            'conditions': [],
+            'environments': []
+        }
+        # Parse parameter columns and values
+        return params
+        
+    def extract_file_patterns(self, df: pd.DataFrame) -> List[str]:
+        """Extract file naming patterns from r_inputs sheet"""
+        patterns = []
+        for _, row in df.iterrows():
+            if pd.notna(row.get('filepath')):
+                patterns.append(row['filepath'])
+        return patterns
+```
+
+#### Data Processing Pipeline
+```python
+class OrcaFlexDataBrowser:
+    def __init__(self, data_directory: Path, excel_config: Path = None):
+        self.data_dir = data_directory
+        self.excel_config = ExcelCollationReader(excel_config) if excel_config else None
+        self.sim_catalog = self.build_simulation_catalog()
+        self.csv_cache = {}
+        
+    def parse_filename(self, filename: str) -> SimulationMetadata:
+        """Extract simulation parameters from standardized naming"""
+        metadata = SimulationMetadata()
+        
+        # FST configuration detection
+        if 'FST1_F' in filename:
+            metadata.fst1_status = 'Flooded'
+        elif 'FST1_E' in filename:
+            metadata.fst1_status = 'Empty'
+            
+        # Tide level detection
+        if 'HWL' in filename:
+            metadata.tide = 'High Water Level'
+        elif 'MWL' in filename:
+            metadata.tide = 'Mean Water Level'
+        elif 'LWL' in filename:
+            metadata.tide = 'Low Water Level'
+            
+        # Environment heading extraction
+        heading_match = re.search(r'(\d{3})deg', filename)
+        if heading_match:
+            metadata.heading = int(heading_match.group(1))
+            
+        return metadata
+```
+
+### User Interface Components
+
+#### 1. Simulation Case Filter Panel
+**Purpose**: Enable rapid selection and comparison of simulation cases based on Excel collation configurations
+
+**Features**:
+- **Vessel Type Selection**:
+  - Radio buttons: FST / LNGC / Custom
+  - Dynamic UI updates based on selection
+  
+- **Configuration Source**:
+  - Excel file selector: Browse/select `wlng_dm_fsts*.xlsx` files
+  - Auto-populate options from Excel worksheets (inputs, r_inputs)
+  
+- **FST Mode Filters** (when FST selected):
+  - FST1 Status: 15% LNG (Empty) / 95% LNG (Flooded)
+  - FST2 Status: 15% LNG (Empty) / 95% LNG (Flooded)
+  - Mooring: Intact / One-line damaged / Two-lines damaged
+  
+- **LNGC Mode Filters** (when LNGC selected):
+  - Vessel Size: 125,000 m³ / 180,000 m³
+  - Berthing: Port / Starboard
+  - Loading: Ballast / 50% Laden / Full Laden / Custom %
+  - Mooring Pattern: From Excel configuration
+  
+- **Environmental Conditions** (common):
+  - Tide Level: HWL / MWL / LWL
+  - Environment Type: Colinear / Non-colinear
+  - Wave Heading: 0° to 315° (45° increments)
+  - Current Heading: 0° to 315° (45° increments) 
+  - Wind Heading: 0° to 315° (45° increments)
+  - Return Period: 5yr / 10yr / 100yr / 1000yr
+  
+- **Case Selection**:
+  - Primary case selector with full parameter display
+  - Comparison case selector for side-by-side analysis
+  - Quick presets for common comparisons
+
+**Implementation**:
+```javascript
+const SimulationFilter = {
+    fstOptions: [
+        {label: 'FST1 Empty, FST2 Empty', value: 'FST1_E_FST2_E'},
+        {label: 'FST1 Flooded, FST2 Empty', value: 'FST1_F_FST2_E'},
+        {label: 'FST1 Empty, FST2 Flooded', value: 'FST1_E_FST2_F'},
+        {label: 'FST1 Flooded, FST2 Flooded', value: 'FST1_F_FST2_F'}
+    ],
+    tideOptions: ['HWL', 'MWL', 'LWL'],
+    headingOptions: [0, 45, 90, 135, 180, 225, 270, 315],
+    
+    applyFilters: function(filters) {
+        const matchingCases = this.findMatchingSimulations(filters);
+        this.loadSimulationData(matchingCases);
+    }
+};
+```
+
+#### 2. Time Series Visualization Panel
+**Purpose**: Display mooring line tensions and jacket forces with interactive controls
+
+**Features**:
+- **Multi-Line Display**: 
+  - Up to 16 mooring lines simultaneously
+  - Individual line toggle controls
+  - Color-coded by line group (FST1, FST2, permanent moorings)
+  
+- **Data Visualization**:
+  - Time series plots with zoom/pan capabilities
+  - Min/Max envelope display option
+  - Statistical overlay (mean line with min/max markers)
+  
+- **Comparison Mode**:
+  - Split-screen view for two simulation cases
+  - Synchronized time axes for direct comparison
+  - Difference plot generation
+
+**Visualization Configuration**:
+```python
+class TimeSeriesVisualizer:
+    def create_tension_plot(self, data: pd.DataFrame, lines: List[str]):
+        fig = go.Figure()
+        
+        for line in lines:
+            if line in data.columns:
+                # Add main time series
+                fig.add_trace(go.Scatter(
+                    x=data.index,
+                    y=data[line],
+                    name=line,
+                    visible=True,
+                    line=dict(color=self.get_line_color(line))
+                ))
+                
+                # Add min/max markers
+                max_val = data[line].max()
+                min_val = data[line].min()
+                fig.add_annotation(
+                    x=data[line].idxmax(),
+                    y=max_val,
+                    text=f"Max: {max_val:.1f} kN",
+                    showarrow=True
+                )
+        
+        return fig
+```
+
+#### 3. Statistical Summary Panel
+**Purpose**: Display key statistics and comparisons
+
+**Features**:
+- **Tabular Display**:
+  - Line-by-line statistics (Min, Max, Mean, Range)
+  - Safety factor calculations
+  - Utilization percentages
+  
+- **Comparison Metrics**:
+  - Percentage differences between cases
+  - Critical line identification
+  - Governing load case determination
+
+**Statistical Analysis**:
+```python
+def generate_statistics(self, data: pd.DataFrame) -> pd.DataFrame:
+    stats = pd.DataFrame()
+    
+    for line in self.mooring_lines:
+        if line in data.columns:
+            stats.loc[line, 'Maximum (kN)'] = data[line].max()
+            stats.loc[line, 'Minimum (kN)'] = data[line].min()
+            stats.loc[line, 'Range (kN)'] = data[line].max() - data[line].min()
+            stats.loc[line, 'Utilization (%)'] = (data[line].max() / self.mbl[line]) * 100
+            
+    return stats.round(1)
+```
+
+#### 4. Automated Insights Panel
+**Purpose**: Generate 3-4 key engineering conclusions from the data
+
+**Features**:
+- **Automatic Analysis**:
+  - Critical line identification
+  - Load case sensitivity assessment
+  - FST flooding impact quantification
+  - Environmental heading effects
+  
+- **Report Generation**:
+  ```python
+  def generate_insights(self, stats: pd.DataFrame, metadata: SimulationMetadata) -> List[str]:
+      insights = []
+      
+      # Critical line identification
+      max_util = stats['Utilization (%)'].max()
+      critical_line = stats['Utilization (%)'].idxmax()
+      insights.append(f"Line {critical_line} governs with {max_util:.1f}% utilization")
+      
+      # FST flooding impact
+      if metadata.fst1_status == 'Flooded':
+          fst_impact = self.calculate_fst_impact()
+          insights.append(f"FST1 flooding increases max tension by {fst_impact:.1f}%")
+      
+      # Environmental sensitivity
+      heading_sensitivity = self.assess_heading_sensitivity()
+      insights.append(f"Maximum tensions occur at {heading_sensitivity}° heading")
+      
+      # Tide effect
+      tide_effect = self.calculate_tide_effect()
+      insights.append(f"Tide variation affects tensions by ±{tide_effect:.1f}%")
+      
+      return insights[:4]  # Return top 4 insights
+  ```
+
+### Implementation Requirements
+
+#### Excel Collation Integration
+1. **Excel File Reading**:
+   - Support for `wlng_dm_fsts*.xlsx` files in parent directory
+   - Parse 'inputs' and 'r_inputs' worksheets automatically
+   - Extract complete file paths and naming conventions
+   - Build parameter matrix from Excel data
+   - Cache configuration for session persistence
+
+2. **Dynamic UI Generation**:
+   - Auto-generate filter options from Excel parameters
+   - Conditional UI elements based on vessel type selection
+   - Cascading filters: vessel type → size → loading → berthing
+   - Real-time validation against available CSV files
+   - Show/hide controls based on data availability
+
+3. **File Pattern Matching**:
+   - Use Excel-defined patterns for automatic file discovery
+   - Support complex naming patterns with multiple parameters
+   - Handle variations in naming conventions
+   - Intelligent fallback for partial matches
+   - Display matched filename to user for confirmation
+
+#### Vessel-Specific Features
+
+**FST Mode Requirements**:
+- Independent FST1 and FST2 configuration
+- LNG levels: 15% (Empty) / 95% (Flooded)
+- Mooring scenarios: Intact / 1-line / 2-lines damaged
+- Support for asymmetric configurations (FST1_F_FST2_E)
+- Pattern: `FST1_[E/F]_FST2_[E/F]_[tide]_[env]_[heading].csv`
+
+**LNGC Mode Requirements**:
+- Vessel sizes: 125,000 m³ / 180,000 m³
+- Berthing options: Port / Starboard
+- Loading states: Ballast (10%) / Partial (50%) / Laden (95%) / Custom
+- Mooring patterns from Excel configuration
+- Pattern: `LNGC_[size]_[berthing]_[loading]_[tide]_[env]_[heading].csv`
+
+**Custom Mode Requirements**:
+- Free-text base name input
+- Manual parameter selection
+- Support for non-standard naming patterns
+- Regex pattern builder for complex cases
+
+#### Data Processing Enhancements
+1. **Excel-Driven Processing**:
+   - Read column mappings from Excel
+   - Support custom unit conversions defined in Excel
+   - Handle multiple data formats per vessel type
+   - Process metadata from Excel headers
+
+2. **Performance Optimization**:
+   - Parallel Excel sheet reading
+   - Incremental CSV loading for large files
+   - Smart caching using Excel-defined keys
+   - Background worker for Excel updates
+
+3. **Validation and Error Handling**:
+   - Validate Excel structure on load
+   - Check for required worksheets
+   - Handle missing or corrupt Excel files
+   - Provide detailed error messages with recovery suggestions
+   - Manual override option if Excel unavailable
+
+### Integration with Document Processing Pipeline
+
+#### Dynamic Data Loading
+- **File Monitoring**: Automatic detection of new CSV files in watched directories
+- **Cache Management**: Intelligent caching of frequently accessed datasets
+- **Background Processing**: Asynchronous loading to maintain UI responsiveness
+
+#### Filename Pattern Learning
+```python
+class PatternLearner:
+    def learn_naming_convention(self, filenames: List[str]):
+        """Extract naming patterns for future automation"""
+        patterns = {
+            'fst_indicators': self.extract_fst_patterns(filenames),
+            'tide_indicators': self.extract_tide_patterns(filenames),
+            'heading_format': self.extract_heading_patterns(filenames),
+            'case_identifiers': self.extract_case_patterns(filenames)
+        }
+        
+        # Store patterns for agent learning
+        self.save_patterns_to_knowledge_base(patterns)
+        return patterns
+```
+
+### Performance Optimization
+
+#### Data Loading Strategy
+- **Lazy Loading**: Load only requested datasets
+- **Progressive Rendering**: Display available data immediately
+- **Background Prefetch**: Anticipate likely comparisons
+- **Memory Management**: Automatic cleanup of unused datasets
+
+#### Caching Architecture
+```python
+class DataCache:
+    def __init__(self, max_size_mb: int = 500):
+        self.cache = {}
+        self.max_size = max_size_mb * 1024 * 1024
+        self.access_times = {}
+        
+    def get_or_load(self, filepath: Path) -> pd.DataFrame:
+        if filepath in self.cache:
+            self.access_times[filepath] = datetime.now()
+            return self.cache[filepath]
+        
+        data = pd.read_csv(filepath)
+        self.cache[filepath] = data
+        self.cleanup_if_needed()
+        return data
+```
+
+### Error Handling and Validation
+
+#### Data Quality Checks
+- **Missing Data Detection**: Identify and flag incomplete time series
+- **Outlier Detection**: Statistical methods to identify anomalous values
+- **Format Validation**: Ensure CSV structure compliance
+- **Unit Consistency**: Verify consistent units across datasets
+
+#### User Feedback
+- **Loading Progress**: Visual indicators for data processing
+- **Error Messages**: Clear descriptions of data issues
+- **Validation Warnings**: Alert users to potential data quality concerns
+
 ## Context Generation Tools Integration
 
 ### Primary Tools Assessment
