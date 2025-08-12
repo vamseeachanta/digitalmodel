@@ -21,7 +21,7 @@ This OrcaFlex Dashboard is **fully functional** with all features implemented:
 ### Option 1: Docker (Recommended) - Windows
 ```bash
 # Navigate to the dashboard directory
-cd specs/modules/visualization/orcaflex-dashboard
+cd specs/modules/orcaflex/results-dashboard/implementation
 
 # Run the Windows startup script
 start.bat
@@ -30,7 +30,7 @@ start.bat
 ### Option 2: Docker - Linux/Mac
 ```bash
 # Navigate to the dashboard directory
-cd specs/modules/visualization/orcaflex-dashboard
+cd specs/modules/orcaflex/results-dashboard/implementation
 
 # Make script executable and run
 chmod +x start.sh
@@ -40,12 +40,12 @@ chmod +x start.sh
 ### Option 3: Manual Setup (Development)
 ```bash
 # Terminal 1 - Backend
-cd specs/modules/visualization/orcaflex-dashboard/src/backend
+cd specs/modules/orcaflex/results-dashboard/implementation/src/backend
 pip install -e .
 uvicorn main:app --reload
 
 # Terminal 2 - Frontend  
-cd specs/modules/visualization/orcaflex-dashboard/src/frontend
+cd specs/modules/orcaflex/results-dashboard/implementation/src/frontend
 npm install
 npm run dev
 ```
