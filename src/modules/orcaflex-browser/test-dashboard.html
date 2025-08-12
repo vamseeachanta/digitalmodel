@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test OrcaFlex Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Simple Test Dashboard</h1>
+    <button onclick="testPlot()">Test Plot</button>
+    <div id="testDiv" style="width: 600px; height: 400px;"></div>
+    
+    <script>
+        function testPlot() {
+            const trace = {
+                x: [1, 2, 3, 4, 5],
+                y: [10, 15, 13, 17, 22],
+                type: 'scatter'
+            };
+            
+            const layout = {
+                title: 'Test Plot Working!'
+            };
+            
+            Plotly.newPlot('testDiv', [trace], layout);
+            alert('If you see a plot, Plotly is working!');
+        }
+        
+        console.log('Test dashboard loaded successfully');
+    </script>
+</body>
+</html>

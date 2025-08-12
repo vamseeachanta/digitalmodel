@@ -26,7 +26,7 @@ Nginx: 1.24+
 ### 1. Clone Repository
 ```bash
 git clone https://github.com/yourorg/digitalmodel.git
-cd digitalmodel/specs/modules/visualization/orcaflex-dashboard
+cd digitalmodel/specs/modules/orcaflex/results-dashboard/implementation
 ```
 
 ### 2. Environment Configuration
