@@ -22,7 +22,9 @@
       "Bash(snap list:*)",
       "Bash(apt list:*)",
       "Bash(blender:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(chmod:*)",
+      "Bash(PYTHONPATH=/mnt/github/github/digitalmodel/src python .agent-os/commands/test-automation.py --help)"
     ],
     "deny": []
   }
