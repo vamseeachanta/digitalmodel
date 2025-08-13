@@ -158,6 +158,65 @@ python tools/execute-tasks.py @specs/modules/module-name/spec-folder/tasks.md
    - Include units in LaTeX format: `$$P_{wind} = \frac{1}{2}\rho C_d A v^2 \text{ [N]}$$`
    - Use for engineering calculations, statistical formulas, and mathematical relationships
 
+## 📁 MANDATORY: Specification File Structure
+
+**CRITICAL DIRECTIVE**: ALL specifications MUST follow this EXACT structure - NO EXCEPTIONS
+
+### Required File Structure
+Every specification in `specs/modules/<module>/<feature>/` MUST contain:
+
+```
+specs/modules/<module>/<feature>/
+├── spec.md                 # Main specification document (REQUIRED)
+├── tasks.md                # Task breakdown with estimates (REQUIRED)
+├── prompt.md               # Complete prompt history (REQUIRED)
+├── task_summary.md         # Task execution tracking (CREATED during execution)
+├── executive-summary.md    # Stakeholder summary (OPTIONAL for enhanced)
+└── diagrams/              # Architecture diagrams (OPTIONAL)
+    └── architecture.mermaid
+```
+
+### MANDATORY Naming Conventions
+**VIOLATIONS WILL BE REJECTED:**
+- ✅ `spec.md` - Main specification
+- ✅ `tasks.md` - Task breakdown
+- ✅ `prompt.md` - Prompt documentation
+- ✅ `task_summary.md` - Execution tracking
+- ❌ `REVISED-SPEC-COMPLETE.md` - WRONG (uppercase, status in name)
+- ❌ `spec-v2.md` - WRONG (versions in filename)
+- ❌ `final-spec.md` - WRONG (status in filename)
+- ❌ `browser-interface-spec.md` - WRONG (feature name redundant)
+
+### Data Duplication Prevention
+**NEVER create duplicate content:**
+1. **Check Existing**: ALWAYS check for existing specs before creating
+2. **Reference Don't Duplicate**: Link to agent-os docs, don't copy
+3. **Single Source of Truth**: Each piece of information exists ONCE
+4. **Cross-Reference**: Use `@module-name:path` for references
+
+### Agent-OS Document References
+**MANDATORY reference hierarchy:**
+1. **Primary**: `.agent-os/standards/` - AI behavior standards
+2. **Product**: `.agent-os/product/` - Product knowledge
+3. **Specs**: `specs/modules/<module>/` - Implementation details
+4. **Never Reference**: Legacy `.ai/` files (historical only)
+
+### Task Summary Requirements
+**task_summary.md MUST include:**
+- Task completion timestamps
+- Approach documentation
+- Efficiency metrics
+- Lessons learned
+- Next logical steps
+- Blockers encountered
+
+### Enforcement
+- File structure violations BLOCK merges
+- Naming violations REQUIRE immediate correction
+- Missing required files PREVENT task completion
+- Duplicate content MUST be removed
+- Wrong references MUST be updated
+
 ### Cross-Repository References
 - Shared components: @assetutilities:src/modules/agent-os/enhanced-create-specs/
 - Sub-agent registry: @assetutilities:agents/registry/sub-agents/workflow-automation
