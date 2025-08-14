@@ -4,6 +4,11 @@ agents:
     path: agents/aqwa
     specialization: general-purpose
     status: active
+  cad-engineering-specialist:
+    created: '2025-08-14T10:02:45.656699'
+    path: agents/cad-engineering-specialist
+    specialization: general-purpose
+    status: active
   web-test-module:
     created: '2025-08-10T17:55:47.703228'
     path: agents/web-test-module
@@ -14,6 +19,10 @@ modules:
   aqwa:
     agents:
     - aqwa
+    coverage: 0.0
+  cad-engineering-specialist:
+    agents:
+    - cad-engineering-specialist
     coverage: 0.0
   web-test-module:
     agents:
