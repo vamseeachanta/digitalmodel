@@ -253,13 +253,14 @@ This repository includes a complete, self-contained Agent OS framework. All slas
 ### Available Slash Commands
 - `/create-spec <spec-name>` - Create detailed specification documents
 - `/execute-tasks <tasks-file>` - Execute tasks from specification
-- `/create-module-agent <agent-name>` - Create specialized AI agents
+- `/create-module-agent <agent-name>` - Create specialized AI agents in `agents/` directory
 
 ### Local Agent OS Structure
 - **Standards**: @.agent-os/standards/ (code style, best practices)
 - **Instructions**: @.agent-os/instructions/ (workflow guidance)
 - **Product Context**: @.agent-os/product/ (mission, roadmap, decisions)
 - **Specifications**: @.agent-os/specs/ (feature specifications and tasks)
+- **AI Agents**: @agents/ (specialized AI agents - consolidated single location)
 
 All references are local to this repository - no external dependencies required.
 

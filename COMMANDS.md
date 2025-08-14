@@ -20,6 +20,10 @@ This command organizes Python projects into a clean module-based structure,
 ### `/propagate-commands`
 This command transfers custom slash commands from a source repository
 
+### `/create-module-agent`
+Creates specialized AI agents in the consolidated `agents/` directory.
+Features: Phased document processing, modular management, RAG optimization
+
 ## Usage
 
 ```bash

@@ -1,5 +1,7 @@
 # AI Agents Directory
 
+**CONSOLIDATED LOCATION**: All AI agents are now centralized in this single `agents/` directory for better organization and management.
+
 This directory contains specialized AI agents for various engineering and technical domains.
 
 ## Available Specialist Agents
