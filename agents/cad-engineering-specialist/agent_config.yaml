@@ -1,0 +1,17 @@
+capabilities:
+- query
+- explain
+- guide
+context_optimization:
+  cross_references: []
+  focused_domain: cad-engineering-specialist
+  max_context_size: 16000
+created: '2025-08-14T10:02:45.655439'
+module_path: .
+name: cad-engineering-specialist
+refresh_config:
+  auto_refresh: true
+  priority: low
+  refresh_interval: 7_days
+specialization: general-purpose
+version: 1.0.0
