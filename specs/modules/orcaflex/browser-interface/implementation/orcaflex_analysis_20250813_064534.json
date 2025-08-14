@@ -1,0 +1,91 @@
+{
+  "timestamp": "2025-08-13T06:45:34.386812",
+  "base_path": "D:\\1522\\ctr7\\orcaflex\\rev_a08\\output\\csv\\03c_100yr",
+  "files_analyzed": 4,
+  "summary": {
+    "total_files_analyzed": 2,
+    "total_struts_found": 8,
+    "timestamp": "2025-08-13T06:45:34.356245",
+    "absolute_max_tension": 1653.768555,
+    "absolute_min_tension": -1764.760132,
+    "formats_detected": [
+      "summary"
+    ]
+  },
+  "critical_case": {
+    "value": 1653.768555,
+    "strut": "strut2",
+    "source_files": [
+      "strut_hwl_strut",
+      "strut_lwl_strut"
+    ],
+    "fe_filename": "D:/1522/ctr7/orcaflex/rev_a08/03c_100yr/fsts_l095_hwl_ncl_000deg.sim",
+    "fe_filename_stem": "fsts_l095_hwl_ncl_000deg"
+  },
+  "strut_analysis": {
+    "strut1": {
+      "min_tension": -262.72406,
+      "max_tension": 77.66256,
+      "source_files": [
+        "strut_hwl_strut",
+        "strut_lwl_strut"
+      ]
+    },
+    "strut2": {
+      "min_tension": -71.138191,
+      "max_tension": 1653.768555,
+      "source_files": [
+        "strut_hwl_strut",
+        "strut_lwl_strut"
+      ]
+    },
+    "strut3": {
+      "min_tension": -1764.760132,
+      "max_tension": -73.653282,
+      "source_files": [
+        "strut_hwl_strut",
+        "strut_lwl_strut"
+      ]
+    },
+    "strut4": {
+      "min_tension": 150.162567,
+      "max_tension": 617.526245,
+      "source_files": [
+        "strut_hwl_strut",
+        "strut_lwl_strut"
+      ]
+    },
+    "strut5": {
+      "min_tension": -92.742142,
+      "max_tension": 135.098541,
+      "source_files": [
+        "strut_hwl_strut",
+        "strut_lwl_strut"
+      ]
+    },
+    "strut6": {
+      "min_tension": -30.78528,
+      "max_tension": 418.318634,
+      "source_files": [
+        "strut_hwl_strut",
+        "strut_lwl_strut"
+      ]
+    },
+    "strut7": {
+      "min_tension": -637.544434,
+      "max_tension": 84.592224,
+      "source_files": [
+        "strut_hwl_strut",
+        "strut_lwl_strut"
+      ]
+    },
+    "strut8": {
+      "min_tension": 78.596031,
+      "max_tension": 302.344147,
+      "source_files": [
+        "strut_hwl_strut",
+        "strut_lwl_strut"
+      ]
+    }
+  }
+}

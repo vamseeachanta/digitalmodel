@@ -8,17 +8,29 @@
 **Additional Context Provided**:
 - Mooring lines are named Line1, Line2, etc.
 - Target tensions need to be defined by user
-- Reference example: `../docs/modules/orcaflex/scripts/orcfxapi_goby/58 - ScipyRootFinding.py`
+- Reference examples:
+  - Root finding approach: `../docs/modules/orcaflex/scripts/orcfxapi_goby/58 - ScipyRootFinding.py`
+  - Semi-automated iteration: `../tests/modules/orcaflex/orcaflex_analysis/moorings/ofx_mooring_analysis_test.py` with `src/digitalmodel/modules/orcaflex/mooring.py`
 - Current manual process: load model, fix vessels, run model, get tensions, iterate lengths by stiffness
 - Objective: achieve target tensions in OrcaFlex using Python in 1 iteration
 - Relevant agent: agents\\orcaflex
 
 ### Analysis and Research Phase
-**Reference Script Analysis**: The example script (`58 - ScipyRootFinding.py`) demonstrates:
-- Single-parameter optimization using `scipy.optimize.fsolve`
-- Newton-Raphson approach for iterating float length to achieve target Z-position
-- OrcaFlex integration pattern with static analysis and property modification
-- Convergence approach using residual function minimization
+**Reference Script Analysis**: 
+
+1. **ScipyRootFinding.py** demonstrates:
+   - Single-parameter optimization using `scipy.optimize.fsolve`
+   - Newton-Raphson approach for iterating float length to achieve target Z-position
+   - OrcaFlex integration pattern with static analysis and property modification
+   - Convergence approach using residual function minimization
+
+2. **Semi-automated Mooring Analysis** (`ofx_mooring_analysis_test.py` and `mooring.py`) provides:
+   - Existing iteration framework with configurable tolerance (10%) and max iterations
+   - YAML-based configuration for target pretensions
+   - Line length adjustment using EA stiffness calculations: `delta_length = (length/EA) * (current_tension - target_tension)`
+   - Include file generation for OrcaFlex model updates
+   - Manual execution requirement between iterations (current limitation)
+   - CSV output for tension analysis results
 
 **Key Technical Insights**:
 - Extension from single-parameter (targetZ) to multi-parameter (target tensions)
@@ -70,8 +82,10 @@ INTEGRATION REQUIREMENTS:
 - Comprehensive error handling and validation
 
 REFERENCE IMPLEMENTATION:
-- Build upon pattern from 58 - ScipyRootFinding.py
+- Build upon pattern from 58 - ScipyRootFinding.py for scipy optimization approach
+- Leverage existing mooring.py semi-automated iteration logic and EA-based calculations
 - Extend from single-parameter to multi-dimensional optimization
+- Automate the manual execution step between iterations
 - Maintain OrcaFlex integration patterns and best practices
 - Follow DigitalModel repository standards and module organization
 

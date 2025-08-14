@@ -1,0 +1,119 @@
+{
+  "timestamp": "2025-08-13T06:24:45.105395",
+  "results": {
+    "test_type": "automated",
+    "timestamp": "2025-08-13T06:24:45.105357",
+    "file_search": {
+      "directory": "sample_data",
+      "pattern": "dm_*_strut_dyn.csv",
+      "files_found": 4,
+      "file_list": [
+        "sample_data\\dm_fsts_03c_l015_lwl_cl_090deg_strut_dyn.csv",
+        "sample_data\\dm_fsts_03c_l015_mwl_ncl_180deg_strut_dyn.csv",
+        "sample_data\\dm_fsts_03c_l095_hwl_ncl_000deg_strut_dyn.csv",
+        "sample_data\\dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv"
+      ]
+    },
+    "data_loading": {
+      "dataframes_loaded": 1,
+      "parallel_workers": 2
+    },
+    "tension_analysis": {
+      "strut_analysis": {
+        "strut_unknown": {
+          "min_tension": 2500.0,
+          "max_tension": 10000.0,
+          "min_row": {
+            "time": 5.05050505050505,
+            "eff_tension": 2500.0,
+            "fe_filename": "output/csv/03c_100yr/dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv",
+            "fe_filename_stem": "dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn",
+            "other_column1": -0.31011677351806,
+            "other_column2": -0.3449872101549794,
+            "source_file": "dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv",
+            "source_path": "sample_data\\dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv"
+          },
+          "max_row": {
+            "time": 1.0101010101010102,
+            "eff_tension": 10000.0,
+            "fe_filename": "output/csv/03c_100yr/dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv",
+            "fe_filename_stem": "dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn",
+            "other_column1": -1.3731173202467557,
+            "other_column2": -0.3264994980781842,
+            "source_file": "dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv",
+            "source_path": "sample_data\\dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv"
+          },
+          "source_file": "dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv"
+        }
+      },
+      "absolute_maximum": {
+        "value": 10000.0,
+        "strut": "strut_unknown",
+        "row_data": {
+          "time": 1.0101010101010102,
+          "eff_tension": 10000.0,
+          "fe_filename": "output/csv/03c_100yr/dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv",
+          "fe_filename_stem": "dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn",
+          "other_column1": -1.3731173202467557,
+          "other_column2": -0.3264994980781842,
+          "source_file": "dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv",
+          "source_path": "sample_data\\dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv"
+        },
+        "fe_filename": "output/csv/03c_100yr/dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv",
+        "fe_filename_stem": "dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn"
+      },
+      "absolute_minimum": {
+        "value": 2500.0,
+        "strut": "strut_unknown",
+        "row_data": {
+          "time": 5.05050505050505,
+          "eff_tension": 2500.0,
+          "fe_filename": "output/csv/03c_100yr/dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv",
+          "fe_filename_stem": "dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn",
+          "other_column1": -0.31011677351806,
+          "other_column2": -0.3449872101549794,
+          "source_file": "dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv",
+          "source_path": "sample_data\\dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv"
+        }
+      },
+      "summary": {
+        "total_struts_analyzed": 1,
+        "timestamp": "2025-08-13T06:24:45.105075",
+        "absolute_max_tension": 10000.0,
+        "absolute_min_tension": 2500.0
+      }
+    },
+    "metadata_extraction": {
+      "critical_file": {
+        "filename": "dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv",
+        "full_path": "output/csv/03c_100yr/dm_fsts_03c_l095_hwl_ncl_045deg_strut_dyn.csv",
+        "loading_condition": "03c_100yr",
+        "lng_loading": "03C 95% LNG",
+        "tide_level": "HHWL (Highest High Water Level)",
+        "environment_type": "Non-colinear",
+        "direction": "045 degrees",
+        "parsed_components": {
+          "lng": "fsts_03c_l095",
+          "tide": "hwl",
+          "env": "ncl",
+          "direction": "045deg"
+        }
+      }
+    }
+  },
+  "user_feedback": {
+    "test_mode": "automated",
+    "sample_data": true,
+    "timestamp": "2025-08-13T06:24:45.105363",
+    "validation": {
+      "files_found": true,
+      "dataframes_loaded": true,
+      "tensions_calculated": true,
+      "metadata_extracted": true
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "processor": "OrcaFlexBrowserBackend"
+  }
+}
