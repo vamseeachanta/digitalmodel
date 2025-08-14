@@ -1,0 +1,39 @@
+{
+  "steps": [
+    {
+      "number": 1,
+      "title": "Check if the website loads",
+      "description": "We need to make sure the website opens in your browser without any errors",
+      "instructions": [
+        "Open your web browser (Chrome, Firefox, or Safari)",
+        "Type the website address in the address bar",
+        "Press Enter to load the website",
+        "Wait for the page to fully load"
+      ],
+      "expected_outcome": "The website should load completely with all images and text visible"
+    },
+    {
+      "number": 2,
+      "title": "Test the login button",
+      "description": "Let's check if the login button works properly",
+      "instructions": [
+        "Find the 'Login' button on the page (usually at the top right)",
+        "Click on the Login button",
+        "Check if a login form appears"
+      ],
+      "expected_outcome": "A login form with username and password fields should appear"
+    },
+    {
+      "number": 3,
+      "title": "Verify the search feature",
+      "description": "Make sure the search box helps you find things",
+      "instructions": [
+        "Find the search box on the page",
+        "Type 'test' in the search box",
+        "Press Enter or click the search button",
+        "Look at the results that appear"
+      ],
+      "expected_outcome": "Search results related to 'test' should appear on the page"
+    }
+  ]
+}
