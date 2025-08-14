@@ -1,0 +1,216 @@
+{
+  "timestamp": "2025-08-13T06:29:32.440201",
+  "results": {
+    "test_type": "enhanced",
+    "timestamp": "2025-08-13T06:29:32.440159",
+    "configuration": {
+      "base_path": "D:\\1522\\ctr7\\orcaflex\\rev_a08\\output\\csv\\03c_100yr",
+      "pattern": "dm_*_strut_dyn.csv",
+      "files_processed": 4
+    },
+    "analysis_results": {
+      "strut_analysis": {
+        "strut1": {
+          "min_tension": -262.72406,
+          "max_tension": 77.66256,
+          "source_files": [
+            "strut_hwl_strut",
+            "strut_lwl_strut"
+          ]
+        },
+        "strut2": {
+          "min_tension": -71.138191,
+          "max_tension": 1653.768555,
+          "source_files": [
+            "strut_hwl_strut",
+            "strut_lwl_strut"
+          ]
+        },
+        "strut3": {
+          "min_tension": -1764.760132,
+          "max_tension": -73.653282,
+          "source_files": [
+            "strut_hwl_strut",
+            "strut_lwl_strut"
+          ]
+        },
+        "strut4": {
+          "min_tension": 150.162567,
+          "max_tension": 617.526245,
+          "source_files": [
+            "strut_hwl_strut",
+            "strut_lwl_strut"
+          ]
+        },
+        "strut5": {
+          "min_tension": -92.742142,
+          "max_tension": 135.098541,
+          "source_files": [
+            "strut_hwl_strut",
+            "strut_lwl_strut"
+          ]
+        },
+        "strut6": {
+          "min_tension": -30.78528,
+          "max_tension": 418.318634,
+          "source_files": [
+            "strut_hwl_strut",
+            "strut_lwl_strut"
+          ]
+        },
+        "strut7": {
+          "min_tension": -637.544434,
+          "max_tension": 84.592224,
+          "source_files": [
+            "strut_hwl_strut",
+            "strut_lwl_strut"
+          ]
+        },
+        "strut8": {
+          "min_tension": 78.596031,
+          "max_tension": 302.344147,
+          "source_files": [
+            "strut_hwl_strut",
+            "strut_lwl_strut"
+          ]
+        }
+      },
+      "file_analyses": {
+        "strut_hwl_strut": {
+          "format": "summary",
+          "source": "strut_hwl_strut",
+          "rows": 29,
+          "columns": 25,
+          "strut_data": {
+            "strut1": {
+              "min_tension": -262.72406,
+              "max_tension": 68.586441
+            },
+            "strut2": {
+              "min_tension": -71.138191,
+              "max_tension": 1653.768555
+            },
+            "strut3": {
+              "min_tension": -1764.760132,
+              "max_tension": -73.653282
+            },
+            "strut4": {
+              "min_tension": 150.162567,
+              "max_tension": 608.458923
+            },
+            "strut5": {
+              "min_tension": -92.742142,
+              "max_tension": 41.710999
+            },
+            "strut6": {
+              "min_tension": -27.252777,
+              "max_tension": 418.318634
+            },
+            "strut7": {
+              "min_tension": -392.628632,
+              "max_tension": 84.592224
+            },
+            "strut8": {
+              "min_tension": 133.826996,
+              "max_tension": 277.367432
+            }
+          },
+          "fe_filename": "D:/1522/ctr7/orcaflex/rev_a08/03c_100yr/fsts_l095_hwl_ncl_000deg.sim",
+          "fe_filename_stem": "fsts_l095_hwl_ncl_000deg"
+        },
+        "strut_lwl_strut": {
+          "format": "summary",
+          "source": "strut_lwl_strut",
+          "rows": 29,
+          "columns": 25,
+          "strut_data": {
+            "strut1": {
+              "min_tension": -261.467285,
+              "max_tension": 77.66256
+            },
+            "strut2": {
+              "min_tension": -67.884842,
+              "max_tension": 1639.164062
+            },
+            "strut3": {
+              "min_tension": -1743.835083,
+              "max_tension": -76.606552
+            },
+            "strut4": {
+              "min_tension": 168.179688,
+              "max_tension": 617.526245
+            },
+            "strut5": {
+              "min_tension": 3.379383,
+              "max_tension": 135.098541
+            },
+            "strut6": {
+              "min_tension": -30.78528,
+              "max_tension": 386.076874
+            },
+            "strut7": {
+              "min_tension": -637.544434,
+              "max_tension": -56.836575
+            },
+            "strut8": {
+              "min_tension": 78.596031,
+              "max_tension": 302.344147
+            }
+          },
+          "fe_filename": "D:/1522/ctr7/orcaflex/rev_a08/03c_100yr/fsts_l095_lwl_ncl_000deg.sim",
+          "fe_filename_stem": "fsts_l095_lwl_ncl_000deg"
+        }
+      },
+      "absolute_maximum": {
+        "value": 1653.768555,
+        "strut": "strut2",
+        "source_files": [
+          "strut_hwl_strut",
+          "strut_lwl_strut"
+        ],
+        "fe_filename": "D:/1522/ctr7/orcaflex/rev_a08/03c_100yr/fsts_l095_hwl_ncl_000deg.sim",
+        "fe_filename_stem": "fsts_l095_hwl_ncl_000deg"
+      },
+      "absolute_minimum": {
+        "value": -1764.760132,
+        "strut": "strut3",
+        "source_files": [
+          "strut_hwl_strut",
+          "strut_lwl_strut"
+        ]
+      },
+      "summary": {
+        "total_files_analyzed": 2,
+        "total_struts_found": 8,
+        "timestamp": "2025-08-13T06:29:32.435477",
+        "absolute_max_tension": 1653.768555,
+        "absolute_min_tension": -1764.760132,
+        "formats_detected": [
+          "summary"
+        ]
+      }
+    },
+    "metadata": {
+      "critical_file": {
+        "filename": "fsts_l095_hwl_ncl_000deg.sim",
+        "full_path": "D:/1522/ctr7/orcaflex/rev_a08/03c_100yr/fsts_l095_hwl_ncl_000deg.sim",
+        "loading_condition": null,
+        "lng_loading": "95% LNG",
+        "tide_level": "HHWL (Highest High Water Level)",
+        "environment_type": "Non-colinear",
+        "direction": "000 degrees",
+        "parsed_components": {
+          "lng": "fsts_l095",
+          "tide": "hwl",
+          "env": "ncl",
+          "direction": "000deg"
+        }
+      }
+    }
+  },
+  "user_feedback": {},
+  "metadata": {
+    "version": "1.0",
+    "processor": "OrcaFlexBrowserBackend"
+  }
+}

@@ -40,7 +40,8 @@
 **Objective**: Implement OrcaFlex API integration for model manipulation  
 **Effort**: 12 hours  
 **Priority**: High  
-**Dependencies**: Task 1.1
+**Dependencies**: Task 1.1  
+**Agent**: OrcaFlex specialist agent
 
 **Subtasks**:
 - [ ] Create OrcaFlex model wrapper class
@@ -67,7 +68,8 @@
 **Objective**: Automated extraction of mooring line tensions from static analysis  
 **Effort**: 10 hours  
 **Priority**: High  
-**Dependencies**: Task 1.2
+**Dependencies**: Task 1.2  
+**Agent**: OrcaFlex specialist agent
 
 **Subtasks**:
 - [ ] Implement tension extraction from OrcaFlex results
@@ -121,7 +123,8 @@
 **Objective**: Automated adjustment of OrcaFlex line properties  
 **Effort**: 10 hours  
 **Priority**: High  
-**Dependencies**: Task 1.2
+**Dependencies**: Task 1.2  
+**Agent**: OrcaFlex specialist agent
 
 **Subtasks**:
 - [ ] Implement line length modification with safety limits
@@ -148,7 +151,8 @@
 **Objective**: Integrate Phase 1 components and validate single-line functionality  
 **Effort**: 8 hours  
 **Priority**: High  
-**Dependencies**: Tasks 1.1-1.5
+**Dependencies**: Tasks 1.1-1.5  
+**Agent**: OrcaFlex specialist agent (for validation)
 
 **Subtasks**:
 - [ ] Integrate all Phase 1 components into unified system
@@ -204,7 +208,8 @@
 **Objective**: Model and account for coupling effects between mooring lines  
 **Effort**: 12 hours  
 **Priority**: High  
-**Dependencies**: Task 2.1
+**Dependencies**: Task 2.1  
+**Agent**: OrcaFlex specialist agent
 
 **Subtasks**:
 - [ ] Analyze line coupling mechanisms (vessel motion, shared anchors)
@@ -423,7 +428,8 @@
 **Objective**: Comprehensive testing and validation for production deployment  
 **Effort**: 16 hours  
 **Priority**: High  
-**Dependencies**: Tasks 3.1-3.3
+**Dependencies**: Tasks 3.1-3.3  
+**Agent**: OrcaFlex specialist agent (for validation)
 
 **Subtasks**:
 - [ ] Create comprehensive test suite covering all functionality

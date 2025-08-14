@@ -5,11 +5,11 @@
 ### Core Components
 
 #### 1. Iteration Engine (`MooringTensionIterator`)
-**Purpose**: Main orchestrator for the optimization process
+**Purpose**: Main orchestrator for the optimization process, building upon existing `mooring.py` patterns
 **Key Methods**:
-- `iterate_to_targets()`: Primary iteration loop
-- `check_convergence()`: Tolerance validation
-- `generate_report()`: Results documentation
+- `iterate_to_targets()`: Primary iteration loop (automates manual process)
+- `check_convergence()`: Tolerance validation (configurable, default 1%)
+- `generate_report()`: Results documentation (extends CSV output format)
 
 #### 2. Tension Calculator (`TensionAnalyzer`)  
 **Purpose**: Interface with OrcaFlex for tension extraction
@@ -73,6 +73,41 @@ The system achieves convergence when:
 $$\max_{i} \left| \frac{T_{current,i} - T_{target,i}}{T_{target,i}} \right| \leq \epsilon_{tol}$$
 
 With default tolerance $\epsilon_{tol} = 0.01$ (1%).
+
+## Reference Implementation Notes
+
+### Existing Semi-Automated Approach
+The current `mooring.py` implementation provides a foundation with:
+
+1. **EA-Based Length Calculation**:
+   ```python
+   delta_length = (length/EA) * (current_tension - target_tension)
+   new_arc_length = arc_length + sum(delta_length)
+   ```
+
+2. **YAML Configuration Structure**:
+   ```yaml
+   mooring:
+     groups:
+       - label: development
+         target_pretension:
+           iterations: 10
+           tolerance: 10  # percentage
+           type: csv
+           filename: pretension_targets.csv
+   ```
+
+3. **Manual Process Limitations**:
+   - Requires manual OrcaFlex execution between iterations
+   - Include file generation for model updates
+   - CSV output for tension analysis results
+
+### Enhancement Strategy
+This specification automates and enhances the existing approach by:
+- Replacing manual execution with API-driven automation
+- Implementing scipy optimization instead of simple EA calculations
+- Adding Jacobian-based multi-dimensional optimization
+- Providing real-time convergence monitoring
 
 ### Algorithm Implementation
 
