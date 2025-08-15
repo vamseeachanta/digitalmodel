@@ -3,6 +3,7 @@ from digitalmodel.modules.orcaflex.orcaflex_iterative_runs import OrcaflexIterat
 from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
 from digitalmodel.modules.orcaflex.opp import OrcaFlexPostProcess
 from digitalmodel.modules.orcaflex.mooring import Mooring
+from digitalmodel.modules.orcaflex.orcaflex_custom_analysis import OrcaFlexCustomAnalysis
 
 
 mooring = Mooring()
@@ -36,7 +37,9 @@ class OrcaflexAnalysis:
             assert orcaflex_license_flag
 
         if static_flag or simulation_flag:
-            orcaFlex_analysis = OrcaFlexPostProcess(cfg)
+            # Use OrcaFlexCustomAnalysis which has the perform_simulations method
+            orcaFlex_analysis = OrcaFlexCustomAnalysis()
+            orcaFlex_analysis.cfg = cfg
             orcaFlex_analysis.perform_simulations()
 
         if iterate_flag:
