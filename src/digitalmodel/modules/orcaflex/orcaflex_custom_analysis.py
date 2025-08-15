@@ -1,9 +1,23 @@
+import os
+import logging
+import pandas as pd
+import numpy as np
+import scipy.interpolate
+from collections import OrderedDict
+import OrcFxAPI
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from datetime import datetime
+from typing import List, Dict, Any
+
 from assetutilities.common.utilities import is_file_valid_func
+from assetutilities.common import file_management as fm
+from assetutilities.common.saveData import saveDataYaml
+from assetutilities.common.ymlInput import ymlInput
 
 # TODO Refactor
 class OrcaFlexCustomAnalysis:
     def __init__(self) -> None:
-        pass
+        self.detailed_histograms_array = []  # Initialize for save_data method
 
     def perform_simulations(self):
         self.process_fea()
@@ -55,14 +69,39 @@ class OrcaFlexCustomAnalysis:
             analysis_type.append("iterate")
 
     def process_fea(self):
-        exts = list(self.cfg.file_management["input_files"].keys())
+        exts = list(self.cfg["file_management"]["input_files"].keys())
+        
+        # Debug: Check what we have
+        print(f"DEBUG: Available extensions: {exts}")
+        if not exts:
+            print("ERROR: No input files specified in configuration")
+            print(f"Input files config: {self.cfg.get('file_management', {}).get('input_files', {})}")
+            return
 
         static_flag = self.cfg["orcaflex"]["analysis"]["static"]
         simulation_flag = self.cfg["orcaflex"]["analysis"]["simulation"]
         iterate_flag = self.cfg["orcaflex"]["analysis"]["iterate"]["flag"]
         save_sim_flag = self.cfg["orcaflex"]["analysis"]["save_sim"]
         save_dat_flag = self.cfg["orcaflex"]["analysis"]["save_dat"]
+        
+        # Check if parallel processing is enabled
+        parallel_config = self.cfg.get("orcaflex", {}).get("parallel", {})
+        use_parallel = parallel_config.get("enabled", False)
+        num_threads = parallel_config.get("threads", 30)
+        
+        # Get all input files
+        all_files = []
+        for ext in exts:
+            files = self.cfg["file_management"]["input_files"][ext]
+            all_files.extend(files)
+        
+        # If parallel processing is enabled and we have multiple files
+        if use_parallel and len(all_files) > 1:
+            logging.info(f"Using parallel processing with {num_threads} threads for {len(all_files)} files")
+            self.process_files_parallel(all_files, num_threads)
+            return
 
+        # Original sequential processing
         for fileIndex in range(
             0, len(self.cfg["file_management"]["input_files"][exts[0]])
         ):
@@ -152,7 +191,7 @@ class OrcaFlexCustomAnalysis:
         ):
             file_yml = ymlInput(filename_with_ext)
             clean_file = {"BaseFile": file_yml["BaseFile"]}
-            save_data.saveDataYaml(clean_file, filename_without_ext)
+            saveDataYaml(clean_file, filename_without_ext)
             clean_model = OrcFxAPI.Model()
             clean_model.LoadData(filename_with_ext)
 
@@ -274,15 +313,18 @@ class OrcaFlexCustomAnalysis:
         return variable_current_value
 
     def save_data(self):
-        save_data.saveDataYaml(
-            self.cfg,
-            self.cfg["Analysis"]["result_folder"] + self.cfg["Analysis"]["file_name"],
-            False,
-        )
+        # Only save if Analysis section exists
+        if "Analysis" in self.cfg and "result_folder" in self.cfg["Analysis"]:
+            saveDataYaml(
+                self.cfg,
+                self.cfg["Analysis"]["result_folder"] + self.cfg["Analysis"]["file_name"],
+                False,
+            )
 
         if (
-            "postprocess" in self.cfg.default
-            and self.cfg.default["postprocess"]["cummulative_histograms"]["flag"]
+            "default" in self.cfg
+            and "postprocess" in self.cfg.get("default", {})
+            and self.cfg["default"]["postprocess"].get("cummulative_histograms", {}).get("flag", False)
         ):
             histogram_data_array = [
                 item["data"] for item in self.detailed_histograms_array
@@ -296,16 +338,81 @@ class OrcaFlexCustomAnalysis:
                 "thin_border": True,
             }
             if len(histogram_data_array) > 0:
-                save_data.DataFrameArray_To_xlsx_openpyxl(
-                    histogram_data_array, customdata
-                )
+                # Save histograms to Excel using pandas
+                with pd.ExcelWriter(customdata["FileName"]) as writer:
+                    for df, sheet_name in zip(histogram_data_array, customdata["SheetNames"]):
+                        df.to_excel(writer, sheet_name=sheet_name, index=False)
 
         if (
-            "Analysis" in self.cfg.default
-            and self.cfg.default["Analysis"].__contains__("RAOs")
-            and self.cfg.default["Analysis"]["RAOs"]["flag"]
+            "default" in self.cfg
+            and "Analysis" in self.cfg.get("default", {})
+            and "RAOs" in self.cfg["default"]["Analysis"]
+            and self.cfg["default"]["Analysis"]["RAOs"].get("flag", False)
         ):
             self.save_RAOs()
+    
+    def save_RAOs(self):
+        # Placeholder for RAOs saving - to be implemented
+        pass
+    
+    def process_summary_by_model_and_cfg(self, model, column_cfg):
+        # Placeholder for summary processing - to be implemented
+        return 0.0
+    
+    def process_files_parallel(self, file_list: List[str], num_threads: int = 30):
+        """
+        Process multiple OrcaFlex files in parallel.
+        Default: 30 threads for optimal performance.
+        
+        Args:
+            file_list: List of file paths to process
+            num_threads: Number of parallel threads (default: 30)
+        """
+        from digitalmodel.modules.orcaflex.orcaflex_parallel_analysis import OrcaFlexParallelAnalysis
+        
+        logging.info(f"Starting parallel processing of {len(file_list)} files with {num_threads} threads")
+        
+        # Create configuration for parallel processing
+        parallel_config = {
+            'static': self.cfg["orcaflex"]["analysis"]["static"],
+            'dynamic': self.cfg["orcaflex"]["analysis"]["simulation"],
+            'save_sim': self.cfg["orcaflex"]["analysis"]["save_sim"],
+            'save_dat': self.cfg["orcaflex"]["analysis"]["save_dat"],
+            'output_dir': self.cfg.get("file_management", {}).get("output_directory", "./results")
+        }
+        
+        # Initialize parallel analyzer
+        analyzer = OrcaFlexParallelAnalysis(num_threads=num_threads)
+        
+        # Process files
+        start_time = datetime.now()
+        results = analyzer.process_files_parallel(file_list, parallel_config)
+        end_time = datetime.now()
+        
+        # Log summary
+        total_duration = (end_time - start_time).total_seconds()
+        successful = results.get('successful', 0)
+        failed = results.get('failed', 0)
+        speedup = results.get('parallel_speedup', 1)
+        
+        logging.info(f"Parallel processing complete:")
+        logging.info(f"  Total files: {len(file_list)}")
+        logging.info(f"  Successful: {successful}")
+        logging.info(f"  Failed: {failed}")
+        logging.info(f"  Total time: {total_duration:.2f}s")
+        logging.info(f"  Speedup: {speedup:.2f}x")
+        
+        # Store results for later use
+        self.parallel_results = results
+        
+        # Handle failed files if any
+        if failed > 0:
+            logging.warning(f"{failed} files failed processing:")
+            for result in results['results']:
+                if result['status'] == 'failed':
+                    logging.warning(f"  - {result['file_path']}: {result.get('error', 'Unknown error')}")
+        
+        print(f"Analysis done for {len(file_list)} input files using {num_threads} parallel threads")
 
     def process_scripts(self):
         model = OrcFxAPI.Model()

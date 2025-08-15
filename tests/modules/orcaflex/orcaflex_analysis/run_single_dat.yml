@@ -1,0 +1,67 @@
+# OrcaFlex Single DAT File Test
+# Purpose: Test running a single .dat file
+# Standardized according to .agent-os/standards/input-file-architecture.md
+
+meta:
+  library: digitalmodel
+  basename: orcaflex
+  version: "1.0.0"
+  description: "Test single DAT file analysis"
+
+default:
+  log_level: DEBUG  # Verbose logging for testing
+  config:
+    overwrite:
+      output: True
+  units:
+    effective_tension: kN
+    bending_moment: kNm
+    length: m
+    time: s
+    angle: deg
+
+orcaflex:
+  analysis:
+    static: True
+    simulation: False  # Dynamic simulation disabled for quick test
+    save_sim: True
+    save_dat: False
+    
+    # Iteration configuration
+    iterate:
+      flag: False
+      to_target_value: False
+      overwrite_data: False
+      UseCalculatedPositions:
+        SetLinesToUserSpecifiedStartingShape: False
+        UseStaticLineEndOrientations: False
+    
+    # UseCalculatedPositions configuration  
+    UseCalculatedPositions_cfg:
+      flag: False
+      clean_StaleCalculatedPositions: False
+  
+  postprocess:
+    visualization:
+      flag: False  # Disable for speed
+    
+    summary:
+      flag: True
+      statistics:
+        add_minimum_to_summary: True
+        add_maximum_to_summary: True
+        add_mean_to_summary: True
+
+file_management:
+  flag: True
+  input_directory: ./
+  output_directory: ./results_dat_test
+  
+  # Filename configuration
+  filename:
+    flag: False  # Don't search for additional files
+  
+  # Only process the single DAT file
+  input_files:
+    dat:
+      - orcaflex_test2.dat

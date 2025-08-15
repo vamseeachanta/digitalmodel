@@ -1,0 +1,203 @@
+# OrcaFlex Batch Analysis Runner
+# Purpose: Process multiple OrcaFlex files in batch mode
+# Standardized according to .agent-os/standards/input-file-architecture.md
+
+meta:
+  library: digitalmodel
+  basename: orcaflex_analysis
+  version: "1.0.0"
+  description: "Batch processing configuration for multiple OrcaFlex analyses"
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+  units:
+    effective_tension: kN
+    bending_moment: kNm
+    force: kN
+    length: m
+    time: s
+    wave_height: m
+    wave_period: s
+    angle: deg
+
+orcaflex:
+  # Pre-processing
+  preprocess:
+    check_yml:
+      flag: True
+      save_dat: True
+  
+  # Analysis configuration for batch processing
+  analysis:
+    # Run both static and dynamic
+    static: True
+    dynamic: True
+    
+    # Dynamic analysis settings
+    simulation_duration: 1800.0  # 30 minutes for faster batch runs
+    time_step: 0.1
+    
+    # Save all formats
+    save_sim: True
+    save_dat: True
+    
+    # Iteration disabled for batch mode
+    iterate:
+      flag: False
+  
+  # Post-processing for batch results
+  postprocess:
+    visualization:
+      flag: False  # Disable for faster batch processing
+    
+    summary:
+      flag: True
+      statistics:
+        add_minimum_to_summary: True
+        add_maximum_to_summary: True
+        add_mean_to_summary: True
+        add_std_dev_to_summary: True
+    
+    # Extract key results only
+    range_graph:
+      flag: True
+      add_effective_tension_to_cfg: True
+    
+    time_series:
+      flag: True
+      histogram: False  # Faster without histograms
+      summation: False
+
+# Batch file management
+file_management:
+  flag: True
+  input_directory: ./
+  output_directory: ./batch_results/run_$(date)
+  
+  # Pattern-based file selection for batch processing
+  filename:
+    extension: [yml, sim, dat]
+    pattern: "*"  # Process all files
+    filters:
+      contains: []  # Include all by default
+      not_contains: [backup, temp, old, test, iteration]  # Exclude these
+
+# Batch processing specific settings
+batch_processing:
+  # Processing options
+  mode: sequential  # Options: sequential, parallel
+  max_parallel_runs: 2  # If mode is parallel
+  
+  # File processing order
+  process_order:
+    - "*.yml"  # Process YAML files first
+    - "*.dat"  # Then DAT files
+    - "*.sim"  # Finally SIM files
+  
+  # Error handling
+  continue_on_error: True
+  retry_failed: True
+  max_retries: 2
+  
+  # Progress tracking
+  save_progress: True
+  progress_file: ./batch_progress.log
+  
+  # Results aggregation
+  aggregate_results: True
+  create_comparison_report: True
+
+# Batch-specific analysis groups
+analysis_groups:
+  # Group 1: Static analysis only files
+  static_only:
+    pattern: "*_static*"
+    analysis:
+      static: True
+      dynamic: False
+  
+  # Group 2: Dynamic analysis files
+  dynamic_analysis:
+    pattern: "*_dynamic*"
+    analysis:
+      static: True  # Always run static first
+      dynamic: True
+      simulation_duration: 3600.0
+  
+  # Group 3: Quick check files
+  quick_check:
+    pattern: "*_quick*"
+    analysis:
+      static: True
+      dynamic: False
+    postprocess:
+      summary:
+        flag: True
+      visualization:
+        flag: False
+
+# Results aggregation
+results_aggregation:
+  # Combine results from all runs
+  combine_summaries: True
+  output_format: excel
+  
+  # Comparison metrics
+  compare:
+    - effective_tension_max
+    - bending_moment_max
+    - convergence_time
+    - simulation_success
+  
+  # Generate consolidated report
+  report:
+    include_all_files: True
+    summary_statistics: True
+    failure_analysis: True
+    performance_metrics: True
+
+# Performance monitoring
+performance:
+  track_execution_time: True
+  track_memory_usage: True
+  save_performance_log: True
+  
+  # Resource limits
+  max_memory_per_run: 4096  # MB
+  max_time_per_run: 3600  # seconds (1 hour)
+  
+  # Optimization
+  cleanup_after_each_run: True  # Free memory between runs
+  compress_results: False  # Keep uncompressed for quick access
+
+# Notification settings (optional)
+notifications:
+  on_completion: True
+  on_error: True
+  summary_report: True
+  
+  # Log file locations
+  log_directory: ./logs
+  error_log: batch_errors.log
+  success_log: batch_success.log
+
+# Batch run summary configuration
+batch_summary:
+  # What to include in final summary
+  include:
+    - total_files_processed
+    - successful_runs
+    - failed_runs
+    - average_run_time
+    - maximum_responses
+    - critical_warnings
+  
+  # Output location
+  summary_file: ./batch_results/batch_summary.xlsx
+  
+  # Visualization
+  create_overview_plots: True
+  plot_formats: [png, pdf]
