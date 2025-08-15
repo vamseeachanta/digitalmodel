@@ -1,4 +1,11 @@
-basename: orcaflex_analysis
+# OrcaFlex Analysis Configuration
+# Standardized according to .agent-os/standards/input-file-architecture.md
+
+meta:
+  library: digitalmodel
+  basename: orcaflex_analysis
+  version: "1.0.0"
+  description: "OrcaFlex general analysis configuration"
 
 orcaflex:
   analysis:
@@ -12,30 +19,30 @@ orcaflex:
       to_target_value: False
       rerun: False
       overwrite_data: True
-      UseCalculatedPositions:
+      use_calculated_positions:
         flag: True
         overwrite: False
         # Only 1 of settings below works.
-        SetLinesToUserSpecifiedStartingShape: True
-        UseStaticLineEndOrientations: False
+        set_lines_to_user_specified_starting_shape: True
+        use_static_line_end_orientations: False
 
-    UseCalculatedPositions_cfg:
+    use_calculated_positions_cfg:
       flag: False
       overwrite: False
-      clean_StaleCalculatedPositions: True
+      clean_stale_calculated_positions: True
       # Only 1 of settings below works.
-      SetLinesToUserSpecifiedStartingShape: True
-      UseStaticLineEndOrientations: False
+      set_lines_to_user_specified_starting_shape: True
+      use_static_line_end_orientations: False
 
   postprocess:
     visualization:
       flag: False
     summary:
       flag: False
-      AddMinimumToSummary: True
-      AddMaximumToSummary: True
-      AddMeanToSummary: True
-    RangeGraph:
+      add_minimum_to_summary: True
+      add_maximum_to_summary: True
+      add_mean_to_summary: True
+    range_graph:
       flag: False
       add_effective_tension_to_cfg: False
     time_series:
@@ -93,63 +100,71 @@ default:
     overwrite:
       output: True
 
-  Constants:
+  constants:
     g: 9.81
   units:
-    verticalDistance: m
-    declinationAngle: deg with vertical
-    Temperature: deg F
-    Pressure: psi
-    EffectiveTension: kN
-    BendingMoment: kNm
-    YieldStrength: psi
-    E: psi
-    NominalID: inch
-    NominalOD: inch
-    NominalWT: inch
-    Rho: kg/m3
-    MassPerUnitLength: kg/m
-    WeightPerUnitLength: N/m
-    SoilStiffness: kN/m/m
-    BuoyancyCoverage: Percentage
+    # Distance and geometry
+    vertical_distance: m
+    length: m
+    nominal_id: inch
+    nominal_od: inch
+    nominal_wt: inch
+    # Angles
+    declination_angle: deg
+    angle: deg
+    # Temperature and pressure
+    temperature: degF
+    pressure: psi
+    # Forces and moments
+    effective_tension: kN
+    bending_moment: kNm
+    force: kN
+    # Material properties
+    yield_strength: psi
+    elastic_modulus: psi
+    # Density and mass
+    density: kg/m3
+    mass_per_unit_length: kg/m
+    weight_per_unit_length: N/m
+    # Soil and coverage
+    soil_stiffness: kN/m/m
+    buoyancy_coverage: percentage
 
-PostProcessUnits:
-  System: US
-  Effective Tension:
-    US: 1
-    SI: 1
-  Bend Moment:
-    US: 1
-    SI: 1
-  API STD 2RD Method 1:
-    US: 1
-    SI: 1
+post_process_units:
+  system: US
+  effective_tension:
+    us: 1
+    si: 1
+  bend_moment:
+    us: 1
+    si: 1
+  api_std_2rd_method_1:
+    us: 1
+    si: 1
 
 file_management:
   flag: True
-  files:
-    files_in_current_directory:
-      flag: False
-      directory: NULL
-    extension: yml
-    filters:
-      filename_contains: [step]
-      filename_not_contains: []
-
-    data_source: yml
-    csv_filename: ""
-
+  input_directory: ./  # Current directory for test files
+  output_directory: ./results
+  
   input_files:
     yml:
       - orcaflex_test1.yml
+  
+  filename:
+    extension: [yml]
+    pattern: "*"
+    filters:
+      contains: [step]
+      not_contains: []
 
-PlotSettings:
-  Name: Buoyancy Element Hydrodynamic Coefficients
-  SupTitle: Buoyancy Element Hydrodynamic Coefficients
-  Title: SLWR Configuration Development
+plot_settings:
+  name: "Buoyancy Element Hydrodynamic Coefficients"
+  sup_title: "Buoyancy Element Hydrodynamic Coefficients"
+  title: "SLWR Configuration Development"
 
-RangeGraph: []
+range_graph: []
 
-Summary: []
+summary: []
 
 time_series: []

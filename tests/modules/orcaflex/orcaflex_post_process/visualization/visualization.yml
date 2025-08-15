@@ -1,10 +1,29 @@
-basename: orcaflex_post_process
+# OrcaFlex Visualization Configuration
+# Standardized according to .agent-os/standards/input-file-architecture.md
+
+meta:
+  library: digitalmodel
+  basename: orcaflex_post_process
+  version: "1.0.0"
+  description: "OrcaFlex visualization post-processing configuration"
 
 default:
   log_level: DEBUG
   config:
     overwrite:
       output: True
+  units:
+    # Forces and moments
+    effective_tension: kN
+    bend_moment: kNm
+    force: kN
+    # Length
+    length: m
+    arc_length: m
+    # Time
+    time: s
+    # Angles
+    angle: deg
 
 orcaflex:
   analysis:
@@ -18,12 +37,12 @@ orcaflex:
   postprocess:
     visualization:
       flag: True
-    Summary:
+    summary:
       flag: False
-      AddMinimumToSummary: True
-      AddMaximumToSummary: True
-      AddMeanToSummary: True
-    RangeGraph:
+      add_minimum_to_summary: True
+      add_maximum_to_summary: True
+      add_mean_to_summary: True
+    range_graph:
       flag: False
       add_effective_tension_to_cfg: False
     time_series:
@@ -77,18 +96,9 @@ visualization_settings:
 
 file_management:
   flag: True
-  files:
-    files_in_current_directory:
-      flag: False
-      directory: NULL
-    extension: yml
-    filters:
-      filename_contains: [step]
-      filename_not_contains: []
-
-    data_source: yml
-    csv_filename: ""
-
+  input_directory: ./  # Current directory
+  output_directory: ./results
+  
   input_files:
     yml:
       - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim

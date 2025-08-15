@@ -13,6 +13,7 @@ This directory contains the Agent OS configuration for the DigitalModel project.
 │   └── roadmap.md     # Product roadmap
 ├── standards/         # Coding standards and conventions
 │   ├── repository-organization.md # MANDATORY module-based directory pattern
+│   ├── input-file-architecture.md # MANDATORY input file configuration standards
 │   ├── code-style.md  # Code formatting and style guide
 │   ├── testing.md     # Testing requirements
 │   └── git.md         # Git workflow and commit conventions
@@ -32,10 +33,11 @@ This directory contains the Agent OS configuration for the DigitalModel project.
 ### For New AI Agents
 1. **Start here**: Read this README for overview
 2. **Product Understanding**: Review `./product/overview.md` and `./product/architecture.md`
-3. **Communication Standards**: Follow `./standards/ai-communication.md` strictly
-4. **Code Standards**: Apply `./standards/code-style.md` and `./standards/testing.md`
-5. **Agent Personas**: Select appropriate persona from `./standards/agent-personas.md`
-6. **Active Specifications**: Check current specs in `specs/modules/<module>/` directories
+3. **Input File Standards**: Follow `./standards/input-file-architecture.md` for all configurations
+4. **Communication Standards**: Follow `./standards/ai-communication.md` strictly
+5. **Code Standards**: Apply `./standards/code-style.md` and `./standards/testing.md`
+6. **Agent Personas**: Select appropriate persona from `./standards/agent-personas.md`
+7. **Active Specifications**: Check current specs in `specs/modules/<module>/` directories
 
 ### For Feature Development
 1. **Specification First**: Create spec in `specs/modules/<module>/` following repository pattern

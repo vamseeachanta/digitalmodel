@@ -1,10 +1,40 @@
-basename: orcaflex_post_process
+# OrcaFlex Post-Processing Summary Configuration
+# Standardized according to .agent-os/standards/input-file-architecture.md
+
+meta:
+  library: digitalmodel
+  basename: orcaflex_post_process
+  version: "1.0.0"
+  description: "OrcaFlex post-processing summary configuration"
 
 default:
   log_level: INFO
   config:
     overwrite:
       output: True
+  units:
+    # Forces and moments
+    effective_tension: kN
+    bend_moment: kNm
+    force: kN
+    # Stress
+    stress: MPa
+    von_mises_stress: MPa
+    # Length and distance
+    length: m
+    arc_length: m
+    # Time
+    time: s
+    period: s
+    # Environment
+    wave_height: m
+    wave_period: s
+    wave_direction: deg
+    current_speed: m/s
+    current_direction: deg
+    # Angles
+    heading: deg
+    angle: deg
 
 orcaflex:
   analysis:
@@ -21,15 +51,15 @@ orcaflex:
     summary:
       flag: True
       statistics:
-        Minimum: True
-        Maximum: True
-        Mean: True
-        StdDev: True
-    RangeGraph:
+        minimum: True
+        maximum: True
+        mean: True
+        std_dev: True
+    range_graph:
       flag: False
     time_series:
       flag: False
-    RAOs:
+    raos:
       flag: False
     cummulative_histograms:
       flag: False
@@ -41,94 +71,94 @@ orcaflex:
 
 summary_settings:
   groups:
-    - Label: dynamics
-      Columns:
-        - Command: GetData
-          ObjectName: Vessel1
-          Variable:
+    - label: dynamics
+      columns:
+        - command: GetData
+          object_name: Vessel1
+          variable:
             - InitialHeading
             - -1
-          Label: Vessel_Heading
-        - Command: GetData
-          ObjectName: Environment
-          Variable:
+          label: vessel_heading
+        - command: GetData
+          object_name: Environment
+          variable:
             - WaveHeight
             - -1
-          Label: Hmax
-        - Command: GetData
-          ObjectName: Environment
-          Variable:
+          label: hmax
+        - command: GetData
+          object_name: Environment
+          variable:
             - WavePeriod
             - -1
-          Label: WavePeriod
-        - Command: GetData
-          ObjectName: Environment
-          Variable:
+          label: wave_period
+        - command: GetData
+          object_name: Environment
+          variable:
             - WaveDirection
             - -1
-          Label: WaveDirection
-        - Command: GetData
-          ObjectName: Environment
-          Variable:
+          label: wave_direction
+        - command: GetData
+          object_name: Environment
+          variable:
             - RefCurrentSpeed
-          Label: RefCurrentSpeed
-        - Command: GetData
-          ObjectName: Environment
-          Variable:
+          label: ref_current_speed
+        - command: GetData
+          object_name: Environment
+          variable:
             - CurrentFactor
             - 0
-          Label: CurrentFactor[0]
-        - Command: GetData
-          ObjectName: Environment
-          Variable:
+          label: current_factor_0
+        - command: GetData
+          object_name: Environment
+          variable:
             - RefCurrentDirection
-          Label: RefCurrentDirection
-        - Command: Range Graph
-          ObjectName: SLWR
-          Statistic_Type: Max
-          SimulationPeriod: [0.0, 10.0]
-          ArcLength:
+          label: ref_current_direction
+        - command: "Range Graph"
+          object_name: SLWR
+          statistic_type: Max
+          simulation_period: [0.0, 10.0]
+          arc_length:
             - 0
             - 50
-          Variable: Effective Tension
-          Label: Eff. Tension
-        - Command: Range Graph
-          ObjectName: SLWR
-          Statistic_Type: Max
-          SimulationPeriod: [0.0, 10.0]
-          ArcLength:
+          variable: "Effective Tension"
+          label: eff_tension
+        - command: "Range Graph"
+          object_name: SLWR
+          statistic_type: Max
+          simulation_period: [0.0, 10.0]
+          arc_length:
             - 0
             - 50
-          Variable: Bend Moment
-          Label: Bend. Moment
-        - Command: Range Graph
-          ObjectName: SLWR
-          Statistic_Type: Max
-          SimulationPeriod: [0.0, 10.0]
-          ArcLength:
+          variable: "Bend Moment"
+          label: bend_moment
+        - command: "Range Graph"
+          object_name: SLWR
+          statistic_type: Max
+          simulation_period: [0.0, 10.0]
+          arc_length:
             - 0
             - 50
-          Variable: API STD 2RD Method 1
-          Label: API M1
-        - Command: Range Graph
-          ObjectName: SLWR
-          Statistic_Type: Max
-          SimulationPeriod: [0.0, 10.0]
-          ArcLength:
+          variable: "API STD 2RD Method 1"
+          label: api_m1
+        - command: "Range Graph"
+          object_name: SLWR
+          statistic_type: Max
+          simulation_period: [0.0, 10.0]
+          arc_length:
             - 0
             - 50
-          Variable: Max von Mises Stress
-          Label: vM stress
-        - Command: TimeHistory
-          Statistic_Type: Max
-          ObjectName: SLWR
-          objectExtra:
-            - End B
-          SimulationPeriod: [0.0, 10.0]
-          Variable: Effective Tension
-          Label: TimeHistory_EndB_EffTension_Max
+          variable: "Max von Mises Stress"
+          label: vm_stress
+        - command: TimeHistory
+          statistic_type: Max
+          object_name: SLWR
+          object_extra:
+            - "End B"
+          simulation_period: [0.0, 10.0]
+          variable: "Effective Tension"
+          label: time_history_end_b_eff_tension_max
 
-RangeGraph_settings:
+range_graph_settings:
   add_effective_tension_to_cfg: False
 
 time_series_settings:
@@ -138,8 +168,8 @@ time_series_settings:
 
 file_management:
   flag: True
-  input_directory: NULL
-  output_directory: NULL
+  input_directory: ./  # Current directory
+  output_directory: ./results
   update_unfinished:
     flag: False
 

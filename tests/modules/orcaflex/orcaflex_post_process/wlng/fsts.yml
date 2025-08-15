@@ -1,10 +1,28 @@
-basename: orcaflex_post_process
+# OrcaFlex WLNG FSTS Configuration
+# Standardized according to .agent-os/standards/input-file-architecture.md
+
+meta:
+  library: digitalmodel
+  basename: orcaflex_post_process
+  version: "1.0.0"
+  description: "OrcaFlex WLNG FSTS post-processing configuration"
 
 default:
   log_level: INFO
   config:
     overwrite:
       output: True
+  units:
+    # Forces and tensions
+    effective_tension: kN
+    force: kN
+    # Time
+    time: s
+    period: s
+    # Length
+    length: m
+    # Angles
+    angle: deg
 
 orcaflex:
   analysis:
@@ -20,11 +38,11 @@ orcaflex:
       flag: False
     summary:
       flag: True
-    RangeGraph:
+    range_graph:
       flag: False
     time_series:
       flag: True
-    RAOs:
+    raos:
       flag: False
     cummulative_histograms:
       flag: False
@@ -35,88 +53,88 @@ orcaflex:
         - 10
 
 summary_settings_master:
-  AddMinimumToSummary: True
-  AddMaximumToSummary: True
-  AddMeanToSummary: True
+  add_minimum_to_summary: True
+  add_maximum_to_summary: True
+  add_mean_to_summary: True
   groups:
-    - Label: inputs
-      Columns:
-        - Command: GetData
+    - label: inputs
+      columns:
+        - command: GetData
 
-    - Label: strut_dynamics
-      Columns:
-        - Command: TimeHistory
-          SimulationPeriod: [0.0, 10.0]
-          objectExtra:
-            - End A
-          Variable: Effective Tension
+    - label: strut_dynamics
+      columns:
+        - command: TimeHistory
+          simulation_period: [0.0, 10.0]
+          object_extra:
+            - "End A"
+          variable: "Effective Tension"
 
-    - Label: strut_static
-      Columns:
-        - Command: TimeHistory
-          SimulationPeriod: StaticState
-          objectExtra:
-            - End A
-          Variable: Effective Tension
+    - label: strut_static
+      columns:
+        - command: TimeHistory
+          simulation_period: StaticState
+          object_extra:
+            - "End A"
+          variable: "Effective Tension"
 
-    - Label: fst_local_static
-      Columns:
-        - Command: TimeHistory
-          SimulationPeriod: StaticState
-          objectExtra:
-            - End B
+    - label: fst_local_static
+      columns:
+        - command: TimeHistory
+          simulation_period: StaticState
+          object_extra:
+            - "End B"
 
-    - Label: fst_local_dynamics
-      Columns:
-        - Command: TimeHistory
-          SimulationPeriod: [0.0, 10.0]
-          objectExtra:
-            - End B
+    - label: fst_local_dynamics
+      columns:
+        - command: TimeHistory
+          simulation_period: [0.0, 10.0]
+          object_extra:
+            - "End B"
 
 summary_settings:
   groups:
-    - Label: inputs
-      Columns:
-        - Command: GetData
-          ObjectName: FST1
-          Variable: [InitialHeading, -1]
-          Label: FST1_Heading
-        - Command: GetData
-          ObjectName: FST2
-          Variable: [InitialHeading, -1]
-          Label: FST2_Heading
-        - Command: GetData
-          ObjectName: Environment
-          Variable: [WindDirection, -1]
-          Label: WindDirection
-        - Command: GetData
-          ObjectName: Environment
-          Variable: [WindSpeed, -1]
-          Label: WindSpeed
-        - Command: GetData
-          ObjectName: Environment
-          Variable: [WaveDirection, -1]
-          Label: WaveDirection
-        - Command: GetData
-          ObjectName: Environment
-          Variable: [WaveHs, -1]
-          Label: Hs
-        - Command: GetData
-          ObjectName: Environment
-          Variable: [WaveTz, -1]
-          Label: WaveTz
-        - Command: GetData
-          ObjectName: Environment
-          Variable: [WaveGamma, -1]
-          Label: WaveGamma
-        - Command: GetData
-          ObjectName: Environment
-          Variable: [RefCurrentSpeed, 0]
-          Label: RefCurrentSpeed
-        - Command: GetData
-          ObjectName: Environment
-          Variable: [RefCurrentDirection, 0]
-          Label: RefCurrentDirection
+    - label: inputs
+      columns:
+        - command: GetData
+          object_name: FST1
+          variable: [InitialHeading, -1]
+          label: fst1_heading
+        - command: GetData
+          object_name: FST2
+          variable: [InitialHeading, -1]
+          label: fst2_heading
+        - command: GetData
+          object_name: Environment
+          variable: [WindDirection, -1]
+          label: wind_direction
+        - command: GetData
+          object_name: Environment
+          variable: [WindSpeed, -1]
+          label: wind_speed
+        - command: GetData
+          object_name: Environment
+          variable: [WaveDirection, -1]
+          label: wave_direction
+        - command: GetData
+          object_name: Environment
+          variable: [WaveHs, -1]
+          label: hs
+        - command: GetData
+          object_name: Environment
+          variable: [WaveTz, -1]
+          label: wave_tz
+        - command: GetData
+          object_name: Environment
+          variable: [WaveGamma, -1]
+          label: wave_gamma
+        - command: GetData
+          object_name: Environment
+          variable: [RefCurrentSpeed, 0]
+          label: ref_current_speed
+        - command: GetData
+          object_name: Environment
+          variable: [RefCurrentDirection, 0]
+          label: ref_current_direction
         - Command: GetData
           ObjectName: Environment
           Variable: [CurrentFactor, 0]
@@ -1266,11 +1284,15 @@ RangeGraph_settings:
 
 file_management:
   flag: True
+  input_directory: ./analysis  # Analysis files directory
+  output_directory: ./results
+  
+  filename:
+    extension: [sim, yml]
+    pattern: "*"
+    filters:
+      contains: []
+      not_contains: []
+  
   update_unfinished:
     flag: False
-
-  files:
-    files_in_current_directory:
-      flag: False
-      directory: analysis
-      auto_read: True
