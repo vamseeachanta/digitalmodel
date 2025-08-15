@@ -1,0 +1,80 @@
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA reader RAOs additional damping configuration"
+
+software:
+  version: []
+  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
+
+type:
+  preprocess: false
+  analysis: false
+  results: true
+
+result_method: aqwareader # lis
+
+result:
+  - label: raos_ad000
+    structure: 1
+    category: frequency
+    save_csv: true
+    save_aqwareader_csv: false
+    inject_into:
+      flag: true
+      filename: results/raos.xlsx
+      sheetname: raos_ad000
+    groups:
+      - third_level_label: FREE FLOATING RAOS
+        first_level: [1] # Frequency choice
+        second_level: [1, 2, 3] # Direction(s)
+        third_level: [1, 7] # Amplitude and Phase
+        fourth_level: null
+
+  - label: damp_ad000
+    structure: 1
+    category: frequency
+    save_csv: true
+    save_aqwareader_csv: true
+    inject_into:
+      flag: true
+      filename: results/raos.xlsx
+      sheetname: damp_ad000
+    groups:
+      - third_level_label: RADIATION DAMPING
+        first_level: [3] # addedmass/damping choice
+        second_level: [1] # Direction Independent
+        third_level: [3] # DOF
+        fourth_level: [3] # DOF - Tensor
+      - third_level_label: RADIATION DAMPING
+        first_level: [3] # addedmass/damping choice
+        second_level: [1] # Direction Independent
+        third_level: [4] # DOF
+        fourth_level: [4]
+      - third_level_label: RADIATION DAMPING
+        first_level: [3] # addedmass/damping choice
+        second_level: [1] # Direction Independent
+        third_level: [5] # DOF
+        fourth_level: [5] # DOF - Tensor
+
+file_management:
+  flag: true
+  update_unfinished:
+    flag: false
+
+  files:
+    files_in_current_directory:
+      flag: false
+      auto_read: true
+      directory: manual
+      filename_pattern: FST1_L015_AD000
+      file_extensions: [PLT]
+    output_directory: null
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false

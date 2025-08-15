@@ -1,0 +1,56 @@
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA ANL EF run configuration"
+
+software:
+  version: []
+  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
+type:
+  preprocess: false
+  analysis: true
+  results: false
+
+analysis_settings:
+  method: ef_server
+  ef_input:
+    run_function: UFFender # uf_wlng_fst
+    time_delay_in_client: 0
+    load_ramp: { flag: true, time: 100, type: linear, initial_factor: 0.5 }
+    closing_function: null
+    number_of_runs: null
+    columns:
+      [
+        "time",
+        "Y_Coordinate",
+        "delta_L",
+        "stiffener_force",
+        "velocity",
+        "dampener_force",
+        "total_force",
+      ]
+    # columns : ['time', 'dl_x', 'dl_y', 'velocity_x', 'velocity_y', 'stiffener_force_x', 'dampener_force_x', 'total_force_x', 'stiffener_force_y', 'dampener_force_y', 'total_force_y']
+    def_pos:
+      - Struct: 0
+        DefPos: [149.11, 18.02, 0]
+
+file_management:
+  flag: true
+  update_unfinished:
+    flag: false
+
+  files:
+    files_in_current_directory:
+      flag: false
+      auto_read: true
+      directory: ef_server
+      file_extensions: [DAT]
+      filename_pattern: null
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false

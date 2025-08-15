@@ -1,0 +1,67 @@
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA reader moorings configuration"
+
+software:
+  version: []
+  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
+
+type:
+  preprocess: false
+  analysis: false
+  results: true
+
+result_method: aqwareader # lis
+
+
+result:
+  - label: cog
+    category: equilibrium
+    save_csv: true
+    inject_into:
+      flag: true
+      filename: results/aqr_moorings.xlsx
+      sheetname: cog
+    structure: 1
+    groups:
+      - third_level_label: POSITION OF COG
+        first_level: [1] # Motion Analysis Time History
+        second_level: [1] # Structure
+        third_level: [1] # COG
+        fourth_level: null # Default DOFs
+
+  - label: moorings
+    category: equilibrium
+    save_csv: true
+    inject_into:
+      flag: true
+      filename: results/aqr_moorings.xlsx
+      sheetname: moorings
+    structure: 1
+    groups:
+      - third_level_label: MOORING FORCE - LINE
+        first_level: [1] # Motion Analysis Time History
+        second_level: [1] # Structure
+        third_level: [15, 16, 17, 18, 19, 20, 21, 22, 23, 24] # Moorings
+        fourth_level: [1, 2, 3, 4, 5, 6] # DOFs
+
+file_management:
+  flag: true
+  update_unfinished:
+    flag: false
+
+  files:
+    files_in_current_directory:
+      flag: false
+      auto_read: true
+      directory: 100mph
+      filename_pattern: null
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false

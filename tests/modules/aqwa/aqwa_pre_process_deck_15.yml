@@ -1,0 +1,45 @@
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA deck preprocessing configuration (15)"
+
+software:
+  version: []
+
+type:
+  preprocess: true
+  analysis: false
+  results: false
+
+pre_process_settings:
+  file_extension: dat
+
+inputs:
+  - file_prefix: F2L95_EHHWL_
+    file_extension: deck
+    data:
+      category: 15
+      raw:
+        directory: K:/1522/ctr7/02_FST/04_ef_100yr/rev6/force/results
+        filename_pattern: D_NOL_F2L95_EHHWL_d_*_cog.csv
+
+file_management:
+  flag: true
+  update_unfinished:
+    flag: false
+
+  files:
+    files_in_current_directory:
+      flag: false
+      auto_read: true
+      directory: output/lis
+      filename_pattern: null
+    output_directory: results
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false

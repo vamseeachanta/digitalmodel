@@ -1,0 +1,103 @@
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA reader time response configuration"
+
+software:
+  version: []
+  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
+
+type:
+  preprocess: false
+  analysis: false
+  results: true
+
+result_method: aqwareader # lis
+
+result:
+  - label: cog
+    category: timeresponse
+    save_csv: true
+    inject_into:
+      flag: true
+      filename: results/aqr_timeresponse.xlsx
+      sheetname: cog
+    structure: 1
+    groups:
+      - third_level_label: POSITION OF COG
+        first_level: [1] # Motion Analysis Time History
+        second_level: [1] # Structure
+        third_level: [1] # COG
+        fourth_level: null # Default DOFs
+        change_of_data:
+          flag: true
+          reference: start # start, mean, end
+          label_substitution:
+            before: POSITION
+            after: CHANGE
+
+  - label: moorings
+    category: timeresponse
+    save_csv: true
+    inject_into:
+      flag: true
+      filename: results/aqr_timeresponse.xlsx
+      sheetname: moorings
+    structure: 1
+    groups:
+      - third_level_label: MOORING LINE
+        first_level: [1] # Motion Analysis Time History
+        second_level: [1] # Structure
+        third_level: [39, 40] # Moorings
+        fourth_level: [4] # attributes
+
+  - label: fenders_1
+    category: timeresponse
+    save_csv: true
+    inject_into:
+      flag: true
+      filename: results/aqr_timeresponse.xlsx
+      sheetname: fenders_1
+    structure: 1
+    groups:
+      - third_level_label: Fender
+        first_level: [1] # Motion Analysis Time History
+        second_level: [1] # Structure
+        third_level: [41, 43] # Fenders
+        fourth_level: [4, 6] # attributes
+
+  - label: fenders_2
+    category: timeresponse
+    save_csv: true
+    inject_into:
+      flag: true
+      filename: results/aqr_timeresponse.xlsx
+      sheetname: fenders_2
+    structure: 1
+    groups:
+      - third_level_label: Fender
+        first_level: [1] # Motion Analysis Time History
+        second_level: [1] # Structure
+        third_level: [42, 44] # Fenders
+        fourth_level: [1] # attributes
+
+file_management:
+  flag: true
+  update_unfinished:
+    flag: false
+
+  files:
+    files_in_current_directory:
+      flag: false
+      auto_read: true
+      directory: K:\b1522_ctr07\_tutorial\dat\002_ship_with_pier
+      file_extensions: [PLT]
+      filename_pattern: 02_S03_HR_WAVE
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false

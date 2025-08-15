@@ -1,0 +1,72 @@
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA deck preprocessing configuration (10)"
+
+software:
+  version: []
+
+type:
+  preprocess: true
+  analysis: false
+  results: false
+
+pre_process_settings:
+  file_extension: dat
+
+inputs:
+  - file_prefix: fst2_
+    file_extension: deck
+    data:
+      category: 10
+
+      raw:
+        [
+          {
+            element_type: CFC,
+            scaling:
+              {
+                Cx: 95271.2,
+                Cy: 445622.6,
+                Cz: 4586242.9,
+                Cnx: 19491532.3,
+                Cny: 19491532.3,
+                Cnz: 91169926.5,
+              },
+            csv: src/digitalmodel/tests/test_data/aqwa/csv/FST2_L000_CFC.csv,
+          },
+          {
+            element_type: WFC,
+            scaling:
+              {
+                Cx: 1191.2,
+                Cy: 5221.1,
+                Cz: 5324.5,
+                Cnx: 223937.5,
+                Cny: 27171.0,
+                Cnz: 1068190.0,
+              },
+            csv: src/digitalmodel/tests/test_data/aqwa/csv/od_fst-2_01_light_long_truss_wolngc.csv,
+          },
+        ]
+
+file_management:
+  flag: true
+  update_unfinished:
+    flag: false
+
+  files:
+    files_in_current_directory:
+      flag: false
+      auto_read: true
+      directory: output/lis
+      filename_pattern: null
+    output_directory: results
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false

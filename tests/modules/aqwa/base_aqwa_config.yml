@@ -1,0 +1,49 @@
+# Base AQWA Configuration Template
+# This file defines the standard structure for all AQWA test configurations
+# All AQWA test files should follow this pattern for consistency
+
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA analysis configuration"
+
+# Software Configuration
+software:
+  version: []
+  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222  # Standardized to latest version
+
+# Analysis Type Configuration
+type:
+  preprocess: false  # Boolean values in lowercase
+  analysis: false
+  results: false
+
+# File Management Configuration
+file_management:
+  flag: true
+  update_unfinished:
+    flag: false
+  files:
+    files_in_current_directory:
+      flag: false
+      auto_read: true
+      directory: null  # Use lowercase 'null' consistently
+      file_extensions: []
+      filename_pattern: null
+    output_directory: null
+
+# Default Configuration
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false
+
+# Additional sections should be added as needed for specific test types:
+# - analysis_settings: for analysis configurations
+# - result: for result processing configurations
+# - pre_process_settings: for preprocessing configurations
+# - mes: for MES file handling
+# - result_method: for specifying result processing method
