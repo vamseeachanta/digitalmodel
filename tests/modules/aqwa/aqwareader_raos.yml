@@ -1,54 +1,58 @@
-basename: aqwa
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA reader RAOs configuration"
 
 software:
   version: []
-  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v181
+  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
 
 type:
-  preprocess: False
-  analysis: False
-  results: True
+  preprocess: false
+  analysis: false
+  results: true
 
 result_method: aqwareader # lis
 
 master_settings:
   structure: 1
   category: frequency
-  save_csv: True
-  save_aqwareader_csv: False
+  save_csv: true
+  save_aqwareader_csv: false
   inject_into:
-    flag: True
+    flag: true
     filename: results/raos.xlsx
   groups:
     - third_level_label: FREE FLOATING RAOS
       first_level: [1] # Frequency choice
       second_level: [1, 2, 3] # Direction(s)
       third_level: [1, 7] # Amplitude and Phase
-      fourth_level: NULL
+      fourth_level: null
 
 result:
   - label: raos
     inject_into:
       sheetname: raos
-    filename_pattern: NULL
-    directory: NULL
+    filename_pattern: null
+    directory: null
 
 file_management:
-  flag: True
+  flag: true
   update_unfinished:
-    flag: False
+    flag: false
 
   files:
     files_in_current_directory:
-      flag: False
-      auto_read: True
+      flag: false
+      auto_read: true
       directory: output/plt
       file_extensions: [PLT]
-      filename_pattern: NULL
+      filename_pattern: null
 
 default:
   log_level: DEBUG
   config:
     overwrite:
-      output: True
-    cfg_sensitivities: False
+      output: true
+    cfg_sensitivities: false

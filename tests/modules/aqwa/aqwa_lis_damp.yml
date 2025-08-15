@@ -1,12 +1,16 @@
-basename: aqwa
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA LIS damping configuration"
 
 software:
   version: []
 
 type:
-  preprocess: False
-  analysis: False
-  results: True
+  preprocess: false
+  analysis: false
+  results: true
 
 result_method: lis # aqwareader
 
@@ -15,7 +19,7 @@ result:
     file_extension: LIS
     search_cfg:
       start:
-        line_number: NULL
+        line_number: null
         key_words:
           [
             N A T U R A L   F R E Q U E N C I E S / P E R I O D S   F O R   S T R U C T U R E
@@ -23,7 +27,7 @@ result:
         occurrence: 4 # freq, period, critical damping, repeated data at end
         transform: { scale: 1, shift: 0 }
       end:
-        line_number: NULL
+        line_number: null
         key_words: [FINISH DATE]
         occurrence: 1
         transform: { scale: 1, shift: -2 }
@@ -33,7 +37,7 @@ result:
           [
             PERIOD     PERIOD                         UNDAMPED  NATURAL  PERIOD(SECONDS),
           ]
-        occurrence: NULL
+        occurrence: null
         header:
           transform:
             scale: 1
@@ -44,7 +48,7 @@ result:
             shift: 5
 
     inject_into:
-      flag: True
+      flag: true
       filename: output/aqwa_damp.xlsx
       sheetname: no_damp_np
 
@@ -52,7 +56,7 @@ result:
     file_extension: LIS
     search_cfg:
       start:
-        line_number: NULL
+        line_number: null
         key_words:
           [
             N A T U R A L   F R E Q U E N C I E S / P E R I O D S   F O R   S T R U C T U R E,
@@ -60,7 +64,7 @@ result:
         occurrence: 4 # freq, period, critical damping, repeated data at end
         transform: { scale: 1, shift: 0 }
       end:
-        line_number: NULL
+        line_number: null
         key_words: [FINISH DATE]
         occurrence: 1
         transform: { scale: 1, shift: -2 }
@@ -70,7 +74,7 @@ result:
           [
             FREQUENCY  FREQUENCY                  APPROXIMATE  PERCENTAGE  CRITICAL DAMPING,
           ]
-        occurrence: NULL
+        occurrence: null
         header:
           transform:
             scale: 1
@@ -81,27 +85,27 @@ result:
             shift: 5
 
     inject_into:
-      flag: False
+      flag: false
       filename: output/aqwa_damp.xlsx
       sheetname: no_damp_cdp
 
 file_management:
-  flag: True
+  flag: true
   update_unfinished:
-    flag: False
+    flag: false
 
   files:
     files_in_current_directory:
-      flag: False
-      auto_read: True
+      flag: false
+      auto_read: true
       directory: output/lis
       file_extensions: [LIS]
       filename_pattern: NO_DAMP
-    output_directory: NULL
+    output_directory: null
 
 default:
   log_level: DEBUG
   config:
     overwrite:
-      output: True
-    cfg_sensitivities: False
+      output: true
+    cfg_sensitivities: false

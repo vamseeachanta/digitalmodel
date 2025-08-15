@@ -1,24 +1,26 @@
-basename: aqwa
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA reader time response configuration"
 
 software:
   version: []
-  # ANSYSInstallDir: C:\Program Files\ANSYS Inc\v181
   ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
-  # "C:\Program Files\ANSYS Inc\v222\aisol\workbench.bat" -cmd "C:\Program Files\ANSYS Inc\v222\aisol\bin\winx64\AqwaReader.exe" --Type 2
 
 type:
-  preprocess: False
-  analysis: False
-  results: True
+  preprocess: false
+  analysis: false
+  results: true
 
 result_method: aqwareader # lis
 
 result:
   - label: cog
     category: timeresponse
-    save_csv: True
+    save_csv: true
     inject_into:
-      flag: True
+      flag: true
       filename: results/aqr_timeresponse.xlsx
       sheetname: cog
     structure: 1
@@ -27,9 +29,9 @@ result:
         first_level: [1] # Motion Analysis Time History
         second_level: [1] # Structure
         third_level: [1] # COG
-        fourth_level: NULL # Default DOFs
+        fourth_level: null # Default DOFs
         change_of_data:
-          flag: True
+          flag: true
           reference: start # start, mean, end
           label_substitution:
             before: POSITION
@@ -37,9 +39,9 @@ result:
 
   - label: moorings
     category: timeresponse
-    save_csv: True
+    save_csv: true
     inject_into:
-      flag: True
+      flag: true
       filename: results/aqr_timeresponse.xlsx
       sheetname: moorings
     structure: 1
@@ -52,9 +54,9 @@ result:
 
   - label: fenders_1
     category: timeresponse
-    save_csv: True
+    save_csv: true
     inject_into:
-      flag: True
+      flag: true
       filename: results/aqr_timeresponse.xlsx
       sheetname: fenders_1
     structure: 1
@@ -67,9 +69,9 @@ result:
 
   - label: fenders_2
     category: timeresponse
-    save_csv: True
+    save_csv: true
     inject_into:
-      flag: True
+      flag: true
       filename: results/aqr_timeresponse.xlsx
       sheetname: fenders_2
     structure: 1
@@ -81,14 +83,14 @@ result:
         fourth_level: [1] # attributes
 
 file_management:
-  flag: True
+  flag: true
   update_unfinished:
-    flag: False
+    flag: false
 
   files:
     files_in_current_directory:
-      flag: False
-      auto_read: True
+      flag: false
+      auto_read: true
       directory: K:\b1522_ctr07\_tutorial\dat\002_ship_with_pier
       file_extensions: [PLT]
       filename_pattern: 02_S03_HR_WAVE
@@ -97,5 +99,5 @@ default:
   log_level: DEBUG
   config:
     overwrite:
-      output: True
-    cfg_sensitivities: False
+      output: true
+    cfg_sensitivities: false

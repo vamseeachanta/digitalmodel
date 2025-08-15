@@ -1,14 +1,15 @@
-basename: aqwa
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA RAO analysis configuration"
 
 software:
   version: []
-  # ANSYSInstallDir: C:\Program Files\ANSYS Inc\v181
   ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
-  # "C:\Program Files\ANSYS Inc\v222\aisol\workbench.bat" -cmd "C:\Program Files\ANSYS Inc\v222\aisol\bin\winx64\AqwaReader.exe" --Type 2
-  # "C:\Program Files\ANSYS Inc\v222\aqwa\bin\winx64\aqwa.exe" /nowind .\02_s04_hr_ext_force
 type:
-  preprocess: False
-  analysis: True
+  preprocess: false
+  analysis: true
   results: false
 
 analysis_settings:
@@ -113,7 +114,7 @@ analysis_settings:
   hydrostatic:
     template: tests/test_data/aqwa/templates/pre_process_hydrostatic_files.yml
     input:
-      - output_filename: NULL
+      - output_filename: null
         input_file_labels: [FST1_L00, FST1_L15]
         output_basename: S
         output_dir: raos
@@ -148,11 +149,11 @@ analysis_settings:
             ],
           ]
         batch:
-          flag: True
+          flag: true
           extension: no
           content: C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind
 
-      - output_filename: NULL
+      - output_filename: null
         input_file_labels: [FST1_L00, FST1_L15]
         output_basename: F
         output_dir: raos
@@ -188,32 +189,32 @@ analysis_settings:
           ]
 
         batch:
-          flag: True
+          flag: true
           extension: no
           content: C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind
 
   additional_damping:
-    flag: True
+    flag: true
     damping: { roll: 10, pitch: 8, unit: percentage }
     template: tests/test_data/aqwa/templates/aqwareader_raos_ad.yml
 
 file_management:
-  flag: True
+  flag: true
   update_unfinished:
-    flag: False
+    flag: false
 
   files:
     files_in_current_directory:
-      flag: False
-      auto_read: True
+      flag: false
+      auto_read: true
       directory: raos
       file_extensions: [DAT]
       filename_pattern: WB_
-    output_directory: NULL
+    output_directory: null
 
 default:
   log_level: DEBUG
   config:
     overwrite:
-      output: True
-    cfg_sensitivities: False
+      output: true
+    cfg_sensitivities: false

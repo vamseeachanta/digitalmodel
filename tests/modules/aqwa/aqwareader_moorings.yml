@@ -1,15 +1,17 @@
-basename: aqwa
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA reader moorings configuration"
 
 software:
   version: []
-  # ANSYSInstallDir: C:\Program Files\ANSYS Inc\v181
   ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
-  # "C:\Program Files\ANSYS Inc\v222\aisol\workbench.bat" -cmd "C:\Program Files\ANSYS Inc\v222\aisol\bin\winx64\AqwaReader.exe" --Type 2
 
 type:
-  preprocess: False
-  analysis: False
-  results: True
+  preprocess: false
+  analysis: false
+  results: true
 
 result_method: aqwareader # lis
 
@@ -17,9 +19,9 @@ result_method: aqwareader # lis
 result:
   - label: cog
     category: equilibrium
-    save_csv: True
+    save_csv: true
     inject_into:
-      flag: True
+      flag: true
       filename: results/aqr_moorings.xlsx
       sheetname: cog
     structure: 1
@@ -28,13 +30,13 @@ result:
         first_level: [1] # Motion Analysis Time History
         second_level: [1] # Structure
         third_level: [1] # COG
-        fourth_level: NULL # Default DOFs
+        fourth_level: null # Default DOFs
 
   - label: moorings
     category: equilibrium
-    save_csv: True
+    save_csv: true
     inject_into:
-      flag: True
+      flag: true
       filename: results/aqr_moorings.xlsx
       sheetname: moorings
     structure: 1
@@ -46,20 +48,20 @@ result:
         fourth_level: [1, 2, 3, 4, 5, 6] # DOFs
 
 file_management:
-  flag: True
+  flag: true
   update_unfinished:
-    flag: False
+    flag: false
 
   files:
     files_in_current_directory:
-      flag: False
-      auto_read: True
+      flag: false
+      auto_read: true
       directory: 100mph
-      filename_pattern: NULL
+      filename_pattern: null
 
 default:
   log_level: DEBUG
   config:
     overwrite:
-      output: True
-    cfg_sensitivities: False
+      output: true
+    cfg_sensitivities: false

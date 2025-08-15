@@ -1,33 +1,37 @@
-basename: aqwa
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA MES files configuration"
 
 software:
   version: []
 
 mes:
-  flag: True
+  flag: true
 
 type:
-  preprocess: False
-  analysis: False
-  results: False
+  preprocess: false
+  analysis: false
+  results: false
 
 file_management:
-  flag: True
+  flag: true
   update_unfinished:
-    flag: False
+    flag: false
 
   files:
     files_in_current_directory:
-      flag: False
-      auto_read: True
+      flag: false
+      auto_read: true
       directory: output/mes
       file_extensions: [MES]
-      filename_pattern: NULL
-    output_directory: NULL
+      filename_pattern: null
+    output_directory: null
 
 default:
   log_level: DEBUG
   config:
     overwrite:
-      output: True
-    cfg_sensitivities: False
+      output: true
+    cfg_sensitivities: false

@@ -1,12 +1,16 @@
-basename: aqwa
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA mooring forces LIS configuration"
 
 software:
   version: []
 
 type:
-  preprocess: False
-  analysis: False
-  results: True
+  preprocess: false
+  analysis: false
+  results: true
 
 result_method: lis # aqwareader
 
@@ -15,19 +19,19 @@ result:
     file_extension: LIS
     search_cfg:
       start:
-        line_number: NULL
+        line_number: null
         key_words: [M O O R I N G   F O R C E S   A N D   S T I F F N E S S]
         occurrence: 1
         transform: { scale: 1, shift: 0 }
       end:
-        line_number: NULL
+        line_number: null
         key_words: [FINISH DATE]
         occurrence: 1
         transform: { scale: 1, shift: -2 }
 
       data_extraction:
         key_words: [M O O R I N G   F O R C E S   A N D   S T I F F N E S S]
-        occurrence: NULL
+        occurrence: null
         header:
           columns:
             [
@@ -56,27 +60,27 @@ result:
             shift: 5
 
     inject_into:
-      flag: True
+      flag: true
       filename: output/aqwa_mooring.xlsx
       sheetname: mooring
 
 file_management:
-  flag: True
+  flag: true
   update_unfinished:
-    flag: False
+    flag: false
 
   files:
     files_in_current_directory:
-      flag: False
-      auto_read: True
+      flag: false
+      auto_read: true
       directory: output/lis
       file_extensions: [LIS]
       filename_pattern: LD_100MPH000WD_
-    output_directory: NULL
+    output_directory: null
 
 default:
   log_level: DEBUG
   config:
     overwrite:
-      output: True
-    cfg_sensitivities: False
+      output: true
+    cfg_sensitivities: false

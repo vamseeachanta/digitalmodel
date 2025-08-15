@@ -1,12 +1,16 @@
-basename: aqwa
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA deck preprocessing configuration"
 
 software:
   version: []
 
 type:
-  preprocess: True
-  analysis: False
-  results: False
+  preprocess: true
+  analysis: false
+  results: false
 
 pre_process_settings:
   file_extension: dat
@@ -23,7 +27,7 @@ inputs:
       category: 4
       element_type: PMAS
       raw: [{ node: 98000, Ixx: 8.083E+09, Iyy: 1.371E+11, Izz: 1.381E+11 }]
-  - file_prefix: NULL
+  - file_prefix: null
     file_extension: deck
     data:
       category: 6
@@ -63,7 +67,7 @@ inputs:
               40,
             ],
         }
-  - file_prefix: NULL
+  - file_prefix: null
     file_extension: deck
     data:
       element_type: FIDP
@@ -189,7 +193,7 @@ inputs:
       category: 7
       raw: { added_damping: { rxx: 1000, ryy: -70038440000 } }
 
-  - file_prefix: NULL
+  - file_prefix: null
     file_extension: deck
     data:
       element_type: NRNM
@@ -197,21 +201,21 @@ inputs:
       raw: { structure: 1, nodes: [99800, 99801, 99802, 99803, 99804, 99805] }
 
 file_management:
-  flag: True
+  flag: true
   update_unfinished:
-    flag: False
+    flag: false
 
   files:
     files_in_current_directory:
-      flag: False
-      auto_read: True
+      flag: false
+      auto_read: true
       directory: output/lis
-      filename_pattern: NULL
+      filename_pattern: null
     output_directory: results
 
 default:
   log_level: DEBUG
   config:
     overwrite:
-      output: True
-    cfg_sensitivities: False
+      output: true
+    cfg_sensitivities: false

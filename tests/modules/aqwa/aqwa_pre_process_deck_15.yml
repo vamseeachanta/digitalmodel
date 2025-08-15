@@ -1,12 +1,16 @@
-basename: aqwa
+meta:
+  library: digitalmodel
+  basename: aqwa
+  version: "1.0.0"
+  description: "AQWA deck preprocessing configuration (15)"
 
 software:
   version: []
 
 type:
-  preprocess: True
-  analysis: False
-  results: False
+  preprocess: true
+  analysis: false
+  results: false
 
 pre_process_settings:
   file_extension: dat
@@ -21,21 +25,21 @@ inputs:
         filename_pattern: D_NOL_F2L95_EHHWL_d_*_cog.csv
 
 file_management:
-  flag: True
+  flag: true
   update_unfinished:
-    flag: False
+    flag: false
 
   files:
     files_in_current_directory:
-      flag: False
-      auto_read: True
+      flag: false
+      auto_read: true
       directory: output/lis
-      filename_pattern: NULL
+      filename_pattern: null
     output_directory: results
 
 default:
   log_level: DEBUG
   config:
     overwrite:
-      output: True
-    cfg_sensitivities: False
+      output: true
+    cfg_sensitivities: false
