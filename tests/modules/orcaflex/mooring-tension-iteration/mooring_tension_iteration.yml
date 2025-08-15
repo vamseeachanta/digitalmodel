@@ -1,16 +1,33 @@
 meta:
   library: digitalmodel
   basename: orcaflex
+  version: "1.0.0"
+  description: "OrcaFlex mooring tension iteration configuration"
 
 default:
   log_level: INFO
   config:
     overwrite:
       output: True
-  unit:
+  units:
+    # Force and tension units
     pretension: kN
+    force: kN
+    tension: kN
+    effective_tension: kN
+    # Length and distance units
     coordinates: m
     length: m
+    perturbation: m
+    # Stiffness units
+    stiffness: kN
+    EA: kN
+    # Additional standard units
+    pressure: psi
+    temperature: degC
+    angle: deg
+    time: s
+    percentage: "%"
 
 orcaflex:
   preprocess:

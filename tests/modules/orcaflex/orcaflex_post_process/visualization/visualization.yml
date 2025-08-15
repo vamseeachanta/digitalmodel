@@ -1,0 +1,105 @@
+# OrcaFlex Visualization Configuration
+# Standardized according to .agent-os/standards/input-file-architecture.md
+
+meta:
+  library: digitalmodel
+  basename: orcaflex_post_process
+  version: "1.0.0"
+  description: "OrcaFlex visualization post-processing configuration"
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  units:
+    # Forces and moments
+    effective_tension: kN
+    bend_moment: kNm
+    force: kN
+    # Length
+    length: m
+    arc_length: m
+    # Time
+    time: s
+    # Angles
+    angle: deg
+
+orcaflex:
+  analysis:
+    static: False
+    simulation: False
+    iterate:
+      flag: False
+    save_sim: False
+    save_dat: False
+
+  postprocess:
+    visualization:
+      flag: True
+    summary:
+      flag: False
+      add_minimum_to_summary: True
+      add_maximum_to_summary: True
+      add_mean_to_summary: True
+    range_graph:
+      flag: False
+      add_effective_tension_to_cfg: False
+    time_series:
+      flag: False
+      histogram: True
+      summation: True
+    cummulative_histograms:
+      flag: False
+    rain_flow:
+      bins: 10
+      range:
+        - 0
+        - 10
+
+visualization_settings:
+  label: ld_6_7_8
+  individual: True
+  combined: False #TODO to be coded
+  hide_items: []
+  add_items: [Umbilical, uta2-deep]
+  views: [elevation, plan]
+  tdp_line:
+    flag: False
+    Name: Umbilical
+  viewparams:
+    elevation:
+      # RelativeToObject: Global
+      ViewCentre: [0, 500, -350]
+      ViewSize: 1700
+      DrawViewAxes: False
+      DrawGlobalAxes: False
+      DrawScaleBar: False
+      ViewAzimuth: 360
+      ViewElevation: 0
+      ViewGamma: 0
+      Height: 1425
+      Width: 892
+      SeaSurfacePenStyle: Solid
+    plan:
+      RelativeToObject: Vessel1
+      ViewCentre: [125, 500, -350]
+      ViewSize: 1500
+      DrawViewAxes: False
+      DrawGlobalAxes: False
+      DrawScaleBar: False
+      ViewAzimuth: 90
+      ViewElevation: 90
+      ViewGamma: 90
+      Height: 1425
+      Width: 892
+
+file_management:
+  flag: True
+  input_directory: ./  # Current directory
+  output_directory: ./results
+  
+  input_files:
+    yml:
+      - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test1.sim
+      # - src/digitalmodel/tests/test_data/orcaflex_post_process/orcaflex_test2.sim
