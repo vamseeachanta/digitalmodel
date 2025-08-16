@@ -24,8 +24,14 @@
       "Bash(blender:*)",
       "Bash(timeout:*)",
       "Bash(chmod:*)",
-      "Bash(PYTHONPATH=/mnt/github/github/digitalmodel/src python .agent-os/commands/test-automation.py --help)"
+      "Bash(PYTHONPATH=/mnt/github/github/digitalmodel/src python .agent-os/commands/test-automation.py --help)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(uv:*)",
+      "Bash(pip install:*)",
+      "Bash(sed:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }
