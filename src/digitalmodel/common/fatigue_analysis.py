@@ -163,6 +163,6 @@ class FatigueAnalysis:
         return default_cfg
 
     def get_rainflow_from_timetrace(self, timetrace):
-        rainflow_df, rainflow_dict = tsa.get_rainflow_count_from_time_series(timetrace)
+        rainflow_df, rainflow_dict = tsa.count_cycles(timetrace)
 
         return rainflow_df, rainflow_dict

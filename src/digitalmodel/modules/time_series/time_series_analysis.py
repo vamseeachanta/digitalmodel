@@ -6,9 +6,9 @@ import logging
 from assetutilities.common.update_deep import update_deep_dictionary
 
 # Reader imports
-from digitalmodel.modules.time_series.time_series_components import TimeSeriesComponents
+from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents
 
-tca = TimeSeriesComponents()
+tca = TimeSeriesComponentsAdapter()
 
 
 class TimeSeriesAnalysis:
@@ -23,14 +23,14 @@ class TimeSeriesAnalysis:
         if cfg["analysis"]["basic"]["sample_fft"]:
             sig_fft, filtered_signal = tca.sample_fft(cfg)
 
-        if cfg["analysis"]["basic"]["sample_window_average_fft"]:
-            sig_fft, filtered_signal = tca.sample_window_average_fft(cfg)
+        if cfg["analysis"]["basic"]["sample_window_averaged_fft"]:
+            sig_fft, filtered_signal = tca.sample_window_averaged_fft(cfg)
 
-        if cfg["analysis"]["basic"]["window_average_fft"]:
-            tca.window_average_fft(cfg)
+        if cfg["analysis"]["basic"]["window_averaged_fft"]:
+            tca.window_averaged_fft(cfg)
 
         if cfg["analysis"]["basic"]["rainflow"]:
-            rainflow_df, rainflow_dict = tca.get_rainflow_count_from_time_series(
+            rainflow_df, rainflow_dict = tca.count_cycles(
                 time_series
             )
 

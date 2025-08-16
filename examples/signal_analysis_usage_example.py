@@ -360,15 +360,15 @@ def example_6_backward_compatibility():
     
     # Use legacy methods
     print("\n1. Legacy rainflow counting:")
-    cycles_df, cycles_dict = adapter.get_rainflow_count_from_time_series(signal)
+    cycles_df, cycles_dict = adapter.count_cycles(signal)
     print(f"   Cycles found: {len(cycles_df)}")
     
     print("\n2. Legacy FFT analysis:")
-    fft_result = adapter.window_average_fft(legacy_cfg, signal, time_step=0.01)
+    fft_result = adapter.window_averaged_fft(legacy_cfg, signal, time_step=0.01)
     print(f"   FFT bins: {len(fft_result)}")
     
     print("\n3. Legacy filtering:")
-    filtered_fft = adapter.get_filtered_fft(legacy_cfg, fft_result)
+    filtered_fft = adapter.filter_spectrum(legacy_cfg, fft_result)
     print(f"   Filtered bins: {len(filtered_fft)}")
     
     print("\n[OK] Legacy code works with new module via adapter")

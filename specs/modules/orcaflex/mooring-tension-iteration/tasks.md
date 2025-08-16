@@ -1,522 +1,484 @@
 # Tasks: OrcaFlex Mooring Tension Iteration System
 
 > **Project Overview**  
-> Total Estimated Effort: 156 hours (4 person-months)  
-> Minimum Viable Product: 68 hours (1.5 person-months)  
-> Development Phases: 3 phases over 5 weeks
+> Phase 1 MVP (Semi-Automated): 40 hours (1 week)  
+> Phase 2 (Fully Automated): 68 hours (1.5 weeks additional)  
+> Phase 3 (Advanced): 48 hours (1 week additional)  
+> Development Approach: Progressive automation starting with manual workflow  
+> **Testing Focus**: Strong test ecosystem using real project data
 
 ---
 
-## Phase 1: Foundation and Core Algorithm (2 weeks)
+## Phase 1: Semi-Automated Workflow (MVP - 1 week)
 
-### Task 1.1: Project Setup and Configuration Framework
-**Objective**: Establish project structure and configuration management  
-**Effort**: 8 hours  
+### Task 1.1: CSV Parser and Input Handler
+**Objective**: Parse target tension CSVs and handle input data  
+**Effort**: 6 hours  
 **Priority**: High  
 **Dependencies**: None
 
 **Subtasks**:
-- [ ] Create module directory structure following repository pattern
-- [ ] Set up YAML configuration parser with validation
-- [ ] Implement configuration data models and schemas
-- [ ] Create unit tests for configuration management
-- [ ] Document configuration format and examples
+- [ ] Create CSV parser for target tension files
+- [ ] Handle optional EA values (CSV or OrcaFlex extraction)
+- [ ] Parse fender properties if provided
+- [ ] Validate input data completeness
+- [ ] Create comprehensive test fixtures from real data
 
 **Deliverables**:
-- Configuration parser (`IterationConfig` class)
-- YAML schema validation
-- Example configuration files
-- Unit test coverage &gt;90%
+- `CSVParser` class for tension/length targets
+- Input validation framework
+- Test fixtures from actual project data
+- Unit test coverage >95%
+
+**Testing Requirements**:
+- Test with actual CSV files from `fsts_lngc_pretension`
+- Handle malformed CSV gracefully
+- Test EA extraction from both CSV and model
+- Validate against known good inputs
 
 **Definition of Done**:
-- Configuration loads and validates correctly
-- Support for all required parameters (targets, tolerances, limits)
-- Clear error messages for invalid configurations
-- All tests passing
+- Parse all existing CSV formats correctly
+- Handle missing/optional fields appropriately
+- Comprehensive error messages for invalid data
+- All tests passing with real data
 
 ---
 
-### Task 1.2: OrcaFlex Model Interface
-**Objective**: Implement OrcaFlex API integration for model manipulation  
-**Effort**: 12 hours  
+### Task 1.2: OrcaFlex Runner Module
+**Objective**: Execute OrcaFlex static analysis via Python API  
+**Effort**: 8 hours  
 **Priority**: High  
 **Dependencies**: Task 1.1  
-**Agent**: OrcaFlex specialist agent
 
 **Subtasks**:
-- [ ] Create OrcaFlex model wrapper class
-- [ ] Implement model validation and setup checks
-- [ ] Build line property extraction and modification methods
-- [ ] Add vessel fixing and static analysis configuration
-- [ ] Create mock API for testing without OrcaFlex license
+- [ ] Create wrapper for running .yml files
+- [ ] Handle .yml to .sim conversion
+- [ ] Manage file paths and output locations
+- [ ] Add vessel 6DOF static analysis setup
+- [ ] Create mock runner for testing without license
 
 **Deliverables**:
-- `OrcaFlexModelInterface` class
-- Model validation framework
-- Mock API for testing
-- Integration tests
+- `OrcaFlexRunner` class
+- File management utilities
+- Mock runner for testing
+- Integration test suite
+
+**Testing Requirements**:
+- Test with actual `fsts*vessel_statics_6dof.yml` files
+- Verify .sim file generation
+- Test file path handling across platforms
+- Mock tests for CI/CD without OrcaFlex
 
 **Definition of Done**:
-- Load and validate OrcaFlex models successfully
-- Extract mooring line properties and current tensions
-- Modify line lengths and execute static analysis
-- Mock API enables testing without commercial license
+- Execute static analysis for all model types
+- Generate .sim files in correct locations
+- Handle errors gracefully with clear messages
+- Mock runner enables full testing
 
 ---
 
-### Task 1.3: Tension Extraction Engine
-**Objective**: Automated extraction of mooring line tensions from static analysis  
-**Effort**: 10 hours  
+### Task 1.3: Result Extractor Module
+**Objective**: Post-process .sim files to extract tensions and forces  
+**Effort**: 8 hours  
 **Priority**: High  
 **Dependencies**: Task 1.2  
-**Agent**: OrcaFlex specialist agent
 
 **Subtasks**:
-- [ ] Implement tension extraction from OrcaFlex results
-- [ ] Add support for different tension types (effective, end forces)
-- [ ] Build tension data validation and quality checks
-- [ ] Create tension history tracking and logging
-- [ ] Handle edge cases and error conditions
+- [ ] Implement `dm_ofx_post_fsts_lngc.yml` equivalent
+- [ ] Extract mooring tensions, line lengths, fender forces
+- [ ] Generate CSV outputs matching current format
+- [ ] Calculate tension differences from targets
+- [ ] Create result validation and quality checks
 
 **Deliverables**:
-- `TensionAnalyzer` class
-- Tension data models
-- Quality validation framework
-- Error handling system
+- `ResultExtractor` class
+- CSV generation utilities
+- Data validation framework
+- Comparison reports
+
+**Testing Requirements**:
+- Test against known good .sim files
+- Verify CSV format matches existing outputs
+- Test extraction of all required quantities
+- Validate calculations against manual checks
 
 **Definition of Done**:
-- Extract tensions from static analysis results
-- Support multiple tension measurement methods
-- Validate tension data quality and consistency
-- Robust error handling for analysis failures
+- Extract all required quantities from .sim files
+- Generate CSVs matching existing format exactly
+- Calculate differences accurately
+- Comprehensive test coverage with real data
 
 ---
 
-### Task 1.4: Basic Newton-Raphson Solver
-**Objective**: Implement single-line tension iteration algorithm  
-**Effort**: 16 hours  
+### Task 1.4: Length Calculator Module
+**Objective**: Calculate new line lengths based on tension differences  
+**Effort**: 10 hours  
 **Priority**: High  
 **Dependencies**: Task 1.3
 
 **Subtasks**:
-- [ ] Implement Newton-Raphson root finding for single parameter
-- [ ] Build convergence criteria checking and validation
-- [ ] Add adaptive step sizing and safety limits
-- [ ] Create iteration history tracking and diagnostics
-- [ ] Implement fallback strategies for convergence failures
+- [ ] Implement ΔL = L/EA × (T_current - T_target) calculation
+- [ ] Handle major governing stiffness selection
+- [ ] Generate includefile YAMLs for line lengths
+- [ ] Add file overwriting with optional backup
+- [ ] Create calculation validation and logging
 
 **Deliverables**:
-- `SingleLineIterator` class
-- Convergence validation framework  
-- Iteration diagnostics system
-- Fallback algorithm implementations
+- `LengthCalculator` class matching `dm_ofx_anal_mooring`
+- Includefile YAML generator
+- Backup management system
+- Calculation test suite
+
+**Testing Requirements**:
+- Test calculations against manual Excel checks
+- Verify includefile format matches existing
+- Test backup and restore functionality
+- Validate against known convergence cases
 
 **Definition of Done**:
-- Converge single mooring line to target tension
-- Achieve ±1% accuracy within 10 iterations
-- Handle non-convergent cases gracefully
-- Comprehensive diagnostic information available
+- Calculate length adjustments correctly
+- Generate includefiles matching existing format
+- Handle file management safely
+- Full test coverage with validation data
 
 ---
 
-### Task 1.5: Line Property Modification System
-**Objective**: Automated adjustment of OrcaFlex line properties  
-**Effort**: 10 hours  
+### Task 1.5: Convergence Reporter
+**Objective**: Report iteration progress and convergence status  
+**Effort**: 6 hours  
 **Priority**: High  
-**Dependencies**: Task 1.2  
-**Agent**: OrcaFlex specialist agent
+**Dependencies**: Tasks 1.3, 1.4  
 
 **Subtasks**:
-- [ ] Implement line length modification with safety limits
-- [ ] Build property backup and restoration system
-- [ ] Add validation for modified line configurations
-- [ ] Create stiffness-based initial estimate calculations
-- [ ] Handle different line types and connection methods
+- [ ] Create convergence checking against tolerance
+- [ ] Generate iteration summary reports
+- [ ] Build comparison tables (current vs target)
+- [ ] Add convergence plots and visualization
+- [ ] Create decision support for manual intervention
 
 **Deliverables**:
-- `LinePropertyManager` class
-- Backup/restore system
-- Property validation framework
-- Stiffness calculation utilities
+- `ConvergenceReporter` class
+- Report generation templates
+- Visualization utilities
+- Decision support outputs
+
+**Testing Requirements**:
+- Test convergence detection accuracy
+- Verify report format and content
+- Test with converging and diverging cases
+- Validate decision recommendations
 
 **Definition of Done**:
-- Modify line lengths safely within physical constraints
-- Backup and restore original properties reliably
-- Validate modified configurations before analysis
-- Support various line types and configurations
+- Accurately detect convergence within tolerance
+- Generate clear, actionable reports
+- Provide visual convergence tracking
+- Support manual go/no-go decisions
 
 ---
 
-### Task 1.6: Phase 1 Integration and Testing
-**Objective**: Integrate Phase 1 components and validate single-line functionality  
+### Task 1.6: Integration Testing and Validation
+**Objective**: End-to-end testing with real project data  
 **Effort**: 8 hours  
 **Priority**: High  
 **Dependencies**: Tasks 1.1-1.5  
-**Agent**: OrcaFlex specialist agent (for validation)
 
 **Subtasks**:
-- [ ] Integrate all Phase 1 components into unified system
-- [ ] Create end-to-end integration tests for single-line iteration
-- [ ] Perform validation against manual calculations
-- [ ] Build performance benchmarks and timing analysis
-- [ ] Create Phase 1 demonstration cases
+- [ ] Create test suite using actual project files
+- [ ] Validate against manual iteration results
+- [ ] Test complete workflow for all vessel configurations
+- [ ] Document validation results and discrepancies
+- [ ] Create regression test baseline
 
 **Deliverables**:
-- Integrated single-line iteration system
-- Validation test results
-- Performance benchmarks
-- Demonstration examples
+- Complete test suite with real data
+- Validation report comparing to manual
+- Test data repository structure
+- CI/CD integration
+
+**Testing Requirements**:
+- Use actual files from `D:\1522\ctr7\orcaflex\rev_a08\base_files`
+- Test all vessel sizes (125km3, 180km3)
+- Test all water levels (hwl, mwl, lwl)
+- Test all berthing sides (pb, sb)
+- Validate convergence within 3-5 iterations
 
 **Definition of Done**:
-- Single-line iteration works end-to-end
-- Results match manual calculations within tolerance
-- Performance meets requirements (&lt;30 seconds)
-- Ready for Phase 2 multi-line extension
+- All real project cases tested
+- Results match manual process within 1%
+- Test suite runs automatically
+- Ready for production use
 
 ---
 
-## Phase 2: Multi-Line System and Advanced Features (2 weeks)
+## Phase 2: Fully Automated Iteration (1.5 weeks)
 
-### Task 2.1: Multi-Dimensional Newton-Raphson Solver
-**Objective**: Extend algorithm to handle multiple mooring lines simultaneously  
-**Effort**: 20 hours  
-**Priority**: High  
-**Dependencies**: Task 1.6
-
-**Subtasks**:
-- [ ] Implement multi-dimensional root finding algorithm
-- [ ] Build Jacobian matrix calculation with finite differences
-- [ ] Add linear system solver for Newton-Raphson updates
-- [ ] Create adaptive perturbation step sizing
-- [ ] Handle singular matrix cases and numerical stability
-
-**Deliverables**:
-- `MultiLineIterator` class
-- Jacobian calculation engine
-- Linear algebra utilities
-- Numerical stability framework
-
-**Definition of Done**:
-- Solve 4+ mooring lines simultaneously
-- Calculate accurate Jacobian matrix for line interactions
-- Maintain numerical stability for ill-conditioned systems
-- Converge within same tolerance as single-line case
-
----
-
-### Task 2.2: Line Interaction Analysis
-**Objective**: Model and account for coupling effects between mooring lines  
+### Task 2.1: Automatic Iteration Controller
+**Objective**: Automate the complete iteration loop  
 **Effort**: 12 hours  
 **Priority**: High  
-**Dependencies**: Task 2.1  
-**Agent**: OrcaFlex specialist agent
+**Dependencies**: Phase 1 Complete
 
 **Subtasks**:
-- [ ] Analyze line coupling mechanisms (vessel motion, shared anchors)
-- [ ] Implement interaction effect quantification
-- [ ] Build validation against independent line assumption
-- [ ] Create interaction strength metrics and reporting
-- [ ] Add configuration options for interaction modeling
+- [ ] Implement automatic iteration loop control
+- [ ] Add convergence detection and stopping criteria
+- [ ] Create rollback mechanism for divergence
+- [ ] Handle multiple iteration strategies
+- [ ] Add progress tracking and logging
 
 **Deliverables**:
-- Line interaction analysis framework
-- Coupling strength metrics
-- Validation methodology
-- Configuration options
+- `IterationController` class
+- Convergence management system
+- Rollback functionality
+- Progress tracking
 
-**Definition of Done**:
-- Quantify interaction effects between lines
-- Demonstrate improved accuracy vs. independent assumption
-- Provide interaction strength reporting
-- Enable selective interaction modeling
+**Testing Requirements**:
+- Test with converging cases (3-5 iterations)
+- Test with slow converging cases (8-10 iterations)
+- Test divergence detection and rollback
+- Validate against manual iteration counts
 
 ---
 
-### Task 2.3: Batch Processing Framework
-**Objective**: Support multiple load cases and environmental conditions  
+### Task 2.2: Multi-Line Jacobian Solver
+**Objective**: Implement Jacobian-based optimization  
+**Effort**: 16 hours  
+**Priority**: High  
+**Dependencies**: Task 2.1
+
+**Subtasks**:
+- [ ] Replace simple EA calculation with Jacobian
+- [ ] Implement finite difference sensitivity
+- [ ] Add multi-dimensional Newton-Raphson
+- [ ] Handle line coupling effects
+- [ ] Create adaptive step sizing
+
+**Deliverables**:
+- `JacobianSolver` class
+- Sensitivity analysis framework
+- Coupling effect quantification
+- Performance improvements
+
+**Testing Requirements**:
+- Compare convergence speed vs simple EA
+- Test with strongly coupled systems
+- Validate Jacobian accuracy
+- Benchmark performance improvements
+
+---
+
+### Task 2.3: Batch Processing System
+**Objective**: Process multiple models in parallel  
 **Effort**: 14 hours  
 **Priority**: Medium  
 **Dependencies**: Task 2.1
 
 **Subtasks**:
-- [ ] Design batch configuration format for multiple cases
-- [ ] Implement parallel processing for independent cases
-- [ ] Build progress tracking and status reporting
-- [ ] Add result aggregation and comparative analysis
-- [ ] Create batch execution monitoring and control
+- [ ] Design batch configuration format
+- [ ] Implement parallel processing
+- [ ] Add queue management
+- [ ] Create result aggregation
+- [ ] Build progress monitoring
 
 **Deliverables**:
 - Batch processing engine
-- Multi-case configuration system
-- Progress monitoring interface
-- Comparative analysis tools
+- Parallel execution framework
+- Result aggregation system
+- Progress dashboard
 
-**Definition of Done**:
-- Process multiple load cases automatically
-- Provide real-time progress updates
-- Generate comparative analysis across cases
-- Support cancellation and error recovery
+**Testing Requirements**:
+- Test with 10+ models simultaneously
+- Verify parallel speedup
+- Test failure isolation
+- Validate result aggregation
 
 ---
 
-### Task 2.4: Advanced Convergence Strategies
-**Objective**: Improve convergence reliability for challenging cases  
-**Effort**: 10 hours  
+### Task 2.4: Advanced Reporting
+**Objective**: Professional reports and visualizations  
+**Effort**: 12 hours  
 **Priority**: Medium  
 **Dependencies**: Task 2.1
 
 **Subtasks**:
-- [ ] Implement Aitken's acceleration for faster convergence
-- [ ] Add trust region methods for stability improvement
-- [ ] Build hybrid algorithms with multiple solution strategies
-- [ ] Create convergence failure diagnosis and recovery
-- [ ] Add user-configurable algorithm parameters
+- [ ] Create report templates
+- [ ] Add convergence visualization
+- [ ] Build comparison analysis
+- [ ] Generate Excel outputs
+- [ ] Create PDF reports
 
 **Deliverables**:
-- Convergence acceleration methods
-- Hybrid solution strategies
-- Failure diagnosis system
-- Parameter configuration interface
-
-**Definition of Done**:
-- Improve convergence speed by 30% for well-behaved cases
-- Increase success rate to &gt;95% for typical configurations
-- Provide clear failure diagnosis and recovery suggestions
-- Enable user customization of algorithm behavior
-
----
-
-### Task 2.5: Professional Reporting System
-**Objective**: Generate comprehensive analysis reports and visualizations  
-**Effort**: 16 hours  
-**Priority**: Medium  
-**Dependencies**: Task 2.1
-
-**Subtasks**:
-- [ ] Design professional report templates and formats
-- [ ] Implement convergence history visualization (plots)
-- [ ] Build before/after tension comparison tables
-- [ ] Add statistical analysis and confidence metrics
-- [ ] Create export capabilities (PDF, Excel, CSV)
-
-**Deliverables**:
-- Report generation engine
-- Visualization components
+- Report generation system
+- Visualization library
 - Export utilities
 - Template system
 
-**Definition of Done**:
-- Generate publication-quality reports
-- Include convergence plots and statistical analysis  
-- Export in multiple formats for different audiences
-- Professional formatting suitable for client presentations
-
 ---
 
-### Task 2.6: Phase 2 Integration and Validation
-**Objective**: Integrate multi-line capabilities and validate complex scenarios  
-**Effort**: 12 hours  
-**Priority**: High  
-**Dependencies**: Tasks 2.1-2.5
-
-**Subtasks**:
-- [ ] Integrate all Phase 2 components
-- [ ] Create comprehensive multi-line test cases
-- [ ] Validate against known multi-line solutions
-- [ ] Perform sensitivity analysis and robustness testing
-- [ ] Build Phase 2 demonstration portfolio
-
-**Deliverables**:
-- Complete multi-line iteration system
-- Comprehensive validation results
-- Sensitivity analysis reports
-- Demonstration case library
-
-**Definition of Done**:
-- Multi-line system works reliably across test cases
-- Results validated against independent calculations
-- System handles various mooring configurations
-- Ready for Phase 3 production features
-
----
-
-## Phase 3: Production Features and Deployment (1 week)
-
-### Task 3.1: Comprehensive Error Handling and Validation
-**Objective**: Production-ready error handling and user input validation  
-**Effort**: 12 hours  
-**Priority**: High  
-**Dependencies**: Task 2.6
-
-**Subtasks**:
-- [ ] Implement comprehensive input validation and sanitization
-- [ ] Build detailed error message system with recovery suggestions
-- [ ] Add model compatibility checking and warnings
-- [ ] Create graceful degradation for edge cases
-- [ ] Implement logging and audit trail capabilities
-
-**Deliverables**:
-- Validation framework
-- Error handling system
-- Logging infrastructure
-- Model compatibility checker
-
-**Definition of Done**:
-- Clear, actionable error messages for all failure modes
-- Robust input validation prevents system crashes
-- Comprehensive logging for troubleshooting
-- Graceful handling of edge cases and invalid inputs
-
----
-
-### Task 3.2: Performance Optimization and Monitoring
-**Objective**: Optimize system performance and add monitoring capabilities  
-**Effort**: 10 hours  
-**Priority**: Medium  
-**Dependencies**: Task 2.6
-
-**Subtasks**:
-- [ ] Profile algorithm performance and identify bottlenecks
-- [ ] Implement performance optimizations (caching, parallelization)
-- [ ] Add performance monitoring and metrics collection
-- [ ] Create performance regression testing framework
-- [ ] Build resource usage monitoring (memory, CPU)
-
-**Deliverables**:
-- Performance optimization improvements
-- Monitoring and metrics system
-- Performance test suite
-- Resource usage tracking
-
-**Definition of Done**:
-- 50% performance improvement over Phase 2 baseline
-- Real-time performance monitoring available
-- Performance regression tests prevent degradation
-- Resource usage stays within specified limits
-
----
-
-### Task 3.3: User Interface and Documentation
-**Objective**: Create user-friendly interfaces and comprehensive documentation  
+### Task 2.5: Vessel Position Optimization
+**Objective**: Include vessel position in optimization  
 **Effort**: 14 hours  
-**Priority**: Medium  
-**Dependencies**: Task 3.1
+**Priority**: Low  
+**Dependencies**: Task 2.2
 
 **Subtasks**:
-- [ ] Design and implement command-line interface
-- [ ] Create configuration GUI for non-technical users
-- [ ] Build comprehensive user documentation and tutorials
-- [ ] Add API documentation for programmatic usage
-- [ ] Create quick-start guides and example workflows
+- [ ] Extract vessel 6DOF positions
+- [ ] Calculate position sensitivities
+- [ ] Include in optimization loop
+- [ ] Validate equilibrium positions
+- [ ] Test convergence improvement
 
 **Deliverables**:
-- Command-line interface
-- Configuration GUI
-- User documentation suite
-- API documentation
-- Tutorial materials
-
-**Definition of Done**:
-- Intuitive command-line interface for power users
-- GUI enables non-technical configuration
-- Complete documentation covers all features
-- Tutorials enable rapid user onboarding
+- Position optimization module
+- Enhanced convergence
+- Validation results
 
 ---
 
-### Task 3.4: Quality Assurance and Testing
-**Objective**: Comprehensive testing and validation for production deployment  
-**Effort**: 16 hours  
+## Phase 3: Advanced Features (1 week)
+
+### Task 3.1: scipy.optimize Integration
+**Objective**: Use advanced optimization algorithms  
+**Effort**: 12 hours  
+**Priority**: Medium  
+**Dependencies**: Phase 2 Complete
+
+**Subtasks**:
+- [ ] Integrate scipy.optimize solvers
+- [ ] Implement trust region methods
+- [ ] Add constraint handling
+- [ ] Create solver selection logic
+- [ ] Benchmark performance
+
+**Deliverables**:
+- scipy integration
+- Multiple solver options
+- Performance comparisons
+
+---
+
+### Task 3.2: Failure Recovery System
+**Objective**: Intelligent failure handling  
+**Effort**: 10 hours  
 **Priority**: High  
-**Dependencies**: Tasks 3.1-3.3  
-**Agent**: OrcaFlex specialist agent (for validation)
+**Dependencies**: Phase 2 Complete
 
 **Subtasks**:
-- [ ] Create comprehensive test suite covering all functionality
-- [ ] Perform validation against industry benchmark cases
-- [ ] Execute stress testing with large/complex models
-- [ ] Conduct user acceptance testing with target engineers
-- [ ] Build continuous integration and automated testing
+- [ ] Detect failure patterns
+- [ ] Implement recovery strategies
+- [ ] Add alternative starting points
+- [ ] Create failure diagnostics
+- [ ] Test recovery success rate
 
 **Deliverables**:
-- Complete test suite (&gt;95% coverage)
-- Validation against industry benchmarks
-- Stress test results
-- User acceptance feedback
-- CI/CD pipeline
-
-**Definition of Done**:
-- All tests pass with &gt;95% code coverage
-- Results validated against published industry cases
-- System handles stress tests without failure
-- Positive user acceptance feedback received
+- Failure detection system
+- Recovery strategies
+- Diagnostic reports
 
 ---
 
-### Task 3.5: Deployment and Production Readiness
-**Objective**: Package and deploy production-ready system  
-**Effort**: 8 hours  
-**Priority**: Medium  
-**Dependencies**: Task 3.4
+### Task 3.3: Production Deployment
+**Objective**: Package for production use  
+**Effort**: 12 hours  
+**Priority**: High  
+**Dependencies**: Tasks 3.1, 3.2
 
 **Subtasks**:
-- [ ] Create installation packages and deployment scripts
-- [ ] Build system requirements documentation
-- [ ] Implement license management and usage tracking
-- [ ] Add update mechanisms and version control
-- [ ] Create production deployment procedures
+- [ ] Create installation packages
+- [ ] Write user documentation
+- [ ] Build GUI interface
+- [ ] Add license management
+- [ ] Create training materials
 
 **Deliverables**:
 - Installation packages
-- Deployment documentation
-- License management system
-- Update mechanisms
-- Deployment procedures
-
-**Definition of Done**:
-- One-click installation on target systems
-- Clear system requirements and compatibility matrix
-- License management integrated with organizational systems
-- Automatic updates and version management available
+- User documentation
+- GUI application
+- Training materials
 
 ---
 
-## Task Dependencies and Critical Path
+### Task 3.4: Comprehensive Validation
+**Objective**: Full validation against industry cases  
+**Effort**: 14 hours  
+**Priority**: High  
+**Dependencies**: Task 3.3
 
-### Critical Path Analysis
-**Phase 1 Critical Path**: 1.1 → 1.2 → 1.3 → 1.4 → 1.5 → 1.6 (64 hours)  
-**Phase 2 Critical Path**: 1.6 → 2.1 → 2.2 → 2.6 (44 hours)  
-**Phase 3 Critical Path**: 2.6 → 3.1 → 3.4 → 3.5 (36 hours)
+**Subtasks**:
+- [ ] Validate against published cases
+- [ ] Test with extreme configurations
+- [ ] Perform sensitivity analysis
+- [ ] Document accuracy metrics
+- [ ] Create validation report
 
-**Total Critical Path**: 144 hours (3.6 person-months)
-
-### Parallel Development Opportunities
-- Tasks 1.4 and 1.5 from parallel development after Task 1.3
-- Tasks 2.3, 2.4, and 2.5 from parallel development after Task 2.1
-- Tasks 3.2 and 3.3 from parallel development after Task 3.1
-
-### Risk Mitigation Tasks
-**High Risk**: Tasks 1.4 (algorithm complexity) and 2.1 (multi-dimensional scaling)  
-**Medium Risk**: Tasks 2.2 (line interaction modeling) and 3.4 (validation complexity)  
-**Mitigation**: Add 20% buffer to high-risk tasks, early prototype validation
+**Deliverables**:
+- Validation test suite
+- Accuracy metrics
+- Validation report
+- Certification readiness
 
 ---
 
-## Resource Allocation and Timeline
+## Test Strategy and Data Management
 
-### Staffing Requirements
-**Senior Developer** (1.0 FTE): Algorithm development, mathematical implementation  
-**Software Developer** (0.5 FTE): Infrastructure, testing, user interface  
-**Domain Expert** (0.25 FTE): Validation, requirements, acceptance testing
+### Test Data Repository Structure
+```
+tests/
+├── fixtures/
+│   ├── csv_inputs/          # Real CSV files
+│   ├── orcaflex_models/     # Sample .yml files
+│   ├── sim_outputs/         # Known good .sim files
+│   └── expected_results/    # Validated outputs
+├── unit/                    # Unit tests per module
+├── integration/             # End-to-end tests
+├── validation/              # Comparison with manual
+└── performance/             # Benchmarking tests
+```
 
-### Timeline Summary
-**Week 1-2**: Phase 1 Foundation (Tasks 1.1-1.6)  
-**Week 3-4**: Phase 2 Multi-Line System (Tasks 2.1-2.6)  
-**Week 5**: Phase 3 Production Features (Tasks 3.1-3.5)
+### Test Coverage Requirements
+- **Phase 1**: >95% unit test coverage
+- **Phase 2**: >90% integration test coverage
+- **Phase 3**: >85% overall coverage
+- **Validation**: 100% of real project cases
 
-### Quality Gates
-**End of Phase 1**: Single-line iteration validated against manual calculations  
-**End of Phase 2**: Multi-line system demonstrated on complex mooring configurations  
-**End of Phase 3**: Production system passes full validation and user acceptance testing
+### Continuous Testing
+- Pre-commit hooks for unit tests
+- CI/CD pipeline for full test suite
+- Nightly validation against real data
+- Performance regression testing
 
-**Total Estimated Effort**: 156 hours over 5 weeks with parallel development
+---
+
+## Risk Mitigation
+
+### Technical Risks
+1. **OrcaFlex API changes**: Maintain version compatibility layer
+2. **Convergence failures**: Multiple fallback strategies
+3. **Performance issues**: Parallel processing and caching
+
+### Project Risks
+1. **Scope creep**: Phased approach with clear boundaries
+2. **Testing complexity**: Strong mock framework
+3. **User adoption**: Close collaboration with manual process users
+
+---
+
+## Success Metrics
+
+### Phase 1 Success Criteria
+- Semi-automated process reduces manual effort by 50%
+- All test cases pass with real data
+- User acceptance from current manual operators
+
+### Phase 2 Success Criteria
+- Fully automated process completes in <5 minutes
+- Convergence rate >95% for typical cases
+- Batch processing handles 10+ models
+
+### Phase 3 Success Criteria
+- Advanced algorithms improve convergence by 30%
+- Recovery strategies handle 90% of failures
+- Production deployment with <1% error rate
+
+---
+
+**Total Effort**: 156 hours across 3.5 weeks with strong test coverage throughout

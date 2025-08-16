@@ -43,7 +43,7 @@ def time_series(cfg):
 
     from common.time_series_components import TimeSeriesComponents
 
-    ts = TimeSeriesComponents(cfg)
+    ts = TimeSeriesComponentsAdapter(cfg)
 
     ts.get_raw_data()
 

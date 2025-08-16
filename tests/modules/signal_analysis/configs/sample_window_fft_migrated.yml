@@ -1,0 +1,111 @@
+# Migrated configuration for signal_analysis module
+# Original: tests/modules/time_series/sample_window_fft.yml
+
+meta:
+  library: digitalmodel
+  basename: signal_analysis
+  version: "2.0.0"
+  description: "Migrated window FFT configuration"
+
+# New signal_analysis configuration
+signal_analysis:
+  # Data source configuration
+  data_source:
+    type: csv
+    file_path: results/D_D_F2L95_HWL_100Y_D060_strut_f.csv
+    
+  # Column configuration
+  columns:
+    time_column: time
+    signal_columns:
+      - REACTION AT ARTIC 1_in X direction
+      - REACTION AT ARTIC 2_in X direction
+      - REACTION AT ARTIC 7_in X direction
+      - REACTION AT ARTIC 6_in X direction
+    
+  # Preprocessing (replaces transform)
+  preprocessing:
+    scale_factors:
+      REACTION AT ARTIC 1_in X direction: 1.0194E-04
+      REACTION AT ARTIC 2_in X direction: 1.0194E-04
+      REACTION AT ARTIC 7_in X direction: 1.0194E-04
+      REACTION AT ARTIC 6_in X direction: 1.0194E-04
+    remove_outliers: false
+    detrend: false
+    
+  # Spectral analysis (replaces fft section)
+  spectral_analysis:
+    enabled: true
+    method: window_averaged  # Replaces sample_window_average_fft
+    window_size: 500
+    window_function: hann
+    overlap: 0.5
+    
+    # Filtering configuration
+    filtering:
+      enabled: true
+      type: none  # Options: lowpass, highpass, bandpass, bandstop, none
+      # low_cutoff: null
+      # high_cutoff: null
+      
+    # Peak detection
+    peak_detection:
+      enabled: true
+      method: find_peaks
+      min_height_percentage: 60
+      min_distance_percentage: 50
+      n_peaks: null  # Auto-detect all peaks
+      
+    # Moving average (post-processing)
+    post_processing:
+      moving_average:
+        enabled: false
+        window_size: 4
+        
+  # Fatigue analysis (if needed)
+  fatigue_analysis:
+    enabled: false
+    # sn_standard: DNV
+    # sn_class: F
+    # scf: 1.0
+    # design_life_years: 25
+    
+  # Rainflow counting
+  rainflow_analysis:
+    enabled: false
+    # method: astm
+    # extract_info: true
+    
+  # Statistics
+  statistics:
+    enabled: true
+    compute:
+      - mean
+      - std
+      - rms
+      - peak_to_peak
+      - zero_crossings
+      
+  # Performance options
+  performance:
+    parallel_processing: false  # Single file, no need for parallel
+    chunk_size: null  # Process entire file at once
+    
+  # Output configuration
+  output:
+    directory: results/
+    save_intermediate: true
+    generate_report: true
+    overwrite: true
+    formats:
+      - csv
+      - xlsx
+      
+# Analysis settings (legacy compatibility)
+Analysis:
+  fe_folder: null
+  result_folder: results/
+
+# Default settings
+default:
+  log_level: INFO

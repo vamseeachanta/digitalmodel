@@ -1,8 +1,27 @@
+"""
+DEPRECATED: This module is being replaced by digitalmodel.modules.signal_analysis
+
+Please migrate to the new signal analysis module:
+- RainflowCounter for rainflow counting
+- SpectralAnalyzer for FFT/spectral analysis
+- FatigueDamageCalculator for fatigue calculations
+
+See migration guide: docs/migration/signal_analysis_migration.md
+"""
+
 # Standard library imports
 import array
 import logging
 import math
 import os
+import warnings
+
+# Issue deprecation warning
+warnings.warn(
+    "TimeSeriesComponents is deprecated. Use digitalmodel.modules.signal_analysis instead",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 # Third party imports
 import numpy as np
@@ -32,7 +51,7 @@ class TimeSeriesComponents:
     def __init__(self, cfg=None):
         self.cfg = cfg
 
-    def window_average_fft(self, cfg):
+    def window_averaged_fft(self, cfg):
         """
         Window average fft
         """
@@ -64,7 +83,7 @@ class TimeSeriesComponents:
                     time = df[group_cfg["columns"]["time"]].to_list()
                     time_step = time[1] - time[0]
                     average_fft_df = self.fft_window_analysis(cfg, signal, time_step)
-                    average_fft_df = self.get_filtered_fft(cfg, average_fft_df)
+                    average_fft_df = self.filter_spectrum(cfg, average_fft_df)
                     signal_dict = {"time_trace": signal, "fft": average_fft_df}
                     filtered_signal_dict = None
                     label = group_cfg["label"]
@@ -72,7 +91,7 @@ class TimeSeriesComponents:
                         cfg, signal_dict, filtered_signal_dict, label
                     )
 
-    def sample_window_average_fft(self, cfg):
+    def sample_window_averaged_fft(self, cfg):
         """
         Sample Window average fft
         """
@@ -239,7 +258,7 @@ class TimeSeriesComponents:
             fft_filtered_signal_df,
         )
 
-    def get_filtered_fft(self, cfg, average_fft_df):
+    def filter_spectrum(self, cfg, average_fft_df):
         cfg_fft = cfg["fft"].copy()
         if cfg_fft.__contains__("filter") and cfg_fft["filter"]["flag"]:
             min_frequency = cfg_fft["filter"].get("min_frequency", None)
@@ -620,7 +639,7 @@ class TimeSeriesComponents:
     #
     #     return average_fft_df
 
-    def get_rainflow_count_from_time_series(self, time_series: array) -> pd.DataFrame:
+    def count_cycles(self, time_series: array) -> pd.DataFrame:
         """
         https://pypi.org/project/rainflow/
         ASTM E1049-85 rainflow cycle counting algorythm for fatigue analysis
