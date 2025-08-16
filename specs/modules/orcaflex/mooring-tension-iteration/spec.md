@@ -74,10 +74,42 @@ $$\max_{i} \left| \frac{T_{current,i} - T_{target,i}}{T_{target,i}} \right| \leq
 
 With default tolerance $\epsilon_{tol} = 0.01$ (1%).
 
-## Reference Implementation Notes
+## Current Manual Process Workflow
 
-### Existing Semi-Automated Approach
-The current `mooring.py` implementation provides a foundation with:
+### Overview
+The existing workflow combines manual OrcaFlex operations with digitalmodel calculations in an iterative process. This specification documents both the current manual approach and the path to automation.
+
+### Manual Iteration Steps
+
+#### Step 1: Input Preparation
+- Load target tensions from CSV: `*_target_mooring_pretension.csv`
+- Target tensions in kN, line lengths optional
+- EA values can be provided or extracted from OrcaFlex model
+- Fender properties from `_target_fender_force.csv` (optional)
+
+#### Step 2: Baseline Analysis
+- Run OrcaFlex static analysis: `fsts*vessel_statics_6dof.yml`
+- Vessel in 6DOF mode for equilibrium position
+- Generates .sim output files
+
+#### Step 3: Result Extraction
+- Execute `dm_ofx_post_fsts_lngc.yml` for post-processing
+- Extracts tensions, line lengths, fender forces to CSV
+- Creates baseline for comparison
+
+#### Step 4: Length Calculation
+- Run `dm_ofx_anal_mooring_*.yml` with digitalmodel
+- Calculates: ΔL = L/EA × (T_current - T_target)
+- Uses major governing stiffness (not combined equivalent)
+- Generates includefile YAMLs (overwritten each iteration)
+
+#### Step 5: Model Update & Iteration
+- Includefiles automatically update OrcaFlex model
+- Re-run static analysis (vessel finds new equilibrium)
+- Manual convergence check via CSV review
+- Repeat until convergence (typically 3-5 iterations)
+
+### Current Implementation Details
 
 1. **EA-Based Length Calculation**:
    ```python
@@ -85,29 +117,73 @@ The current `mooring.py` implementation provides a foundation with:
    new_arc_length = arc_length + sum(delta_length)
    ```
 
-2. **YAML Configuration Structure**:
-   ```yaml
-   mooring:
-     groups:
-       - label: development
-         target_pretension:
-           iterations: 10
-           tolerance: 10  # percentage
-           type: csv
-           filename: pretension_targets.csv
-   ```
+2. **File Management**:
+   - Includefiles overwritten to minimize updates
+   - Occasional manual backups recommended
+   - Results in `fsts_lngc_pretension/results/` folder
 
-3. **Manual Process Limitations**:
-   - Requires manual OrcaFlex execution between iterations
-   - Include file generation for model updates
-   - CSV output for tension analysis results
+3. **Convergence Handling**:
+   - Manual review of CSV outputs
+   - Tolerance typically ±1% of target
+   - Manual rollback if tensions worsen
+   - Option to restart from different initial conditions
 
-### Enhancement Strategy
-This specification automates and enhances the existing approach by:
-- Replacing manual execution with API-driven automation
-- Implementing scipy optimization instead of simple EA calculations
-- Adding Jacobian-based multi-dimensional optimization
-- Providing real-time convergence monitoring
+## Implementation Phases
+
+### Phase 1: Semi-Automated Workflow (MVP)
+**Goal**: Automate calculation steps while maintaining manual control points
+
+#### Components to Implement:
+1. **CSV Parser Module**
+   - Read target tension/length files
+   - Extract EA values from CSV or OrcaFlex models
+   - Validate input data completeness
+
+2. **OrcaFlex Runner Module**
+   - Execute static analysis via Python API
+   - Handle .yml to .sim conversion
+   - Manage file paths and outputs
+
+3. **Result Extractor Module**
+   - Post-process .sim files automatically
+   - Generate CSV outputs matching current format
+   - Calculate tension differences
+
+4. **Length Calculator Module**
+   - Implement ΔL = L/EA × (T_current - T_target)
+   - Generate includefile YAMLs
+   - Handle file overwriting with optional backup
+
+5. **Convergence Reporter**
+   - Compare tensions against targets
+   - Generate iteration summary reports
+   - Flag non-converging cases
+
+#### Manual Steps Retained:
+- Decision to proceed with next iteration
+- Rollback decisions on failure
+- Initial model selection
+- Final validation of results
+
+### Phase 2: Fully Automated Iteration
+**Goal**: Complete automation with intelligent decision making
+
+#### Enhancements:
+- Automatic convergence detection
+- Smart rollback on divergence
+- Jacobian-based optimization (replacing simple EA)
+- Parallel processing for multiple models
+- Vessel position optimization
+
+### Phase 3: Advanced Optimization
+**Goal**: Sophisticated algorithms and robustness
+
+#### Advanced Features:
+- scipy.optimize integration
+- Multi-dimensional Newton-Raphson
+- Adaptive step sizing
+- Convergence acceleration techniques
+- Automated failure recovery strategies
 
 ### Algorithm Implementation
 

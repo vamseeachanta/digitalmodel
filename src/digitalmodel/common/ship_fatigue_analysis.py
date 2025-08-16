@@ -7,7 +7,7 @@ import numpy as np
 
 from assetutilities.common.utilities import add_cwd_to_filename
 from assetutilities.common.data import ReadData
-from digitalmodel.common.fatigue_analysis import FatigueAnalysis
+from digitalmodel.modules.signal_analysis.fatigue import FatigueAnalysis
 
 read_data = ReadData()
 fatigue_analysis = FatigueAnalysis()
