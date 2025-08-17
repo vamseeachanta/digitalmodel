@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, asdict
 import numpy as np
 
-from csv_parser import MooringLineTarget
+from test_implementation.csv_parser import MooringLineTarget
 
 
 @dataclass
