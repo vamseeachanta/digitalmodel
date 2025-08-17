@@ -12,11 +12,18 @@
 - `generate_report()`: Results documentation (extends CSV output format)
 
 #### 2. Tension Calculator (`TensionAnalyzer`)  
-**Purpose**: Interface with OrcaFlex for tension extraction
+**Purpose**: Interface with OrcaFlex for tension extraction via DigitalModel framework
 **Key Methods**:
-- `extract_mooring_tensions()`: Get current line tensions from static analysis
-- `run_static_analysis()`: Execute OrcaFlex static calculation
+- `extract_mooring_tensions()`: Get current line tensions from OrcaFlex result CSV files
+- `run_static_analysis()`: Execute DigitalModel OrcaFlex analysis pipeline
 - `validate_model_state()`: Ensure model readiness for analysis
+- `process_sim_results()`: Post-process .sim files to extract real tension values
+
+**CRITICAL IMPLEMENTATION REQUIREMENTS**:
+- **MUST execute actual OrcaFlex analysis**: Use `python -m digitalmodel.orcaflex config.yml --input model.yml`
+- **MUST process real .sim files**: Extract tensions from `results/*Line_var_data.csv`
+- **MUST update includefiles**: Modify `includefile_*_mooring_line_length.yml` before each run
+- **MUST backup results**: Preserve previous analysis results between iterations
 
 #### 3. Line Modifier (`LinePropertyManager`)
 **Purpose**: Automated adjustment of mooring line properties
@@ -31,6 +38,53 @@
 - `target_tensions`: Dictionary mapping line names to target values
 - `convergence_tolerance`: Acceptable deviation from targets (default: 1%)
 - `max_iterations`: Safety limit for iteration count (default: 10)
+
+### Real OrcaFlex Workflow Implementation
+
+#### CRITICAL: Actual OrcaFlex Execution Required
+**The iteration system MUST execute real OrcaFlex analysis, not simulated physics.**
+
+#### Workflow Steps (Per Iteration)
+1. **Update Includefile**
+   - Modify `includefile_*_mooring_line_length.yml` with new `ArcLength[1]` values
+   - Backup previous includefile with timestamp
+   - Ensure proper YAML formatting
+
+2. **Execute OrcaFlex Analysis**
+   - Run: `python -m digitalmodel.orcaflex dm_ofx_anal_mooring_125km3_pb.yml --input model.yml`
+   - Backup existing `results/` folder before analysis
+   - Monitor for analysis completion (typical 25-40 seconds)
+   - Handle timeout scenarios (600 second limit)
+
+3. **Post-Process Results**
+   - Locate: `results/*Line_var_data.csv` (most recent file)
+   - Extract `Effective tension` column for each mooring line
+   - Match ObjectName to target line identifiers (Line01, Line02, etc.)
+   - Handle missing data with appropriate fallbacks
+
+4. **Iteration Control**
+   - Calculate tension errors vs targets
+   - Apply Newton-Raphson length adjustments with damping (0.8)
+   - Check convergence criteria (1% tolerance)
+   - Continue or terminate based on convergence/max iterations
+
+#### File Structure Requirements
+```
+base_files/fsts_lngc_pretension/
+├── fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof.yml  # Main model
+├── dm_ofx_anal_mooring_125km3_pb.yml                     # Analysis config  
+├── includefile_*_mooring_line_length.yml                 # Line length data
+├── 125km3_l000_pb_target_mooring_pretension.csv          # Target tensions
+└── results/                                              # OrcaFlex outputs
+    └── *Line_var_data.csv                               # Tension results
+```
+
+#### Common Implementation Errors to Avoid
+- **❌ Simulating OrcaFlex**: Never use mathematical models instead of real analysis
+- **❌ Ignoring .sim files**: Must process actual OrcaFlex result files
+- **❌ Missing includefile updates**: Line lengths must be updated before each run
+- **❌ Incorrect tension extraction**: Use 'Effective tension' column, not 'End force'
+- **❌ File conflicts**: Backup existing results to prevent overwrites
 
 ### Mathematical Framework
 

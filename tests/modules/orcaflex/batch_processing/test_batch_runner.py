@@ -19,7 +19,7 @@ import os
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / "src"))
 
-from modules.orcaflex.mooring_tension_iteration.batch_processing.orcaflex_batch_runner import (
+from modules.orcaflex.batch_processing.orcaflex_batch_runner import (
     OrcaFlexBatchRunner
 )
 
