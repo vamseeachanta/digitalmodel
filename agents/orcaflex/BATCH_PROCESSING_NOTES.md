@@ -44,6 +44,8 @@ Environment:
 
 ### Batch Processing Implementation
 
+**Location**: `src/modules/orcaflex/batch_processing/` (NOT under mooring_tension_iteration)
+
 #### File Type Detection
 - Batch runner includes `FileTypeDetector` for automatic classification
 - Validates model files before processing

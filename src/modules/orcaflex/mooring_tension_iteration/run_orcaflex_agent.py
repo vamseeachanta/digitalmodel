@@ -18,7 +18,7 @@ project_root = Path(__file__).parent.parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import the batch runner
-from src.modules.orcaflex.mooring_tension_iteration.batch_processing.orcaflex_batch_runner import (
+from src.modules.orcaflex.batch_processing.orcaflex_batch_runner import (
     OrcaFlexBatchRunner
 )
 
