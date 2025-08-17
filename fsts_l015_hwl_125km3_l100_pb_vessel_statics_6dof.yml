@@ -1,0 +1,64 @@
+batch_info:
+  name: FSTS LNGC Pretension Analysis - HWL 125km3 L100
+  description: Batch processing for FSTS mooring tension iteration with 6DOF vessel statics
+  base_directory: ./tests/modules/orcaflex/orcaflex_analysis/moorings/pretension/fsts_lngc
+  output_directory: ./output/batch_results
+  timestamp: '2025-01-17'
+
+simulation_settings:
+  analysis_type: statics
+  calculate_statics: true
+  save_simulation_file: true
+  save_results: true
+  continue_on_error: true
+  parallel_processing: true
+  max_workers: 4
+
+output_settings:
+  save_csv: true
+  save_simulation: true
+  save_sim_in_model_directory: true  # Save .sim files in same directory as model files
+  csv_output_folder: csv
+  sim_output_folder: sim  # This is ignored when save_sim_in_model_directory is true
+  include_summary_report: true
+
+models:
+  - model_file: 01_qa/6dof/fsts_l095_mwl_125km3_l000_pb.dat
+    description: FSTS L095 MWL 125km3 L000 PB with 6DOF
+    includefile: 01_qa/6dof/includefile_line_defintion_fsts_l095_mwl_125km3_l000_pb_pretension.yml
+    target_tensions: 01_qa/6dof/fsts_l095_mwl_125km3_l000_pb_pretension.csv
+  
+  - model_file: 01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb.dat
+    description: FSTS L095 MWL 125km3 L000 PB with No DOF
+    includefile: 01_qa/dof_none/includefile_line_defintion_fsts_l095_mwl_125km3_l000_pb_pretension.yml
+    target_tensions: 01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_pretension.csv
+
+mooring_parameters:
+  lines_to_check:
+    - Line01
+    - Line02
+    - Line03
+    - Line04
+    - Line05
+    - Line06
+    - Line07
+    - Line08
+    - Line09
+    - Line10
+    - Line11
+    - Line12
+    - Line13
+    - Line14
+    - Line15
+    - Line16
+    - Line17
+    - Line18
+  tension_tolerance: 0.01
+  section_to_modify: 2
+
+processing_options:
+  max_iterations: 10
+  damping_factor: 0.7
+  create_backup: true
+  generate_report: true
+  log_level: INFO

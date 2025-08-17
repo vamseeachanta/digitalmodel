@@ -486,3 +486,5 @@ View all available commands:
 
 - to memorize that always run the test before telling the user about the enhancement or code addition or successful feature or enhacement  happened. all your tests are seriously error prone and take a long time. You should always do this using a parallel process concept in the background. when the Ai agent model improves, you can revisit this memory item
 - also, always check modules and scope of repository to ensure the propagate command does not criss cross modules. Only the high level geeneric items should be propagated without repository specific information. rewrite this appropraitely
+- always utilize existing repo environment
+- orcaflex module agent should note that always run actual license test when license is available.

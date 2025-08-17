@@ -11,7 +11,7 @@ import logging
 from pathlib import Path
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parents[4] / 'src'))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 from digitalmodel.engine import engine
 

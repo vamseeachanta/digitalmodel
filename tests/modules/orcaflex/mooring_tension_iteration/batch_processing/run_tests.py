@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / 'src'))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / "src"))
 
 # Import test module
 from test_batch_runner import suite
