@@ -255,7 +255,9 @@ class OrcaFlexBatchRunner:
     def run_parallel_batch(self) -> List[Dict[str, Any]]:
         """Run batch processing in parallel using ThreadPoolExecutor."""
         results = []
-        max_workers = min(multiprocessing.cpu_count(), 4)  # Limit to 4 concurrent OrcaFlex instances
+        # Get max_workers from config, default to 30 if not specified
+        config_max_workers = self.config.get('simulation_settings', {}).get('max_workers', 30)
+        max_workers = min(multiprocessing.cpu_count(), config_max_workers)
         
         logger.info(f"Running parallel processing with {max_workers} workers")
         
@@ -390,7 +392,15 @@ class OrcaFlexBatchRunner:
         # Create output paths
         model_name = Path(model_config['model_file']).stem
         csv_output = self.csv_dir / f"{model_name}_results.csv"
-        sim_output = self.sim_dir / f"{model_name}.sim"
+        
+        # Save .sim file in the same directory as the model file
+        save_sim_in_model_dir = self.config.get('output_settings', {}).get('save_sim_in_model_directory', False)
+        if save_sim_in_model_dir:
+            # Save .sim in the same directory as the model
+            sim_output = model_path.parent / f"{model_name}.sim"
+        else:
+            # Save .sim in the configured output directory
+            sim_output = self.sim_dir / f"{model_name}.sim"
         
         if self.mock_mode:
             # Mock mode for testing

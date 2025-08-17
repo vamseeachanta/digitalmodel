@@ -211,12 +211,9 @@ docs = [
 "Bug Tracker" = "https://github.com/username/digitalmodel/issues"
 "Documentation" = "https://github.com/username/digitalmodel#readme"
 
-[tool.setuptools]
-packages = ["src"]
-
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["*"]
+include = ["src*"]
 exclude = ["tests*", "docs*"]
 
 [tool.black]

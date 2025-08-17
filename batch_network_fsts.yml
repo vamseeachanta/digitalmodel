@@ -1,0 +1,57 @@
+batch_info:
+  name: FSTS LNGC Network File Processing
+  description: Batch processing for network OrcaFlex model - fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof
+  base_directory: //Acma-ansys05/d/1522/ctr7/orcaflex/rev_a08/base_files/fsts_lngc_pretension
+  output_directory: ./output
+  timestamp: '2025-01-17'
+
+simulation_settings:
+  analysis_type: statics
+  calculate_statics: true
+  save_simulation_file: true
+  save_results: true
+  continue_on_error: true
+  parallel_processing: false
+  max_workers: 4
+
+output_settings:
+  save_csv: true
+  save_simulation: true
+  save_sim_in_model_directory: true  # Save .sim files in same directory as model files
+  csv_output_folder: csv
+  sim_output_folder: sim
+  include_summary_report: true
+
+models:
+  - model_file: fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof.yml
+    description: FSTS L015 HWL 125km3 L100 PB Vessel Statics 6DOF
+
+mooring_parameters:
+  lines_to_check:
+    - Line01
+    - Line02
+    - Line03
+    - Line04
+    - Line05
+    - Line06
+    - Line07
+    - Line08
+    - Line09
+    - Line10
+    - Line11
+    - Line12
+    - Line13
+    - Line14
+    - Line15
+    - Line16
+    - Line17
+    - Line18
+  tension_tolerance: 0.01
+  section_to_modify: 2
+
+processing_options:
+  max_iterations: 10
+  damping_factor: 0.7
+  create_backup: true
+  generate_report: true
+  log_level: INFO
