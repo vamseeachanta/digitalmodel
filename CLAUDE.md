@@ -33,6 +33,20 @@ Create as slash command? (Recommended)
 - `/modernize-deps` - Update dependency management
 - `/organize-structure` - Organize project structure
 
+### 📢 PENDING PROPAGATION (Generic Components Only):
+- **Background Test Runner** - Ready for `/propagate-commands`
+  - Generic test runner for all repositories
+  - Parallel test execution with caching
+  - Background thread processing
+  - See: `.agent-os/commands/GENERIC_PROPAGATION_NOTES.md`
+  
+### ⚠️ REPOSITORY-SPECIFIC (Do NOT Propagate):
+- **OrcaFlex Module** - DigitalModel repository ONLY
+  - All files under `src/modules/orcaflex/`
+  - OrcaFlex-specific batch processing
+  - Mooring tension iteration logic
+  - See: `src/modules/orcaflex/mooring_tension_iteration/PROPAGATION_NOTES.md`
+
 ### Creating New Commands:
 1. Implement in `.agent-os/commands/`
 2. Test locally with `./slash_commands.py /command-name`
@@ -116,9 +130,44 @@ When guidance conflicts:
 - **Configuration-Driven**: YAML files drive most analysis workflows
 - **Units**: SI units internally with proper conversions at boundaries
 
+## 🤖 MANDATORY: Module Agent Usage
+
+**CRITICAL DIRECTIVE**: ALL module work MUST use the corresponding module agent:
+
+### Module Agent Requirements
+1. **Check for Existing Agent**: ALWAYS check `agents/<module>/` directory first
+2. **Use Existing Agent**: If agent exists, USE IT for all module operations
+3. **Create Agent First**: If no agent exists, CREATE IT before any module work
+4. **Agent Integration**: All `/create-spec` commands MUST integrate with module agent
+
+### Available Module Agents
+- **OrcaFlex Agent** (`agents/orcaflex/`): Hydrodynamic analysis, mooring systems, offshore engineering
+- **AQWA Agent** (`agents/aqwa/`): Hydrodynamic diffraction analysis
+- **CAD Engineering Agent** (`agents/cad-engineering-specialist/`): CAD modeling and design
+
+### Module Agent Benefits
+- Domain expertise and standards compliance
+- Automated workflows and batch processing  
+- Consistent implementation patterns
+- Knowledge preservation and reuse
+- Integration with OrcaFlex/AQWA/ANSYS APIs
+
+### Example Usage
+```bash
+# Show OrcaFlex agent capabilities
+python run_orcaflex_agent.py --show-capabilities
+
+# Run batch analysis with agent
+python run_orcaflex_agent.py --batch-config batch_run_all_fsts.yml
+
+# Create new module agent
+python tools/create-module-agent.py <module-name>
+```
+
 ## Available Commands
 
 - **Create-Module-Agent:** Available via `python tools/create-module-agent.py` command
+- **Run-OrcaFlex-Agent:** Available via `python run_orcaflex_agent.py` command
 
 ## Enhanced Features Available
 
@@ -147,7 +196,8 @@ python tools/execute-tasks.py @specs/modules/module-name/spec-folder/tasks.md
 2. **Prompt Documentation**: Create `prompt.md` with complete prompt history and curated reuse prompt
 3. **Template Compliance**: Follow all established templates and patterns
 4. **Module Integration**: Update relevant module READMEs and cross-references
-5. **Markdown Compatibility**: Ensure ALL generated documents use markdown-compatible characters:
+5. **USE MODULE AGENTS**: 🚨 **CRITICAL** - All module work MUST utilize the corresponding module agent from `agents/<module>/` directory. If a module agent doesn't exist, create one FIRST before proceeding with the spec. The agent provides domain expertise, standards compliance, and workflow automation.
+6. **Markdown Compatibility**: Ensure ALL generated documents use markdown-compatible characters:
    - Escape angle brackets: `&lt;` `&gt;` instead of `<` `>`
    - Escape ampersands in text: `&amp;` instead of `&`
    - Escape Windows paths: `D:\\path\\file` instead of `D:\path\file`
@@ -433,3 +483,6 @@ View all available commands:
 
 ---
 *This is MANDATORY and overrides any local command implementations*
+
+- to memorize that always run the test before telling the user about the enhancement or code addition or successful feature or enhacement  happened. all your tests are seriously error prone and take a long time. You should always do this using a parallel process concept in the background. when the Ai agent model improves, you can revisit this memory item
+- also, always check modules and scope of repository to ensure the propagate command does not criss cross modules. Only the high level geeneric items should be propagated without repository specific information. rewrite this appropraitely
