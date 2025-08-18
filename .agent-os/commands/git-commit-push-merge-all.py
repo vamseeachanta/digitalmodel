@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-DEPRECATED: This command has been replaced by /git trunk
+DEPRECATED: This command has been replaced by /git commit
 
 This wrapper provides backward compatibility.
-Please update your workflow to use: /git trunk
+Please update your workflow to use: /git commit
 """
 
 import sys
 import subprocess
 
-print("⚠️  DEPRECATED: Use '/git trunk' instead")
+print("⚠️  DEPRECATED: Use '/git commit' instead")
 print("   Redirecting to new command...\n")
 
 # Convert old command to new format
@@ -17,15 +17,15 @@ args = sys.argv[1:]
 new_args = ["/git"]
 
 # Add subcommand based on old command name
-if "sync-all" in "git_trunk_flow":
+if "sync-all" in "git-commit-push-merge-all":
     new_args.extend(["sync", "--all"])
-elif "sync" in "git_trunk_flow":
+elif "sync" in "git-commit-push-merge-all":
     new_args.append("sync")
-elif "trunk-flow" in "git_trunk_flow":
+elif "trunk-flow" in "git-commit-push-merge-all":
     new_args.append("trunk")
-elif "trunk-status" in "git_trunk_flow":
+elif "trunk-status" in "git-commit-push-merge-all":
     new_args.append("status")
-elif "commit" in "git_trunk_flow":
+elif "commit" in "git-commit-push-merge-all":
     new_args.append("commit")
     new_args.extend(args)  # Pass commit message
 

@@ -17,15 +17,15 @@ args = sys.argv[1:]
 new_args = ["/git"]
 
 # Add subcommand based on old command name
-if "sync-all" in "git_trunk_flow":
+if "sync-all" in "git-trunk-flow-enhanced":
     new_args.extend(["sync", "--all"])
-elif "sync" in "git_trunk_flow":
+elif "sync" in "git-trunk-flow-enhanced":
     new_args.append("sync")
-elif "trunk-flow" in "git_trunk_flow":
+elif "trunk-flow" in "git-trunk-flow-enhanced":
     new_args.append("trunk")
-elif "trunk-status" in "git_trunk_flow":
+elif "trunk-status" in "git-trunk-flow-enhanced":
     new_args.append("status")
-elif "commit" in "git_trunk_flow":
+elif "commit" in "git-trunk-flow-enhanced":
     new_args.append("commit")
     new_args.extend(args)  # Pass commit message
 

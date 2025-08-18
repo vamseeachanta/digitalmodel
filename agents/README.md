@@ -1,83 +1,119 @@
-# AI Agents Directory
+# AI Agents Library
 
-**CONSOLIDATED LOCATION**: All AI agents are now centralized in this single `agents/` directory for better organization and management.
+This folder contains specialized AI agents for various development tasks.
+Agents are sourced from AITmpl and Claude Code Templates.
 
-This directory contains specialized AI agents for various engineering and technical domains.
+## Folder Structure
 
-## Available Specialist Agents
-
-### 1. **CAD Engineering Specialist** (`cad-engineering-specialist.md`)
-- **Expertise**: CAD software, file format conversions, technical drawings
-- **Specializations**: 
-  - PDF to CAD conversions
-  - Open-source CAD tools (FreeCAD, LibreCAD, OpenSCAD)
-  - Proprietary systems (AutoCAD, SolidWorks, CATIA)
-  - File formats (DWG, DXF, STEP, IGES, STL)
-- **Use Cases**: Converting technical drawings, CAD automation, format interoperability
-
-### 2. **Cathodic Protection Engineer** (`cathodic-protection-engineer.md`)
-- **Expertise**: Corrosion prevention, electrical engineering for oil & gas
-- **Specializations**:
-  - Cathodic protection system design (SACP/ICCP)
-  - NACE/ISO/DNV standards compliance
-  - Pipeline integrity and coating assessments
-  - Marine and offshore structure protection
-- **Use Cases**: CP system design, corrosion mitigation, compliance analysis
-
-## Module-Based Agents
-
-### Domain-Specific Agents
-- **AQWA** (`aqwa/`): Hydrodynamic analysis specialist
-- **OrcaFlex** (`orcaflex/`): Marine dynamics and flexible riser analysis
-- **Web Test Module** (`web-test-module/`): Web resource testing and validation
-
-## Agent Structure
-
-Each agent follows a standardized structure:
-
-```yaml
----
-name: agent-name
-description: When to use this agent
-model: sonnet/opus/haiku
-color: display color
----
-
-[Agent personality and expertise definition]
+```
+agents/
+├── security/          # Security audit and penetration testing
+├── performance/       # Performance optimization agents
+├── testing/          # Test generation and E2E testing
+├── documentation/    # API and code documentation
+├── devops/          # CI/CD and infrastructure
+├── data/            # Data engineering and ETL
+└── code_quality/    # Code review and refactoring
 ```
 
-## How Agents Are Used
+## Usage
 
-1. **Automatic Selection**: Claude automatically selects the appropriate specialist agent based on the task context
-2. **Task Tool Integration**: When using the Task tool, the relevant `subagent_type` is selected
-3. **Knowledge Accumulation**: Agents learn from project-specific tasks and documentation
+### Automatic Agent Selection
 
-## Creating New Agents
-
-To create a new specialist agent:
+Agents are automatically selected based on your current task:
 
 ```bash
-# Using the create-module-agent command
-python agent_os/commands/create_module_agent.py <agent-name>
+# During spec creation
+/spec create api-gateway  # Automatically uses API Security Agent
 
-# Or using the slash command
-/create-module-agent <agent-name>
+# During testing
+/test generate  # Uses Test Generation Agent
+
+# During optimization
+/project optimize  # Uses Performance Optimization Agents
 ```
 
-## Agent Management
+### Manual Agent Usage
 
-- **Registry**: `agent-management/agent_registry.yaml` - Central registry of all agents
-- **Templates**: `templates/` - Agent templates and configurations
-- **Module Agents**: `module-agents/` - Agents specific to code modules
-- **Submodule Agents**: `submodule-agents/` - Agents for submodules
+```bash
+# List all available agents
+/ai-agent list
+
+# Get recommendations for current context
+/ai-agent recommend
+
+# Use specific agent
+/ai-agent use "API Security Audit Agent"
+
+# Get agent information
+/ai-agent info "Test Generation Agent"
+```
+
+## Available Agents by Category
+
+### 🔒 Security
+- API Security Audit Agent
+- Penetration Testing Agent
+- Vulnerability Scanner Agent
+
+### ⚡ Performance
+- React Performance Optimization Agent
+- Database Optimization Agent
+- Bundle Size Analyzer Agent
+
+### 🧪 Testing
+- Test Generation Agent
+- E2E Testing Agent
+- Coverage Analysis Agent
+
+### 📚 Documentation
+- API Documentation Agent
+- Code Documentation Agent
+- README Generator Agent
+
+### 🔧 DevOps
+- CI/CD Pipeline Agent
+- Infrastructure as Code Agent
+- Docker Configuration Agent
+
+### 📊 Data
+- ETL Pipeline Agent
+- Data Analysis Agent
+- Data Validation Agent
+
+### ✨ Code Quality
+- Code Review Agent
+- Refactoring Agent
+- Best Practices Agent
+
+## Integration Points
+
+Agents integrate with these commands:
+- `/spec create` - Automatic agent recommendations
+- `/task execute` - Agent assistance during implementation
+- `/test run` - Testing agents for quality assurance
+- `/project optimize` - Performance agents
+- `/git commit` - Code review agents
 
 ## Best Practices
 
-1. **Agent Selection**: Choose agents based on domain expertise required
-2. **Agent Combination**: Multiple agents can collaborate on complex tasks
-3. **Knowledge Updates**: Agents accumulate knowledge from completed tasks
-4. **Documentation**: Keep agent descriptions updated as capabilities expand
+1. **Let agents recommend themselves** - The system knows which agents to use
+2. **Chain agents for better results** - Use multiple agents in sequence
+3. **Review agent suggestions** - Don't apply blindly
+4. **Customize for your project** - Adapt agent outputs to your standards
+5. **Share improvements** - Contribute agent enhancements back
 
----
+## Adding Custom Agents
 
-*For more information on Agent OS, see `.agent-os/README.md`*
+To add your own agents:
+
+1. Create agent file in appropriate category folder
+2. Follow the agent template structure
+3. Update this README with agent details
+4. Test agent integration
+
+## Resources
+
+- AITmpl: https://www.aitmpl.com/
+- Claude Code Templates: https://github.com/davila7/claude-code-templates
+- Agent Catalog: .agent-os/resources/aitmpl_agents_catalog.yaml

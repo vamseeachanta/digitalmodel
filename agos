@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+import sys
+import os
+from pathlib import Path
+
+# Add commands directory to path
+commands_dir = Path(__file__).parent / ".agent-os" / "commands"
+sys.path.insert(0, str(commands_dir))
+
+# Import and run the requested command
+if len(sys.argv) > 1:
+    cmd = sys.argv[1].lstrip('/')
+    if cmd in ['git', 'spec', 'task', 'test', 'project', 'data', 'ai-agent', 'uv-env', 'verify']:
+        module = {'git': 'git.py', 'spec': 'spec.py', 'task': 'task.py', 'test': 'test.py', 'project': 'project.py', 'data': 'data.py', 'ai-agent': 'ai_agent.py', 'uv-env': 'uv_environment_manager.py', 'verify': 'verify-ai-work.py'}.get(cmd)
+        if module:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location(
+                module.replace('.py', ''),
+                commands_dir / module
+            )
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if hasattr(mod, 'main'):
+                sys.argv = [cmd] + sys.argv[2:]
+                mod.main()
