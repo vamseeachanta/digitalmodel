@@ -1,22 +1,23 @@
 import os
 import pathlib
-import pandas as pd
-import numpy as np
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import numpy as np
+import pandas as pd
 
 try:
     pass
 except Exception:
     print("OrcaFlex license not available. Run on different computer")
-from loguru import logger
-from digitalmodel.modules.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
-from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
-from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
-from digitalmodel.modules.orcaflex.all_vars import AllVars
-
-from assetutilities.common.utilities import is_file_valid_func
-from assetutilities.common.file_management import FileManagement
 from assetutilities.common.data import SaveData
+from assetutilities.common.file_management import FileManagement
+from assetutilities.common.utilities import is_file_valid_func
+from loguru import logger
+
+from digitalmodel.modules.orcaflex.all_vars import AllVars
+from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
+from digitalmodel.modules.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
+from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
 
 orcaflex_preprocess = OrcaflexPreProcess()
 orcaflex_objects = OrcaFlexObjects()
@@ -70,23 +71,23 @@ class Mooring:
             iteration_flag = self.get_iteration_flag(
                 cfg, group, force_balance_analysis_dict, current_iteration
             )
-            
+
             return {
-                'file_name': file_name,
-                'force_balance': force_balance_analysis_dict,
-                'fender_force': fender_force_analysis_dict,
-                'iteration_flag': iteration_flag,
-                'current_iteration': current_iteration
+                "file_name": file_name,
+                "force_balance": force_balance_analysis_dict,
+                "fender_force": fender_force_analysis_dict,
+                "iteration_flag": iteration_flag,
+                "current_iteration": current_iteration,
             }
 
         # Process files in parallel with max_workers=30
         with ThreadPoolExecutor(max_workers=30) as executor:
             # Submit all tasks
             futures = {
-                executor.submit(process_single_file, fileIndex): fileIndex 
+                executor.submit(process_single_file, fileIndex): fileIndex
                 for fileIndex in range(len(sim_files))
             }
-            
+
             # Collect results as they complete
             results = []
             for future in as_completed(futures):
@@ -97,9 +98,11 @@ class Mooring:
                     logger.info(f"Completed analysis for {result['file_name']}")
                 except Exception as e:
                     logger.error(f"Error processing file index {fileIndex}: {str(e)}")
-                    
+
         # Log summary
-        logger.info(f"Completed parallel processing of {len(results)}/{len(sim_files)} files")
+        logger.info(
+            f"Completed parallel processing of {len(results)}/{len(sim_files)} files"
+        )
 
         return cfg
 
@@ -121,22 +124,15 @@ class Mooring:
             arc_length = current_var_df_filtered["Arc length"].values[0]
 
             line_length = row["line_length"]
-            new_line_length = line_length.copy()
-            line_ea = row["line_EA"]
-            target_tension = row["target_tension"]
             target_pre_tension_df.at[index, "end_Gy_force"] = current_var_df_filtered[
                 "End GY force"
             ].values[0]
 
             line_length = self.evaluate_line_length_current(arc_length, line_length)
 
+            # Pass row data and calculated values as a cleaner interface
             new_line_length = self.evaluate_line_length_next_iteration(
-                effective_tension,
-                arc_length,
-                line_length,
-                new_line_length,
-                line_ea,
-                target_tension,
+                row, effective_tension, arc_length, line_length
             )
 
             target_pre_tension_df.at[index, "new_line_length"] = new_line_length
@@ -168,20 +164,26 @@ class Mooring:
         return output_dict
 
     def evaluate_line_length_next_iteration(
-        self,
-        effective_tension,
-        arc_length,
-        line_length,
-        new_line_length,
-        line_ea,
-        target_tension,
+        self, row, effective_tension, arc_length, line_length
     ):
         """
         Calculate the next iteration line lengths based on tension differences.
-        
+
+        Args:
+            row: DataFrame row containing line_EA, target_tension, etc.
+            effective_tension: Current effective tension
+            arc_length: Current arc length
+            line_length: Current line lengths
+
         Returns:
             list: Updated new_line_length with calculated values
         """
+        # Extract row data
+        line_ea = row["line_EA"]
+        target_tension = row["target_tension"]
+        new_line_length = line_length.copy()
+
+        # Calculate delta lengths
         delta_length = []
         for i, length in enumerate(line_length):
             delta = length / line_ea[i]
@@ -190,18 +192,22 @@ class Mooring:
             delta_length.append(delta_length_section)
 
         new_arc_length = arc_length + sum(delta_length)
+        # restrict divergence of new arc length to stay within range
+        acceptable_range = (arc_length * 0.95, arc_length * 1.05)
+
         for i, length in enumerate(new_line_length):
             if length is None:
                 other_length = sum(filter(None, new_line_length))
                 length_section = new_arc_length - other_length
+
                 new_line_length[i] = round(float(length_section), 4)
-        
+
         return new_line_length
 
     def evaluate_line_length_current(self, arc_length, line_length):
         """
         Fill in missing line lengths based on arc length and known segments.
-        
+
         Returns:
             list: Updated line_length with calculated missing values
         """
@@ -209,7 +215,7 @@ class Mooring:
             if length is None:
                 other_line_length = sum(filter(None, line_length))
                 line_length[i] = arc_length - other_line_length
-        
+
         return line_length
 
     def fender_force_analysis(self, cfg, group, file_meta_data, var_data_dict):
