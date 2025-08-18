@@ -58,6 +58,47 @@ Create as slash command? (Recommended)
 
 This file provides guidance to AI assistants when working with code in this repository.
 
+## 🧹 MANDATORY: Repository Root Directory Hygiene
+
+**CRITICAL DIRECTIVE**: The repository root MUST remain clean and organized at ALL times.
+
+### Root Directory MUST ONLY Contain:
+✅ **Essential Config Files**: `.gitignore`, `.editorconfig`, `.coveragerc`, `.gitmodules`, `pyproject.toml`, `uv.toml`, `setup.py`
+✅ **Required Documentation**: `README.md`, `LICENSE`, `CLAUDE.md`, `Makefile`
+✅ **Main Directories**: `src/`, `tests/`, `docs/`, `tools/`, `specs/`, `.agent-os/`, `agents/`
+✅ **Convenience Scripts**: `*.sh` files that redirect to tools/ or .agent-os/commands/
+
+### PROHIBITED in Root Directory:
+❌ **Test files**: All `test_*.py` files MUST go in `/tests/`
+❌ **Batch configs**: All `*.yml` configs (except essential) MUST go in appropriate subdirectories
+❌ **Backup files**: All `*.backup*` files MUST be deleted immediately
+❌ **Migration files**: All migration-related files MUST be deleted after use
+❌ **Temporary files**: All temp files (`nul`, `coverage.xml`, etc.) MUST be deleted
+❌ **Generated files**: All generated files MUST go in appropriate subdirectories
+❌ **Tool scripts**: All Python tools MUST go in `/tools/` directory
+
+### Automatic Cleanup Actions:
+When ANY file is created in root, AI agents MUST:
+1. **EVALUATE** if it belongs in root (use checklist above)
+2. **MOVE** to appropriate directory if not essential
+3. **DELETE** if temporary, backup, or migration file
+4. **CREATE** convenience script in root if needed for access
+5. **UPDATE** `.gitignore` to prevent future violations
+
+### File Organization Rules:
+- **Test files** → `/tests/modules/<module>/`
+- **Config files** → `/config/` or `/tests/.../test_configs/`
+- **Documentation** → `/docs/`
+- **Tools/Scripts** → `/tools/`
+- **Agent commands** → `/.agent-os/commands/`
+- **Temporary work** → Use system temp directory, not repo root
+
+### Enforcement:
+- **NEVER** leave test files in root after testing
+- **ALWAYS** clean up after batch operations
+- **IMMEDIATELY** move misplaced files when detected
+- **REFUSE** to create non-essential files in root
+
 ## 🏗️ CRITICAL REPOSITORY ORGANIZATION PATTERN
 
 **THIS REPOSITORY USES MODULE-BASED ORGANIZATION - ENFORCE ACROSS ALL SESSIONS/USERS/SYSTEMS**
@@ -488,3 +529,4 @@ View all available commands:
 - also, always check modules and scope of repository to ensure the propagate command does not criss cross modules. Only the high level geeneric items should be propagated without repository specific information. rewrite this appropraitely
 - always utilize existing repo environment
 - orcaflex module agent should note that always run actual license test when license is available.
+- memory. do not create any unnecessary files in the repo root directory.

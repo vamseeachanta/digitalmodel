@@ -27,6 +27,32 @@ The library is intended to get traction from stretched engineering teams. Teams 
 - A major impact will be in the QA of the work for the end users as well as the responsible leads.
 - Avoid excel to eliminate manual steps. Helps in automation of tasks and no/less room for error.
 
+# Repository Hygiene
+
+This repository enforces strict root directory hygiene to maintain professionalism and organization.
+
+## Root Directory Rules
+- **Only essential files** are allowed in root (see `.agent-os/standards/repository-hygiene.md`)
+- **Test files** must go in `/tests/`
+- **Tools** must go in `/tools/`
+- **Configs** must go in `/config/` or appropriate subdirectories
+- **No temporary/backup files** in root
+
+## Automatic Cleanup
+```bash
+# Check for violations
+python tools/cleanup-root.py --dry-run
+
+# Clean up automatically
+python tools/cleanup-root.py
+```
+
+## Pre-commit Hook
+Enable the pre-commit hook to prevent violations:
+```bash
+git config core.hooksPath .githooks
+```
+
 # Usage
 
 Using the Repository:

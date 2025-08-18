@@ -1,0 +1,21 @@
+#!/bin/bash
+# Pre-commit hook to enforce repository root hygiene
+
+echo "Checking repository root hygiene..."
+
+# Run the cleanup script in dry-run mode
+output=$(python tools/cleanup-root.py --dry-run 2>&1)
+
+# Check if any files need to be moved or deleted
+if echo "$output" | grep -q "Summary: 0 files moved, 0 files deleted"; then
+    echo "✓ Repository root is clean"
+    exit 0
+else
+    echo "✗ Repository root contains files that should be moved or deleted"
+    echo ""
+    echo "$output"
+    echo ""
+    echo "Please run: python tools/cleanup-root.py"
+    echo "Or manually move/delete the files listed above"
+    exit 1
+fi
