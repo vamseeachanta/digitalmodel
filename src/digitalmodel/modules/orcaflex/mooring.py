@@ -42,7 +42,7 @@ class Mooring:
             return int(obj)
         elif isinstance(obj, (np.float64, np.float32, np.float16)):
             return float(obj)
-        elif isinstance(obj, (np.bool_, np.bool8)):
+        elif isinstance(obj, np.bool_):
             return bool(obj)
         else:
             return obj
@@ -403,17 +403,17 @@ class Mooring:
 
             new_line_definition = []
             new_line_length = row["new_line_length"]
-            
+
             # Handle case where new_line_length might be a numpy array
             if isinstance(new_line_length, np.ndarray):
                 new_line_length = new_line_length.tolist()
-            
+
             for i, length in enumerate(new_line_length):
                 # Convert numpy types to native Python types for clean YAML
                 if length is not None:
                     length = self.convert_numpy_types(length)
                     # Extra safety: ensure it's a Python float
-                    if hasattr(length, 'item'):
+                    if hasattr(length, "item"):
                         length = length.item()
                     length = float(length)
                 line_section_item = {f"Length[{i+1}]": length}
@@ -422,17 +422,19 @@ class Mooring:
             array_item = {object_name: new_line_definition}
             includefile_dict.update(array_item)
 
-        filename_dir = fm.get_file_management_input_directory(cfg)
+        # Get the directory from the yml file path itself
         yml_file = file_meta_data["yml"]
-        filename_stem = pathlib.Path(yml_file).stem
-        filename = "includefile_" + filename_stem + "_mooring_line_length.yml"
-        filename_path = os.path.join(filename_dir, filename)
-        
+        yml_path = pathlib.Path(yml_file)
+        filename_dir = yml_path.parent
+        filename_stem = yml_path.stem
+        filename = f"includefile_{filename_stem}_mooring_line_length"
+        filename_path = filename_dir / filename
+
         # Log the path for debugging
-        logger.info(f"Writing includefile to: {filename_path}")
-        
+        logger.info(f"Writing mooring includefile to: {filename_path}")
+
         save_data.saveDataYaml(
-            {"Lines": includefile_dict}, filename_path, default_flow_style=False
+            {"Lines": includefile_dict}, str(filename_path), default_flow_style=False
         )
 
     def prepare_includefile_for_fender_compression(
@@ -453,13 +455,19 @@ class Mooring:
             array_item = {object_name: initial_y_next_iteration}
             includefile_dict.update(array_item)
 
-        filename_dir = fm.get_file_management_input_directory(cfg)
+        # Get the directory from the yml file path itself
         yml_file = file_meta_data["yml"]
-        filename_stem = pathlib.Path(yml_file).stem
-        filename = "includefile_" + filename_stem + "_fender_compression"
-        filename_path = os.path.join(filename_dir, filename)
+        yml_path = pathlib.Path(yml_file)
+        filename_dir = yml_path.parent
+        filename_stem = yml_path.stem
+        filename = f"includefile_{filename_stem}_fender_compression"
+        filename_path = filename_dir / filename
+        
+        # Log the path for debugging
+        logger.info(f"Writing fender includefile to: {filename_path}")
+        
         save_data.saveDataYaml(
-            {"Vessels": includefile_dict}, filename_path, default_flow_style=False
+            {"Vessels": includefile_dict}, str(filename_path), default_flow_style=False
         )
 
     def get_tension(self, cfg, group):
