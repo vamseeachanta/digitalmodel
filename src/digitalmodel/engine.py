@@ -13,7 +13,7 @@ from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
 from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
     DNVRPH103_hydrodynamics_rectangular,
 )
-from digitalmodel.modules.signal_analysis.fatigue import FatigueAnalysis
+from digitalmodel.modules.signal_analysis.fatigue import FatigueDamageCalculator as FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
 from digitalmodel.modules.mooring.mooring import Mooring
 from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
