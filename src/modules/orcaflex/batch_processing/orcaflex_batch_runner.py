@@ -674,6 +674,117 @@ class OrcaFlexBatchRunner:
             f.write("End of Report\n")
         
         logger.info(f"Report saved to: {report_file}")
+        
+        # Generate failure summary if there are failures
+        if summary['failed'] > 0:
+            self.generate_failure_summary(summary)
+    
+    def generate_failure_summary(self, summary: Dict[str, Any]):
+        """
+        Generate a detailed failure summary and rerun configuration.
+        
+        Args:
+            summary: The batch processing summary
+        """
+        # Create failure summary file
+        failure_file = self.output_dir / f"failed_runs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        rerun_config_file = self.output_dir / f"rerun_failed_{datetime.now().strftime('%Y%m%d_%H%M%S')}.yml"
+        
+        failed_models = [r for r in summary['results'] if not r['success']]
+        
+        # Write detailed failure summary
+        with open(failure_file, 'w') as f:
+            f.write("=" * 80 + "\n")
+            f.write("FAILURE SUMMARY REPORT\n")
+            f.write("=" * 80 + "\n\n")
+            f.write(f"Total Failed Models: {len(failed_models)}\n")
+            f.write(f"Failure Rate: {(len(failed_models)/summary['total_models']*100):.1f}%\n\n")
+            
+            # Group failures by error type
+            error_groups = {}
+            for model in failed_models:
+                error = model.get('error', 'Unknown error')
+                # Simplify error message for grouping
+                error_key = error.split('\n')[0][:100]  # First line, max 100 chars
+                if error_key not in error_groups:
+                    error_groups[error_key] = []
+                error_groups[error_key].append(model)
+            
+            f.write("FAILURES BY ERROR TYPE:\n")
+            f.write("-" * 40 + "\n")
+            for error_type, models in error_groups.items():
+                f.write(f"\nError: {error_type}\n")
+                f.write(f"Count: {len(models)} models\n")
+                f.write("Affected models:\n")
+                for model in models:
+                    f.write(f"  - {model['model_file']}\n")
+            
+            f.write("\n" + "=" * 80 + "\n")
+            f.write("DETAILED FAILURE INFORMATION:\n")
+            f.write("-" * 40 + "\n")
+            
+            for idx, model in enumerate(failed_models, 1):
+                f.write(f"\n[{idx}] Model: {model['model_file']}\n")
+                f.write(f"    Description: {model.get('description', 'N/A')}\n")
+                f.write(f"    Error Type: {model.get('error_type', 'Unknown')}\n")
+                f.write(f"    Error Message:\n")
+                error_msg = model.get('error', 'No error message available')
+                for line in error_msg.split('\n'):
+                    f.write(f"        {line}\n")
+                f.write(f"    Processing Time: {model.get('processing_time', 0):.2f} seconds\n")
+                f.write(f"    Timestamp: {model.get('timestamp', 'N/A')}\n")
+                
+                # Add suggestions for common errors
+                if 'license' in error_msg.lower():
+                    f.write("    SUGGESTION: Check OrcaFlex license availability\n")
+                elif 'file not found' in error_msg.lower():
+                    f.write("    SUGGESTION: Verify model file path and include files\n")
+                elif 'convergence' in error_msg.lower():
+                    f.write("    SUGGESTION: Adjust convergence parameters or damping factor\n")
+            
+            f.write("\n" + "=" * 80 + "\n")
+            f.write("RERUN INSTRUCTIONS:\n")
+            f.write("-" * 40 + "\n")
+            f.write(f"1. A rerun configuration has been created: {rerun_config_file.name}\n")
+            f.write(f"2. To rerun failed models, execute:\n")
+            f.write(f"   python -m orcaflex_batch_runner --config {rerun_config_file}\n")
+            f.write(f"3. Consider adjusting parameters based on error types above\n")
+            f.write(f"4. Check system resources and OrcaFlex license before rerunning\n")
+        
+        # Create rerun configuration for failed models
+        rerun_config = self.config.copy()
+        rerun_config['batch_info']['name'] = f"Rerun Failed Models - {self.config['batch_info']['name']}"
+        rerun_config['batch_info']['description'] = f"Rerunning {len(failed_models)} failed models from previous batch"
+        rerun_config['batch_info']['original_config'] = str(self.config_file)
+        rerun_config['batch_info']['timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Include only failed models
+        rerun_config['models'] = []
+        for model in failed_models:
+            # Find original model config
+            for orig_model in self.config['models']:
+                if orig_model['model_file'] == model['model_file']:
+                    model_config = orig_model.copy()
+                    model_config['previous_error'] = model.get('error', 'Unknown')
+                    model_config['retry_attempt'] = model.get('retry_attempt', 0) + 1
+                    rerun_config['models'].append(model_config)
+                    break
+        
+        # Adjust processing options for retry
+        rerun_config['processing_options']['log_level'] = 'DEBUG'  # More verbose logging
+        if 'convergence' in str(error_groups.keys()).lower():
+            # Adjust convergence parameters if convergence errors detected
+            rerun_config['mooring_parameters']['tension_tolerance'] *= 1.5
+            rerun_config['processing_options']['damping_factor'] *= 0.9
+            rerun_config['processing_options']['max_iterations'] += 5
+        
+        # Save rerun configuration
+        with open(rerun_config_file, 'w') as f:
+            yaml.dump(rerun_config, f, default_flow_style=False)
+        
+        logger.info(f"Failure summary saved to: {failure_file}")
+        logger.info(f"Rerun configuration saved to: {rerun_config_file}")
+        logger.info(f"Failed models can be rerun using the generated configuration")
 
 
 def main():

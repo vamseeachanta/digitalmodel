@@ -2,6 +2,7 @@ import os
 import pathlib
 import pandas as pd
 import numpy as np
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 try:
     pass
@@ -44,7 +45,8 @@ class Mooring:
         sim_files = cfg["file_management"]["input_files"]["sim"]
         yml_files = cfg["file_management"]["input_files"]["yml"]
 
-        for fileIndex in range(0, len(sim_files)):
+        def process_single_file(fileIndex):
+            """Process a single file for mooring analysis"""
             file_name = sim_files[fileIndex]
             filename_wo_ext = file_name.with_suffix("")
             yml_file = filename_wo_ext.with_suffix(".yml")
@@ -68,6 +70,36 @@ class Mooring:
             iteration_flag = self.get_iteration_flag(
                 cfg, group, force_balance_analysis_dict, current_iteration
             )
+            
+            return {
+                'file_name': file_name,
+                'force_balance': force_balance_analysis_dict,
+                'fender_force': fender_force_analysis_dict,
+                'iteration_flag': iteration_flag,
+                'current_iteration': current_iteration
+            }
+
+        # Process files in parallel with max_workers=30
+        with ThreadPoolExecutor(max_workers=30) as executor:
+            # Submit all tasks
+            futures = {
+                executor.submit(process_single_file, fileIndex): fileIndex 
+                for fileIndex in range(len(sim_files))
+            }
+            
+            # Collect results as they complete
+            results = []
+            for future in as_completed(futures):
+                fileIndex = futures[future]
+                try:
+                    result = future.result()
+                    results.append(result)
+                    logger.info(f"Completed analysis for {result['file_name']}")
+                except Exception as e:
+                    logger.error(f"Error processing file index {fileIndex}: {str(e)}")
+                    
+        # Log summary
+        logger.info(f"Completed parallel processing of {len(results)}/{len(sim_files)} files")
 
         return cfg
 

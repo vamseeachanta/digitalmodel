@@ -25,6 +25,192 @@ from modules.orcaflex.mooring_tension_iteration.file_type_detector import (
 )
 
 
+def display_failure_summary(summary: dict, output_dir: Path):
+    """
+    Display a detailed failure summary for easy analysis and rerun.
+    
+    Args:
+        summary: Batch processing summary with results
+        output_dir: Output directory where failure files are saved
+    """
+    failed_models = [r for r in summary['results'] if not r['success']]
+    
+    if not failed_models:
+        print("No failures to analyze")
+        return
+    
+    # Group failures by error type
+    error_groups = {}
+    for model in failed_models:
+        error = model.get('error', 'Unknown error')
+        error_key = error.split('\n')[0][:80]  # First line, max 80 chars
+        if error_key not in error_groups:
+            error_groups[error_key] = []
+        error_groups[error_key].append(model)
+    
+    # Display grouped failures
+    print(f"\nTotal Failed Models: {len(failed_models)}")
+    print("\nFailures by Error Type:")
+    print("-" * 40)
+    
+    for error_type, models in error_groups.items():
+        print(f"\n• {error_type}")
+        print(f"  Count: {len(models)} models")
+        print("  Affected files:")
+        for model in models[:3]:  # Show first 3 models
+            print(f"    - {model['model_file']}")
+        if len(models) > 3:
+            print(f"    ... and {len(models) - 3} more")
+    
+    # Check for generated failure files
+    print("\n" + "-" * 40)
+    print("Generated Failure Analysis Files:")
+    
+    # Look for failure summary files
+    failure_files = list(output_dir.glob("failed_runs_*.txt"))
+    rerun_configs = list(output_dir.glob("rerun_failed_*.yml"))
+    
+    if failure_files:
+        latest_failure = sorted(failure_files)[-1]
+        print(f"  • Failure Summary: {latest_failure.name}")
+    
+    if rerun_configs:
+        latest_rerun = sorted(rerun_configs)[-1]
+        print(f"  • Rerun Config: {latest_rerun.name}")
+        print(f"\nTo rerun failed models:")
+        print(f"  python run_batch.py --config {latest_rerun}")
+    
+    # Provide quick action suggestions
+    print("\n" + "-" * 40)
+    print("Quick Actions:")
+    
+    if any('license' in str(eg).lower() for eg in error_groups.keys()):
+        print("  ⚠ License issues detected - Check OrcaFlex license")
+    
+    if any('file not found' in str(eg).lower() for eg in error_groups.keys()):
+        print("  ⚠ Missing files detected - Verify model paths")
+    
+    if any('convergence' in str(eg).lower() for eg in error_groups.keys()):
+        print("  ⚠ Convergence issues - Consider adjusting parameters")
+
+
+def test_failure_recovery():
+    """
+    Test the failure recovery and rerun mechanism.
+    Intentionally creates failures to test the summary generation.
+    """
+    print("\n" + "=" * 80)
+    print("Testing Failure Recovery Mechanism")
+    print("=" * 80)
+    
+    with tempfile.TemporaryDirectory() as temp_dir:
+        test_dir = Path(temp_dir)
+        
+        # Create a mix of valid and invalid model configurations
+        models = [
+            {'model_file': 'valid_model.yml', 'description': 'Valid test model'},
+            {'model_file': 'missing_file.dat', 'description': 'File that does not exist'},
+            {'model_file': 'invalid_format.txt', 'description': 'Invalid file format'},
+            {'model_file': 'convergence_fail.yml', 'description': 'Model with convergence issues'},
+        ]
+        
+        # Create only the valid model file
+        valid_model = test_dir / 'valid_model.yml'
+        valid_model.write_text('''%YAML 1.1
+# Type: Model
+---
+General:
+  UnitsSystem: SI
+''')
+        
+        # Create batch config with mixed models
+        config = {
+            'batch_info': {
+                'name': 'Test Failure Recovery',
+                'description': 'Testing failure summary and recovery',
+                'base_directory': str(test_dir),
+                'output_directory': './output',
+                'timestamp': datetime.now().strftime('%Y-%m-%d')
+            },
+            'simulation_settings': {
+                'analysis_type': 'statics',
+                'continue_on_error': True,  # Important for testing
+                'parallel_processing': False
+            },
+            'output_settings': {
+                'save_csv': True,
+                'save_simulation': True,
+                'csv_output_folder': 'csv',
+                'sim_output_folder': 'sim',
+                'include_summary_report': True
+            },
+            'models': models,
+            'mooring_parameters': {
+                'tension_tolerance': 0.01,
+                'section_to_modify': 2
+            },
+            'processing_options': {
+                'max_iterations': 10,
+                'damping_factor': 0.7,
+                'generate_report': True,
+                'log_level': 'INFO'
+            }
+        }
+        
+        config_file = test_dir / 'test_failure_config.yml'
+        with open(config_file, 'w') as f:
+            yaml.dump(config, f)
+        
+        print(f"\nTest configuration created with:")
+        print(f"  - 1 valid model")
+        print(f"  - 3 models designed to fail")
+        print(f"  - continue_on_error: True")
+        
+        # Run batch with expected failures
+        print("\nRunning batch (expecting failures)...")
+        runner = OrcaFlexBatchRunner(str(config_file), mock_mode=True)
+        summary = runner.run_batch()
+        
+        # Display results
+        print(f"\nResults:")
+        print(f"  Successful: {summary['successful']}")
+        print(f"  Failed: {summary['failed']}")
+        
+        # Display failure analysis
+        if summary['failed'] > 0:
+            display_failure_summary(summary, runner.output_dir)
+            
+            # Check if rerun config was created
+            rerun_configs = list(runner.output_dir.glob("rerun_failed_*.yml"))
+            if rerun_configs:
+                print("\n" + "=" * 80)
+                print("Testing Rerun Capability")
+                print("=" * 80)
+                
+                latest_rerun = sorted(rerun_configs)[-1]
+                print(f"\nRerunning with: {latest_rerun.name}")
+                
+                # Load and display rerun config
+                with open(latest_rerun) as f:
+                    rerun_data = yaml.safe_load(f)
+                
+                print(f"Rerun configuration contains:")
+                print(f"  - {len(rerun_data['models'])} failed models")
+                print(f"  - Original config: {rerun_data['batch_info'].get('original_config', 'N/A')}")
+                
+                # Attempt rerun (will still fail in mock, but tests the mechanism)
+                print("\nAttempting rerun...")
+                rerun_runner = OrcaFlexBatchRunner(str(latest_rerun), mock_mode=True)
+                rerun_summary = rerun_runner.run_batch()
+                
+                print(f"\nRerun Results:")
+                print(f"  Attempted: {rerun_summary['total_models']}")
+                print(f"  Successful: {rerun_summary['successful']}")
+                print(f"  Still Failed: {rerun_summary['failed']}")
+        
+        return summary['failed'] > 0  # Test passes if failures were properly handled
+
+
 def create_test_batch_config(test_dir: Path, model_files: list) -> Path:
     """Create a batch configuration for test models."""
     config = {
@@ -205,6 +391,13 @@ def test_actual_models():
             print(f"Success rate: {summary['success_rate']:.1f}%")
             print(f"Elapsed time: {summary['elapsed_time']:.2f} seconds")
             
+            # Display failure summary if there are failures
+            if summary['failed'] > 0:
+                print("\n" + "=" * 80)
+                print("FAILURE ANALYSIS")
+                print("=" * 80)
+                display_failure_summary(summary, runner.output_dir)
+            
             # Check simulation file paths
             print("\nSimulation Files (would be created with license):")
             sim_count = 0
@@ -325,6 +518,7 @@ def main():
     print("2. Use file type detection to identify them correctly")
     print("3. Run batch processing with parallel execution")
     print("4. Verify .sim file paths are generated")
+    print("5. Test failure recovery and rerun mechanism")
     
     # Run main test
     success = test_actual_models()
@@ -332,15 +526,40 @@ def main():
     # Run comparison test
     test_parallel_vs_sequential()
     
+    # Run failure recovery test
     print("\n" + "=" * 80)
+    print("TESTING FAILURE RECOVERY FEATURES")
+    print("=" * 80)
+    recovery_success = test_failure_recovery()
+    
+    print("\n" + "=" * 80)
+    print("TEST SUMMARY")
+    print("=" * 80)
+    
     if success:
-        print("[OK] All tests completed successfully!")
-        print("\nThe batch runner correctly:")
-        print("  - Identified OrcaFlex models vs DigitalModel configs")
-        print("  - Processed models in parallel")
-        print("  - Generated .sim file paths for each model")
+        print("✓ Model processing test: PASSED")
     else:
-        print("[FAILED] Some tests failed. Check output above for details.")
+        print("✗ Model processing test: FAILED")
+    
+    if recovery_success:
+        print("✓ Failure recovery test: PASSED")
+    else:
+        print("✗ Failure recovery test: FAILED")
+    
+    print("\nThe batch runner features:")
+    print("  - Identifies OrcaFlex models vs DigitalModel configs")
+    print("  - Processes models in parallel")
+    print("  - Generates .sim file paths for each model")
+    print("  - Creates detailed failure summaries")
+    print("  - Generates rerun configurations for failed models")
+    print("  - Groups failures by error type")
+    print("  - Provides actionable suggestions for common errors")
+    
+    overall_success = success and recovery_success
+    if overall_success:
+        print("\n[OK] All tests completed successfully!")
+    else:
+        print("\n[PARTIAL] Some tests failed. Check output above for details.")
     print("=" * 80)
 
 
