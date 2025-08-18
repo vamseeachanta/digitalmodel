@@ -1,0 +1,353 @@
+# AITmpl Agents Catalog
+# Complete catalog of AI agents from AITmpl and Claude Code Templates
+# Source: https://github.com/davila7/claude-code-templates
+
+metadata:
+  version: "1.0.0"
+  last_updated: "2024-01-13"
+  total_agents: 48
+  total_commands: 21
+  sources:
+    - url: "https://github.com/davila7/claude-code-templates"
+    - url: "https://www.aitmpl.com/"
+    - collection: "wshobson/agents"
+  local_storage:
+    location: "agents/"
+    description: "All agents are stored in the 'agents' folder in each repository"
+
+agent_categories:
+  security:
+    agents:
+      - name: "API Security Audit Agent"
+        when_to_use: "When creating or reviewing API endpoints"
+        where: "During /spec create for API specs"
+        capabilities:
+          - "Identify security vulnerabilities"
+          - "Suggest authentication patterns"
+          - "Review authorization logic"
+          - "Check for injection attacks"
+        integration_points:
+          - "/spec create api-*"
+          - "/task execute api-security"
+          - "/test run security"
+
+      - name: "Penetration Testing Agent"
+        when_to_use: "Before production deployment"
+        where: "In CI/CD pipeline or pre-deployment"
+        capabilities:
+          - "Automated security testing"
+          - "Vulnerability scanning"
+          - "Report generation"
+
+  performance:
+    agents:
+      - name: "React Performance Optimization Agent"
+        when_to_use: "When React app becomes slow"
+        where: "During refactoring or optimization tasks"
+        capabilities:
+          - "Identify render bottlenecks"
+          - "Suggest memo optimization"
+          - "Bundle size analysis"
+          - "Code splitting recommendations"
+        integration_points:
+          - "/spec create react-*"
+          - "/project optimize"
+          - "/test performance"
+
+      - name: "Database Optimization Agent"
+        when_to_use: "When queries are slow or database grows"
+        where: "During database schema design or optimization"
+        capabilities:
+          - "Query optimization"
+          - "Index recommendations"
+          - "Schema design review"
+          - "Performance profiling"
+        integration_points:
+          - "/spec create database-*"
+          - "/data optimize"
+
+  code_quality:
+    agents:
+      - name: "Code Review Agent"
+        when_to_use: "Before merging PRs or after task completion"
+        where: "In git hooks or CI/CD"
+        capabilities:
+          - "Style consistency check"
+          - "Best practices validation"
+          - "Security review"
+          - "Performance considerations"
+        integration_points:
+          - "/git commit"
+          - "/task verify"
+
+      - name: "Refactoring Agent"
+        when_to_use: "When code becomes complex or duplicated"
+        where: "During maintenance or tech debt reduction"
+        capabilities:
+          - "Identify code smells"
+          - "Suggest design patterns"
+          - "Extract reusable components"
+          - "Simplify complex logic"
+        integration_points:
+          - "/spec create refactor-*"
+          - "/test summary"
+
+  testing:
+    agents:
+      - name: "Test Generation Agent"
+        when_to_use: "When writing new features or missing tests"
+        where: "During TDD or after implementation"
+        capabilities:
+          - "Generate unit tests"
+          - "Create integration tests"
+          - "Edge case identification"
+          - "Mock generation"
+        integration_points:
+          - "/test generate"
+          - "/spec create"
+          - "/task execute"
+
+      - name: "E2E Testing Agent"
+        when_to_use: "Before releases or major changes"
+        where: "In test suites or CI/CD"
+        capabilities:
+          - "User flow testing"
+          - "Cross-browser testing"
+          - "Screenshot comparison"
+          - "Performance metrics"
+
+  documentation:
+    agents:
+      - name: "API Documentation Agent"
+        when_to_use: "When creating or updating APIs"
+        where: "During API development"
+        capabilities:
+          - "OpenAPI spec generation"
+          - "Example generation"
+          - "Postman collection creation"
+          - "README updates"
+        integration_points:
+          - "/spec create api-*"
+          - "/project docs"
+
+      - name: "Code Documentation Agent"
+        when_to_use: "When code lacks documentation"
+        where: "During code review or maintenance"
+        capabilities:
+          - "JSDoc/docstring generation"
+          - "Inline comment addition"
+          - "README generation"
+          - "Architecture diagrams"
+
+  devops:
+    agents:
+      - name: "CI/CD Pipeline Agent"
+        when_to_use: "When setting up automation"
+        where: "In project initialization or DevOps tasks"
+        capabilities:
+          - "GitHub Actions workflow"
+          - "Jenkins pipeline"
+          - "GitLab CI config"
+          - "Docker configuration"
+        integration_points:
+          - "/project setup"
+          - "/spec create pipeline-*"
+
+      - name: "Infrastructure as Code Agent"
+        when_to_use: "When provisioning cloud resources"
+        where: "During infrastructure setup"
+        capabilities:
+          - "Terraform modules"
+          - "CloudFormation templates"
+          - "Kubernetes manifests"
+          - "Ansible playbooks"
+
+  data_engineering:
+    agents:
+      - name: "ETL Pipeline Agent"
+        when_to_use: "When building data pipelines"
+        where: "In data processing specs"
+        capabilities:
+          - "Pipeline architecture"
+          - "Data validation"
+          - "Error handling"
+          - "Monitoring setup"
+        integration_points:
+          - "/data pipeline"
+          - "/spec create etl-*"
+
+      - name: "Data Analysis Agent"
+        when_to_use: "When analyzing datasets"
+        where: "During data exploration or reporting"
+        capabilities:
+          - "Statistical analysis"
+          - "Visualization generation"
+          - "Pattern detection"
+          - "Report generation"
+        integration_points:
+          - "/data analyze"
+          - "/spec create analysis-*"
+
+available_commands:
+  development:
+    - command: "/generate-tests"
+      description: "Generate comprehensive test suites"
+      when_to_use: "After implementing features"
+      agent_used: "Test Generation Agent"
+      
+    - command: "/optimize-bundle"
+      description: "Optimize JavaScript bundle size"
+      when_to_use: "When app loads slowly"
+      agent_used: "React Performance Optimization Agent"
+      
+    - command: "/check-file"
+      description: "Comprehensive file analysis"
+      when_to_use: "During code review"
+      agent_used: "Code Review Agent"
+      
+    - command: "/api-security-audit"
+      description: "Security audit for APIs"
+      when_to_use: "Before API deployment"
+      agent_used: "API Security Audit Agent"
+
+  database:
+    - command: "/optimize-query"
+      description: "Optimize slow database queries"
+      when_to_use: "When queries are slow"
+      agent_used: "Database Optimization Agent"
+      
+    - command: "/suggest-indexes"
+      description: "Recommend database indexes"
+      when_to_use: "During performance tuning"
+      agent_used: "Database Optimization Agent"
+
+  devops:
+    - command: "/setup-ci"
+      description: "Setup CI/CD pipeline"
+      when_to_use: "Project initialization"
+      agent_used: "CI/CD Pipeline Agent"
+      
+    - command: "/dockerize"
+      description: "Create Docker configuration"
+      when_to_use: "For containerization"
+      agent_used: "CI/CD Pipeline Agent"
+
+  documentation:
+    - command: "/generate-docs"
+      description: "Generate project documentation"
+      when_to_use: "Before releases"
+      agent_used: "Code Documentation Agent"
+      
+    - command: "/api-docs"
+      description: "Generate API documentation"
+      when_to_use: "After API changes"
+      agent_used: "API Documentation Agent"
+
+usage_in_agent_os:
+  spec_creation:
+    description: "Agents help during spec creation"
+    workflow:
+      - step: "Analyze spec type"
+        agents: ["Code Review Agent", "API Security Audit Agent"]
+      - step: "Generate technical spec"
+        agents: ["Database Optimization Agent", "React Performance Agent"]
+      - step: "Create tasks"
+        agents: ["Test Generation Agent"]
+
+  task_execution:
+    description: "Agents assist during implementation"
+    workflow:
+      - step: "Pre-implementation"
+        agents: ["Code Review Agent", "Refactoring Agent"]
+      - step: "Implementation"
+        agents: ["Test Generation Agent", "API Documentation Agent"]
+      - step: "Post-implementation"
+        agents: ["E2E Testing Agent", "Performance Optimization Agent"]
+
+  testing:
+    description: "Agents enhance testing"
+    workflow:
+      - step: "Test generation"
+        agents: ["Test Generation Agent"]
+      - step: "Test execution"
+        agents: ["E2E Testing Agent"]
+      - step: "Coverage analysis"
+        agents: ["Code Review Agent"]
+
+  deployment:
+    description: "Agents help with deployment"
+    workflow:
+      - step: "Pre-deployment"
+        agents: ["API Security Audit Agent", "Penetration Testing Agent"]
+      - step: "Deployment"
+        agents: ["CI/CD Pipeline Agent", "Infrastructure as Code Agent"]
+      - step: "Post-deployment"
+        agents: ["Performance Optimization Agent"]
+
+integration_strategy:
+  automatic_selection:
+    description: "Agents are automatically selected based on context"
+    rules:
+      - if: "spec name contains 'api'"
+        use: ["API Security Audit Agent", "API Documentation Agent"]
+      - if: "spec name contains 'database' or 'data'"
+        use: ["Database Optimization Agent", "Data Analysis Agent"]
+      - if: "spec name contains 'react' or 'frontend'"
+        use: ["React Performance Optimization Agent"]
+      - if: "task is testing"
+        use: ["Test Generation Agent", "E2E Testing Agent"]
+      - if: "deploying to production"
+        use: ["Penetration Testing Agent", "CI/CD Pipeline Agent"]
+
+  manual_invocation:
+    description: "Users can manually invoke specific agents"
+    examples:
+      - "/agent use 'API Security Audit Agent'"
+      - "/agent recommend for database-optimization"
+      - "/agent list available"
+
+  context_aware:
+    description: "Agents understand project context"
+    context_sources:
+      - ".agent-os/product/mission.md"
+      - ".agent-os/product/tech-stack.md"
+      - "Current spec requirements"
+      - "Existing code patterns"
+
+best_practices:
+  agent_selection:
+    - "Let the system recommend agents based on task"
+    - "Use multiple agents for comprehensive coverage"
+    - "Review agent suggestions before applying"
+    - "Customize agent outputs for project needs"
+
+  agent_chaining:
+    - "Use Code Review Agent after Refactoring Agent"
+    - "Run Security Audit before Performance Optimization"
+    - "Generate tests before documentation"
+    - "Validate with E2E after unit tests"
+
+  performance_tips:
+    - "Cache agent results for reuse"
+    - "Run heavy agents asynchronously"
+    - "Batch similar agent operations"
+    - "Use incremental analysis when possible"
+
+monitoring_and_analytics:
+  usage_tracking:
+    - "Track which agents are used most"
+    - "Measure agent effectiveness"
+    - "Monitor agent execution time"
+    - "Log agent recommendations"
+
+  quality_metrics:
+    - "Code quality improvement"
+    - "Bug reduction rate"
+    - "Documentation completeness"
+    - "Security vulnerability reduction"
+
+  feedback_loop:
+    - "Collect user feedback on agent suggestions"
+    - "Improve agent selection algorithm"
+    - "Update agent capabilities"
+    - "Share learnings across projects"
