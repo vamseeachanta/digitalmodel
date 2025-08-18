@@ -403,10 +403,19 @@ class Mooring:
 
             new_line_definition = []
             new_line_length = row["new_line_length"]
+            
+            # Handle case where new_line_length might be a numpy array
+            if isinstance(new_line_length, np.ndarray):
+                new_line_length = new_line_length.tolist()
+            
             for i, length in enumerate(new_line_length):
                 # Convert numpy types to native Python types for clean YAML
                 if length is not None:
                     length = self.convert_numpy_types(length)
+                    # Extra safety: ensure it's a Python float
+                    if hasattr(length, 'item'):
+                        length = length.item()
+                    length = float(length)
                 line_section_item = {f"Length[{i+1}]": length}
                 new_line_definition.append(line_section_item)
 
@@ -416,8 +425,12 @@ class Mooring:
         filename_dir = fm.get_file_management_input_directory(cfg)
         yml_file = file_meta_data["yml"]
         filename_stem = pathlib.Path(yml_file).stem
-        filename = "includefile_" + filename_stem + "_mooring_line_length"
+        filename = "includefile_" + filename_stem + "_mooring_line_length.yml"
         filename_path = os.path.join(filename_dir, filename)
+        
+        # Log the path for debugging
+        logger.info(f"Writing includefile to: {filename_path}")
+        
         save_data.saveDataYaml(
             {"Lines": includefile_dict}, filename_path, default_flow_style=False
         )
