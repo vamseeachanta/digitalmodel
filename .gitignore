@@ -1,5 +1,51 @@
 # DOM POC Files
 
+# ==========================================
+# MANDATORY: Root Directory Hygiene
+# ==========================================
+# Prevent test files in root
+/test_*.py
+/*_test.py
+/test_*.yml
+
+# Prevent backup files in root
+/*.backup*
+/*.bak
+/*~
+/*.old
+
+# Prevent migration files in root
+/*migration*
+/*upgrade*
+/requirements-*.txt
+
+# Prevent temporary files in root
+/tmp*
+/temp*
+/*.tmp
+/nul
+/coverage.xml
+/.command-*
+/agos
+
+# Prevent config files in root (except whitelisted)
+/*.yml
+/*.yaml
+!docker-compose.yml
+/*.json
+!package.json
+/*.ini
+
+# Prevent batch files in root (except convenience scripts)
+/batch_*.yml
+/fsts_*.yml
+/*_batch.yml
+
+# Prevent generated files in root
+/*.log
+/*.pid
+/*.cache
+# ==========================================
 
 # AQWA files
 src\digitalmodel\tests\test_data\aqwa\ef_server\02_S04_HR_EXT_FORCE.LIS
