@@ -3,7 +3,6 @@ import copy
 import logging
 import traceback
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from multiprocessing import cpu_count
 from typing import Dict, List, Tuple
 
 from assetutilities.common.data import PandasChainedAssignent
@@ -19,6 +18,7 @@ from digitalmodel.modules.orcaflex.opp_time_series import OPPTimeSeries
 from digitalmodel.modules.orcaflex.opp_visualization import OPPVisualization
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
 from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.common.parallel_processing import should_use_parallel
 
 ou = OrcaflexUtilities()  # noqa
 of_objects = OrcaFlexObjects()
@@ -224,24 +224,31 @@ class OrcaFlexPostProcess:
                 logging.error(f"Failed to write error report: {str(e)}")
 
     def post_process(self, cfg):
-        """Process multiple simulation files in parallel."""
-        
-        # Get configuration
-        parallel_config = cfg.get('parallel_processing', {})
-        max_workers = parallel_config.get('max_workers', cpu_count())
-        if max_workers == "auto":
-            max_workers = cpu_count()
-        use_parallel = parallel_config.get('enabled', True)
+        """Process multiple simulation files with smart parallel processing."""
         
         load_matrix = ou.get_load_matrix_with_filenames(cfg)
         sim_files = cfg.file_management["input_files"]["sim"]
         
-        if not use_parallel or len(sim_files) == 1:
+        # Set task type for post-processing (mixed CPU and I/O)
+        if 'parallel_processing' not in cfg:
+            cfg['parallel_processing'] = {}
+        cfg['parallel_processing']['task_type'] = 'mixed'
+        
+        # Determine if we should use parallel processing
+        use_parallel, num_workers, log_msg = should_use_parallel(
+            cfg=cfg,
+            num_items=len(sim_files),
+            module_name='OPP Post-Process'
+        )
+        
+        print(log_msg)
+        
+        if not use_parallel:
             # Fall back to sequential processing
             return self._post_process_sequential(cfg)
         
         # Parallel processing
-        print(f"Processing {len(sim_files)} files in parallel with {max_workers} workers")
+        print(f"Processing {len(sim_files)} files in parallel with {num_workers} workers")
         
         # Store cfg as instance variable for access in process_single_file
         self.cfg = cfg
@@ -251,7 +258,7 @@ class OrcaFlexPostProcess:
         
         # Process files in parallel
         results = []
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        with ProcessPoolExecutor(max_workers=num_workers) as executor:
             # Submit all tasks
             future_to_file = {
                 executor.submit(process_single_file, args): args[0] 
