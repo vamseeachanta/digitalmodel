@@ -31,6 +31,22 @@ class Mooring:
     def __init__(self):
         pass
 
+    @staticmethod
+    def convert_numpy_types(obj):
+        """Convert numpy types to native Python types for clean YAML serialization."""
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, (np.integer, np.floating)):
+            return obj.item()
+        elif isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
+            return int(obj)
+        elif isinstance(obj, (np.float64, np.float32, np.float16)):
+            return float(obj)
+        elif isinstance(obj, (np.bool_, np.bool8)):
+            return bool(obj)
+        else:
+            return obj
+
     def router(self, cfg):
         groups = cfg["orcaflex_analysis"]["mooring"]["groups"]
         for group in groups:
@@ -193,16 +209,20 @@ class Mooring:
 
         new_arc_length = arc_length + sum(delta_length)
         # restrict divergence of new arc length to stay within range
-        acceptable_range = (arc_length * 0.95, arc_length * 1.05)
-
+        calculated_length = row["calculated_length"]
+        tolerance = row["tolerance"]
+        acceptable_range = (
+            calculated_length * (1 - tolerance / 100),
+            calculated_length * (1 + tolerance / 100),
+        )
         # Check and restrict new_arc_length to acceptable range
         if new_arc_length < acceptable_range[0]:
-            new_arc_length = acceptable_range[0]
+            new_arc_length = round(float(acceptable_range[0]), 3)
             logger.warning(
                 f"{row['ObjectName']}: Arc length restricted to minimum: {new_arc_length:.2f}"
             )
         elif new_arc_length > acceptable_range[1]:
-            new_arc_length = acceptable_range[1]
+            new_arc_length = round(float(acceptable_range[1]), 3)
             logger.warning(
                 f"{row['ObjectName']}: Arc length restricted to maximum: {new_arc_length:.2f}"
             )
@@ -384,6 +404,9 @@ class Mooring:
             new_line_definition = []
             new_line_length = row["new_line_length"]
             for i, length in enumerate(new_line_length):
+                # Convert numpy types to native Python types for clean YAML
+                if length is not None:
+                    length = self.convert_numpy_types(length)
                 line_section_item = {f"Length[{i+1}]": length}
                 new_line_definition.append(line_section_item)
 
