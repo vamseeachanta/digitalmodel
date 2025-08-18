@@ -202,9 +202,9 @@ class Mooring:
         # Calculate delta lengths
         delta_length = []
         for i, length in enumerate(line_length):
-            delta = length / line_ea[i]
+            delta_length_per_unit_force = length / line_ea[i]
             tension_diff = effective_tension - target_tension
-            delta_length_section = delta * tension_diff
+            delta_length_section = delta_length_per_unit_force * tension_diff
             delta_length.append(delta_length_section)
 
         new_arc_length = arc_length + sum(delta_length)
@@ -227,12 +227,13 @@ class Mooring:
                 f"{row['ObjectName']}: Arc length restricted to maximum: {new_arc_length:.2f}"
             )
 
-        for i, length in enumerate(new_line_length):
-            if length is None:
-                other_length = sum(filter(None, new_line_length))
-                length_section = new_arc_length - other_length
-
-                new_line_length[i] = round(float(length_section), 4)
+        section_idx_to_be_modified = row["section_to_be_modified"]
+        other_length = (
+            sum(new_line_length) - new_line_length[section_idx_to_be_modified]
+        )
+        length_section = new_arc_length - other_length
+        new_line_length[section_idx_to_be_modified] = round(float(length_section), 4)
+        new_line_length = self.convert_numpy_types(new_line_length)
 
         return new_line_length
 
@@ -462,10 +463,10 @@ class Mooring:
         filename_stem = yml_path.stem
         filename = f"includefile_{filename_stem}_fender_compression"
         filename_path = filename_dir / filename
-        
+
         # Log the path for debugging
         logger.info(f"Writing fender includefile to: {filename_path}")
-        
+
         save_data.saveDataYaml(
             {"Vessels": includefile_dict}, str(filename_path), default_flow_style=False
         )
