@@ -415,7 +415,7 @@ class Mooring:
                     # Extra safety: ensure it's a Python float
                     if hasattr(length, "item"):
                         length = length.item()
-                    length = float(length)
+                    length = round(float(length), 4)  # Round to 4 decimal places
                 line_section_item = {f"Length[{i+1}]": length}
                 new_line_definition.append(line_section_item)
 
