@@ -194,6 +194,14 @@ class Mooring:
         new_arc_length = arc_length + sum(delta_length)
         # restrict divergence of new arc length to stay within range
         acceptable_range = (arc_length * 0.95, arc_length * 1.05)
+        
+        # Check and restrict new_arc_length to acceptable range
+        if new_arc_length < acceptable_range[0]:
+            new_arc_length = acceptable_range[0]
+            logger.warning(f"Arc length restricted to minimum: {new_arc_length:.2f}")
+        elif new_arc_length > acceptable_range[1]:
+            new_arc_length = acceptable_range[1]
+            logger.warning(f"Arc length restricted to maximum: {new_arc_length:.2f}")
 
         for i, length in enumerate(new_line_length):
             if length is None:
