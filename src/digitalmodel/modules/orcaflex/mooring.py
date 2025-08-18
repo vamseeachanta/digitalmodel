@@ -128,9 +128,9 @@ class Mooring:
                 "End GY force"
             ].values[0]
 
-            self.evaluate_line_length_current(arc_length, line_length)
+            line_length = self.evaluate_line_length_current(arc_length, line_length)
 
-            self.evaluate_line_length_next_iteration(
+            new_line_length = self.evaluate_line_length_next_iteration(
                 effective_tension,
                 arc_length,
                 line_length,
@@ -176,6 +176,12 @@ class Mooring:
         line_ea,
         target_tension,
     ):
+        """
+        Calculate the next iteration line lengths based on tension differences.
+        
+        Returns:
+            list: Updated new_line_length with calculated values
+        """
         delta_length = []
         for i, length in enumerate(line_length):
             delta = length / line_ea[i]
@@ -189,12 +195,22 @@ class Mooring:
                 other_length = sum(filter(None, new_line_length))
                 length_section = new_arc_length - other_length
                 new_line_length[i] = round(float(length_section), 4)
+        
+        return new_line_length
 
     def evaluate_line_length_current(self, arc_length, line_length):
+        """
+        Fill in missing line lengths based on arc length and known segments.
+        
+        Returns:
+            list: Updated line_length with calculated missing values
+        """
         for i, length in enumerate(line_length):
             if length is None:
                 other_line_length = sum(filter(None, line_length))
                 line_length[i] = arc_length - other_line_length
+        
+        return line_length
 
     def fender_force_analysis(self, cfg, group, file_meta_data, var_data_dict):
         output_dict = {}
