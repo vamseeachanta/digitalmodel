@@ -32,8 +32,16 @@ def parse_kwargs(args_list):
     for arg in args_list:
         if '=' in arg:
             key, value = arg.split('=', 1)
+            # Special handling for models parameter (should be a list)
+            if key == 'models':
+                # If it contains commas, split it
+                if ',' in value:
+                    kwargs[key] = [v.strip() for v in value.split(',')]
+                else:
+                    # Single model, still make it a list
+                    kwargs[key] = [value]
             # Convert to appropriate type
-            if value.lower() == 'true':
+            elif value.lower() == 'true':
                 kwargs[key] = True
             elif value.lower() == 'false':
                 kwargs[key] = False
@@ -134,7 +142,9 @@ Examples:
         
         # Create status reporter
         status_reporter = StatusReporter(enable_colors=True)
-        kwargs['status_reporter'] = status_reporter
+        # Only add status_reporter if not already in kwargs
+        if 'status_reporter' not in kwargs:
+            kwargs['status_reporter'] = status_reporter
         
         # Run with kwargs
         print(f"\nRunning with arguments:")

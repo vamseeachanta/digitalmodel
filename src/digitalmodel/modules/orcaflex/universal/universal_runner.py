@@ -244,10 +244,12 @@ class UniversalOrcaFlexRunner:
         
         # Process models
         if parallel and len(model_files) > 1:
+            # Extract status_reporter from kwargs if present to avoid duplicate
+            status_reporter = kwargs.pop('status_reporter', self.status_reporter)
             results = self.batch_processor.process_batch(
                 models=model_files,
                 output_directory=output_dir,
-                status_reporter=self.status_reporter,
+                status_reporter=status_reporter,
                 **kwargs
             )
         else:

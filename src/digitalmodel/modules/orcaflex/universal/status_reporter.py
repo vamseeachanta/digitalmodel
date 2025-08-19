@@ -95,7 +95,7 @@ class StatusReporter:
             status_str = (
                 f"OrcaFlex: [{self.completed}/{self.total}] "
                 f"{progress_pct:.0f}% | "
-                f"✓{self.success} ✗{self.failed} | "
+                f"OK:{self.success} FAIL:{self.failed} | "
                 f"{rate:.1f}/s | "
                 f"{self.current_model[:30]}"
             )
@@ -225,8 +225,8 @@ class StatusReporter:
         # Overall statistics
         print(f"\n{self.BOLD}Overall Statistics:{self.RESET}")
         print(f"  Total Models Processed: {self.total}")
-        print(f"  {self.GREEN}Successful: {self.success} ✓{self.RESET}")
-        print(f"  {self.RED}Failed: {self.failed} ✗{self.RESET}")
+        print(f"  {self.GREEN}Successful: {self.success} (OK){self.RESET}")
+        print(f"  {self.RED}Failed: {self.failed} (FAIL){self.RESET}")
         
         if self.total > 0:
             success_rate = (self.success / self.total) * 100
@@ -270,7 +270,7 @@ class StatusReporter:
                 error_msg = failed['error']
                 if len(error_msg) > 60:
                     error_msg = error_msg[:57] + "..."
-                print(f"  ✗ {failed['model']}: {error_msg}")
+                print(f"  FAIL: {failed['model']}: {error_msg}")
             if len(self.failed_list) > 5:
                 print(f"  ... and {len(self.failed_list) - 5} more failures")
         
@@ -358,7 +358,7 @@ class StatusReporter:
         if self.completed > 0:
             final_status = (
                 f"OrcaFlex Complete: "
-                f"✓{self.success} ✗{self.failed} "
+                f"OK:{self.success} FAIL:{self.failed} "
                 f"({(self.success/self.total*100):.0f}% success)"
             )
         else:

@@ -291,10 +291,10 @@ class BatchProcessor:
             
             if result.get('success'):
                 self.successful += 1
-                status = "✓"
+                status = "OK"
             else:
                 self.failed += 1
-                status = "✗"
+                status = "FAIL"
             
             # Log progress
             progress = self.completed_count / self.total_count * 100
