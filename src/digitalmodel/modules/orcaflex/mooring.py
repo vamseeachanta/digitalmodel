@@ -125,7 +125,13 @@ class Mooring:
     def mooring_pre_tension_analysis(self, cfg, group, file_meta_data, var_data_dict):
         output_dict = {}
         target_pre_tension_df = self.get_target_pretension(cfg, group)
-        columns = ["ObjectName", "Effective tension", "Arc length", "End GY force"]
+        columns = [
+            "ObjectName",
+            "Effective tension",
+            "Arc length",
+            "End GX force",
+            "End GY force",
+        ]
         current_var_df = var_data_dict["StaticResult"]["Line"][columns]
 
         new_arc_length = []
@@ -140,6 +146,9 @@ class Mooring:
             arc_length = current_var_df_filtered["Arc length"].values[0]
 
             line_length = row["line_length"]
+            target_pre_tension_df.at[index, "end_Gx_force"] = current_var_df_filtered[
+                "End GX force"
+            ].values[0]
             target_pre_tension_df.at[index, "end_Gy_force"] = current_var_df_filtered[
                 "End GY force"
             ].values[0]

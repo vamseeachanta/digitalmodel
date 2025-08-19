@@ -208,6 +208,13 @@ docs = [
 "Bug Tracker" = "https://github.com/username/digitalmodel/issues"
 "Documentation" = "https://github.com/username/digitalmodel#readme"
 
+[project.scripts]
+digital_model = "digitalmodel.__main__:main"
+test-automation = "test_automation.__main__:main"
+run-to-sim = "digitalmodel.modules.orcaflex.run_to_sim_cli:main"
+orcaflex-universal = "digitalmodel.modules.orcaflex.universal_cli:main"
+orcaflex-sim = "digitalmodel.modules.orcaflex.universal_cli:main"
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["*"]

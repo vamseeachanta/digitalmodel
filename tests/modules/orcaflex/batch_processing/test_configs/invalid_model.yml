@@ -1,0 +1,3 @@
+# Invalid model for error testing
+Invalid YAML content {
+  This should fail parsing

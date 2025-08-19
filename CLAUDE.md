@@ -32,6 +32,8 @@ Create as slash command? (Recommended)
 - `/propagate-commands` - Distribute commands to all repos
 - `/modernize-deps` - Update dependency management
 - `/organize-structure` - Organize project structure
+- `/orcaflex-universal` - Universal OrcaFlex simulation runner
+- `/orcaflex-sim` - Alternative command for OrcaFlex runner
 
 ### 📢 PENDING PROPAGATION (Generic Components Only):
 - **Background Test Runner** - Ready for `/propagate-commands`
@@ -46,6 +48,13 @@ Create as slash command? (Recommended)
   - OrcaFlex-specific batch processing
   - Mooring tension iteration logic
   - See: `src/modules/orcaflex/mooring_tension_iteration/PROPAGATION_NOTES.md`
+  - **Universal OrcaFlex Runner** (`src/digitalmodel/modules/orcaflex/universal/`)
+    - Pattern-based model discovery with glob/regex support
+    - Parallel batch processing with adaptive worker scaling
+    - Module-based execution: `python -m digitalmodel.modules.orcaflex.universal`
+    - CLI commands: `orcaflex-universal`, `orcaflex-sim`
+    - Real-time status reporting with terminal updates
+    - Mock mode for testing without OrcaFlex license
 
 ### Creating New Commands:
 1. Implement in `.agent-os/commands/`
@@ -209,6 +218,21 @@ python tools/create-module-agent.py <module-name>
 
 - **Create-Module-Agent:** Available via `python tools/create-module-agent.py` command
 - **Run-OrcaFlex-Agent:** Available via `python run_orcaflex_agent.py` command
+- **Universal OrcaFlex Runner:**
+  - Module execution: `python -m digitalmodel.modules.orcaflex.universal`
+  - CLI command: `orcaflex-universal` or `orcaflex-sim`
+  - Slash command: `/orcaflex-universal` or `/orcaflex-sim`
+  - Examples:
+    ```bash
+    # Pattern-based processing
+    python -m digitalmodel.modules.orcaflex.universal pattern="fsts_*.yml" input_directory="./models"
+    
+    # Using CLI command
+    orcaflex-universal --all --mock
+    
+    # With configuration file
+    /orcaflex-universal --config batch_config.yml
+    ```
 
 ## Enhanced Features Available
 
@@ -530,3 +554,4 @@ View all available commands:
 - always utilize existing repo environment
 - orcaflex module agent should note that always run actual license test when license is available.
 - memory. do not create any unnecessary files in the repo root directory.
+- make an important note that uv tool and repo uv environment should be used for aall work so that the repo uv envionment is always up to date for executing work
