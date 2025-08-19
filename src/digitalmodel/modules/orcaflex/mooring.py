@@ -151,8 +151,23 @@ class Mooring:
                 row, effective_tension, arc_length, line_length
             )
 
-            target_pre_tension_df.at[index, "new_line_length"] = new_line_length
             target_pre_tension_df.at[index, "current_tension"] = effective_tension
+            target_pre_tension_df.at[index, "tension_diff_percent"] = (
+                (effective_tension - row["target_tension"])
+                / row["target_tension"]
+                * 100
+            )
+
+            target_pre_tension_df.at[index, "new_line_length"] = new_line_length
+            converged_line_length_total = sum(new_line_length)
+            target_pre_tension_df.at[index, "converged_line_length_total"] = (
+                converged_line_length_total
+            )
+            target_pre_tension_df.at[index, "length_percent_change"] = (
+                (converged_line_length_total - row["calculated_length"])
+                / row["calculated_length"]
+                * 100
+            )
 
         tension_criteria_pass_flag = self.get_tension_criteria(
             cfg, group, target_pre_tension_df
