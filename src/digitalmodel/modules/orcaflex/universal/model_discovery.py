@@ -228,7 +228,8 @@ class ModelDiscovery:
             # Check for OrcaFlex-specific keys
             orcaflex_indicators = [
                 'General', 'Environment', 'BaseFile',
-                'UnitsSystem', 'Vessels', 'Lines', 'Winches'
+                'UnitsSystem', 'Vessels', 'Lines', 'Winches',
+                'includefile'  # Added to support include files
             ]
             
             if isinstance(data, dict):

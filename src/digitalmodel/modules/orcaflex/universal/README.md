@@ -8,26 +8,54 @@ A comprehensive, library-based OrcaFlex simulation runner that can be executed f
 
 The Universal OrcaFlex Runner is included with the digitalmodel package. No additional installation required.
 
-### Basic Usage
+### Basic Usage - Module Interface
 
 ```bash
-# Process all .yml files in current directory
-/orcaflex-universal --all
+# Process OrcaFlex .yml files to generate .sim files
+python -m digitalmodel.modules.orcaflex.universal pattern="*.yml" input_directory="." output_directory="."
 
-# Process specific pattern
-/orcaflex-universal --pattern "fsts_*.yml" --all
+# If no pattern is specified, defaults to "*.yml" (all YAML files)
+python -m digitalmodel.modules.orcaflex.universal input_directory="." output_directory="."
+
+# Specific example - FSTS 180km3 port/bow models
+python -m digitalmodel.modules.orcaflex.universal pattern="fsts*180km3*pb*.yml" input_directory="." output_directory="."
+
+# Process .dat files instead of .yml
+python -m digitalmodel.modules.orcaflex.universal pattern="*.dat" input_directory="." output_directory="."
+
+# Increase parallel workers to 40 (default is 30)
+python -m digitalmodel.modules.orcaflex.universal pattern="*.yml" max_workers=40
 
 # Mock mode (no license required)
-/orcaflex-universal --mock --test
+python -m digitalmodel.modules.orcaflex.universal --mock pattern="*.yml"
 
-# Use configuration file
-/orcaflex-universal --config batch.yml
+# Dynamic analysis only
+python -m digitalmodel.modules.orcaflex.universal --dynamic pattern="*.yml" simulation_time=200
+
+# Both static and dynamic analysis
+python -m digitalmodel.modules.orcaflex.universal --both pattern="*.yml" simulation_time=150
+
+# Dynamic analysis with custom simulation time
+python -m digitalmodel.modules.orcaflex.universal analysis_type="dynamic" simulation_time=300.0 pattern="*.yml"
 ```
+
+### What This Does
+The command will:
+1. Find all .yml files matching your pattern
+2. Load each OrcaFlex model file
+3. Run analysis (static, dynamic, or both)
+4. Save results as .sim files
+
+### Example Files Processed
+- `fsts_l015_hwl_180km3_l100_pb_vessel_statics_6dof.yml` → `.sim` (43MB)
+- `fsts_l015_lwl_180km3_l100_pb_vessel_statics_6dof.yml` → `.sim` (43MB)
+- `fsts_l095_hwl_180km3_l000_pb_vessel_statics_6dof.yml` → `.sim` (44MB)
 
 ## 📋 Features
 
 - **Universal Access**: Run from any directory without path dependencies
 - **Flexible Processing**: Single file, batch, pattern-based, and directory-based processing
+- **Analysis Types**: Static analysis, dynamic simulation, or both
 - **Live Status Reporting**: Real-time progress in terminal/bash window title
 - **Parallel Processing**: Adaptive worker scaling based on system resources
 - **Mock Mode**: Test without OrcaFlex license
@@ -229,9 +257,23 @@ results = runner.run(pattern="*.yml", input_directory="./test_models")
 ## 📁 File Support
 
 The runner supports the following OrcaFlex file types:
-- `.yml` / `.yaml` - YAML model files
+- `.yml` / `.yaml` - YAML model files (including those with `includefile` directives)
 - `.dat` - OrcaFlex data files  
 - `.sim` - Simulation files (for validation)
+
+### Support for Include Files
+The module recognizes OrcaFlex YAML files that use `includefile` directives. Files with the following structure are fully supported:
+
+```yaml
+BaseFile: ../base_model.yml
+includefile: includefile_general_settings.yml
+includefile: includefile_vessel_statics.yml
+```
+
+The validation checks for these OrcaFlex-specific keys:
+- `General`, `Environment`, `BaseFile`
+- `UnitsSystem`, `Vessels`, `Lines`, `Winches`
+- `includefile` (for modular model files)
 
 ## 🔍 Pattern Matching
 

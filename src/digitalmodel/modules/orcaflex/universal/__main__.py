@@ -69,16 +69,26 @@ Keyword Arguments:
     parallel=true                # Parallel processing
     max_workers=20               # Concurrent workers
     mock=true                    # Mock mode
+    analysis_type="dynamic"      # Analysis type (static/dynamic/both)
+    simulation_time=200.0        # Dynamic simulation duration (seconds)
     
 Examples:
-    # Pattern matching
+    # Pattern matching with static analysis (default)
     python -m digitalmodel.modules.orcaflex.universal pattern="fsts_*.yml"
+    
+    # Dynamic analysis only
+    python -m digitalmodel.modules.orcaflex.universal --dynamic pattern="*.yml" simulation_time=200
+    
+    # Both static and dynamic
+    python -m digitalmodel.modules.orcaflex.universal --both pattern="*.dat"
     
     # Multiple arguments
     python -m digitalmodel.modules.orcaflex.universal \\
         pattern="*.dat" \\
         input_directory="/path/to/models" \\
         output_directory="/path/to/sim" \\
+        analysis_type="dynamic" \\
+        simulation_time=150.0 \\
         parallel=true \\
         max_workers=10
     
@@ -97,6 +107,12 @@ Examples:
     parser.add_argument('--verbose', '-v', action='store_true',
                        help='Verbose output')
     parser.add_argument('--report', help='Save JSON report')
+    parser.add_argument('--static', action='store_true',
+                       help='Run static analysis only')
+    parser.add_argument('--dynamic', action='store_true',
+                       help='Run dynamic analysis only')
+    parser.add_argument('--both', action='store_true',
+                       help='Run both static and dynamic analysis')
     
     # Parse known args and collect remaining as kwargs
     args, unknown = parser.parse_known_args()
@@ -109,6 +125,14 @@ Examples:
         kwargs['mock_mode'] = True
     if args.verbose:
         kwargs['verbose'] = True
+    
+    # Handle analysis type flags
+    if args.static:
+        kwargs['analysis_type'] = 'static'
+    elif args.dynamic:
+        kwargs['analysis_type'] = 'dynamic'
+    elif args.both:
+        kwargs['analysis_type'] = 'both'
     
     # Special handling for common patterns
     if args.all and 'models' not in kwargs:
