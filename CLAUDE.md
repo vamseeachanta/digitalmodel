@@ -281,7 +281,7 @@ python tools/execute-tasks.py @specs/modules/module-name/spec-folder/tasks.md
 Every specification in `specs/modules/<module>/<feature>/` MUST contain:
 
 ```
-specs/modules/<module>/<feature>/
+specs/modules/<module>/<feature>/   # NO DATE PREFIX - Use descriptive names only
 ├── spec.md                 # Main specification document (REQUIRED)
 ├── tasks.md                # Task breakdown with estimates (REQUIRED)
 ├── prompt.md               # Complete prompt history (REQUIRED)
@@ -290,6 +290,12 @@ specs/modules/<module>/<feature>/
 └── diagrams/              # Architecture diagrams (OPTIONAL)
     └── architecture.mermaid
 ```
+
+**🚨 CRITICAL: NO DATE PREFIXES IN SPEC FOLDERS**
+- ✅ CORRECT: `specs/modules/orcaflex/orcaflex-examples-integration/`
+- ❌ WRONG: `specs/modules/orcaflex/2024-12-19-orcaflex-examples-integration/`
+- Dates belong INSIDE documents, NOT in folder names
+- Folder names MUST be descriptive and permanent
 
 ### MANDATORY Naming Conventions
 **VIOLATIONS WILL BE REJECTED:**
