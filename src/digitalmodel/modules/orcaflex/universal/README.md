@@ -29,7 +29,7 @@ python -m digitalmodel.modules.orcaflex.universal pattern="*.yml" max_workers=40
 # Mock mode (no license required)
 python -m digitalmodel.modules.orcaflex.universal --mock pattern="*.yml"
 
-# Dynamic analysis only
+# Dynamic analysis only (runs full time-domain simulation)
 python -m digitalmodel.modules.orcaflex.universal --dynamic pattern="*.yml" simulation_time=200
 
 # Both static and dynamic analysis
@@ -37,6 +37,9 @@ python -m digitalmodel.modules.orcaflex.universal --both pattern="*.yml" simulat
 
 # Dynamic analysis with custom simulation time
 python -m digitalmodel.modules.orcaflex.universal analysis_type="dynamic" simulation_time=300.0 pattern="*.yml"
+
+# Note: Dynamic analysis runs the full OrcaFlex simulation using model.RunSimulation()
+# This includes all stages defined in the model (build-up, simulation, etc.)
 ```
 
 ### What This Does

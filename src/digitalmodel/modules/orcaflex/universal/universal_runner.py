@@ -365,18 +365,25 @@ class UniversalOrcaFlexRunner:
                 # Real OrcaFlex processing
                 import OrcFxAPI
                 
-                # Load model
-                model = OrcFxAPI.Model()
-                
-                # Load model based on file extension
-                if model_file.suffix.lower() in ['.yml', '.yaml', '.dat']:
-                    model.LoadData(str(model_file))
-                else:
-                    raise ValueError(f"Unsupported file type: {model_file.suffix}")
-                
                 # Get analysis type from kwargs
                 analysis_type = kwargs.get('analysis_type', 'static')
                 simulation_time = kwargs.get('simulation_time', 100.0)
+                
+                # Load model directly with file path (as per OrcaFlex documentation)
+                logger.debug(f"Loading model: {model_file}")
+                model = OrcFxAPI.Model(str(model_file))
+                
+                # Set simulation parameters before running
+                if analysis_type in ['dynamic', 'both'] and simulation_time:
+                    try:
+                        logger.debug(f"Setting simulation duration to {simulation_time} seconds")
+                        # Access General data and set simulation duration
+                        general = model['General']
+                        # Set the simulation duration for the first stage (Build-up)
+                        general.StageDuration[0] = simulation_time
+                        logger.debug(f"Simulation duration set successfully")
+                    except Exception as e:
+                        logger.warning(f"Could not set simulation duration: {e}. Using model defaults.")
                 
                 # Run analysis based on type
                 if analysis_type in ['static', 'both']:
@@ -384,10 +391,8 @@ class UniversalOrcaFlexRunner:
                     model.CalculateStatics()
                 
                 if analysis_type in ['dynamic', 'both']:
-                    logger.debug(f"Running dynamic analysis for {model_file.name} (t={simulation_time}s)")
-                    # Set simulation duration
-                    model.general.StageDuration[0] = simulation_time
-                    # Run dynamic simulation
+                    logger.debug(f"Running dynamic simulation for {model_file.name}")
+                    # Run the simulation
                     model.RunSimulation()
                 
                 # Save simulation
