@@ -61,7 +61,8 @@ class UniversalOrcaFlexRunner:
                  mock_mode: bool = False,
                  max_workers: int = 30,
                  license_timeout: int = 300,
-                 verbose: bool = False):
+                 verbose: bool = False,
+                 analysis_type: str = 'static'):
         """
         Initialize the Universal OrcaFlex Runner.
         
@@ -71,12 +72,18 @@ class UniversalOrcaFlexRunner:
             max_workers: Maximum number of parallel workers
             license_timeout: Timeout for license acquisition in seconds
             verbose: Enable verbose logging
+            analysis_type: Type of analysis ('static', 'dynamic', or 'both')
         """
         self.base_dir = Path(base_dir) if base_dir else Path.cwd()
         self.mock_mode = mock_mode
         self.max_workers = max_workers
         self.license_timeout = license_timeout
         self.verbose = verbose
+        self.analysis_type = analysis_type.lower()
+        
+        # Validate analysis type
+        if self.analysis_type not in ['static', 'dynamic', 'both']:
+            raise ValueError(f"Invalid analysis_type: {analysis_type}. Must be 'static', 'dynamic', or 'both'")
         
         # Configure logging
         log_level = logging.DEBUG if verbose else logging.INFO
@@ -99,6 +106,7 @@ class UniversalOrcaFlexRunner:
         logger.info(f"Base directory: {self.base_dir}")
         logger.info(f"Mock mode: {self.mock_mode}")
         logger.info(f"Max workers: {self.max_workers}")
+        logger.info(f"Analysis type: {self.analysis_type}")
     
     def _check_orcaflex_availability(self):
         """Check if OrcaFlex API is available."""
@@ -159,6 +167,8 @@ class UniversalOrcaFlexRunner:
             recursive: bool = False,
             parallel: bool = True,
             exclude_patterns: Optional[List[str]] = None,
+            analysis_type: Optional[str] = None,
+            simulation_time: Optional[float] = None,
             **kwargs) -> RunResults:
         """
         Execute simulations with flexible keyword arguments.
@@ -172,6 +182,8 @@ class UniversalOrcaFlexRunner:
             recursive: Search directories recursively
             parallel: Enable parallel processing
             exclude_patterns: Patterns to exclude from processing
+            analysis_type: Override analysis type ('static', 'dynamic', or 'both')
+            simulation_time: Simulation duration for dynamic analysis (seconds)
             **kwargs: Additional keyword arguments for processing
         
         Returns:
@@ -192,6 +204,19 @@ class UniversalOrcaFlexRunner:
         logger.info("=" * 80)
         
         start_time = time.time()
+        
+        # Use provided analysis_type or default from init
+        current_analysis_type = analysis_type or self.analysis_type
+        if current_analysis_type not in ['static', 'dynamic', 'both']:
+            raise ValueError(f"Invalid analysis_type: {current_analysis_type}")
+        
+        # Set default simulation time if not provided
+        if simulation_time is None and current_analysis_type in ['dynamic', 'both']:
+            simulation_time = 100.0  # Default 100 seconds
+        
+        # Add to kwargs for passing to processing methods
+        kwargs['analysis_type'] = current_analysis_type
+        kwargs['simulation_time'] = simulation_time
         
         # If config file provided, load and merge with arguments
         if config_file:
@@ -321,12 +346,21 @@ class UniversalOrcaFlexRunner:
         try:
             if self.mock_mode:
                 # Mock processing
-                time.sleep(0.1)  # Simulate processing
+                analysis_type = kwargs.get('analysis_type', 'static')
+                # Simulate longer processing for dynamic analysis
+                if analysis_type == 'static':
+                    time.sleep(0.1)
+                elif analysis_type == 'dynamic':
+                    time.sleep(0.2)
+                else:  # both
+                    time.sleep(0.3)
+                
                 sim_file = output_dir / f"{model_file.stem}.sim"
-                sim_file.write_text(f"Mock simulation for {model_file.name}")
+                sim_file.write_text(f"Mock simulation for {model_file.name} (analysis: {analysis_type})")
                 result['sim_file'] = str(sim_file)
                 result['success'] = True
                 result['mock'] = True
+                result['analysis_type'] = analysis_type
             else:
                 # Real OrcaFlex processing
                 import OrcFxAPI
@@ -340,8 +374,21 @@ class UniversalOrcaFlexRunner:
                 else:
                     raise ValueError(f"Unsupported file type: {model_file.suffix}")
                 
-                # Run static analysis
-                model.CalculateStatics()
+                # Get analysis type from kwargs
+                analysis_type = kwargs.get('analysis_type', 'static')
+                simulation_time = kwargs.get('simulation_time', 100.0)
+                
+                # Run analysis based on type
+                if analysis_type in ['static', 'both']:
+                    logger.debug(f"Running static analysis for {model_file.name}")
+                    model.CalculateStatics()
+                
+                if analysis_type in ['dynamic', 'both']:
+                    logger.debug(f"Running dynamic analysis for {model_file.name} (t={simulation_time}s)")
+                    # Set simulation duration
+                    model.general.StageDuration[0] = simulation_time
+                    # Run dynamic simulation
+                    model.RunSimulation()
                 
                 # Save simulation
                 sim_file = output_dir / f"{model_file.stem}.sim"
