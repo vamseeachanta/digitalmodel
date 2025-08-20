@@ -67,6 +67,31 @@ Create as slash command? (Recommended)
 
 This file provides guidance to AI assistants when working with code in this repository.
 
+## 🚫 MANDATORY: No Mock Testing Policy
+
+**CRITICAL DIRECTIVE**: NEVER create mock tests, mock modes, or simulated functionality unless EXPLICITLY requested by the user.
+
+### Strict Requirements:
+- ❌ **NO MOCK TESTS** - Always use real implementations and actual testing
+- ❌ **NO MOCK MODES** - Remove all mock_mode parameters and simulated behaviors
+- ❌ **NO STUB FUNCTIONS** - Implement actual functionality or leave unimplemented
+- ❌ **NO FAKE DATA** - Use real data or clearly indicate data is needed
+- ✅ **REAL TESTING ONLY** - All tests must validate actual functionality
+- ✅ **PRODUCTION-READY CODE** - Write code that works in real environments
+
+### Enforcement:
+- If user hasn't explicitly asked for mocks, DO NOT create them
+- Remove existing mock code unless specifically needed
+- Replace mock tests with integration tests using real components
+- This applies to ALL repositories and ALL code changes
+
+### Exception:
+Only create mocks when user explicitly states:
+- "create mock tests"
+- "add mock mode"
+- "simulate this functionality"
+- "create stub implementation"
+
 ## 🧹 MANDATORY: Repository Root Directory Hygiene
 
 **CRITICAL DIRECTIVE**: The repository root MUST remain clean and organized at ALL times.
@@ -561,3 +586,4 @@ View all available commands:
 - orcaflex module agent should note that always run actual license test when license is available.
 - memory. do not create any unnecessary files in the repo root directory.
 - make an important note that uv tool and repo uv environment should be used for aall work so that the repo uv envionment is always up to date for executing work
+- Mandatory as part of all repos make a note no mocks or mock tests at all unless the user explicitly requests it
