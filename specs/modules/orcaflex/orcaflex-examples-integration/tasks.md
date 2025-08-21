@@ -22,22 +22,22 @@ These are the tasks to be completed for the spec detailed in @specs/modules/orca
   - [x] 2.5 Create download manifest with checksums
   - [x] 2.6 Test downloader with sample examples
 
-- [ ] 3. Create format converter
-  - [ ] 3.1 Set up OrcaFlex API connection for conversion
-  - [ ] 3.2 Implement batch conversion script (.dat/.sim to .yml)
-  - [ ] 3.3 Add validation for converted YAML files
-  - [ ] 3.4 Handle conversion errors and log issues
-  - [ ] 3.5 Create conversion report
-  - [ ] 3.6 Test converter with various file types
+- [x] 3. Create format converter
+  - [x] 3.1 Set up OrcaFlex API connection for conversion
+  - [x] 3.2 Implement batch conversion script (.dat/.sim to .yml)
+  - [x] 3.3 Add validation for converted YAML files
+  - [x] 3.4 Handle conversion errors and log issues
+  - [x] 3.5 Create conversion report
+  - [x] 3.6 Test converter with various file types
 
-- [ ] 4. Build feature analyzer
-  - [ ] 4.1 Define feature extraction schema
-  - [ ] 4.2 Implement component detection (vessels, lines, buoys, etc.)
-  - [ ] 4.3 Extract analysis types (static, dynamic, fatigue)
-  - [ ] 4.4 Identify environmental conditions
-  - [ ] 4.5 Catalog modeling techniques used
-  - [ ] 4.6 Generate feature summary for each example
-  - [ ] 4.7 Test analyzer accuracy
+- [x] 4. Build feature analyzer
+  - [x] 4.1 Define feature extraction schema
+  - [x] 4.2 Implement component detection (vessels, lines, buoys, etc.)
+  - [x] 4.3 Extract analysis types (static, dynamic, fatigue)
+  - [x] 4.4 Identify environmental conditions
+  - [x] 4.5 Catalog modeling techniques used
+  - [x] 4.6 Generate feature summary for each example
+  - [x] 4.7 Test analyzer accuracy
 
 - [ ] 5. Develop knowledge integrator
   - [ ] 5.1 Design knowledge base schema for module agent
