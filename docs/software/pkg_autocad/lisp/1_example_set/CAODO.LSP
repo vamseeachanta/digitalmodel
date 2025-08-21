@@ -1,7 +1,0 @@
-(defun c:cd (/ m1 m2)
- (setq m1 (getpoint "\nDiem dat : "))
- (setq m2 (getstring T "\nNhap cao do <0.000>: "))
- (setvar "attdia" 0)
- (command "insert" "caodo" m1 "100" "" "" m2)
- (princ)
-)

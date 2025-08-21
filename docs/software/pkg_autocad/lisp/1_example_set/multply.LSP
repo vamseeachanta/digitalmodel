@@ -1,6 +1,0 @@
-(defun c:*()
-	(setq a (getreal "\nEnter the first value:")
-	      b (getreal "\nEnter the second value:")
-	)
-	        (* a b)
-)

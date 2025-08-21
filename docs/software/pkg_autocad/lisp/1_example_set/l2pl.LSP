@@ -1,6 +1,0 @@
-(defun c:l2pl(/ ss)
-(if (setq ss (ssget '((0 . "*line,arc"))))
-(vl-cmdf ".pedit" "m" ss "" "y" "j" "10" "")
-)
-(princ)
-) 
