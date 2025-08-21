@@ -6,7 +6,7 @@
 |---------|-------------|-------------|----------|
 | **`/git`** | | **Git Operations** | |
 | | `status` | Show status of all repositories | • Multi-repo status<br>• Uncommitted changes detection<br>• Branch information |
-| | `sync` | Sync all repos with origin | • Auto-stash changes<br>• Pull latest<br>• Restore stashed changes<br>• **Auto-updates this documentation** |
+| | `sync` | Sync all repos with origin | • Auto-stash changes<br>• Pull latest<br>• **Propagates all commands**<br>• **Updates documentation**<br>• Use --no-commands to skip propagation |
 | | `trunk` | Switch to trunk-based development | • Convert to main branch<br>• Clean old branches<br>• Setup trunk workflow |
 | | `commit [msg]` | Commit changes | • Smart commit messages<br>• Auto-staging<br>• Push to origin |
 | | `clean` | Clean branches and references | • Remove merged branches<br>• Prune remote refs<br>• Clean stale data |
@@ -101,7 +101,10 @@
 
 ### Daily Development
 ```bash
-/git sync --all          # Start your day
+/git sync --all          # Start your day - syncs everything!
+                        # • Git pull all repos
+                        # • Propagate latest commands
+                        # • Update documentation
 /task status            # Check progress
 /test run               # Run tests
 /git commit "updates"   # Commit work
@@ -134,6 +137,6 @@
 
 ---
 
-*Auto-generated: 2025-08-18*
+*Auto-generated: 2025-08-21*
 *Distribution: This document is automatically updated and distributed via `/git sync --all`*
 *Total Commands: 7 primary + 2 utility = 9 unified commands (consolidated from 21+)*
