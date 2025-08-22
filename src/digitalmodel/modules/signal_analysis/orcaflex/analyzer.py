@@ -17,6 +17,7 @@ from ..core.rainflow import RainflowCounter
 from ..core.spectral import SpectralAnalyzer
 from ..core.timeseries import TimeSeriesProcessor
 from .reader import GenericTimeSeriesReader
+from .error_handling import SafeAnalyzer, ErrorHandler, safe_analysis
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,13 @@ class TimeSeriesAnalyzer:
         )
         self.processor = TimeSeriesProcessor()
         self.spectral_analyzer = None  # Will be initialized with sampling rate
+        
+        # Initialize error handling
+        self.error_handler = ErrorHandler(
+            continue_on_error=self.config.get('error_handling', {}).get('continue_on_error', True),
+            detailed_logging=self.config.get('error_handling', {}).get('detailed_logging', False)
+        )
+        self.safe_analyzer = SafeAnalyzer(self.error_handler)
         
         # Results storage
         self.results = {}
@@ -142,7 +150,7 @@ class TimeSeriesAnalyzer:
                        col_info: Dict,
                        sampling_rate: float) -> Dict:
         """
-        Analyze a single data column
+        Analyze a single data column with error handling
         
         Args:
             signal: Signal data
@@ -157,49 +165,59 @@ class TimeSeriesAnalyzer:
             'info': col_info,
             'statistics': {},
             'rainflow': {},
-            'spectral': {}
+            'spectral': {},
+            'errors': [],
+            'warnings': []
         }
         
-        # Calculate statistics
-        stats = self.processor.calculate_statistics(signal)
-        results['statistics'] = stats
+        # Validate signal first
+        validation = self.safe_analyzer.validate_signal(signal, context=col_info.get('name', 'Unknown'))
+        if validation['warnings']:
+            results['warnings'].extend(validation['warnings'])
         
-        # Rainflow analysis
+        # Calculate statistics with error handling
+        try:
+            stats = self.processor.calculate_statistics(signal)
+            results['statistics'] = stats
+        except Exception as e:
+            self.error_handler.log_error("Statistics calculation", e)
+            results['statistics'] = {
+                'mean': np.mean(signal) if len(signal) > 0 else 0,
+                'std': np.std(signal) if len(signal) > 0 else 0,
+                'max': np.max(signal) if len(signal) > 0 else 0,
+                'min': np.min(signal) if len(signal) > 0 else 0,
+                'error': str(e)
+            }
+            results['errors'].append(f"Statistics: {e}")
+        
+        # Rainflow analysis with error handling
         if self.config.get('analysis', {}).get('rainflow', {}).get('enable', True):
-            cycles = self.rainflow_counter.count_cycles(signal)
-            results['rainflow']['cycles'] = cycles
-            results['rainflow']['statistics'] = self.rainflow_counter.get_statistics(cycles)
-            
-            # Generate histogram
-            bin_count = self.config.get('analysis', {}).get('rainflow', {}).get('bin_count', 50)
-            histogram = self.rainflow_counter.get_histogram(cycles, bins=bin_count)
-            results['rainflow']['histogram'] = histogram
+            rainflow_results = self.safe_analyzer.safe_rainflow_analysis(
+                signal, 
+                self.rainflow_counter
+            )
+            results['rainflow'] = rainflow_results
+            if rainflow_results.get('error'):
+                results['errors'].append(f"Rainflow: {rainflow_results['error']['error_message']}")
         
-        # Spectral analysis
+        # Spectral analysis with error handling
         if self.config.get('analysis', {}).get('fft', {}).get('enable', True):
             fft_config = self.config.get('analysis', {}).get('fft', {})
-            
-            # Standard FFT
-            spectrum = self.spectral_analyzer.compute_spectrum(signal)
-            results['spectral']['spectrum'] = spectrum
-            
-            # Window-averaged FFT
-            window_size = min(fft_config.get('window_size', 1024), len(signal) // 4)
-            window_fft = self.spectral_analyzer.window_averaged_fft(
+            spectral_results = self.safe_analyzer.safe_spectral_analysis(
                 signal,
-                window_size=window_size,
-                overlap=fft_config.get('overlap', 0.5)
+                self.spectral_analyzer,
+                fft_config
             )
-            results['spectral']['window_fft'] = window_fft
-            
-            # Find peaks
-            n_peaks = fft_config.get('peak_detection', {}).get('n_peaks', 10)
-            peaks = self.spectral_analyzer.find_peaks(window_fft, n_peaks=n_peaks)
-            results['spectral']['peaks'] = peaks
-            
-            # PSD
-            psd = self.spectral_analyzer.compute_psd(signal, method='welch')
-            results['spectral']['psd'] = psd
+            results['spectral'] = spectral_results
+            if spectral_results.get('error'):
+                results['errors'].append(f"Spectral: {spectral_results['error']['error_message']}")
+        
+        # Add analysis success flag
+        results['analysis_complete'] = (
+            len(results['errors']) == 0 or 
+            (results['rainflow'].get('success', False) or 
+             results['spectral'].get('success', False))
+        )
         
         return results
     

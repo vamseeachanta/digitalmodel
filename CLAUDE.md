@@ -239,6 +239,42 @@ python run_orcaflex_agent.py --batch-config batch_run_all_fsts.yml
 python tools/create-module-agent.py <module-name>
 ```
 
+## 🎯 MANDATORY: CLI Consistency Standards
+
+**CRITICAL DIRECTIVE**: ALL module CLI entry points MUST maintain consistent parameter naming and structure across the repository.
+
+### Required CLI Parameters for All Modules:
+- `--input-directory` - Primary input directory for files
+- `--output-directory` - Primary output directory for results  
+- `--pattern` - File pattern matching (e.g., "*.csv", "*.yml")
+- `--recursive` - Recursive directory search
+- `--parallel` - Number of parallel workers
+- `--config` - Configuration file path
+- `--verbose` or `-v` - Verbose output
+- `--dry-run` - Preview without execution
+- `--help` or `-h` - Show help message
+
+### Standard Aliases:
+- `--input-directory` should also accept `--directory` and `-d`
+- `--output-directory` should also accept `--output` and `-o`
+- Maintain backwards compatibility with shorter forms
+
+### Implementation Example:
+```python
+parser.add_argument(
+    '--input-directory', '--directory', '-d',
+    type=str,
+    dest='directory',
+    help='Input directory to search for files'
+)
+```
+
+### Enforcement:
+- ALL new modules MUST follow these standards
+- Existing modules MUST be updated for consistency
+- CLI parameter inconsistencies BLOCK module approval
+- This ensures users have a consistent experience across all modules
+
 ## Available Commands
 
 - **Create-Module-Agent:** Available via `python tools/create-module-agent.py` command
@@ -257,6 +293,19 @@ python tools/create-module-agent.py <module-name>
     
     # With configuration file
     /orcaflex-universal --config batch_config.yml
+    ```
+- **Signal Analysis OrcaFlex Module:**
+  - Module execution: `python -m digitalmodel.modules.signal_analysis.orcaflex`
+  - Examples:
+    ```bash
+    # Single file analysis
+    python -m digitalmodel.modules.signal_analysis.orcaflex --file data.csv --auto-detect
+    
+    # Pattern-based processing
+    python -m digitalmodel.modules.signal_analysis.orcaflex --pattern "*.csv" --input-directory ./data
+    
+    # With output directory
+    python -m digitalmodel.modules.signal_analysis.orcaflex --input-directory ./csv --output-directory ./results
     ```
 
 ## Enhanced Features Available

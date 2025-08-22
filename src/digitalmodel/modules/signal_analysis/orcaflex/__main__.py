@@ -63,13 +63,13 @@ Examples:
   %(prog)s --file simulation.csv --auto-detect
   
   # Pattern matching with specific columns
-  %(prog)s --pattern "fat*.csv" --directory ./data --time-column "Time (s)"
+  %(prog)s --pattern "fat*.csv" --input-directory ./data --time-column "Time (s)"
   
   # Batch processing with configuration
   %(prog)s --config analysis_config.yml --parallel 4
   
   # Directory processing with profile
-  %(prog)s --directory ./orcaflex_output --profile orcaflex_standard
+  %(prog)s --input-directory ./orcaflex_output --output-directory ./results --profile orcaflex_standard
         """
     )
     
@@ -86,9 +86,10 @@ Examples:
         help='File pattern (e.g., "*.csv", "fat*.csv")'
     )
     input_group.add_argument(
-        '--directory', '-d',
+        '--input-directory', '--directory', '-d',
         type=str,
-        help='Directory to search for files'
+        dest='directory',
+        help='Input directory to search for files'
     )
     input_group.add_argument(
         '--recursive', '-r',
@@ -159,8 +160,9 @@ Examples:
     # Output options
     output_group = parser.add_argument_group('Output Options')
     output_group.add_argument(
-        '--output', '-o',
+        '--output-directory', '--output', '-o',
         type=str,
+        dest='output',
         default='output/analysis',
         help='Output directory (default: output/analysis)'
     )
