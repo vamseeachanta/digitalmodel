@@ -4,6 +4,13 @@
 
 **CRITICAL DIRECTIVE**: For EVERY improvement, automation, or repetitive task:
 
+### 🎯 MANDATORY: Agent Assignment and Parallel Execution
+**ALL /create-spec commands MUST:**
+1. **Auto-assign specialized agents** based on task domain
+2. **Execute tasks using subagents** for each component
+3. **Utilize parallel processing** for all independent operations
+4. **Achieve >3x speed improvement** through parallelization
+
 ### AI Agents MUST:
 1. **EVALUATE** if the improvement could benefit multiple repositories
 2. **SUGGEST** creating a slash command when applicable  
@@ -336,6 +343,29 @@ python tools/execute-tasks.py @specs/modules/module-name/spec-folder/tasks.md
 3. **Template Compliance**: Follow all established templates and patterns
 4. **Module Integration**: Update relevant module READMEs and cross-references
 5. **USE MODULE AGENTS**: 🚨 **CRITICAL** - All module work MUST utilize the corresponding module agent from `agents/<module>/` directory. If a module agent doesn't exist, create one FIRST before proceeding with the spec. The agent provides domain expertise, standards compliance, and workflow automation.
+
+#### 🚀 MANDATORY: Agent Assignment and Parallel Processing
+**CRITICAL REQUIREMENTS for /create-spec execution:**
+- **Automatic Agent Assignment**: Based on task domain, automatically assign the appropriate specialized agent(s)
+- **Subagent Execution**: Break down tasks and execute using specialized subagents for each component
+- **Parallel Processing**: MUST use parallel execution for:
+  - Multiple file operations
+  - Independent analysis tasks  
+  - Cross-module operations
+  - Documentation generation
+  - Test creation
+- **Performance Requirements**: Aim for >3x speed improvement through parallelization
+- **Example Flow**:
+  ```
+  /create-spec "mooring-analysis" 
+  → Assigns: OrcaFlex Agent (primary), AQWA Agent (secondary)
+  → Executes in parallel:
+    - Spec generation (Documentation subagent)
+    - Code templates (Code Generation subagent)  
+    - Test creation (Testing subagent)
+    - Integration setup (DevOps subagent)
+  ```
+
 6. **Markdown Compatibility**: Ensure ALL generated documents use markdown-compatible characters:
    - Escape angle brackets: `&lt;` `&gt;` instead of `<` `>`
    - Escape ampersands in text: `&amp;` instead of `&`
