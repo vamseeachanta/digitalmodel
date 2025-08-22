@@ -43,3 +43,10 @@ https://grabcad.com/library/pneumatic-gripper-11
 
 https://grabcad.com/dashboard
 
+
+### References
+
+https://www.manpagez.com/info/gmsh/gmsh-2.2.6/gmsh_63.php
+https://victorsndvg.github.io/FEconv/formats/gmshmsh.xhtml
+https://gmsh.info/doc/texinfo/gmsh.html
+
