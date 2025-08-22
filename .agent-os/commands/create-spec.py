@@ -5,6 +5,22 @@ Works immediately after git clone with no external dependencies.
 
 MANDATORY: All specs MUST be created in specs/modules/[module-name] structure.
 This is enforced across all repositories.
+
+🚀 MANDATORY REQUIREMENTS:
+- Auto-assign specialized agents based on task domain
+- Execute tasks using subagents for each component
+- Utilize parallel processing for all independent operations
+- Achieve >3x speed improvement through parallelization
+
+AGENT ASSIGNMENT:
+- Primary agent: Based on main module (OrcaFlex, AQWA, CAD, etc.)
+- Secondary agents: Supporting functions (Documentation, Testing, DevOps)
+- Subagents: Component-specific execution (parallel groups)
+
+PARALLEL EXECUTION:
+- Group A: Spec writing, diagram generation
+- Group B: Code templates, test creation
+- Group C: API design, integration setup
 """
 
 import sys

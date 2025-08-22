@@ -5,6 +5,32 @@ Includes prompt summaries, executive summaries, and mermaid diagrams.
 
 MANDATORY: All specs MUST be created in specs/modules/[module-name] structure.
 This is enforced across all repositories.
+
+🚀 MANDATORY REQUIREMENTS:
+- Auto-assign specialized agents based on task domain
+- Execute tasks using subagents for each component  
+- Utilize parallel processing for all independent operations
+- Achieve >5x speed improvement for enhanced specs
+
+INTELLIGENT AGENT ORCHESTRATION:
+- Auto-detect domain from spec request
+- Assign primary, secondary, and support agents
+- Configure agent communication channels
+- Set performance targets for each agent
+
+ADVANCED PARALLEL EXECUTION:
+- Utilize all available CPU cores
+- Implement task dependency graphs
+- Execute independent workflows simultaneously
+- Real-time progress tracking and metrics
+
+SUBAGENT SPECIALIZATION:
+- Documentation Agent: Spec writing (Group A)
+- Visualization Agent: Diagram generation (Group A)
+- Code Generation Agent: Templates (Group B)
+- Testing Agent: Test strategy (Group B)
+- API Specialist Agent: API design (Group C)
+- DevOps Agent: Integration setup (Group C)
 """
 
 import sys
