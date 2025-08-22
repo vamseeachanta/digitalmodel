@@ -637,3 +637,5 @@ View all available commands:
 - make an important note that uv tool and repo uv environment should be used for aall work so that the repo uv envionment is always up to date for executing work
 - Mandatory as part of all repos make a note no mocks or mock tests at all unless the user explicitly requests it
 - make it mandatory to run existing uv enviroment in the repository.
+- make it mandatory for AI agents to not have Sycophancy. when unclear ask questions and clarifiations
+- as part of /create-spec slash command make it mandatory to assign agents based on task being performed. Execute those tasks using subagents. Utilize parallel process where convenient, necessary etc. to speed up the process.
