@@ -587,3 +587,4 @@ View all available commands:
 - memory. do not create any unnecessary files in the repo root directory.
 - make an important note that uv tool and repo uv environment should be used for aall work so that the repo uv envionment is always up to date for executing work
 - Mandatory as part of all repos make a note no mocks or mock tests at all unless the user explicitly requests it
+- make it mandatory to run existing uv enviroment in the repository.

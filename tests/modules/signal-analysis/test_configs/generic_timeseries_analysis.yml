@@ -1,0 +1,287 @@
+# Generic Time Series Analysis Configuration
+# Flexible configuration for analyzing any time series data with rainflow and FFT
+
+metadata:
+  name: "Generic Time Series Analysis"
+  version: "2.0.0"
+  description: "Flexible rainflow and FFT analysis for any time series data"
+  author: "DigitalModel Team"
+
+# Input Configuration - Multiple modes supported
+input:
+  # Mode selection: single, pattern, directory, list
+  mode: "pattern"
+  
+  # === SINGLE FILE MODE ===
+  single_file:
+    path: "tests/modules/signal-analysis/test_data/fat002_fsts_sample.csv"
+    
+  # === PATTERN MODE ===
+  pattern_mode:
+    pattern: "fat*.csv"  # Wildcard patterns: *.csv, fat00?.csv, *_Strut*.csv
+    directory: "D:/1522/ctr7/orcaflex/rev_a08/output/csv/07c_fatigue"
+    recursive: false
+    
+  # === DIRECTORY MODE ===
+  directory_mode:
+    path: "D:/1522/ctr7/orcaflex/rev_a08/output/csv"
+    recursive: true
+    file_extensions: [".csv", ".txt", ".dat"]
+    exclude_patterns: ["*_processed.csv", "*_temp.csv"]
+    
+  # === LIST MODE ===
+  list_mode:
+    files:
+      - "fat001_fsts_l015_mwl_wave01_Strut1.csv"
+      - "fat002_fsts_l015_mwl_wave02_Strut1.csv"
+      - "fat003_fsts_l015_mwl_wave03_Strut2.csv"
+    base_directory: "D:/1522/ctr7/orcaflex/rev_a08/output/csv/07c_fatigue"
+
+# Column Mapping Configuration
+column_mapping:
+  # Strategy: auto, manual, profile, hybrid
+  strategy: "hybrid"  # Try auto first, fall back to manual
+  
+  # === AUTO-DETECTION ===
+  auto_detect:
+    # Time column patterns (case-insensitive)
+    time_patterns:
+      - "time"
+      - "Time"
+      - "TIME"
+      - "t"
+      - "Time (s)"
+      - "Time(s)"
+      - "Time [s]"
+      - "Simulation Time"
+      - "elapsed_time"
+    
+    # Data column patterns (supports wildcards)
+    data_patterns:
+      - "*Tension*"
+      - "*Force*"
+      - "*Stress*"
+      - "*Load*"
+      - "*Moment*"
+      - "*Pressure*"
+      - "*Displacement*"
+      - "*Acceleration*"
+    
+    # Columns to exclude
+    exclude_patterns:
+      - "*_flag"
+      - "*_quality"
+      - "*_status"
+      - "*_comment"
+      - "index"
+      - "row_id"
+    
+    # Minimum number of data points
+    min_samples: 100
+    
+  # === MANUAL MAPPING ===
+  manual:
+    time_column: "time"
+    data_columns:
+      - source: "Tension (Jacket End)"
+        alias: "jacket_tension"
+        units: "kN"
+        scale_factor: 1.0
+        offset: 0.0
+      - source: "Tension (Vessel End)"
+        alias: "vessel_tension"
+        units: "kN"
+        scale_factor: 1.0
+        offset: 0.0
+      - source: "Effective Tension"
+        alias: "effective_tension"
+        units: "kN"
+        optional: true  # Don't fail if not found
+  
+  # === PROFILE-BASED MAPPING ===
+  profiles:
+    orcaflex_tension:
+      time: "Time (s)"
+      data_pattern: "Tension*"
+      units: "kN"
+      
+    orcaflex_mooring:
+      time: "Time (s)"
+      data_columns:
+        - "Effective Tension"
+        - "Tension at Anchor"
+        - "Tension at Fairlead"
+      units: "kN"
+      
+    seasam_forces:
+      time: "TIME"
+      data_pattern: "FORCE_*"
+      units: "N"
+      
+    ansys_stress:
+      time: "Time"
+      data_pattern: "*_STRESS_*"
+      units: "MPa"
+      
+    generic_csv:
+      time: 0  # Use first column as time
+      data_columns: "all_numeric"  # Use all numeric columns
+      skip_rows: 1  # Skip header row
+  
+  # Profile selection
+  active_profile: "orcaflex_tension"
+
+# File Processing Options
+file_processing:
+  # File reading
+  encoding: "utf-8"
+  delimiter: ","  # or "\t" for tab-delimited
+  decimal: "."
+  skip_rows: 0
+  header_row: 0
+  
+  # Large file handling
+  chunk_size: 50000  # Read in chunks for large files
+  memory_map: false
+  
+  # Data cleaning
+  drop_na: true
+  fill_na_method: "interpolate"  # forward, backward, interpolate
+  remove_duplicates: true
+  
+  # File filters
+  min_file_size: 1000  # bytes
+  max_file_size: 1000000000  # 1 GB
+  modified_after: null  # ISO date string
+  modified_before: null
+
+# Analysis Configuration (same as before)
+analysis:
+  sampling:
+    auto_detect: true
+    default_rate: 10.0
+    
+  rainflow:
+    method: "astm"
+    extract_info: true
+    bin_count: 50
+    per_column: true  # Analyze each column separately
+    
+  fft:
+    window_size: 4096
+    overlap: 0.5
+    window_function: "hanning"
+    frequency_limit: 10.0
+    
+# Output Configuration
+output:
+  directory: "output/timeseries_analysis"
+  
+  # Output naming
+  naming:
+    use_input_name: true  # Base output name on input file
+    prefix: "analysis"
+    suffix: ""
+    include_column_name: true  # e.g., analysis_fat002_jacket_tension.csv
+    
+  # File organization
+  organization:
+    by_file: true  # Create subdirectory per input file
+    by_date: true  # Create date-based subdirectories
+    by_analysis: false  # Separate rainflow and FFT outputs
+    
+  formats:
+    csv: true
+    json: true
+    excel: false
+    
+  # Summary report
+  summary:
+    create: true
+    format: "html"  # html, markdown, pdf
+    include_all_files: true
+    comparison_table: true
+
+# Batch Processing
+batch:
+  # Parallel processing
+  parallel:
+    enable: true
+    max_workers: 4
+    chunk_files: true  # Process files in chunks
+    
+  # Progress tracking
+  progress:
+    show: true
+    log_file: "batch_progress.log"
+    
+  # Error handling
+  errors:
+    continue_on_error: true
+    retry_failed: true
+    max_retries: 3
+    
+  # Results aggregation
+  aggregate:
+    create_summary: true
+    combine_results: true
+    statistics_across_files: true
+
+# Column-Specific Settings
+column_settings:
+  # Default settings for all columns
+  default:
+    rainflow: true
+    fft: true
+    statistics: true
+    
+  # Override for specific columns (by name or pattern)
+  overrides:
+    - pattern: "*Moment*"
+      rainflow: false  # Skip rainflow for moment data
+      fft: true
+      
+    - pattern: "*Position*"
+      rainflow: false
+      fft: false
+      statistics: true
+
+# Advanced Features
+advanced:
+  # Cross-correlation between signals
+  correlation:
+    enable: false
+    pairs: "all"  # all, specific, or list
+    
+  # Filtering before analysis
+  filtering:
+    enable: false
+    type: "butterworth"
+    order: 4
+    cutoff: [0.1, 5.0]  # Hz
+    
+  # Resampling
+  resampling:
+    enable: false
+    target_rate: 10.0  # Hz
+    method: "linear"
+    
+  # Segmentation
+  segmentation:
+    enable: false
+    segment_length: 3600  # seconds
+    overlap: 0
+
+# Example Usage Commands
+# 
+# 1. Process all CSV files in directory:
+#    python -m timeseries_analyzer --config generic_timeseries_analysis.yml --mode directory
+#
+# 2. Process specific pattern with auto-detection:
+#    python -m timeseries_analyzer --pattern "fat*.csv" --auto-detect
+#
+# 3. Process with specific profile:
+#    python -m timeseries_analyzer --files data.csv --profile orcaflex_mooring
+#
+# 4. Batch process with parallel execution:
+#    python -m timeseries_analyzer --directory /data --recursive --parallel 8
