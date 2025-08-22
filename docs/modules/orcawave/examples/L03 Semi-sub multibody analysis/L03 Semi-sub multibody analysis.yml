@@ -1,0 +1,483 @@
+﻿%YAML 1.1
+# Type: Diffraction
+# Program: OrcaWave 11.5e
+# File: D:\github\digitalmodel\docs\modules\orcawave\examples\L03 Semi-sub multibody analysis\L03 Semi-sub multibody analysis.yml
+# Created: 5:26 AM on 8/22/2025
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+# Model
+UnitsSystem: SI
+Comments: ! "Main column mass and inertia represents the cumulative mass and inertia from the main column, the tower, nacelle,
+  rotor & hub, pontoons and cross bracings.\r\nThere mass and inertia will be corrected for in OrcaFlex once they have been
+  explicitly modelled."
+# Calculation & output
+SolveType: Potential and source formulations
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadPressureIntegration: No
+QuadraticLoadControlSurface: Yes
+QuadraticLoadMomentumConservation: No
+PreferredQuadraticLoadCalculationMethod: Control surface
+HasResonanceDampingLid: No
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1e-6
+WaterlineGapTolerance: 1e-6
+DivideNonPlanarPanels: No
+LinearSolverMethod: Direct LU
+OutputPanelPressures: No
+OutputPanelVelocities: No
+OutputBodyWireFrames: Yes
+OutputIntermediateResults: No
+ValidatePanelArrangement: Yes
+BodyVolumeWarningLevel: 1e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+PanelOverlapWarningLevel: 100e-6
+PanelGapWarningLevel: 100e-6
+PanelAngleWarningLevel: 120
+# Environment
+WaterDepth: 200
+WaterDensity: 1.025
+WavesReferredToBy: period (s)
+HasWaveSpectrumForDragLinearisation: Yes
+DragLinearisationMaxNumberOfIterations: 50
+DragLinearisationTolerance: 1e-6
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+  - 3.75
+  - 4
+  - 4.25
+  - 4.5
+  - 4.75
+  - 5
+  - 5.25
+  - 5.5
+  - 5.75
+  - 6
+  - 6.25
+  - 6.5
+  - 7
+  - 7.5
+  - 8
+  - 8.5
+  - 9
+  - 9.5
+  - 10
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+  - 16
+  - 17
+  - 18
+  - 19
+  - 20
+  - 22
+  - 25
+  - 30
+WaveHeading:
+  - 0
+  - 22.5
+  - 45
+  - 67.5
+  - 90
+  - 112.5
+  - 135
+  - 157.5
+  - 180
+  - 202.5
+  - 225
+  - 247.5
+  - 270
+  - 292.5
+  - 315
+  - 337.5
+QTFMinCrossingAngle: 0
+QTFMaxCrossingAngle: 180
+# Wave spectrum
+WaveType: JONSWAP
+WaveJONSWAPParametersMode: Partially specified
+WaveHs: 7
+WaveTz: 8
+WaveGamma: 1
+SpectrumDiscretisationMethod: Equal energy
+WaveNumberOfSpectralDirections: 1
+WaveNumberOfComponents: 200
+WaveSpectrumMinRelFrequency: 0.5
+WaveSpectrumMaxRelFrequency: 10
+WaveSpectrumMaxComponentFrequencyRange: 0.05
+# Morison element types
+MorisonElementTypes:
+  - # Drag
+    MorisonElementTypeName: UC morison
+    MorisonElementTypeNormalDragDiameter: 12
+    MorisonElementTypeAxialDragDiameter: ~
+    MorisonElementTypeDragCoefficients: [0.61, ~, 0]
+    # Fluid Inertia
+    MorisonElementTypeNormalHydrodynamicDiameter: 12
+    MorisonElementTypeAxialHydrodynamicDiameter: ~
+    MorisonElementTypeCaCoefficients: [0, ~, 0]
+    MorisonElementTypeCmCoefficients: [0, 0, 0]
+    # Drawing
+    MorisonElementTypePen: [1, Clear, Yellow]
+  - # Drag
+    MorisonElementTypeName: BC morison
+    MorisonElementTypeNormalDragDiameter: 24
+    MorisonElementTypeAxialDragDiameter: ~
+    MorisonElementTypeDragCoefficients: [0.68, ~, 4.8]
+    # Fluid Inertia
+    MorisonElementTypeNormalHydrodynamicDiameter: 24
+    MorisonElementTypeAxialHydrodynamicDiameter: ~
+    MorisonElementTypeCaCoefficients: [0, ~, 0]
+    MorisonElementTypeCmCoefficients: [0, 0, 0]
+    # Drawing
+    MorisonElementTypePen: [1, Clear, Yellow]
+  - # Drag
+    MorisonElementTypeName: MC morison
+    MorisonElementTypeNormalDragDiameter: 6.5
+    MorisonElementTypeAxialDragDiameter: ~
+    MorisonElementTypeDragCoefficients: [0.56, ~, 0]
+    # Fluid Inertia
+    MorisonElementTypeNormalHydrodynamicDiameter: 6.5
+    MorisonElementTypeAxialHydrodynamicDiameter: ~
+    MorisonElementTypeCaCoefficients: [0, ~, 0]
+    MorisonElementTypeCmCoefficients: [0, 0, 0]
+    # Drawing
+    MorisonElementTypePen: [1, Clear, Aqua]
+  - # Drag
+    MorisonElementTypeName: Pontoon morison
+    MorisonElementTypeNormalDragDiameter: 1.6
+    MorisonElementTypeAxialDragDiameter: ~
+    MorisonElementTypeDragCoefficients: [0.63, ~, 0]
+    # Fluid Inertia
+    MorisonElementTypeNormalHydrodynamicDiameter: 1.6
+    MorisonElementTypeAxialHydrodynamicDiameter: ~
+    MorisonElementTypeCaCoefficients: [0, ~, 0]
+    MorisonElementTypeCmCoefficients: [0, 0, 0]
+    # Drawing
+    MorisonElementTypePen: [1, Solid, Lime]
+# Bodies
+Bodies:
+  - BodyName: Aft offset column
+    BodyMeshPosition: [-28.87, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: L03 Outer column.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshDipolePanels: 
+    BodyAddInteriorSurfacePanels: Yes
+    BodyInteriorSurfacePanelMethod: Triangulation method
+    BodyControlSurfaceType: Defined by mesh file
+    BodyControlSurfaceMeshFileName: L03 Outer column CS.gdf
+    BodyControlSurfaceMeshFormat: Wamit gdf
+    BodyControlSurfaceMeshLengthUnits: m
+    BodyOrcaFlexImportSymmetry: None
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, -13.75615581]
+    BodyMass: 4352.92
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [308.3705269e3, 0, 0]
+      - [0, 308.3705269e3, 0]
+      - [0, 0, 219.7386562e3]
+    BodyInertiaTensorOriginType: Centre of mass
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Centre column
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+  - BodyName: Port offset column
+    BodyMeshPosition: [14.435, 25.002, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: L03 Outer column.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshDipolePanels: 
+    BodyAddInteriorSurfacePanels: Yes
+    BodyInteriorSurfacePanelMethod: Triangulation method
+    BodyControlSurfaceType: Defined by mesh file
+    BodyControlSurfaceMeshFileName: L03 Outer column CS.gdf
+    BodyControlSurfaceMeshFormat: Wamit gdf
+    BodyControlSurfaceMeshLengthUnits: m
+    BodyOrcaFlexImportSymmetry: None
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, -13.7562]
+    BodyMass: 4352.92
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [308.3705269e3, 0, 0]
+      - [0, 308.3705269e3, 0]
+      - [0, 0, 219.7386562e3]
+    BodyInertiaTensorOriginType: Centre of mass
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Centre column
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+  - BodyName: Stbd offset column
+    BodyMeshPosition: [14.435, -25.002, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: L03 Outer column.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshDipolePanels: 
+    BodyAddInteriorSurfacePanels: Yes
+    BodyInteriorSurfacePanelMethod: Triangulation method
+    BodyControlSurfaceType: Defined by mesh file
+    BodyControlSurfaceMeshFileName: L03 Outer column CS.gdf
+    BodyControlSurfaceMeshFormat: Wamit gdf
+    BodyControlSurfaceMeshLengthUnits: m
+    BodyOrcaFlexImportSymmetry: None
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, -13.7562]
+    BodyMass: 4352.92
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [308.3705269e3, 0, 0]
+      - [0, 308.3705269e3, 0]
+      - [0, 0, 219.7386562e3]
+    BodyInertiaTensorOriginType: Centre of mass
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Centre column
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+  - BodyName: Centre column
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: L03 Centre column.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshDipolePanels: 
+    BodyAddInteriorSurfacePanels: Yes
+    BodyInteriorSurfacePanelMethod: Triangulation method
+    BodyControlSurfaceType: Defined by mesh file
+    BodyControlSurfaceMeshFileName: L03 Centre column CS.gdf
+    BodyControlSurfaceMeshFormat: Wamit gdf
+    BodyControlSurfaceMeshLengthUnits: m
+    BodyOrcaFlexImportSymmetry: None
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [-0.1418, 0, 39.9016]
+    BodyMass: 1013.921
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [2.2513854166844944e6, -7.300525959683341e-12, 6025.898182267982]
+      - [-7.300525959683341e-12, 2.2411146491092937e6, 6.600270748239037e-12]
+      - [6025.898182267982, 6.600270748239037e-12, 744.8987033798227e3]
+    BodyInertiaTensorOriginType: Centre of mass
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [69.83523267724563, 46.35602221954749e-12, -0.07373774103855615, 466.4374878711348e-12, -119.8020457522398, -317.6839595232077e-12]
+      - [60.6443229702653e-12, 69.8472216208902, -51.00255181999435e-12, 116.2123491583652, 582.0764512312694e-12, 1.1509357172033783]
+      - [-0.0734588787523335, -22.335376949470335e-12, 18.675754526759164, 931.8966654212264e-12, -1.35850024093701, 909.0099816345989e-12]
+      - [-501.7834500696683e-12, 115.39019933336594, 173.66700762382045e-12, 86.9318538778568e3, 6.077333281266402e-9, 76.68430745405058]
+      - [-118.99171705275322, -7.276113689623637e-12, -1.35459616904454, -16.795136408138693e-9, 86.9342650540173e3, -24.770802384164637e-9]
+      - [28.94144617975293e-12, 1.1259360629527224, -1.2685478308558966e-9, -32.87232061255199, 18.769759967706318e-9, 118.52344377680865e3]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [100, 0, 0, 0, 0, 0]
+      - [0, 100, 0, 0, 0, 0]
+      - [0, 0, 180, 0, 0, 0]
+      - [0, 0, 0, 75e3, 0, 0]
+      - [0, 0, 0, 0, 75e3, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+    # Morison elements
+    MorisonElements:
+      - MorisonElementType: UC morison
+        MorisonElementPosition: [14.429999999999998, -25, -14]
+        MorisonElementAttitude: [0, 0, 0]
+        MorisonElementLength: 26
+        MorisonElementNumberOfSegments: 13
+      - MorisonElementType: BC morison
+        MorisonElementPosition: [14.429999999999998, -25, -20]
+        MorisonElementAttitude: [0, 0, 0]
+        MorisonElementLength: 6
+        MorisonElementNumberOfSegments: 4
+      - MorisonElementType: UC morison
+        MorisonElementPosition: [-28.870000000000008, 0, -14]
+        MorisonElementAttitude: [0, 0, 0]
+        MorisonElementLength: 26
+        MorisonElementNumberOfSegments: 13
+      - MorisonElementType: BC morison
+        MorisonElementPosition: [-28.870000000000008, 0, -20]
+        MorisonElementAttitude: [0, 0, 0]
+        MorisonElementLength: 6
+        MorisonElementNumberOfSegments: 4
+      - MorisonElementType: UC morison
+        MorisonElementPosition: [14.429999999999998, 25, -14]
+        MorisonElementAttitude: [0, 0, 0]
+        MorisonElementLength: 26
+        MorisonElementNumberOfSegments: 13
+      - MorisonElementType: BC morison
+        MorisonElementPosition: [14.429999999999998, 25, -20]
+        MorisonElementAttitude: [0, 0, 0]
+        MorisonElementLength: 6
+        MorisonElementNumberOfSegments: 4
+      - MorisonElementType: MC morison
+        MorisonElementPosition: [0, 0, -20]
+        MorisonElementAttitude: [0, 0, 0]
+        MorisonElementLength: 30
+        MorisonElementNumberOfSegments: 15
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [9.200000000000001, 22, 10]
+        MorisonElementAttitude: [210, 90, 0]
+        MorisonElementLength: 38
+        MorisonElementNumberOfSegments: 1
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [-23.67, -3, 10]
+        MorisonElementAttitude: [-30, 90, 0]
+        MorisonElementLength: 38
+        MorisonElementNumberOfSegments: 1
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [14.43, -19, 10]
+        MorisonElementAttitude: [90, 90, 0]
+        MorisonElementLength: 38
+        MorisonElementNumberOfSegments: 1
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [4, 19, -17]
+        MorisonElementAttitude: [210, 90, 0]
+        MorisonElementLength: 26
+        MorisonElementNumberOfSegments: 1
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [-18.47, -6, -17]
+        MorisonElementAttitude: [-30, 90, 0]
+        MorisonElementLength: 26
+        MorisonElementNumberOfSegments: 1
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [14.43, -13, -17]
+        MorisonElementAttitude: [90, 90, 0]
+        MorisonElementLength: 26
+        MorisonElementNumberOfSegments: 1
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [1.625, 2.815, 10]
+        MorisonElementAttitude: [60, 90, 0]
+        MorisonElementLength: 19.62
+        MorisonElementNumberOfSegments: 1
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [-3.25, 0, 10]
+        MorisonElementAttitude: [180, 90, 0]
+        MorisonElementLength: 19.62
+        MorisonElementNumberOfSegments: 1
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [1.625, -2.815, 10]
+        MorisonElementAttitude: [300, 90, 0]
+        MorisonElementLength: 19.62
+        MorisonElementNumberOfSegments: 1
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [1.625, 2.815, -17]
+        MorisonElementAttitude: [60, 90, 0]
+        MorisonElementLength: 13.620000000000001
+        MorisonElementNumberOfSegments: 1
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [-3.25, 0, -17]
+        MorisonElementAttitude: [180, 90, 0]
+        MorisonElementLength: 13.620000000000001
+        MorisonElementNumberOfSegments: 1
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [1.625, -2.815, -17]
+        MorisonElementAttitude: [300, 90, 0]
+        MorisonElementLength: 13.620000000000001
+        MorisonElementNumberOfSegments: 1
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [1.625, 2.815, -16.2]
+        MorisonElementAttitude: [60, 37.7, 0]
+        MorisonElementLength: 32.04
+        MorisonElementNumberOfSegments: 13
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [-3.25, 0, -16.2]
+        MorisonElementAttitude: [180, 37.7, 0]
+        MorisonElementLength: 32.04
+        MorisonElementNumberOfSegments: 13
+      - MorisonElementType: Pontoon morison
+        MorisonElementPosition: [1.625, -2.815, -16.2]
+        MorisonElementAttitude: [300, 37.7, 0]
+        MorisonElementLength: 32.04
+        MorisonElementNumberOfSegments: 13
+# Field points
+DetectAndSkipFieldPointsInsideBodies: Yes
+# Drawing
+FreeSurfaceMeshPen: [1, Solid, Aqua]
+...
