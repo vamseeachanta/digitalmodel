@@ -90,13 +90,44 @@ encoding: UTF-8
 - Cache shared components for offline usage
 - Version compatibility checking and management
 
+## 🚀 MANDATORY: Agent Assignment and Parallel Processing
+
+### Critical Requirements for Enhanced Specs:
+1. **Intelligent Agent Orchestration**
+   - Auto-detect domain from spec request
+   - Assign primary, secondary, and support agents
+   - Configure agent communication channels
+   - Set performance targets for each agent
+
+2. **Advanced Parallel Execution**
+   - Utilize all available CPU cores
+   - Implement task dependency graphs
+   - Execute independent workflows simultaneously
+   - Achieve >5x speedup for enhanced specs
+
+3. **Subagent Specialization Matrix**
+   | Task Component | Assigned Subagent | Parallel Group |
+   |----------------|-------------------|----------------|
+   | Spec Writing | Documentation Agent | Group A |
+   | Diagrams | Visualization Agent | Group A |
+   | Code Templates | Code Generation Agent | Group B |
+   | Test Strategy | Testing Agent | Group B |
+   | API Design | API Specialist Agent | Group C |
+   | Integration | DevOps Agent | Group C |
+
+4. **Real-time Progress Tracking**
+   - Display parallel execution status
+   - Show agent performance metrics
+   - Report speedup achievements
+   - Identify optimization opportunities
+
 ## Enhanced Process Flow
 
 <process_flow>
 
 <step number="1" name="enhanced_spec_initiation">
 
-### Step 1: Enhanced Spec Initiation
+### Step 1: Enhanced Spec Initiation (With Agent Pre-Assignment)
 
 <step_metadata>
   <trigger_options>

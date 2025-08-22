@@ -3,14 +3,63 @@
 ## Overview
 This instruction set guides the creation of detailed specification documents for new features and functionality.
 
+## 🚀 MANDATORY: Agent Assignment and Parallel Processing
+
+### Critical Requirements for ALL /create-spec Commands:
+1. **Automatic Agent Assignment**
+   - Analyze task domain and auto-assign appropriate specialized agents
+   - Primary agent: Based on main module (e.g., OrcaFlex, AQWA, CAD)
+   - Secondary agents: For supporting functions (Documentation, Testing, DevOps)
+
+2. **Subagent Execution**
+   - Break down specification into components
+   - Assign specialized subagents for each component:
+     - Documentation subagent: Generate specs and documentation
+     - Code Generation subagent: Create templates and boilerplate
+     - Testing subagent: Design test strategies and create test files
+     - Integration subagent: Setup CI/CD and deployment configs
+
+3. **Parallel Processing Requirements**
+   - MUST execute all independent tasks in parallel
+   - Target: >3x speed improvement through parallelization
+   - Parallel execution areas:
+     - Multiple file generation
+     - Documentation creation
+     - Test case generation
+     - Cross-module analysis
+     - Template instantiation
+
+4. **Performance Monitoring**
+   - Track execution time for each subagent
+   - Report parallelization efficiency
+   - Identify bottlenecks for optimization
+
+### Example Execution Flow:
+```
+/create-spec "offshore-mooring-analysis"
+→ Domain Analysis: Offshore engineering detected
+→ Agent Assignment:
+  - Primary: OrcaFlex Agent
+  - Secondary: AQWA Agent (wave analysis)
+  - Support: Documentation, Testing, DevOps agents
+→ Parallel Execution (all at once):
+  ├─ Spec generation (Documentation subagent)
+  ├─ Code templates (Code Generation subagent)
+  ├─ Test creation (Testing subagent)
+  ├─ Integration setup (DevOps subagent)
+  └─ Cross-references (Integration subagent)
+→ Result: 5 tasks completed in time of 1 (5x speedup)
+```
+
 ## Process
 
-### Step 1: Gather Requirements
+### Step 1: Gather Requirements (With Agent Assignment)
 - Collect user requirements and business context
-- Clarify scope and boundaries
-- Identify technical constraints
+- **MANDATORY**: Analyze domain and assign appropriate agents
+- Clarify scope and boundaries with domain-specific agents
+- Identify technical constraints using specialized subagents
 
-### Step 2: Create Specification Structure
+### Step 2: Create Specification Structure (Parallel Execution)
 - Create spec folder in `specs/modules/<module>/` following repository pattern
 - Generate main spec.md with all required sections
 - **MANDATORY**: Create prompt.md with prompt history and curated reuse prompt
