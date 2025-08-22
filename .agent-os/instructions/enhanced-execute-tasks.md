@@ -51,54 +51,118 @@ encoding: UTF-8
   - Optional: Enhanced spec documentation for task summaries
 </prerequisites>
 
-## 🚨 MANDATORY: Skill Assessment and Delegation Protocol
+## 🚨 MANDATORY: Dual Verification Protocol for Task Execution
 
 ### Critical Requirements for ALL Task Execution:
-**FOR BOTH USERS AND AI AGENTS:**
+**MANDATORY DOUBLE VERIFICATION FOR BOTH USERS AND AI AGENTS:**
 
-1. **Pre-Execution Skill Assessment**
-   - BEFORE executing any task, perform mandatory skill assessment
-   - If you CANNOT handle a task, DO NOT attempt execution
-   - Learn to distinguish where your skills are applicable
-   - Identify areas requiring learning or additional training
-   - Document skill gaps for future improvement
+### 1. USER DOMAIN KNOWLEDGE VERIFICATION (Per Main Task)
+**Interactive verification required before approving each main task:**
 
-2. **Skill Assessment Checklist**
-   - ✅ Do I have the required domain knowledge?
-   - ✅ Do I have access to necessary tools/APIs?
-   - ✅ Can I complete this without causing harm?
-   - ✅ Should this be delegated to a specialist?
-   - ✅ Does this require user confirmation?
+The user MUST confirm ALL of the following (not needed for subtasks):
+- ☐ **Domain Understanding**: I understand the technical domain and concepts involved
+- ☐ **Quality Assessment**: I can evaluate if the implementation meets requirements
+- ☐ **Success Criteria**: I know the expected outcomes and can verify them
+- ☐ **Risk Awareness**: I can identify potential issues or negative impacts
+- ☐ **Approval Authority**: I have the authority to approve changes in this area
+- ☐ **Integration Knowledge**: I understand how this affects other system components
 
-3. **Mandatory Delegation Protocol**
-   - **Domain-specific tasks** → Specialized agents (OrcaFlex, AQWA, CAD)
-   - **Testing tasks** → Testing agent
-   - **Documentation** → Documentation agent
-   - **Infrastructure** → DevOps agent
-   - **User-required tasks** → Explicitly request user execution
+**User Response Required**: "YES, I confirm domain knowledge" or "NO, seek alternative approver"
 
-4. **User Domain Knowledge Confirmation**
-   - For critical operations, confirm user has domain expertise
-   - Request user execution when agent lacks required permissions
-   - Document which tasks require human intervention
-   - Maintain audit trail of delegation decisions
+### 2. AI AGENT SKILL ASSESSMENT (10-Point Verification)
+**Agent MUST evaluate against ALL points before execution:**
 
-5. **Learning and Improvement**
-   - Track tasks where skills were insufficient
-   - Document successful delegation patterns
-   - Build knowledge base of skill requirements
-   - Improve assessment accuracy over time
+1. **Domain Expertise**: Do I have deep, comprehensive knowledge of this specific technical area?
+2. **Tool Proficiency**: Can I effectively use all required tools, APIs, and frameworks?
+3. **Codebase Patterns**: Do I understand the established patterns and conventions in this codebase?
+4. **Testing Competence**: Can I write comprehensive unit, integration, and edge-case tests?
+5. **Error Management**: Do I understand all potential failure modes and recovery strategies?
+6. **Performance Analysis**: Can I assess and optimize performance implications?
+7. **Security Awareness**: Do I understand security implications and best practices?
+8. **Integration Knowledge**: Do I know how this connects to and affects other systems?
+9. **Documentation Skills**: Can I create clear, comprehensive documentation?
+10. **Best Practices**: Am I current with industry standards and best practices?
 
-### Example Skill Assessment Flow:
+**Scoring**: Each point scores 0-10. Minimum total score of 70/100 required to proceed.
+
+### 3. SKILL ACQUISITION AND DELEGATION PROTOCOL
+
+#### When Skills Are Insufficient (Score < 70):
+
+**A. Deep Research Phase (MANDATORY)**
+- Read ALL relevant documentation in the repository
+- Study existing implementations and patterns
+- Review industry best practices and standards
+- Analyze similar solutions in the codebase
+- Understand domain-specific requirements
+- Build knowledge through active learning
+
+**B. Agent Creation/Delegation Strategy**
+- Create lightweight, specialized agents for complex domains
+- Delegate subtasks to domain experts (OrcaFlex Agent, AQWA Agent, etc.)
+- Maintain minimal context per agent (max 10K tokens)
+- Use parallel execution for independent subtasks
+- Document delegation decisions and rationale
+
+**C. User Intervention Protocol**
+When agent cannot proceed:
+- Explicitly state: "USER ACTION REQUIRED"
+- Provide clear, step-by-step instructions
+- Include all necessary context and commands
+- Specify expected outcomes and verification steps
+- Request confirmation when complete
+
+### 4. DELEGATION DECISION MATRIX
+
+| Task Type | Primary Agent | Fallback Strategy |
+|-----------|--------------|-------------------|
+| OrcaFlex Analysis | OrcaFlex Agent | User with OrcaFlex license |
+| AQWA Simulations | AQWA Agent | User with AQWA expertise |
+| CAD Modeling | CAD Agent | User with CAD tools |
+| Testing | Testing Agent | Parallel test execution |
+| Documentation | Documentation Agent | Template-based generation |
+| Research | Research Agent | Web search + documentation |
+| Infrastructure | DevOps Agent | User with admin access |
+
+### 5. CONTINUOUS IMPROVEMENT PROTOCOL
+
+- **Track Skill Gaps**: Document areas where skills were insufficient
+- **Build Knowledge Base**: Create reusable knowledge artifacts
+- **Pattern Recognition**: Identify recurring delegation needs
+- **Agent Evolution**: Enhance agents based on usage patterns
+- **Feedback Loop**: Incorporate user feedback into skill assessments
+
+### Example Verification Flow:
 ```
-Task: "Configure OrcaFlex hydrodynamic analysis"
-→ Skill Assessment:
-  - Domain knowledge: OrcaFlex ❌ (specialized)
-  - Tools available: OrcaFlex API ❌ (licensed)
-  - Risk assessment: High (engineering critical)
-→ Decision: DELEGATE to OrcaFlex Agent
-→ Action: Request OrcaFlex Agent execution
-→ Fallback: If unavailable, request user execution
+Task: "Implement mooring line tension analysis in OrcaFlex"
+
+→ User Verification:
+  ☐ Domain Understanding: YES (offshore engineering)
+  ☐ Quality Assessment: YES (API compliance)
+  ☐ Success Criteria: YES (tension < limits)
+  ☐ Risk Awareness: YES (safety factors)
+  ☐ Approval Authority: YES (lead engineer)
+  ☐ Integration Knowledge: YES (affects downstream)
+  User confirms: "YES, I have domain knowledge"
+
+→ Agent Skill Assessment:
+  1. Domain Expertise: 3/10 (limited OrcaFlex)
+  2. Tool Proficiency: 2/10 (no API access)
+  3. Codebase Patterns: 8/10 (good understanding)
+  4. Testing: 7/10 (can write tests)
+  5. Error Management: 6/10 (moderate)
+  6. Performance: 5/10 (basic knowledge)
+  7. Security: 7/10 (good practices)
+  8. Integration: 6/10 (understand connections)
+  9. Documentation: 8/10 (strong skills)
+  10. Best Practices: 7/10 (current knowledge)
+  Total: 59/100 - INSUFFICIENT
+
+→ Action Plan:
+  1. Deep Research: Study OrcaFlex documentation
+  2. Delegate: Spawn OrcaFlex Agent for implementation
+  3. Support: Provide testing and documentation
+  4. Verify: User validates final implementation
 ```
 
 ## Enhanced Features
