@@ -669,4 +669,43 @@ View all available commands:
 - make it mandatory to run existing uv enviroment in the repository.
 - make it mandatory for AI agents to not have Sycophancy. when unclear ask questions and clarifiations
 - as part of /create-spec slash command make it mandatory to assign agents based on task being performed. Execute those tasks using subagents. Utilize parallel process where convenient, necessary etc. to speed up the process.
-- as part of /execute-tasks slash command: MANDATORY skill assessment before execution. If you cannot handle a task, do not attempt it. Learn to distinguish where your skills apply. Delegate to specialists. Explicitly tell user when they need to execute tasks. Confirm user domain knowledge for critical operations.
+## 🚨 MANDATORY: /execute-tasks Dual Verification Protocol
+
+**CRITICAL DIRECTIVE**: ALL task execution MUST follow dual verification:
+
+### 1. USER DOMAIN VERIFICATION (Per Main Task)
+Before approving each main task, user MUST confirm:
+- ☐ I understand the technical domain of this task
+- ☐ I can evaluate if the implementation is correct
+- ☐ I know the expected outcomes and success criteria
+- ☐ I can identify potential risks or issues
+- ☐ I have authority to approve changes in this area
+- ☐ I understand dependencies and integration points
+
+### 2. AI AGENT 10-POINT SKILL ASSESSMENT
+Agent MUST self-evaluate (minimum 70/100 to proceed):
+1. Domain Expertise: Deep knowledge of technical area (0-10)
+2. Tool Proficiency: Effective use of required tools/APIs (0-10)
+3. Codebase Patterns: Understanding of conventions (0-10)
+4. Testing Competence: Comprehensive test writing ability (0-10)
+5. Error Management: Failure mode understanding (0-10)
+6. Performance Analysis: Optimization capability (0-10)
+7. Security Awareness: Security best practices (0-10)
+8. Integration Knowledge: System connections (0-10)
+9. Documentation Skills: Clear documentation ability (0-10)
+10. Best Practices: Current industry standards (0-10)
+
+### 3. SKILL ACQUISITION PROTOCOL
+If score < 70/100:
+- **Deep Research**: Study all documentation, patterns, best practices
+- **Agent Delegation**: Create/use specialized lightweight agents
+- **User Intervention**: Explicitly request user execution when needed
+
+### 4. DELEGATION MATRIX
+- OrcaFlex tasks → OrcaFlex Agent (or user with license)
+- AQWA tasks → AQWA Agent (or user with expertise)
+- Testing → Testing Agent (parallel execution)
+- Documentation → Documentation Agent
+- Infrastructure → DevOps Agent (or user with admin)
+
+**This dual verification is MANDATORY for ALL /execute-tasks operations**

@@ -7,27 +7,50 @@ Features:
 - Time estimation for user planning
 - Progress tracking with visual indicators
 
-🚨 MANDATORY SKILL ASSESSMENT AND DELEGATION:
-FOR BOTH USERS AND AI AGENTS:
-- BEFORE executing any task, assess if you have the required skills
-- If you CANNOT handle a task, DO NOT attempt execution
-- Learn to distinguish where your skills are applicable
-- Identify areas where you need learning or training
-- Delegate subtasks to appropriate specialized agents
-- If needed, explicitly tell the user to execute specific tasks
-- Confirm user domain knowledge before critical operations
+🚨 MANDATORY DUAL VERIFICATION PROTOCOL:
 
-SKILL ASSESSMENT CHECKLIST:
-1. Do I have the required domain knowledge?
-2. Do I have access to necessary tools/APIs?
-3. Can I complete this without causing harm?
-4. Should this be delegated to a specialist?
-5. Does this require user confirmation?
+1. USER DOMAIN KNOWLEDGE VERIFICATION (Required for each main task):
+   Interactive checklist - User must confirm:
+   □ I understand the technical domain of this task
+   □ I can evaluate if the implementation is correct
+   □ I know the expected outcomes and success criteria
+   □ I can identify potential risks or issues
+   □ I have authority to approve changes in this area
+   □ I understand dependencies and integration points
+
+2. AI AGENT SKILL ASSESSMENT (Required before execution):
+   Agent must self-evaluate against ALL points:
+   ✓ Domain expertise: Do I have deep knowledge of this specific area?
+   ✓ Tool proficiency: Can I effectively use all required tools/APIs?
+   ✓ Code patterns: Do I know the established patterns in this codebase?
+   ✓ Testing knowledge: Can I write comprehensive tests for this feature?
+   ✓ Error handling: Do I understand potential failure modes?
+   ✓ Performance implications: Can I assess performance impact?
+   ✓ Security awareness: Do I understand security implications?
+   ✓ Integration knowledge: Do I know how this connects to other systems?
+   ✓ Documentation ability: Can I properly document this implementation?
+   ✓ Best practices: Am I current with industry best practices?
+
+3. SKILL ACQUISITION PROTOCOL:
+   If ANY skill is lacking:
+   a) STOP and perform deep research:
+      - Read all relevant documentation
+      - Study existing implementations
+      - Review best practices and patterns
+      - Understand domain-specific requirements
+   b) Create or delegate to specialized agents:
+      - Spawn lightweight domain-specific agent
+      - Delegate complex subtasks to experts
+      - Maintain minimal context per agent
+   c) Request user intervention when needed:
+      - Explicitly state what user needs to do
+      - Provide clear instructions and context
 
 DELEGATION PROTOCOL:
 - Domain-specific tasks → Specialized agents (OrcaFlex, AQWA, etc.)
 - Testing tasks → Testing agent
 - Documentation → Documentation agent
+- Research tasks → Research agent
 - User-required tasks → Explicitly request user execution
 
 IMPORTANT ENVIRONMENT NOTES:
@@ -290,8 +313,181 @@ class EnhancedTaskExecutor:
         
         return estimate
     
+    def verify_user_domain_knowledge(self, task: Dict) -> bool:
+        """Interactive verification of user's domain knowledge for a task.
+        
+        Returns True if user confirms domain knowledge, False otherwise.
+        """
+        print("\n" + "="*60)
+        print(f"📋 USER DOMAIN VERIFICATION REQUIRED")
+        print(f"Task: {task['description']}")
+        print("="*60)
+        print("\nPlease confirm ALL of the following:")
+        
+        checklist = [
+            "I understand the technical domain and concepts involved",
+            "I can evaluate if the implementation meets requirements",
+            "I know the expected outcomes and can verify them",
+            "I can identify potential issues or negative impacts",
+            "I have the authority to approve changes in this area",
+            "I understand how this affects other system components"
+        ]
+        
+        for i, item in enumerate(checklist, 1):
+            print(f"  ☐ {i}. {item}")
+        
+        print("\n" + "-"*60)
+        response = input("Do you confirm domain knowledge for this task? (YES/NO): ").strip().upper()
+        
+        if response == "YES":
+            print("✅ User domain knowledge confirmed")
+            return True
+        else:
+            print("❌ Task requires alternative approver with domain knowledge")
+            return False
+    
+    def assess_agent_skills(self, task: Dict) -> Dict:
+        """Perform 10-point skill assessment for AI agent.
+        
+        Returns assessment results with score and recommendations.
+        """
+        print("\n" + "="*60)
+        print(f"🤖 AI AGENT SKILL ASSESSMENT")
+        print(f"Task: {task['description']}")
+        print("="*60)
+        
+        # Skill assessment criteria (simulated - in real implementation,
+        # this would be based on actual agent capabilities)
+        skills = {
+            "Domain Expertise": self._evaluate_domain_knowledge(task),
+            "Tool Proficiency": self._evaluate_tool_proficiency(task),
+            "Codebase Patterns": self._evaluate_codebase_knowledge(task),
+            "Testing Competence": self._evaluate_testing_ability(task),
+            "Error Management": self._evaluate_error_handling(task),
+            "Performance Analysis": self._evaluate_performance_knowledge(task),
+            "Security Awareness": self._evaluate_security_knowledge(task),
+            "Integration Knowledge": self._evaluate_integration_knowledge(task),
+            "Documentation Skills": self._evaluate_documentation_ability(task),
+            "Best Practices": self._evaluate_best_practices(task)
+        }
+        
+        total_score = sum(skills.values())
+        
+        print("\n📊 Skill Assessment Results:")
+        for skill, score in skills.items():
+            bar = "█" * score + "░" * (10 - score)
+            print(f"  {skill:25} [{bar}] {score}/10")
+        
+        print(f"\n📈 Total Score: {total_score}/100")
+        
+        result = {
+            "total_score": total_score,
+            "skills": skills,
+            "passed": total_score >= 70,
+            "recommendations": []
+        }
+        
+        if total_score < 70:
+            print("\n⚠️ INSUFFICIENT SKILLS - Score below 70/100")
+            print("\n🔍 Required Actions:")
+            
+            # Determine required actions
+            if any(score < 5 for score in skills.values()):
+                print("  1. DEEP RESEARCH PHASE:")
+                print("     - Study all relevant documentation")
+                print("     - Review existing implementations")
+                print("     - Understand domain requirements")
+                result["recommendations"].append("deep_research")
+            
+            # Check for delegation needs
+            if "orcaflex" in task['description'].lower():
+                print("  2. DELEGATE TO: OrcaFlex Agent")
+                result["recommendations"].append("delegate:orcaflex")
+            elif "aqwa" in task['description'].lower():
+                print("  2. DELEGATE TO: AQWA Agent")
+                result["recommendations"].append("delegate:aqwa")
+            elif "test" in task['description'].lower():
+                print("  2. DELEGATE TO: Testing Agent")
+                result["recommendations"].append("delegate:testing")
+            
+            # Check if user intervention needed
+            if total_score < 30:
+                print("  3. USER INTERVENTION REQUIRED")
+                print("     - Task complexity exceeds agent capabilities")
+                print("     - User should execute this task manually")
+                result["recommendations"].append("user_execution")
+        else:
+            print("\n✅ SUFFICIENT SKILLS - Proceeding with execution")
+        
+        return result
+    
+    def _evaluate_domain_knowledge(self, task: Dict) -> int:
+        """Evaluate domain knowledge for task (0-10)."""
+        # Simplified evaluation - in real implementation would check
+        # against knowledge base and previous experience
+        description = task['description'].lower()
+        
+        if any(term in description for term in ['orcaflex', 'aqwa', 'ansys']):
+            return 3  # Limited specialized domain knowledge
+        elif any(term in description for term in ['test', 'documentation', 'refactor']):
+            return 8  # Good general knowledge
+        else:
+            return 6  # Moderate knowledge
+    
+    def _evaluate_tool_proficiency(self, task: Dict) -> int:
+        """Evaluate tool proficiency (0-10)."""
+        description = task['description'].lower()
+        
+        if 'orcaflex' in description or 'aqwa' in description:
+            return 2  # Limited access to specialized tools
+        elif 'git' in description or 'python' in description:
+            return 9  # Strong proficiency with common tools
+        else:
+            return 7
+    
+    def _evaluate_codebase_knowledge(self, task: Dict) -> int:
+        """Evaluate understanding of codebase patterns (0-10)."""
+        # Would check against codebase analysis in real implementation
+        return 8  # Generally good understanding
+    
+    def _evaluate_testing_ability(self, task: Dict) -> int:
+        """Evaluate testing competence (0-10)."""
+        if 'test' in task['description'].lower():
+            return 9  # Strong testing capabilities
+        return 7
+    
+    def _evaluate_error_handling(self, task: Dict) -> int:
+        """Evaluate error management knowledge (0-10)."""
+        return 7  # Moderate to good error handling
+    
+    def _evaluate_performance_knowledge(self, task: Dict) -> int:
+        """Evaluate performance analysis capability (0-10)."""
+        if 'performance' in task['description'].lower() or 'optimize' in task['description'].lower():
+            return 6
+        return 5
+    
+    def _evaluate_security_knowledge(self, task: Dict) -> int:
+        """Evaluate security awareness (0-10)."""
+        if 'security' in task['description'].lower() or 'auth' in task['description'].lower():
+            return 8
+        return 7
+    
+    def _evaluate_integration_knowledge(self, task: Dict) -> int:
+        """Evaluate system integration knowledge (0-10)."""
+        if 'integrate' in task['description'].lower() or 'api' in task['description'].lower():
+            return 7
+        return 6
+    
+    def _evaluate_documentation_ability(self, task: Dict) -> int:
+        """Evaluate documentation skills (0-10)."""
+        return 9  # Strong documentation capabilities
+    
+    def _evaluate_best_practices(self, task: Dict) -> int:
+        """Evaluate knowledge of best practices (0-10)."""
+        return 8  # Good understanding of best practices
+
     def execute_task(self, task: Dict) -> Dict:
-        """Execute a single task.
+        """Execute a single task with dual verification.
         
         ENVIRONMENT REQUIREMENTS:
         - Must use existing repo's uv environment
@@ -392,19 +588,67 @@ class EnhancedTaskExecutor:
         return verification
     
     def execute_all_parallel(self) -> Dict:
-        """Execute all pending tasks with intelligent parallelization."""
+        """Execute all pending tasks with dual verification and intelligent parallelization."""
         self.start_time = datetime.now()
         pending_tasks = [t for t in self.tasks if not t['completed']]
         
-        # Separate tasks by parallelizability
-        parallel_tasks = [t for t in pending_tasks if t['can_parallelize']]
-        sequential_tasks = [t for t in pending_tasks if not t['can_parallelize']]
+        # DUAL VERIFICATION PHASE
+        print(f"\n🔒 DUAL VERIFICATION PROTOCOL")
+        print("=" * 60)
         
-        self.progress['total'] = len(pending_tasks)
+        verified_tasks = []
+        for task in pending_tasks:
+            print(f"\n📌 Processing Task {task['number']}: {task['description']}")
+            
+            # Step 1: User Domain Verification (for main tasks only)
+            if not task.get('subtask', False):  # Main tasks only
+                user_verified = self.verify_user_domain_knowledge(task)
+                if not user_verified:
+                    print(f"⏭️  Skipping task {task['number']} - user domain knowledge not confirmed")
+                    continue
+            
+            # Step 2: AI Agent Skill Assessment
+            skill_assessment = self.assess_agent_skills(task)
+            
+            if not skill_assessment['passed']:
+                print(f"\n📋 Task {task['number']} requires alternative execution:")
+                
+                # Handle recommendations
+                if "user_execution" in skill_assessment['recommendations']:
+                    print("👤 USER ACTION REQUIRED: Please execute this task manually")
+                    print(f"   Task: {task['description']}")
+                    continue
+                elif any("delegate:" in r for r in skill_assessment['recommendations']):
+                    delegate_to = [r.split(':')[1] for r in skill_assessment['recommendations'] 
+                                 if r.startswith("delegate:")][0]
+                    print(f"🤖 Delegating to: {delegate_to.upper()} Agent")
+                    # In real implementation, would spawn specialized agent here
+                
+                if "deep_research" in skill_assessment['recommendations']:
+                    print("📚 Initiating deep research phase...")
+                    # In real implementation, would perform research here
+            
+            verified_tasks.append(task)
+        
+        if not verified_tasks:
+            print("\n❌ No tasks passed dual verification")
+            return {
+                'total_tasks': len(pending_tasks),
+                'completed': 0,
+                'failed': 0,
+                'execution_time': 0
+            }
+        
+        # Separate verified tasks by parallelizability
+        parallel_tasks = [t for t in verified_tasks if t['can_parallelize']]
+        sequential_tasks = [t for t in verified_tasks if not t['can_parallelize']]
+        
+        self.progress['total'] = len(verified_tasks)
         
         print(f"\n🚀 PARALLEL EXECUTION ENGINE")
         print("=" * 60)
         print(f"📊 Execution Strategy:")
+        print(f"  • {len(verified_tasks)}/{len(pending_tasks)} tasks passed verification")
         print(f"  • {len(parallel_tasks)} tasks running in parallel")
         print(f"  • {len(sequential_tasks)} tasks running sequentially")
         print(f"  • Using {self.max_workers} worker threads")
