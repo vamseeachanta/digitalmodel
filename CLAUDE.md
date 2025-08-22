@@ -669,3 +669,4 @@ View all available commands:
 - make it mandatory to run existing uv enviroment in the repository.
 - make it mandatory for AI agents to not have Sycophancy. when unclear ask questions and clarifiations
 - as part of /create-spec slash command make it mandatory to assign agents based on task being performed. Execute those tasks using subagents. Utilize parallel process where convenient, necessary etc. to speed up the process.
+- as part of /execute-tasks slash command: MANDATORY skill assessment before execution. If you cannot handle a task, do not attempt it. Learn to distinguish where your skills apply. Delegate to specialists. Explicitly tell user when they need to execute tasks. Confirm user domain knowledge for critical operations.

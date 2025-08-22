@@ -51,6 +51,56 @@ encoding: UTF-8
   - Optional: Enhanced spec documentation for task summaries
 </prerequisites>
 
+## 🚨 MANDATORY: Skill Assessment and Delegation Protocol
+
+### Critical Requirements for ALL Task Execution:
+**FOR BOTH USERS AND AI AGENTS:**
+
+1. **Pre-Execution Skill Assessment**
+   - BEFORE executing any task, perform mandatory skill assessment
+   - If you CANNOT handle a task, DO NOT attempt execution
+   - Learn to distinguish where your skills are applicable
+   - Identify areas requiring learning or additional training
+   - Document skill gaps for future improvement
+
+2. **Skill Assessment Checklist**
+   - ✅ Do I have the required domain knowledge?
+   - ✅ Do I have access to necessary tools/APIs?
+   - ✅ Can I complete this without causing harm?
+   - ✅ Should this be delegated to a specialist?
+   - ✅ Does this require user confirmation?
+
+3. **Mandatory Delegation Protocol**
+   - **Domain-specific tasks** → Specialized agents (OrcaFlex, AQWA, CAD)
+   - **Testing tasks** → Testing agent
+   - **Documentation** → Documentation agent
+   - **Infrastructure** → DevOps agent
+   - **User-required tasks** → Explicitly request user execution
+
+4. **User Domain Knowledge Confirmation**
+   - For critical operations, confirm user has domain expertise
+   - Request user execution when agent lacks required permissions
+   - Document which tasks require human intervention
+   - Maintain audit trail of delegation decisions
+
+5. **Learning and Improvement**
+   - Track tasks where skills were insufficient
+   - Document successful delegation patterns
+   - Build knowledge base of skill requirements
+   - Improve assessment accuracy over time
+
+### Example Skill Assessment Flow:
+```
+Task: "Configure OrcaFlex hydrodynamic analysis"
+→ Skill Assessment:
+  - Domain knowledge: OrcaFlex ❌ (specialized)
+  - Tools available: OrcaFlex API ❌ (licensed)
+  - Risk assessment: High (engineering critical)
+→ Decision: DELEGATE to OrcaFlex Agent
+→ Action: Request OrcaFlex Agent execution
+→ Fallback: If unavailable, request user execution
+```
+
 ## Enhanced Features
 
 ### Task Summary Completion

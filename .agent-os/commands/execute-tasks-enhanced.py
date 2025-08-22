@@ -7,6 +7,29 @@ Features:
 - Time estimation for user planning
 - Progress tracking with visual indicators
 
+🚨 MANDATORY SKILL ASSESSMENT AND DELEGATION:
+FOR BOTH USERS AND AI AGENTS:
+- BEFORE executing any task, assess if you have the required skills
+- If you CANNOT handle a task, DO NOT attempt execution
+- Learn to distinguish where your skills are applicable
+- Identify areas where you need learning or training
+- Delegate subtasks to appropriate specialized agents
+- If needed, explicitly tell the user to execute specific tasks
+- Confirm user domain knowledge before critical operations
+
+SKILL ASSESSMENT CHECKLIST:
+1. Do I have the required domain knowledge?
+2. Do I have access to necessary tools/APIs?
+3. Can I complete this without causing harm?
+4. Should this be delegated to a specialist?
+5. Does this require user confirmation?
+
+DELEGATION PROTOCOL:
+- Domain-specific tasks → Specialized agents (OrcaFlex, AQWA, etc.)
+- Testing tasks → Testing agent
+- Documentation → Documentation agent
+- User-required tasks → Explicitly request user execution
+
 IMPORTANT ENVIRONMENT NOTES:
 - ALWAYS use the existing repository's uv environment
 - NEVER create a new virtual environment
