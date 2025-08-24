@@ -406,6 +406,21 @@ python tools/execute-tasks.py @specs/modules/module-name/spec-folder/tasks.md
    - Document delegation chain in spec.md "Agent Delegation" section
    - Ensure agents know about and can invoke other agents as needed
    - Example: CAD spec delegates modeling to FreeCAD agent, meshing to GMsh agent
+7. **UV ENVIRONMENT USAGE**: 🚨 **MANDATORY** - ALL tasks MUST utilize the existing repo uv environment:
+   - **Every task execution** MUST use `uv run` or activate the uv environment
+   - **Package installations** MUST use `uv add` to keep pyproject.toml updated
+   - **Testing** MUST run through `uv run pytest` to ensure dependencies are current
+   - **Script execution** MUST use `uv run python script.py`
+   - **If impractical**: MUST raise immediate concern to user with specific reason
+   - **Purpose**: Ensures repo uv settings remain up-to-date and consistent
+   - **Example violations to avoid**:
+     - ❌ `python script.py` (uses system Python)
+     - ❌ `pip install package` (bypasses uv management)
+     - ❌ `pytest` (may use wrong environment)
+   - **Correct usage**:
+     - ✅ `uv run python script.py`
+     - ✅ `uv add package`
+     - ✅ `uv run pytest`
 
 #### 🚀 MANDATORY: Agent Assignment and Parallel Processing
 **CRITICAL REQUIREMENTS for /create-spec execution:**
