@@ -1,487 +1,404 @@
-# Technical Specification: OrcaFlex Mooring Tension Iteration System
+# Technical Specification: Mooring Tension Iteration Orchestrator
 
-## System Architecture
+## Executive Summary
 
-### Core Components
+This specification defines an orchestration system that automates the execution of existing mooring tension iteration batch files in a loop, tracking convergence of line tensions without performing any engineering calculations. The system simply runs the existing commands repeatedly until convergence criteria is met or maximum iterations reached.
 
-#### 1. Iteration Engine (`MooringTensionIterator`)
-**Purpose**: Main orchestrator for the optimization process, building upon existing `mooring.py` patterns
-**Key Methods**:
-- `iterate_to_targets()`: Primary iteration loop (automates manual process)
-- `check_convergence()`: Tolerance validation (configurable, default 1%)
-- `generate_report()`: Results documentation (extends CSV output format)
+**Scope**:
+- Orchestrate existing batch commands in a loop
+- Track effective tension values from CSV outputs
+- Check convergence criteria (tolerance tracking)
+- Stop when converged or after 10 iterations
+- NO engineering calculations or modifications
 
-#### 2. Tension Calculator (`TensionAnalyzer`)  
-**Purpose**: Interface with OrcaFlex for tension extraction via DigitalModel framework
-**Key Methods**:
-- `extract_mooring_tensions()`: Get current line tensions from OrcaFlex result CSV files
-- `run_static_analysis()`: Execute DigitalModel OrcaFlex analysis pipeline
-- `validate_model_state()`: Ensure model readiness for analysis
-- `process_sim_results()`: Post-process .sim files to extract real tension values
+## System Overview
 
-**CRITICAL IMPLEMENTATION REQUIREMENTS**:
-- **MUST execute actual OrcaFlex analysis**: Use `python -m digitalmodel.orcaflex config.yml --input model.yml`
-- **MUST process real .sim files**: Extract tensions from `results/*Line_var_data.csv`
-- **MUST update includefiles**: Modify `includefile_*_mooring_line_length.yml` before each run
-- **MUST backup results**: Preserve previous analysis results between iterations
+### Purpose
+Automate the repetitive manual execution of existing batch commands for mooring tension iteration, providing convergence tracking and stopping criteria.
 
-#### 3. Line Modifier (`LinePropertyManager`)
-**Purpose**: Automated adjustment of mooring line properties
-**Key Methods**:
-- `adjust_line_lengths()`: Apply calculated length modifications
-- `calculate_stiffness_matrix()`: Compute line interaction effects
-- `backup_original_properties()`: Save original line configurations
+### Core Functionality
+1. **Execute existing batch commands** from go-by folder
+2. **Extract tension values** from result CSV files
+3. **Track convergence** across iterations
+4. **Stop conditions**: Convergence achieved OR 10 iterations completed
 
-#### 4. Configuration Manager (`IterationConfig`)
-**Purpose**: Manage target specifications and algorithm parameters
-**Key Attributes**:
-- `target_tensions`: Dictionary mapping line names to target values
-- `convergence_tolerance`: Acceptable deviation from targets (default: 1%)
-- `max_iterations`: Safety limit for iteration count (default: 10)
+## Architecture
 
-### Real OrcaFlex Workflow Implementation
+### Simple Orchestration Loop
 
-#### CRITICAL: Actual OrcaFlex Execution Required
-**The iteration system MUST execute real OrcaFlex analysis, not simulated physics.**
-
-#### Workflow Steps (Per Iteration)
-1. **Update Includefile**
-   - Modify `includefile_*_mooring_line_length.yml` with new `ArcLength[1]` values
-   - Backup previous includefile with timestamp
-   - Ensure proper YAML formatting
-
-2. **Execute OrcaFlex Analysis**
-   - Run: `python -m digitalmodel.orcaflex dm_ofx_anal_mooring_125km3_pb.yml --input model.yml`
-   - Backup existing `results/` folder before analysis
-   - Monitor for analysis completion (typical 25-40 seconds)
-   - Handle timeout scenarios (600 second limit)
-
-3. **Post-Process Results**
-   - Locate: `results/*Line_var_data.csv` (most recent file)
-   - Extract `Effective tension` column for each mooring line
-   - Match ObjectName to target line identifiers (Line01, Line02, etc.)
-   - Handle missing data with appropriate fallbacks
-
-4. **Iteration Control**
-   - Calculate tension errors vs targets
-   - Apply Newton-Raphson length adjustments with damping (0.8)
-   - Check convergence criteria (1% tolerance)
-   - Continue or terminate based on convergence/max iterations
-
-#### File Structure Requirements
-```
-base_files/fsts_lngc_pretension/
-├── fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof.yml  # Main model
-├── dm_ofx_anal_mooring_125km3_pb.yml                     # Analysis config  
-├── includefile_*_mooring_line_length.yml                 # Line length data
-├── 125km3_l000_pb_target_mooring_pretension.csv          # Target tensions
-└── results/                                              # OrcaFlex outputs
-    └── *Line_var_data.csv                               # Tension results
+```python
+class MooringTensionOrchestrator:
+    def __init__(self, max_iterations=10):
+        self.max_iterations = max_iterations
+        self.iteration_history = []
+        
+    def run_iteration_loop(self):
+        """Main orchestration loop - NO calculations, just execution."""
+        
+        for iteration in range(1, self.max_iterations + 1):
+            print(f"\n=== Iteration {iteration} ===")
+            
+            # Step 1: Run tension calculation
+            self.run_command("python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml")
+            
+            # Step 2: Run OrcaFlex analysis
+            self.run_command("python -m digitalmodel.modules.orcaflex.universal "
+                           "pattern='fsts*125km3*pb_*.yml' input_directory='.' "
+                           "output_directory='.' validate=false")
+            
+            # Step 3: Post-process results
+            self.run_command("python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30")
+            
+            # Step 4: Read current tensions from CSV
+            current_tensions = self.read_tensions_from_csv()
+            
+            # Step 5: Check convergence
+            if self.check_convergence(current_tensions):
+                print(f"✓ Converged at iteration {iteration}")
+                break
+                
+            if iteration == self.max_iterations:
+                print(f"⚠ Maximum iterations ({self.max_iterations}) reached")
 ```
 
-#### Common Implementation Errors to Avoid
-- **❌ Simulating OrcaFlex**: Never use mathematical models instead of real analysis
-- **❌ Ignoring .sim files**: Must process actual OrcaFlex result files
-- **❌ Missing includefile updates**: Line lengths must be updated before each run
-- **❌ Incorrect tension extraction**: Use 'Effective tension' column, not 'End force'
-- **❌ File conflicts**: Backup existing results to prevent overwrites
+## Batch Commands to Execute
 
-### Mathematical Framework
+Based on files in `go-by/` folder:
 
-#### Optimization Problem Formulation
-The system solves the non-linear system:
-$$\mathbf{f}(\mathbf{L}) = \mathbf{T}(\mathbf{L}) - \mathbf{T}_{target} = \mathbf{0}$$
+### Per Iteration Commands
 
-Where:
-- $\mathbf{L} = [L_1, L_2, \ldots, L_n]^T$ represents mooring line lengths
-- $\mathbf{T}(\mathbf{L})$ is the tension response vector from OrcaFlex analysis
-- $\mathbf{T}_{target}$ contains user-specified target tensions
-
-#### Newton-Raphson Solution Method
-The iterative update equation:
-$$\mathbf{L}^{(k+1)} = \mathbf{L}^{(k)} - \mathbf{J}^{-1}(\mathbf{L}^{(k)}) \mathbf{f}(\mathbf{L}^{(k)})$$
-
-#### Jacobian Matrix Calculation
-The sensitivity matrix for line interactions:
-$$J_{ij} = \frac{\partial T_i}{\partial L_j}$$
-
-Computed using finite differences with adaptive step sizing:
-$$J_{ij} \approx \frac{T_i(\mathbf{L} + h_j\mathbf{e}_j) - T_i(\mathbf{L})}{h_j}$$
-
-Where $h_j$ is the perturbation step for line $j$, calculated as:
-$$h_j = \max(0.01 \cdot L_j, 0.1 \text{ m})$$
-
-#### Line Stiffness Approximation
-For initial step estimates, the effective stiffness:
-$$k_{eff,i} = \frac{EA_i}{L_{0,i}} \cos^2(\theta_i) \cdot f_{catenary}(\lambda_i)$$
-
-Where:
-- $EA_i$ is the axial stiffness of line $i$
-- $L_{0,i}$ is the initial unstretched length
-- $\theta_i$ is the line angle from horizontal at anchor
-- $f_{catenary}(\lambda_i)$ accounts for catenary geometry effects
-- $\lambda_i = \frac{w L_{0,i}^2}{T_{h,i}}$ is the dimensionless catenary parameter
-
-#### Convergence Criteria
-The system achieves convergence when:
-$$\max_{i} \left| \frac{T_{current,i} - T_{target,i}}{T_{target,i}} \right| \leq \epsilon_{tol}$$
-
-With default tolerance $\epsilon_{tol} = 0.01$ (1%).
-
-## Current Manual Process Workflow
-
-### Overview
-The existing workflow combines manual OrcaFlex operations with digitalmodel calculations in an iterative process. This specification documents both the current manual approach and the path to automation.
-
-### Manual Iteration Steps
-
-#### Step 1: Input Preparation
-- Load target tensions from CSV: `*_target_mooring_pretension.csv`
-- Target tensions in kN, line lengths optional
-- EA values can be provided or extracted from OrcaFlex model
-- Fender properties from `_target_fender_force.csv` (optional)
-
-#### Step 2: Baseline Analysis
-- Run OrcaFlex static analysis: `fsts*vessel_statics_6dof.yml`
-- Vessel in 6DOF mode for equilibrium position
-- Generates .sim output files
-
-#### Step 3: Result Extraction
-- Execute `dm_ofx_post_fsts_lngc.yml` for post-processing
-- Extracts tensions, line lengths, fender forces to CSV
-- Creates baseline for comparison
-
-#### Step 4: Length Calculation
-- Run `dm_ofx_anal_mooring_*.yml` with digitalmodel
-- Calculates: ΔL = L/EA × (T_current - T_target)
-- Uses major governing stiffness (not combined equivalent)
-- Generates includefile YAMLs (overwritten each iteration)
-
-#### Step 5: Model Update & Iteration
-- Includefiles automatically update OrcaFlex model
-- Re-run static analysis (vessel finds new equilibrium)
-- Manual convergence check via CSV review
-- Repeat until convergence (typically 3-5 iterations)
-
-### Current Implementation Details
-
-1. **EA-Based Length Calculation**:
-   ```python
-   delta_length = (length/EA) * (current_tension - target_tension)
-   new_arc_length = arc_length + sum(delta_length)
+1. **Tension Calculation**
+   ```bash
+   /d/github/digitalmodel/.venv/Scripts/python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml
    ```
 
-2. **File Management**:
-   - Includefiles overwritten to minimize updates
-   - Occasional manual backups recommended
-   - Results in `fsts_lngc_pretension/results/` folder
+2. **Run OrcaFlex Models**
+   ```bash
+   /d/github/digitalmodel/.venv/Scripts/python -m digitalmodel.modules.orcaflex.universal \
+       pattern="fsts*125km3*pb_*.yml" \
+       input_directory="." \
+       output_directory="." \
+       validate=false
+   ```
 
-3. **Convergence Handling**:
-   - Manual review of CSV outputs
-   - Tolerance typically ±1% of target
-   - Manual rollback if tensions worsen
-   - Option to restart from different initial conditions
+3. **Post-Process Results**
+   ```bash
+   /d/github/digitalmodel/.venv/Scripts/python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30
+   ```
 
-## Implementation Phases
+## Convergence Tracking
 
-### Phase 1: Semi-Automated Workflow (MVP)
-**Goal**: Automate calculation steps while maintaining manual control points
+### Data Sources
 
-#### Components to Implement:
-1. **CSV Parser Module**
-   - Read target tension/length files
-   - Extract EA values from CSV or OrcaFlex models
-   - Validate input data completeness
+1. **Target Tensions**: Read from `fsts_l015_125km3_pb_target_mooring_pretension.csv`
+   - Line01 through Line16
+   - Target tension values in kN
+   - Tolerance values per line
 
-2. **OrcaFlex Runner Module**
-   - Execute static analysis via Python API
-   - Handle .yml to .sim conversion
-   - Manage file paths and outputs
+2. **Current Tensions**: Extract from `results/fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_pretension_analysis.csv`
+   - Effective tension values
+   - Updated after each iteration
 
-3. **Result Extractor Module**
-   - Post-process .sim files automatically
-   - Generate CSV outputs matching current format
-   - Calculate tension differences
+### Convergence Logic (Simple Tolerance Check)
 
-4. **Length Calculator Module**
-   - Implement ΔL = L/EA × (T_current - T_target)
-   - Generate includefile YAMLs
-   - Handle file overwriting with optional backup
-
-5. **Convergence Reporter**
-   - Compare tensions against targets
-   - Generate iteration summary reports
-   - Flag non-converging cases
-
-#### Manual Steps Retained:
-- Decision to proceed with next iteration
-- Rollback decisions on failure
-- Initial model selection
-- Final validation of results
-
-### Phase 2: Fully Automated Iteration
-**Goal**: Complete automation with intelligent decision making
-
-#### Enhancements:
-- Automatic convergence detection
-- Smart rollback on divergence
-- Jacobian-based optimization (replacing simple EA)
-- Parallel processing for multiple models
-- Vessel position optimization
-
-### Phase 3: Advanced Optimization
-**Goal**: Sophisticated algorithms and robustness
-
-#### Advanced Features:
-- scipy.optimize integration
-- Multi-dimensional Newton-Raphson
-- Adaptive step sizing
-- Convergence acceleration techniques
-- Automated failure recovery strategies
-
-### Algorithm Implementation
-
-#### Primary Iteration Loop
 ```python
-def iterate_to_targets(self, target_tensions: Dict[str, float]) -&gt; IterationResult:
+def check_convergence(self, current_tensions, target_tensions, tolerances):
     """
-    Main iteration algorithm for achieving target mooring tensions.
-    
-    Args:
-        target_tensions: Dict mapping line names to target tension values [kN]
-        
-    Returns:
-        IterationResult containing convergence status and final tensions
+    Simple convergence check - NO calculations, just comparison.
+    Returns True if all lines are within their specified tolerance.
     """
-    # Initialize
-    current_lengths = self._get_current_line_lengths()
-    iteration_count = 0
+    converged_lines = []
     
-    while iteration_count &lt; self.config.max_iterations:
-        # Calculate current tensions via OrcaFlex static analysis
-        current_tensions = self.tension_analyzer.extract_mooring_tensions()
+    for line_name in current_tensions:
+        current = current_tensions[line_name]
+        target = target_tensions[line_name]
+        tolerance = tolerances[line_name]  # Percentage
         
-        # Check convergence
-        if self._check_convergence(current_tensions, target_tensions):
-            return IterationResult(
-                converged=True,
-                iterations=iteration_count,
-                final_tensions=current_tensions,
-                final_lengths=current_lengths
-            )
+        # Simple percentage difference check
+        diff_percent = abs(current - target) / target * 100
         
-        # Calculate Jacobian matrix
-        jacobian = self._compute_jacobian(current_lengths)
+        is_converged = diff_percent <= tolerance
+        converged_lines.append(is_converged)
         
-        # Compute tension residuals
-        residuals = self._calculate_residuals(current_tensions, target_tensions)
-        
-        # Newton-Raphson update
-        length_updates = self._solve_linear_system(jacobian, residuals)
-        
-        # Apply updates with safety limits
-        current_lengths = self._apply_length_updates(current_lengths, length_updates)
-        
-        # Update OrcaFlex model
-        self.line_modifier.adjust_line_lengths(current_lengths)
-        
-        iteration_count += 1
+        print(f"{line_name}: Current={current:.1f}, Target={target:.1f}, "
+              f"Diff={diff_percent:.1f}%, Tolerance={tolerance}%, "
+              f"{'✓' if is_converged else '✗'}")
     
-    # Failed to converge
-    return IterationResult(converged=False, iterations=iteration_count)
+    return all(converged_lines)
 ```
 
-#### Jacobian Matrix Computation
+### Tracking History
+
 ```python
-def _compute_jacobian(self, current_lengths: np.ndarray) -&gt; np.ndarray:
-    """
-    Compute sensitivity matrix using finite differences.
+def track_iteration(self, iteration_num, tensions):
+    """Track tension values across iterations for trend analysis."""
     
-    Args:
-        current_lengths: Current line length values [m]
-        
-    Returns:
-        Jacobian matrix J[i,j] = dT_i/dL_j
-    """
-    n_lines = len(current_lengths)
-    jacobian = np.zeros((n_lines, n_lines))
+    self.iteration_history.append({
+        'iteration': iteration_num,
+        'timestamp': datetime.now(),
+        'tensions': tensions.copy(),
+        'converged_lines': self.get_converged_lines(tensions)
+    })
     
-    # Get baseline tensions
-    baseline_tensions = self.tension_analyzer.extract_mooring_tensions()
+def generate_convergence_report(self):
+    """Generate simple convergence trend report."""
     
-    for j in range(n_lines):
-        # Calculate perturbation step
-        h = max(0.01 * current_lengths[j], 0.1)  # Minimum 0.1m step
-        
-        # Perturb line j
-        perturbed_lengths = current_lengths.copy()
-        perturbed_lengths[j] += h
-        
-        # Update model and analyze
-        self.line_modifier.adjust_line_lengths(perturbed_lengths)
-        perturbed_tensions = self.tension_analyzer.extract_mooring_tensions()
-        
-        # Compute derivatives
-        for i in range(n_lines):
-            jacobian[i, j] = (perturbed_tensions[i] - baseline_tensions[i]) / h
-        
-        # Restore original lengths
-        self.line_modifier.adjust_line_lengths(current_lengths)
-    
-    return jacobian
+    print("\n=== Convergence Trend Report ===")
+    for record in self.iteration_history:
+        converged_count = len(record['converged_lines'])
+        total_lines = 16
+        print(f"Iteration {record['iteration']}: "
+              f"{converged_count}/{total_lines} lines converged "
+              f"({converged_count/total_lines*100:.1f}%)")
 ```
 
-### OrcaFlex Integration
+## Implementation Requirements
 
-#### Model Interface Requirements
-The system requires OrcaFlex models with:
-- **Mooring Lines**: Named consistently (e.g., "Line1", "Line2", "Line3", "Line4")
-- **Vessel Objects**: Fixed during static analysis using `vessel.PrimaryMotion = 'Fixed'`
-- **Environment**: Defined current, wind, and wave conditions
-- **Line Types**: Properly configured with axial stiffness (EA) properties
+### File Structure
+```
+go-by/
+├── dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml    # Tension calculation config
+├── dm_ofx_post_fsts_lngc.yml                      # Post-processing config
+├── fsts_l015_125km3_pb_target_mooring_pretension.csv  # Target tensions
+├── fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof.dat  # OrcaFlex model
+└── results/
+    └── *_pretension_analysis.csv                   # Output tensions
+```
 
-#### Static Analysis Configuration
+### Core Implementation
+
 ```python
-def configure_static_analysis(self, model: OrcFxAPI.Model) -&gt; None:
-    """Configure model for static analysis during iteration."""
-    # Fix vessel position
-    for vessel_name in self.config.vessel_names:
-        vessel = model[vessel_name]
-        vessel.PrimaryMotion = 'Fixed'
-        vessel.IncludeAppliedLoads = 'Yes'
-    
-    # Set analysis parameters for speed
-    model.general.StaticsSolver = 'Whole system'
-    model.general.StaticsMaxDamping = 10.0
-    model.general.StaticsMinDamping = 0.1
-    model.general.StaticsMaxIterations = 1000
-    model.general.StaticsConvergenceTolerance = 1e-6
-```
+#!/usr/bin/env python
+"""
+Mooring Tension Iteration Orchestrator
+Simple loop execution of existing batch commands with convergence tracking.
+NO engineering calculations - just orchestration.
+"""
 
-#### Tension Extraction
-```python  
-def extract_mooring_tensions(self) -&gt; Dict[str, float]:
-    """Extract effective tension from all mooring lines."""
-    tensions = {}
-    
-    for line_name in self.config.mooring_line_names:
-        line = self.model[line_name]
-        
-        # Get tension at line end (typically anchor end)
-        end_tension = line.StaticResult('End A Fx', OrcFxAPI.oeEndA)
-        effective_tension = line.StaticResult('Effective Tension', 
-                                            arclength=0.0,  # At anchor
-                                            period=OrcFxAPI.pnStaticState)
-        
-        tensions[line_name] = effective_tension
-    
-    return tensions
-```
+import subprocess
+import csv
+import os
+from datetime import datetime
+from pathlib import Path
 
-### Error Handling and Validation
-
-#### Convergence Failure Handling
-```python
-def handle_convergence_failure(self, iteration_result: IterationResult) -&gt; None:
-    """Handle cases where algorithm fails to converge."""
-    if not iteration_result.converged:
-        # Log failure details
-        self.logger.warning(f"Failed to converge after {iteration_result.iterations} iterations")
-        
-        # Analyze potential causes
-        self._diagnose_failure(iteration_result)
-        
-        # Attempt fallback strategies
-        if self.config.enable_fallback:
-            self._try_fallback_methods()
-        
-        # Restore original model state
-        self.line_modifier.restore_original_properties()
-```
-
-#### Model Validation
-```python
-def validate_model_setup(self, model: OrcFxAPI.Model) -&gt; List[str]:
-    """Validate model configuration for iteration compatibility."""
-    warnings = []
+class MooringTensionOrchestrator:
     
-    # Check mooring line configuration
-    for line_name in self.config.mooring_line_names:
-        if line_name not in model.objects:
-            warnings.append(f"Mooring line '{line_name}' not found in model")
-            continue
+    def __init__(self, working_dir="go-by", max_iterations=10):
+        self.working_dir = Path(working_dir)
+        self.max_iterations = max_iterations
+        self.python_exec = "/d/github/digitalmodel/.venv/Scripts/python"
+        self.iteration_history = []
+        self.target_tensions = {}
+        self.tolerances = {}
+        
+    def load_targets(self):
+        """Load target tensions and tolerances from CSV."""
+        csv_path = self.working_dir / "fsts_l015_125km3_pb_target_mooring_pretension.csv"
+        with open(csv_path, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                line_name = row['ObjectName']
+                self.target_tensions[line_name] = float(row['target_tension'])
+                self.tolerances[line_name] = float(row['tolerance'])
+    
+    def run_command(self, command):
+        """Execute shell command and wait for completion."""
+        print(f"Executing: {command}")
+        result = subprocess.run(command, shell=True, cwd=self.working_dir)
+        if result.returncode != 0:
+            print(f"Warning: Command returned non-zero exit code: {result.returncode}")
+        return result
+    
+    def read_current_tensions(self):
+        """Read current tension values from result CSV."""
+        csv_path = self.working_dir / "results" / "fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_pretension_analysis.csv"
+        
+        tensions = {}
+        if csv_path.exists():
+            with open(csv_path, 'r') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    if 'ObjectName' in row and 'EffectiveTension' in row:
+                        tensions[row['ObjectName']] = float(row['EffectiveTension'])
+        
+        return tensions
+    
+    def check_convergence(self, current_tensions):
+        """Check if all lines are within tolerance."""
+        if not current_tensions:
+            return False
             
-        line = model[line_name]
+        all_converged = True
+        for line_name, target in self.target_tensions.items():
+            if line_name not in current_tensions:
+                print(f"Warning: {line_name} not found in results")
+                all_converged = False
+                continue
+                
+            current = current_tensions[line_name]
+            tolerance = self.tolerances[line_name]
+            diff_percent = abs(current - target) / target * 100
+            
+            is_converged = diff_percent <= tolerance
+            if not is_converged:
+                all_converged = False
+                
+            status = "✓" if is_converged else "✗"
+            print(f"  {line_name}: {current:.1f} kN (target: {target:.1f} kN, "
+                  f"diff: {diff_percent:.1f}%, tol: {tolerance}%) {status}")
         
-        # Validate line type has stiffness data
-        line_type = model[line.LineType[0]]  # First segment line type
-        if not hasattr(line_type, 'EA') or line_type.EA &lt;= 0:
-            warnings.append(f"Line type for {line_name} missing axial stiffness (EA)")
-        
-        # Check anchor connection
-        if line.EndAConnection != 'Anchored':
-            warnings.append(f"Line {line_name} End A should be anchored for tension control")
+        return all_converged
     
-    return warnings
+    def run(self):
+        """Main orchestration loop."""
+        print("Starting Mooring Tension Iteration Orchestrator")
+        print(f"Maximum iterations: {self.max_iterations}")
+        
+        # Load targets
+        self.load_targets()
+        print(f"Loaded {len(self.target_tensions)} target tensions")
+        
+        # Main iteration loop
+        for iteration in range(1, self.max_iterations + 1):
+            print(f"\n{'='*60}")
+            print(f"ITERATION {iteration}")
+            print('='*60)
+            
+            # Step 1: Run tension calculation
+            print("\nStep 1: Running tension calculation...")
+            self.run_command(f"{self.python_exec} -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml")
+            
+            # Step 2: Run OrcaFlex analysis
+            print("\nStep 2: Running OrcaFlex analysis...")
+            self.run_command(f'{self.python_exec} -m digitalmodel.modules.orcaflex.universal '
+                           f'pattern="fsts*125km3*pb_*.yml" input_directory="." '
+                           f'output_directory="." validate=false')
+            
+            # Step 3: Post-process results
+            print("\nStep 3: Post-processing results...")
+            self.run_command(f"{self.python_exec} -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30")
+            
+            # Step 4: Check convergence
+            print("\nStep 4: Checking convergence...")
+            current_tensions = self.read_current_tensions()
+            
+            if not current_tensions:
+                print("Warning: No tension data found, continuing...")
+                continue
+            
+            # Track history
+            self.iteration_history.append({
+                'iteration': iteration,
+                'tensions': current_tensions.copy()
+            })
+            
+            # Check convergence
+            if self.check_convergence(current_tensions):
+                print(f"\n✓✓✓ CONVERGED at iteration {iteration} ✓✓✓")
+                self.generate_summary()
+                return True
+            
+            print(f"\nNot converged, continuing to next iteration...")
+        
+        print(f"\n⚠ Maximum iterations ({self.max_iterations}) reached without convergence")
+        self.generate_summary()
+        return False
+    
+    def generate_summary(self):
+        """Generate convergence summary."""
+        print("\n" + "="*60)
+        print("CONVERGENCE SUMMARY")
+        print("="*60)
+        
+        print(f"Total iterations: {len(self.iteration_history)}")
+        
+        if self.iteration_history:
+            # Show convergence trend
+            print("\nConvergence Trend:")
+            for record in self.iteration_history:
+                iteration = record['iteration']
+                tensions = record['tensions']
+                
+                converged_count = 0
+                for line_name, target in self.target_tensions.items():
+                    if line_name in tensions:
+                        current = tensions[line_name]
+                        tolerance = self.tolerances[line_name]
+                        diff_percent = abs(current - target) / target * 100
+                        if diff_percent <= tolerance:
+                            converged_count += 1
+                
+                total_lines = len(self.target_tensions)
+                print(f"  Iteration {iteration}: {converged_count}/{total_lines} lines "
+                      f"converged ({converged_count/total_lines*100:.1f}%)")
+
+if __name__ == "__main__":
+    orchestrator = MooringTensionOrchestrator()
+    orchestrator.run()
 ```
 
-### Configuration Specification
+## Success Criteria
 
-#### YAML Configuration Format
-```yaml
-# mooring_iteration_config.yml
-iteration_parameters:
-  convergence_tolerance: 0.01  # 1% tolerance
-  max_iterations: 10
-  enable_adaptive_stepping: true
-  safety_factor_limits: [0.5, 2.0]  # Length change limits
+### Technical Requirements
+- ✅ Execute batch commands in sequence
+- ✅ Read tension values from CSV files
+- ✅ Compare against target tensions with tolerances
+- ✅ Stop when converged OR after 10 iterations
+- ✅ Generate convergence report
 
-target_tensions:
-  Line1: 2500.0  # kN
-  Line2: 2500.0  # kN  
-  Line3: 2500.0  # kN
-  Line4: 2500.0  # kN
+### NOT in Scope
+- ❌ Engineering calculations
+- ❌ Line length adjustments
+- ❌ EA stiffness calculations
+- ❌ Newton-Raphson or any optimization algorithms
+- ❌ Model modifications
 
-model_configuration:
-  vessel_names: ["Vessel1"]
-  mooring_line_names: ["Line1", "Line2", "Line3", "Line4"]
-  fix_vessel_during_iteration: true
+## Testing Requirements
 
-algorithm_settings:
-  jacobian_perturbation_ratio: 0.01  # 1% of current length
-  minimum_perturbation: 0.1  # meters
-  line_interaction_matrix: "auto"  # or "diagonal" for independent lines
+### Test Cases
 
-reporting:
-  generate_convergence_plot: true
-  save_intermediate_results: true
-  output_format: ["csv", "excel", "pdf"]
+1. **Successful Convergence**
+   - Run with data that converges in 3-4 iterations
+   - Verify stops when all lines within tolerance
+
+2. **Maximum Iterations**
+   - Run with data that doesn't converge
+   - Verify stops after 10 iterations
+
+3. **Partial Convergence**
+   - Track which lines converge first
+   - Verify trend reporting works
+
+4. **File Handling**
+   - Test with missing result files
+   - Test with malformed CSV data
+
+## Deliverables
+
+1. **orchestrator.py** - Main orchestration script
+2. **Convergence reports** - Per-iteration status
+3. **Summary report** - Final convergence state
+4. **Execution log** - Commands executed and timing
+
+## Usage
+
+```bash
+# From go-by directory
+cd specs/modules/orcaflex/mooring-tension-iteration/go-by
+
+# Run orchestrator
+/d/github/digitalmodel/.venv/Scripts/python ../orchestrator.py
+
+# Or with custom max iterations
+/d/github/digitalmodel/.venv/Scripts/python ../orchestrator.py --max-iterations 5
 ```
 
-### Performance Optimization
+## Summary
 
-#### Computational Efficiency
-- **Parallel Jacobian Calculation**: Compute finite differences concurrently when multiple OrcaFlex licenses available
-- **Adaptive Step Sizing**: Larger steps early in iteration, refined steps near convergence
-- **Convergence Acceleration**: Aitken's Δ² method for faster convergence in well-behaved cases
+This is a simple orchestration system that:
+1. Runs existing batch commands in a loop
+2. Tracks tension convergence from CSV files
+3. Stops when converged or max iterations reached
+4. Does NOT perform any engineering calculations
 
-#### Memory Management
-- **Model State Caching**: Store original line properties for restoration
-- **Result Streaming**: Process large result sets without excessive memory allocation
-- **Garbage Collection**: Explicit cleanup of OrcaFlex objects between iterations
-
-### Quality Assurance
-
-#### Validation Test Cases
-1. **Single Line Validation**: Compare against manual calculation for simple catenary
-2. **Multi-Line Independence**: Verify non-interacting lines converge independently  
-3. **Coupled System Validation**: Test complex interaction cases against known solutions
-4. **Boundary Conditions**: Extreme target values and physically unrealistic requests
-5. **Model Variations**: Different line types, water depths, and vessel configurations
-
-#### Regression Testing
-- **Automated Test Suite**: Comprehensive coverage of algorithm components
-- **Performance Benchmarks**: Timing and memory usage tracking across model types
-- **Result Accuracy**: Statistical validation of convergence accuracy over test cases
-
-This technical specification provides the foundation for implementing a robust, efficient, and validated mooring tension iteration system integrated with OrcaFlex.
+The entire system is approximately 200 lines of Python code focused purely on orchestration and file parsing.

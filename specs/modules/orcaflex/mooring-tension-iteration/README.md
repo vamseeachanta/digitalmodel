@@ -1,236 +1,157 @@
-# OrcaFlex Mooring Tension Iteration System
+# Mooring Tension Iteration Orchestrator
 
 > **Module**: `orcaflex/mooring-tension-iteration`  
-> **Status**: Development Ready  
+> **Status**: Implementation Ready  
 > **Priority**: High  
-> **Updated**: 2025-08-12  
+> **Last Updated**: 2025-08-24  
+> **Specification Version**: 3.0 (Simplified orchestration only)
 
-## Executive Summary
+## 🎯 Executive Summary
 
-The OrcaFlex Mooring Tension Iteration System automates the critical process of adjusting mooring line lengths to achieve target tension values in offshore floating structure analysis. This system addresses the time-intensive manual process currently requiring multiple OrcaFlex runs and manual adjustments, replacing it with a single-iteration Python-based automation solution.
+Simple orchestration system that runs existing mooring tension iteration batch commands in a loop, tracking convergence without performing any engineering calculations. Automates the repetitive manual execution of commands until convergence criteria is met or maximum iterations reached.
 
-**Business Value**: Reduces mooring design iteration time from hours to minutes, enabling rapid design optimization and reducing engineering costs by 80% while ensuring consistent, accurate target tension achievement.
+### Scope
+- ✅ **IN SCOPE**: Orchestration of existing batch commands
+- ✅ **IN SCOPE**: CSV parsing for targets and results
+- ✅ **IN SCOPE**: Convergence tracking (tolerance checking)
+- ✅ **IN SCOPE**: Iteration loop with stopping criteria
+- ❌ **NOT IN SCOPE**: Engineering calculations
+- ❌ **NOT IN SCOPE**: Model modifications
+- ❌ **NOT IN SCOPE**: Line length adjustments
+- ❌ **NOT IN SCOPE**: EA stiffness calculations
 
-**Target Users**: Offshore engineers, mooring system designers, and marine analysts working with OrcaFlex models requiring precise mooring tension control.
+## 📋 What This System Does
 
-## Overview
+1. **Runs these commands in a loop** (from go-by folder):
+   - `python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml`
+   - `python -m digitalmodel.modules.orcaflex.universal pattern="fsts*125km3*pb_*.yml"`
+   - `python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30`
 
-The system provides automated iteration capabilities for adjusting mooring line properties to achieve specified tension targets in OrcaFlex models. The core functionality processes:
+2. **Checks convergence** after each iteration:
+   - Reads target tensions from CSV
+   - Reads current tensions from results
+   - Compares with tolerance percentages
+   - Stops when all lines converged OR 10 iterations complete
 
-- **Multi-Line Iteration**: Simultaneous adjustment of multiple mooring lines (Line1, Line2, etc.) using Newton-Raphson method: $x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}$
-- **Target Tension Matching**: Precise convergence to user-defined tension values $T_{target}$ with tolerance $\epsilon = \pm 1\%$
-- **Stiffness-Based Length Adjustment**: Intelligent line length modification using mooring line stiffness characteristics: $\Delta L = \frac{\Delta T}{k_{eff}}$
-- **Single Iteration Convergence**: Optimization algorithm achieving target tensions in one iteration cycle, eliminating manual trial-and-error
+3. **Generates reports**:
+   - Per-iteration convergence status
+   - Convergence trend across iterations
+   - Final summary
 
-## User Stories
+## 🚀 Quick Start
 
-### Primary User: Mooring Design Engineer
-- **Story 1**: As a mooring design engineer, I want to specify target tensions for each mooring line so I can achieve optimal load distribution across the mooring system.
-- **Story 2**: As a mooring design engineer, I want the system to automatically adjust line lengths in a single iteration so I can eliminate time-consuming manual adjustments.
-- **Story 3**: As a mooring design engineer, I want to review convergence results and final tensions so I can validate the design meets requirements.
+```bash
+# Navigate to go-by folder
+cd specs/modules/orcaflex/mooring-tension-iteration/go-by
 
-### Secondary User: Project Lead
-- **Story 4**: As a project lead, I want automated tension reports with before/after comparisons so I can track design optimization progress.
-- **Story 5**: As a project lead, I want batch processing capabilities for multiple load cases so I can efficiently analyze various design scenarios.
-
-### QA Engineer
-- **Story 6**: As a QA engineer, I want to validate that final tensions match target values within specified tolerances so I can ensure design quality.
-
-## Technical Requirements
-
-### Core Functionality
-1. **Tension Analysis Engine**
-   - Automated extraction of mooring tensions from OrcaFlex static analysis
-   - Support for multiple mooring line types and configurations
-   - Real-time calculation of tension deviations from targets: $\Delta T_i = T_{current,i} - T_{target,i}$
-   - Convergence monitoring with configurable tolerance bands
-
-2. **Optimization Algorithm**
-   - Newton-Raphson root finding for multi-dimensional tension matching
-   - Jacobian matrix calculation for line interaction effects: $J_{ij} = \frac{\partial T_i}{\partial L_j}$
-   - Adaptive step sizing to prevent overcorrection and ensure stability
-   - Fallback mechanisms for non-convergent cases
-
-3. **Line Property Modification**
-   - Automated adjustment of line lengths based on stiffness characteristics
-   - Support for different line types with varying stiffness properties
-   - Validation of modified line properties against physical constraints
-   - Backup and restore capabilities for original line configurations
-
-### Performance Requirements
-- **Convergence Time**: Achieve target tensions in $t_{iteration} < 2$ minutes for typical models
-- **Accuracy**: Tension matching within $\epsilon_{tension} = \pm 1\%$ of target values
-- **Stability**: Converge successfully for $&gt; 95\%$ of typical mooring configurations
-- **Memory Usage**: $M_{usage} < 1$ GB RAM for complex mooring systems
-
-### Integration Requirements
-- **OrcaFlex API**: Full integration with OrcFxAPI Python interface
-- **Model Compatibility**: Support for existing OrcaFlex model files (.dat, .sim formats)
-- **Configuration**: YAML-based configuration for targets and algorithm parameters
-- **Logging**: Comprehensive iteration tracking and convergence diagnostics
-
-## Architecture Overview
-
-### System Components
-1. **Iteration Engine** (Python/OrcFxAPI)
-   - Main optimization loop controller
-   - Convergence criteria evaluation
-   - Step size adaptation logic
-
-2. **Tension Calculator**
-   - OrcaFlex model interface
-   - Static analysis execution
-   - Tension extraction and processing
-
-3. **Line Modifier**
-   - Mooring line property adjustment
-   - Stiffness-based length calculations
-   - Property validation and constraints
-
-4. **Configuration Manager**
-   - Target tension specification
-   - Algorithm parameter management
-   - Model backup and restoration
-
-### Algorithm Flow
-```
-Load Model → Set Targets → Calculate Current Tensions → Compute Adjustments → Modify Lines → Validate → Report
-     ↓            ↓             ↓                    ↓              ↓           ↓         ↓
-OrcaFlex API → YAML Config → Static Analysis → Root Finding → Line Updates → Tolerance → Summary
+# Run orchestrator
+/d/github/digitalmodel/.venv/Scripts/python ../orchestrator.py
 ```
 
-## Mathematical Framework
+That's it! The system will run up to 10 iterations and stop when converged.
 
-### Tension Equilibrium System
-The system solves the non-linear equation set:
-$$\mathbf{f}(\mathbf{L}) = \mathbf{T}(\mathbf{L}) - \mathbf{T}_{target} = \mathbf{0}$$
+## 📊 Implementation Details
 
-Where:
-- $\mathbf{L} = [L_1, L_2, ..., L_n]^T$ is the vector of line lengths
-- $\mathbf{T}(\mathbf{L}) = [T_1(\mathbf{L}), T_2(\mathbf{L}), ..., T_n(\mathbf{L})]^T$ is the tension response vector
-- $\mathbf{T}_{target} = [T_{target,1}, T_{target,2}, ..., T_{target,n}]^T$ is the target tension vector
+### Total Effort: 8 hours (1 day)
+- Task 1: Core orchestrator (4 hours)
+- Task 2: Testing (2 hours)
+- Task 3: Documentation (2 hours)
 
-### Newton-Raphson Iteration
-The iterative solution follows:
-$$\mathbf{L}^{(k+1)} = \mathbf{L}^{(k)} - \mathbf{J}^{-1}(\mathbf{L}^{(k)}) \mathbf{f}(\mathbf{L}^{(k)})$$
-
-Where the Jacobian matrix is:
-$$J_{ij} = \frac{\partial T_i}{\partial L_j} \approx \frac{T_i(\mathbf{L} + h\mathbf{e}_j) - T_i(\mathbf{L})}{h}$$
-
-### Stiffness Approximation
-For initial estimates, the effective line stiffness is:
-$$k_{eff,i} = \frac{EA}{L_{initial,i}} \cos^2(\theta_{line,i})$$
-
-Where:
-- $EA$ is the line axial stiffness
-- $\theta_{line,i}$ is the line angle from horizontal
-- $L_{initial,i}$ is the initial line length
-
-## Implementation Roadmap
-
-### Phase 1: Core Algorithm (2 weeks)
-**Goal**: Implement basic tension iteration for single line
-
-**Deliverables**:
-- OrcaFlex model interface
-- Basic Newton-Raphson solver
-- Single line length adjustment
-- Convergence criteria implementation
-
-**Success Criteria**:
-- Achieve target tension within 1% for single mooring line
-- Complete iteration in &lt;30 seconds for simple model
-- Demonstrate convergence stability
-
-### Phase 2: Multi-Line System (2 weeks)
-**Goal**: Extend to multiple mooring lines with interaction
-
-**Deliverables**:
-- Multi-dimensional root finding
-- Jacobian matrix calculation
-- Line interaction handling
-- Batch processing capabilities
-
-**Success Criteria**:
-- Simultaneous convergence for 4+ mooring lines
-- Handle line coupling effects accurately
-- Process multiple load cases automatically
-
-### Phase 3: Production Features (1 week)
-**Goal**: Production-ready system with validation and reporting
-
-**Deliverables**:
-- Comprehensive error handling
-- Validation against manual results
-- Professional reporting interface
-- Configuration management system
-
-**Success Criteria**:
-- 95%+ convergence success rate
-- Integration with existing OrcaFlex workflows
-- Professional documentation and user guides
-
-## Expected Deliverable
-
-A production-ready Python system that automates mooring tension optimization in OrcaFlex through:
-
-1. **Automated Tension Matching**: Single-iteration convergence to user-specified target tensions across multiple mooring lines
-2. **Intelligent Line Adjustment**: Physics-based line length modification using mooring stiffness characteristics  
-3. **Robust Optimization**: Newton-Raphson solver with adaptive stepping and convergence validation
-4. **Seamless Integration**: Direct OrcaFlex API integration maintaining existing model workflows
-5. **Professional Reporting**: Comprehensive before/after analysis with convergence diagnostics and validation metrics
-
-The system will serve as the primary tool for mooring design optimization, transforming a manual, time-intensive process into an automated, reliable design tool that ensures consistent achievement of target mooring tensions.
-
-## File Organization
-
-```
-specs/modules/orcaflex/mooring-tension-iteration/
-├── README.md                    # This overview (current)
-├── tasks.md                     # Implementation tasks
-├── task_summary.md              # Task execution tracking
-├── prompt.md                    # Original prompts and reuse
-├── technical-specification.md   # Deep technical documentation
-├── executive-summary.md         # Business summary
-├── user-stories.md             # User requirements
-├── diagrams/                   # System diagrams
-│   ├── algorithm-workflow.mermaid
-│   ├── data-flow.mermaid
-│   └── system-architecture.mermaid
-└── sub-specs/                  # Component specifications
-    ├── algorithm-design/       # Optimization algorithms
-    ├── orcaflex-integration/   # OrcaFlex API integration
-    └── optimization-engine/    # Mathematical optimization
+### Core Implementation (~200 lines of Python)
+```python
+class MooringTensionOrchestrator:
+    def run(self):
+        for iteration in range(1, 11):
+            # Step 1: Run batch commands
+            run_command("python -m digitalmodel dm_ofx_anal_mooring...")
+            run_command("python -m digitalmodel.modules.orcaflex.universal...")
+            run_command("python -m digitalmodel dm_ofx_post_fsts_lngc.yml")
+            
+            # Step 2: Check convergence
+            current = read_csv("results/..._pretension_analysis.csv")
+            if check_convergence(current, targets, tolerances):
+                print("✓ Converged!")
+                break
 ```
 
-## Related Documentation
+## 📁 Files Used
 
-- **Executive Summary**: [executive-summary.md](./executive-summary.md)
-- **Technical Specification**: [technical-specification.md](./technical-specification.md)  
-- **User Stories**: [user-stories.md](./user-stories.md)
-- **Implementation Tasks**: [tasks.md](./tasks.md)
-- **Task Progress**: [task_summary.md](./task_summary.md)
-- **Development History**: [prompt.md](./prompt.md)
-- **System Diagrams**: [diagrams/](./diagrams/)
-- **Sub-Specifications**: [sub-specs/](./sub-specs/)
+### Input Files (go-by folder)
+- `fsts_l015_125km3_pb_target_mooring_pretension.csv` - Target tensions & tolerances
+- `dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml` - Tension calculation config
+- `dm_ofx_post_fsts_lngc.yml` - Post-processing config
 
-## Quick Start
+### Output Files
+- `results/*_pretension_analysis.csv` - Current tension values (updated each iteration)
 
-1. **Review Requirements**: Start with [executive-summary.md](./executive-summary.md)
-2. **Understand Technical Approach**: Read [technical-specification.md](./technical-specification.md)
-3. **Implementation Planning**: Follow [tasks.md](./tasks.md)
-4. **Development Setup**: Use [prompt.md](./prompt.md) for development guidance
+## 📈 Convergence Tracking
 
-## Current Status: 📋 DEVELOPMENT READY
+### Target CSV Format
+```csv
+ObjectName,target_tension,tolerance
+Line01,80,50
+Line02,80,50
+Line03,80,1
+...
+Line16,60,1
+```
 
-All specification documents are complete and ready for implementation:
-- ✅ **Requirements Defined**: Complete user stories and technical requirements
-- ✅ **Architecture Designed**: Mathematical framework and system architecture
-- ✅ **Implementation Planned**: Detailed task breakdown with timelines
-- ✅ **Integration Specified**: OrcaFlex API integration patterns defined
+### Convergence Check
+```
+For each line:
+  Difference% = |Current - Target| / Target * 100
+  Converged = Difference% <= Tolerance%
+  
+All lines must converge to stop iterations
+```
 
-**Next Step**: Begin Phase 1 implementation (Core Algorithm)
+## 🎯 Success Criteria
+
+### What Success Looks Like
+```
+============================================================
+ITERATION 4
+============================================================
+Step 1: Running tension calculation...
+Step 2: Running OrcaFlex analysis...
+Step 3: Post-processing results...
+Step 4: Checking convergence...
+  Line01: 79.5 kN (target: 80.0 kN, diff: 0.6%, tol: 50%) ✓
+  Line02: 80.2 kN (target: 80.0 kN, diff: 0.3%, tol: 50%) ✓
+  ...
+  Line16: 59.8 kN (target: 60.0 kN, diff: 0.3%, tol: 1%) ✓
+
+✓✓✓ CONVERGED at iteration 4 ✓✓✓
+```
+
+## 🔧 Technical Requirements
+
+- Python 3.8+
+- DigitalModel framework installed
+- OrcaFlex license (for batch commands)
+- CSV files in go-by folder
+
+## 📝 Key Documents
+
+- **[spec.md](./spec.md)** - Complete technical specification
+- **[tasks.md](./tasks.md)** - Implementation tasks (8 hours total)
+- **[orchestrator.py](./orchestrator.py)** - Main implementation (to be created)
+
+## ⚠️ Important Notes
+
+1. **NO Engineering Calculations** - This system only orchestrates existing commands
+2. **Fixed Commands** - Runs the same 3 commands each iteration
+3. **Simple Tolerance Check** - Just percentage difference comparison
+4. **Maximum 10 Iterations** - Hard limit to prevent infinite loops
+5. **CSV Based** - All data exchange through CSV files
+
+## 🚦 Current Status
+
+- ✅ Specification complete
+- ✅ Tasks defined (8 hours)
+- ⏳ Ready for implementation
+- Total code: ~200 lines of Python
 
 ---
 
-*This specification provides complete documentation for implementing automated mooring tension optimization in OrcaFlex, transforming manual iterative processes into intelligent automated design tools.*
+*This is a simple orchestration system - no engineering calculations, just running existing commands in a loop with convergence checking.*

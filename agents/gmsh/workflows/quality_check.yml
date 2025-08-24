@@ -1,0 +1,270 @@
+# Mesh Quality Check Workflow
+# Comprehensive quality assessment and validation
+
+name: quality_check
+description: Perform comprehensive mesh quality analysis and validation
+version: 1.0.0
+
+# Global configuration
+global_config:
+  parallel_analysis: true
+  generate_reports: true
+  fail_on_poor_quality: false
+  verbose_output: true
+
+# Input configuration
+input:
+  directory: ./meshes
+  patterns:
+    - "*.msh"
+    - "*.vtk"
+    - "*.unv"
+    - "*.nas"
+    - "*.cgns"
+  recursive: true
+  batch_size: 10  # Process in batches
+
+# Quality check stages
+stages:
+  - name: file_validation
+    description: Validate mesh files
+    operations:
+      - type: format_validation
+        check_format: true
+        check_version_compatibility: true
+      - type: integrity_check
+        check_file_corruption: true
+        verify_checksums: false
+        
+  - name: geometry_analysis
+    description: Analyze geometric properties
+    operations:
+      - type: bounding_box
+        compute: true
+        check_dimensions: true
+      - type: volume_analysis
+        compute_total_volume: true
+        check_negative_volumes: true
+      - type: surface_analysis
+        compute_surface_area: true
+        check_surface_orientation: true
+        
+  - name: topology_check
+    description: Check mesh topology
+    operations:
+      - type: connectivity
+        check_orphan_nodes: true
+        check_duplicate_nodes: true
+        tolerance: 1e-9
+      - type: element_validity
+        check_inverted_elements: true
+        check_degenerate_elements: true
+        check_element_types: true
+      - type: boundary_check
+        identify_boundaries: true
+        check_closed_surfaces: true
+        check_manifold: true
+        
+  - name: quality_metrics
+    description: Compute quality metrics
+    operations:
+      - type: element_quality
+        metrics:
+          - jacobian:
+              compute: true
+              min_threshold: 0.0
+              warning_threshold: 0.1
+          - aspect_ratio:
+              compute: true
+              max_threshold: 100.0
+              warning_threshold: 10.0
+          - skewness:
+              compute: true
+              max_threshold: 1.0
+              warning_threshold: 0.6
+          - orthogonality:
+              compute: true
+              min_threshold: 0.0
+              warning_threshold: 0.3
+          - volume_ratio:
+              compute: true
+              check_consistency: true
+          - edge_ratio:
+              compute: true
+              max_threshold: 50.0
+          - min_angle:
+              compute: true
+              min_threshold: 5.0
+              dimension_specific: true
+          - max_angle:
+              compute: true
+              max_threshold: 175.0
+              dimension_specific: true
+              
+  - name: statistical_analysis
+    description: Statistical analysis of quality metrics
+    operations:
+      - type: distribution_analysis
+        compute_histograms: true
+        compute_percentiles: [1, 5, 25, 50, 75, 95, 99]
+        identify_outliers: true
+      - type: clustering
+        identify_problem_regions: true
+        cluster_by_quality: true
+        
+  - name: application_specific
+    description: Application-specific checks
+    operations:
+      - type: fem_suitability
+        check_integration_points: true
+        check_element_distortion: true
+        suggest_element_types: true
+      - type: cfd_suitability
+        check_boundary_layers: true
+        check_y_plus: false
+        check_orthogonality: true
+      - type: structural_suitability
+        check_aspect_ratios: true
+        check_warping: true
+        
+  - name: comparison
+    description: Compare with reference or previous versions
+    operations:
+      - type: reference_comparison
+        reference_directory: ./reference_meshes
+        compare_quality: true
+        compare_topology: true
+        tolerance: 0.01
+      - type: version_tracking
+        track_quality_evolution: true
+        identify_degradation: true
+
+# Quality criteria
+quality_criteria:
+  excellent:
+    overall_score: [95, 100]
+    jacobian_min: 0.7
+    aspect_ratio_max: 3.0
+    skewness_max: 0.2
+    
+  good:
+    overall_score: [85, 95]
+    jacobian_min: 0.5
+    aspect_ratio_max: 5.0
+    skewness_max: 0.35
+    
+  acceptable:
+    overall_score: [70, 85]
+    jacobian_min: 0.3
+    aspect_ratio_max: 10.0
+    skewness_max: 0.5
+    
+  poor:
+    overall_score: [50, 70]
+    jacobian_min: 0.1
+    aspect_ratio_max: 20.0
+    skewness_max: 0.7
+    
+  unacceptable:
+    overall_score: [0, 50]
+    jacobian_min: 0.0
+    aspect_ratio_max: 1000.0
+    skewness_max: 1.0
+
+# Visualization
+visualization:
+  generate: true
+  types:
+    - quality_contours
+    - problem_elements
+    - histogram_plots
+    - convergence_plots
+  formats:
+    - png
+    - html
+  colormap: viridis
+  save_paraview_state: true
+
+# Output configuration
+output:
+  directory: ./quality_reports
+  structure:
+    type: hierarchical
+    group_by: date
+  reports:
+    summary:
+      format: html
+      include_visualizations: true
+      include_recommendations: true
+    detailed:
+      format: json
+      include_element_data: false
+      include_statistics: true
+    comparison:
+      format: csv
+      include_all_meshes: true
+
+# Thresholds and actions
+thresholds:
+  critical:
+    jacobian_min: 0.0
+    action: fail
+    message: "Critical: Inverted elements detected"
+    
+  severe:
+    jacobian_min: 0.1
+    aspect_ratio_max: 50.0
+    action: warning
+    message: "Severe: Very poor quality elements detected"
+    
+  moderate:
+    overall_score: 70
+    action: info
+    message: "Moderate: Mesh quality could be improved"
+
+# Performance settings
+performance:
+  chunk_size: 50000  # elements per chunk
+  memory_limit: 4096  # MB
+  use_multiprocessing: true
+  cache_results: true
+
+# Integration hooks
+hooks:
+  pre_check:
+    - name: backup_mesh
+      command: cp {input_file} {input_file}.backup
+      condition: always
+      
+  post_check:
+    - name: notify_poor_quality
+      command: python notify_quality_issues.py {report_file}
+      condition: overall_score < 70
+      
+    - name: trigger_optimization
+      command: python run_optimization.py {input_file}
+      condition: overall_score < 80
+      
+# Validation rules
+validation_rules:
+  - name: minimum_quality
+    type: threshold
+    metric: overall_score
+    operator: ">="
+    value: 70
+    severity: error
+    
+  - name: no_inverted_elements
+    type: count
+    metric: inverted_elements
+    operator: "=="
+    value: 0
+    severity: critical
+    
+  - name: reasonable_aspect_ratio
+    type: percentile
+    metric: aspect_ratio
+    percentile: 95
+    operator: "<="
+    value: 20.0
+    severity: warning
