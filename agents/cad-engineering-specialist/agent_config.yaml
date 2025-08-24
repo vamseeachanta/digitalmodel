@@ -2,10 +2,28 @@ capabilities:
 - query
 - explain
 - guide
+- delegate
+- coordinate
 context_optimization:
-  cross_references: []
+  cross_references:
+  - agents/freecad
+  - agents/gmsh
   focused_domain: cad-engineering-specialist
   max_context_size: 16000
+delegation:
+  software_specific_agents:
+    freecad:
+      path: agents/freecad
+      capabilities:
+      - parametric_modeling
+      - assembly_design
+      - technical_drawings
+    gmsh:
+      path: agents/gmsh
+      capabilities:
+      - mesh_generation
+      - finite_element_preprocessing
+      - mesh_optimization
 created: '2025-08-14T10:02:45.655439'
 module_path: .
 name: cad-engineering-specialist
