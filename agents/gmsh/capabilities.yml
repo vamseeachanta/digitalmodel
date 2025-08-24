@@ -1,0 +1,212 @@
+# GMSH Agent Capabilities Definition
+# This file defines what the GMSH agent can do and how to invoke its capabilities
+
+name: GMSH Agent
+version: 1.0.0
+description: Finite element mesh generation and manipulation specialist
+
+capabilities:
+  
+  mesh_generation:
+    description: Generate finite element meshes from geometries
+    commands:
+      - name: generate_1d_mesh
+        description: Create 1D line/beam element mesh
+        parameters:
+          geometry: Path to geometry file or geometry object
+          element_size: Target element size
+          order: Element order (1 or 2)
+        example: agent.generate_1d_mesh("beam.step", element_size=0.1)
+      
+      - name: generate_2d_mesh
+        description: Create 2D surface mesh
+        parameters:
+          geometry: Path to geometry file
+          algorithm: Meshing algorithm (frontal, delaunay, meshadapt)
+          element_type: Element type (triangle, quad, mixed)
+        example: agent.generate_2d_mesh("surface.step", algorithm="frontal")
+      
+      - name: generate_3d_mesh
+        description: Create 3D volume mesh
+        parameters:
+          geometry: Path to geometry file
+          algorithm: Meshing algorithm
+          element_type: Element type (tet, hex, prism, pyramid)
+        example: agent.generate_3d_mesh("volume.step", element_type="tet")
+  
+  geometry_processing:
+    description: Import, heal, and manipulate geometries
+    commands:
+      - name: import_geometry
+        description: Import CAD geometry from various formats
+        supported_formats: [STEP, IGES, STL, BREP]
+        parameters:
+          file_path: Path to geometry file
+          heal: Attempt to heal geometry defects
+        example: agent.import_geometry("model.step", heal=True)
+      
+      - name: boolean_operations
+        description: Perform boolean operations on geometries
+        operations: [union, intersection, difference]
+        parameters:
+          geometry1: First geometry
+          geometry2: Second geometry
+          operation: Type of boolean operation
+        example: agent.boolean_operations(geo1, geo2, "union")
+  
+  quality_assessment:
+    description: Evaluate and report mesh quality metrics
+    metrics:
+      - jacobian: Element jacobian determinant
+      - aspect_ratio: Element aspect ratio
+      - skewness: Element skewness
+      - orthogonality: Element orthogonality
+      - volume: Element volume/area
+    commands:
+      - name: assess_quality
+        description: Calculate all quality metrics for a mesh
+        parameters:
+          mesh: Mesh object or file path
+          report_format: Format for quality report (json, html, csv)
+        example: agent.assess_quality("mesh.msh", report_format="html")
+  
+  optimization:
+    description: Optimize mesh quality through various techniques
+    techniques:
+      - laplacian_smoothing: Smooth mesh using Laplacian algorithm
+      - adaptive_refinement: Refine mesh based on error estimates
+      - remeshing: Completely regenerate mesh in poor quality regions
+    commands:
+      - name: optimize_mesh
+        description: Optimize mesh quality
+        parameters:
+          mesh: Mesh to optimize
+          method: Optimization method
+          iterations: Maximum iterations
+          quality_targets: Target quality metrics
+        example: |
+          agent.optimize_mesh(
+            mesh="initial.msh",
+            method="laplacian_smoothing",
+            iterations=10,
+            quality_targets={"min_jacobian": 0.4}
+          )
+  
+  batch_processing:
+    description: Process multiple geometries in batch mode
+    features:
+      - parallel_processing: Process multiple files simultaneously
+      - progress_tracking: Real-time progress monitoring
+      - error_recovery: Continue on individual file failures
+    commands:
+      - name: batch_process
+        description: Process multiple geometry files
+        parameters:
+          input_directory: Directory containing geometry files
+          config_file: Batch configuration YAML
+          parallel_workers: Number of parallel workers
+        example: |
+          agent.batch_process(
+            input_directory="./geometries",
+            config_file="batch_config.yml",
+            parallel_workers=4
+          )
+  
+  integration:
+    description: Export and integrate with analysis tools
+    supported_tools:
+      - orcaflex:
+          formats: [DAT, YML]
+          features: [panel_mesh, mooring_discretization]
+      - ansys:
+          formats: [CDB, INP]
+          features: [boundary_conditions, named_selections]
+      - openfoam:
+          formats: [FOAM]
+          features: [boundary_patches, cell_zones]
+    commands:
+      - name: export_to_orcaflex
+        description: Export mesh for OrcaFlex analysis
+        parameters:
+          mesh: Mesh to export
+          output_file: Output file path
+          include_properties: Include material properties
+        example: agent.export_to_orcaflex(mesh, "model.dat")
+      
+      - name: export_to_ansys
+        description: Export mesh for ANSYS analysis
+        parameters:
+          mesh: Mesh to export
+          output_file: Output file path
+          format: Export format (CDB or INP)
+        example: agent.export_to_ansys(mesh, "model.cdb", format="CDB")
+
+workflows:
+  standard_meshing:
+    description: Standard mesh generation workflow
+    steps:
+      1: Import geometry
+      2: Heal geometry if needed
+      3: Generate mesh
+      4: Assess quality
+      5: Optimize if needed
+      6: Export to desired format
+  
+  batch_optimization:
+    description: Batch mesh optimization workflow
+    steps:
+      1: Load batch configuration
+      2: Process files in parallel
+      3: Assess quality for each
+      4: Optimize poor quality meshes
+      5: Generate batch report
+      6: Export all meshes
+  
+  integration_pipeline:
+    description: Full integration pipeline
+    steps:
+      1: Import from CAD
+      2: Generate mesh with specific requirements
+      3: Validate against solver requirements
+      4: Export to analysis format
+      5: Generate documentation
+
+performance_metrics:
+  mesh_generation_speed: ">100K elements/second"
+  quality_improvement: ">30% reduction in poor elements"
+  batch_processing: "Linear scaling with CPU cores"
+  memory_usage: "<4GB for 1M element mesh"
+
+usage_examples:
+  cli: |
+    # Basic mesh generation
+    python -m agents.gmsh generate --input geometry.step --output mesh.msh
+    
+    # Batch processing
+    python -m agents.gmsh batch --directory ./models --config batch.yml
+    
+    # Quality optimization
+    python -m agents.gmsh optimize --mesh initial.msh --target-quality 0.4
+  
+  python_api: |
+    from agents.gmsh import GMSHAgent
+    
+    # Initialize agent
+    agent = GMSHAgent(config="gmsh_config.json")
+    
+    # Generate mesh
+    mesh = agent.generate_mesh(
+        geometry="platform.step",
+        element_size=0.5,
+        algorithm="frontal-delaunay"
+    )
+    
+    # Assess quality
+    quality = agent.assess_quality(mesh)
+    
+    # Optimize if needed
+    if quality['min_jacobian'] < 0.3:
+        mesh = agent.optimize_mesh(mesh, method="laplacian_smoothing")
+    
+    # Export
+    agent.export_to_ansys(mesh, "platform.cdb")

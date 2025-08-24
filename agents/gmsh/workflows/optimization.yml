@@ -1,0 +1,189 @@
+# Mesh Optimization Workflow
+# Optimizes existing meshes to meet quality criteria
+
+name: mesh_optimization
+description: Optimize mesh quality through iterative refinement
+version: 1.0.0
+
+# Global configuration
+global_config:
+  max_iterations: 10
+  convergence_tolerance: 0.01
+  target_quality_score: 90
+  parallel_optimization: true
+  save_history: true
+
+# Input configuration
+input:
+  directory: ./meshes
+  patterns:
+    - "*.msh"
+    - "*.vtk"
+    - "*.unv"
+  recursive: false
+  quality_threshold: 75  # Only optimize meshes below this score
+
+# Optimization stages
+stages:
+  - name: initial_assessment
+    description: Evaluate current mesh quality
+    operations:
+      - type: quality_assessment
+        comprehensive: true
+        metrics:
+          - jacobian
+          - aspect_ratio
+          - skewness
+          - orthogonality
+          - volume_ratio
+        generate_report: true
+        
+  - name: problem_identification
+    description: Identify problematic elements
+    operations:
+      - type: identify_bad_elements
+        criteria:
+          jacobian_min: 0.1
+          aspect_ratio_max: 10.0
+          skewness_max: 0.6
+          orthogonality_min: 0.3
+      - type: cluster_analysis
+        identify_problem_regions: true
+        
+  - name: targeted_refinement
+    description: Refine problematic regions
+    operations:
+      - type: adaptive_refinement
+        method: error_based
+        refinement_criteria:
+          quality_gradient: true
+          geometric_features: true
+          boundary_layers: true
+        size_field:
+          type: gradient
+          min_size: 0.01
+          max_size: 5.0
+          
+  - name: smoothing
+    description: Apply smoothing algorithms
+    operations:
+      - type: laplacian_smoothing
+        iterations: 5
+        relaxation_factor: 0.5
+        preserve_boundaries: true
+        preserve_features: true
+      - type: optimization_smoothing
+        algorithm: lloyd
+        iterations: 3
+        
+  - name: remeshing
+    description: Remesh if quality improvement insufficient
+    operations:
+      - type: conditional
+        condition: quality_improvement < 10
+        actions:
+          - type: local_remeshing
+            regions: problem_regions
+            algorithm: frontal-delaunay
+            size_function: adaptive
+          - type: global_remeshing
+            condition: quality_score < 60
+            preserve_sizing: false
+            
+  - name: advanced_optimization
+    description: Apply advanced optimization techniques
+    operations:
+      - type: netgen_optimization
+        optimization_steps: hlr  # h=heal, l=laplace, r=relocate
+        iterations: 2
+      - type: gmsh_optimization
+        method: relocate3d
+        force_parametrizable: true
+        threshold: 0.3
+        
+  - name: quality_verification
+    description: Verify final mesh quality
+    operations:
+      - type: quality_assessment
+        comprehensive: true
+      - type: compare_with_initial
+        generate_improvement_report: true
+      - type: validate
+        check_inverted_elements: true
+        check_duplicate_nodes: true
+        check_connectivity: true
+
+# Optimization strategies
+strategies:
+  - name: gentle
+    description: Conservative optimization for sensitive meshes
+    parameters:
+      max_node_movement: 0.1
+      preserve_topology: true
+      boundary_preservation: strict
+      
+  - name: aggressive
+    description: Aggressive optimization for poor quality meshes
+    parameters:
+      max_node_movement: 0.5
+      allow_topology_changes: true
+      boundary_preservation: relaxed
+      
+  - name: balanced
+    description: Balanced approach for general meshes
+    parameters:
+      max_node_movement: 0.3
+      preserve_topology: true
+      boundary_preservation: moderate
+
+# Output configuration
+output:
+  directory: ./optimized_meshes
+  naming:
+    pattern: "{basename}_optimized.{extension}"
+    include_quality_score: true
+  save_intermediate: true
+  intermediate_directory: ./optimization_history
+  formats:
+    - msh
+    - vtk
+
+# Quality targets
+quality_targets:
+  min_jacobian: 0.3
+  max_aspect_ratio: 5.0
+  max_skewness: 0.4
+  min_orthogonality: 0.5
+  target_overall_score: 90
+
+# Convergence criteria
+convergence:
+  type: relative_improvement
+  tolerance: 0.01
+  min_iterations: 2
+  max_iterations: 10
+  early_stopping: true
+
+# Performance settings
+performance:
+  cache_size: 512  # MB
+  use_gpu: false
+  chunk_size: 10000  # elements per chunk
+  parallel_regions: true
+
+# Reporting
+reporting:
+  generate_summary: true
+  include_visualizations: true
+  formats:
+    - html
+    - json
+  metrics_history: true
+  convergence_plots: true
+
+# Error handling
+error_handling:
+  skip_corrupted: true
+  save_failed: true
+  max_retries: 2
+  fallback_strategy: gentle

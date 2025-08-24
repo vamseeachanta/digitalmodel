@@ -1,0 +1,206 @@
+```mermaid
+graph TB
+    %% OrcaWave Integration Module Architecture
+    %% Created: 2025-08-23
+    %% Spec: @specs/modules/orcawave/orcawave-integration/spec.md
+    
+    subgraph "User Interface Layer"
+        UI[User Interface]
+        CLI[Command Line Interface]
+        API[REST API]
+        CONFIG[YAML Configuration]
+    end
+    
+    subgraph "Agent OS Integration"
+        AGENT[OrcaWave Agent<br/>@agents/orcawave/]
+        SUBAGENTS[Specialized Subagents<br/>• API Integration<br/>• Hydrodynamic Analysis<br/>• Batch Processing<br/>• Integration Testing]
+    end
+    
+    subgraph "OrcaWave Integration Core"
+        COORDINATOR[Analysis Coordinator]
+        VALIDATOR[Configuration Validator]
+        
+        subgraph "COM Interface Layer"
+            COMWRAPPER[COM Interface Wrapper]
+            LIFECYCLE[Process Lifecycle Manager]
+            LICENSE[License Manager]
+        end
+        
+        subgraph "Analysis Engine"
+            DIFFRACTION[Diffraction Analysis Runner]
+            RADIATION[Radiation Calculator]
+            MULTIBODY[Multi-Body Interaction]
+            QTF[QTF Processor]
+        end
+        
+        subgraph "File Processing"
+            GDFHANDLER[GDF Mesh Handler]
+            OWRPARSER[OWR Result Parser]
+            CONFIGMGR[Configuration Manager]
+        end
+    end
+    
+    subgraph "Batch Processing System"
+        QUEUE[Job Queue Manager]
+        SCHEDULER[Parallel Scheduler]
+        WORKERS[Worker Pool<br/>• Worker 1<br/>• Worker 2<br/>• Worker N]
+        MONITOR[Progress Monitor]
+    end
+    
+    subgraph "Data Processing Pipeline"
+        EXTRACTOR[Result Extractor]
+        PROCESSOR[Data Processor]
+        VALIDATOR_DATA[Data Validator]
+        CONVERTER[Unit Converter]
+    end
+    
+    subgraph "Integration Layer"
+        ORCAFLEX[OrcaFlex Connector]
+        AQWA[AQWA Comparator]
+        EXCEL[Excel Reporter]
+        EXPORT[Multi-Format Exporter]
+    end
+    
+    subgraph "External Systems"
+        ORCAWAVE_SW[OrcaWave Software<br/>COM Interface]
+        ORCAFLEX_SW[OrcaFlex Software]
+        AQWA_REF[AQWA Benchmark Data<br/>@docs/modules/orcawave/]
+        LICENSE_SERVER[License Server]
+    end
+    
+    subgraph "Storage & Output"
+        INPUT_FILES[Input Files<br/>• .gdf meshes<br/>• .yml configs<br/>• .owd data]
+        RESULTS[Analysis Results<br/>• .owr files<br/>• .hyd databases<br/>• Excel reports]
+        LOGS[System Logs<br/>• Analysis logs<br/>• Performance metrics<br/>• Error reports]
+    end
+    
+    %% User Interface Connections
+    UI --> COORDINATOR
+    CLI --> COORDINATOR
+    API --> COORDINATOR
+    CONFIG --> VALIDATOR
+    
+    %% Agent Integration
+    COORDINATOR --> AGENT
+    AGENT --> SUBAGENTS
+    SUBAGENTS --> DIFFRACTION
+    SUBAGENTS --> RADIATION
+    SUBAGENTS --> MULTIBODY
+    SUBAGENTS --> QTF
+    
+    %% Core Processing Flow
+    VALIDATOR --> CONFIGMGR
+    COORDINATOR --> QUEUE
+    QUEUE --> SCHEDULER
+    SCHEDULER --> WORKERS
+    
+    %% Analysis Engine Flow
+    WORKERS --> COMWRAPPER
+    COMWRAPPER --> ORCAWAVE_SW
+    COMWRAPPER --> LICENSE_SERVER
+    LIFECYCLE --> ORCAWAVE_SW
+    LICENSE --> LICENSE_SERVER
+    
+    %% File Processing
+    CONFIGMGR --> INPUT_FILES
+    GDFHANDLER --> INPUT_FILES
+    OWRPARSER --> RESULTS
+    
+    %% Analysis Execution
+    DIFFRACTION --> ORCAWAVE_SW
+    RADIATION --> ORCAWAVE_SW
+    MULTIBODY --> ORCAWAVE_SW
+    QTF --> ORCAWAVE_SW
+    
+    %% Results Processing
+    ORCAWAVE_SW --> EXTRACTOR
+    EXTRACTOR --> PROCESSOR
+    PROCESSOR --> VALIDATOR_DATA
+    VALIDATOR_DATA --> CONVERTER
+    
+    %% Integration Outputs
+    CONVERTER --> ORCAFLEX
+    CONVERTER --> AQWA
+    CONVERTER --> EXCEL
+    CONVERTER --> EXPORT
+    
+    %% External Integration
+    ORCAFLEX --> ORCAFLEX_SW
+    AQWA --> AQWA_REF
+    
+    %% Output Generation
+    EXCEL --> RESULTS
+    EXPORT --> RESULTS
+    ORCAFLEX --> RESULTS
+    
+    %% Monitoring & Logging
+    MONITOR --> WORKERS
+    MONITOR --> LOGS
+    LIFECYCLE --> LOGS
+    LICENSE --> LOGS
+    
+    %% Styling
+    classDef agentNode fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef coreNode fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef processNode fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef externalNode fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef storageNode fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    
+    class AGENT,SUBAGENTS agentNode
+    class COORDINATOR,VALIDATOR,COMWRAPPER,LIFECYCLE,LICENSE coreNode
+    class DIFFRACTION,RADIATION,MULTIBODY,QTF,QUEUE,SCHEDULER,WORKERS processNode
+    class ORCAWAVE_SW,ORCAFLEX_SW,AQWA_REF,LICENSE_SERVER externalNode
+    class INPUT_FILES,RESULTS,LOGS storageNode
+```
+
+## Architecture Overview
+
+This architecture diagram illustrates the comprehensive OrcaWave Integration Module design with the following key components:
+
+### Layer Architecture
+1. **User Interface Layer**: Multiple access points for different user types
+2. **Agent OS Integration**: Specialized agents with domain expertise
+3. **OrcaWave Integration Core**: Primary processing engine
+4. **Batch Processing System**: Parallel execution framework
+5. **Data Processing Pipeline**: Result extraction and validation
+6. **Integration Layer**: External system connectivity
+7. **Storage & Output**: File management and results
+
+### Key Design Principles
+
+#### Parallel Processing Architecture
+- **Multi-Worker Design**: Concurrent analysis execution with resource pooling
+- **Agent Delegation**: Specialized subagents for parallel task execution
+- **Queue Management**: Intelligent job scheduling and load balancing
+- **Resource Optimization**: License and memory management across workers
+
+#### Error Recovery & Monitoring
+- **Process Lifecycle**: Automatic OrcaWave instance management
+- **Progress Monitoring**: Real-time status tracking across all workers
+- **License Management**: Pool-based license allocation with queuing
+- **Comprehensive Logging**: Multi-level logging for debugging and audit
+
+#### Integration Strategy
+- **OrcaFlex Native**: Direct hydrodynamic database export
+- **AQWA Validation**: Automated benchmark comparison
+- **Multi-Format Export**: Excel, CSV, HDF5 output capabilities
+- **Agent OS Integration**: Full ecosystem compatibility
+
+### Data Flow Summary
+
+1. **Input Processing**: YAML configurations and GDF mesh files
+2. **Analysis Coordination**: Agent-based task distribution
+3. **Parallel Execution**: Multi-worker OrcaWave analysis
+4. **Result Processing**: Extraction, validation, and conversion
+5. **Integration Output**: OrcaFlex databases, reports, benchmarks
+6. **Quality Assurance**: AQWA comparison and validation
+
+### Performance Characteristics
+
+- **Concurrent Workers**: 4-8 parallel OrcaWave instances
+- **Throughput**: 50-100 configurations per day
+- **Memory Management**: Optimized for large mesh models
+- **License Efficiency**: Intelligent pooling and allocation
+- **Error Recovery**: Automatic retry with exponential backoff
+
+This architecture enables the mandatory >3x speed improvement through comprehensive parallel processing while maintaining production-level reliability and quality assurance.

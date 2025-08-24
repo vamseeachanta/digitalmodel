@@ -709,3 +709,4 @@ If score < 70/100:
 - Infrastructure → DevOps Agent (or user with admin)
 
 **This dual verification is MANDATORY for ALL /execute-tasks operations**
+- make mandatory note to utilize existing uv envrionment to execute tasks  as part of /execute-tasks slash command

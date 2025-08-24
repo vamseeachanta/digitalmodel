@@ -2,6 +2,43 @@
 
 ## Complete Prompt History
 
+### Latest Update (2025-08-24)
+**User Request**: "Utilize latest prompt provided in specs\modules\orcaflex\mooring-tension-iteration\prompt.md and write a fresh spec"
+
+**Actions Taken**:
+- Created fresh spec.md (v2.0) based on latest prompt
+- Rewrote tasks.md with streamlined implementation plan (36 hours total)
+- Updated README.md with new executive summary and status
+- Focused on current production methodology with DigitalModel integration
+- Emphasized validation requirements (manual vs automated)
+- All files now in root folder (revision-1 archived)
+
+### Previous Update (2025-08-23)
+**User Request**: "Add to this spec the latest mooring pretension analysis methodology"
+
+**Methodology Details Provided**:
+1. **Step 1 - Establish Initial Tension**:
+   - Input: `fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof.dat`
+   - Command: `/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel.modules.orcaflex.universal pattern="fsts*125km3*pb_*.yml" input_directory="." output_directory="." validate=false`
+
+2. **Step 2 - Post-Process Results**:
+   - Input: `dm_ofx_post_fsts_lngc.yml`
+   - Command: `/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30`
+
+3. **Step 3 - Iterate Tension**:
+   - Input: `fsts_l015_125km3_pb_target_mooring_pretension.csv`
+   - Command: `/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml`
+
+4. **Convergence Criteria**:
+   - Repeat until change in tension < 5%
+   - Monitor: `results/fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_pretension_analysis.csv`
+
+**Updates Applied**:
+- Added "Latest Mooring Pretension Analysis Methodology" section to spec.md
+- Created Phase 0 tasks in tasks.md for current methodology implementation
+- Documented specific commands, file paths, and convergence criteria
+- Integrated with DigitalModel's universal OrcaFlex runner and post-processing pipeline
+
 ### Original Request Context
 **User Request**: "Execute the /create-spec command to create a specification for 'iterate mooring tensions for the model to target values' in the specs/modules/orcaflex/ directory structure."
 

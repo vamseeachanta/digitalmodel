@@ -1,484 +1,239 @@
-# Tasks: OrcaFlex Mooring Tension Iteration System
+# Implementation Tasks: Mooring Tension Iteration Orchestrator
 
-> **Project Overview**  
-> Phase 1 MVP (Semi-Automated): 40 hours (1 week)  
-> Phase 2 (Fully Automated): 68 hours (1.5 weeks additional)  
-> Phase 3 (Advanced): 48 hours (1 week additional)  
-> Development Approach: Progressive automation starting with manual workflow  
-> **Testing Focus**: Strong test ecosystem using real project data
+> **Total Effort**: 8 hours (1 day)  
+> **Scope**: Simple orchestration of existing batch commands  
+> **No Engineering Calculations**: Just execution and convergence tracking
 
----
+## Single Phase Implementation
 
-## Phase 1: Semi-Automated Workflow (MVP - 1 week)
-
-### Task 1.1: CSV Parser and Input Handler
-**Objective**: Parse target tension CSVs and handle input data  
-**Effort**: 6 hours  
-**Priority**: High  
+### Task 1: Core Orchestrator Implementation
+**Effort**: 4 hours  
+**Priority**: Critical  
 **Dependencies**: None
 
-**Subtasks**:
-- [ ] Create CSV parser for target tension files
-- [ ] Handle optional EA values (CSV or OrcaFlex extraction)
-- [ ] Parse fender properties if provided
-- [ ] Validate input data completeness
-- [ ] Create comprehensive test fixtures from real data
-
-**Deliverables**:
-- `CSVParser` class for tension/length targets
-- Input validation framework
-- Test fixtures from actual project data
-- Unit test coverage >95%
-
-**Testing Requirements**:
-- Test with actual CSV files from `fsts_lngc_pretension`
-- Handle malformed CSV gracefully
-- Test EA extraction from both CSV and model
-- Validate against known good inputs
-
-**Definition of Done**:
-- Parse all existing CSV formats correctly
-- Handle missing/optional fields appropriately
-- Comprehensive error messages for invalid data
-- All tests passing with real data
-
----
-
-### Task 1.2: OrcaFlex Runner Module
-**Objective**: Execute OrcaFlex static analysis via Python API  
-**Effort**: 8 hours  
-**Priority**: High  
-**Dependencies**: Task 1.1  
-
-**Subtasks**:
-- [ ] Create wrapper for running .yml files
-- [ ] Handle .yml to .sim conversion
-- [ ] Manage file paths and output locations
-- [ ] Add vessel 6DOF static analysis setup
-- [ ] Create mock runner for testing without license
-
-**Deliverables**:
-- `OrcaFlexRunner` class
-- File management utilities
-- Mock runner for testing
-- Integration test suite
-
-**Testing Requirements**:
-- Test with actual `fsts*vessel_statics_6dof.yml` files
-- Verify .sim file generation
-- Test file path handling across platforms
-- Mock tests for CI/CD without OrcaFlex
-
-**Definition of Done**:
-- Execute static analysis for all model types
-- Generate .sim files in correct locations
-- Handle errors gracefully with clear messages
-- Mock runner enables full testing
-
----
-
-### Task 1.3: Result Extractor Module
-**Objective**: Post-process .sim files to extract tensions and forces  
-**Effort**: 8 hours  
-**Priority**: High  
-**Dependencies**: Task 1.2  
-
-**Subtasks**:
-- [ ] Implement `dm_ofx_post_fsts_lngc.yml` equivalent
-- [ ] Extract mooring tensions, line lengths, fender forces
-- [ ] Generate CSV outputs matching current format
-- [ ] Calculate tension differences from targets
-- [ ] Create result validation and quality checks
-
-**Deliverables**:
-- `ResultExtractor` class
-- CSV generation utilities
-- Data validation framework
-- Comparison reports
-
-**Testing Requirements**:
-- Test against known good .sim files
-- Verify CSV format matches existing outputs
-- Test extraction of all required quantities
-- Validate calculations against manual checks
-
-**Definition of Done**:
-- Extract all required quantities from .sim files
-- Generate CSVs matching existing format exactly
-- Calculate differences accurately
-- Comprehensive test coverage with real data
-
----
-
-### Task 1.4: Length Calculator Module
-**Objective**: Calculate new line lengths based on tension differences  
-**Effort**: 10 hours  
-**Priority**: High  
-**Dependencies**: Task 1.3
-
-**Subtasks**:
-- [ ] Implement ΔL = L/EA × (T_current - T_target) calculation
-- [ ] Handle major governing stiffness selection
-- [ ] Generate includefile YAMLs for line lengths
-- [ ] Add file overwriting with optional backup
-- [ ] Create calculation validation and logging
-
-**Deliverables**:
-- `LengthCalculator` class matching `dm_ofx_anal_mooring`
-- Includefile YAML generator
-- Backup management system
-- Calculation test suite
-
-**Testing Requirements**:
-- Test calculations against manual Excel checks
-- Verify includefile format matches existing
-- Test backup and restore functionality
-- Validate against known convergence cases
-
-**Definition of Done**:
-- Calculate length adjustments correctly
-- Generate includefiles matching existing format
-- Handle file management safely
-- Full test coverage with validation data
-
----
-
-### Task 1.5: Convergence Reporter
-**Objective**: Report iteration progress and convergence status  
-**Effort**: 6 hours  
-**Priority**: High  
-**Dependencies**: Tasks 1.3, 1.4  
-
-**Subtasks**:
-- [ ] Create convergence checking against tolerance
-- [ ] Generate iteration summary reports
-- [ ] Build comparison tables (current vs target)
-- [ ] Add convergence plots and visualization
-- [ ] Create decision support for manual intervention
-
-**Deliverables**:
-- `ConvergenceReporter` class
-- Report generation templates
-- Visualization utilities
-- Decision support outputs
-
-**Testing Requirements**:
-- Test convergence detection accuracy
-- Verify report format and content
-- Test with converging and diverging cases
-- Validate decision recommendations
-
-**Definition of Done**:
-- Accurately detect convergence within tolerance
-- Generate clear, actionable reports
-- Provide visual convergence tracking
-- Support manual go/no-go decisions
-
----
-
-### Task 1.6: Integration Testing and Validation
-**Objective**: End-to-end testing with real project data  
-**Effort**: 8 hours  
-**Priority**: High  
-**Dependencies**: Tasks 1.1-1.5  
-
-**Subtasks**:
-- [ ] Create test suite using actual project files
-- [ ] Validate against manual iteration results
-- [ ] Test complete workflow for all vessel configurations
-- [ ] Document validation results and discrepancies
-- [ ] Create regression test baseline
-
-**Deliverables**:
-- Complete test suite with real data
-- Validation report comparing to manual
-- Test data repository structure
-- CI/CD integration
-
-**Testing Requirements**:
-- Use actual files from `D:\1522\ctr7\orcaflex\rev_a08\base_files`
-- Test all vessel sizes (125km3, 180km3)
-- Test all water levels (hwl, mwl, lwl)
-- Test all berthing sides (pb, sb)
-- Validate convergence within 3-5 iterations
-
-**Definition of Done**:
-- All real project cases tested
-- Results match manual process within 1%
-- Test suite runs automatically
-- Ready for production use
-
----
-
-## Phase 2: Fully Automated Iteration (1.5 weeks)
-
-### Task 2.1: Automatic Iteration Controller
-**Objective**: Automate the complete iteration loop  
-**Effort**: 12 hours  
-**Priority**: High  
-**Dependencies**: Phase 1 Complete
-
-**Subtasks**:
-- [ ] Implement automatic iteration loop control
-- [ ] Add convergence detection and stopping criteria
-- [ ] Create rollback mechanism for divergence
-- [ ] Handle multiple iteration strategies
-- [ ] Add progress tracking and logging
-
-**Deliverables**:
-- `IterationController` class
-- Convergence management system
-- Rollback functionality
-- Progress tracking
-
-**Testing Requirements**:
-- Test with converging cases (3-5 iterations)
-- Test with slow converging cases (8-10 iterations)
-- Test divergence detection and rollback
-- Validate against manual iteration counts
-
----
-
-### Task 2.2: Multi-Line Jacobian Solver
-**Objective**: Implement Jacobian-based optimization  
-**Effort**: 16 hours  
-**Priority**: High  
-**Dependencies**: Task 2.1
-
-**Subtasks**:
-- [ ] Replace simple EA calculation with Jacobian
-- [ ] Implement finite difference sensitivity
-- [ ] Add multi-dimensional Newton-Raphson
-- [ ] Handle line coupling effects
-- [ ] Create adaptive step sizing
-
-**Deliverables**:
-- `JacobianSolver` class
-- Sensitivity analysis framework
-- Coupling effect quantification
-- Performance improvements
-
-**Testing Requirements**:
-- Compare convergence speed vs simple EA
-- Test with strongly coupled systems
-- Validate Jacobian accuracy
-- Benchmark performance improvements
-
----
-
-### Task 2.3: Batch Processing System
-**Objective**: Process multiple models in parallel  
-**Effort**: 14 hours  
-**Priority**: Medium  
-**Dependencies**: Task 2.1
-
-**Subtasks**:
-- [ ] Design batch configuration format
-- [ ] Implement parallel processing
-- [ ] Add queue management
-- [ ] Create result aggregation
-- [ ] Build progress monitoring
-
-**Deliverables**:
-- Batch processing engine
-- Parallel execution framework
-- Result aggregation system
-- Progress dashboard
-
-**Testing Requirements**:
-- Test with 10+ models simultaneously
-- Verify parallel speedup
-- Test failure isolation
-- Validate result aggregation
-
----
-
-### Task 2.4: Advanced Reporting
-**Objective**: Professional reports and visualizations  
-**Effort**: 12 hours  
-**Priority**: Medium  
-**Dependencies**: Task 2.1
-
-**Subtasks**:
-- [ ] Create report templates
-- [ ] Add convergence visualization
-- [ ] Build comparison analysis
-- [ ] Generate Excel outputs
-- [ ] Create PDF reports
-
-**Deliverables**:
-- Report generation system
-- Visualization library
-- Export utilities
-- Template system
-
----
-
-### Task 2.5: Vessel Position Optimization
-**Objective**: Include vessel position in optimization  
-**Effort**: 14 hours  
-**Priority**: Low  
-**Dependencies**: Task 2.2
-
-**Subtasks**:
-- [ ] Extract vessel 6DOF positions
-- [ ] Calculate position sensitivities
-- [ ] Include in optimization loop
-- [ ] Validate equilibrium positions
-- [ ] Test convergence improvement
-
-**Deliverables**:
-- Position optimization module
-- Enhanced convergence
-- Validation results
-
----
-
-## Phase 3: Advanced Features (1 week)
-
-### Task 3.1: scipy.optimize Integration
-**Objective**: Use advanced optimization algorithms  
-**Effort**: 12 hours  
-**Priority**: Medium  
-**Dependencies**: Phase 2 Complete
-
-**Subtasks**:
-- [ ] Integrate scipy.optimize solvers
-- [ ] Implement trust region methods
-- [ ] Add constraint handling
-- [ ] Create solver selection logic
-- [ ] Benchmark performance
-
-**Deliverables**:
-- scipy integration
-- Multiple solver options
-- Performance comparisons
-
----
-
-### Task 3.2: Failure Recovery System
-**Objective**: Intelligent failure handling  
-**Effort**: 10 hours  
-**Priority**: High  
-**Dependencies**: Phase 2 Complete
-
-**Subtasks**:
-- [ ] Detect failure patterns
-- [ ] Implement recovery strategies
-- [ ] Add alternative starting points
-- [ ] Create failure diagnostics
-- [ ] Test recovery success rate
-
-**Deliverables**:
-- Failure detection system
-- Recovery strategies
-- Diagnostic reports
-
----
-
-### Task 3.3: Production Deployment
-**Objective**: Package for production use  
-**Effort**: 12 hours  
-**Priority**: High  
-**Dependencies**: Tasks 3.1, 3.2
-
-**Subtasks**:
-- [ ] Create installation packages
-- [ ] Write user documentation
-- [ ] Build GUI interface
-- [ ] Add license management
-- [ ] Create training materials
-
-**Deliverables**:
-- Installation packages
-- User documentation
-- GUI application
-- Training materials
-
----
-
-### Task 3.4: Comprehensive Validation
-**Objective**: Full validation against industry cases  
-**Effort**: 14 hours  
-**Priority**: High  
-**Dependencies**: Task 3.3
-
-**Subtasks**:
-- [ ] Validate against published cases
-- [ ] Test with extreme configurations
-- [ ] Perform sensitivity analysis
-- [ ] Document accuracy metrics
-- [ ] Create validation report
-
-**Deliverables**:
-- Validation test suite
-- Accuracy metrics
-- Validation report
-- Certification readiness
-
----
-
-## Test Strategy and Data Management
-
-### Test Data Repository Structure
-```
-tests/
-├── fixtures/
-│   ├── csv_inputs/          # Real CSV files
-│   ├── orcaflex_models/     # Sample .yml files
-│   ├── sim_outputs/         # Known good .sim files
-│   └── expected_results/    # Validated outputs
-├── unit/                    # Unit tests per module
-├── integration/             # End-to-end tests
-├── validation/              # Comparison with manual
-└── performance/             # Benchmarking tests
+**Description**: Create Python script to run existing batch commands in a loop with convergence checking.
+
+**Implementation Components**:
+```python
+class MooringTensionOrchestrator:
+    - __init__(working_dir, max_iterations=10)
+    - load_targets() # Read target CSV
+    - run_command() # Execute shell commands
+    - read_current_tensions() # Parse result CSV
+    - check_convergence() # Compare with tolerances
+    - run() # Main loop
+    - generate_summary() # Final report
 ```
 
-### Test Coverage Requirements
-- **Phase 1**: >95% unit test coverage
-- **Phase 2**: >90% integration test coverage
-- **Phase 3**: >85% overall coverage
-- **Validation**: 100% of real project cases
+**Subtasks**:
+- [ ] Create orchestrator.py file
+- [ ] Implement command execution wrapper
+- [ ] Add CSV parsing for targets and results
+- [ ] Implement convergence check logic
+- [ ] Add iteration loop with max limit
+- [ ] Create summary reporting
 
-### Continuous Testing
-- Pre-commit hooks for unit tests
-- CI/CD pipeline for full test suite
-- Nightly validation against real data
-- Performance regression testing
-
----
-
-## Risk Mitigation
-
-### Technical Risks
-1. **OrcaFlex API changes**: Maintain version compatibility layer
-2. **Convergence failures**: Multiple fallback strategies
-3. **Performance issues**: Parallel processing and caching
-
-### Project Risks
-1. **Scope creep**: Phased approach with clear boundaries
-2. **Testing complexity**: Strong mock framework
-3. **User adoption**: Close collaboration with manual process users
+**Deliverables**:
+- `orchestrator.py` - Complete implementation (~200 lines)
+- Execution logs
+- Convergence reports
 
 ---
 
-## Success Metrics
+### Task 2: Testing and Validation
+**Effort**: 2 hours  
+**Priority**: High  
+**Dependencies**: Task 1
 
-### Phase 1 Success Criteria
-- Semi-automated process reduces manual effort by 50%
-- All test cases pass with real data
-- User acceptance from current manual operators
+**Description**: Test orchestrator with existing go-by files.
 
-### Phase 2 Success Criteria
-- Fully automated process completes in <5 minutes
-- Convergence rate >95% for typical cases
-- Batch processing handles 10+ models
+**Test Scenarios**:
+1. **Normal Convergence**
+   - Run with existing data
+   - Verify stops when converged
+   
+2. **Maximum Iterations**
+   - Test with tight tolerances
+   - Verify stops at 10 iterations
+   
+3. **Error Handling**
+   - Test with missing files
+   - Test with malformed CSV
 
-### Phase 3 Success Criteria
-- Advanced algorithms improve convergence by 30%
-- Recovery strategies handle 90% of failures
-- Production deployment with <1% error rate
+**Subtasks**:
+- [ ] Test with go-by data files
+- [ ] Verify convergence detection
+- [ ] Test iteration limits
+- [ ] Validate CSV parsing
+- [ ] Check error handling
+
+**Success Criteria**:
+- Correctly reads target tensions from CSV
+- Executes batch commands successfully
+- Detects convergence based on tolerances
+- Stops at max iterations if not converged
 
 ---
 
-**Total Effort**: 156 hours across 3.5 weeks with strong test coverage throughout
+### Task 3: Documentation and Deployment
+**Effort**: 2 hours  
+**Priority**: Medium  
+**Dependencies**: Task 2
+
+**Description**: Document usage and deploy script.
+
+**Subtasks**:
+- [ ] Write usage documentation
+- [ ] Create example run instructions
+- [ ] Document CSV format requirements
+- [ ] Add command-line argument parsing
+- [ ] Create batch/shell wrapper scripts
+
+**Deliverables**:
+- README with usage instructions
+- Example command lines
+- Wrapper scripts for easy execution
+
+---
+
+## File Structure
+
+```
+mooring-tension-iteration/
+├── orchestrator.py              # Main script (NEW)
+├── README.md                     # Updated documentation
+├── go-by/                       # Existing files
+│   ├── dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml
+│   ├── dm_ofx_post_fsts_lngc.yml
+│   ├── fsts_l015_125km3_pb_target_mooring_pretension.csv
+│   └── results/
+│       └── *_pretension_analysis.csv
+└── logs/                        # Execution logs (NEW)
+    └── iteration_*.log
+```
+
+## Commands to Execute Per Iteration
+
+From the go-by folder:
+
+1. **Tension Calculation**
+   ```bash
+   python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml
+   ```
+
+2. **OrcaFlex Analysis**
+   ```bash
+   python -m digitalmodel.modules.orcaflex.universal \
+       pattern="fsts*125km3*pb_*.yml" \
+       input_directory="." \
+       output_directory="." \
+       validate=false
+   ```
+
+3. **Post-Processing**
+   ```bash
+   python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30
+   ```
+
+## Convergence Logic
+
+```python
+# Read targets
+targets = {
+    'Line01': 80.0,  # kN
+    'Line02': 80.0,
+    # ... Line03-16
+}
+
+tolerances = {
+    'Line01': 50,  # %
+    'Line02': 50,
+    # ... Line03-16
+}
+
+# Check convergence
+for line in lines:
+    diff_percent = abs(current[line] - targets[line]) / targets[line] * 100
+    if diff_percent > tolerances[line]:
+        return False  # Not converged
+return True  # All lines converged
+```
+
+## Usage Example
+
+```bash
+# Navigate to go-by folder
+cd specs/modules/orcaflex/mooring-tension-iteration/go-by
+
+# Run orchestrator
+/d/github/digitalmodel/.venv/Scripts/python ../orchestrator.py
+
+# With options
+/d/github/digitalmodel/.venv/Scripts/python ../orchestrator.py \
+    --max-iterations 5 \
+    --working-dir . \
+    --verbose
+```
+
+## Expected Output
+
+```
+Starting Mooring Tension Iteration Orchestrator
+Maximum iterations: 10
+Loaded 16 target tensions
+
+============================================================
+ITERATION 1
+============================================================
+
+Step 1: Running tension calculation...
+Executing: python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml
+
+Step 2: Running OrcaFlex analysis...
+Executing: python -m digitalmodel.modules.orcaflex.universal ...
+
+Step 3: Post-processing results...
+Executing: python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30
+
+Step 4: Checking convergence...
+  Line01: 75.2 kN (target: 80.0 kN, diff: 6.0%, tol: 50%) ✓
+  Line02: 78.5 kN (target: 80.0 kN, diff: 1.9%, tol: 50%) ✓
+  ...
+  Line16: 58.3 kN (target: 60.0 kN, diff: 2.8%, tol: 1%) ✗
+
+Not converged, continuing to next iteration...
+
+[... iterations continue ...]
+
+✓✓✓ CONVERGED at iteration 4 ✓✓✓
+
+============================================================
+CONVERGENCE SUMMARY
+============================================================
+Total iterations: 4
+
+Convergence Trend:
+  Iteration 1: 12/16 lines converged (75.0%)
+  Iteration 2: 14/16 lines converged (87.5%)
+  Iteration 3: 15/16 lines converged (93.8%)
+  Iteration 4: 16/16 lines converged (100.0%)
+```
+
+## Definition of Done
+
+- [ ] Orchestrator script implemented and tested
+- [ ] Successfully runs batch commands in loop
+- [ ] Correctly parses CSV files for targets and results
+- [ ] Detects convergence based on tolerances
+- [ ] Stops at max iterations or convergence
+- [ ] Generates clear status reports
+- [ ] Documentation complete
+- [ ] Ready for production use
+
+## Notes
+
+- **NO engineering calculations** - just orchestration
+- **NO model modifications** - only runs existing commands
+- **Simple tolerance check** - percentage difference only
+- **Fixed commands** - no dynamic command generation
+- Total implementation: ~200 lines of Python code
