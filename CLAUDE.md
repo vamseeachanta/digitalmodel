@@ -10,6 +10,8 @@
 2. **Execute tasks using subagents** for each component
 3. **Utilize parallel processing** for all independent operations
 4. **Achieve >3x speed improvement** through parallelization
+5. **Enable inter-agent delegation** - Agents MUST know about and delegate to other agents
+6. **Maintain agent registry** - All agents aware of available agents and capabilities
 
 ### AI Agents MUST:
 1. **EVALUATE** if the improvement could benefit multiple repositories
@@ -212,15 +214,70 @@ When guidance conflicts:
 - **Configuration-Driven**: YAML files drive most analysis workflows
 - **Units**: SI units internally with proper conversions at boundaries
 
-## 🤖 MANDATORY: Module Agent Usage
+## 🤖 MANDATORY: Module Agent Usage & Inter-Agent Collaboration
 
-**CRITICAL DIRECTIVE**: ALL module work MUST use the corresponding module agent:
+**CRITICAL DIRECTIVE**: ALL module work MUST use the corresponding module agent with MANDATORY inter-agent awareness:
 
 ### Module Agent Requirements
 1. **Check for Existing Agent**: ALWAYS check `agents/<module>/` directory first
 2. **Use Existing Agent**: If agent exists, USE IT for all module operations
 3. **Create Agent First**: If no agent exists, CREATE IT before any module work
 4. **Agent Integration**: All `/create-spec` commands MUST integrate with module agent
+5. **Inter-Agent Awareness**: ALL agents MUST know about other agents and delegate appropriately
+
+### 🚨 MANDATORY: Inter-Agent Task Delegation Protocol
+
+**CRITICAL FOR ALL SLASH COMMANDS** (especially `/create-spec` and `/create-module-agent`):
+
+#### Every Agent MUST:
+1. **Maintain Agent Registry**: Know all available agents and their capabilities
+2. **Evaluate Task Ownership**: Determine if task belongs to another agent's domain
+3. **Delegate Appropriately**: Route tasks/subtasks to the most qualified agent
+4. **Coordinate Multi-Agent Workflows**: Orchestrate between multiple agents for complex tasks
+5. **Document Delegation**: Track which agent handles which component
+
+#### Delegation Matrix Examples:
+- CAD tasks → CAD Engineering Specialist → FreeCAD/GMsh agents (as needed)
+- OrcaFlex simulations → OrcaFlex Agent
+- AQWA analysis → AQWA Agent  
+- Mesh generation → GMsh Agent
+- Parametric modeling → FreeCAD Agent
+- Wave analysis → OrcaWave Agent
+- Testing tasks → Testing Agent (parallel execution)
+- Documentation → Documentation Agent
+
+#### Implementation Requirements for `/create-spec`:
+1. **Scan All Agents**: Review `agents/*/` directory for available agents
+2. **Match Capabilities**: Map task requirements to agent capabilities
+3. **Create Delegation Plan**: Document which agents handle which tasks
+4. **Include in spec.md**: Add "Agent Delegation" section to specifications
+5. **Update task.md**: Annotate tasks with assigned agent
+
+#### Implementation Requirements for `/create-module-agent`:
+1. **Agent Discovery**: New agents MUST discover existing agents on creation
+2. **Capability Registration**: Register agent capabilities in shared registry
+3. **Cross-References**: Add references to related agents in config
+4. **Delegation Rules**: Define when to delegate to other agents
+5. **Update Existing Agents**: Notify existing agents of new agent capabilities
+
+#### Delegation Configuration Example:
+```yaml
+delegation:
+  known_agents:
+    - name: orcaflex
+      capabilities: [hydrodynamics, mooring, offshore]
+    - name: freecad  
+      capabilities: [parametric_modeling, assembly, drawings]
+    - name: gmsh
+      capabilities: [meshing, fem_preprocessing]
+  delegation_rules:
+    - if: task contains "mesh generation"
+      delegate_to: gmsh
+    - if: task contains "OrcaFlex simulation"
+      delegate_to: orcaflex
+```
+
+**This inter-agent collaboration is MANDATORY for optimal task execution**
 
 ### Available Module Agents
 - **OrcaFlex Agent** (`agents/orcaflex/`): Hydrodynamic analysis, mooring systems, offshore engineering
@@ -343,6 +400,12 @@ python tools/execute-tasks.py @specs/modules/module-name/spec-folder/tasks.md
 3. **Template Compliance**: Follow all established templates and patterns
 4. **Module Integration**: Update relevant module READMEs and cross-references
 5. **USE MODULE AGENTS**: 🚨 **CRITICAL** - All module work MUST utilize the corresponding module agent from `agents/<module>/` directory. If a module agent doesn't exist, create one FIRST before proceeding with the spec. The agent provides domain expertise, standards compliance, and workflow automation.
+6. **INTER-AGENT DELEGATION**: 🚨 **MANDATORY** - Specs MUST include agent delegation mapping:
+   - Identify ALL agents that could contribute to the implementation
+   - Map each task/subtask to the most qualified agent
+   - Document delegation chain in spec.md "Agent Delegation" section
+   - Ensure agents know about and can invoke other agents as needed
+   - Example: CAD spec delegates modeling to FreeCAD agent, meshing to GMsh agent
 
 #### 🚀 MANDATORY: Agent Assignment and Parallel Processing
 **CRITICAL REQUIREMENTS for /create-spec execution:**
@@ -710,3 +773,4 @@ If score < 70/100:
 
 **This dual verification is MANDATORY for ALL /execute-tasks operations**
 - make mandatory note to utilize existing uv envrionment to execute tasks  as part of /execute-tasks slash command
+- mark this as a mandatory for /execute-tasks slash command.
