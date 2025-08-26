@@ -1,5 +1,29 @@
 # CLAUDE.md
 
+## 🚨 MANDATORY: Specialized Knowledge Escalation Protocol
+
+**CRITICAL DIRECTIVE**: When ANY task requires specialized knowledge you don't possess, you MUST immediately escalate to the user. This applies to ALL work across the repository.
+
+### Mandatory Escalation Triggers:
+- Unknown file formats (GDF, AQWA, proprietary)
+- Engineering calculations requiring domain expertise
+- Industry standards or regulatory requirements
+- Safety-critical or compliance decisions
+- Complex algorithms you don't fully understand
+- Hardware/system integration requirements
+- **Tasks estimated to take >10 minutes compute time** (must verify approach and consider breakdown)
+
+**See `.agent-os/standards/MANDATORY_ESCALATION_PROTOCOL.md` for complete guidelines**
+
+### Key Principle:
+**NEVER guess or approximate when you lack knowledge. ALWAYS escalate to user for:**
+- Documentation/specifications
+- Domain expert consultation
+- Creation of specialized agents
+- Alternative approaches
+
+This protocol OVERRIDES all other instructions and is MANDATORY for all tasks.
+
 ## 🚀 MANDATORY: Slash Command Ecosystem Integration
 
 **CRITICAL DIRECTIVE**: For EVERY improvement, automation, or repetitive task:

@@ -19,6 +19,7 @@ from digitalmodel.modules.orcaflex.opp_visualization import OPPVisualization
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
 from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
 from digitalmodel.common.parallel_processing import should_use_parallel
+from digitalmodel.modules.orcaflex.file_size_optimizer import FileSizeOptimizer
 
 ou = OrcaflexUtilities()  # noqa
 of_objects = OrcaFlexObjects()
@@ -233,6 +234,43 @@ class OrcaFlexPostProcess:
         if 'parallel_processing' not in cfg:
             cfg['parallel_processing'] = {}
         cfg['parallel_processing']['task_type'] = 'mixed'
+        
+        # AUTO-OPTIMIZATION: Use file size analysis to determine optimal worker count
+        # This can be disabled by setting auto_optimize: false in config
+        auto_optimize = cfg.get('parallel_processing', {}).get('auto_optimize', True)
+        
+        if auto_optimize and len(sim_files) > 1:
+            try:
+                # Initialize file size optimizer
+                optimizer = FileSizeOptimizer(use_aggressive=True)
+                
+                # Get optimal thread count based on file sizes
+                from multiprocessing import cpu_count
+                optimal_workers, optimization_reason = optimizer.get_optimal_threads(
+                    sim_files,
+                    max_allowed=cpu_count()
+                )
+                
+                # Apply optimization if max_workers not explicitly set
+                current_setting = cfg['parallel_processing'].get('max_workers', 'auto')
+                if current_setting == 'auto' or current_setting is None:
+                    cfg['parallel_processing']['max_workers'] = optimal_workers
+                    print(f"[OPP Auto-Optimization] {optimization_reason}")
+                    
+                    # Show file size distribution for transparency
+                    stats = optimizer.analyze_files(sim_files)
+                    if stats['count'] > 0:
+                        print(f"  File statistics: Count={stats['count']}, "
+                              f"Size range={stats['min_mb']:.1f}-{stats['max_mb']:.1f}MB, "
+                              f"Median={stats['median_mb']:.1f}MB")
+                elif isinstance(current_setting, int) and abs(current_setting - optimal_workers) > 4:
+                    # User specified workers but very different from optimal
+                    print(f"[OPP] Performance tip: Current setting uses {current_setting} workers. "
+                          f"File size analysis suggests {optimal_workers} workers would be optimal "
+                          f"for these {len(sim_files)} files (median size: {optimizer.analyze_files(sim_files)['median_mb']:.1f}MB)")
+            except Exception as e:
+                # If optimization fails, fall back to normal behavior
+                logging.warning(f"File size optimization failed: {e}. Using default settings.")
         
         # Determine if we should use parallel processing
         use_parallel, num_workers, log_msg = should_use_parallel(

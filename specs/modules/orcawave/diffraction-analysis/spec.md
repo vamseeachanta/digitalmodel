@@ -1,250 +1,170 @@
-# OrcaWave Diffraction Analysis Specification - Sea Cypress Vessel
+# OrcaWave Diffraction Analysis Workflow Specification
 
 ## Overview
-Implementation of hydrodynamic diffraction analysis for Sea Cypress vessel using OrcaWave with automated geometry processing and batch execution. Results will be formatted for subsequent OrcaFlex integration (see separate specification).
+Automated workflow for hydrodynamic diffraction analysis using OrcaWave, converting GMsh mesh files to OrcaWave input, executing analysis with parallel validation, and post-processing results for OrcaFlex integration.
 
-## Business Requirements
-- Perform diffraction analysis on Sea Cypress vessel geometry
-- Automate workflow from geometry import to results export
-- Support multiple geometry formats (STL, OBJ)
-- Generate hydrodynamic database in OrcaWave-native formats
-- Export results in formats suitable for OrcaFlex (integration handled separately)
+## Workflow Steps
 
-## Technical Requirements
+### Step 1: Geometry Preparation (User/Manual)
+**Responsibility:** User  
+**Tool:** GMsh Program  
+**Reference:** `agents/gmsh` - GMsh agent documentation and capabilities
 
-### Geometry Processing
-**Input Geometries:**
-- Location: `J:\B1512 Nork & Mendez (legal) Hyundai Peacepia vs Sea Cypress sinking\ACMA Work\Sea Cypress Tug Data\Rhino Model Sea Cypress`
-- Files:
-  - `Sea Cypress_0.25 Mesh_Ascii.stl` - ASCII STL format
-  - `Sea Cypress_0.25 Mesh_Binary.obj` - Wavefront OBJ format
-  - `Sea Cypress_0.25 Mesh_Binary.stl` - Binary STL format
+- User creates or imports geometry in GMsh
+- Generates high-quality panel mesh suitable for diffraction analysis
+- Exports mesh in GMsh .msh format
+- **Input:** CAD geometry or existing mesh
+- **Output:** `Sea Cypress_0.25 Mesh_Ascii.msh` file
 
-**Geometry Format Selection Criteria:**
-1. **Binary STL (Recommended)**
-   - Most efficient for OrcaWave import
-   - Compact file size
-   - Direct support in OrcaWave GDF converter
-   - Preserves mesh topology accurately
+### Step 2: OrcaWave Input File Generation (AI/Automated)
+**Responsibility:** AI  
+**Script:** `generate_orcawave_input.py`
 
-2. **ASCII STL (Alternative)**
-   - Human-readable for verification
-   - Larger file size
-   - Compatible with OrcaWave
+- Convert GMsh .msh file to OrcaWave-compatible format
+- Generate Wamit GDF reference files
+- Create YAML configuration for OrcaWave analysis
+- **Input:** `specs/modules/orcawave/diffraction-analysis/inputs/geometry/Sea Cypress_0.25 Mesh_Ascii.msh`
+- **Reference:** `specs/modules/orcawave/diffraction-analysis/inputs/orcawave/go-by/` (example files)
+- **Output:** `specs/modules/orcawave/diffraction-analysis/inputs/orcawave/` (generated configs)
 
-3. **OBJ Format (Not Recommended)**
-   - Requires conversion
-   - May lose mesh properties
-   - Additional processing overhead
+### Step 3: Analysis Execution (AI/User)
+**Responsibility:** AI provides script, User executes  
+**Script:** `execute_orcawave_parallel.py`
 
-### OrcaWave Configuration
+#### AI Tasks:
+- Provide Python script with parallel validation capabilities
+- Test configuration in parallel threads before proposing
+- Generate validation reports
+- Create batch execution files
 
-#### Input YAML Structure
-```yaml
-analysis:
-  name: "Sea_Cypress_Diffraction"
-  type: "diffraction"
-  vessel:
-    name: "Sea Cypress"
-    geometry: "Sea Cypress_0.25 Mesh_Binary.stl"
-    
-environment:
-  water_depth: 100.0  # meters
-  density: 1025.0     # kg/m³
-  gravity: 9.81       # m/s²
-  
-mesh_settings:
-  panel_size: 0.25    # meters
-  convergence: true
-  refinement_zones: []
-  
-frequency_range:
-  start: 0.01        # rad/s
-  end: 3.0           # rad/s
-  steps: 100
-  
-wave_directions:
-  start: 0           # degrees
-  end: 180           # degrees
-  increment: 15      # degrees
-  
-outputs:
-  formats:
-    - "spreadsheet"  # Excel/CSV
-    - "orcaflex"     # .yml for OrcaFlex
-    - "database"     # Hydrodynamic database
-  directory: "./results/"
-  
-computation:
-  parallel_workers: 4
-  solver: "direct"
-  memory_limit: "16GB"
+#### User Tasks:
+- Review validation results
+- Execute analysis using batch file or GUI
+- Monitor execution progress
+
+#### Parallel Validation Tests:
+1. Configuration validation
+2. Mesh file validation
+3. Numerical stability check
+4. Memory usage estimation
+
+### Step 4: Post-Processing (AI/User)
+**Responsibility:** AI provides script, User executes  
+**Script:** `postprocess_orcawave_parallel.py`
+
+#### AI Tasks:
+- Create post-processing script with parallel data extraction
+- Test extraction in parallel threads before proposing
+- Generate visualization scripts
+- Create OrcaFlex integration formats
+
+#### User Tasks:
+- Execute post-processing batch or GUI
+- Review extracted data and visualizations
+- Import results into OrcaFlex
+
+#### Key Outputs:
+- RAOs (Response Amplitude Operators)
+- Added mass coefficients
+- Damping coefficients
+- Wave excitation forces
+- Mean drift forces
+- QTF (Quadratic Transfer Functions)
+
+## Technical Architecture
+
+### File Structure
+```
+diffraction-analysis/
+├── inputs/
+│   ├── geometry/              # GMsh mesh files (.msh)
+│   └── orcawave/
+│       ├── go-by/             # Reference examples
+│       └── *.yml              # Generated configs
+├── scripts/
+│   ├── generate_orcawave_input.py      # Step 2
+│   ├── execute_orcawave_parallel.py    # Step 3
+│   ├── postprocess_orcawave_parallel.py # Step 4
+│   └── run_*.bat                        # Batch runners
+├── outputs/
+│   └── processed/             # OrcaFlex-ready data
+└── validation/                # Test reports
 ```
 
-### Batch Processing Configuration
+### Agent Delegation
 
-#### Batch Execution Script
-```batch
-@echo off
-REM Sea Cypress Diffraction Analysis Batch Runner
-REM Generated by OrcaWave Agent
+| Task | Primary Agent | Secondary Agent | Role |
+|------|--------------|-----------------|------|
+| Mesh Generation | GMsh Agent | - | Create panel mesh from geometry |
+| Input Generation | OrcaWave Agent | GMsh Agent | Convert mesh formats |
+| Validation | Testing Agent | OrcaWave Agent | Parallel validation tests |
+| Execution | OrcaWave Agent | - | Run diffraction analysis |
+| Post-Processing | OrcaWave Agent | Testing Agent | Extract and validate results |
 
-SET ORCAWAVE_PATH="C:\Program Files\Orcina\OrcaWave\bin\orcawave.exe"
-SET CONFIG_FILE="sea_cypress_diffraction.yml"
-SET LOG_FILE="analysis_log_%date:~-4,4%%date:~-10,2%%date:~-7,2%.txt"
+### Parallel Processing Strategy
 
-echo Starting OrcaWave Diffraction Analysis...
-echo Configuration: %CONFIG_FILE%
-echo Log file: %LOG_FILE%
-
-REM Run OrcaWave analysis
-%ORCAWAVE_PATH% -config %CONFIG_FILE% -batch -log %LOG_FILE%
-
-if %ERRORLEVEL% NEQ 0 (
-    echo ERROR: OrcaWave analysis failed with code %ERRORLEVEL%
-    exit /b %ERRORLEVEL%
-)
-
-echo Analysis completed successfully
-echo Processing results...
-
-REM Convert results to OrcaFlex format
-python convert_to_orcaflex.py --input ./results/ --output ./orcaflex/
-
-echo Batch processing complete
-```
-
-### Results Export Formats
-
-#### Standard OrcaWave Outputs
-1. **Hydrodynamic Coefficients**
-   - Added mass matrices (.csv)
-   - Radiation damping coefficients (.csv)
-   - Wave excitation forces (.csv)
-   - Phase information (.csv)
-
-2. **Database Formats**
-   - OrcaWave native database (.owd)
-   - WAMIT-compatible format (.out)
-   - Excel workbook with all results (.xlsx)
-
-3. **OrcaFlex-Ready Format**
-   - Structured YAML for direct import
-   - Frequency-dependent coefficients
-   - Complete metadata for traceability
-
-**Note**: OrcaFlex integration is handled in a separate specification to maintain modularity and allow for independent execution of diffraction analysis.
-
-## System Architecture
-
-### Component Overview
-1. **Geometry Processor** - Validates and converts mesh formats
-2. **OrcaWave Engine** - Performs diffraction analysis
-3. **Results Processor** - Formats output data
-4. **Export Manager** - Generates multiple output formats
-
-### Data Flow
-```
-Geometry Files → Validation → OrcaWave Analysis → Results Processing → Export Formats
-     ↓               ↓              ↓                    ↓                   ↓
-   (STL/OBJ)    (Mesh Check)   (Diffraction)      (Processing)      (CSV/XLSX/YML)
-```
-
-## Implementation Approach
-
-### Phase 1: Geometry Preparation
-- Validate all three geometry files
-- Select optimal format (Binary STL)
-- Perform mesh quality checks
-- Generate GDF file for OrcaWave
-
-### Phase 2: Analysis Configuration
-- Create YAML configuration file
-- Set environmental parameters
-- Define frequency and direction ranges
-- Configure solver settings
-
-### Phase 3: Batch Execution
-- Implement batch processing script
-- Setup parallel processing
-- Configure result outputs
-- Implement error handling
-
-### Phase 4: Results Processing
-- Export to spreadsheet formats
-- Generate hydrodynamic database
-- Create visualization plots
-- Validate results against benchmarks
-
-### Phase 5: Results Packaging
-- Format results for multiple uses
-- Create OrcaFlex-ready export files
-- Generate comprehensive documentation
-- Package for downstream applications
-
-## Testing Strategy
-
-### Unit Tests
-- Geometry validation functions
-- Configuration file parsing
-- Result data conversion
-- OrcaFlex API integration
-
-### Integration Tests
-- End-to-end workflow execution
-- Batch processing reliability
-- Data format conversions
-- Error recovery mechanisms
-
-### Validation Tests
-- Compare with reference cases
-- Verify conservation principles
-- Check symmetry conditions
-- Validate frequency ranges
-
-## Performance Requirements
-- Analysis completion: &lt; 2 hours for standard mesh
-- Memory usage: &lt; 16 GB RAM
-- Parallel efficiency: &gt; 80% on 4 cores
-- File I/O: Optimized for network drives
-
-## Security Considerations
-- Secure handling of proprietary geometry
-- Encrypted storage of results
-- Access control for batch execution
-- Audit logging of all operations
-
-## Documentation Requirements
-- User guide for batch execution
-- Technical reference for YAML configuration
-- Validation report template
-- Integration troubleshooting guide
+All scripts implement parallel processing for:
+- **Validation**: 4 concurrent validation tests
+- **Data Extraction**: Multiple file processing
+- **Visualization**: Concurrent plot generation
+- **Testing**: Background validation before user execution
 
 ## Success Criteria
-1. ✅ All three geometry formats evaluated
-2. ✅ Automated batch processing operational
-3. ✅ Results exported in all required formats
-4. ✅ OrcaFlex-ready files generated
-5. ✅ Validation against known benchmarks
-6. ✅ Performance targets achieved
 
-## Dependencies
-- OrcaWave v11.0+ with valid license
-- OrcaFlex v11.0+ with valid license
-- Python 3.8+ with required packages
-- Network access to geometry files
-- Sufficient computational resources
+### Functional Requirements
+- ✅ GMsh .msh file successfully converted to OrcaWave input
+- ✅ OrcaWave analysis executes without errors
+- ✅ All hydrodynamic coefficients extracted
+- ✅ OrcaFlex-compatible output generated
 
-## Risk Mitigation
-- **Geometry Issues**: Pre-validation scripts
-- **License Availability**: Queue management system
-- **Memory Limitations**: Mesh decimation options
-- **Network Latency**: Local caching strategy
-- **Solver Convergence**: Adaptive refinement
+### Performance Requirements
+- Parallel validation completed in <30 seconds
+- Post-processing handles multiple result files concurrently
+- Memory usage estimation accurate within 20%
+- All scripts use UV environment
 
-## Future Enhancements
-- Web-based monitoring dashboard
-- Cloud computing integration
-- Machine learning optimization
-- Automated report generation
-- Multi-vessel batch processing
+### Quality Requirements
+- Validation catches configuration errors before execution
+- Comprehensive error handling and logging
+- Clear user feedback at each step
+- Reproducible results
+
+## Implementation Status
+
+### Completed Components
+- ✅ `generate_orcawave_input.py` - GMsh to OrcaWave converter
+- ✅ `execute_orcawave_parallel.py` - Parallel validation and execution
+- ✅ `postprocess_orcawave_parallel.py` - Result extraction and processing
+- ✅ `run_complete_workflow.bat` - End-to-end execution
+- ✅ `run_with_parallel_test.bat` - Testing with UV environment
+
+### Integration Points
+- GMsh Agent: Mesh quality validation and optimization
+- OrcaWave Agent: Analysis configuration and execution
+- OrcaFlex: Direct import of processed YAML/JSON files
+- UV Environment: All scripts use repository Python environment
+
+## Risk Management
+
+### Technical Risks
+| Risk | Mitigation |
+|------|------------|
+| Invalid mesh geometry | Pre-validation in parallel before execution |
+| OrcaWave license unavailable | Dry-run mode with validation only |
+| Large memory requirements | Memory estimation before execution |
+| Incompatible file formats | Multiple format support with fallbacks |
+
+### Process Risks
+| Risk | Mitigation |
+|------|------------|
+| User unfamiliar with GMsh | Reference GMsh agent documentation |
+| Validation warnings ignored | Clear severity indicators in reports |
+| Post-processing incomplete | Progress tracking with resumption capability |
+
+## References
+
+- GMsh Agent: `agents/gmsh/README.md`
+- OrcaWave Agent: `agents/orcawave/README.md`
+- Go-by Examples: `inputs/orcawave/go-by/`
+- OrcaWave Documentation: Vendor documentation
+- OrcaFlex Integration: `specs/modules/orcaflex/orcawave-results-integration/`
