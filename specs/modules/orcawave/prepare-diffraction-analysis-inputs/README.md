@@ -11,6 +11,15 @@ The workflow automates the complete process of:
 4. Running OrcaWave analysis
 5. Post-processing results to Excel/CSV formats
 
+### ⚠️ CRITICAL: OrcaWave YAML Formatting Requirements
+**OrcaWave is extremely particular about YAML file formatting.** We have developed a custom parser to handle OrcaWave's specific requirements. 
+
+📖 **MUST READ**: See [ORCAWAVE_YAML_FORMAT_REQUIREMENTS.md](ORCAWAVE_YAML_FORMAT_REQUIREMENTS.md) for:
+- Critical formatting rules (Yes/No vs true/false, UTF-8 BOM, etc.)
+- Common pitfalls that cause loading failures
+- Custom parser implementation details
+- Confirmed working solution (2025-08-26)
+
 ## Scripts
 
 ### Core Components

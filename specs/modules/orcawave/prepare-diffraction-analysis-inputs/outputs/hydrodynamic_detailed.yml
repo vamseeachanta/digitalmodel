@@ -1,0 +1,347 @@
+hydrodynamic_properties:
+  source: B1512 Gyradius Calcs.xlsx
+  project: B1512 Nork & Mendez - Sea Cypress Station Keeping Analysis
+  vessel_dimensions:
+    LBP:
+      value: 22.86
+      unit: m
+      original:
+        value: 75
+        unit: ft
+    beam:
+      value: 8.53
+      unit: m
+      original:
+        value: 28
+        unit: ft
+    depth:
+      value: 3.05
+      unit: m
+      original:
+        value: 10
+        unit: ft
+  vessel_configurations:
+  - name: incident_draft_fuel_centered
+    description: Incident Draft Fuel centered
+    draft:
+      value: 1.981
+      unit: m
+      original:
+        value: 6.5
+        unit: ft
+    mass_properties:
+      mass:
+        value: 300912.45
+        unit: kg
+        original:
+          value: 296.15999999999997
+          unit: LT
+      center_of_gravity:
+        x:
+          value: 11.2911
+          unit: m
+          description: Longitudinal (from Fr. 0, +Fwd)
+          original:
+            value: 37.04421799027553
+            unit: ft
+        y:
+          value: -0.0005
+          unit: m
+          description: Transverse (from CL, +Port)
+          original:
+            value: -0.0014772420313344142
+            unit: ft
+        z:
+          value: 2.4331
+          unit: m
+          description: Vertical (from ABL, +Up)
+          original:
+            value: 7.982729267963265
+            unit: ft
+      moments_of_inertia:
+        ixx:
+          value: 2094917.78
+          unit: kg.m^2
+          description: Roll moment of inertia
+          original:
+            value: 22193.372482972653
+            unit: LT.ft^2
+        iyy:
+          value: 9098465.41
+          unit: kg.m^2
+          description: Pitch moment of inertia
+          original:
+            value: 96388.33266715259
+            unit: LT.ft^2
+        izz:
+          value: 10218270.06
+          unit: kg.m^2
+          description: Yaw moment of inertia
+          original:
+            value: 108251.44347492649
+            unit: LT.ft^2
+      radii_of_gyration:
+        kxx:
+          value: 2.6385
+          unit: m
+          description: Roll radius of gyration
+          original:
+            value: 8.656621927605684
+            unit: ft
+        kyy:
+          value: 5.4988
+          unit: m
+          description: Pitch radius of gyration
+          original:
+            value: 18.040519241571527
+            unit: ft
+        kzz:
+          value: 5.8273
+          unit: m
+          description: Yaw radius of gyration
+          original:
+            value: 19.11849260368657
+            unit: ft
+  - name: incident_draft_fuel_centered_adjusted
+    description: Incident Draft Fuel centered (adjusted)
+    draft:
+      value: 1.981
+      unit: m
+      original:
+        value: 6.5
+        unit: ft
+    mass_properties:
+      mass:
+        value: 300912.45
+        unit: kg
+        original:
+          value: 296.15999999999997
+          unit: LT
+      center_of_gravity:
+        x:
+          value: 11.2911
+          unit: m
+          description: Longitudinal (from Fr. 0, +Fwd)
+          original:
+            value: 37.04421799027553
+            unit: ft
+        y:
+          value: 0.0915
+          unit: m
+          description: Transverse (from CL, +Port)
+          original:
+            value: 0.30012527012425716
+            unit: ft
+        z:
+          value: 2.4387
+          unit: m
+          description: Vertical (from ABL, +Up)
+          original:
+            value: 8.001119665045923
+            unit: ft
+      moments_of_inertia:
+        ixx:
+          value: 2096879.81
+          unit: kg.m^2
+          description: Roll moment of inertia
+          original:
+            value: 22214.158088404885
+            unit: LT.ft^2
+        iyy:
+          value: 9096031.66
+          unit: kg.m^2
+          description: Pitch moment of inertia
+          original:
+            value: 96362.54975893896
+            unit: LT.ft^2
+        izz:
+          value: 10222665.84
+          unit: kg.m^2
+          description: Yaw moment of inertia
+          original:
+            value: 108298.01198857237
+            unit: LT.ft^2
+      radii_of_gyration:
+        kxx:
+          value: 2.6398
+          unit: m
+          description: Roll radius of gyration
+          original:
+            value: 8.660674737013315
+            unit: ft
+        kyy:
+          value: 5.498
+          unit: m
+          description: Pitch radius of gyration
+          original:
+            value: 18.038106251597068
+            unit: ft
+        kzz:
+          value: 5.8286
+          unit: m
+          description: Yaw radius of gyration
+          original:
+            value: 19.122604438246967
+            unit: ft
+  - name: fo_to_port
+    description: 4070 gallons FO to Port
+    draft:
+      value: 2.042
+      unit: m
+      original:
+        value: 6.7
+        unit: ft
+    mass_properties:
+      mass:
+        value: 307516.75
+        unit: kg
+        original:
+          value: 302.65999999999997
+          unit: LT
+      center_of_gravity:
+        x:
+          value: 11.2794
+          unit: m
+          description: Longitudinal (from Fr. 0, +Fwd)
+          original:
+            value: 37.005899689420474
+            unit: ft
+        y:
+          value: 0.1123
+          unit: m
+          description: Transverse (from CL, +Port)
+          original:
+            value: 0.36841703561752465
+            unit: ft
+        z:
+          value: 2.393
+          unit: m
+          description: Vertical (from ABL, +Up)
+          original:
+            value: 7.850976673495013
+            unit: ft
+      moments_of_inertia:
+        ixx:
+          value: 2161040.49
+          unit: kg.m^2
+          description: Roll moment of inertia
+          original:
+            value: 22893.870611951395
+            unit: LT.ft^2
+        iyy:
+          value: 9157539.02
+          unit: kg.m^2
+          description: Pitch moment of inertia
+          original:
+            value: 97014.15323098974
+            unit: LT.ft^2
+        izz:
+          value: 10288127.38
+          unit: kg.m^2
+          description: Yaw moment of inertia
+          original:
+            value: 108991.50567994677
+            unit: LT.ft^2
+      radii_of_gyration:
+        kxx:
+          value: 2.6509
+          unit: m
+          description: Roll radius of gyration
+          original:
+            value: 8.697252887973765
+            unit: ft
+        kyy:
+          value: 5.457
+          unit: m
+          description: Pitch radius of gyration
+          original:
+            value: 17.903586333230976
+            unit: ft
+        kzz:
+          value: 5.7841
+          unit: m
+          description: Yaw radius of gyration
+          original:
+            value: 18.976617866183517
+            unit: ft
+  - name: fo_to_port_with_ingress
+    description: 4070 gallons FO to Port w/ 5% Eng Rm Ingress
+    draft:
+      value: 2.103
+      unit: m
+      original:
+        value: 6.9
+        unit: ft
+    mass_properties:
+      mass:
+        value: 314100.74
+        unit: kg
+        original:
+          value: 309.14
+          unit: LT
+      center_of_gravity:
+        x:
+          value: 11.2714
+          unit: m
+          description: Longitudinal (from Fr. 0, +Fwd)
+          original:
+            value: 36.979800090573846
+            unit: ft
+        y:
+          value: 0.1299
+          unit: m
+          description: Transverse (from CL, +Port)
+          original:
+            value: 0.4260823575079252
+            unit: ft
+        z:
+          value: 2.3536
+          unit: m
+          description: Vertical (from ABL, +Up)
+          original:
+            value: 7.72185611696966
+            unit: ft
+      moments_of_inertia:
+        ixx:
+          value: 2217957.79
+          unit: kg.m^2
+          description: Roll moment of inertia
+          original:
+            value: 23496.84741509921
+            unit: LT.ft^2
+        iyy:
+          value: 9212157.59
+          unit: kg.m^2
+          description: Pitch moment of inertia
+          original:
+            value: 97592.77751391195
+            unit: LT.ft^2
+        izz:
+          value: 10351008.14
+          unit: kg.m^2
+          description: Yaw moment of inertia
+          original:
+            value: 109657.65885318386
+            unit: LT.ft^2
+      radii_of_gyration:
+        kxx:
+          value: 2.6573
+          unit: m
+          description: Roll radius of gyration
+          original:
+            value: 8.718207413396735
+            unit: ft
+        kyy:
+          value: 5.4156
+          unit: m
+          description: Pitch radius of gyration
+          original:
+            value: 17.76770102813071
+            unit: ft
+        kzz:
+          value: 5.7406
+          unit: m
+          description: Yaw radius of gyration
+          original:
+            value: 18.833970399464512
+            unit: ft
