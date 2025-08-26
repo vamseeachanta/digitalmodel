@@ -13,6 +13,7 @@ from typing import List, Dict, Optional, Callable, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 import psutil
+from digitalmodel.modules.orcaflex.file_size_optimizer import FileSizeOptimizer
 
 logger = logging.getLogger(__name__)
 
@@ -93,8 +94,8 @@ class BatchProcessor:
         self.successful = 0
         self.failed = 0
         
-        # Determine optimal worker count
-        optimal_workers = self._calculate_optimal_workers(len(models))
+        # Determine optimal worker count (now considers file sizes)
+        optimal_workers = self._calculate_optimal_workers(len(models), models)
         
         logger.info("=" * 80)
         logger.info("BATCH PROCESSING - STARTING")
@@ -131,17 +132,36 @@ class BatchProcessor:
         
         return results
     
-    def _calculate_optimal_workers(self, model_count: int) -> int:
+    def _calculate_optimal_workers(self, model_count: int, models: Optional[List[Path]] = None) -> int:
         """
-        Calculate optimal worker count based on system resources.
+        Calculate optimal worker count based on system resources and file sizes.
         
         Args:
             model_count: Number of models to process
+            models: Optional list of model paths for file size analysis
         
         Returns:
             Optimal number of workers
         """
-        # Start with configured maximum
+        # Try to use file size optimization if models provided
+        if models and len(models) > 0:
+            try:
+                # Check if these are .sim files or similar large files
+                sample_file = str(models[0])
+                if any(sample_file.endswith(ext) for ext in ['.sim', '.dat', '.yml']):
+                    # Use file size optimizer for intelligent thread allocation
+                    optimizer = FileSizeOptimizer(use_aggressive=True)
+                    file_paths = [str(m) for m in models]
+                    optimal, reason = optimizer.get_optimal_threads(
+                        file_paths,
+                        max_allowed=self.max_workers
+                    )
+                    logger.info(f"[Auto-Optimization] {reason}")
+                    return optimal
+            except Exception as e:
+                logger.debug(f"File size optimization not applicable: {e}")
+        
+        # Fallback to original logic
         workers = self.max_workers
         
         # Limit by model count (no point having more workers than models)

@@ -1,199 +1,181 @@
-# Prompt Documentation - OrcaWave Sea Cypress Diffraction Analysis
+# OrcaWave Diffraction Analysis Workflow - Prompt Documentation
 
 ## Original User Request
-```
-/create-spec for orcawave diffraction analysis. 
-The key inputs are:
-geometry: Copy the geometries in below to spec 
-J:\B1512 Nork & Mendez (legal) Hyundai Peacepia vs Sea Cypress sinking\ACMA Work\Sea Cypress Tug Data\Rhino Model Sea Cypress
-- consider all 3 geoemtries below:
-  - Sea Cypress_0.25 Mesh_Ascii.stl
-  - Sea Cypress_0.25 Mesh_Binary.obj
-  - Sea Cypress_0.25 Mesh_Binary.stl
-- determine the most (if all 3 geometries are suitable) suitable geometry for use in diffraction analysis. Provide the reason why?
-- create an input .yml file 
-- create a batch file to run the .yml file to provide results
-- save the spreadsheet results 
-- import results to orcaflex file for further dynamic analysis
 
-ensure to assign appropriate agents for tasks and subtasks as needed.
-```
+The user requested a complete workflow specification for OrcaWave diffraction analysis with the following specific steps:
+
+### Step 1 (User): Geometry Preparation
+- **Action:** Manual step where user uses GMsh program
+- **Reference:** `agents\gmsh` documentation and agent capabilities
+- **Output:** Mesh file for analysis
+
+### Step 2 (AI): Create OrcaWave Input Files
+- **Input:** GMsh .msh file located at:
+  - `specs\modules\orcawave\diffraction-analysis\inputs\geometry\Sea Cypress_0.25 Mesh_Ascii.msh`
+- **Reference Files:** Go-by OrcaWave files at:
+  - `specs\modules\orcawave\diffraction-analysis\inputs\orcawave\go-by`
+- **Output Location:** Create spec OrcaWave files in:
+  - `specs\modules\orcawave\diffraction-analysis\inputs\orcawave`
+
+### Step 3 (AI/User): Analysis Execution
+- **AI Responsibility:**
+  - Provide Python script or Windows batch script based on module documentation
+  - Check if solution works using parallel thread before proposing to user
+- **User Responsibility:**
+  - Run using batch file or GUI
+
+### Step 4 (AI/User): Post-Processing
+- **AI Responsibility:**
+  - Create post-processing script to extract key output data
+  - Check if solution works using parallel thread before proposing to user
+- **User Responsibility:**
+  - Run using batch file or GUI
+
+## Context and Background
+
+### Initial Situation
+The user had a `specs/modules/orcawave/diffraction-analysis` directory with many geometry iteration files from previous work. These needed to be cleaned up and organized before implementing the new automated workflow.
+
+### Actions Taken
+1. **Cleanup:** Moved all geometry iteration files to `revision-1/` subfolder
+2. **Organization:** Created clear directory structure for inputs, outputs, scripts
+3. **Documentation:** Created README.md for directory overview
+
+### Existing Resources Discovered
+- **GMsh Agent:** Fully functional agent at `agents/gmsh/` with mesh generation capabilities
+- **OrcaWave Agent:** Specialized agent at `agents/orcawave/` for diffraction analysis
+- **Go-by Files:** Example OrcaWave configurations in YAML format
+- **Mesh Files:** Multiple formats including STL, OBJ, and MSH
+
+## Clarification Questions and Assumptions
+
+### Questions Asked (Implicitly Addressed)
+1. **Q:** What format should the OrcaWave input files be in?
+   - **A:** YAML format based on go-by examples found
+
+2. **Q:** Should the scripts validate before execution?
+   - **A:** Yes, user specifically requested parallel testing before proposing
+
+3. **Q:** What outputs are considered "key" for extraction?
+   - **A:** RAOs, added mass, damping, excitation forces, mean drift, QTF
+
+### Assumptions Made
+1. **OrcaWave Version:** Assumed version 11.5+ based on go-by files
+2. **Parallel Testing:** Interpreted as validation tests running concurrently
+3. **UV Environment:** All scripts should use repository UV environment
+4. **Agent Delegation:** GMsh and OrcaWave agents should be utilized where applicable
+
+## Implementation Approach
+
+### Technical Decisions
+1. **Language:** Python for all scripts (better for parallel processing)
+2. **Configuration:** YAML format for OrcaWave (matches go-by examples)
+3. **Validation:** 4-point parallel validation before execution
+4. **Output Formats:** Both YAML and JSON for OrcaFlex compatibility
+
+### Parallel Processing Strategy
+- **Validation:** Run 4 tests concurrently using ThreadPoolExecutor
+- **Extraction:** Process multiple result files in parallel
+- **Visualization:** Generate plots concurrently
+- **Testing:** Background validation threads before user interaction
+
+### Error Handling
+- Comprehensive try-catch blocks in all scripts
+- Dry-run mode for testing without execution
+- Validation reports saved for review
+- Clear error messages and recovery suggestions
+
+## Scripts Created
+
+### 1. `generate_orcawave_input.py`
+- Converts GMsh .msh to OrcaWave YAML
+- Uses vessel properties from reference files
+- Generates GDF file references
+- Configurable parameters via command line
+
+### 2. `execute_orcawave_parallel.py`
+- Parallel validation framework
+- Auto-detects OrcaWave installation
+- Creates batch files for execution
+- Generates validation reports
+
+### 3. `postprocess_orcawave_parallel.py`
+- Extracts all hydrodynamic data
+- Parallel file processing
+- Creates visualizations
+- Generates OrcaFlex-ready formats
+
+### 4. Batch Files
+- `run_complete_workflow.bat` - End-to-end execution
+- `run_with_parallel_test.bat` - Testing mode with UV
 
 ## Curated Reuse Prompt
+
+For future similar specifications, use this template:
+
 ```
-Create a comprehensive OrcaWave diffraction analysis specification for vessel hydrodynamics with the following requirements:
+Create an automated workflow specification for [ANALYSIS_TYPE] with these steps:
 
-GEOMETRY INPUTS:
-- Multiple geometry formats available (STL ASCII, STL Binary, OBJ)
-- Located at: [INSERT_GEOMETRY_PATH]
-- Files: [LIST_GEOMETRY_FILES]
-- Need evaluation of optimal format for OrcaWave
+Step 1 (User): [MANUAL_PREPARATION]
+- Tool: [SOFTWARE_NAME]
+- Reference: [DOCUMENTATION_PATH]
+- Output: [FILE_TYPE]
 
-TECHNICAL REQUIREMENTS:
-1. Geometry format selection with justification
-2. YAML configuration file for analysis parameters
-3. Batch execution script for automated processing
-4. Results export to spreadsheet format
-5. OrcaFlex integration for dynamic analysis
+Step 2 (AI): Generate Input Files
+- Input: [SOURCE_FILE_PATH]
+- Reference: [EXAMPLE_FILES_PATH]
+- Output: [DESTINATION_PATH]
+- Requirements: Convert from [FORMAT_A] to [FORMAT_B]
 
-DELIVERABLES:
-- Geometry evaluation report
-- OrcaWave input configuration (.yml)
-- Batch processing script (.bat)
-- Results in Excel/CSV format
-- OrcaFlex-ready hydrodynamic database
-- Integration documentation
+Step 3 (AI/User): Execute Analysis
+- AI: Provide script with parallel validation
+- User: Run via batch/GUI
+- Validation: Test in parallel before execution
 
-AGENT ASSIGNMENT:
-- Use OrcaWave Agent for primary analysis
-- CAD Engineering Agent for geometry validation
-- OrcaFlex Agent for integration
-- Testing Agent for validation
-- Documentation Agent for deliverables
+Step 4 (AI/User): Post-Process Results
+- AI: Create extraction script with parallel processing
+- User: Execute and review results
+- Output: [TARGET_FORMAT] for [INTEGRATION_SOFTWARE]
 
-PARALLEL PROCESSING:
-- Implement parallel geometry validation
-- Concurrent results export
-- Parallel test execution
-- Achieve >3x speedup where possible
+Additional Requirements:
+- Use UV environment for all Python execution
+- Implement parallel validation before user actions
+- Create batch files for easy execution
+- Generate comprehensive documentation
+- Utilize existing agents: [AGENT_LIST]
 ```
-
-## Key Context and Decisions
-
-### 1. Geometry Format Selection
-**Decision**: Binary STL format recommended
-**Rationale**:
-- Native OrcaWave support via GDF converter
-- Compact file size for efficient I/O
-- Preserves mesh topology accurately
-- Industry standard for marine CFD
-
-### 2. Analysis Configuration
-**Key Parameters**:
-- Frequency range: 0.01 - 3.0 rad/s (100 steps)
-- Wave directions: 0° - 180° (15° increments)
-- Panel size: 0.25m (matching mesh resolution)
-- Water depth: 100m (deep water assumption)
-
-### 3. Agent Architecture
-**Primary Agent**: OrcaWave Agent
-- Domain expertise in diffraction analysis
-- Batch processing capabilities
-- Integration with OrcaFlex
-
-**Support Agents**:
-- CAD Engineering: Geometry validation
-- Testing: Benchmark validation
-- Documentation: Report generation
-
-### 4. Parallel Processing Strategy
-- Geometry validation: 3 files simultaneously
-- Configuration tasks: 5 parallel streams
-- Results export: 4 format exports in parallel
-- Testing: Concurrent test execution
-
-## Implementation Notes
-
-### Critical Success Factors
-1. **Geometry Quality**: Watertight mesh required
-2. **License Management**: Queue system for OrcaWave
-3. **Memory Optimization**: 16GB limit consideration
-4. **Network Performance**: Local caching for large files
-5. **Integration Testing**: OrcaFlex compatibility
-
-### Technical Constraints
-- OrcaWave v11.0+ required
-- Python 3.8+ for automation
-- Windows batch scripting
-- Network drive access (J: drive)
-
-### Risk Mitigation
-- Pre-validation of all geometries
-- Incremental testing approach
-- Rollback procedures documented
-- License availability checks
-- Memory usage monitoring
-
-## Agent Coordination Protocol
-
-### Task Distribution
-```yaml
-orcawave_agent:
-  responsibilities:
-    - Analysis configuration
-    - Batch execution
-    - Results processing
-    - OrcaFlex export
-  
-cad_agent:
-  responsibilities:
-    - Geometry validation
-    - Mesh quality checks
-    - Format conversion
-    
-testing_agent:
-  responsibilities:
-    - Benchmark validation
-    - Integration testing
-    - Performance testing
-    
-documentation_agent:
-  responsibilities:
-    - Technical reports
-    - User guides
-    - API documentation
-```
-
-### Communication Flow
-1. **Initialization**: OrcaWave Agent coordinates setup
-2. **Validation**: CAD Agent validates geometries in parallel
-3. **Execution**: OrcaWave Agent runs analysis
-4. **Verification**: Testing Agent validates results
-5. **Documentation**: Documentation Agent creates deliverables
-
-## Optimization Opportunities
-
-### Performance Enhancements
-- GPU acceleration for solver (if available)
-- Distributed computing for large meshes
-- Incremental analysis for parameter studies
-- Result caching for repeated queries
-
-### Workflow Improvements
-- CI/CD pipeline integration
-- Automated report generation
-- Real-time progress monitoring
-- Cloud storage integration
-
-### Future Extensions
-- Machine learning for parameter optimization
-- Web-based execution interface
-- Multi-vessel batch processing
-- Automated mesh refinement
-
-## Validation Criteria
-
-### Technical Validation
-- [ ] Mesh quality metrics within tolerance
-- [ ] Conservation of energy satisfied
-- [ ] Symmetry conditions verified
-- [ ] Benchmark comparison &lt; 5% deviation
-
-### Process Validation
-- [ ] All agents successfully coordinated
-- [ ] Parallel speedup &gt; 2.5x achieved
-- [ ] Error handling tested
-- [ ] Documentation complete
-
-### Business Validation
-- [ ] Results suitable for OrcaFlex
-- [ ] Processing time &lt; 4 hours
-- [ ] Automation reduces manual effort 60%
-- [ ] Deliverables meet requirements
 
 ## Lessons Learned
-1. Binary STL format most efficient for OrcaWave
-2. Parallel geometry validation saves significant time
-3. Agent coordination critical for complex workflows
-4. Batch scripting essential for repeatability
-5. Early validation prevents downstream issues
+
+### What Worked Well
+1. **Parallel Validation:** Catches issues before expensive operations
+2. **Agent Integration:** Leveraging existing agents saved development time
+3. **Batch Files:** Simple interface for non-technical users
+4. **Multiple Output Formats:** Flexibility for different use cases
+
+### Challenges Addressed
+1. **Mesh Format Conversion:** Handled by referencing existing GDF files
+2. **OrcaWave Detection:** Auto-detection with fallback to validation-only
+3. **Large File Processing:** Parallel extraction handles efficiently
+4. **User Confirmation:** Clear prompts at critical decision points
+
+## Next Steps
+
+### Immediate Actions
+1. User reviews generated scripts
+2. Test with `run_with_parallel_test.bat`
+3. Execute full workflow if validation passes
+4. Import results into OrcaFlex
+
+### Future Enhancements
+1. GUI interface for workflow management
+2. Cloud execution capabilities
+3. Real-time progress monitoring
+4. Automated report generation in PDF
+
+## References
+
+- GMsh Documentation: `agents/gmsh/README.md`
+- OrcaWave Agent: `agents/orcawave/capabilities.yml`
+- Go-by Examples: `inputs/orcawave/go-by/*.yml`
+- OrcaFlex Integration: `specs/modules/orcaflex/orcawave-results-integration/`
