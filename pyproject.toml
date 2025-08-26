@@ -36,10 +36,7 @@ dependencies = [
     "asyncpg==0.29.0",  # PostgreSQL asyncdriver,
     "async-timeout==4.0.3",  # Timeouthandling,
     "bandit==1.7.5",  # Securitylinting,
-    "beautifulsoup4",
     "beautifulsoup4>=4.13.0,<5.0.0",
-    "black",
-    "black==23.11.0",
     "black>=24.0.0,<25.0.0",
     "bleach==6.1.0",  # HTMLsanitization,
     "boto3==1.34.0",  # AWS S3 if cloud storageneeded,
@@ -50,7 +47,7 @@ dependencies = [
     "celery==5.3.4",
     "chardet==5.2.0",  # Character encodingdetection,
     "coverage==7.3.2",  # Codecoverage,
-    "cryptography==41.0.8",
+    "cryptography>=41.0.0",
     "cx-Oracle==6.3.1",
     "dash",
     "dash>=3.1.0,<4.0.0",
@@ -71,15 +68,12 @@ dependencies = [
     "gzip==1.0",  # Built-in, but ensuringavailability,
     "h5py==3.10.0",  # HDF5format,
     "hiredis==2.2.3",
-    "httpx==0.25.2",
     "httpx==0.25.2",  # For testing HTTPclients,
     "hypercorn==0.15.0",  # Alternative ASGIserver,
     "imgkit",
     "imgkit>=1.2.0,<2.0.0",
     "ipython>=8.0.0",  # Enhanced Pythonshell,
-    "isort",
-    "isort==5.12.0",  # Importsorting,
-    "isort>=5.13.0,<6.0.0",
+    "isort>=5.13.0,<6.0.0",  # Importsorting,
     "kaleido",
     "kaleido>=0.2.0",
     "loguru",
@@ -87,19 +81,12 @@ dependencies = [
     "lxml==4.9.3",  # XMLprocessing,
     "magic==0.4.27",  # File type detection(python-magic),
     "marshmallow==3.20.1",  # Additionalserialization,
-    "matplotlib",
     "matplotlib>=3.7.0,<4.0.0",
-    "matplotlib==3.8.2",
     "memory-profiler==0.61.0",  # Memoryprofiling,
-    "mypy==1.7.1",
     "mypy>=1.8.0,<2.0.0",  # Typechecking,
     "newrelic==9.2.0",  # Performance monitoring(optional),
-    "numpy",
     "numpy>=1.24.0,<2.0.0",  # Usually needed withpandas,
-    "numpy==1.25.2",
-    "openpyxl",
-    "openpyxl>=3.1.0,<4.0.0",
-    "openpyxl==3.1.2",  # Excelexport,
+    "openpyxl>=3.1.0,<4.0.0",  # Excelexport,
     "OrcFxAPI",
     "OrcFxAPI",  # Note: Check if version constraints areavailable,
     "pandas",
@@ -256,6 +243,11 @@ index-url = "https://pypi.org/simple"
 extra-index-url = []
 no-cache = false
 pre = false
+
+[tool.uv.workspace]
+members = [
+    "src/modules/mcp-server/orcawave-mcp",
+]
 
 # MANDATORY: Parallel Processing Configuration
 [tool.parallel]

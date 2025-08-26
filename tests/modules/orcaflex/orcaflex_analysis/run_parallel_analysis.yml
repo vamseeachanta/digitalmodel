@@ -24,7 +24,7 @@ orcaflex:
   # Parallel processing configuration - NEW!
   parallel:
     enabled: True           # Enable parallel processing
-    threads: 30            # Number of parallel threads (default: 30)
+    threads: 15            # Number of parallel threads (optimized default: 15)
     use_processes: True    # Use ProcessPoolExecutor (True) or ThreadPoolExecutor (False)
     
   analysis:

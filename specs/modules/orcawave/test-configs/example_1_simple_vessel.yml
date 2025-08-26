@@ -1,0 +1,167 @@
+%YAML 1.1
+# Example 1: Simple Vessel Configuration
+# Based on L01 Default vessel from OrcaWave examples
+# Using actual GDF file from examples directory
+---
+UnitsSystem: SI
+SolveType: Potential formulation only
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadControlSurface: false
+QuadraticLoadMomentumConservation: false
+HasResonanceDampingLid: false
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1.0e-06
+WaterlineGapTolerance: 1.0e-06
+DivideNonPlanarPanels: true
+LinearSolverMethod: Direct LU
+OutputPanelPressures: false
+OutputBodyWireFrames: true
+OutputIntermediateResults: false
+ValidatePanelArrangement: false
+BodyVolumeWarningLevel: 1.0e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+WaterDepth: 400
+WaterDensity: 1.025
+WavesReferredToBy: period (s)
+HasWaveSpectrumForDragLinearisation: false
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+- 6
+- 8
+- 10
+- 12
+- 15
+WaveHeading:
+- 0
+- 45
+- 90
+- 135
+- 180
+Bodies:
+- BodyName: SimpleVessel
+  BodyMeshPosition:
+  - 0
+  - 0
+  - 0
+  BodyMeshAttitude:
+  - 0
+  - 0
+  - 0
+  BodyIncludedInAnalysis: true
+  BodyMeshFileName: D:\github\digitalmodel\docs\modules\orcawave\examples\L01_default_vessel\L01
+    Vessel mesh.gdf
+  BodyMeshFormat: Wamit gdf
+  BodyMeshLengthUnits: m
+  BodyMeshSymmetry: xz plane
+  BodyMeshDipolePanels: ''
+  BodyAddInteriorSurfacePanels: true
+  BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+  BodyOrcaFlexImportLength: 103
+  BodyHydrostaticIntegralMethod: Standard
+  BodyHydrostaticStiffnessMethod: Displacement
+  BodyInertiaSpecifiedBy: Matrix (for a general body)
+  BodyCentreOfMass:
+  - 2.53
+  - 0
+  - -1.974
+  BodyMass: 9017.95
+  BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+  - - 300000
+    - 0
+    - 0
+  - - 0
+    - 2500000
+    - 0
+  - - 0
+    - 0
+    - 2500000
+  BodyInertiaTensorOriginType: Body origin
+  ? BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz,
+    BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz
+  : - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+  BodyExternalStiffnessMatrixOriginType: Body origin
+  ? BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz,
+    BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz
+  : - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+  BodyExternalDampingMatrixOriginType: Body origin
+  BodyConnectionParent: Free
+  BodyIncreaseRollDampingToTarget: false
+  BodyFixedDOFx: false
+  BodyFixedDOFy: false
+  BodyFixedDOFz: false
+  BodyFixedDOFRx: false
+  BodyFixedDOFRy: false
+  BodyFixedDOFRz: false
+DetectAndSkipFieldPointsInsideBodies: true

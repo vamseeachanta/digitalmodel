@@ -1,0 +1,53 @@
+{
+  "timestamp": "2025-08-25T06:50:52.513154",
+  "production_dir": "D:\\1522\\ctr7\\orcaflex\\rev_a08\\runtime_test",
+  "files_analyzed": 1,
+  "total_size_gb": 0.5604917015880346,
+  "average_size_mb": 573.9435024261475,
+  "files": [
+    {
+      "name": "fat001_fsts_l015_mwl_wave01.sim",
+      "path": "D:\\1522\\ctr7\\orcaflex\\rev_a08\\runtime_test\\fat001_fsts_l015_mwl_wave01.sim",
+      "size_bytes": 601823382,
+      "size_gb": 0.5604917015880346
+    }
+  ],
+  "optimization": {
+    "default_threads": 30,
+    "calculated_optimal": 30,
+    "recommended_threads": 15,
+    "reason": "Large files (500MB-1GB avg) - I/O bound",
+    "memory_limited_threads": 298
+  },
+  "batch_groups": {
+    "large": 1
+  },
+  "memory": {
+    "rss_gb": 0.019931136,
+    "vms_gb": 0.01150976,
+    "available_gb": 250.908471296,
+    "percent_used": 8.6,
+    "gc_stats": [
+      {
+        "collections": 10,
+        "collected": 160,
+        "uncollectable": 0
+      },
+      {
+        "collections": 0,
+        "collected": 0,
+        "uncollectable": 0
+      },
+      {
+        "collections": 0,
+        "collected": 0,
+        "uncollectable": 0
+      }
+    ]
+  },
+  "expected_improvement": {
+    "current_setup": "30 threads (default)",
+    "optimized_setup": "15 threads",
+    "expected_gain": "14-20% runtime reduction for large files"
+  }
+}

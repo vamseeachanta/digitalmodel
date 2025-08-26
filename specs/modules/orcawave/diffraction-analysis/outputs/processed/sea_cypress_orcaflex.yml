@@ -1,0 +1,15 @@
+%YAML 1.1
+# OrcaFlex Vessel Type Data
+# Generated from OrcaWave Analysis
+---
+VesselType:
+  Name: Sea Cypress
+  Length: 30.0
+  Displacement: 400.0
+HydrodynamicDataSource: OrcaWave
+DataFiles:
+  AddedMassAndDamping: sea_cypress_hydro.dat
+  LoadRAOs: sea_cypress_load_raos.dat
+  DisplacementRAOs: sea_cypress_disp_raos.dat
+  QTFs: sea_cypress_qtf.dat
+...

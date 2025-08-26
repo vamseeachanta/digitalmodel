@@ -1,0 +1,59 @@
+UnitsSystem: SI
+SolveType: Potentials only
+LoadRAOCalculationMethod: Pressure integration
+PreferredLoadRAOCalculationMethod: Pressure integration
+WaterDepth: 100
+WaterDensity: 1025
+WavesReferredToBy: period (s)
+LinearSolverMethod: Direct LU
+ValidatePanelArrangement: Yes
+OutputIntermediateResults: Yes
+OutputBodyWireFrames: Yes
+PanelAspectRatioWarningLevel: 20
+PanelsPerWavelengthWarningLevel: 5
+WaterlineGapTolerance: 0.05
+WaterlineZTolerance: 0.001
+
+PeriodOrFrequency:
+  - 3
+  - 5
+  - 7
+  - 10
+  - 12
+  - 15
+  - 20
+  - 25
+
+WaveHeading:
+  - 0
+  - 45
+  - 90
+  - 135
+  - 180
+
+Bodies:
+  - BodyName: SeaCypress
+    BodyMeshFileName: D:/github/digitalmodel/specs/modules/orcawave/diffraction-analysis/inputs/geometry/sea_cypress_corrected.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshBodyNumber: 1
+    BodyIncludedInAnalysis: Yes
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyConnectionParent: Free
+    BodyMass: 400000
+    BodyCentreOfMass: [0, 0, -1.5]
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyInertiaTensorRx: [[44100000, 0, 0], [0, 0, 0], [0, 0, 0]]
+    BodyInertiaTensorRy: [[0, 0, 0], [0, 22500000, 0], [0, 0, 0]]
+    BodyInertiaTensorRz: [[0, 0, 0], [0, 0, 0], [0, 0, 22500000]]
+    BodyInertiaTensorOriginType: Centre of mass
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+    BodyOrcaFlexImportLength: 30
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry

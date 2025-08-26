@@ -133,12 +133,12 @@ def test_parallel_file_processing():
         'output_dir': str(test_dir / 'results_parallel_test')
     }
     
-    # Test with 30 threads (default)
+    # Test with 15 threads (optimized default)
     print("\n" + "-"*40)
-    print("Testing with 30 threads (default)")
+    print("Testing with 15 threads (optimized default)")
     print("-"*40)
     
-    analyzer = OrcaFlexParallelAnalysis(num_threads=30)
+    analyzer = OrcaFlexParallelAnalysis(num_threads=15)
     
     # Convert paths to strings
     file_paths = [str(f) for f in dat_files]

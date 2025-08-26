@@ -1,0 +1,42 @@
+# OrcaWave Project File
+# Sea Cypress Diffraction Analysis
+
+[General]
+Title = Sea Cypress Tug Diffraction Analysis
+UnitsSystem = SI
+WaterDepth = 100.0
+WaterDensity = 1025.0
+
+[Mesh]
+InputFile = ../inputs/geometry/sea_cypress_trimesh.gdf
+MeshFormat = GDF
+Symmetry = None
+
+[FrequencyRange]
+Type = Periods
+Values = 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 25
+
+[Directions]
+Type = Degrees
+Values = 0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180
+
+[Analysis]
+CalculationType = Diffraction
+IncludeRadiation = Yes
+IncludeDiffraction = Yes
+ComputeQTF = Yes
+QTFMethod = Direct
+
+[Output]
+OutputDirectory = ../outputs
+SaveRAOs = Yes
+SaveAddedMass = Yes
+SaveDamping = Yes
+SaveExcitation = Yes
+SaveQTF = Yes
+OutputFormat = All
+
+[Solver]
+Method = DirectLU
+Tolerance = 1e-6
+MaxIterations = 1000

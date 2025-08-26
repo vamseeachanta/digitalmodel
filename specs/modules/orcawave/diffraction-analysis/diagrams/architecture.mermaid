@@ -1,0 +1,118 @@
+graph TB
+    %% Input Layer
+    subgraph "Input Geometries"
+        STL_A[Sea Cypress ASCII STL]
+        STL_B[Sea Cypress Binary STL]
+        OBJ[Sea Cypress OBJ]
+    end
+
+    %% Agent Orchestration Layer
+    subgraph "AI Agent Orchestration"
+        subgraph "Primary Agent"
+            OW_Agent[OrcaWave Agent<br/>Primary Coordinator]
+        end
+        
+        subgraph "Support Agents"
+            CAD_Agent[CAD Engineering Agent<br/>Geometry Validation]
+            Test_Agent[Testing Agent<br/>Validation & Benchmarks]
+            Doc_Agent[Documentation Agent<br/>Reports & Guides]
+            OF_Agent[OrcaFlex Agent<br/>Integration]
+        end
+    end
+
+    %% Processing Pipeline
+    subgraph "Processing Pipeline"
+        subgraph "Phase 1: Validation"
+            GV[Geometry Validation<br/>🔄 Parallel]
+            FS[Format Selection<br/>Binary STL]
+        end
+        
+        subgraph "Phase 2: Configuration"
+            YAML[YAML Configuration<br/>Analysis Parameters]
+            BATCH[Batch Script<br/>Automation]
+        end
+        
+        subgraph "Phase 3: Analysis"
+            GDF[GDF Conversion<br/>Mesh Processing]
+            DIFF[Diffraction Analysis<br/>OrcaWave Solver]
+            VAL[Results Validation<br/>🔄 Parallel]
+        end
+        
+        subgraph "Phase 4: Export"
+            EXCEL[Excel Export<br/>🔄 Parallel]
+            CSV[CSV Export<br/>🔄 Parallel]
+            HDB[Hydrodynamic DB<br/>🔄 Parallel]
+            PLOTS[Visualization<br/>🔄 Parallel]
+        end
+    end
+
+    %% Integration Layer
+    subgraph "OrcaFlex Integration"
+        CONVERT[Data Converter<br/>Format Translation]
+        VESSEL[Vessel Model<br/>OrcaFlex Object]
+        HYDRO[Hydrodynamics<br/>Coefficient Import]
+        DYNAM[Dynamic Analysis<br/>Time Domain]
+    end
+
+    %% Output Layer
+    subgraph "Deliverables"
+        REPORT[Technical Report]
+        GUIDE[User Guide]
+        MODEL[OrcaFlex Model]
+        RESULTS[Analysis Results]
+    end
+
+    %% Connections - Input Flow
+    STL_A --> CAD_Agent
+    STL_B --> CAD_Agent
+    OBJ --> CAD_Agent
+    
+    %% Agent Coordination
+    OW_Agent -.->|coordinates| CAD_Agent
+    OW_Agent -.->|coordinates| Test_Agent
+    OW_Agent -.->|coordinates| Doc_Agent
+    OW_Agent -.->|coordinates| OF_Agent
+    
+    %% Processing Flow
+    CAD_Agent --> GV
+    GV --> FS
+    FS --> YAML
+    YAML --> BATCH
+    BATCH --> GDF
+    GDF --> DIFF
+    DIFF --> VAL
+    
+    %% Parallel Export
+    VAL --> EXCEL
+    VAL --> CSV
+    VAL --> HDB
+    VAL --> PLOTS
+    
+    %% Integration Flow
+    HDB --> CONVERT
+    CONVERT --> VESSEL
+    VESSEL --> HYDRO
+    HYDRO --> DYNAM
+    
+    %% Documentation Flow
+    Test_Agent --> VAL
+    Doc_Agent --> REPORT
+    Doc_Agent --> GUIDE
+    OF_Agent --> MODEL
+    
+    %% Final Outputs
+    EXCEL --> RESULTS
+    CSV --> RESULTS
+    PLOTS --> RESULTS
+    DYNAM --> MODEL
+    
+    %% Styling
+    classDef agent fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef parallel fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef critical fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef output fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    
+    class OW_Agent,CAD_Agent,Test_Agent,Doc_Agent,OF_Agent agent
+    class GV,VAL,EXCEL,CSV,HDB,PLOTS parallel
+    class DIFF,HYDRO critical
+    class REPORT,GUIDE,MODEL,RESULTS output
