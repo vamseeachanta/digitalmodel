@@ -1,0 +1,127 @@
+vessel:
+  name: Sea Cypress
+  type: Supply Vessel
+  configurations:
+    incident_draft_fuel_centered:
+      description: Incident Draft Fuel centered
+      draft: 1.981
+      mass: 300912.45
+      cog:
+      - 11.2911
+      - -0.0005
+      - 2.4331
+      inertia_matrix:
+      - - 2094917.78
+        - 0.0
+        - 0.0
+      - - 0.0
+        - 9098465.41
+        - 0.0
+      - - 0.0
+        - 0.0
+        - 10218270.06
+      gyradii:
+      - 2.6385
+      - 5.4988
+      - 5.8273
+      units:
+        mass: kg
+        length: m
+        inertia: kg.m^2
+    incident_draft_fuel_centered_adjusted:
+      description: Incident Draft Fuel centered (adjusted)
+      draft: 1.981
+      mass: 300912.45
+      cog:
+      - 11.2911
+      - 0.0915
+      - 2.4387
+      inertia_matrix:
+      - - 2096879.81
+        - 0.0
+        - 0.0
+      - - 0.0
+        - 9096031.66
+        - 0.0
+      - - 0.0
+        - 0.0
+        - 10222665.84
+      gyradii:
+      - 2.6398
+      - 5.498
+      - 5.8286
+      units:
+        mass: kg
+        length: m
+        inertia: kg.m^2
+    fo_to_port:
+      description: 4070 gallons FO to Port
+      draft: 2.042
+      mass: 307516.75
+      cog:
+      - 11.2794
+      - 0.1123
+      - 2.393
+      inertia_matrix:
+      - - 2161040.49
+        - 0.0
+        - 0.0
+      - - 0.0
+        - 9157539.02
+        - 0.0
+      - - 0.0
+        - 0.0
+        - 10288127.38
+      gyradii:
+      - 2.6509
+      - 5.457
+      - 5.7841
+      units:
+        mass: kg
+        length: m
+        inertia: kg.m^2
+    fo_to_port_with_ingress:
+      description: 4070 gallons FO to Port w/ 5% Eng Rm Ingress
+      draft: 2.103
+      mass: 314100.74
+      cog:
+      - 11.2714
+      - 0.1299
+      - 2.3536
+      inertia_matrix:
+      - - 2217957.79
+        - 0.0
+        - 0.0
+      - - 0.0
+        - 9212157.59
+        - 0.0
+      - - 0.0
+        - 0.0
+        - 10351008.14
+      gyradii:
+      - 2.6573
+      - 5.4156
+      - 5.7406
+      units:
+        mass: kg
+        length: m
+        inertia: kg.m^2
+  dimensions:
+    LBP:
+      value: 22.86
+      unit: m
+      original:
+        value: 75
+        unit: ft
+    beam:
+      value: 8.53
+      unit: m
+      original:
+        value: 28
+        unit: ft
+    depth:
+      value: 3.05
+      unit: m
+      original:
+        value: 10
+        unit: ft
