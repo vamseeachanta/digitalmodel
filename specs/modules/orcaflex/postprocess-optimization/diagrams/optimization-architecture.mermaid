@@ -1,0 +1,110 @@
+graph TB
+    %% Input Layer
+    subgraph "Input Processing"
+        FILES[.sim Files]
+        CONFIG[Configuration]
+        BATCH1[LNGC Batch<br/>Large Files]
+        BATCH2[Standard Batch<br/>Small Files]
+    end
+
+    %% Resource Management Layer
+    subgraph "Resource Management"
+        MONITOR[Performance Monitor]
+        RESOURCE[Resource Manager]
+        PROFILER[File Profiler]
+        
+        MONITOR --> METRICS[Metrics<br/>CPU, RAM, I/O]
+        PROFILER --> SIZE[File Size<br/>Distribution]
+        RESOURCE --> THREADS[Dynamic Thread<br/>Allocation]
+    end
+
+    %% Optimization Engine
+    subgraph "Optimization Engine"
+        OPTIMIZER[Batch Optimizer]
+        GROUPER[Size-Based<br/>Grouping]
+        ALLOCATOR[Thread<br/>Allocator]
+        
+        subgraph "Thread Strategies"
+            SMALL[Small Files<br/>45 threads]
+            MEDIUM[Medium Files<br/>30 threads]
+            LARGE[Large Files<br/>15 threads]
+        end
+    end
+
+    %% Processing Layer
+    subgraph "Processing Layer"
+        subgraph "Hybrid Model"
+            PPOOL[Process Pool<br/>I/O Operations]
+            TPOOL[Thread Pool<br/>Computations]
+        end
+        
+        MEMORY[Memory<br/>Management]
+        GARBAGE[Garbage<br/>Collection]
+        CACHE[Result<br/>Caching]
+    end
+
+    %% OrcaFlex Integration
+    subgraph "OrcaFlex Processing"
+        LOAD[Load Model]
+        STATIC[Static Analysis]
+        DYNAMIC[Dynamic Analysis]
+        POST[Postprocess]
+        SAVE[Save Results]
+    end
+
+    %% Output Layer
+    subgraph "Output & Monitoring"
+        RESULTS[Results Files]
+        DASHBOARD[Performance<br/>Dashboard]
+        LOGS[Process Logs]
+        TUNING[Auto-Tuning<br/>Feedback]
+    end
+
+    %% Flow Connections
+    FILES --> PROFILER
+    CONFIG --> RESOURCE
+    BATCH1 --> OPTIMIZER
+    BATCH2 --> OPTIMIZER
+
+    SIZE --> GROUPER
+    METRICS --> ALLOCATOR
+    
+    GROUPER --> SMALL
+    GROUPER --> MEDIUM
+    GROUPER --> LARGE
+    
+    SMALL --> TPOOL
+    MEDIUM --> HYBRID[Hybrid Processing]
+    LARGE --> PPOOL
+    
+    HYBRID --> LOAD
+    LOAD --> STATIC
+    STATIC --> DYNAMIC
+    DYNAMIC --> POST
+    POST --> SAVE
+    
+    SAVE --> RESULTS
+    METRICS --> DASHBOARD
+    MONITOR --> LOGS
+    DASHBOARD --> TUNING
+    TUNING --> RESOURCE
+
+    %% Memory Management Flow
+    MEMORY -.-> GARBAGE
+    GARBAGE -.-> CACHE
+    CACHE -.-> SAVE
+
+    %% Styling
+    classDef input fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef resource fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    classDef optimize fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef process fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef orcaflex fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef output fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+    
+    class FILES,CONFIG,BATCH1,BATCH2 input
+    class MONITOR,RESOURCE,PROFILER,METRICS,SIZE,THREADS resource
+    class OPTIMIZER,GROUPER,ALLOCATOR,SMALL,MEDIUM,LARGE optimize
+    class PPOOL,TPOOL,MEMORY,GARBAGE,CACHE,HYBRID process
+    class LOAD,STATIC,DYNAMIC,POST,SAVE orcaflex
+    class RESULTS,DASHBOARD,LOGS,TUNING output

@@ -85,14 +85,25 @@ This file provides guidance to AI assistants when working with code in this repo
 - ❌ **NO MOCK MODES** - Remove all mock_mode parameters and simulated behaviors
 - ❌ **NO STUB FUNCTIONS** - Implement actual functionality or leave unimplemented
 - ❌ **NO FAKE DATA** - Use real data or clearly indicate data is needed
+- ❌ **NO MOCK .SIM FILES** - NEVER create or replace .sim files with mock/test data
 - ✅ **REAL TESTING ONLY** - All tests must validate actual functionality
 - ✅ **PRODUCTION-READY CODE** - Write code that works in real environments
+
+### OrcaFlex-Specific Critical Rules:
+- **NEVER** create mock .sim files in any directory
+- **NEVER** overwrite production .sim files with test data
+- **NEVER** modify .sim files in runtime_test directories
+- **ALWAYS** preserve original .sim files (they are GB-sized binary files)
+- **Production paths protected**: 
+  - `D:\1522\ctr7\orcaflex\rev_a08\runtime_test\*.sim`
+  - Any `*/runtime_test/*.sim` or `*/production/*.sim`
 
 ### Enforcement:
 - If user hasn't explicitly asked for mocks, DO NOT create them
 - Remove existing mock code unless specifically needed
 - Replace mock tests with integration tests using real components
 - This applies to ALL repositories and ALL code changes
+- .sim files are PRODUCTION DATA - treat as read-only unless explicitly told otherwise
 
 ### Exception:
 Only create mocks when user explicitly states:
@@ -787,5 +798,18 @@ If score < 70/100:
 - Infrastructure → DevOps Agent (or user with admin)
 
 **This dual verification is MANDATORY for ALL /execute-tasks operations**
+
+### 5. TASK STATUS UPDATE PROTOCOL 
+**MANDATORY**: After completing ANY task from tasks.md:
+- **Update Status**: Mark completed tasks with [x] checkbox in tasks.md
+- **Add Completion Time**: Note completion timestamp for each task
+- **Document Blockers**: If task couldn't be completed, document why
+- **Update Progress**: Maintain accurate completion percentage
+- **Create task_summary.md**: Document approach, metrics, and lessons learned
+
+**CRITICAL**: The tasks.md file MUST reflect real-time task status. Never leave completed tasks unmarked.
+
 - make mandatory note to utilize existing uv envrionment to execute tasks  as part of /execute-tasks slash command
-- mark this as a mandatory for /execute-tasks slash command.
+- mark this as a mandatory for /execute-tasks slash command
+- MANDATORY: Update tasks.md to reflect completed tasks with [x] checkboxes and timestamps
+- memory stop sycophantic behavior and start asking questions and reasonsing.

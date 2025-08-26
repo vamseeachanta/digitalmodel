@@ -1,0 +1,27 @@
+SEA CYPRESS ORCAWAVE CONFIGURATION ANALYSIS
+============================================================
+
+Configuration File: sea_cypress_diffraction.yml
+Panel Count: 24,332
+Vessel Type: Tug (Sea Cypress)
+
+ISSUES:
+- HIGH panel count (24,332) - may cause memory/performance issues
+- High aspect ratio tolerance (25) - may affect accuracy
+- Large waterline gap tolerance (0.1m)
+- Missing high-frequency response (shortest period is 3s)
+- Limited low-frequency coverage (longest period is 25s)
+- Direct LU solver with large mesh may be slow
+- Full QTF calculation is computationally expensive
+- Mass appears to be estimated (400 tonnes)
+
+RECOMMENDATIONS:
+- Consider using symmetry to reduce panel count by 50%
+- Reduce PanelAspectRatioWarningLevel to 15-20
+- Reduce WaterlineGapTolerance to 0.01-0.05m for better waterline definition
+- Extend period range down to 2s for complete high-frequency coverage
+- Consider extending to 30s for slow-drift analysis
+- Consider using port/starboard symmetry if vessel is symmetric
+- Consider iterative solver for large meshes
+- Consider 'Diagonal QTF only' for initial runs
+- Update with actual vessel mass for accurate RAOs

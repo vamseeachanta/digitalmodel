@@ -55,3 +55,32 @@ workflows:
     enabled: true
     batch_processing: true
     result_extraction: true
+
+# CRITICAL PRODUCTION RULES - MANDATORY ENFORCEMENT
+critical_rules:
+  - name: "NO_MOCK_SIM_FILES"
+    rule: "NEVER create mock .sim files or replace production .sim files with test data"
+    severity: "CRITICAL"
+    enforcement: "MANDATORY"
+    details:
+      - "Production .sim files are large binary OrcaFlex model files (often GB in size)"
+      - "NEVER write or overwrite .sim files unless explicitly creating new models"
+      - "ALWAYS preserve original .sim files in production directories"
+      - "Mock data should only use separate test directories with clear naming"
+      - "When testing, use copies in test directories, never modify originals"
+      - ".sim files in runtime_test directories are PRODUCTION DATA - DO NOT TOUCH"
+    violations_blocked:
+      - "Creating mock .sim files in production directories"
+      - "Overwriting existing .sim files with test data"
+      - "Reducing .sim file sizes for testing"
+      - "Replacing binary .sim content with text/mock data"
+      - "Writing any data to D:\\1522\\ctr7\\orcaflex\\rev_a08\\runtime_test\\*.sim"
+  
+  - name: "PRESERVE_PRODUCTION_DATA"
+    rule: "Production directories and files must remain untouched"
+    severity: "CRITICAL"
+    protected_paths:
+      - "D:\\1522\\ctr7\\orcaflex\\rev_a08\\runtime_test\\*.sim"
+      - "D:\\1522\\ctr7\\orcaflex\\**\\*.sim"
+      - "*/runtime_test/*.sim"
+      - "*/production/*.sim"

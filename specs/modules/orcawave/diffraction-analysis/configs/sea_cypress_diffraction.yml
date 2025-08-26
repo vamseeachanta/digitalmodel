@@ -1,0 +1,169 @@
+%YAML 1.1
+# Type: Diffraction
+# Program: OrcaWave 11.5c
+# Vessel: Sea Cypress Tug
+# Purpose: Hydrodynamic diffraction analysis for Sea Cypress semi-submersible
+# Created: 2025-08-24
+# Geometry: sea_cypress_trimesh.gdf (24,332 panels)
+---
+# Model
+UnitsSystem: SI
+
+# Calculation & output
+SolveType: Full QTF calculation
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadPressureIntegration: Yes
+QuadraticLoadControlSurface: Yes
+QuadraticLoadMomentumConservation: No
+PreferredQuadraticLoadCalculationMethod: Control surface
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1e-6
+WaterlineGapTolerance: 0.1
+DivideNonPlanarPanels: No
+LinearSolverMethod: Direct LU
+OutputPanelPressures: No
+OutputPanelVelocities: No
+OutputBodyWireFrames: Yes
+OutputIntermediateResults: Yes
+ValidatePanelArrangement: Yes
+BodyVolumeWarningLevel: 1e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+
+# Environment
+WaterDepth: 100  # Deep water assumption for initial analysis
+WaterDensity: 1025  # Standard seawater density kg/m³
+WavesReferredToBy: period (s)
+HasWaveSpectrumForDragLinearisation: No
+MorisonFluidVelocity: Undisturbed incident wave
+
+# Frequency range - optimized for tug vessel response
+PeriodOrFrequency:
+  - 3    # High frequency
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10   # Peak response region
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+  - 16
+  - 18
+  - 20
+  - 22
+  - 25   # Low frequency
+
+# Wave headings - 22.5 degree increments for full directional analysis
+WaveHeading:
+  - 0      # Head seas
+  - 22.5
+  - 45     # Bow quartering
+  - 67.5
+  - 90     # Beam seas
+  - 112.5
+  - 135    # Stern quartering
+  - 157.5
+  - 180    # Following seas
+
+# QTF settings for second-order effects
+QTFMinCrossingAngle: 0
+QTFMaxCrossingAngle: 180
+QTFMinPeriodOrFrequency: 5
+QTFMaxPeriodOrFrequency: 20
+QTFFrequencyTypes: Both
+IncludeMeanDriftFullQTFs: Yes
+
+# Bodies configuration
+Bodies:
+  - BodyName: SeaCypress
+    BodyMeshPosition: [0, 0, 0]  # Origin at waterline
+    BodyMeshAttitude: [0, 0, 0]  # No initial rotation
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: ../inputs/geometry/sea_cypress_gmsh_optimized.dat
+    BodyMeshFormat: Aqwa dat
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None  # Full mesh provided
+    BodyMeshBodyNumber: 1
+    BodyMeshImportDryPanels: Yes
+    BodyMeshDipolePanels: 
+    BodyAddInteriorSurfacePanels: No  # Already watertight
+    BodyInteriorSurfacePanelMethod: Triangulation method
+    BodyControlSurfaceType: Automatically generated
+    BodyControlSurfacePanelSize: 5  # Smaller for tug size
+    BodyControlSurfaceSeparationFromBody: 10  # Scaled for vessel
+    BodyControlSurfaceIncludeFreeSurface: Yes
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: 30  # Approximate tug length
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    
+    # Mass properties - typical for 30m tug
+    # These should be updated with actual vessel data
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, -1.5]  # Typical CoG below waterline
+    BodyMass: 400000  # ~400 tonnes displacement (based on volume)
+    
+    # Inertia tensor - estimated for tug vessel
+    # Should be updated with actual values
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [1.6e6, 0, 0]      # Roll inertia (smaller for tug)
+      - [0, 1.5e7, 0]      # Pitch inertia
+      - [0, 0, 1.5e7]      # Yaw inertia
+    BodyInertiaTensorOriginType: Centre of mass
+    
+    # External stiffness matrix (mooring/constraints)
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    
+    # External damping matrix
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    
+    BodyConnectionParent: Free  # Freely floating
+    BodyIncreaseRollDampingToTarget: No
+    
+    # All DOFs free for RAO calculation
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+
+# Field points for pressure/velocity field
+DetectAndSkipFieldPointsInsideBodies: Yes
+
+# QTF calculation settings
+QTFCalculationMethod: Direct method
+FreeSurfacePanelledZoneType: Defined by mesh file
+FreeSurfacePanelledZoneMeshFileName: 
+FreeSurfacePanelledZoneMeshFormat: Wamit gdf
+FreeSurfacePanelledZoneMeshLengthUnits: m
+
+# Drawing/visualization
+InteriorSurfacePanelsPen: [1, Solid, Aqua]
+FreeSurfaceMeshPen: [1, Solid, Aqua]
+
+# Output configuration
+OutputDirectory: ../outputs/
+OutputFilePrefix: sea_cypress_
+ExportFormat: All  # Excel, CSV, and OrcaFlex formats
+...

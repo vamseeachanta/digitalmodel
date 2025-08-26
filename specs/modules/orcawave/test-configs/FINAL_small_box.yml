@@ -1,0 +1,156 @@
+%YAML 1.1
+# OrcaWave Configuration - Small Box Test
+# Using: small_box_test.gdf (verified to exist)
+---
+UnitsSystem: SI
+SolveType: Potential formulation only
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadControlSurface: false
+QuadraticLoadMomentumConservation: false
+HasResonanceDampingLid: false
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1.0e-06
+WaterlineGapTolerance: 1.0e-06
+DivideNonPlanarPanels: false
+LinearSolverMethod: Direct LU
+OutputPanelPressures: false
+OutputBodyWireFrames: true
+OutputIntermediateResults: false
+ValidatePanelArrangement: false
+BodyVolumeWarningLevel: 1.0e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+WaterDepth: 1000
+WaterDensity: 1.025
+WavesReferredToBy: period (s)
+HasWaveSpectrumForDragLinearisation: false
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+- 10
+WaveHeading:
+- 0
+Bodies:
+- BodyName: SmallBox
+  BodyMeshPosition:
+  - 0
+  - 0
+  - 0
+  BodyMeshAttitude:
+  - 0
+  - 0
+  - 0
+  BodyIncludedInAnalysis: true
+  BodyMeshFileName: D:\github\digitalmodel\specs\modules\orcawave\diffraction-analysis\inputs\geometry\small_box_test.gdf
+  BodyMeshFormat: Wamit gdf
+  BodyMeshLengthUnits: m
+  BodyMeshSymmetry: None
+  BodyMeshDipolePanels: ''
+  BodyAddInteriorSurfacePanels: false
+  BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+  BodyOrcaFlexImportLength: 5
+  BodyHydrostaticIntegralMethod: Standard
+  BodyHydrostaticStiffnessMethod: Displacement
+  BodyInertiaSpecifiedBy: Radii of gyration (for a free-floating body)
+  BodyCentreOfMass:
+  - 0
+  - 0
+  - -0.5
+  BodyRadiiOfGyrationRx, BodyRadiiOfGyrationRy, BodyRadiiOfGyrationRz:
+  - - 1.0
+    - 0
+    - 0
+  - - 0
+    - 2.0
+    - 0
+  - - 0
+    - 0
+    - 2.0
+  BodyRadiiOfGyrationOriginType: Body origin
+  ? BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz,
+    BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz
+  : - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+  BodyExternalStiffnessMatrixOriginType: Body origin
+  ? BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz,
+    BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz
+  : - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+  BodyExternalDampingMatrixOriginType: Body origin
+  BodyConnectionParent: Free
+  BodyIncreaseRollDampingToTarget: false
+  BodyFixedDOFx: false
+  BodyFixedDOFy: false
+  BodyFixedDOFz: false
+  BodyFixedDOFRx: false
+  BodyFixedDOFRy: false
+  BodyFixedDOFRz: false
+DetectAndSkipFieldPointsInsideBodies: true

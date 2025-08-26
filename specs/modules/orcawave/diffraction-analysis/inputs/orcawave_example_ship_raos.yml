@@ -1,0 +1,140 @@
+%YAML 1.1
+# Type: Diffraction
+# Program: OrcaWave 11.5c
+# File: Example OrcaWave configuration for ship RAOs analysis
+# Purpose: Go-by example for OrcaWave diffraction analysis setup
+# Source: docs\modules\orcawave\L01_aqwa_benchmark\orcawave_001_ship_raos_rev2.yml
+---
+# Model
+UnitsSystem: SI
+# Calculation & output
+SolveType: Full QTF calculation
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadPressureIntegration: Yes
+QuadraticLoadControlSurface: Yes
+QuadraticLoadMomentumConservation: No
+PreferredQuadraticLoadCalculationMethod: Control surface
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1e-6
+WaterlineGapTolerance: 0.1
+DivideNonPlanarPanels: No
+LinearSolverMethod: Direct LU
+OutputPanelPressures: No
+OutputPanelVelocities: No
+OutputBodyWireFrames: Yes
+OutputIntermediateResults: No
+ValidatePanelArrangement: No
+BodyVolumeWarningLevel: 1e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+# Environment
+WaterDepth: 30
+WaterDensity: 1.025
+WavesReferredToBy: period (s)
+HasWaveSpectrumForDragLinearisation: No
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 7.5
+  - 8
+  - 8.5
+  - 9
+  - 9.5
+  - 10
+  - 11
+  - 13
+  - 15
+  - 16
+  - 17
+  - 19
+  - 20
+  - 22
+WaveHeading:
+  - 0
+  - 22.5
+  - 45
+  - 67.5
+  - 90
+  - 112.5
+  - 135
+  - 157.5
+  - 180
+QTFMinCrossingAngle: 0
+QTFMaxCrossingAngle: 0
+QTFMinPeriodOrFrequency: 2
+QTFMaxPeriodOrFrequency: 10
+QTFFrequencyTypes: Both
+IncludeMeanDriftFullQTFs: No
+# Bodies
+Bodies:
+  - BodyName: Body1
+    BodyMeshPosition: [0, 0, 0.5]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: 001_ship_raos.dat
+    BodyMeshFormat: Aqwa dat
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshBodyNumber: 1
+    BodyMeshImportDryPanels: Yes
+    BodyMeshDipolePanels: 
+    BodyAddInteriorSurfacePanels: Yes
+    BodyInteriorSurfacePanelMethod: Triangulation method
+    BodyControlSurfaceType: Automatically generated
+    BodyControlSurfacePanelSize: 10
+    BodyControlSurfaceSeparationFromBody: 20
+    BodyControlSurfaceIncludeFreeSurface: Yes
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: 103
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [2.53, 0, -1.974]
+    BodyMass: 9017.95
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [254.9374465e3, 0, 0]
+      - [0, 5.979802645e6, 0]
+      - [0, 0, 5.979802645e6]
+    BodyInertiaTensorOriginType: Centre of mass
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 36.01e3, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+# Field points
+DetectAndSkipFieldPointsInsideBodies: Yes
+# QTFs
+QTFCalculationMethod: Direct method
+FreeSurfacePanelledZoneType: Defined by mesh file
+FreeSurfacePanelledZoneMeshFileName: 
+FreeSurfacePanelledZoneMeshFormat: Wamit gdf
+FreeSurfacePanelledZoneMeshLengthUnits: m
+# Drawing
+InteriorSurfacePanelsPen: [1, Solid, Aqua]
+FreeSurfaceMeshPen: [1, Solid, Aqua]
+...

@@ -1,0 +1,33 @@
+# Minimal Test Configuration for OrcaWave
+---
+UnitsSystem: SI
+SolveType: Potentials only
+WaterDepth: 1000
+WaterDensity: 1025
+WavesReferredToBy: period (s)
+PeriodOrFrequency:
+- 5
+- 10
+- 15
+WaveHeading:
+- 0
+- 90
+- 180
+Bodies:
+- BodyName: TestBox
+  BodyMeshFileName: D:/github/digitalmodel/specs/modules/orcawave/diffraction-analysis/inputs/geometry/simple_box_test.gdf
+  BodyMeshFormat: Wamit gdf
+  BodyMeshLengthUnits: m
+  BodyMass: 100000
+  BodyCentreOfMass:
+  - 0
+  - 0
+  - -1
+  BodyInertiaSpecifiedBy: Radii of gyration
+  BodyRadiusOfGyrationRx: 5
+  BodyRadiusOfGyrationRy: 10
+  BodyRadiusOfGyrationRz: 10
+  BodyIncludedInAnalysis: true
+  BodyConnectionParent: Free
+OutputDirectory: ./
+ValidatePanelArrangement: true
