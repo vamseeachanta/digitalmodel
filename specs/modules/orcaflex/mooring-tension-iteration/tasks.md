@@ -1,10 +1,142 @@
 # Implementation Tasks: Mooring Tension Iteration Orchestrator
 
-> **Total Effort**: 15 hours (~2 days)  
+> **Total Effort**: 17 hours (~2.5 days)  
 > **Scope**: Orchestration of existing batch commands with comprehensive analysis  
 > **Analysis Focus**: Execution, convergence tracking, force visualization, and stiffness analysis
 
+## Task Execution Tracker
+
+| Task ID | Description | Status | Priority | Effort |
+|---------|-------------|--------|----------|--------|
+| **0.1** | Run go-by commands once to verify all files work | ✅ Complete | Critical | 1h |
+| **0.2** | Document current file paths and outputs | ⬜ Pending | Critical | 0.5h |
+| **0.3** | Verify CSV format and data availability | ⬜ Pending | Critical | 0.5h |
+| **1.1** | Create orchestrator.py file | ⬜ Pending | Critical | 0.5h |
+| **1.2** | Implement command execution wrapper | ⬜ Pending | Critical | 0.5h |
+| **1.3** | Add CSV parsing for targets and results | ⬜ Pending | Critical | 1h |
+| **1.4** | Implement convergence check logic | ⬜ Pending | Critical | 1h |
+| **1.5** | Add iteration loop with max limit | ⬜ Pending | Critical | 0.5h |
+| **1.6** | Create summary reporting | ⬜ Pending | Critical | 0.5h |
+| **2.1** | Test with go-by data files | ⬜ Pending | High | 0.5h |
+| **2.2** | Verify convergence detection | ⬜ Pending | High | 0.5h |
+| **2.3** | Test iteration limits | ⬜ Pending | High | 0.25h |
+| **2.4** | Validate CSV parsing | ⬜ Pending | High | 0.25h |
+| **2.5** | Check error handling | ⬜ Pending | High | 0.5h |
+| **3.1** | Extract X/Y force components from tension data | ⬜ Pending | High | 0.5h |
+| **3.2** | Create polar/radial charts showing force directions | ⬜ Pending | High | 0.75h |
+| **3.3** | Generate bar charts for +X, -X, +Y, -Y forces | ⬜ Pending | High | 0.5h |
+| **3.4** | Plot convergence trends per direction | ⬜ Pending | High | 0.5h |
+| **3.5** | Create force balance summary chart | ⬜ Pending | High | 0.5h |
+| **3.6** | Add charts to iteration reports | ⬜ Pending | High | 0.25h |
+| **4.1** | Extract displacement-force relationships from data | ⬜ Pending | High | 0.75h |
+| **4.2** | Calculate directional stiffness coefficients (kN/m) | ⬜ Pending | High | 0.75h |
+| **4.3** | Compute restoring force curves for each direction | ⬜ Pending | High | 0.5h |
+| **4.4** | Analyze stiffness symmetry/asymmetry | ⬜ Pending | High | 0.5h |
+| **4.5** | Track stiffness changes during iteration | ⬜ Pending | High | 0.5h |
+| **4.6** | Create stiffness visualization charts | ⬜ Pending | High | 0.5h |
+| **4.7** | Generate stiffness analysis report | ⬜ Pending | High | 0.5h |
+| **5.1** | Write usage documentation | ⬜ Pending | Medium | 0.5h |
+| **5.2** | Create example run instructions | ⬜ Pending | Medium | 0.25h |
+| **5.3** | Document CSV format requirements | ⬜ Pending | Medium | 0.25h |
+| **5.4** | Add command-line argument parsing | ⬜ Pending | Medium | 0.25h |
+| **5.5** | Create batch/shell wrapper scripts | ⬜ Pending | Medium | 0.25h |
+| **5.6** | Document chart interpretation guide | ⬜ Pending | Medium | 0.25h |
+| **5.7** | Add stiffness analysis documentation | ⬜ Pending | Medium | 0.25h |
+
+**Legend**: ⬜ Pending | 🔄 In Progress | ✅ Complete | ❌ Blocked
+
+## Execution Notes
+
+### Recommended Execution Order:
+1. **Phase 0 - Validation (Tasks 0.1-0.3)**: Verify go-by files work
+2. **Phase 1 - Core (Tasks 1.1-1.6)**: Build the basic orchestrator
+3. **Phase 2 - Testing (Tasks 2.1-2.5)**: Validate core functionality
+4. **Phase 3 - Analysis** (Optional, can be done in parallel):
+   - **Option A**: Force Visualization (Tasks 3.1-3.6)
+   - **Option B**: Stiffness Analysis (Tasks 4.1-4.7)
+5. **Phase 4 - Documentation (Tasks 5.1-5.7)**: Complete after implementation
+
+### Critical Path:
+- Tasks 0.1 → 0.2 → 0.3 must complete before any implementation
+- Tasks 1.1 → 1.2 → 1.3 → 1.4 → 1.5 → 1.6 must be done sequentially
+- Tasks 2.1-2.5 can be done after Task 1.6
+- Tasks 3.x and 4.x can be developed independently after Task 1.3
+- Task 5.x can start anytime but should finish last
+
+### Task Dependencies:
+- **Task 1.1** requires successful completion of Tasks 0.1-0.3
+- **Task 1.3** requires Task 0.3 (CSV format verification)
+- **Task 3.1** requires CSV parsing from Task 1.3
+- **Task 4.1** requires CSV parsing from Task 1.3
+- **Tasks 3.6 & 4.7** require iteration loop from Task 1.5
+- **Task 5.6** requires Tasks 3.x complete
+- **Task 5.7** requires Tasks 4.x complete
+
 ## Single Phase Implementation
+
+### Task 0: Go-By Validation and Baseline
+**Effort**: 2 hours  
+**Priority**: Critical  
+**Dependencies**: None
+
+**Description**: Manually run existing batch commands once to ensure all files are present and working before automation.
+
+**Go-By Directory Contents**:
+```
+specs/modules/orcaflex/mooring-tension-iteration/go-by/
+├── dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml
+├── dm_ofx_post_fsts_lngc.yml  
+├── fsts_l015_125km3_pb_target_mooring_pretension.csv
+├── fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof.dat
+└── results/
+    └── (output files will be generated here)
+```
+
+**Commands to Execute**:
+```bash
+cd specs/modules/orcaflex/mooring-tension-iteration/go-by
+
+# Step 1: Run tension calculation
+python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml
+
+# Step 2: Run OrcaFlex analysis  
+python -m digitalmodel.modules.orcaflex.universal \
+    pattern="fsts*125km3*pb_*.yml" \
+    input_directory="." \
+    output_directory="." \
+    validate=false
+
+# Step 3: Post-process results
+python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30
+```
+
+**Subtasks**:
+- [ ] 0.1: Run go-by commands once to verify all files work
+- [ ] 0.2: Document current file paths and outputs
+- [ ] 0.3: Verify CSV format and data availability
+
+**Validation Checklist**:
+- [ ] dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml exists and is valid
+- [ ] dm_ofx_post_fsts_lngc.yml exists and is valid
+- [ ] Target CSV file has correct format with 16 lines
+- [ ] OrcaFlex .dat file exists and can be loaded
+- [ ] Python environment has all required modules
+- [ ] Commands execute without errors
+- [ ] Output CSV is generated in results/
+- [ ] Output contains effective tension data
+
+**Expected Outputs**:
+- Modified YAML configuration files
+- OrcaFlex simulation results
+- CSV file: `results/fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_pretension_analysis.csv`
+
+**Success Criteria**:
+- All three commands execute successfully
+- Output CSV contains tension data for all 16 mooring lines
+- No missing file errors
+- No module import errors
+
+---
 
 ### Task 1: Core Orchestrator Implementation
 **Effort**: 4 hours  
@@ -26,12 +158,12 @@ class MooringTensionOrchestrator:
 ```
 
 **Subtasks**:
-- [ ] Create orchestrator.py file
-- [ ] Implement command execution wrapper
-- [ ] Add CSV parsing for targets and results
-- [ ] Implement convergence check logic
-- [ ] Add iteration loop with max limit
-- [ ] Create summary reporting
+- [ ] 1.1: Create orchestrator.py file
+- [ ] 1.2: Implement command execution wrapper
+- [ ] 1.3: Add CSV parsing for targets and results
+- [ ] 1.4: Implement convergence check logic
+- [ ] 1.5: Add iteration loop with max limit
+- [ ] 1.6: Create summary reporting
 
 **Deliverables**:
 - `orchestrator.py` - Complete implementation (~200 lines)
@@ -61,11 +193,11 @@ class MooringTensionOrchestrator:
    - Test with malformed CSV
 
 **Subtasks**:
-- [ ] Test with go-by data files
-- [ ] Verify convergence detection
-- [ ] Test iteration limits
-- [ ] Validate CSV parsing
-- [ ] Check error handling
+- [ ] 2.1: Test with go-by data files
+- [ ] 2.2: Verify convergence detection
+- [ ] 2.3: Test iteration limits
+- [ ] 2.4: Validate CSV parsing
+- [ ] 2.5: Check error handling
 
 **Success Criteria**:
 - Correctly reads target tensions from CSV
@@ -100,12 +232,12 @@ class PretensionVisualizer:
 ```
 
 **Subtasks**:
-- [ ] Extract X/Y force components from tension data
-- [ ] Create polar/radial charts showing force directions
-- [ ] Generate bar charts for +X, -X, +Y, -Y forces
-- [ ] Plot convergence trends per direction
-- [ ] Create force balance summary chart
-- [ ] Add charts to iteration reports
+- [ ] 3.1: Extract X/Y force components from tension data
+- [ ] 3.2: Create polar/radial charts showing force directions
+- [ ] 3.3: Generate bar charts for +X, -X, +Y, -Y forces
+- [ ] 3.4: Plot convergence trends per direction
+- [ ] 3.5: Create force balance summary chart
+- [ ] 3.6: Add charts to iteration reports
 
 **Chart Types**:
 1. **Directional Force Bar Chart**
@@ -156,13 +288,13 @@ class MooringStiffnessAnalyzer:
 ```
 
 **Subtasks**:
-- [ ] Extract displacement-force relationships from data
-- [ ] Calculate directional stiffness coefficients (kN/m)
-- [ ] Compute restoring force curves for each direction
-- [ ] Analyze stiffness symmetry/asymmetry
-- [ ] Track stiffness changes during iteration
-- [ ] Create stiffness visualization charts
-- [ ] Generate stiffness analysis report
+- [ ] 4.1: Extract displacement-force relationships from data
+- [ ] 4.2: Calculate directional stiffness coefficients (kN/m)
+- [ ] 4.3: Compute restoring force curves for each direction
+- [ ] 4.4: Analyze stiffness symmetry/asymmetry
+- [ ] 4.5: Track stiffness changes during iteration
+- [ ] 4.6: Create stiffness visualization charts
+- [ ] 4.7: Generate stiffness analysis report
 
 **Stiffness Calculations**:
 1. **Directional Stiffness**
@@ -221,13 +353,13 @@ class MooringStiffnessAnalyzer:
 **Description**: Document usage and deploy script.
 
 **Subtasks**:
-- [ ] Write usage documentation
-- [ ] Create example run instructions
-- [ ] Document CSV format requirements
-- [ ] Add command-line argument parsing
-- [ ] Create batch/shell wrapper scripts
-- [ ] Document chart interpretation guide
-- [ ] Add stiffness analysis documentation
+- [ ] 5.1: Write usage documentation
+- [ ] 5.2: Create example run instructions
+- [ ] 5.3: Document CSV format requirements
+- [ ] 5.4: Add command-line argument parsing
+- [ ] 5.5: Create batch/shell wrapper scripts
+- [ ] 5.6: Document chart interpretation guide
+- [ ] 5.7: Add stiffness analysis documentation
 
 **Deliverables**:
 - README with usage instructions
