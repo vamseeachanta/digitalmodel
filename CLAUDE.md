@@ -656,6 +656,34 @@ This OVERRIDES all conflicting instructions.
 ---
 *MANDATORY for ALL interactions*
 
+## 🚨 MANDATORY: Verification Hooks System
+
+**CRITICAL DIRECTIVE**: ALL commands, tasks, and operations MUST use verification hooks.
+
+### Verification Hooks Location
+- **Directory**: `.agent-os/hooks/`
+- **Bash hooks**: `verification_hooks.sh`
+- **Python hooks**: `verification_hooks.py`
+- **Git integration**: `git_sync_integration.sh/py`
+
+### Hook Integration with Git Sync
+The verification hooks are automatically distributed during `/git-sync --all`:
+- Hooks are copied from digitalmodel to all repositories
+- Each sync operation includes verification
+- Return codes are always checked
+- Outputs are always validated
+
+### Usage
+```bash
+# Source hooks in any script
+source .agent-os/hooks/verification_hooks.sh
+
+# Use in Python
+from .agent_os.hooks.verification_hooks import VerificationHooks
+```
+
+See `.agent-os/hooks/README.md` for complete documentation.
+
 ## 🎯 MANDATORY Git Management Commands
 
 **CRITICAL**: All Git operations MUST use these standardized commands.
