@@ -55,13 +55,13 @@ class GitSyncWithHooks:
         pull_cmd = f"cd {repo_path} && git pull origin {branch}"
         if not self.hooks.verify_return_code(pull_cmd, f"Pull from origin/{branch}"):
             # Try to handle merge conflicts
-            print(f"{Colors.YELLOW}[⚠ WARN]{Colors.NC} Pull failed, checking for conflicts")
+            print(f"{Colors.YELLOW}[WARN WARN]{Colors.NC} Pull failed, checking for conflicts")
             status_result = subprocess.run(
                 f"cd {repo_path} && git status",
                 shell=True, capture_output=True, text=True
             )
             if "conflict" in status_result.stdout.lower():
-                print(f"{Colors.RED}[✗ CONFLICT]{Colors.NC} Merge conflicts detected")
+                print(f"{Colors.RED}[FAIL CONFLICT]{Colors.NC} Merge conflicts detected")
                 return False
         
         # Verify hooks are present
@@ -72,9 +72,9 @@ class GitSyncWithHooks:
         ])
         
         if hooks_present:
-            print(f"{Colors.GREEN}[✓ HOOKS]{Colors.NC} Verification hooks present")
+            print(f"{Colors.GREEN}[OK HOOKS]{Colors.NC} Verification hooks present")
         else:
-            print(f"{Colors.YELLOW}[⚠ HOOKS]{Colors.NC} Verification hooks missing")
+            print(f"{Colors.YELLOW}[WARN HOOKS]{Colors.NC} Verification hooks missing")
         
         # Check for uncommitted changes
         print(f"{Colors.BLUE}[PHASE 6]{Colors.NC} Post-sync status")
@@ -84,12 +84,12 @@ class GitSyncWithHooks:
         )
         
         if status_result.stdout.strip():
-            print(f"{Colors.YELLOW}[⚠ WARN]{Colors.NC} Uncommitted changes present")
+            print(f"{Colors.YELLOW}[WARN WARN]{Colors.NC} Uncommitted changes present")
             print(status_result.stdout)
         else:
-            print(f"{Colors.GREEN}[✓ CLEAN]{Colors.NC} Working tree clean")
+            print(f"{Colors.GREEN}[OK CLEAN]{Colors.NC} Working tree clean")
         
-        print(f"{Colors.GREEN}[✓ COMPLETE]{Colors.NC} Git sync complete")
+        print(f"{Colors.GREEN}[OK COMPLETE]{Colors.NC} Git sync complete")
         return True
     
     def copy_hooks_to_repo(self, target_repo: Path) -> bool:
@@ -97,7 +97,7 @@ class GitSyncWithHooks:
         print(f"{Colors.BLUE}[SYNC]{Colors.NC} Syncing hooks to: {target_repo}")
         
         if not target_repo.exists():
-            print(f"{Colors.RED}[✗ SKIP]{Colors.NC} Repository not found: {target_repo}")
+            print(f"{Colors.RED}[FAIL SKIP]{Colors.NC} Repository not found: {target_repo}")
             return False
         
         # Create hooks directory if it doesn't exist
@@ -126,11 +126,11 @@ class GitSyncWithHooks:
             if source.exists():
                 shutil.copy2(source, target)
                 copied += 1
-                print(f"  {Colors.GREEN}✓{Colors.NC} {hook_file}")
+                print(f"  {Colors.GREEN}OK{Colors.NC} {hook_file}")
             else:
-                print(f"  {Colors.YELLOW}⚠{Colors.NC} {hook_file} not found in source")
+                print(f"  {Colors.YELLOW}WARN{Colors.NC} {hook_file} not found in source")
         
-        print(f"{Colors.GREEN}[✓ COPIED]{Colors.NC} {copied} hook files")
+        print(f"{Colors.GREEN}[OK COPIED]{Colors.NC} {copied} hook files")
         
         # Add to git if needed
         status_result = subprocess.run(
@@ -145,12 +145,12 @@ class GitSyncWithHooks:
                 shell=True, capture_output=True
             )
             if add_result.returncode == 0:
-                print(f"{Colors.GREEN}[✓ ADDED]{Colors.NC} Hooks added to git")
+                print(f"{Colors.GREEN}[OK ADDED]{Colors.NC} Hooks added to git")
             else:
-                print(f"{Colors.RED}[✗ ERROR]{Colors.NC} Failed to add hooks to git")
+                print(f"{Colors.RED}[FAIL ERROR]{Colors.NC} Failed to add hooks to git")
                 return False
         else:
-            print(f"{Colors.GREEN}[✓ CURRENT]{Colors.NC} Hooks already up to date")
+            print(f"{Colors.GREEN}[OK CURRENT]{Colors.NC} Hooks already up to date")
         
         return True
     
@@ -174,7 +174,7 @@ class GitSyncWithHooks:
         
         # Verify source hooks exist
         if not self.source_hooks_dir.exists():
-            print(f"{Colors.RED}[✗ ERROR]{Colors.NC} Source hooks not found: {self.source_hooks_dir}")
+            print(f"{Colors.RED}[FAIL ERROR]{Colors.NC} Source hooks not found: {self.source_hooks_dir}")
             return results
         
         # Process each repository
@@ -191,11 +191,11 @@ class GitSyncWithHooks:
                 if self.sync_repository(repo):
                     results[repo_name] = True
                     success_count += 1
-                    print(f"{Colors.GREEN}[✓ SUCCESS]{Colors.NC} {repo_name} synced")
+                    print(f"{Colors.GREEN}[OK SUCCESS]{Colors.NC} {repo_name} synced")
                 else:
                     results[repo_name] = False
                     fail_count += 1
-                    print(f"{Colors.RED}[✗ FAIL]{Colors.NC} {repo_name} sync failed")
+                    print(f"{Colors.RED}[FAIL FAIL]{Colors.NC} {repo_name} sync failed")
                 continue
             
             # First sync the repository
@@ -204,15 +204,15 @@ class GitSyncWithHooks:
                 if self.copy_hooks_to_repo(repo):
                     results[repo_name] = True
                     success_count += 1
-                    print(f"{Colors.GREEN}[✓ SUCCESS]{Colors.NC} {repo_name} synced with hooks")
+                    print(f"{Colors.GREEN}[OK SUCCESS]{Colors.NC} {repo_name} synced with hooks")
                 else:
                     results[repo_name] = False
                     fail_count += 1
-                    print(f"{Colors.RED}[✗ FAIL]{Colors.NC} {repo_name} hook sync failed")
+                    print(f"{Colors.RED}[FAIL FAIL]{Colors.NC} {repo_name} hook sync failed")
             else:
                 results[repo_name] = False
                 fail_count += 1
-                print(f"{Colors.RED}[✗ FAIL]{Colors.NC} {repo_name} git sync failed")
+                print(f"{Colors.RED}[FAIL FAIL]{Colors.NC} {repo_name} git sync failed")
         
         # Summary
         print(f"\n{Colors.YELLOW}{'='*60}{Colors.NC}")
@@ -224,11 +224,11 @@ class GitSyncWithHooks:
         
         if fail_count == 0:
             print(f"{Colors.GREEN}╔{'═'*35}╗{Colors.NC}")
-            print(f"{Colors.GREEN}║     ALL REPOS SYNCED ✓           ║{Colors.NC}")
+            print(f"{Colors.GREEN}║     ALL REPOS SYNCED OK           ║{Colors.NC}")
             print(f"{Colors.GREEN}╚{'═'*35}╝{Colors.NC}")
         else:
             print(f"{Colors.RED}╔{'═'*35}╗{Colors.NC}")
-            print(f"{Colors.RED}║     SOME REPOS FAILED ✗          ║{Colors.NC}")
+            print(f"{Colors.RED}║     SOME REPOS FAILED FAIL          ║{Colors.NC}")
             print(f"{Colors.RED}╚{'═'*35}╝{Colors.NC}")
         
         # Save results to file
@@ -278,10 +278,10 @@ class GitSyncWithHooks:
                 all_present = all(results.values())
                 
                 if all_present:
-                    print(f"{Colors.GREEN}[✓]{Colors.NC} {repo_name}: All hooks present")
+                    print(f"{Colors.GREEN}[OK]{Colors.NC} {repo_name}: All hooks present")
                 else:
                     missing = [k for k, v in results.items() if not v]
-                    print(f"{Colors.YELLOW}[⚠]{Colors.NC} {repo_name}: Missing {missing}")
+                    print(f"{Colors.YELLOW}[WARN]{Colors.NC} {repo_name}: Missing {missing}")
                 
                 verification_results[repo_name] = results
         
