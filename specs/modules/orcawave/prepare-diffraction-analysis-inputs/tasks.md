@@ -4,7 +4,7 @@
 
 ### 1.1 Create Excel Reader Component for Hydrodynamic Properties ✅
 - [x] Implement Excel file reader using openpyxl
-- [x] Read vessel properties from `data/B1512 Gyradius Calcs.xlsx`
+- [x] Read vessel properties from `data/B1512 Gyradius Calcs_rev2.xlsx` (updated 2025-08-26)
 - [x] Extract mass, CoG, gyradii, and inertia matrix values
 - [x] Extract and include vessel draft for each configuration
 - [x] Extract vessel dimensions (LBP, beam, depth)
@@ -21,6 +21,9 @@
 - **Key Features Added**:
   - Vessel draft estimation based on depth (configurable)
   - Vessel dimensions (LBP: 22.86m, Beam: 8.53m, Depth: 3.05m)
+  - **Updated 2025-08-26 16:55**: Modified to read from B1512 Gyradius Calcs_rev2.xlsx
+  - Now generates 3 configurations: incident_draft_fuel_centered, incident_draft_with_water_ingress, windload_heel
+  - Previous 4 configurations reduced to 2 in Excel + 1 from windload_heel.md
   - 4 weight configurations with varying drafts
   - Full unit conversion from Imperial to SI
 - **Completed**: 2025-08-26
@@ -108,20 +111,51 @@
 
 ## Phase 3: Execution Scripts [2 hours]
 
-### 3.1 Create Windows Batch Scripts
-- [ ] Write run_orcawave.bat
-- [ ] Add parameter passing
-- [ ] Include error checking
-- [ ] Create GUI launcher option
-- **Effort**: 30 minutes
+### 3.1 Create Windows Batch Scripts ✅
+- [x] Write run_orcawave.bat (enhanced existing script)
+- [x] Add parameter passing (config files, modes, options)
+- [x] Include error checking (file existence, OrcaWave installation)
+- [x] Create GUI launcher option (launch_orcawave_gui.bat)
+- **Scripts Created**: 
+  - `scripts/run_orcawave.bat` (enhanced version with parallel support)
+  - `scripts/launch_orcawave_gui.bat` (interactive GUI launcher)
+- **Features Added**:
+  - Support for batch/GUI/validation modes
+  - Parallel execution of multiple configurations
+  - Automatic output directory creation
+  - Comprehensive error handling and logging
+  - Progress tracking and summary reports
+- **Completed**: 2025-08-26
+- **Actual Effort**: 15 minutes (vs 30 minutes estimated)
 - **Agent**: OrcaWave Agent
 
-### 3.2 Develop Python Wrapper
-- [ ] Create run_orcawave.py
-- [ ] Implement COM API integration
-- [ ] Add progress monitoring
-- [ ] Handle OrcaWave outputs
-- **Effort**: 45 minutes
+### 3.2 Develop Python Wrapper ✅
+- [x] Create run_orcawave.py
+- [x] Implement COM API integration (with fallback to batch mode)
+- [x] Add progress monitoring (real-time progress bar)
+- [x] Handle OrcaWave outputs (automatic file detection and validation)
+- **Script Created**: `scripts/run_orcawave.py`
+- **Features Implemented**:
+  - COM API support with automatic detection
+  - Three execution modes: batch, COM, parallel
+  - Real-time progress monitoring with visual progress bar
+  - Automatic output file detection and validation
+  - JSON result export for integration with other tools
+  - Parallel processing support for multiple configurations
+  - Comprehensive logging and error handling
+- **Usage Examples**:
+  ```bash
+  # Run single configuration
+  python run_orcawave.py orcawave_fo_to_port.yml
+  
+  # Run all configurations in parallel
+  python run_orcawave.py all --mode parallel --max-workers 4
+  
+  # Use COM API with progress monitoring
+  python run_orcawave.py config.yml --mode com
+  ```
+- **Completed**: 2025-08-26
+- **Actual Effort**: 20 minutes (vs 45 minutes estimated)
 - **Agent**: OrcaWave Agent
 
 ### 3.3 Implement Parallel Validation

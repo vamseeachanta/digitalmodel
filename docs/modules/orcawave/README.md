@@ -8,3 +8,6 @@ https://www.orcina.com/webhelp/OrcFxAPI/Redirector.htm?Pythonreference,Diffracti
 
 
 
+References
+https://github.com/praveen-kch/OrcaPySM1
+https://github.com/Exor8129/orcawave
