@@ -71,20 +71,20 @@ def process_single_file(args: Tuple[str, int, dict]) -> Dict:
             result['range_data'] = None
             
         # Process summary
-        if cfg["orcaflex"]["postprocess"]["summary"]["flag"]:
+        if cfg["orcaflex"]["postprocess"].get("summary", {}).get("flag", False):
             result['summary'] = opp_summary.get_summary_for_file(
                 cfg, model_dict, file_name
             )
             
         # Process linked statistics
-        if cfg["orcaflex"]["postprocess"]["linked_statistics"]["flag"]:
+        if cfg["orcaflex"]["postprocess"].get("linked_statistics", {}).get("flag", False):
             result['linked_statistics'] = opp_ls.get_linked_statistics(
                 cfg, model, file_name
             )
             
         # Process time series
         if cfg["orcaflex"]["postprocess"]["time_series"]["flag"]:
-            if "time_series_settings" in cfg and cfg["time_series_settings"]["data"]:
+            if "time_series_settings" in cfg and cfg["time_series_settings"].get("data"):
                 opp_ts.get_time_series_data(cfg, model_dict, file_name)
                 
         return result
@@ -155,19 +155,19 @@ class OrcaFlexPostProcess:
         cfg = self.get_cfg_with_master_data(cfg)
 
         post_process_data_flag = False
-        if cfg["orcaflex"]["postprocess"]["summary"]["flag"]:
+        if cfg["orcaflex"]["postprocess"].get("summary", {}).get("flag", False):
             post_process_data_flag = True
-        if cfg["orcaflex"]["postprocess"]["linked_statistics"]["flag"]:
+        if cfg["orcaflex"]["postprocess"].get("linked_statistics", {}).get("flag", False):
             post_process_data_flag = True
-        if cfg["orcaflex"]["postprocess"]["RangeGraph"]["flag"]:
+        if cfg["orcaflex"]["postprocess"].get("RangeGraph", {}).get("flag", False):
             post_process_data_flag = True
-        if cfg["orcaflex"]["postprocess"]["time_series"]["flag"]:
+        if cfg["orcaflex"]["postprocess"].get("time_series", {}).get("flag", False):
             post_process_data_flag = True
-        if cfg["orcaflex"]["postprocess"]["cummulative_histograms"]["flag"]:
+        if cfg["orcaflex"]["postprocess"].get("cummulative_histograms", {}).get("flag", False):
             post_process_data_flag = True
 
         post_process_visualization_flag = False
-        if cfg["orcaflex"]["postprocess"]["visualization"]["flag"]:
+        if cfg["orcaflex"]["postprocess"].get("visualization", {}).get("flag", False):
             post_process_visualization_flag = True
 
         app_basename = cfg["meta"]["basename"]

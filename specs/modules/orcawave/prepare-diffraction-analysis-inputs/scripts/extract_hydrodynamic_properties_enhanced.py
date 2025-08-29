@@ -483,7 +483,7 @@ def main():
     # Set up paths
     script_dir = Path(__file__).parent
     data_dir = script_dir.parent / 'data'
-    excel_file = data_dir / 'B1512 Gyradius Calcs.xlsx'
+    excel_file = data_dir / 'B1512 Gyradius Calcs_rev2.xlsx'
     
     # Output directory
     output_dir = script_dir.parent / 'outputs'
@@ -520,7 +520,7 @@ def main():
     # Create detailed output
     detailed_output = {
         'hydrodynamic_properties': {
-            'source': 'B1512 Gyradius Calcs.xlsx + windload_heel.md',
+            'source': 'B1512 Gyradius Calcs_rev2.xlsx + windload_heel.md',
             'project': 'B1512 Nork & Mendez - Sea Cypress Station Keeping Analysis',
             'vessel_dimensions': vessel_dims,
             'vessel_configurations': vessels

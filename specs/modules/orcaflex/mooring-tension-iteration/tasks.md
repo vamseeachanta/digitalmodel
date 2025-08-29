@@ -1,8 +1,8 @@
 # Implementation Tasks: Mooring Tension Iteration Orchestrator
 
-> **Total Effort**: 8 hours (1 day)  
-> **Scope**: Simple orchestration of existing batch commands  
-> **No Engineering Calculations**: Just execution and convergence tracking
+> **Total Effort**: 15 hours (~2 days)  
+> **Scope**: Orchestration of existing batch commands with comprehensive analysis  
+> **Analysis Focus**: Execution, convergence tracking, force visualization, and stiffness analysis
 
 ## Single Phase Implementation
 
@@ -75,10 +75,148 @@ class MooringTensionOrchestrator:
 
 ---
 
-### Task 3: Documentation and Deployment
+### Task 3: Pretension Assessment Charts
+**Effort**: 3 hours  
+**Priority**: High  
+**Dependencies**: Task 1
+
+**Description**: Create visualization charts to assess pretension forces in X and Y directions.
+
+**Chart Requirements**:
+- Display force components for each mooring line
+- Show -X and +X force directions separately
+- Show -Y and +Y force directions separately  
+- Track force evolution across iterations
+- Identify force imbalance and convergence patterns
+
+**Implementation Components**:
+```python
+class PretensionVisualizer:
+    - plot_xy_forces() # Plot X/Y force components
+    - plot_directional_forces() # Show +/- directions
+    - plot_convergence_history() # Evolution over iterations
+    - create_force_balance_chart() # Net forces assessment
+    - generate_report_charts() # All charts for report
+```
+
+**Subtasks**:
+- [ ] Extract X/Y force components from tension data
+- [ ] Create polar/radial charts showing force directions
+- [ ] Generate bar charts for +X, -X, +Y, -Y forces
+- [ ] Plot convergence trends per direction
+- [ ] Create force balance summary chart
+- [ ] Add charts to iteration reports
+
+**Chart Types**:
+1. **Directional Force Bar Chart**
+   - Grouped bars for each line showing force magnitude
+   - Separate bars for +X, -X, +Y, -Y components
+   - Color-coded by convergence status
+
+2. **Force Balance Polar Plot**
+   - Radial plot showing force vectors
+   - Visual representation of system balance
+   - Highlights imbalanced directions
+
+3. **Iteration Convergence Plot**
+   - Time series of forces per direction
+   - Shows convergence trajectory
+   - Identifies problematic directions
+
+**Deliverables**:
+- Force assessment charts (PNG/SVG)
+- Interactive HTML report with plotly
+- Force balance analysis summary
+
+---
+
+### Task 4: Mooring Stiffness Analysis
+**Effort**: 4 hours  
+**Priority**: High  
+**Dependencies**: Task 1
+
+**Description**: Perform mooring stiffness analysis in X and Y directions to understand restoring forces.
+
+**Analysis Requirements**:
+- Calculate stiffness coefficients for -X, +X, -Y, +Y directions
+- Determine restoring force characteristics per direction
+- Analyze stiffness evolution across iterations
+- Identify stiffness asymmetries affecting convergence
+- Correlate stiffness with convergence behavior
+
+**Implementation Components**:
+```python
+class MooringStiffnessAnalyzer:
+    - calculate_directional_stiffness() # Compute K_xx, K_yy, K_xy
+    - analyze_restoring_forces() # F = -K * displacement
+    - compute_stiffness_matrix() # Full 2x2 stiffness matrix
+    - track_stiffness_evolution() # Changes over iterations
+    - identify_stiffness_imbalance() # Asymmetry detection
+    - generate_stiffness_report() # Analysis summary
+```
+
+**Subtasks**:
+- [ ] Extract displacement-force relationships from data
+- [ ] Calculate directional stiffness coefficients (kN/m)
+- [ ] Compute restoring force curves for each direction
+- [ ] Analyze stiffness symmetry/asymmetry
+- [ ] Track stiffness changes during iteration
+- [ ] Create stiffness visualization charts
+- [ ] Generate stiffness analysis report
+
+**Stiffness Calculations**:
+1. **Directional Stiffness**
+   - K_+x: Stiffness for positive X displacement
+   - K_-x: Stiffness for negative X displacement
+   - K_+y: Stiffness for positive Y displacement
+   - K_-y: Stiffness for negative Y displacement
+
+2. **Restoring Force Analysis**
+   - Plot F vs displacement for each direction
+   - Identify linear vs nonlinear regions
+   - Determine effective stiffness ranges
+
+3. **Stiffness Matrix**
+   ```
+   [K] = | K_xx  K_xy |
+         | K_yx  K_yy |
+   ```
+   - Calculate coupling terms
+   - Assess system stability
+
+**Chart Types**:
+1. **Stiffness Bar Chart**
+   - Compare K_+x, K_-x, K_+y, K_-y values
+   - Show stiffness evolution per iteration
+   - Highlight asymmetries
+
+2. **Restoring Force Curves**
+   - F vs displacement plots for each direction
+   - Linear fit vs actual curves
+   - Operating range indicators
+
+3. **Stiffness Matrix Heatmap**
+   - Visual representation of 2x2 stiffness matrix
+   - Evolution across iterations
+   - Coupling term visualization
+
+4. **Stiffness Convergence Plot**
+   - Time series of stiffness values
+   - Convergence indicators
+   - Stability boundaries
+
+**Deliverables**:
+- Stiffness analysis charts (PNG/SVG)
+- Restoring force curves
+- Stiffness matrix visualization
+- Analysis report with insights
+
+---
+
+### Task 5: Documentation and Deployment
 **Effort**: 2 hours  
 **Priority**: Medium  
-**Dependencies**: Task 2
+**Dependencies**: Tasks 2, 3, 4
 
 **Description**: Document usage and deploy script.
 
@@ -88,11 +226,15 @@ class MooringTensionOrchestrator:
 - [ ] Document CSV format requirements
 - [ ] Add command-line argument parsing
 - [ ] Create batch/shell wrapper scripts
+- [ ] Document chart interpretation guide
+- [ ] Add stiffness analysis documentation
 
 **Deliverables**:
 - README with usage instructions
 - Example command lines
 - Wrapper scripts for easy execution
+- Chart interpretation guide
+- Stiffness analysis guide
 
 ---
 
@@ -101,6 +243,8 @@ class MooringTensionOrchestrator:
 ```
 mooring-tension-iteration/
 ├── orchestrator.py              # Main script (NEW)
+├── pretension_visualizer.py     # Visualization module (NEW)
+├── stiffness_analyzer.py        # Stiffness analysis module (NEW)
 ├── README.md                     # Updated documentation
 ├── go-by/                       # Existing files
 │   ├── dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml
@@ -108,8 +252,22 @@ mooring-tension-iteration/
 │   ├── fsts_l015_125km3_pb_target_mooring_pretension.csv
 │   └── results/
 │       └── *_pretension_analysis.csv
-└── logs/                        # Execution logs (NEW)
-    └── iteration_*.log
+├── logs/                        # Execution logs (NEW)
+│   └── iteration_*.log
+└── charts/                      # Visualization outputs (NEW)
+    ├── force_directions/        # Directional force charts
+    │   ├── iteration_*_xy_forces.png
+    │   └── iteration_*_polar.png
+    ├── stiffness/               # Stiffness analysis charts
+    │   ├── directional_stiffness.png
+    │   ├── restoring_forces.png
+    │   ├── stiffness_matrix.png
+    │   └── stiffness_evolution.png
+    ├── convergence/             # Convergence trend charts
+    │   └── force_convergence_history.png
+    └── reports/                 # Interactive HTML reports
+        ├── pretension_analysis.html
+        └── stiffness_analysis.html
 ```
 
 ## Commands to Execute Per Iteration
@@ -227,13 +385,19 @@ Convergence Trend:
 - [ ] Detects convergence based on tolerances
 - [ ] Stops at max iterations or convergence
 - [ ] Generates clear status reports
-- [ ] Documentation complete
+- [ ] Pretension force charts created (-X, +X, -Y, +Y)
+- [ ] Force balance visualization implemented
+- [ ] Stiffness analysis completed for all directions
+- [ ] Restoring force curves generated
+- [ ] Stiffness matrix visualization created
+- [ ] All charts integrated into reports
+- [ ] Documentation complete with chart interpretation guides
 - [ ] Ready for production use
 
 ## Notes
 
-- **NO engineering calculations** - just orchestration
-- **NO model modifications** - only runs existing commands
-- **Simple tolerance check** - percentage difference only
-- **Fixed commands** - no dynamic command generation
-- Total implementation: ~200 lines of Python code
+- **Analysis focus** - Orchestration with comprehensive force and stiffness analysis
+- **NO model modifications** - Only runs existing commands and analyzes outputs
+- **Visualization emphasis** - Charts for force directions and stiffness assessment
+- **Fixed commands** - No dynamic command generation
+- Total implementation: ~500 lines of Python code (orchestrator + visualizers + analyzers)
