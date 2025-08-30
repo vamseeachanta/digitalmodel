@@ -165,8 +165,8 @@ RangeGraph_settings:
   add_effective_tension_to_cfg: false
 file_management:
   flag: true
-  input_directory: ~
-  output_directory: ~
+  input_directory: ../.sim
+  output_directory: ../output/.csv
   update_unfinished:
     flag: false
   filename:
@@ -178,7 +178,8 @@ file_management:
       not_contains:
       - includefile
   input_files:
-    sim: []
+    sim:
+    - ..\.sim\fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof.sim
 parallel_processing:
   enabled: true
   max_workers: 30
@@ -674,17 +675,17 @@ summary_settings:
       Label: lngc_R3
 Analysis:
   basename: orcaflex_post_process
-  analysis_root_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by
+  analysis_root_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts
   file_name: dm_ofx_post_fsts_lngc
   file_name_for_overwrite: dm_ofx_post_fsts_lngc
-  log_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\logs
-  start_time: 2025-08-29 16:15:04.819806
+  log_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts\logs
+  start_time: 2025-08-30 17:22:27.488127
   cfg_array_file_names: ~
   DefaultInputFile: ~
   CustomInputFile: dm_ofx_post_fsts_lngc.yml
-  result_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\results
-  result_data_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\results\Data
-  result_plot_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\results\Plot
-  fe_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\results
-  file_management_input_directory: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by
-  file_management_output_directory: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\results
+  result_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts\../output/.csv
+  result_data_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts\../output/.csv\Data
+  result_plot_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts\../output/.csv\Plot
+  fe_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts\results
+  file_management_input_directory: ..\.sim
+  file_management_output_directory: ..\output\.csv

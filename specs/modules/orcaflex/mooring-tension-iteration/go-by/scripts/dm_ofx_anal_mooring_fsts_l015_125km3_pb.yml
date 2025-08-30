@@ -46,8 +46,8 @@ orcaflex_analysis:
 
 file_management:
   flag: True
-  input_directory: NULL
-  output_directory: NULL
+  input_directory: ../.sim
+  output_directory: ../output/.csv
 
   filename:
     extension: [yml, sim]

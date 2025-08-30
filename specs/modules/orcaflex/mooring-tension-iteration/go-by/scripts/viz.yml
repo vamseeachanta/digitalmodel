@@ -7,6 +7,10 @@ default:
     overwrite:
       output: True
 
+parallel_processing:
+  enabled: True
+  max_workers: auto  # or specify a number like 4
+
 orcaflex:
   analysis:
     static: False
@@ -18,9 +22,9 @@ orcaflex:
 
   postprocess:
     visualization:
-      flag: False
-    summary:
       flag: True
+    summary:
+      flag: False
       statistics:
         Minimum: False
         Maximum: False
@@ -43,6 +47,10 @@ orcaflex:
 summary_settings_master:
   groups:
 
+    - Label: inputs
+      Columns:
+        - Command: GetData
+
     - Label: lngc_moorings_static_eff_tension_max
       Columns:
         - Command: TimeHistory
@@ -50,6 +58,14 @@ summary_settings_master:
           objectExtra:
             - End B
           Variable: Effective Tension
+
+    - Label: lngc_moorings_dynamic_length
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra:
+            - End B
+          Variable: Arc Length
 
     - Label: lngc_fenders_static
       Columns:
@@ -67,7 +83,111 @@ summary_settings_master:
 summary_settings:
   groups:
 
+    - Label: inputs
+      Columns:
+        - Command: GetData
+          ObjectName: FST1
+          Variable: [InitialHeading, -1]
+          Label: FST1_Heading
+        - Command: GetData
+          ObjectName: FST2
+          Variable: [InitialHeading, -1]
+          Label: FST2_Heading
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WindDirection, -1]
+          Label: WindDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WindSpeed, -1]
+          Label: WindSpeed
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveDirection, -1]
+          Label: WaveDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveHs, -1]
+          Label: Hs
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveTz, -1]
+          Label: WaveTz
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveGamma, -1]
+          Label: WaveGamma
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [RefCurrentSpeed, 0]
+          Label: RefCurrentSpeed
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [RefCurrentDirection, 0]
+          Label: RefCurrentDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [CurrentFactor, 0]
+          Label: CurrentFactor[0]
+
     - Label: lngc_moorings_static_eff_tension_max
+      Columns:
+        - ObjectName: Line01
+          Statistic_Type: Max
+          Label: Line01
+        - ObjectName: Line02
+          Statistic_Type: Max
+          Label: Line02
+        - ObjectName: Line03
+          Statistic_Type: Max
+          Label: Line03
+        - ObjectName: Line04
+          Statistic_Type: Max
+          Label: Line04
+        - ObjectName: Line05
+          Statistic_Type: Max
+          Label: Line05
+        - ObjectName: Line06
+          Statistic_Type: Max
+          Label: Line06
+        - ObjectName: Line07
+          Statistic_Type: Max
+          Label: Line07
+        - ObjectName: Line08
+          Statistic_Type: Max
+          Label: Line08
+        - ObjectName: Line09
+          Statistic_Type: Max
+          Label: Line09
+        - ObjectName: Line10
+          Statistic_Type: Max
+          Label: Line10
+        - ObjectName: Line11
+          Statistic_Type: Max
+          Label: Line11
+        - ObjectName: Line12
+          Statistic_Type: Max
+          Label: Line12
+        - ObjectName: Line13
+          Statistic_Type: Max
+          Label: Line13
+        - ObjectName: Line14
+          Statistic_Type: Max
+          Label: Line14
+        - ObjectName: Line15
+          Statistic_Type: Max
+          Label: Line15
+        - ObjectName: Line16
+          Statistic_Type: Max
+          Label: Line16
+        - ObjectName: Line17
+          Statistic_Type: Max
+          Label: Line17
+        - ObjectName: Line18
+          Statistic_Type: Max
+          Label: Line18
+
+    - Label: lngc_moorings_dynamic_length
       Columns:
         - ObjectName: Line01
           Statistic_Type: Max
@@ -138,9 +258,6 @@ summary_settings:
         - ObjectName: fenderFST2L4face
           Statistic_Type: Max
           Label: fenderFST2L4_contact_force_max
-        - ObjectName: fenderFST2L5face
-          Statistic_Type: Max
-          Label: fenderFST2L5_contact_force_max
         - ObjectName: fenderFST1L1face
           Statistic_Type: Max
           Label: fenderFST1L1_contact_force_max
@@ -221,7 +338,7 @@ visualization_settings:
       Width: 800
       SeaSurfacePenStyle: Solid
     plan:
-      # RelativeToObject: Vessel1
+      # RelativeToObject: Global
       ViewCentre: [0, 0, 0]
       ViewSize: 400
       DrawViewAxes: False
