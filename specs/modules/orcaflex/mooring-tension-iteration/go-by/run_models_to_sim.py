@@ -2,7 +2,7 @@
 """
 Simple OrcaFlex Model Runner - Generate .sim Files
 ==================================================
-This script runs OrcaFlex models (.yml files) and saves them as .sim files.
+This script runs OrcaFlex models (.yml and .dat files) and saves them as .sim files.
 No tension iteration or complex processing - just load, run static, and save.
 """
 
@@ -40,7 +40,7 @@ def run_single_model(model_file, output_dir=None, mock_mode=False):
     Run a single OrcaFlex model and save as .sim file.
     
     Args:
-        model_file: Path to the .yml model file
+        model_file: Path to the .yml or .dat model file
         output_dir: Directory to save .sim files (if None, saves in same directory as model)
         mock_mode: If True, simulate without OrcaFlex license
     
@@ -195,25 +195,35 @@ def run_batch(model_list, output_dir=None, mock_mode=False, max_workers=30):
     }
 
 
-def find_model_files(directory="."):
+def find_model_files(directory=".", include_dat=False, dat_only=False, pattern="fsts_*"):
     """
     Find all OrcaFlex model files in directory.
     
     Args:
         directory: Directory to search
+        include_dat: If True, also include .dat files (default: False for backwards compatibility)
+        dat_only: If True, only include .dat files, no .yml files
+        pattern: File pattern to match (default: "fsts_*")
     
     Returns:
         list: List of model file paths
     """
     model_files = []
+    directory = Path(directory)
     
-    # Find all .yml files that look like OrcaFlex models
-    for yml_file in Path(directory).glob("fsts_*.yml"):
-        # Skip includefiles and output files
-        if "includefile" not in str(yml_file).lower() and "_output" not in str(yml_file):
-            # Check if corresponding .sim already exists
-            if yml_file.suffix == ".yml":
+    # Find .yml files unless dat_only is True
+    if not dat_only:
+        for yml_file in directory.glob(f"{pattern}.yml"):
+            # Skip includefiles and output files
+            if "includefile" not in str(yml_file).lower() and "_output" not in str(yml_file):
                 model_files.append(yml_file)
+    
+    # Find .dat files if include_dat or dat_only is True
+    if include_dat or dat_only:
+        for dat_file in directory.glob(f"{pattern}.dat"):
+            # Skip includefiles and temporary files
+            if "includefile" not in str(dat_file).lower() and "_temp" not in str(dat_file).lower():
+                model_files.append(dat_file)
     
     return sorted(model_files)
 
@@ -221,10 +231,38 @@ def find_model_files(directory="."):
 def main():
     """Main function to run models."""
     import argparse
+    import sys
+    
+    # Support both keyword arguments and traditional flags
+    # Convert keyword arguments to flags for argparse
+    converted_args = []
+    for arg in sys.argv[1:]:
+        if '=' in arg and not arg.startswith('-'):
+            # Convert keyword argument to flag format
+            key, value = arg.split('=', 1)
+            # Handle boolean values
+            if value.lower() in ['true', '1', 'yes']:
+                converted_args.append(f'--{key.replace("_", "-")}')
+            elif value.lower() in ['false', '0', 'no']:
+                # Don't add the flag for false boolean values
+                pass
+            else:
+                # For non-boolean values, add both flag and value
+                converted_args.append(f'--{key.replace("_", "-")}')
+                converted_args.append(value)
+        else:
+            # Keep original argument
+            converted_args.append(arg)
+    
+    # Replace sys.argv for argparse
+    sys.argv = [sys.argv[0]] + converted_args
     
     parser = argparse.ArgumentParser(description="Run OrcaFlex models to generate .sim files")
     parser.add_argument("--models", nargs="+", help="Specific model files to run")
-    parser.add_argument("--all", action="store_true", help="Run all models in directory")
+    parser.add_argument("--all", action="store_true", help="[DEPRECATED - use pattern instead] Run all models in directory")
+    parser.add_argument("--include-dat", action="store_true", help="Include .dat files in addition to .yml files")
+    parser.add_argument("--dat", action="store_true", help="Process only .dat files (no .yml files)")
+    parser.add_argument("--pattern", default="*", help="File pattern to match (default: * = all files)")
     parser.add_argument("--output", default=None, help="Output directory for .sim files (default: same as model)")
     parser.add_argument("--mock", action="store_true", help="Run in mock mode (no license needed)")
     parser.add_argument("--threads", type=int, default=30, help="Number of parallel threads (default: 30)")
@@ -234,23 +272,38 @@ def main():
     # Determine which models to run
     if args.models:
         # Run specific models
-        model_list = args.models
+        model_list = [Path(m) for m in args.models]
         logger.info(f"Running specified models: {len(model_list)} files")
-    elif args.all:
-        # Find and run all models
-        model_list = find_model_files()
+    else:
+        # Find models based on pattern (default: all files with pattern="*")
+        # If --all is used for backwards compatibility, treat it as pattern="*"
+        if args.all and args.pattern == "*":
+            logger.info("[INFO] --all flag is deprecated. Using default pattern='*' instead")
+        
+        model_list = find_model_files(
+            directory=".", 
+            include_dat=args.include_dat,
+            dat_only=args.dat,
+            pattern=args.pattern
+        )
+        
+        # Log what types of files we're looking for
+        if args.dat:
+            file_types = [".dat"]
+        elif args.include_dat:
+            file_types = [".yml", ".dat"]
+        else:
+            file_types = [".yml"]
+        
+        # Show search criteria
+        pattern_desc = "all files" if args.pattern == "*" else f"pattern: {args.pattern}"
+        logger.info(f"Searching for {' and '.join(file_types)} files ({pattern_desc})")
+        
         logger.info(f"Found {len(model_list)} model files")
         for model in model_list[:5]:  # Show first 5
             logger.info(f"  - {Path(model).name}")
         if len(model_list) > 5:
             logger.info(f"  ... and {len(model_list) - 5} more")
-    else:
-        # Run a test subset
-        all_models = find_model_files()
-        model_list = all_models[:3]  # Just run first 3 as test
-        logger.info(f"Running test subset: {len(model_list)} models")
-        for model in model_list:
-            logger.info(f"  - {Path(model).name}")
     
     if not model_list:
         logger.error("No models to run!")
