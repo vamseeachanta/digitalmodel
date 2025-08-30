@@ -263,7 +263,12 @@ def main():
     parser.add_argument("--include-dat", action="store_true", help="Include .dat files in addition to .yml files")
     parser.add_argument("--dat", action="store_true", help="Process only .dat files (no .yml files)")
     parser.add_argument("--pattern", default="*", help="File pattern to match (default: * = all files)")
-    parser.add_argument("--output", default=None, help="Output directory for .sim files (default: same as model)")
+    parser.add_argument("--input-directory", "--input", "--directory", "-d", 
+                       default=".", dest="input_directory",
+                       help="Input directory to search for model files (default: current directory)")
+    parser.add_argument("--output-directory", "--output", "-o", 
+                       default=None, dest="output_directory",
+                       help="Output directory for .sim files (default: same as model)")
     parser.add_argument("--mock", action="store_true", help="Run in mock mode (no license needed)")
     parser.add_argument("--threads", type=int, default=30, help="Number of parallel threads (default: 30)")
     
@@ -281,7 +286,7 @@ def main():
             logger.info("[INFO] --all flag is deprecated. Using default pattern='*' instead")
         
         model_list = find_model_files(
-            directory=".", 
+            directory=args.input_directory, 
             include_dat=args.include_dat,
             dat_only=args.dat,
             pattern=args.pattern
@@ -297,6 +302,7 @@ def main():
         
         # Show search criteria
         pattern_desc = "all files" if args.pattern == "*" else f"pattern: {args.pattern}"
+        logger.info(f"Searching in: {args.input_directory}")
         logger.info(f"Searching for {' and '.join(file_types)} files ({pattern_desc})")
         
         logger.info(f"Found {len(model_list)} model files")
@@ -310,7 +316,7 @@ def main():
         return
     
     # Run the batch
-    results = run_batch(model_list, args.output, args.mock, max_workers=args.threads)
+    results = run_batch(model_list, args.output_directory, args.mock, max_workers=args.threads)
     
     # List created .sim files
     if results['successful'] > 0:
