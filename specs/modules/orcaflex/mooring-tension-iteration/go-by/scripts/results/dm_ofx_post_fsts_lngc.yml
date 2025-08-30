@@ -1,0 +1,691 @@
+meta:
+  basename: orcaflex_post_process
+  library: digitalmodel
+  description: Post-process OrcaFlex results
+parameters:
+  VarNames:
+    Line:
+    - End force
+    - End moment
+    - End Ex force
+    - End Ey force
+    - End Ez force
+    - End Ex moment
+    - End Ey moment
+    - End Ez moment
+    - End Lx force
+    - End Ly force
+    - End Lz force
+    - End Lx moment
+    - End Ly moment
+    - End Lz moment
+    - End GX force
+    - End GY force
+    - End GZ force
+    - End GX moment
+    - End GY moment
+    - End GZ moment
+    - X
+    - Y
+    - Z
+    - Dynamic x
+    - Dynamic y
+    - Dynamic z
+    - Layback
+    - Effective tension
+    - Wall tension
+    - Normalised tension
+    - Sidewall pressure
+    - Bend moment
+    - x bend moment
+    - y bend moment
+    - Bend moment component
+    - In plane bend moment
+    - Out of plane bend moment
+    - Curvature
+    - Normalised curvature
+    - x curvature
+    - y curvature
+    - Curvature component
+    - In plane curvature
+    - Out of plane curvature
+    - Bend radius
+    - x bend radius
+    - y bend radius
+    - Bend radius component
+    - In plane bend radius
+    - Out of plane bend radius
+    - Shear force
+    - x shear force
+    - y shear force
+    - Shear force component
+    - In plane shear force
+    - Out of plane shear force
+    - Arc length
+    - Expansion factor
+time_series_settings:
+  histogram: true
+  summation: true
+  groups: []
+orcaflex_post_process: {}
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+orcaflex:
+  postprocess:
+    visualization:
+      flag: false
+    summary:
+      flag: true
+      statistics:
+        Minimum: false
+        Maximum: false
+        Mean: false
+        StdDev: false
+      min: true
+      max: true
+      mean: true
+    linked_statistics:
+      flag: false
+      min: true
+      max: true
+      mean: true
+    RangeGraph:
+      flag: false
+    RAOs:
+      flag: false
+    time_series:
+      flag: false
+      histogram: true
+      summation: true
+    cummulative_histograms:
+      flag: false
+    rain_flow:
+      bins: 10
+      range:
+      - 0
+      - 10
+  analysis:
+    static: false
+    simulation: false
+    iterate:
+      flag: false
+    save_sim: false
+    save_dat: false
+visualization_settings:
+  label: fsts
+  individual: true
+  combined: false
+  hide_items: []
+  add_items:
+  - FST2
+  - FST1
+  - LNGC
+  views:
+  - elevation
+  - plan
+  tdp_line:
+    flag: false
+    Name: Umbilical
+  viewparams:
+    elevation:
+      RelativeToObject: uth2-deep
+      ViewCentre:
+      - 0
+      - 0
+      - 0
+      ViewSize: 140
+      DrawViewAxes: false
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      ViewAzimuth: 180
+      ViewElevation: 0
+      ViewGamma: 0
+      Height: 1000
+      Width: 800
+      SeaSurfacePenStyle: Solid
+    plan:
+      RelativeToObject: uth2-deep
+      ViewCentre:
+      - 0
+      - 0
+      - 0
+      ViewSize: 400
+      DrawViewAxes: false
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      ViewAzimuth: 270
+      ViewElevation: 90
+      ViewGamma: 0
+      Height: 1000
+      Width: 800
+RangeGraph_settings:
+  add_effective_tension_to_cfg: false
+file_management:
+  flag: true
+  input_directory: ../.sim
+  output_directory: ../output/.csv
+  update_unfinished:
+    flag: false
+  filename:
+    extension:
+    - sim
+    pattern: ~
+    filters:
+      contains: []
+      not_contains:
+      - includefile
+  input_files:
+    sim:
+    - ..\.sim\fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof.sim
+parallel_processing:
+  enabled: true
+  max_workers: 30
+  timeout_per_file: 1200
+  save_error_reports: true
+  progress_reporting: true
+  task_type: mixed
+library: digitalmodel
+basename: orcaflex_post_process
+summary_settings_master:
+  groups:
+  - Label: lngc_moorings_static_eff_tension_max
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line01
+      Statistic_Type: Max
+      Label: Line01
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line02
+      Statistic_Type: Max
+      Label: Line02
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line03
+      Statistic_Type: Max
+      Label: Line03
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line04
+      Statistic_Type: Max
+      Label: Line04
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line05
+      Statistic_Type: Max
+      Label: Line05
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line06
+      Statistic_Type: Max
+      Label: Line06
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line07
+      Statistic_Type: Max
+      Label: Line07
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line08
+      Statistic_Type: Max
+      Label: Line08
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line09
+      Statistic_Type: Max
+      Label: Line09
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line10
+      Statistic_Type: Max
+      Label: Line10
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line11
+      Statistic_Type: Max
+      Label: Line11
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line12
+      Statistic_Type: Max
+      Label: Line12
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line13
+      Statistic_Type: Max
+      Label: Line13
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line14
+      Statistic_Type: Max
+      Label: Line14
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line15
+      Statistic_Type: Max
+      Label: Line15
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line16
+      Statistic_Type: Max
+      Label: Line16
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line17
+      Statistic_Type: Max
+      Label: Line17
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line18
+      Statistic_Type: Max
+      Label: Line18
+  - Label: lngc_fenders_static
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST2L1face
+      Statistic_Type: Max
+      Label: fenderFST2L1_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST2L2face
+      Statistic_Type: Max
+      Label: fenderFST2L2_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST2L3face
+      Statistic_Type: Max
+      Label: fenderFST2L3_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST2L4face
+      Statistic_Type: Max
+      Label: fenderFST2L4_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST2L5face
+      Statistic_Type: Max
+      Label: fenderFST2L5_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST1L1face
+      Statistic_Type: Max
+      Label: fenderFST1L1_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST1L2face
+      Statistic_Type: Max
+      Label: fenderFST1L2_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST1L3face
+      Statistic_Type: Max
+      Label: fenderFST1L3_contact_force_max
+  - Label: lngc_6dof_stat
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra: ~
+      ObjectName: LNGC
+      Statistic_Type: Min
+      Variable: X
+      Label: lngc_X
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra: ~
+      ObjectName: LNGC
+      Statistic_Type: Min
+      Variable: Y
+      Label: lngc_Y
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra: ~
+      ObjectName: LNGC
+      Statistic_Type: Min
+      Variable: Z
+      Label: lngc_Z
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra: ~
+      ObjectName: LNGC
+      Statistic_Type: Min
+      Variable: Rotation 1
+      Label: lngc_R1
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra: ~
+      ObjectName: LNGC
+      Statistic_Type: Min
+      Variable: Rotation 2
+      Label: lngc_R2
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra: ~
+      ObjectName: LNGC
+      Statistic_Type: Min
+      Variable: Rotation 3
+      Label: lngc_R3
+summary_settings:
+  groups:
+  - Label: lngc_moorings_static_eff_tension_max
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line01
+      Statistic_Type: Max
+      Label: Line01
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line02
+      Statistic_Type: Max
+      Label: Line02
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line03
+      Statistic_Type: Max
+      Label: Line03
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line04
+      Statistic_Type: Max
+      Label: Line04
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line05
+      Statistic_Type: Max
+      Label: Line05
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line06
+      Statistic_Type: Max
+      Label: Line06
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line07
+      Statistic_Type: Max
+      Label: Line07
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line08
+      Statistic_Type: Max
+      Label: Line08
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line09
+      Statistic_Type: Max
+      Label: Line09
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line10
+      Statistic_Type: Max
+      Label: Line10
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line11
+      Statistic_Type: Max
+      Label: Line11
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line12
+      Statistic_Type: Max
+      Label: Line12
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line13
+      Statistic_Type: Max
+      Label: Line13
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line14
+      Statistic_Type: Max
+      Label: Line14
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line15
+      Statistic_Type: Max
+      Label: Line15
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line16
+      Statistic_Type: Max
+      Label: Line16
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line17
+      Statistic_Type: Max
+      Label: Line17
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra:
+      - End B
+      Variable: Effective Tension
+      ObjectName: Line18
+      Statistic_Type: Max
+      Label: Line18
+  - Label: lngc_fenders_static
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST2L1face
+      Statistic_Type: Max
+      Label: fenderFST2L1_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST2L2face
+      Statistic_Type: Max
+      Label: fenderFST2L2_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST2L3face
+      Statistic_Type: Max
+      Label: fenderFST2L3_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST2L4face
+      Statistic_Type: Max
+      Label: fenderFST2L4_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST2L5face
+      Statistic_Type: Max
+      Label: fenderFST2L5_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST1L1face
+      Statistic_Type: Max
+      Label: fenderFST1L1_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST1L2face
+      Statistic_Type: Max
+      Label: fenderFST1L2_contact_force_max
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      Variable: Solid Contact Force
+      ObjectName: fenderFST1L3face
+      Statistic_Type: Max
+      Label: fenderFST1L3_contact_force_max
+  - Label: lngc_6dof_stat
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra: ~
+      ObjectName: LNGC
+      Statistic_Type: Min
+      Variable: X
+      Label: lngc_X
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra: ~
+      ObjectName: LNGC
+      Statistic_Type: Min
+      Variable: Y
+      Label: lngc_Y
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra: ~
+      ObjectName: LNGC
+      Statistic_Type: Min
+      Variable: Z
+      Label: lngc_Z
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra: ~
+      ObjectName: LNGC
+      Statistic_Type: Min
+      Variable: Rotation 1
+      Label: lngc_R1
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra: ~
+      ObjectName: LNGC
+      Statistic_Type: Min
+      Variable: Rotation 2
+      Label: lngc_R2
+    - Command: TimeHistory
+      SimulationPeriod: StaticState
+      objectExtra: ~
+      ObjectName: LNGC
+      Statistic_Type: Min
+      Variable: Rotation 3
+      Label: lngc_R3
+Analysis:
+  basename: orcaflex_post_process
+  analysis_root_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts
+  file_name: dm_ofx_post_fsts_lngc
+  file_name_for_overwrite: dm_ofx_post_fsts_lngc
+  log_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts\logs
+  start_time: 2025-08-30 17:22:27.488127
+  cfg_array_file_names: ~
+  DefaultInputFile: ~
+  CustomInputFile: dm_ofx_post_fsts_lngc.yml
+  result_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts\../output/.csv
+  result_data_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts\../output/.csv\Data
+  result_plot_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts\../output/.csv\Plot
+  fe_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts\results
+  file_management_input_directory: ..\.sim
+  file_management_output_directory: ..\output\.csv
