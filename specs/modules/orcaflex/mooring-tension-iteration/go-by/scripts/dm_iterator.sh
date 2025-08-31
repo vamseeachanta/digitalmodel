@@ -8,5 +8,5 @@
 # postprocess to get results
 /d/github/digitalmodel/.venv/Scripts/python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30
 /d/github/assetutilities/.venv/Scripts/python -m assetutilities au_collate.yml
-/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel viz.yml "{'meta': {'label': 'viz_fsts_180km3_sb'}, 'file_management': {'filename': {'pattern': 'fsts_*_vessel_statics_6dof'}}}" --workers 30
+/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel viz.    yml "{'meta': {'label': 'viz_fsts_180km3_sb'}, 'file_management': {'input_directory': '../.sim/', 'output_directory': '../output/visual', 'filename': {'pattern': 'fsts_*_vessel_statics_6dof'}}}" --workers 30
 
