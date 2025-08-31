@@ -274,25 +274,39 @@ python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30
 
 **Description**: Create Python script to run existing batch commands in a loop with convergence checking.
 
+**Iteration Termination Criteria** (whichever is achieved first):
+- Maximum of 5 iterations reached, OR
+- Change in line tension exceeds 10 kN from previous iteration (indicating instability)
+
 **Implementation Components**:
 ```python
 class MooringTensionOrchestrator:
-    - __init__(working_dir, max_iterations=10)
+    - __init__(working_dir, max_iterations=5)  # Reduced from 10 to 5
     - load_targets() # Read target CSV
     - run_command() # Execute shell commands
     - read_current_tensions() # Parse result CSV
     - check_convergence() # Compare with tolerances
-    - run() # Main loop
-    - generate_summary() # Final report
+    - check_tension_change() # Monitor tension changes between iterations (>10kN stops)
+    - run() # Main loop with dual termination criteria
+    - generate_summary() # Final report with termination reason
 ```
+
+**Convergence Monitoring**:
+- Track tension history for each line across iterations
+- Calculate delta between current and previous iteration
+- Flag if any line shows >10kN change (potential instability)
+- Record termination reason: "converged", "max_iterations", or "tension_instability"
 
 **Subtasks**:
 - [ ] 1.1: Create orchestrator.py file
 - [ ] 1.2: Implement command execution wrapper
 - [ ] 1.3: Add CSV parsing for targets and results
-- [ ] 1.4: Implement convergence check logic
-- [ ] 1.5: Add iteration loop with max limit
-- [ ] 1.6: Create summary reporting
+- [ ] 1.4: Implement convergence check logic (tolerance-based)
+- [ ] 1.5: Add iteration loop with dual termination criteria:
+  - [ ] 1.5.1: Maximum 5 iterations limit
+  - [ ] 1.5.2: Tension change monitoring (>10kN stops iteration)
+  - [ ] 1.5.3: Track tension history across iterations
+- [ ] 1.6: Create summary reporting with termination reason
 
 **Deliverables**:
 - `orchestrator.py` - Complete implementation (~200 lines)
@@ -311,13 +325,17 @@ class MooringTensionOrchestrator:
 **Test Scenarios**:
 1. **Normal Convergence**
    - Run with existing data
-   - Verify stops when converged
+   - Verify stops when converged within tolerance
    
 2. **Maximum Iterations**
    - Test with tight tolerances
-   - Verify stops at 10 iterations
+   - Verify stops at 5 iterations (reduced from 10)
    
-3. **Error Handling**
+3. **Tension Instability Detection**
+   - Test case with >10kN tension change
+   - Verify stops with "tension_instability" reason
+   
+4. **Error Handling**
    - Test with missing files
    - Test with malformed CSV
 
@@ -598,7 +616,7 @@ cd specs/modules/orcaflex/mooring-tension-iteration/go-by
 
 ```
 Starting Mooring Tension Iteration Orchestrator
-Maximum iterations: 10
+Maximum iterations: 5
 Loaded 16 target tensions
 
 ============================================================
@@ -614,28 +632,43 @@ Executing: python -m digitalmodel.modules.orcaflex.universal ...
 Step 3: Post-processing results...
 Executing: python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30
 
-Step 4: Checking convergence...
+Step 4: Checking convergence and tension stability...
   Line01: 75.2 kN (target: 80.0 kN, diff: 6.0%, tol: 50%) ✓
   Line02: 78.5 kN (target: 80.0 kN, diff: 1.9%, tol: 50%) ✓
   ...
   Line16: 58.3 kN (target: 60.0 kN, diff: 2.8%, tol: 1%) ✗
 
+Tension changes from previous iteration: All within 10kN limit ✓
 Not converged, continuing to next iteration...
 
 [... iterations continue ...]
 
-✓✓✓ CONVERGED at iteration 4 ✓✓✓
+============================================================
+TERMINATION: Maximum iterations reached (5)
+============================================================
 
 ============================================================
 CONVERGENCE SUMMARY
 ============================================================
-Total iterations: 4
+Total iterations: 5
+Termination reason: MAX_ITERATIONS
+Final convergence: 14/16 lines converged (87.5%)
 
 Convergence Trend:
   Iteration 1: 12/16 lines converged (75.0%)
   Iteration 2: 14/16 lines converged (87.5%)
-  Iteration 3: 15/16 lines converged (93.8%)
-  Iteration 4: 16/16 lines converged (100.0%)
+  Iteration 3: 14/16 lines converged (87.5%)
+  Iteration 4: 14/16 lines converged (87.5%)
+  Iteration 5: 14/16 lines converged (87.5%)
+
+Tension Stability:
+  Max change in final iteration: 2.3 kN (Line03)
+  All changes within 10kN stability limit
+
+Alternative Termination Examples:
+- CONVERGED: All lines within tolerance
+- TENSION_INSTABILITY: Line XX showed 15.2kN change (>10kN limit)
+- MAX_ITERATIONS: Reached 5 iteration limit
 ```
 
 ## Definition of Done
