@@ -167,6 +167,167 @@ python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30
   - `go-by/output/visual/*.png` - Visual charts and plots
   - [x] 0.1.1: **Step 1 - Tension Calculation** (Analyzes existing .sim file when present)
     - **Command**: `/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml`
+    - **REQUIRED Visualization Command** (must be executed after tension calculation):
+      ```python
+      # Quick force visualization from pretension_analysis.csv
+      python -c "
+      import pandas as pd
+      import matplotlib.pyplot as plt
+      df = pd.read_csv('output/.csv/fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_pretension_analysis.csv')
+      fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+      
+      # X-Y Force Components
+      ax1.barh(df['ObjectName'], df['end_Gx_force'], alpha=0.7, label='X Force')
+      ax1.barh(df['ObjectName'], df['end_Gy_force'], alpha=0.7, label='Y Force')
+      ax1.set_xlabel('Force (kN)')
+      ax1.set_title('Mooring Line Force Components')
+      ax1.legend()
+      ax1.grid(True, alpha=0.3)
+      ax1.axvline(x=0, color='black', linewidth=0.5)
+      
+      # Vessel Total Forces
+      total_x = df['end_Gx_force'].sum()
+      total_y = df['end_Gy_force'].sum()
+      ax2.arrow(0, 0, total_x/10, 0, head_width=5, head_length=2, fc='blue', ec='blue', label=f'X: {total_x:.1f} kN')
+      ax2.arrow(0, 0, 0, total_y/10, head_width=5, head_length=2, fc='red', ec='red', label=f'Y: {total_y:.1f} kN')
+      ax2.set_xlim(-150, 150)
+      ax2.set_ylim(-150, 150)
+      ax2.set_xlabel('X Force / 10 (kN)')
+      ax2.set_ylabel('Y Force / 10 (kN)')
+      ax2.set_title('Vessel Net Force Vector')
+      ax2.grid(True, alpha=0.3)
+      ax2.legend()
+      ax2.set_aspect('equal')
+      
+      plt.tight_layout()
+      plt.savefig('output/visual/mooring_force_components.png', dpi=150)
+      plt.show()
+      print(f'Total X Force: {total_x:.2f} kN')
+      print(f'Total Y Force: {total_y:.2f} kN')
+      "
+      ```
+    - **REQUIRED Mooring Stiffness Calculation Command** (must be executed after tension calculation):
+      ```python
+      # Calculate mooring stiffness in X and Y directions
+      python -c "
+      import pandas as pd
+      import numpy as np
+      
+      # Read the pretension analysis data
+      df = pd.read_csv('output/.csv/fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_pretension_analysis.csv')
+      
+      # Extract line properties (EA values in kN)
+      # Parse the line_EA column which contains lists like '[1170.0, 47700.0]'
+      df['EA1'] = df['line_EA'].str.extract(r'\[(\d+\.?\d*),')[0].astype(float)
+      df['EA2'] = df['line_EA'].str.extract(r',\s*(\d+\.?\d*)\]')[0].astype(float)
+      
+      # Parse line lengths to get total length
+      df['L1'] = df['line_length'].str.extract(r'\[(\d+\.?\d*),')[0].astype(float)
+      df['L2'] = df['line_length'].str.extract(r',\s*np\.float64\((\d+\.?\d*)\)')[0].fillna(
+          df['line_length'].str.extract(r',\s*(\d+\.?\d*)\]')[0]
+      ).astype(float)
+      df['L_total'] = df['L1'] + df['L2']
+      
+      # Calculate axial stiffness for each line (EA/L)
+      # For two-segment lines: 1/k_total = 1/k1 + 1/k2
+      df['k1'] = df['EA1'] / df['L1']  # kN/m for segment 1
+      df['k2'] = df['EA2'] / df['L2']  # kN/m for segment 2
+      df['k_axial'] = 1 / (1/df['k1'] + 1/df['k2'])  # Combined axial stiffness
+      
+      # Get force components and tension
+      df['Fx'] = df['end_Gx_force']  # X component of force
+      df['Fy'] = df['end_Gy_force']  # Y component of force
+      df['T'] = df['current_tension']  # Total tension
+      
+      # Calculate Z component using Pythagorean theorem
+      # Since T² = Fx² + Fy² + Fz², we get Fz = sqrt(T² - Fx² - Fy²)
+      df['Fz'] = np.sqrt(np.maximum(0, df['T']**2 - df['Fx']**2 - df['Fy']**2))
+      
+      # Calculate direction cosines (force components normalized by tension)
+      # Small angle assumption: line orientation doesn't change significantly
+      df['cos_x'] = df['Fx'] / df['T']  # X direction cosine
+      df['cos_y'] = df['Fy'] / df['T']  # Y direction cosine
+      df['cos_z'] = df['Fz'] / df['T']  # Z direction cosine
+      
+      # Calculate stiffness contributions in X, Y, and Z directions
+      # k_i = k_axial * cos²(θ_i) for each direction
+      df['k_x'] = df['k_axial'] * (df['cos_x'] ** 2)  # X stiffness contribution
+      df['k_y'] = df['k_axial'] * (df['cos_y'] ** 2)  # Y stiffness contribution
+      df['k_z'] = df['k_axial'] * (df['cos_z'] ** 2)  # Z stiffness contribution
+      
+      # Calculate cross-coupling terms for full 3x3 stiffness matrix
+      df['k_xy'] = df['k_axial'] * df['cos_x'] * df['cos_y']  # X-Y coupling
+      df['k_xz'] = df['k_axial'] * df['cos_x'] * df['cos_z']  # X-Z coupling
+      df['k_yz'] = df['k_axial'] * df['cos_y'] * df['cos_z']  # Y-Z coupling
+      
+      # Calculate total system stiffness (sum of all line contributions)
+      K_xx_total = df['k_x'].sum()   # Total X stiffness
+      K_yy_total = df['k_y'].sum()   # Total Y stiffness
+      K_zz_total = df['k_z'].sum()   # Total Z stiffness
+      K_xy_total = df['k_xy'].sum()  # Total X-Y coupling
+      K_xz_total = df['k_xz'].sum()  # Total X-Z coupling
+      K_yz_total = df['k_yz'].sum()  # Total Y-Z coupling
+      
+      # Display results
+      print('\\n=== MOORING LINE STIFFNESS ANALYSIS (3D) ===')
+      print('\\nIndividual Line Stiffness Contributions:')
+      print('-' * 100)
+      print(f\"{'Line':<8} {'k_axial':<10} {'k_x':<10} {'k_y':<10} {'k_z':<10} {'k_xy':<10} {'k_xz':<10} {'k_yz':<10}\")
+      print(f\"{'    ':<8} {'(kN/m)':<10} {'(kN/m)':<10} {'(kN/m)':<10} {'(kN/m)':<10} {'(kN/m)':<10} {'(kN/m)':<10} {'(kN/m)':<10}\")
+      print('-' * 100)
+      
+      for idx, row in df.iterrows():
+          print(f\"{row['ObjectName']:<8} {row['k_axial']:>9.2f} {row['k_x']:>9.2f} {row['k_y']:>9.2f} {row['k_z']:>9.2f} {row['k_xy']:>9.2f} {row['k_xz']:>9.2f} {row['k_yz']:>9.2f}\")
+      
+      print('-' * 100)
+      print(f\"{'TOTAL':<8} {' ':<10} {K_xx_total:>9.2f} {K_yy_total:>9.2f} {K_zz_total:>9.2f} {K_xy_total:>9.2f} {K_xz_total:>9.2f} {K_yz_total:>9.2f}\")
+      
+      print('\\n=== SYSTEM STIFFNESS MATRIX (3x3) ===')
+      print('     [K] = | K_xx  K_xy  K_xz |')
+      print('           | K_xy  K_yy  K_yz |')
+      print('           | K_xz  K_yz  K_zz |')
+      print()
+      print(f'K_xx = {K_xx_total:>8.2f} kN/m  (Surge stiffness)')
+      print(f'K_yy = {K_yy_total:>8.2f} kN/m  (Sway stiffness)')
+      print(f'K_zz = {K_zz_total:>8.2f} kN/m  (Heave stiffness)')
+      print(f'K_xy = {K_xy_total:>8.2f} kN/m  (Surge-Sway coupling)')
+      print(f'K_xz = {K_xz_total:>8.2f} kN/m  (Surge-Heave coupling)')
+      print(f'K_yz = {K_yz_total:>8.2f} kN/m  (Sway-Heave coupling)')
+      
+      # Natural periods estimation (assuming vessel mass ~ 10000 tonnes for LNGC)
+      M_vessel = 10000  # tonnes (typical LNGC mass)
+      T_x = 2 * np.pi * np.sqrt(M_vessel / K_xx_total) if K_xx_total > 0 else np.inf
+      T_y = 2 * np.pi * np.sqrt(M_vessel / K_yy_total) if K_yy_total > 0 else np.inf
+      T_z = 2 * np.pi * np.sqrt(M_vessel / K_zz_total) if K_zz_total > 0 else np.inf
+      
+      print('\\n=== ESTIMATED NATURAL PERIODS ===')
+      print(f'T_surge = {T_x:>6.1f} s  (X-direction)')
+      print(f'T_sway  = {T_y:>6.1f} s  (Y-direction)')
+      print(f'T_heave = {T_z:>6.1f} s  (Z-direction)')
+      
+      # Save stiffness results to CSV
+      stiffness_df = df[['ObjectName', 'k_axial', 'k_x', 'k_y', 'k_z', 'k_xy', 'k_xz', 'k_yz', 'cos_x', 'cos_y', 'cos_z']]
+      stiffness_df.to_csv('output/.csv/mooring_stiffness_analysis.csv', index=False)
+      
+      # Create summary dictionary
+      summary = {
+          'K_xx_total': K_xx_total,
+          'K_yy_total': K_yy_total,
+          'K_zz_total': K_zz_total,
+          'K_xy_total': K_xy_total,
+          'K_xz_total': K_xz_total,
+          'K_yz_total': K_yz_total,
+          'T_surge': T_x,
+          'T_sway': T_y,
+          'T_heave': T_z
+      }
+      
+      # Save summary to CSV
+      pd.DataFrame([summary]).to_csv('output/.csv/mooring_stiffness_summary.csv', index=False)
+      print('\\nStiffness analysis saved to: output/.csv/mooring_stiffness_analysis.csv')
+      print('Summary saved to: output/.csv/mooring_stiffness_summary.csv')
+      "
+      ```
     - **Input Files**:
       - `go-by/scripts/dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml` - Main configuration file
       - `go-by/scripts/fsts_l015_125km3_pb_target_mooring_pretension.csv` - Target pretension values (16 lines)
@@ -175,6 +336,8 @@ python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30
     - **Output Files**:
       - `go-by/scripts/results/dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml` - Updated YAML with calculated tensions
       - `go-by/output/.csv/fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_pretension_analysis.csv` - **PRIMARY OUTPUT: Mooring pretension analysis with targets vs actuals**
+        - Key columns: `current_tension`, `end_Gx_force`, `end_Gy_force`
+        - Vessel total: X = +10.16 kN (balanced), Y = -1205.63 kN (southward)
       - `go-by/output/.csv/fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_fender_force_analysis.csv` - **Fender force analysis results**
       - `go-by/output/.csv/dm_ofx_anal_mooring_fsts_l015_125km3_pb_General_var_data.csv` - General simulation variables
       - `go-by/output/.csv/dm_ofx_anal_mooring_fsts_l015_125km3_pb_Vessel_var_data.csv` - Vessel variable data
@@ -184,6 +347,9 @@ python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30
       - `go-by/output/.csv/dm_ofx_anal_mooring_fsts_l015_125km3_pb_Constraint_var_data.csv` - Constraint variable data
       - `go-by/.sim/includefile_fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_mooring_line_length.yml` - Updated line lengths
       - `go-by/.sim/includefile_fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_fender_compression.yml` - Updated fender settings
+      - `go-by/output/visual/mooring_force_components.png` - **REQUIRED: Force visualization chart** (generated by visualization command)
+      - `go-by/output/.csv/mooring_stiffness_analysis.csv` - **REQUIRED: 3D line stiffness contributions** (k_axial, k_x, k_y, k_z, k_xy, k_xz, k_yz, cos_x, cos_y, cos_z for each line)
+      - `go-by/output/.csv/mooring_stiffness_summary.csv` - **REQUIRED: Full 3x3 system stiffness matrix** (K_xx, K_yy, K_zz, K_xy, K_xz, K_yz and natural periods for surge/sway/heave)
   - [x] 0.1.2: **Step 2 - .dat to .sim Conversion**
     - **Command**: `/d/github/digitalmodel/.venv/Scripts/python run_models_to_sim.py dat=true input_directory="../.dat/" output_directory="../.sim/"`
     - **Input Files**:

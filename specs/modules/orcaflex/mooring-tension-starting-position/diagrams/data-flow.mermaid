@@ -1,0 +1,130 @@
+graph LR
+    %% Data Flow Diagram
+    
+    subgraph "Input Data"
+        CF[Config File<br/>mooring_config.yml]
+        MF[Model File<br/>vessel_model.dat]
+        TT[Target Tensions<br/>target_tensions.csv]
+    end
+    
+    subgraph "Processing Pipeline"
+        subgraph "Stage 1: Setup"
+            LP[Load & Parse]
+            VM[Validate Model]
+            IC[Initialize Components]
+        end
+        
+        subgraph "Stage 2: Analysis"
+            SA[Static Analysis]
+            FE[Force Extraction]
+            FB[Force Balance]
+        end
+        
+        subgraph "Stage 3: Optimization"
+            PO[Position<br/>Optimization]
+            TO[Tension<br/>Optimization]
+            CU[Constraint<br/>Updates]
+        end
+        
+        subgraph "Stage 4: Convergence"
+            CC[Check Criteria]
+            UH[Update History]
+            DD[Detect Divergence]
+        end
+    end
+    
+    subgraph "Intermediate Data"
+        subgraph "Iteration Data"
+            SF[.sim Files]
+            FD[Force Data]
+            TD[Tension Data]
+            PD[Position Data]
+        end
+        
+        subgraph "History Data"
+            IH[Iteration History]
+            CH[Convergence History]
+            EH[Error History]
+        end
+    end
+    
+    subgraph "Output Data"
+        subgraph "Results"
+            FR[Final Results<br/>results.json]
+            SR[Summary Report<br/>summary.html]
+            ER[Excel Report<br/>analysis.xlsx]
+        end
+        
+        subgraph "Visualizations"
+            CP[Convergence Plot]
+            FP[Force Plot]
+            TP[Tension Plot]
+        end
+        
+        subgraph "Logs"
+            IL[Iteration Log]
+            EL[Error Log]
+            PL[Performance Log]
+        end
+    end
+    
+    %% Data Flow Connections
+    CF --> LP
+    MF --> LP
+    TT --> LP
+    
+    LP --> VM
+    VM --> IC
+    
+    IC --> SA
+    SA --> SF
+    SF --> FE
+    FE --> FD
+    FD --> FB
+    
+    FB --> PO
+    FB --> TO
+    PO --> PD
+    TO --> TD
+    
+    PD --> CU
+    TD --> CU
+    
+    CU --> CC
+    CC --> UH
+    UH --> IH
+    CC --> DD
+    DD --> EH
+    
+    IH --> CH
+    CH -->|Not Converged| SA
+    CH -->|Converged| FR
+    
+    FR --> SR
+    FR --> ER
+    
+    IH --> CP
+    FD --> FP
+    TD --> TP
+    
+    SA --> IL
+    DD --> EL
+    CC --> PL
+    
+    %% Styling
+    style CF fill:#e3f2fd
+    style MF fill:#e3f2fd
+    style TT fill:#e3f2fd
+    
+    style SF fill:#fff9c4
+    style FD fill:#fff9c4
+    style TD fill:#fff9c4
+    style PD fill:#fff9c4
+    
+    style FR fill:#c8e6c9
+    style SR fill:#c8e6c9
+    style ER fill:#c8e6c9
+    
+    style CP fill:#f8bbd0
+    style FP fill:#f8bbd0
+    style TP fill:#f8bbd0
