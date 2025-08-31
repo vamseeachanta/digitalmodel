@@ -51,34 +51,6 @@ summary_settings_master:
       Columns:
         - Command: GetData
 
-    - Label: lngc_moorings_static_eff_tension_max
-      Columns:
-        - Command: TimeHistory
-          SimulationPeriod: StaticState
-          objectExtra:
-            - End B
-          Variable: Effective Tension
-
-    - Label: lngc_moorings_dynamic_length
-      Columns:
-        - Command: TimeHistory
-          SimulationPeriod: StaticState
-          objectExtra:
-            - End B
-          Variable: Arc Length
-
-    - Label: lngc_fenders_static
-      Columns:
-        - Command: TimeHistory
-          SimulationPeriod: StaticState
-          Variable: Solid Contact Force
-
-    - Label: lngc_6dof_stat
-      Columns:
-        - Command: TimeHistory
-          SimulationPeriod: StaticState
-          objectExtra: NULL
-
 
 summary_settings:
   groups:
@@ -130,172 +102,6 @@ summary_settings:
           Variable: [CurrentFactor, 0]
           Label: CurrentFactor[0]
 
-    - Label: lngc_moorings_static_eff_tension_max
-      Columns:
-        - ObjectName: Line01
-          Statistic_Type: Max
-          Label: Line01
-        - ObjectName: Line02
-          Statistic_Type: Max
-          Label: Line02
-        - ObjectName: Line03
-          Statistic_Type: Max
-          Label: Line03
-        - ObjectName: Line04
-          Statistic_Type: Max
-          Label: Line04
-        - ObjectName: Line05
-          Statistic_Type: Max
-          Label: Line05
-        - ObjectName: Line06
-          Statistic_Type: Max
-          Label: Line06
-        - ObjectName: Line07
-          Statistic_Type: Max
-          Label: Line07
-        - ObjectName: Line08
-          Statistic_Type: Max
-          Label: Line08
-        - ObjectName: Line09
-          Statistic_Type: Max
-          Label: Line09
-        - ObjectName: Line10
-          Statistic_Type: Max
-          Label: Line10
-        - ObjectName: Line11
-          Statistic_Type: Max
-          Label: Line11
-        - ObjectName: Line12
-          Statistic_Type: Max
-          Label: Line12
-        - ObjectName: Line13
-          Statistic_Type: Max
-          Label: Line13
-        - ObjectName: Line14
-          Statistic_Type: Max
-          Label: Line14
-        - ObjectName: Line15
-          Statistic_Type: Max
-          Label: Line15
-        - ObjectName: Line16
-          Statistic_Type: Max
-          Label: Line16
-        - ObjectName: Line17
-          Statistic_Type: Max
-          Label: Line17
-        - ObjectName: Line18
-          Statistic_Type: Max
-          Label: Line18
-
-    - Label: lngc_moorings_dynamic_length
-      Columns:
-        - ObjectName: Line01
-          Statistic_Type: Max
-          Label: Line01
-        - ObjectName: Line02
-          Statistic_Type: Max
-          Label: Line02
-        - ObjectName: Line03
-          Statistic_Type: Max
-          Label: Line03
-        - ObjectName: Line04
-          Statistic_Type: Max
-          Label: Line04
-        - ObjectName: Line05
-          Statistic_Type: Max
-          Label: Line05
-        - ObjectName: Line06
-          Statistic_Type: Max
-          Label: Line06
-        - ObjectName: Line07
-          Statistic_Type: Max
-          Label: Line07
-        - ObjectName: Line08
-          Statistic_Type: Max
-          Label: Line08
-        - ObjectName: Line09
-          Statistic_Type: Max
-          Label: Line09
-        - ObjectName: Line10
-          Statistic_Type: Max
-          Label: Line10
-        - ObjectName: Line11
-          Statistic_Type: Max
-          Label: Line11
-        - ObjectName: Line12
-          Statistic_Type: Max
-          Label: Line12
-        - ObjectName: Line13
-          Statistic_Type: Max
-          Label: Line13
-        - ObjectName: Line14
-          Statistic_Type: Max
-          Label: Line14
-        - ObjectName: Line15
-          Statistic_Type: Max
-          Label: Line15
-        - ObjectName: Line16
-          Statistic_Type: Max
-          Label: Line16
-        - ObjectName: Line17
-          Statistic_Type: Max
-          Label: Line17
-        - ObjectName: Line18
-          Statistic_Type: Max
-          Label: Line18
-
-    - Label: lngc_fenders_static
-      Columns:
-        - ObjectName: fenderFST2L1face
-          Statistic_Type: Max
-          Label: fenderFST2L1_contact_force_max
-        - ObjectName: fenderFST2L2face
-          Statistic_Type: Max
-          Label: fenderFST2L2_contact_force_max
-        - ObjectName: fenderFST2L3face
-          Statistic_Type: Max
-          Label: fenderFST2L3_contact_force_max
-        - ObjectName: fenderFST2L4face
-          Statistic_Type: Max
-          Label: fenderFST2L4_contact_force_max
-        - ObjectName: fenderFST1L1face
-          Statistic_Type: Max
-          Label: fenderFST1L1_contact_force_max
-        - ObjectName: fenderFST1L2face
-          Statistic_Type: Max
-          Label: fenderFST1L2_contact_force_max
-        - ObjectName: fenderFST1L3face
-          Statistic_Type: Max
-          Label: fenderFST1L3_contact_force_max
-
-    - Label: lngc_6dof_stat
-      Columns:
-        - ObjectName: LNGC
-          Statistic_Type: Min
-          Variable: X
-          Label: lngc_X
-        - ObjectName: LNGC
-          Statistic_Type: Min
-          Variable: Y
-          Label: lngc_Y
-        - ObjectName: LNGC
-          Statistic_Type: Min
-          Variable: Z
-          Label: lngc_Z
-        - ObjectName: LNGC
-          Statistic_Type: Min
-          Variable: Rotation 1
-          Label: lngc_R1
-        - ObjectName: LNGC
-          Statistic_Type: Min
-          Variable: Rotation 2
-          Label: lngc_R2
-        - ObjectName: LNGC
-          Statistic_Type: Min
-          Variable: Rotation 3
-          Label: lngc_R3
-
-
 
 RangeGraph_settings:
   add_effective_tension_to_cfg: False
@@ -303,8 +109,8 @@ RangeGraph_settings:
 file_management:
   flag: True
 
-  input_directory: NULL
-  output_directory: NULL
+  input_directory: ../.sim
+  output_directory: ../output/visual
 
   filename:
     extension: [sim]
