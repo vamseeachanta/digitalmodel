@@ -132,7 +132,6 @@ visualization_settings:
     Name: Umbilical
   viewparams:
     elevation:
-      RelativeToObject: uth2-deep
       ViewCentre:
       - 0
       - 0
@@ -148,7 +147,6 @@ visualization_settings:
       Width: 800
       SeaSurfacePenStyle: Solid
     plan:
-      RelativeToObject: uth2-deep
       ViewCentre:
       - 0
       - 0
@@ -337,7 +335,7 @@ Analysis:
   file_name: viz_viz_fsts_
   file_name_for_overwrite: viz_viz_fsts_
   log_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts\logs
-  start_time: 2025-09-01 07:20:25.309600
+  start_time: 2025-09-01 13:31:51.863287
   cfg_array_file_names: ~
   DefaultInputFile: ~
   CustomInputFile: viz.yml
