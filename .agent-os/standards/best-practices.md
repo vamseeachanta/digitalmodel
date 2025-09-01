@@ -1,7 +1,12 @@
 # Development Best Practices
 
 > Version: 1.0.0
-> Last updated: 2025-08-06
+> Last updated: 2025-03-02
+> Scope: Global development standards
+
+## Context
+
+This file is part of the Agent OS standards system. These global best practices are referenced by all product codebases and provide default development guidelines. Individual projects may extend or override these practices in their `.agent-os/product/dev-best-practices.md` file.
 
 ## Core Principles
 
@@ -42,3 +47,7 @@ When adding third-party dependencies:
 - Write tests for new functionality
 - Maintain existing test coverage
 - Test edge cases and error conditions
+
+---
+
+*Customize this file with your team's specific practices. These guidelines apply to all code written by humans and AI agents.*
