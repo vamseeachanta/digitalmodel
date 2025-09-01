@@ -131,13 +131,16 @@ class Mooring:
             "Arc length",
             "End GX force",
             "End GY force",
+            "End GZ force",  # Added Z-force for 3D stiffness calculation
         ]
         current_var_df = var_data_dict["StaticResult"]["Line"][columns]
 
         new_arc_length = []
         target_pre_tension_df["current_tension"] = None
         target_pre_tension_df["new_line_length"] = None
+        target_pre_tension_df["end_Gx_force"] = None
         target_pre_tension_df["end_Gy_force"] = None
+        target_pre_tension_df["end_Gz_force"] = None
         for index, row in target_pre_tension_df.iterrows():
             object_name = row["ObjectName"]
             mask = current_var_df["ObjectName"] == object_name
@@ -151,6 +154,9 @@ class Mooring:
             ].values[0]
             target_pre_tension_df.at[index, "end_Gy_force"] = current_var_df_filtered[
                 "End GY force"
+            ].values[0]
+            target_pre_tension_df.at[index, "end_Gz_force"] = current_var_df_filtered[
+                "End GZ force"
             ].values[0]
 
             line_length = self.evaluate_line_length_current(arc_length, line_length)
@@ -189,9 +195,16 @@ class Mooring:
         target_pre_tension_df = target_pre_tension_df.apply(
             pd.to_numeric, errors="ignore"
         ).round(4)
+        
+        # Calculate 3D mooring stiffness matrix
+        stiffness_results = self.calculate_mooring_stiffness_3d(
+            target_pre_tension_df, cfg, file_meta_data
+        )
+        
         output_dict = {
             "tension_criteria_pass_flag": tension_criteria_pass_flag,
             "target_pre_tension_df": target_pre_tension_df,
+            "stiffness_analysis": stiffness_results,
         }
 
         filename_dir = cfg["Analysis"]["result_folder"]
@@ -554,3 +567,193 @@ class Mooring:
         ]
 
         return fender_force_df
+    
+    def calculate_mooring_stiffness_3d(self, target_pre_tension_df, cfg=None, file_meta_data=None):
+        """
+        Calculate 3D mooring system stiffness matrix from pretension analysis data.
+        
+        This method calculates the full 3x3 stiffness matrix considering:
+        - Individual line axial stiffness (EA/L)
+        - Direction cosines based on force components
+        - Stiffness contributions in X, Y, Z directions
+        - Cross-coupling terms (K_xy, K_xz, K_yz)
+        
+        Args:
+            target_pre_tension_df: DataFrame containing mooring line data with columns:
+                - ObjectName, line_EA, line_length, current_tension
+                - end_Gx_force, end_Gy_force, end_Gz_force
+            cfg: Optional configuration dictionary for saving outputs
+            file_meta_data: Optional file metadata for naming outputs
+            
+        Returns:
+            dict: Contains stiffness_df (line details) and summary_dict (system totals)
+        """
+        # Create a copy to avoid modifying original
+        df = target_pre_tension_df.copy()
+        
+        # Parse line_EA values (handling list format like '[1170.0, 47700.0]')
+        if df['line_EA'].dtype == 'object':
+            # If line_EA is still a string representation, parse it
+            for idx in df.index:
+                if isinstance(df.at[idx, 'line_EA'], str):
+                    df.at[idx, 'line_EA'] = eval(df.at[idx, 'line_EA'])
+        
+        # Parse line_length values similarly
+        if df['line_length'].dtype == 'object':
+            for idx in df.index:
+                if isinstance(df.at[idx, 'line_length'], str):
+                    df.at[idx, 'line_length'] = eval(df.at[idx, 'line_length'])
+        
+        # Calculate axial stiffness for each line
+        df['k_axial'] = None
+        for idx in df.index:
+            line_ea = df.at[idx, 'line_EA']
+            line_length = df.at[idx, 'line_length']
+            
+            # Handle two-segment lines: 1/k_total = 1/k1 + 1/k2
+            if isinstance(line_ea, list) and isinstance(line_length, list):
+                k_segments = []
+                for ea, length in zip(line_ea, line_length):
+                    if length and length > 0:  # Skip None or zero lengths
+                        k_segments.append(ea / length)
+                
+                if k_segments:
+                    # Combined stiffness for series springs
+                    k_axial = 1 / sum(1/k for k in k_segments if k > 0)
+                    df.at[idx, 'k_axial'] = k_axial
+            else:
+                # Single segment line
+                if line_length and line_length > 0:
+                    df.at[idx, 'k_axial'] = line_ea / line_length
+        
+        # Get force components and tension
+        df['Fx'] = df['end_Gx_force']
+        df['Fy'] = df['end_Gy_force'] 
+        df['Fz'] = df.get('end_Gz_force', 0)  # Default to 0 if not present
+        df['T'] = df['current_tension']
+        
+        # For lines with no Z-force data, calculate it from total tension
+        # Using T² = Fx² + Fy² + Fz²
+        for idx in df.index:
+            if pd.isna(df.at[idx, 'Fz']) or df.at[idx, 'Fz'] == 0:
+                T = df.at[idx, 'T']
+                Fx = df.at[idx, 'Fx']
+                Fy = df.at[idx, 'Fy']
+                Fz_squared = T**2 - Fx**2 - Fy**2
+                if Fz_squared > 0:
+                    df.at[idx, 'Fz'] = np.sqrt(Fz_squared)
+                else:
+                    df.at[idx, 'Fz'] = 0
+        
+        # Calculate direction cosines (normalized force components)
+        # Small angle assumption: line orientation doesn't change significantly
+        df['cos_x'] = df['Fx'] / df['T']
+        df['cos_y'] = df['Fy'] / df['T']
+        df['cos_z'] = df['Fz'] / df['T']
+        
+        # Calculate stiffness contributions considering directionality
+        # For surge (X): Lines can pull in +X or -X, so we need signed contributions
+        # k_x = k_axial * cos²(θ_x) but with sign based on force direction
+        # Positive Fx means line resists +X motion (contributes positive stiffness)
+        # Negative Fx means line resists -X motion (contributes negative stiffness to +X)
+        
+        # Calculate directional stiffness contributions
+        # For lines pulling in +X direction (Fx > 0): positive stiffness contribution
+        # For lines pulling in -X direction (Fx < 0): negative stiffness contribution
+        df['k_x_signed'] = df['k_axial'] * df['cos_x'] * abs(df['cos_x'])  # Preserves sign of cos_x
+        df['k_x'] = df['k_axial'] * (df['cos_x'] ** 2)  # Magnitude only (for reference)
+        
+        # For sway (Y): All lines typically contribute to restoring force in same direction
+        df['k_y'] = df['k_axial'] * (df['cos_y'] ** 2)
+        
+        # For heave (Z): Standard calculation
+        df['k_z'] = df['k_axial'] * (df['cos_z'] ** 2)
+        
+        # Calculate cross-coupling terms
+        df['k_xy'] = df['k_axial'] * df['cos_x'] * df['cos_y']
+        df['k_xz'] = df['k_axial'] * df['cos_x'] * df['cos_z']
+        df['k_yz'] = df['k_axial'] * df['cos_y'] * df['cos_z']
+        
+        # Calculate separate surge stiffness for +X and -X directions
+        # Lines with Fx > 0 contribute to +X stiffness
+        # Lines with Fx < 0 contribute to -X stiffness
+        df['k_x_positive'] = df.apply(lambda row: row['k_x'] if row['Fx'] > 0 else 0, axis=1)
+        df['k_x_negative'] = df.apply(lambda row: row['k_x'] if row['Fx'] < 0 else 0, axis=1)
+        
+        # Calculate total system stiffness
+        # For surge: Net stiffness considering directional contributions
+        K_xx_positive = df['k_x_positive'].sum()  # Stiffness resisting +X motion
+        K_xx_negative = df['k_x_negative'].sum()  # Stiffness resisting -X motion
+        K_xx_total = df['k_x'].sum()  # Total magnitude (traditional calculation)
+        K_xx_net = K_xx_positive - K_xx_negative  # Net directional stiffness
+        
+        K_yy_total = df['k_y'].sum()
+        K_zz_total = df['k_z'].sum()
+        K_xy_total = df['k_xy'].sum()
+        K_xz_total = df['k_xz'].sum()
+        K_yz_total = df['k_yz'].sum()
+        
+        # Estimate natural periods (assuming typical LNGC mass ~10000 tonnes)
+        M_vessel = 10000  # tonnes
+        T_surge = 2 * np.pi * np.sqrt(M_vessel / K_xx_total) if K_xx_total > 0 else np.inf
+        T_sway = 2 * np.pi * np.sqrt(M_vessel / K_yy_total) if K_yy_total > 0 else np.inf
+        T_heave = 2 * np.pi * np.sqrt(M_vessel / K_zz_total) if K_zz_total > 0 else np.inf
+        
+        # Create summary dictionary with directional stiffness information
+        summary_dict = {
+            'K_xx_total': K_xx_total,  # Total magnitude
+            'K_xx_positive': K_xx_positive,  # Lines pulling in +X
+            'K_xx_negative': K_xx_negative,  # Lines pulling in -X
+            'K_xx_net': K_xx_net,  # Net directional stiffness
+            'K_yy_total': K_yy_total,
+            'K_zz_total': K_zz_total,
+            'K_xy_total': K_xy_total,
+            'K_xz_total': K_xz_total,
+            'K_yz_total': K_yz_total,
+            'T_surge': T_surge,
+            'T_sway': T_sway,
+            'T_heave': T_heave
+        }
+        
+        # Prepare stiffness dataframe for output with directional info
+        stiffness_columns = ['ObjectName', 'k_axial', 'k_x', 'k_x_signed', 'k_x_positive', 'k_x_negative',
+                            'k_y', 'k_z', 'k_xy', 'k_xz', 'k_yz', 
+                            'cos_x', 'cos_y', 'cos_z', 'Fx', 'Fy', 'Fz']
+        stiffness_df = df[stiffness_columns].copy()
+        
+        # Log results with directional information
+        logger.info(f"3D Mooring Stiffness Matrix Calculated:")
+        logger.info(f"  Surge Stiffness Analysis:")
+        logger.info(f"    K_xx_total = {K_xx_total:.2f} kN/m (Total magnitude)")
+        logger.info(f"    K_xx_positive (+X lines) = {K_xx_positive:.2f} kN/m")
+        logger.info(f"    K_xx_negative (-X lines) = {K_xx_negative:.2f} kN/m")
+        logger.info(f"    K_xx_net (directional) = {K_xx_net:.2f} kN/m")
+        logger.info(f"  K_yy = {K_yy_total:.2f} kN/m (Sway)")
+        logger.info(f"  K_zz = {K_zz_total:.2f} kN/m (Heave)")
+        logger.info(f"  K_xy = {K_xy_total:.2f} kN/m (Surge-Sway coupling)")
+        logger.info(f"  K_xz = {K_xz_total:.2f} kN/m (Surge-Heave coupling)")
+        logger.info(f"  K_yz = {K_yz_total:.2f} kN/m (Sway-Heave coupling)")
+        logger.info(f"Natural Periods: T_surge={T_surge:.1f}s, T_sway={T_sway:.1f}s, T_heave={T_heave:.1f}s")
+        
+        # Save to CSV if cfg and file_meta_data provided
+        if cfg and file_meta_data:
+            filename_dir = cfg["Analysis"]["result_folder"]
+            yml_file = file_meta_data["yml"]
+            filename_stem = pathlib.Path(yml_file).stem
+            
+            # Save detailed stiffness analysis
+            stiffness_filename = filename_stem + "_mooring_stiffness_analysis.csv"
+            stiffness_path = os.path.join(filename_dir, stiffness_filename)
+            stiffness_df.to_csv(stiffness_path, index=False)
+            logger.info(f"Stiffness analysis saved to: {stiffness_path}")
+            
+            # Save summary
+            summary_filename = filename_stem + "_mooring_stiffness_summary.csv"
+            summary_path = os.path.join(filename_dir, summary_filename)
+            pd.DataFrame([summary_dict]).to_csv(summary_path, index=False)
+            logger.info(f"Stiffness summary saved to: {summary_path}")
+        
+        return {
+            'stiffness_df': stiffness_df,
+            'summary': summary_dict
+        }
