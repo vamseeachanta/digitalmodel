@@ -180,6 +180,7 @@ file_management:
   input_files:
     sim:
     - ..\.sim\fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof.sim
+    - ..\.sim\fsts_l015_hwl_125km3_l100_sb_vessel_statics_6dof.sim
 parallel_processing:
   enabled: true
   max_workers: 30
@@ -679,7 +680,7 @@ Analysis:
   file_name: dm_ofx_post_fsts_lngc
   file_name_for_overwrite: dm_ofx_post_fsts_lngc
   log_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts\logs
-  start_time: 2025-08-30 17:22:27.488127
+  start_time: 2025-09-01 07:20:08.062076
   cfg_array_file_names: ~
   DefaultInputFile: ~
   CustomInputFile: dm_ofx_post_fsts_lngc.yml

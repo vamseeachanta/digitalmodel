@@ -47,7 +47,7 @@ Analysis:
   file_name: au_collate
   file_name_for_overwrite: au_collate
   log_folder: D:\github\digitalmodel\specs\modules\orcaflex\mooring-tension-iteration\go-by\scripts\logs
-  start_time: 2025-08-30 17:27:18.509830
+  start_time: 2025-09-01 07:20:20.309955
   cfg_array_file_names: ~
   DefaultInputFile: ~
   CustomInputFile: au_collate.yml
