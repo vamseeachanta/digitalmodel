@@ -18,6 +18,7 @@ from digitalmodel.modules.orcaflex.all_vars import AllVars
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
 from digitalmodel.modules.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
 from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.modules.orcaflex.visualization import MooringVisualization
 
 orcaflex_preprocess = OrcaflexPreProcess()
 orcaflex_objects = OrcaFlexObjects()
@@ -210,9 +211,68 @@ class Mooring:
         filename_dir = cfg["Analysis"]["result_folder"]
         yml_file = file_meta_data["yml"]
         filename_stem = pathlib.Path(yml_file).stem
+        
+        # Add filename stem to pretension dataframe for reference
+        target_pre_tension_df['filename_stem'] = filename_stem
+        
         filename = filename_stem + "_pretension_analysis.csv"
         filename_path = os.path.join(filename_dir, filename)
         target_pre_tension_df.to_csv(filename_path, index=False)
+        
+        # Generate visualization plots if enabled
+        if cfg.get("visualization", {}).get("enabled", False):
+            # Use visualization output_directory from config, or plot_directory from file_management
+            plot_dir = cfg.get("visualization", {}).get("output_directory")
+            if not plot_dir:
+                plot_dir = cfg.get("file_management", {}).get("plot_directory", 
+                                                              "specs/modules/orcaflex/mooring-tension-iteration/go-by/output/visual")
+            
+            # Ensure directory exists
+            os.makedirs(plot_dir, exist_ok=True)
+            
+            # Create visualization instance
+            viz = MooringVisualization(output_directory=plot_dir)
+            
+            # Generate plots with same stem as CSV file
+            plot_name = filename_stem + "_pretension_analysis"
+            
+            # Create mooring force plots
+            viz.plot_mooring_forces(
+                pretension_df=target_pre_tension_df,
+                stiffness_df=stiffness_results if isinstance(stiffness_results, pd.DataFrame) else None,
+                save_name=plot_name
+            )
+            
+            # Create stiffness visualization if stiffness results available
+            logger.info(f"Checking stiffness_results: type={type(stiffness_results)}, is_dict={isinstance(stiffness_results, dict)}")
+            if stiffness_results and isinstance(stiffness_results, dict):
+                logger.info(f"Stiffness results keys: {stiffness_results.keys()}")
+                if 'stiffness_df' in stiffness_results and 'summary' in stiffness_results:
+                    try:
+                        logger.info("Creating stiffness visualization...")
+                        # Load the saved CSV files to ensure data types are correct
+                        stiffness_analysis_csv = os.path.join(filename_dir, f"{filename_stem}_mooring_stiffness_analysis.csv")
+                        stiffness_summary_csv = os.path.join(filename_dir, f"{filename_stem}_mooring_stiffness_summary.csv")
+                        
+                        if os.path.exists(stiffness_analysis_csv) and os.path.exists(stiffness_summary_csv):
+                            stiffness_analysis_df = pd.read_csv(stiffness_analysis_csv)
+                            stiffness_summary_df = pd.read_csv(stiffness_summary_csv)
+                            
+                            viz.plot_stiffness_characteristics(
+                                stiffness_analysis_df=stiffness_analysis_df,
+                                stiffness_summary_df=stiffness_summary_df,
+                                save_name=plot_name + "_stiffness"
+                            )
+                            logger.info("Stiffness visualization completed")
+                        else:
+                            logger.warning("Stiffness CSV files not found for visualization")
+                    except Exception as e:
+                        logger.error(f"Error creating stiffness visualization: {e}")
+                        logger.info("Stiffness data was saved to CSV but visualization failed")
+                else:
+                    logger.warning(f"Missing required keys in stiffness_results. Has: {stiffness_results.keys()}")
+            
+            logger.info(f"Visualization plots saved to: {plot_dir}")
 
         return output_dict
 
@@ -324,6 +384,10 @@ class Mooring:
         filename_dir = cfg["Analysis"]["result_folder"]
         yml_file = file_meta_data["yml"]
         filename_stem = pathlib.Path(yml_file).stem
+        
+        # Add filename stem to fender force dataframe for reference
+        fender_force_df['filename_stem'] = filename_stem
+        
         filename = filename_stem + "_fender_force_analysis.csv"
         filename_path = os.path.join(filename_dir, filename)
         fender_force_df.to_csv(filename_path, index=False)
@@ -741,11 +805,17 @@ class Mooring:
             yml_file = file_meta_data["yml"]
             filename_stem = pathlib.Path(yml_file).stem
             
+            # Add filename stem to stiffness dataframe for reference
+            stiffness_df['filename_stem'] = filename_stem
+            
             # Save detailed stiffness analysis
             stiffness_filename = filename_stem + "_mooring_stiffness_analysis.csv"
             stiffness_path = os.path.join(filename_dir, stiffness_filename)
             stiffness_df.to_csv(stiffness_path, index=False)
             logger.info(f"Stiffness analysis saved to: {stiffness_path}")
+            
+            # Add filename stem to summary dict
+            summary_dict['filename_stem'] = filename_stem
             
             # Save summary
             summary_filename = filename_stem + "_mooring_stiffness_summary.csv"

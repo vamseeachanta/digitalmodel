@@ -55,3 +55,11 @@ file_management:
     filters:
       contains: []
       not_contains: [includefile]
+
+# Add visualization settings to generate plots
+visualization:
+  enabled: True
+  output_directory: ../output/visual
+  save_plots: True
+  plot_formats: [png]
+  dpi: 150
