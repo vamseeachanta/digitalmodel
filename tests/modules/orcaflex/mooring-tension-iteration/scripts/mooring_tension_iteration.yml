@@ -1,0 +1,114 @@
+meta:
+  library: digitalmodel
+  basename: orcaflex
+  version: "1.0.0"
+  description: "OrcaFlex mooring tension iteration configuration"
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+  units:
+    # Force and tension units
+    pretension: kN
+    force: kN
+    tension: kN
+    effective_tension: kN
+    # Length and distance units
+    coordinates: m
+    length: m
+    perturbation: m
+    # Stiffness units
+    stiffness: kN
+    EA: kN
+    # Additional standard units
+    pressure: psi
+    temperature: degC
+    angle: deg
+    time: s
+    percentage: "%"
+
+orcaflex:
+  preprocess:
+    check_yml:
+      flag: False
+      save_dat: True
+
+  analysis:
+    mooring:
+      flag: True
+      calculation: tension_iteration  # New mode: automated iteration
+
+  postprocess:
+    visualization:
+      flag: True
+      plot_convergence: True
+
+orcaflex_analysis:
+  mooring_tension_iteration:
+    # Optimization method: scipy or newton_raphson
+    method: scipy
+    
+    # Global convergence settings
+    convergence:
+      tolerance: 1.0  # percentage
+      max_iterations: 10
+      damping_factor: 0.8  # For stability
+    
+    # Target tension specifications
+    groups:
+    - label: development
+      target_pretension:
+        type: yaml  # Can be yaml, csv, or manual
+        tensions:
+          Line1: 1500.0  # kN
+          Line2: 1500.0  # kN
+          Line3: 1800.0  # kN
+          Line4: 1800.0  # kN
+      
+      # Line properties for stiffness calculation
+      line_properties:
+        Line1:
+          EA: 850000  # kN
+          sections: [100, null, 100]  # null indicates variable section
+        Line2:
+          EA: 850000
+          sections: [100, null, 100]
+        Line3:
+          EA: 950000
+          sections: [120, null, 120]
+        Line4:
+          EA: 950000
+          sections: [120, null, 120]
+      
+      # Vessel fixing configuration
+      vessel_config:
+        fix_vessels: True
+        vessels_to_fix: [FPSO, LNGC]
+        fix_degrees_of_freedom: [x, y, z, rx, ry, rz]
+    
+    # Jacobian calculation settings
+    jacobian:
+      method: finite_difference  # or analytical if available
+      perturbation_factor: 0.01  # 1% of line length
+      min_perturbation: 0.1  # meters
+
+    # Output configuration
+    output:
+      save_iterations: True
+      iteration_folder: iterations
+      final_report: tension_iteration_report.pdf
+      convergence_plot: convergence_history.png
+
+file_management:
+  flag: True
+  input_directory: mooring_models/tension_iteration
+  output_directory: results/tension_iteration
+
+  filename:
+    extension: [yml, sim, dat]
+    pattern: mooring_tension_base
+    filters:
+      contains: []
+      not_contains: [backup, temp, iteration_]

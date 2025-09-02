@@ -1,0 +1,421 @@
+# OrcaFlex Analysis Runner Configuration
+# Purpose: Run OrcaFlex analysis on .sim, .yml, or .dat files
+# Standardized according to .agent-os/standards/input-file-architecture.md
+
+meta:
+  library: digitalmodel
+  basename: orcaflex_analysis
+  version: "1.0.0"
+  description: "OrcaFlex analysis runner for simulation and model files"
+  author: "Engineering Team"
+  date: "2025-08-15"
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+      input: False  # Protect input files
+  
+  # Comprehensive units definition
+  units:
+    # Forces and tensions
+    effective_tension: kN
+    bending_moment: kNm
+    force: kN
+    tension: kN
+    pretension: kN
+    # Stress
+    stress: MPa
+    von_mises_stress: MPa
+    yield_strength: psi
+    # Length and geometry
+    length: m
+    arc_length: m
+    vertical_distance: m
+    nominal_id: inch
+    nominal_od: inch
+    nominal_wt: inch
+    # Time
+    time: s
+    period: s
+    time_step: s
+    simulation_duration: s
+    # Environment
+    wave_height: m
+    wave_period: s
+    wave_direction: deg
+    current_speed: m/s
+    current_direction: deg
+    wind_speed: m/s
+    wind_direction: deg
+    water_depth: m
+    # Angles
+    angle: deg
+    heading: deg
+    declination_angle: deg
+    # Material properties
+    elastic_modulus: psi
+    density: kg/m3
+    mass_per_unit_length: kg/m
+    weight_per_unit_length: N/m
+    # Soil and seabed
+    soil_stiffness: kN/m/m
+    seabed_friction: dimensionless
+    # Other
+    temperature: degC
+    pressure: psi
+    buoyancy_coverage: percentage
+  
+  # Global constants
+  constants:
+    g: 9.81  # Gravitational acceleration (m/s²)
+    rho_water: 1025  # Seawater density (kg/m³)
+    rho_air: 1.225  # Air density (kg/m³)
+
+orcaflex:
+  # Pre-processing configuration
+  preprocess:
+    validation:
+      flag: True
+      check_yml: True
+      check_license: True
+      validate_inputs: True
+    
+    conversion:
+      yml_to_dat: True  # Convert YAML to DAT format
+      save_dat: True
+      dat_output_directory: ./converted
+  
+  # Main analysis configuration
+  analysis:
+    # Analysis type selection
+    type: both  # Options: static, dynamic, both
+    
+    static:
+      flag: True
+      method: standard  # Options: standard, quick, detailed
+      convergence:
+        tolerance: 1e-6
+        max_iterations: 200
+        damping_factor: 0.8
+      
+      use_calculated_positions:
+        flag: True
+        overwrite: False
+        set_lines_to_user_specified_starting_shape: True
+        use_static_line_end_orientations: False
+    
+    dynamic:
+      flag: True
+      simulation_duration: 3600.0  # seconds
+      time_step: 0.1  # seconds
+      ramp_time: 120.0  # seconds
+      
+      # Time domain settings
+      implicit_integration:
+        flag: True
+        gamma: 0.5
+        beta: 0.25
+      
+      # Output intervals
+      output:
+        time_interval: 1.0  # seconds
+        save_restart: True
+        restart_interval: 600.0  # seconds
+    
+    # Iteration settings for optimization
+    iterate:
+      flag: False
+      to_target_value: False
+      max_iterations: 10
+      convergence_tolerance: 0.01  # 1%
+      rerun: False
+      overwrite_data: True
+    
+    # Save options
+    save_sim: True
+    save_dat: True
+    save_yml: False
+  
+  # Post-processing configuration
+  postprocess:
+    # Visualization
+    visualization:
+      flag: True
+      plots:
+        - type: time_series
+          variables: [effective_tension, bend_moment]
+        - type: range_graph
+          variables: [effective_tension]
+        - type: 3d_view
+          save_image: True
+    
+    # Summary statistics
+    summary:
+      flag: True
+      statistics:
+        add_minimum_to_summary: True
+        add_maximum_to_summary: True
+        add_mean_to_summary: True
+        add_std_dev_to_summary: True
+        add_percentiles: [5, 95]
+      
+      # Variables to summarize
+      variables:
+        - effective_tension
+        - bend_moment
+        - von_mises_stress
+        - vessel_offset
+    
+    # Range graphs
+    range_graph:
+      flag: True
+      add_effective_tension_to_cfg: True
+      arc_length_points: 100
+      variables:
+        - effective_tension
+        - bend_moment
+        - curvature
+    
+    # Time series extraction
+    time_series:
+      flag: True
+      extraction_points:
+        - object: Line1
+          arc_length: [0, 50, 100]  # meters from end A
+        - object: Line2
+          arc_length: [0, 50, 100]
+      variables:
+        - effective_tension
+        - bend_moment
+      histogram: True
+      bins: 50
+      summation: False
+    
+    # Fatigue analysis
+    fatigue:
+      flag: False
+      method: rainflow
+      bins: 20
+      sn_curve: dnv_e_seawater_cp  # DNV E-curve with cathodic protection
+    
+    # Response statistics
+    response_statistics:
+      flag: True
+      include_extremes: True
+      include_raos: False
+      simulation_period: [0, 3600]  # Full simulation
+
+# File management configuration
+file_management:
+  flag: True
+  
+  # Input configuration
+  input_directory: ./  # Current directory (tests/modules/orcaflex/orcaflex_analysis)
+  
+  # Input files - multiple options for different run scenarios
+  input_files:
+    # Option 1: Run specific files
+    specific:
+      yml:
+        - orcaflex_test1.yml
+        - orcaflex_test2.yml
+      sim:
+        - orcaflex_test1.sim
+        - orcaflex_test2.sim
+      dat:
+        - orcaflex_test2.dat
+    
+    # Option 2: Pattern-based selection (comment out specific if using this)
+    # pattern:
+    #   extension: [yml, sim, dat]
+    #   pattern: "orcaflex_test*"
+    #   filters:
+    #     contains: [test]
+    #     not_contains: [backup, temp, old]
+  
+  # Output configuration
+  output_directory: ./results/analysis_run_$(timestamp)
+  output_prefix: result_
+  output_timestamp: True
+  
+  # File organization
+  create_subdirectories:
+    by_file_type: True  # Separate folders for different outputs
+    structure:
+      - simulations  # .sim files
+      - data  # .dat files  
+      - summaries  # Summary CSV/Excel files
+      - plots  # Visualization outputs
+      - logs  # Analysis logs
+  
+  # Batch processing options
+  batch_processing:
+    flag: True
+    parallel: False  # Run files sequentially (True for parallel if OrcaFlex licenses available)
+    max_parallel: 2  # Maximum parallel runs if parallel=True
+    continue_on_error: True  # Continue with next file if one fails
+    
+  # File filtering for automatic discovery
+  filename:
+    extension: [yml, sim, dat]
+    pattern: "*"
+    filters:
+      contains: []
+      not_contains: [backup, temp, _old, _bak, iteration_]
+
+# Analysis-specific settings
+analysis_settings:
+  # Model settings
+  model:
+    check_data: True
+    auto_calculate_lengths: True
+    auto_set_line_lengths: True
+  
+  # Environmental conditions (can be overridden by model files)
+  environment:
+    water_depth: 1500.0  # meters
+    seabed_type: flat
+    wave_kinematic_stretching: wheeler
+  
+  # Vessel settings
+  vessel:
+    include_wave_drift: True
+    include_current_loads: True
+    include_wind_loads: True
+  
+  # Line settings  
+  lines:
+    include_seabed_friction: True
+    include_bending_stiffness: True
+    include_torsional_stiffness: False
+    line_feeding: automatic
+  
+  # Solver settings
+  solver:
+    use_parallel_processing: True
+    num_threads: 4
+    memory_allocation: automatic
+
+# Results extraction configuration
+results_extraction:
+  # Time series data
+  time_series:
+    objects:
+      - name: all_lines
+        type: Line
+        variables: [effective_tension, bend_moment, curvature]
+      - name: all_vessels
+        type: Vessel
+        variables: [x, y, z, roll, pitch, yaw]
+    
+    # Arc length positions for lines (% of total length)
+    arc_length_positions: [0, 25, 50, 75, 100]
+    
+    # Time range
+    time_range:
+      start: 0
+      end: simulation_end
+      interval: 1.0  # seconds
+  
+  # Summary statistics
+  summary:
+    include_static: True
+    include_dynamic: True
+    percentiles: [1, 5, 50, 95, 99]
+  
+  # Export formats
+  export:
+    formats: [csv, excel]
+    include_metadata: True
+    decimal_places: 3
+
+# Execution modes
+execution_mode:
+  # Choose one of the following modes:
+  mode: analysis  # Options: analysis, check_only, convert_only
+  
+  # Mode-specific settings
+  check_only:
+    report_issues: True
+    save_report: True
+  
+  convert_only:
+    source_format: yml
+    target_format: dat
+    validate_conversion: True
+  
+  analysis:
+    pre_check: True
+    post_validation: True
+    generate_report: True
+
+# Error handling
+error_handling:
+  on_error: continue  # Options: stop, continue, skip
+  max_retries: 3
+  retry_delay: 5  # seconds
+  save_error_log: True
+  error_log_path: ./logs/errors.log
+
+# Reporting configuration
+reporting:
+  generate_summary: True
+  summary_format: excel
+  include_plots: True
+  include_statistics: True
+  comparison_report: False  # Set to True to compare multiple runs
+  
+  # Report sections
+  sections:
+    - executive_summary
+    - analysis_settings
+    - environmental_conditions
+    - maximum_responses
+    - statistical_summary
+    - time_series_plots
+    - conclusions
+
+# Validation rules
+validation:
+  pre_analysis:
+    check_file_exists: True
+    check_file_format: True
+    check_license: True
+    check_dependencies: True
+  
+  post_analysis:
+    check_convergence: True
+    check_output_files: True
+    validate_results_range: True
+  
+  # Result range validation
+  expected_ranges:
+    effective_tension:
+      min: 0
+      max: 10000  # kN
+    bend_moment:
+      min: -5000
+      max: 5000  # kNm
+    vessel_offset:
+      max: 50  # meters
+
+# Notes and documentation
+notes:
+  purpose: |
+    This configuration file is designed to run OrcaFlex analyses on multiple
+    input files (.sim, .yml, .dat) with comprehensive pre-processing, analysis,
+    and post-processing capabilities.
+  
+  usage: |
+    1. Place this file in the orcaflex_analysis directory
+    2. Ensure input files are present in the input_directory
+    3. Run: python -m digitalmodel.engine run_orcaflex_analysis.yml
+    4. Results will be saved in the output_directory
+  
+  requirements: |
+    - OrcaFlex license (for .sim and .dat files)
+    - Python packages: digitalmodel, OrcFxAPI
+    - Sufficient disk space for results
+    - Input files in correct format

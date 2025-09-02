@@ -1,0 +1,3 @@
+root['StageDuration[2]']:
+  new_value: 200
+  old_value: 300

@@ -1,0 +1,117 @@
+default:
+  log_level: DEBUG
+
+  Analysis:
+    Analyze :
+      file_type: script
+      flag: True
+      simulation: True
+      statics: False
+    Summary:
+      flag: True
+      AddMinimumToSummary: True
+      AddMaximumToSummary: True
+      AddMeanToSummary: True
+    RangeGraph:
+      flag: True
+      add_effective_tension_to_cfg: False
+    time_series:
+      flag: False
+
+  config:
+    overwrite:
+      output: True
+
+PostProcessUnits:
+    System : US
+    Effective Tension:
+        US: 1
+        SI: 1
+    Bend Moment:
+        US: 1
+        SI: 1
+    API STD 2RD Method 1:
+        US: 1
+        SI: 1
+
+
+Files:
+- Label: Effective Tension
+  Name: tests\cfg\orcaflex_analysis_py_2500ft_script.txt
+  ObjectName: vertical
+  simulation: True
+  statics: False
+
+PlotSettings:
+  Name: Buoyancy Element Hydrodynamic Coefficients
+  SupTitle: Buoyancy Element Hydrodynamic Coefficients
+  Title: SLWR Configuration Development
+
+RangeGraph:
+-
+  Command: Range Graph
+  ObjectName: SLWR
+  AdditionalData:
+    - Max
+  SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+  ArcLength:
+    - 0
+    - 7000
+  Variable: Effective Tension
+  xlabel: Arc Length (m)
+  ylabel: Effective Tension (kN)
+  Title: Effective Tension at Top of Riser
+  Subtitle: All Riser
+  FileName: Effective_Tension
+  axhline: NULL
+
+Summary:
+-
+  SummaryFileName: Table_Top
+  Columns:
+    -
+      Command: Range Graph
+      ObjectName: SLWR
+      AdditionalData:
+        - Max
+      SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+      ArcLength:
+        - 0
+        - 50
+      Variable: Effective Tension
+      Label: Eff. Tension
+    -
+      Command: Range Graph
+      ObjectName: SLWR
+      AdditionalData:
+        - Max
+      SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+      ArcLength:
+        - 0
+        - 50
+      Variable: Bend Moment
+      Label: Bend. Moment
+    -
+      Command: Range Graph
+      ObjectName: SLWR
+      AdditionalData:
+        - Max
+      SimulationPeriod:  SpecifiedPeriod(30.0, 120.0)
+      ArcLength:
+        - 0
+        - 50
+      Variable: API STD 2RD Method 1
+      Label: API M1
+    -
+      Command: Range Graph
+      ObjectName: SLWR
+      AdditionalData:
+        - Max
+      SimulationPeriod:  SpecifiedPeriod(30.0, 120.0)
+      ArcLength:
+        - 0
+        - 50
+      Variable: Max von Mises Stress
+      Label: vM stress
+
+

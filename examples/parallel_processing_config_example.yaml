@@ -1,0 +1,51 @@
+# Parallel Processing Configuration Example
+# Add this section to your existing OrcaFlex configuration file
+
+parallel_processing:
+  # Enable or disable parallel processing
+  # Set to false to use sequential processing
+  enabled: true
+  
+  # Number of worker processes
+  # Options:
+  #   - Integer value (e.g., 4)
+  #   - "auto" to use all available CPU cores
+  # Note: Consider OrcaFlex license limitations when setting this value
+  max_workers: 4
+  
+  # Timeout per file in seconds
+  # If a file takes longer than this, it will be terminated
+  # Set to null for no timeout
+  timeout_per_file: 3600
+  
+  # Save error reports for failed files
+  # Creates <filename>_error.log for each failed file
+  save_error_reports: true
+  
+  # Enable progress reporting
+  # Shows which files are being processed in real-time
+  progress_reporting: true
+
+# Example of how to integrate with existing configuration:
+orcaflex:
+  postprocess:
+    summary:
+      flag: true
+    linked_statistics:
+      flag: true
+    RangeGraph:
+      flag: true
+    time_series:
+      flag: true
+    cummulative_histograms:
+      flag: false
+    visualization:
+      flag: false
+
+file_management:
+  input_files:
+    sim:
+      - "simulation1.sim"
+      - "simulation2.sim"
+      - "simulation3.sim"
+      - "simulation4.sim"

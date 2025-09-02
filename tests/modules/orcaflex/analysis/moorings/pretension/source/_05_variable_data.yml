@@ -1,0 +1,5 @@
+﻿VariableData:
+  Constrainttranslationalstiffness:
+    includefile: 05_a_wsp_damper_stiffness.yml
+    includefile: 05_c_fender_stiffness.yml
+  includefile: 05_b_damping.yml

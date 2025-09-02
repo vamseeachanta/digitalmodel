@@ -1,0 +1,40 @@
+basename: orcaflex_post_process
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  preprocess:
+    load_vessel: 
+      flag: True
+      input_prgram: aqwa
+    check_yml: False
+    save_dat: True
+
+  postprocess:
+    visualization:
+      flag: False
+
+preprocess:
+  load_vessel:
+    groups:
+      - input_file: aqwa_to_ofx/input/FST2L015_FST1L015_HWL.LIS
+        vt_names: [Strt1_FST2type, Strt2_FST1type]
+        multibodyGroupName: multibody_group
+        output_template: aqwa_to_ofx/templates/fsts_fst1_l015_fst2_l015.yml
+        output_file: aqwa_to_ofx/templates/fsts_l015_hwl.dat
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      directory: data
+      auto_read: True
+      filename_pattern: NULL

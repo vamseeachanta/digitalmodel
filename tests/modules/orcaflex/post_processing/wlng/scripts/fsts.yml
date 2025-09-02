@@ -1,0 +1,1298 @@
+# OrcaFlex WLNG FSTS Configuration
+# Standardized according to .agent-os/standards/input-file-architecture.md
+
+meta:
+  library: digitalmodel
+  basename: orcaflex_post_process
+  version: "1.0.0"
+  description: "OrcaFlex WLNG FSTS post-processing configuration"
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+  units:
+    # Forces and tensions
+    effective_tension: kN
+    force: kN
+    # Time
+    time: s
+    period: s
+    # Length
+    length: m
+    # Angles
+    angle: deg
+
+orcaflex:
+  analysis:
+    static: False
+    simulation: False
+    iterate:
+      flag: False
+    save_sim: False
+    save_dat: False
+
+  postprocess:
+    visualization:
+      flag: False
+    summary:
+      flag: True
+    range_graph:
+      flag: False
+    time_series:
+      flag: True
+    raos:
+      flag: False
+    cummulative_histograms:
+      flag: False
+    rain_flow:
+      bins: 10
+      range:
+        - 0
+        - 10
+
+summary_settings_master:
+  add_minimum_to_summary: True
+  add_maximum_to_summary: True
+  add_mean_to_summary: True
+  groups:
+    - label: inputs
+      columns:
+        - command: GetData
+
+    - label: strut_dynamics
+      columns:
+        - command: TimeHistory
+          simulation_period: [0.0, 10.0]
+          object_extra:
+            - "End A"
+          variable: "Effective Tension"
+
+    - label: strut_static
+      columns:
+        - command: TimeHistory
+          simulation_period: StaticState
+          object_extra:
+            - "End A"
+          variable: "Effective Tension"
+
+    - label: fst_local_static
+      columns:
+        - command: TimeHistory
+          simulation_period: StaticState
+          object_extra:
+            - "End B"
+
+    - label: fst_local_dynamics
+      columns:
+        - command: TimeHistory
+          simulation_period: [0.0, 10.0]
+          object_extra:
+            - "End B"
+
+summary_settings:
+  groups:
+    - label: inputs
+      columns:
+        - command: GetData
+          object_name: FST1
+          variable: [InitialHeading, -1]
+          label: fst1_heading
+        - command: GetData
+          object_name: FST2
+          variable: [InitialHeading, -1]
+          label: fst2_heading
+        - command: GetData
+          object_name: Environment
+          variable: [WindDirection, -1]
+          label: wind_direction
+        - command: GetData
+          object_name: Environment
+          variable: [WindSpeed, -1]
+          label: wind_speed
+        - command: GetData
+          object_name: Environment
+          variable: [WaveDirection, -1]
+          label: wave_direction
+        - command: GetData
+          object_name: Environment
+          variable: [WaveHs, -1]
+          label: hs
+        - command: GetData
+          object_name: Environment
+          variable: [WaveTz, -1]
+          label: wave_tz
+        - command: GetData
+          object_name: Environment
+          variable: [WaveGamma, -1]
+          label: wave_gamma
+        - command: GetData
+          object_name: Environment
+          variable: [RefCurrentSpeed, 0]
+          label: ref_current_speed
+        - command: GetData
+          object_name: Environment
+          variable: [RefCurrentDirection, 0]
+          label: ref_current_direction
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [CurrentFactor, 0]
+          Label: CurrentFactor[0]
+
+    - Label: strut_dynamics
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_Body_eff_tension_min
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_Body_eff_tension_max
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_Body_eff_tension_min
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_Body_eff_tension_max
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_Body_eff_tension_min
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_Body_eff_tension_max
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_Body_eff_tension_min
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_Body_eff_tension_max
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_Body_eff_tension_min
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_Body_eff_tension_max
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_Body_eff_tension_min
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_Body_eff_tension_max
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_Body_eff_tension_min
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_Body_eff_tension_max
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_Body_eff_tension_min
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_Body_eff_tension_max
+
+    - Label: strut_static
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_Body_eff_tension_min
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_Body_eff_tension_min
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_Body_eff_tension_min
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_Body_eff_tension_min
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_Body_eff_tension_min
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_Body_eff_tension_min
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_Body_eff_tension_min
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_Body_eff_tension_min
+
+    - Label: fst_local_static
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Lz
+          Variable: End Lz force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Lx
+          Variable: End Lx force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Ly
+          Variable: End Ly force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Lz
+          Variable: End Lz force
+
+    - Label: fst_local_dynamic
+      Columns:
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Min
+          Label: Strut1_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut1_Body
+          Statistic_Type: Max
+          Label: Strut1_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Min
+          Label: Strut2_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut2_Body
+          Statistic_Type: Max
+          Label: Strut2_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Min
+          Label: Strut3_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut3_Body
+          Statistic_Type: Max
+          Label: Strut3_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Min
+          Label: Strut4_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut4_Body
+          Statistic_Type: Max
+          Label: Strut4_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Min
+          Label: Strut5_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut5_Body
+          Statistic_Type: Max
+          Label: Strut5_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Min
+          Label: Strut6_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut6_Body
+          Statistic_Type: Max
+          Label: Strut6_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Min
+          Label: Strut7_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut7_Body
+          Statistic_Type: Max
+          Label: Strut7_FST_Lz_max
+          Variable: End Lz force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Lx_min
+          Variable: End Lx force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_FST_Lx_max
+          Variable: End Lx force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Ly_min
+          Variable: End Ly force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_FST_Ly_max
+          Variable: End Ly force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Min
+          Label: Strut8_FST_Lz_min
+          Variable: End Lz force
+        - ObjectName: Strut8_Body
+          Statistic_Type: Max
+          Label: Strut8_FST_Lz_max
+          Variable: End Lz force
+
+time_series_settings_master:
+  data: True
+  histogram: False
+  summation: False
+  groups:
+    - Columns:
+        - Command: TimeHistory
+          ObjectName: Strut1_Body
+          SimulationPeriod: [0.0, 10]
+    - Columns:
+        - Command: TimeHistory
+          ObjectName: Strut2_Body
+          SimulationPeriod: [0.0, 10]
+    - Columns:
+        - Command: TimeHistory
+          ObjectName: Strut3_Body
+          SimulationPeriod: [0.0, 10]
+    - Columns:
+        - Command: TimeHistory
+          ObjectName: Strut4_Body
+          SimulationPeriod: [0.0, 10]
+    - Columns:
+        - Command: TimeHistory
+          ObjectName: Strut5_Body
+          SimulationPeriod: [0.0, 10]
+    - Columns:
+        - Command: TimeHistory
+          ObjectName: Strut6_Body
+          SimulationPeriod: [0.0, 10]
+    - Columns:
+        - Command: TimeHistory
+          ObjectName: Strut7_Body
+          SimulationPeriod: [0.0, 10]
+    - Columns:
+        - Command: TimeHistory
+          ObjectName: Strut8_Body
+          SimulationPeriod: [0.0, 10]
+
+    - Columns:
+        - Command: TimeHistory
+          objectExtra: NULL
+          SimulationPeriod: [0.0, 10]
+
+    - Columns:
+        - Command: TimeHistory
+          objectExtra: NULL
+          SimulationPeriod: [0.0, 10]
+
+    - Columns:
+        - Command: TimeHistory
+          objectExtra: NULL
+          SimulationPeriod: [0.0, 10]
+
+    - Columns:
+        - Command: TimeHistory
+          objectExtra: NULL
+          SimulationPeriod: [0.0, 10]
+
+time_series_settings:
+  data: True
+  histogram: False
+  summation: False
+  groups:
+    - Label: Strut1
+      Columns:
+        - Variable: Effective Tension
+          objectExtra: [End A]
+          Label: Tension (Jacket End)
+        - Variable: Shear Force
+          objectExtra: [End A]
+          Label: Shear (Jacket End)
+        - Variable: End Gx Force
+          objectExtra: [End A]
+          Label: Fx (Jacket End)
+        - Variable: End Gy Force
+          objectExtra: [End A]
+          Label: Fy (Jacket End)
+        - Variable: End Gz Force
+          objectExtra: [End A]
+          Label: Fz (Jacket End)
+        - Variable: X
+          objectExtra: [End A]
+          Label: X (Jacket End)
+        - Variable: Y
+          objectExtra: [End A]
+          Label: Y (Jacket End)
+        - Variable: Z
+          objectExtra: [End A]
+          Label: Z (Jacket End)
+        - Variable: GX velocity
+          objectExtra: [End A]
+          Label: Vx (Jacket End)
+        - Variable: GY velocity
+          objectExtra: [End A]
+          Label: Vy (Jacket End)
+        - Variable: GZ velocity
+          objectExtra: [End A]
+          Label: Vz (Jacket End)
+        - Variable: EZ Angle
+          objectExtra: [End A]
+          Label: Angle (Jacket End)
+
+        - Variable: Effective Tension
+          objectExtra: [End B]
+          Label: Tension (Vessel End)
+        - Variable: Shear Force
+          objectExtra: [End B]
+          Label: Shear (Vessel End)
+        - Variable: End Gx Force
+          objectExtra: [End B]
+          Label: Fx (Vessel End)
+        - Variable: End Gy Force
+          objectExtra: [End B]
+          Label: Fy (Vessel End)
+        - Variable: End Gz Force
+          objectExtra: [End B]
+          Label: Fz (Vessel End)
+        - Variable: X
+          objectExtra: [End B]
+          Label: X (Vessel End)
+        - Variable: Y
+          objectExtra: [End B]
+          Label: Y (Vessel End)
+        - Variable: Z
+          objectExtra: [End B]
+          Label: Z (Vessel End)
+        - Variable: GX velocity
+          objectExtra: [End B]
+          Label: Vx (Vessel End)
+        - Variable: GY velocity
+          objectExtra: [End B]
+          Label: Vy (Vessel End)
+        - Variable: GZ velocity
+          objectExtra: [End B]
+          Label: Vz (Vessel End)
+        - Variable: EZ Angle
+          objectExtra: [End B]
+          Label: Angle (Vessel End)
+
+    - Label: Strut2
+      Columns:
+        - Variable: Effective Tension
+          objectExtra: [End A]
+          Label: Tension (Jacket End)
+        - Variable: Shear Force
+          objectExtra: [End A]
+          Label: Shear (Jacket End)
+        - Variable: End Gx Force
+          objectExtra: [End A]
+          Label: Fx (Jacket End)
+        - Variable: End Gy Force
+          objectExtra: [End A]
+          Label: Fy (Jacket End)
+        - Variable: End Gz Force
+          objectExtra: [End A]
+          Label: Fz (Jacket End)
+        - Variable: X
+          objectExtra: [End A]
+          Label: X (Jacket End)
+        - Variable: Y
+          objectExtra: [End A]
+          Label: Y (Jacket End)
+        - Variable: Z
+          objectExtra: [End A]
+          Label: Z (Jacket End)
+        - Variable: GX velocity
+          objectExtra: [End A]
+          Label: Vx (Jacket End)
+        - Variable: GY velocity
+          objectExtra: [End A]
+          Label: Vy (Jacket End)
+        - Variable: GZ velocity
+          objectExtra: [End A]
+          Label: Vz (Jacket End)
+        - Variable: EZ Angle
+          objectExtra: [End A]
+          Label: Angle (Jacket End)
+
+        - Variable: Effective Tension
+          objectExtra: [End B]
+          Label: Tension (Vessel End)
+        - Variable: Shear Force
+          objectExtra: [End B]
+          Label: Shear (Vessel End)
+        - Variable: End Gx Force
+          objectExtra: [End B]
+          Label: Fx (Vessel End)
+        - Variable: End Gy Force
+          objectExtra: [End B]
+          Label: Fy (Vessel End)
+        - Variable: End Gz Force
+          objectExtra: [End B]
+          Label: Fz (Vessel End)
+        - Variable: X
+          objectExtra: [End B]
+          Label: X (Vessel End)
+        - Variable: Y
+          objectExtra: [End B]
+          Label: Y (Vessel End)
+        - Variable: Z
+          objectExtra: [End B]
+          Label: Z (Vessel End)
+        - Variable: GX velocity
+          objectExtra: [End B]
+          Label: Vx (Vessel End)
+        - Variable: GY velocity
+          objectExtra: [End B]
+          Label: Vy (Vessel End)
+        - Variable: GZ velocity
+          objectExtra: [End B]
+          Label: Vz (Vessel End)
+        - Variable: EZ Angle
+          objectExtra: [End B]
+          Label: Angle (Vessel End)
+
+    - Label: Strut3
+      Columns:
+        - Variable: Effective Tension
+          objectExtra: [End A]
+          Label: Tension (Jacket End)
+        - Variable: Shear Force
+          objectExtra: [End A]
+          Label: Shear (Jacket End)
+        - Variable: End Gx Force
+          objectExtra: [End A]
+          Label: Fx (Jacket End)
+        - Variable: End Gy Force
+          objectExtra: [End A]
+          Label: Fy (Jacket End)
+        - Variable: End Gz Force
+          objectExtra: [End A]
+          Label: Fz (Jacket End)
+        - Variable: X
+          objectExtra: [End A]
+          Label: X (Jacket End)
+        - Variable: Y
+          objectExtra: [End A]
+          Label: Y (Jacket End)
+        - Variable: Z
+          objectExtra: [End A]
+          Label: Z (Jacket End)
+        - Variable: GX velocity
+          objectExtra: [End A]
+          Label: Vx (Jacket End)
+        - Variable: GY velocity
+          objectExtra: [End A]
+          Label: Vy (Jacket End)
+        - Variable: GZ velocity
+          objectExtra: [End A]
+          Label: Vz (Jacket End)
+        - Variable: EZ Angle
+          objectExtra: [End A]
+          Label: Angle (Jacket End)
+
+        - Variable: Effective Tension
+          objectExtra: [End B]
+          Label: Tension (Vessel End)
+        - Variable: Shear Force
+          objectExtra: [End B]
+          Label: Shear (Vessel End)
+        - Variable: End Gx Force
+          objectExtra: [End B]
+          Label: Fx (Vessel End)
+        - Variable: End Gy Force
+          objectExtra: [End B]
+          Label: Fy (Vessel End)
+        - Variable: End Gz Force
+          objectExtra: [End B]
+          Label: Fz (Vessel End)
+        - Variable: X
+          objectExtra: [End B]
+          Label: X (Vessel End)
+        - Variable: Y
+          objectExtra: [End B]
+          Label: Y (Vessel End)
+        - Variable: Z
+          objectExtra: [End B]
+          Label: Z (Vessel End)
+        - Variable: GX velocity
+          objectExtra: [End B]
+          Label: Vx (Vessel End)
+        - Variable: GY velocity
+          objectExtra: [End B]
+          Label: Vy (Vessel End)
+        - Variable: GZ velocity
+          objectExtra: [End B]
+          Label: Vz (Vessel End)
+        - Variable: EZ Angle
+          objectExtra: [End B]
+          Label: Angle (Vessel End)
+
+    - Label: Strut4
+      Columns:
+        - Variable: Effective Tension
+          objectExtra: [End A]
+          Label: Tension (Jacket End)
+        - Variable: Shear Force
+          objectExtra: [End A]
+          Label: Shear (Jacket End)
+        - Variable: End Gx Force
+          objectExtra: [End A]
+          Label: Fx (Jacket End)
+        - Variable: End Gy Force
+          objectExtra: [End A]
+          Label: Fy (Jacket End)
+        - Variable: End Gz Force
+          objectExtra: [End A]
+          Label: Fz (Jacket End)
+        - Variable: X
+          objectExtra: [End A]
+          Label: X (Jacket End)
+        - Variable: Y
+          objectExtra: [End A]
+          Label: Y (Jacket End)
+        - Variable: Z
+          objectExtra: [End A]
+          Label: Z (Jacket End)
+        - Variable: GX velocity
+          objectExtra: [End A]
+          Label: Vx (Jacket End)
+        - Variable: GY velocity
+          objectExtra: [End A]
+          Label: Vy (Jacket End)
+        - Variable: GZ velocity
+          objectExtra: [End A]
+          Label: Vz (Jacket End)
+        - Variable: EZ Angle
+          objectExtra: [End A]
+          Label: Angle (Jacket End)
+
+        - Variable: Effective Tension
+          objectExtra: [End B]
+          Label: Tension (Vessel End)
+        - Variable: Shear Force
+          objectExtra: [End B]
+          Label: Shear (Vessel End)
+        - Variable: End Gx Force
+          objectExtra: [End B]
+          Label: Fx (Vessel End)
+        - Variable: End Gy Force
+          objectExtra: [End B]
+          Label: Fy (Vessel End)
+        - Variable: End Gz Force
+          objectExtra: [End B]
+          Label: Fz (Vessel End)
+        - Variable: X
+          objectExtra: [End B]
+          Label: X (Vessel End)
+        - Variable: Y
+          objectExtra: [End B]
+          Label: Y (Vessel End)
+        - Variable: Z
+          objectExtra: [End B]
+          Label: Z (Vessel End)
+        - Variable: GX velocity
+          objectExtra: [End B]
+          Label: Vx (Vessel End)
+        - Variable: GY velocity
+          objectExtra: [End B]
+          Label: Vy (Vessel End)
+        - Variable: GZ velocity
+          objectExtra: [End B]
+          Label: Vz (Vessel End)
+        - Variable: EZ Angle
+          objectExtra: [End B]
+          Label: Angle (Vessel End)
+
+    - Label: Strut5
+      Columns:
+        - Variable: Effective Tension
+          objectExtra: [End A]
+          Label: Tension (Jacket End)
+        - Variable: Shear Force
+          objectExtra: [End A]
+          Label: Shear (Jacket End)
+        - Variable: End Gx Force
+          objectExtra: [End A]
+          Label: Fx (Jacket End)
+        - Variable: End Gy Force
+          objectExtra: [End A]
+          Label: Fy (Jacket End)
+        - Variable: End Gz Force
+          objectExtra: [End A]
+          Label: Fz (Jacket End)
+        - Variable: X
+          objectExtra: [End A]
+          Label: X (Jacket End)
+        - Variable: Y
+          objectExtra: [End A]
+          Label: Y (Jacket End)
+        - Variable: Z
+          objectExtra: [End A]
+          Label: Z (Jacket End)
+        - Variable: GX velocity
+          objectExtra: [End A]
+          Label: Vx (Jacket End)
+        - Variable: GY velocity
+          objectExtra: [End A]
+          Label: Vy (Jacket End)
+        - Variable: GZ velocity
+          objectExtra: [End A]
+          Label: Vz (Jacket End)
+        - Variable: EZ Angle
+          objectExtra: [End A]
+          Label: Angle (Jacket End)
+
+        - Variable: Effective Tension
+          objectExtra: [End B]
+          Label: Tension (Vessel End)
+        - Variable: Shear Force
+          objectExtra: [End B]
+          Label: Shear (Vessel End)
+        - Variable: End Gx Force
+          objectExtra: [End B]
+          Label: Fx (Vessel End)
+        - Variable: End Gy Force
+          objectExtra: [End B]
+          Label: Fy (Vessel End)
+        - Variable: End Gz Force
+          objectExtra: [End B]
+          Label: Fz (Vessel End)
+        - Variable: X
+          objectExtra: [End B]
+          Label: X (Vessel End)
+        - Variable: Y
+          objectExtra: [End B]
+          Label: Y (Vessel End)
+        - Variable: Z
+          objectExtra: [End B]
+          Label: Z (Vessel End)
+        - Variable: GX velocity
+          objectExtra: [End B]
+          Label: Vx (Vessel End)
+        - Variable: GY velocity
+          objectExtra: [End B]
+          Label: Vy (Vessel End)
+        - Variable: GZ velocity
+          objectExtra: [End B]
+          Label: Vz (Vessel End)
+        - Variable: EZ Angle
+          objectExtra: [End B]
+          Label: Angle (Vessel End)
+
+    - Label: Strut6
+      Columns:
+        - Variable: Effective Tension
+          objectExtra: [End A]
+          Label: Tension (Jacket End)
+        - Variable: Shear Force
+          objectExtra: [End A]
+          Label: Shear (Jacket End)
+        - Variable: End Gx Force
+          objectExtra: [End A]
+          Label: Fx (Jacket End)
+        - Variable: End Gy Force
+          objectExtra: [End A]
+          Label: Fy (Jacket End)
+        - Variable: End Gz Force
+          objectExtra: [End A]
+          Label: Fz (Jacket End)
+        - Variable: X
+          objectExtra: [End A]
+          Label: X (Jacket End)
+        - Variable: Y
+          objectExtra: [End A]
+          Label: Y (Jacket End)
+        - Variable: Z
+          objectExtra: [End A]
+          Label: Z (Jacket End)
+        - Variable: GX velocity
+          objectExtra: [End A]
+          Label: Vx (Jacket End)
+        - Variable: GY velocity
+          objectExtra: [End A]
+          Label: Vy (Jacket End)
+        - Variable: GZ velocity
+          objectExtra: [End A]
+          Label: Vz (Jacket End)
+        - Variable: EZ Angle
+          objectExtra: [End A]
+          Label: Angle (Jacket End)
+
+        - Variable: Effective Tension
+          objectExtra: [End B]
+          Label: Tension (Vessel End)
+        - Variable: Shear Force
+          objectExtra: [End B]
+          Label: Shear (Vessel End)
+        - Variable: End Gx Force
+          objectExtra: [End B]
+          Label: Fx (Vessel End)
+        - Variable: End Gy Force
+          objectExtra: [End B]
+          Label: Fy (Vessel End)
+        - Variable: End Gz Force
+          objectExtra: [End B]
+          Label: Fz (Vessel End)
+        - Variable: X
+          objectExtra: [End B]
+          Label: X (Vessel End)
+        - Variable: Y
+          objectExtra: [End B]
+          Label: Y (Vessel End)
+        - Variable: Z
+          objectExtra: [End B]
+          Label: Z (Vessel End)
+        - Variable: GX velocity
+          objectExtra: [End B]
+          Label: Vx (Vessel End)
+        - Variable: GY velocity
+          objectExtra: [End B]
+          Label: Vy (Vessel End)
+        - Variable: GZ velocity
+          objectExtra: [End B]
+          Label: Vz (Vessel End)
+        - Variable: EZ Angle
+          objectExtra: [End B]
+          Label: Angle (Vessel End)
+
+    - Label: Strut7
+      Columns:
+        - Variable: Effective Tension
+          objectExtra: [End A]
+          Label: Tension (Jacket End)
+        - Variable: Shear Force
+          objectExtra: [End A]
+          Label: Shear (Jacket End)
+        - Variable: End Gx Force
+          objectExtra: [End A]
+          Label: Fx (Jacket End)
+        - Variable: End Gy Force
+          objectExtra: [End A]
+          Label: Fy (Jacket End)
+        - Variable: End Gz Force
+          objectExtra: [End A]
+          Label: Fz (Jacket End)
+        - Variable: X
+          objectExtra: [End A]
+          Label: X (Jacket End)
+        - Variable: Y
+          objectExtra: [End A]
+          Label: Y (Jacket End)
+        - Variable: Z
+          objectExtra: [End A]
+          Label: Z (Jacket End)
+        - Variable: GX velocity
+          objectExtra: [End A]
+          Label: Vx (Jacket End)
+        - Variable: GY velocity
+          objectExtra: [End A]
+          Label: Vy (Jacket End)
+        - Variable: GZ velocity
+          objectExtra: [End A]
+          Label: Vz (Jacket End)
+        - Variable: EZ Angle
+          objectExtra: [End A]
+          Label: Angle (Jacket End)
+
+        - Variable: Effective Tension
+          objectExtra: [End B]
+          Label: Tension (Vessel End)
+        - Variable: Shear Force
+          objectExtra: [End B]
+          Label: Shear (Vessel End)
+        - Variable: End Gx Force
+          objectExtra: [End B]
+          Label: Fx (Vessel End)
+        - Variable: End Gy Force
+          objectExtra: [End B]
+          Label: Fy (Vessel End)
+        - Variable: End Gz Force
+          objectExtra: [End B]
+          Label: Fz (Vessel End)
+        - Variable: X
+          objectExtra: [End B]
+          Label: X (Vessel End)
+        - Variable: Y
+          objectExtra: [End B]
+          Label: Y (Vessel End)
+        - Variable: Z
+          objectExtra: [End B]
+          Label: Z (Vessel End)
+        - Variable: GX velocity
+          objectExtra: [End B]
+          Label: Vx (Vessel End)
+        - Variable: GY velocity
+          objectExtra: [End B]
+          Label: Vy (Vessel End)
+        - Variable: GZ velocity
+          objectExtra: [End B]
+          Label: Vz (Vessel End)
+        - Variable: EZ Angle
+          objectExtra: [End B]
+          Label: Angle (Vessel End)
+
+    - Label: Strut8
+      Columns:
+        - Variable: Effective Tension
+          objectExtra: [End A]
+          Label: Tension (Jacket End)
+        - Variable: Shear Force
+          objectExtra: [End A]
+          Label: Shear (Jacket End)
+        - Variable: End Gx Force
+          objectExtra: [End A]
+          Label: Fx (Jacket End)
+        - Variable: End Gy Force
+          objectExtra: [End A]
+          Label: Fy (Jacket End)
+        - Variable: End Gz Force
+          objectExtra: [End A]
+          Label: Fz (Jacket End)
+        - Variable: X
+          objectExtra: [End A]
+          Label: X (Jacket End)
+        - Variable: Y
+          objectExtra: [End A]
+          Label: Y (Jacket End)
+        - Variable: Z
+          objectExtra: [End A]
+          Label: Z (Jacket End)
+        - Variable: GX velocity
+          objectExtra: [End A]
+          Label: Vx (Jacket End)
+        - Variable: GY velocity
+          objectExtra: [End A]
+          Label: Vy (Jacket End)
+        - Variable: GZ velocity
+          objectExtra: [End A]
+          Label: Vz (Jacket End)
+        - Variable: EZ Angle
+          objectExtra: [End A]
+          Label: Angle (Jacket End)
+
+        - Variable: Effective Tension
+          objectExtra: [End B]
+          Label: Tension (Vessel End)
+        - Variable: Shear Force
+          objectExtra: [End B]
+          Label: Shear (Vessel End)
+        - Variable: End Gx Force
+          objectExtra: [End B]
+          Label: Fx (Vessel End)
+        - Variable: End Gy Force
+          objectExtra: [End B]
+          Label: Fy (Vessel End)
+        - Variable: End Gz Force
+          objectExtra: [End B]
+          Label: Fz (Vessel End)
+        - Variable: X
+          objectExtra: [End B]
+          Label: X (Vessel End)
+        - Variable: Y
+          objectExtra: [End B]
+          Label: Y (Vessel End)
+        - Variable: Z
+          objectExtra: [End B]
+          Label: Z (Vessel End)
+        - Variable: GX velocity
+          objectExtra: [End B]
+          Label: Vx (Vessel End)
+        - Variable: GY velocity
+          objectExtra: [End B]
+          Label: Vy (Vessel End)
+        - Variable: GZ velocity
+          objectExtra: [End B]
+          Label: Vz (Vessel End)
+        - Variable: EZ Angle
+          objectExtra: [End B]
+          Label: Angle (Vessel End)
+
+    - Label: Jacket1
+      Columns:
+        - ObjectName: Jacket1_X_Springs
+          Variable: x
+          Label: x displacment
+        - ObjectName: Jacket1_Y_Springs
+          Variable: y
+          Label: y displacment
+        - ObjectName: Jacket1_X_Springs
+          Variable: x velocity
+          Label: x velocity
+        - ObjectName: Jacket1_Y_Springs
+          Variable: y velocity
+          Label: y velocity
+        - ObjectName: Jacket1_X_Springs
+          Variable: In-frame connection GX force
+          Label: FX Force
+        - ObjectName: Jacket1_Y_Springs
+          Variable: In-frame connection GY force
+          Label: FY Force
+        - ObjectName: Jacket1_Z_Springs
+          Variable: In-frame connection GZ force
+          Label: FZ Force
+
+    - Label: Jacket2
+      Columns:
+        - ObjectName: Jacket2_X_Springs
+          Variable: x
+          Label: x displacment
+        - ObjectName: Jacket2_Y_Springs
+          Variable: y
+          Label: y displacment
+        - ObjectName: Jacket2_X_Springs
+          Variable: x velocity
+          Label: x velocity
+        - ObjectName: Jacket2_Y_Springs
+          Variable: y velocity
+          Label: y velocity
+        - ObjectName: Jacket2_X_Springs
+          Variable: In-frame connection GX force
+          Label: FX Force
+        - ObjectName: Jacket2_Y_Springs
+          Variable: In-frame connection GY force
+          Label: FY Force
+        - ObjectName: Jacket2_Z_Springs
+          Variable: In-frame connection GZ force
+          Label: FZ Force
+
+    - Label: Jacket3
+      Columns:
+        - ObjectName: Jacket3_X_Springs
+          Variable: x
+          Label: x displacment
+        - ObjectName: Jacket3_Y_Springs
+          Variable: y
+          Label: y displacment
+        - ObjectName: Jacket3_X_Springs
+          Variable: x velocity
+          Label: x velocity
+        - ObjectName: Jacket3_Y_Springs
+          Variable: y velocity
+          Label: y velocity
+        - ObjectName: Jacket3_X_Springs
+          Variable: In-frame connection GX force
+          Label: FX Force
+        - ObjectName: Jacket3_Y_Springs
+          Variable: In-frame connection GY force
+          Label: FY Force
+        - ObjectName: Jacket3_Z_Springs
+          Variable: In-frame connection GZ force
+          Label: FZ Force
+
+    - Label: Jacket4
+      Columns:
+        - ObjectName: Jacket4_X_Springs
+          Variable: x
+          Label: x displacment
+        - ObjectName: Jacket4_Y_Springs
+          Variable: y
+          Label: y displacment
+        - ObjectName: Jacket4_X_Springs
+          Variable: x velocity
+          Label: x velocity
+        - ObjectName: Jacket4_Y_Springs
+          Variable: y velocity
+          Label: y velocity
+        - ObjectName: Jacket4_X_Springs
+          Variable: In-frame connection GX force
+          Label: FX Force
+        - ObjectName: Jacket4_Y_Springs
+          Variable: In-frame connection GY force
+          Label: FY Force
+        - ObjectName: Jacket4_Z_Springs
+          Variable: In-frame connection GZ force
+          Label: FZ Force
+
+RangeGraph_settings:
+  add_effective_tension_to_cfg: False
+
+file_management:
+  flag: True
+  input_directory: ./analysis  # Analysis files directory
+  output_directory: ./results
+  
+  filename:
+    extension: [sim, yml]
+    pattern: "*"
+    filters:
+      contains: []
+      not_contains: []
+  
+  update_unfinished:
+    flag: False

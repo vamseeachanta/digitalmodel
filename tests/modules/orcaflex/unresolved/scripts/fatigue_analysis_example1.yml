@@ -1,0 +1,45 @@
+﻿%YAML 1.1
+# Type: Fatigue
+# Program: OrcaFlex 10.0e
+---
+Title: ECS Drilling Riser Analysis
+DamageCalculation: Homogeneous pipe stress
+AnalysisType: Rainflow
+# Units
+UnitsSystem: SI
+CriticalDamageFactor: 0.1
+ThetaCount: 16
+# Results
+OutputLoadCaseTables: Yes
+OutputDetailedLoadCaseTables: No
+LoadCaseDamageUnits: Damage per year
+SNCurves:
+  - SNcurveName: DNV 84 F, Seawater with CP
+    SNcurveSpecificationMethod: Table
+    SNcurveTableN, SNcurveTableS:
+      - [6.3154E+11 , 1000]
+      - [6.3154E+02, 1000000]
+    SNcurveEnduranceLimit: 0
+    SNcurveMeanStressModel: None
+AnalysisData:
+  - ArcLengthInterval: [0, 7000]
+    RadialPosition: Inner
+    SCF: 1.3
+    ThicknessCorrectionFactor: 1
+    AnalysisDataSNcurve: DNV 84 F, Seawater with CP
+  - ArcLengthInterval: [0, 7000]
+    RadialPosition: Outer
+    SCF: 1.3
+    ThicknessCorrectionFactor: 1
+    AnalysisDataSNcurve: DNV 84 F, Seawater with CP
+LoadCases:
+  - LoadCaseFileName: Ballast\001_06in_GI_Ballast_Dr210_Hs=0.8m_Tp=8s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.940993
+  - LoadCaseFileName: Ballast\002_06in_GI_Ballast_Dr210_Hs=0.8m_Tp=9s.sim
+    LoadCaseLineName: SLWR
+    PeriodFrom: 20
+    PeriodTo: 3600
+    LoadCaseExposureTime: 2.031959

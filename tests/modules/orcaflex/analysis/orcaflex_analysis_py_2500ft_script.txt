@@ -1,0 +1,44 @@
+﻿// Case  1
+LoadData results\app_vertical_riser_vertical_riser_py_west_boreas_Wave1_FE.yml
+Select General
+StageDuration[2]= 600.0
+Select Environment
+Select WaveTrain "Wave1"
+WaveHs= 0.5
+Select Environment
+Select WaveTrain "Wave1"
+WaveTp= 3.0
+Select Environment
+Select WaveTrain "Wave1"
+WaveSeed= 71573
+Select Environment
+Select WaveTrain "Wave1"
+WaveDirection= 92.5
+Select "Deepwater Pontus_vessel"
+Draught= Operating
+Select "Deepwater Pontus_vessel"
+InitialZ= -18.15
+SaveData results\001_2500ft_WT_0875_64ppg_Hs=0.5m_Tp=3s.dat
+
+// Case  2
+LoadData results\app_vertical_riser_vertical_riser_py_west_boreas_Wave1_FE.yml
+Select General
+StageDuration[2]= 600.0
+Select Environment
+Select WaveTrain "Wave1"
+WaveHs= 1.0
+Select Environment
+Select WaveTrain "Wave1"
+WaveTp= 3.0
+Select Environment
+Select WaveTrain "Wave1"
+WaveSeed= 47469
+Select Environment
+Select WaveTrain "Wave1"
+WaveDirection= 92.5
+Select "Deepwater Pontus_vessel"
+Draught= Operating
+Select "Deepwater Pontus_vessel"
+InitialZ= -18.15
+SaveData results\002_2500ft_WT_0875_64ppg_Hs=1.0m_Tp=3s.dat
+

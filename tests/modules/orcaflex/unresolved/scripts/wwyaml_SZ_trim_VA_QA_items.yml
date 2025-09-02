@@ -1,0 +1,15 @@
+dictionary_item_added: !!python/object/new:deepdiff.model.PrettyOrderedSet
+  state:
+  - root['StaticsMaxIterations']
+  - root['StaticsMinDamping']
+  - root['ImplicitUseVariableTimeStep']
+  - root['ImplicitVariableMaxTimeStep']
+  - root['ImplicitVariableMaxNumOfIterations']
+  - root['StageDuration[1]']
+dictionary_item_removed: !!python/object/new:deepdiff.model.PrettyOrderedSet
+  state:
+  - root['StaticsMaxDamping']
+values_changed:
+  root['StageDuration[2]']:
+    new_value: 200
+    old_value: 300

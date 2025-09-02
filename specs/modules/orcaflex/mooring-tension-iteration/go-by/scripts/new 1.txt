@@ -1,0 +1,3 @@
+/create-spec orcaflex model builder to help create models with the following standard structure:
+model-example-1
+model-example-2
