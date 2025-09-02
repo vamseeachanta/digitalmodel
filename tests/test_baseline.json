@@ -1,0 +1,50 @@
+{
+  "date": "2025-09-02T15:50:05.541326",
+  "summary": {
+    "total_tests": 65,
+    "passed": 62,
+    "failed": 0,
+    "skipped": 3,
+    "errors": 0,
+    "pass_rate": 95.4,
+    "coverage": 8.37,
+    "execution_time_seconds": 14.41
+  },
+  "modules": {
+    "aqwa": {
+      "files": 8,
+      "status": "passing"
+    },
+    "catenary_riser": {
+      "files": 2,
+      "status": "passing"
+    },
+    "orcaflex": {
+      "files": 5,
+      "status": "passing"
+    },
+    "pipeline": {
+      "files": 5,
+      "status": "passing"
+    },
+    "pipe_capacity": {
+      "files": 1,
+      "status": "passing"
+    },
+    "signal_analysis": {
+      "files": 8,
+      "status": "passing"
+    },
+    "time_series": {
+      "files": 3,
+      "status": "passing"
+    },
+    "viv_analysis": {
+      "files": 1,
+      "status": "passing"
+    }
+  },
+  "command": "python -m pytest tests/ -v",
+  "environment": "repository_uv",
+  "python_version": "3.11"
+}

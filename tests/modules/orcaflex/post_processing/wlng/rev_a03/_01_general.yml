@@ -1,6 +1,0 @@
-﻿General:
-  - includefile: 01_a_static_analysis.yml
-
-  - includefile: 01_b_dynamic_analysis.yml
-
-  - includefile: 01_c_global_north.yml

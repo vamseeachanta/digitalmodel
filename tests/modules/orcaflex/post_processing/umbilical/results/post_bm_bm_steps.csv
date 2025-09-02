@@ -1,9 +1,0 @@
-fe_filename,RunStatus,FileName,Description
-.\bm_step01.sim,2,.\bm_step01.sim,Description
-.\bm_step02.sim,2,.\bm_step02.sim,Description
-.\bm_step03.sim,2,.\bm_step03.sim,Description
-.\bm_step07.sim,2,.\bm_step07.sim,Description
-.\bm_step09.sim,2,.\bm_step09.sim,Description
-,,Mean,Mean
-,,Minimum,Minimum
-,,Maximum,Maximum

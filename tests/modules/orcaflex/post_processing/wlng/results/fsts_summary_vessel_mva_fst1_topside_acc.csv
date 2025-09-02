@@ -1,6 +1,0 @@
-fe_filename,run_status,description,statistic,FST1_ref_x_acc_min,FST1_ref_x_acc_max,FST1_ref_y_acc_min,FST1_ref_y_acc_max,FST1_ref_z_acc_min,FST1_ref_z_acc_max,FST1_ref_rx_acc_min,FST1_ref_rx_acc_max,FST1_ref_ry_acc_min,FST1_ref_ry_acc_max,FST1_ref_rz_acc_min,FST1_ref_rz_acc_max
-K:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/wlng/analysis/FST2F_FST1F_LWL_000deg.sim,,,,-0.005688,0.003534,-0.002569,0.001853,-0.000416,0.00082,-2.4e-05,3.4e-05,-4e-06,8e-06,-2.3e-05,2.9e-05
-,,,min,-0.005688,0.003534,-0.002569,0.001853,-0.000416,0.00082,-2.4e-05,3.4e-05,-4e-06,8e-06,-2.3e-05,2.9e-05
-,,,max,-0.005688,0.003534,-0.002569,0.001853,-0.000416,0.00082,-2.4e-05,3.4e-05,-4e-06,8e-06,-2.3e-05,2.9e-05
-,,,mean,-0.005688,0.003534,-0.002569,0.001853,-0.000416,0.00082,-2.4e-05,3.4e-05,-4e-06,8e-06,-2.3e-05,2.9e-05
-,,,stdev,,,,,,,,,,,,

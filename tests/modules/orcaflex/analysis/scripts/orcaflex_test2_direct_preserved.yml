@@ -1,7 +1,0 @@
-model_name: orcaflex_test2_direct
-original_sim_file: orcaflex_test2_direct.sim
-preserved_from: orphaned_sim_file
-note: This .sim file had no corresponding input file and was preserved
-original_size: 3.47 MB
-preservation_date: '2024-08-21'
-todo: Convert to proper OrcaFlex input format when needed
