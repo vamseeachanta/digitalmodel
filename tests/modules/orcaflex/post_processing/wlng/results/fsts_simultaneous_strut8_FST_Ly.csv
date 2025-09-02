@@ -1,6 +1,0 @@
-fe_filename,Label,run_status,statistic,ValueAtMax_End Ly force,TimeOfMax_End Ly force,LinkedValueAtMax_End Lx force,LinkedValueAtMax_End Lz force,ValueAtMin_End Ly force,TimeOfMin_End Ly force,LinkedValueAtMin_End Lx force,LinkedValueAtMin_End Lz force
-K:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\wlng\analysis\FST2F_FST1F_LWL_000deg.sim,End Ly,,,197.125488,10.0,-76.296902,833.371826,102.257598,3.5,-35.806687,851.978027
-,,,min,197.125488,10.0,-76.296902,833.371826,102.257598,3.5,-35.806687,851.978027
-,,,max,197.125488,10.0,-76.296902,833.371826,102.257598,3.5,-35.806687,851.978027
-,,,mean,197.125488,10.0,-76.296902,833.371826,102.257598,3.5,-35.806687,851.978027
-,,,stdev,,,,,,,,

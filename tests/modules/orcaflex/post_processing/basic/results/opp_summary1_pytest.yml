@@ -1,5 +1,0 @@
-orcaflex_post_process:
-  summary:
-    groups:
-      - data: k:\github\digitalmodel\tests\modules\orcaflex\orcaflex_post_process\results\opp_summary1_dynamics_pytest.csv
-        label: dynamics

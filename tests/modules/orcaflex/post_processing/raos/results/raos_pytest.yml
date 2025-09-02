@@ -1,8 +1,0 @@
-orcaflex_post_process:
-  time_series:
-    - time_series:
-        groups:
-          - data: "test_data_1.csv"
-    - time_series:
-        groups:
-          - data: "test_data_2.csv"

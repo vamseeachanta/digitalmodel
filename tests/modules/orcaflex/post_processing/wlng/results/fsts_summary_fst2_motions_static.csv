@@ -1,6 +1,0 @@
-fe_filename,run_status,description,statistic,fst2_X,fst2_Y,fst2_Z,fst2_R1,fst2_R2,fst2_R3
-K:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/wlng/analysis/FST2F_FST1F_LWL_000deg.sim,,,,-207.93364,-0.046776,-10.790375,-1.289781,0.030806,0.219802
-,,,min,-207.93364,-0.046776,-10.790375,-1.289781,0.030806,0.219802
-,,,max,-207.93364,-0.046776,-10.790375,-1.289781,0.030806,0.219802
-,,,mean,-207.93364,-0.046776,-10.790375,-1.289781,0.030806,0.219802
-,,,stdev,,,,,,

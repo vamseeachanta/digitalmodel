@@ -1,7 +1,0 @@
-fe_filename,run_status,description,statistic,Vessel_Heading,Hmax,WavePeriod,WaveDirection,RefCurrentSpeed,CurrentFactor[0],RefCurrentDirection,Eff. Tension,Bend. Moment,API M1,vM stress,TimeHistory_EndB_EffTension_Max
-K:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test1.sim,,,,0.0,,,270.0,1.0,0.9,270.0,582.89502,60.617218,0.772398,229768.918891,1.534494
-K:/github/digitalmodel/tests/modules/orcaflex/orcaflex_post_process/orcaflex_test2.sim,,,,0.0,,,270.0,1.0,2.1,180.0,582.89502,60.617218,0.772398,229768.918891,1.534494
-,,,min,0.0,,,270.0,1.0,0.9,180.0,582.89502,60.617218,0.772398,229768.918891,1.534494
-,,,max,0.0,,,270.0,1.0,2.1,270.0,582.89502,60.617218,0.772398,229768.918891,1.534494
-,,,mean,0.0,,,270.0,1.0,1.5,225.0,582.89502,60.617218,0.772398,229768.918891,1.534494
-,,,stdev,0.0,,,0.0,0.0,0.848528,63.63961,0.0,0.0,0.0,0.0,0.0

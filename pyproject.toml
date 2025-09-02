@@ -54,7 +54,6 @@ dependencies = [
     "deepdiff",
     "deepdiff>=8.0.0,<9.0.0",
     "defusedxml==0.7.1", # Secure XMLprocessing,
-    "digitalmodel",
     "docx",
     "factory-boy==3.3.0", # Test datafactories,
     "faker==20.1.0", # Fake datageneration,
@@ -65,7 +64,6 @@ dependencies = [
     "flake8==6.1.0",
     "geopy==2.4.1", # Geographic calculations (ifneeded),
     "gunicorn==21.2.0", # Alternative touvicorn,
-    "gzip==1.0", # Built-in, but ensuringavailability,
     "h5py==3.10.0", # HDF5format,
     "hiredis==2.2.3",
     "httpx==0.25.2", # For testing HTTPclients,
@@ -79,7 +77,6 @@ dependencies = [
     "loguru",
     "loguru>=0.7.0,<1.0.0",
     "lxml==4.9.3", # XMLprocessing,
-    "magic==0.4.27", # File type detection(python-magic),
     "marshmallow==3.20.1", # Additionalserialization,
     "matplotlib>=3.7.0,<4.0.0",
     "memory-profiler==0.61.0", # Memoryprofiling,
@@ -118,7 +115,6 @@ dependencies = [
     "python-docx>=0.8.0",
     "python-dotenv==1.0.0",
     "python-jose[cryptography]==3.3.0", # Additional JWT support
-    "python-magic==0.4.27", # File type detection
     "python-multipart==0.0.6",
     "pyyaml",
     "pyyaml>=6.0.0,<7.0.0",
