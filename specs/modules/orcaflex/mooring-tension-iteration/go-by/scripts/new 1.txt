@@ -1,3 +1,14 @@
 /create-spec orcaflex model builder to help create models with the following standard structure:
-model-example-1
-model-example-2
+- standard architecture
+- standard file structure. Examples below:
+	- model-example-1
+	- model-example-2
+
+
+
+rev1 folder: D:\1522\ctr7\orcaflex\rev_a08\base_files\fsts_lngc_pretension\rev1
+rev2 folder: D:\1522\ctr7\orcaflex\rev_a08\base_files\fsts_lngc_pretension\rev2
+copy files from rev1 and rev2 with following rules:
+- reorganize the rev2 files by following file structure of test folder: D:\github\digitalmodel\tests\modules\orcaflex\mooring-tension-iteration\fsts-l015-test-cases
+- create missing commands in .sh file to ensure analyis mooring analysis runs without errors. 
+- Run the analysis script and fix any bugs
