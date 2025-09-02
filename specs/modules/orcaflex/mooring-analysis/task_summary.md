@@ -11,7 +11,7 @@
 - **Codebase Investigation**: Conducted comprehensive analysis of existing OrcaFlex modules
   - Analyzed `src/digitalmodel/modules/orcaflex/mooring.py` (830 lines) - found extensive pretension analysis and 3D stiffness calculations
   - Examined `src/digitalmodel/modules/orcaflex/analysis/comparative.py` (534 lines) - discovered multi-configuration analysis patterns
-  - Reviewed test data in `tests/modules/orcaflex/mooring-tension-iteration/go-by/` - identified comprehensive examples and output patterns
+  - Reviewed test data in `tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/` - identified comprehensive examples and output patterns
   - Studied OrcaFlex agent configuration and workflow patterns in `agents/orcaflex/`
 
 - **Pattern Recognition**: Identified repository patterns and integration requirements

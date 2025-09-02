@@ -14,7 +14,7 @@ This specification has been superseded by a new, more comprehensive mooring anal
 - Test files have been moved to appropriate test directory
 
 ### Migration Information
-- **Test Files**: Moved to `tests/modules/orcaflex/mooring-tension-iteration/go-by/`
+- **Test Files**: Moved to `tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/`
 - **New Spec**: See `specs/modules/orcaflex/mooring-analysis/`
 - **Analysis Module**: `src/digitalmodel/modules/orcaflex/analysis/`
 

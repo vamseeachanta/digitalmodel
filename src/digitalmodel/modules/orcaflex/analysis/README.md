@@ -149,8 +149,8 @@ For detailed technical specification and implementation plan, see:
 
 ```bash
 python -m digitalmodel.modules.orcaflex.analysis \
-    --input-directory tests/modules/orcaflex/mooring-tension-iteration/go-by/output/.csv \
-    --output-directory tests/modules/orcaflex/mooring-tension-iteration/go-by/output
+    --input-directory tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output/.csv \
+    --output-directory tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output
 ```
 
 ### Example 2: Using Configuration
@@ -158,8 +158,8 @@ python -m digitalmodel.modules.orcaflex.analysis \
 ```yaml
 # analysis_config.yml
 file_management:
-  input_directory: ../digitalmodel/tests/modules/orcaflex/mooring-tension-iteration/go-by/output/.csv
-  output_directory: ../digitalmodel/tests/modules/orcaflex/mooring-tension-iteration/go-by/output
+  input_directory: ../digitalmodel/tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output/.csv
+  output_directory: ../digitalmodel/tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output
 
 output:
   report: ./report/analysis_report.md
