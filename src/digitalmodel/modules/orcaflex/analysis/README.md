@@ -137,14 +137,20 @@ python -m digitalmodel.modules.orcaflex.analysis \
     --config mooring_analysis.yml
 ```
 
+## Specification
+
+For detailed technical specification and implementation plan, see:
+- `specs/modules/orcaflex/mooring-analysis/spec.md` - Technical specification
+- `specs/modules/orcaflex/mooring-analysis/tasks.md` - Implementation tasks
+
 ## Examples
 
 ### Example 1: Basic Analysis
 
 ```bash
 python -m digitalmodel.modules.orcaflex.analysis \
-    --input-directory specs/modules/orcaflex/mooring-tension-iteration/go-by/output/.csv \
-    --output-directory specs/modules/orcaflex/mooring-tension-iteration/go-by/output
+    --input-directory tests/modules/orcaflex/mooring-tension-iteration/go-by/output/.csv \
+    --output-directory tests/modules/orcaflex/mooring-tension-iteration/go-by/output
 ```
 
 ### Example 2: Using Configuration
@@ -152,8 +158,8 @@ python -m digitalmodel.modules.orcaflex.analysis \
 ```yaml
 # analysis_config.yml
 file_management:
-  input_directory: ../digitalmodel/specs/modules/orcaflex/mooring-tension-iteration/go-by/output/.csv
-  output_directory: ../digitalmodel/specs/modules/orcaflex/mooring-tension-iteration/go-by/output
+  input_directory: ../digitalmodel/tests/modules/orcaflex/mooring-tension-iteration/go-by/output/.csv
+  output_directory: ../digitalmodel/tests/modules/orcaflex/mooring-tension-iteration/go-by/output
 
 output:
   report: ./report/analysis_report.md
