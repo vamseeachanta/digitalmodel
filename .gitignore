@@ -45,6 +45,19 @@
 /*.log
 /*.pid
 /*.cache
+
+# Coverage and test artifacts
+htmlcov/
+.pytest_cache/
+.coverage
+coverage.xml
+*.cover
+.hypothesis/
+
+# Logs
+logs/
+*.log
+
 # ==========================================
 
 # AQWA files
