@@ -27,7 +27,7 @@
 - Leverage existing work in:
   - `src/digitalmodel/modules/orcaflex/analysis/` (comparative analysis module)
   - `src/digitalmodel/modules/orcaflex/mooring.py` (core mooring analysis)
-  - Test examples in `tests/modules/orcaflex/mooring-tension-iteration/go-by/`
+  - Test examples in `tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/`
 - Follow repository patterns and ensure the spec is production-ready, not test-focused.
 
 ## Analysis Approach
@@ -55,7 +55,7 @@ I conducted comprehensive analysis of the existing codebase to understand:
    - Discovered OrcaFlex agent integration patterns
 
 4. **Test Data & Examples**:
-   - Analyzed test examples in `tests/modules/orcaflex/mooring-tension-iteration/go-by/`
+   - Analyzed test examples in `tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/`
    - Found comprehensive configuration examples and output data
    - Identified visualization and reporting patterns
 
