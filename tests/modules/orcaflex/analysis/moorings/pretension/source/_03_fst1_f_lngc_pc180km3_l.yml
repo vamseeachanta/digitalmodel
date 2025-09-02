@@ -1,0 +1,5 @@
+﻿VesselTypes:
+  includefile: 03_a_fst1_f_lngc_pc180km3_l_vessel_type.yml
+
+Vessels:
+  includefile: 03_b_fst1_f_vessel.yml
