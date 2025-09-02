@@ -1,0 +1,22 @@
+test_name: analysis
+description: Batch configuration for analysis tests
+model_files:
+  directory: ../
+  pattern: '*.dat'
+  recursive: false
+output_settings:
+  base_directory: ../output
+  csv_directory: ../output/.csv
+  sim_directory: ../.sim
+  save_sim: true
+  save_csv: true
+analysis_settings:
+  analysis_type: static
+  parallel_workers: 4
+  timeout: 3600
+  retry_on_failure: true
+  max_retries: 2
+logging:
+  level: INFO
+  log_directory: logs
+  log_file: analysis_analysis.log

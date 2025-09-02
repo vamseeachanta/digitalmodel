@@ -1,0 +1,104 @@
+flowchart LR
+    %% Input Data Flow
+    subgraph "Input Layer"
+        CONFIG[Configuration<br/>YAML/JSON]
+        EXCEL[Stack-up Data<br/>Excel]
+        METOCEAN[Environmental<br/>Data]
+        VESSEL[Vessel<br/>RAOs]
+    end
+    
+    %% Processing Pipeline
+    subgraph "Processing Pipeline"
+        direction TB
+        
+        VALIDATE[Input<br/>Validation]
+        BUILD[Model<br/>Building]
+        
+        subgraph "Analysis Sequence"
+            S1[1. Static<br/>Analysis]
+            S2[2. Dynamic<br/>Analysis]
+            S3[3. Post-Processing]
+            S4[4. Specialized<br/>Analysis]
+            
+            S1 --> S2
+            S2 --> S3
+            S3 --> S4
+        end
+        
+        VALIDATE --> BUILD
+        BUILD --> S1
+    end
+    
+    %% Parallel Processing
+    subgraph "Parallel Execution"
+        direction TB
+        
+        BATCH[Batch<br/>Manager]
+        
+        W1[Worker 1]
+        W2[Worker 2]
+        W3[Worker 3]
+        W4[Worker N]
+        
+        BATCH --> W1
+        BATCH --> W2
+        BATCH --> W3
+        BATCH --> W4
+    end
+    
+    %% Results Aggregation
+    subgraph "Results Processing"
+        AGG[Results<br/>Aggregator]
+        STATS[Statistical<br/>Analysis]
+        COMPLY[Compliance<br/>Checking]
+        
+        AGG --> STATS
+        AGG --> COMPLY
+    end
+    
+    %% Output Generation
+    subgraph "Output Layer"
+        direction TB
+        
+        RGEN[Report<br/>Generator]
+        
+        subgraph "Outputs"
+            REP1[Executive<br/>Summary]
+            REP2[Technical<br/>Report]
+            REP3[Data<br/>Exports]
+            REP4[Visualizations]
+        end
+        
+        RGEN --> REP1
+        RGEN --> REP2
+        RGEN --> REP3
+        RGEN --> REP4
+    end
+    
+    %% Data Flow Connections
+    CONFIG --> VALIDATE
+    EXCEL --> VALIDATE
+    METOCEAN --> VALIDATE
+    VESSEL --> VALIDATE
+    
+    S4 --> BATCH
+    BATCH --> AGG
+    
+    W1 --> AGG
+    W2 --> AGG
+    W3 --> AGG
+    W4 --> AGG
+    
+    STATS --> RGEN
+    COMPLY --> RGEN
+    
+    %% Styling
+    classDef input fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef process fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    classDef parallel fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef output fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    
+    class CONFIG,EXCEL,METOCEAN,VESSEL input
+    class VALIDATE,BUILD,S1,S2,S3,S4 process
+    class BATCH,W1,W2,W3,W4 parallel
+    class RGEN,REP1,REP2,REP3,REP4 output

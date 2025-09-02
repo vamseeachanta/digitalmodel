@@ -1,0 +1,97 @@
+graph TD
+    %% Riser Types Hierarchy
+    subgraph "Riser Type Classification"
+        BASE[Base Riser Model]
+        
+        subgraph "Production Risers"
+            SCR[Steel Catenary Riser<br/>- Free hanging<br/>- Touchdown point<br/>- Dynamic response]
+            
+            LAZY[Lazy Wave Riser<br/>- Buoyancy modules<br/>- Wave configuration<br/>- Reduced fatigue]
+            
+            TTR[Top Tensioned Riser<br/>- Tensioner system<br/>- Vertical configuration<br/>- Low motion]
+            
+            HYBRID[Hybrid Riser<br/>- Combined systems<br/>- Complex geometry<br/>- Multi-material]
+        end
+        
+        subgraph "Drilling/Workover"
+            DRILL[Drilling Riser<br/>- BOP connection<br/>- Tensioner ring<br/>- Mud return]
+            
+            WORK[Workover Riser<br/>- Subsea tree<br/>- EDP system<br/>- Completion ops]
+        end
+        
+        subgraph "Flexible Systems"
+            FLEX[Flexible Riser<br/>- Multi-layer<br/>- High flexibility<br/>- Complex analysis]
+            
+            UMBILICAL[Umbilical<br/>- Power/control<br/>- Chemical injection<br/>- Dynamic service]
+        end
+    end
+    
+    %% Component Requirements
+    subgraph "Component Requirements by Type"
+        direction LR
+        
+        subgraph "SCR Components"
+            SCR_C[- Hang-off<br/>- Pipe sections<br/>- Touchdown zone]
+        end
+        
+        subgraph "Lazy Wave Components"
+            LAZY_C[- Hang-off<br/>- Pipe sections<br/>- Buoyancy modules<br/>- Touchdown zone]
+        end
+        
+        subgraph "TTR Components"
+            TTR_C[- Tensioner system<br/>- Stress joint<br/>- Riser joints<br/>- Keel joint]
+        end
+        
+        subgraph "Drilling Components"
+            DRILL_C[- Tensioner ring<br/>- Telescopic joint<br/>- Riser joints<br/>- Buoyancy<br/>- BOP connector]
+        end
+    end
+    
+    %% Analysis Requirements
+    subgraph "Analysis Requirements Matrix"
+        direction TB
+        
+        subgraph "Analysis Types"
+            A_STATIC[Static<br/>✓ All Types]
+            A_DYNAMIC[Dynamic<br/>✓ All Types]
+            A_FATIGUE[Fatigue<br/>✓ Critical for SCR/Lazy]
+            A_VIV[VIV<br/>✓ Deep water risers]
+            A_EXTREME[Extreme<br/>✓ All Types]
+        end
+    end
+    
+    %% Connections
+    BASE --> SCR
+    BASE --> LAZY
+    BASE --> TTR
+    BASE --> HYBRID
+    BASE --> DRILL
+    BASE --> WORK
+    BASE --> FLEX
+    BASE --> UMBILICAL
+    
+    SCR -.-> SCR_C
+    LAZY -.-> LAZY_C
+    TTR -.-> TTR_C
+    DRILL -.-> DRILL_C
+    
+    SCR --> A_STATIC
+    SCR --> A_FATIGUE
+    LAZY --> A_FATIGUE
+    TTR --> A_VIV
+    DRILL --> A_DYNAMIC
+    
+    %% Styling
+    classDef base fill:#e1f5fe,stroke:#01579b,stroke-width:3px
+    classDef production fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef drilling fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef flexible fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef component fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef analysis fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+    
+    class BASE base
+    class SCR,LAZY,TTR,HYBRID production
+    class DRILL,WORK drilling
+    class FLEX,UMBILICAL flexible
+    class SCR_C,LAZY_C,TTR_C,DRILL_C component
+    class A_STATIC,A_DYNAMIC,A_FATIGUE,A_VIV,A_EXTREME analysis
