@@ -164,11 +164,13 @@ class OPPVisualization:
         return viewparams
 
     def save_image(self, cfg, model, file_name, viewparams, view_label):
-        result_plot_folder = cfg["Analysis"]["result_plot_folder"]
+        # Save directly to output_directory instead of Plot subdirectory
+        output_directory = cfg.get("file_management", {}).get("output_directory", 
+                                  cfg["Analysis"]["result_plot_folder"])
         file_name_img = (
             os.path.basename(file_name).split(".")[0] + "_" + view_label + ".jpg"
         )
-        file_name_with_path = os.path.join(result_plot_folder, file_name_img)
+        file_name_with_path = os.path.join(output_directory, file_name_img)
         logger.info(f"Saving ...  {file_name_img}  view")
         model.SaveModelView(file_name_with_path, viewparams)
     

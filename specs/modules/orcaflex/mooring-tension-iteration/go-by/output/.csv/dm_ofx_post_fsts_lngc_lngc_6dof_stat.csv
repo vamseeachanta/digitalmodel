@@ -1,2 +1,0 @@
-fe_filename,fe_filename_stem,run_status,start_time,stop_time,description,statistic,lngc_X,lngc_Y,lngc_Z,lngc_R1,lngc_R2,lngc_R3
-D:/github/digitalmodel/specs/modules/orcaflex/mooring-tension-iteration/go-by/.sim/fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof.sim,fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof,InStaticState,-10.0,inf,,,-179.303352,-52.173964,-2.220903,0.387754,5.920707,0.523675

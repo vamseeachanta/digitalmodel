@@ -185,6 +185,10 @@ dmypy.json
 # siva adding private workspace 
 _dev-private/
 
+# Generated output directories
+/output/
+/results/
+
 
 # Agent OS
 .agent-os/cache/
