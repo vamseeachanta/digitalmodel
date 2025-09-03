@@ -1,3 +1,4 @@
+from assetutilities.common.path_resolver import PathResolver
 try:
     import OrcFxAPI
 except Exception:

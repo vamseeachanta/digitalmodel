@@ -1,7 +1,3 @@
-try:
-    import OrcFxAPI
-except Exception:
-    print("OrcaFlex license not available. Run on different computer")
 import os
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -9,6 +5,11 @@ from typing import Dict, List, Tuple, Optional
 from loguru import logger
 from assetutilities.common.yml_utilities import is_file_valid_func
 from digitalmodel.common.parallel_processing import should_use_parallel
+from assetutilities.common.path_resolver import PathResolver
+try:
+    import OrcFxAPI
+except Exception:
+    print("OrcaFlex license not available. Run on different computer")
 
 
 class OPPVisualization:
@@ -164,9 +165,20 @@ class OPPVisualization:
         return viewparams
 
     def save_image(self, cfg, model, file_name, viewparams, view_label):
-        # Save directly to output_directory instead of Plot subdirectory
-        output_directory = cfg.get("file_management", {}).get("output_directory", 
-                                  cfg["Analysis"]["result_plot_folder"])
+        # Use visualization output_directory if available, otherwise fall back to file_management
+        output_directory = cfg.get("visualization", {}).get("output_directory")
+        if not output_directory:
+            output_directory = cfg.get("visualization", {}).get("plot_directory")
+        if not output_directory:
+            output_directory = cfg.get("file_management", {}).get("output_directory", 
+                                      cfg.get("Analysis", {}).get("result_plot_folder", "output"))
+        
+        # Resolve path using PathResolver for consistency
+        output_directory = PathResolver.resolve_path(output_directory, cfg)
+        
+        # Ensure directory exists
+        os.makedirs(output_directory, exist_ok=True)
+        
         file_name_img = (
             os.path.basename(file_name).split(".")[0] + "_" + view_label + ".jpg"
         )

@@ -1,12 +1,3 @@
-"""
-Visualization module for OrcaFlex mooring analysis results.
-
-This module provides visualization capabilities for:
-- Mooring line forces (X, Y, Z components)
-- Mooring system stiffness characteristics
-- Force distribution and directional analysis
-"""
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -16,6 +7,16 @@ import matplotlib.patches as mpatches
 from mpl_toolkits.mplot3d import Axes3D
 import os
 from pathlib import Path
+from assetutilities.common.path_resolver import PathResolver
+"""
+Visualization module for OrcaFlex mooring analysis results.
+
+This module provides visualization capabilities for:
+- Mooring line forces (X, Y, Z components)
+- Mooring system stiffness characteristics
+- Force distribution and directional analysis
+"""
+
 
 
 class MooringVisualization:
@@ -28,7 +29,7 @@ class MooringVisualization:
         Args:
             output_directory (str): Directory to save plots
         """
-        self.output_directory = output_directory or os.getcwd()
+        self.output_directory = PathResolver.resolve_path(output_directory or os.getcwd(), cfg=None)
         Path(self.output_directory).mkdir(parents=True, exist_ok=True)
         
     def plot_mooring_forces(self, pretension_df, stiffness_df=None, save_name="mooring_forces"):
