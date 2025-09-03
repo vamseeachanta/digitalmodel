@@ -67,7 +67,7 @@ Keyword Arguments:
     output_directory="./sim"     # Output directory  
     recursive=true               # Recursive search
     parallel=true                # Parallel processing
-    max_workers=20               # Concurrent workers
+    max_workers=20               # Concurrent workers (also accepts 'workers')
     mock=true                    # Mock mode
     analysis_type="dynamic"      # Analysis type (static/dynamic/both)
     simulation_time=200.0        # Dynamic simulation duration (seconds)
@@ -158,8 +158,14 @@ Examples:
             runner_kwargs['mock_mode'] = kwargs.pop('mock_mode')
         if 'verbose' in kwargs:
             runner_kwargs['verbose'] = kwargs.pop('verbose')
+        
+        # Handle both 'workers' and 'max_workers' for consistency
         if 'max_workers' in kwargs:
             runner_kwargs['max_workers'] = kwargs.pop('max_workers')
+        elif 'workers' in kwargs:
+            # Support 'workers' for backward compatibility
+            runner_kwargs['max_workers'] = kwargs.pop('workers')
+            print(f"  Note: 'workers' parameter mapped to 'max_workers'")
         
         # Create runner
         runner = UniversalOrcaFlexRunner(**runner_kwargs)

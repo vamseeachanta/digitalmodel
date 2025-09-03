@@ -7,7 +7,7 @@
 # /d/github/digitalmodel/.venv/Scripts/python -m digitalmodel.modules.orcaflex.universal pattern="fsts*180km3*pb_*.yml" input_directory="." output_directory="." validate=false
 
 # postprocess to get results
-/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel config/dm_ofx_post_fsts_lngc.yml --workers 30
+/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel config/dm_ofx_post_fsts_lngc.yml --max_workers 30
 /d/github/assetutilities/.venv/Scripts/python -m assetutilities config/au_collate.yml
 /d/github/digitalmodel/.venv/Scripts/python -m digitalmodel config/viz.yml "{'meta': {'label': 'viz_fsts_'}, 'file_management': {'input_directory': '../run_files/sim/', 'output_directory': '../output/visual', 'filename': {'pattern': 'fsts_*_vessel_statics_6dof'}}}" --workers 30
 

@@ -128,6 +128,11 @@ def get_parallel_config(cfg: dict, module_name: str = '') -> dict:
     # Get configuration from cfg
     parallel_config = cfg.get('parallel_processing', {})
     
+    # Handle both 'workers' and 'max_workers' for backward compatibility
+    if 'workers' in parallel_config and 'max_workers' not in parallel_config:
+        parallel_config['max_workers'] = parallel_config['workers']
+        logger.debug(f"[{module_name}] 'workers' parameter mapped to 'max_workers'")
+    
     # Merge with defaults
     for key, default_value in default_config.items():
         if key not in parallel_config:
