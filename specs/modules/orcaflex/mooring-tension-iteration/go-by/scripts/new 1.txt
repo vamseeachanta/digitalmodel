@@ -6,9 +6,25 @@
 
 
 
-rev1 folder: D:\1522\ctr7\orcaflex\rev_a08\base_files\fsts_lngc_pretension\rev1
-rev2 folder: D:\1522\ctr7\orcaflex\rev_a08\base_files\fsts_lngc_pretension\rev2
-copy files from rev1 and rev2 with following rules:
-- reorganize the rev2 files by following file structure of test folder: D:\github\digitalmodel\tests\modules\orcaflex\mooring-tension-iteration\fsts-l015-test-cases
-- create missing commands in .sh file to ensure analyis mooring analysis runs without errors. 
-- Run the analysis script and fix any bugs
+/create-spec In addition to existing mooring analysis capabilities for the orcaflex mooring module, implement a function to assess 
+- mooring pretension  
+- mooring stiffness  
+- fender forces
+- Summary for each run.
+- comparison for each group of runs based on filenaming groups
+- overall summary
+
+
+The digitalmodel repository contains a comprehensive mooring module at
+  /d/github/digitalmodel/src/digitalmodel/modules/ with the following key
+  capabilities 
+  1. Core Components:
+  2. Mooring Forces Analysis:
+  3. Visualization Capabilities:
+  4. Data Processing:
+
+new analysis python code should be able to handle. If necessary utilize LLMs to aptly understand context from input file names.
+2 example folders as follows:
+  - 24 files: D:\1522\ctr7\orcaflex\rev_a08\base_files\fsts_lngc_pretension\output\collate\csv 
+  - 2 files: D:\github\digitalmodel\tests\modules\orcaflex\mooring-tension-iteration\fsts-l015-test-cases\output\collate\csv
+  

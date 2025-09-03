@@ -1,6 +1,7 @@
 import os
 import pathlib
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from assetutilities.common.path_resolver import PathResolver
 
 import numpy as np
 import pandas as pd
@@ -222,10 +223,16 @@ class Mooring:
         # Generate visualization plots if enabled
         if cfg.get("visualization", {}).get("enabled", False):
             # Use visualization output_directory from config, or plot_directory from file_management
+            # Use visualization output_directory from config, or plot_directory from file_management
             plot_dir = cfg.get("visualization", {}).get("output_directory")
             if not plot_dir:
-                plot_dir = cfg.get("file_management", {}).get("plot_directory", 
+                plot_dir = cfg.get("visualization", {}).get("plot_directory")
+            if not plot_dir:
+                plot_dir = cfg.get("file_management", {}).get("output_directory", 
                                                               "specs/modules/orcaflex/mooring-tension-iteration/go-by/output/visual")
+            
+            # Resolve path using PathResolver for consistency
+            plot_dir = PathResolver.resolve_path(plot_dir, cfg)
             
             # Ensure directory exists
             os.makedirs(plot_dir, exist_ok=True)
@@ -524,12 +531,30 @@ class Mooring:
             array_item = {object_name: new_line_definition}
             includefile_dict.update(array_item)
 
-        # Get the directory from the yml file path itself
+        # Get the directory from configuration or yml file path
         yml_file = file_meta_data["yml"]
         yml_path = pathlib.Path(yml_file)
-        filename_dir = yml_path.parent
         filename_stem = yml_path.stem
         filename = f"includefile_{filename_stem}_mooring_line_length"
+        
+        # Use includefile_directory from config if specified
+        if cfg.get("file_management", {}).get("includefile_directory"):
+            includefile_dir = pathlib.Path(cfg["file_management"]["includefile_directory"])
+            # Make the path absolute if it's relative
+            if not includefile_dir.is_absolute():
+                # Get the analysis root folder from cfg or use current working directory
+                if cfg.get("Analysis", {}).get("analysis_root_folder"):
+                    base_dir = pathlib.Path(cfg["Analysis"]["analysis_root_folder"])
+                else:
+                    base_dir = pathlib.Path.cwd()
+                includefile_dir = base_dir / includefile_dir
+            filename_dir = includefile_dir.resolve()
+            # Create directory if it doesn't exist
+            filename_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            # Fall back to yml file directory
+            filename_dir = yml_path.parent
+        
         filename_path = filename_dir / filename
 
         # Log the path for debugging
@@ -557,12 +582,30 @@ class Mooring:
             array_item = {object_name: initial_y_next_iteration}
             includefile_dict.update(array_item)
 
-        # Get the directory from the yml file path itself
+        # Get the directory from configuration or yml file path
         yml_file = file_meta_data["yml"]
         yml_path = pathlib.Path(yml_file)
-        filename_dir = yml_path.parent
         filename_stem = yml_path.stem
         filename = f"includefile_{filename_stem}_fender_compression"
+        
+        # Use includefile_directory from config if specified
+        if cfg.get("file_management", {}).get("includefile_directory"):
+            includefile_dir = pathlib.Path(cfg["file_management"]["includefile_directory"])
+            # Make the path absolute if it's relative
+            if not includefile_dir.is_absolute():
+                # Get the analysis root folder from cfg or use current working directory
+                if cfg.get("Analysis", {}).get("analysis_root_folder"):
+                    base_dir = pathlib.Path(cfg["Analysis"]["analysis_root_folder"])
+                else:
+                    base_dir = pathlib.Path.cwd()
+                includefile_dir = base_dir / includefile_dir
+            filename_dir = includefile_dir.resolve()
+            # Create directory if it doesn't exist
+            filename_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            # Fall back to yml file directory
+            filename_dir = yml_path.parent
+        
         filename_path = filename_dir / filename
 
         # Log the path for debugging

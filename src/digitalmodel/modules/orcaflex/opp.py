@@ -2,8 +2,11 @@
 import copy
 import logging
 import traceback
+import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from typing import Dict, List, Tuple
+from digitalmodel.modules.orcaflex.output_control import OutputController
+from assetutilities.common.path_resolver import PathResolver
 
 from assetutilities.common.data import PandasChainedAssignent
 
@@ -58,7 +61,7 @@ def process_single_file(args: Tuple[str, int, dict]) -> Dict:
         if model is None:
             return result
             
-        print(f"Post-processing file: {file_name}")
+        # Print statement removed - now handled by OutputController
         
         # Process RangeGraph
         try:
@@ -227,6 +230,10 @@ class OrcaFlexPostProcess:
     def post_process(self, cfg):
         """Process multiple simulation files with smart parallel processing."""
         
+        # Initialize output controller
+        output_controller = OutputController.from_config(cfg)
+        start_time = time.time()
+        
         load_matrix = ou.get_load_matrix_with_filenames(cfg)
         sim_files = cfg.file_management["input_files"]["sim"]
         
@@ -255,19 +262,25 @@ class OrcaFlexPostProcess:
                 current_setting = cfg['parallel_processing'].get('max_workers', 'auto')
                 if current_setting == 'auto' or current_setting is None:
                     cfg['parallel_processing']['max_workers'] = optimal_workers
-                    print(f"[OPP Auto-Optimization] {optimization_reason}")
                     
-                    # Show file size distribution for transparency
-                    stats = optimizer.analyze_files(sim_files)
-                    if stats['count'] > 0:
-                        print(f"  File statistics: Count={stats['count']}, "
-                              f"Size range={stats['min_mb']:.1f}-{stats['max_mb']:.1f}MB, "
-                              f"Median={stats['median_mb']:.1f}MB")
+                    # Show optimization message based on verbosity
+                    if output_controller.level != OutputController.QUIET:
+                        stats = optimizer.analyze_files(sim_files)
+                        if stats['count'] > 0:
+                            optimization_msg = (f"Files: {stats['count']}, "
+                                              f"Median size: {stats['median_mb']:.1f}MB, "
+                                              f"Optimal threads: {optimal_workers}")
+                        else:
+                            optimization_msg = optimization_reason
                 elif isinstance(current_setting, int) and abs(current_setting - optimal_workers) > 4:
                     # User specified workers but very different from optimal
-                    print(f"[OPP] Performance tip: Current setting uses {current_setting} workers. "
-                          f"File size analysis suggests {optimal_workers} workers would be optimal "
-                          f"for these {len(sim_files)} files (median size: {optimizer.analyze_files(sim_files)['median_mb']:.1f}MB)")
+                    if output_controller.level == OutputController.VERBOSE:
+                        print(f"[OPP] Performance tip: Current setting uses {current_setting} workers. "
+                              f"File size analysis suggests {optimal_workers} workers would be optimal "
+                              f"for these {len(sim_files)} files (median size: {optimizer.analyze_files(sim_files)['median_mb']:.1f}MB)")
+                    optimization_msg = f"Using {current_setting} workers (user-specified)"
+                else:
+                    optimization_msg = None
             except Exception as e:
                 # If optimization fails, fall back to normal behavior
                 logging.warning(f"File size optimization failed: {e}. Using default settings.")
@@ -279,14 +292,19 @@ class OrcaFlexPostProcess:
             module_name='OPP Post-Process'
         )
         
-        print(log_msg)
+        # Get optimization message if not already set
+        if 'optimization_msg' not in locals():
+            optimization_msg = None
         
         if not use_parallel:
-            # Fall back to sequential processing
-            return self._post_process_sequential(cfg)
+            # Fall back to sequential processing with output control
+            output_controller.start_processing(len(sim_files), 1, optimization_msg)
+            result = self._post_process_sequential_with_output(cfg, output_controller)
+            output_controller.finish_processing()
+            return result
         
-        # Parallel processing
-        print(f"Processing {len(sim_files)} files in parallel with {num_workers} workers")
+        # Start processing with output controller
+        output_controller.start_processing(len(sim_files), num_workers, optimization_msg)
         
         # Store cfg as instance variable for access in process_single_file
         self.cfg = cfg
@@ -306,15 +324,17 @@ class OrcaFlexPostProcess:
             # Collect results with progress tracking
             for future in as_completed(future_to_file):
                 file_name = future_to_file[future]
+                output_controller.file_started(file_name)
                 try:
                     result = future.result()
                     results.append(result)
                     if result.get('error'):
-                        print(f"Failed: {file_name} - {result['error']}")
+                        output_controller.file_completed(file_name, result['error'])
                         self._handle_process_error(file_name, Exception(result['error']), cfg)
                     else:
-                        print(f"Completed: {file_name}")
+                        output_controller.file_completed(file_name)
                 except Exception as e:
+                    output_controller.file_completed(file_name, str(e))
                     logging.error(f"Failed to process {file_name}: {str(e)}")
                     self._handle_process_error(file_name, e, cfg)
                     results.append({
@@ -338,15 +358,63 @@ class OrcaFlexPostProcess:
         self.RangeAllFiles = aggregated['RangeAllFiles']
         self.HistogramAllFiles = aggregated['histogram_all_files']
         
+        # Finish output control
+        output_controller.finish_processing()
+        
+        return cfg
+
+    def _post_process_sequential_with_output(self, cfg, output_controller):
+        """Process simulation files sequentially with output control."""
+        load_matrix = ou.get_load_matrix_with_filenames(cfg)
+        sim_files = cfg.file_management["input_files"]["sim"]
+        
+        results = []
+        for idx, file_name in enumerate(sim_files):
+            output_controller.file_started(file_name)
+            try:
+                result = process_single_file((file_name, idx, cfg))
+                results.append(result)
+                if result.get('error'):
+                    output_controller.file_completed(file_name, result['error'])
+                    self._handle_process_error(file_name, Exception(result['error']), cfg)
+                else:
+                    output_controller.file_completed(file_name)
+            except Exception as e:
+                output_controller.file_completed(file_name, str(e))
+                logging.error(f"Failed to process {file_name}: {str(e)}")
+                self._handle_process_error(file_name, e, cfg)
+                results.append({
+                    'file_name': file_name,
+                    'file_index': idx,
+                    'error': str(e)
+                })
+        
+        # Aggregate results
+        aggregated = aggregate_results(results, cfg)
+        
+        # Update load matrix
+        self._update_load_matrix(load_matrix, aggregated['load_matrix_updates'])
+        
+        # Save results
+        opp_summary.save_summary(aggregated['summary'], cfg)
+        opp_ls.save_linked_statistics(aggregated['linked_statistics'], cfg)
+        
+        # Store for later use
+        self.RangeAllFiles = aggregated['RangeAllFiles']
+        self.HistogramAllFiles = aggregated['histogram_all_files']
+        
         return cfg
 
     def _post_process_sequential(self, cfg):
-        """Process simulation files sequentially using the same process_single_file function."""
+        """Process simulation files sequentially (legacy method - consider using post_process instead)."""
+        
+        # Create output controller for legacy method
+        output_controller = OutputController.from_config(cfg)
         
         load_matrix = ou.get_load_matrix_with_filenames(cfg)
         sim_files = cfg.file_management["input_files"]["sim"]
         
-        print(f"Processing {len(sim_files)} files sequentially")
+        output_controller.start_processing(len(sim_files), 1, None)
         
         # Process files sequentially
         results = []
@@ -357,10 +425,10 @@ class OrcaFlexPostProcess:
                 results.append(result)
                 
                 if result.get('error'):
-                    print(f"Failed: {file_name} - {result['error']}")
+                    output_controller.file_completed(file_name, result['error'])
                     self._handle_process_error(file_name, Exception(result['error']), cfg)
                 else:
-                    print(f"Completed: {file_name}")
+                    output_controller.file_completed(file_name)
                     
             except Exception as e:
                 logging.error(f"Failed to process {file_name}: {str(e)}")
@@ -384,6 +452,9 @@ class OrcaFlexPostProcess:
         # Store for later use
         self.RangeAllFiles = aggregated['RangeAllFiles']
         self.HistogramAllFiles = aggregated['histogram_all_files']
+        
+        # Finish output control
+        output_controller.finish_processing()
         
         return cfg
 

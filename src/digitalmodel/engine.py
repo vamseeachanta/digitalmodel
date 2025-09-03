@@ -32,7 +32,9 @@ from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnal
 from digitalmodel.modules.transformation.transformation import Transformation
 from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
+from digitalmodel.common.plate_buckling import PlateBuckling
 from loguru import logger
+from digitalmodel.modules.orcaflex.output_control import OutputController, get_output_level_from_argv
 
 library_name = "digitalmodel"
 wwyaml = WorkingWithYAML()
@@ -45,6 +47,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         inputfile, cfg_argv_dict = app_manager.validate_arguments_run_methods(inputfile)
         cfg = wwyaml.ymlInput(inputfile, updateYml=None)
         cfg = AttributeDict(cfg)
+        # Track config file path for relative path resolution
+        import os
+        if inputfile and os.path.exists(inputfile):
+            cfg["_config_file_path"] = os.path.abspath(inputfile)
+            cfg["_config_dir_path"] = os.path.dirname(os.path.abspath(inputfile))
+        logger.info(f"Engine set config dir: {cfg.get('_config_dir_path')}")
         if cfg is None:
             raise ValueError("cfg is None")
 
@@ -58,20 +66,29 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     if config_flag:
         fm = FileManagement()
         cfg_base = app_manager.configure(cfg, library_name, basename, cfg_argv_dict)
+        # Preserve config file path from original cfg
+        if "_config_file_path" in cfg:
+            cfg_base["_config_file_path"] = cfg["_config_file_path"]
+        if "_config_dir_path" in cfg:
+            cfg_base["_config_dir_path"] = cfg["_config_dir_path"]
         cfg_base = fm.router(cfg_base)
         result_folder_dict, cfg_base = app_manager.configure_result_folder(
             None, cfg_base
         )
     else:
         cfg_base = cfg
+    
+    # Apply output control settings from command line
+    output_level = get_output_level_from_argv()
+    if output_level == OutputController.QUIET:
+        cfg_base['quiet'] = True
+        cfg_base['verbose'] = False
+    elif output_level == OutputController.VERBOSE:
+        cfg_base['quiet'] = False
+        cfg_base['verbose'] = True
 
     logger.info(f"{basename}, application ... START")
 
-    if "catenary" in basename:
-        from digitalmodel.modules.catenary.catenary import Catenary
-
-        catenary = Catenary()
-        cfg_base = catenary.router(cfg_base)
     if "catenary" in basename:
         from digitalmodel.modules.catenary.catenary import Catenary
 
@@ -82,12 +99,6 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename in ["orcaflex", "orcaflex_analysis", "orcaflex_post_process"]:
         ofx = OrcaFlex()
         cfg_base = ofx.router(cfg_base)
-    elif basename in ["orcaflex", "orcaflex_analysis", "orcaflex_post_process"]:
-        ofx = OrcaFlex()
-        cfg_base = ofx.router(cfg_base)
-    elif basename in ["aqwa"]:
-        aqwa = Aqwa()
-        cfg_base = aqwa.router(cfg_base)
     elif basename in ["aqwa"]:
         aqwa = Aqwa()
         cfg_base = aqwa.router(cfg_base)
@@ -126,7 +137,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         cfg_base = ship_design.router(cfg_base)
     elif basename == "ship_design_aqwa":
         ship_design = ShipDesign()
-        cfg_base = cfg_base = ship_design.router(cfg_base)
+        cfg_base = ship_design.router(cfg_base)
     elif basename == "fatigue_analysis":
         fatigue_analysis = FatigueAnalysis()
         cfg_base = fatigue_analysis.router(cfg_base)
@@ -159,11 +170,6 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "mooring":
         mooring = Mooring()
         cfg_base = mooring.router(cfg_base)
-
-    elif basename == "mooring":
-        mooring = Mooring()
-        cfg_base = mooring.router(cfg_base)
-
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
