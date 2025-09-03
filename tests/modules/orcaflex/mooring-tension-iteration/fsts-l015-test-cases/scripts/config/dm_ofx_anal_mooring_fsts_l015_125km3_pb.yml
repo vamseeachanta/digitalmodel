@@ -46,8 +46,8 @@ orcaflex_analysis:
 
 file_management:
   flag: True
-  input_directory: ../.sim
-  output_directory: ../output/.csv
+  input_directory: ../../run_files/sim
+  output_directory: ../../output/collate/csv
 
   filename:
     extension: [yml, sim]
@@ -59,7 +59,7 @@ file_management:
 # Add visualization settings to generate plots
 visualization:
   enabled: True
-  output_directory: ../output/visual
+  output_directory: ../../output/visual
   save_plots: True
   plot_formats: [png]
   dpi: 150

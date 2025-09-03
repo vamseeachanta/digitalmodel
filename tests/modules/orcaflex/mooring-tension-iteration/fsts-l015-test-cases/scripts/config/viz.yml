@@ -109,8 +109,8 @@ RangeGraph_settings:
 file_management:
   flag: True
 
-  input_directory: ../.sim
-  output_directory: ../output/visual
+  input_directory: ../../run_files/sim
+  output_directory: ../../output/visual
 
   filename:
     extension: [sim]

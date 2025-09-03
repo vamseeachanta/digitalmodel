@@ -21,20 +21,20 @@ data:
         label: dm_fsts_pretension
         target:
           template: template_pretension_analysis_summary.xlsx
-          filename: ../output/collate/pretension_analysis_summary.xlsx
+          filename: ../../output/collate/pretension_analysis_summary.xlsx
         csvs:
         -
           input:
-            filename: ../output/.csv/dm_ofx_post_fsts_lngc_lngc_moorings_static_eff_tension_max.csv
+            filename: ../../output/collate/csv/dm_ofx_post_fsts_lngc_lngc_moorings_static_eff_tension_max.csv
           target:
             sheet_name: mooring
         -
           input:
-            filename: ../output/.csv/dm_ofx_post_fsts_lngc_lngc_fenders_static.csv
+            filename: ../../output/collate/csv/dm_ofx_post_fsts_lngc_lngc_fenders_static.csv
           target:
             sheet_name: fender
         -
           input:
-            filename: ../output/.csv/dm_ofx_post_fsts_lngc_lngc_6dof_stat.csv
+            filename: ../../output/collate/csv/dm_ofx_post_fsts_lngc_lngc_6dof_stat.csv
           target:
             sheet_name: lngc

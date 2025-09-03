@@ -23,7 +23,7 @@ def main():
     
     # Define paths
     base_dir = Path(__file__).parent.parent
-    csv_dir = base_dir / 'output' / '.csv'
+    csv_dir = base_dir / 'output' / 'collate' / 'csv'
     plots_dir = base_dir / 'output' / 'plots'
     
     # Create plots directory
