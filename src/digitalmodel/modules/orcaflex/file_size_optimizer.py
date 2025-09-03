@@ -146,6 +146,10 @@ class FileSizeOptimizer:
         """
         Determine optimal thread count based on file sizes.
         
+        YML files have no file size dependency - they convert to SIM files
+        and the input file size is small. Only SIM files need thread optimization
+        based on their size.
+        
         Args:
             file_paths: List of file paths to process
             max_allowed: Maximum threads allowed by system
@@ -154,6 +158,21 @@ class FileSizeOptimizer:
         Returns:
             Tuple of (optimal_thread_count, reasoning_message)
         """
+        # Check if all files are YML files (no size optimization needed)
+        if file_paths and all(str(f).lower().endswith('.yml') for f in file_paths):
+            # For YML files, use maximum available threads (up to max_allowed)
+            # since these are small input files that generate SIM files
+            cpu_count = os.cpu_count() or 1
+            if max_allowed:
+                optimal = min(max_allowed, cpu_count)
+            else:
+                optimal = cpu_count
+            
+            reason = (f"YML files: {len(file_paths)}, "
+                     f"Using max threads: {optimal} (no file size dependency)")
+            logger.info(f"Thread optimization: {reason}")
+            return (optimal, reason)
+        
         # Analyze files
         stats = self.analyze_files(file_paths)
         
