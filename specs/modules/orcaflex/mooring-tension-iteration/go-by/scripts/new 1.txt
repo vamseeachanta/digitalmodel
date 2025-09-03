@@ -1,8 +1,8 @@
 /create-spec orcaflex model builder to help create models with the following standard structure:
 - standard architecture
 - standard file structure. Examples below:
-	- model-example-1
-	- model-example-2
+	- model-example-1: tests\modules\orcaflex\analysis\moorings\pretension\source
+	- model-example-2: ?
 
 
 
