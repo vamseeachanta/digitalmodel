@@ -37,6 +37,16 @@ def process_single_file(args: Tuple[str, int, dict]) -> Dict:
     """Process a single simulation file and return results."""
     file_name, file_index, cfg = args
     
+    # Add filter to suppress "Error code: 19" messages in this worker
+    import logging as std_logging
+    class ErrorCode19Filter(std_logging.Filter):
+        def filter(self, record):
+            return "Error code: 19" not in record.getMessage()
+    
+    root_logger = std_logging.getLogger()
+    error_filter = ErrorCode19Filter()
+    root_logger.addFilter(error_filter)
+    
     try:
         # Get model and metadata
         model_dict = ou.get_model_and_metadata(file_name=file_name)

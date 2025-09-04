@@ -9,6 +9,9 @@ import math
 import os
 from pathlib import Path
 import pathlib
+import sys
+import io
+import logging
 
 
 
@@ -587,7 +590,43 @@ class OrcaflexUtilities:
         return filename_without_extension
 
     def loadSimulation(self, FileName):
-        model = OrcFxAPI.Model(FileName)
+        # Temporarily suppress stdout and stderr to avoid "Error code: 19" messages
+        # while still logging to the log file
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        sys.stdout = io.StringIO()
+        sys.stderr = io.StringIO()
+        
+        # Also temporarily filter root logger to suppress "Error code: 19" messages
+        root_logger = logging.getLogger()
+        old_level = root_logger.level
+        
+        # Add custom filter to suppress "Error code: 19" messages
+        class ErrorCode19Filter(logging.Filter):
+            def filter(self, record):
+                # Block messages containing "Error code: 19"
+                return "Error code: 19" not in record.getMessage()
+        
+        error_filter = ErrorCode19Filter()
+        root_logger.addFilter(error_filter)
+        
+        try:
+            model = OrcFxAPI.Model(FileName)
+            # Capture any output that was suppressed
+            suppressed_stdout = sys.stdout.getvalue()
+            suppressed_stderr = sys.stderr.getvalue()
+            if suppressed_stdout and "Error code" in suppressed_stdout:
+                # Log to file but not to console
+                logger.debug(f"Suppressed stdout for {FileName}: {suppressed_stdout.strip()}")
+            if suppressed_stderr and "Error code" in suppressed_stderr:
+                # Log to file but not to console  
+                logger.debug(f"Suppressed stderr for {FileName}: {suppressed_stderr.strip()}")
+        finally:
+            # Always restore stdout, stderr and logging
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
+            root_logger.removeFilter(error_filter)
+        
         return model
 
     def get_seastate_probability(self, file_index):

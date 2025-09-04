@@ -109,7 +109,7 @@ class AllVars:
             # Get variable Data
             try:
                 if objectExtra is not None:
-                    VarData = object.StaticResult(VarNames, objectExtra=objectExtra)
+                    VarData = object.StaticResult(VarNames, objectExtra)
                 else:
                     VarData = object.StaticResult(VarNames)
 
@@ -118,8 +118,9 @@ class AllVars:
                 VarData_df = pd.DataFrame(columns=df_columns)
                 VarData_df.loc[0] = data_df_row
             except Exception as e:
-                logger.error(
-                    f"Error retrieving StaticResult for {object_df_row['ObjectName']}: {e}"
+                # Log as debug instead of error to reduce noise for expected missing static results
+                logger.debug(
+                    f"StaticResult not available for {object_df_row['ObjectName']}: {e}"
                 )
                 VarData_df = pd.DataFrame()
 
