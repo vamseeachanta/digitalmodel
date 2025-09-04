@@ -1,0 +1,79 @@
+```mermaid
+graph TB
+    %% System Architecture for Passing Ship Forces Module
+    
+    subgraph "Input Layer"
+        A[YAML Config Files] --> B[Pydantic Validator]
+        C[CLI Interface] --> B
+        D[Python API] --> B
+        E[Config Templates] --> A
+    end
+    
+    subgraph "Configuration Processing"
+        B --> F[Configuration Parser]
+        F --> G[Unit Converter]
+        F --> H[Expression Evaluator]
+        G --> I[Normalized Config]
+        H --> I
+    end
+    
+    subgraph "Mathematical Engine"
+        I --> J[Force Calculator]
+        J --> K[Sectional Area Functions]
+        J --> L[Kernel Functions F/G]
+        J --> M[Integration Engine]
+        K --> N[S1/S2 Curves]
+        L --> O[Nested Quadrature]
+        M --> P[SciPy Integration]
+        
+        N --> Q[Infinite Depth]
+        O --> Q
+        P --> Q
+        Q --> R[Finite Depth Correction]
+        R --> S[Harmonic Summation]
+    end
+    
+    subgraph "Results Processing"
+        S --> T[Result Cache]
+        T --> U[Force Components]
+        U --> V[Surge Force Fx]
+        U --> W[Sway Force Fy]
+        U --> X[Yaw Moment Mz]
+    end
+    
+    subgraph "Output Layer"
+        V --> Y[Visualization Engine]
+        W --> Y
+        X --> Y
+        Y --> Z[Interactive Plots]
+        Y --> AA[Static Charts]
+        Y --> AB[Report Generation]
+        
+        V --> AC[Data Export]
+        W --> AC
+        X --> AC
+        AC --> AD[JSON Output]
+        AC --> AE[CSV Output]
+        AC --> AF[HDF5 Output]
+    end
+    
+    subgraph "Infrastructure Services"
+        AG[Parallel Executor] -.-> J
+        AH[Progress Monitor] -.-> AG
+        AI[Error Handler] -.-> J
+        AJ[Performance Monitor] -.-> J
+        AK[Logger] -.-> J
+    end
+    
+    subgraph "Integration Points"
+        AF --> AL[OrcaFlex Interface]
+        AF --> AM[AQWA Interface]
+        AF --> AN[Mooring Module]
+        Y --> AO[Web Dashboard]
+    end
+    
+    style A fill:#e1f5fe
+    style J fill:#fff3e0
+    style Y fill:#f3e5f5
+    style AG fill:#e8f5e9
+```

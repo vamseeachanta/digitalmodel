@@ -1,59 +1,181 @@
 # Spec Tasks
 
-These are the tasks to be completed for the spec detailed in @specs/modules/ship_design/passing-ship-forces/spec.md
+These are the tasks to be completed for the spec detailed in @specs/modules/marine-engineering/mathcad-to-python-psf/spec.md
 
 > Created: 2025-01-01
+> Last Updated: 2025-01-04
 > Status: Ready for Implementation
 > Estimated Total Effort: 3-4 days
+> Template: Enhanced
 
-## Tasks
+## Task Summary
 
-- [ ] 1. Create Core Mathematical Formulations Module `[M]`
-  - [ ] 1.1 Write tests for sectional area functions (S1, S2)
-  - [ ] 1.2 Implement sectional area curve functions with derivatives
-  - [ ] 1.3 Write tests for F and G kernel functions
-  - [ ] 1.4 Implement F and G integral kernel functions
-  - [ ] 1.5 Write tests for Wang's force formulations
-  - [ ] 1.6 Implement infinite depth force calculations (surge, sway, yaw)
-  - [ ] 1.7 Implement finite depth corrections with harmonic summation
-  - [ ] 1.8 Verify all mathematical tests pass
+| Phase | Tasks | Effort | Dependencies | Agent |
+|-------|-------|--------|--------------|-------|
+| 1. Core Math | 8 subtasks | 8 hours | None | Ship Design + Math |
+| 2. Configuration | 7 subtasks | 4 hours | None | Ship Design |
+| 3. Calculator | 8 subtasks | 16 hours | Phase 1,2 | Ship Design + Testing |
+| 4. Visualization | 7 subtasks | 8 hours | Phase 3 | Visualization |
+| 5. Integration | 7 subtasks | 4 hours | Phase 3,4 | Ship Design + Docs |
 
-- [ ] 2. Develop Configuration System `[S]`
-  - [ ] 2.1 Write tests for YAML configuration parsing
-  - [ ] 2.2 Create Pydantic models for configuration validation
-  - [ ] 2.3 Implement YAML parser with expression evaluation
-  - [ ] 2.4 Create configuration templates (basic, tanker, offshore)
-  - [ ] 2.5 Implement unit system detection and conversion
-  - [ ] 2.6 Add configuration merge and override capabilities
-  - [ ] 2.7 Verify all configuration tests pass
+## Detailed Tasks
 
-- [ ] 3. Build Calculation Engine `[L]`
-  - [ ] 3.1 Write integration tests using MathCAD reference values
-  - [ ] 3.2 Implement PassingShipCalculator main class
-  - [ ] 3.3 Add numerical integration with SciPy quad/dblquad
-  - [ ] 3.4 Implement result caching mechanism
-  - [ ] 3.5 Add batch processing with parallel execution
-  - [ ] 3.6 Implement progress reporting for long calculations
-  - [ ] 3.7 Validate against MathCAD reference (0.1% tolerance)
-  - [ ] 3.8 Verify all calculation tests pass
+### Phase 1: Core Mathematical Formulations Module `[M - 8 hours]`
 
-- [ ] 4. Create Visualization Module `[M]`
-  - [ ] 4.1 Write tests for plot generation functions
-  - [ ] 4.2 Implement force distribution plots
-  - [ ] 4.3 Create parametric study visualization
-  - [ ] 4.4 Add interactive matplotlib features
-  - [ ] 4.5 Implement multi-plot comparison layouts
-  - [ ] 4.6 Add export functionality (PNG, PDF, SVG)
-  - [ ] 4.7 Verify all visualization tests pass
+- [ ] 1. Create Core Mathematical Formulations Module
+  - [ ] 1.1 Write tests for sectional area functions (S1, S2) `[XS]`
+    - **Agent**: Testing Agent
+    - **Priority**: High
+    - **Acceptance**: Tests cover edge cases, zero/max values
+  - [ ] 1.2 Implement sectional area curve functions with derivatives `[S]`
+    - **Agent**: Math Agent → Ship Design Agent
+    - **Priority**: High
+    - **Deliverable**: `formulations.py::sectional_areas()`
+  - [ ] 1.3 Write tests for F and G kernel functions `[XS]`
+    - **Agent**: Testing Agent
+    - **Priority**: High
+    - **Acceptance**: Validate against MathCAD reference
+  - [ ] 1.4 Implement F and G integral kernel functions `[M]`
+    - **Agent**: Math Agent → Ship Design Agent
+    - **Priority**: High
+    - **Deliverable**: `formulations.py::kernel_functions()`
+  - [ ] 1.5 Write tests for Wang's force formulations `[S]`
+    - **Agent**: Testing Agent
+    - **Priority**: High
+    - **Acceptance**: 0.1% accuracy tolerance
+  - [ ] 1.6 Implement infinite depth force calculations (surge, sway, yaw) `[M]`
+    - **Agent**: Ship Design Agent
+    - **Priority**: High
+    - **Deliverable**: `formulations.py::wang_forces_infinite()`
+  - [ ] 1.7 Implement finite depth corrections with harmonic summation `[M]`
+    - **Agent**: Math Agent → Ship Design Agent
+    - **Priority**: Medium
+    - **Deliverable**: `formulations.py::finite_depth_correction()`
+  - [ ] 1.8 Verify all mathematical tests pass `[XS]`
+    - **Agent**: Testing Agent
+    - **Priority**: High
+    - **Success**: 100% test pass rate
 
-- [ ] 5. Develop CLI and Integration Interface `[S]`
-  - [ ] 5.1 Write tests for CLI argument parsing
-  - [ ] 5.2 Implement CLI with standard parameter naming
-  - [ ] 5.3 Add module entry point for `python -m digitalmodel.modules.ship_design.passing_ship`
-  - [ ] 5.4 Create batch processing commands
-  - [ ] 5.5 Add JSON/CSV output exporters
-  - [ ] 5.6 Integrate with existing ship_design module structure
-  - [ ] 5.7 Verify all CLI tests pass
+### Phase 2: Develop Configuration System `[S - 4 hours]`
+
+- [ ] 2. Develop Configuration System
+  - [ ] 2.1 Write tests for YAML configuration parsing `[XS]`
+    - **Agent**: Testing Agent
+    - **Priority**: High
+  - [ ] 2.2 Create Pydantic models for configuration validation `[S]`
+    - **Agent**: Ship Design Agent
+    - **Deliverable**: `configuration.py::ConfigModels`
+  - [ ] 2.3 Implement YAML parser with expression evaluation `[S]`
+    - **Agent**: Ship Design Agent
+    - **Deliverable**: `configuration.py::YAMLParser`
+  - [ ] 2.4 Create configuration templates (basic, tanker, offshore) `[XS]`
+    - **Agent**: Documentation Agent
+    - **Deliverable**: `templates/*.yaml`
+  - [ ] 2.5 Implement unit system detection and conversion `[S]`
+    - **Agent**: Ship Design Agent
+    - **Deliverable**: `configuration.py::UnitConverter`
+  - [ ] 2.6 Add configuration merge and override capabilities `[XS]`
+    - **Agent**: Ship Design Agent
+  - [ ] 2.7 Verify all configuration tests pass `[XS]`
+    - **Agent**: Testing Agent
+    - **Success**: 100% validation coverage
+
+### Phase 3: Build Calculation Engine `[L - 16 hours]`
+
+- [ ] 3. Build Calculation Engine
+  - [ ] 3.1 Write integration tests using MathCAD reference values `[S]`
+    - **Agent**: Testing Agent
+    - **Priority**: Critical
+    - **Data**: Extract from PDF reference
+  - [ ] 3.2 Implement PassingShipCalculator main class `[M]`
+    - **Agent**: Ship Design Agent
+    - **Deliverable**: `calculator.py::PassingShipCalculator`
+  - [ ] 3.3 Add numerical integration with SciPy quad/dblquad `[M]`
+    - **Agent**: Math Agent → Ship Design Agent
+    - **Optimization**: Adaptive quadrature
+  - [ ] 3.4 Implement result caching mechanism `[S]`
+    - **Agent**: Performance Agent
+    - **Deliverable**: `calculator.py::ResultCache`
+  - [ ] 3.5 Add batch processing with parallel execution `[M]`
+    - **Agent**: Performance Agent → Ship Design Agent
+    - **Deliverable**: `calculator.py::BatchProcessor`
+  - [ ] 3.6 Implement progress reporting for long calculations `[S]`
+    - **Agent**: Ship Design Agent
+    - **UI**: Progress bar with ETA
+  - [ ] 3.7 Validate against MathCAD reference (0.1% tolerance) `[M]`
+    - **Agent**: Testing Agent
+    - **Critical**: Must achieve accuracy target
+  - [ ] 3.8 Verify all calculation tests pass `[S]`
+    - **Agent**: Testing Agent
+    - **Metrics**: Performance benchmarks met
+
+### Phase 4: Create Visualization Module `[M - 8 hours]`
+
+- [ ] 4. Create Visualization Module
+  - [ ] 4.1 Write tests for plot generation functions `[XS]`
+    - **Agent**: Testing Agent
+  - [ ] 4.2 Implement force distribution plots `[S]`
+    - **Agent**: Visualization Agent
+    - **Deliverable**: `visualization.py::plot_forces()`
+  - [ ] 4.3 Create parametric study visualization `[M]`
+    - **Agent**: Visualization Agent
+    - **Deliverable**: `visualization.py::parametric_study()`
+  - [ ] 4.4 Add interactive matplotlib features `[S]`
+    - **Agent**: Visualization Agent
+    - **Features**: Zoom, pan, data cursor
+  - [ ] 4.5 Implement multi-plot comparison layouts `[S]`
+    - **Agent**: Visualization Agent
+    - **Deliverable**: `visualization.py::comparison_plots()`
+  - [ ] 4.6 Add export functionality (PNG, PDF, SVG) `[XS]`
+    - **Agent**: Visualization Agent
+    - **Formats**: High-resolution outputs
+  - [ ] 4.7 Verify all visualization tests pass `[XS]`
+    - **Agent**: Testing Agent
+
+### Phase 5: Develop CLI and Integration Interface `[S - 4 hours]`
+
+- [ ] 5. Develop CLI and Integration Interface
+  - [ ] 5.1 Write tests for CLI argument parsing `[XS]`
+    - **Agent**: Testing Agent
+  - [ ] 5.2 Implement CLI with standard parameter naming `[S]`
+    - **Agent**: Ship Design Agent
+    - **Deliverable**: `cli.py`
+    - **Standards**: Repository CLI conventions
+  - [ ] 5.3 Add module entry point for `python -m digitalmodel.modules.ship_design.passing_ship` `[XS]`
+    - **Agent**: Ship Design Agent
+    - **Deliverable**: `__main__.py`
+  - [ ] 5.4 Create batch processing commands `[S]`
+    - **Agent**: Ship Design Agent
+    - **Commands**: --batch, --parallel
+  - [ ] 5.5 Add JSON/CSV output exporters `[S]`
+    - **Agent**: Ship Design Agent
+    - **Deliverable**: `exporters.py`
+  - [ ] 5.6 Integrate with existing ship_design module structure `[S]`
+    - **Agent**: Ship Design Agent
+    - **Integration**: Common utilities, patterns
+  - [ ] 5.7 Verify all CLI tests pass `[XS]`
+    - **Agent**: Testing Agent
+    - **Coverage**: All commands tested
+
+## Task Execution Guidelines
+
+### Parallel Execution Opportunities
+Tasks that can be executed in parallel:
+- Phase 1 and Phase 2 (independent)
+- Tasks 1.1-1.3 and 2.1-2.3 (within phases)
+- Visualization development parallel to later calculation tasks
+
+### Critical Path
+1. Mathematical formulations (Phase 1) → Must be correct
+2. Calculator implementation (Phase 3.2-3.3) → Core functionality
+3. MathCAD validation (Phase 3.7) → Accuracy gate
+4. CLI implementation (Phase 5) → User interface
+
+### Quality Gates
+- [ ] Phase 1 Complete: All mathematical tests passing
+- [ ] Phase 3 Complete: 0.1% accuracy achieved
+- [ ] Phase 5 Complete: Integration tests passing
+- [ ] Final: >90% test coverage, all benchmarks met
 
 ## Task Effort Scale
 - `[XS]` - 1-2 hours
@@ -62,11 +184,16 @@ These are the tasks to be completed for the spec detailed in @specs/modules/ship
 - `[L]` - 1-2 days
 - `[XL]` - 2-3 days
 
-## Dependencies
-- Task 3 depends on Task 1 (formulations needed for calculator)
-- Task 3 depends on Task 2 (configuration needed for calculator)
-- Task 4 can proceed in parallel with Task 3
-- Task 5 depends on Tasks 3 and 4
+## Dependencies Graph
+```mermaid
+graph TD
+    A[Phase 1: Math] --> C[Phase 3: Calculator]
+    B[Phase 2: Config] --> C
+    C --> D[Phase 4: Visualization]
+    C --> E[Phase 5: CLI/Integration]
+    D --> F[Complete]
+    E --> F
+```
 
 ## Success Criteria
 - ✅ All unit tests passing with >90% coverage
@@ -75,3 +202,26 @@ These are the tasks to be completed for the spec detailed in @specs/modules/ship
 - ✅ Documentation complete with examples
 - ✅ Performance benchmarks met (<100ms single calc)
 - ✅ Integration with ship_design module verified
+- ✅ All agent delegations executed successfully
+
+## Risk Mitigation
+
+| Risk | Mitigation | Owner |
+|------|------------|-------|
+| Numerical convergence | Extensive edge case testing | Math Agent |
+| Performance targets | Early profiling and optimization | Performance Agent |
+| Integration complexity | Follow established patterns | Ship Design Agent |
+| Accuracy validation | Multiple reference data sources | Testing Agent |
+
+## Post-Implementation Checklist
+- [ ] Code review completed
+- [ ] Documentation updated
+- [ ] Performance profiling done
+- [ ] User guide created
+- [ ] Knowledge transfer session held
+- [ ] Deployment verified
+- [ ] Monitoring configured
+
+---
+
+**Note**: Tasks should be executed using UV environment (`uv run`) to maintain repository consistency. All testing must use real calculations per repository policy (no mocks).
