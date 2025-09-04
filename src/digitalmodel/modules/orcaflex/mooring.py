@@ -143,6 +143,7 @@ class Mooring:
         target_pre_tension_df["end_Gx_force"] = None
         target_pre_tension_df["end_Gy_force"] = None
         target_pre_tension_df["end_Gz_force"] = None
+        target_pre_tension_df["tolerance_flag"] = 0  # Initialize tolerance flag column
         for index, row in target_pre_tension_df.iterrows():
             object_name = row["ObjectName"]
             mask = current_var_df["ObjectName"] == object_name
@@ -164,7 +165,7 @@ class Mooring:
             line_length = self.evaluate_line_length_current(arc_length, line_length)
 
             # Pass row data and calculated values as a cleaner interface
-            new_line_length = self.evaluate_line_length_next_iteration(
+            new_line_length, tolerance_reached = self.evaluate_line_length_next_iteration(
                 row, effective_tension, arc_length, line_length
             )
 
@@ -185,6 +186,8 @@ class Mooring:
                 / row["calculated_length"]
                 * 100
             )
+            # Add tolerance_flag: 1 if length tolerance was reached, 0 otherwise
+            target_pre_tension_df.at[index, "tolerance_flag"] = 1 if tolerance_reached else 0
 
         tension_criteria_pass_flag = self.get_tension_criteria(
             cfg, group, target_pre_tension_df
@@ -320,13 +323,16 @@ class Mooring:
             calculated_length * (1 + tolerance / 100),
         )
         # Check and restrict new_arc_length to acceptable range
+        tolerance_reached = False  # Flag to indicate if tolerance limit was reached
         if new_arc_length < acceptable_range[0]:
             new_arc_length = round(float(acceptable_range[0]), 3)
+            tolerance_reached = True
             logger.warning(
                 f"{row['ObjectName']}: Arc length restricted to minimum: {new_arc_length:.2f}"
             )
         elif new_arc_length > acceptable_range[1]:
             new_arc_length = round(float(acceptable_range[1]), 3)
+            tolerance_reached = True
             logger.warning(
                 f"{row['ObjectName']}: Arc length restricted to maximum: {new_arc_length:.2f}"
             )
@@ -339,7 +345,7 @@ class Mooring:
         new_line_length[section_idx_to_be_modified] = round(float(length_section), 4)
         new_line_length = self.convert_numpy_types(new_line_length)
 
-        return new_line_length
+        return new_line_length, tolerance_reached
 
     def evaluate_line_length_current(self, arc_length, line_length):
         """
