@@ -1,0 +1,59 @@
+# Offshore vessel configuration template for passing ship calculations
+# FPSO and supply vessel operations in deep water
+
+# Common offshore vessel dimensions
+variables:
+  fpso_length: 285.0        # Typical FPSO length
+  psv_length: 90.0          # Platform Supply Vessel length
+  deepwater_depth: 1500.0   # Deep water operations
+  
+moored_vessel:
+  length: !var fpso_length        # meters
+  beam: !eval "var:fpso_length / 4.5"    # Wider beam for stability
+  draft: !eval "var:fpso_length / 12.0"   # Deeper draft when loaded
+  block_coefficient: 0.88         # Very high for FPSOs
+  name: "FPSO - Turret Moored"
+
+passing_vessel:
+  length: !var psv_length         # meters
+  beam: !eval "var:psv_length / 4.0"     # PSV typical ratio
+  draft: !eval "var:psv_length / 15.0"    # Relatively shallow
+  block_coefficient: 0.70         # Lower for service vessels
+  name: "Platform Supply Vessel"
+
+environment:
+  water_depth: !var deepwater_depth  # Deep water (effectively infinite)
+  water_density: 1025.0     # kg/m³ (seawater)
+  current_velocity: 0.75    # m/s (1.5 knots - loop current)
+
+calculation:
+  # Offshore operations require larger separations
+  stagger_distance: !eval "var:fpso_length * 0.75"
+  lateral_separation: 100.0    # meters (safety zone)
+  passing_velocity: 2.5        # m/s (~5 knots approach speed)
+  num_points: 150             # High accuracy for critical operations
+  tolerance: 1.0e-5           # Very tight tolerance
+  max_iterations: 3000        # Allow more iterations
+
+output_units: "SI"
+description: "Deepwater FPSO and supply vessel approach scenario"
+
+# Operational parameters specific to offshore
+operational_limits:
+  min_lateral_clearance: 75.0     # meters (company policy)
+  max_approach_speed: 3.0         # m/s
+  significant_wave_height: 3.5    # meters (operational limit)
+  wind_speed_limit: 15.0          # m/s (30 knots)
+  
+# Mooring system information (for reference)
+mooring_system:
+  type: "Internal Turret"
+  number_of_lines: 12
+  pretension: 1500.0              # kN per line
+  line_azimuth_spacing: 30.0      # degrees
+  
+# Zones around FPSO
+safety_zones:
+  exclusion_zone: 50.0            # meters (no entry)
+  restricted_zone: 100.0          # meters (permission required)
+  advisory_zone: 500.0            # meters (notify approach)
