@@ -1,0 +1,43 @@
+# Tanker vessel configuration template for passing ship calculations
+# Large tanker and shuttle tanker scenario
+
+# Define reusable variables
+variables:
+  vlcc_length: 330.0      # Very Large Crude Carrier length
+  aframax_length: 250.0   # Aframax tanker length
+  
+moored_vessel:
+  length: !var vlcc_length      # meters
+  beam: !eval "var:vlcc_length / 5.5"   # L/B ratio of 5.5
+  draft: !eval "var:vlcc_length / 15.0"  # L/T ratio of 15
+  block_coefficient: 0.85      # High for tankers
+  name: "VLCC - Moored"
+
+passing_vessel:
+  length: !var aframax_length   # meters
+  beam: !eval "var:aframax_length / 6.0"   # L/B ratio of 6.0
+  draft: !eval "var:aframax_length / 16.0"  # L/T ratio of 16
+  block_coefficient: 0.82       # Slightly lower for shuttle tanker
+  name: "Aframax Shuttle Tanker"
+
+environment:
+  water_depth: !eval "22.0 * 1.5"  # 1.5 times moored vessel draft
+  water_density: 1025.0   # kg/m³ (seawater)
+  current_velocity: 0.25  # m/s (0.5 knots current)
+
+calculation:
+  stagger_distance: !eval "var:vlcc_length * 0.5"  # Half ship length
+  lateral_separation: !eval "60.0 * 1.2"  # 1.2 times beam
+  passing_velocity: 3.0     # m/s (~6 knots - slow for safety)
+  num_points: 100          # More points for accuracy
+  tolerance: 5.0e-5        # Tighter tolerance for large forces
+  max_iterations: 2000     # More iterations allowed
+
+output_units: "SI"
+description: "Tanker-to-tanker passing scenario for offshore loading operations"
+
+# Safety notes
+safety_considerations:
+  min_lateral_separation: 50.0  # meters (regulatory minimum)
+  max_passing_speed: 4.0        # m/s (safety limit)
+  weather_limit: "Beaufort 4"   # Maximum sea state
