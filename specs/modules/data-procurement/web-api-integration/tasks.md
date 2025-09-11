@@ -3,7 +3,10 @@
 These are the tasks to be completed for the spec detailed in @specs/modules/data-procurement/web-api-integration/spec.md
 
 > Created: 2025-01-09
+> Updated: 2024-12-20
 > Status: Ready for Implementation
+> Version: 2.0.0
+> Type: Enhanced Modular Task Breakdown
 
 ## Tasks
 
@@ -114,39 +117,229 @@ These are the tasks to be completed for the spec detailed in @specs/modules/data
   - [ ] 12.6 Create example notebooks demonstrating usage
   - [ ] 12.7 Verify documentation completeness
 
-## Task Effort Estimates
+## Enhanced Task Effort Estimates
 
-| Task | Estimated Effort | Complexity |
-|------|-----------------|------------|
-| 1. Module structure | 2 hours | Low |
-| 2. API Gateway | 4 hours | Medium |
-| 3. NOAA client | 3 hours | Medium |
-| 4. Open-Meteo client | 3 hours | Medium |
-| 5. StormGlass client | 3 hours | Medium |
-| 6. Caching system | 4 hours | High |
-| 7. Rate limiting | 3 hours | Medium |
-| 8. Data transformation | 3 hours | Medium |
-| 9. Configuration | 2 hours | Low |
-| 10. CLI interface | 2 hours | Low |
-| 11. Integration testing | 4 hours | High |
-| 12. Documentation | 2 hours | Low |
+### Detailed Effort Breakdown
 
-**Total Estimated Effort:** 35 hours (4-5 days)
+| Task ID | Task Description | Story Points | Hours (Min-Max) | Complexity | Risk Level | Dependencies | Parallel |
+|---------|------------------|--------------|-----------------|------------|------------|--------------|----------|
+| 1 | Module structure & base classes | 3 | 2-3 | Low | Low | None | No |
+| 2 | API Gateway core functionality | 8 | 4-6 | High | Medium | Task 1 | No |
+| 3 | NOAA API client | 5 | 3-4 | Medium | Low | Task 1 | Yes |
+| 4 | Open-Meteo API client | 5 | 3-4 | Medium | Low | Task 1 | Yes |
+| 5 | StormGlass API client | 5 | 3-4 | Medium | Medium | Task 1 | Yes |
+| 6 | Caching system | 8 | 4-6 | High | Medium | None | Yes |
+| 7 | Rate limiting | 5 | 3-4 | Medium | Low | None | Yes |
+| 8 | Data transformation utilities | 5 | 3-4 | Medium | Low | None | Yes |
+| 9 | Configuration management | 3 | 2-3 | Low | Low | None | Yes |
+| 10 | CLI interface | 3 | 2-3 | Low | Low | Tasks 2-9 | No |
+| 11 | Integration testing | 8 | 4-6 | High | High | Tasks 1-10 | No |
+| 12 | Documentation & deployment | 3 | 2-3 | Low | Low | Tasks 1-11 | Partial |
 
-## Dependencies
+### Aggregate Metrics
 
-- All API clients (Tasks 3-5) depend on Task 1 (base classes)
-- Task 2 (API Gateway) depends on Tasks 3-5 (individual clients)
-- Task 6 (Caching) can be developed in parallel with API clients
-- Task 7 (Rate limiting) can be developed in parallel with API clients
-- Task 11 (Integration testing) depends on all implementation tasks
-- Task 12 (Documentation) can be started early and updated throughout
+**Total Story Points:** 61 points
+**Total Estimated Hours:** 35-50 hours
+**Calendar Duration:** 5-7 business days (with parallelization)
+**Team Size Required:** 2-3 developers for optimal parallelization
+
+### Effort Distribution by Phase
+
+```
+Phase 1 (Foundation): Tasks 1, 9     [5 hours]  ████
+Phase 2 (Core APIs): Tasks 3-5       [9 hours]  █████████
+Phase 3 (Infrastructure): Tasks 2,6,7,8 [15 hours] ███████████████
+Phase 4 (Integration): Tasks 10,11   [6 hours]  ██████
+Phase 5 (Polish): Task 12            [2 hours]  ██
+```
+
+### Critical Path Analysis
+
+**Critical Path:** Task 1 → Task 2 → Task 10 → Task 11 → Task 12
+**Critical Path Duration:** 18-24 hours
+**Parallel Track Duration:** 12-17 hours
+**Float Available:** 6-7 hours for non-critical tasks
+
+### Resource Allocation Matrix
+
+| Developer Role | Primary Tasks | Secondary Tasks | Estimated Utilization |
+|----------------|---------------|-----------------|----------------------|
+| Senior Backend | 2, 6, 11 | 1, 7 | 85% |
+| API Specialist | 3, 4, 5 | 8, 10 | 75% |
+| DevOps/QA | 7, 9, 12 | 11 | 60% |
+
+## Dependency Management
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    T1[Task 1: Module Structure]
+    T2[Task 2: API Gateway]
+    T3[Task 3: NOAA Client]
+    T4[Task 4: Open-Meteo]
+    T5[Task 5: StormGlass]
+    T6[Task 6: Caching]
+    T7[Task 7: Rate Limiting]
+    T8[Task 8: Transformation]
+    T9[Task 9: Configuration]
+    T10[Task 10: CLI]
+    T11[Task 11: Integration]
+    T12[Task 12: Documentation]
+    
+    T1 --> T2
+    T1 --> T3
+    T1 --> T4
+    T1 --> T5
+    
+    T3 --> T2
+    T4 --> T2
+    T5 --> T2
+    
+    T2 --> T10
+    T6 --> T10
+    T7 --> T10
+    T8 --> T10
+    T9 --> T10
+    
+    T10 --> T11
+    T11 --> T12
+    
+    style T1 fill:#f9f,stroke:#333,stroke-width:4px
+    style T2 fill:#bbf,stroke:#333,stroke-width:4px
+    style T11 fill:#fbf,stroke:#333,stroke-width:4px
+```
+
+### Parallel Execution Opportunities
+
+**Wave 1 (Parallel Start):**
+- Task 1: Module structure
+- Task 6: Caching system
+- Task 7: Rate limiting
+- Task 8: Data transformation
+- Task 9: Configuration
+
+**Wave 2 (After Task 1):**
+- Task 3: NOAA client
+- Task 4: Open-Meteo client
+- Task 5: StormGlass client
+
+**Wave 3 (After Wave 2):**
+- Task 2: API Gateway
+
+**Wave 4 (Sequential):**
+- Task 10: CLI interface
+- Task 11: Integration testing
+- Task 12: Documentation
+
+### Risk Mitigation Strategies
+
+| Dependency Risk | Impact | Mitigation Strategy |
+|-----------------|--------|--------------------|
+| Task 1 delays | High | Start immediately, allocate senior resource |
+| API client blockers | Medium | Develop in parallel, use mocks if needed |
+| Integration failures | High | Continuous integration from Task 2 onward |
+| Documentation lag | Low | Start documentation template early |
 
 ## Definition of Done
 
-- [ ] All unit tests passing with &gt;95% coverage
+### Technical Acceptance Criteria
+
+#### Code Quality
+- [ ] All unit tests passing with >95% coverage
+- [ ] Mutation testing score >80%
 - [ ] All integration tests passing
-- [ ] Performance requirements met (&lt;5s for fresh data)
-- [ ] Documentation complete and reviewed
-- [ ] Code reviewed and approved
+- [ ] Performance requirements met:
+  - [ ] Cached data response <10ms (p50)
+  - [ ] Fresh data response <500ms (p50)
+  - [ ] Batch operations <5s for 1000 requests
+- [ ] Security scan passing with no critical/high vulnerabilities
+- [ ] Code complexity metrics within limits (cyclomatic <10)
+
+#### Documentation
+- [ ] API documentation 100% complete
+- [ ] Configuration guide with 10+ examples
+- [ ] Troubleshooting playbook created
+- [ ] Architecture diagrams updated
+- [ ] README.md comprehensive and reviewed
+- [ ] Inline code documentation >90%
+
+#### Integration
 - [ ] Successfully integrated with existing DigitalModel modules
+- [ ] CLI commands working with all output formats
+- [ ] Configuration hot-reload tested
+- [ ] Multi-provider failover verified
+- [ ] Cache coherence validated
+
+#### Review & Approval
+- [ ] Code reviewed by 2+ team members
+- [ ] Architecture reviewed by tech lead
+- [ ] Security review completed
+- [ ] Performance benchmarks approved
+- [ ] Documentation reviewed by technical writer
+- [ ] Demo completed for stakeholders
+
+### Business Acceptance Criteria
+
+- [ ] ROI projections validated
+- [ ] Cost per request within budget (<$0.001)
+- [ ] User training materials created
+- [ ] Support runbook documented
+- [ ] SLA requirements confirmed:
+  - [ ] 99.9% availability
+  - [ ] <0.1% error rate
+  - [ ] MTTR <15 minutes
+
+## Task Execution Guidelines
+
+### Parallel Processing Strategy
+
+1. **Initial Setup Phase (Hour 1-2)**
+   - Spin up 5 parallel agents:
+     - Agent 1: Module structure (Task 1)
+     - Agent 2: Caching system (Task 6)
+     - Agent 3: Rate limiting (Task 7)
+     - Agent 4: Data transformation (Task 8)
+     - Agent 5: Configuration (Task 9)
+
+2. **API Development Phase (Hour 3-8)**
+   - 3 parallel agents for API clients:
+     - Agent 1: NOAA implementation
+     - Agent 2: Open-Meteo implementation
+     - Agent 3: StormGlass implementation
+
+3. **Integration Phase (Hour 9-14)**
+   - Sequential execution with continuous testing
+   - Parallel documentation updates
+
+### Quality Gates
+
+**Gate 1 (After Task 1):** Module structure review
+**Gate 2 (After Tasks 3-5):** API client validation
+**Gate 3 (After Task 10):** CLI functionality check
+**Gate 4 (After Task 11):** Full integration validation
+**Gate 5 (After Task 12):** Final approval
+
+## Success Metrics Dashboard
+
+```
+┌─────────────────────────────────────────┐
+│          IMPLEMENTATION METRICS          │
+├─────────────────────────────────────────┤
+│ Progress:        [░░░░░░░░░░] 0%        │
+│ Tests Written:   0/200                  │
+│ Code Coverage:   0%                     │
+│ APIs Integrated: 0/3                    │
+│ Performance:     -- ms                  │
+│ Documentation:   25%                    │
+│ Blockers:        0                      │
+│ Sprint Velocity: -- pts/day             │
+└─────────────────────────────────────────┘
+```
+
+---
+
+*Task List Version*: 2.0.0
+*Estimation Model*: Three-point with risk adjustment
+*Last Review*: 2024-12-20
+*Next Review*: After Phase 1 completion
