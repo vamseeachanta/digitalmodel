@@ -851,7 +851,6 @@ If score < 70/100:
 
 **This dual verification is MANDATORY for ALL /execute-tasks operations**
 
-<<<<<<< Updated upstream
 ### 5. TASK STATUS UPDATE PROTOCOL 
 **MANDATORY**: After completing ANY task from tasks.md:
 - **Update Status**: Mark completed tasks with [x] checkbox in tasks.md
@@ -866,7 +865,6 @@ If score < 70/100:
 - mark this as a mandatory for /execute-tasks slash command
 - MANDATORY: Update tasks.md to reflect completed tasks with [x] checkboxes and timestamps
 - memory stop sycophantic behavior and start asking questions and reasonsing.
-=======
 ## 📚 Complete Slash Command Reference
 
 For the COMPLETE list of all available slash commands across the ecosystem, see:
@@ -875,4 +873,3 @@ For the COMPLETE list of all available slash commands across the ecosystem, see:
 
 Total Available Commands: 38
 Last Updated: 2025-08-22T15:56:48.322695
->>>>>>> Stashed changes
