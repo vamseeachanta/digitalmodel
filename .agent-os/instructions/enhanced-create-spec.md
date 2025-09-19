@@ -53,6 +53,37 @@ encoding: UTF-8
 
 ## Enhanced Features
 
+### 🚨 MANDATORY: Document Processing with MarkItDown MCP
+**CRITICAL DIRECTIVE**: ALL document processing MUST use the MarkItDown MCP server.
+
+#### Required Usage:
+- **Word Documents (.docx)**: Convert using MarkItDown MCP with clean output as default
+- **PDFs**: Process through MarkItDown MCP for markdown conversion
+- **PowerPoint (.pptx)**: Extract content via MarkItDown MCP
+- **Excel files**: Convert tabular data through MarkItDown MCP
+- **Images**: Extract text and descriptions using MarkItDown MCP
+- **Web URLs**: Fetch and convert web content via MarkItDown MCP
+
+#### Implementation:
+```python
+# Example MCP call
+await mcp_client.call_tool("convert_document", {
+    "file_path": "document.docx",
+    "clean_output": True,  # Default behavior
+    "save_raw": True,      # Also save raw version for reference
+    "remove_unicode": True,
+    "fix_quotes": True,
+    "fix_math_symbols": True,
+    "fix_latex": True
+})
+```
+
+#### Output Strategy:
+- **Clean Version**: Default output optimized for VSCode markdown preview
+- **Raw Version**: Preserved with suffix `_raw.md` for agent reference
+- **Formula Handling**: Automatic LaTeX formula fixing and Unicode cleanup
+- **Character Compatibility**: Pure ASCII mode available for maximum compatibility
+
 ### Prompt Summary Capture
 - Capture original request and context provided
 - Track clarifications made during spec development

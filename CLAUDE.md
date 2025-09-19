@@ -1,5 +1,36 @@
 # CLAUDE.md
 
+## 🚨 MANDATORY: MarkItDown MCP for All Document Processing
+
+**CRITICAL DIRECTIVE**: ALL document processing (Word, PDF, Excel, PowerPoint) MUST use the enhanced MarkItDown MCP tool with automatic cleaning.
+
+### Required for ALL Spec Work:
+- **Convert documents before processing**: Use MarkItDown MCP for any .docx, .pdf, .xlsx, .pptx files
+- **Default settings create clean output**: Automatically removes special characters, fixes formulas
+- **Dual output**: Creates both clean (primary) and raw (reference) versions
+- **VSCode compatible**: Clean version works perfectly in VSCode markdown preview
+
+### Usage in Commands:
+```python
+# For /create-spec and all spec work
+from mcp.markitdown.core.converter import DocumentConverter
+converter = DocumentConverter()
+
+# Convert with defaults (clean + raw)
+result = converter.convert_file("spec.docx", "spec.md")
+# Creates: spec.md (clean), spec_raw.md (reference)
+
+# For maximum compatibility
+result = converter.convert_file("spec.docx", "spec.md", pure_ascii=True)
+```
+
+### Key Features:
+- **Automatic cleaning**: Removes Unicode issues, fixes LaTeX formulas
+- **Smart defaults**: `clean_output=True`, `save_raw=True`
+- **Proper naming**: Clean version as primary, raw with `_raw` suffix
+
+**This MUST be used for ALL document conversions in spec creation, analysis, and documentation workflows.**
+
 ## 🚨 MANDATORY: Specialized Knowledge Escalation Protocol
 
 **CRITICAL DIRECTIVE**: When ANY task requires specialized knowledge you don't possess, you MUST immediately escalate to the user. This applies to ALL work across the repository.
