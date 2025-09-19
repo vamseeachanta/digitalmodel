@@ -49,6 +49,38 @@ This traditional workflow remains fully supported and is the default for backwar
   - Ensure alignment with product roadmap and mission
 </purpose>
 
+## 🚨 MANDATORY: Document Processing Requirements
+
+**CRITICAL DIRECTIVE**: ALL document processing during spec creation MUST use the MarkItDown MCP server.
+
+### Required Document Processing:
+- **Word Documents (.docx)**: MUST convert using MarkItDown MCP with clean output as default
+- **PDFs**: MUST process through MarkItDown MCP for markdown conversion
+- **PowerPoint (.pptx)**: MUST extract content via MarkItDown MCP
+- **Excel files**: MUST convert tabular data through MarkItDown MCP
+- **Images**: MUST extract text and descriptions using MarkItDown MCP
+- **Web URLs**: MUST fetch and convert web content via MarkItDown MCP
+
+### Implementation Requirements:
+```python
+# Required MCP usage pattern
+await mcp_client.call_tool("convert_document", {
+    "file_path": "document.docx",
+    "clean_output": True,  # MANDATORY default
+    "save_raw": True,      # MANDATORY for agent reference
+    "remove_unicode": True,
+    "fix_quotes": True,
+    "fix_math_symbols": True,
+    "fix_latex": True
+})
+```
+
+### Output Standards:
+- **Clean Version**: Default output optimized for VSCode markdown preview (filename.md)
+- **Raw Version**: Preserved with `_raw.md` suffix for agent reference
+- **Formula Handling**: Automatic LaTeX formula fixing and Unicode cleanup
+- **VSCode Compatibility**: Remove special characters that cause preview issues
+
 <context>
   - Part of Agent OS framework
   - Executed when implementing roadmap items

@@ -31,6 +31,38 @@ encoding: UTF-8
   - Ensure quality through testing and review
 </purpose>
 
+## 🚨 MANDATORY: Document Processing During Task Execution
+
+**CRITICAL DIRECTIVE**: ALL document processing during task execution MUST use the MarkItDown MCP server.
+
+### Required Usage:
+- **Word Documents (.docx)**: Convert using MarkItDown MCP with clean output as default
+- **PDFs**: Process through MarkItDown MCP for markdown conversion
+- **PowerPoint (.pptx)**: Extract content via MarkItDown MCP
+- **Excel files**: Convert tabular data through MarkItDown MCP
+- **Images**: Extract text and descriptions using MarkItDown MCP
+- **Web URLs**: Fetch and convert web content via MarkItDown MCP
+
+### Implementation Requirements:
+```python
+# MANDATORY MCP usage during task execution
+await mcp_client.call_tool("convert_document", {
+    "file_path": "document.docx",
+    "clean_output": True,  # Default behavior
+    "save_raw": True,      # Also save raw version for reference
+    "remove_unicode": True,
+    "fix_quotes": True,
+    "fix_math_symbols": True,
+    "fix_latex": True
+})
+```
+
+### Integration with Task Execution:
+- **Task Documentation**: Convert any provided documents before starting tasks
+- **Reference Materials**: Process external documents using MarkItDown MCP
+- **Output Generation**: Use clean markdown output for all documentation tasks
+- **Version Control**: Commit both clean and raw versions when appropriate
+
 <context>
   - Part of Agent OS framework
   - Executed after spec planning is complete

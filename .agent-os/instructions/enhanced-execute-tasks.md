@@ -34,6 +34,44 @@ encoding: UTF-8
   - Provide comprehensive implementation tracking
 </purpose>
 
+## 🚨 MANDATORY: Enhanced Document Processing During Task Execution
+
+**CRITICAL DIRECTIVE**: ALL document processing during enhanced task execution MUST use the MarkItDown MCP server with comprehensive tracking.
+
+### Required Usage with Enhanced Tracking:
+- **Word Documents (.docx)**: Convert using MarkItDown MCP with clean output as default
+- **PDFs**: Process through MarkItDown MCP for markdown conversion
+- **PowerPoint (.pptx)**: Extract content via MarkItDown MCP
+- **Excel files**: Convert tabular data through MarkItDown MCP
+- **Images**: Extract text and descriptions using MarkItDown MCP
+- **Web URLs**: Fetch and convert web content via MarkItDown MCP
+
+### Enhanced Implementation Requirements:
+```python
+# MANDATORY Enhanced MCP usage during task execution
+conversion_result = await mcp_client.call_tool("convert_document", {
+    "file_path": "document.docx",
+    "clean_output": True,  # Default behavior
+    "save_raw": True,      # Also save raw version for reference
+    "remove_unicode": True,
+    "fix_quotes": True,
+    "fix_math_symbols": True,
+    "fix_latex": True
+})
+
+# Enhanced tracking for task summary
+task_metrics["documents_processed"] += 1
+task_metrics["conversion_time"] = conversion_result.get("processing_time")
+task_metrics["files_generated"] = conversion_result.get("output_files")
+```
+
+### Enhanced Integration Features:
+- **Task Summary Integration**: Document conversion metrics in task_summary.md
+- **Performance Tracking**: Record processing times and optimization opportunities
+- **Quality Metrics**: Track character cleanup effectiveness and formula fixes
+- **Cross-Reference Validation**: Ensure converted documents maintain proper linking
+- **Automated Documentation**: Generate conversion reports for executive summaries
+
 <context>
   - Enhanced version of Agent OS framework
   - Executed after spec planning is complete
