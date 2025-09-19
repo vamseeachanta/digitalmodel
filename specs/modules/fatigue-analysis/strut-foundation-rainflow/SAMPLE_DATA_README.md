@@ -12,7 +12,7 @@ This directory contains sample time trace data for the Strut Foundation Fatigue 
 
 ## Sample Data Structure
 
-### Reference Seastate Configuration: `reference_seastate_timetraces.csv`
+### Reference Seastate Configuration: `reference_seastate_timetrace_metadata.csv`
 Contains the original fatigue load case definitions with OrcaFlex simulation parameters:
 - Complete list of 68 fatigue cases (36 wave + 32 wind)
 - Simulation file paths and parameters
@@ -69,7 +69,7 @@ This directory contains a subset of 6 sample files for demonstration:
 ## Usage in Fatigue Analysis
 
 ### Processing Pipeline:
-1. **Load Metadata**: Read `reference_seastate_timetraces.csv` to identify available time traces
+1. **Load Metadata**: Read `reference_seastate_timetrace_metadata.csv` to identify available time traces
 2. **Load Time Traces**: Read individual CSV files from `sample_timetraces/` directory
 3. **Apply Scaling**: Scale time traces based on target fatigue conditions
    - Wind scaling: (target_speed/10)²
