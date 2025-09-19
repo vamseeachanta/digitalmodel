@@ -1,0 +1,27 @@
+================================================================================
+SAMPLE EFFECTIVE TENSION GENERATION SUMMARY
+================================================================================
+
+Conditions Processed: 10
+Struts Processed: S1, S2
+Total Time Traces Generated: 20
+Output Directory: output/sample_effective_tension
+
+SCALING FACTOR RANGES IN SAMPLE:
+  Wind Scale Factors: 0.0156 to 1.9600
+  Wave Scale Factors: 0.0200 to 1.2000
+
+EFFECTIVE TENSION STATISTICS:
+  Maximum Tension: 678.71 kN
+  Minimum Tension: 0.89 kN
+  Average Mean Tension: 114.89 kN
+  Average Std Dev: 22.75 kN
+
+VERIFICATION CHECKS:
+[OK] Scaling factors match expected formulas
+[OK] Wind and wave references selected based on direction
+[OK] Effective tension = scaled wind + scaled wave
+[OK] Metadata preserved for traceability
+
+Scaling Log: output/sample_effective_tension\sample_scaling_log.csv
+Summary generated at: 2025-09-19 13:33:30.222386
