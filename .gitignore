@@ -148,6 +148,12 @@ target/
 profile_default/
 ipython_config.py
 
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
 # pyenv
 .python-version
 
