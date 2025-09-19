@@ -1,0 +1,126 @@
+graph LR
+    %% MarkItDown MCP Component Diagram
+    
+    subgraph "Repository Structure"
+        subgraph "specs/modules/mcp-server/"
+            subgraph "mcp/markitdown/"
+                README1[README.md<br/>Documentation]
+                CONFIG1[config.yml<br/>Default Config]
+                RUN1[run_server.py<br/>Entry Point]
+            end
+        end
+        
+        subgraph "src/mcp/markitdown/"
+            subgraph "core/"
+                CONV[converter.py<br/>Conversion Logic]
+                SERVER[server.py<br/>Basic Server]
+                FAST[fastmcp_server.py<br/>FastMCP Server]
+            end
+            
+            subgraph "api/"
+                LLM_API[llm_integration.py<br/>LLM Connectors]
+                AZURE_API[azure_integration.py<br/>Azure DI Client]
+            end
+            
+            subgraph "plugins/"
+                CUSTOM[custom_formats.py<br/>Format Plugins]
+                ENHANCE[enhancers.py<br/>Enhancement Plugins]
+            end
+            
+            subgraph "config/"
+                LOADER[config_loader.py<br/>Config Management]
+                VALID[validators.py<br/>Config Validation]
+            end
+            
+            subgraph "tests/"
+                TEST_CONV[test_converter.py<br/>Converter Tests]
+                TEST_MCP[test_mcp_protocol.py<br/>Protocol Tests]
+                TEST_INT[test_integration.py<br/>Integration Tests]
+            end
+        end
+    end
+    
+    subgraph "External Dependencies"
+        MARKITDOWN[markitdown<br/>Core Library]
+        FASTMCP_LIB[fastmcp<br/>MCP Framework]
+        YAML_LIB[pyyaml<br/>Config Parser]
+        
+        subgraph "Optional Dependencies"
+            OPENAI[openai<br/>GPT Integration]
+            ANTHROPIC[anthropic<br/>Claude Integration]
+            AZURE_SDK[azure-ai-documentintelligence<br/>Azure OCR]
+        end
+    end
+    
+    subgraph "Runtime Components"
+        subgraph "Server Process"
+            MAIN[Main Thread<br/>Server Loop]
+            ASYNC_LOOP[Async Event Loop<br/>Request Handler]
+            WORKERS[Worker Pool<br/>Parallel Processing]
+        end
+        
+        subgraph "Memory Structures"
+            HIST_MEM[History Buffer<br/>Recent Operations]
+            CACHE_MEM[Document Cache<br/>Converted Files]
+            CONFIG_MEM[Config Store<br/>Runtime Settings]
+        end
+    end
+    
+    subgraph "File System"
+        INPUT[Input Documents<br/>Various Formats]
+        OUTPUT[Output Files<br/>Markdown]
+        CACHE_FILES[Cache Directory<br/>.markitdown_cache/]
+        LOGS[Log Files<br/>markitdown.log]
+    end
+    
+    %% Dependencies
+    RUN1 --> FAST
+    FAST --> CONV
+    FAST --> SERVER
+    CONV --> MARKITDOWN
+    FAST --> FASTMCP_LIB
+    CONFIG1 --> LOADER
+    LOADER --> YAML_LIB
+    
+    %% Optional dependencies
+    LLM_API -.-> OPENAI
+    LLM_API -.-> ANTHROPIC
+    AZURE_API -.-> AZURE_SDK
+    
+    %% Runtime connections
+    FAST --> MAIN
+    MAIN --> ASYNC_LOOP
+    ASYNC_LOOP --> WORKERS
+    CONV --> HIST_MEM
+    CONV --> CACHE_MEM
+    LOADER --> CONFIG_MEM
+    
+    %% File system connections
+    INPUT --> CONV
+    CONV --> OUTPUT
+    CACHE_MEM --> CACHE_FILES
+    FAST --> LOGS
+    
+    %% Test connections
+    TEST_CONV --> CONV
+    TEST_MCP --> FAST
+    TEST_INT --> RUN1
+    
+    %% Plugin connections
+    CUSTOM --> CONV
+    ENHANCE --> CONV
+    
+    %% Styling
+    classDef spec fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef src fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef external fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef optional fill:#fce4ec,stroke:#880e4f,stroke-width:1px,stroke-dasharray: 5 5
+    classDef runtime fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef filesystem fill:#f5f5f5,stroke:#424242,stroke-width:2px
+    
+    class README1,CONFIG1,RUN1 spec
+    class CONV,SERVER,FAST,LLM_API,AZURE_API,CUSTOM,ENHANCE,LOADER,VALID,TEST_CONV,TEST_MCP,TEST_INT src
+    class MARKITDOWN,FASTMCP_LIB,YAML_LIB external
+    class OPENAI,ANTHROPIC,AZURE_SDK optional
+    class MAIN,ASYNC_LOOP,WORKERS,HIST_MEM,CACHE_MEM,CONFIG_MEM runtime
+    class INPUT,OUTPUT,CACHE_FILES,LOGS filesystem

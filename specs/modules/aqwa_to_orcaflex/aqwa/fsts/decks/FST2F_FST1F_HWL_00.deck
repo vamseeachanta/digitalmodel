@@ -1,0 +1,12 @@
+********************************************************************************
+*********************************** DECK  0 ************************************
+********************************************************************************
+JOB AQWA  LINE  
+TITLE               FST2 95% LNG, FST1 95%LNG, HWL
+NUM_CORES        16
+*OPTIONS PPEL PRPR
+OPTIONS NQTF CQTF AQTF MQTF
+OPTIONS LDRG
+OPTIONS GOON
+OPTIONS LHFR REST END
+RESTART  1  3

@@ -1,0 +1,147 @@
+# MarkItDown MCP Server Configuration
+
+server:
+  name: markitdown
+  port: 3106
+  host: localhost
+  description: "Document to Markdown conversion service for LLM processing"
+
+markitdown:
+  # Optional LLM configuration for enhanced features
+  llm:
+    model: null  # e.g., "gpt-4o", "claude-3", null to disable
+    api_key: null  # Set via environment variable MARKITDOWN_LLM_API_KEY
+    temperature: 0.3
+    max_tokens: 500
+  
+  # Azure Document Intelligence (optional for enhanced PDF processing)
+  azure:
+    endpoint: null  # Set via environment variable AZURE_ENDPOINT
+    key: null  # Set via environment variable AZURE_KEY
+    use_layout: true  # Use layout API for better structure preservation
+  
+  # Processing options
+  processing:
+    batch_size: 10  # Number of files to process in parallel
+    timeout: 300  # Maximum time (seconds) per file
+    max_file_size: 100  # Maximum file size in MB
+    preserve_formatting: true
+    include_metadata: true
+    extract_images: true
+    describe_images: false  # Use LLM to describe images (requires LLM config)
+  
+  # Output options
+  output:
+    format: markdown  # Output format: markdown, plain, json
+    code_syntax_highlighting: true
+    table_format: github  # Table format: github, simple, grid, pipe
+    include_toc: true  # Include table of contents for long documents
+    max_heading_level: 6
+    line_width: 120  # Maximum line width for text wrapping
+  
+  # File type specific options
+  file_types:
+    pdf:
+      use_ocr: true  # Enable OCR for scanned PDFs
+      extract_tables: true
+      extract_images: true
+      preserve_layout: false
+    
+    excel:
+      include_formulas: false
+      include_cell_formats: false
+      merge_sheets: false  # Merge all sheets into one document
+      sheet_separator: "---"
+    
+    powerpoint:
+      include_speaker_notes: true
+      include_slide_numbers: true
+      slide_separator: "---"
+    
+    word:
+      include_comments: true
+      include_tracked_changes: false
+      preserve_styles: true
+    
+    images:
+      use_ocr: true
+      describe_with_llm: false  # Requires LLM configuration
+      include_exif: false
+    
+    html:
+      remove_scripts: true
+      remove_styles: true
+      preserve_links: true
+      simplify_tables: false
+  
+  # Security settings
+  security:
+    allowed_directories:  # List of allowed directories for file access
+      - "./documents"
+      - "./specs"
+      - "./data"
+    blocked_extensions:  # File extensions to block
+      - ".exe"
+      - ".dll"
+      - ".so"
+      - ".app"
+    scan_for_malware: false  # Enable if antivirus integration available
+  
+  # Caching
+  cache:
+    enabled: true
+    directory: "./.markitdown_cache"
+    ttl: 3600  # Cache time-to-live in seconds
+    max_size: 1000  # Maximum cache size in MB
+  
+  # Logging
+  logging:
+    level: INFO  # DEBUG, INFO, WARNING, ERROR
+    file: "./logs/markitdown.log"
+    max_file_size: 10  # MB
+    backup_count: 5
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# MCP specific configuration
+mcp:
+  # Resource configuration
+  resources:
+    - uri: "markitdown://capabilities"
+      name: "Conversion Capabilities"
+      description: "List of supported file types and conversion options"
+      
+    - uri: "markitdown://history"
+      name: "Conversion History"
+      description: "Recent conversion operations and statistics"
+      
+    - uri: "markitdown://config"
+      name: "Configuration"
+      description: "Current server configuration"
+  
+  # Tool configuration
+  tools:
+    - name: "convert_document"
+      description: "Convert a single document to Markdown"
+      
+    - name: "batch_convert"
+      description: "Convert multiple documents in a directory"
+      
+    - name: "extract_text"
+      description: "Extract plain text from a document"
+      
+    - name: "extract_tables"
+      description: "Extract tables from documents as structured data"
+      
+    - name: "describe_image"
+      description: "Generate description for an image using LLM"
+  
+  # Prompts for LLM operations
+  prompts:
+    - name: "describe_image"
+      template: "Describe this image in detail for documentation purposes"
+      
+    - name: "summarize_document"
+      template: "Provide a concise summary of this document"
+      
+    - name: "extract_key_points"
+      template: "Extract the key points from this document as a bullet list"

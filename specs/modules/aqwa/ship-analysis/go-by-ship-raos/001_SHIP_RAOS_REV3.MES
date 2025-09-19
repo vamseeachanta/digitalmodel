@@ -1,0 +1,13 @@
+
+ **** INPUT DATA WARNING **** Requested number of cores, 12, is reduced to the number of available licenses, 4
+ --------------------------------------------------------------------------------------------------------------
+
+ **** MODELING WARNING **** WHEN AQWA IS *NOT* RUN FROM WORKBENCH, ONLY 2 PARAMETERS (RESOLUTION) ARE ALLOWED ON THE 
+                            SEAG CARD. DEFAULT VALUES HAVE BEEN USED FOR THE GRID SIZE.
+ ---------------------------------------------------------------------------------------------------------------------
+
+ **** MODELING WARNING **** 70 MODELLING RULE #1 VIOLATIONS IGNORED BY GOON OPTION
+ ----------------------------------------------------------------------------------
+
+ **** ANALYSIS WARNING **** *.MSD not exist. Use PMAS input
+ --------------------------------------------------------------------------------
