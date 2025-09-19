@@ -2,21 +2,68 @@
 
 ## Executive Summary
 
-This specification defines a comprehensive fatigue analysis system for strut foundation structures using rainflow counting methodology. The system automates the complete fatigue evaluation workflow from environmental load case definition through time domain analysis, rainflow counting, load scaling, stress mapping, and final fatigue life estimation.
+This specification defines a comprehensive fatigue analysis system for strut foundation structures using rainflow counting methodology. The system uses a metadata CSV file (`reference_seastate_timetraces.csv`) where each row contains metadata about a time trace file for a specific reference seastate. The actual time trace data is stored in separate CSV files. These reference time traces are directly scaled to match target fatigue conditions, followed by rainflow counting and fatigue damage calculation, eliminating the need for repeated time domain simulations.
 
 ## Project Overview
 
 ### Objective
-Develop an automated fatigue analysis module that implements the complete procedure for strut foundation fatigue evaluation using rainflow counting, as defined in the WLNG fatigue methodology document.
+Develop an automated fatigue analysis module that implements the complete procedure for strut foundation fatigue evaluation using rainflow counting, as defined in the WLNG fatigue methodology document. The system processes pre-computed reference seastate time traces directly, eliminating the need for repeated time domain simulations.
 
 ### Scope
-- **Environmental Load Cases**: 18 wave + 16 wind conditions
-- **Fatigue Conditions**: 81 combined wind-wave conditions
-- **Time Domain Analysis**: 3-hour simulations per condition
-- **Rainflow Processing**: Extract load ranges and cycle counts for 8 mooring struts
-- **Scaling & Weighting**: Scale loads for fatigue conditions and weight by annual occurrence
+- **Reference Seastates**: 34 pre-computed conditions (18 wave @ Hs=0.5m, 16 wind @ 10m/s)
+- **Metadata Format**: CSV file with metadata (each row = metadata for one time trace file)
+- **Time Trace Data**: Separate CSV files containing actual time series data
+- **Fatigue Conditions**: 81 combined wind-wave conditions with scaling factors
+- **Direct Load Scaling**: Scale reference time traces to target fatigue conditions
+- **Rainflow Processing**: Apply rainflow counting to scaled time traces for 8 mooring struts
+- **Annual Weighting**: Weight results by occurrence percentages
 - **FEA Integration**: Map loads to stresses using finite element results
 - **Fatigue Calculation**: Apply S-N curves and Miner's rule for damage assessment
+
+## Reference Seastate Time Trace Workflow
+
+### Data Input Structure
+The system uses a two-tier data structure for managing reference seastate time traces:
+
+#### 1. Metadata File (`reference_seastate_timetraces.csv`)
+```
+┌─────────────┬──────────────┬──────────┬─────────────────┬──────────┬────────────┬──────────────┐
+│ seastate_id │ seastate_type│ strut_id │ time_trace_file │ duration │ sample_rate│ units        │
+├─────────────┼──────────────┼──────────┼─────────────────┼──────────┼────────────┼──────────────┤
+│ W01         │ wave         │ S1       │ W01_S1.csv      │ 10800    │ 0.1        │ kN           │
+│ W01         │ wave         │ S2       │ W01_S2.csv      │ 10800    │ 0.1        │ kN           │
+│ ...         │ ...          │ ...      │ ...             │ ...      │ ...        │ ...          │
+│ WD16        │ wind         │ S8       │ WD16_S8.csv     │ 10800    │ 0.1        │ kN           │
+└─────────────┴──────────────┴──────────┴─────────────────┴──────────┴────────────┴──────────────┘
+Total rows: 272 (34 reference seastates × 8 struts)
+```
+
+#### 2. Time Trace Data Files
+Each time trace file referenced in the metadata contains the actual time series data:
+```
+Example: W01_S1.csv
+┌──────┬───────────┐
+│ time │ load_value│
+├──────┼───────────┤
+│ 0.0  │ 125.3     │
+│ 0.1  │ 128.7     │
+│ 0.2  │ 124.1     │
+│ ...  │ ...       │
+│10800 │ 122.9     │
+└──────┴───────────┘
+```
+
+### Processing Pipeline
+1. **Load Metadata**: Read `reference_seastate_timetraces.csv` to identify all time trace files
+2. **Load Time Traces**: Read individual CSV files containing actual time series data
+3. **Apply Scaling Factors**: For each of 81 fatigue conditions:
+   - Identify corresponding reference seastate (wind or wave)
+   - Load the appropriate time trace file
+   - Apply scaling factor to entire time trace
+   - Wind scaling: (target_speed/10)²
+   - Wave scaling: target_Hs/0.5
+4. **Rainflow Analysis**: Process scaled time traces through rainflow counting
+5. **Fatigue Calculation**: Apply S-N curves to resulting load cycles
 
 ## Technical Architecture
 
@@ -34,7 +81,8 @@ src/digitalmodel/modules/fatigue_analysis/
 │   ├── fatigue_conditions.yml
 │   └── sn_curve_parameters.yml
 ├── data/
-│   ├── input/                   # Time domain results
+│   ├── metadata/                # Metadata CSV files
+│   ├── timetraces/              # Individual time trace CSV files
 │   ├── intermediate/            # Processed rainflow data
 │   └── output/                  # Final fatigue results
 └── cli/
@@ -51,64 +99,128 @@ src/digitalmodel/modules/fatigue_analysis/
 
 ```mermaid
 graph TB
-    A[Environmental Load Cases] --> B[Time Domain Analysis]
-    B --> C[Strut Load Extraction]
-    C --> D[Rainflow Counting]
-    D --> E[Load Scaling]
-    F[Fatigue Conditions] --> E
-    E --> G[Load Binning]
-    G --> H[Annual Weighting]
-    I[FEA Results] --> J[Stress Mapping]
-    H --> J
-    J --> K[Fatigue Damage Calculation]
-    K --> L[Life Estimation]
-    L --> M[Design Verification]
+    A[Metadata CSV<br/>reference_seastate_timetraces.csv] --> B[Load Metadata]
+    B --> C[Load Time Trace Files]
+    C --> D[Time Series Data]
+    E[Fatigue Conditions<br/>81 combinations] --> F[Direct Load Scaling]
+    D --> F
+    F --> G[Scaled Time Traces]
+    G --> H[Rainflow Counting]
+    H --> I[Load Ranges & Cycles]
+    I --> J[Annual Weighting]
+    K[FEA Results] --> L[Stress Mapping]
+    J --> L
+    L --> M[Fatigue Damage Calculation]
+    M --> N[Life Estimation]
+    N --> O[Design Verification]
 ```
 
 ## Implementation Requirements
 
-### 1. Environmental Load Case Processing
-- Load 18 wave load cases (Hs = 0.5 m)
-- Load 16 wind load cases (wind speed = 10 m/s)
-- Each simulation duration: 3 hours
-- Extract strut load time histories for 8 mooring struts
+### 1. Reference Seastate Time Trace Input Processing
+- **Metadata File**: CSV file (`reference_seastate_timetraces.csv`)
+- **Metadata Structure**: Each row contains metadata pointing to a time trace file
+- **Time Trace Files**: Separate CSV files containing actual time series data
+- **Reference Conditions**: 34 total (18 wave cases @ Hs=0.5m, 16 wind cases @ 10m/s)
+- **Strut Data**: 8 mooring struts per seastate (272 total time trace files)
+- **Direct Processing**: Time traces are directly scaled without additional simulation
 
-### 2. Rainflow Counting Module
+### 2. Metadata and Time Trace Handler
+```python
+class MetadataHandler:
+    def __init__(self, metadata_path='reference_seastate_timetraces.csv'):
+        self.metadata_path = metadata_path
+        self.metadata_df = None
+        self.time_traces = {}
+    
+    def load_metadata(self):
+        """Load metadata CSV containing references to time trace files"""
+        # Columns: [seastate_id, seastate_type, strut_id, time_trace_file, duration, sample_rate, units]
+        self.metadata_df = pd.read_csv(self.metadata_path)
+        return self.metadata_df
+    
+    def load_time_trace(self, seastate_id, strut_id):
+        """Load actual time trace data from referenced CSV file"""
+        # Find the file path from metadata
+        row = self.metadata_df[(self.metadata_df['seastate_id'] == seastate_id) & 
+                               (self.metadata_df['strut_id'] == strut_id)]
+        file_path = row['time_trace_file'].values[0]
+        
+        # Load time series data from CSV file
+        trace_data = pd.read_csv(f'data/timetraces/{file_path}')
+        return trace_data['load_value'].values
+    
+    def get_reference_type(self, seastate_id):
+        """Determine if reference seastate is wind or wave type"""
+        return self.metadata_df[self.metadata_df['seastate_id'] == seastate_id]['seastate_type'].values[0]
+```
+
+### 3. Rainflow Counting Module
 ```python
 class RainflowProcessor:
     def __init__(self, duration=200):  # seconds
         self.duration = duration
     
-    def process_timeseries(self, load_history):
-        """Apply rainflow counting to extract load ranges and cycles"""
-        # Implementation using established rainflow algorithm
+    def process_scaled_timeseries(self, scaled_trace):
+        """Apply rainflow counting to scaled time trace"""
+        # Direct rainflow on already-scaled time trace
         return load_ranges, cycle_counts
     
-    def process_all_struts(self, simulation_results):
-        """Process all 8 struts for all 34 conditions"""
-        # Returns 272 arrays (34 conditions × 8 struts)
+    def process_all_struts(self, scaled_traces):
+        """Process all 8 struts for all fatigue conditions"""
+        # Process scaled time traces for each strut
         pass
 ```
 
-### 3. Load Scaling System
+### 4. Direct Load Scaling System
 ```python
-class LoadScaler:
-    def scale_wind_loads(self, base_loads, target_wind_speed, base_wind_speed=10):
-        """Scale wind loads with square of wind speed ratio"""
-        scale_factor = (target_wind_speed / base_wind_speed) ** 2
-        return base_loads * scale_factor
+class DirectLoadScaler:
+    def __init__(self, metadata_handler):
+        self.base_wind_speed = 10  # m/s
+        self.base_hs = 0.5  # m
+        self.metadata_handler = metadata_handler
     
-    def scale_wave_loads(self, base_loads, target_hs, base_hs=0.5):
-        """Scale wave loads linearly with significant wave height"""
-        scale_factor = target_hs / base_hs
-        return base_loads * scale_factor
+    def scale_time_trace(self, time_trace, seastate_type, target_condition):
+        """Scale entire time trace based on target fatigue condition"""
+        # Determine scaling factor based on seastate type
+        if seastate_type == 'wind':
+            scale_factor = (target_condition['wind_speed'] / self.base_wind_speed) ** 2
+        else:  # wave
+            scale_factor = target_condition['wave_height'] / self.base_hs
+        
+        # Apply scaling to entire time trace
+        scaled_trace = time_trace * scale_factor
+        return scaled_trace
     
-    def combine_scaled_loads(self, wind_loads, wave_loads, bins):
-        """Map scaled loads to common bins and sum cycle counts"""
-        pass
+    def process_fatigue_condition(self, fatigue_condition, strut_id):
+        """Process a single fatigue condition for a specific strut"""
+        # Determine which reference seastate to use (wind or wave)
+        if fatigue_condition['primary_driver'] == 'wind':
+            # Use appropriate wind reference seastate
+            reference_id = self.select_wind_reference(fatigue_condition)
+        else:
+            # Use appropriate wave reference seastate
+            reference_id = self.select_wave_reference(fatigue_condition)
+        
+        # Load the time trace from file
+        time_trace = self.metadata_handler.load_time_trace(reference_id, strut_id)
+        seastate_type = self.metadata_handler.get_reference_type(reference_id)
+        
+        # Scale the time trace
+        scaled_trace = self.scale_time_trace(time_trace, seastate_type, fatigue_condition)
+        return scaled_trace
+    
+    def generate_all_scaled_traces(self, fatigue_conditions):
+        """Generate scaled time traces for all 81 fatigue conditions and 8 struts"""
+        scaled_results = {}
+        for condition in fatigue_conditions:
+            for strut_id in ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8']:
+                key = f"{condition['id']}_{strut_id}"
+                scaled_results[key] = self.process_fatigue_condition(condition, strut_id)
+        return scaled_results
 ```
 
-### 4. Stress Mapping Integration
+### 5. Stress Mapping Integration
 ```python
 class StressMapper:
     def __init__(self, unit_load=4000):  # kN
@@ -123,7 +235,7 @@ class StressMapper:
         return scf * load_ranges * unit_stress
 ```
 
-### 5. Fatigue Damage Calculator
+### 6. Fatigue Damage Calculator
 ```python
 class FatigueCalculator:
     def __init__(self):
@@ -203,13 +315,29 @@ material_properties:
 
 ### Primary Commands
 ```bash
-# Complete fatigue analysis workflow
-uv run python -m digitalmodel.modules.fatigue_analysis --config config.yml
+# Complete fatigue analysis workflow with metadata and time traces
+uv run python -m digitalmodel.modules.fatigue_analysis \
+    --metadata reference_seastate_timetraces.csv \
+    --timetraces-dir data/timetraces \
+    --config config.yml
 
 # Individual processing steps
-uv run python -m digitalmodel.modules.fatigue_analysis.rainflow --input-dir data/timeseries
-uv run python -m digitalmodel.modules.fatigue_analysis.scaling --fatigue-conditions config/fatigue_conditions.yml
-uv run python -m digitalmodel.modules.fatigue_analysis.damage --stress-results data/stress_ranges.csv
+# Step 1: Validate metadata and time trace files
+uv run python -m digitalmodel.modules.fatigue_analysis.validate \
+    --metadata reference_seastate_timetraces.csv \
+    --timetraces-dir data/timetraces
+
+# Step 2: Scale time traces for fatigue conditions
+uv run python -m digitalmodel.modules.fatigue_analysis.scaling \
+    --metadata reference_seastate_timetraces.csv \
+    --timetraces-dir data/timetraces \
+    --fatigue-conditions config/fatigue_conditions.yml \
+    --output-dir data/scaled_traces
+
+# Step 3: Apply rainflow counting to scaled traces
+uv run python -m digitalmodel.modules.fatigue_analysis.rainflow \
+    --scaled-dir data/scaled_traces \
+    --output-dir data/rainflow_results
 
 # Batch processing
 uv run python -m digitalmodel.modules.fatigue_analysis --batch --parallel 4
@@ -217,20 +345,39 @@ uv run python -m digitalmodel.modules.fatigue_analysis --batch --parallel 4
 
 ### CLI Parameters
 - `--config`: Main configuration file path
-- `--input-directory`: Time domain results directory
+- `--metadata`: Metadata CSV file path (`reference_seastate_timetraces.csv`)
+- `--timetraces-dir`: Directory containing individual time trace CSV files
 - `--output-directory`: Results output directory
 - `--parallel`: Number of parallel workers
 - `--struts`: Specific struts to analyze (default: all 8)
 - `--conditions`: Specific fatigue conditions to process
 - `--verbose`: Detailed progress output
 - `--validate`: Run validation checks only
+- `--scaled-dir`: Directory containing scaled time traces (for intermediate steps)
+- `--output-dir`: Output directory for specific processing steps
 
 ## Input/Output Specifications
 
 ### Input Requirements
-1. **Time Domain Results**: CSV files with strut load time histories
-2. **FEA Results**: Unit stress values per strut location
-3. **Configuration Files**: Environmental and fatigue condition definitions
+1. **Metadata File**: `reference_seastate_timetraces.csv`
+   - Format: Each row contains metadata for one time trace file
+   - Columns: `[seastate_id, seastate_type, strut_id, time_trace_file, duration, sample_rate, units]`
+   - Total rows: 272 (34 reference seastates × 8 struts)
+   
+2. **Time Trace Files**: Individual CSV files in `data/timetraces/` directory
+   - Format: Two columns `[time, load_value]`
+   - One file per seastate/strut combination
+   - File naming convention: `{seastate_id}_{strut_id}.csv`
+   - Example: `W01_S1.csv`, `WD16_S8.csv`
+   
+3. **FEA Results**: Unit stress values per strut location
+   - Stress response per unit load (4000 kN)
+   - Multiple critical locations per strut
+   
+4. **Configuration Files**: 
+   - Fatigue condition definitions with scaling parameters
+   - S-N curve parameters (ABS "E" in Air)
+   - Annual occurrence percentages
 
 ### Output Products
 1. **Rainflow Results**: Load ranges and cycle counts per strut per condition
