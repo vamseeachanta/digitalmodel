@@ -11,6 +11,13 @@ Model Context Protocol (MCP) servers enable Claude CLI to interact with various 
 - **Status**: Production Ready
 - **Documentation**: [OrcaWave MCP](./orcawave/README.md)
 
+### MarkItDown
+- **Purpose**: Document to Markdown conversion for LLM processing
+- **Location**: `mcp/markitdown/`
+- **Port**: 3106
+- **Status**: Production Ready
+- **Documentation**: [MarkItDown MCP](./markitdown/README.md)
+
 ### Future MCP Servers (Planned)
 - **OrcaFlex**: Time-domain analysis and mooring systems
 - **AQWA**: Hydrodynamic analysis validation
@@ -103,6 +110,7 @@ All MCP servers should:
 | FreeCAD | 3103 | Planned |
 | GMsh | 3104 | Planned |
 | Excel | 3105 | Planned |
+| MarkItDown | 3106 | Active |
 
 ## Integration with Agents
 
