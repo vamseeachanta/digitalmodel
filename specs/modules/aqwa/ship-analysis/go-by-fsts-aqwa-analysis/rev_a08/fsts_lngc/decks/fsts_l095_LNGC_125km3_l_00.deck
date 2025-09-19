@@ -1,0 +1,12 @@
+********************************************************************************
+*********************************** DECK  0 ************************************
+********************************************************************************
+JOB AQWA  LINE  
+TITLE               FSTs LNG 95%, LNGC 125km3 0%
+NUM_CORES        64
+*OPTIONS PPEL PRPR
+OPTIONS NQTF CQTF AQTF MQTF
+OPTIONS LDRG
+OPTIONS GOON
+OPTIONS LHFR REST END
+RESTART  1  3
