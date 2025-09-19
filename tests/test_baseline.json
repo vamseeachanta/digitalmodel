@@ -1,50 +1,73 @@
 {
-  "date": "2025-09-02T15:50:05.541326",
+  "date": "2025-09-05T06:20:11.714733",
   "summary": {
-    "total_tests": 65,
-    "passed": 62,
+    "total_tests": 66,
+    "passed": 0,
     "failed": 0,
-    "skipped": 3,
-    "errors": 0,
-    "pass_rate": 95.4,
-    "coverage": 8.37,
-    "execution_time_seconds": 14.41
+    "skipped": 0,
+    "errors": 36,
+    "pass_rate": 0.0,
+    "execution_time_seconds": 6.46
   },
   "modules": {
     "aqwa": {
-      "files": 8,
-      "status": "passing"
+      "files": 11,
+      "status": "has_errors"
     },
     "catenary_riser": {
       "files": 2,
-      "status": "passing"
+      "status": "has_errors"
+    },
+    "cathodic_protection": {
+      "files": 1,
+      "status": "has_errors"
+    },
+    "code_dnvrph103": {
+      "files": 2,
+      "status": "has_errors"
+    },
+    "fatigue_analysis": {
+      "files": 2,
+      "status": "has_errors"
+    },
+    "installation": {
+      "files": 1,
+      "status": "has_errors"
     },
     "orcaflex": {
-      "files": 5,
-      "status": "passing"
+      "files": 2,
+      "status": "has_errors"
     },
     "pipeline": {
-      "files": 5,
-      "status": "passing"
+      "files": 4,
+      "status": "has_errors"
     },
-    "pipe_capacity": {
+    "rao_analysis": {
       "files": 1,
-      "status": "passing"
+      "status": "has_errors"
+    },
+    "ship_design": {
+      "files": 2,
+      "status": "has_errors"
     },
     "signal_analysis": {
-      "files": 8,
+      "files": 6,
       "status": "passing"
     },
     "time_series": {
       "files": 3,
-      "status": "passing"
+      "status": "has_errors"
+    },
+    "umbilical_analysis": {
+      "files": 2,
+      "status": "has_errors"
     },
     "viv_analysis": {
       "files": 1,
-      "status": "passing"
+      "status": "has_errors"
     }
   },
   "command": "python -m pytest tests/ -v",
-  "environment": "repository_uv",
-  "python_version": "3.11"
+  "environment": "repository_python",
+  "python_version": "3.13"
 }
