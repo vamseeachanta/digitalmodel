@@ -5,10 +5,10 @@
 This specification defines a comprehensive fatigue analysis system for strut foundation structures using rainflow counting methodology. The system uses a metadata CSV file (`reference_seastate_timetrace_metadata.csv`) where each row contains metadata about a time trace file for a specific reference seastate. The actual time trace data is stored in separate CSV files. These reference time traces are directly scaled to match target fatigue conditions, followed by rainflow counting and fatigue damage calculation, eliminating the need for repeated time domain simulations.
 
 The system analyzes 4 distinct vessel configurations, each requiring separate fatigue damage calculations:
-1. **FSTs Light (L015)** - Both FSTs in light condition
-2. **FSTs Full (L095)** - Both FSTs in full/loaded condition  
-3. **LNGC Partner (125k m³)** - Smaller LNG carrier alongside
-4. **LNGC Excalibur (180k m³)** - Larger LNG carrier alongside
+1. **FSTs Light (L015)** - Both FSTs in light condition (15% loaded)
+2. **FSTs Full (L095)** - Both FSTs in full condition (95% loaded)  
+3. **FSTs Light + LNGC Full** - Light FSTs with full 125k m³ LNGC (offloading scenario)
+4. **FSTs Full + LNGC Light** - Full FSTs with light 125k m³ LNGC (loading scenario)
 
 ## Project Overview
 
@@ -691,8 +691,8 @@ uv run python -m digitalmodel.modules.fatigue_analysis --batch --parallel 4
    - Separate results for each of 4 vessel configurations:
      - FSTs Light (L015) fatigue life
      - FSTs Full (L095) fatigue life
-     - LNGC Partner (125k m³) fatigue life
-     - LNGC Excalibur (180k m³) fatigue life
+     - FSTs Light + LNGC Full (offloading) fatigue life
+     - FSTs Full + LNGC Light (loading) fatigue life
    - Annual damage rates per configuration
    - Life predictions in years
    - Design compliance check for all configurations
@@ -810,11 +810,14 @@ fatigue_calc = FatigueCalculator()
 
 # Process each vessel configuration separately
 configurations = {
-    'FSTs_L015': 'fsts_l015',  # FSTs Light
-    'FSTs_L095': 'fsts_l095',  # FSTs Full
-    'LNGC_125k': 'lngc_125',   # LNGC Partner
-    'LNGC_180k': 'lngc_180'    # LNGC Excalibur
+    'FSTs_L015': 'fsts_l015',                    # FSTs Light only
+    'FSTs_L095': 'fsts_l095',                    # FSTs Full only
+    'FSTs_L015_LNGC_Full': 'fsts_l015_lngc_125_full',   # Light FSTs + Full LNGC
+    'FSTs_L095_LNGC_Light': 'fsts_l095_lngc_125_light'  # Full FSTs + Light LNGC
 }
+
+# Note: Sample data may not contain all configuration files
+# Process available configurations only
 
 fatigue_results = {}
 
@@ -879,12 +882,12 @@ output/
 │   ├── rainflow_results/
 │   ├── damage_results/
 │   └── config_summary.txt
-├── lngc_125k/                    # LNGC Partner configuration
+├── fsts_l015_lngc_125_full/     # FSTs Light + LNGC Full
 │   ├── effective_tension/
 │   ├── rainflow_results/
 │   ├── damage_results/
 │   └── config_summary.txt
-├── lngc_180k/                    # LNGC Excalibur configuration
+├── fsts_l095_lngc_125_light/    # FSTs Full + LNGC Light
 │   ├── effective_tension/
 │   ├── rainflow_results/
 │   ├── damage_results/
@@ -901,10 +904,10 @@ output/
 2. **Performance**: Process full dataset (4 configs × 81 conditions × 8 struts) within time limits
 3. **Accuracy**: Validation against manual calculations within 1% tolerance
 4. **Configuration Coverage**: Separate fatigue life estimates for:
-   - FSTs Light (L015)
-   - FSTs Full (L095)
-   - LNGC Partner (125k m³)
-   - LNGC Excalibur (180k m³)
+   - FSTs Light (L015) - standalone
+   - FSTs Full (L095) - standalone
+   - FSTs Light + LNGC Full (offloading)
+   - FSTs Full + LNGC Light (loading)
 5. **Usability**: Intuitive CLI with clear error messages and progress indicators
 6. **Maintainability**: Well-documented, modular code structure
 7. **Integration**: Seamless integration with existing OrcaFlex workflows
