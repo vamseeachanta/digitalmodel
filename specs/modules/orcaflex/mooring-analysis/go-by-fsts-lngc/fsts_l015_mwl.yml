@@ -1,0 +1,12 @@
+- includefile: aqwaimport_fsts_l015_mwl.yml
+- includefile: _01_general_fsts.yml
+- includefile: _02_environment.yml
+
+# Current and Wind Coefficients
+- includefile: _14_fsts_l015_cw_coeffs.yml
+
+- includefile: _05_variable_data.yml
+- includefile: _06_line_types_fsts.yml
+- includefile: _07_lines_fsts.yml
+
+... [truncated] ...

@@ -1,0 +1,12 @@
+﻿New: FST2_Conact_Line_01
+FST2_Conact_Line_01:
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+
+... [truncated] ...

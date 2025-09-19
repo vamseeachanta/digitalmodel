@@ -1,0 +1,12 @@
+Locked: No
+DampingRelativeTo: Earth
+DisturbanceVessel: (none)
+WaveCalculationMethod: Specified by environment
+CharacteristicLength: ~
+CharacteristicForce: ~
+Mass: 0
+MomentsOfInertia: [0, 0, 0]
+CentreOfMass: [0, 0, 0]
+LumpedBuoyAddedMassMethod: Diagonal values
+
+... [truncated] ...

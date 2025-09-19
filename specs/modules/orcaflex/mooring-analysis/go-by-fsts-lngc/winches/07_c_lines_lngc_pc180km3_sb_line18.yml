@@ -1,0 +1,12 @@
+﻿New: Line18
+Line18:
+    Connection, ConnectionX, ConnectionY, ConnectionZ:
+      - [FST2, 6.22, -21.10, 25.62]
+      - [LNGC, 297.52, 1.17, 26.40]
+    WinchControlType: By stage
+    StageMode, StageValue:
+      - [Specified Tension, 10]
+      - [Specified payout, 0]
+      - [Specified payout, 0]
+
+... [truncated] ...

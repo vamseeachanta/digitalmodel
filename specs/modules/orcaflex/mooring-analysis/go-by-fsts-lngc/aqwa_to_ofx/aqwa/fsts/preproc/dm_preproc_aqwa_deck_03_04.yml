@@ -1,0 +1,12 @@
+basename: aqwa
+
+software:
+  version: []
+
+type:
+  preprocess: True
+  analysis: False
+  results: False
+
+
+... [truncated] ...

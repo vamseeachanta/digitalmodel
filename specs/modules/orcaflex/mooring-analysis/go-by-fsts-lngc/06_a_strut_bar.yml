@@ -1,0 +1,12 @@
+﻿New: Strut_Bar
+
+Strut_Bar:
+  Category: General
+  # Geometry and mass
+  OD: 0.1
+  ID: 0
+  CentreOfMass: [0, 0]
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.4
+
+... [truncated] ...

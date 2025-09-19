@@ -1,0 +1,12 @@
+﻿New: fenderFST2L1
+fenderFST2L1:
+  InFrameConnection: FST2
+  InFrameInitialPosition: [42.37, -28.80, 7.90]
+  InFrameInitialAttitude: [90, 0, 0]
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  # General
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+
+... [truncated] ...

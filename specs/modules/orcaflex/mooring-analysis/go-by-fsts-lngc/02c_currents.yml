@@ -1,0 +1,12 @@
+# Current
+MultipleCurrentDataCanBeDefined: No
+CurrentModel: Variation scheme
+CurrentRamped: No
+CurrentApplyVerticalStretching: No
+HorizontalCurrentFactor: ~
+VerticalCurrentVariationMethod: Interpolated
+RefCurrentSpeed: 0
+RefCurrentDirection: 0
+CurrentDepth, CurrentFactor, CurrentRotation:
+
+... [truncated] ...

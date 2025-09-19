@@ -1,0 +1,12 @@
+library: digitalmodel
+basename: orcaflex_post_process
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+orcaflex:
+  analysis:
+    static: false
+
+... [truncated] ...
