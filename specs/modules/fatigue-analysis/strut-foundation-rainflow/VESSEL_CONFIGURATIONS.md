@@ -23,22 +23,22 @@ The fatigue analysis system must evaluate 4 distinct vessel configurations at th
 - **Operational Scenario**: Terminal at maximum storage capacity
 - **Reference Cases**: fat019 through fat036 (wave), fat053 through fat068 (wind)
 
-### 3. LNGC Partner (125k m³)
-- **Configuration ID**: `lngc_125`
-- **Description**: Smaller LNG carrier alongside for loading/offloading
-- **Vessel**: LNGC Partner class
-- **Capacity**: 125,000 m³
-- **FST Status**: Variable (typically one light, one full)
-- **Operational Scenario**: Standard LNG transfer operations
+### 3. FSTs Light + LNGC Full (L015 + 125k Full)
+- **Configuration ID**: `fsts_l015_lngc_125_full`
+- **Description**: FSTs in light condition with full LNGC alongside
+- **FST1 Draft**: 15% loaded
+- **FST2 Draft**: 15% loaded
+- **LNGC Partner**: 125,000 m³ (Full condition)
+- **Operational Scenario**: LNGC offloading to empty FSTs
 - **Reference Cases**: To be added when available
 
-### 4. LNGC Excalibur (180k m³)
-- **Configuration ID**: `lngc_180`
-- **Description**: Larger LNG carrier alongside for loading/offloading
-- **Vessel**: LNGC Excalibur class
-- **Capacity**: 180,000 m³
-- **FST Status**: Variable (typically one light, one full)
-- **Operational Scenario**: Large-scale LNG transfer operations
+### 4. FSTs Full + LNGC Light (L095 + 125k Light)
+- **Configuration ID**: `fsts_l095_lngc_125_light`
+- **Description**: FSTs in full condition with light LNGC alongside
+- **FST1 Draft**: 95% loaded
+- **FST2 Draft**: 95% loaded
+- **LNGC Partner**: 125,000 m³ (Light/ballast condition)
+- **Operational Scenario**: LNGC loading from full FSTs
 - **Reference Cases**: To be added when available
 
 ## Impact on Fatigue Analysis
@@ -56,11 +56,12 @@ Each configuration results in different:
    - Light condition: Lower inertia, higher accelerations
    - Full condition: Higher static loads, different natural periods
 
-2. **LNGC Presence**:
-   - Additional mooring loads transferred through struts
-   - Shielding effects on wave loads
-   - Modified current loads
-   - Ship-to-ship interaction forces
+2. **LNGC Presence (Configs 3 & 4)**:
+   - Additional mooring loads from LNGC transferred through struts
+   - Shielding effects on wave loads to/from FSTs
+   - Modified current loads due to three-vessel configuration
+   - Ship-to-ship interaction forces between LNGC and FSTs
+   - Combined system dynamics with different mass distributions
 
 3. **Environmental Coupling**:
    - Each configuration responds differently to same environmental conditions
@@ -79,13 +80,13 @@ Each configuration requires:
 ### Output Structure
 ```
 Configuration Results:
-├── fsts_l015/
+├── fsts_l015/                          # FSTs Light only
 │   └── Min fatigue life: XX years (Strut SY)
-├── fsts_l095/
+├── fsts_l095/                          # FSTs Full only
 │   └── Min fatigue life: XX years (Strut SY)
-├── lngc_125k/
+├── fsts_l015_lngc_125_full/           # FSTs Light + LNGC Full
 │   └── Min fatigue life: XX years (Strut SY)
-└── lngc_180k/
+└── fsts_l095_lngc_125_light/          # FSTs Full + LNGC Light
     └── Min fatigue life: XX years (Strut SY)
 ```
 
@@ -102,6 +103,14 @@ The minimum fatigue life across ALL configurations determines:
 - **8 struts** per seastate
 - **272 time traces** per configuration
 - **Total**: 1,088 time trace files for complete analysis
+
+### Current Data Availability:
+- **FSTs L015**: Available (fat001-fat018 wave, fat037-fat052 wind)
+- **FSTs L095**: Available (fat019-fat036 wave, fat053-fat068 wind)
+- **FSTs L015 + LNGC Full**: To be generated
+- **FSTs L095 + LNGC Light**: To be generated
+
+**Note**: Sample data directory contains limited files for testing. Full production analysis requires complete time trace sets for all configurations.
 
 ### Scaling Application:
 - Same 81 fatigue conditions applied to each configuration
