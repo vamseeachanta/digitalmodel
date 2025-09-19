@@ -1,6 +1,2 @@
-C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe /nowind .\dats\fsts_l015_125km3_l100_pb_mwl
-C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe /nowind .\dats\fsts_l015_125km3_l100_pb_hwl
-C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe /nowind .\dats\fsts_l015_125km3_l100_pb_lwl
-C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe /nowind .\dats\fsts_l015_125km3_l100_sb_mwl
-C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe /nowind .\dats\fsts_l015_125km3_l100_sb_hwl
-C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe /nowind .\dats\fsts_l015_125km3_l100_sb_lwl
+[Binary file stub]
+Original size: 612 bytes

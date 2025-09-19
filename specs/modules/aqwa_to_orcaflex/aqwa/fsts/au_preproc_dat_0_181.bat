@@ -1,3 +1,2 @@
-"C:\Program Files\ANSYS Inc\v181\aqwa\bin\winx64\aqwa.exe" /nowind .\FST2L095_FST1L095_MWL
-"C:\Program Files\ANSYS Inc\v181\aqwa\bin\winx64\aqwa.exe" /nowind .\FST2L095_FST1L095_HWL
-"C:\Program Files\ANSYS Inc\v181\aqwa\bin\winx64\aqwa.exe" /nowind .\FST2L095_FST1L095_LWL
+[Binary file stub]
+Original size: 276 bytes
