@@ -1,0 +1,12 @@
+basename: file_edit
+edit_type: concatenate
+concatenate_type: 2d_array # 2d_array
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+
+... [truncated] ...

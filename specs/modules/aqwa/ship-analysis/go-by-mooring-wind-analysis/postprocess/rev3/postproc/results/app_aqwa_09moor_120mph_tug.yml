@@ -1,0 +1,12 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: aqwa
+  software:
+    version: []
+    ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
+  type:
+    preprocess: false
+    analysis: false
+
+... [truncated] ...
