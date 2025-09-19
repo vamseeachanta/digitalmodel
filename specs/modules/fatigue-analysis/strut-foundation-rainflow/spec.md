@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This specification defines a comprehensive fatigue analysis system for strut foundation structures using rainflow counting methodology. The system uses a metadata CSV file (`reference_seastate_timetraces.csv`) where each row contains metadata about a time trace file for a specific reference seastate. The actual time trace data is stored in separate CSV files. These reference time traces are directly scaled to match target fatigue conditions, followed by rainflow counting and fatigue damage calculation, eliminating the need for repeated time domain simulations.
+This specification defines a comprehensive fatigue analysis system for strut foundation structures using rainflow counting methodology. The system uses a metadata CSV file (`reference_seastate_timetrace_metadata.csv`) where each row contains metadata about a time trace file for a specific reference seastate. The actual time trace data is stored in separate CSV files. These reference time traces are directly scaled to match target fatigue conditions, followed by rainflow counting and fatigue damage calculation, eliminating the need for repeated time domain simulations.
 
 ## Project Overview
 
@@ -25,7 +25,7 @@ Develop an automated fatigue analysis module that implements the complete proced
 ### Data Input Structure
 The system uses a two-tier data structure for managing reference seastate time traces:
 
-#### 1. Metadata File (`reference_seastate_timetraces.csv`)
+#### 1. Metadata File (`reference_seastate_timetrace_metadata.csv`)
 ```
 ┌─────────────┬──────────────┬──────────┬─────────────────┬──────────┬────────────┬──────────────┐
 │ seastate_id │ seastate_type│ strut_id │ time_trace_file │ duration │ sample_rate│ units        │
@@ -38,7 +38,16 @@ The system uses a two-tier data structure for managing reference seastate time t
 Total rows: 272 (34 reference seastates × 8 struts)
 ```
 
-#### 2. Time Trace Data Files
+#### 2. Reference Seastate Definitions (`reference_seastate_definition.csv`)
+Defines the environmental conditions for each reference seastate:
+- Load Case ID (F001-F068)
+- FST loading conditions (Light/Full)
+- LNG carrier configurations
+- Water levels (HWL/MWL/LWL)
+- Wind: Direction and speed (10 m/s for wind reference cases)
+- Wave: Direction, Hs (0.5m for wave reference cases), and Tp
+
+#### 3. Time Trace Data Files
 Each time trace file referenced in the metadata contains the actual time series data:
 ```
 Example: W01_S1.csv
@@ -54,7 +63,7 @@ Example: W01_S1.csv
 ```
 
 ### Processing Pipeline
-1. **Load Metadata**: Read `reference_seastate_timetraces.csv` to identify all time trace files
+1. **Load Metadata**: Read `reference_seastate_timetrace_metadata.csv` to identify all time trace files
 2. **Load Time Traces**: Read individual CSV files containing actual time series data
 3. **Apply Scaling Factors**: For each of 81 fatigue conditions:
    - Identify corresponding reference seastate (wind or wave)
@@ -77,7 +86,8 @@ src/digitalmodel/modules/fatigue_analysis/
 │   ├── stress_mapper.py         # FEA stress mapping
 │   └── fatigue_calculator.py    # S-N curve and damage calculations
 ├── config/
-│   ├── reference_seastate_timetraces.csv  # Reference seastate metadata
+│   ├── reference_seastate_timetrace_metadata.csv  # Reference seastate metadata
+│   ├── reference_seastate_definition.csv # Reference seastate environmental conditions  
 │   ├── fatigue_seastates.csv             # 81 fatigue conditions
 │   └── sn_curve_parameters.yml           # S-N curve parameters
 ├── data/
@@ -90,7 +100,7 @@ src/digitalmodel/modules/fatigue_analysis/
 ```
 
 ### Configuration Management
-- **Reference Seastates**: CSV file (`reference_seastate_timetraces.csv`) with 68 OrcaFlex simulation cases
+- **Reference Seastates**: CSV file (`reference_seastate_timetrace_metadata.csv`) with 68 OrcaFlex simulation cases
 - **Fatigue Conditions**: CSV file (`fatigue_seastates.csv`) with 81 combined conditions and occurrence percentages
 - **S-N Curve Parameters**: ABS "E" in Air curve parameters (in YAML configuration)
 - **FEA Parameters**: Unit load values and stress concentration factors
@@ -99,7 +109,7 @@ src/digitalmodel/modules/fatigue_analysis/
 
 ```mermaid
 graph TB
-    A[Metadata CSV<br/>reference_seastate_timetraces.csv] --> B[Load Metadata]
+    A[Metadata CSV<br/>reference_seastate_timetrace_metadata.csv] --> B[Load Metadata]
     B --> C[Load Time Trace Files]
     C --> D[Time Series Data]
     E[Fatigue Conditions<br/>81 combinations] --> F[Direct Load Scaling]
@@ -118,7 +128,7 @@ graph TB
 ## Implementation Requirements
 
 ### 1. Reference Seastate Time Trace Input Processing
-- **Metadata File**: CSV file (`reference_seastate_timetraces.csv`)
+- **Metadata File**: CSV file (`reference_seastate_timetrace_metadata.csv`)
 - **Metadata Structure**: Each row contains metadata pointing to a time trace file
 - **Time Trace Files**: Separate CSV files containing actual time series data
 - **Reference Conditions**: 34 total (18 wave cases @ Hs=0.5m, 16 wind cases @ 10m/s)
@@ -128,7 +138,7 @@ graph TB
 ### 2. Metadata and Time Trace Handler
 ```python
 class MetadataHandler:
-    def __init__(self, metadata_path='reference_seastate_timetraces.csv'):
+    def __init__(self, metadata_path='reference_seastate_timetrace_metadata.csv'):
         self.metadata_path = metadata_path
         self.metadata_df = None
         self.time_traces = {}
@@ -581,19 +591,19 @@ material_properties:
 ```bash
 # Complete fatigue analysis workflow with metadata and time traces
 uv run python -m digitalmodel.modules.fatigue_analysis \
-    --metadata reference_seastate_timetraces.csv \
+    --metadata reference_seastate_timetrace_metadata.csv \
     --timetraces-dir data/timetraces \
     --config config.yml
 
 # Individual processing steps
 # Step 1: Validate metadata and time trace files
 uv run python -m digitalmodel.modules.fatigue_analysis.validate \
-    --metadata reference_seastate_timetraces.csv \
+    --metadata reference_seastate_timetrace_metadata.csv \
     --timetraces-dir data/timetraces
 
 # Step 2: Scale time traces for fatigue conditions
 uv run python -m digitalmodel.modules.fatigue_analysis.scaling \
-    --metadata reference_seastate_timetraces.csv \
+    --metadata reference_seastate_timetrace_metadata.csv \
     --timetraces-dir data/timetraces \
     --fatigue-conditions fatigue_seastates.csv \
     --output-dir data/scaled_traces
@@ -609,7 +619,7 @@ uv run python -m digitalmodel.modules.fatigue_analysis --batch --parallel 4
 
 ### CLI Parameters
 - `--config`: Main configuration file path
-- `--metadata`: Metadata CSV file path (`reference_seastate_timetraces.csv`)
+- `--metadata`: Metadata CSV file path (`reference_seastate_timetrace_metadata.csv`)
 - `--timetraces-dir`: Directory containing individual time trace CSV files
 - `--output-directory`: Results output directory
 - `--parallel`: Number of parallel workers
@@ -623,7 +633,7 @@ uv run python -m digitalmodel.modules.fatigue_analysis --batch --parallel 4
 ## Input/Output Specifications
 
 ### Input Requirements
-1. **Metadata File**: `reference_seastate_timetraces.csv`
+1. **Metadata File**: `reference_seastate_timetrace_metadata.csv`
    - Format: Each row contains metadata for one time trace file
    - Columns: `[seastate_id, seastate_type, strut_id, time_trace_file, duration, sample_rate, units]`
    - Total rows: 272 (34 reference seastates × 8 struts)
@@ -765,7 +775,7 @@ scaler.update_scaling_factors('new_fatigue_conditions.csv')
 ### Complete Workflow
 ```python
 # Initialize the fatigue analysis system
-metadata = MetadataHandler('reference_seastate_timetraces.csv', 'sample_timetraces/')
+metadata = MetadataHandler('reference_seastate_timetrace_metadata.csv', 'sample_timetraces/')
 scaler = DirectLoadScaler(metadata, 'fatigue_seastates.csv')
 
 # Step 1: Generate all effective tension time traces (wind + wave combined)
