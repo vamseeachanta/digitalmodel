@@ -816,8 +816,19 @@ configurations = {
     'FSTs_L095_LNGC_Light': 'fsts_l095_lngc_125_light'  # Full FSTs + Light LNGC
 }
 
-# Note: Sample data may not contain all configuration files
-# Process available configurations only
+# Note: Sample data contains limited files for testing only
+# See SAMPLE_DATA_LIMITATIONS.md for details
+# Process available configurations or use synthetic data
+
+print("Checking available configurations...")
+available_configs = {}
+for config_name, config_id in configurations.items():
+    # Check if configuration data exists
+    if check_config_data_exists(config_id):
+        available_configs[config_name] = config_id
+        print(f"  ✓ {config_name}: Data found")
+    else:
+        print(f"  ✗ {config_name}: No data (will use synthetic)")
 
 fatigue_results = {}
 
