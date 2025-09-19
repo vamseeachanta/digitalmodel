@@ -3,6 +3,7 @@ import copy
 import math
 import os
 from pathlib import Path
+import warnings
 
 # Third party imports
 from loguru import logger
@@ -84,9 +85,31 @@ class OPPSummary:
             summary = copy.deepcopy(summary_groups_for_file)
         else:
             for key in summary_groups_for_file.keys():
-                summary[key] = pd.concat(
-                    [summary[key], summary_groups_for_file[key]], ignore_index=True
-                )
+                # Handle concatenation to avoid FutureWarning about empty/all-NA columns
+                df1 = summary[key]
+                df2 = summary_groups_for_file[key]
+                
+                # Check if either DataFrame is empty
+                if df1.empty and df2.empty:
+                    summary[key] = df1  # Keep empty structure
+                elif df1.empty:
+                    summary[key] = df2.copy()
+                elif df2.empty:
+                    summary[key] = df1  # Keep existing summary
+                else:
+                    # Both DataFrames have data - concatenate them
+                    # Suppress FutureWarning about empty or all-NA columns
+                    with warnings.catch_warnings():
+                        warnings.filterwarnings(
+                            "ignore", 
+                            category=FutureWarning,
+                            message=".*DataFrame concatenation with empty or all-NA.*"
+                        )
+                        summary[key] = pd.concat(
+                            [df1, df2], 
+                            ignore_index=True, 
+                            sort=False
+                        )
 
         return summary
 

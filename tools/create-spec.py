@@ -5,6 +5,20 @@ Works immediately after git clone with no external dependencies.
 
 MANDATORY: All specs MUST be created in specs/modules/[module-name] structure.
 This is enforced across all repositories.
+
+🚨 MANDATORY: Document Processing Requirements
+ALL document processing during spec creation MUST use the MarkItDown MCP server:
+- Word Documents (.docx): Convert using MarkItDown MCP with clean output as default
+- PDFs: Process through MarkItDown MCP for markdown conversion  
+- PowerPoint (.pptx): Extract content via MarkItDown MCP
+- Excel files: Convert tabular data through MarkItDown MCP
+- Images: Extract text and descriptions using MarkItDown MCP
+- Web URLs: Fetch and convert web content via MarkItDown MCP
+
+Output Strategy:
+- Clean Version: Default output optimized for VSCode markdown preview
+- Raw Version: Preserved with _raw.md suffix for agent reference
+- Formula Handling: Automatic LaTeX formula fixing and Unicode cleanup
 """
 
 import sys
