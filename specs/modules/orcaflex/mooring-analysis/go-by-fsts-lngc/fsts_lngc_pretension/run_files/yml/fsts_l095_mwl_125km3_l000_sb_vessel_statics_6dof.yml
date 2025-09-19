@@ -1,0 +1,6 @@
+﻿BaseFile: ../../../fsts_l095_mwl_125km3_l000_sb.yml
+
+includefile: includefile_general_short_run.yml
+includefile: includefile_vessel_statics_6dof.yml
+
+includefile: includefile_fsts_l095_mwl_125km3_l000_sb_vessel_statics_6dof_mooring_line_length.yml

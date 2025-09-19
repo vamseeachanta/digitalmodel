@@ -1,0 +1,12 @@
+﻿New: trellborg_D6mL11p5m
+trellborg_D6mL11p5m:
+  IndependentValue, DependentValue:
+    - [-1.00, -1000.0]
+    - [0.00, 0.0]
+    - [0.30, 254.0]
+    - [0.60, 554.0]
+    - [0.90, 899.0]
+    - [1.20, 1300.0]
+    - [1.50, 1770.0]
+
+... [truncated] ...

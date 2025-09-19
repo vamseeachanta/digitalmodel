@@ -1,0 +1,12 @@
+basename: excel_utilities
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+task: csv_copy_to_excel
+files:
+  target:
+    path: C:\Users\ss7a2365\Desktop\
+
+... [truncated] ...

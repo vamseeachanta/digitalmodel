@@ -1,0 +1,8 @@
+Vessels:
+  FST2:
+    IncludedInStatics: none
+  FST1:
+    IncludedInStatics: none
+  LNGC:
+    IncludedInStatics: none
+
