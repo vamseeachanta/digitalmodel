@@ -1,7 +1,9 @@
 # Sample Time Trace Data Documentation
 
+⚠️ **IMPORTANT**: This is sample data for testing only. See `SAMPLE_DATA_LIMITATIONS.md` for complete limitations.
+
 ## Overview
-This directory contains sample time trace data for the Strut Foundation Fatigue Analysis system. The data represents reference seastate time traces that are used as input for fatigue analysis calculations.
+This directory contains **limited sample** time trace data for the Strut Foundation Fatigue Analysis system. The data represents a small subset of reference seastate time traces used for testing and development purposes only.
 
 ## Data Source
 - **Original Location**: `D:\1522\ctr9\fatigue_wsp_method\07c_fatigue\`
@@ -58,13 +60,15 @@ Each CSV file contains time series data with the following columns:
 - **Wind Reference**: Wind speed = 10 m/s
 
 ## Sample Files Included
-This directory contains a subset of 6 sample files for demonstration:
-1. `W01_S1.csv` - Wave case 01, Strut 1
-2. `W01_S2.csv` - Wave case 01, Strut 2
-3. `W02_S1.csv` - Wave case 02, Strut 1
-4. `W02_S2.csv` - Wave case 02, Strut 2
-5. `WD01_S1.csv` - Wind case 01, Strut 1
-6. `WD01_S2.csv` - Wind case 01, Strut 2
+This directory contains only 6 sample files for demonstration:
+1. `W01_S1.csv` - Wave case 01, Strut 1 (Config 1 partial)
+2. `W01_S2.csv` - Wave case 01, Strut 2 (Config 1 partial)
+3. `W02_S1.csv` - Wave case 02, Strut 1 (Config 1 partial)
+4. `W02_S2.csv` - Wave case 02, Strut 2 (Config 1 partial)
+5. `WD01_S1.csv` - Wind case 01, Strut 1 (Config 1 partial)
+6. `WD01_S2.csv` - Wind case 01, Strut 2 (Config 1 partial)
+
+**Note**: This represents < 1% of required data for complete analysis
 
 ## Usage in Fatigue Analysis
 
