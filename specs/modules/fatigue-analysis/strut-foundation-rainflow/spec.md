@@ -77,9 +77,9 @@ src/digitalmodel/modules/fatigue_analysis/
 │   ├── stress_mapper.py         # FEA stress mapping
 │   └── fatigue_calculator.py    # S-N curve and damage calculations
 ├── config/
-│   ├── environmental_conditions.yml
-│   ├── fatigue_conditions.yml
-│   └── sn_curve_parameters.yml
+│   ├── reference_seastate_timetraces.csv  # Reference seastate metadata
+│   ├── fatigue_seastates.csv             # 81 fatigue conditions
+│   └── sn_curve_parameters.yml           # S-N curve parameters
 ├── data/
 │   ├── metadata/                # Metadata CSV files
 │   ├── timetraces/              # Individual time trace CSV files
@@ -90,9 +90,9 @@ src/digitalmodel/modules/fatigue_analysis/
 ```
 
 ### Configuration Management
-- **Environmental Conditions**: YAML configuration for 34 load cases (18 wave + 16 wind)
-- **Fatigue Conditions**: 81 combined conditions with occurrence percentages
-- **S-N Curve Parameters**: ABS "E" in Air curve parameters
+- **Reference Seastates**: CSV file (`reference_seastate_timetraces.csv`) with 68 OrcaFlex simulation cases
+- **Fatigue Conditions**: CSV file (`fatigue_seastates.csv`) with 81 combined conditions and occurrence percentages
+- **S-N Curve Parameters**: ABS "E" in Air curve parameters (in YAML configuration)
 - **FEA Parameters**: Unit load values and stress concentration factors
 
 ## Data Flow Architecture
@@ -175,49 +175,304 @@ class RainflowProcessor:
 ### 4. Direct Load Scaling System
 ```python
 class DirectLoadScaler:
-    def __init__(self, metadata_handler):
+    def __init__(self, metadata_handler, fatigue_conditions_path='fatigue_seastates.csv',
+                 scaling_factors_output='fatigue_scaling_factors.csv'):
         self.base_wind_speed = 10  # m/s
         self.base_hs = 0.5  # m
         self.metadata_handler = metadata_handler
+        self.fatigue_conditions_path = fatigue_conditions_path
+        self.scaling_factors_output = scaling_factors_output
+        self.fatigue_conditions = pd.read_csv(fatigue_conditions_path)
+        self.scaling_factors_df = None
+        
+        # Calculate and save scaling factors on initialization
+        self.calculate_and_save_scaling_factors()
     
-    def scale_time_trace(self, time_trace, seastate_type, target_condition):
+    def calculate_and_save_scaling_factors(self):
+        """Calculate all scaling factors and save to CSV for verification"""
+        scaling_data = []
+        
+        for idx, row in self.fatigue_conditions.iterrows():
+            wind_speed = row['Wind Speed (m/s)']
+            hs = row['Hs (m)']
+            occurrence = row['Occurrence (%)']
+            
+            # Calculate scaling factors
+            wind_scale_factor = (wind_speed / self.base_wind_speed) ** 2
+            wave_scale_factor = hs / self.base_hs
+            
+            # Create formula strings for documentation
+            wind_formula = f"({wind_speed}/{self.base_wind_speed})^2"
+            wave_formula = f"{hs}/{self.base_hs}"
+            
+            scaling_data.append({
+                'Row': row['Row'],
+                'Wind Speed (m/s)': wind_speed,
+                'Hs (m)': hs,
+                'Wind Scale Factor': round(wind_scale_factor, 6),
+                'Wave Scale Factor': round(wave_scale_factor, 6),
+                'Wind Scale Formula': wind_formula,
+                'Wave Scale Formula': wave_formula,
+                'Occurrence (%)': occurrence,
+                'Wind Dir (°)': row['Wind Dir (°)'],
+                'Wave Dir (°)': row['Wave Dir (°)']
+            })
+        
+        # Save to DataFrame and CSV
+        self.scaling_factors_df = pd.DataFrame(scaling_data)
+        self.scaling_factors_df.to_csv(self.scaling_factors_output, index=False)
+        
+        # Log summary statistics
+        self.log_scaling_statistics()
+        
+        return self.scaling_factors_df
+    
+    def log_scaling_statistics(self):
+        """Log key statistics about scaling factors"""
+        print(f"Scaling factors calculated and saved to: {self.scaling_factors_output}")
+        print(f"Wind scaling range: {self.scaling_factors_df['Wind Scale Factor'].min():.4f} to "
+              f"{self.scaling_factors_df['Wind Scale Factor'].max():.4f}")
+        print(f"Wave scaling range: {self.scaling_factors_df['Wave Scale Factor'].min():.4f} to "
+              f"{self.scaling_factors_df['Wave Scale Factor'].max():.4f}")
+        print(f"Total fatigue conditions: {len(self.scaling_factors_df)}")
+        print(f"Total occurrence check: {self.scaling_factors_df['Occurrence (%)'].sum():.2f}%")
+    
+    def scale_time_trace(self, time_trace, seastate_type, fatigue_row):
         """Scale entire time trace based on target fatigue condition"""
-        # Determine scaling factor based on seastate type
+        # Get pre-calculated scaling factor from DataFrame
+        row_num = fatigue_row['Row']
+        scaling_row = self.scaling_factors_df[self.scaling_factors_df['Row'] == row_num].iloc[0]
+        
+        # Use appropriate scaling factor based on seastate type
         if seastate_type == 'wind':
-            scale_factor = (target_condition['wind_speed'] / self.base_wind_speed) ** 2
+            scale_factor = scaling_row['Wind Scale Factor']
         else:  # wave
-            scale_factor = target_condition['wave_height'] / self.base_hs
+            scale_factor = scaling_row['Wave Scale Factor']
         
         # Apply scaling to entire time trace
         scaled_trace = time_trace * scale_factor
-        return scaled_trace
+        return scaled_trace, scale_factor
     
-    def process_fatigue_condition(self, fatigue_condition, strut_id):
-        """Process a single fatigue condition for a specific strut"""
-        # Determine which reference seastate to use (wind or wave)
-        if fatigue_condition['primary_driver'] == 'wind':
-            # Use appropriate wind reference seastate
-            reference_id = self.select_wind_reference(fatigue_condition)
+    def select_wind_reference(self, target_dir):
+        """Select appropriate wind reference seastate based on direction
+        
+        Wind reference seastates (WD01-WD16) cover various directions at 10 m/s
+        """
+        # Map target direction to closest available wind reference
+        # This is a simplified mapping - actual implementation would use metadata
+        direction_map = {
+            0: 'WD01', 45: 'WD02', 90: 'WD03', 135: 'WD04',
+            180: 'WD05', 225: 'WD06', 270: 'WD07', 315: 'WD08',
+            # Additional references for specific directions
+            70: 'WD09', 110: 'WD10', 125: 'WD11', 150: 'WD12',
+            200: 'WD13', 290: 'WD14', 335: 'WD15', 160: 'WD16'
+        }
+        
+        # Find closest direction
+        closest_dir = min(direction_map.keys(), key=lambda x: abs(x - target_dir))
+        return direction_map[closest_dir]
+    
+    def select_wave_reference(self, target_dir):
+        """Select appropriate wave reference seastate based on direction
+        
+        Wave reference seastates (W01-W18) cover various directions at Hs = 0.5m
+        """
+        # Map target direction to closest available wave reference
+        direction_map = {
+            0: 'W01', 45: 'W02', 70: 'W03', 90: 'W04',
+            110: 'W05', 125: 'W06', 135: 'W07', 150: 'W08',
+            160: 'W09', 180: 'W10', 200: 'W11', 225: 'W12',
+            270: 'W13', 290: 'W14', 310: 'W15', 315: 'W16',
+            335: 'W17', 350: 'W18'
+        }
+        
+        # Find closest direction
+        closest_dir = min(direction_map.keys(), key=lambda x: abs(x - target_dir))
+        return direction_map[closest_dir]
+    
+    def determine_reference_seastate(self, fatigue_row):
+        """Determine which reference seastate to use based on fatigue condition"""
+        row_num = fatigue_row['Row']
+        scaling_row = self.scaling_factors_df[self.scaling_factors_df['Row'] == row_num].iloc[0]
+        
+        # Compare relative impact of wind vs wave
+        wind_impact = scaling_row['Wind Scale Factor']
+        wave_impact = scaling_row['Wave Scale Factor']
+        
+        # Select reference based on dominant scaling factor
+        # Also consider direction matching for better representation
+        if wind_impact > wave_impact * 1.5:  # Wind dominant (with 1.5x threshold)
+            return self.select_wind_reference(scaling_row['Wind Dir (°)'])
         else:
-            # Use appropriate wave reference seastate
-            reference_id = self.select_wave_reference(fatigue_condition)
-        
-        # Load the time trace from file
-        time_trace = self.metadata_handler.load_time_trace(reference_id, strut_id)
-        seastate_type = self.metadata_handler.get_reference_type(reference_id)
-        
-        # Scale the time trace
-        scaled_trace = self.scale_time_trace(time_trace, seastate_type, fatigue_condition)
-        return scaled_trace
+            return self.select_wave_reference(scaling_row['Wave Dir (°)'])
     
-    def generate_all_scaled_traces(self, fatigue_conditions):
-        """Generate scaled time traces for all 81 fatigue conditions and 8 struts"""
+    def process_fatigue_condition(self, fatigue_row, strut_id):
+        """Process a single fatigue condition for a specific strut by combining wind and wave effects"""
+        row_num = fatigue_row['Row']
+        scaling_row = self.scaling_factors_df[self.scaling_factors_df['Row'] == row_num].iloc[0]
+        
+        # Get both wind and wave reference time traces
+        wind_ref_id = self.select_wind_reference(scaling_row['Wind Dir (°)'])
+        wave_ref_id = self.select_wave_reference(scaling_row['Wave Dir (°)'])
+        
+        # Load wind reference time trace and scale it
+        wind_trace = self.metadata_handler.load_time_trace(wind_ref_id, strut_id)
+        wind_scale_factor = scaling_row['Wind Scale Factor']
+        scaled_wind_trace = wind_trace * wind_scale_factor
+        
+        # Load wave reference time trace and scale it
+        wave_trace = self.metadata_handler.load_time_trace(wave_ref_id, strut_id)
+        wave_scale_factor = scaling_row['Wave Scale Factor']
+        scaled_wave_trace = wave_trace * wave_scale_factor
+        
+        # Combine wind and wave contributions to get effective tension
+        effective_tension = scaled_wind_trace + scaled_wave_trace
+        
+        # Store metadata about scaling for traceability
+        metadata = {
+            'fatigue_condition': fatigue_row['Row'],
+            'wind_reference': wind_ref_id,
+            'wave_reference': wave_ref_id,
+            'wind_scale_factor': wind_scale_factor,
+            'wave_scale_factor': wave_scale_factor,
+            'occurrence_pct': fatigue_row['Occurrence (%)'],
+            'wind_dir': scaling_row['Wind Dir (°)'],
+            'wave_dir': scaling_row['Wave Dir (°)'],
+            'wind_speed': scaling_row['Wind Speed (m/s)'],
+            'Hs': scaling_row['Hs (m)']
+        }
+        
+        return effective_tension, metadata
+    
+    def generate_all_scaled_traces(self, output_dir='data/scaled_traces', time_step=0.1):
+        """Generate combined effective tension time traces for all 81 fatigue conditions and 8 struts
+        
+        Args:
+            output_dir: Directory to save the combined time traces
+            time_step: Time step for the output time traces (seconds)
+        
+        Returns:
+            Dictionary of effective tension time traces and comprehensive metadata
+        """
+        import os
+        import numpy as np
+        
+        os.makedirs(output_dir, exist_ok=True)
+        
         scaled_results = {}
-        for condition in fatigue_conditions:
+        scaling_log = []
+        
+        print(f"Generating effective tension time traces for {len(self.fatigue_conditions)} fatigue conditions...")
+        
+        for idx, row in self.fatigue_conditions.iterrows():
+            condition_id = row['Row']
+            
             for strut_id in ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8']:
-                key = f"{condition['id']}_{strut_id}"
-                scaled_results[key] = self.process_fatigue_condition(condition, strut_id)
+                key = f"FC{condition_id:03d}_{strut_id}"
+                
+                # Process and get combined effective tension with metadata
+                effective_tension, metadata = self.process_fatigue_condition(row, strut_id)
+                scaled_results[key] = effective_tension
+                
+                # Prepare comprehensive scaling information for logging
+                scaling_log.append({
+                    'Fatigue_Condition': f"FC{condition_id:03d}",
+                    'Strut_ID': strut_id,
+                    'Wind_Speed_mps': metadata['wind_speed'],
+                    'Hs_m': metadata['Hs'],
+                    'Wind_Dir_deg': metadata['wind_dir'],
+                    'Wave_Dir_deg': metadata['wave_dir'],
+                    'Wind_Ref_Seastate': metadata['wind_reference'],
+                    'Wave_Ref_Seastate': metadata['wave_reference'],
+                    'Wind_Scale_Factor': round(metadata['wind_scale_factor'], 4),
+                    'Wave_Scale_Factor': round(metadata['wave_scale_factor'], 4),
+                    'Occurrence_pct': metadata['occurrence_pct'],
+                    'Max_Tension_kN': round(np.max(effective_tension), 2),
+                    'Min_Tension_kN': round(np.min(effective_tension), 2),
+                    'Mean_Tension_kN': round(np.mean(effective_tension), 2),
+                    'Std_Dev_kN': round(np.std(effective_tension), 2)
+                })
+                
+                # Save combined effective tension time trace to CSV file
+                output_path = os.path.join(output_dir, f"{key}_effective_tension.csv")
+                
+                # Create time array based on trace length and time step
+                time_array = np.arange(len(effective_tension)) * time_step
+                
+                # Save with comprehensive headers
+                output_df = pd.DataFrame({
+                    'time_s': time_array,
+                    'effective_tension_kN': effective_tension,
+                })
+                
+                # Add metadata as header comments
+                with open(output_path, 'w') as f:
+                    f.write(f"# Fatigue Condition: FC{condition_id:03d}\n")
+                    f.write(f"# Strut: {strut_id}\n")
+                    f.write(f"# Wind Speed: {metadata['wind_speed']} m/s\n")
+                    f.write(f"# Significant Wave Height: {metadata['Hs']} m\n")
+                    f.write(f"# Wind Scale Factor: {metadata['wind_scale_factor']:.4f}\n")
+                    f.write(f"# Wave Scale Factor: {metadata['wave_scale_factor']:.4f}\n")
+                    f.write(f"# Annual Occurrence: {metadata['occurrence_pct']}%\n")
+                    f.write(f"# Wind Reference: {metadata['wind_reference']}\n")
+                    f.write(f"# Wave Reference: {metadata['wave_reference']}\n")
+                    output_df.to_csv(f, index=False)
+                
+                # Progress indicator
+                if (idx * 8 + int(strut_id[1]) - 1) % 50 == 0:
+                    progress = ((idx * 8 + int(strut_id[1]) - 1) / (len(self.fatigue_conditions) * 8)) * 100
+                    print(f"  Progress: {progress:.1f}% - Processing {key}")
+        
+        # Save comprehensive scaling log for audit trail and verification
+        scaling_log_df = pd.DataFrame(scaling_log)
+        scaling_log_path = os.path.join(output_dir, 'effective_tension_scaling_log.csv')
+        scaling_log_df.to_csv(scaling_log_path, index=False)
+        
+        # Generate summary statistics
+        summary_path = os.path.join(output_dir, 'effective_tension_summary.txt')
+        with open(summary_path, 'w') as f:
+            f.write("=" * 80 + "\n")
+            f.write("EFFECTIVE TENSION GENERATION SUMMARY\n")
+            f.write("=" * 80 + "\n\n")
+            f.write(f"Total Fatigue Conditions: {len(self.fatigue_conditions)}\n")
+            f.write(f"Total Struts: 8\n")
+            f.write(f"Total Time Traces Generated: {len(scaled_results)}\n")
+            f.write(f"Output Directory: {output_dir}\n\n")
+            
+            f.write("SCALING FACTOR RANGES:\n")
+            f.write(f"  Wind Scale Factors: {scaling_log_df['Wind_Scale_Factor'].min():.4f} to "
+                   f"{scaling_log_df['Wind_Scale_Factor'].max():.4f}\n")
+            f.write(f"  Wave Scale Factors: {scaling_log_df['Wave_Scale_Factor'].min():.4f} to "
+                   f"{scaling_log_df['Wave_Scale_Factor'].max():.4f}\n\n")
+            
+            f.write("EFFECTIVE TENSION STATISTICS:\n")
+            f.write(f"  Maximum Tension: {scaling_log_df['Max_Tension_kN'].max():.2f} kN\n")
+            f.write(f"  Minimum Tension: {scaling_log_df['Min_Tension_kN'].min():.2f} kN\n")
+            f.write(f"  Average Mean Tension: {scaling_log_df['Mean_Tension_kN'].mean():.2f} kN\n")
+            f.write(f"  Average Std Dev: {scaling_log_df['Std_Dev_kN'].mean():.2f} kN\n\n")
+            
+            f.write(f"Scaling Log: {scaling_log_path}\n")
+            f.write(f"Summary generated at: {pd.Timestamp.now()}\n")
+        
+        print(f"\n✓ Generated {len(scaled_results)} effective tension time traces")
+        print(f"✓ Output directory: {output_dir}")
+        print(f"✓ Scaling log: {scaling_log_path}")
+        print(f"✓ Summary: {summary_path}")
+        
         return scaled_results
+    
+    def update_scaling_factors(self, new_fatigue_conditions_path=None):
+        """Dynamically update scaling factors if fatigue conditions change"""
+        if new_fatigue_conditions_path:
+            self.fatigue_conditions_path = new_fatigue_conditions_path
+        
+        # Reload fatigue conditions
+        self.fatigue_conditions = pd.read_csv(self.fatigue_conditions_path)
+        
+        # Recalculate and save scaling factors
+        self.calculate_and_save_scaling_factors()
+        
+        print("Scaling factors updated successfully")
 ```
 
 ### 5. Stress Mapping Integration
@@ -285,14 +540,23 @@ wind_conditions:
   # ... 15 more wind cases
 ```
 
-### Fatigue Conditions (fatigue_conditions.yml)
-```yaml
-fatigue_conditions:
-  - condition_id: "FC01"
-    wind_speed: 5.0  # m/s
-    wave_height: 1.0  # m (Hs)
-    occurrence_percent: 2.5
-  # ... 80 more conditions
+### Fatigue Conditions (fatigue_seastates.csv)
+The 81 fatigue conditions are defined in `fatigue_seastates.csv` with columns:
+- `Row`: Condition index (1-81)
+- `Wind Speed (m/s)`: Target wind speed for scaling
+- `Wind Dir (°)`: Wind direction
+- `Hs (m)`: Significant wave height for scaling
+- `Tp (s)`: Peak period
+- `Wave Dir (°)`: Wave direction
+- `Occurrence (%)`: Annual occurrence percentage for weighting
+- `Occurrence (hrs)`: Annual hours
+
+Example entries:
+```csv
+Row,Wind Speed (m/s),Wind Dir (°),Hs (m),Tp (s),Wave Dir (°),Occurrence (%),Occurrence (hrs)
+1,5,180,0.15,1.7,150,7.76,680.2
+2,3,180,0.09,1,150,6.977,611.6
+...
 ```
 
 ### S-N Curve Parameters (sn_curve_parameters.yml)
@@ -331,7 +595,7 @@ uv run python -m digitalmodel.modules.fatigue_analysis.validate \
 uv run python -m digitalmodel.modules.fatigue_analysis.scaling \
     --metadata reference_seastate_timetraces.csv \
     --timetraces-dir data/timetraces \
-    --fatigue-conditions config/fatigue_conditions.yml \
+    --fatigue-conditions fatigue_seastates.csv \
     --output-dir data/scaled_traces
 
 # Step 3: Apply rainflow counting to scaled traces
@@ -374,17 +638,43 @@ uv run python -m digitalmodel.modules.fatigue_analysis --batch --parallel 4
    - Stress response per unit load (4000 kN)
    - Multiple critical locations per strut
    
-4. **Configuration Files**: 
-   - Fatigue condition definitions with scaling parameters
+4. **Fatigue Conditions File**: `fatigue_seastates.csv`
+   - 81 fatigue conditions with wind/wave parameters
+   - Annual occurrence percentages for weighting
+   - Target values for load scaling
+   
+5. **Configuration Files**: 
    - S-N curve parameters (ABS "E" in Air)
-   - Annual occurrence percentages
+   - FEA stress concentration factors
 
 ### Output Products
-1. **Rainflow Results**: Load ranges and cycle counts per strut per condition
-2. **Scaled Load Data**: Combined wind-wave loads for fatigue conditions
-3. **Stress Range Data**: Mapped stress ranges with cycle counts
-4. **Damage Assessment**: Per-strut damage calculations
-5. **Fatigue Life Estimates**: Final life estimates and design verification
+1. **Effective Tension Time Traces**: Combined wind+wave scaled loads
+   - Format: CSV files with time and effective_tension_kN columns
+   - Naming: `FC{condition}_{strut}_effective_tension.csv`
+   - Headers: Comprehensive metadata including scaling factors
+   - Total files: 648 (81 conditions × 8 struts)
+   
+2. **Scaling Log**: Complete audit trail for all processing
+   - File: `effective_tension_scaling_log.csv`
+   - Contains: Scaling factors, reference seastates, statistics
+   - Purpose: Verification and quality assurance
+   
+3. **Rainflow Results**: Load ranges and cycle counts per strut per condition
+   - Processed from effective tension traces
+   - Format: Range bins with cycle counts
+   
+4. **Stress Range Data**: Mapped stress ranges with cycle counts
+   - Converted from load ranges using FEA unit stresses
+   - Includes SCF application
+   
+5. **Damage Assessment**: Per-strut damage calculations
+   - Miner's rule accumulation
+   - Weighted by occurrence percentages
+   
+6. **Fatigue Life Estimates**: Final life estimates and design verification
+   - Annual damage rates
+   - Life predictions in years
+   - Design compliance check
 
 ## Validation Requirements
 
@@ -442,6 +732,110 @@ This specification requires coordination with multiple specialized agents:
 - **Documentation Agent**: User guides and API documentation
 - **FEA Agent**: Finite element analysis integration and stress mapping
 
+## Dynamic Scaling Factor Management
+
+### Automatic Calculation and Updates
+The `DirectLoadScaler` class automatically:
+1. **Calculates scaling factors** on initialization for all 81 fatigue conditions
+2. **Saves to CSV file** (`fatigue_scaling_factors.csv`) for verification and audit
+3. **Logs statistics** including min/max values and total occurrence check
+4. **Updates dynamically** when fatigue conditions change via `update_scaling_factors()`
+
+### Scaling Factor Verification Features
+- **Pre-calculated values**: All scaling factors computed and stored for transparency
+- **Formula documentation**: Each factor includes its calculation formula
+- **Direction tracking**: Wind and wave directions preserved for reference selection
+- **Audit trail**: Scaling log generated for each processed condition
+
+### Usage Example
+```python
+# Initialize scaler - automatically calculates and saves scaling factors
+scaler = DirectLoadScaler(metadata_handler)
+
+# Scaling factors are now available in:
+# - scaler.scaling_factors_df (DataFrame)
+# - fatigue_scaling_factors.csv (file)
+
+# If fatigue conditions change, update dynamically
+scaler.update_scaling_factors('new_fatigue_conditions.csv')
+```
+
+## Execution Example
+
+### Complete Workflow
+```python
+# Initialize the fatigue analysis system
+metadata = MetadataHandler('reference_seastate_timetraces.csv', 'sample_timetraces/')
+scaler = DirectLoadScaler(metadata, 'fatigue_seastates.csv')
+
+# Step 1: Generate all effective tension time traces (wind + wave combined)
+print("Generating effective tension time traces...")
+effective_traces = scaler.generate_all_scaled_traces(
+    output_dir='output/effective_tension_traces',
+    time_step=0.1
+)
+
+# Step 2: Apply rainflow counting to each effective tension trace
+print("Performing rainflow counting...")
+rainflow = RainflowCounter()
+for trace_id, effective_tension in effective_traces.items():
+    ranges, counts = rainflow.count_cycles(effective_tension)
+    rainflow.save_results(trace_id, ranges, counts)
+
+# Step 3: Map to stresses and calculate damage
+print("Calculating fatigue damage...")
+stress_mapper = StressMapper(unit_load=4000)
+fatigue_calc = FatigueCalculator()
+
+for strut_id in ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8']:
+    total_damage = 0
+    for condition in range(1, 82):
+        # Get rainflow results for this condition/strut
+        trace_id = f"FC{condition:03d}_{strut_id}"
+        ranges, counts = rainflow.load_results(trace_id)
+        
+        # Convert to stresses
+        unit_stress = stress_mapper.get_unit_stress(strut_id)
+        stress_ranges = stress_mapper.map_loads_to_stress(ranges, unit_stress, scf=1.2)
+        
+        # Calculate damage for this condition
+        damage = fatigue_calc.calculate_damage(counts, stress_ranges)
+        
+        # Weight by occurrence percentage
+        occurrence_pct = scaler.scaling_factors_df.loc[condition-1, 'Occurrence (%)']
+        weighted_damage = damage * (occurrence_pct / 100)
+        
+        total_damage += weighted_damage
+    
+    # Calculate fatigue life
+    annual_damage = fatigue_calc.annual_damage(total_damage, analysis_duration=200)
+    fatigue_life = 1 / annual_damage
+    print(f"Strut {strut_id}: Fatigue Life = {fatigue_life:.1f} years")
+```
+
+### Output Directory Structure
+```
+output/
+├── effective_tension_traces/
+│   ├── FC001_S1_effective_tension.csv
+│   ├── FC001_S2_effective_tension.csv
+│   ├── ...
+│   ├── FC081_S8_effective_tension.csv
+│   ├── effective_tension_scaling_log.csv
+│   └── effective_tension_summary.txt
+├── rainflow_results/
+│   ├── FC001_S1_rainflow.csv
+│   ├── ...
+│   └── FC081_S8_rainflow.csv
+├── damage_results/
+│   ├── damage_by_condition.csv
+│   ├── damage_by_strut.csv
+│   └── fatigue_life_summary.csv
+└── reports/
+    ├── fatigue_analysis_report.pdf
+    └── validation_results.xlsx
+```
+
 ## Success Criteria
 
 1. **Functional**: Complete automated fatigue analysis workflow
@@ -450,6 +844,7 @@ This specification requires coordination with multiple specialized agents:
 4. **Usability**: Intuitive CLI with clear error messages and progress indicators
 5. **Maintainability**: Well-documented, modular code structure
 6. **Integration**: Seamless integration with existing OrcaFlex workflows
+7. **Traceability**: Complete audit trail of scaling factors and processing decisions
 
 ## Risk Mitigation
 
