@@ -4,6 +4,12 @@
 
 This specification defines a comprehensive fatigue analysis system for strut foundation structures using rainflow counting methodology. The system uses a metadata CSV file (`reference_seastate_timetrace_metadata.csv`) where each row contains metadata about a time trace file for a specific reference seastate. The actual time trace data is stored in separate CSV files. These reference time traces are directly scaled to match target fatigue conditions, followed by rainflow counting and fatigue damage calculation, eliminating the need for repeated time domain simulations.
 
+The system analyzes 4 distinct vessel configurations, each requiring separate fatigue damage calculations:
+1. **FSTs Light (L015)** - Both FSTs in light condition
+2. **FSTs Full (L095)** - Both FSTs in full/loaded condition  
+3. **LNGC Partner (125k m³)** - Smaller LNG carrier alongside
+4. **LNGC Excalibur (180k m³)** - Larger LNG carrier alongside
+
 ## Project Overview
 
 ### Objective
@@ -681,10 +687,15 @@ uv run python -m digitalmodel.modules.fatigue_analysis --batch --parallel 4
    - Miner's rule accumulation
    - Weighted by occurrence percentages
    
-6. **Fatigue Life Estimates**: Final life estimates and design verification
-   - Annual damage rates
+6. **Fatigue Life Estimates**: Final life estimates per configuration
+   - Separate results for each of 4 vessel configurations:
+     - FSTs Light (L015) fatigue life
+     - FSTs Full (L095) fatigue life
+     - LNGC Partner (125k m³) fatigue life
+     - LNGC Excalibur (180k m³) fatigue life
+   - Annual damage rates per configuration
    - Life predictions in years
-   - Design compliance check
+   - Design compliance check for all configurations
 
 ## Validation Requirements
 
@@ -797,64 +808,108 @@ print("Calculating fatigue damage...")
 stress_mapper = StressMapper(unit_load=4000)
 fatigue_calc = FatigueCalculator()
 
-for strut_id in ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8']:
-    total_damage = 0
-    for condition in range(1, 82):
-        # Get rainflow results for this condition/strut
-        trace_id = f"FC{condition:03d}_{strut_id}"
-        ranges, counts = rainflow.load_results(trace_id)
-        
-        # Convert to stresses
-        unit_stress = stress_mapper.get_unit_stress(strut_id)
-        stress_ranges = stress_mapper.map_loads_to_stress(ranges, unit_stress, scf=1.2)
-        
-        # Calculate damage for this condition
-        damage = fatigue_calc.calculate_damage(counts, stress_ranges)
-        
-        # Weight by occurrence percentage
-        occurrence_pct = scaler.scaling_factors_df.loc[condition-1, 'Occurrence (%)']
-        weighted_damage = damage * (occurrence_pct / 100)
-        
-        total_damage += weighted_damage
+# Process each vessel configuration separately
+configurations = {
+    'FSTs_L015': 'fsts_l015',  # FSTs Light
+    'FSTs_L095': 'fsts_l095',  # FSTs Full
+    'LNGC_125k': 'lngc_125',   # LNGC Partner
+    'LNGC_180k': 'lngc_180'    # LNGC Excalibur
+}
+
+fatigue_results = {}
+
+for config_name, config_id in configurations.items():
+    print(f"\nProcessing {config_name} configuration...")
+    config_results = {}
     
-    # Calculate fatigue life
-    annual_damage = fatigue_calc.annual_damage(total_damage, analysis_duration=200)
-    fatigue_life = 1 / annual_damage
-    print(f"Strut {strut_id}: Fatigue Life = {fatigue_life:.1f} years")
+    for strut_id in ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8']:
+        total_damage = 0
+        
+        for condition in range(1, 82):
+            # Get rainflow results for this configuration/condition/strut
+            trace_id = f"{config_id}_FC{condition:03d}_{strut_id}"
+            ranges, counts = rainflow.load_results(trace_id)
+            
+            # Convert to stresses
+            unit_stress = stress_mapper.get_unit_stress(strut_id, config_id)
+            stress_ranges = stress_mapper.map_loads_to_stress(ranges, unit_stress, scf=1.2)
+            
+            # Calculate damage for this condition
+            damage = fatigue_calc.calculate_damage(counts, stress_ranges)
+            
+            # Weight by occurrence percentage
+            occurrence_pct = scaler.scaling_factors_df.loc[condition-1, 'Occurrence (%)']
+            weighted_damage = damage * (occurrence_pct / 100)
+            
+            total_damage += weighted_damage
+        
+        # Calculate fatigue life for this strut/configuration
+        annual_damage = fatigue_calc.annual_damage(total_damage, analysis_duration=200)
+        fatigue_life = 1 / annual_damage
+        config_results[strut_id] = fatigue_life
+        print(f"  {config_name} - Strut {strut_id}: Fatigue Life = {fatigue_life:.1f} years")
+    
+    fatigue_results[config_name] = config_results
+
+# Summary of all configurations
+print("\n" + "="*60)
+print("FATIGUE LIFE SUMMARY (ALL CONFIGURATIONS)")
+print("="*60)
+for config_name, results in fatigue_results.items():
+    min_life = min(results.values())
+    critical_strut = min(results, key=results.get)
+    print(f"{config_name:15} - Min Life: {min_life:.1f} years (Strut {critical_strut})")
 ```
 
 ### Output Directory Structure
 ```
 output/
-├── effective_tension_traces/
-│   ├── FC001_S1_effective_tension.csv
-│   ├── FC001_S2_effective_tension.csv
-│   ├── ...
-│   ├── FC081_S8_effective_tension.csv
-│   ├── effective_tension_scaling_log.csv
-│   └── effective_tension_summary.txt
-├── rainflow_results/
-│   ├── FC001_S1_rainflow.csv
-│   ├── ...
-│   └── FC081_S8_rainflow.csv
-├── damage_results/
-│   ├── damage_by_condition.csv
-│   ├── damage_by_strut.csv
-│   └── fatigue_life_summary.csv
-└── reports/
-    ├── fatigue_analysis_report.pdf
-    └── validation_results.xlsx
+├── fsts_l015/                    # FSTs Light configuration
+│   ├── effective_tension/
+│   │   ├── FC001_S1_effective_tension.csv
+│   │   ├── ...
+│   │   └── FC081_S8_effective_tension.csv
+│   ├── rainflow_results/
+│   │   └── [rainflow counting results]
+│   ├── damage_results/
+│   │   └── fatigue_life_summary.csv
+│   └── config_summary.txt
+├── fsts_l095/                    # FSTs Full configuration  
+│   ├── effective_tension/
+│   ├── rainflow_results/
+│   ├── damage_results/
+│   └── config_summary.txt
+├── lngc_125k/                    # LNGC Partner configuration
+│   ├── effective_tension/
+│   ├── rainflow_results/
+│   ├── damage_results/
+│   └── config_summary.txt
+├── lngc_180k/                    # LNGC Excalibur configuration
+│   ├── effective_tension/
+│   ├── rainflow_results/
+│   ├── damage_results/
+│   └── config_summary.txt
+└── summary/
+    ├── all_configurations_comparison.csv
+    ├── critical_struts_summary.csv
+    └── fatigue_analysis_report.pdf
 ```
 
 ## Success Criteria
 
-1. **Functional**: Complete automated fatigue analysis workflow
-2. **Performance**: Process full dataset within specified time limits
+1. **Functional**: Complete automated fatigue analysis workflow for all 4 configurations
+2. **Performance**: Process full dataset (4 configs × 81 conditions × 8 struts) within time limits
 3. **Accuracy**: Validation against manual calculations within 1% tolerance
-4. **Usability**: Intuitive CLI with clear error messages and progress indicators
-5. **Maintainability**: Well-documented, modular code structure
-6. **Integration**: Seamless integration with existing OrcaFlex workflows
-7. **Traceability**: Complete audit trail of scaling factors and processing decisions
+4. **Configuration Coverage**: Separate fatigue life estimates for:
+   - FSTs Light (L015)
+   - FSTs Full (L095)
+   - LNGC Partner (125k m³)
+   - LNGC Excalibur (180k m³)
+5. **Usability**: Intuitive CLI with clear error messages and progress indicators
+6. **Maintainability**: Well-documented, modular code structure
+7. **Integration**: Seamless integration with existing OrcaFlex workflows
+8. **Traceability**: Complete audit trail of scaling factors and processing decisions
+9. **Critical Component**: Identify critical strut for each configuration
 
 ## Risk Mitigation
 
