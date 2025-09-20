@@ -92,6 +92,10 @@ class RainflowCounter:
         reversals = []
         indices = []
         
+        # Handle empty data
+        if len(data) == 0:
+            return np.array([]), np.array([])
+        
         # Ensure we start with a reversal point
         reversals.append(data[0])
         indices.append(0)
