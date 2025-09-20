@@ -36,6 +36,7 @@ from .reference_seastate_processor import (
     FatigueResult,
     TensionToStressConverter
 )
+from .visualizer import FatigueVisualizer, generate_all_visualizations
 
 __all__ = [
     # Rainflow counting
@@ -50,7 +51,10 @@ __all__ = [
     'Configuration',
     'FatigueCondition',
     'FatigueResult',
-    'TensionToStressConverter'
+    'TensionToStressConverter',
+    # Visualization
+    'FatigueVisualizer',
+    'generate_all_visualizations'
 ]
 
-__version__ = '1.1.0'
+__version__ = '1.2.0'
