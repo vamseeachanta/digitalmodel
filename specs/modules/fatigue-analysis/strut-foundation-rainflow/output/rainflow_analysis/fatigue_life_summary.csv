@@ -1,6 +1,0 @@
-file,fatigue_life_years,design_factor,passes_check
-FC001_S1_effective_tension.csv,0.0015643812756656096,6.257525102662439e-05,False
-FC001_S2_effective_tension.csv,0.001327356028438031,5.309424113752124e-05,False
-FC002_S1_effective_tension.csv,0.21258174126325238,0.008503269650530096,False
-FC002_S2_effective_tension.csv,0.14832514918054635,0.005933005967221854,False
-FC003_S1_effective_tension.csv,4.6222078525719305e-05,1.8488831410287722e-06,False
