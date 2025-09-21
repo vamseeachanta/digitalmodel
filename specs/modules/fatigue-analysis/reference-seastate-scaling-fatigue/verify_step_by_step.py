@@ -286,7 +286,7 @@ class StepVerifier:
         print("STEP 6: OUTPUT GENERATION TEST")
         print("="*60)
         
-        output_dir = Path(__file__).parent / "output_step_verify"
+        output_dir = Path(__file__).parent / "output" / "verification" / "step_by_step"
         output_dir.mkdir(exist_ok=True)
         
         print(f"\n[INFO] Output directory: {output_dir}")

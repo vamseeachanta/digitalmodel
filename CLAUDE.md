@@ -613,6 +613,38 @@ parser.add_argument(
 - CLI parameter inconsistencies BLOCK module approval
 - This ensures users have a consistent experience across all modules
 
+## 📊 MANDATORY: Table Formatting Standards
+
+**CRITICAL DIRECTIVE**: ALL tables MUST include units in column headers, NEVER in cell values.
+
+### Why This Is Mandatory
+Special symbols (°, ², µ, Ω) in table cells cause:
+- Rendering issues across markdown processors
+- Encoding errors for AI agents and bots
+- Git diff readability problems
+- Copy-paste failures
+
+### Correct Format ✅
+```markdown
+| Wind Speed (m/s) | Wave Height (m) | Direction (deg) |
+|------------------|-----------------|-----------------|
+| 10               | 0.5             | 45              |
+```
+
+### Incorrect Format ❌
+```markdown
+| Wind Speed | Wave Height | Direction |
+|------------|-------------|-----------|
+| 10 m/s     | 0.5 m       | 45°       |  ← WRONG: Units in cells
+```
+
+### Standard Unit Representations
+- Degrees: `(deg)` NOT `(°)`
+- Square: `(m2)` NOT `(m²)`
+- Per second squared: `(m/s2)` NOT `(m/s²)`
+
+**Full guidelines**: See `.agent-os/standards/TABLE_FORMATTING_STANDARDS.md`
+
 ## Available Commands
 
 - **Create-Module-Agent:** Available via `python tools/create-module-agent.py` command

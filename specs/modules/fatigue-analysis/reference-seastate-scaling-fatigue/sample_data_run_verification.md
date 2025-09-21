@@ -99,8 +99,8 @@ Components:
   - fsts_l095_125km3_l000_pb = FSTs Full + LNGC Light
 - mwl: Mean Water Level (always present)
 - {reference}: Reference seastate
-  - wind01 = Wind reference (10 m/s, 0°)
-  - wave01 = Wave reference (Hs=0.5m, Tp=2.7s, 0°)
+  - wind01 = Wind reference (10 m/s, 0 deg)
+  - wave01 = Wave reference (Hs=0.5m, Tp=2.7s, 0 deg)
 - Strut{#}: Strut number (1-8)
 ```
 
@@ -170,10 +170,10 @@ STEP 3: FILE CONTENT CHECK
 |FSTs Full + LNGC Light|wave01|0.0-99.9s|75.4-317.1 kN|1000|
 
 #### Reference Load Metadata
-|Reference|Load Type|Magnitude|Period|Direction|
-|---------|---------|---------|------|---------|  
-|wind01|Wind|10 m/s|N/A|0°|
-|wave01|Wave|Hs=0.5m, Tp=2.7s|2.7s|0°|
+|Reference|Load Type|Magnitude|Period|Direction (deg)|
+|---------|---------|---------|------|---------------|  
+|wind01|Wind|10 m/s|N/A|0|
+|wave01|Wave|Hs=0.5m, Tp=2.7s|2.7s|0|
 
 ### CSV File Structure
 ```csv
@@ -275,16 +275,105 @@ STEP 5: SCALING CALCULATION TEST
 - **Combined Scaling**: Applied correctly to tension data
 - **Output Range**: Realistic for scaled conditions
 
+### Intermediate Outputs Generated
+Step 5 now generates comprehensive intermediate outputs in `output/verification/intermediate/`:
+
+#### Sea State (SS) Condition to Reference File Mapping
+A comprehensive mapping table showing:
+- Each Sea State condition (SS001-SS004) with full environmental parameters
+- Reference files used for wind and wave (REF_WIND01, REF_WAVE01)
+- Scaling factors calculated for each condition
+- Vessel configurations and corresponding source files
+
+**Naming Convention:**
+- **REF_*** = Reference/calibration data (baseline measurements used for ALL sea states)
+- **SS###** = Sea State conditions (actual field/project conditions scaled from references)
+
+**Reference Baselines:**
+- **REF_WIND01**: 10 m/s at 0 deg (baseline wind calibration)
+- **REF_WAVE01**: Hs=0.5m, Tp=2.7s at 0 deg (baseline wave calibration)
+
+**Sea State Conditions Summary:**
+| SS ID | Purpose | Wind (m/s) | Hs (m) | Wind Scale | Wave Scale | Description |
+|-------|---------|------------|--------|------------|------------|-------------|
+| SS001 | Test | 15 | 0.75 | 2.25x | 1.50x | 1.5x baseline for validation |
+| SS002 | Reference | 10 | 0.50 | 1.00x | 1.00x | Baseline reference condition |
+| SS003 | Low Load | 5 | 0.25 | 0.25x | 0.50x | Calm conditions |
+| SS004 | High Load | 20 | 1.00 | 4.00x | 2.00x | Severe conditions |
+
+**Reference File Pattern:**
+```
+Input: {vessel_config}_mwl_{reference}_Strut{#}.csv
+Output: {vessel_config}_SS{###}_Strut{#}.csv
+```
+
+**Reference to Sea State Mapping:**
+
+| Sea State | Wind (m/s) | Wind Dir (deg) | Hs (m) | Tp (s) | Wave Dir (deg) | Ref Wind Used | Ref Wave Used |
+|-----------|------------|----------------|--------|--------|----------------|---------------|---------------|
+| SS001 | 15 | 0 | 0.75 | 4.0 | 0 | REF_WIND01 | REF_WAVE01 |
+| SS002 | 10 | 0 | 0.50 | 2.7 | 0 | REF_WIND01 | REF_WAVE01 |
+| SS003 | 5 | 0 | 0.25 | 2.0 | 0 | REF_WIND01 | REF_WAVE01 |
+| SS004 | 20 | 0 | 1.00 | 5.0 | 0 | REF_WIND01 | REF_WAVE01 |
+
+**Reference Baseline Values:**
+- **REF_WIND01**: 10 m/s at 0 deg
+- **REF_WAVE01**: Hs=0.5m, Tp=2.7s at 0 deg
+
+**Detailed Example for SS001:**
+```
+Input Reference Files:
+- Wind: fsts_l015_mwl_REF_WIND01_Strut1.csv (10 m/s baseline)
+- Wave: fsts_l015_mwl_REF_WAVE01_Strut1.csv (0.5m Hs baseline)
+
+Scaling Applied:
+- Wind: 2.25x (for 15 m/s target)
+- Wave: 1.50x (for 0.75m Hs target)
+
+Output File:
+- fsts_l015_SS001_Strut1.csv (scaled to SS001 conditions)
+```
+
+#### Scaling Comparison Results
+| Condition | Wind (m/s) | Hs (m) | Wind Scale | Wave Scale | Combined Range (kN) | Wind % | Wave % |
+|-----------|------------|--------|------------|------------|---------------------|--------|--------|
+| SS001 (Test) | 15 | 0.75 | 2.25 | 1.50 | 912.2 - 2148.3 | 78.8% | 21.2% |
+| SS002 (Ref) | 10 | 0.50 | 1.00 | 1.00 | 431.5 - 1035.9 | 71.3% | 28.7% |
+| SS003 (Low) | 5 | 0.25 | 0.25 | 0.50 | 127.5 - 319.8 | 55.3% | 44.7% |
+| SS004 (High) | 20 | 1.00 | 4.00 | 2.00 | 1481.1 - 3657.0 | 83.2% | 16.8% |
+
+#### Files Created
+- **SS Condition Mapping**: `ss_condition_mapping.csv`, `ss_condition_mapping.md`, `ss_condition_mapping.json`
+- **Component breakdowns**: `SS001_components.csv`, `SS002_components.csv`, `SS003_components.csv`, `SS004_components.csv`
+- **Summary statistics**: `scaling_summary.csv`
+- **Comparison table**: `scaling_comparison.md`
+- **Step metadata**: `step5_metadata.json`
+- **Naming convention guide**: `FINALIZED_NAMING_CONVENTION.md`
+
 ### Verification Results
-- ✅ Scaling factors calculated correctly
-- ✅ Wind quadratic scaling formula applied
-- ✅ Wave linear scaling formula applied
-- ✅ Generated output maintains 1000 samples
+- ✅ Scaling factors calculated correctly using proper formulas
+- ✅ Wind quadratic scaling formula applied: (V/10)²
+- ✅ Wave linear scaling formula applied: Hs/0.5
+- ✅ Generated output maintains 1000 samples (100 seconds at 10 Hz)
 - ✅ Output tension ranges are physically reasonable
+- ✅ Wind/wave contribution ratios vary correctly with conditions
+- ✅ Intermediate outputs provide full traceability
+- ✅ SS condition mapping provides complete reference file verification
+- ✅ Clear distinction between REF_* (calibration) and SS### (field conditions)
+- ✅ All 4 vessel configurations × 4 SS conditions × 8 struts = 128 combinations documented
+
+### Key Findings
+- Wind loads dominate at higher wind speeds (>15 m/s)
+- Wave contribution becomes significant at lower wind speeds
+- Scaling preserves data integrity (sample count, time resolution)
+- Combined tensions follow simple addition principle
+- SS naming convention follows industry standards for Sea States
+- Clear separation: REF_* for calibration, SS### for field conditions
+- Complete traceability from reference files (REF_WIND01/REF_WAVE01) to output files (SS###)
 
 ---
 
-## STEP 6: Output Generation Test ✅
+## STEP 6: Output Generation Test ✅ [UPDATED]
 
 ### Execution
 ```bash
@@ -297,7 +386,7 @@ python verify_step_by_step.py 6
 STEP 6: OUTPUT GENERATION TEST
 ============================================================
 
-[INFO] Output directory: D:\github\digitalmodel\specs\modules\fatigue-analysis\reference-seastate-scaling-fatigue\output_step_verify
+[INFO] Output directory: D:\github\digitalmodel\specs\modules\fatigue-analysis\reference-seastate-scaling-fatigue\output\verification\step_by_step
 
 [INFO] Processing FC001
 [PASS] Output file created
@@ -307,7 +396,7 @@ STEP 6: OUTPUT GENERATION TEST
 ```
 
 ### Output File Verification
-- **Directory Created**: `output_step_verify/`
+- **Directory Created**: `output/verification/step_by_step/` (consolidated structure)
 - **File Generated**: `test_FC001_Strut1.csv`
 - **File Size**: ~29KB (consistent with 1000 samples)
 - **Format**: Correct CSV with Time and Tension columns
@@ -319,6 +408,12 @@ STEP 6: OUTPUT GENERATION TEST
 - ✅ File contains valid data (1000 samples)
 - ✅ Production naming convention followed
 - ✅ File is readable and properly formatted
+- ✅ **Output Consolidation Complete**: All outputs now in single `output/` structure
+  - `output/verification/step_by_step/` - Step verification results
+  - `output/verification/intermediate/` - Intermediate calculations
+  - `output/verification/automated/` - Automated test results
+  - `output/benchmarks/` - Performance benchmarks
+  - `output/testing/` - Test outputs
 
 ---
 

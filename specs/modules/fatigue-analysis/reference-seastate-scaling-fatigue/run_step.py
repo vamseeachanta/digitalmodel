@@ -40,7 +40,7 @@ def show_step_summary(step_num, step_name, success):
         },
         5: {
             'tested': ['Load scaling calculations', 'Wind and wave scaling factors', 'Combined load generation'],
-            'expected': ['Wind scaling: (V/10)²', 'Wave scaling: Hs/0.5', 'Proper combination of scaled loads'],
+            'expected': ['Wind scaling: (V/10)^2', 'Wave scaling: Hs/0.5', 'Proper combination of scaled loads'],
             'results': ['Scaling factors calculated correctly', 'Generated scaled timeseries', 'Output maintains 1000 samples']
         },
         6: {
@@ -62,7 +62,7 @@ def show_step_summary(step_num, step_name, success):
         
         print("\nResults obtained:")
         for item in summary['results']:
-            print(f"  ✓ {item}")
+            print(f"  [OK] {item}")
     
     print(f"\nStep Status: {'PASSED' if success else 'FAILED'}")
     print("="*60)
