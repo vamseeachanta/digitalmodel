@@ -162,7 +162,13 @@ Examples:
         '--parallel',
         type=int,
         default=1,
-        help='Number of parallel workers (default: 1)'
+        help='Number of parallel workers (default: 1, 0=auto)'
+    )
+    
+    parser.add_argument(
+        '--adaptive',
+        action='store_true',
+        help='Use adaptive parallel processing based on system load'
     )
     
     parser.add_argument(
@@ -251,7 +257,7 @@ def run_analysis(args):
     
     # Initialize processor
     try:
-        from digitalmodel.modules.fatigue_analysis.integrated_processor import (
+        from .integrated_processor import (
             IntegratedFatigueProcessor,
             ProductionDataHandler
         )
@@ -276,7 +282,7 @@ def run_analysis(args):
         
         # Override S-N curve if specified
         if args.sn_curve != 'ABS_E_AIR':
-            from digitalmodel.modules.fatigue_analysis.fatigue_damage_calculator import FatigueDamageCalculator
+            from .fatigue_damage_calculator import FatigueDamageCalculator
             processor.fatigue_calculator = FatigueDamageCalculator(
                 sn_curve=FatigueDamageCalculator.CURVES[args.sn_curve],
                 scf=args.scf,
@@ -291,7 +297,7 @@ def run_analysis(args):
             # Convert to FatigueCondition objects
             conditions = []
             for _, row in df.iterrows():
-                from integrated_processor import FatigueCondition
+                from .integrated_processor import FatigueCondition
                 conditions.append(FatigueCondition(
                     id=int(row.get('Row', len(conditions) + 1)),
                     wind_speed=float(row.get('Wind Speed (m/s)', 5.0)),
@@ -340,9 +346,115 @@ def run_analysis(args):
         logging.info("STARTING FATIGUE ANALYSIS")
         logging.info("="*60)
         
-        # Import and run the main analysis
-        from integrated_processor import main
-        results, summary = main(data_path)
+        # Check if parallel processing is requested
+        if args.parallel and args.parallel > 1:
+            # Use parallel processor
+            from .parallel_processor import (
+                ParallelFatigueProcessor,
+                AdaptiveParallelProcessor
+            )
+            
+            # Create base processor for parallel processing
+            from .reference_seastate_processor import (
+                ReferenceSeaStateProcessor
+            )
+            
+            base_processor = ReferenceSeaStateProcessor(
+                data_path=data_path,
+                output_path=args.output_directory,
+                scf=args.scf,
+                design_life_years=args.design_life
+            )
+            
+            # Create appropriate parallel processor
+            if args.adaptive:
+                parallel_processor = AdaptiveParallelProcessor(
+                    base_processor=base_processor,
+                    num_workers=args.parallel if args.parallel > 0 else None,
+                    show_progress=not args.verbose
+                )
+                logging.info("Using adaptive parallel processing")
+            else:
+                parallel_processor = ParallelFatigueProcessor(
+                    base_processor=base_processor,
+                    num_workers=args.parallel,
+                    show_progress=not args.verbose
+                )
+                logging.info(f"Using parallel processing with {args.parallel} workers")
+            
+            # Get configurations to process
+            if config_list:
+                configs_to_process = config_list
+            else:
+                configs_to_process = list(data_handler.configurations.keys())
+            
+            # Load fatigue conditions
+            conditions = processor.fatigue_conditions
+            
+            # Create tasks and process in parallel
+            tasks = parallel_processor.create_tasks(
+                config_names=configs_to_process,
+                strut_nums=strut_list,
+                conditions=conditions
+            )
+            
+            results = parallel_processor.process_batch_parallel(tasks)
+            
+            # Get performance metrics
+            metrics = parallel_processor.get_performance_metrics()
+            
+            # Convert results to format expected by rest of code
+            results_data = []
+            for result in results:
+                results_data.append({
+                    'config_name': result.config_name,
+                    'strut_num': result.strut_num,
+                    'condition_id': result.condition_id,
+                    'annual_damage': result.annual_damage,
+                    'fatigue_life_years': result.fatigue_life_years,
+                    'max_stress_range': result.max_stress_range,
+                    'total_cycles': result.total_cycles
+                })
+            
+            # Create summary
+            from collections import defaultdict
+            config_summaries = defaultdict(lambda: {
+                'weight_pct': 0,
+                'damages': [],
+                'fatigue_lives': []
+            })
+            
+            for result in results:
+                config = result.config_name
+                config_summaries[config]['damages'].append(result.annual_damage)
+                config_summaries[config]['fatigue_lives'].append(result.fatigue_life_years)
+                if config in data_handler.configurations:
+                    config_summaries[config]['weight_pct'] = data_handler.configurations[config].weight
+            
+            summary = {}
+            for config, data in config_summaries.items():
+                summary[config] = {
+                    'weight_pct': data['weight_pct'],
+                    'critical_strut': min(enumerate(data['fatigue_lives'], 1), key=lambda x: x[1])[0] if data['fatigue_lives'] else 1,
+                    'min_fatigue_life': min(data['fatigue_lives']) if data['fatigue_lives'] else 0,
+                    'max_annual_damage': max(data['damages']) if data['damages'] else 0,
+                    'mean_fatigue_life': np.mean(data['fatigue_lives']) if data['fatigue_lives'] else 0
+                }
+            
+            # Save performance report
+            if args.parallel > 1:
+                parallel_processor.save_performance_report()
+                logging.info(f"Parallel processing metrics:")
+                logging.info(f"  Total tasks: {metrics['total_tasks']}")
+                logging.info(f"  Successful: {metrics['successful_tasks']}")
+                logging.info(f"  Average time per task: {metrics['average_time']:.2f}s")
+                logging.info(f"  Parallelization efficiency: {metrics['parallelization_efficiency']:.1f}%")
+            
+            results = results_data
+        else:
+            # Use sequential processing (original method)
+            from .integrated_processor import main
+            results, summary = main(data_path)
         
         # Save results
         if results:
