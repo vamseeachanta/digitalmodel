@@ -1,0 +1,62 @@
+{
+  "timestamp": "2025-09-21T06:48:55.901968",
+  "directories_processed": [
+    "output_auto_verify",
+    "output_benchmark",
+    "output_progress_test",
+    "output_step5_intermediate",
+    "output_step_verify",
+    "output_verification"
+  ],
+  "files_moved": [
+    {
+      "from": "output_auto_verify\\fsts_l015_FC001_Strut1_test.csv",
+      "to": "output\\verification\\automated\\fsts_l015_FC001_Strut1_test.csv"
+    },
+    {
+      "from": "output_progress_test\\processing_summary.csv",
+      "to": "output\\testing\\processing_summary.csv"
+    },
+    {
+      "from": "output_progress_test\\processing_summary.json",
+      "to": "output\\testing\\processing_summary.json"
+    },
+    {
+      "from": "output_step5_intermediate\\FC001_components.csv",
+      "to": "output\\verification\\intermediate\\FC001_components.csv"
+    },
+    {
+      "from": "output_step5_intermediate\\FC002_components.csv",
+      "to": "output\\verification\\intermediate\\FC002_components.csv"
+    },
+    {
+      "from": "output_step5_intermediate\\FC003_components.csv",
+      "to": "output\\verification\\intermediate\\FC003_components.csv"
+    },
+    {
+      "from": "output_step5_intermediate\\FC004_components.csv",
+      "to": "output\\verification\\intermediate\\FC004_components.csv"
+    },
+    {
+      "from": "output_step5_intermediate\\scaling_comparison.md",
+      "to": "output\\verification\\intermediate\\scaling_comparison.md"
+    },
+    {
+      "from": "output_step5_intermediate\\scaling_summary.csv",
+      "to": "output\\verification\\intermediate\\scaling_summary.csv"
+    },
+    {
+      "from": "output_step5_intermediate\\step5_metadata.json",
+      "to": "output\\verification\\intermediate\\step5_metadata.json"
+    },
+    {
+      "from": "output_step_verify\\test_FC001_Strut1.csv",
+      "to": "output\\verification\\step_by_step\\test_FC001_Strut1.csv"
+    },
+    {
+      "from": "output_verification\\fsts_l015_FC001_Strut1_combined.csv",
+      "to": "output\\verification\\general\\fsts_l015_FC001_Strut1_combined.csv"
+    }
+  ],
+  "errors": []
+}

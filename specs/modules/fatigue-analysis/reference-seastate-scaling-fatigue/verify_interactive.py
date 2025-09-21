@@ -220,10 +220,10 @@ class InteractiveVerification:
         self.print_header(5, "SCALING CALCULATION TEST")
         
         try:
-            processor = LoadScaler(
-                base_path=self.sample_data_path,
-                output_dir=self.base_path / "output_interactive"
-            )
+            # First create the data handler
+            data_handler = ProductionDataHandler(self.sample_data_path)
+            # Then create the LoadScaler with the handler
+            processor = LoadScaler(data_handler)
             
             # Test scaling with specific conditions
             wind_speed = 15  # m/s
@@ -241,25 +241,31 @@ class InteractiveVerification:
             print(f"  Wind: {wind_factor:.2f} (speed squared)")
             print(f"  Wave: {wave_factor:.2f} (Hs ratio)")
             
-            # Generate scaled data
-            scaled_data = processor.generate_scaled_seastate(
-                config_name='fsts_l015',
+            # Create a test fatigue condition
+            from src.digitalmodel.modules.fatigue_analysis.strut_foundation_processor import FatigueCondition
+            test_condition = FatigueCondition(
+                id=1,
                 wind_speed=wind_speed,
-                wave_hs=wave_hs,
-                wave_tp=4.0,
-                wave_dir=0,
                 wind_dir=0,
-                strut_number=1
+                hs=wave_hs,
+                tp=4.0,
+                wave_dir=0,
+                occurrence=1.0
             )
             
-            if scaled_data is not None and len(scaled_data) > 0:
+            # Process the fatigue condition
+            scaled_tension, metadata = processor.process_fatigue_condition(
+                config_name='fsts_l015',
+                condition=test_condition,
+                strut_num=1
+            )
+            
+            if len(scaled_tension) > 0:
                 print(f"\n[PASS] Scaling successful")
-                print(f"  Generated: {len(scaled_data)} samples")
-                
-                tension_col = [col for col in scaled_data.columns if 'Tension' in col][0]
-                print(f"  Range: {scaled_data[tension_col].min():.1f} to {scaled_data[tension_col].max():.1f} kN")
-                print(f"  Wind scale applied: {wind_factor:.2f}")
-                print(f"  Wave scale applied: {wave_factor:.2f}")
+                print(f"  Generated: {len(scaled_tension)} samples")
+                print(f"  Range: {scaled_tension.min():.1f} to {scaled_tension.max():.1f} kN")
+                print(f"  Wind scale applied: {metadata.get('wind_scale_factor', 0):.2f}")
+                print(f"  Wave scale applied: {metadata.get('wave_scale_factor', 0):.2f}")
                 return True
             else:
                 print(f"\n[FAIL] Scaling failed")
@@ -279,26 +285,42 @@ class InteractiveVerification:
         print(f"\n[INFO] Output directory: {output_dir}")
         
         try:
-            processor = LoadScaler(
-                base_path=self.sample_data_path,
-                output_dir=output_dir
-            )
+            # Create data handler and processor
+            data_handler = ProductionDataHandler(self.sample_data_path)
+            processor = LoadScaler(data_handler)
             
             # Generate a test output file
             test_fc = "FC001"
             print(f"\n[INFO] Processing {test_fc}")
             
-            scaled_data = processor.generate_scaled_seastate(
-                config_name='fsts_l015',
+            # Create test condition
+            from src.digitalmodel.modules.fatigue_analysis.strut_foundation_processor import FatigueCondition
+            test_condition = FatigueCondition(
+                id=1,
                 wind_speed=15,
-                wave_hs=0.75,
-                wave_tp=4.0,
-                wave_dir=0,
                 wind_dir=0,
-                strut_number=1
+                hs=0.75,
+                tp=4.0,
+                wave_dir=0,
+                occurrence=1.0
             )
             
-            if scaled_data is not None:
+            # Process the condition
+            scaled_tension, metadata = processor.process_fatigue_condition(
+                config_name='fsts_l015',
+                condition=test_condition,
+                strut_num=1
+            )
+            
+            if len(scaled_tension) > 0:
+                # Create DataFrame for output
+                import pandas as pd
+                time_array = np.arange(len(scaled_tension)) * 0.1  # 0.1s timestep
+                scaled_data = pd.DataFrame({
+                    'Time': time_array,
+                    'Effective Tension at Vessel End': scaled_tension
+                })
+                
                 # Save to file
                 output_file = output_dir / f"test_{test_fc}_Strut1.csv"
                 scaled_data.to_csv(output_file, index=False)
