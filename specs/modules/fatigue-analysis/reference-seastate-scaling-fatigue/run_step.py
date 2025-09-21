@@ -39,15 +39,15 @@ def run_single_step(step_num):
         
         print("\n" + "="*60)
         if success:
-            print(f"✅ STEP {step_num} PASSED")
+            print(f"[PASS] STEP {step_num} PASSED")
         else:
-            print(f"❌ STEP {step_num} FAILED")
+            print(f"[FAIL] STEP {step_num} FAILED")
         print("="*60)
         
         return success
         
     except Exception as e:
-        print(f"\n❌ ERROR in Step {step_num}: {e}")
+        print(f"\n[ERROR] in Step {step_num}: {e}")
         import traceback
         traceback.print_exc()
         return False
