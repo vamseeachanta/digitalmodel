@@ -31,7 +31,7 @@ class Configuration:
     
 @dataclass
 class FatigueCondition:
-    """Fatigue condition parameters"""
+    """Fatigue condition parameters (legacy)"""
     id: int
     wind_speed: float  # m/s
     wind_dir: float    # degrees
@@ -39,6 +39,18 @@ class FatigueCondition:
     tp: float          # s
     wave_dir: float    # degrees
     occurrence: float  # percentage
+
+@dataclass
+class SeaState:
+    """Sea state parameters using new SS naming convention"""
+    id: str           # SS001, SS002, etc.
+    wind_speed: float  # m/s
+    wind_dir: float    # degrees
+    hs: float          # m
+    tp: float          # s
+    wave_dir: float    # degrees
+    occurrence: float  # percentage
+    description: str = ""
 
 class ProductionDataHandler:
     """Handles production data loading and processing"""
@@ -94,9 +106,13 @@ class ProductionDataHandler:
         }
         
     def get_reference_files(self, config_name: str) -> Dict[str, List[str]]:
-        """Get all reference files for a configuration (flat structure)"""
+        """Get all reference files for a configuration (flat structure)
+        
+        Supports both new (REF_WIND01, REF_WAVE01) and legacy (wind01, wave01) naming
+        """
         # In production, files are in flat structure with pattern:
-        # {config}_mwl_{reference}_Strut{#}.csv
+        # New: {config}_mwl_REF_WIND01_Strut{#}.csv, {config}_mwl_REF_WAVE01_Strut{#}.csv
+        # Legacy: {config}_mwl_wind01_Strut{#}.csv, {config}_mwl_wave01_Strut{#}.csv
         
         reference_files = {'wind': [], 'wave': []}
         
@@ -107,11 +123,22 @@ class ProductionDataHandler:
         for file_path in files:
             filename = file_path.name
             # Parse the reference type from filename
-            # Example: fsts_l015_mwl_wind01_Strut1.csv
+            # Examples: 
+            # New: fsts_l015_mwl_REF_WIND01_Strut1.csv
+            # Legacy: fsts_l015_mwl_wind01_Strut1.csv
             parts = filename.replace('.csv', '').split('_mwl_')
             if len(parts) == 2:
-                ref_part = parts[1].split('_')[0]  # Get 'wind01' or 'wave01'
-                if ref_part.startswith('wind'):
+                ref_part = parts[1].split('_')[0]  # Get 'REF_WIND01', 'wind01', etc.
+                
+                # Check for new naming convention
+                if ref_part.startswith('REF_WIND'):
+                    if ref_part not in reference_files['wind']:
+                        reference_files['wind'].append(ref_part)
+                elif ref_part.startswith('REF_WAVE'):
+                    if ref_part not in reference_files['wave']:
+                        reference_files['wave'].append(ref_part)
+                # Check for legacy naming convention
+                elif ref_part.startswith('wind'):
                     if ref_part not in reference_files['wind']:
                         reference_files['wind'].append(ref_part)
                 elif ref_part.startswith('wave'):
@@ -123,9 +150,34 @@ class ProductionDataHandler:
     def parse_reference_name(self, ref_name: str) -> Dict:
         """Parse reference name to extract parameters
         
-        Production format: wind01, wave01, etc.
+        Supports both new (REF_WIND01, REF_WAVE01) and legacy (wind01, wave01) formats
         """
-        if ref_name.startswith('wind'):
+        # New naming convention: REF_WIND01, REF_WAVE01
+        if ref_name.startswith('REF_WIND'):
+            # Extract number (e.g., '01' from 'REF_WIND01')
+            num_str = ref_name.replace('REF_WIND', '')
+            num = int(num_str) if num_str else 1
+            return {
+                'type': 'wind',
+                'number': num,
+                'direction': 0.0,  # REF_WIND01 is baseline at 0°
+                'speed': 10.0,     # Reference wind speed
+                'naming_format': 'new'
+            }
+        elif ref_name.startswith('REF_WAVE'):
+            # Extract number (e.g., '01' from 'REF_WAVE01')
+            num_str = ref_name.replace('REF_WAVE', '')
+            num = int(num_str) if num_str else 1
+            return {
+                'type': 'wave',
+                'number': num,
+                'direction': 0.0,  # REF_WAVE01 is baseline at 0°
+                'hs': 0.5,        # Reference Hs
+                'tp': 2.7,        # Reference Tp
+                'naming_format': 'new'
+            }
+        # Legacy naming convention: wind01, wave01
+        elif ref_name.startswith('wind'):
             # Extract number (e.g., '01' from 'wind01')
             num = int(ref_name[4:]) if len(ref_name) > 4 else 1
             # Map to direction (simplified - would need actual mapping from production)
@@ -134,7 +186,8 @@ class ProductionDataHandler:
                 'type': 'wind',
                 'number': num,
                 'direction': direction,
-                'speed': 10.0  # Reference wind speed
+                'speed': 10.0,  # Reference wind speed
+                'naming_format': 'legacy'
             }
         elif ref_name.startswith('wave'):
             # Extract number (e.g., '01' from 'wave01')
@@ -146,7 +199,8 @@ class ProductionDataHandler:
                 'number': num,
                 'direction': direction % 360,
                 'hs': 0.5,  # Reference Hs
-                'tp': 2.7   # Reference Tp
+                'tp': 2.7,  # Reference Tp
+                'naming_format': 'legacy'
             }
         return {}
     
@@ -205,14 +259,15 @@ class LoadScaler:
     
     def __init__(self, data_handler: ProductionDataHandler):
         self.data_handler = data_handler
-        self.base_wind_speed = 10.0  # m/s
-        self.base_hs = 0.5  # m
+        self.base_wind_speed = 10.0  # m/s (REF_WIND01 baseline)
+        self.base_hs = 0.5  # m (REF_WAVE01 baseline)
         
-        # Load fatigue conditions
+        # Load both legacy fatigue conditions and new sea states
         self.fatigue_conditions = self.load_fatigue_conditions()
+        self.sea_states = self.load_sea_states()
         
     def load_fatigue_conditions(self) -> List[FatigueCondition]:
-        """Load fatigue conditions from CSV"""
+        """Load legacy fatigue conditions from CSV"""
         fatigue_file = Path("input/fatigue_conditions.csv")
         
         if not fatigue_file.exists():
@@ -234,6 +289,78 @@ class LoadScaler:
             ))
         
         return conditions
+    
+    def load_sea_states(self) -> List[SeaState]:
+        """Load sea states using new SS naming convention"""
+        sea_state_file = Path("input/sea_states.csv")
+        
+        if not sea_state_file.exists():
+            # Create sample sea states for testing based on verification framework
+            return self.create_sample_sea_states()
+        
+        df = pd.read_csv(sea_state_file)
+        sea_states = []
+        
+        for _, row in df.iterrows():
+            sea_states.append(SeaState(
+                id=str(row.get('Sea_State_ID', f'SS{len(sea_states)+1:03d}')),
+                wind_speed=float(row.get('Wind Speed (m/s)', 5.0)),
+                wind_dir=float(row.get('Wind Dir (°)', 0.0)),
+                hs=float(row.get('Hs (m)', 0.15)),
+                tp=float(row.get('Tp (s)', 2.0)),
+                wave_dir=float(row.get('Wave Dir (°)', 0.0)),
+                occurrence=float(row.get('Occurrence (%)', 1.0)),
+                description=str(row.get('Description', ''))
+            ))
+        
+        return sea_states
+    
+    def create_sample_sea_states(self) -> List[SeaState]:
+        """Create sample sea states based on verification framework mapping"""
+        sea_states = [
+            SeaState(
+                id='SS001',
+                wind_speed=15.0,
+                wind_dir=0.0,
+                hs=0.75,
+                tp=2.7,
+                wave_dir=0.0,
+                occurrence=25.0,
+                description='Test validation condition'
+            ),
+            SeaState(
+                id='SS002',
+                wind_speed=10.0,
+                wind_dir=0.0,
+                hs=0.50,
+                tp=2.7,
+                wave_dir=0.0,
+                occurrence=25.0,
+                description='Baseline check condition'
+            ),
+            SeaState(
+                id='SS003',
+                wind_speed=5.0,
+                wind_dir=0.0,
+                hs=0.25,
+                tp=2.7,
+                wave_dir=0.0,
+                occurrence=25.0,
+                description='Calm conditions'
+            ),
+            SeaState(
+                id='SS004',
+                wind_speed=20.0,
+                wind_dir=0.0,
+                hs=1.00,
+                tp=2.7,
+                wave_dir=0.0,
+                occurrence=25.0,
+                description='Severe conditions'
+            )
+        ]
+        
+        return sea_states
     
     def create_sample_fatigue_conditions(self) -> List[FatigueCondition]:
         """Create sample fatigue conditions for testing"""
@@ -268,27 +395,48 @@ class LoadScaler:
     
     def select_closest_reference(self, config_name: str, ref_type: str, 
                                 direction: float, tp: Optional[float] = None) -> str:
-        """Select the closest reference seastate based on parameters"""
+        """Select the closest reference seastate based on parameters
+        
+        Prefers new REF_WIND01/REF_WAVE01 format, falls back to legacy
+        """
         ref_files = self.data_handler.get_reference_files(config_name)
         
         if not ref_files.get(ref_type):
             return ""
         
-        # Filter by type
+        # Filter by type and prioritize new naming format
         typed_refs = []
+        new_format_refs = []
+        legacy_refs = []
+        
         for ref_name in ref_files[ref_type]:
             params = self.data_handler.parse_reference_name(ref_name)
             if params.get('type') == ref_type:
-                typed_refs.append((ref_name, params))
+                if params.get('naming_format') == 'new':
+                    new_format_refs.append((ref_name, params))
+                else:
+                    legacy_refs.append((ref_name, params))
+        
+        # Prefer new format, use legacy as fallback
+        typed_refs = new_format_refs if new_format_refs else legacy_refs
         
         if not typed_refs:
             return ""
         
-        # Find closest by direction (and Tp for waves)
+        # For new format with REF_WIND01/REF_WAVE01, prefer the 01 references
+        if new_format_refs:
+            for ref_name, params in new_format_refs:
+                if (ref_type == 'wind' and ref_name == 'REF_WIND01') or \
+                   (ref_type == 'wave' and ref_name == 'REF_WAVE01'):
+                    return ref_name
+            # If REF_*01 not found, return first available
+            return new_format_refs[0][0]
+        
+        # Legacy fallback: Find closest by direction (and Tp for waves)
         best_ref = None
         best_score = float('inf')
         
-        for ref_dir, params in typed_refs:
+        for ref_name, params in typed_refs:
             # Calculate direction difference (accounting for circular nature)
             dir_diff = abs(params['direction'] - direction)
             if dir_diff > 180:
@@ -303,13 +451,13 @@ class LoadScaler:
             
             if score < best_score:
                 best_score = score
-                best_ref = ref_dir
+                best_ref = ref_name
         
         return best_ref or ""
     
     def process_fatigue_condition(self, config_name: str, condition: FatigueCondition,
                                  strut_num: int) -> Tuple[np.ndarray, Dict]:
-        """Process a single fatigue condition by combining scaled wind and wave references"""
+        """Process a single fatigue condition by combining scaled wind and wave references (legacy)"""
         
         # Calculate scaling factors
         wind_scale = (condition.wind_speed / self.base_wind_speed) ** 2
@@ -351,6 +499,66 @@ class LoadScaler:
             'hs': condition.hs,
             'tp': condition.tp,
             'occurrence_pct': condition.occurrence
+        }
+        
+        return effective_tension, metadata
+    
+    def process_sea_state(self, config_name: str, sea_state: SeaState,
+                         strut_num: int) -> Tuple[np.ndarray, Dict]:
+        """Process a single sea state using new SS naming convention
+        
+        Uses REF_WIND01 and REF_WAVE01 as baseline references for scaling
+        """
+        
+        # Calculate scaling factors based on REF_WIND01 and REF_WAVE01 baselines
+        wind_scale = (sea_state.wind_speed / self.base_wind_speed) ** 2
+        wave_scale = sea_state.hs / self.base_hs
+        
+        # Always use REF_WIND01 and REF_WAVE01 as references for new convention
+        wind_ref = self.select_closest_reference(config_name, 'wind', 0.0)  # 0° for REF_WIND01
+        wave_ref = self.select_closest_reference(config_name, 'wave', 0.0)  # 0° for REF_WAVE01
+        
+        # Prefer new naming format
+        ref_files = self.data_handler.get_reference_files(config_name)
+        if 'REF_WIND01' in ref_files.get('wind', []):
+            wind_ref = 'REF_WIND01'
+        if 'REF_WAVE01' in ref_files.get('wave', []):
+            wave_ref = 'REF_WAVE01'
+        
+        if not wind_ref or not wave_ref:
+            logger.warning(f"Could not find references for {sea_state.id}")
+            return np.array([]), {}
+        
+        # Load reference data
+        time_wind, tension_wind = self.data_handler.load_strut_data(config_name, wind_ref, strut_num)
+        time_wave, tension_wave = self.data_handler.load_strut_data(config_name, wave_ref, strut_num)
+        
+        if len(tension_wind) == 0 or len(tension_wave) == 0:
+            return np.array([]), {}
+        
+        # Ensure same length
+        min_len = min(len(tension_wind), len(tension_wave))
+        tension_wind = tension_wind[:min_len]
+        tension_wave = tension_wave[:min_len]
+        
+        # Scale and combine
+        scaled_wind = tension_wind * wind_scale
+        scaled_wave = tension_wave * wave_scale
+        effective_tension = scaled_wind + scaled_wave
+        
+        # Metadata
+        metadata = {
+            'sea_state_id': sea_state.id,
+            'wind_reference': wind_ref,
+            'wave_reference': wave_ref,
+            'wind_scale_factor': wind_scale,
+            'wave_scale_factor': wave_scale,
+            'wind_speed': sea_state.wind_speed,
+            'hs': sea_state.hs,
+            'tp': sea_state.tp,
+            'occurrence_pct': sea_state.occurrence,
+            'description': sea_state.description,
+            'naming_convention': 'new'
         }
         
         return effective_tension, metadata

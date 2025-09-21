@@ -37,15 +37,15 @@ class FatigueFileNamer:
         for directory in self.dirs.values():
             directory.mkdir(parents=True, exist_ok=True)
     
-    def get_scaled_ref_filename(self, fc_id: int, ref_case: str, 
+    def get_scaled_ref_filename(self, condition_id: str, ref_case: str, 
                                scale_factor: float, strut_num: int, 
                                ref_type: str = 'wind') -> Path:
         """
         Get filename for scaled reference file (intermediate)
         
         Args:
-            fc_id: Fatigue condition ID
-            ref_case: Reference case (e.g., 'wind09', 'wave13')
+            condition_id: Condition ID (legacy: FC001, new: SS001)
+            ref_case: Reference case (e.g., 'wind09', 'REF_WIND01')
             scale_factor: Scaling factor applied
             strut_num: Strut number
             ref_type: 'wind' or 'wave'
@@ -54,49 +54,74 @@ class FatigueFileNamer:
             Path to scaled reference file
         """
         scale_str = f"s{int(scale_factor*100):03d}"  # e.g., 0.25 -> s025
-        filename = f"{self.config}_FC{fc_id:03d}_{ref_case}_{scale_str}_Strut{strut_num}_scaled.csv"
+        
+        # Support both legacy FC### and new SS### formats
+        if isinstance(condition_id, int):
+            condition_str = f"FC{condition_id:03d}"  # Legacy format
+        else:
+            condition_str = condition_id  # New format (SS001, etc.)
+            
+        filename = f"{self.config}_{condition_str}_{ref_case}_{scale_str}_Strut{strut_num}_scaled.csv"
         return self.dirs['scaled_references'] / filename
     
-    def get_combined_filename(self, fc_id: int, strut_num: int) -> Path:
+    def get_combined_filename(self, condition_id, strut_num: int) -> Path:
         """
         Get filename for combined effective tension file
         
         Args:
-            fc_id: Fatigue condition ID
+            condition_id: Condition ID (legacy: int for FC###, new: str for SS###)
             strut_num: Strut number
             
         Returns:
             Path to combined tension file
         """
-        filename = f"{self.config}_FC{fc_id:03d}_Strut{strut_num}_combined.csv"
+        # Support both legacy FC### and new SS### formats
+        if isinstance(condition_id, int):
+            condition_str = f"FC{condition_id:03d}"  # Legacy format
+        else:
+            condition_str = condition_id  # New format (SS001, etc.)
+            
+        filename = f"{self.config}_{condition_str}_Strut{strut_num}_combined.csv"
         return self.dirs['combined_tensions'] / filename
     
-    def get_rainflow_filename(self, fc_id: int, strut_num: int) -> Path:
+    def get_rainflow_filename(self, condition_id, strut_num: int) -> Path:
         """
         Get filename for rainflow results file
         
         Args:
-            fc_id: Fatigue condition ID
+            condition_id: Condition ID (legacy: int for FC###, new: str for SS###)
             strut_num: Strut number
             
         Returns:
             Path to rainflow results file
         """
-        filename = f"{self.config}_FC{fc_id:03d}_Strut{strut_num}_rainflow.csv"
+        # Support both legacy FC### and new SS### formats
+        if isinstance(condition_id, int):
+            condition_str = f"FC{condition_id:03d}"  # Legacy format
+        else:
+            condition_str = condition_id  # New format (SS001, etc.)
+            
+        filename = f"{self.config}_{condition_str}_Strut{strut_num}_rainflow.csv"
         return self.dirs['rainflow_results'] / filename
     
-    def get_damage_filename(self, fc_id: int, strut_num: int) -> Path:
+    def get_damage_filename(self, condition_id, strut_num: int) -> Path:
         """
         Get filename for damage results file
         
         Args:
-            fc_id: Fatigue condition ID
+            condition_id: Condition ID (legacy: int for FC###, new: str for SS###)
             strut_num: Strut number
             
         Returns:
             Path to damage results file
         """
-        filename = f"{self.config}_FC{fc_id:03d}_Strut{strut_num}_damage.csv"
+        # Support both legacy FC### and new SS### formats
+        if isinstance(condition_id, int):
+            condition_str = f"FC{condition_id:03d}"  # Legacy format
+        else:
+            condition_str = condition_id  # New format (SS001, etc.)
+            
+        filename = f"{self.config}_{condition_str}_Strut{strut_num}_damage.csv"
         return self.dirs['damage_results'] / filename
     
     def get_summary_filename(self) -> Path:
@@ -177,15 +202,26 @@ if __name__ == "__main__":
     # Create file naming structure
     namers = create_output_structure('output')
     
-    # Example for fsts_l015, FC023, Strut1
+    # Example for fsts_l015
     namer = namers['fsts_l015']
     
-    # Get various filenames
+    print("=== Legacy FC### Format ===")
+    # Get various filenames (legacy format)
     print("Scaled wind:", namer.get_scaled_ref_filename(23, 'wind09', 3.24, 1, 'wind'))
     print("Scaled wave:", namer.get_scaled_ref_filename(23, 'wave15', 1.60, 1, 'wave'))
     print("Combined:", namer.get_combined_filename(23, 1))
     print("Rainflow:", namer.get_rainflow_filename(23, 1))
     print("Damage:", namer.get_damage_filename(23, 1))
+    
+    print("\n=== New SS### Format ===")
+    # Get various filenames (new format)
+    print("Scaled wind:", namer.get_scaled_ref_filename('SS001', 'REF_WIND01', 2.25, 1, 'wind'))
+    print("Scaled wave:", namer.get_scaled_ref_filename('SS001', 'REF_WAVE01', 1.50, 1, 'wave'))
+    print("Combined:", namer.get_combined_filename('SS001', 1))
+    print("Rainflow:", namer.get_rainflow_filename('SS001', 1))
+    print("Damage:", namer.get_damage_filename('SS001', 1))
+    
+    print("\n=== Common Files ===")
     print("Summary:", namer.get_summary_filename())
     
     # Overall files
