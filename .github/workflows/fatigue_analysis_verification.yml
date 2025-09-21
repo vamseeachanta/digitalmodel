@@ -1,0 +1,27 @@
+name: Fatigue Analysis Verification
+
+on:
+  push:
+    paths:
+      - 'src/digitalmodel/modules/fatigue_analysis/**'
+      - 'specs/modules/fatigue-analysis/**'
+      - 'tests/modules/fatigue_analysis/**'
+  pull_request:
+    paths:
+      - 'src/digitalmodel/modules/fatigue_analysis/**'
+      - 'specs/modules/fatigue-analysis/**'
+  workflow_dispatch:
+
+jobs:
+  verify-steps:
+    name: Run Step Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: |
+          pip install numpy pandas pytest
+          cd specs/modules/fatigue-analysis/reference-seastate-scaling-fatigue
+          python verify_step_by_step.py all
