@@ -192,22 +192,38 @@ Only create mocks when user explicitly states:
 **CRITICAL DIRECTIVE**: For ALL step-by-step verification processes in this repository:
 
 ### Verification Requirements:
-1. **Git Commit After Each Step**: MANDATORY - After user confirms a step is complete, MUST commit all changes before proceeding
-2. **Clean Working Directory**: Each step MUST start with a clean git status
-3. **Isolated Changes**: Only changes from the current step should be visible for review
-4. **Commit Message Format**: `verify: Complete Step N - <description>`
-5. **User Confirmation**: MUST receive explicit user confirmation before proceeding to next step
+1. **Show Step Summary**: MANDATORY - Display comprehensive summary of what was tested and results
+2. **User Review & Permission**: MANDATORY - Wait for explicit user confirmation that results are correct
+3. **Git Commit After Confirmation**: MANDATORY - Only commit after user confirms step is correct
+4. **Clean Working Directory**: Each step MUST start with a clean git status
+5. **Isolated Changes**: Only changes from the current step should be visible for review
+6. **Commit Message Format**: `verify: Complete Step N - <description>`
 
-### Implementation Pattern:
+### MANDATORY Implementation Pattern:
 ```python
-# After step completion and before user confirmation:
+# 1. After step execution:
+print("STEP N SUMMARY:")
+print("- What was tested")
+print("- Results obtained")
+print("- Files created/modified")
+
+# 2. Request user confirmation:
+"Please review the Step N results above.
+Are the results correct and ready to commit? (yes/no):"
+
+# 3. Only if user confirms with 'yes':
 git add -A
 git commit -m "verify: Complete Step N - <step description>"
 git status  # Should show clean
 
-# Then ask user:
-"Step N completed and committed. Review results above. Continue to Step N+1?"
+# 4. Then ask about next step:
+"Step N committed. Ready to proceed to Step N+1? (yes/no):"
 ```
+
+### Three-Stage Process (MANDATORY):
+1. **EXECUTE** - Run the step and display results
+2. **CONFIRM** - Show summary and get user approval of correctness
+3. **COMMIT** - Only commit after user confirms results are correct
 
 ### Purpose:
 - Makes it easy for users to review ONLY the changes from each step
