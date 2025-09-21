@@ -1,0 +1,51 @@
+{
+  "timestamp": "2025-09-21T05:20:16.536196",
+  "all_passed": true,
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "results": [
+    {
+      "test": "Directory exists",
+      "passed": true,
+      "detail": "D:\\github\\digitalmodel\\specs\\modules\\fatigue-analysis\\reference-seastate-scaling-fatigue\\sample_data"
+    },
+    {
+      "test": "Flat structure",
+      "passed": true,
+      "detail": "No subdirs"
+    },
+    {
+      "test": "Naming convention",
+      "passed": true,
+      "detail": "All correct"
+    },
+    {
+      "test": "File count",
+      "passed": true,
+      "detail": "64 files"
+    },
+    {
+      "test": "File contents",
+      "passed": true,
+      "detail": "1000 rows"
+    },
+    {
+      "test": "Data loading",
+      "passed": true,
+      "detail": "4 configs"
+    },
+    {
+      "test": "Scaling process",
+      "passed": true,
+      "detail": "1000 samples"
+    },
+    {
+      "test": "Output generation",
+      "passed": true,
+      "detail": "fsts_l015_FC001_Strut1_test.csv"
+    }
+  ]
+}
