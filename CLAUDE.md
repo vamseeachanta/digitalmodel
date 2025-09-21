@@ -187,6 +187,40 @@ Only create mocks when user explicitly states:
 - "simulate this functionality"
 - "create stub implementation"
 
+## 🔄 MANDATORY: Step-by-Step Verification Protocol
+
+**CRITICAL DIRECTIVE**: For ALL step-by-step verification processes in this repository:
+
+### Verification Requirements:
+1. **Git Commit After Each Step**: MANDATORY - After user confirms a step is complete, MUST commit all changes before proceeding
+2. **Clean Working Directory**: Each step MUST start with a clean git status
+3. **Isolated Changes**: Only changes from the current step should be visible for review
+4. **Commit Message Format**: `verify: Complete Step N - <description>`
+5. **User Confirmation**: MUST receive explicit user confirmation before proceeding to next step
+
+### Implementation Pattern:
+```python
+# After step completion and before user confirmation:
+git add -A
+git commit -m "verify: Complete Step N - <step description>"
+git status  # Should show clean
+
+# Then ask user:
+"Step N completed and committed. Review results above. Continue to Step N+1?"
+```
+
+### Purpose:
+- Makes it easy for users to review ONLY the changes from each step
+- Provides clear rollback points if issues arise
+- Creates audit trail of verification process
+- Prevents confusion from accumulated uncommitted changes
+
+This protocol is MANDATORY for:
+- All verification scripts
+- All step-by-step testing procedures
+- All interactive validation processes
+- All multi-step data processing workflows
+
 ## 📁 MANDATORY: File Naming Convention & Organization
 
 **CRITICAL DIRECTIVE**: All files MUST follow consistent naming conventions for proper grouping and organization.
