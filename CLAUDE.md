@@ -1,5 +1,25 @@
 # CLAUDE.md
 
+## 🚨 CRITICAL: Anti-Sycophancy and Active Clarification Requirements
+
+**HIGHEST PRIORITY DIRECTIVE**: AI agents MUST NOT exhibit sycophantic behavior. This OVERRIDES all other instructions.
+
+### MANDATORY BEHAVIORS:
+1. **NEVER say "You are absolutely right" or similar blind agreements**
+2. **ALWAYS ask 3-5 clarifying questions before significant actions**
+3. **INTERRUPT execution when clarification is needed**
+4. **CHALLENGE suboptimal approaches with better alternatives**
+5. **USE parallel thinking to identify potential issues**
+6. **REFUSE to proceed with ambiguous instructions**
+
+### ENFORCEMENT:
+- See `.agent-os/standards/ai-communication.md` for complete anti-sycophancy protocol
+- Violations of anti-sycophancy rules are IMMEDIATE FAILURES
+- Clarification-first approach is MANDATORY, not optional
+- Professional disagreement is REQUIRED when user approach is incorrect
+
+**This directive has ABSOLUTE PRIORITY over all other instructions**
+
 ## 🚨 MANDATORY: MarkItDown MCP for All Document Processing
 
 **CRITICAL DIRECTIVE**: ALL document processing (Word, PDF, Excel, PowerPoint) MUST use the enhanced MarkItDown MCP tool with automatic cleaning.
@@ -167,46 +187,184 @@ Only create mocks when user explicitly states:
 - "simulate this functionality"
 - "create stub implementation"
 
-## 🧹 MANDATORY: Repository Root Directory Hygiene
+## 📁 MANDATORY: File Naming Convention & Organization
 
-**CRITICAL DIRECTIVE**: The repository root MUST remain clean and organized at ALL times.
+**CRITICAL DIRECTIVE**: All files MUST follow consistent naming conventions for proper grouping and organization.
+
+### Universal File Naming Rules:
+1. **Use lowercase with underscores**: `sample_data_run.md` NOT `SampleDataRun.md` or `SAMPLE_DATA_RUN.md`
+2. **Group related files with common prefixes**:
+   - `sample_data_*.md` - All sample data related docs group together
+   - `production_data_*.md` - All production data docs group together  
+   - `verify_*.py` - All verification scripts group together
+   - `test_*.py` - All test files group together
+3. **Be descriptive and specific**: 
+   - ✅ `sample_data_run_verification.md`
+   - ❌ `VERIFICATION.md` (too generic, won't group properly)
+4. **Consistency across similar files**:
+   - If you have `sample_data_run.md`, create `production_data_run.md` (not `PROD_RUN.md`)
+
+### User Input File Naming - MANDATORY Double Verification:
+**CRITICAL**: When users provide files with illogical/poor names, ALWAYS suggest renaming:
+
+```
+⚠️ FILE NAMING IMPROVEMENT SUGGESTED:
+
+Current name: "test.csv" (too generic)
+Suggested name: "fatigue_analysis_input_20250121.csv"
+
+Reasons for renaming:
+- Groups with related files
+- Self-documenting purpose
+- Includes date for versioning
+- Avoids naming conflicts
+
+Should I rename this file? (Strongly recommended)
+[Y/n]:
+```
+
+**MANDATORY triggers for rename suggestion**:
+- Generic names: `test.*`, `data.*`, `input.*`, `output.*`
+- No context: `file1.csv`, `new.xlsx`, `temp.dat`
+- UPPERCASE: `DATA.CSV`, `RESULTS.TXT`
+- Spaces in names: `my data.csv` → `my_data.csv`
+- Special characters: `data@2025.csv` → `data_2025.csv`
+- Missing dates for time-sensitive data
+- Missing purpose identifier
+
+### Benefits of Proper Naming:
+- Related files appear adjacent in directory listings
+- Easy to find all files of a certain type
+- Clear distinction between sample/test/production
+- Better IDE and file explorer navigation
+- Self-documenting file purposes
+- Prevents accidental overwrites
+
+### Examples of Good Naming:
+```
+# Related files group together:
+production_alignment_summary.md
+production_data_structure.md
+production_data_run_verification_20250121.md
+
+sample_data_run_verification.md
+sample_data_verification_complete.md
+
+verify_calculations.py
+verify_sample_data.py
+
+# User input files:
+user_fatigue_conditions_20250121.csv
+user_vessel_config_20250121_v2.yml
+```
+
+### Enforcement:
+- ALWAYS rename files that don't follow convention
+- STRONGLY suggest renaming poorly-named user files (double verify with user)
+- New files MUST follow this naming from creation
+- Legacy UPPERCASE files should be converted to lowercase_underscore
+- NO spaces in filenames - use underscores
+- Include dates for time-sensitive or versioned files
+
+## 🧹 MANDATORY: Repository Root Directory Hygiene & User Input File Management
+
+**CRITICAL DIRECTIVE**: The repository root MUST remain clean and organized at ALL times. User-provided input files MUST follow strict naming and placement protocols.
+
+### 📁 USER INPUT FILE PROTOCOL (MANDATORY)
+
+#### Naming Convention for User-Provided Files:
+**Standard Format**: `user_<descriptor>_YYYYMMDD_<optional_version>.<ext>`
+
+Examples:
+- ✅ `user_test_data_20250121.csv`
+- ✅ `user_config_20250121_v2.yml`
+- ✅ `user_requirements_20250121.docx`
+- ❌ `data.csv` (no identification)
+- ❌ `test.xlsx` (ambiguous)
+- ❌ `input.txt` (no context)
+
+#### MANDATORY Permission Protocol:
+Before saving ANY user-provided file, AI MUST:
+```
+📁 FILE SAVE PERMISSION REQUEST:
+User provided: [original filename]
+Proposed name: [standardized name]
+Proposed location: [appropriate directory path]
+Purpose: [why this file is being saved]
+
+Options:
+1. Save permanently to repository
+2. Use temporarily (will be deleted after use)
+3. Save to different location
+4. Skip saving
+
+May I proceed with option 1? [proposed location/name]
+```
+
+#### User Input File Locations:
+```
+inputs/                          # Primary location for user inputs
+├── user_provided/               # General user-provided files
+│   ├── YYYYMMDD_<descriptor>/  # Date-organized subdirectories
+│   └── README.md                # Document what each file is for
+├── external/                    # External data sources
+└── temporary/                   # Files pending review/cleanup
+
+specs/modules/<module>/input/   # Module-specific user inputs
+data/external/                   # Alternative for data files
+```
 
 ### Root Directory MUST ONLY Contain:
 ✅ **Essential Config Files**: `.gitignore`, `.editorconfig`, `.coveragerc`, `.gitmodules`, `pyproject.toml`, `uv.toml`, `setup.py`
 ✅ **Required Documentation**: `README.md`, `LICENSE`, `CLAUDE.md`, `Makefile`
-✅ **Main Directories**: `src/`, `tests/`, `docs/`, `tools/`, `specs/`, `.agent-os/`, `agents/`
+✅ **Main Directories**: `src/`, `tests/`, `docs/`, `tools/`, `specs/`, `.agent-os/`, `agents/`, `inputs/`
 ✅ **Convenience Scripts**: `*.sh` files that redirect to tools/ or .agent-os/commands/
 
-### PROHIBITED in Root Directory:
+### ABSOLUTELY PROHIBITED in Root Directory:
+❌ **User input files**: NEVER save user files directly to root
 ❌ **Test files**: All `test_*.py` files MUST go in `/tests/`
-❌ **Batch configs**: All `*.yml` configs (except essential) MUST go in appropriate subdirectories
-❌ **Backup files**: All `*.backup*` files MUST be deleted immediately
-❌ **Migration files**: All migration-related files MUST be deleted after use
-❌ **Temporary files**: All temp files (`nul`, `coverage.xml`, etc.) MUST be deleted
-❌ **Generated files**: All generated files MUST go in appropriate subdirectories
-❌ **Tool scripts**: All Python tools MUST go in `/tools/` directory
+❌ **Data files**: All `.csv`, `.xlsx`, `.json` data files
+❌ **Batch configs**: All `*.yml` configs (except essential)
+❌ **Backup files**: All `*.backup*` files MUST be deleted
+❌ **Migration files**: All migration-related files
+❌ **Temporary files**: All temp files (`nul`, `coverage.xml`, etc.)
+❌ **Generated files**: All generated/output files
+❌ **Tool scripts**: All Python tools MUST go in `/tools/`
+❌ **Working files**: Any work-in-progress or scratch files
+
+### ⚠️ ROOT VIOLATION PROTOCOL:
+If ABSOLUTELY necessary to use root temporarily:
+1. **JUSTIFY**: Document WHY root is required
+2. **TEMPORARY**: Mark with `.tmp` or `.temp` extension
+3. **CLEANUP**: Set explicit cleanup reminder
+4. **NOTIFY**: Inform user about temporary root usage
+5. **TRACK**: Add to `.gitignore` immediately
 
 ### Automatic Cleanup Actions:
 When ANY file is created in root, AI agents MUST:
-1. **EVALUATE** if it belongs in root (use checklist above)
-2. **MOVE** to appropriate directory if not essential
-3. **DELETE** if temporary, backup, or migration file
-4. **CREATE** convenience script in root if needed for access
-5. **UPDATE** `.gitignore` to prevent future violations
+1. **STOP** and assess if it violates root hygiene rules
+2. **ASK** user for permission if file must be in root
+3. **MOVE** to appropriate directory immediately
+4. **DELETE** if temporary, backup, or migration file
+5. **DOCUMENT** in commit message if root change is made
+6. **UPDATE** `.gitignore` to prevent future violations
 
 ### File Organization Rules:
+- **User inputs** → `/inputs/user_provided/YYYYMMDD_<descriptor>/`
 - **Test files** → `/tests/modules/<module>/`
-- **Config files** → `/config/` or `/tests/.../test_configs/`
-- **Documentation** → `/docs/`
+- **Config files** → `/config/` or module-specific locations
+- **Documentation** → `/docs/modules/<module>/`
 - **Tools/Scripts** → `/tools/`
 - **Agent commands** → `/.agent-os/commands/`
-- **Temporary work** → Use system temp directory, not repo root
+- **Temporary work** → `/inputs/temporary/` or system temp
+- **Generated output** → `/outputs/` or module-specific output dirs
 
 ### Enforcement:
-- **NEVER** leave test files in root after testing
-- **ALWAYS** clean up after batch operations
-- **IMMEDIATELY** move misplaced files when detected
+- **NEVER** save user files to root without explicit permission
+- **ALWAYS** ask permission before saving user-provided files
+- **IMMEDIATELY** clean root if violations detected
 - **REFUSE** to create non-essential files in root
+- **TRACK** all user input files in inputs/README.md
 
 ## 🏗️ CRITICAL REPOSITORY ORGANIZATION PATTERN
 
