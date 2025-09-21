@@ -197,14 +197,14 @@ class InteractiveVerification:
                 print(f"\n  {config}:")
                 
                 ref_files = handler.get_reference_files(config)
-                print(f"    Wind refs: {list(ref_files.get('wind', {}).keys())}")
-                print(f"    Wave refs: {list(ref_files.get('wave', {}).keys())}")
+                print(f"    Wind refs: {ref_files.get('wind', [])}")
+                print(f"    Wave refs: {ref_files.get('wave', [])}")
                 
                 # Try loading wind01
-                if 'wind01' in ref_files.get('wind', {}):
-                    data = handler.load_strut_data(config, 'wind01', 1)
-                    if data is not None and len(data) > 0:
-                        print(f"    [PASS] Loaded {len(data)} samples from wind01")
+                if 'wind01' in ref_files.get('wind', []):
+                    time_data, tension_data = handler.load_strut_data(config, 'wind01', 1)
+                    if len(time_data) > 0 and len(tension_data) > 0:
+                        print(f"    [PASS] Loaded {len(time_data)} samples from wind01")
                     else:
                         print(f"    [FAIL] Could not load data from wind01")
                         return False
