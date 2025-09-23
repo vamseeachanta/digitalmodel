@@ -1,0 +1,14 @@
+[
+  {
+    "timestamp": 1758552375450,
+    "memoryTotal": 274567839744,
+    "memoryUsed": 34962055168,
+    "memoryFree": 239605784576,
+    "memoryUsagePercent": 12.733485174592088,
+    "memoryEfficiency": 87.26651482540791,
+    "cpuCount": 64,
+    "cpuLoad": 0,
+    "platform": "win32",
+    "uptime": 3724640.359
+  }
+]
