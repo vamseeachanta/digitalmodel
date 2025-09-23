@@ -1,37 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(cat:*)",
-      "Bash(git rm:*)",
-      "Bash(ls:*)",
-      "Bash(python -m pytest fsts_time_traces_test.py::test_process -v)",
-      "Bash(python -m pytest fsts_time_traces_test.py::test_process -v -s)",
-      "Bash(python:*)",
-      "Bash(rm:*)",
-      "Bash(git branch:*)",
-      "Bash(ren:*)",
-      "Bash(mv:*)",
-      "Bash(dir \"\\Acma-ansys05\\d\\1522\\ctr7\\orcaflex\\rev_a08\\output\\csv\\02c_005yr\" \")",
-      "Bash(find:*)",
-      "Bash(grep:*)",
-      "Bash(freecad:*)",
-      "Bash(snap list:*)",
-      "Bash(apt list:*)",
-      "Bash(blender:*)",
-      "Bash(timeout:*)",
-      "Bash(chmod:*)",
-      "Bash(PYTHONPATH=/mnt/github/github/digitalmodel/src python .agent-os/commands/test-automation.py --help)",
-      "Bash(git checkout:*)",
-      "Bash(git merge:*)",
-      "Bash(uv:*)",
-      "Bash(pip install:*)",
-      "Bash(sed:*)"
+      "mcp__ruv-swarm",
+      "mcp__claude-flow"
     ],
-    "deny": [],
-    "defaultMode": "acceptEdits"
+    "deny": []
   }
 }
