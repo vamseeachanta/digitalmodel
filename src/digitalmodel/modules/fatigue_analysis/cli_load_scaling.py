@@ -7,17 +7,17 @@ Standalone CLI runner for the load scaling module that can be executed
 directly from the command line with various options.
 
 Usage Examples:
-    # Basic execution with defaults
-    python cli_load_scaling.py
+    # Run with YAML configuration
+    python cli_load_scaling.py config.yml
     
-    # Specify input files
-    python cli_load_scaling.py --reference-seastates ref.csv --fatigue-conditions fatigue.csv
+    # Run with verbose output
+    python cli_load_scaling.py config.yml --verbose
     
-    # Process specific configuration
-    python cli_load_scaling.py --config fsts_l015 --struts 1,2,3,4
+    # Validate configuration only
+    python cli_load_scaling.py config.yml --validate-only
     
-    # Batch process all configurations
-    python cli_load_scaling.py --batch --parallel 4
+    # Generate template configuration
+    python cli_load_scaling.py --generate-template > my_config.yml
 """
 
 import argparse
@@ -29,6 +29,7 @@ import numpy as np
 import logging
 from datetime import datetime
 import json
+import yaml
 from typing import List, Dict, Optional
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import time
@@ -37,7 +38,7 @@ import time
 MODULE_DIR = Path(__file__).parent
 sys.path.insert(0, str(MODULE_DIR.parent.parent))
 
-from digitalmodel.modules.fatigue_analysis.load_scaling import LoadScaler
+from digitalmodel.modules.fatigue_analysis.load_scaling import LoadScalingProcessor
 
 # Configure logging
 def setup_logging(verbose: bool = False):
