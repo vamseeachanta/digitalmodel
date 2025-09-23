@@ -21,21 +21,21 @@ input_data:
   # Reference Seastate Configuration
   reference_seastate:
     # Metadata file containing reference load case definitions
-    metadata_file: "specs/modules/fatigue-analysis/reference-seastate-scaling-fatigue/input/reference_seastate_definitions_sample.csv"
+    metadata_file: "input/reference_seastate_definitions_sample.csv"
     
     # Time trace data folder containing reference tension time series
-    data_folder: "specs/modules/fatigue-analysis/reference-seastate-scaling-fatigue/reference_data"
+    data_folder: "reference_data"
     
     # File pattern for reference data files
     file_pattern: "{config}_{env_ref}_Strut{strut_id}.csv"
     
     # Column containing tension data in reference files
-    tension_column: "Effective Tension (kN)"
+    tension_column: "Effective Tension at Vessel End"
     
   # Fatigue Seastates Configuration
   fatigue_seastates:
     # Metadata file containing fatigue seastate definitions
-    metadata_file: "specs/modules/fatigue-analysis/reference-seastate-scaling-fatigue/input/fatigue_seastates_sample.csv"
+    metadata_file: "input/fatigue_seastates_sample.csv"
     
     # Column mapping for fatigue seastate parameters
     column_mapping:
@@ -45,7 +45,7 @@ input_data:
       wave_period: "Tp (s)"
       wave_direction: "Wave Dir (°)"
       occurrence: "Occurrence (%)"
-      
+
   # Vessel Configurations
   vessel_configurations:
     # Four vessel loading configurations
@@ -112,64 +112,25 @@ load_scaling:
       
   # Scaling limits and validation
   validation:
-    max_wind_scaling_factor: 10.0
-    min_wind_scaling_factor: 0.1
+    max_wind_scaling_factor: 100.0
+    min_wind_scaling_factor: 0.01
     max_wave_scaling_factor: 10.0
     min_wave_scaling_factor: 0.1
     warn_if_no_exact_match: true
     
-# ============================================================================
-# PROCESSING PARAMETERS
-# ============================================================================
-processing:
-  # Time series processing
-  time_series:
-    duration_seconds: 100       # Duration of each time series sample
-    time_step_seconds: 0.1      # Time step in tension time series
-    sample_points: 1000         # Number of points in each sample
-    
-  # Fatigue analysis parameters
-  fatigue_analysis:
-    design_life_years: 20       # Design life for fatigue assessment
-    seconds_per_year: 31557600  # 365.25 * 24 * 3600
-    
-  # Rainflow counting settings
-  rainflow:
-    method: "ASTM_E1049"        # Standard rainflow counting method
-    min_range_kN: 0.01          # Minimum cycle range to consider
-    normalize_yearly: true       # Normalize to yearly cycles
-    
-  # S-N curve parameters
-  sn_curve:
-    curve_type: "DNV-C"         # DNV C-curve for steel in seawater
-    description: "Steel in seawater with cathodic protection"
-    parameters:
-      a: 6.0e11                 # Fatigue strength coefficient
-      m: 3.0                    # Fatigue strength exponent
-    stress_units: "MPa"
-    
-  # Tension to stress conversion
-  tension_to_stress:
-    method: "linear_factor"
-    conversion_factor: 0.25     # MPa/kN conversion factor
-    includes_scf: true          # Stress concentration factor included
-    
+
 # ============================================================================
 # OUTPUT CONFIGURATION
 # ============================================================================
 output:
   # Output folder structure
-  base_folder: "specs/modules/fatigue-analysis/reference-seastate-scaling-fatigue/output"
+  base_folder: "output"
   
   # Output file naming pattern
   file_naming:
     pattern: "{config}_FC{fc_number:03d}_Strut{strut_number}_{type}.csv"
     types:
       scaled_tension: "scaled_tension"
-      rainflow_counts: "rainflow"
-      stress_ranges: "stress"
-      damage_calc: "damage"
-      combined: "combined"
       
   # Output file format
   file_format: "csv"
@@ -185,7 +146,7 @@ output:
     - "rainflow_results"
     - "stress_conversions"
     - "damage_calculations"
-    
+
   # Summary reports
   generate_summary: true
   summary_outputs:
