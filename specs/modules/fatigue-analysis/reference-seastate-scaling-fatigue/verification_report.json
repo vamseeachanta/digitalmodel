@@ -1,0 +1,9 @@
+{
+  "timestamp": "2025-09-23T06:47:39.051090",
+  "config_file": "input/load_scaling_config.yml",
+  "total_tests": 35,
+  "passed": 35,
+  "failed": 0,
+  "warnings": [],
+  "errors": []
+}
