@@ -6,7 +6,7 @@ For a data transformation program,
 
 An input file should contain the following sections:
 
-- tension data
+- raw data
   - folder: specs\modules\data-transformation\lookup-table\data
   - 
   - file naming pattern (fsts_FC001_Strut1_rainflow): `{config}_FC{###}_Strut{#}_rainflow.csv`
@@ -27,7 +27,7 @@ An input file should contain the following sections:
   - **File Naming Pattern**: `{config}_FC{###}_Strut{#}_{location_id}_stress_rainflow.csv`
   - **Output Folder**: specs\modules\fatigue-analysis\reference-seastate-scale-load\output\rainflow\stress_range
   - **Output File Type**: csv
-  - output: 
+  - output:
     - stress range (Mpa)
     - Cycles_Annual
 
