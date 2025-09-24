@@ -1,0 +1,7 @@
+metadata_id,wind_factor,wave_factor,wind_reference,wave_reference
+1,0.25,0.3,wind01,wave01
+2,1.0,0.5,wind01,wave01
+3,2.25,1.0,wind01,wave01
+4,4.0,1.5,wind01,wave01
+5,1.0,0.6,wind01,wave01
+6,2.25,0.8,wind01,wave01

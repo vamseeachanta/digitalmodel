@@ -1,0 +1,212 @@
+# Master Input Configuration - Sample Data
+# Fatigue Analysis Pipeline Configuration
+# This file consolidates all input parameters and file references
+
+default:
+  # Analysis identification
+  analysis_name: "Sample Fatigue Analysis"
+  analysis_type: "reference-seastate-scaling"
+  project_id: "SAMPLE-001"
+  structure: "Strut1"
+  
+  # Analysis parameters
+  parameters:
+    sample_duration_seconds: 100  # Duration of each time series sample
+    time_step_seconds: 0.1        # Time step in tension time series
+    sample_points: 1000            # Number of points in each sample
+    seconds_per_year: 31557600    # 365.25 * 24 * 3600
+    design_life_years: 20          # Target design life
+    
+  # File paths - Reference conditions
+  reference_files:
+    base_directory: "input/reference"
+    file_pattern: "fsts*Strut1.csv"
+    files:
+      - "fsts_surge_Strut1.csv"
+      - "fsts_sway_Strut1.csv"
+      - "fsts_heave_Strut1.csv"
+      - "fsts_roll_Strut1.csv"
+      - "fsts_pitch_Strut1.csv"
+      - "fsts_yaw_Strut1.csv"
+    column_name: "Effective Tension (kN)"
+    
+  # File paths - Sea state conditions  
+  seastate_files:
+    base_directory: "input/seastate"
+    file_pattern: "fsts_FC*_SS_*Strut1.csv"
+    files:
+      FC001: "fsts_FC001_SS_Strut1.csv"
+      FC002: "fsts_FC002_SS_Strut1.csv"
+      FC003: "fsts_FC003_SS_Strut1.csv"
+      FC004: "fsts_FC004_SS_Strut1.csv"
+      FC005: "fsts_FC005_SS_Strut1.csv"
+      FC006: "fsts_FC006_SS_Strut1.csv"
+      FC007: "fsts_FC007_SS_Strut1.csv"
+      FC008: "fsts_FC008_SS_Strut1.csv"
+      FC009: "fsts_FC009_SS_Strut1.csv"
+      FC010: "fsts_FC010_SS_Strut1.csv"
+    column_name: "Effective Tension (kN)"
+    
+  # Fatigue conditions (metocean data)
+  fatigue_conditions:
+    file: "input/fatigue_conditions.csv"
+    data:
+      FC001:
+        wind_speed_mps: 5
+        wind_dir_deg: 0
+        hs_m: 0.15
+        tp_s: 2.0
+        wave_dir_deg: 0
+        occurrence_pct: 20
+      FC002:
+        wind_speed_mps: 10
+        wind_dir_deg: 45
+        hs_m: 0.25
+        tp_s: 2.7
+        wave_dir_deg: 45
+        occurrence_pct: 15
+      FC003:
+        wind_speed_mps: 15
+        wind_dir_deg: 90
+        hs_m: 0.5
+        tp_s: 3.5
+        wave_dir_deg: 90
+        occurrence_pct: 10
+      FC004:
+        wind_speed_mps: 20
+        wind_dir_deg: 135
+        hs_m: 0.75
+        tp_s: 4.2
+        wave_dir_deg: 135
+        occurrence_pct: 5
+      FC005:
+        wind_speed_mps: 5
+        wind_dir_deg: 180
+        hs_m: 0.15
+        tp_s: 2.0
+        wave_dir_deg: 180
+        occurrence_pct: 20
+      FC006:
+        wind_speed_mps: 10
+        wind_dir_deg: 225
+        hs_m: 0.25
+        tp_s: 2.7
+        wave_dir_deg: 225
+        occurrence_pct: 15
+      FC007:
+        wind_speed_mps: 15
+        wind_dir_deg: 270
+        hs_m: 0.5
+        tp_s: 3.5
+        wave_dir_deg: 270
+        occurrence_pct: 10
+      FC008:
+        wind_speed_mps: 20
+        wind_dir_deg: 315
+        hs_m: 0.75
+        tp_s: 4.2
+        wave_dir_deg: 315
+        occurrence_pct: 2
+      FC009:
+        wind_speed_mps: 10
+        wind_dir_deg: 0
+        hs_m: 0.3
+        tp_s: 2.8
+        wave_dir_deg: 0
+        occurrence_pct: 2
+      FC010:
+        wind_speed_mps: 15
+        wind_dir_deg: 180
+        hs_m: 0.4
+        tp_s: 3.2
+        wave_dir_deg: 180
+        occurrence_pct: 1
+        
+  # Scaling factors
+  scaling_factors:
+    wind:
+      reference_speed_mps: 10      # Reference wind speed
+      exponent: 2                   # Wind scaling exponent
+      formula: "(V/10)^2"
+    wave:
+      reference_hs_m: 0.5          # Reference wave height
+      exponent: 1                   # Wave scaling exponent  
+      formula: "Hs/0.5"
+      
+  # Tension to stress conversion
+  tension_to_stress:
+    file: "input/tension_range_to_stress_range_function.csv"
+    method: "linear_interpolation"
+    # Conversion table (includes SCF and cross-sectional effects)
+    conversion_table:
+      - tension_kN: 0
+        stress_MPa: 0.0
+      - tension_kN: 500
+        stress_MPa: 125.0
+      - tension_kN: 1000
+        stress_MPa: 250.0
+      - tension_kN: 2000
+        stress_MPa: 500.0
+      - tension_kN: 3000
+        stress_MPa: 750.0
+      - tension_kN: 4000
+        stress_MPa: 1000.0
+      - tension_kN: 5000
+        stress_MPa: 1250.0
+    conversion_factor: 0.25  # MPa/kN (derived from table)
+    includes_scf: true       # SCF already included in conversion
+    
+  # S-N curve parameters
+  sn_curve:
+    curve_type: "DNV-C"
+    description: "Steel in seawater with cathodic protection"
+    formula: "N = a * S^(-m)"
+    parameters:
+      a: 6.0e11  # Fatigue strength coefficient
+      m: 3.0     # Fatigue strength exponent
+    stress_units: "MPa"
+    thickness_correction: false  # No thickness correction for sample
+    
+  # Rainflow counting settings
+  rainflow:
+    method: "ASTM_E1049"  # Standard rainflow counting method
+    normalize_yearly: true  # Normalize to yearly cycles in Step 7
+    min_range_kN: 0.01     # Minimum cycle range to consider
+    
+  # Output settings
+  output:
+    base_directory: "output/verification/sample_analysis"
+    save_intermediate: true  # Save results at each step
+    intermediate_files:
+      step6_scaled: "scaled_tensions"
+      step7_rainflow: "rainflow_counts"
+      step8_stress: "stress_ranges"
+      step10_damage: "damage_per_fc"
+      step11_total: "total_damage"
+    final_results: "fatigue_life_results.yml"
+    generate_plots: true
+    plot_formats: ["png", "pdf"]
+    
+  # Validation thresholds
+  validation:
+    min_fatigue_life_years: 20  # Minimum acceptable life
+    max_damage_per_year: 0.05   # Maximum annual damage (1/20)
+    occurrence_sum_tolerance: 0.01  # Tolerance for occurrence sum to 100%
+    
+  # Processing options
+  processing:
+    parallel_processing: true
+    num_workers: 4
+    verbose: true
+    debug_mode: false
+    
+# Additional metadata
+metadata:
+  created_date: "2025-01-22"
+  created_by: "Fatigue Analysis Module"
+  version: "1.0.0"
+  last_modified: "2025-01-22"
+  notes: |
+    Sample data configuration for fatigue analysis verification.
+    Uses simplified metocean conditions for testing.
+    All file paths are relative to the module root directory.
