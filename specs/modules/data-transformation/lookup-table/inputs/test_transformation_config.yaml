@@ -1,0 +1,83 @@
+# Data Transformation Configuration File
+# Convert tension ranges to stress ranges using lookup table
+
+raw_data:
+  folder: "specs/modules/data-transformation/lookup-table/data"
+  file_pattern: "*_FC*_Strut*_rainflow.csv"
+  format: "csv"
+  data_column: "Range (kN)"
+  
+  # File naming components extraction
+  naming_pattern:
+    regex: "(.+)_FC(\\d{3})_Strut(\\d)_rainflow\\.csv"
+    groups:
+      config: 1
+      fc_number: 2
+      strut_number: 3
+
+transformation:
+  source: "lookup"
+  method: "linear"
+  lookup_table:
+    file: "specs/modules/data-transformation/lookup-table/inputs/tension_range_to_stress_range_function.csv"
+    x_column: "tension range (kN)"
+    y_column: "stress range (Mpa)"
+    
+    # Location IDs will be extracted from the lookup table
+    # Each unique location ID will generate a separate output file
+    location_id_column: "location ID"
+    config_column: "config"
+    
+    # Process all unique location IDs found in lookup table
+    # Available location IDs: [2, 3, 5, 6, 7, 9, 10]
+    process_all_locations: true
+    
+    # Config mapping from filename to lookup table values
+    config_mapping:
+      "fsts_l015_125km3_l100_pb": "fsts_l015_125km3_l100_pb_mwl"
+      "fsts_l095_125km3_l000_pb": "fsts_l095_125km3_l000_pb_mwl"
+      "fsts_l015": "fsts_l015_mwl"
+      "fsts_l095": "fsts_l095_mwl"
+        
+  # Interpolation settings
+  interpolation:
+    method: "linear"  # linear, cubic, nearest
+    extrapolate: true  # Allow extrapolation beyond lookup table bounds
+    
+output:
+  folder: "specs/modules/data-transformation/lookup-table/output"
+  # Output file will be created for each location ID
+  file_pattern: "{config}_FC{fc_number}_Strut{strut_number}_loc{location_id:02d}_stress_rainflow.csv"
+  format: "csv"
+  
+  # Columns to include in output
+  columns:
+    - name: "stress range (Mpa)"
+      source: "transformation"
+    - name: "Cycles_Annual"
+      source: "input"  # Copy from input file
+    
+# Processing options
+processing:
+  # Process all files matching pattern
+  process_all_files: true
+  skip_empty_ranges: true  # Skip rows where Range (kN) is 0 or Cycles_Annual is 0
+  error_handling: "log"  # log, skip, or fail
+  
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "transformation_log.txt"
+  
+# Validation
+validation:
+  check_lookup_coverage: true  # Warn if input values outside lookup range
+  min_tension_range: 0  # kN
+  max_tension_range: 10000  # kN
+  required_columns:
+    input:
+      - "Range (kN)"
+      - "Cycles_Annual"
+    lookup:
+      - "tension range (kN)"
+      - "stress range (Mpa)"
