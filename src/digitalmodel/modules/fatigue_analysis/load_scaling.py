@@ -164,9 +164,13 @@ class LoadScalingProcessor:
             Tuple of (wind_reference, wave_reference)
         """
         # Extract fatigue parameters
-        wind_dir = fatigue_state['Wind Dir (°)']
+        wind_dir = fatigue_state.get('Wind Dir (deg)', fatigue_state.get('Wind Dir (°)', None))
+        if wind_dir is None:
+            raise KeyError(f"Wind direction column not found in fatigue state: {fatigue_state.keys()}")
         wind_speed = fatigue_state['Wind Speed (m/s)']
-        wave_dir = fatigue_state['Wave Dir (°)']
+        wave_dir = fatigue_state.get('Wave Dir (deg)', fatigue_state.get('Wave Dir (°)', None))
+        if wave_dir is None:
+            raise KeyError(f"Wave direction column not found in fatigue state: {fatigue_state.keys()}")
         wave_hs = fatigue_state['Hs (m)']
         wave_tp = fatigue_state['Tp (s)']
         
@@ -379,34 +383,77 @@ class LoadScalingProcessor:
         output_config = self.config['output']
         base_folder = output_config['base_folder']
         
-        # Create output directory if it doesn't exist
-        os.makedirs(base_folder, exist_ok=True)
+        # Try to use efficient output format
+        import sys
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(module_dir)))
+        efficient_module_path = os.path.join(parent_dir, 'digitalmodel', 'modules', 'fatigue_analysis')
+        if efficient_module_path not in sys.path:
+            sys.path.insert(0, efficient_module_path)
         
-        logger.info(f"Saving outputs to {base_folder}")
+        try:
+            from load_scaling_efficient_v2 import EfficientOutputWriterV2
+            use_efficient = True
+        except ImportError:
+            try:
+                from load_scaling_efficient import EfficientOutputWriter
+                use_efficient = True
+            except ImportError:
+                logger.warning("Efficient output module not found, using standard format")
+                use_efficient = False
         
-        for load_case in self.results:
-            # Generate filename
-            file_name = output_config['file_naming']['pattern'].format(
-                config=load_case.config,
-                fc_number=int(load_case.fatigue_condition[2:]),
-                strut_number=load_case.strut,
-                type='scaled_tension'
-            )
+        if use_efficient:
+            # Use efficient output format with metadata extraction
+            logger.info(f"Saving outputs to {base_folder} using enhanced efficient format")
+            try:
+                writer = EfficientOutputWriterV2(base_folder)
+            except NameError:
+                writer = EfficientOutputWriter(base_folder)
             
-            file_path = os.path.join(base_folder, file_name)
+            # Save all results using efficient format
+            for load_case in self.results:
+                writer.write_scaled_tension(
+                    config_id=load_case.config,
+                    fc_number=int(load_case.fatigue_condition[2:]),
+                    strut_number=load_case.strut,
+                    time_series=load_case.time_vector,
+                    scaled_tension=load_case.scaled_tension,
+                    wind_factor=load_case.scaling_factors.wind_factor,
+                    wave_factor=load_case.scaling_factors.wave_factor,
+                    wind_reference=load_case.scaling_factors.wind_reference,
+                    wave_reference=load_case.scaling_factors.wave_reference
+                )
             
-            # Prepare data for saving
-            data = pd.DataFrame({
-                'Time (s)': load_case.time_vector,
-                'Scaled Tension (kN)': load_case.scaled_tension,
-                'Wind Factor': load_case.scaling_factors.wind_factor,
-                'Wave Factor': load_case.scaling_factors.wave_factor,
-                'Wind Reference': load_case.scaling_factors.wind_reference,
-                'Wave Reference': load_case.scaling_factors.wave_reference
-            })
+            # Finalize and write metadata
+            writer.finalize()
+        else:
+            # Fallback to standard format
+            os.makedirs(base_folder, exist_ok=True)
+            logger.info(f"Saving outputs to {base_folder}")
             
-            # Save to CSV
-            data.to_csv(file_path, index=False)
+            for load_case in self.results:
+                # Generate filename
+                file_name = output_config['file_naming']['pattern'].format(
+                    config=load_case.config,
+                    fc_number=int(load_case.fatigue_condition[2:]),
+                    strut_number=load_case.strut,
+                    type='scaled_tension'
+                )
+                
+                file_path = os.path.join(base_folder, file_name)
+                
+                # Prepare data for saving
+                data = pd.DataFrame({
+                    'Time (s)': load_case.time_vector,
+                    'Scaled Tension (kN)': load_case.scaled_tension,
+                    'Wind Factor': load_case.scaling_factors.wind_factor,
+                    'Wave Factor': load_case.scaling_factors.wave_factor,
+                    'Wind Reference': load_case.scaling_factors.wind_reference,
+                    'Wave Reference': load_case.scaling_factors.wave_reference
+                })
+                
+                # Save to CSV
+                data.to_csv(file_path, index=False)
             
         # Save summary report
         if output_config.get('generate_summary', True):

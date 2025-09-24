@@ -1,0 +1,17 @@
+FC ID,FC Description,Vessel Config,Vessel Description,Wind Speed (m/s),Wind Dir (deg),Hs (m),Tp (s),Wave Dir (deg),Wind Scale Factor,Wave Scale Factor,Wind Ref File,Wave Ref File,Wind Ref Speed,Wave Ref Hs
+FC001,Test Condition,fsts_l015,FSTs Light (15% loaded),15,0,0.75,4.0,0,2.25,1.50,fsts_l015_mwl_wind01_Strut*.csv,fsts_l015_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC001,Test Condition,fsts_l095,FSTs Full (95% loaded),15,0,0.75,4.0,0,2.25,1.50,fsts_l095_mwl_wind01_Strut*.csv,fsts_l095_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC001,Test Condition,fsts_l015_125km3_l100_pb,FSTs Light + LNGC Full,15,0,0.75,4.0,0,2.25,1.50,fsts_l015_125km3_l100_pb_mwl_wind01_Strut*.csv,fsts_l015_125km3_l100_pb_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC001,Test Condition,fsts_l095_125km3_l000_pb,FSTs Full + LNGC Light,15,0,0.75,4.0,0,2.25,1.50,fsts_l095_125km3_l000_pb_mwl_wind01_Strut*.csv,fsts_l095_125km3_l000_pb_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC002,Reference Baseline,fsts_l015,FSTs Light (15% loaded),10,0,0.5,2.7,0,1.00,1.00,fsts_l015_mwl_wind01_Strut*.csv,fsts_l015_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC002,Reference Baseline,fsts_l095,FSTs Full (95% loaded),10,0,0.5,2.7,0,1.00,1.00,fsts_l095_mwl_wind01_Strut*.csv,fsts_l095_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC002,Reference Baseline,fsts_l015_125km3_l100_pb,FSTs Light + LNGC Full,10,0,0.5,2.7,0,1.00,1.00,fsts_l015_125km3_l100_pb_mwl_wind01_Strut*.csv,fsts_l015_125km3_l100_pb_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC002,Reference Baseline,fsts_l095_125km3_l000_pb,FSTs Full + LNGC Light,10,0,0.5,2.7,0,1.00,1.00,fsts_l095_125km3_l000_pb_mwl_wind01_Strut*.csv,fsts_l095_125km3_l000_pb_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC003,Low Condition,fsts_l015,FSTs Light (15% loaded),5,0,0.25,2.0,0,0.25,0.50,fsts_l015_mwl_wind01_Strut*.csv,fsts_l015_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC003,Low Condition,fsts_l095,FSTs Full (95% loaded),5,0,0.25,2.0,0,0.25,0.50,fsts_l095_mwl_wind01_Strut*.csv,fsts_l095_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC003,Low Condition,fsts_l015_125km3_l100_pb,FSTs Light + LNGC Full,5,0,0.25,2.0,0,0.25,0.50,fsts_l015_125km3_l100_pb_mwl_wind01_Strut*.csv,fsts_l015_125km3_l100_pb_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC003,Low Condition,fsts_l095_125km3_l000_pb,FSTs Full + LNGC Light,5,0,0.25,2.0,0,0.25,0.50,fsts_l095_125km3_l000_pb_mwl_wind01_Strut*.csv,fsts_l095_125km3_l000_pb_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC004,High Condition,fsts_l015,FSTs Light (15% loaded),20,0,1.0,5.0,0,4.00,2.00,fsts_l015_mwl_wind01_Strut*.csv,fsts_l015_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC004,High Condition,fsts_l095,FSTs Full (95% loaded),20,0,1.0,5.0,0,4.00,2.00,fsts_l095_mwl_wind01_Strut*.csv,fsts_l095_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC004,High Condition,fsts_l015_125km3_l100_pb,FSTs Light + LNGC Full,20,0,1.0,5.0,0,4.00,2.00,fsts_l015_125km3_l100_pb_mwl_wind01_Strut*.csv,fsts_l015_125km3_l100_pb_mwl_wave01_Strut*.csv,10 m/s,0.5 m
+FC004,High Condition,fsts_l095_125km3_l000_pb,FSTs Full + LNGC Light,20,0,1.0,5.0,0,4.00,2.00,fsts_l095_125km3_l000_pb_mwl_wind01_Strut*.csv,fsts_l095_125km3_l000_pb_mwl_wave01_Strut*.csv,10 m/s,0.5 m

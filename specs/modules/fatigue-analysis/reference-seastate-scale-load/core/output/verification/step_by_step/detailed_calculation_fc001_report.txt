@@ -1,0 +1,23 @@
+DETAILED CALCULATION REPORT: FC001 FATIGUE ANALYSIS
+============================================================
+
+Analysis Date: 2025-09-22 03:19:19
+
+CALCULATION PARAMETERS:
+  Sample Duration:      100.0 seconds
+  Seconds per Year:     31557600 seconds
+  FC001 Occurrence:     0.20 (20%)
+  Normalization Factor: 6.3115e+04
+  Conversion Factor:    0.250000 MPa/kN
+  S-N Constants:        a = 6.0e+11, m = 3.0
+
+DETAILED RESULTS:
+example_type  tension_range_kN  cycle_count_sample  yearly_cycles  normalization_factor  stress_range_MPa  cycles_to_failure  damage_per_year   life_years
+       Small          4.090318                 1.0        63115.2               63115.2          1.022579       5.611256e+11     1.124796e-07 8.890499e+06
+      Medium         19.931028                 1.0        63115.2               63115.2          4.982757       4.850004e+09     1.301343e-05 7.684368e+04
+       Large         57.402842                 1.0        63115.2               63115.2         14.350711       2.030164e+08     3.108873e-04 3.216600e+03
+
+VALIDATION SUMMARY:
+  Combined Damage:      3.2401e-04 per year
+  Combined Life:        3.09e+03 years
+  Damage Ratio (L/S):   3e+03
