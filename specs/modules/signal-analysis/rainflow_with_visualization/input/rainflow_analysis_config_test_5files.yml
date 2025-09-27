@@ -21,13 +21,13 @@ input_data:
   # Time trace data configuration
   timetrace:
     # Using test data folder with existing files
-    data_folder: "timetrace"
+    data_folder: "D:\\1522\\ctr9\\fatigue_wsp_method\\07c_fatigue\\output\\scaled_loads\\tension_data"
     
     # Input file format
     file_format: "csv"
-    name_pattern: "{config}_FC{fc_number:03d}_Strut{strut_number}_scaled_tension.csv"
+    name_pattern: "{config}_FC{fc_number:03d}_Strut{strut_number}_tension.csv"
     # Limit to first 5 files for testing
-    filter_pattern: "fsts_l015_125km3_l100_pb_FC001_Strut[1-5]_scaled_tension.csv"
+    filter_pattern: "fsts_l015_125km3_l100_pb_FC001_Strut[1-5]_tension.csv"
 
     # Column containing the tension/stress data
     data_column: "Scaled Tension (kN)"

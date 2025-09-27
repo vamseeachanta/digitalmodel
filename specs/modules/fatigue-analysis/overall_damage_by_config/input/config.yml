@@ -1,0 +1,134 @@
+# Overall Damage by Configuration - Input Configuration
+# Purpose: Calculate total fatigue damage across all configurations using Miner's rule
+
+# Project paths
+paths:
+  base_folder: "D:/github/digitalmodel"
+  
+  # Input files (relative to base_folder)
+  fatigue_life_summary: "specs/modules/fatigue-analysis/overall_damage_by_config/input/fatigue_life_summary.csv"
+  config_weightage: "specs/modules/fatigue-analysis/overall_damage_by_config/input/config_weightage.csv"
+  
+  # Output folder (relative to base_folder)
+  output_folder: "specs/modules/fatigue-analysis/overall_damage_by_config/output/overall_damage"
+
+# Configuration name mapping
+# Maps configuration names from config_weightage.csv (with _mwl suffix) to fatigue_life_summary.csv (without suffix)
+configuration_mapping:
+  fsts_l015_mwl: "fsts_l015"
+  fsts_l095_mwl: "fsts_l095"
+  fsts_l015_125km3_l100_pb_mwl: "fsts_l015_125km3_l100_pb"
+  fsts_l095_125km3_l000_pb_mwl: "fsts_l095_125km3_l000_pb"
+
+# Input data columns
+input_columns:
+  fatigue_life_summary:
+    configuration: "configuration"
+    strut: "strut"
+    location: "location"
+    total_damage_rate: "total_damage_rate"  # in 1/year
+    fatigue_life_years: "fatigue_life_years"
+  
+  config_weightage:
+    configuration: "Configuration"
+    duration_weight: "Duration Weight (%)"
+
+# Methodology
+methodology:
+  description: |
+    1. For each configuration, strut, and location:
+       - Weighted Damage Rate = Total Damage Rate × (Duration Weight % / 100)
+    2. Apply Miner's rule to sum weighted damage rates across all configurations
+    3. Calculate overall fatigue life = 1 / Total Damage Rate
+
+# Output specifications
+output:
+  file_type: "csv"
+  
+  # Output files to generate
+  files:
+    - name: "damage_by_configuration.csv"
+      description: "Damage rate breakdown by configuration for each strut and location"
+      columns:
+        - "strut"
+        - "location"
+        - "configuration"
+        - "total_damage_rate"
+        - "duration_weight_percent"
+        - "weighted_damage_rate"
+        - "contribution_to_total_percent"
+    
+    - name: "overall_damage_summary.csv"
+      description: "Overall damage summary by strut and location using Miner's rule"
+      columns:
+        - "strut"
+        - "location"
+        - "total_damage_rate_miners_rule"
+        - "fatigue_life_years"
+    
+    - name: "configuration_contribution.csv"
+      description: "Configuration contribution to total damage across all struts and locations"
+      columns:
+        - "configuration"
+        - "average_contribution_percent"
+        - "min_contribution_percent"
+        - "max_contribution_percent"
+
+# Plotting specifications
+plotting:
+  enabled: true
+  
+  plots:
+    - type: "bar_cumulative"
+      name: "damage_by_config_bar.png"
+      description: "Bar plot showing damage rate by configuration with cumulative overlay"
+      x_axis: "Configuration"
+      y_axis_primary: "Weighted Damage Rate (1/year)"
+      y_axis_secondary: "Cumulative Damage Rate (1/year)"
+      style:
+        figure_size: [12, 6]
+        dpi: 300
+    
+    - type: "polar_summary"
+      name: "damage_contribution_polar_summary.png"
+      description: "Summary polar plot showing average contribution % across all strut-locations for each configuration"
+      radial_axis: "Average Contribution to Total Damage (%)"
+      angular_axis: "Configuration"
+      style:
+        figure_size: [10, 10]
+        dpi: 300
+    
+    - type: "polar_worst_case"
+      name: "damage_contribution_polar_worst_case.png"
+      description: "Polar plot for worst-case strut-location showing configuration contributions"
+      radial_axis: "Contribution to Total Damage (%)"
+      angular_axis: "Configuration"
+      style:
+        figure_size: [10, 10]
+        dpi: 300
+    
+    - type: "stacked_bar"
+      name: "damage_by_strut_location.png"
+      description: "Stacked bar plot showing damage contribution by configuration for each strut-location"
+      x_axis: "Strut-Location"
+      y_axis: "Damage Rate (1/year)"
+      stack_by: "Configuration"
+      style:
+        figure_size: [14, 8]
+        dpi: 300
+
+# Processing options
+processing:
+  # Handle infinite fatigue life (zero damage rate)
+  handle_inf_life: true
+  inf_life_threshold: 1e-15  # Damage rates below this are considered zero
+  
+  # Decimal precision for outputs
+  decimal_precision:
+    damage_rate: 10
+    fatigue_life: 2
+    contribution_percent: 2
+  
+  # Validation
+  validate_weightage_sum: true  # Check if duration weights sum to 100%
+  weightage_tolerance: 0.01  # Allow 0.01% tolerance
