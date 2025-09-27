@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  fatigue-analysis:
+    build: .
+    container_name: fatigue-analysis-module
+    volumes:
+      - ./data:/data
+      - ./config:/config
+      - ./output:/output
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    command: python run_damage_analysis.py --config /config/damage_analysis_config_production.yml
+    restart: unless-stopped
+    
+  fatigue-monitor:
+    build: .
+    container_name: fatigue-monitor
+    volumes:
+      - ./data:/data
+      - ./config:/config
+      - ./output:/output
+      - ./reports:/reports
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python monitor_fatigue_health.py --summary /output/reports/damage_analysis_summary.csv --output /reports
+    depends_on:
+      - fatigue-analysis
+    restart: unless-stopped
+
+  # Optional: Web API service
+  # fatigue-api:
+  #   build: .
+  #   container_name: fatigue-api
+  #   ports:
+  #     - "5000:5000"
+  #   volumes:
+  #     - ./data:/data
+  #     - ./config:/config
+  #   environment:
+  #     - FLASK_APP=api_wrapper.py
+  #   command: flask run --host=0.0.0.0
+  #   restart: unless-stopped
+
+volumes:
+  data:
+  config:
+  output:
+  reports:

@@ -1,0 +1,182 @@
+# Stress Rainflow to Damage Analysis Configuration - TEST (2 FILES)
+# Module: Fatigue Damage Calculation using Miner's Rule
+# Created: 2025-01-24
+# Version: 1.0.0
+# Status: QUICK TEST
+
+project:
+  name: "Stress Rainflow to Damage Analysis - Test"
+  description: "Quick test with 2 files"
+  analysis_type: "fatigue-damage-miners-rule"
+  project_id: "FATIGUE-TEST"
+  version: "1.0.0"
+  date: "2025-01-24"
+  author: "Engineering Team"
+  
+input_data:
+  stress_rainflow:
+    data_folder: "stress_rainflow"
+    file_pattern: "{config}_FC{fc_number:03d}_Strut{strut_number}_{location_id}_stress_rainflow.csv"
+    filter_pattern: "fsts_l015_125km3_l100_pb_FC001_Strut1_loc0*_stress_rainflow.csv"
+    columns:
+      stress_range: "stress range (Mpa)"
+      annual_cycles: "Cycles_Annual"
+    validation:
+      min_stress_range: 0.0
+      max_stress_range: 2000.0
+      min_cycles: 0
+      max_cycles: 1.0e10
+
+  processing:
+    batch_mode: true
+    continue_on_error: true
+    parallel_processing: false
+    max_workers: 1
+    file_selection:
+      all_files: true  # Just get all matching filter_pattern
+
+sn_curve:
+  curve_type: "ABS-E"
+  environment: "in-air"
+  parameters:
+    log_a: 12.0170      # CORRECTED from ABS Table 1
+    m: 3.0
+    fatigue_limit_cycles: 1.0e7
+    fatigue_limit_stress: 47.0  # CORRECTED from ABS Table 1
+    two_segment:
+      enabled: true
+      transition_cycles: 1.0e7
+      log_c: 15.378
+      r: 5.0
+
+thickness_correction:
+  enabled: true
+  reference_thickness_mm: 22.0
+  thickness_exponent_tk: 0.25
+  location_thickness_mm:
+    loc01: 50.0
+    loc02: 25.0
+    loc03: 25.0
+    loc04: 20.0
+    loc05: 18.0
+    loc06: 20.0
+    loc07: 20.0
+    loc08: 50.0
+    loc09: 50.0
+    loc10: 50.0
+    default: 22.0
+
+stress_factors:
+  stress_concentration:
+    enabled: true
+    location_scf:
+      loc01: 1.15
+      loc02: 2.0
+      loc03: 1.15
+      loc04: 1.15
+      loc05: 1.15
+      loc06: 1.15
+      loc07: 1.15
+      loc08: 1.15
+      loc09: 1.15
+      loc10: 1.15
+      default: 1.0
+  mean_stress_correction:
+    enabled: false
+    method: "none"
+
+damage_calculation:
+  miners_rule:
+    damage_sum_threshold: 1.0
+  safety_factors:
+    design_factor: 5.0
+    fatigue_safety_factor: 1.0
+  options:
+    ignore_below_fatigue_limit: false
+    cumulative_damage_method: "linear"
+
+output:
+  folders:
+    base: "output/test"
+    results: "damage_results"
+    plots: "visualizations"
+    reports: "reports"
+  file_naming:
+    pattern: "{config}_FC{fc_number:03d}_Strut{strut_number}_{location_id}_damage_rate"
+    extension: "csv"
+  formats:
+    damage_results:
+      enabled: true
+      columns:
+        - "stress_range_mpa"
+        - "cycles_annual"
+        - "cycles_to_failure"
+        - "damage_per_bin"
+        - "damage_rate_per_year"
+      include_total: true
+    summary_report:
+      enabled: true
+      filename: "test_damage_summary.csv"
+
+visualization:
+  damage_plot:
+    enabled: true
+    figure_size: [12, 8]
+    dpi: 150
+    components:
+      damage_histogram: true
+      sn_curve_overlay: true
+      cumulative_damage: true
+    styling:
+      title: "Fatigue Damage Analysis - {config} FC{fc_number:03d} Strut{strut_number} {location_id}"
+      xlabel: "Stress Range [MPa]"
+      ylabel_left: "Annual Damage Rate [1/year]"
+      ylabel_right: "Cycles to Failure"
+      grid: true
+      log_scale_y: true
+      log_scale_x: false
+    legend:
+      location: "upper right"
+      show_total_damage: true
+      show_fatigue_life: true
+  sn_curve_plot:
+    enabled: true
+
+validation:
+  input_checks:
+    check_file_existence: true
+    check_column_names: true
+    check_data_ranges: true
+    check_sum_cycles: true
+  calculation_checks:
+    verify_damage_sum: true
+    check_thickness_correction: true
+    verify_sn_curve: true
+  output_checks:
+    check_file_generation: true
+    verify_plot_generation: true
+    check_summary_completeness: true
+  thresholds:
+    max_annual_damage: 1.0
+    min_fatigue_life_years: 1.0
+    max_stress_range_mpa: 1000.0
+
+logging:
+  level: "INFO"
+  log_to_file: true
+  log_file: "test_damage_{timestamp}.log"
+  progress:
+    show_progress_bar: true
+    report_interval: 1
+  errors:
+    save_error_log: true
+    include_traceback: true
+    continue_on_error: true
+
+performance:
+  chunk_size: 1000
+  cache_sn_calculations: true
+  parallel:
+    enabled: false
+    max_workers: 1
+    batch_size: 2

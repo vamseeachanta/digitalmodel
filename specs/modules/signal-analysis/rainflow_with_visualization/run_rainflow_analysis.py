@@ -142,13 +142,30 @@ class RainflowAnalyzer:
         # Try to extract FC number and strut number
         fc_num = None
         strut_num = None
-        config_name = parts[0] if parts else 'unknown'
+        fc_index = None
+        strut_index = None
         
-        for part in parts:
+        # Find FC and Strut positions
+        for i, part in enumerate(parts):
             if part.startswith('FC'):
                 fc_num = part[2:]
+                fc_index = i
             elif part.startswith('Strut'):
                 strut_num = part[5:]
+                strut_index = i
+        
+        # Extract config name - everything before FC
+        if fc_index is not None:
+            config_parts = parts[:fc_index]
+            config_name = '_'.join(config_parts) if config_parts else 'unknown'
+        else:
+            # If no FC found, use everything before 'Strut' or 'scaled'
+            if strut_index is not None:
+                config_parts = parts[:strut_index]
+            else:
+                # Use everything except the last parts (usually 'scaled_tension')
+                config_parts = [p for p in parts if p not in ['scaled', 'tension']]
+            config_name = '_'.join(config_parts) if config_parts else 'unknown'
         
         return {
             'filename': name,

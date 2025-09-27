@@ -1,0 +1,71 @@
+2025-09-24 05:19:00,018 - INFO - Starting tension to stress transformation
+2025-09-24 05:19:00,023 - INFO - Found location IDs: [ 2  3  5  6  7  9 10]
+2025-09-24 05:19:00,023 - INFO - Found configs in lookup table: ['fsts_l015_mwl' ' fsts_l095_mwl' ' fsts_l015_125km3_l100_pb_mwl'
+ ' fsts_l095_125km3_l000_pb_mwl']
+2025-09-24 05:19:00,040 - INFO - Found 3 files to process
+2025-09-24 05:19:00,040 - INFO - Processing file: specs/modules/data-transformation/lookup-table/data\fsts_l015_125km3_l100_pb_FC001_Strut1_rainflow.csv
+2025-09-24 05:19:00,042 - WARNING - No interpolator for location 2, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,042 - WARNING - No interpolator for location 3, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,042 - WARNING - No interpolator for location 5, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,042 - WARNING - No interpolator for location 6, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,042 - WARNING - No interpolator for location 7, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,042 - WARNING - No interpolator for location 9, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,042 - WARNING - No interpolator for location 10, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,042 - INFO - Processing file: specs/modules/data-transformation/lookup-table/data\fsts_l015_125km3_l100_pb_FC001_Strut2_rainflow.csv
+2025-09-24 05:19:00,044 - WARNING - No interpolator for location 2, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,044 - WARNING - No interpolator for location 3, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,044 - WARNING - No interpolator for location 5, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,044 - WARNING - No interpolator for location 6, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,044 - WARNING - No interpolator for location 7, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,044 - WARNING - No interpolator for location 9, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,044 - WARNING - No interpolator for location 10, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,044 - INFO - Processing file: specs/modules/data-transformation/lookup-table/data\fsts_l015_125km3_l100_pb_FC001_Strut6_rainflow.csv
+2025-09-24 05:19:00,045 - WARNING - No interpolator for location 2, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,045 - WARNING - No interpolator for location 3, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,045 - WARNING - No interpolator for location 5, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,046 - WARNING - No interpolator for location 6, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,046 - WARNING - No interpolator for location 7, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,046 - WARNING - No interpolator for location 9, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,046 - WARNING - No interpolator for location 10, config fsts_l015_125km3_l100_pb_mwl
+2025-09-24 05:19:00,046 - INFO - Transformation complete
+2025-09-24 05:20:10,016 - INFO - Starting tension to stress transformation
+2025-09-24 05:20:10,027 - INFO - Found location IDs: [ 2  3  5  6  7  9 10]
+2025-09-24 05:20:10,028 - INFO - Found configs in lookup table: ['fsts_l015_mwl' 'fsts_l095_mwl' 'fsts_l015_125km3_l100_pb_mwl'
+ 'fsts_l095_125km3_l000_pb_mwl']
+2025-09-24 05:20:10,052 - INFO - Found 3 files to process
+2025-09-24 05:20:10,053 - INFO - Processing file: specs/modules/data-transformation/lookup-table/data\fsts_l015_125km3_l100_pb_FC001_Strut1_rainflow.csv
+2025-09-24 05:20:10,059 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut1_loc02_stress_rainflow.csv
+2025-09-24 05:20:10,061 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut1_loc03_stress_rainflow.csv
+2025-09-24 05:20:10,064 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut1_loc05_stress_rainflow.csv
+2025-09-24 05:20:10,068 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut1_loc06_stress_rainflow.csv
+2025-09-24 05:20:10,071 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut1_loc07_stress_rainflow.csv
+2025-09-24 05:20:10,073 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut1_loc09_stress_rainflow.csv
+2025-09-24 05:20:10,075 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut1_loc10_stress_rainflow.csv
+2025-09-24 05:20:10,075 - INFO - Processing file: specs/modules/data-transformation/lookup-table/data\fsts_l015_125km3_l100_pb_FC001_Strut2_rainflow.csv
+2025-09-24 05:20:10,080 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut2_loc02_stress_rainflow.csv
+2025-09-24 05:20:10,082 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut2_loc03_stress_rainflow.csv
+2025-09-24 05:20:10,085 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut2_loc05_stress_rainflow.csv
+2025-09-24 05:20:10,091 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut2_loc06_stress_rainflow.csv
+2025-09-24 05:20:10,098 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut2_loc07_stress_rainflow.csv
+2025-09-24 05:20:10,104 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut2_loc09_stress_rainflow.csv
+2025-09-24 05:20:10,107 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut2_loc10_stress_rainflow.csv
+2025-09-24 05:20:10,107 - INFO - Processing file: specs/modules/data-transformation/lookup-table/data\fsts_l015_125km3_l100_pb_FC001_Strut6_rainflow.csv
+2025-09-24 05:20:10,110 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut6_loc02_stress_rainflow.csv
+2025-09-24 05:20:10,113 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut6_loc03_stress_rainflow.csv
+2025-09-24 05:20:10,116 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut6_loc05_stress_rainflow.csv
+2025-09-24 05:20:10,123 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut6_loc06_stress_rainflow.csv
+2025-09-24 05:20:10,129 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut6_loc07_stress_rainflow.csv
+2025-09-24 05:20:10,135 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut6_loc09_stress_rainflow.csv
+2025-09-24 05:20:10,138 - INFO - Saved output to: specs/modules/fatigue-analysis/reference-seastate-scale-load/output/rainflow/stress_range\fsts_l015_125km3_l100_pb_FC001_Strut6_loc10_stress_rainflow.csv
+2025-09-24 05:20:10,138 - INFO - Transformation complete
+2025-09-24 09:53:54,291 - INFO - Found location IDs: [ 2  3  5  6  7  9 10]
+2025-09-24 09:53:54,291 - INFO - Found configs in lookup table: ['fsts_l015_mwl' 'fsts_l095_mwl' 'fsts_l015_125km3_l100_pb_mwl'
+ 'fsts_l095_125km3_l000_pb_mwl']
+2025-09-24 09:53:54,301 - INFO - Processing file: specs\modules\data-transformation\lookup-table\data\fsts_l015_125km3_l100_pb_FC001_Strut1_rainflow.csv
+2025-09-24 09:53:54,304 - INFO - Saved output to: specs/modules/data-transformation/lookup-table/output\fsts_l015_125km3_l100_pb_FC001_Strut1_loc02_stress_rainflow.csv
+2025-09-24 09:53:54,306 - INFO - Saved output to: specs/modules/data-transformation/lookup-table/output\fsts_l015_125km3_l100_pb_FC001_Strut1_loc03_stress_rainflow.csv
+2025-09-24 09:53:54,307 - INFO - Saved output to: specs/modules/data-transformation/lookup-table/output\fsts_l015_125km3_l100_pb_FC001_Strut1_loc05_stress_rainflow.csv
+2025-09-24 09:53:54,309 - INFO - Saved output to: specs/modules/data-transformation/lookup-table/output\fsts_l015_125km3_l100_pb_FC001_Strut1_loc06_stress_rainflow.csv
+2025-09-24 09:53:54,310 - INFO - Saved output to: specs/modules/data-transformation/lookup-table/output\fsts_l015_125km3_l100_pb_FC001_Strut1_loc07_stress_rainflow.csv
+2025-09-24 09:53:54,311 - INFO - Saved output to: specs/modules/data-transformation/lookup-table/output\fsts_l015_125km3_l100_pb_FC001_Strut1_loc09_stress_rainflow.csv
+2025-09-24 09:53:54,313 - INFO - Saved output to: specs/modules/data-transformation/lookup-table/output\fsts_l015_125km3_l100_pb_FC001_Strut1_loc10_stress_rainflow.csv
