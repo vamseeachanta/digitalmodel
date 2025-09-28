@@ -109,10 +109,10 @@ class OverallDamageCalculator:
             inplace=True
         )
         
-        inf_threshold = self.config['processing']['inf_life_threshold']
+        inf_threshold = float(self.config['processing']['inf_life_threshold'])
         total_damage['fatigue_life_years'] = np.where(
-            total_damage['total_damage_rate_miners_rule'] > inf_threshold,
-            1.0 / total_damage['total_damage_rate_miners_rule'],
+            total_damage['total_damage_rate_miners_rule'].values > inf_threshold,
+            1.0 / total_damage['total_damage_rate_miners_rule'].values,
             np.inf
         )
         
