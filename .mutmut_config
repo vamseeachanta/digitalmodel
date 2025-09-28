@@ -1,0 +1,91 @@
+# Mutation Testing Configuration for DigitalModel
+# This file configures mutmut for comprehensive mutation testing
+
+[mutmut]
+# Paths to mutate (source code only)
+paths_to_mutate = src/
+
+# Test directory
+tests_dir = tests/
+
+# Test runner command
+runner = python -m pytest --tb=short -q
+
+# Backup original files before mutation
+backup = false
+
+# Show timing information
+show_times = true
+
+# Cache mutation results
+cache_only = false
+
+# Exclude patterns (files/directories to skip)
+exclude_patterns =
+    */test_*
+    */__pycache__/*
+    */.git/*
+    */migrations/*
+    */vendor/*
+    */third_party/*
+    setup.py
+    conftest.py
+
+# Only mutate specific file types
+include_patterns =
+    *.py
+
+# Mutation operators to use (default: all)
+# Available operators: AOD, AOR, ASR, BCR, BLR, EHD, EXS, IHD, IOD, IOP, LCR, LOD, LOR, ROR, SIR
+mutation_operators = AOD,AOR,ASR,BCR,BLR,EHD,EXS,IHD,IOD,IOP,LCR,LOD,LOR,ROR,SIR
+
+# Timeout for each mutation test (seconds)
+timeout = 60
+
+# Number of parallel workers
+workers = auto
+
+# Minimum test score threshold (percentage)
+# If mutation score falls below this, exit with error
+min_score = 75
+
+# Coverage threshold - only mutate lines covered by tests
+coverage_data = .coverage
+
+# Skip mutations that are known to be equivalent
+skip_covered = false
+
+# Generate HTML report
+html_output = mutation_report.html
+
+# Generate JSON report for CI integration
+json_output = mutation_report.json
+
+# Verbosity level (0=quiet, 1=normal, 2=verbose)
+verbosity = 1
+
+# Configuration for different mutation test profiles
+[mutmut.profiles.quick]
+# Quick mutation testing for development
+paths_to_mutate = src/digitalmodel/common/
+mutation_operators = AOD,AOR,BCR
+timeout = 30
+min_score = 60
+
+[mutmut.profiles.comprehensive]
+# Comprehensive mutation testing for CI
+paths_to_mutate = src/
+mutation_operators = AOD,AOR,ASR,BCR,BLR,EHD,EXS,IHD,IOD,IOP,LCR,LOD,LOR,ROR,SIR
+timeout = 120
+min_score = 80
+workers = 4
+
+[mutmut.profiles.critical]
+# Mutation testing for critical code paths only
+paths_to_mutate =
+    src/digitalmodel/common/basic_statistics.py
+    src/digitalmodel/common/fatigue_analysis.py
+    src/digitalmodel/common/FEAComponents.py
+mutation_operators = AOD,AOR,BCR,ROR
+timeout = 90
+min_score = 90

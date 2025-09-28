@@ -1,0 +1,34 @@
+{
+  "collection_timestamp": "2025-09-28T15:23:33.730447",
+  "project_root": "/mnt/github/github/digitalmodel",
+  "coverage": {
+    "error": "Coverage report not found"
+  },
+  "test_results": {
+    "error": "Test report not found"
+  },
+  "benchmarks": {
+    "error": "Benchmark report not found"
+  },
+  "mutation_testing": {
+    "error": "Mutation report not found"
+  },
+  "test_files": {
+    "total_test_files": 74,
+    "total_test_lines": 15459,
+    "test_categories": {
+      "unit": 74,
+      "integration": 1,
+      "benchmarks": 1,
+      "property": 4,
+      "security": 3
+    },
+    "avg_lines_per_file": 208.90540540540542,
+    "timestamp": "2025-09-28T15:23:33.927141"
+  },
+  "quick_analysis": {
+    "collected_tests": 0,
+    "collection_time": "quick",
+    "timestamp": "2025-09-28T15:23:34.165888"
+  }
+}

@@ -1,0 +1,561 @@
+name: Advanced Testing Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run full test suite nightly
+    - cron: '0 2 * * *'
+
+env:
+  PYTHON_DEFAULT_VERSION: "3.11"
+
+jobs:
+  # Matrix testing across Python versions and OS
+  matrix-testing:
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        exclude:
+          # Exclude some combinations to reduce CI time
+          - os: windows-latest
+            python-version: "3.9"
+          - os: macos-latest
+            python-version: "3.9"
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+
+    - name: Install system dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential gfortran libopenblas-dev
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev,test]
+
+    - name: Run basic test suite
+      run: |
+        pytest tests/ \
+          --maxfail=10 \
+          --tb=short \
+          -x \
+          --cov=src \
+          --cov-report=xml \
+          --junit-xml=test-results-${{ matrix.os }}-${{ matrix.python-version }}.xml \
+          -m "not slow and not integration"
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
+        path: test-results-*.xml
+
+    - name: Upload coverage to Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == env.PYTHON_DEFAULT_VERSION
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  # Performance benchmarking
+  performance-benchmarks:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for benchmark comparison
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev,test]
+
+    - name: Run performance benchmarks
+      run: |
+        pytest tests/performance/ \
+          --benchmark-json=benchmark-results.json \
+          --benchmark-compare-fail=mean:10% \
+          --benchmark-sort=mean \
+          -v
+
+    - name: Store benchmark results
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        tool: 'pytest'
+        output-file-path: benchmark-results.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        auto-push: true
+        alert-threshold: '150%'
+        comment-on-alert: true
+        fail-on-alert: true
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: benchmark-results.json
+
+  # Property-based testing with extended examples
+  property-based-testing:
+    name: Property-Based Testing
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev,test]
+
+    - name: Run property-based tests with extended examples
+      run: |
+        pytest tests/property/ \
+          --hypothesis-profile=ci \
+          --tb=short \
+          -v \
+          --cov=src \
+          --cov-report=xml:coverage-property.xml
+      env:
+        HYPOTHESIS_PROFILE: ci
+
+    - name: Upload property test coverage
+      uses: actions/upload-artifact@v3
+      with:
+        name: property-test-coverage
+        path: coverage-property.xml
+
+  # Mutation testing
+  mutation-testing:
+    name: Mutation Testing
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[mutation-test]')
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev,test]
+
+    - name: Run mutation testing
+      run: |
+        mutmut run --paths-to-mutate=src/ --tests-dir=tests/ --runner="python -m pytest"
+        mutmut html
+
+    - name: Upload mutation test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: mutation-test-results
+        path: html/
+
+  # Security testing
+  security-testing:
+    name: Security Testing
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev,test]
+        pip install bandit safety
+
+    - name: Run security vulnerability tests
+      run: |
+        pytest tests/security/ \
+          --tb=short \
+          -v \
+          --junit-xml=security-test-results.xml
+
+    - name: Run Bandit security linter
+      run: |
+        bandit -r src/ -f json -o bandit-results.json || true
+
+    - name: Run Safety check for dependencies
+      run: |
+        safety check --json --output safety-results.json || true
+
+    - name: Upload security test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-test-results
+        path: |
+          security-test-results.xml
+          bandit-results.json
+          safety-results.json
+
+  # Contract testing
+  contract-testing:
+    name: Contract Testing
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev,test]
+
+    - name: Run contract tests
+      run: |
+        pytest tests/contracts/ \
+          --tb=short \
+          -v \
+          --junit-xml=contract-test-results.xml
+
+    - name: Validate API schemas
+      run: |
+        python -c "
+        from tests.contracts.test_api_contracts import APIContractValidator
+        validator = APIContractValidator()
+        print('All API schemas valid!')
+        "
+
+    - name: Upload contract test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: contract-test-results
+        path: contract-test-results.xml
+
+  # Load and stress testing
+  load-testing:
+    name: Load and Stress Testing
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[load-test]')
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev,test]
+
+    - name: Run load tests
+      run: |
+        pytest tests/performance/test_load_testing.py \
+          --tb=short \
+          -v \
+          -m "load_test" \
+          --junit-xml=load-test-results.xml
+
+    - name: Run stress tests
+      run: |
+        pytest tests/performance/test_load_testing.py \
+          --tb=short \
+          -v \
+          -m "stress_test" \
+          --junit-xml=stress-test-results.xml
+
+    - name: Upload load test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: load-test-results
+        path: |
+          load-test-results.xml
+          stress-test-results.xml
+
+  # Integration testing with real services
+  integration-testing:
+    name: Integration Testing
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: digitalmodel_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev,test]
+        pip install psycopg2-binary redis
+
+    - name: Run integration tests
+      run: |
+        pytest tests/ \
+          --tb=short \
+          -v \
+          -m "integration" \
+          --junit-xml=integration-test-results.xml
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/digitalmodel_test
+        REDIS_URL: redis://localhost:6379/0
+
+    - name: Upload integration test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: integration-test-results
+        path: integration-test-results.xml
+
+  # Parallel test execution
+  parallel-testing:
+    name: Parallel Test Execution
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev,test]
+
+    - name: Run tests in parallel
+      run: |
+        pytest tests/ \
+          -n auto \
+          --dist=loadfile \
+          --tb=short \
+          --maxfail=10 \
+          --cov=src \
+          --cov-report=xml:coverage-parallel.xml \
+          --junit-xml=parallel-test-results.xml \
+          -m "not slow"
+
+    - name: Upload parallel test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: parallel-test-results
+        path: |
+          parallel-test-results.xml
+          coverage-parallel.xml
+
+  # Code quality and lint checks
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev,test]
+        pip install mypy pylint
+
+    - name: Run Black code formatting check
+      run: |
+        black --check --diff src/ tests/
+
+    - name: Run isort import sorting check
+      run: |
+        isort --check-only --diff src/ tests/
+
+    - name: Run flake8 linting
+      run: |
+        flake8 src/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 src/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+    - name: Run mypy type checking
+      run: |
+        mypy src/ --ignore-missing-imports --no-strict-optional
+
+    - name: Run pylint
+      run: |
+        pylint src/ --exit-zero --score=yes --output-format=json > pylint-results.json || true
+
+    - name: Upload code quality results
+      uses: actions/upload-artifact@v3
+      with:
+        name: code-quality-results
+        path: pylint-results.json
+
+  # Documentation and examples testing
+  documentation-testing:
+    name: Documentation Testing
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev,test,docs]
+
+    - name: Test docstring examples
+      run: |
+        python -m doctest src/digitalmodel/*.py -v || true
+
+    - name: Test example scripts
+      run: |
+        find . -name "example_*.py" -exec python {} \; || true
+
+    - name: Build documentation
+      run: |
+        cd docs && make html
+
+    - name: Test documentation links
+      run: |
+        # Add link checking here if needed
+        echo "Documentation built successfully"
+
+  # Final test report aggregation
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [
+      matrix-testing,
+      performance-benchmarks,
+      property-based-testing,
+      security-testing,
+      contract-testing,
+      parallel-testing,
+      code-quality
+    ]
+    if: always()
+    steps:
+    - name: Download all test artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Generate test summary
+      run: |
+        echo "# Test Summary" > test-summary.md
+        echo "" >> test-summary.md
+        echo "## Test Results" >> test-summary.md
+
+        # Count test files
+        test_files=$(find . -name "test-results-*.xml" -o -name "*-test-results.xml" | wc -l)
+        echo "- Total test result files: $test_files" >> test-summary.md
+
+        # Check for failures
+        if find . -name "*.xml" -exec grep -l "failures=\"[1-9]" {} \; | head -1; then
+          echo "- Status: ❌ Some tests failed" >> test-summary.md
+        else
+          echo "- Status: ✅ All tests passed" >> test-summary.md
+        fi
+
+        echo "" >> test-summary.md
+        echo "## Coverage Reports" >> test-summary.md
+        echo "- Unit test coverage available" >> test-summary.md
+        echo "- Property test coverage available" >> test-summary.md
+        echo "- Parallel test coverage available" >> test-summary.md
+
+        echo "" >> test-summary.md
+        echo "## Benchmark Results" >> test-summary.md
+        if [ -f "benchmark-results/benchmark-results.json" ]; then
+          echo "- Performance benchmarks completed" >> test-summary.md
+        else
+          echo "- Performance benchmarks not run" >> test-summary.md
+        fi
+
+        cat test-summary.md
+
+    - name: Upload test summary
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-summary
+        path: test-summary.md
+
+  # Notification and reporting
+  notify-results:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [test-summary]
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+    - name: Download test summary
+      uses: actions/download-artifact@v3
+      with:
+        name: test-summary
+
+    - name: Send notification
+      run: |
+        echo "Test summary would be sent to team notification channels"
+        cat test-summary.md

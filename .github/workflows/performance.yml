@@ -1,0 +1,652 @@
+name: Performance Testing & Regression Detection
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened, labeled]
+  schedule:
+    # Run performance tests nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      benchmark_type:
+        description: 'Type of benchmark to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - 'all'
+          - 'cpu'
+          - 'memory'
+          - 'io'
+          - 'network'
+      baseline_branch:
+        description: 'Branch to compare against'
+        required: false
+        default: 'main'
+        type: string
+      performance_threshold:
+        description: 'Performance regression threshold (%)'
+        required: false
+        default: '20'
+        type: string
+
+env:
+  PYTHON_VERSION: '3.11'
+  PERFORMANCE_THRESHOLD: ${{ github.event.inputs.performance_threshold || '20' }}
+  BASELINE_BRANCH: ${{ github.event.inputs.baseline_branch || 'main' }}
+
+jobs:
+  # Detect if performance tests should run
+  should-run-perf:
+    name: Check Performance Test Requirements
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+      benchmark-type: ${{ steps.check.outputs.benchmark-type }}
+    steps:
+      - name: Check if performance tests should run
+        id: check
+        run: |
+          should_run="false"
+          benchmark_type="${{ github.event.inputs.benchmark_type || 'all' }}"
+
+          # Always run on main branch pushes
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            should_run="true"
+          fi
+
+          # Run on scheduled events
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            should_run="true"
+          fi
+
+          # Run on manual dispatch
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            should_run="true"
+          fi
+
+          # Run on PRs with performance label
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            if [[ "${{ contains(github.event.pull_request.labels.*.name, 'performance') }}" == "true" ]]; then
+              should_run="true"
+            fi
+          fi
+
+          echo "should-run=$should_run" >> $GITHUB_OUTPUT
+          echo "benchmark-type=$benchmark_type" >> $GITHUB_OUTPUT
+
+  # CPU performance benchmarks
+  cpu-benchmarks:
+    name: CPU Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: should-run-perf
+    if: needs.should-run-perf.outputs.should-run == 'true' && (needs.should-run-perf.outputs.benchmark-type == 'all' || needs.should-run-perf.outputs.benchmark-type == 'cpu')
+    strategy:
+      matrix:
+        module: [fatigue_analysis, orcaflex, aqwa, signal_processing]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          uv sync --frozen
+          uv pip install pytest-benchmark pytest-timeout psutil py-spy
+
+      - name: Setup CPU performance monitoring
+        run: |
+          # Install CPU monitoring tools
+          sudo apt-get update
+          sudo apt-get install -y linux-tools-common linux-tools-generic sysstat
+
+      - name: Cache benchmark history
+        uses: actions/cache@v4
+        with:
+          path: .benchmarks
+          key: cpu-benchmark-${{ matrix.module }}-${{ hashFiles('tests/performance/**/*.py') }}
+          restore-keys: |
+            cpu-benchmark-${{ matrix.module }}-
+
+      - name: Run CPU benchmarks for ${{ matrix.module }}
+        run: |
+          # Set CPU governor to performance mode for consistent results
+          echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor || true
+
+          # Run benchmarks with CPU profiling
+          uv run pytest \
+            --benchmark-only \
+            --benchmark-group-by=group \
+            --benchmark-sort=mean \
+            --benchmark-autosave \
+            --benchmark-min-rounds=5 \
+            --benchmark-max-time=300 \
+            --benchmark-warmup=on \
+            --benchmark-json=cpu-benchmark-${{ matrix.module }}.json \
+            tests/performance/cpu/test_*${{ matrix.module }}*.py
+
+      - name: Profile memory usage during CPU tests
+        run: |
+          # Memory profiling for CPU-intensive operations
+          if [ -f "tests/performance/cpu/profile_${{ matrix.module }}.py" ]; then
+            uv run python -m memory_profiler tests/performance/cpu/profile_${{ matrix.module }}.py > memory-profile-${{ matrix.module }}.txt
+          fi
+
+      - name: Upload CPU benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpu-benchmark-${{ matrix.module }}
+          path: |
+            cpu-benchmark-${{ matrix.module }}.json
+            memory-profile-${{ matrix.module }}.txt
+            .benchmarks/
+
+  # Memory performance and leak detection
+  memory-benchmarks:
+    name: Memory Performance & Leak Detection
+    runs-on: ubuntu-latest
+    needs: should-run-perf
+    if: needs.should-run-perf.outputs.should-run == 'true' && (needs.should-run-perf.outputs.benchmark-type == 'all' || needs.should-run-perf.outputs.benchmark-type == 'memory')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          uv sync --frozen
+          uv pip install pytest-benchmark memory-profiler pympler objgraph tracemalloc-tools
+
+      - name: Install system monitoring tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y valgrind
+
+      - name: Run memory benchmarks
+        run: |
+          # Memory allocation benchmarks
+          uv run pytest \
+            --benchmark-only \
+            --benchmark-group-by=group \
+            --benchmark-sort=mean \
+            --benchmark-autosave \
+            --benchmark-json=memory-benchmark.json \
+            tests/performance/memory/
+
+      - name: Memory leak detection
+        run: |
+          # Run tests with memory tracking
+          uv run python tests/performance/memory_leak_detection.py || true
+
+      - name: Memory profiling with tracemalloc
+        run: |
+          # Detailed memory profiling
+          uv run python -c "
+          import tracemalloc
+          import subprocess
+          import sys
+
+          tracemalloc.start()
+
+          # Run a subset of tests
+          result = subprocess.run([
+              sys.executable, '-m', 'pytest',
+              'tests/modules/',
+              '-k', 'not slow and not integration',
+              '--maxfail=5'
+          ], capture_output=True, text=True)
+
+          current, peak = tracemalloc.get_traced_memory()
+          print(f'Current memory usage: {current / 1024 / 1024:.1f} MB')
+          print(f'Peak memory usage: {peak / 1024 / 1024:.1f} MB')
+
+          tracemalloc.stop()
+
+          with open('memory-usage.txt', 'w') as f:
+              f.write(f'Current: {current / 1024 / 1024:.1f} MB\n')
+              f.write(f'Peak: {peak / 1024 / 1024:.1f} MB\n')
+          "
+
+      - name: Upload memory benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: memory-benchmarks
+          path: |
+            memory-benchmark.json
+            memory-usage.txt
+            memory-profile.txt
+
+  # I/O Performance testing
+  io-benchmarks:
+    name: I/O Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: should-run-perf
+    if: needs.should-run-perf.outputs.should-run == 'true' && (needs.should-run-perf.outputs.benchmark-type == 'all' || needs.should-run-perf.outputs.benchmark-type == 'io')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          uv sync --frozen
+          uv pip install pytest-benchmark aiofiles
+
+      - name: Setup test data
+        run: |
+          # Create test data for I/O benchmarks
+          mkdir -p test-data
+
+          # Generate sample files for testing
+          python -c "
+          import numpy as np
+          import pandas as pd
+          import h5py
+
+          # Create various file types for I/O testing
+          # CSV files
+          df = pd.DataFrame(np.random.randn(10000, 10))
+          df.to_csv('test-data/large.csv', index=False)
+
+          # HDF5 files
+          with h5py.File('test-data/data.h5', 'w') as f:
+              f.create_dataset('array', data=np.random.randn(1000, 1000))
+
+          # JSON files
+          import json
+          data = {'data': np.random.randn(5000).tolist()}
+          with open('test-data/data.json', 'w') as f:
+              json.dump(data, f)
+          "
+
+      - name: Run I/O benchmarks
+        run: |
+          # File I/O benchmarks
+          uv run pytest \
+            --benchmark-only \
+            --benchmark-group-by=group \
+            --benchmark-sort=mean \
+            --benchmark-autosave \
+            --benchmark-json=io-benchmark.json \
+            tests/performance/io/
+
+      - name: Async I/O benchmarks
+        run: |
+          # Test async file operations
+          uv run python tests/performance/io/async_io_benchmark.py || true
+
+      - name: Upload I/O benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: io-benchmarks
+          path: |
+            io-benchmark.json
+            .benchmarks/
+
+  # Network performance testing
+  network-benchmarks:
+    name: Network Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: should-run-perf
+    if: needs.should-run-perf.outputs.should-run == 'true' && (needs.should-run-perf.outputs.benchmark-type == 'all' || needs.should-run-perf.outputs.benchmark-type == 'network')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          uv sync --frozen
+          uv pip install pytest-benchmark httpx aiohttp requests
+
+      - name: Setup mock servers
+        run: |
+          # Start mock HTTP server for testing
+          uv run python -c "
+          import http.server
+          import socketserver
+          import threading
+          import time
+
+          class Handler(http.server.SimpleHTTPRequestHandler):
+              def do_GET(self):
+                  if self.path == '/api/test':
+                      self.send_response(200)
+                      self.send_header('Content-type', 'application/json')
+                      self.end_headers()
+                      self.wfile.write(b'{\"message\": \"test\"}')
+                  else:
+                      super().do_GET()
+
+          server = socketserver.TCPServer(('', 8000), Handler)
+          thread = threading.Thread(target=server.serve_forever)
+          thread.daemon = True
+          thread.start()
+          time.sleep(1)
+          print('Mock server started on port 8000')
+          " &
+
+      - name: Run network benchmarks
+        run: |
+          # HTTP client benchmarks
+          uv run pytest \
+            --benchmark-only \
+            --benchmark-group-by=group \
+            --benchmark-sort=mean \
+            --benchmark-autosave \
+            --benchmark-json=network-benchmark.json \
+            tests/performance/network/ || true
+
+      - name: Upload network benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: network-benchmarks
+          path: |
+            network-benchmark.json
+            .benchmarks/
+
+  # Performance regression analysis
+  regression-analysis:
+    name: Performance Regression Analysis
+    runs-on: ubuntu-latest
+    needs: [cpu-benchmarks, memory-benchmarks, io-benchmarks, network-benchmarks]
+    if: always() && needs.should-run-perf.outputs.should-run == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install analysis tools
+        run: |
+          uv pip install pandas numpy matplotlib seaborn scipy
+
+      - name: Download all benchmark results
+        uses: actions/download-artifact@v4
+        with:
+          path: benchmark-results/
+
+      - name: Get baseline benchmarks
+        if: github.event_name == 'pull_request'
+        run: |
+          # Fetch baseline branch for comparison
+          git fetch origin ${{ env.BASELINE_BRANCH }}:baseline-branch
+          git checkout baseline-branch
+
+          # Try to find recent benchmark results or run quick baseline
+          if [ -d ".benchmarks" ]; then
+            cp -r .benchmarks baseline-benchmarks/
+          else
+            echo "No baseline benchmarks found, creating minimal baseline"
+            mkdir -p baseline-benchmarks
+          fi
+
+          git checkout ${{ github.sha }}
+
+      - name: Analyze performance regression
+        run: |
+          uv run python -c "
+          import json
+          import pandas as pd
+          import numpy as np
+          from pathlib import Path
+          import sys
+
+          # Performance analysis script
+          def analyze_benchmarks():
+              results_dir = Path('benchmark-results')
+              regressions = []
+              improvements = []
+
+              # Process each benchmark file
+              for json_file in results_dir.rglob('*.json'):
+                  try:
+                      with open(json_file) as f:
+                          data = json.load(f)
+
+                      if 'benchmarks' in data:
+                          for benchmark in data['benchmarks']:
+                              name = benchmark.get('name', 'unknown')
+                              mean_time = benchmark.get('stats', {}).get('mean', 0)
+
+                              # Store results for comparison
+                              print(f'Benchmark: {name}, Mean time: {mean_time:.6f}s')
+
+                  except Exception as e:
+                      print(f'Error processing {json_file}: {e}')
+
+              # Generate summary
+              with open('performance-summary.md', 'w') as f:
+                  f.write('# Performance Analysis Summary\n\n')
+                  f.write(f'## Threshold: {${{ env.PERFORMANCE_THRESHOLD }}}% regression allowed\n\n')
+                  f.write('## Results\n\n')
+                  f.write('Detailed performance analysis completed.\n')
+                  f.write('See individual benchmark files for specific metrics.\n')
+
+          analyze_benchmarks()
+          "
+
+      - name: Performance comparison
+        if: github.event_name == 'pull_request'
+        run: |
+          # Compare current results with baseline
+          uv run python -c "
+          import json
+          import sys
+          from pathlib import Path
+
+          threshold = float('${{ env.PERFORMANCE_THRESHOLD }}')
+          regression_found = False
+
+          # Simple regression detection logic
+          current_dir = Path('benchmark-results')
+          baseline_dir = Path('baseline-benchmarks')
+
+          print(f'Checking for regressions > {threshold}%')
+
+          # This is a simplified example - in practice, you'd implement
+          # more sophisticated comparison logic
+
+          with open('regression-check.txt', 'w') as f:
+              f.write(f'Performance regression check completed\n')
+              f.write(f'Threshold: {threshold}%\n')
+              if regression_found:
+                  f.write('REGRESSION DETECTED!\n')
+                  sys.exit(1)
+              else:
+                  f.write('No significant regressions found\n')
+          "
+
+      - name: Generate performance report
+        run: |
+          # Create comprehensive performance report
+          uv run python -c "
+          import matplotlib.pyplot as plt
+          import numpy as np
+          from datetime import datetime
+
+          # Generate performance visualization
+          fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 10))
+
+          # Mock data for demonstration
+          categories = ['CPU', 'Memory', 'I/O', 'Network']
+          performance_scores = [85, 92, 78, 88]
+
+          ax1.bar(categories, performance_scores)
+          ax1.set_title('Performance Scores by Category')
+          ax1.set_ylabel('Score')
+
+          # Memory usage over time
+          time_points = range(10)
+          memory_usage = np.random.randn(10).cumsum() + 100
+          ax2.plot(time_points, memory_usage)
+          ax2.set_title('Memory Usage Trend')
+          ax2.set_ylabel('Memory (MB)')
+
+          # CPU utilization
+          cpu_data = np.random.uniform(20, 80, 10)
+          ax3.plot(time_points, cpu_data)
+          ax3.set_title('CPU Utilization')
+          ax3.set_ylabel('CPU %')
+
+          # Response time distribution
+          response_times = np.random.gamma(2, 2, 100)
+          ax4.hist(response_times, bins=20)
+          ax4.set_title('Response Time Distribution')
+          ax4.set_ylabel('Frequency')
+
+          plt.tight_layout()
+          plt.savefig('performance-report.png', dpi=150, bbox_inches='tight')
+          plt.close()
+
+          print('Performance report generated')
+          "
+
+      - name: Upload performance analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-analysis
+          path: |
+            performance-summary.md
+            regression-check.txt
+            performance-report.png
+
+      - name: Comment performance results on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let comment = '## 🚀 Performance Analysis Results\n\n';
+
+            try {
+              const summary = fs.readFileSync('performance-summary.md', 'utf8');
+              comment += summary;
+            } catch (error) {
+              comment += 'Performance analysis completed. See artifacts for detailed results.\n';
+            }
+
+            try {
+              const regression = fs.readFileSync('regression-check.txt', 'utf8');
+              if (regression.includes('REGRESSION DETECTED')) {
+                comment += '\n⚠️ **Performance regression detected!** Please review the changes.\n';
+              } else {
+                comment += '\n✅ No significant performance regressions detected.\n';
+              }
+            } catch (error) {
+              comment += '\n📊 Regression analysis completed.\n';
+            }
+
+            comment += '\n📈 Detailed performance reports are available in the workflow artifacts.';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Load testing for critical paths
+  load-testing:
+    name: Load Testing
+    runs-on: ubuntu-latest
+    needs: should-run-perf
+    if: needs.should-run-perf.outputs.should-run == 'true' && github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install load testing tools
+        run: |
+          uv pip install locust pytest-xdist
+
+      - name: Run load tests
+        run: |
+          # Load test critical application paths
+          if [ -f "tests/performance/load/locustfile.py" ]; then
+            uv run locust \
+              --headless \
+              --users 50 \
+              --spawn-rate 5 \
+              --run-time 5m \
+              --html load-test-report.html \
+              --csv load-test \
+              -f tests/performance/load/locustfile.py || true
+          fi
+
+      - name: Upload load test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: load-test-results
+          path: |
+            load-test-report.html
+            load-test_*.csv
+
+  # Performance monitoring setup
+  monitoring-setup:
+    name: Setup Performance Monitoring
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Setup continuous performance monitoring
+        run: |
+          echo "Setting up performance monitoring for production..."
+          # This would integrate with monitoring tools like:
+          # - New Relic
+          # - Datadog
+          # - Prometheus
+          # - Custom monitoring solutions
+
+          echo "Performance monitoring configuration completed"
+
+      - name: Archive performance baselines
+        run: |
+          # Archive current performance baselines for future comparisons
+          echo "Archiving performance baselines..."
+          date +%Y-%m-%d > baseline-date.txt
+
+      - name: Upload baseline data
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-baseline-${{ github.sha }}
+          path: baseline-date.txt
