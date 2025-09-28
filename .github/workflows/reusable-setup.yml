@@ -1,0 +1,129 @@
+name: Reusable Setup Workflow
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.11'
+      install-dev-deps:
+        description: 'Install development dependencies'
+        required: false
+        type: boolean
+        default: true
+      cache-key-suffix:
+        description: 'Additional cache key suffix'
+        required: false
+        type: string
+        default: ''
+      setup-system-deps:
+        description: 'Install system dependencies'
+        required: false
+        type: boolean
+        default: false
+      uv-version:
+        description: 'UV version to install'
+        required: false
+        type: string
+        default: 'latest'
+    outputs:
+      python-version:
+        description: 'Actual Python version installed'
+        value: ${{ jobs.setup.outputs.python-version }}
+      cache-hit:
+        description: 'Whether cache was hit'
+        value: ${{ jobs.setup.outputs.cache-hit }}
+      pip-cache-key:
+        description: 'Generated cache key'
+        value: ${{ jobs.setup.outputs.pip-cache-key }}
+
+jobs:
+  setup:
+    name: Setup Python Environment
+    runs-on: ubuntu-latest
+    outputs:
+      python-version: ${{ steps.setup-python.outputs.python-version }}
+      cache-hit: ${{ steps.cache-deps.outputs.cache-hit }}
+      pip-cache-key: ${{ steps.cache-key.outputs.key }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          cache_key="python-${{ inputs.python-version }}-uv-${{ hashFiles('uv.lock', 'pyproject.toml') }}"
+
+          if [[ "${{ inputs.install-dev-deps }}" == "true" ]]; then
+            cache_key="${cache_key}-dev"
+          fi
+
+          if [[ -n "${{ inputs.cache-key-suffix }}" ]]; then
+            cache_key="${cache_key}-${{ inputs.cache-key-suffix }}"
+          fi
+
+          echo "key=${cache_key}" >> $GITHUB_OUTPUT
+          echo "Generated cache key: ${cache_key}"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+        with:
+          version: ${{ inputs.uv-version }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        id: setup-python
+        run: |
+          uv python install ${{ inputs.python-version }}
+          python_version=$(uv python list | grep "^${{ inputs.python-version }}" | head -1 | awk '{print $1}')
+          echo "python-version=${python_version}" >> $GITHUB_OUTPUT
+          echo "Installed Python version: ${python_version}"
+
+      - name: Cache dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            .venv
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            python-${{ inputs.python-version }}-uv-
+            python-${{ inputs.python-version }}-
+
+      - name: Install system dependencies
+        if: inputs.setup-system-deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libhdf5-dev \
+            libnetcdf-dev \
+            build-essential \
+            pkg-config \
+            libffi-dev \
+            libssl-dev
+
+      - name: Install Python dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: |
+          if [[ "${{ inputs.install-dev-deps }}" == "true" ]]; then
+            echo "Installing with dev dependencies..."
+            uv sync --frozen
+          else
+            echo "Installing without dev dependencies..."
+            uv sync --frozen --no-dev
+          fi
+
+      - name: Verify installation
+        run: |
+          echo "Python version:"
+          python --version
+
+          echo "UV version:"
+          uv --version
+
+          echo "Installed packages:"
+          uv pip list --format=freeze | head -20

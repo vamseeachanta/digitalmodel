@@ -110,6 +110,16 @@ dependencies = [
     "pytest-mock==3.12.0",
     "pytest-mock>=3.12.0,<4.0.0",
     "pytest-xdist>=3.5.0,<4.0.0", # For parallel test execution
+    "pytest-benchmark>=4.0.0,<5.0.0", # Performance benchmarking
+    "pytest-timeout>=2.1.0,<3.0.0", # Test timeout handling
+    "pytest-randomly>=3.15.0,<4.0.0", # Randomize test order
+    "pytest-sugar>=0.9.7,<1.0.0", # Better test output
+    "hypothesis>=6.100.0,<7.0.0", # Property-based testing
+    "mutmut>=2.4.0,<3.0.0", # Mutation testing
+    "pytest-html>=4.1.0,<5.0.0", # HTML test reports
+    "pytest-json-report>=1.5.0,<2.0.0", # JSON test reports
+    "pytest-metadata>=3.1.0,<4.0.0", # Test metadata
+    "pytest-instafail>=0.5.0,<1.0.0", # Fast failure reporting
     "python-dateutil==2.8.2",
     "python-docx>=0.8.0",
     "python-dotenv==1.0.0",
@@ -210,11 +220,54 @@ disallow_untyped_defs = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "--cov=src --cov-report=term-missing --cov-report=html"
+addopts = """
+    --cov=src
+    --cov-report=term-missing
+    --cov-report=html:htmlcov
+    --cov-report=xml:coverage.xml
+    --cov-report=json:coverage.json
+    --html=reports/pytest_report.html
+    --self-contained-html
+    --json-report --json-report-file=reports/test_report.json
+    --benchmark-json=reports/benchmarks.json
+    --benchmark-compare-fail=mean:10%
+    --timeout=300
+    --randomly-seed=42
+    --tb=short
+    --strict-markers
+    --strict-config
+"""
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "benchmark: marks tests as performance benchmarks",
+    "property: marks tests as property-based tests",
+    "security: marks tests as security tests",
+    "flaky: marks tests as potentially flaky",
+    "external: marks tests that require external services",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+minversion = "7.0"
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["*/tests/*", "*/test_*.py"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/env/*",
+    "setup.py",
+    "*/migrations/*",
+]
+branch = true
+parallel = true
 
 [tool.coverage.report]
 exclude_lines = [
@@ -224,7 +277,55 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "raise AssertionError",
     "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "@abstract",
+    "pass",
+    "\\.\\.\\.",
 ]
+show_missing = true
+skip_covered = false
+skip_empty = false
+precision = 2
+fail_under = 80.0
+
+[tool.coverage.html]
+directory = "htmlcov"
+show_contexts = true
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.coverage.json]
+output = "coverage.json"
+show_contexts = true
+
+# Mutation Testing Configuration
+[tool.mutmut]
+paths_to_mutate = "src/"
+tests_dir = "tests/"
+runner = "python -m pytest"
+backup = false
+show_times = true
+
+# Performance Benchmarking Configuration
+[tool.pytest.benchmark]
+skip = false
+disable_gc = true
+min_time = 0.000005
+max_time = 1.0
+min_rounds = 5
+timer = "perf_counter"
+calibration_precision = 10
+warmup = false
+warmup_iterations = 100000
+
+# Hypothesis Configuration
+[tool.hypothesis]
+max_examples = 100
+deadline = 800
+database_file = ".hypothesis/examples"
+verbosity = "normal"
+print_blob = false
 
 [tool.uv]
 # UV environment configuration

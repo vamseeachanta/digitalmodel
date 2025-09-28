@@ -1,0 +1,218 @@
+name: Reusable Testing Workflow
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.11'
+      test-path:
+        description: 'Path to tests'
+        required: false
+        type: string
+        default: 'tests/'
+      coverage-threshold:
+        description: 'Minimum coverage percentage'
+        required: false
+        type: number
+        default: 85
+      test-markers:
+        description: 'Pytest markers to run'
+        required: false
+        type: string
+        default: ''
+      parallel-workers:
+        description: 'Number of parallel workers'
+        required: false
+        type: string
+        default: 'auto'
+      timeout:
+        description: 'Test timeout in seconds'
+        required: false
+        type: number
+        default: 300
+      upload-coverage:
+        description: 'Upload coverage reports'
+        required: false
+        type: boolean
+        default: true
+      artifact-name:
+        description: 'Name for test artifacts'
+        required: false
+        type: string
+        default: 'test-results'
+    outputs:
+      coverage-percentage:
+        description: 'Test coverage percentage'
+        value: ${{ jobs.test.outputs.coverage-percentage }}
+      test-count:
+        description: 'Number of tests run'
+        value: ${{ jobs.test.outputs.test-count }}
+      test-status:
+        description: 'Overall test status'
+        value: ${{ jobs.test.outputs.test-status }}
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    outputs:
+      coverage-percentage: ${{ steps.coverage.outputs.percentage }}
+      test-count: ${{ steps.test-results.outputs.count }}
+      test-status: ${{ steps.test-results.outputs.status }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python environment
+        uses: ./.github/workflows/reusable-setup.yml
+        with:
+          python-version: ${{ inputs.python-version }}
+          install-dev-deps: true
+          setup-system-deps: true
+          cache-key-suffix: testing
+
+      - name: Install testing dependencies
+        run: |
+          uv pip install \
+            pytest-xdist \
+            pytest-cov \
+            pytest-html \
+            pytest-json-report \
+            pytest-timeout \
+            pytest-randomly \
+            pytest-benchmark
+
+      - name: Create test reports directory
+        run: |
+          mkdir -p reports
+
+      - name: Run tests
+        id: run-tests
+        run: |
+          test_cmd="uv run pytest"
+          test_cmd="$test_cmd ${{ inputs.test-path }}"
+          test_cmd="$test_cmd -n ${{ inputs.parallel-workers }}"
+          test_cmd="$test_cmd --timeout=${{ inputs.timeout }}"
+          test_cmd="$test_cmd --cov=src"
+          test_cmd="$test_cmd --cov-report=xml:reports/coverage.xml"
+          test_cmd="$test_cmd --cov-report=html:reports/htmlcov"
+          test_cmd="$test_cmd --cov-report=term-missing"
+          test_cmd="$test_cmd --cov-fail-under=${{ inputs.coverage-threshold }}"
+          test_cmd="$test_cmd --junitxml=reports/junit.xml"
+          test_cmd="$test_cmd --html=reports/report.html"
+          test_cmd="$test_cmd --self-contained-html"
+          test_cmd="$test_cmd --json-report --json-report-file=reports/report.json"
+
+          if [[ -n "${{ inputs.test-markers }}" ]]; then
+            test_cmd="$test_cmd -m '${{ inputs.test-markers }}'"
+          fi
+
+          echo "Running: $test_cmd"
+          eval $test_cmd
+
+      - name: Parse test results
+        id: test-results
+        if: always()
+        run: |
+          if [[ -f "reports/report.json" ]]; then
+            test_count=$(python -c "
+            import json
+            with open('reports/report.json') as f:
+                data = json.load(f)
+            print(data.get('summary', {}).get('total', 0))
+            ")
+
+            test_status=$(python -c "
+            import json
+            with open('reports/report.json') as f:
+                data = json.load(f)
+            if data.get('summary', {}).get('failed', 0) > 0:
+                print('failed')
+            elif data.get('summary', {}).get('error', 0) > 0:
+                print('error')
+            else:
+                print('passed')
+            ")
+          else
+            test_count=0
+            test_status="unknown"
+          fi
+
+          echo "count=$test_count" >> $GITHUB_OUTPUT
+          echo "status=$test_status" >> $GITHUB_OUTPUT
+
+      - name: Extract coverage percentage
+        id: coverage
+        if: always()
+        run: |
+          if [[ -f "reports/coverage.xml" ]]; then
+            coverage_pct=$(python -c "
+            import xml.etree.ElementTree as ET
+            tree = ET.parse('reports/coverage.xml')
+            root = tree.getroot()
+            coverage = root.attrib.get('line-rate', '0')
+            print(f'{float(coverage) * 100:.1f}')
+            ")
+          else
+            coverage_pct="0.0"
+          fi
+
+          echo "percentage=$coverage_pct" >> $GITHUB_OUTPUT
+          echo "Coverage: $coverage_pct%"
+
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ inputs.artifact-name }}-${{ inputs.python-version }}
+          path: |
+            reports/
+            .coverage
+
+      - name: Upload coverage to Codecov
+        if: inputs.upload-coverage && always()
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./reports/coverage.xml
+          flags: unittests
+          name: codecov-${{ inputs.artifact-name }}
+          fail_ci_if_error: false
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const coverage = '${{ steps.coverage.outputs.percentage }}';
+            const testCount = '${{ steps.test-results.outputs.count }}';
+            const testStatus = '${{ steps.test-results.outputs.status }}';
+            const threshold = ${{ inputs.coverage-threshold }};
+
+            let statusEmoji = testStatus === 'passed' ? '✅' : '❌';
+            let coverageEmoji = parseFloat(coverage) >= threshold ? '✅' : '❌';
+
+            const comment = `## 🧪 Test Results
+
+            | Metric | Value | Status |
+            |--------|-------|--------|
+            | Tests Run | ${testCount} | ${statusEmoji} |
+            | Coverage | ${coverage}% | ${coverageEmoji} |
+            | Threshold | ${threshold}% | - |
+
+            **Python Version:** ${{ inputs.python-version }}
+            **Test Status:** ${testStatus.toUpperCase()}
+
+            ${parseFloat(coverage) < threshold ?
+              `⚠️ Coverage is below the ${threshold}% threshold!` :
+              '🎉 All tests passed and coverage threshold met!'}
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
