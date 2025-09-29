@@ -28,7 +28,7 @@ input_data:
     name_pattern: "{config}_FC{fc_number:03d}_Strut{strut_number}_tension.csv"
     filter_pattern: "*_tension.csv"
 
-    # Column containing the tension/stress data
+    # Column containing the tension data
     data_column: "Scaled Tension (kN)"
     
     # Time column (if present)
@@ -63,25 +63,25 @@ rainflow_counting:
     # Determine time trace length from data
     auto_detect_length: true
     
-  # Binning parameters for stress RANGE (always positive)
+  # Binning parameters for tension RANGE (always positive)
   binning:
     # Number of bins for cycle counting
     num_bins: 50
     
     # Binning method
-    method: "linear"  # Linear binning for stress range
+    method: "linear"  # Linear binning for tension range
     
     # Minimum bin value for RANGE (always positive)
-    min_range: 0.0  # Stress range starts from zero
+    min_range: 0.0  # Tension range starts from zero
     
     # Maximum bin value for RANGE
-    max_range: 10000  # Maximum expected stress range in kN - increased for production data
+    max_range: 10000  # Maximum expected tension range in kN - increased for production data
     
     # Binning for MEAN values (can be negative)
     mean_binning:
       enabled: true
-      min_mean: -5000  # Minimum mean stress (can be negative/compression) - scaled for production
-      max_mean: 5000   # Maximum mean stress (positive/tension) - scaled for production
+      min_mean: -5000  # Minimum mean tension (can be negative/compression) - scaled for production
+      max_mean: 5000   # Maximum mean tension (positive/tension) - scaled for production
     
   # Cycle extraction parameters
   cycle_extraction:
@@ -182,7 +182,7 @@ output:
       format: "csv"
       include_headers: true
       columns:
-        - "Range (kN)"  # Always positive (magnitude of stress cycle)
+        - "Range (kN)"  # Always positive (magnitude of tension cycle)
         - "Mean (kN)"   # Can be positive or negative
         - "Cycles_TimeTrace"
         - "Cycles_Annual"
@@ -250,11 +250,47 @@ visualization:
       figure_size: [14, 10]
       dpi: 150
       
+    # 3D Rainflow Matrix Plot Customization
+    rainflow_3d_plot:
+      # Main plot title
+      title: "Production Rainflow Matrix - 3D Visualization"
+      
+      # Subplot titles
+      subplot_titles:
+        scatter_3d: "Rainflow Cycle Distribution - 3D View"
+        projection_2d: "Rainflow Cycle Distribution - 2D Projection"
+      
+      # Axis labels
+      axes_labels:
+        x_axis: "Tension Range (kN)"  # X-axis: Range (always positive)
+        y_axis: "Mean Tension (kN)"   # Y-axis: Mean (can be negative)
+        z_axis: "Cycle Count"         # Z-axis: Count
+        colorbar: "Number of Cycles"  # Colorbar label
+      
+      # Viewing angle for 3D plot
+      view_angle:
+        elevation: 20  # Elevation angle in degrees
+        azimuth: 45   # Azimuth angle in degrees
+      
+      # Color scheme
+      colormap: "viridis"  # Options: viridis, plasma, inferno, magma, cividis
+      
+      # Marker style
+      marker:
+        style: "o"  # Marker style: o (circle), s (square), ^ (triangle)
+        alpha: 0.7  # Transparency (0-1)
+        edge_color: "black"  # Edge color for markers
+        edge_width: 0.3  # Edge width
+      
+      # Statistics box
+      show_statistics: true  # Show statistics box on 2D projection
+      statistics_position: [0.02, 0.98]  # Position in axes coordinates
+      
     # Plot components (in priority order)
     components:
       - "time_trace_with_cycles"  # Time trace with identified peaks/valleys/cycles
       - "rainflow_matrix"  # 3D matrix plot (Range vs Mean vs Count)
-      - "cycle_histogram"  # Cycle count histogram by stress range
+      - "cycle_histogram"  # Cycle count histogram by tension range
       - "range_mean_scatter"  # Range-mean scatter plot
       - "cumulative_damage"  # Cumulative damage plot
       
@@ -424,7 +460,7 @@ metadata:
     - Mean values: Can be positive or negative ((max + min)/2)
     
     Production Configuration Changes (v1.1.0):
-    - Increased max_range from 1000 to 10000 kN for larger stress ranges
+    - Increased max_range from 1000 to 10000 kN for larger tension ranges
     - Scaled mean binning range to ±5000 kN to match production data
     - Filtering disabled (not used in production analysis)
     - PDF report generation disabled (enable if libraries installed)
