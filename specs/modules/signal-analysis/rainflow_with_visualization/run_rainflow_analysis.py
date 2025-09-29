@@ -370,7 +370,13 @@ class RainflowAnalyzer:
     def _generate_visualizations(self, data: pd.DataFrame, rainflow_results: dict, 
                                 fft_results: dict, file_info: dict):
         """Generate all visualization plots"""
-        if not self.config['visualization']['timeseries_plot']['enabled']:
+        # Check if any visualization is enabled
+        viz_config = self.config.get('visualization', {})
+        if not any([
+            viz_config.get('timeseries_plot', {}).get('enabled', False),
+            viz_config.get('rainflow_plot', {}).get('enabled', False),
+            viz_config.get('fft_plot', {}).get('enabled', False)
+        ]):
             return
             
         # Handle absolute or relative output paths
@@ -449,6 +455,36 @@ class RainflowAnalyzer:
         if len(results.get('ranges', [])) == 0:
             return
             
+        # Get 3D plot configuration
+        plot_config = self.config.get('visualization', {}).get('rainflow_plot', {}).get('rainflow_3d_plot', {})
+        
+        # Extract configuration parameters
+        main_title = plot_config.get('title', 'Rainflow Matrix - 3D Scatter Plot')
+        subplot_titles = plot_config.get('subplot_titles', {})
+        title_3d = subplot_titles.get('scatter_3d', 'Rainflow Matrix - 3D Scatter Plot')
+        title_2d = subplot_titles.get('projection_2d', 'Rainflow Matrix - Top View')
+        
+        axes_labels = plot_config.get('axes_labels', {})
+        x_label = axes_labels.get('x_axis', 'Tension Range (kN)')
+        y_label = axes_labels.get('y_axis', 'Mean Tension (kN)')
+        z_label = axes_labels.get('z_axis', 'Cycle Count')
+        colorbar_label = axes_labels.get('colorbar', 'Cycle Count')
+        
+        view_angle = plot_config.get('view_angle', {})
+        elevation = view_angle.get('elevation', 20)
+        azimuth = view_angle.get('azimuth', 45)
+        
+        colormap = plot_config.get('colormap', 'viridis')
+        
+        marker_config = plot_config.get('marker', {})
+        marker_style = marker_config.get('style', 'o')
+        marker_alpha = marker_config.get('alpha', 0.7)
+        edge_color = marker_config.get('edge_color', 'black')
+        edge_width = marker_config.get('edge_width', 0.3)
+        
+        show_stats = plot_config.get('show_statistics', True)
+        stats_pos = plot_config.get('statistics_position', [0.02, 0.98])
+        
         # Create figure with 3D scatter plot and 2D projection
         fig = plt.figure(figsize=(16, 7))
         
@@ -474,23 +510,24 @@ class RainflowAnalyzer:
             # 3D scatter plot with dots
             scatter = ax1.scatter(ranges_filtered, means_filtered, counts_filtered,
                                 s=sizes, c=colors, 
-                                cmap='viridis', alpha=0.7, edgecolors='black', linewidth=0.3,
-                                marker='o')  # Circular dots
+                                cmap=colormap, alpha=marker_alpha, 
+                                edgecolors=edge_color, linewidth=edge_width,
+                                marker=marker_style)
             
-            ax1.set_xlabel('Stress Range (kN)', fontsize=10, labelpad=10)
-            ax1.set_ylabel('Mean Stress (kN)', fontsize=10, labelpad=10)
-            ax1.set_zlabel('Cycle Count', fontsize=10, labelpad=10)
-            ax1.set_title('Rainflow Matrix - 3D Scatter Plot', fontsize=12)
+            ax1.set_xlabel(x_label, fontsize=10, labelpad=10)
+            ax1.set_ylabel(y_label, fontsize=10, labelpad=10)
+            ax1.set_zlabel(z_label, fontsize=10, labelpad=10)
+            ax1.set_title(title_3d, fontsize=12)
             
             # Set viewing angle for better visibility
-            ax1.view_init(elev=20, azim=45)
+            ax1.view_init(elev=elevation, azim=azimuth)
             
             # Add grid
             ax1.grid(True, alpha=0.3)
             
             # Add colorbar
             cbar1 = plt.colorbar(scatter, ax=ax1, pad=0.1, shrink=0.8)
-            cbar1.set_label('Cycle Count', fontsize=10)
+            cbar1.set_label(colorbar_label, fontsize=10)
         
         # Plot 2: 2D projection (top view)
         ax2 = fig.add_subplot(122)
@@ -501,27 +538,29 @@ class RainflowAnalyzer:
             
             scatter2 = ax2.scatter(ranges_filtered, means_filtered,
                                  s=sizes_2d, c=counts_filtered,
-                                 cmap='viridis', alpha=0.6, edgecolors='black', linewidth=0.5)
+                                 cmap=colormap, alpha=marker_alpha * 0.85,  # Slightly less transparent for 2D
+                                 edgecolors=edge_color, linewidth=edge_width * 1.5)
             
-            ax2.set_xlabel('Stress Range (kN)', fontsize=11)
-            ax2.set_ylabel('Mean Stress (kN)', fontsize=11)
-            ax2.set_title('Rainflow Matrix - Top View', fontsize=12)
+            ax2.set_xlabel(x_label, fontsize=11)
+            ax2.set_ylabel(y_label, fontsize=11)
+            ax2.set_title(title_2d, fontsize=12)
             ax2.grid(True, alpha=0.3)
             
             # Add colorbar
             cbar2 = plt.colorbar(scatter2, ax=ax2)
-            cbar2.set_label('Cycle Count', fontsize=10)
+            cbar2.set_label(colorbar_label, fontsize=10)
             
-            # Add statistics box
-            stats_text = (f'Total Cycles: {np.sum(counts):.0f}\n'
-                         f'Max Range: {np.max(ranges):.1f} kN\n'
-                         f'Mean Range: {np.mean(ranges):.1f} kN\n'
-                         f'Max Count: {np.max(counts):.0f}')
-            ax2.text(0.02, 0.98, stats_text, transform=ax2.transAxes,
-                    verticalalignment='top', fontsize=9,
-                    bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+            # Add statistics box if enabled
+            if show_stats:
+                stats_text = (f'Total Cycles: {np.sum(counts):.0f}\n'
+                             f'Max Range: {np.max(ranges):.1f} kN\n'
+                             f'Mean Range: {np.mean(ranges):.1f} kN\n'
+                             f'Max Count: {np.max(counts):.0f}')
+                ax2.text(stats_pos[0], stats_pos[1], stats_text, transform=ax2.transAxes,
+                        verticalalignment='top', fontsize=9,
+                        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
         
-        plt.suptitle('Rainflow Counting Results - 3D Visualization', fontsize=14, fontweight='bold')
+        plt.suptitle(main_title, fontsize=14, fontweight='bold')
         plt.tight_layout()
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         plt.close()
