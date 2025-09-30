@@ -1,0 +1,11 @@
+{
+  "source_file": "31519-CAL-0-0001-01 (Fatigue Curves for Analysis).xlsx",
+  "sheet_name": "Raw Data",
+  "description": "Fatigue curves for analysis - S-N curve data from multiple standards (DNV, API, BS, BP)",
+  "note": "Same curve type may appear multiple times for different environments (In Air, Seawater CP, Free Corrosion)",
+  "files_created": {
+    "raw_data": "fatigue_curves_raw_data.csv",
+    "structured_data": "fatigue_curves_structured.csv",
+    "structured_json": "fatigue_curves_structured.json"
+  }
+}
