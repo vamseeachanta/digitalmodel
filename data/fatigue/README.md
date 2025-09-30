@@ -74,6 +74,90 @@ Each curve includes:
 | `References Used` | Reference numbers |
 | `Special Notes*` | Additional information |
 
+## S-N Curve Plotting
+
+This database includes a comprehensive plotting module that provides capabilities similar to the reference Excel file.
+
+### Features
+
+- **Plot Types**: Log-log and linear-log scales
+- **Stress Concentration Factors**: Apply SCF to curves
+- **Fatigue Limits**: Include or exclude fatigue limit cut-offs
+- **Multi-Curve Comparison**: Plot and compare multiple curves
+- **Reference Highlighting**: Highlight a reference curve in comparisons
+
+### Quick Start - Plotting
+
+```python
+from digitalmodel.fatigue.sn_curve_plotter import SNCurvePlotter
+
+# Initialize plotter
+plotter = SNCurvePlotter()
+
+# List available curves
+dnv_curves = plotter.list_curves(curve_type_filter='DNV', environment_filter='Air')
+print(dnv_curves)
+
+# Plot S-N curves
+plotter.plot_curves(
+    lookup_indices=[64, 175],  # API-X' and BS'14 D
+    scf=1.0,
+    include_fatigue_limit=True,
+    plot_type='log-log',
+    title='S-N Curve Comparison',
+    save_path='sn_curves.png'
+)
+
+# Comparison plot with reference curve highlighted
+plotter.create_comparison_plot(
+    reference_index=64,        # Reference curve
+    comparison_indices=[63, 175, 183],  # Compare against these
+    scf=1.0,
+    save_path='comparison.png'
+)
+```
+
+### Command Line Interface
+
+```bash
+# List all curves
+python examples/fatigue/plot_sn_curves_cli.py --list
+
+# List DNV curves in air
+python examples/fatigue/plot_sn_curves_cli.py --list --curve-type DNV --environment Air
+
+# Plot specific curves
+python examples/fatigue/plot_sn_curves_cli.py --plot --indices 64,175 --output plot.png
+
+# Plot with SCF=2.0 and no fatigue limit
+python examples/fatigue/plot_sn_curves_cli.py --plot --indices 64,175 --scf 2.0 --no-limit
+
+# Comparison plot with reference curve
+python examples/fatigue/plot_sn_curves_cli.py --compare-ref 64 --compare 63,175,183 --output comparison.png
+
+# Linear-log plot
+python examples/fatigue/plot_sn_curves_cli.py --plot --indices 64 --plot-type linear-log
+```
+
+### Example Scripts
+
+See `examples/fatigue/plot_sn_curves_examples.py` for 8 comprehensive examples:
+
+1. Basic log-log plot
+2. Linear-log plot
+3. With stress concentration factors
+4. Without fatigue limits
+5. DNV curves comparison
+6. ABS curves across environments
+7. Reference comparison plot
+8. Joint type comparison
+
+Run all examples:
+```bash
+cd examples/fatigue
+python plot_sn_curves_examples.py
+```
+
 ## Usage Examples
 
 ### Python - Load from GitHub
