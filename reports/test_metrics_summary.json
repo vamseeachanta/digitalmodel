@@ -1,0 +1,231 @@
+{
+  "report_metadata": {
+    "generated_at": "2025-09-28T15:45:00Z",
+    "generator": "Claude Code Analyzer Agent",
+    "project": "DigitalModel",
+    "analysis_scope": "comprehensive"
+  },
+  "test_summary": {
+    "total_test_files": 148,
+    "total_test_methods": 675,
+    "tests_collected": 133,
+    "collection_success_rate": 19.7,
+    "avg_file_size_lines": 225.2,
+    "largest_file_lines": 2253
+  },
+  "test_categories": {
+    "unit": {
+      "count": 502,
+      "percentage": 74.4
+    },
+    "integration": {
+      "count": 51,
+      "percentage": 7.6
+    },
+    "api": {
+      "count": 33,
+      "percentage": 4.9
+    },
+    "property": {
+      "count": 34,
+      "percentage": 5.0
+    },
+    "security": {
+      "count": 27,
+      "percentage": 4.0
+    },
+    "benchmark": {
+      "count": 19,
+      "percentage": 2.8
+    },
+    "ui": {
+      "count": 9,
+      "percentage": 1.3
+    }
+  },
+  "coverage_metrics": {
+    "overall_coverage": 33.42,
+    "target_coverage": 80.0,
+    "coverage_gap": -46.58,
+    "files_tracked": 34,
+    "coverage_distribution": {
+      "0-20%": {
+        "files": 14,
+        "percentage": 41.2
+      },
+      "21-40%": {
+        "files": 2,
+        "percentage": 5.9
+      },
+      "41-60%": {
+        "files": 4,
+        "percentage": 11.8
+      },
+      "61-80%": {
+        "files": 3,
+        "percentage": 8.8
+      },
+      "81-100%": {
+        "files": 11,
+        "percentage": 32.4
+      }
+    }
+  },
+  "critical_uncovered_files": [
+    {
+      "rank": 1,
+      "file": "src/digitalmodel/__main__.py",
+      "coverage": 0.0,
+      "uncovered_lines": 2,
+      "total_lines": 2,
+      "priority": "critical"
+    },
+    {
+      "rank": 2,
+      "file": "src/digitalmodel/aqwa.py",
+      "coverage": 0.0,
+      "uncovered_lines": 40,
+      "total_lines": 40,
+      "priority": "critical"
+    },
+    {
+      "rank": 3,
+      "file": "src/digitalmodel/catenary_riser_summary.py",
+      "coverage": 0.0,
+      "uncovered_lines": 49,
+      "total_lines": 49,
+      "priority": "critical"
+    },
+    {
+      "rank": 4,
+      "file": "src/digitalmodel/custom/PipeSizing.py",
+      "coverage": 0.0,
+      "uncovered_lines": 101,
+      "total_lines": 101,
+      "priority": "critical"
+    },
+    {
+      "rank": 5,
+      "file": "src/digitalmodel/custom/aqwa/aqwa_analysis.py",
+      "coverage": 0.0,
+      "uncovered_lines": 6,
+      "total_lines": 6,
+      "priority": "critical"
+    },
+    {
+      "rank": 6,
+      "file": "src/digitalmodel/engine.py",
+      "coverage": 0.0,
+      "uncovered_lines": 144,
+      "total_lines": 144,
+      "priority": "critical"
+    },
+    {
+      "rank": 7,
+      "file": "src/digitalmodel/fea_model.py",
+      "coverage": 0.0,
+      "uncovered_lines": 8,
+      "total_lines": 8,
+      "priority": "critical"
+    },
+    {
+      "rank": 8,
+      "file": "src/digitalmodel/time_series.py",
+      "coverage": 0.0,
+      "uncovered_lines": 51,
+      "total_lines": 51,
+      "priority": "critical"
+    },
+    {
+      "rank": 9,
+      "file": "src/digitalmodel/modules/automation/go_by_folder/metadata/markdown_docs.py",
+      "coverage": 6.0,
+      "uncovered_lines": 151,
+      "total_lines": 166,
+      "priority": "high"
+    },
+    {
+      "rank": 10,
+      "file": "src/digitalmodel/modules/automation/go_by_folder/metadata/analysis.py",
+      "coverage": 7.7,
+      "uncovered_lines": 202,
+      "total_lines": 229,
+      "priority": "high"
+    }
+  ],
+  "performance_metrics": {
+    "test_framework": "pytest 8.4.1",
+    "coverage_tool": "coverage.py v7.10.2",
+    "benchmark_sample": {
+      "test_name": "list_processing_benchmark",
+      "mean_time_us": 41.19,
+      "std_dev_us": 14.90,
+      "operations_per_second": 16972
+    },
+    "execution_status": {
+      "basic_test_execution": "functional",
+      "advanced_features": "limited_missing_plugins",
+      "benchmark_tests": "working",
+      "coverage_collection": "available"
+    }
+  },
+  "issues_identified": {
+    "critical": [
+      {
+        "issue": "Low overall coverage",
+        "details": "33.42% vs 80% target",
+        "impact": "high"
+      },
+      {
+        "issue": "Missing test plugins",
+        "details": "pytest-html, pytest-json-report not installed",
+        "impact": "medium"
+      },
+      {
+        "issue": "Zero coverage files",
+        "details": "8 core modules completely untested",
+        "impact": "high"
+      }
+    ],
+    "medium": [
+      {
+        "issue": "Test collection gap",
+        "details": "Only 19.7% of identified tests collected",
+        "impact": "medium"
+      },
+      {
+        "issue": "Configuration conflicts",
+        "details": "Plugin loading issues in pyproject.toml",
+        "impact": "low"
+      }
+    ]
+  },
+  "recommendations": {
+    "immediate": [
+      "Install missing pytest plugins",
+      "Fix pyproject.toml configuration",
+      "Focus testing on 8 zero-coverage modules",
+      "Establish 50% coverage baseline"
+    ],
+    "short_term": [
+      "Bring critical modules to 60%+ coverage",
+      "Complete test infrastructure setup",
+      "Set up CI/CD automated testing",
+      "Create testing guidelines"
+    ],
+    "long_term": [
+      "Achieve 80% overall coverage target",
+      "Implement mutation and property-based testing",
+      "Establish performance benchmarks",
+      "Team training on testing best practices"
+    ]
+  },
+  "total_uncovered_lines": 854,
+  "test_infrastructure": {
+    "parallel_testing": "configured",
+    "benchmarking": "enabled",
+    "property_testing": "available",
+    "mutation_testing": "configured",
+    "coverage_formats": ["html", "xml", "json", "lcov"]
+  }
+}

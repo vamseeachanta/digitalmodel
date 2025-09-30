@@ -1,0 +1,532 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Performance Dashboard - DigitalModel</title>
+    <style>
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .metric-value.good { color: #27ae60; }
+        .metric-value.warning { color: #f39c12; }
+        .metric-value.critical { color: #e74c3c; }
+
+        .metric-subtitle {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .chart-container {
+            height: 400px;
+            margin: 20px 0;
+        }
+
+        .recommendation {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .recommendation.high {
+            border-left-color: #e74c3c;
+            background: #fff5f5;
+        }
+
+        .recommendation.medium {
+            border-left-color: #f39c12;
+            background: #fffbf0;
+        }
+
+        .recommendation.low {
+            border-left-color: #27ae60;
+            background: #f0fff4;
+        }
+
+        .recommendation h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .file-list {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            transition: width 0.3s ease;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge.high { background: #e74c3c; color: white; }
+        .badge.medium { background: #f39c12; color: white; }
+        .badge.low { background: #27ae60; color: white; }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+        
+    </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🚀 Test Performance Dashboard</h1>
+            <div class="timestamp">Last Updated: 2025-09-28 15:48:16</div>
+        </header>
+
+        <div class="metrics-grid">
+            
+        <div class="metric-card">
+            <h3>📁 Total Test Files</h3>
+            <div class="metric-value">98</div>
+            <div class="metric-subtitle">Across all test categories</div>
+        </div>
+
+        <div class="metric-card">
+            <h3>⏱️ Estimated Runtime</h3>
+            <div class="metric-value warning">7.0m</div>
+            <div class="metric-subtitle">Sequential execution time</div>
+        </div>
+
+        <div class="metric-card">
+            <h3>⚡ Parallel Runtime</h3>
+            <div class="metric-value good">2.1m</div>
+            <div class="metric-subtitle">70% faster</div>
+        </div>
+
+        <div class="metric-card">
+            <h3>🔥 Complex Files</h3>
+            <div class="metric-value critical">8</div>
+            <div class="metric-subtitle">Files needing optimization</div>
+        </div>
+        
+        </div>
+
+        <div class="charts-section">
+            
+        <div class="section charts-section">
+            <h2>📊 Performance Metrics</h2>
+
+            <div class="chart-container" id="testDistributionChart"></div>
+            <div class="chart-container" id="executionTimeChart"></div>
+            <div class="chart-container" id="complexityChart"></div>
+        </div>
+        
+        </div>
+
+        <div class="analysis-section">
+            
+        <div class="section analysis-section">
+            <h2>🔍 Detailed Analysis</h2>
+
+            <h3>📈 Test Distribution</h3>
+            <div class="file-list">
+                
+                <div class="file-item">
+                    <span>Unit Tests</span>
+                    <span>80 files (81.6%)</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 81.63265306122449%"></div>
+                </div>
+                
+                <div class="file-item">
+                    <span>Integration Tests</span>
+                    <span>4 files (4.1%)</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 4.081632653061225%"></div>
+                </div>
+                
+                <div class="file-item">
+                    <span>Performance Tests</span>
+                    <span>5 files (5.1%)</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 5.1020408163265305%"></div>
+                </div>
+                
+                <div class="file-item">
+                    <span>Property Tests</span>
+                    <span>3 files (3.1%)</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 3.061224489795918%"></div>
+                </div>
+                
+                <div class="file-item">
+                    <span>Security Tests</span>
+                    <span>2 files (2.0%)</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 2.0408163265306123%"></div>
+                </div>
+                
+                <div class="file-item">
+                    <span>Automation Tests</span>
+                    <span>4 files (4.1%)</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 4.081632653061225%"></div>
+                </div>
+                
+            </div>
+
+            <h3>📋 Large Files (5 total)</h3>
+            <div class='file-list'>
+                <div class="file-item">
+                    <span>test_performance_baselines.py</span>
+                    <span>571 lines (20.3KB)</span>
+                </div>
+                
+                <div class="file-item">
+                    <span>contracts/test_api_contracts.py</span>
+                    <span>660 lines (23.8KB)</span>
+                </div>
+                
+                <div class="file-item">
+                    <span>modules/marine_analysis/python_code_passing_ship/test_configuration.py</span>
+                    <span>687 lines (22.4KB)</span>
+                </div>
+                
+                <div class="file-item">
+                    <span>property/test_state_machine_properties.py</span>
+                    <span>575 lines (19.8KB)</span>
+                </div>
+                
+                <div class="file-item">
+                    <span>security/test_injection_attacks.py</span>
+                    <span>678 lines (25.6KB)</span>
+                </div>
+                </div>
+
+            <h3>📦 Heavy Dependencies (37 imports)</h3>
+            <div class="file-list">
+                
+            <div class="file-item">
+                <span>test_performance_baselines.py</span>
+                <span><code>pandas</code></span>
+            </div>
+            
+            <div class="file-item">
+                <span>test_performance_baselines.py</span>
+                <span><code>numpy</code></span>
+            </div>
+            
+            <div class="file-item">
+                <span>modules/fatigue_analysis/test_cli.py</span>
+                <span><code>pandas</code></span>
+            </div>
+            
+            <div class="file-item">
+                <span>modules/fatigue_analysis/test_rainflow_counter.py</span>
+                <span><code>pandas</code></span>
+            </div>
+            
+            <div class="file-item">
+                <span>modules/fatigue_analysis/test_rainflow_counter.py</span>
+                <span><code>numpy</code></span>
+            </div>
+            
+            <div class="file-item">
+                <span>modules/fatigue_analysis/test_reference_seastate_processor.py</span>
+                <span><code>pandas</code></span>
+            </div>
+            
+            <div class="file-item">
+                <span>modules/fatigue_analysis/test_reference_seastate_processor.py</span>
+                <span><code>numpy</code></span>
+            </div>
+            
+            <div class="file-item">
+                <span>modules/fatigue_analysis/test_reference_seastate_scaling.py</span>
+                <span><code>pandas</code></span>
+            </div>
+            
+            <div class="file-item">
+                <span>modules/fatigue_analysis/test_reference_seastate_scaling.py</span>
+                <span><code>numpy</code></span>
+            </div>
+            
+            <div class="file-item">
+                <span>modules/marine_analysis/python_code_passing_ship/test_calculator.py</span>
+                <span><code>numpy</code></span>
+            </div>
+            
+            </div>
+        </div>
+        
+        </div>
+
+        <div class="recommendations-section">
+            
+        <div class="section recommendations-section">
+            <h2>💡 Optimization Recommendations</h2>
+            
+            <div class="recommendation medium">
+                <h4>
+                    <span class="badge medium">medium</span>
+                    Import Optimization
+                </h4>
+                <p><strong>Recommendation:</strong> Optimize 37 heavy module imports</p>
+                <p><strong>Implementation:</strong> Use lazy imports, mock heavy dependencies, or conditional imports</p>
+                <p><strong>Expected Improvement:</strong> 10-15% faster test startup time</p>
+            </div>
+            
+            <div class="recommendation low">
+                <h4>
+                    <span class="badge low">low</span>
+                    Reporting Overhead
+                </h4>
+                <p><strong>Recommendation:</strong> Consider disabling coverage for development runs</p>
+                <p><strong>Implementation:</strong> Use separate make targets: one with coverage (CI), one without (dev)</p>
+                <p><strong>Expected Improvement:</strong> 15-25% faster execution without coverage</p>
+            </div>
+            
+            <div class="recommendation medium">
+                <h4>
+                    <span class="badge medium">medium</span>
+                    Test Complexity
+                </h4>
+                <p><strong>Recommendation:</strong> Break down complex test files into smaller, focused modules</p>
+                
+                
+            </div>
+            
+        </div>
+        
+        </div>
+
+        <div class="details-section">
+            
+        <div class="section details-section">
+            <h2>🔧 Technical Details</h2>
+
+            <h3>Analysis Information</h3>
+            <div class="file-list">
+                <div class="file-item">
+                    <span>Analysis Timestamp</span>
+                    <span>2025-09-28T15:47:06.798248</span>
+                </div>
+                <div class="file-item">
+                    <span>Dashboard Generated</span>
+                    <span>2025-09-28 15:48:16</span>
+                </div>
+            </div>
+
+            <h3>Data Sources</h3>
+            <div class="file-list">
+                <div class="file-item">
+                    <span>Performance Analysis</span>
+                    <span>✅ Available</span>
+                </div>
+                <div class="file-item">
+                    <span>Resource Usage</span>
+                    <span>✅ Available</span>
+                </div>
+            </div>
+        </div>
+        
+        </div>
+    </div>
+
+    <script>
+        
+        // Test Distribution Chart
+        const testDistData = [{
+            values: [80, 4, 5, 3, 2, 4],
+            labels: ['Unit', 'Integration', 'Performance', 'Property', 'Security', 'Automation'],
+            type: 'pie',
+            hole: 0.4,
+            marker: {
+                colors: ['#3498db', '#e74c3c', '#f39c12', '#9b59b6', '#e67e22', '#1abc9c']
+            }
+        }];
+
+        const testDistLayout = {
+            title: 'Test Distribution by Type',
+            font: { family: 'Segoe UI, sans-serif' },
+            showlegend: true,
+            height: 350
+        };
+
+        Plotly.newPlot('testDistributionChart', testDistData, testDistLayout, {responsive: true});
+
+        // Execution Time Chart
+        const execTimeData = [{
+            x: ['Unit Tests', 'Integration', 'Performance', 'Total Sequential', 'Total Parallel'],
+            y: [2.7, 0.5, 1.3, 7.0, 2.1],
+            type: 'bar',
+            marker: {
+                color: ['#3498db', '#e74c3c', '#f39c12', '#95a5a6', '#27ae60']
+            }
+        }];
+
+        const execTimeLayout = {
+            title: 'Estimated Execution Times (minutes)',
+            xaxis: { title: 'Test Category' },
+            yaxis: { title: 'Time (minutes)' },
+            font: { family: 'Segoe UI, sans-serif' },
+            height: 350
+        };
+
+        Plotly.newPlot('executionTimeChart', execTimeData, execTimeLayout, {responsive: true});
+
+        // Complexity Chart
+        const complexityData = [{
+            x: ['< 20 lines', '20-100 lines', '100-300 lines', '300-500 lines', '> 500 lines'],
+            y: [25, 45, 20, 8, 5],
+            type: 'bar',
+            marker: {
+                color: ['#27ae60', '#2ecc71', '#f39c12', '#e67e22', '#e74c3c']
+            }
+        }];
+
+        const complexityLayout = {
+            title: 'File Complexity Distribution',
+            xaxis: { title: 'File Size Range' },
+            yaxis: { title: 'Number of Files' },
+            font: { family: 'Segoe UI, sans-serif' },
+            height: 350
+        };
+
+        Plotly.newPlot('complexityChart', complexityData, complexityLayout, {responsive: true});
+
+        // Add refresh functionality
+        setInterval(() => {
+            const timestamp = document.querySelector('.timestamp');
+            if (timestamp) {
+                timestamp.textContent = 'Last Updated: ' + new Date().toLocaleString();
+            }
+        }, 60000); // Update every minute
+        
+    </script>
+</body>
+</html>
