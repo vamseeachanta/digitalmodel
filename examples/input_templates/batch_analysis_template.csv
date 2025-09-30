@@ -1,0 +1,4 @@
+plate_id,description,length,breadth,thickness,youngs_modulus,yield_strength,longitudinal_stress,transverse_stress,shear_stress
+Panel_A,Deck panel section A,3.0,0.8,0.012,210e9,355e6,50e6,30e6,20e6
+Panel_B,Side panel section B,2.5,0.7,0.010,210e9,275e6,40e6,60e6,25e6
+Panel_C,Bottom panel section C,2.8,0.9,0.015,210e9,355e6,70e6,45e6,30e6
