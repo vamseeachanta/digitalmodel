@@ -3,14 +3,14 @@
 
 # Project paths
 paths:
-  base_folder: "D:/github/digitalmodel"
-  
-  # Input files (relative to base_folder)
-  fatigue_life_summary: "specs/modules/fatigue-analysis/overall_damage_by_config/input/fatigue_life_summary.csv"
-  config_weightage: "specs/modules/fatigue-analysis/overall_damage_by_config/input/config_weightage.csv"
-  
-  # Output folder (relative to base_folder)
-  output_folder: "specs/modules/fatigue-analysis/overall_damage_by_config/output/overall_damage"
+  base_folder: "D:/1522/ctr9/fatigue_wsp_method/07c_fatigue/output/damage"
+
+  # Input files (absolute paths to production outputs)
+  fatigue_life_summary: "D:/1522/ctr9/fatigue_wsp_method/07c_fatigue/output/damage/fatigue_life_summary.csv"
+  config_weightage: "D:/workspace-hub/digitalmodel/specs/modules/fatigue-analysis/overall_damage_by_config/input/config_weightage.csv"
+
+  # Output folder (absolute path)
+  output_folder: "D:/1522/ctr9/fatigue_wsp_method/07c_fatigue/output/damage/overall_damage"
 
 # Configuration name mapping
 # Maps configuration names from config_weightage.csv (with _mwl suffix) to fatigue_life_summary.csv (without suffix)
@@ -88,25 +88,23 @@ plotting:
       style:
         figure_size: [12, 6]
         dpi: 300
-    
-    - type: "polar_summary"
-      name: "damage_contribution_polar_summary.png"
-      description: "Summary polar plot showing average contribution % across all strut-locations for each configuration"
-      radial_axis: "Average Contribution to Total Damage (%)"
-      angular_axis: "Configuration"
+
+    - type: "bar_worst_case"
+      name: "damage_contribution_worst_case_bar.png"
+      description: "Bar chart for worst-case strut-location showing configuration contributions"
+      x_axis: "Configuration"
+      y_axis: "Contribution to Total Damage (%)"
+      style:
+        figure_size: [12, 6]
+        dpi: 300
+
+    - type: "pie_worst_case"
+      name: "damage_contribution_worst_case_pie.png"
+      description: "Pie chart for worst-case strut-location showing configuration contributions"
       style:
         figure_size: [10, 10]
         dpi: 300
-    
-    - type: "polar_worst_case"
-      name: "damage_contribution_polar_worst_case.png"
-      description: "Polar plot for worst-case strut-location showing configuration contributions"
-      radial_axis: "Contribution to Total Damage (%)"
-      angular_axis: "Configuration"
-      style:
-        figure_size: [10, 10]
-        dpi: 300
-    
+
     - type: "stacked_bar"
       name: "damage_by_strut_location.png"
       description: "Stacked bar plot showing damage contribution by configuration for each strut-location"
@@ -115,6 +113,26 @@ plotting:
       stack_by: "Configuration"
       style:
         figure_size: [14, 8]
+        dpi: 300
+
+    - type: "stacked_bar_worst_strut"
+      name: "damage_worst_strut_all_locations.png"
+      description: "Stacked bar plot for worst-case strut comparing all locations"
+      x_axis: "Location"
+      y_axis: "Weighted Damage Rate (1/year)"
+      stack_by: "Configuration"
+      style:
+        figure_size: [12, 6]
+        dpi: 300
+
+    - type: "stacked_bar_worst_location"
+      name: "damage_worst_location_all_struts.png"
+      description: "Stacked bar plot for worst-case location comparing all struts"
+      x_axis: "Strut"
+      y_axis: "Weighted Damage Rate (1/year)"
+      stack_by: "Configuration"
+      style:
+        figure_size: [12, 6]
         dpi: 300
 
 # Processing options
