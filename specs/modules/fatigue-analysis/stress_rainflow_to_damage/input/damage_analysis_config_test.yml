@@ -39,15 +39,20 @@ sn_curve:
   curve_type: "ABS-E"
   environment: "in-air"
   parameters:
-    log_a: 12.0170      # CORRECTED from ABS Table 1
-    m: 3.0
-    fatigue_limit_cycles: 1.0e7
-    fatigue_limit_stress: 47.0  # CORRECTED from ABS Table 1
+    # Segment 1 parameters (High Stress, N < 10^7 cycles)
+    log_a: 12.0170      # log10(a) - ABS'20 Table 1
+    m: 3.0              # Slope for Segment 1
+
+    # Transition point (where Segment 1 meets Segment 2)
+    fatigue_limit_cycles: 1.0e7        # Transition at 10 million cycles
+    fatigue_limit_stress: 47.0         # Stress at transition point [MPa] - ABS'20 Table 1
+
+    # Segment 2 parameters (Low Stress, N >= 10^7 cycles)
     two_segment:
-      enabled: true
-      transition_cycles: 1.0e7
-      log_c: 15.378
-      r: 5.0
+      enabled: true                     # Enable two-segment S-N curve
+      transition_cycles: 1.0e7          # Must match fatigue_limit_cycles
+      log_c: 15.362                     # log10(c) for Segment 2 - ABS'20 database
+      r: 5.0                            # Slope for Segment 2
 
 thickness_correction:
   enabled: true
@@ -92,8 +97,11 @@ damage_calculation:
     design_factor: 5.0
     fatigue_safety_factor: 1.0
   options:
-    ignore_below_fatigue_limit: false
-    cumulative_damage_method: "linear"
+    # Two-segment S-N curve behavior (NO FATIGUE ENDURANCE LIMIT)
+    ignore_below_fatigue_limit: false   # FALSE = All stress cycles contribute to damage
+                                        # TRUE = Infinite life below fatigue_limit_stress
+                                        # For two-segment curve, set FALSE to use both segments
+    cumulative_damage_method: "linear"  # Linear Miner's rule damage accumulation
 
 output:
   folders:

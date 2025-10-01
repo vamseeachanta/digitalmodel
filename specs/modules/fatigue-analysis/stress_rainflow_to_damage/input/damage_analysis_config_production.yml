@@ -69,24 +69,25 @@ sn_curve:
   curve_type: "ABS-E"          # ABS E curve as specified
   environment: "in-air"        # In air conditions
   
-  # S-N curve parameters (ABS E curve, in air)
-  # Format: log10(N) = log10(a) - m * log10(S)
-  # Where: N = number of cycles to failure, S = stress range [MPa]
+  # Two-Segment S-N curve parameters (ABS E curve, in air)
+  # Segment 1: log10(N) = log_a - m * log10(S)   [N < 10^7]
+  # Segment 2: log10(N) = log_c - r * log10(S)   [N >= 10^7]
+  # Where: N = cycles to failure, S = stress range [MPa]
   parameters:
-    # CORRECTED ABS E curve parameters from official ABS table
-    log_a: 12.0170             # log10(1.04e12) - Verified from ABS Table 1
-    m: 3.0                     # Slope (negative inverse slope)
-    
-    # Fatigue limit (endurance limit)
-    fatigue_limit_cycles: 1.0e7     # Cycles at fatigue limit
-    fatigue_limit_stress: 47.0      # CORRECTED: Stress at fatigue limit [MPa] from ABS Table 1
-    
-    # Two-segment S-N curve option (for N > 10^7 cycles)
+    # Segment 1 parameters (High Stress, N < 10^7 cycles)
+    log_a: 12.0170             # log10(a) - ABS'20 Table 1
+    m: 3.0                     # Slope for Segment 1
+
+    # Transition point (where Segment 1 meets Segment 2)
+    fatigue_limit_cycles: 1.0e7        # Transition at 10 million cycles
+    fatigue_limit_stress: 47.0         # Stress at transition point [MPa] - ABS'20 Table 1
+
+    # Segment 2 parameters (Low Stress, N >= 10^7 cycles)
     two_segment:
-      enabled: true            # ABS E has two segments
-      transition_cycles: 1.0e7 # Transition at fatigue limit
-      log_c: 15.378           # log10(2.39e15) for second segment
-      r: 5.0                  # Slope for N > 10^7
+      enabled: true                     # Enable two-segment S-N curve
+      transition_cycles: 1.0e7          # Must match fatigue_limit_cycles
+      log_c: 15.362                     # log10(c) for Segment 2 - ABS'20 database
+      r: 5.0                            # Slope for Segment 2
 
 # ============================================================================
 # THICKNESS CORRECTION
@@ -154,8 +155,11 @@ damage_calculation:
     
   # Calculation options
   options:
-    ignore_below_fatigue_limit: false  # Include cycles below fatigue limit
-    cumulative_damage_method: "linear" # Linear damage accumulation
+    # Two-segment S-N curve behavior (NO FATIGUE ENDURANCE LIMIT)
+    ignore_below_fatigue_limit: false   # FALSE = All stress cycles contribute to damage
+                                        # TRUE = Infinite life below fatigue_limit_stress
+                                        # For two-segment curve, set FALSE to use both segments
+    cumulative_damage_method: "linear"  # Linear Miner's rule damage accumulation
 
 # ============================================================================
 # OUTPUT CONFIGURATION
