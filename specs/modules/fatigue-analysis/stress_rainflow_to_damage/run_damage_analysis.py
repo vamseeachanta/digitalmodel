@@ -58,22 +58,38 @@ class DamageAnalyzer:
     
     def calculate_cycles_to_failure(self, stress_range: float) -> float:
         """
-        Calculate number of cycles to failure using S-N curve
-        
-        S-N Curve: log10(N) = log10(a) - m * log10(S)
-        Where: N = cycles to failure, S = stress range, a = coefficient, m = slope
+        Calculate number of cycles to failure using two-segment S-N curve
+
+        Two-Segment S-N Curve:
+        - Segment 1 (High Stress): log10(N) = log_a - m * log10(S)  [N < N_transition]
+        - Segment 2 (Low Stress):  log10(N) = log_c - r * log10(S)  [N >= N_transition]
+
+        Where: N = cycles to failure, S = stress range
         """
         params = self.config['sn_curve']['parameters']
-        
-        # Check if stress is below fatigue limit
-        if stress_range <= params['fatigue_limit_stress']:
-            return float('inf')  # Infinite life below fatigue limit
-        
-        # Calculate N using S-N curve
-        log_N = params['log_a'] - params['m'] * np.log10(stress_range)
-        N = 10 ** log_N
-        
-        return N
+        damage_opts = self.config['damage_calculation']['options']
+
+        # Check if we should ignore below fatigue limit (infinite life)
+        if damage_opts.get('ignore_below_fatigue_limit', False):
+            if stress_range <= params['fatigue_limit_stress']:
+                return float('inf')  # Infinite life below fatigue limit
+
+        # Calculate N using Segment 1 (high stress region)
+        log_N1 = params['log_a'] - params['m'] * np.log10(stress_range)
+        N1 = 10 ** log_N1
+
+        # Check if two-segment curve is enabled and if we're in Segment 2 region
+        two_seg = params.get('two_segment', {})
+        if two_seg.get('enabled', False):
+            transition_cycles = float(params.get('fatigue_limit_cycles', 1.0e7))
+
+            # If N1 >= transition cycles, use Segment 2 instead
+            if N1 >= transition_cycles:
+                log_N2 = two_seg['log_c'] - two_seg['r'] * np.log10(stress_range)
+                N2 = 10 ** log_N2
+                return N2
+
+        return N1
     
     def get_thickness_correction_factor(self, location_id: str, thickness_mm: float) -> float:
         """
