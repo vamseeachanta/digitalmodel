@@ -151,32 +151,42 @@ class OverallDamageCalculator:
                         contributions_df: pd.DataFrame):
         """Generate all CSV output files"""
         print("Generating output files...")
-        
+
         output_folder = self.base_folder / self.config['paths']['output_folder']
         output_folder.mkdir(parents=True, exist_ok=True)
-        
+
         decimal_prec = self.config['processing']['decimal_precision']
-        
+
         damage_by_config = contributions_df[[
             'strut', 'location', 'configuration_original', 'total_damage_rate',
             'duration_weight_percent', 'weighted_damage_rate', 'contribution_to_total_percent'
         ]].copy()
         damage_by_config.rename(columns={'configuration_original': 'configuration'}, inplace=True)
-        
-        damage_by_config.to_csv(
-            output_folder / 'damage_by_configuration.csv',
-            index=False,
-            float_format=f'%.{decimal_prec["damage_rate"]}f'
-        )
-        print(f"  Created: damage_by_configuration.csv")
-        
-        total_damage.to_csv(
-            output_folder / 'overall_damage_summary.csv',
-            index=False,
-            float_format=f'%.{decimal_prec["damage_rate"]}f'
-        )
-        print(f"  Created: overall_damage_summary.csv")
-        
+
+        # Try to write damage_by_configuration.csv
+        try:
+            damage_by_config.to_csv(
+                output_folder / 'damage_by_configuration.csv',
+                index=False,
+                float_format=f'%.{decimal_prec["damage_rate"]}f'
+            )
+            print(f"  Created: damage_by_configuration.csv")
+        except PermissionError:
+            print(f"\n  WARNING: Could not write 'damage_by_configuration.csv' - file is locked/open")
+            print(f"  Skipping this file and continuing...")
+
+        # Try to write overall_damage_summary.csv
+        try:
+            total_damage.to_csv(
+                output_folder / 'overall_damage_summary.csv',
+                index=False,
+                float_format=f'%.{decimal_prec["damage_rate"]}f'
+            )
+            print(f"  Created: overall_damage_summary.csv")
+        except PermissionError:
+            print(f"\n  WARNING: Could not write 'overall_damage_summary.csv' - file is locked/open")
+            print(f"  Skipping this file and continuing...")
+
         config_contrib = contributions_df.groupby('configuration_original').agg({
             'contribution_to_total_percent': ['mean', 'min', 'max']
         }).reset_index()
@@ -184,14 +194,19 @@ class OverallDamageCalculator:
             'configuration', 'average_contribution_percent',
             'min_contribution_percent', 'max_contribution_percent'
         ]
-        
-        config_contrib.to_csv(
-            output_folder / 'configuration_contribution.csv',
-            index=False,
-            float_format=f'%.{decimal_prec["contribution_percent"]}f'
-        )
-        print(f"  Created: configuration_contribution.csv")
-        
+
+        # Try to write configuration_contribution.csv
+        try:
+            config_contrib.to_csv(
+                output_folder / 'configuration_contribution.csv',
+                index=False,
+                float_format=f'%.{decimal_prec["contribution_percent"]}f'
+            )
+            print(f"  Created: configuration_contribution.csv")
+        except PermissionError:
+            print(f"\n  WARNING: Could not write 'configuration_contribution.csv' - file is locked/open")
+            print(f"  Skipping this file and continuing...")
+
         self.results['damage_by_config'] = damage_by_config
         self.results['total_damage'] = total_damage
         self.results['config_contrib'] = config_contrib
@@ -201,14 +216,16 @@ class OverallDamageCalculator:
         """Generate all visualization plots"""
         if not self.config['plotting']['enabled']:
             return
-        
+
         print("Creating visualization plots...")
         output_folder = self.base_folder / self.config['paths']['output_folder']
-        
+
         self._create_bar_cumulative_plot(output_folder)
-        self._create_polar_summary_plot(output_folder)
-        self._create_polar_worst_case_plot(output_folder)
+        self._create_worst_case_bar_plot(output_folder)
+        self._create_worst_case_pie_plot(output_folder)
         self._create_stacked_bar_plot(output_folder)
+        self._create_worst_strut_stacked_bar_plot(output_folder)
+        self._create_worst_location_stacked_bar_plot(output_folder)
     
     def _create_bar_cumulative_plot(self, output_folder: Path):
         """Create bar chart with cumulative overlay"""
@@ -239,97 +256,113 @@ class OverallDamageCalculator:
         plt.close()
         print(f"  Created: damage_by_config_bar.png")
     
-    def _create_polar_summary_plot(self, output_folder: Path):
-        """Create summary polar plot for average contributions"""
-        config_contrib = self.results['config_contrib'].copy()
-        
-        fig = plt.figure(figsize=(10, 10))
-        ax = fig.add_subplot(111, projection='polar')
-        
-        theta = np.linspace(0, 2 * np.pi, len(config_contrib), endpoint=False)
-        radii = config_contrib['average_contribution_percent'].values
-        width = 2 * np.pi / len(config_contrib) * 0.8
-        
-        bars = ax.bar(theta, radii, width=width, alpha=0.7)
-        
-        colors = plt.cm.viridis(np.linspace(0, 1, len(config_contrib)))
-        for bar, color in zip(bars, colors):
-            bar.set_facecolor(color)
-        
-        ax.set_xticks(theta)
-        ax.set_xticklabels(config_contrib['configuration'], fontsize=10)
-        ax.set_ylabel('Average Contribution (%)', fontsize=11)
-        ax.set_title('Configuration Damage Contribution\n(Average Across All Strut-Locations)',
-                    fontsize=13, fontweight='bold', pad=20)
-        
-        plt.tight_layout()
-        plt.savefig(output_folder / 'damage_contribution_polar_summary.png', 
-                   dpi=300, bbox_inches='tight')
-        plt.close()
-        print(f"  Created: damage_contribution_polar_summary.png")
-    
-    def _create_polar_worst_case_plot(self, output_folder: Path):
-        """Create polar plot for worst-case strut-location"""
+    def _create_worst_case_bar_plot(self, output_folder: Path):
+        """Create bar chart for worst-case strut-location"""
         total_damage = self.results['total_damage']
         contributions_df = self.results['contributions_df']
-        
+
         worst_strut, worst_loc, worst_life = self.identify_worst_case(total_damage)
-        
+
         if worst_strut is None:
-            print("  Skipped: worst-case polar plot (no finite life cases)")
+            print("  Skipped: worst-case bar plot (no finite life cases)")
             return
-        
+
         worst_case_data = contributions_df[
             (contributions_df['strut'] == worst_strut) &
             (contributions_df['location'] == worst_loc)
         ].copy()
-        
-        fig = plt.figure(figsize=(10, 10))
-        ax = fig.add_subplot(111, projection='polar')
-        
-        theta = np.linspace(0, 2 * np.pi, len(worst_case_data), endpoint=False)
-        radii = worst_case_data['contribution_to_total_percent'].values
-        width = 2 * np.pi / len(worst_case_data) * 0.8
-        
-        bars = ax.bar(theta, radii, width=width, alpha=0.7)
-        
+
+        fig, ax = plt.subplots(figsize=(12, 6))
+
+        x_pos = np.arange(len(worst_case_data))
         colors = plt.cm.plasma(np.linspace(0, 1, len(worst_case_data)))
-        for bar, color in zip(bars, colors):
-            bar.set_facecolor(color)
-        
-        ax.set_xticks(theta)
-        ax.set_xticklabels(worst_case_data['configuration_original'], fontsize=10)
-        ax.set_ylabel('Contribution (%)', fontsize=11)
+
+        bars = ax.bar(x_pos, worst_case_data['contribution_to_total_percent'].values,
+                     alpha=0.8, color=colors)
+
+        ax.set_xlabel('Configuration', fontsize=12)
+        ax.set_ylabel('Contribution to Total Damage (%)', fontsize=12)
         ax.set_title(f'Worst-Case Configuration Contributions\n' +
                     f'Strut {worst_strut}, {worst_loc} ' +
                     f'(Fatigue Life: {worst_life:.1f} years)',
-                    fontsize=13, fontweight='bold', pad=20)
-        
+                    fontsize=14, fontweight='bold')
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(worst_case_data['configuration_original'], rotation=45, ha='right')
+        ax.grid(axis='y', alpha=0.3, linestyle='--')
+
+        for i, (bar, val) in enumerate(zip(bars, worst_case_data['contribution_to_total_percent'].values)):
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
+                   f'{val:.1f}%', ha='center', va='bottom', fontsize=9)
+
         plt.tight_layout()
-        plt.savefig(output_folder / 'damage_contribution_polar_worst_case.png',
+        plt.savefig(output_folder / 'damage_contribution_worst_case_bar.png',
                    dpi=300, bbox_inches='tight')
         plt.close()
-        print(f"  Created: damage_contribution_polar_worst_case.png")
+        print(f"  Created: damage_contribution_worst_case_bar.png")
+
+    def _create_worst_case_pie_plot(self, output_folder: Path):
+        """Create pie chart for worst-case strut-location"""
+        total_damage = self.results['total_damage']
+        contributions_df = self.results['contributions_df']
+
+        worst_strut, worst_loc, worst_life = self.identify_worst_case(total_damage)
+
+        if worst_strut is None:
+            print("  Skipped: worst-case pie plot (no finite life cases)")
+            return
+
+        worst_case_data = contributions_df[
+            (contributions_df['strut'] == worst_strut) &
+            (contributions_df['location'] == worst_loc)
+        ].copy()
+
+        fig, ax = plt.subplots(figsize=(10, 10))
+
+        colors = plt.cm.plasma(np.linspace(0, 1, len(worst_case_data)))
+
+        wedges, texts, autotexts = ax.pie(
+            worst_case_data['contribution_to_total_percent'].values,
+            labels=worst_case_data['configuration_original'].values,
+            autopct='%1.1f%%',
+            startangle=90,
+            colors=colors,
+            textprops={'fontsize': 10}
+        )
+
+        for autotext in autotexts:
+            autotext.set_color('white')
+            autotext.set_fontweight('bold')
+
+        ax.set_title(f'Worst-Case Configuration Contributions\n' +
+                    f'Strut {worst_strut}, {worst_loc} ' +
+                    f'(Fatigue Life: {worst_life:.1f} years)',
+                    fontsize=14, fontweight='bold', pad=20)
+
+        plt.tight_layout()
+        plt.savefig(output_folder / 'damage_contribution_worst_case_pie.png',
+                   dpi=300, bbox_inches='tight')
+        plt.close()
+        print(f"  Created: damage_contribution_worst_case_pie.png")
     
     def _create_stacked_bar_plot(self, output_folder: Path):
         """Create stacked bar plot by strut-location"""
         contributions_df = self.results['contributions_df']
-        
+
         contributions_df['strut_location'] = (
             contributions_df['strut'].astype(str) + '-' + contributions_df['location']
         )
-        
+
         pivot_data = contributions_df.pivot_table(
             index='strut_location',
             columns='configuration_original',
             values='weighted_damage_rate',
             aggfunc='sum'
         )
-        
+
         fig, ax = plt.subplots(figsize=(14, 8))
-        pivot_data.plot(kind='bar', stacked=True, ax=ax, 
+        pivot_data.plot(kind='bar', stacked=True, ax=ax,
                        colormap='tab10', alpha=0.8)
-        
+
         ax.set_xlabel('Strut-Location', fontsize=12)
         ax.set_ylabel('Weighted Damage Rate (1/year)', fontsize=12)
         ax.set_title('Damage Contribution by Configuration for Each Strut-Location',
@@ -341,6 +374,82 @@ class OverallDamageCalculator:
                    dpi=300, bbox_inches='tight')
         plt.close()
         print(f"  Created: damage_by_strut_location.png")
+
+    def _create_worst_strut_stacked_bar_plot(self, output_folder: Path):
+        """Create stacked bar plot for worst-case strut comparing all locations"""
+        total_damage = self.results['total_damage']
+        contributions_df = self.results['contributions_df']
+
+        worst_strut, worst_loc, worst_life = self.identify_worst_case(total_damage)
+
+        if worst_strut is None:
+            print("  Skipped: worst strut stacked bar plot (no finite life cases)")
+            return
+
+        worst_strut_data = contributions_df[
+            contributions_df['strut'] == worst_strut
+        ].copy()
+
+        pivot_data = worst_strut_data.pivot_table(
+            index='location',
+            columns='configuration_original',
+            values='weighted_damage_rate',
+            aggfunc='sum'
+        )
+
+        fig, ax = plt.subplots(figsize=(12, 6))
+        pivot_data.plot(kind='bar', stacked=True, ax=ax,
+                       colormap='tab10', alpha=0.8)
+
+        ax.set_xlabel('Location', fontsize=12)
+        ax.set_ylabel('Weighted Damage Rate (1/year)', fontsize=12)
+        ax.set_title(f'Damage Contribution by Configuration\nWorst-Case Strut {worst_strut} - All Locations',
+                    fontsize=14, fontweight='bold')
+        ax.legend(title='Configuration', bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.savefig(output_folder / 'damage_worst_strut_all_locations.png',
+                   dpi=300, bbox_inches='tight')
+        plt.close()
+        print(f"  Created: damage_worst_strut_all_locations.png")
+
+    def _create_worst_location_stacked_bar_plot(self, output_folder: Path):
+        """Create stacked bar plot for worst-case location comparing all struts"""
+        total_damage = self.results['total_damage']
+        contributions_df = self.results['contributions_df']
+
+        worst_strut, worst_loc, worst_life = self.identify_worst_case(total_damage)
+
+        if worst_strut is None:
+            print("  Skipped: worst location stacked bar plot (no finite life cases)")
+            return
+
+        worst_loc_data = contributions_df[
+            contributions_df['location'] == worst_loc
+        ].copy()
+
+        pivot_data = worst_loc_data.pivot_table(
+            index='strut',
+            columns='configuration_original',
+            values='weighted_damage_rate',
+            aggfunc='sum'
+        )
+
+        fig, ax = plt.subplots(figsize=(12, 6))
+        pivot_data.plot(kind='bar', stacked=True, ax=ax,
+                       colormap='tab10', alpha=0.8)
+
+        ax.set_xlabel('Strut', fontsize=12)
+        ax.set_ylabel('Weighted Damage Rate (1/year)', fontsize=12)
+        ax.set_title(f'Damage Contribution by Configuration\nWorst-Case Location {worst_loc} - All Struts',
+                    fontsize=14, fontweight='bold')
+        ax.legend(title='Configuration', bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.savefig(output_folder / 'damage_worst_location_all_struts.png',
+                   dpi=300, bbox_inches='tight')
+        plt.close()
+        print(f"  Created: damage_worst_location_all_struts.png")
     
     def print_summary(self):
         """Print calculation summary"""

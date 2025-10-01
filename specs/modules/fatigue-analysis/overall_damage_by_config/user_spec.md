@@ -31,3 +31,34 @@ An input file should contain the following sections:
     - fatigue life (years)
 
   - A plot showing damage rate by configuration and cumulative damage rate
+
+
+## Revisions
+
+### 2025-10-01, 9:42 AM
+
+Updated visualization plots in spec and implementation:
+
+**Changes to config.yml:**
+- Deleted "polar_summary" plot section
+- Replaced "polar_worst_case" plot with "bar_worst_case" (bar chart)
+- Added new plot types:
+  - `damage_contribution_worst_case_bar.png` - Bar chart for worst-case strut-location
+  - `damage_contribution_worst_case_pie.png` - Pie chart for worst-case strut-location
+  - `damage_worst_strut_all_locations.png` - Stacked bar comparing all locations for worst strut
+  - `damage_worst_location_all_struts.png` - Stacked bar comparing all struts for worst location
+
+**Changes to calculate_overall_damage.py:**
+- Removed `_create_polar_summary_plot()` method
+- Replaced `_create_polar_worst_case_plot()` with `_create_worst_case_bar_plot()`
+- Added `_create_worst_case_pie_plot()` method
+- Added `_create_worst_strut_stacked_bar_plot()` method
+- Added `_create_worst_location_stacked_bar_plot()` method
+- Updated `create_plots()` to call all new methods
+
+**New Visualizations:**
+1. Worst-case bar chart showing configuration contributions for the worst strut-location
+2. Worst-case pie chart showing configuration contributions for the worst strut-location
+3. Stacked bar chart for worst-case strut showing damage across all locations
+4. Stacked bar chart for worst-case location showing damage across all struts
+
