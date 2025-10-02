@@ -3,7 +3,17 @@
     "allow": [
       "mcp__ruv-swarm",
       "mcp__claude-flow@alpha",
-      "mcp__flow-nexus"
+      "mcp__flow-nexus",
+      "Bash(mv:*)",
+      "Bash(.venv/Scripts/pip.exe install:*)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/modules/marine_analysis/mathcad-to-python-passing_ship/test_mathcad_validation.py -v --tb=short)",
+      "Bash(uv pip install:*)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/modules/marine_analysis/mathcad-to-python-passing_ship/test_mathcad_validation.py::TestMathCADValidation::test_sway_force_validation -v --tb=short)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/modules/marine_analysis/mathcad-to-python-passing_ship/test_mathcad_validation.py -v --tb=line -x)",
+      "Bash(.venv/Scripts/python.exe -c \"import sys; sys.path.insert(0, ''src/digitalmodel/modules/marine_analysis/mathcad-to-python-passing_ship''); from calculator import PassingShipCalculator; print(''Import successful'')\")",
+      "Bash(git mv:*)",
+      "Bash(export PYTHONPATH=src)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/modules/marine_analysis/python_mathcad/test_mathcad_validation.py -v --tb=short)"
     ],
     "deny": []
   }
