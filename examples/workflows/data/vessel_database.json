@@ -1,0 +1,143 @@
+{
+  "fpso_vessels": [
+    {
+      "name": "FPSO-Generic-300k",
+      "type": "FPSO",
+      "loa_m": 330.0,
+      "beam_m": 58.0,
+      "depth_m": 31.5,
+      "operating_draft_m": 21.0,
+      "displacement_tonnes": 350000,
+      "deadweight_tonnes": 300000,
+      "wind_area_transverse_m2": 3500,
+      "wind_area_longitudinal_m2": 9000,
+      "vcg_m": 15.0,
+      "lcg_from_ap_m": 165.0
+    },
+    {
+      "name": "FPSO-Spread-250k",
+      "type": "FPSO",
+      "loa_m": 310.0,
+      "beam_m": 54.0,
+      "operating_draft_m": 19.5,
+      "displacement_tonnes": 280000,
+      "wind_area_transverse_m2": 3200,
+      "wind_area_longitudinal_m2": 8500
+    }
+  ],
+
+  "tankers": [
+    {
+      "name": "VLCC-Generic",
+      "type": "VLCC",
+      "loa_m": 330.0,
+      "beam_m": 60.0,
+      "depth_m": 31.0,
+      "scantling_draft_m": 23.0,
+      "displacement_tonnes": 320000,
+      "deadweight_tonnes": 300000,
+      "wind_area_laden_m2": 8000,
+      "wind_area_ballast_m2": 12000
+    },
+    {
+      "name": "Suezmax-Generic",
+      "type": "Suezmax",
+      "loa_m": 270.0,
+      "beam_m": 48.0,
+      "scantling_draft_m": 17.5,
+      "displacement_tonnes": 165000,
+      "deadweight_tonnes": 150000,
+      "wind_area_laden_m2": 6000,
+      "wind_area_ballast_m2": 9000
+    },
+    {
+      "name": "Aframax-Generic",
+      "type": "Aframax",
+      "loa_m": 250.0,
+      "beam_m": 44.0,
+      "scantling_draft_m": 15.5,
+      "displacement_tonnes": 120000,
+      "deadweight_tonnes": 105000,
+      "wind_area_laden_m2": 5000,
+      "wind_area_ballast_m2": 7500
+    }
+  ],
+
+  "drilling_vessels": [
+    {
+      "name": "Drillship-Generic",
+      "type": "Drillship",
+      "loa_m": 240.0,
+      "beam_m": 42.0,
+      "operating_draft_m": 12.0,
+      "displacement_tonnes": 75000,
+      "dp_class": 2,
+      "thruster_capacity_kn": 2000,
+      "moon_pool_area_m2": 100
+    },
+    {
+      "name": "Semi-Sub-Rig",
+      "type": "Semi-Submersible",
+      "loa_m": 120.0,
+      "beam_m": 95.0,
+      "operating_draft_m": 25.0,
+      "displacement_tonnes": 60000,
+      "dp_class": 2,
+      "variable_deck_load_tonnes": 8000
+    }
+  ],
+
+  "installation_vessels": [
+    {
+      "name": "Pipelay-S-lay",
+      "type": "S-Lay Vessel",
+      "loa_m": 200.0,
+      "beam_m": 40.0,
+      "stinger_length_m": 140.0,
+      "stinger_angle_deg": 6.0,
+      "tensioner_capacity_tonnes": 500,
+      "max_water_depth_m": 3000
+    },
+    {
+      "name": "Pipelay-J-lay",
+      "type": "J-Lay Vessel",
+      "loa_m": 180.0,
+      "beam_m": 42.0,
+      "tower_height_m": 95.0,
+      "tensioner_capacity_tonnes": 650,
+      "max_water_depth_m": 3500
+    },
+    {
+      "name": "Jack-Up-Generic",
+      "type": "Jack-Up",
+      "hull_length_m": 80.0,
+      "hull_width_m": 80.0,
+      "hull_depth_m": 12.0,
+      "operating_draft_m": 8.0,
+      "leg_length_m": 160.0,
+      "max_water_depth_m": 130,
+      "variable_deck_load_tonnes": 5000
+    }
+  ],
+
+  "renewable_energy": [
+    {
+      "name": "Floating-Wind-15MW",
+      "type": "Semi-Submersible Platform",
+      "turbine_rated_power_mw": 15.0,
+      "rotor_diameter_m": 240.0,
+      "hub_height_m": 150.0,
+      "platform_displacement_tonnes": 20000,
+      "platform_draft_m": 20.0,
+      "column_spacing_m": 50.0
+    },
+    {
+      "name": "WEC-Point-Absorber",
+      "type": "Wave Energy Converter",
+      "device_diameter_m": 10.0,
+      "device_draft_m": 5.0,
+      "rated_power_kw": 500,
+      "displacement_tonnes": 500
+    }
+  ]
+}
