@@ -1,0 +1,474 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "description": "Workflow orchestration templates for multi-agent collaboration",
+    "lastUpdated": "2025-10-03"
+  },
+  "workflows": {
+    "sparc-complete": {
+      "name": "Complete SPARC Workflow",
+      "description": "Full SPARC methodology with gate-pass reviews at each phase",
+      "phases": [
+        {
+          "name": "specification",
+          "agents": {
+            "primary": "spec-kit-analyzer",
+            "support": ["claude-flow-researcher", "agent-os-planner"]
+          },
+          "tasks": [
+            "Analyze requirements",
+            "Create spec with spec-kit",
+            "Validate with Agent OS instructions",
+            "Document in .agent-os/specs/"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-flow-researcher",
+            "minScore": 90
+          },
+          "outputs": [
+            ".agent-os/specs/[spec-name]/spec.md",
+            ".agent-os/specs/[spec-name]/sub-specs/technical-spec.md"
+          ]
+        },
+        {
+          "name": "pseudocode",
+          "agents": {
+            "primary": "claude-flow-architect",
+            "support": ["claude-sonnet-4.5"]
+          },
+          "tasks": [
+            "Design algorithms",
+            "Analyze complexity",
+            "Document edge cases",
+            "Create pseudocode specifications"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-flow-architect",
+            "minScore": 85
+          },
+          "outputs": [
+            ".agent-os/specs/[spec-name]/sub-specs/pseudocode.md"
+          ]
+        },
+        {
+          "name": "architecture",
+          "agents": {
+            "primary": "claude-flow-architect",
+            "support": ["claude-sonnet-4.5", "claude-flow-reviewer"]
+          },
+          "tasks": [
+            "Design system architecture",
+            "Define database schema",
+            "Plan API endpoints",
+            "Document architectural decisions"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-flow-architect",
+            "minScore": 88
+          },
+          "outputs": [
+            ".agent-os/specs/[spec-name]/sub-specs/architecture.md",
+            ".agent-os/specs/[spec-name]/sub-specs/database-schema.md",
+            ".agent-os/specs/[spec-name]/sub-specs/api-spec.md"
+          ]
+        },
+        {
+          "name": "refinement-tdd",
+          "agents": {
+            "primary": "claude-flow-coder",
+            "support": ["claude-flow-tester", "factory-ai-droid"]
+          },
+          "tasks": [
+            "Write tests first (TDD)",
+            "Implement functionality",
+            "Run tests continuously",
+            "Refactor with confidence"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-flow-reviewer",
+            "minScore": 90
+          },
+          "outputs": [
+            "tests/",
+            "src/",
+            "Test coverage report"
+          ]
+        },
+        {
+          "name": "completion",
+          "agents": {
+            "primary": "claude-sonnet-4.5",
+            "support": ["claude-flow-reviewer", "claude-flow-tester"]
+          },
+          "tasks": [
+            "Integration validation",
+            "Final code review",
+            "Documentation completion",
+            "Deployment preparation"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-sonnet-4.5",
+            "minScore": 92
+          },
+          "outputs": [
+            "Pull request",
+            "Deployment checklist",
+            "Updated roadmap"
+          ]
+        }
+      ],
+      "coordination": {
+        "platform": "claude-flow",
+        "hooks": {
+          "pre-task": "npx claude-flow@alpha hooks pre-task",
+          "post-edit": "npx claude-flow@alpha hooks post-edit",
+          "post-task": "npx claude-flow@alpha hooks post-task",
+          "session-restore": "npx claude-flow@alpha hooks session-restore",
+          "session-end": "npx claude-flow@alpha hooks session-end"
+        },
+        "memory": {
+          "enabled": true,
+          "keys": [
+            "swarm/[agent]/context",
+            "swarm/[agent]/decisions",
+            "swarm/[agent]/artifacts"
+          ]
+        }
+      }
+    },
+    "feature-development": {
+      "name": "Feature Development Workflow",
+      "description": "Rapid feature development with factory.ai and claude-flow",
+      "phases": [
+        {
+          "name": "planning",
+          "agents": {
+            "primary": "agent-os-planner",
+            "support": ["spec-kit-analyzer"]
+          },
+          "tasks": [
+            "Create feature spec",
+            "Break down into tasks",
+            "Estimate complexity"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-flow-researcher",
+            "minScore": 85
+          }
+        },
+        {
+          "name": "implementation",
+          "agents": {
+            "primary": "factory-ai-droid",
+            "support": ["claude-flow-coder", "claude-sonnet-4.5"]
+          },
+          "tasks": [
+            "Generate initial code",
+            "Implement core features",
+            "Add error handling"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-flow-reviewer",
+            "minScore": 88
+          }
+        },
+        {
+          "name": "testing",
+          "agents": {
+            "primary": "claude-flow-tester",
+            "support": ["factory-ai-droid"]
+          },
+          "tasks": [
+            "Write comprehensive tests",
+            "Achieve 90% coverage",
+            "Test edge cases"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-flow-tester",
+            "minScore": 90
+          }
+        },
+        {
+          "name": "review-deploy",
+          "agents": {
+            "primary": "claude-flow-reviewer",
+            "support": ["claude-sonnet-4.5"]
+          },
+          "tasks": [
+            "Code review",
+            "Security check",
+            "Create PR",
+            "Deploy to staging"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-sonnet-4.5",
+            "minScore": 92
+          }
+        }
+      ]
+    },
+    "refactoring-workflow": {
+      "name": "Code Refactoring Workflow",
+      "description": "Safe refactoring with automated testing",
+      "phases": [
+        {
+          "name": "analysis",
+          "agents": {
+            "primary": "claude-flow-reviewer",
+            "support": ["claude-sonnet-4.5"]
+          },
+          "tasks": [
+            "Analyze code quality",
+            "Identify refactoring opportunities",
+            "Assess risks"
+          ],
+          "gatePass": {
+            "enabled": false
+          }
+        },
+        {
+          "name": "test-baseline",
+          "agents": {
+            "primary": "claude-flow-tester",
+            "support": ["factory-ai-droid"]
+          },
+          "tasks": [
+            "Ensure comprehensive tests exist",
+            "Document current behavior",
+            "Establish baseline coverage"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-flow-tester",
+            "minScore": 85
+          }
+        },
+        {
+          "name": "refactor",
+          "agents": {
+            "primary": "factory-ai-droid",
+            "support": ["claude-sonnet-4.5"]
+          },
+          "tasks": [
+            "Apply refactoring patterns",
+            "Maintain test pass rate",
+            "Update documentation"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-flow-reviewer",
+            "minScore": 90
+          }
+        },
+        {
+          "name": "validation",
+          "agents": {
+            "primary": "claude-flow-reviewer",
+            "support": ["claude-flow-tester"]
+          },
+          "tasks": [
+            "Verify all tests pass",
+            "Check performance",
+            "Review changes"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-sonnet-4.5",
+            "minScore": 95
+          }
+        }
+      ]
+    },
+    "bug-fix-workflow": {
+      "name": "Bug Fix Workflow",
+      "description": "Systematic bug fixing with root cause analysis",
+      "phases": [
+        {
+          "name": "reproduction",
+          "agents": {
+            "primary": "claude-sonnet-4.5",
+            "support": ["claude-flow-tester"]
+          },
+          "tasks": [
+            "Reproduce the bug",
+            "Write failing test",
+            "Document symptoms"
+          ],
+          "gatePass": {
+            "enabled": false
+          }
+        },
+        {
+          "name": "root-cause",
+          "agents": {
+            "primary": "claude-sonnet-4.5",
+            "support": ["claude-flow-reviewer"]
+          },
+          "tasks": [
+            "Analyze root cause",
+            "Identify affected components",
+            "Plan fix strategy"
+          ],
+          "gatePass": {
+            "enabled": false
+          }
+        },
+        {
+          "name": "fix",
+          "agents": {
+            "primary": "factory-ai-droid",
+            "support": ["claude-sonnet-4.5"]
+          },
+          "tasks": [
+            "Implement fix",
+            "Ensure test passes",
+            "Check for regressions"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-flow-reviewer",
+            "minScore": 90
+          }
+        },
+        {
+          "name": "prevention",
+          "agents": {
+            "primary": "claude-flow-tester",
+            "support": ["claude-flow-reviewer"]
+          },
+          "tasks": [
+            "Add regression tests",
+            "Update validation",
+            "Document prevention"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-flow-reviewer",
+            "minScore": 88
+          }
+        }
+      ]
+    },
+    "documentation-workflow": {
+      "name": "Documentation Workflow",
+      "description": "Comprehensive documentation creation and maintenance",
+      "phases": [
+        {
+          "name": "planning",
+          "agents": {
+            "primary": "claude-sonnet-4.5",
+            "support": ["spec-kit-analyzer"]
+          },
+          "tasks": [
+            "Define documentation scope",
+            "Identify target audiences",
+            "Create outline"
+          ],
+          "gatePass": {
+            "enabled": false
+          }
+        },
+        {
+          "name": "generation",
+          "agents": {
+            "primary": "claude-sonnet-4.5",
+            "support": ["factory-ai-droid"]
+          },
+          "tasks": [
+            "Generate API documentation",
+            "Create user guides",
+            "Write technical specs"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-flow-reviewer",
+            "minScore": 85
+          }
+        },
+        {
+          "name": "validation",
+          "agents": {
+            "primary": "claude-flow-reviewer",
+            "support": ["spec-kit-analyzer"]
+          },
+          "tasks": [
+            "Verify accuracy",
+            "Check completeness",
+            "Ensure clarity"
+          ],
+          "gatePass": {
+            "enabled": true,
+            "reviewer": "claude-sonnet-4.5",
+            "minScore": 90
+          }
+        }
+      ]
+    }
+  },
+  "integrationPatterns": {
+    "factory-ai-claude-flow": {
+      "description": "Combine factory.ai bulk operations with claude-flow coordination",
+      "pattern": [
+        "1. Initialize claude-flow swarm for coordination",
+        "2. Use factory.ai for bulk code generation/refactoring",
+        "3. claude-flow agents review and validate changes",
+        "4. Gate-pass review before committing",
+        "5. claude-flow orchestrates PR creation"
+      ],
+      "example": {
+        "task": "Refactor 50 Python files to use async/await",
+        "execution": [
+          "npx claude-flow@alpha swarm init --topology mesh",
+          "droid exec 'refactor all Python files to use async/await'",
+          "./modules/automation/gate_pass_review.sh refinement . --auto",
+          "npx claude-flow@alpha hooks post-task"
+        ]
+      }
+    },
+    "spec-kit-agent-os": {
+      "description": "Evolve specs with spec-kit and execute with agent-os",
+      "pattern": [
+        "1. Create initial spec with agent-os",
+        "2. Evolve with spec-kit based on feedback",
+        "3. agent-os breaks down into tasks",
+        "4. Execute tasks with appropriate agents",
+        "5. Update spec based on implementation learnings"
+      ],
+      "example": {
+        "task": "Implement payment processing feature",
+        "execution": [
+          "@~/.agent-os/instructions/create-spec.md",
+          "specify validate [spec-file]",
+          "specify evolve [spec-file] --feedback 'Add stripe integration'",
+          "@~/.agent-os/instructions/execute-tasks.md",
+          "specify update [spec-file] --status completed"
+        ]
+      }
+    },
+    "multi-agent-review": {
+      "description": "Multiple agents review work from different perspectives",
+      "pattern": [
+        "1. Primary agent implements feature",
+        "2. Security agent reviews for vulnerabilities",
+        "3. Performance agent reviews for optimization",
+        "4. Testing agent validates coverage",
+        "5. Architecture agent validates design patterns"
+      ],
+      "agents": [
+        "claude-flow-reviewer (general quality)",
+        "claude-flow-architect (design patterns)",
+        "claude-flow-tester (test coverage)",
+        "claude-sonnet-4.5 (comprehensive review)"
+      ]
+    }
+  }
+}
