@@ -1,11 +1,30 @@
 import math
 import pandas as pd
+import warnings
 
 import matplotlib.pyplot as plt
 from digitalmodel.modules.catenary.pipeProperties import pipeProperties
 
 
 def catenaryEquation(data):
+    """
+    DEPRECATED: This legacy dict-based catenary API is deprecated.
+
+    Please use the modern API from marine_engineering.catenary instead:
+        from marine_engineering.catenary import CatenarySolver, CatenaryInput
+
+    For backward compatibility, use the adapter:
+        from marine_engineering.catenary import catenaryEquation
+
+    This function will be removed in a future version.
+    """
+    warnings.warn(
+        "digitalmodel.modules.catenary.catenaryMethods.catenaryEquation is deprecated. "
+        "Use marine_engineering.catenary.CatenarySolver for new code, or "
+        "marine_engineering.catenary.catenaryEquation for backward compatibility.",
+        DeprecationWarning,
+        stacklevel=2
+    )
 
     if data["F"] != None:
         S = data["d"] * (2 * data["F"] / data["w"] - data["d"])
@@ -45,6 +64,20 @@ def catenaryEquation(data):
 
 
 def catenaryForces(data):
+    """
+    DEPRECATED: This legacy dict-based catenary forces API is deprecated.
+
+    Please use the modern API from marine_engineering.catenary instead.
+    For backward compatibility, use:
+        from marine_engineering.catenary import catenaryForces
+    """
+    warnings.warn(
+        "digitalmodel.modules.catenary.catenaryMethods.catenaryForces is deprecated. "
+        "Use marine_engineering.catenary.catenaryForces for backward compatibility.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+
     #  Vertical load on vessel
     Fv = data["weightPerUnitLength"] * data["S"]
     #  Total force along catenary
