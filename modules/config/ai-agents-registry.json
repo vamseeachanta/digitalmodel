@@ -1,0 +1,482 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "lastUpdated": "2025-10-03",
+    "updateFrequency": "daily",
+    "autoUpdateEnabled": true
+  },
+  "agentPlatforms": {
+    "claude-flow": {
+      "enabled": true,
+      "version": "@alpha",
+      "mcp": "mcp__claude-flow",
+      "agentCount": 54,
+      "capabilities": ["coordination", "swarm", "tdd", "github", "consensus", "performance"]
+    },
+    "factory-ai": {
+      "enabled": true,
+      "version": "0.18.0",
+      "cli": "droid",
+      "capabilities": ["code-generation", "refactoring", "testing", "documentation", "migration"]
+    },
+    "spec-kit": {
+      "enabled": true,
+      "cli": "specify",
+      "capabilities": ["spec-evolution", "requirements", "documentation", "validation"]
+    },
+    "agent-os": {
+      "enabled": true,
+      "capabilities": ["workflow", "planning", "execution", "standards", "best-practices"]
+    }
+  },
+  "agents": {
+    "claude-sonnet-4.5": {
+      "platform": "claude-code",
+      "type": "primary",
+      "capabilities": {
+        "code-generation": {"score": 95, "domains": ["python", "javascript", "bash", "typescript"]},
+        "code-review": {"score": 90, "domains": ["all"]},
+        "architecture": {"score": 92, "domains": ["system-design", "api-design", "database"]},
+        "testing": {"score": 88, "domains": ["unit", "integration", "e2e"]},
+        "documentation": {"score": 93, "domains": ["technical", "api", "guides"]},
+        "refactoring": {"score": 91, "domains": ["all"]},
+        "debugging": {"score": 89, "domains": ["all"]},
+        "planning": {"score": 94, "domains": ["project", "spec", "roadmap"]}
+      },
+      "bestFor": ["complex-tasks", "multi-step-workflows", "orchestration"],
+      "limitations": ["image-generation", "real-time-data"],
+      "costTier": "high"
+    },
+    "factory-ai-droid": {
+      "platform": "factory-ai",
+      "type": "specialist",
+      "capabilities": {
+        "code-generation": {"score": 88, "domains": ["python", "javascript", "java", "go"]},
+        "refactoring": {"score": 92, "domains": ["all"]},
+        "migration": {"score": 90, "domains": ["framework", "version", "language"]},
+        "testing": {"score": 85, "domains": ["unit", "integration"]},
+        "documentation": {"score": 82, "domains": ["code-comments", "docstrings"]},
+        "bug-fixing": {"score": 87, "domains": ["all"]}
+      },
+      "bestFor": ["automated-refactoring", "bulk-updates", "code-migration"],
+      "limitations": ["complex-architecture", "multi-repo-coordination"],
+      "costTier": "medium"
+    },
+    "claude-flow-coder": {
+      "platform": "claude-flow",
+      "type": "specialist",
+      "capabilities": {
+        "code-generation": {"score": 90, "domains": ["python", "javascript", "typescript"]},
+        "tdd-implementation": {"score": 93, "domains": ["all"]},
+        "test-writing": {"score": 91, "domains": ["unit", "integration"]},
+        "sparc-methodology": {"score": 95, "domains": ["all"]}
+      },
+      "bestFor": ["tdd-workflows", "test-first-development", "sparc-phases"],
+      "limitations": ["standalone-operation"],
+      "costTier": "low"
+    },
+    "claude-flow-reviewer": {
+      "platform": "claude-flow",
+      "type": "reviewer",
+      "capabilities": {
+        "code-review": {"score": 94, "domains": ["all"]},
+        "quality-analysis": {"score": 92, "domains": ["style", "performance", "security"]},
+        "best-practices": {"score": 91, "domains": ["all"]},
+        "security-audit": {"score": 88, "domains": ["authentication", "authorization", "validation"]}
+      },
+      "bestFor": ["code-review", "quality-gates", "security-checks"],
+      "limitations": ["code-generation"],
+      "costTier": "low"
+    },
+    "claude-flow-tester": {
+      "platform": "claude-flow",
+      "type": "specialist",
+      "capabilities": {
+        "test-generation": {"score": 93, "domains": ["unit", "integration", "e2e"]},
+        "test-review": {"score": 90, "domains": ["all"]},
+        "coverage-analysis": {"score": 89, "domains": ["all"]},
+        "test-debugging": {"score": 87, "domains": ["all"]}
+      },
+      "bestFor": ["test-creation", "coverage-improvement", "test-maintenance"],
+      "limitations": ["code-implementation"],
+      "costTier": "low"
+    },
+    "claude-flow-architect": {
+      "platform": "claude-flow",
+      "type": "specialist",
+      "capabilities": {
+        "system-design": {"score": 95, "domains": ["microservices", "api", "database"]},
+        "architecture-review": {"score": 93, "domains": ["all"]},
+        "scalability": {"score": 91, "domains": ["performance", "distributed"]},
+        "security-architecture": {"score": 89, "domains": ["all"]}
+      },
+      "bestFor": ["architecture-design", "system-planning", "technical-decisions"],
+      "limitations": ["implementation-details"],
+      "costTier": "low"
+    },
+    "claude-flow-researcher": {
+      "platform": "claude-flow",
+      "type": "specialist",
+      "capabilities": {
+        "requirements-analysis": {"score": 92, "domains": ["all"]},
+        "research": {"score": 94, "domains": ["technical", "market", "best-practices"]},
+        "documentation-review": {"score": 90, "domains": ["all"]},
+        "feasibility-analysis": {"score": 91, "domains": ["all"]}
+      },
+      "bestFor": ["requirement-gathering", "research", "analysis"],
+      "limitations": ["code-implementation"],
+      "costTier": "low"
+    },
+    "spec-kit-analyzer": {
+      "platform": "spec-kit",
+      "type": "specialist",
+      "capabilities": {
+        "spec-evolution": {"score": 93, "domains": ["requirements", "features"]},
+        "spec-validation": {"score": 91, "domains": ["completeness", "consistency"]},
+        "requirement-tracking": {"score": 90, "domains": ["all"]},
+        "documentation-generation": {"score": 89, "domains": ["specs", "requirements"]}
+      },
+      "bestFor": ["spec-creation", "requirement-evolution", "spec-validation"],
+      "limitations": ["code-generation"],
+      "costTier": "free"
+    },
+    "agent-os-planner": {
+      "platform": "agent-os",
+      "type": "orchestrator",
+      "capabilities": {
+        "workflow-planning": {"score": 94, "domains": ["product", "feature", "task"]},
+        "task-breakdown": {"score": 92, "domains": ["all"]},
+        "standards-enforcement": {"score": 93, "domains": ["code-style", "best-practices"]},
+        "execution-coordination": {"score": 91, "domains": ["all"]}
+      },
+      "bestFor": ["product-planning", "workflow-orchestration", "standards"],
+      "limitations": ["code-implementation"],
+      "costTier": "free"
+    },
+    "plotly-visualization-agent": {
+      "platform": "python-plotly",
+      "type": "specialist",
+      "capabilities": {
+        "interactive-plotting": {"score": 95, "domains": ["time-series", "scatter", "line", "bar", "heatmap", "3d"]},
+        "html-report-generation": {"score": 93, "domains": ["analysis", "dashboard", "monitoring"]},
+        "csv-data-handling": {"score": 94, "domains": ["pandas", "relative-paths", "data-import"]},
+        "responsive-design": {"score": 88, "domains": ["mobile", "tablet", "desktop"]},
+        "data-visualization": {"score": 96, "domains": ["scientific", "engineering", "business"]},
+        "statistical-plots": {"score": 91, "domains": ["distribution", "correlation", "regression"]}
+      },
+      "bestFor": ["interactive-html-reports", "scientific-visualization", "general-analysis"],
+      "limitations": ["real-time-streaming", "very-large-datasets"],
+      "costTier": "free",
+      "dependencies": ["plotly", "pandas"],
+      "reportingStandards": {
+        "interactiveOnly": true,
+        "csvRelativePaths": true,
+        "htmlOutputRequired": true,
+        "responsiveDesign": true
+      }
+    },
+    "bokeh-dashboard-agent": {
+      "platform": "python-bokeh",
+      "type": "specialist",
+      "capabilities": {
+        "dashboard-creation": {"score": 94, "domains": ["real-time", "multi-plot", "complex-layouts"]},
+        "interactive-plots": {"score": 92, "domains": ["scatter", "line", "bar", "network"]},
+        "real-time-updates": {"score": 90, "domains": ["streaming", "server-side", "websockets"]},
+        "large-dataset-handling": {"score": 93, "domains": ["100k+points", "performance-optimization"]},
+        "html-reports": {"score": 91, "domains": ["standalone", "embedded"]},
+        "csv-integration": {"score": 92, "domains": ["pandas", "data-loading"]}
+      },
+      "bestFor": ["complex-dashboards", "real-time-monitoring", "large-datasets"],
+      "limitations": ["3d-plotting", "statistical-transforms"],
+      "costTier": "free",
+      "dependencies": ["bokeh", "pandas"],
+      "reportingStandards": {
+        "interactiveOnly": true,
+        "csvRelativePaths": true,
+        "htmlOutputRequired": true,
+        "responsiveDesign": true
+      }
+    },
+    "altair-analysis-agent": {
+      "platform": "python-altair",
+      "type": "specialist",
+      "capabilities": {
+        "statistical-visualization": {"score": 93, "domains": ["distributions", "correlations", "trends"]},
+        "exploratory-analysis": {"score": 92, "domains": ["data-exploration", "pattern-discovery"]},
+        "declarative-plotting": {"score": 94, "domains": ["grammar-of-graphics", "vega-lite"]},
+        "interactive-plots": {"score": 91, "domains": ["filtering", "selection", "tooltips"]},
+        "html-reports": {"score": 90, "domains": ["analysis", "research"]},
+        "csv-handling": {"score": 93, "domains": ["pandas", "data-transforms"]}
+      },
+      "bestFor": ["statistical-analysis", "exploratory-data-analysis", "research-reports"],
+      "limitations": ["complex-dashboards", "real-time-data"],
+      "costTier": "free",
+      "dependencies": ["altair", "pandas", "vega"],
+      "reportingStandards": {
+        "interactiveOnly": true,
+        "csvRelativePaths": true,
+        "htmlOutputRequired": true,
+        "responsiveDesign": true
+      }
+    },
+    "d3js-custom-viz-agent": {
+      "platform": "javascript-d3",
+      "type": "specialist",
+      "capabilities": {
+        "custom-visualizations": {"score": 96, "domains": ["bespoke", "highly-interactive", "animated"]},
+        "web-integration": {"score": 94, "domains": ["html", "javascript", "svg"]},
+        "csv-loading": {"score": 92, "domains": ["d3-fetch", "relative-paths"]},
+        "advanced-interactions": {"score": 95, "domains": ["drag-drop", "zoom", "brush", "transitions"]},
+        "data-binding": {"score": 93, "domains": ["dynamic-updates", "enter-exit-update"]},
+        "geospatial": {"score": 91, "domains": ["maps", "projections", "choropleth"]}
+      },
+      "bestFor": ["custom-interactive-viz", "unique-requirements", "web-applications"],
+      "limitations": ["python-integration", "learning-curve"],
+      "costTier": "free",
+      "dependencies": ["d3.js"],
+      "reportingStandards": {
+        "interactiveOnly": true,
+        "csvRelativePaths": true,
+        "htmlOutputRequired": true,
+        "responsiveDesign": true
+      }
+    }
+  },
+  "gatePassReviewMatrix": {
+    "specification-phase": {
+      "primaryReviewer": "claude-flow-researcher",
+      "secondaryReviewer": "spec-kit-analyzer",
+      "checkpoints": [
+        "requirements-completeness",
+        "feasibility-analysis",
+        "spec-validation",
+        "stakeholder-alignment"
+      ],
+      "passCriteria": {
+        "completeness": 90,
+        "clarity": 85,
+        "feasibility": 80
+      }
+    },
+    "pseudocode-phase": {
+      "primaryReviewer": "claude-flow-architect",
+      "secondaryReviewer": "claude-sonnet-4.5",
+      "checkpoints": [
+        "algorithm-correctness",
+        "complexity-analysis",
+        "edge-cases-coverage",
+        "maintainability"
+      ],
+      "passCriteria": {
+        "correctness": 95,
+        "efficiency": 85,
+        "readability": 90
+      }
+    },
+    "architecture-phase": {
+      "primaryReviewer": "claude-flow-architect",
+      "secondaryReviewer": "claude-sonnet-4.5",
+      "checkpoints": [
+        "design-patterns",
+        "scalability",
+        "security",
+        "performance",
+        "maintainability"
+      ],
+      "passCriteria": {
+        "scalability": 85,
+        "security": 90,
+        "maintainability": 88
+      }
+    },
+    "implementation-phase": {
+      "primaryReviewer": "claude-flow-reviewer",
+      "secondaryReviewer": "claude-sonnet-4.5",
+      "checkpoints": [
+        "code-quality",
+        "test-coverage",
+        "style-compliance",
+        "best-practices",
+        "security-vulnerabilities"
+      ],
+      "passCriteria": {
+        "code-quality": 90,
+        "test-coverage": 85,
+        "security": 95
+      }
+    },
+    "testing-phase": {
+      "primaryReviewer": "claude-flow-tester",
+      "secondaryReviewer": "claude-flow-reviewer",
+      "checkpoints": [
+        "test-coverage",
+        "edge-cases",
+        "integration-tests",
+        "test-quality"
+      ],
+      "passCriteria": {
+        "coverage": 90,
+        "quality": 88,
+        "edge-cases": 85
+      }
+    },
+    "refinement-phase": {
+      "primaryReviewer": "claude-flow-reviewer",
+      "secondaryReviewer": "factory-ai-droid",
+      "checkpoints": [
+        "code-optimization",
+        "refactoring-opportunities",
+        "performance-improvements",
+        "documentation-completeness"
+      ],
+      "passCriteria": {
+        "optimization": 85,
+        "documentation": 90,
+        "performance": 88
+      }
+    },
+    "completion-phase": {
+      "primaryReviewer": "claude-sonnet-4.5",
+      "secondaryReviewer": "claude-flow-reviewer",
+      "checkpoints": [
+        "integration-validation",
+        "deployment-readiness",
+        "documentation-review",
+        "final-quality-check"
+      ],
+      "passCriteria": {
+        "integration": 95,
+        "deployment": 90,
+        "quality": 92
+      }
+    }
+  },
+  "taskTypeAgentMapping": {
+    "code-generation": {
+      "primary": "claude-sonnet-4.5",
+      "alternatives": ["factory-ai-droid", "claude-flow-coder"],
+      "reviewers": ["claude-flow-reviewer"]
+    },
+    "code-refactoring": {
+      "primary": "factory-ai-droid",
+      "alternatives": ["claude-sonnet-4.5", "claude-flow-coder"],
+      "reviewers": ["claude-flow-reviewer"]
+    },
+    "test-creation": {
+      "primary": "claude-flow-tester",
+      "alternatives": ["claude-sonnet-4.5"],
+      "reviewers": ["claude-flow-reviewer", "claude-flow-tester"]
+    },
+    "code-review": {
+      "primary": "claude-flow-reviewer",
+      "alternatives": ["claude-sonnet-4.5"],
+      "reviewers": ["claude-flow-architect"]
+    },
+    "architecture-design": {
+      "primary": "claude-flow-architect",
+      "alternatives": ["claude-sonnet-4.5"],
+      "reviewers": ["claude-flow-reviewer", "claude-sonnet-4.5"]
+    },
+    "spec-creation": {
+      "primary": "spec-kit-analyzer",
+      "alternatives": ["claude-sonnet-4.5", "agent-os-planner"],
+      "reviewers": ["claude-flow-researcher"]
+    },
+    "requirement-analysis": {
+      "primary": "claude-flow-researcher",
+      "alternatives": ["spec-kit-analyzer", "claude-sonnet-4.5"],
+      "reviewers": ["claude-sonnet-4.5"]
+    },
+    "documentation": {
+      "primary": "claude-sonnet-4.5",
+      "alternatives": ["factory-ai-droid"],
+      "reviewers": ["claude-flow-reviewer"]
+    },
+    "bug-fixing": {
+      "primary": "claude-sonnet-4.5",
+      "alternatives": ["factory-ai-droid"],
+      "reviewers": ["claude-flow-reviewer", "claude-flow-tester"]
+    },
+    "migration": {
+      "primary": "factory-ai-droid",
+      "alternatives": ["claude-sonnet-4.5"],
+      "reviewers": ["claude-flow-reviewer", "claude-flow-architect"]
+    },
+    "performance-optimization": {
+      "primary": "claude-sonnet-4.5",
+      "alternatives": ["factory-ai-droid"],
+      "reviewers": ["claude-flow-reviewer", "claude-flow-architect"]
+    },
+    "security-audit": {
+      "primary": "claude-flow-reviewer",
+      "alternatives": ["claude-sonnet-4.5"],
+      "reviewers": ["claude-flow-architect"]
+    },
+    "html-report-generation": {
+      "primary": "plotly-visualization-agent",
+      "alternatives": ["bokeh-dashboard-agent", "altair-analysis-agent"],
+      "reviewers": ["claude-flow-reviewer"]
+    },
+    "interactive-visualization": {
+      "primary": "plotly-visualization-agent",
+      "alternatives": ["bokeh-dashboard-agent", "d3js-custom-viz-agent"],
+      "reviewers": ["claude-flow-reviewer", "claude-sonnet-4.5"]
+    },
+    "dashboard-creation": {
+      "primary": "bokeh-dashboard-agent",
+      "alternatives": ["plotly-visualization-agent", "d3js-custom-viz-agent"],
+      "reviewers": ["claude-flow-reviewer"]
+    },
+    "data-analysis-report": {
+      "primary": "altair-analysis-agent",
+      "alternatives": ["plotly-visualization-agent", "claude-sonnet-4.5"],
+      "reviewers": ["claude-flow-researcher"]
+    },
+    "csv-data-visualization": {
+      "primary": "plotly-visualization-agent",
+      "alternatives": ["altair-analysis-agent", "bokeh-dashboard-agent"],
+      "reviewers": ["claude-flow-reviewer"]
+    }
+  },
+  "agentSelectionRules": {
+    "considerFactors": [
+      "task-complexity",
+      "domain-expertise",
+      "cost-efficiency",
+      "availability",
+      "past-performance",
+      "integration-requirements"
+    ],
+    "complexityThresholds": {
+      "simple": {"primary": "claude-flow-coder", "cost": "low"},
+      "moderate": {"primary": "factory-ai-droid", "cost": "medium"},
+      "complex": {"primary": "claude-sonnet-4.5", "cost": "high"}
+    },
+    "domainSpecialization": {
+      "python": ["claude-sonnet-4.5", "factory-ai-droid", "claude-flow-coder"],
+      "javascript": ["claude-sonnet-4.5", "factory-ai-droid", "claude-flow-coder"],
+      "bash": ["claude-sonnet-4.5"],
+      "architecture": ["claude-flow-architect", "claude-sonnet-4.5"],
+      "testing": ["claude-flow-tester", "claude-sonnet-4.5"],
+      "documentation": ["claude-sonnet-4.5", "factory-ai-droid"]
+    }
+  },
+  "dailyUpdateProcedure": {
+    "enabled": true,
+    "schedule": "00:00 UTC",
+    "steps": [
+      "check-platform-versions",
+      "update-capability-scores",
+      "review-performance-metrics",
+      "adjust-agent-rankings",
+      "sync-across-repositories",
+      "generate-update-report"
+    ],
+    "sources": [
+      "platform-changelogs",
+      "agent-performance-logs",
+      "community-feedback",
+      "benchmark-results"
+    ]
+  }
+}

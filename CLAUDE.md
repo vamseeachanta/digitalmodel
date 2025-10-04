@@ -350,3 +350,28 @@ NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 Never save working files, text/mds and tests to the root folder.
+
+## 📊 HTML Reporting Requirements
+
+**MANDATORY FOR ALL MODULES:**
+
+1. **Interactive Plots Only** - All visualizations MUST be interactive (Plotly, Bokeh, Altair, D3.js)
+   - ❌ NO static matplotlib PNG/SVG exports
+   - ✅ Interactive plots with hover, zoom, pan, export
+
+2. **HTML Reports Required** - Every module MUST generate HTML reports
+   - Analysis reports with visualizations
+   - Performance dashboards
+   - Data quality reports
+
+3. **CSV Data Import** - Data MUST be imported from CSV with relative paths
+   - Use relative paths from report location
+   - Store CSVs in `/data/raw/`, `/data/processed/`, or `/data/results/`
+
+**Technology Selection:**
+- **General analysis:** Plotly (`plotly-visualization-agent`)
+- **Dashboards:** Bokeh (`bokeh-dashboard-agent`)
+- **Statistical:** Altair (`altair-analysis-agent`)
+- **Custom viz:** D3.js (`d3js-custom-viz-agent`)
+
+**See full standards:** `docs/HTML_REPORTING_STANDARDS.md`
