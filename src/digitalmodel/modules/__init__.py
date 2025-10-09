@@ -3,7 +3,7 @@
 This package contains all specialized modules for the digital model system.
 """
 
-# Import submodules
-from . import marine_analysis
+# Import submodules - commented out to avoid import errors
+# from . import marine_analysis
 
-__all__ = ['marine_analysis']
+__all__ = []
