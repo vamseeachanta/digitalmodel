@@ -30,7 +30,7 @@ from digitalmodel.modules.pipeline.pipeline import Pipeline
 from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis
 from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis
 from digitalmodel.modules.transformation.transformation import Transformation
-# from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser
+from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.common.plate_buckling import PlateBuckling
 from loguru import logger

@@ -96,7 +96,11 @@ def plot_3d_surface(df, coefficient, title=None, filename=None):
 
 
 def plot_polar_diagrams(df, displacements=None, filename=None):
-    """Create polar diagrams for wind coefficients at multiple displacements."""
+    """Create polar diagrams for wind coefficients at multiple displacements.
+
+    Handles multiple vessel types/displacement ratios by selecting the first combination
+    for each displacement, and extends data from 0-180° to 0-360° using symmetry.
+    """
     if displacements is None:
         displacements = sorted(df['displacement'].unique())[:3]  # Use first 3
 
@@ -104,7 +108,28 @@ def plot_polar_diagrams(df, displacements=None, filename=None):
 
     # CXw polar plots
     for idx, disp in enumerate(displacements):
-        data = df[df['displacement'] == disp].sort_values('heading')
+        # Filter by displacement and select first vessel_type/displacement_ratio combination
+        disp_data = df[df['displacement'] == disp]
+
+        # Get first unique combination
+        first_vessel = disp_data['vessel_type'].iloc[0]
+        first_ratio = disp_data['displacement_ratio'].iloc[0]
+
+        data = disp_data[
+            (disp_data['vessel_type'] == first_vessel) &
+            (disp_data['displacement_ratio'] == first_ratio)
+        ].sort_values('heading').copy()
+
+        # Extend 0-180° to 0-360° using symmetry
+        # For wind coefficients: CXw is symmetric, CYw is anti-symmetric about 180°
+        if data['heading'].max() <= 180:
+            # Create mirrored data for 180-360°
+            mirror_data = data[data['heading'] > 0].copy()
+            mirror_data['heading'] = 360 - mirror_data['heading']
+            mirror_data['CXw'] = data[data['heading'] > 0]['CXw'].values[::-1]
+            mirror_data['CYw'] = -data[data['heading'] > 0]['CYw'].values[::-1]  # Anti-symmetric
+
+            data = pd.concat([data, mirror_data]).sort_values('heading').reset_index(drop=True)
 
         # CXw
         ax1 = fig.add_subplot(2, len(displacements), idx + 1, projection='polar')
@@ -114,7 +139,8 @@ def plot_polar_diagrams(df, displacements=None, filename=None):
         ax1.fill(theta, r, alpha=0.25, color='blue')
         ax1.set_theta_zero_location('N')
         ax1.set_theta_direction(-1)
-        ax1.set_title(f'CXw\nDisp: {disp/1000:.0f}k tonnes', fontsize=10, pad=15)
+        ax1.set_title(f'CXw\n{first_vessel}\nDisp: {disp/1000:.0f}k tonnes (DR={first_ratio})',
+                     fontsize=9, pad=15)
         ax1.grid(True)
 
         # CYw
@@ -124,10 +150,11 @@ def plot_polar_diagrams(df, displacements=None, filename=None):
         ax2.fill(theta, r2, alpha=0.25, color='red')
         ax2.set_theta_zero_location('N')
         ax2.set_theta_direction(-1)
-        ax2.set_title(f'CYw\nDisp: {disp/1000:.0f}k tonnes', fontsize=10, pad=15)
+        ax2.set_title(f'CYw\n{first_vessel}\nDisp: {disp/1000:.0f}k tonnes (DR={first_ratio})',
+                     fontsize=9, pad=15)
         ax2.grid(True)
 
-    plt.suptitle('OCIMF Wind Coefficient Polar Diagrams', fontsize=14, y=0.98)
+    plt.suptitle('OCIMF Wind Coefficient Polar Diagrams (0-360°)', fontsize=14, y=0.98)
     plt.tight_layout(rect=[0, 0, 1, 0.96])
 
     if filename:
