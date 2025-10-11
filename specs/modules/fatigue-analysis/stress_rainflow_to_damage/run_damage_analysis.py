@@ -141,8 +141,8 @@ class DamageAnalyzer:
                 location_id = part
             if part.startswith('Strut'):
                 strut_num = part[5:]  # Remove 'Strut' prefix
-            if part.startswith('FC'):
-                fc_num = part[2:]  # Remove 'FC' prefix
+            if part.startswith('fc') or part.startswith('FC'):
+                fc_num = part[2:]  # Remove 'fc' or 'FC' prefix
                 config_name = '_'.join(parts[:i])
         
         if not location_id:
@@ -367,7 +367,7 @@ class DamageAnalyzer:
                 config_name = None
                 
                 for i, part in enumerate(parts):
-                    if part.startswith('FC'):
+                    if part.startswith('fc') or part.startswith('FC'):
                         fc_part = part
                         fc_num = int(part[2:])
                         config_name = '_'.join(parts[:i])
