@@ -14,6 +14,7 @@ Author: Digital Model Team
 Date: 2025-10-05
 """
 
+import json
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -26,6 +27,7 @@ warnings.filterwarnings('ignore')
 try:
     import plotly.graph_objects as go
     import plotly.express as px
+    import plotly.utils
     from plotly.subplots import make_subplots
     PLOTLY_AVAILABLE = True
 except ImportError:
@@ -415,7 +417,7 @@ class RAOQAReportGenerator:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RAO QA Report - Interactive Analysis</title>
-    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    <script src="../assets/js/plotly-2.26.0.min.js"></script>
     <style>
         * {{
             margin: 0;
@@ -657,24 +659,19 @@ class RAOQAReportGenerator:
 
     <script>
         // Plot 1 - RAO vs Period
-        var plot1Data = {fig1.to_json()};
-        Plotly.newPlot('plot1', plot1Data.data, plot1Data.layout, {{responsive: true}});
+        Plotly.newPlot('plot1', {json.dumps(fig1.data, cls=plotly.utils.PlotlyJSONEncoder)}, {json.dumps(fig1.layout, cls=plotly.utils.PlotlyJSONEncoder)}, {{responsive: true}});
 
         // Plot 2 - RAO vs Frequency
-        var plot2Data = {fig2.to_json()};
-        Plotly.newPlot('plot2', plot2Data.data, plot2Data.layout, {{responsive: true}});
+        Plotly.newPlot('plot2', {json.dumps(fig2.data, cls=plotly.utils.PlotlyJSONEncoder)}, {json.dumps(fig2.layout, cls=plotly.utils.PlotlyJSONEncoder)}, {{responsive: true}});
 
         // Plot 3 - Polar Plot
-        var plot3Data = {fig3.to_json()};
-        Plotly.newPlot('plot3', plot3Data.data, plot3Data.layout, {{responsive: true}});
+        Plotly.newPlot('plot3', {json.dumps(fig3.data, cls=plotly.utils.PlotlyJSONEncoder)}, {json.dumps(fig3.layout, cls=plotly.utils.PlotlyJSONEncoder)}, {{responsive: true}});
 
         // Plot 4 - Heatmap
-        var plot4Data = {fig4.to_json()};
-        Plotly.newPlot('plot4', plot4Data.data, plot4Data.layout, {{responsive: true}});
+        Plotly.newPlot('plot4', {json.dumps(fig4.data, cls=plotly.utils.PlotlyJSONEncoder)}, {json.dumps(fig4.layout, cls=plotly.utils.PlotlyJSONEncoder)}, {{responsive: true}});
 
         // Plot 5 - Statistics
-        var plot5Data = {fig5.to_json()};
-        Plotly.newPlot('plot5', plot5Data.data, plot5Data.layout, {{responsive: true}});
+        Plotly.newPlot('plot5', {json.dumps(fig5.data, cls=plotly.utils.PlotlyJSONEncoder)}, {json.dumps(fig5.layout, cls=plotly.utils.PlotlyJSONEncoder)}, {{responsive: true}});
     </script>
 </body>
 </html>
