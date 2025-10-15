@@ -7,3 +7,7 @@ repo_root = Path(__file__).parent.parent
 src_path = repo_root / "src"
 if str(src_path) not in sys.path:
     sys.path.insert(0, str(src_path))
+
+assetutilities_path = (repo_root.parent / "assetutilities" / "src").resolve()
+if assetutilities_path.exists() and str(assetutilities_path) not in sys.path:
+    sys.path.insert(0, str(assetutilities_path))
