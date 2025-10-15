@@ -5,6 +5,8 @@ import sys
 # Third party imports
 import pytest  # noqa
 
+pytest.importorskip("OrcFxAPI", reason="OrcaFlex license not available on this machine")
+
 # Reader imports
 from digitalmodel.engine import engine
 from unittest.mock import patch, MagicMock

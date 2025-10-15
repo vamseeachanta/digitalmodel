@@ -4,10 +4,16 @@ import pandas as pd
 import numpy as np
 import scipy.interpolate
 from collections import OrderedDict
-import OrcFxAPI
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from typing import List, Dict, Any
+
+try:
+    import OrcFxAPI  # type: ignore
+    ORCAFLEX_AVAILABLE = True
+except ImportError:
+    OrcFxAPI = None  # type: ignore
+    ORCAFLEX_AVAILABLE = False
 
 from assetutilities.common.utilities import is_file_valid_func
 from assetutilities.common import file_management as fm
@@ -18,6 +24,10 @@ from assetutilities.common.ymlInput import ymlInput
 class OrcaFlexCustomAnalysis:
     def __init__(self) -> None:
         self.detailed_histograms_array = []  # Initialize for save_data method
+
+    def _ensure_orcaflex(self) -> None:
+        if not ORCAFLEX_AVAILABLE:
+            raise RuntimeError("OrcaFlex license not available on this machine")
 
     def perform_simulations(self):
         self.process_fea()
@@ -69,6 +79,7 @@ class OrcaFlexCustomAnalysis:
             analysis_type.append("iterate")
 
     def process_fea(self):
+        self._ensure_orcaflex()
         exts = list(self.cfg["file_management"]["input_files"].keys())
         
         # Debug: Check what we have
@@ -180,6 +191,7 @@ class OrcaFlexCustomAnalysis:
         )
 
     def clean_model(self, model, filename_with_ext, filename_without_ext):
+        self._ensure_orcaflex()
         clean_model = model
 
         UseCalculatedPositions_cfg = self.cfg["orcaflex"]["analysis"][
@@ -360,6 +372,7 @@ class OrcaFlexCustomAnalysis:
         return 0.0
     
     def process_files_parallel(self, file_list: List[str], num_threads: int = 30):
+        self._ensure_orcaflex()
         """
         Process multiple OrcaFlex files in parallel.
         Default: 30 threads for optimal performance.
@@ -415,6 +428,7 @@ class OrcaFlexCustomAnalysis:
         print(f"Analysis done for {len(file_list)} input files using {num_threads} parallel threads")
 
     def process_scripts(self):
+        self._ensure_orcaflex()
         model = OrcFxAPI.Model()
         for file_index in range(
             0, len(self.cfg["Analysis"]["input_files"]["with_ext"])

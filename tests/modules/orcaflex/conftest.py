@@ -2,6 +2,8 @@
 import pytest
 from pathlib import Path
 
+pytest.importorskip("OrcFxAPI", reason="OrcaFlex license not available on this machine")
+
 @pytest.fixture
 def orcaflex_test_data_dir():
     """Return path to OrcaFlex test data directory."""
