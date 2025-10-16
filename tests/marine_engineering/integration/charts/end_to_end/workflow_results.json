@@ -1,0 +1,41 @@
+{
+  "vessel": {
+    "name": "Test VLCC",
+    "type": "VLCC",
+    "displacement": 300000,
+    "loa": 320.0,
+    "beam": 58.0,
+    "draft": 22.0
+  },
+  "environment": {
+    "Hs": 5.0,
+    "Tp": 10.0,
+    "Tz": 7.817145625913466,
+    "wind_speed": 20.0,
+    "current_speed": 1.5
+  },
+  "forces": {
+    "wind_fx_MN": 0.09753688046336176,
+    "wind_fy_MN": 0.526653081893921,
+    "current_fx_MN": 1.3478283782939426,
+    "current_fy_MN": 4.0590004838705065,
+    "total_fx_MN": 1.4453652587573045,
+    "total_fy_MN": 4.585653565764427
+  },
+  "mooring": {
+    "num_lines": 8,
+    "max_tension_MN": 1.0732066957205535,
+    "min_tension_MN": 0.5,
+    "mean_tension_MN": 0.6955642545245364,
+    "line_tensions_MN": [
+      0.680670657344663,
+      1.0330717885353797,
+      1.0732066957205535,
+      0.777564894595695,
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  }
+}
