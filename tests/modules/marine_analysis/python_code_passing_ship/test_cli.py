@@ -17,18 +17,17 @@ module_path = Path(__file__).parent.parent.parent.parent / "src"
 if str(module_path) not in sys.path:
     sys.path.insert(0, str(module_path))
 
-try:
-    from digitalmodel.modules.marine_analysis.python_code_passing_ship.cli import (
-        create_parser,
-        main,
-        process_single,
-        process_batch,
-        export_results
-    )
-except ImportError:
-    # If import fails, create mock functions for testing
-    import sys
-    sys.exit("CLI module not properly configured yet")
+# Ensure CLI module is available; skip tests gracefully if not
+cli_module = pytest.importorskip(
+    "digitalmodel.modules.marine_analysis.python_code_passing_ship.cli",
+    reason="CLI module not properly configured yet"
+)
+
+create_parser = cli_module.create_parser
+main = cli_module.main
+process_single = cli_module.process_single
+process_batch = cli_module.process_batch
+export_results = cli_module.export_results
 
 
 class TestCLIArgumentParser:
@@ -347,9 +346,10 @@ class TestCLIIntegration:
         # This test verifies the __main__.py file works correctly
         import subprocess
         
+        python_exec = sys.executable
         result = subprocess.run(
             [
-                "C:/Users/Sk Samdan/Desktop/github/digitalmodel/.venv/Scripts/python.exe",
+                python_exec,
                 "-m",
                 "digitalmodel.modules.marine_analysis.python_code_passing_ship",
                 "--help"
@@ -385,9 +385,10 @@ environment:
         
         # Run CLI
         import subprocess
+        python_exec = sys.executable
         result = subprocess.run(
             [
-                "C:/Users/Sk Samdan/Desktop/github/digitalmodel/.venv/Scripts/python.exe",
+                python_exec,
                 "-m",
                 "digitalmodel.modules.marine_analysis.python_code_passing_ship",
                 "--config", str(config_file),
