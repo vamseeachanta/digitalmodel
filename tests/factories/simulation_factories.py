@@ -101,7 +101,9 @@ class EngineeringProvider(faker.providers.BaseProvider):
 
 
 # Register the custom provider
-faker.Faker.add_provider(EngineeringProvider)
+# Create Faker instance and add provider
+fake = faker.Faker()
+fake.add_provider(EngineeringProvider)
 
 
 class SimulationParametersFactory(factory.Factory):

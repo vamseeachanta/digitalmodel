@@ -1,0 +1,181 @@
+{
+  "General": {
+    "Density": 1025.0,
+    "KinematicViscosity": 1.35e-06,
+    "WaterDepth": 100.0
+  },
+  "Vessel": {
+    "Name": "Test VLCC",
+    "Mass": 300000000,
+    "Length": 320.0,
+    "Beam": 58.0,
+    "Draft": 22.0,
+    "CentreOfMass": [
+      0,
+      0,
+      -10
+    ]
+  },
+  "Lines": [
+    {
+      "Name": "Line1",
+      "Length": 500.0,
+      "TargetSegmentLength": 10.0,
+      "Fairlead": [
+        150.0,
+        0.0,
+        -15.0
+      ],
+      "Anchor": [
+        400.0,
+        0.0,
+        -100.0
+      ],
+      "LineType": {
+        "Diameter": 0.12,
+        "MassPerUnitLength": 81.54943934760448,
+        "EA": 1000000000.0
+      }
+    },
+    {
+      "Name": "Line2",
+      "Length": 500.0,
+      "TargetSegmentLength": 10.0,
+      "Fairlead": [
+        106.06601717798213,
+        106.06601717798213,
+        -15.0
+      ],
+      "Anchor": [
+        282.842712474619,
+        282.842712474619,
+        -100.0
+      ],
+      "LineType": {
+        "Diameter": 0.12,
+        "MassPerUnitLength": 81.54943934760448,
+        "EA": 1000000000.0
+      }
+    },
+    {
+      "Name": "Line3",
+      "Length": 500.0,
+      "TargetSegmentLength": 10.0,
+      "Fairlead": [
+        9.184850993605149e-15,
+        150.0,
+        -15.0
+      ],
+      "Anchor": [
+        2.4492935982947064e-14,
+        400.0,
+        -100.0
+      ],
+      "LineType": {
+        "Diameter": 0.12,
+        "MassPerUnitLength": 81.54943934760448,
+        "EA": 1000000000.0
+      }
+    },
+    {
+      "Name": "Line4",
+      "Length": 500.0,
+      "TargetSegmentLength": 10.0,
+      "Fairlead": [
+        -106.06601717798212,
+        106.06601717798213,
+        -15.0
+      ],
+      "Anchor": [
+        -282.84271247461896,
+        282.842712474619,
+        -100.0
+      ],
+      "LineType": {
+        "Diameter": 0.12,
+        "MassPerUnitLength": 81.54943934760448,
+        "EA": 1000000000.0
+      }
+    },
+    {
+      "Name": "Line5",
+      "Length": 500.0,
+      "TargetSegmentLength": 10.0,
+      "Fairlead": [
+        -150.0,
+        1.8369701987210297e-14,
+        -15.0
+      ],
+      "Anchor": [
+        -400.0,
+        4.898587196589413e-14,
+        -100.0
+      ],
+      "LineType": {
+        "Diameter": 0.12,
+        "MassPerUnitLength": 81.54943934760448,
+        "EA": 1000000000.0
+      }
+    },
+    {
+      "Name": "Line6",
+      "Length": 500.0,
+      "TargetSegmentLength": 10.0,
+      "Fairlead": [
+        -106.06601717798215,
+        -106.06601717798212,
+        -15.0
+      ],
+      "Anchor": [
+        -282.8427124746191,
+        -282.84271247461896,
+        -100.0
+      ],
+      "LineType": {
+        "Diameter": 0.12,
+        "MassPerUnitLength": 81.54943934760448,
+        "EA": 1000000000.0
+      }
+    },
+    {
+      "Name": "Line7",
+      "Length": 500.0,
+      "TargetSegmentLength": 10.0,
+      "Fairlead": [
+        -2.7554552980815446e-14,
+        -150.0,
+        -15.0
+      ],
+      "Anchor": [
+        -7.347880794884119e-14,
+        -400.0,
+        -100.0
+      ],
+      "LineType": {
+        "Diameter": 0.12,
+        "MassPerUnitLength": 81.54943934760448,
+        "EA": 1000000000.0
+      }
+    },
+    {
+      "Name": "Line8",
+      "Length": 500.0,
+      "TargetSegmentLength": 10.0,
+      "Fairlead": [
+        106.0660171779821,
+        -106.06601717798215,
+        -15.0
+      ],
+      "Anchor": [
+        282.84271247461896,
+        -282.8427124746191,
+        -100.0
+      ],
+      "LineType": {
+        "Diameter": 0.12,
+        "MassPerUnitLength": 81.54943934760448,
+        "EA": 1000000000.0
+      }
+    }
+  ]
+}
