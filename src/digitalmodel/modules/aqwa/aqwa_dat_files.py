@@ -1,7 +1,11 @@
 # Standard library imports
 import glob
 import logging
+import math
 import os
+import re
+from dataclasses import dataclass, field
+from typing import Dict, Iterable, List, Optional, Tuple
 
 # Third party imports
 import pandas as pd  # noqa : F401
@@ -13,6 +17,11 @@ from assetutilities.common.yml_utilities import WorkingWithYAML
 # Reader imports
 from digitalmodel.modules.aqwa.aqwa_utilities import AqwaUtilities
 
+try:
+    import numpy as np
+except ImportError:  # pragma: no cover - numpy is required but guard for optional envs
+    np = None  # type: ignore[assignment]
+
 wwy = WorkingWithYAML()
 
 
@@ -21,6 +30,49 @@ au = AqwaUtilities()
 rd = ReadData()
 save_data = SaveData()
 white_space = " "
+
+
+FLOAT_PATTERN = re.compile(
+    r"[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?"
+)
+
+
+@dataclass
+class DATFrequencyGrid:
+    frequencies: List[float] = field(default_factory=list)
+    periods: List[float] = field(default_factory=list)
+
+    def as_array(self) -> "np.ndarray":  # pragma: no cover - thin wrapper
+        if np is None:
+            raise ImportError("NumPy is required to produce array output")
+        return np.asarray(self.frequencies, dtype=float)
+
+
+@dataclass
+class DATDragMatrix:
+    matrix: "np.ndarray"
+    row_labels: List[str]
+    column_labels: List[str]
+
+
+@dataclass
+class DATDeckOneMetadata:
+    cog_element: Optional[int]
+    cog_coordinates: Optional[Tuple[float, float, float]]
+    raw_lines: List[str]
+
+
+@dataclass
+class DATInspectionResult:
+    dat_path: str
+    decks: Dict[int, List[str]]
+    options: Dict[str, bool]
+    frequency_grid: DATFrequencyGrid
+    drag_matrix: Optional[DATDragMatrix]
+    deck_one: DATDeckOneMetadata
+    mass: float = 0.0
+    inertia: Dict[str, float] = field(default_factory=dict)
+    restoring: Dict[str, float] = field(default_factory=dict)
 
 
 class AqwaDATFiles:
@@ -455,3 +507,225 @@ class AqwaDATFiles:
             body.append(body_item_str)
 
         return body
+
+    # ---------------------------------------------------------------------
+    # New inspection helpers for viscous damping workflow
+    # ---------------------------------------------------------------------
+
+    def inspect_dat_file(self, dat_path: str) -> DATInspectionResult:
+        """Inspect an AQWA .dat file and return parsed deck metadata."""
+
+        decks = self._read_decks_from_file(dat_path)
+        options = self._parse_options(decks)
+        frequency_grid = self._parse_deck6(decks.get(6, []))
+        drag_matrix = self._parse_deck7(decks.get(7, []))
+        deck_one = self._parse_deck1(decks.get(1, []))
+        total_mass = self._parse_deck3(decks.get(3, []))
+        inertia_map = self._parse_deck4(decks.get(4, []))
+        if total_mass:
+            inertia_map.setdefault("I33", total_mass)
+        restoring_map = self._parse_deck5(decks.get(5, []))
+
+        return DATInspectionResult(
+            dat_path=dat_path,
+            decks=decks,
+            options=options,
+            frequency_grid=frequency_grid,
+            drag_matrix=drag_matrix,
+            deck_one=deck_one,
+            mass=total_mass,
+            inertia=inertia_map,
+            restoring=restoring_map,
+        )
+
+    def validate_ldrg_option(self, dat_path: str) -> None:
+        """Raise an error if OPTIONS LDRG is not enabled in the .dat file."""
+
+        inspection = self.inspect_dat_file(dat_path)
+        if not inspection.options.get("LDRG", False):
+            raise ValueError(
+                f"OPTIONS LDRG not enabled in AQWA input file: {dat_path}"
+            )
+
+    def validate_cog_element(self, dat_path: str, expected_element: int = 98000) -> None:
+        """Raise an error if the expected CoG element is missing from Deck 1."""
+
+        inspection = self.inspect_dat_file(dat_path)
+        if inspection.deck_one.cog_element != expected_element:
+            raise ValueError(
+                "CoG element validation failed. "
+                f"Expected element {expected_element} not located in Deck 1 for {dat_path}."
+            )
+
+    # ------------------------------------------------------------------
+    # Private helpers
+    # ------------------------------------------------------------------
+
+    def _read_decks_from_file(self, dat_path: str) -> Dict[int, List[str]]:
+        decks: Dict[int, List[str]] = {}
+        current_deck: Optional[int] = None
+        deck_pattern = re.compile(r"DECK\s+(\d+)", re.IGNORECASE)
+
+        with open(dat_path, "r", encoding="utf-8", errors="ignore") as handle:
+            for raw_line in handle:
+                line = raw_line.rstrip("\n")
+                deck_match = deck_pattern.search(line)
+                if deck_match:
+                    current_deck = int(deck_match.group(1))
+                    decks[current_deck] = []
+                    continue
+                if current_deck is None:
+                    continue
+                decks[current_deck].append(line)
+
+        return decks
+
+    def _parse_options(self, decks: Dict[int, List[str]]) -> Dict[str, bool]:
+        options: Dict[str, bool] = {}
+        for lines in decks.values():
+            for line in lines:
+                if "OPTIONS" in line.upper():
+                    tokens = line.upper().split()
+                    for token in tokens:
+                        if token in {"OPTIONS", "OPTION"}:
+                            continue
+                        options[token] = True
+        return options
+
+    def _parse_deck6(self, deck_lines: Iterable[str]) -> DATFrequencyGrid:
+        grid = DATFrequencyGrid()
+        for line in deck_lines:
+            tokens = line.split()
+            if not tokens:
+                continue
+            # Frequency is typically the last entry on the line
+            try:
+                freq = float(tokens[-1])
+            except (ValueError, IndexError):
+                continue
+
+            if freq <= 0:
+                period = math.inf
+            else:
+                period = 1.0 / freq
+
+            grid.frequencies.append(freq)
+            grid.periods.append(period)
+
+        return grid
+
+    def _parse_deck7(self, deck_lines: Iterable[str]) -> Optional[DATDragMatrix]:
+        if np is None:
+            return None
+
+        dof_labels = ["surge", "sway", "heave", "roll", "pitch", "yaw"]
+        matrix = np.zeros((len(dof_labels), len(dof_labels)), dtype=float)
+        row_labels: List[str] = []
+
+        for line in deck_lines:
+            tokens = line.split()
+            if len(tokens) < 8:
+                continue
+            label = tokens[0].strip()
+            try:
+                row_idx = int(tokens[1]) - 1
+            except ValueError:
+                continue
+            try:
+                values = [float(value) for value in tokens[2:8]]
+            except ValueError:
+                continue
+            if 0 <= row_idx < len(dof_labels):
+                matrix[row_idx, : len(values)] = values
+                row_labels.append(f"{label}_{row_idx + 1}")
+
+        if not row_labels:
+            return None
+
+        return DATDragMatrix(matrix=matrix, row_labels=row_labels, column_labels=dof_labels)
+
+    def _parse_deck3(self, deck_lines: Iterable[str]) -> float:
+        total_mass = 0.0
+        for line in deck_lines:
+            floats = FLOAT_PATTERN.findall(line)
+            if not floats:
+                continue
+            try:
+                mass_val = float(floats[-1])
+            except ValueError:
+                continue
+            total_mass += mass_val
+        return total_mass
+
+    def _parse_deck4(self, deck_lines: Iterable[str]) -> Dict[str, float]:
+        inertia_map = {"I44": 0.0, "I55": 0.0, "I66": 0.0}
+        for line in deck_lines:
+            floats = FLOAT_PATTERN.findall(line)
+            if len(floats) < 6:
+                continue
+            try:
+                Ixx, _, _, Iyy, _, Izz = [float(val) for val in floats[-6:]]
+            except ValueError:
+                continue
+            inertia_map["I44"] += Ixx
+            inertia_map["I55"] += Iyy
+            inertia_map["I66"] += Izz
+        return inertia_map
+
+    def _parse_deck5(self, deck_lines: Iterable[str]) -> Dict[str, float]:
+        if np is None:
+            return {}
+
+        floats: List[float] = []
+        for line in deck_lines:
+            floats.extend(
+                float(value)
+                for value in FLOAT_PATTERN.findall(line)
+                if self._is_float(value)
+            )
+
+        if len(floats) < 36:
+            return {}
+
+        matrix = np.asarray(floats[:36], dtype=float).reshape(6, 6)
+        return {
+            "C33": matrix[2, 2],
+            "C44": matrix[3, 3],
+            "C55": matrix[4, 4],
+        }
+
+    def _is_float(self, token: str) -> bool:
+        try:
+            float(token)
+            return True
+        except ValueError:
+            return False
+
+    def _parse_deck1(self, deck_lines: Iterable[str]) -> DATDeckOneMetadata:
+        lines = list(deck_lines)
+        cog_element = None
+        cog_coordinates: Optional[Tuple[float, float, float]] = None
+
+        for line in lines:
+            ints = re.findall(r"\d+", line)
+            if not ints:
+                continue
+            element_id = int(ints[0])
+            if element_id == 98000:
+                cog_element = element_id
+                floats = FLOAT_PATTERN.findall(line)
+                if len(floats) >= 3:
+                    try:
+                        coords: Tuple[float, float, float] = tuple(
+                            float(value) for value in floats[-3:]
+                        )
+                        cog_coordinates = coords
+                    except ValueError:
+                        cog_coordinates = None
+                break
+
+        return DATDeckOneMetadata(
+            cog_element=cog_element,
+            cog_coordinates=cog_coordinates,
+            raw_lines=lines,
+        )
