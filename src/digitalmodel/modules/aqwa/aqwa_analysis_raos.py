@@ -15,7 +15,10 @@ from assetutilities.common.yml_utilities import WorkingWithYAML  # noqa
 from assetutilities.engine import engine as au_engine
 
 # Reader imports
-from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities  # noqa
+try:  # pragma: no cover - compatibility shim for environments without custom package
+    from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities  # noqa: F401
+except ModuleNotFoundError:  # pragma: no cover
+    from digitalmodel.modules.aqwa.aqwa_utilities import AqwaUtilities  # type: ignore
 from digitalmodel.engine import engine as dm_engine  # noqa
 from scipy import interpolate
 

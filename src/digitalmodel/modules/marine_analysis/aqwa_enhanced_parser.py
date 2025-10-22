@@ -1,14 +1,14 @@
-"""Enhanced ANSYS AQWA .lis file parser with data interpretation.
-
-This module provides enhanced functionality to parse ANSYS AQWA output files
-with the ability to interpret abbreviated data format where wave direction
-rows repeat the period and frequency from the first row.
-"""
+"""Enhanced ANSYS AQWA .lis file parser with data interpretation."""
 
 import re
-from typing import Dict, List, Tuple, Any, Optional
-import numpy as np
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Sequence, Tuple
+
+import numpy as np
+
+
+FLOAT_PATTERN = re.compile(r"[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?")
+DEFAULT_DOF_LABELS = ("surge", "sway", "heave", "roll", "pitch", "yaw")
 
 
 class AQWAFileError(Exception):
@@ -21,6 +21,7 @@ class AQWAEnhancedParser:
     
     def __init__(self):
         """Initialize enhanced AQWA reader with parsing patterns."""
+        self._content_cache: Dict[str, str] = {}
         # Pattern to find displacement RAO sections (not VEL or ACC)
         self.rao_section_pattern = re.compile(
             r'(?<!VEL\s)(?<!ACC\s)R\.A\.O\.S-VARIATION\s+WITH\s+WAVE\s+DIRECTION'
@@ -44,11 +45,7 @@ class AQWAEnhancedParser:
     
     def parse_lis_file(self, file_path: str) -> Dict[str, Any]:
         """Parse AQWA .lis file and extract RAO data with data interpretation."""
-        try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read()
-        except Exception as e:
-            raise AQWAFileError(f"Failed to read file {file_path}: {str(e)}")
+        content = self._read_file_content(file_path)
         
         # Find all displacement RAO sections
         sections = self._find_displacement_rao_sections(content)
@@ -94,6 +91,18 @@ class AQWAEnhancedParser:
             'headings': np.array(headings),
             'raos': raos
         }
+
+    def _read_file_content(self, file_path: str) -> str:
+        path = Path(file_path)
+        cache_key = str(path.resolve())
+        if cache_key not in self._content_cache:
+            try:
+                self._content_cache[cache_key] = path.read_text(
+                    encoding='utf-8', errors='ignore'
+                )
+            except Exception as exc:  # pragma: no cover - direct IO
+                raise AQWAFileError(f"Failed to read file {file_path}: {exc}")
+        return self._content_cache[cache_key]
     
     def _find_displacement_rao_sections(self, content: str) -> List[str]:
         """Find all displacement RAO sections in the content."""
@@ -267,7 +276,7 @@ class AQWAEnhancedParser:
             return None
         
         data_part = line[start_pos:]
-        dof_names = ['surge', 'sway', 'heave', 'roll', 'pitch', 'yaw']
+        dof_names = list(DEFAULT_DOF_LABELS)
         
         result = {}
         values = []
@@ -306,6 +315,310 @@ class AQWAEnhancedParser:
                 result[dof] = {'amplitude': 0.0, 'phase': 0.0}
         
         return result
+
+    def _extract_section_lines(
+        self,
+        content: str,
+        header_pattern: str,
+        stop_keywords: Optional[Sequence[str]] = None,
+    ) -> List[str]:
+        match = re.search(header_pattern, content, re.IGNORECASE)
+        if not match:
+            return []
+
+        remaining = content[match.end():].splitlines()
+        stop_keywords = stop_keywords or (
+            "HYDRODYNAMIC",
+            "WAVE",
+            "END OF",
+            "RESULTS",
+            "OPTIONS",
+        )
+
+        section: List[str] = []
+        blank_streak = 0
+        for raw_line in remaining:
+            line = raw_line.rstrip()
+            stripped = line.strip()
+
+            if not stripped:
+                blank_streak += 1
+                if blank_streak > 5 and section:
+                    break
+                section.append(line)
+                continue
+
+            blank_streak = 0
+            upper = stripped.upper()
+            if stripped.startswith('*') and section:
+                break
+            if any(keyword in upper for keyword in stop_keywords) and section:
+                break
+
+            section.append(line)
+
+        return section
+
+    def _parse_frequency_matrix_section(self, lines: List[str]) -> Dict[str, Any]:
+        if not lines:
+            empty = np.empty((0, 6, 6))
+            return {"frequencies": np.array([]), "matrices": empty, "dofs": DEFAULT_DOF_LABELS}
+
+        frequencies: List[float] = []
+        matrices: List[List[float]] = []
+        buffer: List[float] = []
+        current_freq: Optional[float] = None
+
+        for raw_line in lines:
+            tokens = FLOAT_PATTERN.findall(raw_line)
+            if not tokens:
+                continue
+
+            line_starts_with_number = raw_line.lstrip()[:1].isdigit()
+            if line_starts_with_number and len(tokens) >= 2:
+                if current_freq is not None and len(buffer) >= 36:
+                    matrices.append(buffer[:36])
+                    frequencies.append(current_freq)
+                buffer = []
+                try:
+                    current_freq = float(tokens[1])
+                except ValueError:
+                    current_freq = None
+                buffer.extend(float(val) for val in tokens[2:])
+            else:
+                buffer.extend(float(val) for val in tokens)
+
+            if current_freq is not None and len(buffer) >= 36:
+                matrices.append(buffer[:36])
+                frequencies.append(current_freq)
+                buffer = []
+                current_freq = None
+
+        if current_freq is not None and len(buffer) >= 36:
+            matrices.append(buffer[:36])
+            frequencies.append(current_freq)
+
+        if not matrices:
+            empty = np.empty((0, 6, 6))
+            return {"frequencies": np.array([]), "matrices": empty, "dofs": DEFAULT_DOF_LABELS}
+
+        matrices_array = np.asarray(matrices, dtype=float)
+        if matrices_array.shape[1] != 36:
+            matrices_array = matrices_array[:, :36]
+        matrices_array = matrices_array.reshape(-1, 6, 6)
+
+        return {
+            "frequencies": np.asarray(frequencies, dtype=float),
+            "matrices": matrices_array,
+            "dofs": DEFAULT_DOF_LABELS,
+        }
+
+    def _parse_square_matrix(self, lines: List[str]) -> np.ndarray:
+        rows: List[List[float]] = []
+        for raw_line in lines:
+            floats = FLOAT_PATTERN.findall(raw_line)
+            if len(floats) < 1:
+                continue
+            try:
+                row = [float(val) for val in floats[:6]]
+            except ValueError:
+                continue
+            rows.append(row)
+
+        if not rows:
+            return np.empty((0, 0))
+
+        matrix = np.asarray(rows, dtype=float)
+        if matrix.shape[1] < 6:
+            padding = 6 - matrix.shape[1]
+            matrix = np.pad(matrix, ((0, 0), (0, padding)))
+        if matrix.shape[0] < 6:
+            padding = 6 - matrix.shape[0]
+            matrix = np.pad(matrix, ((0, padding), (0, 0)))
+        return matrix[:6, :6]
+
+    def _parse_drag_table_lines(self, lines: List[str]) -> List[Dict[str, Any]]:
+        entries: List[Dict[str, Any]] = []
+        current_structure = None
+        for raw_line in lines:
+            stripped = raw_line.strip()
+            if not stripped or stripped.startswith('-'):
+                continue
+
+            parts = stripped.split()
+            if len(parts) < 3:
+                continue
+
+            element_id = self._safe_int(parts[0])
+            structure_id = self._safe_int(parts[1])
+            if structure_id is not None:
+                current_structure = structure_id
+
+            floats = [self._safe_float(value) for value in parts[2:]]
+            floats = [val for val in floats if val is not None]
+
+            area = floats[3] if len(floats) > 3 else 0.0
+            cd_normal = floats[4] if len(floats) > 4 else 0.0
+            cd_axial = floats[5] if len(floats) > 5 else 0.0
+            cm = floats[6] if len(floats) > 6 else 0.0
+            centroid = tuple(floats[0:3]) if len(floats) >= 3 else (0.0, 0.0, 0.0)
+
+            entry = {
+                "element_id": element_id,
+                "structure_id": current_structure,
+                "centroid": centroid,
+                "area": area,
+                "cd_normal": cd_normal,
+                "cd_axial": cd_axial,
+                "cm": cm,
+                "raw": stripped,
+            }
+            entries.append(entry)
+
+        return entries
+
+    def _parse_external_damping_lines(self, lines: List[str]) -> Dict[str, Any]:
+        contributions: Dict[str, List[float]] = {
+            "B33": [],
+            "B44": [],
+            "B55": [],
+        }
+
+        for raw_line in lines:
+            tokens = raw_line.split()
+            if len(tokens) < 4:
+                continue
+            floats: List[float] = []
+            for token in tokens:
+                value = self._safe_float(token)
+                if value is not None:
+                    floats.append(value)
+            if len(floats) < 3:
+                continue
+            if len(floats) > 0:
+                contributions["B33"].append(floats[0])
+            if len(floats) > 1:
+                contributions["B44"].append(floats[1])
+            if len(floats) > 2:
+                contributions["B55"].append(floats[2])
+
+        return {
+            "B33": np.asarray(contributions["B33"], dtype=float) if contributions["B33"] else np.array([]),
+            "B44": np.asarray(contributions["B44"], dtype=float) if contributions["B44"] else np.array([]),
+            "B55": np.asarray(contributions["B55"], dtype=float) if contributions["B55"] else np.array([]),
+            "raw": lines,
+        }
+
+    def _parse_percent_critical_section(self, lines: List[str]) -> Dict[str, Any]:
+        frequencies: List[float] = []
+        perc: Dict[str, List[float]] = {"B33": [], "B44": [], "B55": []}
+
+        for raw_line in lines:
+            tokens = FLOAT_PATTERN.findall(raw_line)
+            if len(tokens) < 8:
+                continue
+            try:
+                freq = float(tokens[1])
+            except ValueError:
+                continue
+            frequencies.append(freq)
+            try:
+                perc["B33"].append(float(tokens[4]))
+                perc["B44"].append(float(tokens[5]))
+                perc["B55"].append(float(tokens[6]))
+            except (ValueError, IndexError):
+                continue
+
+        return {
+            "frequencies": np.asarray(frequencies, dtype=float),
+            "B33": np.asarray(perc["B33"], dtype=float),
+            "B44": np.asarray(perc["B44"], dtype=float),
+            "B55": np.asarray(perc["B55"], dtype=float),
+            "raw": lines,
+        }
+
+    def _safe_float(self, value: str) -> Optional[float]:
+        try:
+            return float(value)
+        except ValueError:
+            return None
+
+    def _safe_int(self, value: str) -> Optional[int]:
+        try:
+            return int(value)
+        except ValueError:
+            return None
+
+    # ------------------------------------------------------------------
+    # Additional extraction helpers required for viscous damping workflow
+    # ------------------------------------------------------------------
+
+    def extract_damping_matrices(self, file_path: str) -> Dict[str, Any]:
+        content = self._read_file_content(file_path)
+        lines = self._extract_section_lines(
+            content,
+            r"DAMPING-VARIATION\s+WITH\s+WAVE\s+PERIOD/FREQUENCY",
+        )
+        return self._parse_frequency_matrix_section(lines)
+
+    def extract_added_mass_matrices(self, file_path: str) -> Dict[str, Any]:
+        content = self._read_file_content(file_path)
+        lines = self._extract_section_lines(
+            content,
+            r"ADDED-MASS-VARIATION\s+WITH\s+WAVE\s+PERIOD/FREQUENCY",
+        )
+        return self._parse_frequency_matrix_section(lines)
+
+    def extract_added_mass_at_infinite_frequency(self, file_path: str) -> Dict[str, Any]:
+        content = self._read_file_content(file_path)
+        lines = self._extract_section_lines(
+            content,
+            r"ADDED\s+MASS\s+AT\s+INFINITE\s+FREQUENCY",
+        )
+        matrix = self._parse_square_matrix(lines)
+        diagonal = {}
+        if matrix.size:
+            for idx, dof in enumerate(DEFAULT_DOF_LABELS):
+                diagonal[f"A{idx+1}{idx+1}"] = float(matrix[idx, idx])
+        return {"matrix": matrix, "dofs": DEFAULT_DOF_LABELS, "diagonal": diagonal}
+
+    def extract_drag_table(self, file_path: str) -> List[Dict[str, Any]]:
+        content = self._read_file_content(file_path)
+        lines = self._extract_section_lines(
+            content,
+            r"GEOMETRY\s+DRAG\s+ADDED\s+MASS",
+            stop_keywords=("HYDRODYNAMIC", "END OF", "WAVE", "MASS"),
+        )
+        return self._parse_drag_table_lines(lines)
+
+    def extract_external_damping(self, file_path: str) -> Dict[str, Any]:
+        content = self._read_file_content(file_path)
+        lines = self._extract_section_lines(
+            content,
+            r"H/I\s+DAMPING\s+FOR\s+FORCE\s+ON\s+STR#",
+        )
+        return self._parse_external_damping_lines(lines)
+
+    def extract_percent_critical_damping(self, file_path: str) -> Dict[str, Any]:
+        content = self._read_file_content(file_path)
+        lines = self._extract_section_lines(
+            content,
+            r"APPROXIMATE\s+PERCENTAGE\s+CRITICAL\s+DAMPING",
+        )
+        return self._parse_percent_critical_section(lines)
+
+    def extract_restoring_coefficients(self, file_path: str) -> Dict[str, Any]:
+        content = self._read_file_content(file_path)
+        lines = self._extract_section_lines(
+            content,
+            r"HYDROSTATIC\s+RESTORING\s+COEFFICIENTS",
+        )
+        matrix = self._parse_square_matrix(lines)
+        diagonal: Dict[str, float] = {}
+        if matrix.size:
+            for idx, dof in enumerate(DEFAULT_DOF_LABELS):
+                diagonal[f"C{idx+1}{idx+1}"] = float(matrix[idx, idx])
+        return {"matrix": matrix, "dofs": DEFAULT_DOF_LABELS, "diagonal": diagonal}
     
     def expand_abbreviated_data(self, raw_data: str) -> str:
         """Expand abbreviated data format to full format.

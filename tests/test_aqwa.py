@@ -127,6 +127,80 @@ class TestAqwaRouter:
     @patch('digitalmodel.aqwa.a_pre')
     @patch('digitalmodel.aqwa.a_post')
     @patch('digitalmodel.aqwa.mes_files')
+    @patch('digitalmodel.modules.aqwa.aqwa_router.ViscousDampingDetermination')
+    def test_router_analysis_viscous_damping_enabled(
+        self,
+        mock_viscous,
+        mock_mes,
+        mock_post,
+        mock_pre,
+        aqwa_instance,
+        base_cfg,
+    ):
+        """Router should invoke viscous damping workflow when configured."""
+
+        cfg = copy.deepcopy(base_cfg)
+        cfg["type"]["analysis"] = True
+        viscous_config = {
+            "config": {"context": {"analysis_source": "."}, "cases": []},
+            "results_directory": "results/path",
+        }
+        cfg["analysis_settings"] = {"viscous_damping": viscous_config}
+
+        mock_instance = mock_viscous.return_value
+        expected_result = {"results": [], "output_directory": "results/path"}
+        mock_instance.run.return_value = expected_result
+
+        with patch.object(aqwa_instance, 'get_cfg_with_master_data', return_value=cfg):
+            result = aqwa_instance.router(cfg)
+
+        mock_viscous.assert_called_once()
+        mock_instance.run.assert_called_once_with(viscous_config["config"], "results/path")
+        assert result["analysis_settings"]["viscous_damping"]["results"] == expected_result
+        mock_pre.pre_process_router.assert_not_called()
+        mock_post.post_process_router.assert_not_called()
+        mock_mes.router.assert_not_called()
+
+    @patch('digitalmodel.aqwa.a_pre')
+    @patch('digitalmodel.aqwa.a_post')
+    @patch('digitalmodel.aqwa.mes_files')
+    @patch('digitalmodel.modules.aqwa.aqwa_router.ViscousDampingDetermination')
+    def test_router_analysis_viscous_damping_disabled_fallback(
+        self,
+        mock_viscous,
+        mock_mes,
+        mock_post,
+        mock_pre,
+        aqwa_instance,
+        base_cfg,
+    ):
+        """Router should fall back to legacy analysis when viscous damping disabled."""
+
+        cfg = copy.deepcopy(base_cfg)
+        cfg["type"]["analysis"] = True
+        cfg["analysis_settings"] = {"viscous_damping": {"enabled": False}}
+
+        mock_analysis_instance = Mock()
+
+        with patch.object(aqwa_instance, 'get_cfg_with_master_data', return_value=cfg), \
+             patch('builtins.__import__') as mock_import:
+
+            mock_module = Mock()
+            mock_module.AqwaAnalysis.return_value = mock_analysis_instance
+            mock_import.return_value = mock_module
+
+            result = aqwa_instance.router(cfg)
+
+        mock_viscous.assert_not_called()
+        mock_analysis_instance.analysis_router.assert_called_once_with(cfg)
+        mock_pre.pre_process_router.assert_not_called()
+        mock_post.post_process_router.assert_not_called()
+        mock_mes.router.assert_not_called()
+        assert result == cfg
+
+    @patch('digitalmodel.aqwa.a_pre')
+    @patch('digitalmodel.aqwa.a_post')
+    @patch('digitalmodel.aqwa.mes_files')
     def test_router_mes_flag_true(self, mock_mes, mock_post, mock_pre, aqwa_instance, base_cfg):
         """Test router when mes flag is enabled."""
         cfg = copy.deepcopy(base_cfg)
