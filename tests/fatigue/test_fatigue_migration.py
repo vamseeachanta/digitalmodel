@@ -282,7 +282,7 @@ class TestShearAnalysisMigration:
                 assert not data['is_finite'], f"Stress {data['stress']} <= {fatigue_limit} should have infinite life"
 
 
-class TestEngineering ValidationMigration:
+class TestEngineeringValidationMigration:
     """Test engineering validation functions"""
 
     def test_time_domain_validation(self):
