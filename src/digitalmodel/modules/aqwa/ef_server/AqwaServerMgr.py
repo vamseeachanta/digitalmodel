@@ -22,8 +22,10 @@ class LogStdOut(object):
         sys.stdout = self
 
     def __del__(self):
-        sys.stdout = self.stdout
-        self.Log.close()
+        # Only restore stdout, don't close the log file
+        # The log file will be closed when LogClass.close() is explicitly called
+        if hasattr(self, 'stdout'):
+            sys.stdout = self.stdout
 
     def write(self, data):
         self.stdout.write(data)
@@ -42,8 +44,10 @@ class LogStdErr(object):
         sys.stderr = self
 
     def __del__(self):
-        sys.stderr = self.stderr
-        self.Log.close()
+        # Only restore stderr, don't close the log file
+        # The log file will be closed when LogClass.close() is explicitly called
+        if hasattr(self, 'stderr'):
+            sys.stderr = self.stderr
 
     def write(self, data):
         self.stderr.write(data)
@@ -68,7 +72,20 @@ class LogClass(object):
         self.Log.close()
 
 
-Log = LogClass("AqwaServerLogFile.txt")
+# Dummy log class for testing mode that doesn't redirect stdout/stderr
+class DummyLog:
+    def write(self, data):
+        pass  # Do nothing during testing
+    
+    def close(self):
+        pass
+
+# Only create log when running as main, not during import for testing
+# This prevents pytest from crashing due to stdout/stderr redirection
+if __name__ == '__main__' or 'pytest' not in sys.modules:
+    Log = LogClass("AqwaServerLogFile.txt")
+else:
+    Log = DummyLog()
 
 # A class for socket message setup
 class AqwaMsg:

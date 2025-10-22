@@ -11,8 +11,8 @@ Date: 2025-10-03
 import sys
 import os
 
-# Set UTF-8 encoding for Windows
-if sys.platform == 'win32':
+# Set UTF-8 encoding for Windows only when running as main, not during testing
+if sys.platform == 'win32' and 'pytest' not in sys.modules:
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
