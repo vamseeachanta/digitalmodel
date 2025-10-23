@@ -1,0 +1,9 @@
+component,min_capacity,max_capacity,safety_factor_min,safety_factor_max,reference_basis
+top_chain_studless_R4,6500,8200,1.6,2.2,"API RP 2SK Stationkeeping Systems (https://www.api.org/products-and-services/standards)"
+spiral_strand_wire,4500,6200,1.8,2.5,"Bridon-Bekaert Spiral Strand Catalogue (https://bridon-bekaert.com/markets/oil-gas/)"
+bottom_chain_R5,7800,9600,1.7,2.3,"OCIMF Mooring Equipment Guidelines MEG4 (https://www.ocimf.org/publications/offshore-marine/mooring-equipment-guidelines-meg4)"
+hawser_shackle,5200,6400,2.0,2.6,"Crosby G-2130 Shackle Datasheet (https://www.thecrosbygroup.com/products/shackles/)"
+hawser_single_leg,1960,2940,2.0,2.5,"OCIMF Hawser System Table 5 (specs/modules/data-procurement/CALM_Buoy_claude.md)"
+hawser_double_leg,2940,3920,2.1,2.6,"OCIMF Hawser System Table 5 (specs/modules/data-procurement/CALM_Buoy_claude.md)"
+chafe_chain_typeA,4000,5200,2.0,2.4,"OCIMF Chafe Chain Guidance (specs/modules/data-procurement/CALM_Buoy_claude.md)"
+suction_pile_anchor,9000,12000,1.8,2.3,"CALM Mooring System Specifications Table 3 (specs/modules/data-procurement/CALM_Buoy_claude.md)"
