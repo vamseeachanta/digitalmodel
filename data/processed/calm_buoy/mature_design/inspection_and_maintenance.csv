@@ -1,0 +1,5 @@
+subsystem,activity,method,frequency,acceptance_criteria,responsible_party,record_reference
+mooring,Hawser inspection,Visual + load pin trend,Monthly,"No cuts > 10% rope diameter per OCIMF MEG4",Marine operations,"https://www.ocimf.org/publications/offshore-marine/mooring-equipment-guidelines-meg4"
+hull,Coating integrity survey,UT spot checks + visual,Annually,"Coating breakdown < 5% area; wastage < 0.5 mm",Integrity team,"https://www.dnv.com/oilgas/services/asset-integrity-management.html"
+turret,Bearing lubrication,Grease flush per manufacturer,Quarterly,"Grease purge runs clear; no metal debris",Mechanical maintenance,"https://www.sofec.com/services/operations-maintenance/"
+offloading,Hose pressure test,Hydrostatic to 1.5 x MAWP,Biennial,"No leakage; hold pressure 30 min",Subsea services,"https://www.man-oil-marine.com/products/offshore-loading-hoses/"
