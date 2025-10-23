@@ -158,6 +158,8 @@ class ValidationResult:
 
 ## Physical Consistency Validation
 
+### Directory Structure
+
 ### Reference Data Organization
 
 **Pattern:** Organize reference data by scope:
@@ -175,6 +177,29 @@ data/
     ├── conditions.csv
     └── properties.csv
 ```
+
+### Reports and Results Organization
+
+**Pattern:** Separate human-readable reports from detailed results:
+
+```
+reports/
+└── validation/<asset_category>/
+    ├── validation_summary_YYYYMMDD_HHMMSS.csv
+    ├── validation_report_YYYYMMDD_HHMMSS.md
+    └── validation_report_YYYYMMDD_HHMMSS.html
+
+results/
+└── validation/<asset_category>/
+    ├── detailed_issues_YYYYMMDD_HHMMSS.json
+    ├── parameter_comparison_YYYYMMDD_HHMMSS.csv
+    ├── orcaflex_output_YYYYMMDD_HHMMSS.txt
+    └── validation_metrics_YYYYMMDD_HHMMSS.json
+```
+
+**Distinction:**
+- **reports/**: Human-readable summaries for stakeholders (CSV summaries, Markdown, HTML)
+- **results/**: Detailed validation data for analysis/debugging (JSON, raw outputs, full parameter lists)
 
 ### CSV Reference Data Format
 
@@ -299,7 +324,7 @@ analysis_converged,physical_checks,physical_warnings,critical_issues,
 validation_time_sec,error_messages,notes
 ```
 
-**Location Pattern:** `<module>/validation_results/validation_summary_YYYYMMDD_HHMMSS.csv`
+**Location Pattern:** `reports/validation/<asset_category>/validation_summary_YYYYMMDD_HHMMSS.csv`
 
 ### 3. Markdown Report Format
 

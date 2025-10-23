@@ -112,6 +112,23 @@ From YAML → Data Mappings:
 | LineTypes → MBL | mooring_capacity_ranges.csv | *_capacity |
 | Lines → Length | mooring_line_properties.csv | length |
 
+## Directory Structure
+
+### Output Organization
+
+```
+reports/validation/calm_buoy/           # Human-readable summaries
+├── validation_summary_YYYYMMDD.csv
+├── validation_report_YYYYMMDD.md
+└── validation_report_YYYYMMDD.html
+
+results/validation/calm_buoy/           # Detailed analysis data
+├── detailed_issues_YYYYMMDD.json
+├── parameter_comparison_YYYYMMDD.csv
+├── orcaflex_output_YYYYMMDD.txt
+└── validation_metrics_YYYYMMDD.json
+```
+
 ## Output Formats
 
 ### 1. Console Output (Loguru)
@@ -140,7 +157,7 @@ Issues:
 
 ### 2. CSV Summary
 
-**Location:** `specs/modules/orcaflex/modular-input-file/validation_results/`
+**Location:** `reports/validation/calm_buoy/`
 
 **Filename:** `validation_summary_YYYYMMDD_HHMMSS.csv`
 
@@ -156,7 +173,7 @@ timestamp,file_name,validation_level,status,yaml_valid,orcaflex_available,orcafl
 
 ### 3. Markdown Report
 
-**Location:** Same as CSV
+**Location:** `reports/validation/calm_buoy/`
 
 **Filename:** `validation_report_YYYYMMDD_HHMMSS.md`
 
@@ -188,9 +205,19 @@ timestamp,file_name,validation_level,status,yaml_valid,orcaflex_available,orcafl
 
 ### 4. HTML Interactive Report
 
-**Location:** Same as CSV/Markdown
+**Location:** `reports/validation/calm_buoy/`
 
 **Filename:** `validation_report_YYYYMMDD_HHMMSS.html`
+
+### 5. Detailed Results (for analysis/debugging)
+
+**Location:** `results/validation/calm_buoy/`
+
+**Files Generated:**
+- `detailed_issues_YYYYMMDD_HHMMSS.json` - Full issue data with metadata
+- `parameter_comparison_YYYYMMDD_HHMMSS.csv` - All parameter comparisons
+- `orcaflex_output_YYYYMMDD_HHMMSS.txt` - Raw OrcaFlex analysis output (if available)
+- `validation_metrics_YYYYMMDD_HHMMSS.json` - Performance and statistics
 
 **Features:**
 - Interactive Plotly charts:
@@ -264,7 +291,8 @@ python -m digitalmodel.modules.orcaflex.modular_input_validation \
 ```bash
 python -m digitalmodel.modules.orcaflex.modular_input_validation \
     --report-all \
-    --output-dir validation_results/ \
+    --reports-dir reports/validation/calm_buoy/ \
+    --results-dir results/validation/calm_buoy/ \
     calm_buoy_base.yml
 ```
 
