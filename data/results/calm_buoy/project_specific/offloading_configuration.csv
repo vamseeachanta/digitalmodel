@@ -1,0 +1,5 @@
+component_id,component_type,nominal_size,design_pressure,material_spec,notes
+FLH1,Floating Hose,20.0,30.0,OCIMF GMPHOM Type A,"Lazy-S string per OCIMF hose guidance (https://www.ocimf.org/publications/offshore-marine/guide-to-manufacturing-and-purchasing-hoses-for-offshore-moorings)"
+SUB1,Submarine Hose,20.0,40.0,API 17K,"Chinese Lantern riser layout using API 17K bonded flexible pipe (https://www.api.org/products-and-services/standards)"
+MBC1,Marine Breakaway Coupling,20.0,48.0,EMSTEC Series 500,"Emergency disconnect coupling reference (https://www.emstec.net/marine-breakaway-couplings/)"
+PLEM1,Pipeline End Manifold,24.0,48.0,ASME B31.3,"PLEM valve skid design per ASME process piping (https://www.asme.org/codes-standards/find-codes-standards/b31-3-process-piping)"

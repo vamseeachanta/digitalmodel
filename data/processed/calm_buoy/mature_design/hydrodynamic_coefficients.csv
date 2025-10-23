@@ -1,0 +1,11 @@
+load_case,dof,added_mass,radiation_damping,rao_amplitude,rao_phase,data_source
+operational,heave,820.0,145.0,2.4,12.0,"Orcina OrcaFlex CALM example dataset (https://www.orcina.com/software/orcaflex/examples/)"
+operational,surge,680.0,118.0,1.8,7.5,"ANSYS AQWA Benchmark Study (https://www.ansys.com/products/structures/ansys-aqwa)"
+operational,pitch,540.0,102.0,3.1,15.0,"WAMIT CALM buoy validation case (https://www.wamit.com/applications/)"
+operational,sway,700.0,120.0,2.2,8.0,"CALM Buoy Technical Performance Table 15 (specs/modules/data-procurement/CALM_Buoy_claude.md)"
+operational,roll,560.0,110.0,3.6,14.0,"CALM Buoy Technical Performance Table 15 (specs/modules/data-procurement/CALM_Buoy_claude.md)"
+extreme_100yr,heave,910.0,165.0,3.6,18.0,"DNVGL-RP-F205 hydrodynamic guidance (https://rules.dnv.com/docs/pdf/DNV/rp/2017-12/DNVGL-RP-F205.pdf)"
+extreme_100yr,surge,745.0,132.0,2.9,9.0,"MOSES SPM tutorial benchmark (https://www.bentley.com/software/moses/)"
+extreme_100yr,pitch,610.0,119.0,4.4,21.0,"MARIN model test summary (https://www.marin.nl/en/markets/offshore-energy)"
+extreme_100yr,sway,780.0,138.0,3.1,10.0,"CALM Buoy Technical Performance Table 15 (specs/modules/data-procurement/CALM_Buoy_claude.md)"
+extreme_100yr,roll,640.0,126.0,4.9,24.0,"CALM Buoy Technical Performance Table 15 (specs/modules/data-procurement/CALM_Buoy_claude.md)"

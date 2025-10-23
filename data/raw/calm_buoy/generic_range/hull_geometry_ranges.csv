@@ -1,0 +1,9 @@
+parameter,min_value,max_value,reference_basis,notes
+skirt_diameter,8.0,16.0,"OCIMF Offshore CALM Guidance (https://www.ocimf.org/publications/offshore-marine)","Assumes offloading systems for AFRAMAX to VLCC support"
+freeboard,3.5,6.5,"DNVGL-OS-E403 Offshore Loading Buoys (https://rules.dnv.com/docs/pdf/DNV/codes/docs/2016-07/dnvgl-os-e403.pdf)","Maintain splash zone clearance for 100-year sea state"
+hull_draft,8.0,14.0,"SBM Offshore CALM Buoy Specifications (https://www.sbmoffshore.com/what-we-do/products/calm-buoys)","Covers shallow to deep-draft CALM hulls"
+turret_offset,0.0,1.5,"Bluewater Turret Mooring Brochure (https://www.bluewater.com/products-services/mooring/)","Offset relative to centerline for swivel integration"
+buoy_diameter,8.0,20.0,"CALM Buoy Design Specifications Table 1 (specs/modules/data-procurement/CALM_Buoy_claude.md)","Diameter envelope for global installed systems"
+buoy_height,3.0,7.5,"CALM Buoy Design Specifications Table 1 (specs/modules/data-procurement/CALM_Buoy_claude.md)","Measured from keel to deck including skirt"
+swivel_stack_height,9.0,11.0,"CALM Buoy Design Specifications Table 1 (specs/modules/data-procurement/CALM_Buoy_claude.md)","Accommodates multi-path swivel assemblies"
+main_bearing_diameter,2.0,3.0,"CALM Buoy Design Specifications Table 1 (specs/modules/data-procurement/CALM_Buoy_claude.md)","Three-race roller bearing interface"
