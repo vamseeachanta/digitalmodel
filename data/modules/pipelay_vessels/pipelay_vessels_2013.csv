@@ -1,30 +1,61 @@
 contractor,primary_index,secondary_index,vessel_name,year_built,upgrade_year,home_port,station_keeping,vessel_role,length_ft,beam_ft,depth_ft,draft_ft,crew_capacity,spec_notes
 "ALLSEAS GROUP, S.A.",1,2.0,SOLITAIRE,1998,,Varies,DP,pipelay vessel,984.0,131.0,79.0,28.0,420.0,"H DP3 17 7 H H 3 2,316 H H H 2 2"" 60"" H 42' 50' >10,000' 9,100'"
 "ALLSEAS GROUP, S.A.",2,2.0,AUDACIA,2007,,Varies,DP,pipelay vessel,738.0,106.0,63.0,27.0,270.0,"H DP3 11 7 H H 3 1,157 H H H 2 2"" 60"" H 42' 40' >10,000' 3,500' (Lay Only 40' - >10,000') (S-Lay 2"" - 60"" Rigid Pipe)"
-CNOOC,10,6.0,HAI YANG SHI YOU 201,2012,,"Tanggu,Tianjin,P.R.C.",,Pipe laying crane vessel,669.0,128.0,46.0,23.0,380.0,"H DP3 6 3 2 800 H 6"" 60"" H H 49' 6,562'"
+"ALLSEAS GROUP, S.A.",3,2.0,LORELAY,Varies,,,DP,pipelay vessel,599.0,85.0,51.0,22.0,230.0,"H DP2 7 6 H H 3 363 H H H 2 2"" 28"" H 42' 35' >10,000' 5,410' (Lay Only 35' - >10,000') (S-Lay 2"" - 36"" Rigid Pipe)"
+"ALLSEAS GROUP, S.A.",1455,,"West Loop South, Suite 400; Houston, TX",77027,,,,,,,,,,
+"ALLSEAS GROUP, S.A.",2,,CALAMITY JANE,Varies,,Bury vessel 427' 85 33' 15' 72 H,DP2,H,4.0,48.0,30.0,2500.0,,"1345' (Bury Only 30' - 2,500') (Bury Only 4"" - 42"")"
+0 ASCOT CONSTRUCTORS OFFSHORE LTD.,4,,ASCOT FORCADOS,1,,"Choba, Portharcourt Derrick/pipe Lay Barge 300' 90' 20' 10'/12' 152 H",Anchors,,6.0,4.0,,,1.0,"100 H H H H H 4"" 24"" H H H H H H 4"" 24"" 40' 15' 200' 100' 90' 100' (24"")"
+0 ASCOT CONSTRUCTORS OFFSHORE LTD.,4,,ASCOT ESCRAVOS,1,,"Choba, Portharcourt Pipe Lay Barge 200' 54' 14' 8'/12' 120 H",Anchors,,6.0,5.0,,1.0,40.0,"H H H H H 4"" 16"" H H H H H H 4"" 16"" 40' 12' 100' 40' 60'"
+CAL DIVE,5,,Pipelay/Bury 260' 72' 16' 7',88,7.0,"Point 3 3 2"" 36"" 48"" 10'",,,,,,,,
+CAL DIVE,6,,LONE STAR Pipelay/Bury 313' 90' 18' 12',165,,"H 8 Point 4 4 H H H H H 2"" 36"" H H H H H H 48"" 15' (Burial up to 16' of cover/Pipelay up to 800')",,,,,,,,
+CHET MORRISON CONTRACTORS,7,1.0,CM,11,,"Houma, LA Lay/Bury Barge 195' 46' 13' 5' 50 H",Anchors,& Spuds,4.0,2.0,,1.0,50.0,"H H H H H H H 3 1"" 30"" H H H H H H H 2"" 48"" 40 7' 100' 200' 60' (Lay 7' - 100'; Bury 7' - 100') (Lay 1"" - 30"" and Bury 2"" - 30"")"
+CHET MORRISON CONTRACTORS,8,1.0,CM,9,,"Houma, LA Lay/Bury Barge 180' 54' 12' 5' 44 H",Anchors,,4.0,2.0,,1.0,40.0,"H H H H H H H 3 1"" 30"" H H H H H H H 2"" 48"" 40 7' 250' 200' 210'"
+CHET MORRISON CONTRACTORS,9,1.0,CM,15,,"Houma, LA Lay/Bury Barge 220' 60' 14' 8' 65 H",Anchors,,5.0,3.0,,1.0,80.0,"H H H H H H H 3 1"" 30"" H H H H H H H H 2"" 48"" 40 8' 400' 200' 400' (Lay 8' - 400'; Bury 8' - 200') (Lay 1"" - 30"" and Bury 2"" - 30"")"
+CNOOC,10,6.0,HAI YANG SHI YOU,201,2012.0,"Tanggu,Tianjin,P.R.C.",,Pipe laying crane vessel,669.0,128.0,46.0,23.0,380.0,"H DP3 6 3 2 800 H 6"" 60"" H H 49' 6,562'"
+CNOOC,6,,LANJIANG Heavy derrick/lay barge 517' 157' 41' 26' 26' 26' - 492',,,,,,,,,,,
+CNOOC,6,,BH109 Lift/pipe laying barge 307' 93' 22' 14',,,,,,,,,,,
+CNOOC,6,,BH106 Lift/pipe laying barge 262' 75' 16' 673',,,,,,,,,,,
 EMAS AMC,11,6.0,LEWEK CHAMPION,2007,,Asia,DP2,Pipe Lay Barge,466.0,131.0,33.0,21.0,358.0,"• DP2 9 5 H H 2 441 H H H 2 6"" 60"" H H H 39' H 28' 4,920' 476' (Lay >20' - 2000') (Lay 4"" - 60"" rigid)"
+EMAS AMC,12,,"LEWEK CONSTELLATION Ingleside, TX or As Required 5,280'",DP3,,Multi-Lay Vessel w/heavy lift capabilities 587' 151' 51' 28'/35' 239 •,DP3,,1.0,1.0,,,2.0,"1,764 H H H H H H H 2 4"" 16"" rigid/24"" H H 39' 16,400' (Lay >160' - 10,000') (Lay 4""-16"" Rigid, Lay 4""-24"" flexible)"
+EMAS AMC,13,,"LEWEK EXPRESS Ingleside, TX or As Required 5,280'",DP,,MSV 531' 114' 32' 20' 132 •,DP2,,1.0,1.0,,,2.0,"485 H H H H H H H 2 2"" 14"" H H H 36' 9,840' 8,230'"
+EMAS AMC,14,,"LEWEK CENTURION Ingleside, TX or As Required",DP,,PLV 480' 98' 56' 19'/25' 220 •,DP2,,9.0,7.0,,,3.0,"893 H H H 2 4"" 36"" H H H H 43' 39' 8,200' 450' (Lay >50' - 8,200') (Lay 4"" - 36"" rigid)"
 "HEEREMA MARINE CONTRACTORS U.S., INC.",7,,DCV BALDER,1978,2002.0,"Fourchon, LA",DP,Pipelay/Inst. Vessel,505.0,282.0,138.0,36.0,400.0,"• DP3 5 3 H H 2,300 H H H H 2 6"" 32"" H 236' 300' 10,000' 10,000' (J-Lay 50' - 10,000') (J-Lay 6"" - 32"")"
+"HEEREMA MARINE CONTRACTORS U.S., INC.",15,7.0,"DCV AEGIR Fourchon, LA",DP,,RJ-Lay/Deep Sea Construction 689' 152' 52' 26'/30' 305 •,DP3,,5.0,3.0,,,4400.0,"H H H H 2 6"" 32"" H H 157' H 300' 11,500' (R-Lay or J-Lay 300'-11,500') (R-Lay 6"" - 16""/J-Lay 6"" - 32"")"
 LEIGHTON INTERNATIONAL,16,6.0,STEALTH,2006,,"Singapore A1 Barge: Accomodation, Pipelay, Work Barge 330' 100' 20' 15' 232 H",Anchored,,7.0,5.0,,,2.0,"220 H H H H 8"" 60"" H H H H H H 40' 8.2' 328' N/A (0 to 150 mtrs) (6"" to 60"")"
 LEIGHTON INTERNATIONAL,17,6.0,ECLIPSE,2008,,"Singapore A1, Pipe lay/Accommodation/Work Barge 427' 105' 28' 19' 260 H",Anchored,,8.0,4.0,,,2.0,"264 H H H H 6"" 60"" H H H H H H 40' 11.48' 492' N/A (0 to 150 mtrs) (6"" to 60"")"
 LEIGHTON INTERNATIONAL,18,6.0,FAULKNER,2008,,"Funafuti, Tuvalu A1 Barge 250' 80' 16' 11' 32 9 point 6 4 H H 2 120 H H H H 8"" 32""",,,,,,,,
-McDERMOTT,19,,DERRICK BARGE 50 (DB50),1988,,"Morgan City, LA",,DP Derrick/Lay Barge,497.0,151.0,41.0,31.0,320.0,"H DP2/8-Pt. 8 N/A H H N/A 775/200 H H H H H H H 2+ 2"" 20"" H H H H 165' H 400' >10,000' 4,400'"
-McDERMOTT,20,,DERRICK BARGE 16 (DB16),1967,1999.0,"Morgan City, LA",,DP Derrick/Lay Barge,400.0,100.0,28.5,16.0,184.0,"H DP2/8-Pt. 8 5 H H 3 300/100 H H H H H H H 2+ 2""/4"" 10""/48"" H H H H 42' H 20' >10,000' 3,500' (S-Lay or Reel Lay 20' - >10,000') (Reel Lay Rigid Pipe 2"" - 10""; S-Lay 4"" - 48"")"
-McDERMOTT,21,,DERRICK BARGE 27 (DB27),1974,,"Dubai, UAE",,Derrick/Lay Barge,420.0,128.0,28.0,15.5,270.0,"H 12-pt 12 5 H H 2 540 H H H H H H 2+ 4"" 72"" H H 42' 20' case by case 3,000'"
-McDERMOTT,22,,DERRICK BARGE 30 (DB30),1975,,"Batam Island, Indonesia",,Derrick/Lay Barge,420.0,158.0,28.0,12.0,303.0,"H 12-pt 12 5 H H 2 550 H H H 2+ 4"" 60"" H H 40' 20' case by case 3,000' S-Lay 4"" - 60"" >1,000' (S-Lay 4"" - 60"")"
+McDERMOTT,19,,DERRICK BARGE,50,,"(DB50) 1988 Morgan City, LA",,DP Derrick/Lay Barge,497.0,151.0,41.0,31.0,320.0,"H DP2/8-Pt. 8 N/A H H N/A 775/200 H H H H H H H 2+ 2"" 20"" H H H H 165' H 400' >10,000' 4,400'"
+McDERMOTT,20,,DERRICK BARGE,16,,"(DB16) 1967 1999 Morgan City, LA",,DP Derrick/Lay Barge,400.0,100.0,28.5,16.0,184.0,"H DP2/8-Pt. 8 5 H H 3 300/100 H H H H H H H 2+ 2""/4"" 10""/48"" H H H H 42' H 20' >10,000' 3,500' (S-Lay or Reel Lay 20' - >10,000') (Reel Lay Rigid Pipe 2"" - 10""; S-Lay 4"" - 48"")"
+McDERMOTT,21,,DERRICK BARGE,27,,"(DB27) 1974 Dubai, UAE",,Derrick/Lay Barge,420.0,128.0,28.0,15.5,270.0,"H 12-pt 12 5 H H 2 540 H H H H H H 2+ 4"" 72"" H H 42' 20' case by case 3,000'"
+McDERMOTT,22,,DERRICK BARGE,30,,"(DB30) 1975 Batam Island, Indonesia",,Derrick/Lay Barge,420.0,158.0,28.0,12.0,303.0,"H 12-pt 12 5 H H 2 550 H H H 2+ 4"" 60"" H H 40' 20' case by case 3,000' S-Lay 4"" - 60"" >1,000' (S-Lay 4"" - 60"")"
 McDERMOTT,23,,DERRICK BARGE KP1 (KP1),1974,,"Batam Island, Indonesia",,Derrick/Lay Barge,456.0,99.0,30.0,11.8,295.0,"H 10-pt 10 5 H H 2 300 H H H 2+ 4"" 60"" H H 40'/60' 20' case by case 2,600'"
-McDERMOTT,24,,DERRICK BARGE 32 (DB32),2010,,"Dubai, UAE",,Derrick/Lay Barge,456.0,120.0,29.5,15.7,292.0,"H 10-pt 10 6 H H 2 240 H H H 2+ 6"" 60"" H H 42' 10' case by case 2,600'"
+McDERMOTT,24,,DERRICK BARGE,32,,"(DB32) 2010 Dubai, UAE",,Derrick/Lay Barge,456.0,120.0,29.5,15.7,292.0,"H 10-pt 10 6 H H 2 240 H H H 2+ 6"" 60"" H H 42' 10' case by case 2,600'"
 McDERMOTT,25,,AGILE,1978,,"Dartmouth, Nova Scotia",,DP SCV Vessel,441.0,64.6,43.5,27.8,199.0,"H DP2 H H H H 2"" 8"" H H 6"" 40"" 25' 3,000' 3,000'"
-McDERMOTT,26,,NORTH OCEAN 102 (NO102),2009,,,,DP SCVessel,451.0,89.0,32.0,22.5,199.0,"H DP2 2 240 H H 4"" 16"" H H 600'"
-McDERMOTT,27,,LAY VESSEL NORTH OCEAN 105 (LVNO105),2012,,,,Global Varies DP Reel Vessel,451.0,99.0,43.5,22.5,129.0,"H DP2 2 1 H H 1 992 H H H H H H 4"" 16"" H H NA H 30 9,800' varies 4,600'"
+McDERMOTT,26,,NORTH OCEAN,102,,(NO102) 2009,,DP SCVessel,451.0,89.0,32.0,22.5,199.0,"H DP2 2 240 H H 4"" 16"" H H 600'"
+McDERMOTT,27,,LAY VESSEL NORTH OCEAN,105,,(LVNO105) 2012,,Global Varies DP Reel Vessel,451.0,99.0,43.5,22.5,129.0,"H DP2 2 1 H H 1 992 H H H H H H 4"" 16"" H H NA H 30 9,800' varies 4,600'"
+NORCE OFFSHORE PTE LTD,28,,DLB NORCE ENDEAVOUR Singapore,,,Derrick/Lay Barge 480' 138' 33' 17'/20.3' 280 H 8-point 7 4 2 330 H H H 2 4” 48” H H H 42 18 492,,,,,,,,
 OCEANIC MARINE CONTRACTORS,29,,OCEANIC,5000,2011.0,UAE,,,,,,,,"Pipe Lay 646' 157' 47'/65' 22'/24' 398 H DP 9 4 3 529 H H H H H 6"" 60"" H H H H H H 40 30' 30'-985' (30' - 985') (6"" to 60"")"
 SAIPEM AMERICA INC.,30,3.0,SAIPEM,3000,1976.0,2003 Project Driven Heavy Lift,DP,Vessel,531.5,126.7,29.5,22.0,195.0,"H DP3 H H H H H H H H H H H H 52' 10,000' 5,000' (Lay Only 40' - 10,000') (Lay Only 6"" - 60"")"
+SAIPEM AMERICA INC.,31,3.0,CASTORO SEI Project Driven Semi-sub Lay Barge 498.7' 213.3' 98.4' 47.6',342,,"H 12 Point 6DJ 3DJ H H 3 859 H H H 6"" 60"" H H H 84' 40' 3,500' 4,100'' (Lay Only 35' - 3,500') (Reel Lay Only 4"" - 8"")",,,,,,,,
+SAIPEM AMERICA INC.,32,3.0,CASTORO OTTO Project Driven Derrick/Lay Barge 629.9' 114.8' 49.2' 32.8,356,,"H 12 Point 9 5-6 H H 3 595 H H 6"" 60"" H H H 84' 29' 1,200' 1,200' (Lay Only 22' - 1,200') (Lay Only 6"" - 60"")",,,,,,,,
 SAIPEM AMERICA INC.,33,3.0,SAIPEM,7000,,Project Driven Derrick/J-Lay Barge 649.6' 285.4' 142.7' 88.6' 725,DP3/14-Point,,,,3.0,,,"4"" 32"" 168' 108' 10,000' 7,500'"
-SEA TRUCKS GROUP,41,,JASCON 25,2009,,worldwide,DP,Lay Crane Accom,390.0,100.0,27.0,16.0,355.0,"H DP3 6 3+1 H H 2 265 H H H H H H H 4"" 60"" H H H H Shallow / medium"
-SEA TRUCKS GROUP,42,,JASCON 30,2007,,worldwide,DP,Lay Crane Accom,365.0,100.0,20.0,15.0,298.0,"H DP 3/10-Point 6 3+1 H H 3 220 H H H H H H H 4"" 60"" H H H H"
-SEA TRUCKS GROUP,43,,JASCON 34,2010,,worldwide,DP,Lay Crane Accom,390.0,100.0,27.0,16.0,355.0,"H DP3 6 3+1 H H 2 265 H H H H H H H 4"" 60"" H H H H Shallow / medium"
-SEA TRUCKS GROUP,44,,JASCON 2,2009,,West Africa,DP,Lay Accom,260.0,116.0,14.0,10.0,220.0,"H 8-Point 5 3+1 H H 1 55 H H H H H H H 4"" 32"" H H H H Shallow"
+SAIPEM AMERICA INC.,34,3.0,CASTORO,10,,"Project Driven Lay / Trenching Barge 456' 120' 30' 14'8""/17'1"" 200 H 8 Point 6 3 H H 2 400 H H H 4"" 40"" H H H H 4"" 60"" 42' 21' 800' 800' (Lay or Bury 20' - 800') (Lay Only 4"" - 40"" or Bury 4"" - 60"")",,,,,,,,
+SAIPEM AMERICA INC.,35,3.0,SEMAC,1,,"Project Driven Semi-sub Lay Barge 487.3' 180.1' 91.3' 23'/44'3"" 362 H 12 Point 7DJ 4DJ H H 3 600 H H H H 2 6"" 60"" H H H 84' 32' 2,000' (Lay Only 30' - 2,000') (Lay Only 6"" - 60"")",,,,,,,,
+SAIPEM AMERICA INC.,36,3.0,SAIPEM FDS Project Driven Field Development Ship 536' 99' 41' 24.3'/26.2',236,,H,DP-Class,III,,,,,3.0,"1,210/1,650 H H H H H H 2 4"" 20"" H H H H H H 168' H 10,000' 52' 10,000' (Lay Only 50' - 10,000') (Lay Only 4"" - 20"")"
+SAIPEM AMERICA INC.,37,3.0,CASTORO,7,,"Project Driven Semi-sub Lay Barge 549' 192' 65' 37.7'/65.6' 401 H 14 Points 7DJ 4DJ H H 5 750 H H H H 3 8"" 60"" H H H 84' 50' 1,500' (Lay Only 30' - 1,350') (Lay Only 8"" - 60"")",,,,,,,,
+SAIPEM AMERICA INC.,38,3.0,Project Driven,DP,,Lay Vessel 1082' 128' 78' 26.24'/34.77' 702,DP3/8-Points,,,,3.0,,2.0,"8"" 60"" 126' 37.7' 10,000' (Lay Only 43' - 10,000') (Lay Only 8"" - 60"")"
+SAIPEM AMERICA INC.,3,,SAIPEM FDS,2,,Project Driven Field Development Ship 600.4' 105.6' 47.6' 26.24'/31.16' 325 H,DP-Class,III,,,,,,"3306/4400 H H H H H 4"" 36"" H H H H H H 168' H 52' 10,000' (Lay Only 50' - 10,000') (Lay Only 4"" - 32"")"
+SAIPEM AMERICA INC.,39,3.0,CASTORO II Project Driven Derrick/Lay Barge 442.9' 106.9' 29.5' 8'/18',290,,"H 11 point 8 5 H H 2 400 H H H H 2 8"" 72"" H H H 42' 22' 800'",,,,,,,,
+SAIPEM AMERICA INC.,3,,S,355,,"Project Driven Derrick/Lay Barge 354.3' 98.4' 24.6' 8.6'/15.2' 206 H 12 point 6 4 H H 2 220 H H H H 3 3"" 48"" H H H 42' 20' 600' (Lay Only 20' - 550') (Lay Only 3"" - 48"")",,,,,,,,
+SAIPEM AMERICA INC.,40,3.0,CRAWLER Project Driven Derrick/Lay Barge 493.7' 112.4' 46.6' 23'/34.56',230,,"H 12 point 8 4 H H 2 160 H H H H 3 4"" 48"" H H H 42' 32' 400' (Lay Only 32' - 400') (Lay Only 4"" - 48"")",,,,,,,,
+SAIPEM AMERICA INC.,3,,SB,230,,"Project Driven Lay Barge 230' 74.8' 14.9' 8.2'/10.56' 117 H 10 point 5 2 H H 1 55 H H H H 3 4"" 30"" H H H 42' 20' 160'",,,,,,,,
+SEA TRUCKS GROUP,41,,JASCON,25,2009.0,worldwide,DP,Lay Crane Accom,390.0,100.0,27.0,16.0,355.0,"H DP3 6 3+1 H H 2 265 H H H H H H H 4"" 60"" H H H H Shallow / medium"
+SEA TRUCKS GROUP,42,,JASCON,30,2007.0,worldwide,DP,Lay Crane Accom,365.0,100.0,20.0,15.0,298.0,"H DP 3/10-Point 6 3+1 H H 3 220 H H H H H H H 4"" 60"" H H H H"
+SEA TRUCKS GROUP,43,,JASCON,34,2010.0,worldwide,DP,Lay Crane Accom,390.0,100.0,27.0,16.0,355.0,"H DP3 6 3+1 H H 2 265 H H H H H H H 4"" 60"" H H H H Shallow / medium"
+SEA TRUCKS GROUP,44,,JASCON,2,2009.0,West Africa,DP,Lay Accom,260.0,116.0,14.0,10.0,220.0,"H 8-Point 5 3+1 H H 1 55 H H H H H H H 4"" 32"" H H H H Shallow"
+SUBSEA 7,45,,"NORMAND SEVEN Project Driven 2,900'",DP,,Pipelay Vessel 426' 92' 28' 100 H,DP3,,600.0,,,,,6560'
 SUBSEA 7,46,,SEVEN OCEANS,2007,,"Project Driven 2,900'",DP,Pipelay Vessel,516.0,93.0,41.0,24.0,120.0,"H DP2 1 800 H H 6"" 16"" H H 9,842'"
-SUBSEA 7,47,,SEVEN NAVICA,1999,,"Project Driven 2,900'",DP,Pipelay Vessel,356.0,72.0,29.0,24.6,72.0,"H DP2 1 1 H H 1 500 H H H H H H 2 2"" 19"" H 42' H 30' 9,500'+ 6,600' (Lay Only 30' - >9,500') (Reel Lay 16"" Rigid, 19"" Flexible)"
+SUBSEA 7,47,,SEVEN,NAVICA,1999.0,"Project Driven 2,900'",DP,Pipelay Vessel,356.0,72.0,29.0,24.6,72.0,"H DP2 1 1 H H 1 500 H H H H H H 2 2"" 19"" H 42' H 30' 9,500'+ 6,600' (Lay Only 30' - >9,500') (Reel Lay 16"" Rigid, 19"" Flexible)"
 SUBSEA 7,48,,KOMMANDOR,3000,1984.0,"1999 Project Driven 2,900'",DP,Pipelay Vessel,388.0,69.0,33.0,16.0,73.0,"H DP2 6 440 H H H H 3 2.5"" 12"" H H H H 30' 3,280' 3,280'"
 SUBSEA 7,49,,LOCHNAGAR,1982,1998.0,"Project Driven 2,900'",DP,Pipelay Vessel,349.0,75.0,32.0,19.0,73.0,"H DP2 6 510 H H H H 3 2.5"" 16"" H H H H 30' 6,560' 4,920'"
 SUBSEA 7,50,,SKANDI NEPTUNE,2001,2005.0,"Project Driven 2,900'",DP,Multi-Purpose Vessel,342.0,79.0,34.0,18.0,106.0,"H DP2 2 200 H H 3 16 8,842"
@@ -34,14 +65,11 @@ SUBSEA 7,53,,ACERGY EAGLE,1997,,Project Driven Flexible Pipelay/Construction Shi
 SUBSEA 7,54,,SEVEN MAR,2001,,Project Driven Flexible Pipelay/Construction Ship 485' 89' 44' 26' 121 H,DP2,,760.0,,,3.0,,"20"" H 50'"
 SUBSEA 7,55,,SKANDI ACERGY,2008,,Project Driven Heavy Construction Ship 515' 89' 40' 28' 140 H,DP3,,280.0,,,2.0,,"14"" H 25'"
 SUBSEA 7,56,,SKANDI SEVEN,2008,,Project Driven Flexible Pipelay/Consruction Ship 396' 75' 30' 20' 120 H,DP3,,,,,,,
+SUBSEA 7,57,,SEVEN WAVES Project Driven Flexible Pipelay 490' 98' 43' 24',120,,H,DP2,,550.0,,,,,
 SWIBER HOLDINGS,6,,SWIBER CHAI,2009,,"China Derrick pipelay barge 394' 125' 20' 36' 300 H 7 5 H H 240 6"" 60""",,,,,,,,
 SWIBER HOLDINGS,6,,SWIBER CONCORDE,2008,,"South-East Asia Pipelay barge 371' 94' 24' 13' 248 H 7 5 H H 240 8"" 60""",,,,,,,,
 SWIBER HOLDINGS,58,6.0,SWIBER CONQUEST,2007,,"South-East Asia Accommodation/pipelay barge 354' 100' 14' 15' 280 H 7 5 H H 240 8"" 60""",,,,,,,,
 SWIBER HOLDINGS,6,,SWIBER GLORIOUS,2006,,South-East Asia Accommodation/pipelay barge (optional) 371' 92' 23' 16' 300 H,,,,,,,,
 SWIBER HOLDINGS,6,,AZIZ,2010,,"South-East Asia Accommodation/pipelay barge 366' 104' 14' 15' 300 H 5 H H 240 4"" 60""",,,,,,,,
-SWIBER HOLDINGS,1,,MAS 300,2010,,"South-East Asia Pipelay/Accommodation 366' 104' 24' 15' 300 H 7 5 H H 240 4"" 60""",,,,,,,,
-TECHNIP,59,1200.0,,2010,,,DP-2,Derrick/Lay Vessel,532.4,105.6,52.8,20.4,264.0,"H DP-2/8-Point 10 5 H H 3 827 H H H 2 4"" 60"" H H H 42' 45' >8,000' 5,400' (Lay Only 45' - 8,000') (S-Lay 4"" - 60"")"
-TECHNIP,60,3.0,DEEP CONSTRUCTOR,1980,2001.0,"Theodore, AL when in GOM",DP,MSV,416.0,67.0,27.0,27.0,109.0,"H DP3 1 1 H 2 440 H H H H H H H 2 2"" 14"" H H H H 2"" 12"" 84' H 200' 5,000' (Modular J-Lay or S-Lay 200' - 5,000') (Modular J-Lay Rigid Pipe 2"" - 14"", Flexible 2"" - 14"" & Lay Coiled Line Pipe 1"" - 4-1/2"", Bury 2"" - 12"")"
-TECHNIP,61,3.0,APACHE II,2009,,"Theodore, AL when in GOM 4,800'",DP,Reel Ship,450.0,89.0,38.0,22.0,120.0,"H DP3 1 1 H 1 411 H H H H H H H 2 2"" 18"" H H 50' 5,000' (Lay only 50' - 5,000') (Reel Lay Only 2"" - 16"")"
-TECHNIP,62,1.0,,2001,,"Theodore, AL 4,800'",DP,Reel Ship,677.0,105.0,58.0,33.0,120.0,"DP3 1 1 2 1,697 3 2"" 28"" 160' 246' 10,000'"
-TECHNIP,1,,DEEP ENERGY,2013,,"Theodore, AL 4,800'",DP,Reel Ship,636.0,101.0,50.0,27.0,140.0,"H DP3 1 1 H H 2 1,000 H H H H H H H 3 2"" 18"" H H 50' 10,000' (Reel Lay 2"" - 18"")"
+SWIBER HOLDINGS,1,,MAS,300,2010.0,"South-East Asia Pipelay/Accommodation 366' 104' 24' 15' 300 H 7 5 H H 240 4"" 60""",,,,,,,,
+VAN OORD,63,2012.0,Shallow water pipelay barge 394' 132' 29.5' 16.4',300,7.0,"3 2 280 6"" 60""",,,,,,,,
