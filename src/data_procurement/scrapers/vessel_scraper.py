@@ -156,7 +156,8 @@ class VesselScraper(BaseScraper):
 
         # Rename columns (case-insensitive)
         df_copy = df.copy()
-        df_copy.columns = df_copy.columns.str.lower().str.strip()
+        # Convert to strings first (handles integer/tuple columns from multi-level headers)
+        df_copy.columns = df_copy.columns.astype(str).str.lower().str.strip()
 
         for old_col, new_col in column_mapping.items():
             if old_col in df_copy.columns and new_col not in df_copy.columns:
