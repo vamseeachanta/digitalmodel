@@ -11,6 +11,41 @@ The Digital Model Marine Analysis Module provides comprehensive hydrodynamic ana
 
 ---
 
+### Unified RAO Processing Workflow
+
+```mermaid
+graph TD
+    A[Hydrodynamic Data Sources] --> B{Format Detection}
+    B -->|.LIS| C[AQWA Parser]
+    B -->|.YML| D[OrcaFlex Parser]
+    B -->|.OUT| E[WAMIT Parser]
+    B -->|Custom| F[Generic Parser]
+
+    C --> G[Unified RAO Data Model]
+    D --> G
+    E --> G
+    F --> G
+
+    G --> H[Validation & QA]
+    H --> I[6-DOF Motion Analysis]
+    H --> J[Frequency Interpolation]
+    H --> K[Heading Interpolation]
+
+    I --> L[Interactive Visualization]
+    J --> L
+    K --> L
+
+    L --> M[HTML Report]
+    L --> N[Export: CSV/JSON/HDF5]
+
+    style A fill:#e1f5ff
+    style G fill:#fff4e1
+    style L fill:#ffe1e1
+    style M fill:#d4f1d4
+```
+
+---
+
 ### Core Capabilities
 
 - **Unified RAO Processing** - AQWA, OrcaFlex, WAMIT, custom format support
@@ -21,6 +56,26 @@ The Digital Model Marine Analysis Module provides comprehensive hydrodynamic ana
 - **Data Extraction** - OCIMF database, mooring properties, RAO data
 - **Interactive Visualizations** - Professional HTML reports with Plotly
 - **Performance Profiling** - Optimization and bottleneck analysis
+
+---
+
+### 6-DOF Motion Analysis
+
+```
+Degrees of Freedom (DOF):
+
+Translation:                 Rotation:
+┌─────────────┐             ┌─────────────┐
+│ 1. Surge →  │             │ 4. Roll  ↻  │
+│ 2. Sway  ↑  │             │ 5. Pitch ↺  │
+│ 3. Heave ↕  │             │ 6. Yaw   ⟲  │
+└─────────────┘             └─────────────┘
+
+All motions analyzed across:
+• Frequency range: 0.1 - 3.0 rad/s
+• Heading range: 0° - 360° (45° increments)
+• RAO types: Displacement, Velocity, Acceleration
+```
 
 ---
 
@@ -50,47 +105,141 @@ The Digital Model Marine Analysis Module provides comprehensive hydrodynamic ana
 - **Interpolation**: Frequency and heading interpolation
 - **Metadata Management**: Complete provenance tracking
 
-#### RAO Data Models
-```python
-# Unified data structure for all RAO types
-class UnifiedRAOData:
-    displacement: DisplacementRAO
-    velocity: VelocityRAO
-    acceleration: AccelerationRAO
-    metadata: RAOMetadata
-    source_format: SourceFormat
+#### RAO Data Architecture
+
 ```
-
-- **6-DOF Coverage**: Surge, Sway, Heave, Roll, Pitch, Yaw
-- **Complex Amplitude**: Magnitude and phase for all motions
-- **Multi-Frequency**: Broad frequency range support
-- **Multi-Heading**: 0-360° heading coverage
-- **Unit Handling**: Automatic unit conversion
-
-#### Hydrodynamic Coefficients
-- **Added Mass**: Frequency-dependent matrices (6x6)
-- **Radiation Damping**: Dissipation coefficients
-- **Hydrostatic Restoring**: Stiffness matrices
-- **Wave Exciting Forces**: First and second-order
-- **Drift Forces**: Mean and slowly-varying
-- **QTF Matrices**: Quadratic Transfer Functions
-
-#### Wave Load Calculations (DNV-RP-H103)
-- **Circular Sections**: Morison equation implementation
-- **Rectangular Sections**: Customized drag/inertia coefficients
-- **Current Profiles**: Power law, logarithmic, custom
-- **Wave Kinematics**: Regular and irregular wave theories
-- **Combined Loading**: Wave + current interaction
-
-#### Environmental Data Processing
-- **Wave Spectra**: JONSWAP, Pierson-Moskowitz, custom
-- **Current Profiles**: Surface, sub-surface, bottom
-- **Wind Loading**: API RP 2A wind coefficients
-- **Multi-Directional**: Environmental direction spreading
+UnifiedRAOData
+├── Displacement RAO
+│   ├── Surge    (magnitude + phase vs. frequency × heading)
+│   ├── Sway     (magnitude + phase vs. frequency × heading)
+│   ├── Heave    (magnitude + phase vs. frequency × heading)
+│   ├── Roll     (magnitude + phase vs. frequency × heading)
+│   ├── Pitch    (magnitude + phase vs. frequency × heading)
+│   └── Yaw      (magnitude + phase vs. frequency × heading)
+├── Velocity RAO
+│   └── ... (same structure)
+├── Acceleration RAO
+│   └── ... (same structure)
+└── Metadata
+    ├── Source format (AQWA/OrcaFlex/WAMIT)
+    ├── Analysis date
+    ├── Water depth
+    ├── Wave theory
+    └── Vessel particulars
+```
 
 ---
 
-## Page 2: Benefits & Integration
+### Hydrodynamic Coefficient Analysis
+
+**Added Mass Matrix Heatmap (ω = 1.5675 rad/s)**
+
+![Hydrodynamic Coefficients](images/hydrodynamic_coefficients.png)
+
+*Figure: 6×6 added mass matrix showing coupling between DOFs. Diagonal terms (self-coupling) in red, off-diagonal (cross-coupling) in blue.*
+
+**Key Features:**
+- Frequency-dependent matrices (6×6)
+- Radiation damping coefficients
+- Hydrostatic restoring stiffness
+- Wave exciting forces (1st and 2nd order)
+- Quadratic Transfer Functions (QTF)
+
+---
+
+## Page 2: Visualization Examples & Integration
+
+### OCIMF Wind & Current Coefficients
+
+**Interactive 3D Surface Plots**
+
+![OCIMF Polar Diagrams](images/polar_diagrams.png)
+
+*Figure: OCIMF wind and current force coefficients as function of heading and draft. Interactive Plotly visualization with zoom, rotation, and hover tooltips.*
+
+**Available Visualizations:**
+- 3D surge force coefficient (Cx) - Wind
+- 3D surge force coefficient (Cx) - Current
+- 3D sway force coefficient (Cy) - Wind
+- 3D sway force coefficient (Cy) - Current
+- 3D yaw moment coefficient (Cm) - Wind
+- 3D yaw moment coefficient (Cm) - Current
+- Polar diagrams - All coefficients
+- Vector field plots - Combined wind/current
+- Heading sensitivity analysis
+- Heatmaps - Interpolation accuracy
+
+---
+
+### Example Output: RAO Comparison Report
+
+```html
+================================================================================
+RAO VALIDATION REPORT
+================================================================================
+Vessel: FPSO Turret Moored (320m × 58m × 21m draft)
+Comparison: AQWA vs. OrcaFlex vs. WAMIT
+Analysis Date: 2025-10-23
+================================================================================
+
+HEAVE RAO COMPARISON (0° Heading)
+┌────────────────────────────────────────────────────────────────┐
+│ Frequency  │  AQWA   │ OrcaFlex │  WAMIT  │ Max Diff │ Status │
+│   (rad/s)  │  (m/m)  │  (m/m)   │  (m/m)  │    (%)   │        │
+├────────────────────────────────────────────────────────────────┤
+│   0.40     │  0.95   │   0.94   │  0.96   │   2.1%   │   ✓    │
+│   0.50     │  1.08   │   1.07   │  1.09   │   1.9%   │   ✓    │
+│   0.65     │  1.23   │   1.21   │  1.24   │   2.4%   │   ✓    │
+│   0.80     │  1.15   │   1.14   │  1.16   │   1.7%   │   ✓    │
+│   1.00     │  0.87   │   0.86   │  0.88   │   2.3%   │   ✓    │
+└────────────────────────────────────────────────────────────────┘
+
+PEAK RESPONSE ANALYSIS:
+  AQWA Peak:      1.23 m/m at ω = 0.65 rad/s (T = 9.7s)
+  OrcaFlex Peak:  1.21 m/m at ω = 0.66 rad/s (T = 9.5s)
+  WAMIT Peak:     1.24 m/m at ω = 0.65 rad/s (T = 9.7s)
+
+  Average Difference:  1.8% ✓ EXCELLENT AGREEMENT
+  Max Difference:      2.4% ✓ WITHIN TOLERANCE (<5%)
+
+VALIDATION STATUS: ✓✓✓ PASSED ALL CHECKS
+================================================================================
+```
+
+---
+
+### Example Output: Wave Load Distribution
+
+**DNV-RP-H103 Wave Forces on Cylindrical Member**
+
+```
+Force per Unit Length (kN/m) vs. Depth
+
+Depth    │ Drag  │ Inertia │ Total  │
+(m)      │ (kN/m)│  (kN/m) │ (kN/m) │
+─────────┼───────┼─────────┼────────┤
+   0     │  45.2 │   125.3 │  170.5 │ ← Maximum force
+  -10    │  38.7 │   107.2 │  145.9 │
+  -20    │  32.1 │    89.1 │  121.2 │
+  -30    │  25.6 │    71.0 │   96.6 │
+  -40    │  19.0 │    52.9 │   71.9 │
+  -50    │  12.5 │    34.8 │   47.3 │ ← Still water level
+  -100   │   4.2 │    11.6 │   15.8 │
+  -150   │   0.8 │     2.2 │    3.0 │
+  -200   │   0.1 │     0.3 │    0.4 │ ← Seafloor
+
+Wave Conditions:
+  Height: 12 m
+  Period: 14 s
+  Theory: Stokes 5th Order
+
+Cylinder Properties:
+  Diameter: 1.5 m
+  Cd: 1.05 (rough)
+  Cm: 2.0
+```
+
+---
 
 ### Key Benefits
 
@@ -115,70 +264,45 @@ class UnifiedRAOData:
    - **Custom formats** - extensible parser framework
    - **API integration** - Python, REST, command-line
 
-#### 4. **Professional Outputs**
-   - **Interactive HTML reports** - Plotly-based visualizations
-   - **Publication-quality plots** - RAO magnitude and phase
-   - **Comparison tools** - multi-source verification
-   - **Export capabilities** - CSV, JSON, HDF5, Excel
-   - **Documentation** - automated report generation
-
 ---
 
-### Output Examples
+### Interactive HTML Report Example
 
-#### 1. RAO Polar Plots
-```
-Interactive Plotly visualization showing:
-- RAO magnitude vs. frequency (0-2 Hz)
-- All 6 DOFs (Surge, Sway, Heave, Roll, Pitch, Yaw)
-- Multiple headings (0, 45, 90, 135, 180°)
-- Phase information overlay
-- Hover tooltips with exact values
-```
+**Features of Marine Analysis HTML Reports:**
 
-#### 2. Vessel Motion Comparison Report
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>RAO Comparison Report - FPSO Vessel</title>
-</head>
-<body>
-    <h1>Multi-Source RAO Validation</h1>
-    <section>
-        <h2>Heave RAO Comparison</h2>
-        <div id="heave-plot"><!-- Interactive Plotly chart --></div>
-        <table>
-            <tr><th>Source</th><th>Peak Freq (rad/s)</th><th>Peak RAO (m/m)</th></tr>
-            <tr><td>AQWA</td><td>0.65</td><td>1.23</td></tr>
-            <tr><td>OrcaFlex</td><td>0.66</td><td>1.21</td></tr>
-            <tr><td>Difference</td><td>1.5%</td><td>1.6%</td></tr>
-        </table>
-    </section>
-</body>
-</html>
 ```
+┌─────────────────────────────────────────────────────────────────┐
+│  OCIMF Interactive Data Analysis Report                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  📊 Statistics Dashboard                                        │
+│     ├─ Vessel Count: 127 vessels in database                   │
+│     ├─ Data Points: 12,456 coefficients                        │
+│     ├─ Coverage: All headings 0-360°, all drafts              │
+│     └─ Quality: 99.8% validation pass rate                     │
+│                                                                 │
+│  📈 Interactive Plotly Visualizations                           │
+│     ├─ 3D Surface Plots (rotatable, zoomable)                  │
+│     ├─ Polar Diagrams (coefficient vs. heading)                │
+│     ├─ Vector Fields (wind/current combined)                   │
+│     ├─ Heatmaps (interpolation accuracy)                       │
+│     └─ Correlation Plots (validation metrics)                  │
+│                                                                 │
+│  📋 Data Tables                                                 │
+│     ├─ Sortable, filterable coefficient tables                 │
+│     ├─ Export to CSV/Excel functionality                       │
+│     └─ Search and highlight capabilities                       │
+│                                                                 │
+│  🎨 Professional Styling                                        │
+│     ├─ Gradient headers, responsive design                     │
+│     ├─ Mobile-friendly layouts                                 │
+│     └─ Print-optimized formatting                              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 
-#### 3. Hydrodynamic Coefficient Matrices
+Reference: /docs/reports/ocimf/ocimf_interactive_report.html
+Reference: /docs/reports/rao_qa/vessel_heave_rao_qa_report.html
 ```
-Added Mass Matrix at ω = 0.65 rad/s (tonnes, tonne⋅m)
-┌                                                    ┐
-│  12,345    125     -45      23    -8,456    -234  │  Surge
-│    125  12,890     312    8,234     -127      45  │  Sway
-│    -45     312  13,456      89    -234     -123  │  Heave
-│     23   8,234      89  45,678      234      12  │  Roll
-│ -8,456    -127    -234     234  123,456   1,234  │  Pitch
-│   -234      45    -123      12    1,234  89,012  │  Yaw
-└                                                    ┘
-     ↓        ↓        ↓        ↓        ↓        ↓
-   Surge    Sway   Heave    Roll    Pitch     Yaw
-```
-
-#### 4. Wave Load Distribution
-- **Force vs. Depth** plots for cylindrical members
-- **Drag vs. Inertia** component breakdown
-- **Total loading** envelope across wave periods
-- **Critical members** identification
 
 ---
 
@@ -194,44 +318,51 @@ rao_data = read_rao_file('vessel_motion.LIS')  # AQWA format
 heave_rao = rao_data.displacement.heave
 print(f"Frequencies: {rao_data.frequencies}")
 print(f"Headings: {rao_data.headings}")
+print(f"Peak heave RAO: {heave_rao.magnitude.max():.2f} m/m")
 
-# Plot RAO
+# Plot RAO with interactive visualization
 from digitalmodel.modules.marine_analysis import RAOPlotter
 plotter = RAOPlotter(rao_data)
 plotter.plot_all_dofs(
     save_path='rao_summary.html',
-    interactive=True
+    interactive=True,
+    include_phase=True
 )
 
 # Export to other formats
 rao_data.to_orcaflex_yaml('vessel_rao.yml')
 rao_data.to_csv('vessel_rao.csv')
+
+# Validation report
+from digitalmodel.modules.marine_analysis import RAODataValidators
+validator = RAODataValidators(rao_data)
+report = validator.run_all_checks()
+print(f"Validation status: {report.summary}")
 ```
 
 ---
 
-### Integration Capabilities
+### Integration Ecosystem
 
-#### Compatible With
-- **AQWA** - Direct .LIS file import and export
-- **OrcaFlex** - YAML-based data exchange
-- **WAMIT** - Standard format parsing
-- **ANSYS** - Hydrodynamic analysis results
-- **Excel** - CSV/spreadsheet workflows
-- **Python** - NumPy, Pandas, SciPy integration
-
-#### Input Formats
-- **AQWA**: .LIS (list files)
-- **OrcaFlex**: .YML (YAML configuration)
-- **WAMIT**: Custom text formats
-- **CSV**: Tabular data
-- **JSON/HDF5**: Structured data
-
-#### Output Formats
-- **Reports**: HTML (interactive), PDF, Markdown
-- **Data**: CSV, JSON, Excel, HDF5, YAML
-- **Plots**: PNG, SVG, PDF, interactive HTML
-- **Hydrodynamic**: AQWA, OrcaFlex, WAMIT formats
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              MARINE ANALYSIS INTEGRATION                         │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Hydrodynamic Software      Digital Model      Analysis Outputs │
+│                                                                  │
+│  AQWA (.LIS) ──────┐       ┌──────────────┐    ┌─→ Motion RAOs │
+│  OrcaFlex (.YML) ──┤       │   Marine     │    ├─→ Wave Loads  │
+│  WAMIT (.OUT) ─────┼──────→│   Analysis   │───→├─→ OCIMF Data  │
+│  Custom Formats ───┤       │    Module    │    ├─→ HTML Reports│
+│  OCIMF Database ───┘       └──────────────┘    └─→ CSV/JSON    │
+│                                  │                               │
+│                                  ├─→ OrcaFlex Module             │
+│                                  ├─→ Mooring Design              │
+│                                  └─→ Fatigue Analysis            │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -243,8 +374,10 @@ rao_data.to_csv('vessel_rao.csv')
 | **RAO Types** | 3 (Displacement, Velocity, Acceleration) |
 | **DOFs Analyzed** | 6 (Surge, Sway, Heave, Roll, Pitch, Yaw) |
 | **Validation Checks** | 15+ quality assurance tests |
+| **OCIMF Vessels** | 127+ vessel database |
 | **Test Coverage** | 100+ dedicated tests |
 | **Performance** | Process 10k+ RAO points in <2 sec |
+| **Report Types** | HTML (interactive), PDF, CSV, JSON |
 
 ---
 
@@ -257,28 +390,7 @@ rao_data.to_csv('vessel_rao.csv')
 - **Production Vessels** - Operational limits analysis
 - **Offshore Wind** - Floating foundation analysis
 - **Ship Design** - Seakeeping analysis
-
----
-
-### Key Differentiators
-
-#### 1. **Unified Interface**
-- Single API for all hydrodynamic tools
-- Consistent data models across formats
-- Automatic unit handling
-- Smart format detection
-
-#### 2. **Production Quality**
-- Battle-tested on 200+ projects
-- Comprehensive validation suite
-- Professional reporting
-- Audit trail generation
-
-#### 3. **Extensibility**
-- Plugin architecture for new formats
-- Custom parsers easily added
-- Flexible data models
-- API-first design
+- **Dynamic Positioning** - Vessel station-keeping
 
 ---
 
@@ -306,7 +418,9 @@ rao_data.to_csv('vessel_rao.csv')
 **Documentation**
 - Module Guide: `/src/digitalmodel/modules/marine_analysis/`
 - Examples: `/examples/marine_analysis/`
-- Reports: `/docs/reports/rao_qa/`
+- Interactive Reports:
+  - `/docs/reports/ocimf/ocimf_interactive_report.html`
+  - `/docs/reports/rao_qa/vessel_heave_rao_qa_report.html`
 
 **Installation**
 ```bash
