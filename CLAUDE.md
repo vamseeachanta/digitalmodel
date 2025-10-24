@@ -1,5 +1,70 @@
 # Claude Code Configuration - SPARC Development Environment
 
+## Interactive Engagement (MANDATORY)
+
+**YOU MUST ask clarifying questions BEFORE starting any task.**
+
+### Required Question Pattern
+
+Before implementing ANY request, you MUST:
+1. **Understand the requirement** - Ask about goals, constraints, and context
+2. **Clarify ambiguities** - Identify and ask about unclear aspects
+3. **Propose approach** - Describe your planned implementation strategy
+4. **Wait for confirmation** - Get explicit approval before proceeding
+5. **Ask follow-ups** - Continue dialogue as implementation reveals questions
+
+### When to Ask Questions (ALWAYS)
+
+- **Scope clarification**: What exactly should be included/excluded?
+- **Technical choices**: Which approach/technology/pattern to use?
+- **Edge cases**: How should unusual scenarios be handled?
+- **Integration points**: How does this connect to existing code?
+- **Testing requirements**: What tests are needed? What coverage?
+- **Performance expectations**: Are there specific performance requirements?
+- **Error handling**: How should errors be handled?
+- **User experience**: If UI/UX involved, what's the desired interaction?
+
+### Question Format
+
+Present questions as:
+- **Numbered lists** for multiple questions
+- **Options with trade-offs** when choices exist
+- **Specific scenarios** for concrete examples
+- **Wait for response** - Never assume answers
+
+### Example Interaction
+
+**User**: "Add user authentication"
+
+**Assistant**: "I have some questions before implementing authentication:
+
+1. **Authentication method**: Which approach?
+   - Option A: JWT tokens (stateless, scales well)
+   - Option B: Session-based (simpler, server state)
+   - Option C: OAuth (third-party providers)
+
+2. **User storage**: Where to store user data?
+   - Existing database?
+   - New user table schema needed?
+
+3. **Password security**: Requirements?
+   - Hashing algorithm (bcrypt, argon2)?
+   - Password complexity rules?
+
+4. **Session management**: How long should sessions last?
+
+5. **Error handling**: What should happen on failed login?
+
+Please let me know your preferences for these decisions."
+
+### Never Assume
+
+- **Never guess** at requirements
+- **Never implement** without explicit approval
+- **Never skip** the question phase
+- **Always engage** in dialogue before coding
+
+
 ## 🚨 CRITICAL: CONCURRENT EXECUTION & FILE MANAGEMENT
 
 **ABSOLUTE RULES**:
@@ -50,6 +115,36 @@
 This project uses SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) methodology with Claude-Flow orchestration for systematic Test-Driven Development.
 
 ## SPARC Commands
+
+
+### 🤖 AI Folder Organization Responsibility
+
+**After basic structure is established, AI manages file organization:**
+
+1. **Recognize Need**: When 5+ files accumulate without clear organization
+2. **Propose Structure**: Suggest module/domain-driven subfolder organization
+3. **Wait for Approval**: Never create folders without user confirmation
+4. **Execute**: Create folders, move files, update imports, commit
+
+**Rules:**
+- **Module-driven naming**: Use domain/business names (marine_analysis/, authentication/, data_processing/)
+- **Maximum depth**: 5 levels of nesting
+- **Consistency**: Same structure patterns across all 26 repositories
+- **Always propose first**: Describe structure and rationale, wait for "yes"
+
+**Example proposal:**
+```
+"I notice 12 files related to stress analysis. I propose:
+
+marine_analysis/
+├── stress/              # Stress calculations (4 files)
+├── buckling/            # Buckling analysis (4 files)
+└── fatigue/             # Fatigue analysis (4 files)
+
+Should I proceed with this organization?"
+```
+
+**See full standards**: `docs/FILE_ORGANIZATION_STANDARDS.md`
 
 ### Core Commands
 - `npx claude-flow sparc modes` - List available modes
