@@ -10,6 +10,15 @@ Sustainable digital models for engineering assets built with sustainable enginee
 
 ---
 
+## 🔍 Capabilities Snapshot
+- **Lifecycle coverage**: fatigue, stress, hydrodynamics, riser & mooring, metocean, vessel systems.
+- **Digital thread**: ASCII-first configs drive FE models, CAD/animations, reports, and QA workflows.
+- **Data procurement**: structured spec library for supplier intelligence across offshore domains.
+- **Automation ready**: modular APIs, CLI tooling, and integration hooks for pipelines & dashboards.
+- **Validation tooling**: cross-check analytical vs. numerical results with repeatable benchmarking.
+
+---
+
 ## 🎯 Vision
 
 Utilize a single source of ASCII inputs (promoting single source of truth) to generate equivalent analytical models encompassing the complete lifecycle operations of engineering assets:
@@ -457,4 +466,3 @@ Special thanks to:
 **Last Updated**: September 30, 2025
 **Version**: 2.0.0
 **Total Commits**: 305+
-
