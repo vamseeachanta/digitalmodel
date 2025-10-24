@@ -50,14 +50,21 @@ class RateLimiter:
         self.hour_tokens = []
         self.day_tokens = []
 
+        # Lazy cleanup optimization (Phase 1)
+        self._cleanup_counter = 0
+        self._cleanup_threshold = 100  # Cleanup every 100 calls instead of every call
+
     def acquire(self) -> None:
         """Block until rate limit allows request."""
         now = datetime.now()
 
-        # Clean old tokens
-        self._clean_tokens(self.minute_tokens, now, timedelta(minutes=1))
-        self._clean_tokens(self.hour_tokens, now, timedelta(hours=1))
-        self._clean_tokens(self.day_tokens, now, timedelta(days=1))
+        # Lazy cleanup: only every N calls (Phase 1 optimization)
+        self._cleanup_counter += 1
+        if self._cleanup_counter >= self._cleanup_threshold:
+            self._clean_tokens(self.minute_tokens, now, timedelta(minutes=1))
+            self._clean_tokens(self.hour_tokens, now, timedelta(hours=1))
+            self._clean_tokens(self.day_tokens, now, timedelta(days=1))
+            self._cleanup_counter = 0
 
         # Wait if limits exceeded
         if self.rpm and len(self.minute_tokens) >= self.rpm:

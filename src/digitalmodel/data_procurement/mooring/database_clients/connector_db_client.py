@@ -135,6 +135,23 @@ class ConnectorDatabaseClient(BaseAPIClient):
 
         self.connector_database = self._initialize_connector_database()
 
+        # Build indexes for O(1) lookup (Phase 1 optimization)
+        self._type_index = {}
+        self._pin_diameter_index = {}
+        for connector in self.connector_database:
+            connector_type = connector['type']
+            pin_diameter = connector['pin_diameter']
+
+            # Type index
+            if connector_type not in self._type_index:
+                self._type_index[connector_type] = []
+            self._type_index[connector_type].append(connector)
+
+            # Pin diameter index
+            if pin_diameter not in self._pin_diameter_index:
+                self._pin_diameter_index[pin_diameter] = []
+            self._pin_diameter_index[pin_diameter].append(connector)
+
         logger.info(f"Initialized ConnectorDatabaseClient with {len(self.connector_database)} connector specifications")
 
     def _initialize_connector_database(self) -> List[Dict[str, Any]]:
@@ -306,13 +323,14 @@ class ConnectorDatabaseClient(BaseAPIClient):
         """
         required_wll_with_margin = required_wll * safety_margin
 
+        # Use type index if specified (O(1) lookup instead of O(n))
+        if connector_type:
+            candidates = self._type_index.get(connector_type, [])
+        else:
+            candidates = self.connector_database
+
         suitable_connectors = []
-
-        for connector in self.connector_database:
-            # Check connector type filter
-            if connector_type and connector['type'] != connector_type:
-                continue
-
+        for connector in candidates:
             # Check if connector meets WLL requirement
             if connector['working_load_limit'] >= required_wll_with_margin:
                 suitable_connectors.append(connector.copy())

@@ -138,6 +138,23 @@ class SyntheticRopeDatabaseClient(BaseAPIClient):
 
         self.rope_database = self._initialize_rope_database()
 
+        # Build indexes for O(1) lookup (Phase 1 optimization)
+        self._fiber_type_index = {}
+        self._diameter_index = {}
+        for rope in self.rope_database:
+            fiber_type = rope['fiber_type']
+            diameter = rope['diameter']
+
+            # Fiber type index
+            if fiber_type not in self._fiber_type_index:
+                self._fiber_type_index[fiber_type] = []
+            self._fiber_type_index[fiber_type].append(rope)
+
+            # Diameter index
+            if diameter not in self._diameter_index:
+                self._diameter_index[diameter] = []
+            self._diameter_index[diameter].append(rope)
+
         logger.info(f"Initialized SyntheticRopeDatabaseClient with {len(self.rope_database)} synthetic rope specifications")
 
     def _initialize_rope_database(self) -> List[Dict[str, Any]]:
@@ -310,12 +327,14 @@ class SyntheticRopeDatabaseClient(BaseAPIClient):
         """
         required_mbl = design_load * safety_factor
 
+        # Use fiber type index if specified (O(1) lookup instead of O(n))
+        if fiber_type:
+            candidates = self._fiber_type_index.get(fiber_type, [])
+        else:
+            candidates = self.rope_database
+
         suitable_ropes = []
-
-        for rope in self.rope_database:
-            if fiber_type and rope['fiber_type'] != fiber_type:
-                continue
-
+        for rope in candidates:
             if rope['minimum_breaking_load'] >= required_mbl:
                 suitable_ropes.append(rope.copy())
 

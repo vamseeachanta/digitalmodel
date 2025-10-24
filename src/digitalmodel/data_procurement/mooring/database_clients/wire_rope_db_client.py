@@ -113,6 +113,23 @@ class WireRopeDatabaseClient(BaseAPIClient):
 
         self.rope_database = self._initialize_rope_database()
 
+        # Build indexes for O(1) lookup (Phase 1 optimization)
+        self._construction_index = {}
+        self._diameter_index = {}
+        for rope in self.rope_database:
+            construction = rope['construction']
+            diameter = rope['diameter']
+
+            # Construction index
+            if construction not in self._construction_index:
+                self._construction_index[construction] = []
+            self._construction_index[construction].append(rope)
+
+            # Diameter index
+            if diameter not in self._diameter_index:
+                self._diameter_index[diameter] = []
+            self._diameter_index[diameter].append(rope)
+
         logger.info(f"Initialized WireRopeDatabaseClient with {len(self.rope_database)} wire rope specifications")
 
     def _initialize_rope_database(self) -> List[Dict[str, Any]]:
@@ -277,12 +294,14 @@ class WireRopeDatabaseClient(BaseAPIClient):
         """
         required_mbl = design_load * safety_factor
 
+        # Use construction index if specified (O(1) lookup instead of O(n))
+        if construction:
+            candidates = self._construction_index.get(construction, [])
+        else:
+            candidates = self.rope_database
+
         suitable_ropes = []
-
-        for rope in self.rope_database:
-            if construction and rope['construction'] != construction:
-                continue
-
+        for rope in candidates:
             if rope['minimum_breaking_load'] >= required_mbl:
                 suitable_ropes.append(rope.copy())
 
