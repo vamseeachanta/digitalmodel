@@ -156,6 +156,23 @@ class AnchorDatabaseClient(BaseAPIClient):
 
         self.anchor_database = self._initialize_anchor_database()
 
+        # Build indexes for O(1) lookup (Phase 1 optimization)
+        self._type_index = {}
+        self._weight_index = {}
+        for anchor in self.anchor_database:
+            anchor_type = anchor['type']
+            weight = anchor['dry_weight']
+
+            # Type index
+            if anchor_type not in self._type_index:
+                self._type_index[anchor_type] = []
+            self._type_index[anchor_type].append(anchor)
+
+            # Weight index
+            if weight not in self._weight_index:
+                self._weight_index[weight] = []
+            self._weight_index[weight].append(anchor)
+
         logger.info(f"Initialized AnchorDatabaseClient with {len(self.anchor_database)} anchor specifications")
 
     def _initialize_anchor_database(self) -> List[Dict[str, Any]]:
@@ -320,13 +337,14 @@ class AnchorDatabaseClient(BaseAPIClient):
         # Required capacity with safety factor
         required_capacity_with_sf = required_capacity * safety_factor
 
+        # Use type index if specified (O(1) lookup instead of O(n))
+        if anchor_type:
+            candidates = self._type_index.get(anchor_type, [])
+        else:
+            candidates = self.anchor_database
+
         suitable_anchors = []
-
-        for anchor in self.anchor_database:
-            # Check anchor type filter
-            if anchor_type and anchor['type'] != anchor_type:
-                continue
-
+        for anchor in candidates:
             # Check soil suitability
             if anchor['soil_suitability'].get(soil) == 'not_suitable':
                 continue

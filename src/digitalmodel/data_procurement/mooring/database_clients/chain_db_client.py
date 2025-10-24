@@ -99,6 +99,23 @@ class ChainDatabaseClient(BaseAPIClient):
         # Initialize chain database (embedded)
         self.chain_database = self._initialize_chain_database()
 
+        # Build indexes for O(1) lookup (Phase 1 optimization)
+        self._grade_index = {}
+        self._diameter_index = {}
+        for chain in self.chain_database:
+            grade = chain['grade']
+            diameter = chain['diameter']
+
+            # Grade index
+            if grade not in self._grade_index:
+                self._grade_index[grade] = []
+            self._grade_index[grade].append(chain)
+
+            # Diameter index
+            if diameter not in self._diameter_index:
+                self._diameter_index[diameter] = []
+            self._diameter_index[diameter].append(chain)
+
         logger.info(f"Initialized ChainDatabaseClient with {len(self.chain_database)} chain specifications")
 
     def _initialize_chain_database(self) -> List[Dict[str, Any]]:
@@ -289,15 +306,15 @@ class ChainDatabaseClient(BaseAPIClient):
         # Required MBL = design_load × safety_factor
         required_mbl = design_load * safety_factor
 
-        # Filter chains
+        # Use grade index if specified (O(1) lookup instead of O(n))
+        if grade:
+            candidates = self._grade_index.get(grade, [])
+        else:
+            candidates = self.chain_database
+
+        # Filter chains by MBL requirement
         suitable_chains = []
-
-        for chain in self.chain_database:
-            # Check grade filter
-            if grade and chain['grade'] != grade:
-                continue
-
-            # Check if chain meets MBL requirement
+        for chain in candidates:
             if chain['minimum_breaking_load'] >= required_mbl:
                 suitable_chains.append(chain.copy())
 
