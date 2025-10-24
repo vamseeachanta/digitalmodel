@@ -34,6 +34,7 @@ from .common import (
 from .metocean import MetoceanClient
 from .vessel import VesselClient
 from .mooring import MooringClient
+from .riser import RiserClient
 
 __version__ = "4.0.0"  # Phase 4: Repository Integration complete
 __all__ = [
@@ -44,4 +45,5 @@ __all__ = [
     "MetoceanClient",
     "VesselClient",
     "MooringClient",
+    "RiserClient",
 ]

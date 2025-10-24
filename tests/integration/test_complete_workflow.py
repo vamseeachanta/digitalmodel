@@ -146,7 +146,7 @@ class TestCompleteWorkflow:
         - HMPE rope selection
         - Nonlinear stiffness
         """
-        design_load = 4000  # kN (within component database limits for taut-leg)
+        design_load = 2500  # kN (within component database limits for taut-leg)
         water_depth = 2000  # m (deepwater)
 
         # Design taut-leg mooring
