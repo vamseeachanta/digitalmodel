@@ -11,6 +11,29 @@ The Digital Model Fatigue Analysis Module provides comprehensive fatigue assessm
 
 ---
 
+### Analysis Workflow
+
+```mermaid
+graph LR
+    A[Stress Time-Series] --> B{Analysis Method}
+    B -->|Time-Domain| C[Rainflow Counting]
+    B -->|Frequency-Domain| D[Spectral Analysis]
+    C --> E[Cycle Extraction]
+    D --> F[PSD Processing]
+    E --> G[S-N Curve Application]
+    F --> G
+    G --> H[Damage Accumulation]
+    H --> I[Life Prediction]
+    I --> J[HTML Report]
+
+    style A fill:#e1f5ff
+    style J fill:#d4f1d4
+    style G fill:#fff4e1
+    style H fill:#ffe1e1
+```
+
+---
+
 ### Core Capabilities
 
 - **Comprehensive S-N Curve Database** - 221 validated curves from 17 international standards
@@ -20,6 +43,29 @@ The Digital Model Fatigue Analysis Module provides comprehensive fatigue assessm
 - **Mean Stress Corrections** - Goodman, Gerber, Soderberg, and custom methods
 - **Critical Plane Analysis** - Multiaxial fatigue assessment
 - **Automated Reporting** - Professional HTML reports with interactive visualizations
+
+---
+
+### S-N Curve Database Coverage
+
+```
+Standards Coverage (221 Total Curves):
+┌─────────────────────────────────────────────────────────────┐
+│ DNV-RP-C203        ████████████████████████████  81 curves │
+│ BS 7608            ███████████████████████████   79 curves │
+│ BP Standards       ███████                       25 curves │
+│ ABS                ███████                       24 curves │
+│ Norsok M-101       ████                          15 curves │
+│ Bureau Veritas     ████                          14 curves │
+│ Titanium           █                              4 curves │
+│ API RP 2A          █                              2 curves │
+└─────────────────────────────────────────────────────────────┘
+
+Joint Types:               Environments:
+• Plated Welded           • In Air
+• Tubular                 • Seawater with CP
+• Tubular Nodal           • Free Corrosion
+```
 
 ---
 
@@ -35,28 +81,34 @@ The Digital Model Fatigue Analysis Module provides comprehensive fatigue assessm
 - **API RP 2A** (2 curves) - Offshore fixed platforms
 - **Titanium Standards** (4 curves) - Specialized materials
 
-#### Joint Types & Environments
-- **Joint Types**: Plated welded, Tubular, Tubular nodal
-- **Environments**: In Air, Seawater with CP, Free Corrosion
-- **Materials**: Steel, Aluminum, Titanium, Composites
-
 ---
 
 ### Technical Features
 
-#### Time-Domain Analysis
+#### Time-Domain Analysis Pipeline
+
+```
+Input Data → Gate Filtering → Rainflow Counting → Cycle Binning → Statistics
+   ↓              ↓                  ↓                 ↓             ↓
+Time-Series   Remove noise    Extract cycles    Group ranges   Min/Max/Mean
+  (stress)    Small cycles    With means        Histogram      Percentiles
+```
+
+**Features:**
 - **Rainflow Counting**: ASTM E1049-85 standard implementation
 - **Gate Filtering**: Configurable absolute or relative thresholds
 - **Cycle Extraction**: Full cycle history with ranges and means
 - **Batch Processing**: Efficient large dataset handling
 - **Statistical Analysis**: Cycle distribution and histogram generation
 
-#### Frequency-Domain Analysis
-- **Dirlik Method**: Most accurate spectral method for wide-band processes
-- **Tovo-Benasciutti**: Advanced multi-modal spectrum handling
-- **Narrow-Band**: Conservative estimates for high-frequency content
-- **Single-Moment**: Fast approximation for preliminary design
-- **Response PSD**: Transfer function-based load calculation
+#### Frequency-Domain Analysis Methods
+
+| Method | Accuracy | Speed | Best Use Case |
+|--------|----------|-------|---------------|
+| **Dirlik** | ★★★★★ | ★★★☆☆ | Wide-band, multi-modal spectra |
+| **Tovo-Benasciutti** | ★★★★☆ | ★★★★☆ | Bi-modal spectra |
+| **Narrow-Band** | ★★☆☆☆ | ★★★★★ | Conservative estimates |
+| **Single-Moment** | ★★★☆☆ | ★★★★★ | Preliminary design |
 
 #### S-N Curve Management
 - **Power Law Models**: Single-slope and bi-linear formulations
@@ -66,16 +118,9 @@ The Digital Model Fatigue Analysis Module provides comprehensive fatigue assessm
 - **Curve Fitting**: Automated parameter estimation from test data
 - **Interactive Plotting**: Log-log, linear-log, comparison plots
 
-#### Damage Accumulation Models
-- **Linear Damage**: Classical Palmgren-Miner rule
-- **Modified Miner's**: Load sequence effects
-- **Nonlinear Models**: Advanced damage interaction
-- **Safety Factors**: Configurable design margins
-- **Life Prediction**: Remaining life estimation
-
 ---
 
-## Page 2: Benefits & Integration
+## Page 2: Benefits & Visualization Examples
 
 ### Key Benefits
 
@@ -100,42 +145,137 @@ The Digital Model Fatigue Analysis Module provides comprehensive fatigue assessm
    - **Parallel processing** - multi-core utilization
    - **Cloud-ready** - containerized deployment options
 
-#### 4. **Comprehensive Outputs**
-   - **Interactive HTML reports** with drill-down capability
-   - **Publication-quality plots** - log-log, linear-log, comparisons
-   - **Detailed CSV exports** - cycle counts, damage breakdown
-   - **Executive summaries** - management-ready assessments
-   - **Code calculations** - full audit trail for verification
+---
+
+### Example Output: S-N Curve Comparison
+
+**Multi-Standard S-N Curve Overlay (Log-Log Plot)**
+
+```
+Stress Range vs. Cycles to Failure
+10³ ┤
+    │     DNV Curve D ─────────────┐
+    │                               │
+10² │          BS 7608 Class F ─┐  │
+    │                            │  │
+    │                API X Curve │  │
+10¹ │                  ────────┐ │  │
+    │                          │ │  │
+    └────────────────────────────┴─┴──┴───
+    10⁴    10⁵    10⁶    10⁷    10⁸   10⁹
+                  Cycles to Failure
+
+Features Shown:
+✓ SCF = 2.0 applied
+✓ Fatigue limits indicated
+✓ Design points marked
+✓ Safety margin zones
+```
+
+*Interactive version with zoom, pan, hover tooltips available in HTML reports*
 
 ---
 
-### Output Examples
+### Example Output: Rainflow Cycle Histogram
 
-#### 1. S-N Curve Comparison Plots
-- **Log-log plots** with automatic grid and annotation
-- **Multi-standard overlays** (DNV, BS, API, ABS)
-- **SCF application** visualization
-- **Fatigue limit** indication
-- **Export formats**: PNG, SVG, PDF, interactive HTML
+**3D Histogram: Stress Range vs. Mean Stress vs. Cycle Count**
 
-#### 2. Rainflow Cycle Histograms
-- **3D histogram** of range vs. mean vs. count
-- **Cumulative damage** per stress range
-- **Statistical distributions** - Weibull, Lognormal
-- **Critical cycles** identification
+```
+         Cycle Count
+              ↑
+          500 │     ██████
+              │     ██████  ███
+          400 │ ███ ██████  ███
+              │ ███ ██████  ███ ██
+          300 │ ███ ██████  ███ ██ █
+              │ ███ ██████ ████ ██ █
+          200 │ ███ ██████ ████ ██ █
+              │ ███ ██████ ████ ██ █
+          100 │ ███ ██████ ████ ██ █
+              │ ███ ██████ ████ ██ █
+            0 └──────────────────────────→
+                Stress Range (MPa)
 
-#### 3. Fatigue Life Assessment Reports
-- **Damage summary** by load case
-- **Safety factor** calculations
-- **Life fraction used** visualization
-- **Inspection recommendations** based on damage state
-- **Uncertainty bounds** from probabilistic analysis
+    Mean Stress →
 
-#### 4. Frequency-Domain Spectral Analysis
-- **PSD plots** with spectral moments
-- **Method comparison** (Dirlik vs. Tovo-Benasciutti vs. Narrow-band)
-- **Transfer function** visualization
-- **Response spectra** for multiple DOFs
+Critical Cycles: 234 cycles with Δσ > 200 MPa
+Total Damage: 85% from cycles > 150 MPa
+```
+
+---
+
+### Example Output: Fatigue Life Assessment Report
+
+```
+================================================================================
+FATIGUE ANALYSIS SUMMARY
+================================================================================
+Analysis Date: 2025-10-23
+Asset: Mooring Chain Connection
+Location: Fairlead, Mooring Line 3
+Load Case: 100-year Storm (Hs=16m, Tp=14s)
+================================================================================
+
+DAMAGE ASSESSMENT:
+┌────────────────────────────────────────────────────────────────────┐
+│ Total Damage (Miner's Rule):        0.247                         │
+│ Safety Factor:                      4.05                           │
+│ Life Fraction Used:                 24.7%                          │
+│ Estimated Remaining Life:           58.3 years                     │
+│                                                                    │
+│ Status: ✓ ACCEPTABLE (Damage < 1.0)                              │
+│ Recommendation: Continue normal inspection schedule               │
+└────────────────────────────────────────────────────────────────────┘
+
+STATISTICAL SUMMARY:
+  Total Cycles Counted:      12,456
+  Unique Stress Ranges:        234
+  Maximum Stress Range:      287.3 MPa
+  Mean Stress Range:          45.2 MPa
+  95th Percentile:           156.7 MPa
+
+DAMAGE BREAKDOWN BY STRESS RANGE:
+  Range 0-50 MPa:      5.2% damage (8,234 cycles)
+  Range 50-100 MPa:   12.8% damage (2,456 cycles)
+  Range 100-150 MPa:  28.4% damage (1,123 cycles)
+  Range 150-200 MPa:  35.1% damage (456 cycles)
+  Range > 200 MPa:    18.5% damage (187 cycles) ⚠ Critical
+
+RECOMMENDATIONS:
+  ✓ Structure is in good condition
+  ✓ Continue normal operation
+  ⚠ Monitor critical stress ranges (>200 MPa)
+  • Next inspection: 12 months
+  • Focus areas: Fairlead connection points
+================================================================================
+```
+
+---
+
+### Example Output: Frequency-Domain Spectral Analysis
+
+**Power Spectral Density (PSD) Plot**
+
+![Frequency Response](images/frequency_response_curves.png)
+
+*Figure: Multi-DOF frequency response showing spectral analysis with Dirlik method damage estimation*
+
+**Spectral Moments Summary:**
+```
+m₀ (Variance):           234.5 MPa²
+m₁ (Mean Frequency):       0.85 Hz
+m₂ (Bandwidth):           1.23
+m₄ (Irregularity):        2.45
+
+Spectral Parameters:
+  α (Vanmarcke):          0.62
+  ε (Wirsching):          0.78
+
+Damage Comparison:
+  Narrow-Band:     D = 0.345  (Conservative)
+  Dirlik:          D = 0.247  (Recommended)
+  Tovo-Benasciutti: D = 0.251  (Alternative)
+```
 
 ---
 
@@ -154,15 +294,41 @@ results = quick_fatigue_analysis(
 )
 
 # Results include:
-# - Total damage: 0.045
-# - Safety factor: 22.2
-# - Life fraction used: 4.5%
-# - Estimated remaining cycles: 2.1e7
+print(f"Total damage: {results['total_damage']:.4f}")
+print(f"Safety factor: {results['safety_factor']:.2f}")
+print(f"Life fraction used: {results['life_fraction_used']*100:.1f}%")
+print(f"Estimated cycles remaining: {results['estimated_life_cycles']:.2e}")
+
+# Generate interactive HTML report
+from digitalmodel.fatigue import create_fatigue_report
+create_fatigue_report(
+    results,
+    output_path='fatigue_report.html',
+    include_plots=True
+)
 ```
 
 ---
 
 ### Integration Capabilities
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    INTEGRATION ECOSYSTEM                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  INPUT SOURCES              DIGITAL MODEL           OUTPUTS     │
+│                                                                 │
+│  OrcaFlex ──────┐          ┌──────────────┐     ┌─→ HTML       │
+│  AQWA ──────────┤          │   Fatigue    │     ├─→ PDF        │
+│  ANSYS ─────────┼────────→ │   Analysis   │ ───→├─→ CSV/Excel  │
+│  NumPy Arrays ──┤          │    Module    │     ├─→ JSON       │
+│  CSV/Excel ─────┘          └──────────────┘     └─→ HDF5       │
+│                                  │                              │
+│                                  ├─→ Other Modules              │
+│                                  │   (Stress, OrcaFlex, etc.)  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 #### Compatible With
 - **OrcaFlex** - Time-series extraction and analysis
@@ -171,18 +337,6 @@ results = quick_fatigue_analysis(
 - **Python/NumPy** - Direct array processing
 - **Pandas** - DataFrame-based workflows
 - **Excel** - CSV import/export
-
-#### Input Formats
-- **Time-series**: CSV, JSON, HDF5, NumPy arrays
-- **Transfer functions**: YAML, JSON, text tables
-- **S-N curves**: Built-in database + custom CSV/JSON
-- **Configuration**: YAML, JSON, Python dictionaries
-
-#### Output Formats
-- **Reports**: HTML (interactive), PDF, Markdown
-- **Data**: CSV, JSON, Excel, HDF5
-- **Plots**: PNG, SVG, PDF, interactive HTML
-- **Logs**: Structured JSON logs for audit trails
 
 ---
 
@@ -196,6 +350,7 @@ results = quick_fatigue_analysis(
 | **Test Coverage** | 150+ dedicated tests |
 | **Documentation** | Comprehensive API + examples |
 | **Performance** | 10,000+ cycles/sec processing |
+| **Report Types** | HTML, PDF, Markdown, CSV |
 
 ---
 
@@ -237,6 +392,10 @@ results = quick_fatigue_analysis(
 - API Reference: `/docs/api/fatigue.md`
 - Examples: `/examples/fatigue/`
 - S-N Database: `/data/fatigue/README.md`
+
+**Interactive Reports**
+- Example HTML Report: `/docs/reports/fatigue/fatigue_analysis_report.html`
+- Live Dashboard: [View interactive examples]
 
 **Installation**
 ```bash
