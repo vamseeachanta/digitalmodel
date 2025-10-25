@@ -1,3 +1,5 @@
+![Digital Model Logo](../../../assets/logo/digitalmodel_logo.svg)
+
 # Mooring Analysis Module
 ## Comprehensive Station-Keeping Design for Offshore Floating Systems
 

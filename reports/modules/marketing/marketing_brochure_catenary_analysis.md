@@ -1,3 +1,5 @@
+![Digital Model Logo](../../../assets/logo/digitalmodel_logo.svg)
+
 # Catenary Analysis Module
 ## Advanced Riser & Mooring Line Shape Prediction for Offshore Systems
 

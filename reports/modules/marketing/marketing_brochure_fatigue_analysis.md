@@ -1,3 +1,5 @@
+![Digital Model Logo](../../../assets/logo/digitalmodel_logo.svg)
+
 # Fatigue Analysis Module
 ## Advanced Fatigue Assessment for Offshore & Marine Structures
 

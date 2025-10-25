@@ -1,3 +1,5 @@
+![Digital Model Logo](../../../assets/logo/digitalmodel_logo.svg)
+
 # Pipeline Analysis Module
 ## Advanced Pipeline Design & Integrity Assessment
 

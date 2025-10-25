@@ -1,3 +1,5 @@
+![Digital Model Logo](../../../assets/logo/digitalmodel_logo.svg)
+
 # Time Series Analysis Module
 ## Advanced Signal Processing & Spectral Analysis for Marine Engineering
 
