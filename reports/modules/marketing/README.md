@@ -6,7 +6,7 @@ This directory contains professional marketing brochures for Digital Model modul
 
 ## Available Brochures
 
-### Completed (5 modules)
+### Completed (6 modules)
 
 1. **Fatigue Analysis** - Comprehensive S-N curve database and fatigue assessment
    - File: `marketing_brochure_fatigue_analysis.md` / `.pdf`
@@ -27,6 +27,10 @@ This directory contains professional marketing brochures for Digital Model modul
 5. **OrcaFlex Integration** - Automated modeling and post-processing
    - File: `marketing_brochure_orcaflex_integration.md` / `.pdf`
    - Highlights: YAML-based automation, real-time dashboard, 90% time savings
+
+6. **API 579 Fitness for Service** - Asset integrity and corrosion management
+   - File: `marketing_brochure_api579_ffs.md` / `.pdf`
+   - Highlights: Complete API 579-1/ASME FFS-1 implementation, 13 assessment parts, 30-50% life extension
 
 ### Planned (10+ additional modules)
 

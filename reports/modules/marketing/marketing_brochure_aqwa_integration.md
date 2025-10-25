@@ -1,3 +1,5 @@
+![Digital Model Logo](../../../assets/logo/digitalmodel_logo.svg)
+
 # AQWA Integration Module
 ## ANSYS AQWA Hydrodynamic Analysis Automation & Post-Processing
 

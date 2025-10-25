@@ -1,3 +1,5 @@
+![Digital Model Logo](../../../assets/logo/digitalmodel_logo.svg)
+
 # Data Procurement Module
 ## Automated Marine Engineering Data Acquisition & Integration
 

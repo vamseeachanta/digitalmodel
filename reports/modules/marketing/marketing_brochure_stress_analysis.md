@@ -1,3 +1,5 @@
+![Digital Model Logo](../../../assets/logo/digitalmodel_logo.svg)
+
 # Stress Analysis Module
 ## Advanced Structural Stress Assessment for Engineering Assets
 

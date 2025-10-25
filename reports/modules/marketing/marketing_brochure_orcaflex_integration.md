@@ -1,3 +1,5 @@
+![Digital Model Logo](../../../assets/logo/digitalmodel_logo.svg)
+
 # OrcaFlex Integration Module
 ## Automated Dynamic Analysis Workflows for OrcaFlex
 

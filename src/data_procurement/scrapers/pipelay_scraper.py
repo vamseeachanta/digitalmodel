@@ -26,46 +26,66 @@ class PipelayVesselScraper(VesselScraper):
         self.vessel_type = "Pipelay Vessel"
         self.source_url = source_url
 
-    def scrape_custom_url(self, url: str) -> Optional[pd.DataFrame]:
+    def scrape_custom_url(self, url: str, use_selenium: bool = False) -> Optional[pd.DataFrame]:
         """
         Scrape pipelay vessel data from a custom URL.
 
         Args:
             url: URL containing pipelay vessel data tables
+            use_selenium: Use Selenium for dynamic content (default: False)
 
         Returns:
             DataFrame with vessel data or None
         """
         self.logger.info(f"Scraping custom URL: {url}")
 
-        response = self.fetch_page(url)
-        if not response:
-            return None
+        if use_selenium:
+            # Use Selenium for dynamic content
+            from .dynamic_scraper import DynamicScraper
 
-        tables = self.extract_tables(response.text)
+            with DynamicScraper(
+                base_url=url,
+                headless=True,
+                output_dir=self.output_dir
+            ) as dynamic_scraper:
+                df = dynamic_scraper.scrape_dynamic(url, min_rows=5)
+                return df
+        else:
+            # Standard static scraping
+            response = self.fetch_page(url)
+            if not response:
+                return None
 
-        if not tables:
-            self.logger.warning("No tables found in custom URL")
-            return None
+            tables = self.extract_tables(response.text)
 
-        df = max(tables, key=len)
-        return df
+            if not tables:
+                self.logger.warning("No tables found in custom URL")
+                return None
 
-    def scrape(self, custom_url: Optional[str] = None) -> Optional[pd.DataFrame]:
+            df = max(tables, key=len)
+            return df
+
+    def scrape(self, custom_url: Optional[str] = None, use_selenium: bool = False) -> Optional[pd.DataFrame]:
         """
         Main scraping method for pipelay vessel data.
 
         Args:
             custom_url: Optional custom URL to scrape
+            use_selenium: Use Selenium for dynamic content (default: False, auto-detect)
 
         Returns:
             DataFrame with vessel data or None
         """
+        # Auto-detect if Selenium needed for known dynamic sites
+        if custom_url and 'offshore-fleet.com' in custom_url:
+            use_selenium = True
+            self.logger.info("Detected offshore-fleet.com - using Selenium for dynamic content")
+
         if custom_url:
-            df = self.scrape_custom_url(custom_url)
+            df = self.scrape_custom_url(custom_url, use_selenium=use_selenium)
             source = custom_url
         elif self.source_url:
-            df = self.scrape_custom_url(self.source_url)
+            df = self.scrape_custom_url(self.source_url, use_selenium=use_selenium)
             source = self.source_url
         else:
             self.logger.warning("No URL provided for pipelay vessel scraping")

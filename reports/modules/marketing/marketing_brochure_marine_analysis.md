@@ -1,3 +1,5 @@
+![Digital Model Logo](../../../assets/logo/digitalmodel_logo.svg)
+
 # Marine Analysis Module
 ## Advanced Hydrodynamic Analysis for Offshore & Marine Vessels
 
