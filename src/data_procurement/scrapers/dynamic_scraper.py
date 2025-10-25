@@ -86,7 +86,11 @@ class DynamicScraper(BaseScraper):
 
         # Initialize driver
         try:
-            service = Service(ChromeDriverManager().install())
+            # Use chromium binary from snap
+            chrome_options.binary_location = "/snap/bin/chromium"
+
+            # Get matching ChromeDriver for Chromium 141
+            service = Service(ChromeDriverManager(driver_version="141.0.7390.54").install())
             self.driver = webdriver.Chrome(service=service, options=chrome_options)
             self.driver.set_page_load_timeout(self.page_load_timeout)
 
