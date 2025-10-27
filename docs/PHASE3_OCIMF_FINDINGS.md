@@ -347,6 +347,89 @@ By discovering pre-existing OCIMF data, we saved significant development effort:
 
 ---
 
+## Automated Validation Framework
+
+### Validation Script: `validate_ocimf_data.py`
+
+A comprehensive automated validation framework was created to ensure ongoing data quality for OCIMF datasets.
+
+**Location:** `src/data_procurement/validators/validate_ocimf_data.py`
+
+**Features:**
+- Automated dataset validation (completeness, consistency, physical realism)
+- Quality scoring system (0-100 scale with weighted components)
+- Coefficient range validation against expected physical limits
+- Vessel dimension validation (LOA, beam, draft)
+- Heading coverage analysis (interval checking)
+- Duplicate detection
+- Comprehensive error and warning reporting
+- CSV report generation
+
+**Quality Scoring Formula:**
+```
+Total Score = Completeness (40%) + No Errors (30%) + Few Warnings (30%)
+```
+
+**Usage:**
+```bash
+# Validate all datasets in default directory
+python src/data_procurement/validators/validate_ocimf_data.py
+
+# Validate custom directory with custom report location
+python src/data_procurement/validators/validate_ocimf_data.py \
+    --data-dir path/to/ocimf \
+    --report path/to/report.txt
+```
+
+### Validation Results
+
+**Overall Summary:**
+- Datasets Validated: 3
+- Valid Datasets: 3/3 (100%)
+- Average Quality Score: 87.7/100
+
+**Individual Dataset Scores:**
+
+| Dataset | Quality Score | Completeness | Status | Issues |
+|---------|--------------|--------------|--------|--------|
+| ocimf_coefficients_production.csv | 100/100 | 100.0% | ✅ VALID | None |
+| ocimf_coefficients_sample.csv | 95/100 | 100.0% | ✅ VALID | 1 warning |
+| ocimf_database.csv | 68/100 | 95.0% | ✅ VALID | 7 warnings |
+
+**Detailed Findings:**
+
+**Production Dataset:**
+- Perfect quality score (100/100)
+- No errors, no warnings
+- All coefficients within expected ranges
+- Standard 10° heading intervals
+- Ready for immediate production use
+
+**Sample Dataset:**
+- High quality score (95/100)
+- Single warning: Non-standard heading intervals (30° instead of 10°)
+- This is intentional - designed as simplified reference
+- 100% data completeness maintained
+
+**Database Dataset:**
+- Moderate quality score (68/100)
+- 7 warnings identified:
+  1. CXw: 83.3% complete (26 rows missing)
+  2. CYw: 83.3% complete (26 rows missing)
+  3. CMw: 83.3% complete (26 rows missing)
+  4. CYw: 51 values exceed expected range [0.0, 1.0]
+  5. CMw: 5 values exceed expected range [-0.3, 0.3]
+  6. CYc: 132 values outside expected range
+  7. Non-standard 15° heading intervals
+- Current coefficients: 100% complete
+- Recommendation: Use production dataset for critical applications
+
+**Validation Report Output:**
+Full detailed report available at: `data/mooring/raw/ocimf/validation_report.txt`
+
+---
+
 **Phase 3 Status:** ✅ COMPLETE
 **Data Quality:** PRODUCTION READY
+**Validation Framework:** ✅ OPERATIONAL
 **Action Required:** NONE - Proceed to Phase 4
