@@ -104,6 +104,42 @@ plotter.plot_curves(
 
 ---
 
+### CALM Buoy Operational Analysis ⭐ NEW
+**Interactive Dashboards for Mooring System Design**
+
+- **Complete reference dataset** from Hengyi PMB project (Brunei)
+- **13 CSV files** covering all operational aspects:
+  - Environmental conditions (1-yr and 100-yr return periods)
+  - Mooring line properties and configurations (95mm Studless R3 chain)
+  - Performance analysis (offsets, tensions, safety factors)
+  - Vessel design (300k DWT tanker)
+  - Buoy geometry and hawser systems
+- **Interactive HTML reports** with Plotly visualizations
+- **Production-ready** for OrcaFlex model generation
+
+```python
+from digitalmodel.mooring.calm_buoy import CALMBuoyReportGenerator
+
+# Generate interactive HTML dashboard
+generator = CALMBuoyReportGenerator("data/mooring/results/calm_buoy/project_specific/south_east_asia_project_1")
+report_path = generator.generate_report()
+```
+
+**Quick Access:**
+- Data: `/data/mooring/results/calm_buoy/`
+- Reports: `/reports/mooring/calm_buoy/`
+- Documentation: `/docs/PHASE5_CALM_BUOY_OPERATIONAL_ANALYSIS.md`
+- Source: `/src/digitalmodel/mooring/calm_buoy/`
+
+**Key Features:**
+- 6-leg CALM buoy with 60° spacing
+- Operational (intact & 1 line damaged) scenarios
+- Survival (100-year metocean) scenarios
+- All safety factors exceed ABS requirements (SF > 2.0)
+- Full traceability to design reports
+
+---
+
 ### Structural Analysis
 
 #### Stress Analysis
@@ -148,6 +184,7 @@ plotter.plot_curves(
 - **SALM** - Single Anchor Line Mooring
 - **Buoy systems** - Hydrodynamic analysis
 - **Anchor design** - Load capacity verification
+- **CALM Buoy Analysis** ⭐ NEW - Comprehensive operational datasets with interactive dashboards
 
 #### Subsea Infrastructure
 - **Pipelines** - On-bottom stability, span analysis
