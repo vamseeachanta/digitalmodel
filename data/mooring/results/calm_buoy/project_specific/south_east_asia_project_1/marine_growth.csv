@@ -1,0 +1,4 @@
+depth_interval,thickness_mm,density_kg_m3,source
+MSL to 0 m (CD),75,1250,"HYBN-01DD-3.15.6-84011SP-SP02-1001-0 Table 4-5"
+0 to -3 m (CD),50,1250,"HYBN-01DD-3.15.6-84011SP-SP02-1001-0 Table 4-5"
+-3 m to seabed,30,1250,"HYBN-01DD-3.15.6-84011SP-SP02-1001-0 Table 4-5"
