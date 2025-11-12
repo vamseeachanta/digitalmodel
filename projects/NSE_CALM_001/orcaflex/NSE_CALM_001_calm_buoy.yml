@@ -1,0 +1,38 @@
+%YAML 1.1
+# Type: Model
+# Program: OrcaFlex
+# Modular Input File for: CALM Buoy Model
+# Generated from: C06_CALM_Buoy.yml
+# Description: Main file with includefile references to modular components
+---
+General:
+  - includefile: modules/_01a_units_analysis.yml
+  - includefile: modules/_01b_statics.yml
+  - includefile: modules/_01c_dynamics.yml
+  - includefile: modules/_01d_stages.yml
+  - includefile: modules/_01e_view.yml
+
+VariableData:
+  - includefile: modules/_02_variable_data.yml
+
+Environment:
+  - includefile: modules/_03a_sea_density.yml
+  - includefile: modules/_03b_seabed.yml
+  - includefile: modules/_03c_waves.yml
+  - includefile: modules/_03d_current.yml
+  - includefile: modules/_03e_wind.yml
+
+VesselTypes:
+  - includefile: modules/_04_vessel_types.yml
+
+LineTypes:
+  - includefile: modules/_05_line_types.yml
+
+Vessels:
+  - includefile: modules/_06_vessels_buoys.yml
+
+Lines:
+  - includefile: modules/_07_lines.yml
+
+Groups:
+  - includefile: modules/_08_groups.yml

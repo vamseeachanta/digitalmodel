@@ -1,0 +1,13 @@
+# Stages
+StartTime: ~
+FirstStage: ~
+RampStartTime: ~
+RampFinishTime: ~
+TimeHistoryImportFrom: ~
+TimeHistoryImportTo: ~
+StageDuration:
+  - 10
+  - 100
+# Restart state
+RestartStateRecordingPeriodicCount: 0
+RestartStateRecordingTest:

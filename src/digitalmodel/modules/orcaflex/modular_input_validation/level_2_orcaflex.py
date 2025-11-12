@@ -6,7 +6,7 @@ ABOUTME: Validates YAML files by loading them through OrcaFlex API and running s
 from pathlib import Path
 from typing import Optional, Tuple
 import sys
-from .models import Level2Result, ValidationStatus, SoftwareAvailability
+from .models import Level2Result, ValidationStatus, OrcaFlexAvailability
 from .utils import load_yaml_file
 
 
@@ -72,26 +72,26 @@ class Level2OrcaFlexValidator:
 
         result = Level2Result(
             orcaflex_loadable=False,
-            orcaflex_available=SoftwareAvailability.UNKNOWN
+            orcaflex_available=OrcaFlexAvailability.UNKNOWN
         )
 
         # Check file existence
         if not file_path.exists():
-            result.orcaflex_available = SoftwareAvailability.NO
+            result.orcaflex_available = OrcaFlexAvailability.NO
             result.load_errors.append(f"File not found: {file_path}")
             result.status = ValidationStatus.FAIL
             return result
 
         # Check OrcaFlex availability
         if not self.orcaflex_available:
-            result.orcaflex_available = SoftwareAvailability.NO
+            result.orcaflex_available = OrcaFlexAvailability.NO
             result.orcaflex_version = None
             result.comments = "OrcaFlex not available - skipping API validation"
             result.status = ValidationStatus.SKIPPED
             return result
 
         # OrcaFlex is available
-        result.orcaflex_available = SoftwareAvailability.YES
+        result.orcaflex_available = OrcaFlexAvailability.YES
         result.orcaflex_version = self.orcaflex_version
 
         # Try to load the file with OrcaFlex

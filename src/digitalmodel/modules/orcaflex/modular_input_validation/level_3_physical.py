@@ -5,7 +5,7 @@ ABOUTME: Validates YAML parameters against CALM buoy reference data and project-
 
 from pathlib import Path
 from typing import Dict, List, Optional, Any
-from .models import Level3Result, ValidationStatus, PhysicalCheck, Severity
+from .models import Level3Result, ValidationStatus, PhysicalConsistencyCheck, Severity
 from .data_loader import CALMBuoyDataLoader, ParameterRange
 from .utils import (
     load_yaml_file,
@@ -161,23 +161,41 @@ class Level3PhysicalValidator:
 
         return merged
 
-    def _deep_merge_dicts(self, base: Dict, override: Dict) -> Dict:
+    def _deep_merge_dicts(self, base: Any, override: Any) -> Any:
         """
-        Deep merge two dictionaries.
+        Deep merge two data structures (dicts or lists).
 
         Args:
-            base: Base dictionary
-            override: Override dictionary
+            base: Base data structure (dict, list, or primitive)
+            override: Override data structure (dict, list, or primitive)
 
         Returns:
-            Merged dictionary
+            Merged data structure
         """
+        # If override is not a dict, return it as-is (replacement behavior)
+        if not isinstance(override, dict):
+            return override
+
+        # If base is not a dict but override is, return override
+        if not isinstance(base, dict):
+            return override
+
+        # Both are dicts - perform deep merge
         result = base.copy()
 
         for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-                result[key] = self._deep_merge_dicts(result[key], value)
+            if key in result:
+                # Both values are dicts - recurse
+                if isinstance(result[key], dict) and isinstance(value, dict):
+                    result[key] = self._deep_merge_dicts(result[key], value)
+                # Both values are lists - extend
+                elif isinstance(result[key], list) and isinstance(value, list):
+                    result[key] = result[key] + value
+                # Otherwise - override replaces base
+                else:
+                    result[key] = value
             else:
+                # Key doesn't exist in base - add it
                 result[key] = value
 
         return result
@@ -186,7 +204,7 @@ class Level3PhysicalValidator:
         self,
         content: Dict,
         ranges: Dict[str, ParameterRange]
-    ) -> List[PhysicalCheck]:
+    ) -> List[PhysicalConsistencyCheck]:
         """
         Validate hull geometry parameters.
 
@@ -221,7 +239,7 @@ class Level3PhysicalValidator:
             try:
                 actual_value = float(actual_value)
             except (ValueError, TypeError):
-                checks.append(PhysicalCheck(
+                checks.append(PhysicalConsistencyCheck(
                     parameter=param_name,
                     actual_value=str(actual_value),
                     expected_range=f"[{param_range.min_value}, {param_range.max_value}]",
@@ -247,7 +265,7 @@ class Level3PhysicalValidator:
                 severity = Severity.WARNING
                 message = f"{param_name} outside generic range - verify design basis"
 
-            checks.append(PhysicalCheck(
+            checks.append(PhysicalConsistencyCheck(
                 parameter=param_name,
                 actual_value=f"{actual_value:.2f}",
                 expected_range=f"[{param_range.min_value}, {param_range.max_value}]",
@@ -264,7 +282,7 @@ class Level3PhysicalValidator:
         self,
         content: Dict,
         ranges: Dict[str, ParameterRange]
-    ) -> List[PhysicalCheck]:
+    ) -> List[PhysicalConsistencyCheck]:
         """
         Validate metocean design parameters.
 
@@ -318,7 +336,7 @@ class Level3PhysicalValidator:
                 severity = Severity.WARNING
                 message = f"{param_name} outside typical design range"
 
-            checks.append(PhysicalCheck(
+            checks.append(PhysicalConsistencyCheck(
                 parameter=param_name,
                 actual_value=f"{actual_value:.2f}",
                 expected_range=f"[{param_range.min_value}, {param_range.max_value}]",
@@ -335,7 +353,7 @@ class Level3PhysicalValidator:
         self,
         content: Dict,
         ranges: Dict[str, ParameterRange]
-    ) -> List[PhysicalCheck]:
+    ) -> List[PhysicalConsistencyCheck]:
         """
         Validate mooring component capacities and safety factors.
 
@@ -390,7 +408,7 @@ class Level3PhysicalValidator:
                 severity = Severity.WARNING
                 message = f"{param_name} outside typical capacity range"
 
-            checks.append(PhysicalCheck(
+            checks.append(PhysicalConsistencyCheck(
                 parameter=param_name,
                 actual_value=f"{actual_value:.2f}",
                 expected_range=f"[{param_range.min_value}, {param_range.max_value}]",
@@ -408,7 +426,7 @@ class Level3PhysicalValidator:
         content: Dict,
         env_conditions: Dict[str, Dict],
         line_properties: Dict[str, Dict]
-    ) -> List[PhysicalCheck]:
+    ) -> List[PhysicalConsistencyCheck]:
         """
         Compare parameters to project-specific data.
 
@@ -438,7 +456,7 @@ class Level3PhysicalValidator:
         self,
         content: Dict,
         env_conditions: Dict[str, Dict]
-    ) -> List[PhysicalCheck]:
+    ) -> List[PhysicalConsistencyCheck]:
         """
         Compare environmental conditions to project-specific data.
 
@@ -481,7 +499,7 @@ class Level3PhysicalValidator:
                 hs_diff = calculate_percentage_difference(actual_hs, expected_hs)
                 tp_diff = calculate_percentage_difference(actual_tp, expected_tp)
 
-                checks.append(PhysicalCheck(
+                checks.append(PhysicalConsistencyCheck(
                     parameter=f"wave_hs_{sea_state_id}",
                     actual_value=f"{actual_hs:.2f}",
                     expected_value=f"{expected_hs:.2f}",
@@ -492,7 +510,7 @@ class Level3PhysicalValidator:
                     reference_basis="Project-specific data"
                 ))
 
-                checks.append(PhysicalCheck(
+                checks.append(PhysicalConsistencyCheck(
                     parameter=f"wave_tp_{sea_state_id}",
                     actual_value=f"{actual_tp:.2f}",
                     expected_value=f"{expected_tp:.2f}",
@@ -511,7 +529,7 @@ class Level3PhysicalValidator:
         self,
         content: Dict,
         line_properties: Dict[str, Dict]
-    ) -> List[PhysicalCheck]:
+    ) -> List[PhysicalConsistencyCheck]:
         """
         Compare mooring line properties to project-specific data.
 
@@ -552,7 +570,7 @@ class Level3PhysicalValidator:
 
                 severity = Severity.INFO if abs(mbl_diff) < 5.0 else Severity.WARNING
 
-                checks.append(PhysicalCheck(
+                checks.append(PhysicalConsistencyCheck(
                     parameter=f"line_mbl_{line_id}",
                     actual_value=f"{actual_mbl:.2f}",
                     expected_value=f"{expected_mbl:.2f}",
