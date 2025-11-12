@@ -1,5 +1,5 @@
 Vessels:
-    - Name: Vessel
+  - Name: Vessel
     VesselType: Vessel Type1
     Draught: Draught1
     Length: ~
