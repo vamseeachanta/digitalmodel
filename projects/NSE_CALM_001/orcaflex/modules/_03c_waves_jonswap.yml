@@ -1,0 +1,55 @@
+# Waves
+KinematicStretchingMethod: Vertical stretching
+UserSpecifiedRandomWaveSeeds: No
+WaveFrequencySpectrumDiscretisationMethod: Equal energy
+WaveTrains:
+  - Name: Wave 1
+    WaveType: JONSWAP
+    WaveDirection: 180
+    WaveOrigin: [0, 0]
+    WaveTimeOrigin: 0
+    WaveNumberOfSpectralDirections: 1
+    WaveJONSWAPParameters: Partially specified
+    WaveHs: 2.5
+    WaveTz: 6.4
+    WaveGamma: 3.3
+    WaveNumberOfComponents: 100
+    WaveSpectrumMinRelFrequency: 0.5
+    WaveSpectrumMaxRelFrequency: 10
+    WaveSpectrumMaxComponentFrequencyRange: 0.05
+# Wave calculation
+WaveKinematicsCutoffDepth: Infinity
+WaveCalculationMethod: Instantaneous position (exact)
+WaveCalculationTimeInterval: 0
+WaveCalculationSpatialInterval: 0
+# Current
+MultipleCurrentDataCanBeDefined: No
+CurrentModel: Variation scheme
+CurrentRamped: No
+CurrentApplyVerticalStretching: No
+HorizontalCurrentFactor: ~
+VerticalCurrentVariationMethod: Interpolated
+RefCurrentSpeed: 1
+RefCurrentDirection: 120
+CurrentDepth, CurrentFactor, CurrentRotation:
+  - [0, 0.39999999999999997, 0]
+  - [45, 0.39999999999999997, 20]
+  - [100, 0.19999999999999998, 40]
+# Wind
+IncludeVesselWindLoads: Yes
+IncludeLineWindLoads: Yes
+IncludeBuoyWindLoads: No
+IncludeBuoyWingWindLoads: Yes
+WindRamping: From mean
+WindType: NPD spectrum
+AirDensity: 0.00128
+AirSpeedOfSound: 343
+WindSpectrumElevation: ~
+WindSpectrumFMin: 0
+WindSpectrumFMax: Infinity
+WindTimeOrigin: 0
+WindSeed: 12345
+NumberOfWindComponents: 1000
+WindSpeed: 15
+WindDirection: 165
+VerticalWindVariationFactor: ~

@@ -1,0 +1,27 @@
+Groups:
+  Structure:
+    Vessel: Model
+    Loadhose: Model
+    Hawser: Model
+    CALM Buoy: Model
+    CALM Top: CALM Buoy
+    Pivot1: CALM Buoy
+    Pivot2: CALM Buoy
+    CALM Base: CALM Buoy
+    Master: CALM Base
+    Radial1: CALM Base
+    Radial2: CALM Base
+    Radial3: CALM Base
+    Radial4: CALM Base
+    Radial5: CALM Base
+    Radial6: CALM Base
+    Moorings: Model
+    Mooring1: Moorings
+    Mooring2: Moorings
+    Mooring3: Moorings
+    Mooring4: Moorings
+    Mooring5: Moorings
+    Mooring6: Moorings
+  State:
+    Collapsed: []
+  ...

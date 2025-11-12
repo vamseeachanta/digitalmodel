@@ -1,0 +1,299 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# CALM BUOY PROJECT CONFIGURATION (Human-Friendly Format)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# This file uses human-readable keys for intuitive editing.
+# Units are specified in comments for clarity.
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+
+Human Input:
+  Project Information:
+    Name: North Sea CALM Buoy - Example Project
+    Code: NSE_CALM_001
+    Client: North Sea Energy Partners
+    Operator: Maritime Offshore Services
+    Location: North Sea - UK Sector Block 21/23
+    Latitude: 57.5
+    Longitude: 1.2
+    Created Date: '2025-01-15'
+    Engineer: Dr. Sarah Johnson
+    Reviewer: Prof. Michael Chen
+    Version: '1.0'
+    Description: 'CALM buoy mooring system for VLCC crude oil offloading in North
+      Sea.
+
+      Design basis: 100-year return period extreme conditions.
+
+      Operational water depth: 120m, soft clay seabed.
+
+      '
+  Standards & Codes:
+    Primary Code: ISO 19901-7:2013
+    Mooring Standard: API RP 2SK 2005
+    Buoy Standard: DNVGL-OS-E403 2021
+    Classification Society: ABS
+    National Regulations:
+    - UK HSE Offshore Installation Regulations 1995
+    - IMCA M103 - Guidelines for Moorings
+    Industry Guidelines:
+    - OCIMF SMOG 4th Edition
+    - OCIMF MEG4
+  Site Conditions:
+    Water Depth: 120
+    Seabed Type: soft clay
+    Seabed Slope: 1.5
+    Seabed Friction Coefficient: 0.5
+    Metocean Data Source: data/results/calm_buoy/project_specific/environmental_conditions.csv
+    Metocean Conditions:
+      Operating:
+        Significant Wave Height (Hs): 2.5
+        Peak Period (Tp): 8.0
+        Wind Speed: 15
+        Surface Current: 1.2
+        Seabed Current: 0.3
+      Design (1-year):
+        Return Period: 1-year
+        Annual Exceedance Probability: 63.2%
+        Significant Wave Height (Hs): 2.5
+        Peak Period (Tp): 7.5
+        Zero-Crossing Period (Tz): 5.3
+        Wind Speed (1-hour mean): 20
+        Wind Gust (3-second): 28
+        Surface Current: 1.4
+        Mid-Depth Current: 1.0
+        Near-Bed Current: 0.6
+      Design (10-year):
+        Return Period: 10-year
+        Annual Exceedance Probability: 9.5%
+        Significant Wave Height (Hs): 5.0
+        Peak Period (Tp): 11.0
+        Zero-Crossing Period (Tz): 7.8
+        Wind Speed (1-hour mean): 30
+        Wind Gust (3-second): 42
+        Surface Current: 1.9
+      Extreme (100-year):
+        Return Period: 100-year
+        Annual Exceedance Probability: 1.0%
+        Significant Wave Height (Hs): 8.5
+        Peak Period (Tp): 14.0
+        Zero-Crossing Period (Tz): 9.9
+        Wind Speed (1-hour mean): 37
+        Wind Gust (3-second): 52
+        Surface Current: 2.3
+    Tidal Range: 4.5
+    Marine Growth Thickness: 0.05
+  Buoy Specifications:
+    Type: turret_calm
+    Outer Diameter: 12.0
+    Draft: 10.0
+    Freeboard: 3.0
+    Skirt Diameter: 11.0
+    Displacement: 9500
+    Dry Mass: 8500
+    Operating Mass: 9200
+    Centre of Gravity:
+    - 0
+    - 0
+    - -2.0
+    Roll Inertia: 260000
+    Pitch Inertia: 6000000
+    Yaw Inertia: 6000000
+    Hydrodynamic Database: data/processed/calm_buoy/mature_design/hydrodynamic_coefficients.csv
+    RAO Source: specs/modules/orcaflex/modular-input-file/output/_04_vessel_types.yml
+    Steel Grade: Steel - Grade S355
+    Coating: Epoxy + Marine Grade Paint System
+    Design Life: 25
+  Mooring System:
+    Pattern: radial_symmetric
+    Number of Lines: 6
+    Azimuth Spacing: 60
+    Mooring Lines:
+    - Name: top_chain
+      Type: studless_chain
+      Grade: R4
+      Diameter: 76
+      Length: 150
+      Minimum Breaking Load: 7300
+      Mass per Meter: 88.3
+      Axial Stiffness (EA): 407000
+    - Name: bottom_chain
+      Type: studless_chain
+      Grade: R4
+      Diameter: 76
+      Length: 200
+      Minimum Breaking Load: 7300
+      Mass per Meter: 88.3
+      Axial Stiffness (EA): 407000
+    Fairlead Height: -1.5
+    Anchor Type: drag_embedment
+    Anchor Holding Capacity: 2500
+    Safety Factor (Intact): 1.8
+    Safety Factor (Damaged): 1.3
+    Pretension: 500
+  Offloading System:
+    Tanker Type: VLCC
+    Deadweight Tonnage: 300000
+    Length Overall: 330
+    Beam: 60
+    Draft (Laden): 22
+    Hose Type: floating_hose_string
+    Hose Diameter: 16
+    Hose Length: 120
+    Number of Hose Segments: 3
+    Hose Minimum Breaking Load: 150
+    Hawser Type: nylon_rope
+    Hawser Diameter: 76
+    Hawser Length: 90
+    Hawser Minimum Breaking Load: 1800
+    Transfer Rate: 100000
+    Product Density: 0.85
+  Analysis Settings:
+    Run Preliminary: true
+    Run Detailed: false
+    Run Sensitivity: false
+
+    Operability Analysis:
+      Enabled: true
+      Return Period: design_1yr
+      Directions: 12
+      Direction Spacing: 30
+      Align Wind Current: true
+
+    Load Cases:
+    - Name: operating_head_seas
+      Condition: design_1yr
+      Wave Direction: 0
+      Current Direction: 0
+      Wind Direction: 0
+    - Name: operating_quartering
+      Condition: design_1yr
+      Wave Direction: 45
+      Current Direction: 30
+      Wind Direction: 15
+    - Name: extreme_head_seas
+      Condition: extreme
+      Wave Direction: 0
+      Current Direction: 0
+      Wind Direction: 0
+    - Name: extreme_beam_seas
+      Condition: extreme
+      Wave Direction: 90
+      Current Direction: 60
+      Wind Direction: 75
+    Simulation Duration: 3600
+    Time Step: 0.1
+    Ramp Time: 100
+    Output Mooring Tension: true
+    Output Buoy Motions: true
+    Output Hose Curvature: true
+    Output Clearances: true
+    Output Statistics: true
+AI Generated:
+  Validation Results:
+    Validated by AI: false
+    Validation Date: null
+    Validation Version: '1.0'
+    Confidence Score: null
+    Checks Performed:
+      Geometry Within Ranges: null
+      Metocean Realistic: null
+      Mooring Capacity Adequate: null
+      Safety Factors Met: null
+      OrcaFlex Syntax Valid: null
+  Derived Parameters:
+    Mooring Footprint Radius: null
+    Total Mooring Mass: null
+    Mooring Stiffness (Surge): null
+    Mooring Stiffness (Sway): null
+    Watch Circle Radius: null
+    Buoy Natural Periods:
+      Surge: null
+      Heave: null
+      Pitch: null
+    Max Line Tension (Operating): null
+    Max Line Tension (Extreme): null
+    Utilization Ratio (Intact): null
+    Utilization Ratio (Damaged): null
+  Recommendations:
+    Warnings: []
+    Suggestions: []
+  Data Sources:
+    Hull Geometry Ranges: data/raw/calm_buoy/generic_range/hull_geometry_ranges.csv
+    Metocean Design Ranges: data/raw/calm_buoy/generic_range/metocean_design_ranges.csv
+    Mooring Capacity Ranges: data/raw/calm_buoy/generic_range/mooring_capacity_ranges.csv
+    Hydrodynamic Coefficients: data/processed/calm_buoy/mature_design/hydrodynamic_coefficients.csv
+    Structural Components: data/processed/calm_buoy/mature_design/structural_components.csv
+    Project Environmental Conditions: data/results/calm_buoy/project_specific/environmental_conditions.csv
+    Project Mooring Properties: data/results/calm_buoy/project_specific/mooring_line_properties.csv
+    Project Offloading Config: data/results/calm_buoy/project_specific/offloading_configuration.csv
+Generation Settings:
+  Orcaflex:
+    Templates:
+      Preliminary:
+        Base: specs/modules/orcaflex/modular-input-file/output/calm_buoy_base.yml
+        Description: Standard model with lumped buoy representation
+        Modules: 16
+      Detailed:
+        Base: specs/modules/orcaflex/modular-input-file/output/discretised_calm_buoy_base.yml
+        Description: Discretised model with detailed buoy geometry
+        Modules: 17
+    Overrides:
+      Environment:
+        Template: jonswap_default
+        Customize:
+          Wave Hs: human_input.site.metocean_override.operating_conditions.hs_max
+          Wave Tp: human_input.site.metocean_override.operating_conditions.tp_max
+          Current Speed: human_input.site.metocean_override.operating_conditions.current_speed_surface
+          Wind Speed: human_input.site.metocean_override.operating_conditions.wind_speed_max
+      Buoy Specifications:
+        Template: vessel_type_default
+        Customize:
+          Mass: human_input.buoy.mass_operating
+          Draft: human_input.buoy.draft
+          Cog: human_input.buoy.centre_of_gravity
+      Mooring System:
+        Template: radial_6_lines
+        Customize:
+          Number of Lines: human_input.mooring.number_of_lines
+          Chain Diameter: human_input.mooring.line_segments[0].nominal_diameter
+          Top Chain Length: human_input.mooring.line_segments[0].length
+          Bottom Chain Length: human_input.mooring.line_segments[1].length
+  Output:
+    Project Root: projects/{project_code}
+    Structure:
+      Orcaflex:
+        Path: orcaflex
+        Files:
+        - '{project_code}_calm_buoy.yml'
+        - modules/*.yml
+      Freecad:
+        Path: freecad
+        Files:
+        - buoy_geometry.FCStd
+        - mooring_layout.FCStd
+      Blender:
+        Path: blender
+        Files:
+        - visualization.blend
+        - renders/*.png
+      Reports:
+        Path: reports
+        Files:
+        - validation_report.html
+        - analysis_summary.pdf
+      Data:
+        Path: data
+        Files:
+        - project_metocean.csv
+        - mooring_properties.csv
+  Validation Results:
+    Run After Generation: true
+    Levels:
+    - 1
+    - 3
+    Tolerance Percent: 10.0
+    Fail On Critical: true
+    Warn On Out Of Range: true
+Multi-Fidelity Analysis:
+  Enabled: false

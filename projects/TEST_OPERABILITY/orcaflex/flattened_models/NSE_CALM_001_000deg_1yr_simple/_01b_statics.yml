@@ -1,0 +1,5 @@
+# Statics
+BuoysIncludedInStatics: All
+LineStaticsStep1Policy: Parent lines excluded
+LineStaticsStep2Policy: Parent lines excluded
+WholeSystemStaticsEnabled: Yes
