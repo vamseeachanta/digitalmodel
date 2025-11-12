@@ -1,0 +1,35 @@
+%YAML 1.1
+---
+General:
+  UnitsSystem: SI
+
+Environment:
+  WaterDepth: 300
+
+VesselTypes:
+  - Name: Simple_Buoy
+    Length: 10
+
+LineTypes:
+  - Name: Chain
+    OD: 0.12
+    EA: 407000e3
+
+Vessels:
+  - Name: CALM_Buoy
+    VesselType: Simple_Buoy
+    Connection: Free
+    InitialPosition: [0, 0, 0]
+
+Lines:
+  - Name: Mooring1
+    Connection: [CALM_Buoy, Anchored]
+    ConnectionX: [[0, 0], [300, 0]]
+    ConnectionZ: [[-1.5, 0], [0.1, 0]]
+    LineType: [Chain]
+    Length: [350]
+
+Groups:
+  - Name: All_Lines
+    Type: Lines
+    Contents: [Mooring1]
