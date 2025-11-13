@@ -1,0 +1,11 @@
+Unnamed: 1,Unnamed: 2
+Depth,Thickness (mm)
+,
+MHHW to MLLW,60
+20 m below MLLW,30
+50 m below MLLW,10
+100 m below MLLW,10
+140 m below MLLW,0
+,
+"NOTE 1    Thickness is constant between MHHW and MLLW.  Below MLLW, thickness is defined atspecific depths.  Linearly interpolate between the specific depths.NOTE 2    Growth specific gravity is 1.2.",
+,

@@ -1,0 +1,20 @@
+Unnamed: 0,Unnamed: 1,Unnamed: 2,Return Period (years),Unnamed: 4
+Load Case,,,,
+,10,25,50 100 200 1000,2000
+Wind dominant,,,,
+Wind speed,1.00,1.00,1.00 1.00 1.00 1.00,1.00
+Wave height,1.00,0.95,0.95 0.95 0.95 0.95,0.95
+Uniform current,0.80,0.80,0.80 0.80 0.80 0.80,0.80
+Wind Direction from wave (deg),15,15,15 15 15 15,15
+Wave dominant,,,,
+Wind speed,1.00,0.95,0.95 0.95 0.95 0.95,0.95
+Wave height,1.00,1.00,1.00 1.00 1.00 1.00,1.00
+Uniform current,0.80,0.80,0.80 0.80 0.80 0.80,0.80
+Wind direction from wave (deg),15,15,15 15 15 15,15
+Current dominant,,,,
+Wind speed,0.80,0.75,0.75 0.75 0.75 0.75,0.75
+Wave height,0.80,0.75,0.75 0.75 0.75 0.75,0.75
+Uniform current,1.00,1.00,1.00 1.00 1.00 1.00,1.00
+Wind direction from wave (deg),0,0,0 0 0 0,0
+"NOTE 1  Current headings in WD ? 50 m are independent of wind and wave, and are given by Figure H.19.",,,,
+"NOTE 2  At a return period of 15 years, the same factors may be used as for 10 years.",,,,

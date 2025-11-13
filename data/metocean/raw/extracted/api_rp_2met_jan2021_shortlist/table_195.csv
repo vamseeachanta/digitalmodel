@@ -1,0 +1,21 @@
+Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7,Unnamed: 8
+Metocean Parameter,,Return Period (years),,,,,
+,1.0,5,10,50,,100.0,
+,,,,,,,
+"Wind speed (m/s)10 min mean wind speed3 s gust wind speed",,,,,,,
+,14.0,18,19,21,,22.0,
+,17.0,22,23,26,,27.0,
+,,,,,,,
+"Wave height (m)MaximumSignificant",,,,,,,
+,9.4,13.5,14.2,15.8,,16.4,
+,5.2,7.5,7.9,8.8,,9.1,
+Wave direction (from),,NW-N,NW-N,NW-N,NW-N,,NW-N
+Spectral peak period (s),,1017,1217,1217,1217,,1217
+,,,,,,,
+"Current speed (m/s)Surface90 m depth a1 m above sea floor",,,,,,,
+,0.6,0.7,0.7,0.8,,0.8,
+,0.5,0.6,0.6,0.7,,0.7,
+,0.5,0.6,0.6,0.7,,0.7,
+,,,,,,,
+"a   For water depths less than 90 m, the seabed current should be calculated from a linear distribution between the surface current andthat at 90 m depth in this table.",,,,,,,
+,,,,,,,

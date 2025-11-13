@@ -1,0 +1,21 @@
+Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6
+Metocean Parameter,Return Period (years),,,,
+1,5,10,50,100,
+,,,,,
+Nominal water depth,120 m,,,,
+Wind speed at 10 m above MSL,,,,,
+1 h mean (m/s),20.8,23.2,24.0,26.2,27.0
+10 min mean (m/s),24.1,26.9,27.9,30.4,31.3
+1 min mean (m/s),28.7,32.0,33.2,36.1,37.3
+3 s gust (m/s),34.7,38.8,40.1,43.7,45.1
+Waves,,,,,
+Significant height (m),4.9,5.6,5.8,6.4,6.7
+Maximum height (m),9.3,10.6,11.1,12.2,12.7
+Mean period (s),7.3,7.8,8.0,8.4,8.5
+Spectral peak period (s),10.3,11.0,11.2,11.8,12.0
+Wave direction (from),,,,,
+Extreme,WNW,WNW,WNW,WNW,WNW
+Prevailing,NNE/W,NNE/W,NNE/W,NNE/W,NNE/W
+Current speed,,,,,
+Surface (m/s),2.13,2.27,2.44,2.63,2.80
+,,,,,

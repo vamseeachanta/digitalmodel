@@ -1,0 +1,21 @@
+(1),(2),(3),(4),(5),(6),(7),(8),(9)
+Variable,Range,Reported,Mode of,Required,Sensor,Output,Typical Operational,Remarks
+,,Resolution,Measurement/,Measurement,Time,Averaging,Performance,
+,,,Observation,Uncertainty,Constant,Time,,
+4. Clouds,,,,,,,,
+4.1 Cloud amount,,,,,,,,Period (30 s) clustering algorithms
+,0/8 to 8/8,1/8,I,1/8,n/a,,2/8,may be used to estimate low cloud
+,,,,,,,,amount automatically.
+4.2 Height of cloud,,,,,,,,*Accuracy difficult to determine
+base,0 m to 30 km,10 m,I,10 m for ? 100 m,n/a,,?10 m repeatability*,since no definition exists for
+,,,,10 % for > 100 m,,,,instrumentally measured cloud base
+,,,,,,,,height.
+5. Wind,,,,,,,,
+5.1 Speed,,,,0.5 m/s,Distance,,,Average over 2 and /or 10 min.
+,0 m/s to 60 m/s,0.5 m/s,A,for ? 5 m/s,constant.,2 min and/or,0.5 m/s for ? 5 m/s,Nonlinear devices. Care needed in
+,,,,10 % for > 5 m/s,2 m to 5 m,10 min,10 % for > 5 m/s,design of averaging process.
+,,,,,,,,
+5.2 Direction,0° to 360°,1°,A,5°,1 s,2 min and/or,5°,
+,,,,,,10 min,,
+5.3 Gusts,0 m/s to 75 m/s,0.1 m/s,A,10 %,,3 s,0.5 m/s for ? 5 m/s,Highest 3 s average should be
+,,,,,,,10 % for > 5 m/s,recorded.

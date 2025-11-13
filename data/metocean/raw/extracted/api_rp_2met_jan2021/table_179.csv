@@ -1,0 +1,26 @@
+Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7,Unnamed: 8,Unnamed: 9
+Load Case,Return Period (years),,,,,,,
+10,15,25.0,50.0,100.0,300.0,500.0,1000.0,
+,,,,,,,,
+Wind speed (10 m elevation),,,,,,,,
+1 h mean wind speed (m/s),30.2,33.3,36.6,40.4,44.1,49.4,51.8,54.9
+10 min mean wind speed (m/s),31.4,34.7,38.0,42.1,45.8,51.4,53.9,57.1
+1 min mean wind speed (m/s),34.6,38.2,41.8,46.3,50.4,56.5,59.2,62.8
+3 s gust (m/s),42.0,46.4,50.8,56.2,61.1,68.5,71.8,76.1
+Waves (depth ? 120 m),,,,,,,,
+Significant wave height (m),9.0,10.6,11.8,13.2,14.4,16.0,16.7,17.6
+Maximum wave height (m),16.0,18.6,20.9,23.3,25.4,28.3,29.5,31.1
+Extreme water level (m),10.3,12.0,13.5,15.0,16.3,18.2,18.9,19.9
+Peak spectral period (s),12.9,13.6,14.2,14.9,15.4,16.2,16.5,17.0
+Period of maximum wave (s),11.6,12.3,12.8,13.4,13.9,14.6,14.9,15.3
+Currents (depth ? 50 m),,,,,,,,
+Surface speed (m/s),1.42,1.57,1.72,1.9,2.07,2.32,2.43,2.58
+Bottom of profile (m),57.3,63.3,69.4,76.8,83.7,93.9,98.4,104.4
+Currents (depth 10 m to 50 m),,,,,,,,
+Uniform speed (m/s),1.42,1.57,1.72,1.9,2.07,2.32,2.43,2.58
+Water level (depth ? 120 m),,,,,,,,
+Associated storm surge (m),0.22,0.27,0.34,0.43,0.53,0.65,0.69,0.74
+Tidal amplitude (m),0.42,0.42,0.42,0.42,0.42,0.42,0.42,0.42
+,,,,,,,,
+"NOTE 1Wind speeds for a given return period are applicable to all water depths throughout the region.NOTE 2Extreme water level is referenced to MLLW and consists of extreme crest elevation plus associated surge and tide.NOTE 3        See H.9.2.2.5 for guidance if air gap relative to n-year extreme water level is not positive.NOTE 4See Figure H.9 and Figure H.10 for wave and extreme water level values for water depths between 10 m and 120 m.NOTE 5The peak spectral period and period of maximum wave apply to waves in all water depths. When assessing systemswith dynamic sensitivity, a ± 2 s variation in wave period should be considered.NOTE 6For depths ? 50 m, the current profile is defined by a three-point shape (see H.9.2.2.6).NOTE 7Reference Figure H.11 for surge and tide in water depths less than 120 m.",,,,,,,,
+,,,,,,,,

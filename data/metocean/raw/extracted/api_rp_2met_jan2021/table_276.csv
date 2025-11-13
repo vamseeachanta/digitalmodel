@@ -1,0 +1,22 @@
+Wind (10 m elevation),Unnamed: 0
+1 h mean (m/s),7.6
+10 min mean (m/s),8.0
+1 min mean (m/s),8.6
+3 s gust (m/s),9.4
+Waves,
+Significant wave height (m),2.0
+Maximum wave height (m),3.0
+Extreme water level (m),1.8
+Peak spectral period (s),6.0
+Period of maximum wave (s),6.0
+Water level,
+Storm surge (m),0.20
+Tidal amplitude (m),0.42
+Normalized current profile,
+Depth below surface (m),Scale
+0,1.00
+50,0.99
+150,0.66
+300,0.35
+600,0.20
+1000+,0.20 m/s
