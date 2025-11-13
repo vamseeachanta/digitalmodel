@@ -312,8 +312,8 @@ Loadhose:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Vessel, 45, 5, 7, 30, 165, 0, ~]
-      - [CALM Top, -3.201296069889044, 4.320710529453033, 0.5, 315, 30.00000000000001, 0, ~]
+      - [Vessel1, 45, 5, 7, 30, 165, 0, ~]
+      - [CALMTop, -3.201296069889044, 4.320710529453033, 0.5, 315, 30.00000000000001, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [Infinity, ~]
@@ -361,8 +361,8 @@ Hawser:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [CALM Top, -4.507972599671972, 3.120780440136267, 1.1928223140903764, 125.00000000000001, 90, 0, ~]
-      - [Vessel, 50, 0, 7, 180, 90, 0, ~]
+      - [CALMTop, -4.507972599671972, 3.120780440136267, 1.1928223140903764, 125.00000000000001, 90, 0, ~]
+      - [Vessel1, 50, 0, 7, 180, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -408,7 +408,7 @@ Pivot1:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [CALM Top, 0, 0, 0, 0, 180, 0, ~]
+      - [CALMTop, 0, 0, 0, 0, 180, 0, ~]
       - [Master, 0, 0, 0.795, 0, 180, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -458,7 +458,7 @@ Pivot2:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [Master, 0, 0, 3.795, 0, 180, 0, ~]
-      - [CALM Top, 0, 0, 1, 0, 180, 0, ~]
+      - [CALMTop, 0, 0, 1, 0, 180, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [Infinity, ~]
