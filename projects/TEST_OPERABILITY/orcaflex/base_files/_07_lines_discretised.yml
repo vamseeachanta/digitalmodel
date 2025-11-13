@@ -1,5 +1,5 @@
-Lines:
-  - Name: Mooring1
+New: Mooring1
+Mooring1:
     IncludeTorsion: No
     TopEnd: End A
     LengthAndEndOrientations: Explicit
@@ -24,8 +24,8 @@ Lines:
       - [~, 0, 0.001]
     # Sections
     LineType, Length, TargetSegmentLength:
-      - [2.5" Chain, 150, 10]
-      - [2.5" Chain, 195, 15]
+      - [2p5inChain, 150, 10]
+      - [2p5inChain, 195, 15]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -48,7 +48,8 @@ Lines:
     DrawNodesAsDiscs: No
     DrawShadedNodesAsSpheres: Yes
     ContactPen: [5, Solid, White]
-  - Name: Mooring2
+New: Mooring2
+Mooring2:
     IncludeTorsion: No
     TopEnd: End A
     LengthAndEndOrientations: Explicit
@@ -73,8 +74,8 @@ Lines:
       - [~, 0, 0.001]
     # Sections
     LineType, Length, TargetSegmentLength:
-      - [2.5" Chain, 150, 10]
-      - [2.5" Chain, 195, 15]
+      - [2p5inChain, 150, 10]
+      - [2p5inChain, 195, 15]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -97,7 +98,8 @@ Lines:
     DrawNodesAsDiscs: No
     DrawShadedNodesAsSpheres: Yes
     ContactPen: [5, Solid, White]
-  - Name: Mooring3
+New: Mooring3
+Mooring3:
     IncludeTorsion: No
     TopEnd: End A
     LengthAndEndOrientations: Explicit
@@ -122,8 +124,8 @@ Lines:
       - [~, 0, 0.001]
     # Sections
     LineType, Length, TargetSegmentLength:
-      - [2.5" Chain, 150, 10]
-      - [2.5" Chain, 195, 15]
+      - [2p5inChain, 150, 10]
+      - [2p5inChain, 195, 15]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -146,7 +148,8 @@ Lines:
     DrawNodesAsDiscs: No
     DrawShadedNodesAsSpheres: Yes
     ContactPen: [5, Solid, White]
-  - Name: Mooring4
+New: Mooring4
+Mooring4:
     IncludeTorsion: No
     TopEnd: End A
     LengthAndEndOrientations: Explicit
@@ -171,8 +174,8 @@ Lines:
       - [~, 0, 0.001]
     # Sections
     LineType, Length, TargetSegmentLength:
-      - [2.5" Chain, 150, 10]
-      - [2.5" Chain, 195, 15]
+      - [2p5inChain, 150, 10]
+      - [2p5inChain, 195, 15]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -195,7 +198,8 @@ Lines:
     DrawNodesAsDiscs: No
     DrawShadedNodesAsSpheres: Yes
     ContactPen: [5, Solid, White]
-  - Name: Mooring5
+New: Mooring5
+Mooring5:
     IncludeTorsion: No
     TopEnd: End A
     LengthAndEndOrientations: Explicit
@@ -220,8 +224,8 @@ Lines:
       - [~, 0, 0.001]
     # Sections
     LineType, Length, TargetSegmentLength:
-      - [2.5" Chain, 150, 10]
-      - [2.5" Chain, 195, 15]
+      - [2p5inChain, 150, 10]
+      - [2p5inChain, 195, 15]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -244,7 +248,8 @@ Lines:
     DrawNodesAsDiscs: No
     DrawShadedNodesAsSpheres: Yes
     ContactPen: [5, Solid, White]
-  - Name: Mooring6
+New: Mooring6
+Mooring6:
     IncludeTorsion: No
     TopEnd: End A
     LengthAndEndOrientations: Explicit
@@ -269,8 +274,8 @@ Lines:
       - [~, 0, 0.001]
     # Sections
     LineType, Length, TargetSegmentLength:
-      - [2.5" Chain, 150, 10]
-      - [2.5" Chain, 195, 15]
+      - [2p5inChain, 150, 10]
+      - [2p5inChain, 195, 15]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -293,7 +298,8 @@ Lines:
     DrawNodesAsDiscs: No
     DrawShadedNodesAsSpheres: Yes
     ContactPen: [5, Solid, White]
-  - Name: Loadhose
+New: Loadhose
+Loadhose:
     IncludeTorsion: No
     TopEnd: End A
     LengthAndEndOrientations: Explicit
@@ -341,7 +347,8 @@ Lines:
     DrawNodesAsDiscs: No
     DrawShadedNodesAsSpheres: Yes
     ContactPen: [5, Solid, White]
-  - Name: Hawser
+New: Hawser
+Hawser:
     IncludeTorsion: No
     TopEnd: End A
     LengthAndEndOrientations: Explicit
@@ -387,7 +394,8 @@ Lines:
     DrawNodesAsDiscs: No
     DrawShadedNodesAsSpheres: Yes
     ContactPen: [5, Solid, White]
-  - Name: Pivot1
+New: Pivot1
+Pivot1:
     IncludeTorsion: No
     TopEnd: End A
     LengthAndEndOrientations: Explicit
@@ -435,7 +443,8 @@ Lines:
     # Drawing
     DrawNodesAsDiscs: No
     DrawShadedNodesAsSpheres: Yes
-  - Name: Pivot2
+New: Pivot2
+Pivot2:
     IncludeTorsion: No
     TopEnd: End A
     LengthAndEndOrientations: Explicit
