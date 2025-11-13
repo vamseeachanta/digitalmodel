@@ -1,0 +1,118 @@
+# Mooring Supplier Targets
+
+Extracted from MOORING-010814REV poster. Use these vendor names as starting points for data procurement follow-up.
+
+- 2hoffshore
+- API
+- Akersolutions
+- Alloywire
+- Amogconsulting
+- Anchor Chain
+- Appletonmarine
+- Arcelormittal
+- Astrotechnology
+- BPP Tech
+- Balltec
+- Balmoral Offshore
+- Bardex
+- Bexco
+- Bladt
+- Bluewater
+- Bodewes
+- Boskalis
+- Bridon
+- Bridonltd
+- Broehl
+- Brookfieldwire
+- Bruceanchor
+- Ceccwrr
+- Cmworks
+- Cortlandcompany
+- Crpgroup
+- Cslropes
+- DCL USA
+- DNV
+- Deepseaeng
+- Delmarus
+- Dhac
+- Dsrcorp
+- Eagle
+- Emas
+- Feubo
+- Firstsubsea
+- Flint Tech
+- Floatec
+- Franklin
+- Geos
+- Gnweb
+- Greenpin
+- Gunnebojohnson
+- HMC
+- Hamanaka Chain
+- Helixesg
+- Houston Offshore
+- Intermoor
+- Jumbo Offshore
+- KBR
+- Kiswire
+- Kohlswagjuteri
+- LE Beon
+- LOC Group
+- Lankhorsteuronete
+- Lgchains
+- Lhrmarine
+- Londonmarine
+- Marit
+- Mcdermott
+- Mcskenny
+- Menck
+- Mesterkette
+- Millerproducts
+- Moorlink
+- Moorsure
+- Mtnw USA
+- NOV
+- Nessco
+- OIS LTD
+- Offspringinternational
+- Oilstates
+- Orwelloffshore
+- Otsas
+- Parker
+- Ramnas
+- Rappmarine
+- Redaelli
+- Rokrem
+- Rolls Royce
+- SCI Chain
+- Samsonrope
+- Sbmoffshore
+- Scanrope
+- Scanropemarine
+- Scimar
+- Sigmaoffshore
+- Smithberger
+- Sofec
+- Solutions
+- Sotra
+- Southgatemarine
+- Sptoffshore
+- Strainstall
+- Technip
+- Teufelberger
+- Thecrosbygroup
+- Timberland Group
+- Tokyorope
+- Trelleborg
+- Trioncorp
+- Unirope
+- Ushamartin
+- Veritas
+- Vicinaymarine
+- Vikingseatech
+- Vryhof
+- WFS Tech
+- Wachain
+- Welaptega
+- Whitehillmfg
+- Worleyparsons

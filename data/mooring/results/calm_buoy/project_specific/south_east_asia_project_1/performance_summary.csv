@@ -1,0 +1,5 @@
+condition,mooring_state,max_offset_m,max_heave_m,max_pitch_deg,max_horizontal_acc_m_s2,max_vertical_acc_m_s2,min_touchdown_length_m,max_mooring_tension_kN,max_hawser_tension_kN,mooring_safety_factor,hawser_safety_factor,water_depth_basis_m,notes,source
+operational,intact,9.6,2.5,23.4,4.0,2.4,104.0,2195.3,2141.6,3.3,3.8,32.72,"Mooring line load at fairlead; hawser tension from coupled OrcaFlex run","HYBN-01DD-3.15.6-84011NA-DP03-2001-0 Table 7.1; HYBN-01DD-3.15.6-84011NA-DP03-2002-0 Table 6.13"
+operational,one_line_damaged,17.7,2.7,23.2,5.0,3.0,59.0,2502.2,2735.9,2.9,3.0,32.72,"Worst-case with most loaded leg removed","HYBN-01DD-3.15.6-84011NA-DP03-2001-0 Table 7.1; HYBN-01DD-3.15.6-84011NA-DP03-2002-0 Table 6.13"
+survival,intact,6.0,4.1,13.3,2.5,2.4,198.0,908.0,0.0,8.1,,32.55,"No tanker connected; hawser inactive","HYBN-01DD-3.15.6-84011NA-DP03-2001-0 Table 7.2; HYBN-01DD-3.15.6-84011NA-DP03-2002-0 Table 6.6"
+survival,one_line_damaged,11.4,4.4,9.6,2.4,2.4,178.0,1060.2,0.0,6.9,,32.55,"Most loaded leg removed in survival; hawser inactive","HYBN-01DD-3.15.6-84011NA-DP03-2001-0 Table 7.2; HYBN-01DD-3.15.6-84011NA-DP03-2002-0 Table 6.7"
