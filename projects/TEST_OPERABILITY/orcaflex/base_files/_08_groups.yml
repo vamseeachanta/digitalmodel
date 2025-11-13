@@ -1,5 +1,4 @@
-Groups:
-  Structure:
+Structure:
   Vessel: Model
   Loadhose: Model
   Hawser: Model
@@ -15,5 +14,5 @@ Groups:
   Mooring4: Moorings
   Mooring5: Moorings
   Mooring6: Moorings
-  State:
+State:
   Collapsed: []
