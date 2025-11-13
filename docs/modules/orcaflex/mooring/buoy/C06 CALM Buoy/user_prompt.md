@@ -32,6 +32,17 @@ J:\B1522 McDermott Woodfibre FST Eng Completion\ACMA Work\CTR 07 Hydrodynamic an
 with the latest file strucure, review below folder to see if any of the files are no longer needed and can be archived or deleted:
 projects\TEST_OPERABILITY\orcaflex\modules
 
+
+### File Checking
+
+Check orcaflex base_file format in below folder:
+projects\TEST_OPERABILITY\orcaflex\base_files
+
+the calm buoy models in whole yml file format are given in: docs\modules\orcaflex\mooring\buoy\C06 CALM Buoy
+
+Utilize below if an example relative path files are needed.
+tests\modules\orcaflex\analysis\moorings\pretension\source
+
 ### Running Analysis
 
 Utilize existing scripts to run the 1 year files in the folder below:
@@ -41,6 +52,7 @@ run 1 year operability analysis. Utilize below if an example relative path files
 tests\modules\orcaflex\analysis\moorings\pretension\source
 
 for the leassons learnt so far from the work. Let us save and commit files, Following this, let us enhance the agent with all the learnings. Make sure the orcaflex agent is used for future work.
+
 
 ### Postprocess 
 
