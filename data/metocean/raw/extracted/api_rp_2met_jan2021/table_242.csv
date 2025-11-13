@@ -1,0 +1,7 @@
+Return Period (years) Metocean Parameter,Unnamed: 1
+1 5 10 50,100.0
+10 min mean wind speed (m/s) 25 27 28 30,31.0
+Significant wave height (m) 4.8 5.5 6 6.7,7.0
+Spectral peak period (s) a 10 10.7 11.2 11.8,12.1
+Surface current speed (m/s) 0.5 0.6 0.65 0.67,0.7
+aAssume the peak spectral period can vary by ± 10 % around these central estimates.,

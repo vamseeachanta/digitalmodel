@@ -1,0 +1,15 @@
+Unnamed: 1,Unnamed: 2
+Clause/Subclause,Modifications
+,
+"A.7.4 Wind SpectraThis subclause recommended using the Frøya wind spectra for all storm types.This subclause now has three subsections:?(A.7.4.1)Explainswhichrelationsareappropriatetowhichstormtype.Clarifies that squalls are inherently transient phenomena more appropriatelytreated in the time domain than by a spectral representation. Adds a figureshowing a comparison of extratropical and tropical storm wind spectra at twoelevations for two representative wind speeds.?(A.7.4.2)PresentstheFrøyaequationsasappropriateforextratropicalstorms. The text and equations in this subsection are unchanged from theoriginal description except that the figure showing sample wind spectra isdeleted in light of the figure added in A.7.4.1.?(A.7.4.3)PresentssimplifiedESDUspectraasappropriatefromtropicalcyclones.Explanation: Comparison of the Frøya-based relations and ESDU wind spectra against measurements intropical cyclone events demonstrated that the ESDU relations as presented in A.7.4.3 are a more appropriatebasis for tropical cyclones than the Frøya-based relations (based on wind measurements made offshoreNorway).",
+,
+,
+"Annex HAdded regional annex for the US Gulf of Mexico.Explanation: ISO-19901-1:2015 does not have an annex for the US Gulf of Mexico. This annex has updatedinformation relative to the First Edition of API 2MET.",
+,
+,
+"Annex IAdded regional annex for the US Coast of California.Explanation: ISO-19901-1:2015 does not have an annex for the US Coast of California. This annex presentsprecisely the same information as the First Edition of API 2MET.",
+,
+,
+"Annex JAdded regional annex for the Other US Waters.Explanation: ISO-19901-1:2015 does not have an annex for the Other US Waters (areas outside Gulf ofMexico and California offshore region). This annex presents precisely the same information as the FirstEdition of API 2MET.",
+,
+,

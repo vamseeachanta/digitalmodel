@@ -1,0 +1,10 @@
+Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7,Unnamed: 8
+"Height aboveSea Levelm",,Ice Created from Sea Spray,,Ice Created from Precipitation,,,
+,"Thicknessmm","Densitykg/m3",,"Thicknessmm","Densitykg/m3",,
+,56° N to 68° N,North of 68° N,,,,,
+,,,,,,,
+,,,,,,,
+5 to 10,,80,150,850,,10.0,900.0
+10 to 25,,"Linear reductionfrom 80 to 0","Linear reduction from150 to 0","Linear reductionfrom 850 to 500",,10.0,900.0
+Above 25,,0,0,,,10.0,900.0
+,,,,,,,

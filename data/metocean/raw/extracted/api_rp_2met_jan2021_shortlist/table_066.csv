@@ -1,0 +1,65 @@
+Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6
+Newfoundland Offshore (Grand Banks),,,,,
+,,,,,
+Metocean Parameter,Return Period (years),,,,
+100,50,10,5 b,1,
+,,,,,
+,,,,,
+Wind speed a,,,,,
+10 min wind speed (m/s),37 to 41,36 to 39,33 to 34,29 to 33,25 to 31
+,,,,,
+3 s gust wind speed (m/s),50 to 55,48 to 52,42 to 45,38 to 42,34 to 39
+,,,,,
+Waves,,,,,
+,,,,,
+Maximum wave height (m),28 to 31,26 to 29,24 to 26,22 to 23,19 to 21
+,,,,,
+Significant wave height (m),14.5 to 16,14 to 15,12 to 13,11 to 12,10 to11
+,,,,,
+Associated peak period (s),15 to 20,15 to 20,14 to 18,13 to 18,12 to 17
+,,,,,
+Current speed,,,,,
+,,,,,
+Surface (m/s),1.3 to 1.7,1.2 to 1.6,1.1 to 1.3,1.0 to 1.2,0.9 to 1.0
+,,,,,
+Mid-depth (m/s),0.9 to 1.1,0.8 to 1.1,0.7 to 1.0,0.6 to 1.0,0.5 to 0.9
+,,,,,
+Near-bottom (m/s),0.9 to 1.0,0.8 to 1.0,0.7 to 0.8,0.6 to 0.8,0.5 to 0.7
+,,,,,
+Storm surge,,,,,
+,,,,,
+Surge above MSL (m),0.70,,0.61,0.46,0.50
+,,,,,
+,,,,,
+Nova Scotia Offshore (Sable Island Bank),,,,,
+,,,,,
+Metocean Parameter,Return Period (years),,,,
+100,50,10,5 b,1,
+,,,,,
+Wind speed a,,,,,
+,,,,,
+10 min (m/s),41 to 45,40 to 43,35 to 38,30 to 34,25 to 30
+,,,,,
+3 s gust (m/s),50 to 58,50 to 55,45 to 48,39 to 43,34 to 37
+,,,,,
+Waves,,,,,
+,,,,,
+Maximum height (m),19 to 27,18 to 27,16 to 26,15 to 26,15 to 26
+,,,,,
+Significant height (m),11 to 15,11 to 14,9 to 11,8 to 10,7 to 9
+,,,,,
+Associated peak period (s),15 to 18,15 to 17,14 to 15,13 to 15,13 to 14
+,,,,,
+Current speed,,,,,
+,,,,,
+Surface (m/s),1.5 to 2.3,1.4 to 2.3,1.3 to 2.1,1.2 to 1.8,1.0 to 1.4
+,,,,,
+Mid-depth (m/s),1.1 to 1.3,1.0 to 1.2,1.0 to 1.1,0.9 to 1.1,0.9 to 1.0
+,,,,,
+Near-bottom (m/s),0.8 to 1.1,0.7 to 1.1,0.7 to 1.0,0.8 to 1.0,0.9 to 1.0
+,,,,,
+Storm surge,,,,,
+,,,,,
+Surge above MSL (m),0.6 to 0.7,0.5 to 0.6,0.49,,
+,,,,,
+,,,,,

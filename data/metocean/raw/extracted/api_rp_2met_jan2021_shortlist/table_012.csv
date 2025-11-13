@@ -1,0 +1,14 @@
+Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7,Unnamed: 8,Unnamed: 9,Unnamed: 10
+"(1)Variable","(2)Range","(3)ReportedResolution","(4)Mode ofMeasurement/Observation","(5)RequiredMeasurementUncertainty","(6)SensorTimeConstant","(7)OutputAveragingTime","(8)Typical OperationalPerformance","(9)Remarks",
+,,,,,,,,,
+1 Temperature,,,,,,,,,
+1.1 Air temperature,?40 °C to +40 °C,0.1 K,I,0.1 K,20 s,1 min,0.2 K,"Operational performance andeffective time constant can beaffected by the design ofthermometer solar radiation screen.",
+"1.2 Extremes of airtemperature",?40 °C to +40 °C,0.1 K,I,0.1 K,20 s,1 min,0.2 K,,
+"1.3 Sea-surfacetemperature",?2 °C to +40 °C,0.1 K,I,0.1 K,20 s,1 min,0.2 K,,
+2 Humidity,,,,,,,,,
+"2.1 Dewpointtemperature","< ?60 °C to+35 °C",0.1 K,I,0.1 K,20 s,1 min,0.5 K,"If measured directly.Tending to ± 0.1 °C when relativehumidity nearing saturation.",
+2.2 Relative humidity,5 % to 100 %,1 %,I,+3 %,40 s,1 min,+3 % to 5 %,"Solid state sensorscan showsignificanttemperature andhumiditydependence.","Humiditynearingsaturation."
+3 Atmospheric pressure,,,,,,,,,
+3.1 Pressure,"920 hPa to1080 hPa",0.1 hPa,I,0.1 hPa,20 s,1 min,0.3 hPa,"Range to sea level. Accuracyseriously affected by dynamicpressure due to wind andtemperature co-efficient oftransducer.",
+3.2 Tendency,Not specified,0.1 hPa,I,0.2 hPa,,,0.2 hPa,"Difference between instantaneousvalues.",
+,,,,,,,,,

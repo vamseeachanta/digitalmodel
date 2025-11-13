@@ -1,0 +1,18 @@
+Return Period (years) Metocean Parameter,Unnamed: 1
+1 5 10 50,100
+"Nominal water depth 20 m (10° N, 108° E)",
+Wind speed at 10 m above MSL,
+1 h mean (m/s) 23.1 25.8 26.7 29.1,30.0
+10 min mean (m/s) 26.8 29.9 31.0 33.8,34.8
+1 min mean (m/s) 31.9 35.6 36.8 40.2,41.4
+3 s gust (m/s) 38.6 43.1 44.6 48.6,50.1
+Waves,
+Significant height (m) 3.7 4.7 5.4 5.7,6.2
+Maximum height (m) 7.1 9.0 10.2 10.7,11.8
+Mean period (s) 6.7 7.6 8.1 8.3,8.7
+Spectral peak period (s) 9.5 10.7 11.4 11.7,12.3
+Wave direction (from),
+Extreme NE NE NE NE,NE
+Prevailing NE NE NE NE,NE
+Current speed,
+Surface (m/s) 1.14 1.22 1.31 1.41,1.50

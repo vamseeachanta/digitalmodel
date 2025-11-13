@@ -1,0 +1,3689 @@
+{
+  "source": "API_RP_2MET_Derivation_of_Metocean_Design_Operating_Conditions_Jan2021.pdf",
+  "extracted_at": "2025-11-11T11:29:12.424837Z",
+  "tables": [
+    {
+      "index": 1,
+      "mode": "lattice",
+      "rows": 2,
+      "cols": 0,
+      "csv": "table_001.csv",
+      "sheet": "lattice_001",
+      "columns": []
+    },
+    {
+      "index": 2,
+      "mode": "lattice",
+      "rows": 1,
+      "cols": 0,
+      "csv": "table_002.csv",
+      "sheet": "lattice_002",
+      "columns": []
+    },
+    {
+      "index": 3,
+      "mode": "lattice",
+      "rows": 3,
+      "cols": 0,
+      "csv": "table_003.csv",
+      "sheet": "lattice_003",
+      "columns": []
+    },
+    {
+      "index": 4,
+      "mode": "lattice",
+      "rows": 6,
+      "cols": 6,
+      "csv": "table_004.csv",
+      "sheet": "lattice_004",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6"
+      ]
+    },
+    {
+      "index": 5,
+      "mode": "lattice",
+      "rows": 8,
+      "cols": 2,
+      "csv": "table_005.csv",
+      "sheet": "lattice_005",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 6,
+      "mode": "lattice",
+      "rows": 5,
+      "cols": 3,
+      "csv": "table_006.csv",
+      "sheet": "lattice_006",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 3",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 7,
+      "mode": "lattice",
+      "rows": 18,
+      "cols": 0,
+      "csv": "table_007.csv",
+      "sheet": "lattice_007",
+      "columns": []
+    },
+    {
+      "index": 8,
+      "mode": "lattice",
+      "rows": 12,
+      "cols": 0,
+      "csv": "table_008.csv",
+      "sheet": "lattice_008",
+      "columns": []
+    },
+    {
+      "index": 9,
+      "mode": "lattice",
+      "rows": 15,
+      "cols": 0,
+      "csv": "table_009.csv",
+      "sheet": "lattice_009",
+      "columns": []
+    },
+    {
+      "index": 10,
+      "mode": "lattice",
+      "rows": 5,
+      "cols": 0,
+      "csv": "table_010.csv",
+      "sheet": "lattice_010",
+      "columns": []
+    },
+    {
+      "index": 11,
+      "mode": "lattice",
+      "rows": 16,
+      "cols": 2,
+      "csv": "table_011.csv",
+      "sheet": "lattice_011",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 12,
+      "mode": "lattice",
+      "rows": 13,
+      "cols": 10,
+      "csv": "table_012.csv",
+      "sheet": "lattice_012",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10"
+      ]
+    },
+    {
+      "index": 13,
+      "mode": "lattice",
+      "rows": 10,
+      "cols": 9,
+      "csv": "table_013.csv",
+      "sheet": "lattice_013",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9"
+      ]
+    },
+    {
+      "index": 14,
+      "mode": "lattice",
+      "rows": 12,
+      "cols": 9,
+      "csv": "table_014.csv",
+      "sheet": "lattice_014",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9"
+      ]
+    },
+    {
+      "index": 15,
+      "mode": "lattice",
+      "rows": 9,
+      "cols": 9,
+      "csv": "table_015.csv",
+      "sheet": "lattice_015",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9"
+      ]
+    },
+    {
+      "index": 16,
+      "mode": "lattice",
+      "rows": 13,
+      "cols": 9,
+      "csv": "table_016.csv",
+      "sheet": "lattice_016",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9"
+      ]
+    },
+    {
+      "index": 17,
+      "mode": "lattice",
+      "rows": 8,
+      "cols": 9,
+      "csv": "table_017.csv",
+      "sheet": "lattice_017",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9"
+      ]
+    },
+    {
+      "index": 18,
+      "mode": "lattice",
+      "rows": 7,
+      "cols": 4,
+      "csv": "table_018.csv",
+      "sheet": "lattice_018",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 19,
+      "mode": "lattice",
+      "rows": 8,
+      "cols": 4,
+      "csv": "table_019.csv",
+      "sheet": "lattice_019",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 20,
+      "mode": "lattice",
+      "rows": 9,
+      "cols": 8,
+      "csv": "table_020.csv",
+      "sheet": "lattice_020",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8"
+      ]
+    },
+    {
+      "index": 21,
+      "mode": "lattice",
+      "rows": 10,
+      "cols": 7,
+      "csv": "table_021.csv",
+      "sheet": "lattice_021",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7"
+      ]
+    },
+    {
+      "index": 22,
+      "mode": "lattice",
+      "rows": 11,
+      "cols": 5,
+      "csv": "table_022.csv",
+      "sheet": "lattice_022",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5"
+      ]
+    },
+    {
+      "index": 23,
+      "mode": "lattice",
+      "rows": 98,
+      "cols": 0,
+      "csv": "table_023.csv",
+      "sheet": "lattice_023",
+      "columns": []
+    },
+    {
+      "index": 24,
+      "mode": "lattice",
+      "rows": 4,
+      "cols": 0,
+      "csv": "table_024.csv",
+      "sheet": "lattice_024",
+      "columns": []
+    },
+    {
+      "index": 25,
+      "mode": "lattice",
+      "rows": 45,
+      "cols": 0,
+      "csv": "table_025.csv",
+      "sheet": "lattice_025",
+      "columns": []
+    },
+    {
+      "index": 26,
+      "mode": "lattice",
+      "rows": 33,
+      "cols": 0,
+      "csv": "table_026.csv",
+      "sheet": "lattice_026",
+      "columns": []
+    },
+    {
+      "index": 27,
+      "mode": "lattice",
+      "rows": 30,
+      "cols": 0,
+      "csv": "table_027.csv",
+      "sheet": "lattice_027",
+      "columns": []
+    },
+    {
+      "index": 28,
+      "mode": "lattice",
+      "rows": 36,
+      "cols": 6,
+      "csv": "table_028.csv",
+      "sheet": "lattice_028",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6"
+      ]
+    },
+    {
+      "index": 29,
+      "mode": "lattice",
+      "rows": 36,
+      "cols": 6,
+      "csv": "table_029.csv",
+      "sheet": "lattice_029",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 7"
+      ]
+    },
+    {
+      "index": 30,
+      "mode": "lattice",
+      "rows": 22,
+      "cols": 6,
+      "csv": "table_030.csv",
+      "sheet": "lattice_030",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6"
+      ]
+    },
+    {
+      "index": 31,
+      "mode": "lattice",
+      "rows": 13,
+      "cols": 17,
+      "csv": "table_031.csv",
+      "sheet": "lattice_031",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10",
+        "Unnamed: 11",
+        "Unnamed: 12",
+        "Unnamed: 13",
+        "Unnamed: 14",
+        "Unnamed: 15",
+        "Unnamed: 16",
+        "Unnamed: 17"
+      ]
+    },
+    {
+      "index": 32,
+      "mode": "lattice",
+      "rows": 14,
+      "cols": 16,
+      "csv": "table_032.csv",
+      "sheet": "lattice_032",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10",
+        "Unnamed: 11",
+        "Unnamed: 12",
+        "Unnamed: 13",
+        "Unnamed: 14",
+        "Unnamed: 15",
+        "Unnamed: 16"
+      ]
+    },
+    {
+      "index": 33,
+      "mode": "lattice",
+      "rows": 27,
+      "cols": 10,
+      "csv": "table_033.csv",
+      "sheet": "lattice_033",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10"
+      ]
+    },
+    {
+      "index": 34,
+      "mode": "lattice",
+      "rows": 100,
+      "cols": 0,
+      "csv": "table_034.csv",
+      "sheet": "lattice_034",
+      "columns": []
+    },
+    {
+      "index": 35,
+      "mode": "lattice",
+      "rows": 6,
+      "cols": 0,
+      "csv": "table_035.csv",
+      "sheet": "lattice_035",
+      "columns": []
+    },
+    {
+      "index": 36,
+      "mode": "lattice",
+      "rows": 68,
+      "cols": 0,
+      "csv": "table_036.csv",
+      "sheet": "lattice_036",
+      "columns": []
+    },
+    {
+      "index": 37,
+      "mode": "lattice",
+      "rows": 126,
+      "cols": 0,
+      "csv": "table_037.csv",
+      "sheet": "lattice_037",
+      "columns": []
+    },
+    {
+      "index": 38,
+      "mode": "lattice",
+      "rows": 8,
+      "cols": 0,
+      "csv": "table_038.csv",
+      "sheet": "lattice_038",
+      "columns": []
+    },
+    {
+      "index": 39,
+      "mode": "lattice",
+      "rows": 9,
+      "cols": 0,
+      "csv": "table_039.csv",
+      "sheet": "lattice_039",
+      "columns": []
+    },
+    {
+      "index": 40,
+      "mode": "lattice",
+      "rows": 127,
+      "cols": 0,
+      "csv": "table_040.csv",
+      "sheet": "lattice_040",
+      "columns": []
+    },
+    {
+      "index": 41,
+      "mode": "lattice",
+      "rows": 7,
+      "cols": 0,
+      "csv": "table_041.csv",
+      "sheet": "lattice_041",
+      "columns": []
+    },
+    {
+      "index": 42,
+      "mode": "lattice",
+      "rows": 17,
+      "cols": 0,
+      "csv": "table_042.csv",
+      "sheet": "lattice_042",
+      "columns": []
+    },
+    {
+      "index": 43,
+      "mode": "lattice",
+      "rows": 231,
+      "cols": 1,
+      "csv": "table_043.csv",
+      "sheet": "lattice_043",
+      "columns": [
+        "Unnamed: 12"
+      ]
+    },
+    {
+      "index": 44,
+      "mode": "lattice",
+      "rows": 63,
+      "cols": 0,
+      "csv": "table_044.csv",
+      "sheet": "lattice_044",
+      "columns": []
+    },
+    {
+      "index": 45,
+      "mode": "lattice",
+      "rows": 31,
+      "cols": 0,
+      "csv": "table_045.csv",
+      "sheet": "lattice_045",
+      "columns": []
+    },
+    {
+      "index": 46,
+      "mode": "lattice",
+      "rows": 27,
+      "cols": 0,
+      "csv": "table_046.csv",
+      "sheet": "lattice_046",
+      "columns": []
+    },
+    {
+      "index": 47,
+      "mode": "lattice",
+      "rows": 254,
+      "cols": 0,
+      "csv": "table_047.csv",
+      "sheet": "lattice_047",
+      "columns": []
+    },
+    {
+      "index": 48,
+      "mode": "lattice",
+      "rows": 92,
+      "cols": 0,
+      "csv": "table_048.csv",
+      "sheet": "lattice_048",
+      "columns": []
+    },
+    {
+      "index": 49,
+      "mode": "lattice",
+      "rows": 22,
+      "cols": 0,
+      "csv": "table_049.csv",
+      "sheet": "lattice_049",
+      "columns": []
+    },
+    {
+      "index": 50,
+      "mode": "lattice",
+      "rows": 26,
+      "cols": 0,
+      "csv": "table_050.csv",
+      "sheet": "lattice_050",
+      "columns": []
+    },
+    {
+      "index": 51,
+      "mode": "lattice",
+      "rows": 26,
+      "cols": 4,
+      "csv": "table_051.csv",
+      "sheet": "lattice_051",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 52,
+      "mode": "lattice",
+      "rows": 297,
+      "cols": 0,
+      "csv": "table_052.csv",
+      "sheet": "lattice_052",
+      "columns": []
+    },
+    {
+      "index": 53,
+      "mode": "lattice",
+      "rows": 292,
+      "cols": 0,
+      "csv": "table_053.csv",
+      "sheet": "lattice_053",
+      "columns": []
+    },
+    {
+      "index": 54,
+      "mode": "lattice",
+      "rows": 48,
+      "cols": 0,
+      "csv": "table_054.csv",
+      "sheet": "lattice_054",
+      "columns": []
+    },
+    {
+      "index": 55,
+      "mode": "lattice",
+      "rows": 19,
+      "cols": 0,
+      "csv": "table_055.csv",
+      "sheet": "lattice_055",
+      "columns": []
+    },
+    {
+      "index": 56,
+      "mode": "lattice",
+      "rows": 44,
+      "cols": 0,
+      "csv": "table_056.csv",
+      "sheet": "lattice_056",
+      "columns": []
+    },
+    {
+      "index": 57,
+      "mode": "lattice",
+      "rows": 10,
+      "cols": 0,
+      "csv": "table_057.csv",
+      "sheet": "lattice_057",
+      "columns": []
+    },
+    {
+      "index": 58,
+      "mode": "lattice",
+      "rows": 11,
+      "cols": 0,
+      "csv": "table_058.csv",
+      "sheet": "lattice_058",
+      "columns": []
+    },
+    {
+      "index": 59,
+      "mode": "lattice",
+      "rows": 13,
+      "cols": 0,
+      "csv": "table_059.csv",
+      "sheet": "lattice_059",
+      "columns": []
+    },
+    {
+      "index": 60,
+      "mode": "lattice",
+      "rows": 14,
+      "cols": 0,
+      "csv": "table_060.csv",
+      "sheet": "lattice_060",
+      "columns": []
+    },
+    {
+      "index": 61,
+      "mode": "lattice",
+      "rows": 107,
+      "cols": 0,
+      "csv": "table_061.csv",
+      "sheet": "lattice_061",
+      "columns": []
+    },
+    {
+      "index": 62,
+      "mode": "lattice",
+      "rows": 97,
+      "cols": 0,
+      "csv": "table_062.csv",
+      "sheet": "lattice_062",
+      "columns": []
+    },
+    {
+      "index": 63,
+      "mode": "lattice",
+      "rows": 9,
+      "cols": 3,
+      "csv": "table_063.csv",
+      "sheet": "lattice_063",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3"
+      ]
+    },
+    {
+      "index": 64,
+      "mode": "lattice",
+      "rows": 5,
+      "cols": 6,
+      "csv": "table_064.csv",
+      "sheet": "lattice_064",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6"
+      ]
+    },
+    {
+      "index": 65,
+      "mode": "lattice",
+      "rows": 52,
+      "cols": 0,
+      "csv": "table_065.csv",
+      "sheet": "lattice_065",
+      "columns": []
+    },
+    {
+      "index": 66,
+      "mode": "lattice",
+      "rows": 64,
+      "cols": 6,
+      "csv": "table_066.csv",
+      "sheet": "lattice_066",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6"
+      ]
+    },
+    {
+      "index": 67,
+      "mode": "lattice",
+      "rows": 64,
+      "cols": 10,
+      "csv": "table_067.csv",
+      "sheet": "lattice_067",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10"
+      ]
+    },
+    {
+      "index": 68,
+      "mode": "lattice",
+      "rows": 34,
+      "cols": 6,
+      "csv": "table_068.csv",
+      "sheet": "lattice_068",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6"
+      ]
+    },
+    {
+      "index": 69,
+      "mode": "lattice",
+      "rows": 1,
+      "cols": 1,
+      "csv": "table_069.csv",
+      "sheet": "lattice_069",
+      "columns": [
+        "Unnamed: 0"
+      ]
+    },
+    {
+      "index": 70,
+      "mode": "lattice",
+      "rows": 14,
+      "cols": 7,
+      "csv": "table_070.csv",
+      "sheet": "lattice_070",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7"
+      ]
+    },
+    {
+      "index": 71,
+      "mode": "lattice",
+      "rows": 87,
+      "cols": 0,
+      "csv": "table_071.csv",
+      "sheet": "lattice_071",
+      "columns": []
+    },
+    {
+      "index": 72,
+      "mode": "lattice",
+      "rows": 96,
+      "cols": 0,
+      "csv": "table_072.csv",
+      "sheet": "lattice_072",
+      "columns": []
+    },
+    {
+      "index": 73,
+      "mode": "lattice",
+      "rows": 114,
+      "cols": 0,
+      "csv": "table_073.csv",
+      "sheet": "lattice_073",
+      "columns": []
+    },
+    {
+      "index": 74,
+      "mode": "lattice",
+      "rows": 111,
+      "cols": 0,
+      "csv": "table_074.csv",
+      "sheet": "lattice_074",
+      "columns": []
+    },
+    {
+      "index": 75,
+      "mode": "lattice",
+      "rows": 65,
+      "cols": 0,
+      "csv": "table_075.csv",
+      "sheet": "lattice_075",
+      "columns": []
+    },
+    {
+      "index": 76,
+      "mode": "lattice",
+      "rows": 61,
+      "cols": 0,
+      "csv": "table_076.csv",
+      "sheet": "lattice_076",
+      "columns": []
+    },
+    {
+      "index": 77,
+      "mode": "lattice",
+      "rows": 116,
+      "cols": 0,
+      "csv": "table_077.csv",
+      "sheet": "lattice_077",
+      "columns": []
+    },
+    {
+      "index": 78,
+      "mode": "lattice",
+      "rows": 113,
+      "cols": 0,
+      "csv": "table_078.csv",
+      "sheet": "lattice_078",
+      "columns": []
+    },
+    {
+      "index": 79,
+      "mode": "lattice",
+      "rows": 55,
+      "cols": 0,
+      "csv": "table_079.csv",
+      "sheet": "lattice_079",
+      "columns": []
+    },
+    {
+      "index": 80,
+      "mode": "lattice",
+      "rows": 81,
+      "cols": 0,
+      "csv": "table_080.csv",
+      "sheet": "lattice_080",
+      "columns": []
+    },
+    {
+      "index": 81,
+      "mode": "lattice",
+      "rows": 74,
+      "cols": 0,
+      "csv": "table_081.csv",
+      "sheet": "lattice_081",
+      "columns": []
+    },
+    {
+      "index": 82,
+      "mode": "lattice",
+      "rows": 38,
+      "cols": 0,
+      "csv": "table_082.csv",
+      "sheet": "lattice_082",
+      "columns": []
+    },
+    {
+      "index": 83,
+      "mode": "lattice",
+      "rows": 99,
+      "cols": 0,
+      "csv": "table_083.csv",
+      "sheet": "lattice_083",
+      "columns": []
+    },
+    {
+      "index": 84,
+      "mode": "lattice",
+      "rows": 54,
+      "cols": 0,
+      "csv": "table_084.csv",
+      "sheet": "lattice_084",
+      "columns": []
+    },
+    {
+      "index": 85,
+      "mode": "lattice",
+      "rows": 59,
+      "cols": 0,
+      "csv": "table_085.csv",
+      "sheet": "lattice_085",
+      "columns": []
+    },
+    {
+      "index": 86,
+      "mode": "lattice",
+      "rows": 90,
+      "cols": 0,
+      "csv": "table_086.csv",
+      "sheet": "lattice_086",
+      "columns": []
+    },
+    {
+      "index": 87,
+      "mode": "lattice",
+      "rows": 49,
+      "cols": 0,
+      "csv": "table_087.csv",
+      "sheet": "lattice_087",
+      "columns": []
+    },
+    {
+      "index": 88,
+      "mode": "lattice",
+      "rows": 93,
+      "cols": 0,
+      "csv": "table_088.csv",
+      "sheet": "lattice_088",
+      "columns": []
+    },
+    {
+      "index": 89,
+      "mode": "lattice",
+      "rows": 71,
+      "cols": 0,
+      "csv": "table_089.csv",
+      "sheet": "lattice_089",
+      "columns": []
+    },
+    {
+      "index": 90,
+      "mode": "lattice",
+      "rows": 109,
+      "cols": 0,
+      "csv": "table_090.csv",
+      "sheet": "lattice_090",
+      "columns": []
+    },
+    {
+      "index": 91,
+      "mode": "lattice",
+      "rows": 80,
+      "cols": 0,
+      "csv": "table_091.csv",
+      "sheet": "lattice_091",
+      "columns": []
+    },
+    {
+      "index": 92,
+      "mode": "lattice",
+      "rows": 70,
+      "cols": 0,
+      "csv": "table_092.csv",
+      "sheet": "lattice_092",
+      "columns": []
+    },
+    {
+      "index": 93,
+      "mode": "lattice",
+      "rows": 108,
+      "cols": 0,
+      "csv": "table_093.csv",
+      "sheet": "lattice_093",
+      "columns": []
+    },
+    {
+      "index": 94,
+      "mode": "lattice",
+      "rows": 101,
+      "cols": 0,
+      "csv": "table_094.csv",
+      "sheet": "lattice_094",
+      "columns": []
+    },
+    {
+      "index": 95,
+      "mode": "lattice",
+      "rows": 105,
+      "cols": 0,
+      "csv": "table_095.csv",
+      "sheet": "lattice_095",
+      "columns": []
+    },
+    {
+      "index": 96,
+      "mode": "lattice",
+      "rows": 56,
+      "cols": 0,
+      "csv": "table_096.csv",
+      "sheet": "lattice_096",
+      "columns": []
+    },
+    {
+      "index": 97,
+      "mode": "lattice",
+      "rows": 35,
+      "cols": 0,
+      "csv": "table_097.csv",
+      "sheet": "lattice_097",
+      "columns": []
+    },
+    {
+      "index": 98,
+      "mode": "lattice",
+      "rows": 86,
+      "cols": 0,
+      "csv": "table_098.csv",
+      "sheet": "lattice_098",
+      "columns": []
+    },
+    {
+      "index": 99,
+      "mode": "lattice",
+      "rows": 125,
+      "cols": 0,
+      "csv": "table_099.csv",
+      "sheet": "lattice_099",
+      "columns": []
+    },
+    {
+      "index": 100,
+      "mode": "lattice",
+      "rows": 135,
+      "cols": 0,
+      "csv": "table_100.csv",
+      "sheet": "lattice_100",
+      "columns": []
+    },
+    {
+      "index": 101,
+      "mode": "lattice",
+      "rows": 24,
+      "cols": 1,
+      "csv": "table_101.csv",
+      "sheet": "lattice_101",
+      "columns": [
+        "--`,,`,,`,,,,`,```,`,,,````,`,`-`-"
+      ]
+    },
+    {
+      "index": 102,
+      "mode": "lattice",
+      "rows": 127,
+      "cols": 1,
+      "csv": "table_102.csv",
+      "sheet": "lattice_102",
+      "columns": [
+        "Unnamed: 3"
+      ]
+    },
+    {
+      "index": 103,
+      "mode": "lattice",
+      "rows": 2,
+      "cols": 1,
+      "csv": "table_103.csv",
+      "sheet": "lattice_103",
+      "columns": [
+        "--`,,`,,`,,,,`,```,`,,,````,`,`-`-"
+      ]
+    },
+    {
+      "index": 104,
+      "mode": "lattice",
+      "rows": 116,
+      "cols": 1,
+      "csv": "table_104.csv",
+      "sheet": "lattice_104",
+      "columns": [
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 105,
+      "mode": "lattice",
+      "rows": 4,
+      "cols": 1,
+      "csv": "table_105.csv",
+      "sheet": "lattice_105",
+      "columns": [
+        "--`,,`,,`,,,,`,```,`,,,````,`,`-`-"
+      ]
+    },
+    {
+      "index": 106,
+      "mode": "lattice",
+      "rows": 7,
+      "cols": 1,
+      "csv": "table_106.csv",
+      "sheet": "lattice_106",
+      "columns": [
+        "--`,,`,,`,,,,`,```,`,,,````,`,`-`-"
+      ]
+    },
+    {
+      "index": 107,
+      "mode": "lattice",
+      "rows": 3,
+      "cols": 1,
+      "csv": "table_107.csv",
+      "sheet": "lattice_107",
+      "columns": [
+        "--`,,`,,`,,,,`,```,`,,,````,`,`-`-"
+      ]
+    },
+    {
+      "index": 108,
+      "mode": "lattice",
+      "rows": 6,
+      "cols": 1,
+      "csv": "table_108.csv",
+      "sheet": "lattice_108",
+      "columns": [
+        "```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 109,
+      "mode": "lattice",
+      "rows": 2,
+      "cols": 1,
+      "csv": "table_109.csv",
+      "sheet": "lattice_109",
+      "columns": [
+        "```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 110,
+      "mode": "lattice",
+      "rows": 139,
+      "cols": 1,
+      "csv": "table_110.csv",
+      "sheet": "lattice_110",
+      "columns": [
+        "```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 111,
+      "mode": "lattice",
+      "rows": 4,
+      "cols": 1,
+      "csv": "table_111.csv",
+      "sheet": "lattice_111",
+      "columns": [
+        "```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 112,
+      "mode": "lattice",
+      "rows": 3,
+      "cols": 1,
+      "csv": "table_112.csv",
+      "sheet": "lattice_112",
+      "columns": [
+        "```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 113,
+      "mode": "lattice",
+      "rows": 150,
+      "cols": 1,
+      "csv": "table_113.csv",
+      "sheet": "lattice_113",
+      "columns": [
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 114,
+      "mode": "lattice",
+      "rows": 2,
+      "cols": 1,
+      "csv": "table_114.csv",
+      "sheet": "lattice_114",
+      "columns": [
+        "--`,,`,,`,,,,`,```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 115,
+      "mode": "lattice",
+      "rows": 3,
+      "cols": 1,
+      "csv": "table_115.csv",
+      "sheet": "lattice_115",
+      "columns": [
+        "--`,,`,,`,,,,`,```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 116,
+      "mode": "lattice",
+      "rows": 6,
+      "cols": 1,
+      "csv": "table_116.csv",
+      "sheet": "lattice_116",
+      "columns": [
+        "--`,,`,,`,,,,`,```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 117,
+      "mode": "lattice",
+      "rows": 4,
+      "cols": 1,
+      "csv": "table_117.csv",
+      "sheet": "lattice_117",
+      "columns": [
+        "--`,,`,,`,,,,`,```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 118,
+      "mode": "lattice",
+      "rows": 116,
+      "cols": 1,
+      "csv": "table_118.csv",
+      "sheet": "lattice_118",
+      "columns": [
+        "--`,,`,,`,,,,`,```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 119,
+      "mode": "lattice",
+      "rows": 129,
+      "cols": 1,
+      "csv": "table_119.csv",
+      "sheet": "lattice_119",
+      "columns": [
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 120,
+      "mode": "lattice",
+      "rows": 5,
+      "cols": 1,
+      "csv": "table_120.csv",
+      "sheet": "lattice_120",
+      "columns": [
+        "--`,,`,,`,,,,`,```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 121,
+      "mode": "lattice",
+      "rows": 7,
+      "cols": 1,
+      "csv": "table_121.csv",
+      "sheet": "lattice_121",
+      "columns": [
+        "--`,,`,,`,,,,`,```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 122,
+      "mode": "lattice",
+      "rows": 98,
+      "cols": 1,
+      "csv": "table_122.csv",
+      "sheet": "lattice_122",
+      "columns": [
+        "--`,,`,,`,,,,`,```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 123,
+      "mode": "lattice",
+      "rows": 110,
+      "cols": 1,
+      "csv": "table_123.csv",
+      "sheet": "lattice_123",
+      "columns": [
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 124,
+      "mode": "lattice",
+      "rows": 75,
+      "cols": 0,
+      "csv": "table_124.csv",
+      "sheet": "lattice_124",
+      "columns": []
+    },
+    {
+      "index": 125,
+      "mode": "lattice",
+      "rows": 14,
+      "cols": 8,
+      "csv": "table_125.csv",
+      "sheet": "lattice_125",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8"
+      ]
+    },
+    {
+      "index": 126,
+      "mode": "lattice",
+      "rows": 14,
+      "cols": 6,
+      "csv": "table_126.csv",
+      "sheet": "lattice_126",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6"
+      ]
+    },
+    {
+      "index": 127,
+      "mode": "lattice",
+      "rows": 10,
+      "cols": 16,
+      "csv": "table_127.csv",
+      "sheet": "lattice_127",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10",
+        "Unnamed: 11",
+        "Unnamed: 12",
+        "Unnamed: 13",
+        "Unnamed: 14",
+        "Unnamed: 15",
+        "Unnamed: 16"
+      ]
+    },
+    {
+      "index": 128,
+      "mode": "lattice",
+      "rows": 10,
+      "cols": 20,
+      "csv": "table_128.csv",
+      "sheet": "lattice_128",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10",
+        "Unnamed: 11",
+        "Unnamed: 12",
+        "Unnamed: 13",
+        "Unnamed: 14",
+        "Unnamed: 15",
+        "Unnamed: 16",
+        "Unnamed: 17",
+        "Unnamed: 18",
+        "Unnamed: 19",
+        "Unnamed: 20"
+      ]
+    },
+    {
+      "index": 129,
+      "mode": "lattice",
+      "rows": 8,
+      "cols": 3,
+      "csv": "table_129.csv",
+      "sheet": "lattice_129",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3"
+      ]
+    },
+    {
+      "index": 130,
+      "mode": "lattice",
+      "rows": 26,
+      "cols": 12,
+      "csv": "table_130.csv",
+      "sheet": "lattice_130",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10",
+        "Unnamed: 11",
+        "Unnamed: 12"
+      ]
+    },
+    {
+      "index": 131,
+      "mode": "lattice",
+      "rows": 22,
+      "cols": 23,
+      "csv": "table_131.csv",
+      "sheet": "lattice_131",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10",
+        "Unnamed: 11",
+        "Unnamed: 12",
+        "Unnamed: 13",
+        "Unnamed: 14",
+        "Unnamed: 15",
+        "Unnamed: 16",
+        "Unnamed: 17",
+        "Unnamed: 18",
+        "Unnamed: 19",
+        "Unnamed: 20",
+        "Unnamed: 21",
+        "Unnamed: 22",
+        "Unnamed: 23"
+      ]
+    },
+    {
+      "index": 132,
+      "mode": "lattice",
+      "rows": 22,
+      "cols": 12,
+      "csv": "table_132.csv",
+      "sheet": "lattice_132",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10",
+        "Unnamed: 11",
+        "Unnamed: 12"
+      ]
+    },
+    {
+      "index": 133,
+      "mode": "lattice",
+      "rows": 21,
+      "cols": 0,
+      "csv": "table_133.csv",
+      "sheet": "lattice_133",
+      "columns": []
+    },
+    {
+      "index": 134,
+      "mode": "lattice",
+      "rows": 72,
+      "cols": 0,
+      "csv": "table_134.csv",
+      "sheet": "lattice_134",
+      "columns": []
+    },
+    {
+      "index": 135,
+      "mode": "lattice",
+      "rows": 24,
+      "cols": 0,
+      "csv": "table_135.csv",
+      "sheet": "lattice_135",
+      "columns": []
+    },
+    {
+      "index": 136,
+      "mode": "lattice",
+      "rows": 5,
+      "cols": 3,
+      "csv": "table_136.csv",
+      "sheet": "lattice_136",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3"
+      ]
+    },
+    {
+      "index": 137,
+      "mode": "lattice",
+      "rows": 39,
+      "cols": 0,
+      "csv": "table_137.csv",
+      "sheet": "lattice_137",
+      "columns": []
+    },
+    {
+      "index": 138,
+      "mode": "lattice",
+      "rows": 6,
+      "cols": 13,
+      "csv": "table_138.csv",
+      "sheet": "lattice_138",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10",
+        "Unnamed: 11",
+        "Unnamed: 12",
+        "Unnamed: 13"
+      ]
+    },
+    {
+      "index": 139,
+      "mode": "lattice",
+      "rows": 30,
+      "cols": 4,
+      "csv": "table_139.csv",
+      "sheet": "lattice_139",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 140,
+      "mode": "lattice",
+      "rows": 15,
+      "cols": 3,
+      "csv": "table_140.csv",
+      "sheet": "lattice_140",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3"
+      ]
+    },
+    {
+      "index": 141,
+      "mode": "lattice",
+      "rows": 36,
+      "cols": 5,
+      "csv": "table_141.csv",
+      "sheet": "lattice_141",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5"
+      ]
+    },
+    {
+      "index": 142,
+      "mode": "lattice",
+      "rows": 36,
+      "cols": 8,
+      "csv": "table_142.csv",
+      "sheet": "lattice_142",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8"
+      ]
+    },
+    {
+      "index": 143,
+      "mode": "lattice",
+      "rows": 21,
+      "cols": 15,
+      "csv": "table_143.csv",
+      "sheet": "lattice_143",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10",
+        "Unnamed: 11",
+        "Unnamed: 12",
+        "Unnamed: 13",
+        "Unnamed: 14",
+        "Unnamed: 15"
+      ]
+    },
+    {
+      "index": 144,
+      "mode": "lattice",
+      "rows": 16,
+      "cols": 0,
+      "csv": "table_144.csv",
+      "sheet": "lattice_144",
+      "columns": []
+    },
+    {
+      "index": 145,
+      "mode": "lattice",
+      "rows": 351,
+      "cols": 0,
+      "csv": "table_145.csv",
+      "sheet": "lattice_145",
+      "columns": []
+    },
+    {
+      "index": 146,
+      "mode": "lattice",
+      "rows": 160,
+      "cols": 0,
+      "csv": "table_146.csv",
+      "sheet": "lattice_146",
+      "columns": []
+    },
+    {
+      "index": 147,
+      "mode": "lattice",
+      "rows": 88,
+      "cols": 0,
+      "csv": "table_147.csv",
+      "sheet": "lattice_147",
+      "columns": []
+    },
+    {
+      "index": 148,
+      "mode": "lattice",
+      "rows": 46,
+      "cols": 0,
+      "csv": "table_148.csv",
+      "sheet": "lattice_148",
+      "columns": []
+    },
+    {
+      "index": 149,
+      "mode": "lattice",
+      "rows": 34,
+      "cols": 0,
+      "csv": "table_149.csv",
+      "sheet": "lattice_149",
+      "columns": []
+    },
+    {
+      "index": 150,
+      "mode": "lattice",
+      "rows": 267,
+      "cols": 0,
+      "csv": "table_150.csv",
+      "sheet": "lattice_150",
+      "columns": []
+    },
+    {
+      "index": 151,
+      "mode": "lattice",
+      "rows": 141,
+      "cols": 0,
+      "csv": "table_151.csv",
+      "sheet": "lattice_151",
+      "columns": []
+    },
+    {
+      "index": 152,
+      "mode": "lattice",
+      "rows": 20,
+      "cols": 0,
+      "csv": "table_152.csv",
+      "sheet": "lattice_152",
+      "columns": []
+    },
+    {
+      "index": 153,
+      "mode": "lattice",
+      "rows": 57,
+      "cols": 0,
+      "csv": "table_153.csv",
+      "sheet": "lattice_153",
+      "columns": []
+    },
+    {
+      "index": 154,
+      "mode": "lattice",
+      "rows": 185,
+      "cols": 0,
+      "csv": "table_154.csv",
+      "sheet": "lattice_154",
+      "columns": []
+    },
+    {
+      "index": 155,
+      "mode": "lattice",
+      "rows": 184,
+      "cols": 0,
+      "csv": "table_155.csv",
+      "sheet": "lattice_155",
+      "columns": []
+    },
+    {
+      "index": 156,
+      "mode": "lattice",
+      "rows": 42,
+      "cols": 0,
+      "csv": "table_156.csv",
+      "sheet": "lattice_156",
+      "columns": []
+    },
+    {
+      "index": 157,
+      "mode": "lattice",
+      "rows": 183,
+      "cols": 1,
+      "csv": "table_157.csv",
+      "sheet": "lattice_157",
+      "columns": [
+        "Unnamed: 27"
+      ]
+    },
+    {
+      "index": 158,
+      "mode": "lattice",
+      "rows": 94,
+      "cols": 0,
+      "csv": "table_158.csv",
+      "sheet": "lattice_158",
+      "columns": []
+    },
+    {
+      "index": 159,
+      "mode": "lattice",
+      "rows": 28,
+      "cols": 0,
+      "csv": "table_159.csv",
+      "sheet": "lattice_159",
+      "columns": []
+    },
+    {
+      "index": 160,
+      "mode": "lattice",
+      "rows": 53,
+      "cols": 0,
+      "csv": "table_160.csv",
+      "sheet": "lattice_160",
+      "columns": []
+    },
+    {
+      "index": 161,
+      "mode": "lattice",
+      "rows": 37,
+      "cols": 0,
+      "csv": "table_161.csv",
+      "sheet": "lattice_161",
+      "columns": []
+    },
+    {
+      "index": 162,
+      "mode": "lattice",
+      "rows": 78,
+      "cols": 0,
+      "csv": "table_162.csv",
+      "sheet": "lattice_162",
+      "columns": []
+    },
+    {
+      "index": 163,
+      "mode": "lattice",
+      "rows": 187,
+      "cols": 0,
+      "csv": "table_163.csv",
+      "sheet": "lattice_163",
+      "columns": []
+    },
+    {
+      "index": 164,
+      "mode": "lattice",
+      "rows": 60,
+      "cols": 0,
+      "csv": "table_164.csv",
+      "sheet": "lattice_164",
+      "columns": []
+    },
+    {
+      "index": 165,
+      "mode": "lattice",
+      "rows": 58,
+      "cols": 0,
+      "csv": "table_165.csv",
+      "sheet": "lattice_165",
+      "columns": []
+    },
+    {
+      "index": 166,
+      "mode": "lattice",
+      "rows": 23,
+      "cols": 0,
+      "csv": "table_166.csv",
+      "sheet": "lattice_166",
+      "columns": []
+    },
+    {
+      "index": 167,
+      "mode": "lattice",
+      "rows": 189,
+      "cols": 2,
+      "csv": "table_167.csv",
+      "sheet": "lattice_167",
+      "columns": [
+        "Unnamed: 26",
+        "Unnamed: 62"
+      ]
+    },
+    {
+      "index": 168,
+      "mode": "lattice",
+      "rows": 64,
+      "cols": 0,
+      "csv": "table_168.csv",
+      "sheet": "lattice_168",
+      "columns": []
+    },
+    {
+      "index": 169,
+      "mode": "lattice",
+      "rows": 73,
+      "cols": 0,
+      "csv": "table_169.csv",
+      "sheet": "lattice_169",
+      "columns": []
+    },
+    {
+      "index": 170,
+      "mode": "lattice",
+      "rows": 179,
+      "cols": 0,
+      "csv": "table_170.csv",
+      "sheet": "lattice_170",
+      "columns": []
+    },
+    {
+      "index": 171,
+      "mode": "lattice",
+      "rows": 175,
+      "cols": 0,
+      "csv": "table_171.csv",
+      "sheet": "lattice_171",
+      "columns": []
+    },
+    {
+      "index": 172,
+      "mode": "lattice",
+      "rows": 47,
+      "cols": 0,
+      "csv": "table_172.csv",
+      "sheet": "lattice_172",
+      "columns": []
+    },
+    {
+      "index": 173,
+      "mode": "lattice",
+      "rows": 188,
+      "cols": 0,
+      "csv": "table_173.csv",
+      "sheet": "lattice_173",
+      "columns": []
+    },
+    {
+      "index": 174,
+      "mode": "lattice",
+      "rows": 32,
+      "cols": 0,
+      "csv": "table_174.csv",
+      "sheet": "lattice_174",
+      "columns": []
+    },
+    {
+      "index": 175,
+      "mode": "lattice",
+      "rows": 20,
+      "cols": 6,
+      "csv": "table_175.csv",
+      "sheet": "lattice_175",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6"
+      ]
+    },
+    {
+      "index": 176,
+      "mode": "lattice",
+      "rows": 56,
+      "cols": 6,
+      "csv": "table_176.csv",
+      "sheet": "lattice_176",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6"
+      ]
+    },
+    {
+      "index": 177,
+      "mode": "lattice",
+      "rows": 25,
+      "cols": 0,
+      "csv": "table_177.csv",
+      "sheet": "lattice_177",
+      "columns": []
+    },
+    {
+      "index": 178,
+      "mode": "lattice",
+      "rows": 10,
+      "cols": 2,
+      "csv": "table_178.csv",
+      "sheet": "lattice_178",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 179,
+      "mode": "lattice",
+      "rows": 25,
+      "cols": 9,
+      "csv": "table_179.csv",
+      "sheet": "lattice_179",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9"
+      ]
+    },
+    {
+      "index": 180,
+      "mode": "lattice",
+      "rows": 13,
+      "cols": 3,
+      "csv": "table_180.csv",
+      "sheet": "lattice_180",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3"
+      ]
+    },
+    {
+      "index": 181,
+      "mode": "lattice",
+      "rows": 15,
+      "cols": 5,
+      "csv": "table_181.csv",
+      "sheet": "lattice_181",
+      "columns": [
+        "0.90",
+        "0.95",
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 3"
+      ]
+    },
+    {
+      "index": 182,
+      "mode": "lattice",
+      "rows": 8,
+      "cols": 4,
+      "csv": "table_182.csv",
+      "sheet": "lattice_182",
+      "columns": [
+        "Unnamed: 12",
+        "Unnamed: 13",
+        "Unnamed: 14",
+        "Unnamed: 15"
+      ]
+    },
+    {
+      "index": 183,
+      "mode": "lattice",
+      "rows": 21,
+      "cols": 8,
+      "csv": "table_183.csv",
+      "sheet": "lattice_183",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8"
+      ]
+    },
+    {
+      "index": 184,
+      "mode": "lattice",
+      "rows": 24,
+      "cols": 8,
+      "csv": "table_184.csv",
+      "sheet": "lattice_184",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8"
+      ]
+    },
+    {
+      "index": 185,
+      "mode": "lattice",
+      "rows": 19,
+      "cols": 7,
+      "csv": "table_185.csv",
+      "sheet": "lattice_185",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7"
+      ]
+    },
+    {
+      "index": 186,
+      "mode": "lattice",
+      "rows": 22,
+      "cols": 8,
+      "csv": "table_186.csv",
+      "sheet": "lattice_186",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8"
+      ]
+    },
+    {
+      "index": 187,
+      "mode": "lattice",
+      "rows": 21,
+      "cols": 7,
+      "csv": "table_187.csv",
+      "sheet": "lattice_187",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7"
+      ]
+    },
+    {
+      "index": 188,
+      "mode": "lattice",
+      "rows": 25,
+      "cols": 7,
+      "csv": "table_188.csv",
+      "sheet": "lattice_188",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7"
+      ]
+    },
+    {
+      "index": 189,
+      "mode": "lattice",
+      "rows": 14,
+      "cols": 3,
+      "csv": "table_189.csv",
+      "sheet": "lattice_189",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3"
+      ]
+    },
+    {
+      "index": 190,
+      "mode": "lattice",
+      "rows": 23,
+      "cols": 2,
+      "csv": "table_190.csv",
+      "sheet": "lattice_190",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 191,
+      "mode": "lattice",
+      "rows": 5,
+      "cols": 2,
+      "csv": "table_191.csv",
+      "sheet": "lattice_191",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 192,
+      "mode": "lattice",
+      "rows": 11,
+      "cols": 2,
+      "csv": "table_192.csv",
+      "sheet": "lattice_192",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 193,
+      "mode": "lattice",
+      "rows": 48,
+      "cols": 16,
+      "csv": "table_193.csv",
+      "sheet": "lattice_193",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10",
+        "Unnamed: 11",
+        "Unnamed: 12",
+        "Unnamed: 13",
+        "Unnamed: 14",
+        "Unnamed: 15",
+        "Unnamed: 16"
+      ]
+    },
+    {
+      "index": 194,
+      "mode": "lattice",
+      "rows": 20,
+      "cols": 7,
+      "csv": "table_194.csv",
+      "sheet": "lattice_194",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7"
+      ]
+    },
+    {
+      "index": 195,
+      "mode": "lattice",
+      "rows": 20,
+      "cols": 8,
+      "csv": "table_195.csv",
+      "sheet": "lattice_195",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8"
+      ]
+    },
+    {
+      "index": 196,
+      "mode": "lattice",
+      "rows": 21,
+      "cols": 10,
+      "csv": "table_196.csv",
+      "sheet": "lattice_196",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10"
+      ]
+    },
+    {
+      "index": 197,
+      "mode": "lattice",
+      "rows": 19,
+      "cols": 4,
+      "csv": "table_197.csv",
+      "sheet": "lattice_197",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 198,
+      "mode": "lattice",
+      "rows": 4,
+      "cols": 2,
+      "csv": "table_198.csv",
+      "sheet": "lattice_198",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 199,
+      "mode": "lattice",
+      "rows": 14,
+      "cols": 2,
+      "csv": "table_199.csv",
+      "sheet": "lattice_199",
+      "columns": [
+        "Unnamed: 1",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 200,
+      "mode": "stream",
+      "rows": 46,
+      "cols": 2,
+      "csv": "table_200.csv",
+      "sheet": "stream_200",
+      "columns": [
+        "11.1 General ................................................................................................................................................. 31",
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 201,
+      "mode": "stream",
+      "rows": 46,
+      "cols": 2,
+      "csv": "table_201.csv",
+      "sheet": "stream_201",
+      "columns": [
+        "E.1",
+        "Map of Sakhalin Showing Locations of Example Metocean Parameters ....................................... 137"
+      ]
+    },
+    {
+      "index": 202,
+      "mode": "stream",
+      "rows": 42,
+      "cols": 2,
+      "csv": "table_202.csv",
+      "sheet": "stream_202",
+      "columns": [
+        "A.4",
+        "Potential Application of Metocean Information ................................................................................... 80"
+      ]
+    },
+    {
+      "index": 203,
+      "mode": "stream",
+      "rows": 47,
+      "cols": 1,
+      "csv": "table_203.csv",
+      "sheet": "stream_203",
+      "columns": [
+        "F.4 Historical Tsunamis and Tsunami-like Events Observed in the Caspian Sea ............................... 172"
+      ]
+    },
+    {
+      "index": 204,
+      "mode": "stream",
+      "rows": 1,
+      "cols": 2,
+      "csv": "table_204.csv",
+      "sheet": "stream_204",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 205,
+      "mode": "stream",
+      "rows": 5,
+      "cols": 5,
+      "csv": "table_205.csv",
+      "sheet": "stream_205",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Storm surge (shown positive but may be",
+        "Unnamed: 3"
+      ]
+    },
+    {
+      "index": 206,
+      "mode": "stream",
+      "rows": 13,
+      "cols": 2,
+      "csv": "table_206.csv",
+      "sheet": "stream_206",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 207,
+      "mode": "stream",
+      "rows": 4,
+      "cols": 2,
+      "csv": "table_207.csv",
+      "sheet": "stream_207",
+      "columns": [
+        "\u0097",
+        "where environmental conditions are not provided in standard guidance documents or are otherwise"
+      ]
+    },
+    {
+      "index": 208,
+      "mode": "stream",
+      "rows": 3,
+      "cols": 7,
+      "csv": "table_208.csv",
+      "sheet": "stream_208",
+      "columns": [
+        "i",
+        "Unnamed: 0",
+        "Di",
+        "?i",
+        "pi",
+        "qi",
+        "ri"
+      ]
+    },
+    {
+      "index": 209,
+      "mode": "stream",
+      "rows": 10,
+      "cols": 1,
+      "csv": "table_209.csv",
+      "sheet": "stream_209",
+      "columns": [
+        "Type of Storm or Region Directional Spreading Factor"
+      ]
+    },
+    {
+      "index": 210,
+      "mode": "stream",
+      "rows": 5,
+      "cols": 13,
+      "csv": "table_210.csv",
+      "sheet": "stream_210",
+      "columns": [
+        "Variable",
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "D1(? )",
+        "Unnamed: 2",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "D2(? )",
+        "Unnamed: 13",
+        "Unnamed: 14"
+      ]
+    },
+    {
+      "index": 211,
+      "mode": "stream",
+      "rows": 6,
+      "cols": 3,
+      "csv": "table_211.csv",
+      "sheet": "stream_211",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 212,
+      "mode": "stream",
+      "rows": 6,
+      "cols": 6,
+      "csv": "table_212.csv",
+      "sheet": "stream_212",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5"
+      ]
+    },
+    {
+      "index": 213,
+      "mode": "stream",
+      "rows": 8,
+      "cols": 2,
+      "csv": "table_213.csv",
+      "sheet": "stream_213",
+      "columns": [
+        "\u0097",
+        "Sea-ice keels can create gouges in the seabed in relatively shallow or intermediate water depths"
+      ]
+    },
+    {
+      "index": 214,
+      "mode": "stream",
+      "rows": 23,
+      "cols": 2,
+      "csv": "table_214.csv",
+      "sheet": "stream_214",
+      "columns": [
+        "Application",
+        "Comments"
+      ]
+    },
+    {
+      "index": 215,
+      "mode": "stream",
+      "rows": 24,
+      "cols": 9,
+      "csv": "table_215.csv",
+      "sheet": "stream_215",
+      "columns": [
+        "(1)",
+        "(2)",
+        "(3)",
+        "(4)",
+        "(5)",
+        "(6)",
+        "(7)",
+        "(8)",
+        "(9)"
+      ]
+    },
+    {
+      "index": 216,
+      "mode": "stream",
+      "rows": 20,
+      "cols": 9,
+      "csv": "table_216.csv",
+      "sheet": "stream_216",
+      "columns": [
+        "(1)",
+        "(2)",
+        "(3)",
+        "(4)",
+        "(5)",
+        "(6)",
+        "(7)",
+        "(8)",
+        "(9)"
+      ]
+    },
+    {
+      "index": 217,
+      "mode": "stream",
+      "rows": 27,
+      "cols": 8,
+      "csv": "table_217.csv",
+      "sheet": "stream_217",
+      "columns": [
+        "(1)",
+        "(2)",
+        "(3)",
+        "(4)",
+        "(5) (6)",
+        "(7)",
+        "(8)",
+        "(9)"
+      ]
+    },
+    {
+      "index": 218,
+      "mode": "stream",
+      "rows": 19,
+      "cols": 8,
+      "csv": "table_218.csv",
+      "sheet": "stream_218",
+      "columns": [
+        "(1)",
+        "(2)",
+        "(3)",
+        "(4)",
+        "(5)",
+        "(6)",
+        "(7)",
+        "(8) (9)"
+      ]
+    },
+    {
+      "index": 219,
+      "mode": "stream",
+      "rows": 21,
+      "cols": 10,
+      "csv": "table_219.csv",
+      "sheet": "stream_219",
+      "columns": [
+        "(1)",
+        "(2)",
+        "(3)",
+        "(4)",
+        "(5)",
+        "(6)",
+        "(7)",
+        "(8)",
+        "Unnamed: 0",
+        "(9)"
+      ]
+    },
+    {
+      "index": 220,
+      "mode": "stream",
+      "rows": 16,
+      "cols": 8,
+      "csv": "table_220.csv",
+      "sheet": "stream_220",
+      "columns": [
+        "(1) (2)",
+        "(3)",
+        "(4)",
+        "(5)",
+        "(6)",
+        "(7)",
+        "(8)",
+        "(9)"
+      ]
+    },
+    {
+      "index": 221,
+      "mode": "stream",
+      "rows": 5,
+      "cols": 3,
+      "csv": "table_221.csv",
+      "sheet": "stream_221",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Type of Growth"
+      ]
+    },
+    {
+      "index": 222,
+      "mode": "stream",
+      "rows": 6,
+      "cols": 2,
+      "csv": "table_222.csv",
+      "sheet": "stream_222",
+      "columns": [
+        "Depth from Mean",
+        "Thickness of Marine Growth at"
+      ]
+    },
+    {
+      "index": 223,
+      "mode": "stream",
+      "rows": 3,
+      "cols": 3,
+      "csv": "table_223.csv",
+      "sheet": "stream_223",
+      "columns": [
+        "Cause of Ice",
+        "Thickness",
+        "Density"
+      ]
+    },
+    {
+      "index": 224,
+      "mode": "stream",
+      "rows": 6,
+      "cols": 3,
+      "csv": "table_224.csv",
+      "sheet": "stream_224",
+      "columns": [
+        "Unnamed: 0",
+        "Ice Created from Sea Spray",
+        "Ice Created from Precipitation"
+      ]
+    },
+    {
+      "index": 225,
+      "mode": "stream",
+      "rows": 7,
+      "cols": 5,
+      "csv": "table_225.csv",
+      "sheet": "stream_225",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Return Period (years)",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 226,
+      "mode": "stream",
+      "rows": 9,
+      "cols": 4,
+      "csv": "table_226.csv",
+      "sheet": "stream_226",
+      "columns": [
+        "Unnamed: 0",
+        "Air Temperature",
+        "Sea Surface",
+        "Sea Flo--`,o,`,r,` ,,,,`,```,`,,,````,`,`-`-`,,`,,`,`,,`---"
+      ]
+    },
+    {
+      "index": 227,
+      "mode": "stream",
+      "rows": 17,
+      "cols": 3,
+      "csv": "table_227.csv",
+      "sheet": "stream_227",
+      "columns": [
+        "Return Period (years) Metocean Parameter",
+        "Unnamed: 0",
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 228,
+      "mode": "stream",
+      "rows": 18,
+      "cols": 2,
+      "csv": "table_228.csv",
+      "sheet": "stream_228",
+      "columns": [
+        "Return Period (years) Metocean Parameter",
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 229,
+      "mode": "stream",
+      "rows": 10,
+      "cols": 3,
+      "csv": "table_229.csv",
+      "sheet": "stream_229",
+      "columns": [
+        "Nigeria Metocean Parameter",
+        "Northern",
+        "Southern"
+      ]
+    },
+    {
+      "index": 230,
+      "mode": "stream",
+      "rows": 10,
+      "cols": 13,
+      "csv": "table_230.csv",
+      "sheet": "stream_230",
+      "columns": [
+        "Significant",
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Peak Period (s)",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10"
+      ]
+    },
+    {
+      "index": 231,
+      "mode": "stream",
+      "rows": 11,
+      "cols": 13,
+      "csv": "table_231.csv",
+      "sheet": "stream_231",
+      "columns": [
+        "Significant",
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Peak Period (s)",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10"
+      ]
+    },
+    {
+      "index": 232,
+      "mode": "stream",
+      "rows": 26,
+      "cols": 9,
+      "csv": "table_232.csv",
+      "sheet": "stream_232",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "H T",
+        "Unnamed: 3",
+        "Unnamed: 5",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10"
+      ]
+    },
+    {
+      "index": 233,
+      "mode": "stream",
+      "rows": 19,
+      "cols": 3,
+      "csv": "table_233.csv",
+      "sheet": "stream_233",
+      "columns": [
+        "Phenomenon Parameter",
+        "Annual Maximum Value",
+        "Range of Annual Maximum Values"
+      ]
+    },
+    {
+      "index": 234,
+      "mode": "stream",
+      "rows": 6,
+      "cols": 3,
+      "csv": "table_234.csv",
+      "sheet": "stream_234",
+      "columns": [
+        "Parameter",
+        "Dimension",
+        "Population"
+      ]
+    },
+    {
+      "index": 235,
+      "mode": "stream",
+      "rows": 4,
+      "cols": 6,
+      "csv": "table_235.csv",
+      "sheet": "stream_235",
+      "columns": [
+        "Water depth (m)",
+        "5 to 8",
+        "14 to 18",
+        "22 to 26",
+        "30 to 35",
+        "34 to 50"
+      ]
+    },
+    {
+      "index": 236,
+      "mode": "stream",
+      "rows": 12,
+      "cols": 4,
+      "csv": "table_236.csv",
+      "sheet": "stream_236",
+      "columns": [
+        "Unnamed: 0",
+        "Newfoundland Offshore Gulf of St.",
+        "Beaufort Sea",
+        "Nova Scotia Offshore"
+      ]
+    },
+    {
+      "index": 237,
+      "mode": "stream",
+      "rows": 32,
+      "cols": 4,
+      "csv": "table_237.csv",
+      "sheet": "stream_237",
+      "columns": [
+        "Unnamed: 0",
+        "Newfoundland Offshore (Grand Banks)",
+        "Unnamed: 1",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 238,
+      "mode": "stream",
+      "rows": 32,
+      "cols": 3,
+      "csv": "table_238.csv",
+      "sheet": "stream_238",
+      "columns": [
+        "Unnamed: 0",
+        "Canadian East Coast Deepwater",
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 239,
+      "mode": "stream",
+      "rows": 24,
+      "cols": 2,
+      "csv": "table_239.csv",
+      "sheet": "stream_239",
+      "columns": [
+        "Beaufort Sea",
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 240,
+      "mode": "stream",
+      "rows": 12,
+      "cols": 1,
+      "csv": "table_240.csv",
+      "sheet": "stream_240",
+      "columns": [
+        "Indicative Values of Ice Parameter"
+      ]
+    },
+    {
+      "index": 241,
+      "mode": "stream",
+      "rows": 7,
+      "cols": 2,
+      "csv": "table_241.csv",
+      "sheet": "stream_241",
+      "columns": [
+        "Return Period (years) Metocean Parameter",
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 242,
+      "mode": "stream",
+      "rows": 6,
+      "cols": 2,
+      "csv": "table_242.csv",
+      "sheet": "stream_242",
+      "columns": [
+        "Return Period (years) Metocean Parameter",
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 243,
+      "mode": "stream",
+      "rows": 5,
+      "cols": 10,
+      "csv": "table_243.csv",
+      "sheet": "stream_243",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Monthly Air Temperature (\u00b0 C)",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8"
+      ]
+    },
+    {
+      "index": 244,
+      "mode": "stream",
+      "rows": 4,
+      "cols": 3,
+      "csv": "table_244.csv",
+      "sheet": "stream_244",
+      "columns": [
+        "Area",
+        "Sea Surface Temperature (\u00b0 C)",
+        "Sea Floor Temperature (\u00b0 C)"
+      ]
+    },
+    {
+      "index": 245,
+      "mode": "stream",
+      "rows": 13,
+      "cols": 9,
+      "csv": "table_245.csv",
+      "sheet": "stream_245",
+      "columns": [
+        "Significant",
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Spectral Peak Period (s)",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6"
+      ]
+    },
+    {
+      "index": 246,
+      "mode": "stream",
+      "rows": 11,
+      "cols": 9,
+      "csv": "table_246.csv",
+      "sheet": "stream_246",
+      "columns": [
+        "Significant",
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Spectral Peak Period (s)",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6"
+      ]
+    },
+    {
+      "index": 247,
+      "mode": "stream",
+      "rows": 6,
+      "cols": 4,
+      "csv": "table_247.csv",
+      "sheet": "stream_247",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3"
+      ]
+    },
+    {
+      "index": 248,
+      "mode": "stream",
+      "rows": 4,
+      "cols": 3,
+      "csv": "table_248.csv",
+      "sheet": "stream_248",
+      "columns": [
+        "Unnamed: 0",
+        "Average Number of Events",
+        "Maximum Number of Events"
+      ]
+    },
+    {
+      "index": 249,
+      "mode": "stream",
+      "rows": 2,
+      "cols": 7,
+      "csv": "table_249.csv",
+      "sheet": "stream_249",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Days per Month with Dust Storms at Fort Shevchenko",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5"
+      ]
+    },
+    {
+      "index": 250,
+      "mode": "stream",
+      "rows": 16,
+      "cols": 3,
+      "csv": "table_250.csv",
+      "sheet": "stream_250",
+      "columns": [
+        "Sea Ice",
+        "Average Annual Maximum Value",
+        "Uncertainty in Annual Maximum Values"
+      ]
+    },
+    {
+      "index": 251,
+      "mode": "stream",
+      "rows": 14,
+      "cols": 3,
+      "csv": "table_251.csv",
+      "sheet": "stream_251",
+      "columns": [
+        "Date",
+        "Location",
+        "Description"
+      ]
+    },
+    {
+      "index": 252,
+      "mode": "stream",
+      "rows": 18,
+      "cols": 4,
+      "csv": "table_252.csv",
+      "sheet": "stream_252",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Return Period (years)",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 253,
+      "mode": "stream",
+      "rows": 18,
+      "cols": 3,
+      "csv": "table_253.csv",
+      "sheet": "stream_253",
+      "columns": [
+        "Unnamed: 0",
+        "Return Period (years)",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 254,
+      "mode": "stream",
+      "rows": 4,
+      "cols": 4,
+      "csv": "table_254.csv",
+      "sheet": "stream_254",
+      "columns": [
+        "Area",
+        "Air Temperature (\u00b0C)",
+        "Sea Surface Temperature (\u00b0C)",
+        "Sea Floor Temperature (\u00b0C)"
+      ]
+    },
+    {
+      "index": 255,
+      "mode": "stream",
+      "rows": 7,
+      "cols": 3,
+      "csv": "table_255.csv",
+      "sheet": "stream_255",
+      "columns": [
+        "Significant Wave",
+        "Peak Period (s)",
+        "Unnamed: 0"
+      ]
+    },
+    {
+      "index": 256,
+      "mode": "stream",
+      "rows": 19,
+      "cols": 13,
+      "csv": "table_256.csv",
+      "sheet": "stream_256",
+      "columns": [
+        "Significant",
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Peak Period (s)",
+        "Unnamed: 6",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10"
+      ]
+    },
+    {
+      "index": 257,
+      "mode": "stream",
+      "rows": 7,
+      "cols": 2,
+      "csv": "table_257.csv",
+      "sheet": "stream_257",
+      "columns": [
+        "b)",
+        "transition (April and May), when the winds are light (except during occasional squalls) and variable in"
+      ]
+    },
+    {
+      "index": 258,
+      "mode": "stream",
+      "rows": 17,
+      "cols": 2,
+      "csv": "table_258.csv",
+      "sheet": "stream_258",
+      "columns": [
+        "Return Period (years) Metocean Parameter",
+        "Unnamed: 1"
+      ]
+    },
+    {
+      "index": 259,
+      "mode": "stream",
+      "rows": 16,
+      "cols": 2,
+      "csv": "table_259.csv",
+      "sheet": "stream_259",
+      "columns": [
+        "Return Period (years) Metocean Parameter",
+        "Unnamed: 0"
+      ]
+    },
+    {
+      "index": 260,
+      "mode": "stream",
+      "rows": 18,
+      "cols": 5,
+      "csv": "table_260.csv",
+      "sheet": "stream_260",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Return Period (years)",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 261,
+      "mode": "stream",
+      "rows": 18,
+      "cols": 6,
+      "csv": "table_261.csv",
+      "sheet": "stream_261",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Return Period (years)",
+        "Unnamed: 4",
+        "Unnamed: 5"
+      ]
+    },
+    {
+      "index": 262,
+      "mode": "stream",
+      "rows": 28,
+      "cols": 4,
+      "csv": "table_262.csv",
+      "sheet": "stream_262",
+      "columns": [
+        "Metocean Parameter",
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 263,
+      "mode": "stream",
+      "rows": 13,
+      "cols": 5,
+      "csv": "table_263.csv",
+      "sheet": "stream_263",
+      "columns": [
+        "1 Mobile",
+        "14",
+        "Green Canyon",
+        "27",
+        "Sigsbee Escarpment"
+      ]
+    },
+    {
+      "index": 264,
+      "mode": "stream",
+      "rows": 15,
+      "cols": 6,
+      "csv": "table_264.csv",
+      "sheet": "stream_264",
+      "columns": [
+        "1",
+        "South Padre Island",
+        "17",
+        "West Cameron South",
+        "33",
+        "Grand Isle"
+      ]
+    },
+    {
+      "index": 265,
+      "mode": "stream",
+      "rows": 8,
+      "cols": 2,
+      "csv": "table_265.csv",
+      "sheet": "stream_265",
+      "columns": [
+        "Unnamed: 0",
+        "Depth Thickness (mm)"
+      ]
+    },
+    {
+      "index": 266,
+      "mode": "stream",
+      "rows": 29,
+      "cols": 7,
+      "csv": "table_266.csv",
+      "sheet": "stream_266",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Return Period (years)",
+        "Unnamed: 4",
+        "Unnamed: 5"
+      ]
+    },
+    {
+      "index": 267,
+      "mode": "stream",
+      "rows": 11,
+      "cols": 6,
+      "csv": "table_267.csv",
+      "sheet": "stream_267",
+      "columns": [
+        "Conundrum",
+        "? Surge + Tide",
+        "? TH (s)",
+        "Conundrum.1",
+        "? Surge + Tide.1",
+        "? TH  (s)"
+      ]
+    },
+    {
+      "index": 268,
+      "mode": "stream",
+      "rows": 19,
+      "cols": 5,
+      "csv": "table_268.csv",
+      "sheet": "stream_268",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Return Period (years)",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 269,
+      "mode": "stream",
+      "rows": 21,
+      "cols": 6,
+      "csv": "table_269.csv",
+      "sheet": "stream_269",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Return Period (years)",
+        "Unnamed: 3",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 270,
+      "mode": "stream",
+      "rows": 26,
+      "cols": 5,
+      "csv": "table_270.csv",
+      "sheet": "stream_270",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Return Period (years)",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 271,
+      "mode": "stream",
+      "rows": 20,
+      "cols": 6,
+      "csv": "table_271.csv",
+      "sheet": "stream_271",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Return Period (years)",
+        "Unnamed: 3",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 272,
+      "mode": "stream",
+      "rows": 19,
+      "cols": 1,
+      "csv": "table_272.csv",
+      "sheet": "stream_272",
+      "columns": [
+        "When applying the seasonal conditions in this section, the following should be noted."
+      ]
+    },
+    {
+      "index": 273,
+      "mode": "stream",
+      "rows": 19,
+      "cols": 5,
+      "csv": "table_273.csv",
+      "sheet": "stream_273",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Return Period (years)",
+        "Unnamed: 3"
+      ]
+    },
+    {
+      "index": 274,
+      "mode": "stream",
+      "rows": 23,
+      "cols": 6,
+      "csv": "table_274.csv",
+      "sheet": "stream_274",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Return Period (years)",
+        "Unnamed: 3",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 275,
+      "mode": "stream",
+      "rows": 11,
+      "cols": 3,
+      "csv": "table_275.csv",
+      "sheet": "stream_275",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2"
+      ]
+    },
+    {
+      "index": 276,
+      "mode": "stream",
+      "rows": 21,
+      "cols": 2,
+      "csv": "table_276.csv",
+      "sheet": "stream_276",
+      "columns": [
+        "Wind (10 m elevation)",
+        "Unnamed: 0"
+      ]
+    },
+    {
+      "index": 277,
+      "mode": "stream",
+      "rows": 2,
+      "cols": 2,
+      "csv": "table_277.csv",
+      "sheet": "stream_277",
+      "columns": [
+        "Return Period (years)",
+        "Current (m/s)"
+      ]
+    },
+    {
+      "index": 278,
+      "mode": "stream",
+      "rows": 8,
+      "cols": 2,
+      "csv": "table_278.csv",
+      "sheet": "stream_278",
+      "columns": [
+        "Parameter",
+        "Factors"
+      ]
+    },
+    {
+      "index": 279,
+      "mode": "stream",
+      "rows": 26,
+      "cols": 12,
+      "csv": "table_279.csv",
+      "sheet": "stream_279",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Unnamed: 3",
+        "Unnamed: 4",
+        "Unnamed: 5",
+        "Unnamed: 6",
+        "Peak Period (s)",
+        "Unnamed: 7",
+        "Unnamed: 8",
+        "Unnamed: 9",
+        "Unnamed: 10"
+      ]
+    },
+    {
+      "index": 280,
+      "mode": "stream",
+      "rows": 16,
+      "cols": 5,
+      "csv": "table_280.csv",
+      "sheet": "stream_280",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Unnamed: 2",
+        "Return Period (years)",
+        "Unnamed: 3"
+      ]
+    },
+    {
+      "index": 281,
+      "mode": "stream",
+      "rows": 10,
+      "cols": 2,
+      "csv": "table_281.csv",
+      "sheet": "stream_281",
+      "columns": [
+        "Mean spring tidal range (m)",
+        "1.0 m"
+      ]
+    },
+    {
+      "index": 282,
+      "mode": "stream",
+      "rows": 27,
+      "cols": 7,
+      "csv": "table_282.csv",
+      "sheet": "stream_282",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "100-Year Hmax Wave",
+        "Current",
+        "Storm Tide",
+        "Unnamed: 2",
+        "Unnamed: 4"
+      ]
+    },
+    {
+      "index": 283,
+      "mode": "stream",
+      "rows": 17,
+      "cols": 3,
+      "csv": "table_283.csv",
+      "sheet": "stream_283",
+      "columns": [
+        "Unnamed: 0",
+        "Unnamed: 1",
+        "Wind Speed (10 m 60 min),"
+      ]
+    },
+    {
+      "index": 284,
+      "mode": "stream",
+      "rows": 27,
+      "cols": 1,
+      "csv": "table_284.csv",
+      "sheet": "stream_284",
+      "columns": [
+        "Clause/Subclause Modifications"
+      ]
+    },
+    {
+      "index": 285,
+      "mode": "stream",
+      "rows": 23,
+      "cols": 2,
+      "csv": "table_285.csv",
+      "sheet": "stream_285",
+      "columns": [
+        "[15]",
+        "Forristall G.Z. and Davies A.M. (Eds.), Verification of a Soil-Wave Interaction Model in Modelling"
+      ]
+    },
+    {
+      "index": 286,
+      "mode": "stream",
+      "rows": 21,
+      "cols": 3,
+      "csv": "table_286.csv",
+      "sheet": "stream_286",
+      "columns": [
+        "[70]",
+        "Minerals Management",
+        "Texas-Louisiana"
+      ]
+    },
+    {
+      "index": 287,
+      "mode": "stream",
+      "rows": 20,
+      "cols": 2,
+      "csv": "table_287.csv",
+      "sheet": "stream_287",
+      "columns": [
+        "[214]",
+        "Zenkevitch L., Biology of the Seas of the USSR, The Caspian Sea, Chapter 11, Wiley and Sons,"
+      ]
+    }
+  ]
+}

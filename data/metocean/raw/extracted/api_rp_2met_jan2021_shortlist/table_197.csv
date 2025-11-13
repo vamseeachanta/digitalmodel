@@ -1,0 +1,20 @@
+Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4
+Zone,Location,"Wind Speed (10 m 60 min),m/s",
+With Wave,Maximum,,
+,,,
+6,Washington/Oregon,31,41.0
+7,Gulf of Alaska (Icy Bay),31,46.0
+8,Gulf of Alaska (Kodiak),31,46.0
+9,Lower Cook Inlet,31,46.0
+10,Northern Aleutian Shelf,31,46.0
+11,St. George Basin,31,46.0
+12,Navarin Basin,31,46.0
+13,Norton Sound (depth = 18 m),31,46.0
+14,Chukchi Sea (depth > 18 m),31,41.0
+15,Chukchi Sea (depth ? 18 m),31,41.0
+16,Beaufort Sea (depth > 15 m),31,36.0
+17,Beaufort Sea (depth ? 15 m),31,36.0
+18,Georges Bank,31,41.0
+19,Baltimore Canyon,46,51.0
+20,Georgia Embayment,46,51.0
+,,,
