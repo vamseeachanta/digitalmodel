@@ -1,5 +1,5 @@
-Buoys:
-  - Name: CALM Top
+New: CALMTop
+CALMTop:
     BuoyType: Spar buoy
     Connection: Free
     DampingRelativeTo: Earth
@@ -73,7 +73,8 @@ Buoys:
     Pen: [1, Solid, Blue]
     # Shaded drawing
     ShadedDrawingCullingMode: Anticlockwise
-  - Name: Master
+New: Master
+Master:
     BuoyType: Spar buoy
     Connection: Free
     DampingRelativeTo: Earth
@@ -170,7 +171,8 @@ Buoys:
     Pen: [1, Solid, Lime]
     # Shaded drawing
     ShadedDrawingCullingMode: Anticlockwise
-  - Name: Radial1
+New: Radial1
+Radial1:
     BuoyType: Spar buoy
     Connection: Master
     DampingRelativeTo: Earth
@@ -267,7 +269,8 @@ Buoys:
     Pen: [1, Solid, Lime]
     # Shaded drawing
     ShadedDrawingCullingMode: Anticlockwise
-  - Name: Radial2
+New: Radial2
+Radial2:
     BuoyType: Spar buoy
     Connection: Master
     DampingRelativeTo: Earth
@@ -364,7 +367,8 @@ Buoys:
     Pen: [1, Solid, Lime]
     # Shaded drawing
     ShadedDrawingCullingMode: Anticlockwise
-  - Name: Radial3
+New: Radial3
+Radial3:
     BuoyType: Spar buoy
     Connection: Master
     DampingRelativeTo: Earth
@@ -461,7 +465,8 @@ Buoys:
     Pen: [1, Solid, Lime]
     # Shaded drawing
     ShadedDrawingCullingMode: Anticlockwise
-  - Name: Radial4
+New: Radial4
+Radial4:
     BuoyType: Spar buoy
     Connection: Master
     DampingRelativeTo: Earth
@@ -558,7 +563,8 @@ Buoys:
     Pen: [1, Solid, Lime]
     # Shaded drawing
     ShadedDrawingCullingMode: Anticlockwise
-  - Name: Radial5
+New: Radial5
+Radial5:
     BuoyType: Spar buoy
     Connection: Master
     DampingRelativeTo: Earth
@@ -655,7 +661,8 @@ Buoys:
     Pen: [1, Solid, Lime]
     # Shaded drawing
     ShadedDrawingCullingMode: Anticlockwise
-  - Name: Radial6
+New: Radial6
+Radial6:
     BuoyType: Spar buoy
     Connection: Master
     DampingRelativeTo: Earth
@@ -752,3 +759,4 @@ Buoys:
     Pen: [1, Solid, Lime]
     # Shaded drawing
     ShadedDrawingCullingMode: Anticlockwise
+
