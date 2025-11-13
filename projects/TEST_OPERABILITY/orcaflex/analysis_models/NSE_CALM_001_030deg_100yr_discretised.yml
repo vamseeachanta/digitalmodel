@@ -1,16 +1,2 @@
-%YAML 1.1
-# Type: Model
-# Program: OrcaFlex
-# Analysis Model: CALM Buoy - 30 deg Direction, 100-Year Return Period
-# Model Type: Discretised (8 buoys)
----
-- includefile: ../base_files/sections/_01_general.yml
-- includefile: ../base_files/sections/_02_variable_data.yml
-- includefile: ../base_files/sections/_03_environment.yml
-- includefile: ../base_files/sections/env/_env_030deg_100yr.yml
-- includefile: ../base_files/sections/_04_vessel_types.yml
-- includefile: ../base_files/sections/_05_line_types.yml
-- includefile: ../base_files/sections/_06_vessels.yml
-- includefile: ../base_files/_06_buoys_discretised.yml
-- includefile: ../base_files/sections/_07_lines_discretised.yml
-- includefile: ../base_files/sections/_08_groups_discretised.yml
+BaseFile: ../base_files/calm_buoy_discretised_base.yml
+includefile: ../base_files/env/_env_030deg_100yr.yml

@@ -1,15 +1,2 @@
-%YAML 1.1
-# Type: Model
-# Program: OrcaFlex
-# Analysis Model: CALM Buoy - 90 deg Direction, 1-Year Return Period
-# Model Type: Simple (single vessel)
----
-- includefile: ../base_files/sections/_01_general.yml
-- includefile: ../base_files/sections/_02_variable_data.yml
-- includefile: ../base_files/sections/_03_environment.yml
-- includefile: ../base_files/sections/env/_env_090deg_1yr.yml
-- includefile: ../base_files/sections/_04_vessel_types.yml
-- includefile: ../base_files/sections/_05_line_types.yml
-- includefile: ../base_files/sections/_06_vessels.yml
-- includefile: ../base_files/sections/_07_lines.yml
-- includefile: ../base_files/sections/_08_groups.yml
+BaseFile: ../base_files/calm_buoy_simple_base.yml
+includefile: ../base_files/env/_env_090deg_1yr.yml
