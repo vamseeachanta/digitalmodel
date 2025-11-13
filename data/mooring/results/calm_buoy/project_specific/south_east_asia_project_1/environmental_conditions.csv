@@ -1,0 +1,3 @@
+scenario,return_period_years,wave_hs_m,wave_tp_s,wave_hmax_m,wind_speed_m_s,wind_reference_height_m,surface_current_m_s,mid_depth_current_m_s,seabed_current_m_s,water_depth_range_m,notes,source
+operational_extreme,1,2.4,6.9,5.1,14.5,10,0.75,0.53,0.25,"32.72-35.42","Directional sets consider wind/wave/current collinear, 30°/45°, and 45°/90° offsets","HYBN-01DD-3.15.6-84011NA-DP03-2002-0 Table 5.2; HYBN-01DD-3.15.6-84011SP-SP02-1001-0 Table 4-2/4-3/4-4"
+survival_extreme,100,3.7,8.6,7.4,22.7,10,0.93,0.61,0.32,"32.55-35.59","Applied for buoy-only survival evaluation with same directional combinations","HYBN-01DD-3.15.6-84011NA-DP03-2002-0 Table 5.2; HYBN-01DD-3.15.6-84011SP-SP02-1001-0 Table 4-2/4-3/4-4"

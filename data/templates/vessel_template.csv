@@ -1,0 +1,2 @@
+vessel_name,vessel_type,year_built,owner,operator,flag,classification_society,length_m,beam_m,depth_m,draft_m,displacement_tonnes,water_depth_m,deck_space_m2,accommodation_capacity,positioning_system,propulsion,notes
+Example FPSO,FPSO,2020,Owner Company,Operator Company,Singapore,DNV,300,50,25,15,150000,3000,5000,150,DP3,Azimuth Thrusters,Sample vessel data
