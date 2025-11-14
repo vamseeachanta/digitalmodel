@@ -13,7 +13,7 @@ Mooring1:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [CALMBase, 6.000000, 0.000000, -1.5, 0, 180, 0, ~]
-      - [Anchored, 40.000000, 0.000000, 0.1143, 0, 90, 0, ~]
+      - [Anchored, 106.000000, 0.000000, 0.1143, 0, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -24,9 +24,9 @@ Mooring1:
       - [~, 0, 0.001]
     # Sections - Top chain, Clump weight, Bottom chain
     LineType, Length, TargetSegmentLength:
-      - [2p5inChain, 15.0, 5]
+      - [2p5inChain, 40.8, 5]
       - [ClumpWeight, 5.0, 5]
-      - [2p5inChain, 25.0, 5]
+      - [2p5inChain, 104.2, 5]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -65,7 +65,7 @@ Mooring2:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [CALMBase, 3.000000, 5.196152, -1.5, 60, 180, 0, ~]
-      - [Anchored, 20.000000, 34.641016, 0.1143, 60, 90, 0, ~]
+      - [Anchored, 53.000000, 91.798693, 0.1143, 60, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -76,9 +76,9 @@ Mooring2:
       - [~, 0, 0.001]
     # Sections - Top chain, Clump weight, Bottom chain
     LineType, Length, TargetSegmentLength:
-      - [2p5inChain, 15.0, 5]
+      - [2p5inChain, 40.8, 5]
       - [ClumpWeight, 5.0, 5]
-      - [2p5inChain, 25.0, 5]
+      - [2p5inChain, 104.2, 5]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -117,7 +117,7 @@ Mooring3:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [CALMBase, -3.000000, 5.196152, -1.5, 120, 180, 0, ~]
-      - [Anchored, -20.000000, 34.641016, 0.1143, 120, 90, 0, ~]
+      - [Anchored, -53.000000, 91.798693, 0.1143, 120, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -128,9 +128,9 @@ Mooring3:
       - [~, 0, 0.001]
     # Sections - Top chain, Clump weight, Bottom chain
     LineType, Length, TargetSegmentLength:
-      - [2p5inChain, 15.0, 5]
+      - [2p5inChain, 40.8, 5]
       - [ClumpWeight, 5.0, 5]
-      - [2p5inChain, 25.0, 5]
+      - [2p5inChain, 104.2, 5]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -169,7 +169,7 @@ Mooring4:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [CALMBase, -6.000000, 0.000000, -1.5, 180, 180, 0, ~]
-      - [Anchored, -40.000000, 0.000000, 0.1143, 180, 90, 0, ~]
+      - [Anchored, -106.000000, 0.000000, 0.1143, 180, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -180,9 +180,9 @@ Mooring4:
       - [~, 0, 0.001]
     # Sections - Top chain, Clump weight, Bottom chain
     LineType, Length, TargetSegmentLength:
-      - [2p5inChain, 15.0, 5]
+      - [2p5inChain, 40.8, 5]
       - [ClumpWeight, 5.0, 5]
-      - [2p5inChain, 25.0, 5]
+      - [2p5inChain, 104.2, 5]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -221,7 +221,7 @@ Mooring5:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [CALMBase, -3.000000, -5.196152, -1.5, 240, 180, 0, ~]
-      - [Anchored, -20.000000, -34.641016, 0.1143, 240, 90, 0, ~]
+      - [Anchored, -53.000000, -91.798693, 0.1143, 240, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -232,9 +232,9 @@ Mooring5:
       - [~, 0, 0.001]
     # Sections - Top chain, Clump weight, Bottom chain
     LineType, Length, TargetSegmentLength:
-      - [2p5inChain, 15.0, 5]
+      - [2p5inChain, 40.8, 5]
       - [ClumpWeight, 5.0, 5]
-      - [2p5inChain, 25.0, 5]
+      - [2p5inChain, 104.2, 5]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -273,7 +273,7 @@ Mooring6:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [CALMBase, 3.000000, -5.196152, -1.5, 300, 180, 0, ~]
-      - [Anchored, 20.000000, -34.641016, 0.1143, 300, 90, 0, ~]
+      - [Anchored, 53.000000, -91.798693, 0.1143, 300, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -284,9 +284,9 @@ Mooring6:
       - [~, 0, 0.001]
     # Sections - Top chain, Clump weight, Bottom chain
     LineType, Length, TargetSegmentLength:
-      - [2p5inChain, 15.0, 5]
+      - [2p5inChain, 40.8, 5]
       - [ClumpWeight, 5.0, 5]
-      - [2p5inChain, 25.0, 5]
+      - [2p5inChain, 104.2, 5]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
