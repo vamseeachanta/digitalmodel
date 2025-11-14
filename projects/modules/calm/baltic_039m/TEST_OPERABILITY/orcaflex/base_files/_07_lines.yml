@@ -336,7 +336,7 @@ Loadhose:
     # Sections
     LineType, Length, TargetSegmentLength:
       - [Hose, 10, 0.5]
-      - [Hose, 25, 2]
+      - [Hose, 30, 2]
       - [Hose, 10, 0.5]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
