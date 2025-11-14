@@ -8,7 +8,7 @@ CurrentRamped: No
 CurrentApplyVerticalStretching: No
 HorizontalCurrentFactor: ~
 VerticalCurrentVariationMethod: Interpolated
-RefCurrentSpeed: 1.4
+RefCurrentSpeed: 0.001
 RefCurrentDirection: 0
 CurrentDepth, CurrentFactor, CurrentRotation:
   - [0, 0.4, 0]

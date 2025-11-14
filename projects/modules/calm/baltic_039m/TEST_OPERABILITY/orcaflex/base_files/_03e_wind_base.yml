@@ -16,6 +16,6 @@ WindSpectrumFMax: Infinity
 WindTimeOrigin: 0
 WindSeed: 12345
 NumberOfWindComponents: 1000
-WindSpeed: 20
+WindSpeed: 0.01
 WindDirection: 0
 VerticalWindVariationFactor: ~

@@ -13,7 +13,7 @@ WaveTrains:
     WaveTimeOrigin: 0
     WaveNumberOfSpectralDirections: 1
     WaveJONSWAPParameters: Partially specified
-    WaveHs: 2.5
+    WaveHs: 0.05
     WaveTz: 5.3
     WaveGamma: 3.3
     WaveNumberOfComponents: 100
