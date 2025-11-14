@@ -5,7 +5,7 @@ Vessel1:
   Draught: Draught1
   Length: ~
   Connection: Free
-  InitialPosition: [-60.97324722686836, 86.19138402618022, 0]
+  InitialPosition: [-56.35309463166716, 79.66036649465761, 0]
   Orientation: [0, 0, -54.42182314480139]
   # Calculation
   IncludedInStatics: None
