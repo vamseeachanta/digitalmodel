@@ -24,9 +24,9 @@ Mooring1:
       - [~, 0, 0.001]
     # Sections - Top chain, Clump weight, Bottom chain
     LineType, Length, TargetSegmentLength:
-      - [2p5inChain, 40.8, 5]
-      - [ClumpWeight, 5.0, 5]
-      - [2p5inChain, 104.2, 5]
+      - [2p5inChain, 40.8, 1]
+      - [ClumpWeight, 5.0, 1]
+      - [2p5inChain, 104.2, 2]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -76,9 +76,9 @@ Mooring2:
       - [~, 0, 0.001]
     # Sections - Top chain, Clump weight, Bottom chain
     LineType, Length, TargetSegmentLength:
-      - [2p5inChain, 40.8, 5]
-      - [ClumpWeight, 5.0, 5]
-      - [2p5inChain, 104.2, 5]
+      - [2p5inChain, 40.8, 1]
+      - [ClumpWeight, 5.0, 1]
+      - [2p5inChain, 104.2, 2]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -128,9 +128,9 @@ Mooring3:
       - [~, 0, 0.001]
     # Sections - Top chain, Clump weight, Bottom chain
     LineType, Length, TargetSegmentLength:
-      - [2p5inChain, 40.8, 5]
-      - [ClumpWeight, 5.0, 5]
-      - [2p5inChain, 104.2, 5]
+      - [2p5inChain, 40.8, 1]
+      - [ClumpWeight, 5.0, 1]
+      - [2p5inChain, 104.2, 2]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -180,9 +180,9 @@ Mooring4:
       - [~, 0, 0.001]
     # Sections - Top chain, Clump weight, Bottom chain
     LineType, Length, TargetSegmentLength:
-      - [2p5inChain, 40.8, 5]
-      - [ClumpWeight, 5.0, 5]
-      - [2p5inChain, 104.2, 5]
+      - [2p5inChain, 40.8, 1]
+      - [ClumpWeight, 5.0, 1]
+      - [2p5inChain, 104.2, 2]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -232,9 +232,9 @@ Mooring5:
       - [~, 0, 0.001]
     # Sections - Top chain, Clump weight, Bottom chain
     LineType, Length, TargetSegmentLength:
-      - [2p5inChain, 40.8, 5]
-      - [ClumpWeight, 5.0, 5]
-      - [2p5inChain, 104.2, 5]
+      - [2p5inChain, 40.8, 1]
+      - [ClumpWeight, 5.0, 1]
+      - [2p5inChain, 104.2, 2]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -284,9 +284,9 @@ Mooring6:
       - [~, 0, 0.001]
     # Sections - Top chain, Clump weight, Bottom chain
     LineType, Length, TargetSegmentLength:
-      - [2p5inChain, 40.8, 5]
-      - [ClumpWeight, 5.0, 5]
-      - [2p5inChain, 104.2, 5]
+      - [2p5inChain, 40.8, 1]
+      - [ClumpWeight, 5.0, 1]
+      - [2p5inChain, 104.2, 2]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
