@@ -1,0 +1,248 @@
+# Crowley 650 Class ATB (Articulated Tug Barge)
+# Coupled tug & barge configuration
+# Wind and current coefficients based on OCIMF methodology
+
+New: Crowley650ATB
+Crowley650ATB:
+  Name: Crowley650ATB
+  Length: 210
+  # Conventions
+  RAOResponseUnits: degrees
+  RAOWaveUnit: amplitude
+  WavesReferredToBy: period (s)
+  RAOPhaseConvention: lags
+  RAOPhaseUnitsConvention: degrees
+  RAOPhaseRelativeToConvention: crest
+  SurgePositive: forward
+  SwayPositive: port
+  HeavePositive: up
+  RollPositiveStarboard: down
+  PitchPositiveBow: down
+  YawPositiveBow: port
+  Symmetry: xz plane
+  CurrentCoeffSymmetry: xz plane
+  WindCoeffSymmetry: xz plane
+  QTFConventionsRotationOrder: RzRyRx
+  QTFConventionsRotationAxes: rotated
+  QTFConventionsFrameOfReference: body
+
+  Draughts:
+    - Name: Loaded
+      # Mass properties
+      # DWT: 27,457 tonnes, Lightship estimated at 8,000 tonnes
+      # Total displacement: 35,457 tonnes
+      Mass: 35457
+
+      # Moment of inertia (estimated for barge configuration)
+      # Ixx = m * (B^2 + D^2) / 12
+      # Iyy = m * (L^2 + D^2) / 12
+      # Izz = m * (L^2 + B^2) / 12
+      MomentOfInertiaTensorX, MomentOfInertiaTensorY, MomentOfInertiaTensorZ:
+        - [0.191e6, 0, 0]  # Roll inertia
+        - [13.1e9, 0]      # Pitch inertia
+        - [13.1e9, 0, 0]   # Yaw inertia
+
+      # Centre of mass (estimated for loaded ATB)
+      # LCG from stern: 105m (mid-length)
+      # VCG from keel: 6.5m (approximately 70% of draft)
+      CentreOfMass: [105, 0, -6.5]
+
+      # Simplified RAO data (placeholder - should be updated with actual data)
+      DisplacementRAOs:
+        RAOOrigin: [105, 0, -6.5]
+        PhaseOrigin: [~, ~, ~]
+        RAOs:
+          - RAODirection: 0
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+              - [0, 0, 360, 0, 0, 0, 360, 0, 0, 0, 0, 0, 0]
+              - [5, 0.02, 90, 0, 0, 0.05, 120, 0, 0, 0.2, -270, 0, 0]
+              - [6, 0.04, 85, 0, 0, 0.08, 180, 0, 0, 0.4, -260, 0, 0]
+              - [7, 0.06, 80, 0, 0, 0.12, 200, 0, 0, 0.6, -250, 0, 0]
+              - [8, 0.10, 75, 0, 0, 0.15, 210, 0, 0, 0.8, -240, 0, 0]
+              - [9, 0.15, 72, 0, 0, 0.20, 220, 0, 0, 1.0, -230, 0, 0]
+              - [10, 0.20, 70, 0, 0, 0.25, 230, 0, 0, 1.2, -220, 0, 0]
+              - [12, 0.30, 68, 0, 0, 0.35, 240, 0, 0, 1.5, -210, 0, 0]
+              - [15, 0.45, 65, 0, 0, 0.50, 250, 0, 0, 1.8, -200, 0, 0]
+              - [20, 0.65, 62, 0, 0, 0.70, 260, 0, 0, 2.0, -190, 0, 0]
+              - [Infinity, 1, 90, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+
+          - RAODirection: 45
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+              - [0, 0, 360, 0, 360, 0, 360, 0, 0, 0, 0, 0, 0]
+              - [5, 0.015, 95, 0.015, 80, 0.045, 125, 0.05, -85, 0.15, -275, 0.03, 70]
+              - [6, 0.03, 88, 0.03, 75, 0.07, 185, 0.08, -80, 0.35, -265, 0.05, 65]
+              - [7, 0.05, 83, 0.05, 70, 0.11, 205, 0.12, -75, 0.55, -255, 0.08, 60]
+              - [8, 0.08, 78, 0.08, 68, 0.14, 215, 0.18, -72, 0.75, -245, 0.12, 58]
+              - [9, 0.12, 75, 0.12, 66, 0.18, 225, 0.25, -70, 0.95, -235, 0.15, 55]
+              - [10, 0.16, 73, 0.16, 64, 0.23, 235, 0.32, -68, 1.10, -225, 0.18, 53]
+              - [12, 0.25, 71, 0.25, 62, 0.33, 245, 0.45, -66, 1.35, -215, 0.22, 50]
+              - [15, 0.38, 68, 0.38, 60, 0.48, 255, 0.60, -64, 1.65, -205, 0.28, 48]
+              - [20, 0.55, 65, 0.55, 58, 0.68, 265, 0.80, -62, 1.85, -195, 0.35, 45]
+              - [Infinity, 0.707, 90, 0.707, 90, 1, 0, 0, 0, 0, 0, 0, 0]
+
+          - RAODirection: 90
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+              - [0, 0, 0, 0, 360, 0, 360, 0, 0, 0, 0, 0, 0]
+              - [5, 0, 0, 0.02, 85, 0.04, 130, 0.15, -80, 0, 0, 0.05, 75]
+              - [6, 0, 0, 0.04, 80, 0.06, 190, 0.25, -75, 0, 0, 0.08, 70]
+              - [7, 0, 0, 0.06, 75, 0.10, 210, 0.40, -70, 0, 0, 0.12, 65]
+              - [8, 0, 0, 0.10, 72, 0.13, 220, 0.55, -68, 0, 0, 0.18, 62]
+              - [9, 0, 0, 0.15, 70, 0.16, 230, 0.70, -66, 0, 0, 0.25, 60]
+              - [10, 0, 0, 0.20, 68, 0.20, 240, 0.85, -64, 0, 0, 0.32, 58]
+              - [12, 0, 0, 0.30, 66, 0.28, 250, 1.10, -62, 0, 0, 0.45, 55]
+              - [15, 0, 0, 0.45, 64, 0.42, 260, 1.35, -60, 0, 0, 0.60, 52]
+              - [20, 0, 0, 0.65, 62, 0.60, 270, 1.60, -58, 0, 0, 0.80, 50]
+              - [Infinity, 0, 0, 1, 90, 1, 0, 0, 0, 0, 0, 0, 0]
+
+          - RAODirection: 135
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+              - [0, 0, 360, 0, 360, 0, 360, 0, 0, 0, 0, 0, 0]
+              - [5, -0.015, 85, 0.015, 95, 0.045, 135, 0.05, 95, -0.15, 105, 0.03, 110]
+              - [6, -0.03, 82, 0.03, 88, 0.07, 195, 0.08, 100, -0.35, 115, 0.05, 115]
+              - [7, -0.05, 77, 0.05, 83, 0.11, 215, 0.12, 105, -0.55, 125, 0.08, 120]
+              - [8, -0.08, 74, 0.08, 78, 0.14, 225, 0.18, 108, -0.75, 135, 0.12, 122]
+              - [9, -0.12, 71, 0.12, 75, 0.18, 235, 0.25, 110, -0.95, 145, 0.15, 125]
+              - [10, -0.16, 69, 0.16, 73, 0.23, 245, 0.32, 112, -1.10, 155, 0.18, 127]
+              - [12, -0.25, 67, 0.25, 71, 0.33, 255, 0.45, 114, -1.35, 165, 0.22, 130]
+              - [15, -0.38, 65, 0.38, 68, 0.48, 265, 0.60, 116, -1.65, 175, 0.28, 132]
+              - [20, -0.55, 63, 0.55, 65, 0.68, 275, 0.80, 118, -1.85, 185, 0.35, 135]
+              - [Infinity, -0.707, 90, 0.707, 90, 1, 0, 0, 0, 0, 0, 0, 0]
+
+          - RAODirection: 180
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+              - [0, 0, 360, 0, 0, 0, 360, 0, 0, 0, 0, 0, 0]
+              - [5, -0.02, 90, 0, 0, 0.05, 140, 0, 0, -0.2, 90, 0, 0]
+              - [6, -0.04, 85, 0, 0, 0.08, 200, 0, 0, -0.4, 100, 0, 0]
+              - [7, -0.06, 80, 0, 0, 0.12, 220, 0, 0, -0.6, 110, 0, 0]
+              - [8, -0.10, 75, 0, 0, 0.15, 230, 0, 0, -0.8, 120, 0, 0]
+              - [9, -0.15, 72, 0, 0, 0.20, 240, 0, 0, -1.0, 130, 0, 0]
+              - [10, -0.20, 70, 0, 0, 0.25, 250, 0, 0, -1.2, 140, 0, 0]
+              - [12, -0.30, 68, 0, 0, 0.35, 260, 0, 0, -1.5, 150, 0, 0]
+              - [15, -0.45, 65, 0, 0, 0.50, 270, 0, 0, -1.8, 160, 0, 0]
+              - [20, -0.65, 62, 0, 0, 0.70, 280, 0, 0, -2.0, 170, 0, 0]
+              - [Infinity, -1, 90, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+
+      # Added mass and damping (simplified - should be updated with actual data)
+      AddedMassRollDamping: 0.1
+      AddedMassPitchDamping: 0.1
+
+      # Current loading coefficients (OCIMF methodology for ATB)
+      # Based on typical ATB form with high superstructure
+      # Reference area for current: L × T = 210m × 9.2m = 1932 m²
+      CurrentCoeffDirection, CurrentCoeffSurge, CurrentCoeffSway, CurrentCoeffHeave, CurrentCoeffRoll, CurrentCoeffPitch, CurrentCoeffYaw:
+        - [0, 0.75, 0, 0, 0, 0, 0]           # Head current
+        - [15, 0.68, 0.18, 0, 0, 0, -0.05]
+        - [30, 0.55, 0.38, 0, 0, 0, -0.12]
+        - [45, 0.38, 0.58, 0, 0, 0, -0.18]
+        - [60, 0.18, 0.75, 0, 0, 0, -0.22]
+        - [75, 0.05, 0.85, 0, 0, 0, -0.18]
+        - [90, 0, 0.92, 0, 0, 0, 0]          # Beam current
+        - [105, -0.05, 0.85, 0, 0, 0, 0.18]
+        - [120, -0.18, 0.75, 0, 0, 0, 0.22]
+        - [135, -0.38, 0.58, 0, 0, 0, 0.18]
+        - [150, -0.55, 0.38, 0, 0, 0, 0.12]
+        - [165, -0.68, 0.18, 0, 0, 0, 0.05]
+        - [180, -0.75, 0, 0, 0, 0, 0]        # Following current
+
+      CurrentYawRateDrag: [0, 0, 85e6]  # Scaled for ATB size
+
+      # Wind load coefficients (OCIMF methodology for ATB)
+      # Frontal area (loaded): ~2,100 m² (tug + barge superstructure)
+      # Lateral area (loaded): ~5,040 m² (L × height above water)
+      # Longitudinal moment arm: ~105m (from vessel center)
+      WindAreasAndAreaMoment: [2100, 5040, 0, 0, 0, 529e3]
+      WindDragOrigin: [105, 0, 8.0]  # Height of wind centroid above water
+
+      # Wind coefficients (OCIMF for loaded tanker/barge profile)
+      WindCoeffDirection, WindCoeffSurge, WindCoeffSway, WindCoeffHeave, WindCoeffRoll, WindCoeffPitch, WindCoeffYaw:
+        - [0, 0.85, 0, 0, 0, 0, 0]           # Head wind
+        - [15, 0.78, 0.22, 0, 0, 0, -0.08]
+        - [30, 0.62, 0.48, 0, 0, 0, -0.18]
+        - [45, 0.42, 0.72, 0, 0, 0, -0.25]
+        - [60, 0.22, 0.88, 0, 0, 0, -0.28]
+        - [75, 0.08, 0.95, 0, 0, 0, -0.22]
+        - [90, 0, 1.00, 0, 0, 0, 0]          # Beam wind
+        - [105, -0.08, 0.95, 0, 0, 0, 0.22]
+        - [120, -0.22, 0.88, 0, 0, 0, 0.28]
+        - [135, -0.42, 0.72, 0, 0, 0, 0.25]
+        - [150, -0.62, 0.48, 0, 0, 0, 0.18]
+        - [165, -0.78, 0.22, 0, 0, 0, 0.08]
+        - [180, -0.85, 0, 0, 0, 0, 0]        # Following wind
+
+    - Name: Ballast
+      # Ballast condition (estimated 40% DWT)
+      # Displacement: ~19,000 tonnes
+      Mass: 19000
+
+      # Moment of inertia (ballast condition)
+      MomentOfInertiaTensorX, MomentOfInertiaTensorY, MomentOfInertiaTensorZ:
+        - [0.102e6, 0, 0]   # Roll inertia
+        - [7.0e9, 0]        # Pitch inertia
+        - [7.0e9, 0, 0]     # Yaw inertia
+
+      # Centre of mass (ballast - higher VCG)
+      CentreOfMass: [105, 0, -3.5]
+
+      # Simplified RAO data for ballast (placeholder)
+      DisplacementRAOs:
+        RAOOrigin: [105, 0, -3.5]
+        PhaseOrigin: [~, ~, ~]
+        RAOs:
+          - RAODirection: 0
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+              - [0, 0, 360, 0, 0, 0, 360, 0, 0, 0, 0, 0, 0]
+              - [5, 0.03, 95, 0, 0, 0.08, 115, 0, 0, 0.3, -265, 0, 0]
+              - [8, 0.15, 80, 0, 0, 0.22, 205, 0, 0, 1.2, -235, 0, 0]
+              - [10, 0.30, 75, 0, 0, 0.35, 225, 0, 0, 1.8, -215, 0, 0]
+              - [15, 0.60, 70, 0, 0, 0.65, 245, 0, 0, 2.5, -195, 0, 0]
+              - [Infinity, 1, 90, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+
+          - RAODirection: 90
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+              - [0, 0, 0, 0, 360, 0, 360, 0, 0, 0, 0, 0, 0]
+              - [5, 0, 0, 0.03, 90, 0.06, 125, 0.25, -75, 0, 0, 0.08, 80]
+              - [8, 0, 0, 0.15, 77, 0.18, 215, 0.85, -63, 0, 0, 0.28, 67]
+              - [10, 0, 0, 0.30, 73, 0.28, 235, 1.25, -60, 0, 0, 0.48, 63]
+              - [15, 0, 0, 0.60, 69, 0.55, 255, 1.85, -56, 0, 0, 0.85, 57]
+              - [Infinity, 0, 0, 1, 90, 1, 0, 0, 0, 0, 0, 0, 0]
+
+          - RAODirection: 180
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+              - [0, 0, 360, 0, 0, 0, 360, 0, 0, 0, 0, 0, 0]
+              - [5, -0.03, 95, 0, 0, 0.08, 135, 0, 0, -0.3, 95, 0, 0]
+              - [8, -0.15, 80, 0, 0, 0.22, 225, 0, 0, -1.2, 125, 0, 0]
+              - [10, -0.30, 75, 0, 0, 0.35, 245, 0, 0, -1.8, 145, 0, 0]
+              - [15, -0.60, 70, 0, 0, 0.65, 265, 0, 0, -2.5, 165, 0, 0]
+              - [Infinity, -1, 90, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+
+      # Current coefficients (ballast condition - higher freeboard)
+      CurrentCoeffDirection, CurrentCoeffSurge, CurrentCoeffSway, CurrentCoeffHeave, CurrentCoeffRoll, CurrentCoeffPitch, CurrentCoeffYaw:
+        - [0, 0.65, 0, 0, 0, 0, 0]
+        - [30, 0.48, 0.32, 0, 0, 0, -0.10]
+        - [60, 0.15, 0.68, 0, 0, 0, -0.18]
+        - [90, 0, 0.85, 0, 0, 0, 0]
+        - [120, -0.15, 0.68, 0, 0, 0, 0.18]
+        - [150, -0.48, 0.32, 0, 0, 0, 0.10]
+        - [180, -0.65, 0, 0, 0, 0, 0]
+
+      CurrentYawRateDrag: [0, 0, 55e6]
+
+      # Wind coefficients (ballast condition - higher freeboard)
+      # Frontal area (ballast): ~3,200 m² (more superstructure exposed)
+      # Lateral area (ballast): ~7,350 m² (higher above water)
+      WindAreasAndAreaMoment: [3200, 7350, 0, 0, 0, 771e3]
+      WindDragOrigin: [105, 0, 12.0]  # Higher wind centroid in ballast
+
+      WindCoeffDirection, WindCoeffSurge, WindCoeffSway, WindCoeffHeave, WindCoeffRoll, WindCoeffPitch, WindCoeffYaw:
+        - [0, 0.95, 0, 0, 0, 0, 0]
+        - [30, 0.72, 0.52, 0, 0, 0, -0.22]
+        - [60, 0.28, 0.95, 0, 0, 0, -0.32]
+        - [90, 0, 1.10, 0, 0, 0, 0]
+        - [120, -0.28, 0.95, 0, 0, 0, 0.32]
+        - [150, -0.72, 0.52, 0, 0, 0, 0.22]
+        - [180, -0.95, 0, 0, 0, 0, 0]
+
+  # Shaded drawing (optional - placeholder path)
+  ShadedDrawingFileName: ! '%ApplicationFolder%\Shaded Drawing Samples\Tanker\Tanker.x'
+  ShadedDrawingDrawSize: 210
+  ShadedDrawingCullingMode: Anticlockwise
