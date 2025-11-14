@@ -268,5 +268,5 @@ claude-flow
 # Removed Windows wrapper files per user request
 hive-mind-prompt-*.txt
 
-# OrcaFlex simulation files
-projects/TEST_OPERABILITY/orcaflex/analysis_models/*.sim
+# OrcaFlex simulation files - ignore in all projects subdirectories
+projects/**/*.sim
