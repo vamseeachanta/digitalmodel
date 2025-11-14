@@ -335,9 +335,9 @@ Loadhose:
       - [~, 0, 0.001]
     # Sections
     LineType, Length, TargetSegmentLength:
-      - [Hose, 40, 0.5]
-      - [Hose, 60, 2]
-      - [Hose, 20, 0.5]
+      - [Hose, 10, 0.5]
+      - [Hose, 25, 2]
+      - [Hose, 10, 0.5]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -384,7 +384,7 @@ Hawser:
       - [~, 0, 0.001]
     # Sections
     LineType, Length, TargetSegmentLength:
-      - [HawserLine, 90, 5]
+      - [HawserLine, 40, 1]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
