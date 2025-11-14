@@ -13,7 +13,7 @@ Mooring1:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [CALMBase, 6.000000, 0.000000, -1.5, 0, 180, 0, ~]
-      - [Anchored, 35.750000, 0.000000, 0.1143, 0, 90, 0, ~]
+      - [Anchored, 40.000000, 0.000000, 0.1143, 0, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -65,7 +65,7 @@ Mooring2:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [CALMBase, 3.000000, 5.196152, -1.5, 60, 180, 0, ~]
-      - [Anchored, 17.875000, 30.960408, 0.1143, 60, 90, 0, ~]
+      - [Anchored, 20.000000, 34.641016, 0.1143, 60, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -117,7 +117,7 @@ Mooring3:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [CALMBase, -3.000000, 5.196152, -1.5, 120, 180, 0, ~]
-      - [Anchored, -17.875000, 30.960408, 0.1143, 120, 90, 0, ~]
+      - [Anchored, -20.000000, 34.641016, 0.1143, 120, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -169,7 +169,7 @@ Mooring4:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [CALMBase, -6.000000, 0.000000, -1.5, 180, 180, 0, ~]
-      - [Anchored, -35.750000, 0.000000, 0.1143, 180, 90, 0, ~]
+      - [Anchored, -40.000000, 0.000000, 0.1143, 180, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -221,7 +221,7 @@ Mooring5:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [CALMBase, -3.000000, -5.196152, -1.5, 240, 180, 0, ~]
-      - [Anchored, -17.875000, -30.960408, 0.1143, 240, 90, 0, ~]
+      - [Anchored, -20.000000, -34.641016, 0.1143, 240, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -273,7 +273,7 @@ Mooring6:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [CALMBase, 3.000000, -5.196152, -1.5, 300, 180, 0, ~]
-      - [Anchored, 17.875000, -30.960408, 0.1143, 300, 90, 0, ~]
+      - [Anchored, 20.000000, -34.641016, 0.1143, 300, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
