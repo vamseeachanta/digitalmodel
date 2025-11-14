@@ -1,0 +1,21 @@
+# Wind - 180 deg Direction, 1-Year Return Period
+# North Sea Conditions: Speed=20 m/s
+# Standalone and reusable
+
+IncludeVesselWindLoads: Yes
+IncludeLineWindLoads: Yes
+IncludeBuoyWindLoads: No
+IncludeBuoyWingWindLoads: Yes
+WindRamping: From mean
+WindType: NPD spectrum
+AirDensity: 0.00128
+AirSpeedOfSound: 343
+WindSpectrumElevation: ~
+WindSpectrumFMin: 0
+WindSpectrumFMax: Infinity
+WindTimeOrigin: 0
+WindSeed: 12345
+NumberOfWindComponents: 1000
+WindSpeed: 20
+WindDirection: 180
+VerticalWindVariationFactor: ~
