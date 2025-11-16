@@ -1,0 +1,7 @@
+# Dynamics
+DynamicsSolutionMethod: Implicit time domain
+ImplicitUseVariableTimeStep: No
+ImplicitConstantTimeStep: 0.1
+LogPrecision: Single
+TargetLogSampleInterval: 0.1
+LogStartTime: ~

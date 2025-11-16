@@ -1,0 +1,16 @@
+# Current - 0 deg Direction, 10-Year Return Period
+# North Sea Conditions: Surface speed=1.9 m/s
+# Standalone and reusable
+
+MultipleCurrentDataCanBeDefined: No
+CurrentModel: Variation scheme
+CurrentRamped: No
+CurrentApplyVerticalStretching: No
+HorizontalCurrentFactor: ~
+VerticalCurrentVariationMethod: Interpolated
+RefCurrentSpeed: 1.9
+RefCurrentDirection: 0
+CurrentDepth, CurrentFactor, CurrentRotation:
+  - [0, 0.4, 0]
+  - [45, 0.4, 20]
+  - [100, 0.2, 40]

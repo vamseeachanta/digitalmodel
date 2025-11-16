@@ -1,0 +1,64 @@
+ARCHIVED: 2025-11-11
+
+This directory contains the OLD MODULE STRUCTURE that has been replaced by the new modular architecture.
+
+REASON FOR ARCHIVAL:
+- Old structure used nested directories (not industry standard)
+- Environment files used "user specified components" format (opaque, 100 lines)
+- Only supported 1-year return period
+- Mixed shared and direction-specific files in same directory
+- Duplicated structural modules
+
+REPLACED BY:
+1. base_files/ (19 structural modules + 108 environment files)
+   - Shared structural modules: _01a to _08_groups_discretised.yml
+   - Standalone environment files: base_files/env/*.yml
+   - JONSWAP wave format (simple, transparent, comparable)
+   - All 3 return periods: 1-year, 10-year, 100-year
+   - All 12 directions: 0° to 330° in 30° steps
+
+2. analysis_models/ (72 ready-to-run OrcaFlex models)
+   - Flat file naming: NSE_CALM_001_<dir>deg_<rp>_<type>.yml
+   - Both simple and discretised model types
+   - References base_files and env files
+   - Industry standard structure (McDermott Woodfibre FST convention)
+
+ARCHIVED CONTENT:
+- 12 direction subdirectories (operability_000deg to operability_330deg)
+- 36 old environment files (waves, current, wind)
+- 20 root-level module files (duplicates + obsolete)
+- Total: 56 files
+
+NEW STRUCTURE BENEFITS:
+✓ No duplication (single source of truth)
+✓ Flat structure (easy navigation)
+✓ Clear naming conventions
+✓ JONSWAP format (transparent wave data)
+✓ Multiple return periods (1yr, 10yr, 100yr)
+✓ Industry standard (McDermott convention)
+✓ Complete documentation
+
+IMPACT OF ARCHIVAL:
+- No impact on current workflow
+- All analysis models reference base_files/, not modules/
+- All functionality preserved and enhanced
+- New structure is production-ready
+
+RESTORATION (if needed):
+To restore old structure:
+  cd projects/TEST_OPERABILITY/orcaflex
+  mv _archived/modules_old_structure_20251111 modules
+
+However, this is NOT recommended as the new structure is superior in all aspects.
+
+DOCUMENTATION:
+- See: STRUCTURE_SUMMARY.md (project root)
+- See: base_files/README.md
+- See: base_files/env/README.md
+- See: analysis_models/README.md
+- See: ARCHIVAL_REVIEW.md (this directory)
+
+---
+Archived as part of OrcaFlex model structure modernization
+Project: North Sea CALM Buoy Example (NSE_CALM_001)
+New structure implements industry best practices

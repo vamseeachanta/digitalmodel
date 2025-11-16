@@ -1,0 +1,7 @@
+
+General:
+  - includefile: _01a_units_analysis.yml
+  - includefile: _01b_statics.yml
+  - includefile: _01c_dynamics.yml
+  - includefile: _01d_stages.yml
+  - includefile: _01e_view.yml

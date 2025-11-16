@@ -1,0 +1,24 @@
+%YAML 1.1
+---
+General:
+  UnitsSystem: SI
+  StageCount: 1
+  StageDuration: [10]
+
+Environment:
+  WaterDepth: 300
+
+LineTypes:
+  - Name: Chain
+    OD: 0.12
+    EA: 407e6
+
+Lines:
+  - Name: Mooring1
+    Connection: [Fixed, Anchored]
+    EndAX: 0
+    EndBX: 100
+    EndAZ: -50
+    EndBZ: -300
+    LineType: [Chain]
+    Length: [150]

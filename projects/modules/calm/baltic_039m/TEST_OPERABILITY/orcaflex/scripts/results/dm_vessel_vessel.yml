@@ -1,0 +1,1603 @@
+meta:
+  basename: orcaflex_post_process
+  library: digitalmodel
+  description: Post-process OrcaFlex results
+  arg_parse_dict: true
+  label: vessel
+parameters:
+  VarNames:
+    Line:
+    - End force
+    - End moment
+    - End Ex force
+    - End Ey force
+    - End Ez force
+    - End Ex moment
+    - End Ey moment
+    - End Ez moment
+    - End Lx force
+    - End Ly force
+    - End Lz force
+    - End Lx moment
+    - End Ly moment
+    - End Lz moment
+    - End GX force
+    - End GY force
+    - End GZ force
+    - End GX moment
+    - End GY moment
+    - End GZ moment
+    - X
+    - Y
+    - Z
+    - Dynamic x
+    - Dynamic y
+    - Dynamic z
+    - Layback
+    - Effective tension
+    - Wall tension
+    - Normalised tension
+    - Sidewall pressure
+    - Bend moment
+    - x bend moment
+    - y bend moment
+    - Bend moment component
+    - In plane bend moment
+    - Out of plane bend moment
+    - Curvature
+    - Normalised curvature
+    - x curvature
+    - y curvature
+    - Curvature component
+    - In plane curvature
+    - Out of plane curvature
+    - Bend radius
+    - x bend radius
+    - y bend radius
+    - Bend radius component
+    - In plane bend radius
+    - Out of plane bend radius
+    - Shear force
+    - x shear force
+    - y shear force
+    - Shear force component
+    - In plane shear force
+    - Out of plane shear force
+    - Arc length
+    - Expansion factor
+time_series_settings:
+  histogram: false
+  summation: false
+  groups:
+  - Columns:
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Effective Tension
+      objectExtra:
+      - End A
+      Label: Tension (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Shear Force
+      objectExtra:
+      - End A
+      Label: Shear (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: End Gx Force
+      objectExtra:
+      - End A
+      Label: Fx (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: End Gy Force
+      objectExtra:
+      - End A
+      Label: Fy (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: End Gz Force
+      objectExtra:
+      - End A
+      Label: Fz (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: X
+      objectExtra:
+      - End A
+      Label: X (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Y
+      objectExtra:
+      - End A
+      Label: Y (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Z
+      objectExtra:
+      - End A
+      Label: Z (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: GX velocity
+      objectExtra:
+      - End A
+      Label: Vx (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: GY velocity
+      objectExtra:
+      - End A
+      Label: Vy (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: GZ velocity
+      objectExtra:
+      - End A
+      Label: Vz (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: EZ Angle
+      objectExtra:
+      - End A
+      Label: Angle (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Effective Tension
+      objectExtra:
+      - End B
+      Label: Tension (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Shear Force
+      objectExtra:
+      - End B
+      Label: Shear (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: End Gx Force
+      objectExtra:
+      - End B
+      Label: Fx (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: End Gy Force
+      objectExtra:
+      - End B
+      Label: Fy (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: End Gz Force
+      objectExtra:
+      - End B
+      Label: Fz (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: X
+      objectExtra:
+      - End B
+      Label: X (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Y
+      objectExtra:
+      - End B
+      Label: Y (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Z
+      objectExtra:
+      - End B
+      Label: Z (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: GX velocity
+      objectExtra:
+      - End B
+      Label: Vx (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: GY velocity
+      objectExtra:
+      - End B
+      Label: Vy (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: GZ velocity
+      objectExtra:
+      - End B
+      Label: Vz (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: EZ Angle
+      objectExtra:
+      - End B
+      Label: Angle (Vessel End)
+    Label: Mooring1
+  data: true
+orcaflex_post_process: {}
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+orcaflex:
+  postprocess:
+    visualization:
+      flag: false
+    summary:
+      flag: true
+      statistics:
+        Minimum: false
+        Maximum: false
+        Mean: false
+        StdDev: false
+      min: true
+      max: true
+      mean: true
+    linked_statistics:
+      flag: false
+      min: true
+      max: true
+      mean: true
+    RangeGraph:
+      flag: false
+    RAOs:
+      flag: false
+    time_series:
+      flag: true
+      histogram: true
+      summation: true
+    cummulative_histograms:
+      flag: false
+    rain_flow:
+      bins: 10
+      range:
+      - 0
+      - 10
+  analysis:
+    static: false
+    simulation: false
+    iterate:
+      flag: false
+    save_sim: false
+    save_dat: false
+visualization_settings:
+  label: ld_6_7_8
+  individual: true
+  combined: false
+  hide_items: []
+  add_items:
+  - Umbilical
+  - uta2-deep
+  views:
+  - Elevation
+  - Plan
+  tdp_line: Umbilical
+  viewparams:
+    elevation:
+      ViewCentre:
+      - -17
+      - 0
+      - 12
+      ViewSize: 120
+      DrawViewAxes: false
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      ViewAzimuth: 270
+      ViewElevation: 0
+      ViewGamma: 71.89
+      Height: 1425
+      Width: 892
+    plan:
+      ViewCentre:
+      - 10
+      - 0
+      - 8
+      ViewSize: 80
+      DrawViewAxes: false
+      DrawGlobalAxes: false
+      DrawScaleBar: false
+      ViewAzimuth: 270
+      ViewElevation: 90
+      ViewGamma: 0
+      Height: 1425
+      Width: 892
+RangeGraph_settings:
+  add_effective_tension_to_cfg: false
+file_management:
+  flag: true
+  input_directory: ../analysis_models
+  output_directory: ~
+  update_unfinished:
+    flag: false
+  filename:
+    extension:
+    - sim
+    pattern: CALM
+    filters:
+      contains: []
+      not_contains: []
+  input_files:
+    sim:
+    - ..\analysis_models\CALM_atb_000deg_1yr_simple.sim
+    - ..\analysis_models\CALM_atb_000deg_no_load.sim
+    - ..\analysis_models\CALM_atb_030deg_1yr_simple.sim
+    - ..\analysis_models\NSE_CALM_001_000deg_1yr_simple.sim
+    - ..\analysis_models\NSE_CALM_001_000deg_no_load.sim
+    - ..\analysis_models\NSE_CALM_001_030deg_1yr_simple.sim
+parallel_processing:
+  enabled: true
+  max_workers: 3
+  timeout_per_file: 1200
+  save_error_reports: true
+  progress_reporting: true
+  task_type: mixed
+Analysis:
+  result_folder: D:\workspace-hub\digitalmodel\projects\modules\calm\baltic_039m\TEST_OPERABILITY\orcaflex\scripts\results
+  file_name: dm_vessel_vessel
+  basename: orcaflex_post_process
+  analysis_root_folder: D:\workspace-hub\digitalmodel\projects\modules\calm\baltic_039m\TEST_OPERABILITY\orcaflex\scripts
+  file_name_for_overwrite: dm_vessel_vessel
+  log_folder: D:\workspace-hub\digitalmodel\projects\modules\calm\baltic_039m\TEST_OPERABILITY\orcaflex\scripts\logs
+  start_time: 2025-11-15 01:57:14.656781
+  cfg_array_file_names: ~
+  DefaultInputFile: ~
+  CustomInputFile: dm_vessel.yml
+  result_data_folder: D:\workspace-hub\digitalmodel\projects\modules\calm\baltic_039m\TEST_OPERABILITY\orcaflex\scripts\results\Data
+  result_plot_folder: D:\workspace-hub\digitalmodel\projects\modules\calm\baltic_039m\TEST_OPERABILITY\orcaflex\scripts\results\Plot
+  fe_folder: D:\workspace-hub\digitalmodel\projects\modules\calm\baltic_039m\TEST_OPERABILITY\orcaflex\scripts\results
+  file_management_input_directory: ..\analysis_models
+  file_management_output_directory: D:\workspace-hub\digitalmodel\projects\modules\calm\baltic_039m\TEST_OPERABILITY\orcaflex\scripts\results
+summary_settings_master:
+  AddMinimumToSummary: true
+  AddMaximumToSummary: true
+  AddMeanToSummary: true
+  groups:
+  - Label: vessel1_6dof_dyn
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Min
+      Variable: Dynamic x
+      Label: vessel1_dynamic_x_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Max
+      Variable: Dynamic x
+      Label: vessel1_dynamic_x_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Min
+      Variable: Dynamic y
+      Label: vessel1_dynamic_y_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Max
+      Variable: Dynamic y
+      Label: vessel1_dynamic_y_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Min
+      Variable: Dynamic z
+      Label: vessel1_dynamic_z_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Max
+      Variable: Dynamic z
+      Label: vessel1_dynamic_z_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Min
+      Variable: Dynamic Rx
+      Label: vessel1_dynamic_Rx_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Max
+      Variable: Dynamic Rx
+      Label: vessel1_dynamic_Rx_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Min
+      Variable: Dynamic Ry
+      Label: vessel1_dynamic_Ry_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Max
+      Variable: Dynamic Ry
+      Label: vessel1_dynamic_Ry_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Min
+      Variable: Dynamic Rz
+      Label: vessel1_dynamic_Rz_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Max
+      Variable: Dynamic Rz
+      Label: vessel1_dynamic_Rz_max
+  - Label: vessel1_6dof_abs
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: X
+      Statistic_Type: Min
+      Label: vessel1_X_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: X
+      Statistic_Type: Max
+      Label: vessel1_X_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Y
+      Statistic_Type: Min
+      Label: vessel1_Y_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Y
+      Statistic_Type: Max
+      Label: vessel1_Y_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Z
+      Statistic_Type: Min
+      Label: vessel1_Z_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Z
+      Statistic_Type: Max
+      Label: vessel1_Z_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Rotation 1
+      Statistic_Type: Min
+      Label: vessel1_R1_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Rotation 1
+      Statistic_Type: Max
+      Label: vessel1_R1_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Rotation 2
+      Statistic_Type: Min
+      Label: vessel1_R2_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Rotation 2
+      Statistic_Type: Max
+      Label: vessel1_R2_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Rotation 3
+      Statistic_Type: Min
+      Label: vessel1_R3_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Rotation 3
+      Statistic_Type: Max
+      Label: vessel1_R3_abs_max
+  - Label: calm_buoy_6dof_abs
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: X
+      Statistic_Type: Min
+      Label: CALMTop_X_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: X
+      Statistic_Type: Max
+      Label: CALMTop_X_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Y
+      Statistic_Type: Min
+      Label: CALMTop_Y_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Y
+      Statistic_Type: Max
+      Label: CALMTop_Y_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Z
+      Statistic_Type: Min
+      Label: CALMTop_Z_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Z
+      Statistic_Type: Max
+      Label: CALMTop_Z_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Rotation 1
+      Statistic_Type: Min
+      Label: CALMTop_R1_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Rotation 1
+      Statistic_Type: Max
+      Label: CALMTop_R1_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Rotation 2
+      Statistic_Type: Min
+      Label: CALMTop_R2_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Rotation 2
+      Statistic_Type: Max
+      Label: CALMTop_R2_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Rotation 3
+      Statistic_Type: Min
+      Label: CALMTop_R3_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Rotation 3
+      Statistic_Type: Max
+      Label: CALMTop_R3_abs_max
+  - Label: line_tension
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring1
+      Statistic_Type: Min
+      Label: Mooring1_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring1
+      Statistic_Type: Max
+      Label: Mooring1_eff_tension_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring2
+      Statistic_Type: Min
+      Label: Mooring2_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring2
+      Statistic_Type: Max
+      Label: Mooring2_eff_tension_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring3
+      Statistic_Type: Min
+      Label: Mooring3_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring3
+      Statistic_Type: Max
+      Label: Mooring3_eff_tension_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring4
+      Statistic_Type: Min
+      Label: Mooring4_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring4
+      Statistic_Type: Max
+      Label: Mooring4_eff_tension_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring5
+      Statistic_Type: Min
+      Label: Mooring5_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring5
+      Statistic_Type: Max
+      Label: Mooring5_eff_tension_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring6
+      Statistic_Type: Min
+      Label: Mooring6_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring6
+      Statistic_Type: Max
+      Label: Mooring6_eff_tension_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Hawser
+      Statistic_Type: Min
+      Label: Hawser_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Hawser
+      Statistic_Type: Max
+      Label: Hawser_eff_tension_max
+summary_settings:
+  AddMinimumToSummary: true
+  AddMaximumToSummary: true
+  AddMeanToSummary: true
+  groups:
+  - Label: vessel1_6dof_dyn
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Min
+      Variable: Dynamic x
+      Label: vessel1_dynamic_x_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Max
+      Variable: Dynamic x
+      Label: vessel1_dynamic_x_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Min
+      Variable: Dynamic y
+      Label: vessel1_dynamic_y_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Max
+      Variable: Dynamic y
+      Label: vessel1_dynamic_y_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Min
+      Variable: Dynamic z
+      Label: vessel1_dynamic_z_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Max
+      Variable: Dynamic z
+      Label: vessel1_dynamic_z_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Min
+      Variable: Dynamic Rx
+      Label: vessel1_dynamic_Rx_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Max
+      Variable: Dynamic Rx
+      Label: vessel1_dynamic_Rx_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Min
+      Variable: Dynamic Ry
+      Label: vessel1_dynamic_Ry_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Max
+      Variable: Dynamic Ry
+      Label: vessel1_dynamic_Ry_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Min
+      Variable: Dynamic Rz
+      Label: vessel1_dynamic_Rz_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Statistic_Type: Max
+      Variable: Dynamic Rz
+      Label: vessel1_dynamic_Rz_max
+  - Label: vessel1_6dof_abs
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: X
+      Statistic_Type: Min
+      Label: vessel1_X_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: X
+      Statistic_Type: Max
+      Label: vessel1_X_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Y
+      Statistic_Type: Min
+      Label: vessel1_Y_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Y
+      Statistic_Type: Max
+      Label: vessel1_Y_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Z
+      Statistic_Type: Min
+      Label: vessel1_Z_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Z
+      Statistic_Type: Max
+      Label: vessel1_Z_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Rotation 1
+      Statistic_Type: Min
+      Label: vessel1_R1_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Rotation 1
+      Statistic_Type: Max
+      Label: vessel1_R1_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Rotation 2
+      Statistic_Type: Min
+      Label: vessel1_R2_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Rotation 2
+      Statistic_Type: Max
+      Label: vessel1_R2_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Rotation 3
+      Statistic_Type: Min
+      Label: vessel1_R3_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: Vessel1
+      Variable: Rotation 3
+      Statistic_Type: Max
+      Label: vessel1_R3_abs_max
+  - Label: calm_buoy_6dof_abs
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: X
+      Statistic_Type: Min
+      Label: CALMTop_X_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: X
+      Statistic_Type: Max
+      Label: CALMTop_X_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Y
+      Statistic_Type: Min
+      Label: CALMTop_Y_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Y
+      Statistic_Type: Max
+      Label: CALMTop_Y_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Z
+      Statistic_Type: Min
+      Label: CALMTop_Z_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Z
+      Statistic_Type: Max
+      Label: CALMTop_Z_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Rotation 1
+      Statistic_Type: Min
+      Label: CALMTop_R1_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Rotation 1
+      Statistic_Type: Max
+      Label: CALMTop_R1_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Rotation 2
+      Statistic_Type: Min
+      Label: CALMTop_R2_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Rotation 2
+      Statistic_Type: Max
+      Label: CALMTop_R2_abs_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Rotation 3
+      Statistic_Type: Min
+      Label: CALMTop_R3_abs_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra: ~
+      ObjectName: CALMTop
+      Variable: Rotation 3
+      Statistic_Type: Max
+      Label: CALMTop_R3_abs_max
+  - Label: line_tension
+    Columns:
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring1
+      Statistic_Type: Min
+      Label: Mooring1_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring1
+      Statistic_Type: Max
+      Label: Mooring1_eff_tension_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring2
+      Statistic_Type: Min
+      Label: Mooring2_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring2
+      Statistic_Type: Max
+      Label: Mooring2_eff_tension_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring3
+      Statistic_Type: Min
+      Label: Mooring3_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring3
+      Statistic_Type: Max
+      Label: Mooring3_eff_tension_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring4
+      Statistic_Type: Min
+      Label: Mooring4_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring4
+      Statistic_Type: Max
+      Label: Mooring4_eff_tension_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring5
+      Statistic_Type: Min
+      Label: Mooring5_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring5
+      Statistic_Type: Max
+      Label: Mooring5_eff_tension_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring6
+      Statistic_Type: Min
+      Label: Mooring6_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Mooring6
+      Statistic_Type: Max
+      Label: Mooring6_eff_tension_max
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Hawser
+      Statistic_Type: Min
+      Label: Hawser_eff_tension_min
+    - Command: TimeHistory
+      SimulationPeriod:
+      - 0.0
+      - ~
+      objectExtra:
+      - End A
+      Variable: Effective Tension
+      ObjectName: Hawser
+      Statistic_Type: Max
+      Label: Hawser_eff_tension_max
+time_series_settings_master:
+  data: false
+  histogram: false
+  summation: false
+  groups:
+  - Columns:
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Effective Tension
+      objectExtra:
+      - End A
+      Label: Tension (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Shear Force
+      objectExtra:
+      - End A
+      Label: Shear (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: End Gx Force
+      objectExtra:
+      - End A
+      Label: Fx (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: End Gy Force
+      objectExtra:
+      - End A
+      Label: Fy (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: End Gz Force
+      objectExtra:
+      - End A
+      Label: Fz (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: X
+      objectExtra:
+      - End A
+      Label: X (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Y
+      objectExtra:
+      - End A
+      Label: Y (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Z
+      objectExtra:
+      - End A
+      Label: Z (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: GX velocity
+      objectExtra:
+      - End A
+      Label: Vx (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: GY velocity
+      objectExtra:
+      - End A
+      Label: Vy (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: GZ velocity
+      objectExtra:
+      - End A
+      Label: Vz (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: EZ Angle
+      objectExtra:
+      - End A
+      Label: Angle (Jacket End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Effective Tension
+      objectExtra:
+      - End B
+      Label: Tension (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Shear Force
+      objectExtra:
+      - End B
+      Label: Shear (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: End Gx Force
+      objectExtra:
+      - End B
+      Label: Fx (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: End Gy Force
+      objectExtra:
+      - End B
+      Label: Fy (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: End Gz Force
+      objectExtra:
+      - End B
+      Label: Fz (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: X
+      objectExtra:
+      - End B
+      Label: X (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Y
+      objectExtra:
+      - End B
+      Label: Y (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: Z
+      objectExtra:
+      - End B
+      Label: Z (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: GX velocity
+      objectExtra:
+      - End B
+      Label: Vx (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: GY velocity
+      objectExtra:
+      - End B
+      Label: Vy (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: GZ velocity
+      objectExtra:
+      - End B
+      Label: Vz (Vessel End)
+    - Command: TimeHistory
+      ObjectName: Mooring1
+      SimulationPeriod:
+      - 0.0
+      - ~
+      Variable: EZ Angle
+      objectExtra:
+      - End B
+      Label: Angle (Vessel End)
+    Label: Mooring1
+_config_file_path: D:\workspace-hub\digitalmodel\projects\modules\calm\baltic_039m\TEST_OPERABILITY\orcaflex\scripts\dm_vessel.yml
+_config_dir_path: D:\workspace-hub\digitalmodel\projects\modules\calm\baltic_039m\TEST_OPERABILITY\orcaflex\scripts

@@ -1,0 +1,3 @@
+Timestamp,File,Overall Status,Level 1 Status,Level 2 Status,Level 3 Status,YAML Valid,OrcaFlex Loadable,Parameters Validated,Total Issues,Critical Issues,Warnings,Validation Time (s),Comments
+2025-11-04 00:59:28,specs\modules\orcaflex\modular-input-file\output\calm_buoy_base.yml,pass,pass,N/A,unknown,Yes,No,0,0,0,0,0.35,OK
+2025-11-04 00:59:28,specs\modules\orcaflex\modular-input-file\output\discretised_calm_buoy_base.yml,pass,pass,N/A,unknown,Yes,No,0,0,0,0,0.39,OK

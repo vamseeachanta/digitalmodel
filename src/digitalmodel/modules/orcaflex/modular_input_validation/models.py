@@ -98,6 +98,14 @@ class Level2Result:
     status: ValidationStatus = ValidationStatus.UNKNOWN
     availability_comment: str = ""
 
+    # Additional attributes used by level_2_orcaflex.py
+    comments: str = ""
+    model_stage: Optional[str] = None
+    analysis_mode: Optional[str] = None
+    object_count: int = 0
+    static_analysis_passed: bool = False
+    warnings: List[str] = field(default_factory=list)
+
 
 @dataclass
 class PhysicalConsistencyCheck:
@@ -124,6 +132,16 @@ class Level3Result:
     failures: int = 0
     consistency_checks: List[PhysicalConsistencyCheck] = field(default_factory=list)
     status: ValidationStatus = ValidationStatus.UNKNOWN
+
+    # Category-specific checks
+    hull_geometry_checks: List[PhysicalConsistencyCheck] = field(default_factory=list)
+    metocean_checks: List[PhysicalConsistencyCheck] = field(default_factory=list)
+    mooring_capacity_checks: List[PhysicalConsistencyCheck] = field(default_factory=list)
+    project_comparison_checks: List[PhysicalConsistencyCheck] = field(default_factory=list)
+
+    # Additional metrics
+    parameters_validated: int = 0
+    critical_issues: int = 0
 
 
 @dataclass
