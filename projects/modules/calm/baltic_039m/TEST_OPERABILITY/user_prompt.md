@@ -32,3 +32,17 @@ Define the below vessel, use ocimf wind and current coefficients.
         Max Draft (m)		  11.70	
         DWT (tonnes)		35,589
         Capacity (bbl)	   260,440		
+
+
+Make the data format for this non-working file
+projects\modules\calm\baltic_039m\TEST_OPERABILITY\orcaflex\base_files\_04_vessel_type_crowley650_atb.yml
+
+as consistent as possible with this working file. Do not change anything in this working file:
+projects\modules\calm\baltic_039m\TEST_OPERABILITY\orcaflex\base_files\_04_vessel_type1.yml
+
+
+
+## Postprocess
+
+Troubleshoot to run the below file:
+"D:\workspace-hub\digitalmodel\projects\modules\calm\baltic_039m\TEST_OPERABILITY\orcaflex\scripts\dm_vessel.yml"
