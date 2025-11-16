@@ -1,0 +1,496 @@
+New: Mooring1
+Mooring1:
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALMBase, 6, 0, -1.5, 0, 180, 0, ~]
+      - [Anchored, 299.13326732253665, 5.580584446653303, 0.1143, 0, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [2p5inChain, 150, 10]
+      - [2p5inChain, 195, 15]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 180
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    DrawShadedNodesAsSpheres: Yes
+    ContactPen: [5, Solid, White]
+New: Mooring2
+Mooring2:
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALMBase, 2.999999999999999, 5.196152422706632, -1.5, 59.999999999999986, 180, 0, ~]
+      - [Anchored, 146.13326732253665, 270.5882055819849, 0.1143, 60, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [2p5inChain, 150, 10]
+      - [2p5inChain, 195, 15]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 240
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    DrawShadedNodesAsSpheres: Yes
+    ContactPen: [5, Solid, White]
+New: Mooring3
+Mooring3:
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALMBase, -3.000000000000001, 5.19615242270663, -1.5, 119.99999999999999, 180, 0, ~]
+      - [Anchored, -159.86673267746338, 270.5882055819848, 0.1143, 120, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [2p5inChain, 150, 10]
+      - [2p5inChain, 195, 15]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 300
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    DrawShadedNodesAsSpheres: Yes
+    ContactPen: [5, Solid, White]
+New: Mooring4
+Mooring4:
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALMBase, -2.9999999999999973, -5.196152422706632, -1.5, 239.99999999999997, 180, 0, ~]
+      - [Anchored, -159.8667326774632, -259.42703668867836, 0.1143, 240, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [2p5inChain, 150, 10]
+      - [2p5inChain, 195, 15]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 60
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    DrawShadedNodesAsSpheres: Yes
+    ContactPen: [5, Solid, White]
+New: Mooring5
+Mooring5:
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALMBase, 3.000000000000001, -5.196152422706632, -1.5, 300, 180, 0, ~]
+      - [Anchored, 146.1332673225367, -259.4270366886783, 0.1143, 300, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [2p5inChain, 150, 10]
+      - [2p5inChain, 195, 15]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 120
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    DrawShadedNodesAsSpheres: Yes
+    ContactPen: [5, Solid, White]
+New: Mooring6
+Mooring6:
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALMBase, -6.000000000000001, 888.1784197001252e-18, -1.5, 180, 180, 0, ~]
+      - [Anchored, -312.86673267746335, 5.580584446653339, 0.1143, 180, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [2p5inChain, 150, 10]
+      - [2p5inChain, 195, 15]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 0
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    DrawShadedNodesAsSpheres: Yes
+    ContactPen: [5, Solid, White]
+New: Loadhose
+Loadhose:
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Vessel1, 45, 5, 7, 30, 165, 0, ~]
+      - [CALMTop, -3.201296069889044, 4.320710529453033, 0.5, 315, 30.00000000000001, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [Infinity, ~]
+      - [Infinity, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Hose, 40, 0.5]
+      - [Hose, 60, 2]
+      - [Hose, 20, 0.5]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: None
+    # Drawing
+    DrawNodesAsDiscs: No
+    DrawShadedNodesAsSpheres: Yes
+    ContactPen: [5, Solid, White]
+New: Hawser
+Hawser:
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALMTop, -4.507972599671972, 3.120780440136267, 1.1928223140903764, 125.00000000000001, 90, 0, ~]
+      - [Vessel1, 50, 0, 7, 180, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [HawserLine, 90, 5]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    # Drawing
+    DrawNodesAsDiscs: No
+    DrawShadedNodesAsSpheres: Yes
+    ContactPen: [5, Solid, White]
+New: Pivot1
+Pivot1:
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALMTop, 0, 0, 0, 0, 180, 0, ~]
+      - [CALMBase, 0, 0, 0.7946049904251593, 0, 180, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [Infinity, ~]
+      - [Infinity, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    Sections:
+      - LineType: Pivot
+        Length: 0.99
+        NumberOfSegments: 1
+        DisturbanceVessel: (none)
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    # Drawing
+    Hidden: Yes
+    DrawNodesAsDiscs: No
+    DrawShadedNodesAsSpheres: Yes
+New: Pivot2
+Pivot2:
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALMBase, 0, 0, 3.7946049904251593, 0, 180, 0, ~]
+      - [CALMTop, 0, 0, 1, 0, 180, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [Infinity, ~]
+      - [Infinity, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    Sections:
+      - LineType: Pivot
+        Length: 0.99
+        NumberOfSegments: 1
+        DisturbanceVessel: (none)
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    # Drawing
+    Hidden: Yes
+    DrawNodesAsDiscs: No
+    DrawShadedNodesAsSpheres: Yes

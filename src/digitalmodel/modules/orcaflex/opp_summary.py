@@ -230,6 +230,9 @@ class OPPSummary:
         return summary_columns
 
     def get_additional_data(self, cfg, RangeDF, VariableName, output, Statistic_Type):
+        # Initialize output_value to None to avoid UnboundLocalError
+        output_value = None
+
         if cfg["Command"] == "Range Graph":
             RangeDF[VariableName] = getattr(output, Statistic_Type)
             if VariableName == "API STD 2RD Method 1":

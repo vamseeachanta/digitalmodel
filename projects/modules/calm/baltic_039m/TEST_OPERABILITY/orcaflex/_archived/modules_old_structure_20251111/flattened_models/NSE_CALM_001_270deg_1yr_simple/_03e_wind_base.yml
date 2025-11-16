@@ -1,0 +1,21 @@
+# Wind - Base Definition
+# NOTE: WindDirection is set to 0° as placeholder - override in load case files
+# Return Period: 1-year (Wind speed=20 m/s based on North Sea conditions)
+
+IncludeVesselWindLoads: Yes
+IncludeLineWindLoads: Yes
+IncludeBuoyWindLoads: No
+IncludeBuoyWingWindLoads: Yes
+WindRamping: From mean
+WindType: NPD spectrum
+AirDensity: 0.00128
+AirSpeedOfSound: 343
+WindSpectrumElevation: ~
+WindSpectrumFMin: 0
+WindSpectrumFMax: Infinity
+WindTimeOrigin: 0
+WindSeed: 12345
+NumberOfWindComponents: 1000
+WindSpeed: 20
+WindDirection: 0
+VerticalWindVariationFactor: ~
