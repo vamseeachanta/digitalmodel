@@ -1,7 +1,7 @@
 New: Vessel1
 Vessel1:
   Name: Vessel1
-  VesselType: Crowley650ATB
+  VesselType: VesselType1
   Draught: Draught1
   Length: ~
   Connection: Free
