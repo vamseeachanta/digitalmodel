@@ -4,7 +4,7 @@
 # Heading: {{ heading }} degrees
 # Date: {{ generation_date }}
 
-# Include standalone environmental files
-includefile: {{ wave_file }}
-includefile: {{ wind_file }}
-includefile: {{ current_file }}
+Environment:
+  - includefile: {{ wave_file }}
+  - includefile: {{ wind_file }}
+  - includefile: {{ current_file }}
