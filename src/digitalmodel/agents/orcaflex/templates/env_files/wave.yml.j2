@@ -4,12 +4,33 @@
 # Heading: {{ heading }} degrees
 # Date: {{ generation_date }}
 
-WaveType: JONSWAP
-WaveDirection: {{ heading }}
-WaveTrains: 1
+# Wave calculation settings
+KinematicStretchingMethod: Vertical stretching
+UserSpecifiedRandomWaveSeeds: No
+WaveFrequencySpectrumDiscretisationMethod: Equal energy
 
-WaveHs: {{ Hs }}
-WaveTp: {{ Tp }}
-WaveGamma: {{ gamma }}
-WaveOrigin: [0, 0]
-WaveNumberOfSpectralDirections: 1
+WaveTrains:
+  - Name: Wave 1
+    WaveType: JONSWAP
+    WaveDirection: {{ heading }}
+    WaveOrigin: [0, 0]
+    WaveTimeOrigin: 0
+    WaveNumberOfSpectralDirections: 1
+
+    # JONSWAP parameters
+    WaveJONSWAPParameters: Partially specified
+    WaveHs: {{ Hs }}
+    WaveTz: {{ Tz }}
+    WaveGamma: {{ gamma }}
+
+    # Discretization
+    WaveNumberOfComponents: 100
+    WaveSpectrumMinRelFrequency: 0.5
+    WaveSpectrumMaxRelFrequency: 10
+    WaveSpectrumMaxComponentFrequencyRange: 0.05
+
+# Wave calculation
+WaveKinematicsCutoffDepth: Infinity
+WaveCalculationMethod: Instantaneous position (exact)
+WaveCalculationTimeInterval: 0
+WaveCalculationSpatialInterval: 0

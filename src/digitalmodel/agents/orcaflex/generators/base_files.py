@@ -7,6 +7,7 @@ from pathlib import Path
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from typing import List, Dict, Any
+import math
 
 
 class BaseFileGenerator:
@@ -39,6 +40,10 @@ class BaseFileGenerator:
             lstrip_blocks=True
         )
 
+        # Add math functions to Jinja2 environment
+        self.env.globals['cos'] = math.cos
+        self.env.globals['sin'] = math.sin
+
         # Vessel-specific configurations
         self.vessel_configs = {
             'crowley650_atb': {
@@ -46,6 +51,14 @@ class BaseFileGenerator:
                 'beam': 32.3,
                 'draft': 6.1,
                 'displacement': 30000.0,
+                'cog_x': 0.0,
+                'cog_y': 0.0,
+                'cog_z': -3.0,
+                'ixx': 2.5e8,
+                'iyy': 6.0e9,
+                'izz': 6.0e9,
+                'superstructure_area': 500.0,
+                'lateral_wind_area': 2000.0,
                 'rao_file': 'crowley650_atb_RAO.txt',
                 'amd_file': 'crowley650_atb_AMD.txt'
             }
@@ -61,27 +74,45 @@ class BaseFileGenerator:
             'water_depth': self.water_depth,
             'num_mooring_lines': self.num_mooring_lines,
             'generation_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+
+            # Vessel parameters
             'vessel_length': vessel_config.get('length', 195.0),
             'vessel_beam': vessel_config.get('beam', 32.3),
             'vessel_draft': vessel_config.get('draft', 6.1),
             'vessel_displacement': vessel_config.get('displacement', 30000.0),
+            'cog_x': vessel_config.get('cog_x', 0.0),
+            'cog_y': vessel_config.get('cog_y', 0.0),
+            'cog_z': vessel_config.get('cog_z', -3.0),
+            'ixx': vessel_config.get('ixx', 2.5e8),
+            'iyy': vessel_config.get('iyy', 6.0e9),
+            'izz': vessel_config.get('izz', 6.0e9),
+            'superstructure_area': vessel_config.get('superstructure_area', 500.0),
+            'lateral_wind_area': vessel_config.get('lateral_wind_area', 2000.0),
             'rao_file': vessel_config.get('rao_file', 'vessel_RAO.txt'),
             'amd_file': vessel_config.get('amd_file', 'vessel_AMD.txt'),
+
             # General settings
-            'stage_duration_buildup': -10.0,
-            'stage_duration_simulation': 100.0,
-            'log_sample_interval': 0.1,
-            'time_step': 0.1,
-            'wave_type': 'JONSWAP',
-            'wave_direction': 0,
+            'stage_duration_buildup': 10,
+            'stage_duration_simulation': 100,
+            'statics_min_damping': 5,
+            'use_calculated_mean_position': 'No',
+            'dynamics_solution_method': 'Implicit time domain',
+            'line_contact': 'No',
+
             # Line settings
-            'line_length': self.water_depth + 100.0,  # Catenary length
-            'line_diameter': 0.084,  # 84mm chain
-            'line_mass_per_length': 49.0,  # kg/m for R3 studless chain
+            'line_length': self.water_depth + 100.0,
+            'line_diameter': 0.084,
+            'line_mass_per_length': 49.0,
+            'line_ea': 1.0e9,
+            'vessel_fairlead_x': 0.0,
+            'vessel_fairlead_y': 0.0,
+            'vessel_fairlead_z': -vessel_config.get('draft', 6.1),
+
             # Buoy settings
+            'buoy_mass': 5000.0,
+            'buoy_draft': 1.0,
             'buoy_diameter': 3.0,
-            'buoy_height': 2.0,
-            'buoy_mass': 5000.0
+            'buoy_waterplane_area': 3.14159 * (3.0/2)**2
         }
 
     def _render_template(self, template_name: str, output_path: Path, **extra_params) -> Path:
@@ -107,64 +138,80 @@ class BaseFileGenerator:
             output_dir / '01_general.yml'
         )
 
-    def generate_var_data(self, output_dir: Path) -> Path:
-        """Generate 02_var_data.yml"""
+    def generate_environment(self, output_dir: Path) -> Path:
+        """Generate 02_environment.yml"""
         return self._render_template(
-            '02_var_data.yml.j2',
-            output_dir / '02_var_data.yml'
+            '02_environment.yml.j2',
+            output_dir / '02_environment.yml'
         )
 
-    def generate_environment_ref(self, output_dir: Path) -> Path:
-        """Generate 03_environment.yml (reference to env files)"""
+    def generate_vessel_type(self, output_dir: Path) -> tuple:
+        """Generate 04_vessel wrapper and data files"""
+        wrapper = self._render_template(
+            '04_vessel_wrapper.yml.j2',
+            output_dir / '04_vessel.yml'
+        )
+        data = self._render_template(
+            '_04_vessel_data.yml.j2',
+            output_dir / '_04_vessel_data.yml'
+        )
+        return (wrapper, data)
+
+    def generate_vessel_instance(self, output_dir: Path) -> tuple:
+        """Generate 05_vessel_inst wrapper and data files"""
+        wrapper = self._render_template(
+            '05_vessel_inst_wrapper.yml.j2',
+            output_dir / '05_vessel_inst.yml'
+        )
+        data = self._render_template(
+            '_05_vessel_inst_data.yml.j2',
+            output_dir / '_05_vessel_inst_data.yml'
+        )
+        return (wrapper, data)
+
+    def generate_line_types(self, output_dir: Path) -> Path:
+        """Generate 06_line_types.yml"""
         return self._render_template(
-            '03_environment.yml.j2',
-            output_dir / '03_environment.yml'
+            '06_line_types.yml.j2',
+            output_dir / '06_line_types.yml'
         )
 
-    def generate_vessel(self, output_dir: Path) -> Path:
-        """Generate 04_vessel_{vessel_type}.yml"""
-        filename = f"04_vessel_{self.vessel_type}.yml"
-        return self._render_template(
-            '04_vessel.yml.j2',
-            output_dir / filename
+    def generate_lines(self, output_dir: Path) -> tuple:
+        """Generate 07_lines wrapper and data files"""
+        wrapper = self._render_template(
+            '07_lines_wrapper.yml.j2',
+            output_dir / '07_lines.yml'
         )
+        data = self._render_template(
+            '_07_lines_data.yml.j2',
+            output_dir / '_07_lines_data.yml'
+        )
+        return (wrapper, data)
 
-    def generate_lines(self, output_dir: Path) -> Path:
-        """Generate 05_lines.yml"""
-        return self._render_template(
-            '05_lines.yml.j2',
-            output_dir / '05_lines.yml'
+    def generate_buoys(self, output_dir: Path) -> tuple:
+        """Generate 08_buoys wrapper and data files"""
+        wrapper = self._render_template(
+            '08_buoys_wrapper.yml.j2',
+            output_dir / '08_buoys.yml'
         )
-
-    def generate_buoys(self, output_dir: Path) -> Path:
-        """Generate 06_buoys.yml"""
-        return self._render_template(
-            '06_buoys.yml.j2',
-            output_dir / '06_buoys.yml'
+        data = self._render_template(
+            '_08_buoys_data.yml.j2',
+            output_dir / '_08_buoys_data.yml'
         )
+        return (wrapper, data)
 
     def generate_groups(self, output_dir: Path) -> Path:
-        """Generate 08_groups.yml"""
+        """Generate 09_groups.yml"""
         return self._render_template(
-            '08_groups.yml.j2',
-            output_dir / '08_groups.yml'
-        )
-
-    def generate_calculated_positions(self, output_dir: Path) -> Path:
-        """Generate _90_calculated_positions.yml"""
-        return self._render_template(
-            '_90_calculated_positions.yml.j2',
-            output_dir / '_90_calculated_positions.yml'
+            '09_groups.yml.j2',
+            output_dir / '09_groups.yml'
         )
 
     def generate_master_include(self, output_dir: Path) -> Path:
         """Generate master include file that references all base files"""
-        vessel_file = f"04_vessel_{self.vessel_type}.yml"
-
         return self._render_template(
             '_master_base.yml.j2',
-            output_dir / f"{self.project_name}_base.yml",
-            vessel_file=vessel_file
+            output_dir / f"{self.project_name}_base.yml"
         )
 
     def generate_all(self, output_dir: Path) -> List[Path]:
@@ -184,14 +231,30 @@ class BaseFileGenerator:
 
         files = [
             self.generate_general(output_path),
-            self.generate_var_data(output_path),
-            self.generate_environment_ref(output_path),
-            self.generate_vessel(output_path),
-            self.generate_lines(output_path),
-            self.generate_buoys(output_path),
-            self.generate_groups(output_path),
-            self.generate_calculated_positions(output_path),
-            self.generate_master_include(output_path)
+            self.generate_environment(output_path),
         ]
+
+        # Vessel type (wrapper + data)
+        vessel_type_files = self.generate_vessel_type(output_path)
+        files.extend(vessel_type_files)
+
+        # Vessel instance (wrapper + data)
+        vessel_inst_files = self.generate_vessel_instance(output_path)
+        files.extend(vessel_inst_files)
+
+        files.append(self.generate_line_types(output_path))
+
+        # Lines (wrapper + data)
+        lines_files = self.generate_lines(output_path)
+        files.extend(lines_files)
+
+        # Buoys (wrapper + data)
+        buoys_files = self.generate_buoys(output_path)
+        files.extend(buoys_files)
+
+        files.extend([
+            self.generate_groups(output_path),
+            self.generate_master_include(output_path)
+        ])
 
         return files

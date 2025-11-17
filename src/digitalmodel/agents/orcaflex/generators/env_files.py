@@ -35,9 +35,9 @@ class EnvFileGenerator:
         # Environmental conditions database
         self.conditions = {
             'baltic_sea': {
-                '1yr': {'Hs': 2.5, 'Tp': 6.0, 'wind_speed': 15.0, 'current_speed': 0.5},
-                '10yr': {'Hs': 3.5, 'Tp': 7.5, 'wind_speed': 20.0, 'current_speed': 0.7},
-                '100yr': {'Hs': 4.5, 'Tp': 9.0, 'wind_speed': 25.0, 'current_speed': 1.0}
+                '1yr': {'Hs': 2.5, 'Tz': 5.3, 'wind_speed': 15.0, 'current_speed': 0.5},
+                '10yr': {'Hs': 3.5, 'Tz': 6.6, 'wind_speed': 20.0, 'current_speed': 0.7},
+                '100yr': {'Hs': 4.5, 'Tz': 7.9, 'wind_speed': 25.0, 'current_speed': 1.0}
             }
         }
 
@@ -49,7 +49,7 @@ class EnvFileGenerator:
             'return_period': return_period,
             'heading': heading,
             'Hs': conditions['Hs'],
-            'Tp': conditions['Tp'],
+            'Tz': conditions['Tz'],
             'gamma': 3.3,  # JONSWAP peak enhancement factor
             'wind_speed': conditions['wind_speed'],
             'wind_direction': heading,
