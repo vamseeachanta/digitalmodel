@@ -1,0 +1,75 @@
+JOB BUOY  DRIF  WFRQ
+TITLE               Buoy for JPKenny; ACMA JOB B860
+OPTIONS REST RDEP CONV END
+*
+*    -- -- -- ---- --------- --------- --------- ---------
+*    BUOY MODEL
+*    -- -- -- ---- --------- --------- --------- ---------
+*
+RESTART   4  5                AB2HAT
+    09    DRM1
+ END09FIDD               100.0     100.0     600.0    3000.0    3000.0
+          FINI
+    10    HLD1
+    10WIFX    1    6     0.017     0.017     0.016     0.014     0.012     0.009
+    10WIFX    7    9     0.006     0.003     0.000
+    10WIFY    1    6     0.000     0.003     0.006     0.009     0.012     0.014
+    10WIFY    7    9     0.016     0.017     0.017
+    10WIRZ    1    6     0.000     0.000     0.000     0.000     0.000     0.000
+    10WIRZ    7    9     0.000     0.000     0.000
+    10CUFX    1    6    83.020    81.425    76.701    69.029    58.704    46.124
+    10CUFX    7    9    31.771    16.196     0.000
+    10CUFY    1    6     0.000    16.196    31.771    46.124    58.704    69.029
+    10CUFY    7    9    76.701    81.425    83.020
+    10CURZ    1    6     0.000     0.000     0.000     0.000     0.000     0.000
+ END10CURZ    7    9     0.000     0.000     0.000
+    10    FINI
+    11    NONE 
+    12    CONS
+ END12DCON    2    1 9000 9001         2  500  536
+    13    SPEC
+    13SPDN                  30
+    13WIND                33.0        30
+    13CURR                1.22        30
+ END13JONH              0.3000    2.0000     3.000      5.50     0.537             
+    14    MOOR
+    14PRIC
+*                                    m/l       A        EA         BS        L
+*                                 (MT/m)     (m^2)    (kN)       (kN)      (m)
+    14COMP   20   30         2      20.0      60.0       0.0
+*                                 (MT/m) in air = .177     (MT/m) in water = .154
+    14ECAT                       0.17700   0.01272    8.00e5    6647.0     300.0
+    14ECAT                       0.17700   0.01272    8.00e5    6647.0      30.0
+    14NLIN    1 8000    0 8007	    
+    14NLIN    1 8001    0 8008                	    
+    14NLIN    1 8002    0 8009                	    
+    14NLIN    1 8003    0 8010                	    
+    14NLIN    1 8004    0 8011                	    
+ END14NLIN    1 8005    0 8012
+* 
+* Hawser Definitions where Tension = P1.E + P2.E^2 + P3.E^3 + P4.E^4 + P5.E^5
+* P1, P2, P3, P4, P5 = Parameters input on the POLY card
+* E = Extension of the mooring line
+*
+*    14POLY                        1.1106    0.5922
+*    14NLIN    2         3                    60.00
+*    14POLY                        1.1106    0.5922
+*    14NLIN    2         3                    60.00
+    15    NONE
+    16    TINT
+ END16TIME     99999     0.108
+    17    NONE	
+    18    PROP
+    18PREV72000	
+    18PTEN    1
+ END18NODE    1 8999 
+    19    NONE
+    20    NONE
+
+
+
+
+
+
+
+
