@@ -234,7 +234,30 @@ Templates will be considered complete when:
 
 **Current Status**: 2/8 criteria met (25%)
 
+## 🔍 Latest Finding (2025-11-17 01:45 UTC)
+
+### Root Cause Identified: Line Template Format Mismatch
+
+**Issue:** Lines fail to reference LineType despite correct file order and valid LineType definition.
+
+**Root Cause:** Line template uses simplified property format incompatible with OrcaFlex 11.5e:
+- ❌ Current: `LineType: MooringChain` (simple string)
+- ✅ Required: `LineType, Length, TargetSegmentLength: [[type, len, seg]]` (array format)
+- ❌ Current: `EndAConnection: Vessel1` (simple property)
+- ✅ Required: `Connection, ConnectionX, ...: [[obj, x, y, z, ...]]` (array format)
+
+**Evidence:**
+```bash
+# Test confirmed:
+- LineTypes file loads successfully ✅
+- Master file up to LineTypes loads ✅
+- Master file fails when Lines added ❌
+- Reference files use array-based Connection format
+```
+
+**Next Action:** Update `_07_lines_data.yml.j2` template to use array-based format matching reference `_07_lines.yml`.
+
 ---
 
-**Last Updated**: 2025-11-16 22:45 UTC
-**Next Action**: Choose fix approach (A, B, or C) and proceed systematically
+**Last Updated**: 2025-11-17 01:45 UTC
+**Next Action**: Update Line template to array-based format
