@@ -9,12 +9,13 @@
 {% set anchor_y = line_length * sin(angle * 3.14159 / 180) -%}
 New: Mooring{{ i }}
 Mooring{{ i }}:
-  LineType: MooringChain
-  Length: {{ line_length }}
-  EndAConnection: Vessel1
-  EndBConnection: Anchored
-  EndBAnchorX: {{ "%.2f"|format(anchor_x) }}
-  EndBAnchorY: {{ "%.2f"|format(anchor_y) }}
-  EndBAnchorZ: {{ -water_depth }}
+  # Array-based connection format for OrcaFlex 11.5e
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage:
+    - [Vessel1, 0, 0, 0, 0, 180, 0, ~]
+    - [Anchored, {{ "%.2f"|format(anchor_x) }}, {{ "%.2f"|format(anchor_y) }}, {{ -water_depth }}, 0, 90, 0, ~]
+
+  # Array-based LineType format (single section)
+  LineType, Length, TargetSegmentLength:
+    - [MooringChain, {{ line_length }}, 2]
 
 {% endfor %}
