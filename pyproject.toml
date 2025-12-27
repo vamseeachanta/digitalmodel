@@ -243,10 +243,14 @@ markers = [
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
     "benchmark: marks tests as performance benchmarks",
+    "performance: marks tests as performance tests",
     "property: marks tests as property-based tests",
     "security: marks tests as security tests",
     "flaky: marks tests as potentially flaky",
     "external: marks tests that require external services",
+    "load_test: marks tests as load tests",
+    "stress_test: marks tests as stress tests",
+    "chaos_test: marks tests as chaos/fault injection tests",
 ]
 filterwarnings = [
     "error",
