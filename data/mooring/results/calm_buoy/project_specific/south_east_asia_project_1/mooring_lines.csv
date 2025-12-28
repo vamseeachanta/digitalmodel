@@ -1,2 +1,0 @@
-line_id,segment,chain_grade,diameter_mm,pretension_kN,length_m,anchor_radius_m,axial_stiffness_MN,weight_in_air_kg_per_m,mbl_kN,mbl_with_corrosion_kN,corrosion_allowance_mm_per_year,spacing_deg,operational_safety_factor_intact,operational_safety_factor_one_line_damaged,source,notes
-LEG_TEMPLATE,single_segment,Studless R3,95,124,354,350,770.74,180,7326,5994,0.4,60,3.3,2.9,"Table 5-2; Table 4.4; Table 6.13","Representative for each of six identical mooring legs"

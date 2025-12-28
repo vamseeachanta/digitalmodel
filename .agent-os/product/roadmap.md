@@ -1,6 +1,6 @@
 # DigitalModel Product Roadmap
 
-> **Last Updated:** 2025-12-26
+> **Last Updated:** 2025-12-28
 > **Version:** 2.0.0
 > **Status:** Active Development
 > **Developer:** Solo (Vamsee Achanta)
@@ -251,7 +251,13 @@ This roadmap provides a comprehensive, prioritized development plan for DigitalM
 
 ### Should-Have Features
 - [ ] **VIV Analysis Module** - Vortex-induced vibration `L`
-- [ ] **Installation Analysis** - Lifting and lowering `M`
+- [ ] **OrcaFlex Installation Analysis** - Comprehensive offshore installation simulation `L`
+  - Lifting analysis (crane operations, rigging loads, dynamic amplification)
+  - Lowering through splash zone (hydrodynamic loads, slamming)
+  - Landing/positioning analysis (seabed interaction, touch-down)
+  - Cable/umbilical lay operations (tension control, overbend/sagbend)
+  - Weather window analysis (operability limits, waiting-on-weather)
+  - Vessel motion considerations (RAO-based responses, multi-body dynamics)
 - [ ] **Corrosion Modeling** - Wall thickness reduction `S`
 
 ### Dependencies

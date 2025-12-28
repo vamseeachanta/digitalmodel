@@ -115,7 +115,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         ofm = OrcaflexFileManagement()
         cfg_base = ofm.file_management(cfg_base)
     elif basename == "rigging":
-        from digitalmodel.custom.rigging import Rigging
+        from digitalmodel.modules.rigging.rigging import Rigging
 
         rigging = Rigging()
         cfg_base = rigging.get_rigging_groups(cfg_base)

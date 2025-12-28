@@ -1,7 +1,0 @@
-region,location,return_period_years,probability_exceedance,speed_ms,direction_deg,depth_m,source_table
-nan,,100.0,,1.7,,0.0,table_237.csv
-nan,,50.0,,1.6,,0.0,table_237.csv
-nan,,10.0,,1.3,,0.0,table_237.csv
-nan,,100.0,,2.3,,0.0,table_237.csv
-nan,,50.0,,2.3,,0.0,table_237.csv
-nan,,10.0,,2.1,,0.0,table_237.csv

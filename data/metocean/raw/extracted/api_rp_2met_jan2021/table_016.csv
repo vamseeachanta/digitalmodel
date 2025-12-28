@@ -1,14 +1,0 @@
-Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7,Unnamed: 8,Unnamed: 9
-"(1)Variable","(2)Range","(3)ReportedResolution","(4)Mode ofMeasurement/Observation","(5)RequiredMeasurementUncertainty","(6)SensorTimeConstant","(7)OutputAveragingTime","(8)Typical OperationalPerformance","(9)Remarks"
-,,,,,,,,
-"7.4 Variables fromwave spectrum",,,,,,,"Depends onaveraging time andsea regularity as wellas intrinsic instrumentaccuracy.",
-"7.4.1 Significant waveheight (Hmo)",0 m to 20 m,0.1 m,A,,0.5 s,20 min,"0.5 m for ? 5 m; 10 %for > 5 m",
-"7.4.2 Average period(Tm02)",3 s to 30 s,0.1 s,A,,0.5 s,20 min,0.5 s,
-7.4.3 Peak period (Tp),3 s to 30 s,0.1 s,A,,0.5 s,20 min,0.5 s,"Period of peak of frequencyspectrum."
-7.4.4 Mean direction,0 ° to 360 °,10°,A,,0.5 s,20 min,20°,"May be spectrally averaged orbased on angular harmonics."
-7.4.5 Direction spread,0 ° to 360 °,10°,A,,,,,
-8 Ocean currents,,,,,,,,
-8.1 Current speed,"0 cm·s-1 to250 cm·s-1",1 cm·s-1,A,"1 cm·s-1 to10 cm·s-1",1 s,"5 min to20 min","2 cm·s-1  to10 cm·s-1","Achievable accuracy affected bytype of measurement; direct oracoustic Doppler profilers."
-8.2 Current direction,0° to 360°,1°,A,±5°,1 s,"5 min to20 min",±5°,
-9 Water level,±3 m,1 cm,I,±1 cm,,10 min,±5 cm,
-,,,,,,,,

@@ -1,11 +1,0 @@
-Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7,Unnamed: 8,Unnamed: 9
-"(1)Variable","(2)Range","(3)ReportedResolution","(4)Mode ofMeasurement/Observation","(5)RequiredMeasurementUncertainty","(6)SensorTimeConstant","(7)OutputAveragingTime","(8)Typical OperationalPerformance","(9)Remarks"
-,,,,,,,,
-4. Clouds,,,,,,,,
-4.1 Cloud amount,0/8 to 8/8,1/8,I,1/8,n/a,,2/8,"Period (30 s) clustering algorithmsmay be used to estimate low cloudamount automatically."
-"4.2 Height of cloudbase",0 m to 30 km,10 m,I,"10 m for ? 100 m10 % for > 100 m",n/a,,?10 m repeatability*,"*Accuracy difficult to determinesince no definition exists forinstrumentally measured cloud baseheight."
-5. Wind,,,,,,,,
-5.1 Speed,0 m/s to 60 m/s,0.5 m/s,A,"0.5 m/sfor ? 5 m/s10 % for > 5 m/s","Distanceconstant.2 m to 5 m","2 min and/or10 min","0.5 m/s for ? 5 m/s10 % for > 5 m/s","Average over 2 and /or 10 min.Nonlinear devices. Care needed indesign of averaging process."
-5.2 Direction,0° to 360°,1°,A,5°,1 s,"2 min and/or10 min",5°,
-5.3 Gusts,0 m/s to 75 m/s,0.1 m/s,A,10 %,,3 s,"0.5 m/s for ? 5 m/s10 % for > 5 m/s","Highest 3 s average should berecorded."
-,,,,,,,,
