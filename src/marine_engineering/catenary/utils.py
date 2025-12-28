@@ -13,74 +13,83 @@ def safe_sinh(x: Union[float, np.ndarray], max_arg: float = 700.0) -> Union[floa
     """
     Safely compute sinh(x) avoiding overflow.
 
-    For large arguments where sinh would overflow, uses asymptotic approximation:
-    sinh(x) ≈ exp(x)/2 for x >> 1
+    For large arguments where sinh would overflow, returns the maximum
+    representable float value with appropriate sign.
 
     Parameters
     ----------
     x : float or np.ndarray
         Input value(s)
     max_arg : float, optional
-        Maximum argument before using approximation (default: 700.0)
+        Maximum argument before returning max float (default: 700.0)
 
     Returns
     -------
     result : float or np.ndarray
-        sinh(x) or approximation
+        sinh(x) or max float for overflow cases
     """
+    # Maximum safe exponent before float64 overflow
+    overflow_threshold = 709.0
+    max_float = np.finfo(np.float64).max
+
     if isinstance(x, np.ndarray):
-        result = np.zeros_like(x)
+        result = np.zeros_like(x, dtype=np.float64)
         mask_small = np.abs(x) <= max_arg
         mask_large_pos = x > max_arg
         mask_large_neg = x < -max_arg
 
         result[mask_small] = np.sinh(x[mask_small])
-        result[mask_large_pos] = np.exp(x[mask_large_pos]) / 2.0
-        result[mask_large_neg] = -np.exp(-x[mask_large_neg]) / 2.0
+        # For very large x, return max float instead of computing exp(x)
+        result[mask_large_pos] = max_float
+        result[mask_large_neg] = -max_float
 
         return result
     else:
         if abs(x) <= max_arg:
             return np.sinh(x)
         elif x > 0:
-            return np.exp(x) / 2.0
+            return max_float
         else:
-            return -np.exp(-x) / 2.0
+            return -max_float
 
 
 def safe_cosh(x: Union[float, np.ndarray], max_arg: float = 700.0) -> Union[float, np.ndarray]:
     """
     Safely compute cosh(x) avoiding overflow.
 
-    For large arguments where cosh would overflow, uses asymptotic approximation:
-    cosh(x) ≈ exp(|x|)/2 for |x| >> 1
+    For large arguments where cosh would overflow, returns the maximum
+    representable float value.
 
     Parameters
     ----------
     x : float or np.ndarray
         Input value(s)
     max_arg : float, optional
-        Maximum argument before using approximation (default: 700.0)
+        Maximum argument before returning max float (default: 700.0)
 
     Returns
     -------
     result : float or np.ndarray
-        cosh(x) or approximation
+        cosh(x) or max float for overflow cases
     """
+    # Maximum safe exponent before float64 overflow
+    max_float = np.finfo(np.float64).max
+
     if isinstance(x, np.ndarray):
-        result = np.zeros_like(x)
+        result = np.zeros_like(x, dtype=np.float64)
         mask_small = np.abs(x) <= max_arg
         mask_large = np.abs(x) > max_arg
 
         result[mask_small] = np.cosh(x[mask_small])
-        result[mask_large] = np.exp(np.abs(x[mask_large])) / 2.0
+        # For very large |x|, return max float instead of computing exp(|x|)
+        result[mask_large] = max_float
 
         return result
     else:
         if abs(x) <= max_arg:
             return np.cosh(x)
         else:
-            return np.exp(abs(x)) / 2.0
+            return max_float
 
 
 def validate_catenary_inputs(

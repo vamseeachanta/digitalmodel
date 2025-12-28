@@ -6,6 +6,9 @@ See https://github.com/vamseeachanta/digitalmodel/ for more information.
 # Version of package
 __version__ = "0.0.9"
 
+# Import modules subpackage for test patching support
+from . import modules
+
 # Expose modules at top level for backward compatibility with engine.py imports
 try:
     from digitalmodel.modules.aqwa.aqwa_router import Aqwa

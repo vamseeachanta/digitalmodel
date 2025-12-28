@@ -1,6 +1,0 @@
-component_id,subsystem,material_grade,thickness,corrosion_allowance,coating_system,weld_class
-hull_shell_plating,Hull,AH36,32.0,3.0,"Jotun Baltoflake coating (https://www.jotun.com/oilandgas)","AWS D1.1 Marine (https://www.aws.org/standards/page/d1)"
-turret_shaft,Turret,ASTM A707 L5,85.0,2.0,"Thermally sprayed aluminum per DNVGL-CG-0288 (https://rules.dnv.com/docs/pdf/DNV/cg/2019-12/DNVGL-CG-0288.pdf)","DNVGL-OS-C401 Class 1 (https://rules.dnv.com/docs/pdf/DNV/codes/docs/2016-07/dnvgl-os-c401.pdf)"
-deck_stiffener,Topside,EH36,18.0,2.5,"Hempel Hempadur 45753 (https://www.hempel.com/products/hempadur-45753)","ISO 2553 Level B (https://www.iso.org/standard/62833.html)"
-fender_skirt,Hull,ASTM A36,20.0,2.0,"Heavy duty pipe per CALM Hull Components Table 4 (specs/modules/data-procurement/CALM_Buoy_claude.md)","ABS SPM Rules Section 5 (https://ww2.eagle.org/content/dam/eagle/rules-and-guides/current/offshore/189_spm/abs-single-point-moorings-2021.pdf)"
-chain_stopper,Turret,ASTM A694 F65,45.0,1.5,"Self-aligning ratchet stopper spec Table 4 (specs/modules/data-procurement/CALM_Buoy_claude.md)","OCIMF SMOG chain stopper fabrication (https://www.ocimf.org/publications/offshore-marine)"

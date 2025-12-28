@@ -1,10 +1,0 @@
-Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7,Unnamed: 8,Unnamed: 9
-"(1)Variable","(2)Range","(3)ReportedResolution","(4)Mode ofMeasurement/Observation","(5)RequiredMeasurementUncertainty","(6)SensorTimeConstant","(7)OutputAveragingTime","(8)Typical OperationalPerformance","(9)Remarks"
-,,,,,,,,
-7.3 Wave spectrum,,,,,,"Minimum17 min","Depends onaveraging time andsea regularity as wellas intrinsic instrumentaccuracy.","Instruments may include wavebuoys, altimeter, microwave Dopplerradar, HF radar, navigation radaretc. (1 Hz sampling frequency issufficient.)"
-"7.3.11-D spectral density",,0.1 m2·Hz?1,I,,,,"Should be sufficientto achieve 7.4requirements.",
-Frequency,"0.035 Hz to0.3 Hz",< 0.01 Hz,,,,,,
-"7.3.22-D spectral density",,"0.1 m2·Hz?1·rad?1",,,,,"Should be sufficientto achieve 7.4requirements.",
-Frequency,"0.035 Hz to0.3 Hz",< 0.01 Hz,,,,,,
-Direction,0 ° to 360 °,"10° (seeremark)",,,,,"2-D spectrum may be based onparameterized directionaldistribution and reported as directionand spread parameters.",
-,,,,,,,,

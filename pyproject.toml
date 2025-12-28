@@ -199,8 +199,8 @@ orcaflex-sim = "digitalmodel.modules.orcaflex.universal_cli:main"
 create-go-by = "digitalmodel.modules.automation.go_by_folder.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["*"]
+where = ["src"]
+include = ["digitalmodel*"]
 exclude = ["tests*", "docs*"]
 
 [tool.black]

@@ -1,5 +1,0 @@
-operation_id,operation_description,limit_state,criteria,monitoring_channels,shutdown_threshold,units
-normal_loading,"Tanker loading at operational sea state",SLS,"Per OCIMF SMOG: Hawser load < 0.6 MBL; Hs <= 3.5 m (https://www.ocimf.org/publications/offshore-marine)","hawser_load,hs,wind_speed",0.6,MBL fraction
-storm_watch,"Suspend transfer and standby readiness",ALS,"OCIMF SMOG disconnect trigger: wind > 30 kn or Hs > 5.0 m (https://www.ocimf.org/publications/offshore-marine)","wind_speed,hs,hawser_load",5.0,m
-survival_mode,"System unmanned, hoses secured",ULS,"API RP 2SK survival check: chain tension < 0.8 MBL (https://www.api.org/products-and-services/standards)","line_tension,buoy_offset",0.8,MBL fraction
-emergency_disconnect,"Execute hawser release and hose MBC trip",ALS,"OCIMF SMOG emergency release procedure: hawser release < 5 min, MBC containment (https://www.ocimf.org/publications/offshore-marine)","hawser_load,mbc_status",5.0,min

@@ -1,4 +1,0 @@
-sea_state_id,hs,tp,wave_direction,wind_speed,wind_direction,surface_current_speed,bottom_current_speed,return_period,probability
-operational_case_ocimf,3.0,9.0,135.0,12.0,140.0,0.6,0.4,annual,0.20
-storm_shut_in_ocimf,5.0,13.5,150.0,30.0,160.0,1.2,0.8,5-year,0.01
-survival_100yr_api,9.0,15.5,170.0,38.0,190.0,1.6,1.1,100-year,0.01
