@@ -14,6 +14,7 @@ try:
     from digitalmodel.modules.aqwa.aqwa_router import Aqwa
     from digitalmodel.modules.mooring.mooring import Mooring
     from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
+    from digitalmodel.modules.ct_hydraulics.ct_hydraulics import CTHydraulics
     from digitalmodel.modules.pipe_capacity.pipe_capacity import PipeCapacity
     from digitalmodel.modules.pipeline.pipeline import Pipeline
     from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis
