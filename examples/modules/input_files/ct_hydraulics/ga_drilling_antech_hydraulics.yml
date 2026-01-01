@@ -25,8 +25,8 @@ ct_hydraulics:
     pressure_drop_psi: 2601.0
   fluid:
     density_ppg: 14.0
-    ct_viscosity_cp: 20.0
-    annulus_viscosity_cp: 1382.4
+    ct_viscosity_cp: 13.5
+    annulus_viscosity_cp: 700.0
   flow:
     rate_gpm: 400.0
   options:
