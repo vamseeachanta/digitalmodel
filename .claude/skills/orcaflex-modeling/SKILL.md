@@ -1,6 +1,19 @@
 ---
 name: orcaflex-modeling
 description: Setup, configure, and run OrcaFlex hydrodynamic simulations using the universal runner. Use for marine/offshore analysis including static analysis, dynamic simulations, mooring analysis, and batch processing of OrcaFlex models.
+version: 2.0.0
+updated: 2025-01-02
+category: offshore-engineering
+triggers:
+  - OrcaFlex model setup
+  - hydrodynamic simulation
+  - mooring analysis
+  - riser analysis
+  - installation analysis
+  - batch OrcaFlex processing
+  - .yml model files
+  - .dat model files
+  - .sim simulation files
 ---
 
 # OrcaFlex Modeling Skill
@@ -15,6 +28,41 @@ Create, configure, and execute OrcaFlex hydrodynamic simulations for offshore en
 - Configuring mooring analysis or iterative simulations
 - Using the universal runner for pattern-based batch execution
 - Preprocessing vessel data and checking model configurations
+- Hydrodynamic analysis and mooring system design
+- Riser analysis and installation sequence planning
+- Fatigue assessment of offshore structures
+
+## Agent Capabilities
+
+This skill integrates agent capabilities from `/agents/orcaflex/`:
+
+### Domain Expertise
+- **Tools**: OrcaFlex, OrcaWave
+- **Analysis Types**:
+  - Hydrodynamic analysis
+  - Mooring system design
+  - Riser analysis
+  - Installation analysis
+  - Fatigue assessment
+
+### Industry Standards
+- DNV-ST-F201 (Dynamic Risers)
+- API RP 2SK (Stationkeeping)
+- ISO 19901-7 (Mooring Systems)
+
+### Critical Production Rules
+
+**NEVER** create mock .sim files or replace production .sim files with test data.
+
+Protected paths (DO NOT MODIFY):
+- `*/runtime_test/*.sim`
+- `*/production/*.sim`
+- Production .sim files are large binary OrcaFlex model files (often GB in size)
+
+### Workflow Automation
+- Enhanced specs with auto-update and learning
+- Analysis automation with batch processing
+- Result extraction and summary generation
 
 ## Prerequisites
 
@@ -342,14 +390,75 @@ print(f"Associated period: {Tassociated:.2f} s")
 3. Run compute-intensive jobs overnight
 4. Clean up intermediate files after processing
 
+## MCP Tool Integration
+
+### Swarm Coordination
+```javascript
+// Initialize offshore analysis swarm
+mcp__claude-flow__swarm_init { topology: "hierarchical", maxAgents: 5 }
+
+// Spawn specialized agents
+mcp__claude-flow__agent_spawn { type: "code-analyzer", name: "orcaflex-validator" }
+mcp__claude-flow__agent_spawn { type: "tester", name: "simulation-verifier" }
+```
+
+### Memory Coordination
+```javascript
+// Store model configuration
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "orcaflex/model/config",
+  namespace: "offshore",
+  value: JSON.stringify({
+    model: "mooring_analysis",
+    status: "configured",
+    timestamp: Date.now()
+  })
+}
+
+// Track analysis progress
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "orcaflex/analysis/progress",
+  namespace: "offshore",
+  value: JSON.stringify({
+    phase: "simulation",
+    completion: 0.75,
+    files_processed: 15
+  })
+}
+```
+
+## External Documentation
+
+Automatically refreshed from:
+- https://www.orcina.com/webhelp/OrcaFlex/
+- https://www.orcina.com/resources/examples/
+- https://www.dnv.com/rules-standards/
+
+Refresh schedule:
+- Official docs: Weekly
+- Standards: Monthly
+- Examples: Bi-weekly
+
 ## Related Skills
 
 - [orcaflex-post-processing](../orcaflex-post-processing/SKILL.md) - Post-process simulation results
+- [orcawave-analysis](../orcawave-analysis/SKILL.md) - Diffraction/radiation analysis
 - [mooring-design](../mooring-design/SKILL.md) - Mooring system design
 - [structural-analysis](../structural-analysis/SKILL.md) - Structural verification
+- [aqwa-analysis](../aqwa-analysis/SKILL.md) - AQWA benchmark validation
 
 ## References
 
 - OrcaFlex Documentation: [Orcina OrcaFlex](https://www.orcina.com/orcaflex/)
 - OrcFxAPI Python Guide
 - Universal Runner: `src/digitalmodel/modules/orcaflex/universal/README.md`
+- Agent Configuration: `agents/orcaflex/agent.yaml`
+
+---
+
+## Version History
+
+- **2.0.0** (2025-01-02): Merged agent capabilities from agents/orcaflex/, added MCP integration, critical production rules, external documentation refresh
+- **1.0.0** (2024-12-01): Initial release with universal runner and batch processing
