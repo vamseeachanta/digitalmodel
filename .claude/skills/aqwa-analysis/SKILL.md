@@ -1,6 +1,23 @@
 ---
 name: aqwa-analysis
 description: Integrate with AQWA hydrodynamic software for RAO computation, damping analysis, and coefficient extraction. Use for AQWA file processing, RAO calculation, hydrodynamic coefficient extraction, and pre/post processing workflows.
+version: 3.0.0
+updated: 2025-01-02
+category: offshore-engineering
+triggers:
+  - AQWA analysis
+  - RAO extraction
+  - added mass calculation
+  - damping coefficient
+  - wave diffraction
+  - radiation analysis
+  - AQWA-LINE
+  - AQWA-DRIFT
+  - AQWA-LIBRIUM
+  - AQWA-NAUT
+  - .LIS files
+  - .DAT files
+  - .MES files
 ---
 
 # AQWA Analysis Skill
@@ -16,6 +33,43 @@ Integrate with ANSYS AQWA hydrodynamic software for RAO computation, added mass/
 - Added mass and damping matrix extraction
 - Viscous damping determination
 - Pre/post processing workflows
+- Diffraction/radiation analysis (AQWA-LINE)
+- Time domain motions (AQWA-DRIFT)
+- Stability analysis (AQWA-LIBRIUM)
+- Cable dynamics (AQWA-NAUT)
+- Coupled analysis (AQWA-WAVE)
+
+## Agent Capabilities
+
+This skill integrates agent capabilities from `/agents/aqwa/`:
+
+### Domain Expertise
+- **Software**: ANSYS AQWA
+- **Analysis Modules**:
+  - AQWA-LINE: Diffraction/Radiation analysis
+  - AQWA-DRIFT: Time domain motions
+  - AQWA-LIBRIUM: Stability analysis
+  - AQWA-NAUT: Cable dynamics
+  - AQWA-WAVE: Coupled analysis
+
+### Core Capabilities
+- First-order wave forces
+- Second-order drift forces
+- Multi-body interactions
+- Mooring and riser systems
+- Hydrodynamic coefficients
+- RAO calculations
+
+### Industry Standards
+- DNV-RP-C205 (Environmental Conditions)
+- API RP 2SK (Stationkeeping)
+- ISO 19901-7 (Mooring Systems)
+- IEC 61400-3 (Wind Turbines)
+
+### Context Optimization
+- Cross-references: OrcaFlex, ANSYS Mechanical
+- Focused domain: AQWA hydrodynamics
+- Max context size: 16000 tokens
 
 ## Prerequisites
 
@@ -424,10 +478,60 @@ if not validator.check_symmetric_added_mass():
     print("Warning: Added mass matrix not symmetric")
 ```
 
+## MCP Tool Integration
+
+### Swarm Coordination
+```javascript
+// Initialize hydrodynamic analysis swarm
+mcp__claude-flow__swarm_init { topology: "mesh", maxAgents: 4 }
+
+// Spawn specialized agents
+mcp__claude-flow__agent_spawn { type: "analyst", name: "aqwa-processor" }
+mcp__claude-flow__agent_spawn { type: "code-analyzer", name: "coefficient-extractor" }
+```
+
+### Memory Coordination
+```javascript
+// Store extracted RAOs
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "aqwa/raos/vessel",
+  namespace: "hydrodynamics",
+  value: JSON.stringify({
+    vessel: "FPSO",
+    directions: [0, 45, 90, 135, 180],
+    frequencies: 50,
+    timestamp: Date.now()
+  })
+}
+
+// Store coefficient matrices
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "aqwa/coefficients/added_mass",
+  namespace: "hydrodynamics",
+  value: JSON.stringify({
+    frequency_count: 25,
+    matrix_size: "6x6",
+    validated: true
+  })
+}
+```
+
+### Phased Processing Workflow
+The agent uses a phased approach for AQWA processing:
+1. **Discovery**: Identify AQWA output files
+2. **Quality**: Validate file integrity
+3. **Extraction**: Extract RAOs and coefficients
+4. **Synthesis**: Combine multi-body results
+5. **Validation**: Check physical consistency
+6. **Integration**: Export to OrcaFlex format
+
 ## Related Skills
 
 - [hydrodynamics](../hydrodynamics/SKILL.md) - Coefficient management
 - [orcaflex-modeling](../orcaflex-modeling/SKILL.md) - Apply RAOs in OrcaFlex
+- [orcawave-analysis](../orcawave-analysis/SKILL.md) - Benchmark validation
 - [mooring-design](../mooring-design/SKILL.md) - Vessel motion input
 
 ## References
@@ -435,3 +539,12 @@ if not validator.check_symmetric_added_mass():
 - ANSYS AQWA User Manual
 - DNV-RP-C205: Environmental Conditions and Environmental Loads
 - Newman, J.N.: Marine Hydrodynamics
+- Agent Configuration: `agents/aqwa/agent.yaml`
+
+---
+
+## Version History
+
+- **3.0.0** (2025-01-02): Merged agent capabilities from agents/aqwa/, added MCP integration, phased processing workflow, AQWA module descriptions
+- **2.0.0** (2024-11-15): Added validation and preprocessing modules
+- **1.0.0** (2024-10-01): Initial release with RAO extraction and coefficient management
