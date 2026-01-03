@@ -63,7 +63,7 @@ class OrcaFlexModelGenerator:
             components_dir: Path to component library (CSV files)
             templates_dir: Path to template library
         """
-        self.repo_root = Path(__file__).parent.parent.parent.parent.parent
+        self.repo_root = Path(__file__).parent.parent.parent.parent.parent.parent
 
         # Set default paths
         if components_dir is None:
@@ -100,6 +100,19 @@ class OrcaFlexModelGenerator:
         components = []
 
         # Handle subcategories like "lines/risers"
+        # Check if category refers to a specific CSV file
+        parts = category.split("/")
+        if len(parts) == 2:
+            # Category like "lines/risers" → look for lines/risers.csv
+            csv_path = self.components_dir / parts[0] / f"{parts[1]}.csv"
+            if csv_path.exists():
+                df = self._load_component_csv(parts[0], parts[1])
+                if len(df.columns) > 0:
+                    id_col = df.columns[0]
+                    components.extend(df[id_col].tolist())
+                return components
+
+        # Otherwise treat as directory and glob for CSV files
         category_path = self.components_dir / category.replace("/", "\\")
 
         if not category_path.exists():
@@ -135,7 +148,23 @@ class OrcaFlexModelGenerator:
             >>> print(vessel['LOA'])  # 300.0
             >>> print(vessel['Displacement'])  # 200000.0
         """
-        # Search all CSV files in category for this component
+        # Handle subcategories like "lines/risers"
+        # Check if category refers to a specific CSV file
+        parts = category.split("/")
+        if len(parts) == 2:
+            # Category like "lines/risers" → look for lines/risers.csv
+            csv_path = self.components_dir / parts[0] / f"{parts[1]}.csv"
+            if csv_path.exists():
+                df = self._load_component_csv(parts[0], parts[1])
+                id_col = df.columns[0]
+                matches = df[df[id_col] == component_id]
+                if len(matches) > 0:
+                    return matches.iloc[0].to_dict()
+                raise ComponentNotFoundError(
+                    f"Component '{component_id}' not found in '{category}'"
+                )
+
+        # Otherwise treat as directory and search all CSV files
         category_path = self.components_dir / category.replace("/", "\\")
 
         if not category_path.exists():
