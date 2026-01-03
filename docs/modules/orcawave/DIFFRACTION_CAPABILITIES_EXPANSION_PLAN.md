@@ -1,7 +1,7 @@
 # Diffraction Capabilities Expansion Plan (AQWA + OrcaWave)
 
 **Date:** 2026-01-03
-**Status:** Draft Plan
+**Status:** Phase 2 Complete - Output Standardization
 
 ## Overview
 
@@ -43,16 +43,24 @@ This plan expands diffraction analysis capabilities for AQWA and OrcaWave in a f
 
 ## Expansion Phases
 
-### Phase 1: Workflow Hardening (Short Term)
-- Fix execution blockers and path mismatches.
-- Ensure AQWA analysis routing covers RAO, damping, and EF server flows.
-- Normalize config locations for example runs.
-- Add minimal CLI examples in docs for both tools.
+### Phase 1: Workflow Hardening (Short Term) ✅ COMPLETE
+- ✅ Fix execution blockers and path mismatches.
+- ✅ Ensure AQWA analysis routing covers RAO, damping, and EF server flows.
+- ✅ Normalize config locations for example runs.
+- ✅ Add minimal CLI examples in docs for both tools.
 
-### Phase 2: Output Standardization (Mid Term)
-- Define unified output schemas (RAO tables, added mass, damping).
-- Implement converters to OrcaFlex-ready YAML/CSV outputs.
-- Add validation scripts for results completeness and ranges.
+**Deliverables**: 3 CLI tools, 1,220+ lines documentation
+**Completion**: 2026-01-03
+**Report**: `docs/modules/orcawave/PHASE_1_COMPLETION.md`
+
+### Phase 2: Output Standardization (Mid Term) ✅ COMPLETE
+- ✅ Define unified output schemas (RAO tables, added mass, damping).
+- ✅ Implement converters to OrcaFlex-ready YAML/CSV outputs.
+- ✅ Add validation scripts for results completeness and ranges.
+
+**Deliverables**: 2,030+ lines code, 6 export formats, comprehensive validation
+**Completion**: 2026-01-03
+**Report**: `docs/modules/diffraction/PHASE_2_COMPLETION.md`
 
 ### Phase 3: Automation + QA (Mid Term)
 - Batch execution support for multiple headings/drafts.
