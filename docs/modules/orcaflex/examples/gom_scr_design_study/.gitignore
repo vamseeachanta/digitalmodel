@@ -13,6 +13,9 @@ results/
 # Study matrix (generated)
 study_matrix.yml
 
+# Keep the HTML report generator script, but ignore generated HTML
+!generate_html_report.py
+
 # Python cache
 __pycache__/
 *.pyc

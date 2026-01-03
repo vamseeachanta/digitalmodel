@@ -48,6 +48,7 @@ gom_scr_design_study/
 ├── design_study.py                # Main execution script
 ├── generate_configs.py            # Configuration generator
 ├── analyze_results.py             # Results analysis
+├── generate_html_report.py        # Interactive HTML report generator
 ├── configs/                       # Generated configurations (27 YAML files)
 │   ├── model_10in_1000m_1yr.yml
 │   ├── model_10in_1000m_10yr.yml
@@ -59,7 +60,8 @@ gom_scr_design_study/
 └── results/                       # Analysis results
     ├── design_study_summary.md
     ├── comparison_matrix.csv
-    └── recommendations.md
+    ├── recommendations.md
+    └── design_study_dashboard.html  # Interactive HTML dashboard
 ```
 
 ---
@@ -92,9 +94,30 @@ python analyze_results.py
 ```
 
 This creates:
-- Design comparison matrix
-- Recommendations report
-- Summary documentation
+- Design comparison matrix (CSV)
+- Recommendations report (Markdown)
+- Summary documentation (Markdown)
+
+### Step 4: Generate Interactive HTML Dashboard
+
+```bash
+python generate_html_report.py
+```
+
+This creates an interactive HTML dashboard with:
+- **Design space visualization** - Interactive scatter plot showing all configurations
+- **Model distribution heatmap** - Water depth vs environment coverage
+- **Riser type analysis** - Bar charts and grouped distributions
+- **Complete comparison table** - Sortable, interactive data table
+- **Summary statistics** - Key metrics and study overview
+
+The dashboard uses Plotly for fully interactive visualizations with:
+- Hover tooltips for detailed information
+- Zoom and pan capabilities
+- Export to PNG functionality
+- Responsive design for all screen sizes
+
+Open `results/design_study_dashboard.html` in any web browser to view the interactive dashboard.
 
 ---
 
