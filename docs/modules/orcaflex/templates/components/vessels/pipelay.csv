@@ -1,0 +1,6 @@
+VesselID,VesselName,LOA,Breadth,Depth,Draught,Displacement,LCG,VCG,WindArea,CurrentArea,LayMethod,PipeCapacity,TensionCapacity,Description
+PLV_SLAY_LARGE,S-Lay Vessel Large,185.0,40.0,12.0,8.5,45000.0,0.0,6.0,4000.0,3200.0,S-LAY,800.0,500.0,Large S-lay pipelay vessel
+PLV_SLAY_MEDIUM,S-Lay Vessel Medium,165.0,35.0,11.0,7.5,38000.0,0.0,5.5,3500.0,2800.0,S-LAY,600.0,400.0,Medium S-lay vessel
+PLV_JLAY,J-Lay Vessel,175.0,38.0,11.5,8.0,42000.0,0.0,5.8,3800.0,3000.0,J-LAY,1000.0,600.0,J-lay deepwater vessel with tower
+PLV_REELLAY,Reel-Lay Vessel,160.0,32.0,10.5,7.0,35000.0,0.0,5.2,3200.0,2600.0,REEL,1500.0,300.0,Reel-lay vessel with large carousel
+PLV_FLEXLAY,Flexible Pipelay,155.0,30.0,10.0,6.8,32000.0,0.0,5.0,3000.0,2400.0,FLEX,2000.0,200.0,Flexible pipe and umbilical installation
