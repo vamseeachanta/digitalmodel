@@ -9,7 +9,7 @@ analysis:
   vessel:
     name: "Sea Cypress"
     geometry: "Sea Cypress_0.25 Mesh_Binary.stl"
-    geometry_path: "specs/modules/orcawave/sea-cypress-diffraction-analysis/inputs/geometry"
+    geometry_path: "specs/modules/orcawave/diffraction-analysis/inputs/geometry"
     
 environment:
   water_depth: 100.0        # meters - deep water assumption
@@ -129,7 +129,7 @@ metadata:
   project: "B1512 Sea Cypress Analysis"
   author: "OrcaWave Module Agent"
   version: "1.0.0"
-  created: "2025-09-02"
+  created: "2026-01-03"
   description: "Diffraction analysis configuration"
   tags:
     - "diffraction"

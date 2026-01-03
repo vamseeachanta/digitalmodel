@@ -52,35 +52,39 @@ class GeometryValidator:
         
     def validate_all(self, parallel: bool = True) -> Dict[str, MeshStatistics]:
         """Validate all geometry files in parallel"""
-        
+
         geometry_files = {
             "Sea Cypress_0.25 Mesh_Ascii.stl": "stl_ascii",
-            "Sea Cypress_0.25 Mesh_Binary.stl": "stl_binary", 
+            "Sea Cypress_0.25 Mesh_Binary.stl": "stl_binary",
             "Sea Cypress_0.25 Mesh_Binary.obj": "obj"
         }
-        
+
         logger.info(f"Validating {len(geometry_files)} geometry files...")
         logger.info(f"Geometry path: {self.geometry_path}")
-        
+
         if parallel:
-            with ProcessPoolExecutor(max_workers=3) as executor:
-                futures = {}
-                for filename, format_type in geometry_files.items():
-                    filepath = self.geometry_path / filename
-                    if filepath.exists():
-                        future = executor.submit(self.validate_file, filepath, format_type)
-                        futures[future] = filename
-                    else:
-                        logger.warning(f"File not found: {filepath}")
-                
-                for future in as_completed(futures):
-                    filename = futures[future]
-                    try:
-                        stats = future.result()
-                        self.results[filename] = stats
-                        logger.info(f"✓ Validated: {filename}")
-                    except Exception as e:
-                        logger.error(f"✗ Failed to validate {filename}: {e}")
+            try:
+                with ProcessPoolExecutor(max_workers=3) as executor:
+                    futures = {}
+                    for filename, format_type in geometry_files.items():
+                        filepath = self.geometry_path / filename
+                        if filepath.exists():
+                            future = executor.submit(self.validate_file, filepath, format_type)
+                            futures[future] = filename
+                        else:
+                            logger.warning(f"File not found: {filepath}")
+
+                    for future in as_completed(futures):
+                        filename = futures[future]
+                        try:
+                            stats = future.result()
+                            self.results[filename] = stats
+                            logger.info(f"Validated: {filename}")
+                        except Exception as e:
+                            logger.error(f"Failed to validate {filename}: {e}")
+            except (OSError, PermissionError) as e:
+                logger.warning(f"Parallel validation failed: {e}. Retrying sequentially.")
+                return self.validate_all(parallel=False)
         else:
             for filename, format_type in geometry_files.items():
                 filepath = self.geometry_path / filename
@@ -88,14 +92,14 @@ class GeometryValidator:
                     try:
                         stats = self.validate_file(filepath, format_type)
                         self.results[filename] = stats
-                        logger.info(f"✓ Validated: {filename}")
+                        logger.info(f"Validated: {filename}")
                     except Exception as e:
-                        logger.error(f"✗ Failed to validate {filename}: {e}")
+                        logger.error(f"Failed to validate {filename}: {e}")
                 else:
                     logger.warning(f"File not found: {filepath}")
-        
+
         return self.results
-    
+
     def validate_file(self, filepath: Path, format_type: str) -> MeshStatistics:
         """Validate a single geometry file"""
         
@@ -144,7 +148,7 @@ class GeometryValidator:
                 faces.append([base_idx, base_idx + 1, base_idx + 2])
         
         vertices = np.array(vertices)
-        faces = np.array(faces)
+        faces = np.array(faces, dtype=object)
         
         return self._compute_mesh_statistics(
             filepath.name, "stl_binary", vertices, faces
@@ -172,7 +176,7 @@ class GeometryValidator:
                         current_triangle = []
         
         vertices = np.array(vertices)
-        faces = np.array(faces)
+        faces = np.array(faces, dtype=object)
         
         return self._compute_mesh_statistics(
             filepath.name, "stl_ascii", vertices, faces
@@ -201,7 +205,7 @@ class GeometryValidator:
                     faces.append(indices)
         
         vertices = np.array(vertices)
-        faces = np.array(faces)
+        faces = np.array(faces, dtype=object)
         
         return self._compute_mesh_statistics(
             filepath.name, "obj", vertices, faces
@@ -328,9 +332,13 @@ class GeometryValidator:
             report.append(f"Faces: {stats.num_faces:,}")
             report.append(f"Volume: {stats.volume:.2f} m³")
             report.append(f"Surface Area: {stats.surface_area:.2f} m²")
-            report.append(f"Watertight: {'✓' if stats.is_watertight else '✗'}")
-            report.append(f"Duplicates: {'✗ Has duplicates' if stats.has_duplicate_vertices else '✓ No duplicates'}")
-            report.append(f"Degenerate Faces: {'✗ Has degenerate' if stats.has_degenerate_faces else '✓ No degenerate'}")
+            report.append(f"Watertight: {'yes' if stats.is_watertight else 'no'}")
+            report.append(
+                f"Duplicates: {'has duplicates' if stats.has_duplicate_vertices else 'no duplicates'}"
+            )
+            report.append(
+                f"Degenerate Faces: {'has degenerate' if stats.has_degenerate_faces else 'no degenerate'}"
+            )
             report.append(f"Max Aspect Ratio: {stats.max_aspect_ratio:.2f}")
             report.append(f"Panel Area Range: {stats.min_panel_area:.4f} - {stats.max_panel_area:.2f} m²")
             report.append(f"Bounding Box: [{stats.bbox_min[0]:.1f}, {stats.bbox_max[0]:.1f}] × "
@@ -420,6 +428,11 @@ def main():
         help='Vessel name for output organization',
         default='generic_vessel'
     )
+    parser.add_argument(
+        '--no-parallel',
+        action='store_true',
+        help='Disable parallel validation'
+    )
     
     args = parser.parse_args()
     
@@ -428,8 +441,14 @@ def main():
         GEOMETRY_PATH = Path(args.path)
     else:
         # Default to specs location relative to repository root
-        repo_root = Path(__file__).parent.parent.parent.parent.parent
-        GEOMETRY_PATH = repo_root / "specs" / "modules" / "orcawave" / "sea-cypress-diffraction-analysis" / "inputs" / "geometry"
+        repo_root = None
+        for parent in [Path(__file__).resolve()] + list(Path(__file__).resolve().parents):
+            if (parent / "pyproject.toml").exists() or (parent / ".git").exists():
+                repo_root = parent
+                break
+        if repo_root is None:
+            repo_root = Path(__file__).resolve().parents[6]
+        GEOMETRY_PATH = repo_root / "specs" / "modules" / "orcawave" / "diffraction-analysis" / "inputs" / "geometry"
     
     # Make path absolute if relative
     if not GEOMETRY_PATH.is_absolute():
@@ -455,7 +474,7 @@ def main():
     
     try:
         # Validate all geometries in parallel
-        results = validator.validate_all(parallel=True)
+        results = validator.validate_all(parallel=not args.no_parallel)
         
         # Generate and display report
         report = validator.generate_report()
@@ -479,7 +498,7 @@ def main():
                 'num_faces': stats.num_faces,
                 'volume': float(stats.volume),
                 'surface_area': float(stats.surface_area),
-                'is_watertight': stats.is_watertight,
+                'is_watertight': bool(stats.is_watertight),
                 'max_aspect_ratio': float(stats.max_aspect_ratio),
                 'quality_score': validator._assess_quality(stats)
             }

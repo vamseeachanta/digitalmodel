@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 OrcaWave Generic Diffraction Analysis Orchestrator
 Main execution module for automated diffraction analysis workflow
@@ -202,7 +202,7 @@ class OrcaWaveOrchestrator:
         self._create_output_directories()
         
         self.workflow_state['geometry_validated'] = True
-        logger.info("✓ Phase 1 completed successfully")
+        logger.info("Phase 1 completed successfully")
         return True
     
     def _phase2_orcawave_execution(self) -> bool:
@@ -265,7 +265,7 @@ class OrcaWaveOrchestrator:
             logger.warning("Visualization generation failed (non-critical)")
         
         self.workflow_state['results_converted'] = True
-        logger.info("✓ Phase 3 completed successfully")
+        logger.info("âœ“ Phase 3 completed successfully")
         return True
     
     def _phase4_quality_assurance(self) -> bool:
@@ -282,7 +282,7 @@ class OrcaWaveOrchestrator:
             logger.warning("Some quality checks failed - review results")
         
         self.workflow_state['quality_checked'] = True
-        logger.info("✓ Phase 4 completed")
+        logger.info("âœ“ Phase 4 completed")
         return True
     
     def _phase5_packaging(self) -> bool:
@@ -313,7 +313,7 @@ class OrcaWaveOrchestrator:
         readme_content = self._generate_package_readme()
         (package_dir / "README.md").write_text(readme_content)
         
-        logger.info(f"✓ Results packaged: {package_dir}")
+        logger.info(f"âœ“ Results packaged: {package_dir}")
         return True
     
     def _check_orcawave_installation(self) -> bool:
@@ -330,7 +330,7 @@ class OrcaWaveOrchestrator:
         orcawave_found = False
         for path in orcawave_paths:
             if Path(path).exists():
-                logger.info(f"✓ OrcaWave found: {path}")
+                logger.info(f"OrcaWave found: {path}")
                 orcawave_found = True
                 break
         
@@ -361,7 +361,7 @@ class OrcaWaveOrchestrator:
         # Resolve path relative to repo root if not absolute
         geometry_path = Path(geometry_path)
         if not geometry_path.is_absolute():
-            repo_root = self.module_dir.parent.parent.parent.parent
+            repo_root = self._find_repo_root()
             geometry_path = repo_root / geometry_path
         
         if not geometry_path.exists():
@@ -372,18 +372,24 @@ class OrcaWaveOrchestrator:
         try:
             # Run validation script with geometry path and vessel name
             result = subprocess.run(
-                [sys.executable, str(validation_script), 
-                 "--path", str(geometry_path),
-                 "--vessel", self.vessel_name],
+                [
+                    sys.executable,
+                    str(validation_script),
+                    "--path",
+                    str(geometry_path),
+                    "--vessel",
+                    self.vessel_name,
+                    "--no-parallel",
+                ],
                 capture_output=True,
-                text=True
+                text=True,
             )
             
             if result.returncode != 0:
                 logger.error(f"Geometry validation failed: {result.stderr}")
                 return False
             
-            logger.info("✓ Geometry validation completed")
+            logger.info("Geometry validation completed")
             
             # Parse validation results if available
             validation_results = self.results_dir / "validation" / "validation_results*.json"
@@ -422,7 +428,7 @@ class OrcaWaveOrchestrator:
         # Update results directory for this run
         self.results_dir = vessel_results_dir
         
-        logger.info(f"✓ Created output directories for {self.vessel_name}")
+        logger.info(f"Created output directories for {self.vessel_name}")
     
     def _convert_to_orcaflex(self) -> bool:
         """Convert results to OrcaFlex format"""
@@ -455,7 +461,7 @@ class OrcaWaveOrchestrator:
                 logger.error(f"Conversion failed: {result.stderr}")
                 return False
             
-            logger.info("✓ OrcaFlex conversion completed")
+            logger.info("âœ“ OrcaFlex conversion completed")
             return True
             
         except Exception as e:
@@ -473,8 +479,15 @@ class OrcaWaveOrchestrator:
         # - Wave excitation forces
         # - RAOs if available
         
-        logger.info("✓ Visualization generation completed")
+        logger.info("âœ“ Visualization generation completed")
         return True
+
+    def _find_repo_root(self) -> Path:
+        """Find repository root by locating pyproject.toml or .git."""
+        for parent in [self.module_dir] + list(self.module_dir.parents):
+            if (parent / "pyproject.toml").exists() or (parent / ".git").exists():
+                return parent
+        return self.module_dir.parent
     
     def _run_quality_checks(self) -> bool:
         """Run quality checks on results"""
@@ -490,7 +503,7 @@ class OrcaWaveOrchestrator:
         
         all_passed = True
         for check_name, passed in checks.items():
-            status = "✓" if passed else "✗"
+            status = "âœ“" if passed else "âœ—"
             logger.info(f"  {status} {check_name}")
             if not passed:
                 all_passed = False
@@ -546,7 +559,7 @@ class OrcaWaveOrchestrator:
         report.append("")
         report.append("Workflow Status:")
         for phase, completed in self.workflow_state.items():
-            status = "✓ Completed" if completed else "✗ Incomplete"
+            status = "âœ“ Completed" if completed else "âœ— Incomplete"
             report.append(f"  {phase}: {status}")
         report.append("")
         report.append("Configuration:")
