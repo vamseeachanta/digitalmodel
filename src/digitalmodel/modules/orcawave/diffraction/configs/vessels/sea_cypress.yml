@@ -13,7 +13,7 @@ geometry:
   alternate_files:
     - "Sea Cypress_0.25 Mesh_Ascii.stl"
     - "Sea Cypress_0.25 Mesh_Binary.obj"
-  path: "specs/modules/orcawave/sea-cypress-diffraction-analysis/inputs/geometry"
+  path: "specs/modules/orcawave/diffraction-analysis/inputs/geometry"
   # Alternative absolute path (update as needed):
   # path: "D:\\github\\digitalmodel\\specs\\modules\\orcawave\\sea-cypress-diffraction-analysis\\inputs\\geometry"
   
