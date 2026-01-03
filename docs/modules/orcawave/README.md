@@ -302,8 +302,29 @@ https://www.orcina.com/webhelp/OrcFxAPI/Redirector.htm?Pythonreference,Diffracti
 - [orcawave](https://github.com/Exor8129/orcawave) - Additional OrcaWave utilities
 
 ### Orcina Documentation
-- [OrcaWave Manual](https://www.orcina.com/webhelp/OrcaWave/)
+- [OrcaWave Manual](https://www.orcina.com/webhelp/OrcaWave/Default.htm)
 - [OrcFxAPI Reference](https://www.orcina.com/webhelp/OrcFxAPI/)
+
+---
+
+## Claude Code Skill
+
+The **orcawave-analysis** skill provides specialized agent capabilities for OrcaWave analysis:
+
+```bash
+# Invoke the OrcaWave analysis skill
+/orcawave-analysis
+```
+
+**Skill capabilities**:
+- Expert guidance for diffraction/radiation analysis
+- Panel mesh generation and optimization
+- Multi-body hydrodynamic interactions
+- QTF computation
+- Batch processing workflows
+- OrcaFlex database generation
+
+**Location**: `.claude/skills/orcawave-analysis/SKILL.md`
 
 ---
 
@@ -312,7 +333,8 @@ https://www.orcina.com/webhelp/OrcFxAPI/Redirector.htm?Pythonreference,Diffracti
 For questions about OrcaWave automation:
 1. Check the **QUICK_START.md** guide
 2. Review **DIFFRACTION_CAPABILITIES_EXPANSION_PLAN.md** for roadmap
-3. See examples in `docs/modules/orcawave/examples/`
+3. Use the **orcawave-analysis** skill for expert guidance
+4. See examples in `docs/modules/orcawave/examples/`
 
 ---
 
