@@ -2,9 +2,9 @@
 
 **ABOUTME**: Complete guide for using the OrcaWave converter to extract diffraction data from OrcaFlex models and convert to unified schema.
 
-**Version**: 3.0.0 (Phase 3)
-**Status**: Core Implementation Complete
-**Date**: 2026-01-03
+**Version**: 3.0.0 (Phase 3.2)
+**Status**: Data Extraction Complete
+**Date**: 2026-01-04
 
 ---
 
@@ -290,8 +290,9 @@ except RuntimeError as e:
 
 ## Current Implementation Status
 
-### ✅ Implemented (Phase 3.1)
+### ✅ Implemented (Phase 3.1 & 3.2)
 
+**Phase 3.1 - Core Framework**:
 - Core converter class structure
 - OrcFxAPI integration framework
 - Unified schema conversion
@@ -299,24 +300,32 @@ except RuntimeError as e:
 - Error handling infrastructure
 - Documentation
 
-### 🔄 In Progress / TODO
+**Phase 3.2 - Data Extraction (COMPLETE)**:
+- ✅ Actual RAO table parsing from OrcFxAPI
+- ✅ Added mass matrices extraction from vessel type data
+- ✅ Damping matrices extraction from vessel type data
+- ✅ Frequency and heading extraction from actual data
+- ✅ Data validation and error handling
+- ✅ Warning system for missing data
 
-**Priority 1 - Core Data Extraction**:
-- [ ] Implement actual RAO table parsing from OrcFxAPI
-- [ ] Extract added mass matrices from vessel type data
-- [ ] Extract damping matrices from vessel type data
-- [ ] Frequency and heading extraction from actual data
+**Data Extraction Features**:
+- `OrcaWaveDataExtractor` class for low-level OrcFxAPI access
+- RAO extraction for all 6 DOFs (Surge, Sway, Heave, Roll, Pitch, Yaw)
+- Symmetric 6×6 matrix extraction (21 independent values)
+- Frequency/period conversion (ω = 2π/T)
+- Complex RAO to magnitude/phase conversion
+- Validation checks for empty data
+- Warning messages for missing frequency data
 
-**Priority 2 - Data Validation**:
-- [ ] Verify matrix symmetry from OrcaFlex data
-- [ ] Handle different OrcaFlex data storage formats
-- [ ] Support for multiple vessel types in same model
+### 📋 Future Enhancements
 
-**Priority 3 - Advanced Features**:
+**Advanced Features**:
 - [ ] Support for QTF extraction (if available)
 - [ ] Mean drift force extraction
 - [ ] Metadata extraction (analysis date, settings)
 - [ ] Integration with OrcaWave orchestrator Phase 3 results
+- [ ] Support for multiple vessel types in same model
+- [ ] Batch processing framework
 
 ---
 
@@ -437,6 +446,6 @@ def convert_orcawave_results(
 
 ---
 
-**Last Updated**: 2026-01-03
-**Version**: 3.0.0 - Phase 3.1
-**Status**: Core Implementation Complete, Data Extraction In Progress
+**Last Updated**: 2026-01-04
+**Version**: 3.0.0 - Phase 3.2
+**Status**: Data Extraction Complete

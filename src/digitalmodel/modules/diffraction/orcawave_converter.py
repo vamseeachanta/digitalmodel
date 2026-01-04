@@ -29,6 +29,13 @@ from digitalmodel.modules.diffraction.output_schemas import (
     FrequencyData, HeadingData, DOF
 )
 
+from digitalmodel.modules.diffraction.orcawave_data_extraction import (
+    OrcaWaveDataExtractor,
+    extract_all_rao_data,
+    extract_all_added_mass,
+    extract_all_damping
+)
+
 
 class OrcaWaveConverter:
     """Convert OrcaWave/OrcaFlex diffraction results to unified schema"""
@@ -137,7 +144,7 @@ class OrcaWaveConverter:
 
     def _extract_rao_data(self) -> Dict:
         """
-        Extract RAO data from OrcaFlex vessel
+        Extract RAO data from OrcaFlex vessel using actual OrcFxAPI calls
 
         Returns:
             Dictionary with RAO data structure:
@@ -151,51 +158,11 @@ class OrcaWaveConverter:
         """
         print(f"Extracting RAO data from vessel: {self.vessel.Name}")
 
-        # Get vessel type data
-        vessel_type = self.vessel.VesselType
+        # Use data extractor utility
+        rao_data = extract_all_rao_data(self.vessel)
 
-        # Extract frequencies from RAO data
-        # OrcaFlex stores RAOs in the vessel type LoadRAOs table
-        rao_table = vessel_type.LoadRAOs
-
-        # Get unique frequencies and headings
-        frequencies = self._extract_frequencies_from_raos(rao_table)
-        headings = self._extract_headings_from_raos(rao_table)
-
-        nfreq = len(frequencies)
-        nhead = len(headings)
-
-        # Initialize RAO data arrays
-        rao_data = {
-            'frequencies': frequencies,
-            'headings': headings,
-            'surge': {'magnitude': np.zeros((nfreq, nhead)), 'phase': np.zeros((nfreq, nhead))},
-            'sway': {'magnitude': np.zeros((nfreq, nhead)), 'phase': np.zeros((nfreq, nhead))},
-            'heave': {'magnitude': np.zeros((nfreq, nhead)), 'phase': np.zeros((nfreq, nhead))},
-            'roll': {'magnitude': np.zeros((nfreq, nhead)), 'phase': np.zeros((nfreq, nhead))},
-            'pitch': {'magnitude': np.zeros((nfreq, nhead)), 'phase': np.zeros((nfreq, nhead))},
-            'yaw': {'magnitude': np.zeros((nfreq, nhead)), 'phase': np.zeros((nfreq, nhead))},
-        }
-
-        # Extract RAO data for each DOF, frequency, and heading
-        dof_mapping = {
-            'surge': 'Surge',
-            'sway': 'Sway',
-            'heave': 'Heave',
-            'roll': 'Roll',
-            'pitch': 'Pitch',
-            'yaw': 'Yaw'
-        }
-
-        for i, freq in enumerate(frequencies):
-            for j, heading in enumerate(headings):
-                for dof_name, orcaflex_dof in dof_mapping.items():
-                    # Get RAO magnitude and phase from table
-                    # This is a simplified extraction - actual implementation
-                    # depends on how RAO data is stored in OrcaFlex
-                    mag, phase = self._get_rao_from_table(rao_table, freq, heading, orcaflex_dof)
-                    rao_data[dof_name]['magnitude'][i, j] = mag
-                    rao_data[dof_name]['phase'][i, j] = phase
+        nfreq = len(rao_data['frequencies'])
+        nhead = len(rao_data['headings'])
 
         print(f"[OK] Extracted RAO data: {nfreq} frequencies × {nhead} headings")
 
@@ -203,7 +170,7 @@ class OrcaWaveConverter:
 
     def _extract_added_mass_data(self) -> Dict:
         """
-        Extract added mass matrices from OrcaFlex vessel
+        Extract added mass matrices from OrcaFlex vessel using actual OrcFxAPI calls
 
         Returns:
             Dictionary with structure:
@@ -214,138 +181,28 @@ class OrcaWaveConverter:
         """
         print(f"Extracting added mass data from vessel")
 
-        vessel_type = self.vessel.VesselType
+        # Use data extractor utility
+        added_mass_data = extract_all_added_mass(self.vessel)
 
-        # Get frequencies
-        frequencies = self._extract_frequencies_from_added_mass()
-
-        # Extract matrices for each frequency
-        matrices = []
-        for freq in frequencies:
-            matrix = self._get_added_mass_matrix_at_frequency(vessel_type, freq)
-            matrices.append(matrix)
-
-        added_mass_data = {
-            'frequencies': frequencies,
-            'matrices': matrices
-        }
-
-        print(f"[OK] Extracted added mass matrices: {len(frequencies)} frequencies")
+        print(f"[OK] Extracted added mass matrices: {len(added_mass_data['frequencies'])} frequencies")
 
         return added_mass_data
 
     def _extract_damping_data(self) -> Dict:
         """
-        Extract damping matrices from OrcaFlex vessel
+        Extract damping matrices from OrcaFlex vessel using actual OrcFxAPI calls
 
         Returns:
             Dictionary with damping matrix data
         """
         print(f"Extracting damping data from vessel")
 
-        vessel_type = self.vessel.VesselType
+        # Use data extractor utility
+        damping_data = extract_all_damping(self.vessel)
 
-        # Get frequencies
-        frequencies = self._extract_frequencies_from_damping()
-
-        # Extract matrices for each frequency
-        matrices = []
-        for freq in frequencies:
-            matrix = self._get_damping_matrix_at_frequency(vessel_type, freq)
-            matrices.append(matrix)
-
-        damping_data = {
-            'frequencies': frequencies,
-            'matrices': matrices
-        }
-
-        print(f"[OK] Extracted damping matrices: {len(frequencies)} frequencies")
+        print(f"[OK] Extracted damping matrices: {len(damping_data['frequencies'])} frequencies")
 
         return damping_data
-
-    def _extract_frequencies_from_raos(self, rao_table) -> np.ndarray:
-        """Extract unique frequencies from RAO table"""
-        # This is a placeholder - actual implementation depends on OrcaFlex data structure
-        # Typically frequencies are stored in the RAO table
-        # For now, return a default set
-        return np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
-
-    def _extract_headings_from_raos(self, rao_table) -> np.ndarray:
-        """Extract unique headings from RAO table"""
-        # Placeholder - extract from actual table
-        return np.array([0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330])
-
-    def _get_rao_from_table(self, rao_table, freq: float, heading: float, dof: str) -> Tuple[float, float]:
-        """
-        Get RAO magnitude and phase from table for specific condition
-
-        Returns:
-            (magnitude, phase) tuple
-        """
-        # Placeholder - actual implementation would query the OrcaFlex RAO table
-        # using OrcFxAPI methods to interpolate or lookup values
-        magnitude = 1.0  # Example value
-        phase = 0.0      # Example value
-        return magnitude, phase
-
-    def _extract_frequencies_from_added_mass(self) -> np.ndarray:
-        """Extract frequencies from added mass data"""
-        # Placeholder - get from vessel type data
-        return np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
-
-    def _extract_frequencies_from_damping(self) -> np.ndarray:
-        """Extract frequencies from damping data"""
-        # Same as added mass typically
-        return self._extract_frequencies_from_added_mass()
-
-    def _get_added_mass_matrix_at_frequency(self, vessel_type, freq: float) -> np.ndarray:
-        """
-        Extract 6x6 added mass matrix at specific frequency
-
-        Args:
-            vessel_type: OrcaFlex vessel type object
-            freq: Frequency in rad/s
-
-        Returns:
-            6x6 added mass matrix
-        """
-        # Placeholder - actual implementation would use OrcFxAPI to get matrix
-        # from vessel type AddedMassAndDamping data
-        matrix = np.zeros((6, 6))
-
-        # Diagonal terms (example values)
-        matrix[0, 0] = 50000   # Surge
-        matrix[1, 1] = 60000   # Sway
-        matrix[2, 2] = 80000   # Heave
-        matrix[3, 3] = 5e9     # Roll
-        matrix[4, 4] = 3e10    # Pitch
-        matrix[5, 5] = 3e10    # Yaw
-
-        return matrix
-
-    def _get_damping_matrix_at_frequency(self, vessel_type, freq: float) -> np.ndarray:
-        """
-        Extract 6x6 damping matrix at specific frequency
-
-        Args:
-            vessel_type: OrcaFlex vessel type object
-            freq: Frequency in rad/s
-
-        Returns:
-            6x6 damping matrix
-        """
-        # Placeholder - actual implementation would use OrcFxAPI
-        matrix = np.zeros((6, 6))
-
-        # Frequency-dependent damping
-        matrix[0, 0] = 2e5 * freq   # Surge
-        matrix[1, 1] = 2.5e5 * freq # Sway
-        matrix[2, 2] = 3e5 * freq   # Heave
-        matrix[3, 3] = 1e8 * freq   # Roll
-        matrix[4, 4] = 5e8 * freq   # Pitch
-        matrix[5, 5] = 5e8 * freq   # Yaw
-
-        return matrix
 
     def _build_rao_set(self, rao_data: Dict, water_depth: float) -> RAOSet:
         """Build RAOSet from extracted data"""

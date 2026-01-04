@@ -552,22 +552,23 @@ validator.export_report(output_file)
 - Complete conversion example
 
 ### Phase 3 - Automation + QA (In Progress) 🔄
-- ✅ **OrcaWave converter** - Core implementation complete
+- ✅ **OrcaWave converter** - Core implementation complete (Phase 3.1)
   - OrcFxAPI integration framework
   - Unified schema conversion
   - Same export capability as AQWA
-- 🔄 **Data extraction refinement** - In progress
+- ✅ **Data extraction refinement** - Complete (Phase 3.2)
   - Actual RAO extraction from OrcFxAPI
   - Added mass/damping matrix extraction
   - Frequency/heading parsing
+  - Validation and error handling
+- 📋 **Batch processing** - Next (Phase 3.3)
+  - Multi-vessel/multi-configuration support
+  - Parallel execution framework
+  - Result aggregation
 - 📋 **Benchmark comparison** - Planned
   - AQWA vs OrcaWave statistical comparison
   - Automated cross-tool validation
   - Deviation analysis and reporting
-- 📋 **Batch processing** - Planned
-  - Multi-vessel/multi-configuration support
-  - Parallel execution framework
-  - Result aggregation
 
 ### Phase 4 - Templates + Examples (Future)
 - End-to-end example projects
@@ -577,4 +578,4 @@ validator.export_report(output_file)
 ---
 
 **Last Updated**: 2026-01-04
-**Version**: 3.0.0 - Phase 3.1 (OrcaWave Converter Core)
+**Version**: 3.0.0 - Phase 3.2 (OrcaWave Data Extraction Complete)
