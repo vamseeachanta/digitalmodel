@@ -69,18 +69,25 @@ This plan expands diffraction analysis capabilities for AQWA and OrcaWave in a f
   - Same 6-format export capability
   - Complete documentation and usage guide
   - Module integration with availability checking
-- 🔄 **Data Extraction Refinement (Phase 3.2)** - NEXT
-  - Actual OrcFxAPI data extraction (replace placeholders)
-  - RAO table parsing from vessel type
-  - Added mass/damping matrix extraction
-  - Frequency and heading data extraction
-- 📋 Batch execution support for multiple headings/drafts
-- 📋 Add geometry quality gates (watertight, normals, panel limits)
+- ✅ **Data Extraction Refinement (Phase 3.2)** - COMPLETE
+  - Actual OrcFxAPI data extraction implemented
+  - RAO table parsing from vessel type (LoadRAOs)
+  - Added mass/damping matrix extraction (AddedMassAndDamping)
+  - Frequency and heading data extraction with validation
+  - Data extraction utility module (~420 lines)
+  - Error handling and warning system
+  - Removed placeholder methods
+- 📋 **Batch Execution Framework (Phase 3.3)** - NEXT
+  - Support for multiple headings/drafts
+  - Parallel processing capability
+  - Progress tracking and reporting
+- 📋 Geometry quality gates (watertight, normals, panel limits)
 - 📋 Create automated comparison between AQWA and OrcaWave benchmarks
 
 **Deliverables (Phase 3.1)**: 1,000+ lines code + documentation
+**Deliverables (Phase 3.2)**: 420 lines data extraction + validation
 **Completion**: 2026-01-04
-**Next**: Data extraction refinement
+**Next**: Batch execution framework (Phase 3.3)
 
 ### Phase 4: Templates + Examples (Long Term)
 - Publish end-to-end example projects for both tools.
