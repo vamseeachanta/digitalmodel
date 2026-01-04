@@ -42,6 +42,19 @@ from digitalmodel.modules.diffraction.aqwa_converter import (
     convert_aqwa_results
 )
 
+# OrcaWave converter (requires OrcFxAPI)
+try:
+    from digitalmodel.modules.diffraction.orcawave_converter import (
+        OrcaWaveConverter,
+        convert_orcawave_results
+    )
+    ORCAWAVE_AVAILABLE = True
+except ImportError:
+    ORCAWAVE_AVAILABLE = False
+    # Provide placeholder classes when OrcFxAPI not available
+    OrcaWaveConverter = None
+    convert_orcawave_results = None
+
 from digitalmodel.modules.diffraction.output_validator import (
     OutputValidator,
     validate_results
@@ -77,8 +90,11 @@ __all__ = [
     # Converters
     'AQWAConverter',
     'convert_aqwa_results',
+    'OrcaWaveConverter',
+    'convert_orcawave_results',
+    'ORCAWAVE_AVAILABLE',
 ]
 
-__version__ = "2.0.0"
+__version__ = "3.0.0"
 __author__ = "Digital Model Development Team"
-__status__ = "Phase 2 Complete - Output Standardization"
+__status__ = "Phase 3 - Automation + QA (In Progress)"
