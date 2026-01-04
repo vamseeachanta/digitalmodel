@@ -1,0 +1,162 @@
+name: VIV Analysis Module Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/digitalmodel/modules/viv_analysis/**'
+      - 'tests/modules/viv_analysis/**'
+      - '.github/workflows/viv-analysis-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/digitalmodel/modules/viv_analysis/**'
+      - 'tests/modules/viv_analysis/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test VIV Analysis Module
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.10', '3.11']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install pytest pytest-cov pytest-mock
+
+    - name: Run VIV Analysis unit tests
+      run: |
+        pytest tests/modules/viv_analysis/test_viv_analysis_unit.py -v --cov=src/digitalmodel/modules/viv_analysis --cov-report=term-missing --cov-report=xml
+
+    - name: Run VIV Analysis CLI tests
+      run: |
+        pytest tests/modules/viv_analysis/test_viv_analysis_cli.py -v
+
+    - name: Upload coverage to Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: viv-analysis
+        name: viv-analysis-coverage
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install ruff black isort mypy
+
+    - name: Run ruff
+      run: |
+        ruff check src/digitalmodel/modules/viv_analysis
+
+    - name: Run black
+      run: |
+        black --check src/digitalmodel/modules/viv_analysis tests/modules/viv_analysis
+
+    - name: Run isort
+      run: |
+        isort --check-only src/digitalmodel/modules/viv_analysis tests/modules/viv_analysis
+
+    - name: Run mypy
+      run: |
+        mypy src/digitalmodel/modules/viv_analysis --ignore-missing-imports
+      continue-on-error: true
+
+  cli-validation:
+    name: CLI Command Validation
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install package
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+
+    - name: Test CLI installation
+      run: |
+        viv-analysis --version
+
+    - name: Test natural-freq command
+      run: |
+        viv-analysis natural-freq --length 50 --diameter 0.5 --thickness 0.025 --material steel --n-modes 3
+
+    - name: Test screening command
+      run: |
+        viv-analysis screening --length 50 --diameter 0.5 --thickness 0.025 --current 1.5 --material steel
+
+    - name: Test JSON output
+      run: |
+        viv-analysis natural-freq --length 50 --diameter 0.5 --thickness 0.025 --n-modes 2 --output test_output.json
+        test -f test_output.json
+
+  build:
+    name: Build Distribution
+    runs-on: ubuntu-latest
+    needs: [test, lint, cli-validation]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install build tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+
+    - name: Build package
+      run: |
+        python -m build
+
+    - name: Check distribution
+      run: |
+        twine check dist/*
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist-viv-analysis
+        path: dist/
+        retention-days: 7
