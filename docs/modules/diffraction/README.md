@@ -101,6 +101,41 @@ for output_type, file_path in output_files.items():
 
 ---
 
+## Examples
+
+### Complete Conversion Example
+
+A comprehensive end-to-end example demonstrating the Phase 2 workflow is available:
+
+**Location**: `docs/modules/diffraction/examples/complete_conversion_example.py`
+
+**What it demonstrates**:
+1. Creating realistic mock AQWA diffraction data for an FPSO
+2. Converting to unified `DiffractionResults` schema
+3. Running comprehensive validation (6 categories)
+4. Exporting to all 6 OrcaFlex formats
+
+**How to run**:
+```bash
+cd D:/workspace-hub/digitalmodel
+uv run python docs/modules/diffraction/examples/complete_conversion_example.py
+```
+
+**Generates 7 output files**:
+- Vessel type YAML
+- RAO CSV (wide format)
+- Added mass CSV (long format)
+- Damping CSV (long format)
+- Excel workbook (5 sheets)
+- Summary text report
+- Validation report JSON
+
+**Mock Data**: 17 frequencies, 12 headings, 6 DOFs for a generic FPSO at 1200m water depth
+
+See `docs/modules/diffraction/examples/README.md` for complete documentation.
+
+---
+
 ## Data Schemas
 
 ### DiffractionResults
