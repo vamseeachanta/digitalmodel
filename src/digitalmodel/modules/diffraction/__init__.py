@@ -87,11 +87,21 @@ try:
         MockDataGenerator,
         create_test_vessel
     )
+    from digitalmodel.modules.diffraction.orcawave_data_extraction import (
+        OrcaWaveDataExtractor,
+        extract_all_rao_data,
+        extract_all_added_mass,
+        extract_all_damping
+    )
     TEST_UTILITIES_AVAILABLE = True
 except ImportError:
     TEST_UTILITIES_AVAILABLE = False
     MockDataGenerator = None
     create_test_vessel = None
+    OrcaWaveDataExtractor = None
+    extract_all_rao_data = None
+    extract_all_added_mass = None
+    extract_all_damping = None
 
 __all__ = [
     # Results containers
@@ -137,6 +147,10 @@ __all__ = [
     'GeometryQualityReport',
     'MockDataGenerator',
     'create_test_vessel',
+    'OrcaWaveDataExtractor',
+    'extract_all_rao_data',
+    'extract_all_added_mass',
+    'extract_all_damping',
     'TEST_UTILITIES_AVAILABLE',
 ]
 

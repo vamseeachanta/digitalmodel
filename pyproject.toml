@@ -24,6 +24,7 @@ classifiers = [
 
 dependencies = [
     "aiofiles==23.2.1",
+    "click>=8.0.0,<9.0.0", # CLI framework for command-line tools
     "gmsh>=4.11.0", # GMSH Python bindings for mesh generation
     "aiosqlite==0.19.0", # SQLite async driver fordevelopment",
     "alembic==1.12.1",
@@ -197,6 +198,7 @@ run-to-sim = "digitalmodel.modules.orcaflex.run_to_sim_cli:main"
 orcaflex-universal = "digitalmodel.modules.orcaflex.universal_cli:main"
 orcaflex-sim = "digitalmodel.modules.orcaflex.universal_cli:main"
 create-go-by = "digitalmodel.modules.automation.go_by_folder.cli:main"
+diffraction = "digitalmodel.modules.diffraction.cli:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
