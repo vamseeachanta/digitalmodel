@@ -1,7 +1,7 @@
 # Diffraction Capabilities Expansion Plan (AQWA + OrcaWave)
 
-**Date:** 2026-01-03
-**Status:** Phase 2 Complete - Output Standardization
+**Date:** 2026-01-04
+**Status:** Phase 3 In Progress - Automation + QA
 
 ## Overview
 
@@ -62,10 +62,25 @@ This plan expands diffraction analysis capabilities for AQWA and OrcaWave in a f
 **Completion**: 2026-01-03
 **Report**: `docs/modules/diffraction/PHASE_2_COMPLETION.md`
 
-### Phase 3: Automation + QA (Mid Term)
-- Batch execution support for multiple headings/drafts.
-- Add geometry quality gates (watertight, normals, panel limits).
-- Create automated comparison between AQWA and OrcaWave benchmarks.
+### Phase 3: Automation + QA (Mid Term) 🔄 IN PROGRESS
+- ✅ **OrcaWave Converter Implementation (Phase 3.1)** - COMPLETE
+  - Core converter class with OrcFxAPI integration (~630 lines)
+  - Unified schema conversion matching AQWA converter
+  - Same 6-format export capability
+  - Complete documentation and usage guide
+  - Module integration with availability checking
+- 🔄 **Data Extraction Refinement (Phase 3.2)** - NEXT
+  - Actual OrcFxAPI data extraction (replace placeholders)
+  - RAO table parsing from vessel type
+  - Added mass/damping matrix extraction
+  - Frequency and heading data extraction
+- 📋 Batch execution support for multiple headings/drafts
+- 📋 Add geometry quality gates (watertight, normals, panel limits)
+- 📋 Create automated comparison between AQWA and OrcaWave benchmarks
+
+**Deliverables (Phase 3.1)**: 1,000+ lines code + documentation
+**Completion**: 2026-01-04
+**Next**: Data extraction refinement
 
 ### Phase 4: Templates + Examples (Long Term)
 - Publish end-to-end example projects for both tools.
