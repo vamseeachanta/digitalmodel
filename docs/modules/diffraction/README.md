@@ -2,8 +2,8 @@
 
 **ABOUTME**: Standardized schemas and converters for AQWA and OrcaWave diffraction analysis results with OrcaFlex export capability.
 
-**Version**: 2.0.0
-**Status**: Phase 2 Complete - Output Standardization
+**Version**: 3.0.0
+**Status**: Phase 3 - Automation + QA (In Progress)
 
 ---
 
@@ -26,13 +26,17 @@ src/digitalmodel/modules/diffraction/
 ├── output_schemas.py              # Unified data schemas
 ├── orcaflex_exporter.py           # OrcaFlex format export
 ├── aqwa_converter.py              # AQWA results converter
-├── orcawave_converter.py          # OrcaWave results converter (future)
+├── orcawave_converter.py          # OrcaWave results converter (NEW Phase 3)
 └── output_validator.py            # Results validation
 
 docs/modules/diffraction/
-├── README.md                      # This file
-├── USAGE_GUIDE.md                 # Detailed usage examples
-└── PHASE_2_COMPLETION.md          # Phase 2 completion report
+├── README.md                         # This file
+├── ORCAWAVE_CONVERTER_GUIDE.md      # OrcaWave converter guide (NEW Phase 3)
+├── PHASE_2_COMPLETION.md            # Phase 2 completion report
+└── examples/
+    ├── README.md                     # Examples documentation
+    ├── complete_conversion_example.py # Complete workflow example
+    └── outputs/                      # Generated outputs (gitignored)
 ```
 
 ---
@@ -98,6 +102,59 @@ output_files = exporter.export_all()
 for output_type, file_path in output_files.items():
     print(f"{output_type}: {file_path}")
 ```
+
+### Convert OrcaWave Results to OrcaFlex Format (Phase 3)
+
+**NEW in Version 3.0.0** - OrcaWave converter for extracting diffraction data from OrcaFlex models:
+
+```python
+from digitalmodel.modules.diffraction import (
+    ORCAWAVE_AVAILABLE,
+    convert_orcawave_results
+)
+
+# Check if OrcFxAPI is available
+if not ORCAWAVE_AVAILABLE:
+    print("OrcFxAPI required - install OrcaFlex with Python API")
+else:
+    # Convert and export in one step
+    output_dir = convert_orcawave_results(
+        model_file="path/to/model.sim",
+        water_depth=1200.0,
+        output_folder="output/",
+        vessel_name="MyVessel"  # Optional - auto-detects if None
+    )
+
+    # Same output files as AQWA converter:
+    # - vessel_type.yml, raos.csv, added_mass.csv, damping.csv, etc.
+```
+
+**Manual OrcaWave Workflow**:
+
+```python
+from digitalmodel.modules.diffraction import (
+    OrcaWaveConverter,
+    OrcaFlexExporter,
+    validate_results
+)
+
+# Step 1: Convert OrcaWave results
+converter = OrcaWaveConverter(
+    model_file="analysis/fpso.sim",
+    vessel_name="FPSO_A"  # Optional
+)
+
+results = converter.convert_to_unified_schema(water_depth=1200.0)
+
+# Step 2: Validate (same as AQWA)
+validation_report = validate_results(results)
+
+# Step 3: Export (same as AQWA)
+exporter = OrcaFlexExporter(results, output_dir="output/")
+output_files = exporter.export_all()
+```
+
+**See**: `docs/modules/diffraction/ORCAWAVE_CONVERTER_GUIDE.md` for complete documentation
 
 ---
 
@@ -490,16 +547,34 @@ validator.export_report(output_file)
 ### Phase 2 Complete ✅
 - Unified output schemas
 - AQWA converter (template)
-- OrcaFlex exporter
-- Comprehensive validation
+- OrcaFlex exporter (6 formats)
+- Comprehensive validation (6 categories)
+- Complete conversion example
 
-### Phase 3 (Next)
-- OrcaWave converter implementation
-- AQWA/OrcaWave benchmark comparison
-- Automated cross-tool validation
-- Batch processing workflows
+### Phase 3 - Automation + QA (In Progress) 🔄
+- ✅ **OrcaWave converter** - Core implementation complete
+  - OrcFxAPI integration framework
+  - Unified schema conversion
+  - Same export capability as AQWA
+- 🔄 **Data extraction refinement** - In progress
+  - Actual RAO extraction from OrcFxAPI
+  - Added mass/damping matrix extraction
+  - Frequency/heading parsing
+- 📋 **Benchmark comparison** - Planned
+  - AQWA vs OrcaWave statistical comparison
+  - Automated cross-tool validation
+  - Deviation analysis and reporting
+- 📋 **Batch processing** - Planned
+  - Multi-vessel/multi-configuration support
+  - Parallel execution framework
+  - Result aggregation
+
+### Phase 4 - Templates + Examples (Future)
+- End-to-end example projects
+- Reusable vessel templates
+- Configuration generators
 
 ---
 
-**Last Updated**: 2026-01-03
-**Version**: 2.0.0 - Phase 2 Complete
+**Last Updated**: 2026-01-04
+**Version**: 3.0.0 - Phase 3.1 (OrcaWave Converter Core)
