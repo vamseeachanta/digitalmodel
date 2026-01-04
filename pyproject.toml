@@ -202,6 +202,7 @@ aqwa = "digitalmodel.modules.aqwa.aqwa_cli:main"
 diffraction = "digitalmodel.modules.diffraction.cli:cli"
 structural-analysis = "digitalmodel.modules.structural_analysis.cli:main"
 mooring-analysis = "digitalmodel.modules.mooring_analysis.cli:main"
+viv-analysis = "digitalmodel.modules.viv_analysis.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
