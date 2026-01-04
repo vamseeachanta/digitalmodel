@@ -10,12 +10,14 @@ import numpy as np
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 from datetime import datetime
+from loguru import logger
 
 from digitalmodel.modules.diffraction.output_schemas import (
     DiffractionResults, RAOSet, AddedMassSet, DampingSet,
     RAOComponent, HydrodynamicMatrix,
     FrequencyData, HeadingData, DOF
 )
+from digitalmodel.modules.diffraction.aqwa_lis_parser import parse_aqwa_lis_file
 
 
 class AQWAConverter:
@@ -32,8 +34,30 @@ class AQWAConverter:
         self.analysis_folder = Path(analysis_folder)
         self.vessel_name = vessel_name
 
-        # AQWA output file patterns
-        self.lis_file = self.analysis_folder / f"{vessel_name}.LIS"
+        # AQWA output file patterns - try multiple possible filenames
+        possible_files = [
+            self.analysis_folder / f"{vessel_name}.LIS",
+            self.analysis_folder / f"{vessel_name.upper()}.LIS",
+            self.analysis_folder / f"{vessel_name.lower()}.LIS",
+        ]
+
+        # Find first .LIS file that exists, or use first .LIS file in folder
+        self.lis_file = None
+        for file_path in possible_files:
+            if file_path.exists():
+                self.lis_file = file_path
+                break
+
+        # If no exact match, find any .LIS file in the folder
+        if self.lis_file is None:
+            lis_files = list(self.analysis_folder.glob("*.LIS"))
+            if lis_files:
+                self.lis_file = lis_files[0]
+                logger.warning(f"Using first .LIS file found: {self.lis_file.name}")
+            else:
+                raise FileNotFoundError(f"No .LIS file found in {self.analysis_folder}")
+
+        logger.info(f"Using AQWA .LIS file: {self.lis_file}")
 
     def convert_to_unified_schema(
         self,
@@ -100,25 +124,52 @@ class AQWAConverter:
                 ...
             }
         """
-        # Placeholder - actual implementation would parse AQWA .LIS file
-        # This is a template showing the expected structure
+        logger.info(f"Extracting RAO data from: {self.lis_file}")
 
-        print(f"Extracting RAO data from: {self.lis_file}")
+        # Parse the .LIS file
+        parsed_data = parse_aqwa_lis_file(self.lis_file)
 
-        # Example structure (would be filled from actual file parsing)
-        rao_data = {
-            'frequencies': np.array([]),  # Will be filled from file
-            'headings': np.array([]),     # Will be filled from file
-            'surge': {'magnitude': np.array([[]]), 'phase': np.array([[]])},
-            'sway': {'magnitude': np.array([[]]), 'phase': np.array([[]])},
-            'heave': {'magnitude': np.array([[]]), 'phase': np.array([[]])},
-            'roll': {'magnitude': np.array([[]]), 'phase': np.array([[]])},
-            'pitch': {'magnitude': np.array([[]]), 'phase': np.array([[]])},
-            'yaw': {'magnitude': np.array([[]]), 'phase': np.array([[]])},
+        frequencies = np.array(parsed_data['frequencies'])
+        headings = np.array(parsed_data['headings'])
+        raos = parsed_data['raos']
+
+        # Organize RAO data into 2D arrays: [freq_idx, heading_idx]
+        n_freqs = len(frequencies)
+        n_headings = len(headings)
+
+        # Initialize arrays for each DOF
+        dof_data = {
+            'surge': {'magnitude': np.zeros((n_freqs, n_headings)), 'phase': np.zeros((n_freqs, n_headings))},
+            'sway': {'magnitude': np.zeros((n_freqs, n_headings)), 'phase': np.zeros((n_freqs, n_headings))},
+            'heave': {'magnitude': np.zeros((n_freqs, n_headings)), 'phase': np.zeros((n_freqs, n_headings))},
+            'roll': {'magnitude': np.zeros((n_freqs, n_headings)), 'phase': np.zeros((n_freqs, n_headings))},
+            'pitch': {'magnitude': np.zeros((n_freqs, n_headings)), 'phase': np.zeros((n_freqs, n_headings))},
+            'yaw': {'magnitude': np.zeros((n_freqs, n_headings)), 'phase': np.zeros((n_freqs, n_headings))},
         }
 
-        # TODO: Implement actual .LIS file parsing
-        # Use existing aqwa_reader.py functionality or implement new parser
+        # Fill in the data from parsed RAOs
+        for (freq, heading), rao_values in raos.items():
+            # Find indices
+            freq_idx = np.where(np.isclose(frequencies, freq))[0]
+            heading_idx = np.where(np.isclose(headings, heading))[0]
+
+            if len(freq_idx) > 0 and len(heading_idx) > 0:
+                fi = freq_idx[0]
+                hi = heading_idx[0]
+
+                # Fill in each DOF
+                for dof_name in dof_data.keys():
+                    amp, phase = rao_values[dof_name]
+                    dof_data[dof_name]['magnitude'][fi, hi] = amp
+                    dof_data[dof_name]['phase'][fi, hi] = phase
+
+        rao_data = {
+            'frequencies': frequencies,
+            'headings': headings,
+            **dof_data
+        }
+
+        logger.success(f"Extracted RAO data: {n_freqs} frequencies x {n_headings} headings")
 
         return rao_data
 
@@ -133,15 +184,29 @@ class AQWAConverter:
                 'matrices': List of 6x6 ndarrays
             }
         """
-        print(f"Extracting added mass data from AQWA results")
+        logger.info(f"Extracting added mass data from AQWA .LIS file")
+
+        # Parse the .LIS file
+        parsed_data = parse_aqwa_lis_file(self.lis_file)
+
+        frequencies = np.array(parsed_data['frequencies'])
+        added_mass_matrices = parsed_data['added_mass']
+
+        # Convert dictionary to sorted list of matrices
+        matrices = []
+        for freq in frequencies:
+            if freq in added_mass_matrices:
+                matrices.append(added_mass_matrices[freq])
+            else:
+                logger.warning(f"Added mass matrix missing for frequency {freq:.3f} rad/s")
+                matrices.append(np.zeros((6, 6)))
 
         added_mass_data = {
-            'frequencies': np.array([]),
-            'matrices': []  # List of 6x6 matrices
+            'frequencies': frequencies,
+            'matrices': matrices
         }
 
-        # TODO: Implement extraction from AQWA output files
-        # May be in .HYD or other AQWA output files
+        logger.success(f"Extracted {len(matrices)} added mass matrices")
 
         return added_mass_data
 
@@ -152,14 +217,29 @@ class AQWAConverter:
         Returns:
             Dictionary with damping matrix data
         """
-        print(f"Extracting damping data from AQWA results")
+        logger.info(f"Extracting damping data from AQWA .LIS file")
+
+        # Parse the .LIS file
+        parsed_data = parse_aqwa_lis_file(self.lis_file)
+
+        frequencies = np.array(parsed_data['frequencies'])
+        damping_matrices = parsed_data['damping']
+
+        # Convert dictionary to sorted list of matrices
+        matrices = []
+        for freq in frequencies:
+            if freq in damping_matrices:
+                matrices.append(damping_matrices[freq])
+            else:
+                logger.warning(f"Damping matrix missing for frequency {freq:.3f} rad/s")
+                matrices.append(np.zeros((6, 6)))
 
         damping_data = {
-            'frequencies': np.array([]),
-            'matrices': []
+            'frequencies': frequencies,
+            'matrices': matrices
         }
 
-        # TODO: Implement extraction from AQWA output files
+        logger.success(f"Extracted {len(matrices)} damping matrices")
 
         return damping_data
 
