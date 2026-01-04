@@ -201,6 +201,7 @@ create-go-by = "digitalmodel.modules.automation.go_by_folder.cli:main"
 aqwa = "digitalmodel.modules.aqwa.aqwa_cli:main"
 diffraction = "digitalmodel.modules.diffraction.cli:cli"
 structural-analysis = "digitalmodel.modules.structural_analysis.cli:main"
+mooring-analysis = "digitalmodel.modules.mooring_analysis.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
