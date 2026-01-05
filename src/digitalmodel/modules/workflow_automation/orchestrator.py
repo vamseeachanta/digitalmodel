@@ -17,6 +17,9 @@ from .models import (
     WorkflowConfig,
     TaskStatus,
 )
+from .cache import WorkflowCache
+from .parallel import AdaptiveParallelExecutor
+from .callbacks import ProgressTracker, ConsoleCallback
 
 
 class WorkflowOrchestrator:
@@ -27,15 +30,43 @@ class WorkflowOrchestrator:
     results, and handles error propagation.
     """
 
-    def __init__(self, config: Optional[WorkflowConfig] = None):
+    def __init__(
+        self,
+        config: Optional[WorkflowConfig] = None,
+        enable_cache: bool = True,
+        enable_parallel: bool = True,
+        enable_progress: bool = True,
+    ):
         """
         Initialize workflow orchestrator
 
         Args:
             config: Workflow configuration (uses defaults if None)
+            enable_cache: Enable result caching (default: True)
+            enable_parallel: Enable parallel execution (default: True)
+            enable_progress: Enable progress callbacks (default: True)
         """
         self.config = config or WorkflowConfig()
         self.task_results: Dict[str, Any] = {}  # Cache for task results
+
+        # Advanced features
+        self.enable_cache = enable_cache
+        self.enable_parallel = enable_parallel
+        self.enable_progress = enable_progress
+
+        # Initialize cache
+        self.cache = WorkflowCache() if enable_cache else None
+
+        # Initialize parallel executor
+        self.parallel_executor = AdaptiveParallelExecutor(
+            max_workers=self.config.max_parallel_tasks
+        ) if enable_parallel else None
+
+        # Initialize progress tracker
+        self.progress_tracker = ProgressTracker() if enable_progress else None
+        if self.progress_tracker:
+            # Add default console callback
+            self.progress_tracker.add_callback(ConsoleCallback(verbose=False))
 
     def execute_workflow(
         self,
@@ -52,6 +83,14 @@ class WorkflowOrchestrator:
         """
         start_time = datetime.now()
 
+        # Emit workflow started event
+        if self.progress_tracker:
+            self.progress_tracker.workflow_started(
+                workflow.workflow_id,
+                workflow.name,
+                len(workflow.tasks),
+            )
+
         # Get dependency-ordered task groups
         try:
             task_groups = workflow.get_dependency_order()
@@ -65,29 +104,88 @@ class WorkflowOrchestrator:
 
         # Execute task groups in order
         for group_idx, task_ids in enumerate(task_groups):
-            print(f"\n=== Executing task group {group_idx + 1}/{len(task_groups)} ===")
+            if not self.enable_parallel:
+                print(f"\n=== Executing task group {group_idx + 1}/{len(task_groups)} ===")
 
-            for task_id in task_ids:
-                task = workflow.get_task(task_id)
-                if task is None:
-                    continue
+            # Get tasks for this group
+            tasks = [workflow.get_task(tid) for tid in task_ids if workflow.get_task(tid)]
 
-                # Execute task
-                try:
-                    self._execute_task(workflow, task)
-                except Exception as e:
-                    if workflow.stop_on_error and task.required:
-                        # Stop workflow on error
-                        return self._create_error_result(
-                            workflow,
-                            start_time,
-                            f"Task '{task.name}' failed: {e}"
-                        )
+            if not tasks:
+                continue
+
+            # Execute tasks (parallel or sequential)
+            if self.enable_parallel and len(tasks) > 1:
+                # Parallel execution
+                self._execute_task_group_parallel(workflow, tasks)
+            else:
+                # Sequential execution
+                for task in tasks:
+                    try:
+                        self._execute_task(workflow, task)
+                    except Exception as e:
+                        if workflow.stop_on_error and task.required:
+                            if self.progress_tracker:
+                                self.progress_tracker.workflow_failed(
+                                    workflow.workflow_id,
+                                    workflow.name,
+                                    f"Task '{task.name}' failed: {e}"
+                                )
+                            return self._create_error_result(
+                                workflow,
+                                start_time,
+                                f"Task '{task.name}' failed: {e}"
+                            )
 
         # Create result summary
         end_time = datetime.now()
 
-        return self._create_workflow_result(workflow, start_time, end_time)
+        result = self._create_workflow_result(workflow, start_time, end_time)
+
+        # Emit workflow completed event
+        if self.progress_tracker:
+            completed = sum(1 for s in result.task_statuses.values()
+                          if s in [TaskStatus.COMPLETED, TaskStatus.CACHED])
+            failed = len(result.get_failed_tasks())
+
+            self.progress_tracker.workflow_completed(
+                workflow.workflow_id,
+                workflow.name,
+                len(workflow.tasks),
+                completed,
+                failed,
+            )
+
+        return result
+
+    def _execute_task_group_parallel(
+        self,
+        workflow: WorkflowDefinition,
+        tasks: list
+    ) -> None:
+        """
+        Execute a group of tasks in parallel
+
+        Args:
+            workflow: Parent workflow
+            tasks: List of tasks to execute in parallel
+        """
+        if not self.parallel_executor:
+            # Fallback to sequential
+            for task in tasks:
+                self._execute_task(workflow, task)
+            return
+
+        # Execute tasks in parallel
+        results = self.parallel_executor.execute_task_group(
+            tasks,
+            lambda t: self._execute_task(workflow, t)
+        )
+
+        # Process results
+        for result in results:
+            task = workflow.get_task(result.task_id)
+            if not result.success and task and task.required:
+                raise Exception(result.error)
 
     def _execute_task(
         self,
@@ -107,7 +205,16 @@ class WorkflowOrchestrator:
         Raises:
             Exception: If task execution fails
         """
-        print(f"  → Running: {task.name}")
+        # Emit task started event
+        if self.progress_tracker:
+            self.progress_tracker.task_started(
+                workflow.workflow_id,
+                workflow.name,
+                task
+            )
+
+        if not self.enable_parallel:
+            print(f"  → Running: {task.name}")
 
         task.status = TaskStatus.RUNNING
         task.start_time = datetime.now()
@@ -115,6 +222,30 @@ class WorkflowOrchestrator:
         try:
             # Prepare task inputs
             inputs = self._prepare_task_inputs(task)
+
+            # Check cache first
+            if self.cache and task.cache_results:
+                cached_result = self.cache.get_task_result(task, inputs)
+                if cached_result is not None:
+                    task.result = cached_result
+                    task.status = TaskStatus.CACHED
+                    task.end_time = datetime.now()
+
+                    if not self.enable_parallel:
+                        print(f"  💾 Cached: {task.name}")
+
+                    if self.progress_tracker:
+                        self.progress_tracker.task_cached(
+                            workflow.workflow_id,
+                            workflow.name,
+                            task
+                        )
+
+                    # Store outputs
+                    for output_name, result_key in task.outputs.items():
+                        self.task_results[result_key] = self._extract_output(cached_result, output_name)
+
+                    return cached_result
 
             # Execute task function
             result = self._call_task_function(task, inputs)
@@ -125,6 +256,9 @@ class WorkflowOrchestrator:
             task.end_time = datetime.now()
 
             # Cache result
+            if self.cache and task.cache_results:
+                self.cache.set_task_result(task, inputs, result)
+
             if task.cache_results:
                 self.task_results[task.task_id] = result
 
@@ -133,7 +267,17 @@ class WorkflowOrchestrator:
                 self.task_results[result_key] = self._extract_output(result, output_name)
 
             duration = task.duration_seconds
-            print(f"  ✓ Completed: {task.name} ({duration:.1f}s)")
+
+            if not self.enable_parallel:
+                print(f"  ✓ Completed: {task.name} ({duration:.1f}s)")
+
+            # Emit task completed event
+            if self.progress_tracker:
+                self.progress_tracker.task_completed(
+                    workflow.workflow_id,
+                    workflow.name,
+                    task
+                )
 
             return result
 
@@ -142,7 +286,17 @@ class WorkflowOrchestrator:
             task.end_time = datetime.now()
             task.error_message = str(e)
 
-            print(f"  ✗ Failed: {task.name} - {e}")
+            if not self.enable_parallel:
+                print(f"  ✗ Failed: {task.name} - {e}")
+
+            # Emit task failed event
+            if self.progress_tracker:
+                self.progress_tracker.task_failed(
+                    workflow.workflow_id,
+                    workflow.name,
+                    task,
+                    str(e)
+                )
 
             if task.required:
                 raise
