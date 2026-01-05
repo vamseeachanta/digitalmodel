@@ -205,6 +205,7 @@ mooring-analysis = "digitalmodel.modules.mooring_analysis.cli:main"
 viv-analysis = "digitalmodel.modules.viv_analysis.cli:main"
 catenary-riser = "digitalmodel.modules.catenary_riser.cli:main"
 signal-analysis = "digitalmodel.modules.signal_analysis.cli:main"
+hydrodynamics = "digitalmodel.modules.hydrodynamics.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
