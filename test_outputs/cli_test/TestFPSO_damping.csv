@@ -1,0 +1,361 @@
+Frequency (rad/s),Period (s),DOF_i,DOF_j,Damping,Unit
+2.000000e-01,3.141593e+01,Surge,Surge,4.000000e+04,N.s/m
+2.000000e-01,3.141593e+01,Surge,Sway,1.000000e+03,N.s/m
+2.000000e-01,3.141593e+01,Surge,Heave,0.000000e+00,N.s/m
+2.000000e-01,3.141593e+01,Surge,Roll,0.000000e+00,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Surge,Pitch,-4.000000e+05,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Surge,Yaw,0.000000e+00,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Sway,Surge,1.000000e+03,N.s/m
+2.000000e-01,3.141593e+01,Sway,Sway,5.000000e+04,N.s/m
+2.000000e-01,3.141593e+01,Sway,Heave,0.000000e+00,N.s/m
+2.000000e-01,3.141593e+01,Sway,Roll,-2.000000e+05,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Sway,Pitch,0.000000e+00,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Sway,Yaw,0.000000e+00,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Heave,Surge,0.000000e+00,N.s/m
+2.000000e-01,3.141593e+01,Heave,Sway,0.000000e+00,N.s/m
+2.000000e-01,3.141593e+01,Heave,Heave,6.000000e+04,N.s/m
+2.000000e-01,3.141593e+01,Heave,Roll,0.000000e+00,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Heave,Pitch,1.000000e+05,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Heave,Yaw,0.000000e+00,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Roll,Surge,0.000000e+00,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Roll,Sway,-2.000000e+05,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Roll,Heave,0.000000e+00,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Roll,Roll,2.000000e+07,N.m.s/rad
+2.000000e-01,3.141593e+01,Roll,Pitch,0.000000e+00,N.m.s/rad
+2.000000e-01,3.141593e+01,Roll,Yaw,0.000000e+00,N.m.s/rad
+2.000000e-01,3.141593e+01,Pitch,Surge,-4.000000e+05,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Pitch,Sway,0.000000e+00,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Pitch,Heave,1.000000e+05,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Pitch,Roll,0.000000e+00,N.m.s/rad
+2.000000e-01,3.141593e+01,Pitch,Pitch,4.000000e+08,N.m.s/rad
+2.000000e-01,3.141593e+01,Pitch,Yaw,0.000000e+00,N.m.s/rad
+2.000000e-01,3.141593e+01,Yaw,Surge,0.000000e+00,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Yaw,Sway,0.000000e+00,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Yaw,Heave,0.000000e+00,N.s or N.m.s/rad
+2.000000e-01,3.141593e+01,Yaw,Roll,0.000000e+00,N.m.s/rad
+2.000000e-01,3.141593e+01,Yaw,Pitch,0.000000e+00,N.m.s/rad
+2.000000e-01,3.141593e+01,Yaw,Yaw,4.000000e+08,N.m.s/rad
+4.000000e-01,1.570796e+01,Surge,Surge,8.000000e+04,N.s/m
+4.000000e-01,1.570796e+01,Surge,Sway,2.000000e+03,N.s/m
+4.000000e-01,1.570796e+01,Surge,Heave,0.000000e+00,N.s/m
+4.000000e-01,1.570796e+01,Surge,Roll,0.000000e+00,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Surge,Pitch,-8.000000e+05,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Surge,Yaw,0.000000e+00,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Sway,Surge,2.000000e+03,N.s/m
+4.000000e-01,1.570796e+01,Sway,Sway,1.000000e+05,N.s/m
+4.000000e-01,1.570796e+01,Sway,Heave,0.000000e+00,N.s/m
+4.000000e-01,1.570796e+01,Sway,Roll,-4.000000e+05,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Sway,Pitch,0.000000e+00,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Sway,Yaw,0.000000e+00,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Heave,Surge,0.000000e+00,N.s/m
+4.000000e-01,1.570796e+01,Heave,Sway,0.000000e+00,N.s/m
+4.000000e-01,1.570796e+01,Heave,Heave,1.200000e+05,N.s/m
+4.000000e-01,1.570796e+01,Heave,Roll,0.000000e+00,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Heave,Pitch,2.000000e+05,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Heave,Yaw,0.000000e+00,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Roll,Surge,0.000000e+00,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Roll,Sway,-4.000000e+05,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Roll,Heave,0.000000e+00,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Roll,Roll,4.000000e+07,N.m.s/rad
+4.000000e-01,1.570796e+01,Roll,Pitch,0.000000e+00,N.m.s/rad
+4.000000e-01,1.570796e+01,Roll,Yaw,0.000000e+00,N.m.s/rad
+4.000000e-01,1.570796e+01,Pitch,Surge,-8.000000e+05,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Pitch,Sway,0.000000e+00,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Pitch,Heave,2.000000e+05,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Pitch,Roll,0.000000e+00,N.m.s/rad
+4.000000e-01,1.570796e+01,Pitch,Pitch,8.000000e+08,N.m.s/rad
+4.000000e-01,1.570796e+01,Pitch,Yaw,0.000000e+00,N.m.s/rad
+4.000000e-01,1.570796e+01,Yaw,Surge,0.000000e+00,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Yaw,Sway,0.000000e+00,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Yaw,Heave,0.000000e+00,N.s or N.m.s/rad
+4.000000e-01,1.570796e+01,Yaw,Roll,0.000000e+00,N.m.s/rad
+4.000000e-01,1.570796e+01,Yaw,Pitch,0.000000e+00,N.m.s/rad
+4.000000e-01,1.570796e+01,Yaw,Yaw,8.000000e+08,N.m.s/rad
+6.000000e-01,1.047198e+01,Surge,Surge,1.200000e+05,N.s/m
+6.000000e-01,1.047198e+01,Surge,Sway,3.000000e+03,N.s/m
+6.000000e-01,1.047198e+01,Surge,Heave,0.000000e+00,N.s/m
+6.000000e-01,1.047198e+01,Surge,Roll,0.000000e+00,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Surge,Pitch,-1.200000e+06,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Surge,Yaw,0.000000e+00,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Sway,Surge,3.000000e+03,N.s/m
+6.000000e-01,1.047198e+01,Sway,Sway,1.500000e+05,N.s/m
+6.000000e-01,1.047198e+01,Sway,Heave,0.000000e+00,N.s/m
+6.000000e-01,1.047198e+01,Sway,Roll,-6.000000e+05,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Sway,Pitch,0.000000e+00,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Sway,Yaw,0.000000e+00,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Heave,Surge,0.000000e+00,N.s/m
+6.000000e-01,1.047198e+01,Heave,Sway,0.000000e+00,N.s/m
+6.000000e-01,1.047198e+01,Heave,Heave,1.800000e+05,N.s/m
+6.000000e-01,1.047198e+01,Heave,Roll,0.000000e+00,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Heave,Pitch,3.000000e+05,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Heave,Yaw,0.000000e+00,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Roll,Surge,0.000000e+00,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Roll,Sway,-6.000000e+05,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Roll,Heave,0.000000e+00,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Roll,Roll,6.000000e+07,N.m.s/rad
+6.000000e-01,1.047198e+01,Roll,Pitch,0.000000e+00,N.m.s/rad
+6.000000e-01,1.047198e+01,Roll,Yaw,0.000000e+00,N.m.s/rad
+6.000000e-01,1.047198e+01,Pitch,Surge,-1.200000e+06,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Pitch,Sway,0.000000e+00,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Pitch,Heave,3.000000e+05,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Pitch,Roll,0.000000e+00,N.m.s/rad
+6.000000e-01,1.047198e+01,Pitch,Pitch,1.200000e+09,N.m.s/rad
+6.000000e-01,1.047198e+01,Pitch,Yaw,0.000000e+00,N.m.s/rad
+6.000000e-01,1.047198e+01,Yaw,Surge,0.000000e+00,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Yaw,Sway,0.000000e+00,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Yaw,Heave,0.000000e+00,N.s or N.m.s/rad
+6.000000e-01,1.047198e+01,Yaw,Roll,0.000000e+00,N.m.s/rad
+6.000000e-01,1.047198e+01,Yaw,Pitch,0.000000e+00,N.m.s/rad
+6.000000e-01,1.047198e+01,Yaw,Yaw,1.200000e+09,N.m.s/rad
+8.000000e-01,7.853982e+00,Surge,Surge,1.600000e+05,N.s/m
+8.000000e-01,7.853982e+00,Surge,Sway,4.000000e+03,N.s/m
+8.000000e-01,7.853982e+00,Surge,Heave,0.000000e+00,N.s/m
+8.000000e-01,7.853982e+00,Surge,Roll,0.000000e+00,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Surge,Pitch,-1.600000e+06,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Surge,Yaw,0.000000e+00,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Sway,Surge,4.000000e+03,N.s/m
+8.000000e-01,7.853982e+00,Sway,Sway,2.000000e+05,N.s/m
+8.000000e-01,7.853982e+00,Sway,Heave,0.000000e+00,N.s/m
+8.000000e-01,7.853982e+00,Sway,Roll,-8.000000e+05,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Sway,Pitch,0.000000e+00,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Sway,Yaw,0.000000e+00,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Heave,Surge,0.000000e+00,N.s/m
+8.000000e-01,7.853982e+00,Heave,Sway,0.000000e+00,N.s/m
+8.000000e-01,7.853982e+00,Heave,Heave,2.400000e+05,N.s/m
+8.000000e-01,7.853982e+00,Heave,Roll,0.000000e+00,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Heave,Pitch,4.000000e+05,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Heave,Yaw,0.000000e+00,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Roll,Surge,0.000000e+00,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Roll,Sway,-8.000000e+05,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Roll,Heave,0.000000e+00,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Roll,Roll,8.000000e+07,N.m.s/rad
+8.000000e-01,7.853982e+00,Roll,Pitch,0.000000e+00,N.m.s/rad
+8.000000e-01,7.853982e+00,Roll,Yaw,0.000000e+00,N.m.s/rad
+8.000000e-01,7.853982e+00,Pitch,Surge,-1.600000e+06,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Pitch,Sway,0.000000e+00,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Pitch,Heave,4.000000e+05,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Pitch,Roll,0.000000e+00,N.m.s/rad
+8.000000e-01,7.853982e+00,Pitch,Pitch,1.600000e+09,N.m.s/rad
+8.000000e-01,7.853982e+00,Pitch,Yaw,0.000000e+00,N.m.s/rad
+8.000000e-01,7.853982e+00,Yaw,Surge,0.000000e+00,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Yaw,Sway,0.000000e+00,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Yaw,Heave,0.000000e+00,N.s or N.m.s/rad
+8.000000e-01,7.853982e+00,Yaw,Roll,0.000000e+00,N.m.s/rad
+8.000000e-01,7.853982e+00,Yaw,Pitch,0.000000e+00,N.m.s/rad
+8.000000e-01,7.853982e+00,Yaw,Yaw,1.600000e+09,N.m.s/rad
+1.000000e+00,6.283185e+00,Surge,Surge,2.000000e+05,N.s/m
+1.000000e+00,6.283185e+00,Surge,Sway,5.000000e+03,N.s/m
+1.000000e+00,6.283185e+00,Surge,Heave,0.000000e+00,N.s/m
+1.000000e+00,6.283185e+00,Surge,Roll,0.000000e+00,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Surge,Pitch,-2.000000e+06,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Surge,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Sway,Surge,5.000000e+03,N.s/m
+1.000000e+00,6.283185e+00,Sway,Sway,2.500000e+05,N.s/m
+1.000000e+00,6.283185e+00,Sway,Heave,0.000000e+00,N.s/m
+1.000000e+00,6.283185e+00,Sway,Roll,-1.000000e+06,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Sway,Pitch,0.000000e+00,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Sway,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Heave,Surge,0.000000e+00,N.s/m
+1.000000e+00,6.283185e+00,Heave,Sway,0.000000e+00,N.s/m
+1.000000e+00,6.283185e+00,Heave,Heave,3.000000e+05,N.s/m
+1.000000e+00,6.283185e+00,Heave,Roll,0.000000e+00,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Heave,Pitch,5.000000e+05,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Heave,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Roll,Surge,0.000000e+00,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Roll,Sway,-1.000000e+06,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Roll,Heave,0.000000e+00,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Roll,Roll,1.000000e+08,N.m.s/rad
+1.000000e+00,6.283185e+00,Roll,Pitch,0.000000e+00,N.m.s/rad
+1.000000e+00,6.283185e+00,Roll,Yaw,0.000000e+00,N.m.s/rad
+1.000000e+00,6.283185e+00,Pitch,Surge,-2.000000e+06,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Pitch,Sway,0.000000e+00,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Pitch,Heave,5.000000e+05,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Pitch,Roll,0.000000e+00,N.m.s/rad
+1.000000e+00,6.283185e+00,Pitch,Pitch,2.000000e+09,N.m.s/rad
+1.000000e+00,6.283185e+00,Pitch,Yaw,0.000000e+00,N.m.s/rad
+1.000000e+00,6.283185e+00,Yaw,Surge,0.000000e+00,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Yaw,Sway,0.000000e+00,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Yaw,Heave,0.000000e+00,N.s or N.m.s/rad
+1.000000e+00,6.283185e+00,Yaw,Roll,0.000000e+00,N.m.s/rad
+1.000000e+00,6.283185e+00,Yaw,Pitch,0.000000e+00,N.m.s/rad
+1.000000e+00,6.283185e+00,Yaw,Yaw,2.000000e+09,N.m.s/rad
+1.200000e+00,5.235988e+00,Surge,Surge,2.400000e+05,N.s/m
+1.200000e+00,5.235988e+00,Surge,Sway,6.000000e+03,N.s/m
+1.200000e+00,5.235988e+00,Surge,Heave,0.000000e+00,N.s/m
+1.200000e+00,5.235988e+00,Surge,Roll,0.000000e+00,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Surge,Pitch,-2.400000e+06,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Surge,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Sway,Surge,6.000000e+03,N.s/m
+1.200000e+00,5.235988e+00,Sway,Sway,3.000000e+05,N.s/m
+1.200000e+00,5.235988e+00,Sway,Heave,0.000000e+00,N.s/m
+1.200000e+00,5.235988e+00,Sway,Roll,-1.200000e+06,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Sway,Pitch,0.000000e+00,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Sway,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Heave,Surge,0.000000e+00,N.s/m
+1.200000e+00,5.235988e+00,Heave,Sway,0.000000e+00,N.s/m
+1.200000e+00,5.235988e+00,Heave,Heave,3.600000e+05,N.s/m
+1.200000e+00,5.235988e+00,Heave,Roll,0.000000e+00,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Heave,Pitch,6.000000e+05,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Heave,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Roll,Surge,0.000000e+00,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Roll,Sway,-1.200000e+06,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Roll,Heave,0.000000e+00,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Roll,Roll,1.200000e+08,N.m.s/rad
+1.200000e+00,5.235988e+00,Roll,Pitch,0.000000e+00,N.m.s/rad
+1.200000e+00,5.235988e+00,Roll,Yaw,0.000000e+00,N.m.s/rad
+1.200000e+00,5.235988e+00,Pitch,Surge,-2.400000e+06,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Pitch,Sway,0.000000e+00,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Pitch,Heave,6.000000e+05,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Pitch,Roll,0.000000e+00,N.m.s/rad
+1.200000e+00,5.235988e+00,Pitch,Pitch,2.400000e+09,N.m.s/rad
+1.200000e+00,5.235988e+00,Pitch,Yaw,0.000000e+00,N.m.s/rad
+1.200000e+00,5.235988e+00,Yaw,Surge,0.000000e+00,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Yaw,Sway,0.000000e+00,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Yaw,Heave,0.000000e+00,N.s or N.m.s/rad
+1.200000e+00,5.235988e+00,Yaw,Roll,0.000000e+00,N.m.s/rad
+1.200000e+00,5.235988e+00,Yaw,Pitch,0.000000e+00,N.m.s/rad
+1.200000e+00,5.235988e+00,Yaw,Yaw,2.400000e+09,N.m.s/rad
+1.400000e+00,4.487990e+00,Surge,Surge,2.800000e+05,N.s/m
+1.400000e+00,4.487990e+00,Surge,Sway,7.000000e+03,N.s/m
+1.400000e+00,4.487990e+00,Surge,Heave,0.000000e+00,N.s/m
+1.400000e+00,4.487990e+00,Surge,Roll,0.000000e+00,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Surge,Pitch,-2.800000e+06,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Surge,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Sway,Surge,7.000000e+03,N.s/m
+1.400000e+00,4.487990e+00,Sway,Sway,3.500000e+05,N.s/m
+1.400000e+00,4.487990e+00,Sway,Heave,0.000000e+00,N.s/m
+1.400000e+00,4.487990e+00,Sway,Roll,-1.400000e+06,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Sway,Pitch,0.000000e+00,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Sway,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Heave,Surge,0.000000e+00,N.s/m
+1.400000e+00,4.487990e+00,Heave,Sway,0.000000e+00,N.s/m
+1.400000e+00,4.487990e+00,Heave,Heave,4.200000e+05,N.s/m
+1.400000e+00,4.487990e+00,Heave,Roll,0.000000e+00,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Heave,Pitch,7.000000e+05,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Heave,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Roll,Surge,0.000000e+00,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Roll,Sway,-1.400000e+06,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Roll,Heave,0.000000e+00,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Roll,Roll,1.400000e+08,N.m.s/rad
+1.400000e+00,4.487990e+00,Roll,Pitch,0.000000e+00,N.m.s/rad
+1.400000e+00,4.487990e+00,Roll,Yaw,0.000000e+00,N.m.s/rad
+1.400000e+00,4.487990e+00,Pitch,Surge,-2.800000e+06,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Pitch,Sway,0.000000e+00,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Pitch,Heave,7.000000e+05,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Pitch,Roll,0.000000e+00,N.m.s/rad
+1.400000e+00,4.487990e+00,Pitch,Pitch,2.800000e+09,N.m.s/rad
+1.400000e+00,4.487990e+00,Pitch,Yaw,0.000000e+00,N.m.s/rad
+1.400000e+00,4.487990e+00,Yaw,Surge,0.000000e+00,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Yaw,Sway,0.000000e+00,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Yaw,Heave,0.000000e+00,N.s or N.m.s/rad
+1.400000e+00,4.487990e+00,Yaw,Roll,0.000000e+00,N.m.s/rad
+1.400000e+00,4.487990e+00,Yaw,Pitch,0.000000e+00,N.m.s/rad
+1.400000e+00,4.487990e+00,Yaw,Yaw,2.800000e+09,N.m.s/rad
+1.600000e+00,3.926991e+00,Surge,Surge,3.200000e+05,N.s/m
+1.600000e+00,3.926991e+00,Surge,Sway,8.000000e+03,N.s/m
+1.600000e+00,3.926991e+00,Surge,Heave,0.000000e+00,N.s/m
+1.600000e+00,3.926991e+00,Surge,Roll,0.000000e+00,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Surge,Pitch,-3.200000e+06,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Surge,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Sway,Surge,8.000000e+03,N.s/m
+1.600000e+00,3.926991e+00,Sway,Sway,4.000000e+05,N.s/m
+1.600000e+00,3.926991e+00,Sway,Heave,0.000000e+00,N.s/m
+1.600000e+00,3.926991e+00,Sway,Roll,-1.600000e+06,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Sway,Pitch,0.000000e+00,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Sway,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Heave,Surge,0.000000e+00,N.s/m
+1.600000e+00,3.926991e+00,Heave,Sway,0.000000e+00,N.s/m
+1.600000e+00,3.926991e+00,Heave,Heave,4.800000e+05,N.s/m
+1.600000e+00,3.926991e+00,Heave,Roll,0.000000e+00,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Heave,Pitch,8.000000e+05,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Heave,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Roll,Surge,0.000000e+00,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Roll,Sway,-1.600000e+06,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Roll,Heave,0.000000e+00,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Roll,Roll,1.600000e+08,N.m.s/rad
+1.600000e+00,3.926991e+00,Roll,Pitch,0.000000e+00,N.m.s/rad
+1.600000e+00,3.926991e+00,Roll,Yaw,0.000000e+00,N.m.s/rad
+1.600000e+00,3.926991e+00,Pitch,Surge,-3.200000e+06,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Pitch,Sway,0.000000e+00,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Pitch,Heave,8.000000e+05,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Pitch,Roll,0.000000e+00,N.m.s/rad
+1.600000e+00,3.926991e+00,Pitch,Pitch,3.200000e+09,N.m.s/rad
+1.600000e+00,3.926991e+00,Pitch,Yaw,0.000000e+00,N.m.s/rad
+1.600000e+00,3.926991e+00,Yaw,Surge,0.000000e+00,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Yaw,Sway,0.000000e+00,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Yaw,Heave,0.000000e+00,N.s or N.m.s/rad
+1.600000e+00,3.926991e+00,Yaw,Roll,0.000000e+00,N.m.s/rad
+1.600000e+00,3.926991e+00,Yaw,Pitch,0.000000e+00,N.m.s/rad
+1.600000e+00,3.926991e+00,Yaw,Yaw,3.200000e+09,N.m.s/rad
+1.800000e+00,3.490659e+00,Surge,Surge,3.600000e+05,N.s/m
+1.800000e+00,3.490659e+00,Surge,Sway,9.000000e+03,N.s/m
+1.800000e+00,3.490659e+00,Surge,Heave,0.000000e+00,N.s/m
+1.800000e+00,3.490659e+00,Surge,Roll,0.000000e+00,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Surge,Pitch,-3.600000e+06,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Surge,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Sway,Surge,9.000000e+03,N.s/m
+1.800000e+00,3.490659e+00,Sway,Sway,4.500000e+05,N.s/m
+1.800000e+00,3.490659e+00,Sway,Heave,0.000000e+00,N.s/m
+1.800000e+00,3.490659e+00,Sway,Roll,-1.800000e+06,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Sway,Pitch,0.000000e+00,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Sway,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Heave,Surge,0.000000e+00,N.s/m
+1.800000e+00,3.490659e+00,Heave,Sway,0.000000e+00,N.s/m
+1.800000e+00,3.490659e+00,Heave,Heave,5.400000e+05,N.s/m
+1.800000e+00,3.490659e+00,Heave,Roll,0.000000e+00,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Heave,Pitch,9.000000e+05,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Heave,Yaw,0.000000e+00,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Roll,Surge,0.000000e+00,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Roll,Sway,-1.800000e+06,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Roll,Heave,0.000000e+00,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Roll,Roll,1.800000e+08,N.m.s/rad
+1.800000e+00,3.490659e+00,Roll,Pitch,0.000000e+00,N.m.s/rad
+1.800000e+00,3.490659e+00,Roll,Yaw,0.000000e+00,N.m.s/rad
+1.800000e+00,3.490659e+00,Pitch,Surge,-3.600000e+06,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Pitch,Sway,0.000000e+00,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Pitch,Heave,9.000000e+05,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Pitch,Roll,0.000000e+00,N.m.s/rad
+1.800000e+00,3.490659e+00,Pitch,Pitch,3.600000e+09,N.m.s/rad
+1.800000e+00,3.490659e+00,Pitch,Yaw,0.000000e+00,N.m.s/rad
+1.800000e+00,3.490659e+00,Yaw,Surge,0.000000e+00,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Yaw,Sway,0.000000e+00,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Yaw,Heave,0.000000e+00,N.s or N.m.s/rad
+1.800000e+00,3.490659e+00,Yaw,Roll,0.000000e+00,N.m.s/rad
+1.800000e+00,3.490659e+00,Yaw,Pitch,0.000000e+00,N.m.s/rad
+1.800000e+00,3.490659e+00,Yaw,Yaw,3.600000e+09,N.m.s/rad
+2.000000e+00,3.141593e+00,Surge,Surge,4.000000e+05,N.s/m
+2.000000e+00,3.141593e+00,Surge,Sway,1.000000e+04,N.s/m
+2.000000e+00,3.141593e+00,Surge,Heave,0.000000e+00,N.s/m
+2.000000e+00,3.141593e+00,Surge,Roll,0.000000e+00,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Surge,Pitch,-4.000000e+06,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Surge,Yaw,0.000000e+00,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Sway,Surge,1.000000e+04,N.s/m
+2.000000e+00,3.141593e+00,Sway,Sway,5.000000e+05,N.s/m
+2.000000e+00,3.141593e+00,Sway,Heave,0.000000e+00,N.s/m
+2.000000e+00,3.141593e+00,Sway,Roll,-2.000000e+06,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Sway,Pitch,0.000000e+00,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Sway,Yaw,0.000000e+00,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Heave,Surge,0.000000e+00,N.s/m
+2.000000e+00,3.141593e+00,Heave,Sway,0.000000e+00,N.s/m
+2.000000e+00,3.141593e+00,Heave,Heave,6.000000e+05,N.s/m
+2.000000e+00,3.141593e+00,Heave,Roll,0.000000e+00,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Heave,Pitch,1.000000e+06,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Heave,Yaw,0.000000e+00,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Roll,Surge,0.000000e+00,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Roll,Sway,-2.000000e+06,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Roll,Heave,0.000000e+00,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Roll,Roll,2.000000e+08,N.m.s/rad
+2.000000e+00,3.141593e+00,Roll,Pitch,0.000000e+00,N.m.s/rad
+2.000000e+00,3.141593e+00,Roll,Yaw,0.000000e+00,N.m.s/rad
+2.000000e+00,3.141593e+00,Pitch,Surge,-4.000000e+06,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Pitch,Sway,0.000000e+00,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Pitch,Heave,1.000000e+06,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Pitch,Roll,0.000000e+00,N.m.s/rad
+2.000000e+00,3.141593e+00,Pitch,Pitch,4.000000e+09,N.m.s/rad
+2.000000e+00,3.141593e+00,Pitch,Yaw,0.000000e+00,N.m.s/rad
+2.000000e+00,3.141593e+00,Yaw,Surge,0.000000e+00,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Yaw,Sway,0.000000e+00,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Yaw,Heave,0.000000e+00,N.s or N.m.s/rad
+2.000000e+00,3.141593e+00,Yaw,Roll,0.000000e+00,N.m.s/rad
+2.000000e+00,3.141593e+00,Yaw,Pitch,0.000000e+00,N.m.s/rad
+2.000000e+00,3.141593e+00,Yaw,Yaw,4.000000e+09,N.m.s/rad

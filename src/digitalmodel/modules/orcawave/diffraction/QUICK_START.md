@@ -4,7 +4,7 @@
 
 The geometry files are now stored in the specifications directory:
 ```
-specs/modules/orcawave/sea-cypress-diffraction-analysis/inputs/geometry/
+specs/modules/orcawave/diffraction-analysis/inputs/geometry/
 ```
 
 ## Available Commands
@@ -18,7 +18,7 @@ python src/modules/orcawave/diffraction/orchestrator.py --list-vessels
 ```bash
 # Validate Sea Cypress geometry
 python src/modules/orcawave/diffraction/scripts/validate_geometry.py \
-    --path specs/modules/orcawave/sea-cypress-diffraction-analysis/inputs/geometry \
+    --path specs/modules/orcawave/diffraction-analysis/inputs/geometry \
     --vessel sea_cypress
 ```
 
@@ -55,7 +55,7 @@ src/modules/orcawave/diffraction/
 └── results/
     └── [vessel_name]/          # Results organized by vessel
 
-specs/modules/orcawave/sea-cypress-diffraction-analysis/
+specs/modules/orcawave/diffraction-analysis/
 └── inputs/
     └── geometry/               # Geometry files location
         ├── Sea Cypress_0.25 Mesh_Binary.stl
@@ -66,7 +66,7 @@ specs/modules/orcawave/sea-cypress-diffraction-analysis/
 ## Configuration
 
 The Sea Cypress vessel configuration (`configs/vessels/sea_cypress.yml`) is configured to use:
-- **Geometry path**: `specs/modules/orcawave/sea-cypress-diffraction-analysis/inputs/geometry`
+- **Geometry path**: `specs/modules/orcawave/diffraction-analysis/inputs/geometry`
 - **Primary file**: `Sea Cypress_0.25 Mesh_Binary.stl`
 - **Panel size**: 0.25 meters
 - **Water depth**: 100 meters

@@ -1,0 +1,53 @@
+{
+  "vessel_name": "TestFPSO",
+  "analysis_tool": "OrcaWave",
+  "validation_date": "2026-01-04 11:20:54",
+  "schema_validation": {
+    "raos": [],
+    "added_mass": [],
+    "damping": [],
+    "consistency": []
+  },
+  "physical_validity": {
+    "raos": [],
+    "added_mass": [],
+    "damping": []
+  },
+  "range_checks": {
+    "raos": [],
+    "added_mass": [
+      "Extremely large coefficient (8.16e+10) at frequency 0.2000",
+      "Extremely large coefficient (8.32e+10) at frequency 0.4000",
+      "Extremely large coefficient (8.48e+10) at frequency 0.6000",
+      "Extremely large coefficient (8.64e+10) at frequency 0.8000",
+      "Extremely large coefficient (8.80e+10) at frequency 1.0000",
+      "Extremely large coefficient (8.96e+10) at frequency 1.2000",
+      "Extremely large coefficient (9.12e+10) at frequency 1.4000",
+      "Extremely large coefficient (9.28e+10) at frequency 1.6000",
+      "Extremely large coefficient (9.44e+10) at frequency 1.8000",
+      "Extremely large coefficient (9.60e+10) at frequency 2.0000"
+    ],
+    "damping": []
+  },
+  "frequency_coverage": {
+    "coverage": [
+      "Minimum frequency 0.2000 rad/s may miss low-frequency response (< 0.1 rad/s)"
+    ],
+    "discretization": [
+      "Only 10 frequencies - may be insufficient for accurate interpolation"
+    ]
+  },
+  "heading_coverage": {
+    "coverage": [
+      "Heading range 330.0 deg - may need full 360 deg coverage for omnidirectional analysis"
+    ],
+    "discretization": [
+      "Large heading gap (47.1 deg) - may affect interpolation accuracy"
+    ]
+  },
+  "symmetry_checks": {
+    "added_mass": [],
+    "damping": []
+  },
+  "overall_status": "WARNING"
+}

@@ -1,0 +1,9 @@
+VesselType:
+  Name: SHIP_RAOS
+  WaterDepth: 100.0
+  DiffractionSource: AQWA
+  CreatedDate: '2026-01-04 11:34:07'
+  RAODataFile: SHIP_RAOS_raos.csv
+  AddedMassDataFile: SHIP_RAOS_added_mass.csv
+  DampingDataFile: SHIP_RAOS_damping.csv
+  Notes: Converted from AQWA analysis results

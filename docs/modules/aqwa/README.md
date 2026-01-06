@@ -6,6 +6,17 @@ Comprehensive documentation for ANSYS AQWA hydrodynamic analysis software.
 
 ## 📚 Quick Navigation
 
+### ⚡ Quick Start & CLI Tools
+- **[QUICK START GUIDE](QUICK_START.md)** - Fast setup and CLI usage
+- **Command Line Interface** - Run analyses from terminal:
+  ```bash
+  # AQWA CLI
+  python src/digitalmodel/modules/aqwa/aqwa_cli.py --method raos --folder <path>
+
+  # Unified Diffraction CLI (AQWA + OrcaWave)
+  python src/digitalmodel/modules/diffraction_cli.py aqwa --method raos --folder <path>
+  ```
+
 ### 🚀 Getting Started
 - [AQWA Overview](getting-started/aqwa-overview.md) - Introduction to AQWA capabilities
 - [Introduction](getting-started/introduction.md) - Getting started with AQWA

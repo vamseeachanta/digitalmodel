@@ -1,0 +1,281 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AQWA vs OrcaWave RAO Comparison (Interpolated)</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+        .summary {
+            background-color: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-size: 1.2em;
+        }
+        .section {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+            color: #374151;
+        }
+        tr:hover {
+            background-color: #f9fafb;
+        }
+        .pass {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .fail {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .highlight {
+            background-color: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .info {
+            background-color: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌊 AQWA vs OrcaWave RAO Comparison</h1>
+        <div class="subtitle">
+            Linear Interpolation Method - Mismatched Grids Aligned<br>
+            Generated: 2026-01-05 22:26:15
+        </div>
+        <div class="summary">
+            <strong>Overall Result:</strong> 0/6 DOFs pass 5% tolerance (❌ FAIL)<br>
+            <strong>Method:</strong> OrcaWave data interpolated to AQWA frequency/heading grid<br>
+            <strong>Tolerance:</strong> 5% for 90% of significant values (≥10% of peak)
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📊 Peak Value Comparison</h2>
+        <div class="info">
+            Peak values compared after interpolating OrcaWave to AQWA grid.
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>DOF</th>
+                    <th>AQWA Peak</th>
+                    <th>OrcaWave Peak</th>
+                    <th>Difference</th>
+                    <th>Error %</th>
+                    <th>Overall Pass Rate</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td><strong>SURGE</strong></td>
+                    <td>0.8926</td>
+                    <td>471.2770</td>
+                    <td>470.3844</td>
+                    <td class="fail">52698.23%</td>
+                    <td class="fail">84.7%</td>
+                    <td class="fail">❌ FAIL</td>
+                </tr>
+
+                <tr>
+                    <td><strong>SWAY</strong></td>
+                    <td>0.0000</td>
+                    <td>5520.3392</td>
+                    <td>5520.3392</td>
+                    <td class="pass">0.00%</td>
+                    <td class="fail">84.8%</td>
+                    <td class="fail">❌ FAIL</td>
+                </tr>
+
+                <tr>
+                    <td><strong>HEAVE</strong></td>
+                    <td>0.9224</td>
+                    <td>2334.9684</td>
+                    <td>2334.0460</td>
+                    <td class="fail">253040.55%</td>
+                    <td class="fail">84.7%</td>
+                    <td class="fail">❌ FAIL</td>
+                </tr>
+
+                <tr>
+                    <td><strong>ROLL</strong></td>
+                    <td>0.0002</td>
+                    <td>12504.1166</td>
+                    <td>12504.1164</td>
+                    <td class="fail">6252058199.76%</td>
+                    <td class="fail">84.7%</td>
+                    <td class="fail">❌ FAIL</td>
+                </tr>
+
+                <tr>
+                    <td><strong>PITCH</strong></td>
+                    <td>0.4577</td>
+                    <td>230924.8390</td>
+                    <td>230924.3813</td>
+                    <td class="fail">50453218.54%</td>
+                    <td class="fail">84.7%</td>
+                    <td class="fail">❌ FAIL</td>
+                </tr>
+
+                <tr>
+                    <td><strong>YAW</strong></td>
+                    <td>0.0000</td>
+                    <td>582063.2628</td>
+                    <td>582063.2628</td>
+                    <td class="pass">0.00%</td>
+                    <td class="fail">84.8%</td>
+                    <td class="fail">❌ FAIL</td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>📈 Significant Values Statistics</h2>
+        <div class="info">
+            Only values ≥10% of peak magnitude included. Pass requires 90% within 5% tolerance.
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>DOF</th>
+                    <th>Significant Points</th>
+                    <th>Within 5%</th>
+                    <th>Pass Rate</th>
+                    <th>Mean Error</th>
+                    <th>Max Error</th>
+                    <th>RMS Error</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td><strong>SURGE</strong></td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td class="fail">0.0%</td>
+                    <td>6794.84%</td>
+                    <td>13489.68%</td>
+                    <td>9538.91%</td>
+                </tr>
+
+                <tr>
+                    <td><strong>SWAY</strong></td>
+                    <td>1443</td>
+                    <td>1223</td>
+                    <td class="fail">84.8%</td>
+                    <td>45122371641556.75%</td>
+                    <td>5520339179152706.00%</td>
+                    <td>374142770556899.38%</td>
+                </tr>
+
+                <tr>
+                    <td><strong>HEAVE</strong></td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td class="fail">0.0%</td>
+                    <td>10630.52%</td>
+                    <td>21161.04%</td>
+                    <td>14963.28%</td>
+                </tr>
+
+                <tr>
+                    <td><strong>ROLL</strong></td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td class="fail">0.0%</td>
+                    <td>4141521.95%</td>
+                    <td>8282943.89%</td>
+                    <td>5856925.79%</td>
+                </tr>
+
+                <tr>
+                    <td><strong>PITCH</strong></td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td class="fail">0.0%</td>
+                    <td>606803.12%</td>
+                    <td>1213506.25%</td>
+                    <td>858078.50%</td>
+                </tr>
+
+                <tr>
+                    <td><strong>YAW</strong></td>
+                    <td>1443</td>
+                    <td>1223</td>
+                    <td class="fail">84.8%</td>
+                    <td>4699160611059050.00%</td>
+                    <td>582063262784926848.00%</td>
+                    <td>40108709995920944.00%</td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>🔧 Interpolation Details</h2>
+        <div class="info">
+            <strong>Method:</strong> 2D Linear Interpolation (scipy.interpolate.RegularGridInterpolator)<br>
+            <strong>Source Grid (OrcaWave):</strong> 20 frequencies × 9 headings = 180 points<br>
+            <strong>Target Grid (AQWA):</strong> 13 frequencies × 111 headings = 1443 points<br>
+            <strong>Interpolation:</strong> Complex RAOs interpolated separately (real + imaginary)<br>
+            <strong>Bounds Handling:</strong> Zero-fill for out-of-bounds values
+        </div>
+    </div>
+
+</body>
+</html>

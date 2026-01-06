@@ -9,7 +9,11 @@ SETLOCAL EnableDelayedExpansion
 REM Configuration
 SET ORCAWAVE_PATH="C:\Program Files\Orcina\OrcaWave\bin\orcawave.exe"
 SET CONFIG_DIR=..\configs
-SET CONFIG_FILE=%CONFIG_DIR%\sea_cypress_diffraction.yml
+IF "%~1"=="" (
+    SET CONFIG_FILE=%CONFIG_DIR%\sea_cypress_diffraction.yml
+) ELSE (
+    SET CONFIG_FILE=%~1
+)
 SET RESULTS_DIR=..\results
 SET LOG_DIR=..\logs
 SET TIMESTAMP=%date:~-4,4%%date:~-10,2%%date:~-7,2%_%time:~0,2%%time:~3,2%%time:~6,2%
