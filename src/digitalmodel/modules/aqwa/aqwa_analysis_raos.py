@@ -132,6 +132,7 @@ class AqwaRAOs:
 
         input_cfg = template_yaml["input"]
         analysis_root_folder = cfg["Analysis"]["analysis_root_folder"]
+        module_path = os.path.dirname(__file__)
 
         for input in input_cfg:
             input_files_cfg = input["input_files"]
@@ -178,6 +179,7 @@ class AqwaRAOs:
 
         input_cfg = template_yaml["input"]
         analysis_root_folder = cfg["Analysis"]["analysis_root_folder"]
+        module_path = os.path.dirname(__file__)
 
         for input in input_cfg:
             input_files_cfg = input["input_files"]

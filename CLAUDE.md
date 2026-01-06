@@ -64,6 +64,15 @@ Please let me know your preferences for these decisions."
 - **Never skip** the question phase
 - **Always engage** in dialogue before coding
 
+## Codex Skills Link
+
+Codex should be able to read the Claude skills stored under `.claude/skills`.
+Create a Windows junction so Codex sees them under `C:\Users\ansystech\.codex\skills\claude`:
+
+```
+New-Item -ItemType Junction -Path C:\Users\ansystech\.codex\skills\claude -Target D:\workspace-hub\digitalmodel\.claude\skills
+```
+
 
 ## 🚨 CRITICAL: CONCURRENT EXECUTION & FILE MANAGEMENT
 

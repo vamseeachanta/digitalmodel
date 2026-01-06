@@ -1,0 +1,9 @@
+VesselType:
+  Name: TestFPSO
+  WaterDepth: 1200.0
+  DiffractionSource: OrcaWave
+  CreatedDate: '2026-01-04 11:20:54'
+  RAODataFile: TestFPSO_raos.csv
+  AddedMassDataFile: TestFPSO_added_mass.csv
+  DampingDataFile: TestFPSO_damping.csv
+  Notes: CLI workflow test with mock data
