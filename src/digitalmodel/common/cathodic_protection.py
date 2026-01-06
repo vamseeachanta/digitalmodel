@@ -340,7 +340,6 @@ class CathodicProtection:
         """
         design = inputs.get("design", {})
         design_margin = design.get("design_margin", 1.15)  # 15% default safety margin
-        utilization_factor = design.get("utilization_factor", 0.85)  # 85% typical anode efficiency
 
         # Extract outer surface area (main protected surface for buried pipeline)
         outer_area = geometry["outer_surface_area_m2"]
@@ -367,7 +366,7 @@ class CathodicProtection:
 
         # Apply design margin to mean demand
         # Design margin accounts for uncertainties in coating quality, environment, and aging
-        # Note: Utilization factor is applied later in anode mass calculation (line 435), not here
+        # Note: Utilization factor is applied in _dnv_anode_requirements() from anode config, not here
         design_demand = mean_demand * design_margin
 
         # Calculate total anode mass required based on design demand
@@ -385,7 +384,6 @@ class CathodicProtection:
             "mean_current_demand_A": round(mean_demand, 3),
             "design_current_demand_A": round(design_demand, 3),
             "design_margin": round(design_margin, 6),
-            "utilization_factor": round(utilization_factor, 6),
             "design_life_years": design_life_years,
             "design_life_hours": round(design_life_hours, 3),
             "total_charge_Ah": round(total_charge_Ah, 3),
@@ -499,9 +497,9 @@ class CathodicProtection:
 
         # DNV RP-F103 spacing validation criteria
         # Extract minimum and maximum spacing limits from configuration
-        anodes = inputs.get("anodes", {})
-        min_spacing_m = anodes.get("min_spacing_m", 5.0)  # Minimum 5m typical
-        max_spacing_m = anodes.get("max_spacing_m", 50.0)  # Maximum 50m typical
+        anode = inputs.get("anode", {})
+        min_spacing_m = anode.get("min_spacing_m", 5.0)  # Minimum 5m typical
+        max_spacing_m = anode.get("max_spacing_m", 50.0)  # Maximum 50m typical
 
         # Validate spacing falls within DNV acceptable range
         spacing_valid = min_spacing_m <= spacing_m <= max_spacing_m
