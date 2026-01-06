@@ -30,16 +30,33 @@ inputs:
       net_weight: 27.5 # kg
       ratio_of_gross_to_net_weight: 1.1 #
       gross_weight: 30.25 # kg
+    geometry:
+      type: long_flush # slender_offset | long_flush | short_flush
+      length_m: 1.4
+      width_m: 0.15
+      radius_m: null
+      exposed_area_m2: null
+      offset_m: null
+      final_length_m: 1.281 # L_final = L_initial - 0.1*u*L_initial
+      final_width_m: 0.15
+      final_radius_m: null
+      final_exposed_area_m2: null
 
   structure:
     coating: Yes # Yes or No
     area_coverage: 100 # %
     coating_yearly_breakdown_factor: 3 # % per year
+    coating_initial_breakdown_factor: 2 # % initial breakdown factor
+    coating_initial_breakdown_duration: 2 # years
+    coating_breakdown_factor_max: 2.0 # cap for final breakdown factor
     steel_coated_area: 13446.04 # m2
+    steel_total_area: 13446.04 # m2
 
   design_current:
     input: csv
     csv_filename: 
+    coated_steel_mA_m2: 13.5
+    uncoated_steel_mA_m2: 200
 
 ABS_gn_ships_2018:
   v_ssc: # Protection potential (V) with respect to Ag/AgCl/seawater reference electrode, Section 2, Chapter 3.1, Table 1
