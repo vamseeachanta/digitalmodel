@@ -301,14 +301,59 @@ mcp__claude-flow__memory_usage {
 }
 ```
 
+### Benchmark Validation vs AQWA
+
+Compare OrcaWave results with AQWA for validation at peak/significant values.
+
+```python
+from digitalmodel.modules.diffraction.comparison_framework import PeakRAOComparator
+from digitalmodel.modules.diffraction.aqwa_converter import AQWAConverter
+from digitalmodel.modules.diffraction.orcawave_converter import OrcaWaveConverter
+
+# Extract both datasets
+aqwa_results = AQWAConverter(...).convert_to_unified_schema(...)
+orcawave_results = OrcaWaveConverter(vessel).convert()
+
+# Peak-focused comparison
+comparator = PeakRAOComparator(
+    aqwa_results=aqwa_results,
+    orcawave_results=orcawave_results,
+    peak_threshold=0.10,  # ≥10% of peak
+    tolerance=0.05  # 5% tolerance
+)
+
+# Run comparison
+results = comparator.compare_peaks()
+
+# Generate report
+comparator.generate_peak_report_html(
+    results,
+    output_file="benchmark/comparison_report.html"
+)
+```
+
+**Validation Criteria:**
+- 5% tolerance on peak values
+- 90% of significant points within 5%
+- Significant = RAO ≥ 10% of peak magnitude
+- Focus on resonance regions
+
+**Benchmark Location:**
+`docs/modules/orcawave/L01_aqwa_benchmark/`
+
+**Automated Scripts:**
+- `run_comparison.py` - Full comparison with all data points
+- `run_comparison_peaks.py` - Peak-focused validation (recommended)
+
 ## Best Practices
 
 1. **Mesh Quality**: Ensure panel mesh convergence before production runs
 2. **Frequency Range**: Cover wave spectrum frequencies of interest
 3. **Direction Resolution**: Use finer resolution for asymmetric vessels
 4. **QTF Computation**: Include second-order effects for deep-draft vessels
-5. **Validation**: Cross-check results with AQWA or other tools
+5. **Validation**: Cross-check peak values with AQWA (5% tolerance on significant values)
 6. **License Management**: Queue analyses during peak license usage
+7. **Benchmark Testing**: Run AQWA comparison before production use
 
 ## Error Handling
 
@@ -351,4 +396,65 @@ if validation["issues"]:
 
 ## Version History
 
+- **1.1.0** (2026-01-05): Added AQWA benchmark comparison, peak-focused validation framework, 5% tolerance criteria for significant values
 - **1.0.0** (2025-01-02): Initial release from agents/orcawave/ configuration
+
+---
+
+## OrcaWave API Properties Reference
+
+These properties return the same data as shown on the validation page in the OrcaWave GUI:
+
+**Frequency/Period Data:**
+- `headings` - Wave heading angles (degrees)
+- `frequencies` - Wave frequencies (rad/s)
+- `angularFrequencies` - Angular frequencies
+- `periods` - Wave periods (seconds)
+- `periodsOrFrequencies` - Display format
+
+**Hydrostatic and Frequency-Dependent:**
+- `hydrostaticResults` - Hydrostatic stiffness matrix
+- `addedMass` - Frequency-dependent added mass
+- `infiniteFrequencyAddedMass` - Infinite frequency added mass
+- `damping` - Radiation damping coefficients
+
+**RAO Data:**
+- `loadRAOsHaskind` - Force/moment RAOs (Haskind method) - N/m, N·m/m
+- `loadRAOsDiffraction` - Force/moment RAOs (diffraction) - N/m, N·m/m
+- `displacementRAOs` - **Motion/displacement RAOs** (m/m, rad/m) - **Use for AQWA comparison**
+
+**QTF Data:**
+- `meanDriftHeadingPairs` - Mean drift force heading combinations
+- `QTFHeadingPairs` - QTF heading pairs
+- `QTFFrequencies`, `QTFAngularFrequencies`, `QTFPeriods`, `QTFPeriodsOrFrequencies`
+
+**Mean Drift and Pressure:**
+- `meanDriftLoadPressureIntegration` - Mean drift from pressure
+- `meanDriftLoadControlSurface` - Mean drift from control surface
+- `meanDriftLoadMomentumConservation` - Mean drift from momentum
+
+**Field Points:**
+- `fieldPointPressure` - Pressure at field points
+- `fieldPointRAO` - RAO at field points
+- `fieldPointVelocity` - Velocity at field points
+- `fieldPointRAOGradient` - RAO gradients
+
+**Panel Data:**
+- `panelGeometry` - Panel mesh geometry
+- `panelPressure` - Panel pressure (total)
+- `panelPressureDiffraction` - Panel pressure (diffraction component)
+- `panelPressureRadiation` - Panel pressure (radiation component)
+- `panelVelocity` - Panel velocities
+- `panelVelocityDiffraction` - Panel velocity (diffraction)
+- `panelVelocityRadiation` - Panel velocity (radiation)
+- `panelPotentialInfiniteFrequencyRadiation` - Infinite frequency potential
+
+**Quadratic Loads:**
+- `quadraticLoadFromPressureIntegration` - Quadratic loads from pressure
+- `quadraticLoadFromControlSurface` - Quadratic loads from control surface
+- `directPotentialLoad` - Direct potential loads
+- `indirectPotentialLoad` - Indirect potential loads
+
+**Roll Damping:**
+- `extraRollDamping` - Additional roll damping
+- `rollDampingPercentCritical` - Roll damping as % of critical
