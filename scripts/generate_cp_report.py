@@ -61,6 +61,59 @@ def create_saipem_config():
     }
 
 
+def create_deepwater_36inch_config():
+    """
+    Create deepwater 36-inch pipeline configuration for CP analysis.
+
+    Deepwater characteristics:
+    - Larger diameter: 36" (0.914m) vs 24" (0.610m)
+    - Longer pipeline: 25 km vs 10 km
+    - Colder temperature: 4°C (deepwater environment)
+    - Higher design margin: 1.20 for deepwater risk
+    - Longer design life: 30 years
+    - Larger anodes: 500 kg vs 400 kg
+    - Longer wet storage: 3 years (typical for deepwater projects)
+
+    Returns:
+        Configuration dictionary for deepwater 36-inch pipeline
+    """
+    return {
+        "inputs": {
+            "pipeline": {
+                "outer_diameter_m": 0.914,  # 36 inches
+                "wall_thickness_m": 0.032,  # Thicker for deepwater pressure
+                "length_m": 25000.0,  # 25 km deepwater pipeline
+                "coating_initial_breakdown_pct": 0.003,  # Better installation control
+                "coating_yearly_breakdown_pct": 0.0015,  # Lower degradation in deepwater
+                "coating_quality": "good",  # Essential for deepwater
+                "wet_storage_years": 3.0,  # Longer wet storage for deepwater projects
+                "resistivity_ohm_m": 2e-7,
+            },
+            "coating": {
+                "resistance_ohm_m2": 1.0,  # Good quality coating resistivity (Ω·m)
+            },
+            "environment": {
+                "seawater_resistivity_ohm_cm": 20.0,  # Slightly lower in deepwater
+                "temperature_c": 4.0,  # Cold deepwater temperature
+                "free_corrosion_potential_V": -0.630,
+                "anode_potential_V": -0.950,
+            },
+            "design_data": {
+                "design_life": 30.0,  # Longer design life for deepwater investment
+            },
+            "design": {
+                "design_margin": 1.20,  # Higher margin for deepwater risk
+            },
+            "anode": {
+                "material": "aluminium",
+                "individual_anode_mass_kg": 500.0,  # Larger anodes for deepwater
+                "utilization_factor": 0.80,  # More conservative for deepwater
+                "contingency_factor": 1.10,
+            },
+        }
+    }
+
+
 def main():
     """
     Generate CP comparison report: DNV 2010 vs 2016.
@@ -74,7 +127,7 @@ def main():
     """
     print("=" * 80)
     print("Cathodic Protection Analysis Report Generator")
-    print("DNV RP-F103: 2010 vs 2016 (Enhanced Saipem) Comparison")
+    print("DNV RP-F103: 2010 vs 2016 - Deepwater 36-inch Pipeline Comparison")
     print("=" * 80)
     print()
 
@@ -82,7 +135,7 @@ def main():
     cp = CathodicProtection()
 
     # Create base configuration
-    config = create_saipem_config()
+    config = create_deepwater_36inch_config()
 
     # Run DNV 2010 calculation (without wet storage enhancement)
     print("Running DNV RP-F103:2010 calculation...")
@@ -92,8 +145,8 @@ def main():
     print("✓ DNV 2010 calculation complete")
 
     # Run DNV 2016 calculation (with wet storage enhancement - Phase 1 feature)
-    print("Running DNV RP-F103:2016 (Enhanced Saipem) calculation...")
-    results_enhanced = cp.DNV_RP_F103_2010(config)  # Uses wet_storage_years=2.0
+    print("Running DNV RP-F103:2016 (Deepwater 36-inch) calculation...")
+    results_enhanced = cp.DNV_RP_F103_2010(config)  # Uses wet_storage_years=3.0
     print("✓ DNV 2016 calculation complete")
 
     # Generate HTML comparison report
@@ -103,7 +156,7 @@ def main():
     report_path = generator.generate_comparison_report(
         results_2010=results_standard,
         results_2016=results_enhanced,
-        title="Cathodic Protection Analysis: DNV RP-F103 2010 vs 2016"
+        title="Cathodic Protection Analysis: DNV RP-F103 2010 vs 2016 - Deepwater 36-inch Pipeline"
     )
 
     print(f"✓ Report generated: {report_path}")
