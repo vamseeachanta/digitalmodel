@@ -399,7 +399,9 @@ class CathodicProtection:
 
         # Calculate total anode mass required based on design demand
         # This will be used by subsequent helper methods for anode sizing
-        design_life_years = design.get("design_life_years", 25)
+        # Extract design life from design_data (user input) - Bug fix: was using wrong dict key
+        design_data = inputs.get("design_data", {})
+        design_life_years = design_data.get("design_life", 25)
         hours_per_year = 8760.0
         design_life_hours = design_life_years * hours_per_year
 
@@ -576,9 +578,13 @@ class CathodicProtection:
         # Calculate inner diameter
         inner_diameter_m = outer_diameter_m - (2.0 * wall_thickness_m)
 
-        # Extract coating resistance from configuration
+        # Extract coating resistivity from configuration
+        # NOTE: Parameter is named "resistance_ohm_m2" for historical reasons, but is actually
+        # coating RESISTIVITY in Ω·m, not resistance in Ω·m². The formula requires resistivity.
+        # Typical values: 0.05-1.0 Ω·m produce attenuation lengths of 100-500m
+        # Bug fix: Changed from wrong default of 50000 (way too high) to 1.0 (good quality coating)
         coating = inputs.get("coating", {})
-        coating_resistance_ohm_m2 = coating.get("resistance_ohm_m2", 50000.0)
+        coating_resistivity_ohm_m = coating.get("resistance_ohm_m2", 1.0)  # Despite name, this is resistivity in Ω·m
 
         # Steel resistivity (carbon steel typical value)
         steel_resistivity_ohm_m = 1.7e-7  # ohm-m for carbon steel
@@ -589,7 +595,7 @@ class CathodicProtection:
         # Where:
         # - D = outer diameter (m)
         # - t = wall thickness (m)
-        # - ρ_coating = coating resistance (ohm-m²)
+        # - ρ_coating = coating resistivity (ohm-m) - NOT resistance (ohm-m²)
         # - ρ_steel = steel resistivity (ohm-m)
         # - d = inner diameter (m)
 
@@ -601,7 +607,7 @@ class CathodicProtection:
             ln_diameter_ratio = 0.0
 
         # Calculate attenuation length (DNV 2010 simplified formula)
-        numerator = outer_diameter_m * wall_thickness_m * coating_resistance_ohm_m2
+        numerator = outer_diameter_m * wall_thickness_m * coating_resistivity_ohm_m
         denominator = 4.0 * steel_resistivity_ohm_m * ln_diameter_ratio
 
         if denominator > 0:
