@@ -288,7 +288,7 @@ class CPHTMLReportGenerator:
             ['Outer Diameter', f"{geometry.get('outer_diameter_m', 0):.3f} m"],
             ['Length', f"{geometry.get('length_m', 0)/1000:.2f} km"],
             ['Seawater Resistivity', f"{environment.get('seawater_resistivity_ohm_cm', 0)} Ω·cm"],
-            ['Temperature', f"{environment.get('temperature_c', 0)}°C"],
+            ['Temperature', f"{environment.get('seawater_temperature_C', 0)}°C"],
             ['Coating Quality', pipeline.get('coating_quality', 'N/A')],
             ['Wet Storage', f"{pipeline.get('wet_storage_years', 0)} years"]
         ]
