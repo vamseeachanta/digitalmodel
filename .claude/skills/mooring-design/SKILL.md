@@ -1,11 +1,47 @@
 ---
 name: mooring-design
-description: Design and analyze mooring systems including CALM and SALM buoys, catenary moorings, and spread mooring configurations. Covers mooring line design, safety factors, environmental loading, and compliance with DNV, API, and ABS standards.
+description: Design and analyze mooring systems including CALM and SALM buoys, catenary
+  moorings, and spread mooring configurations. Covers mooring line design, safety
+  factors, environmental loading, and compliance with DNV, API, and ABS standards.
+updated: '2026-01-07'
 ---
-
 # Mooring Design Skill
 
 Design and analyze mooring systems for floating offshore structures, including CALM buoys, SALM buoys, and spread mooring configurations.
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+dependencies:
+  orcaflex-modeling: '>=2.0.0,<3.0.0'
+  hydrodynamics: '>=1.0.0,<2.0.0'
+orcaflex_version: '>=11.0'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 

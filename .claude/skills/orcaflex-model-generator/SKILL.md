@@ -1,15 +1,16 @@
 ---
 name: orcaflex-model-generator
-description: Generate OrcaFlex models from templates using component assembly with lookup tables for vessels, risers, materials, and environments.
+description: Generate OrcaFlex models from templates using component assembly with
+  lookup tables for vessels, risers, materials, and environments.
 triggers:
-  - generate OrcaFlex model
-  - create riser model
-  - SCR analysis
-  - model from template
-  - component assembly
-  - parametric model generation
+- generate OrcaFlex model
+- create riser model
+- SCR analysis
+- model from template
+- component assembly
+- parametric model generation
+updated: '2026-01-07'
 ---
-
 # OrcaFlex Model Generator Skill
 
 **ABOUTME**: Generate complete OrcaFlex models using component assembly approach - build models
@@ -17,6 +18,39 @@ triggers:
              tables instead of manually editing template files.
 
 ---
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+dependencies:
+  orcaflex-file-conversion: '>=1.0.0,<2.0.0'
+orcaflex_version: '>=11.0'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## Overview
 

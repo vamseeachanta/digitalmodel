@@ -1,25 +1,60 @@
 ---
 name: freecad-automation
-description: AI-powered automation agent for FreeCAD CAD operations including natural language processing, batch processing, parametric design, and marine engineering applications. Use for CAD automation, drawing generation, FEM preprocessing, and integration with offshore analysis tools.
+description: AI-powered automation agent for FreeCAD CAD operations including natural
+  language processing, batch processing, parametric design, and marine engineering
+  applications. Use for CAD automation, drawing generation, FEM preprocessing, and
+  integration with offshore analysis tools.
 version: 1.0.0
 updated: 2025-01-02
 category: cad-engineering
 triggers:
-  - FreeCAD automation
-  - parametric modeling
-  - CAD batch processing
-  - technical drawings
-  - assembly management
-  - FEM preprocessing
-  - hull design
-  - marine CAD
-  - .FCStd files
-  - Python scripting CAD
+- FreeCAD automation
+- parametric modeling
+- CAD batch processing
+- technical drawings
+- assembly management
+- FEM preprocessing
+- hull design
+- marine CAD
+- .FCStd files
+- Python scripting CAD
 ---
-
 # FreeCAD Automation Skill
 
 AI-powered automation for FreeCAD CAD operations with natural language processing, batch processing, and marine engineering specialization.
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+dependencies:
+  cad-engineering: '>=1.0.0,<2.0.0'
+  gmsh-meshing: '>=1.0.0,<2.0.0'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 

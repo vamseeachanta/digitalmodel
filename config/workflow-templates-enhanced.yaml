@@ -1,0 +1,735 @@
+# ABOUTME: Enhanced workflow templates with phase dependencies, quality gates, and agent orchestration
+# Defines reusable workflow patterns for common development tasks
+
+# Template version and metadata
+version: "1.0.0"
+metadata:
+  created: "2026-01-07"
+  description: "Enhanced workflow templates for systematic development"
+
+# Global configuration
+global_config:
+  max_phases_per_workflow: 10
+  max_agents_per_phase: 10
+  max_concurrent_workflows: 3
+  max_workflow_duration_minutes: 60
+  checkpoint_dir: "data/workflows/checkpoints"
+  retry_policy:
+    max_retries_per_agent: 1
+    max_failures_per_phase: 2
+
+  # Quality gates applied to all workflows unless overridden
+  default_quality_gates:
+    code_coverage:
+      enabled: true
+      threshold: 80
+      halt_on_failure: true
+    linting:
+      enabled: true
+      halt_on_failure: true
+    type_checking:
+      enabled: true
+      halt_on_failure: true
+
+# Workflow Templates
+templates:
+
+  # ============================================================================
+  # FULL-STACK DEVELOPMENT WORKFLOW
+  # ============================================================================
+  full_stack_development:
+    name: "Full-Stack Development Workflow"
+    description: "End-to-end development from specification to deployment"
+
+    coordination:
+      topology: "hierarchical"
+      use_mcp: true
+      use_claude_code_tasks: true
+
+    quality_gates:
+      code_coverage:
+        threshold: 85
+      linting: true
+      type_checking: true
+
+    phases:
+      - id: "spec"
+        name: "Specification & Planning"
+        dependencies: []
+        parallel: false
+        agents:
+          - type: "researcher"
+            role: "requirements_analyst"
+            task: "Analyze requirements and create detailed specification"
+            coordination: "hooks"
+          - type: "planner"
+            role: "task_planner"
+            task: "Break down specification into actionable tasks"
+            coordination: "hooks"
+
+        outputs:
+          - "docs/spec.md"
+          - "docs/tasks.md"
+
+        checkpoints:
+          - "specification_complete"
+          - "task_breakdown_complete"
+
+      - id: "architecture"
+        name: "Architecture Design"
+        dependencies: ["spec"]
+        parallel: false
+        agents:
+          - type: "system-architect"
+            role: "system_designer"
+            task: "Design system architecture and component interactions"
+            coordination: "hooks"
+          - type: "code-analyzer"
+            role: "database_architect"
+            task: "Design database schema and data models"
+            coordination: "hooks"
+
+        outputs:
+          - "docs/architecture.md"
+          - "docs/database_schema.sql"
+
+        checkpoints:
+          - "architecture_design_complete"
+
+      - id: "backend_development"
+        name: "Backend Development"
+        dependencies: ["architecture"]
+        parallel: true
+        agents:
+          - type: "backend-dev"
+            role: "api_developer"
+            task: "Implement REST API endpoints with authentication"
+            coordination: "hooks"
+          - type: "coder"
+            role: "business_logic_developer"
+            task: "Implement core business logic and services"
+            coordination: "hooks"
+          - type: "code-analyzer"
+            role: "database_developer"
+            task: "Implement database models and migrations"
+            coordination: "hooks"
+
+        outputs:
+          - "src/backend/api/"
+          - "src/backend/services/"
+          - "src/backend/models/"
+
+        checkpoints:
+          - "backend_implementation_complete"
+
+      - id: "frontend_development"
+        name: "Frontend Development"
+        dependencies: ["architecture"]
+        parallel: true
+        agents:
+          - type: "coder"
+            role: "ui_developer"
+            task: "Implement user interface components"
+            coordination: "hooks"
+          - type: "coder"
+            role: "state_management_developer"
+            task: "Implement state management and API integration"
+            coordination: "hooks"
+
+        outputs:
+          - "src/frontend/components/"
+          - "src/frontend/store/"
+
+        checkpoints:
+          - "frontend_implementation_complete"
+
+      - id: "testing"
+        name: "Comprehensive Testing"
+        dependencies: ["backend_development", "frontend_development"]
+        parallel: true
+        agents:
+          - type: "tester"
+            role: "unit_tester"
+            task: "Create unit tests with >85% coverage"
+            coordination: "hooks"
+          - type: "tester"
+            role: "integration_tester"
+            task: "Create integration tests for API endpoints"
+            coordination: "hooks"
+          - type: "tester"
+            role: "e2e_tester"
+            task: "Create end-to-end tests for critical user flows"
+            coordination: "hooks"
+
+        outputs:
+          - "tests/unit/"
+          - "tests/integration/"
+          - "tests/e2e/"
+
+        checkpoints:
+          - "testing_complete"
+
+        quality_gates:
+          code_coverage:
+            threshold: 85
+
+      - id: "review"
+        name: "Code Review & Quality Assurance"
+        dependencies: ["testing"]
+        parallel: false
+        agents:
+          - type: "reviewer"
+            role: "code_reviewer"
+            task: "Review code quality, security, and best practices"
+            coordination: "hooks"
+          - type: "reviewer"
+            role: "security_auditor"
+            task: "Perform security audit and vulnerability assessment"
+            coordination: "hooks"
+
+        outputs:
+          - "reports/code_review.md"
+          - "reports/security_audit.md"
+
+        checkpoints:
+          - "review_complete"
+
+      - id: "integration"
+        name: "Integration & Deployment Prep"
+        dependencies: ["review"]
+        parallel: false
+        agents:
+          - type: "cicd-engineer"
+            role: "integration_specialist"
+            task: "Setup CI/CD pipeline and deployment configuration"
+            coordination: "hooks"
+          - type: "coder"
+            role: "integration_developer"
+            task: "Integrate frontend and backend components"
+            coordination: "hooks"
+
+        outputs:
+          - ".github/workflows/ci.yml"
+          - "docker-compose.yml"
+          - "reports/integration_report.html"
+
+        checkpoints:
+          - "integration_complete"
+
+  # ============================================================================
+  # BUG FIX WORKFLOW
+  # ============================================================================
+  bug_fix_workflow:
+    name: "Bug Fix Workflow"
+    description: "Systematic bug identification, fixing, and verification"
+
+    coordination:
+      topology: "mesh"
+      use_mcp: true
+      use_claude_code_tasks: true
+
+    quality_gates:
+      code_coverage:
+        threshold: 80
+      linting: true
+      type_checking: true
+
+    phases:
+      - id: "investigation"
+        name: "Bug Investigation & Root Cause Analysis"
+        dependencies: []
+        parallel: false
+        agents:
+          - type: "researcher"
+            role: "bug_analyst"
+            task: "Analyze bug report and reproduce issue"
+            coordination: "hooks"
+          - type: "code-analyzer"
+            role: "root_cause_analyzer"
+            task: "Identify root cause and affected components"
+            coordination: "hooks"
+
+        outputs:
+          - "reports/bug_analysis.md"
+
+        checkpoints:
+          - "bug_investigation_complete"
+
+      - id: "fix_implementation"
+        name: "Bug Fix Implementation"
+        dependencies: ["investigation"]
+        parallel: false
+        agents:
+          - type: "coder"
+            role: "bug_fixer"
+            task: "Implement bug fix with minimal changes"
+            coordination: "hooks"
+
+        outputs:
+          - "src/**/fixed_files.py"
+
+        checkpoints:
+          - "fix_implemented"
+
+      - id: "test_verification"
+        name: "Test & Verification"
+        dependencies: ["fix_implementation"]
+        parallel: true
+        agents:
+          - type: "tester"
+            role: "regression_tester"
+            task: "Create regression test for the bug"
+            coordination: "hooks"
+          - type: "tester"
+            role: "verification_tester"
+            task: "Verify fix doesn't break existing functionality"
+            coordination: "hooks"
+
+        outputs:
+          - "tests/regression/test_bug_*.py"
+
+        checkpoints:
+          - "verification_complete"
+
+        quality_gates:
+          code_coverage:
+            threshold: 80
+
+      - id: "review_approval"
+        name: "Code Review & Approval"
+        dependencies: ["test_verification"]
+        parallel: false
+        agents:
+          - type: "reviewer"
+            role: "fix_reviewer"
+            task: "Review bug fix for correctness and side effects"
+            coordination: "hooks"
+
+        outputs:
+          - "reports/bug_fix_review.md"
+
+        checkpoints:
+          - "review_approved"
+
+  # ============================================================================
+  # REFACTORING WORKFLOW
+  # ============================================================================
+  refactoring_workflow:
+    name: "Code Refactoring Workflow"
+    description: "Systematic code refactoring with quality preservation"
+
+    coordination:
+      topology: "hierarchical"
+      use_mcp: true
+      use_claude_code_tasks: true
+
+    quality_gates:
+      code_coverage:
+        threshold: 80
+        maintain_or_improve: true
+      linting: true
+      type_checking: true
+
+    phases:
+      - id: "analysis"
+        name: "Code Analysis & Planning"
+        dependencies: []
+        parallel: false
+        agents:
+          - type: "code-analyzer"
+            role: "code_quality_analyzer"
+            task: "Analyze code quality, complexity, and technical debt"
+            coordination: "hooks"
+          - type: "planner"
+            role: "refactoring_planner"
+            task: "Plan refactoring strategy and identify risks"
+            coordination: "hooks"
+
+        outputs:
+          - "reports/code_analysis.html"
+          - "docs/refactoring_plan.md"
+
+        checkpoints:
+          - "analysis_complete"
+
+      - id: "baseline_testing"
+        name: "Baseline Test Coverage"
+        dependencies: ["analysis"]
+        parallel: false
+        agents:
+          - type: "tester"
+            role: "baseline_tester"
+            task: "Ensure comprehensive test coverage before refactoring"
+            coordination: "hooks"
+
+        outputs:
+          - "reports/baseline_coverage.html"
+
+        checkpoints:
+          - "baseline_established"
+
+        quality_gates:
+          code_coverage:
+            threshold: 80
+
+      - id: "refactoring_implementation"
+        name: "Refactoring Implementation"
+        dependencies: ["baseline_testing"]
+        parallel: false
+        agents:
+          - type: "coder"
+            role: "refactoring_specialist"
+            task: "Implement refactoring changes incrementally"
+            coordination: "hooks"
+
+        outputs:
+          - "src/**/refactored_files.py"
+
+        checkpoints:
+          - "refactoring_complete"
+
+      - id: "verification"
+        name: "Verification & Quality Assurance"
+        dependencies: ["refactoring_implementation"]
+        parallel: true
+        agents:
+          - type: "tester"
+            role: "regression_verifier"
+            task: "Run all tests and verify no regressions"
+            coordination: "hooks"
+          - type: "reviewer"
+            role: "quality_reviewer"
+            task: "Review refactored code for improvements"
+            coordination: "hooks"
+          - type: "code-analyzer"
+            role: "metrics_analyzer"
+            task: "Analyze code metrics and verify improvements"
+            coordination: "hooks"
+
+        outputs:
+          - "reports/refactoring_verification.html"
+          - "reports/quality_improvements.md"
+
+        checkpoints:
+          - "verification_complete"
+
+        quality_gates:
+          code_coverage:
+            threshold: 80
+            maintain_or_improve: true
+
+  # ============================================================================
+  # RESEARCH WORKFLOW
+  # ============================================================================
+  research_workflow:
+    name: "Research & Investigation Workflow"
+    description: "Systematic research and knowledge discovery"
+
+    coordination:
+      topology: "mesh"
+      use_mcp: true
+      use_claude_code_tasks: true
+
+    quality_gates:
+      # No code quality gates for research
+      enabled: false
+
+    phases:
+      - id: "topic_definition"
+        name: "Research Topic Definition"
+        dependencies: []
+        parallel: false
+        agents:
+          - type: "researcher"
+            role: "topic_analyst"
+            task: "Define research scope and objectives"
+            coordination: "hooks"
+
+        outputs:
+          - "docs/research_objectives.md"
+
+        checkpoints:
+          - "topic_defined"
+
+      - id: "information_gathering"
+        name: "Information Gathering"
+        dependencies: ["topic_definition"]
+        parallel: true
+        agents:
+          - type: "researcher"
+            role: "literature_researcher"
+            task: "Research existing solutions and approaches"
+            coordination: "hooks"
+          - type: "researcher"
+            role: "best_practices_researcher"
+            task: "Research industry best practices"
+            coordination: "hooks"
+          - type: "code-analyzer"
+            role: "codebase_analyzer"
+            task: "Analyze existing codebase for relevant patterns"
+            coordination: "hooks"
+
+        outputs:
+          - "docs/research/literature_review.md"
+          - "docs/research/best_practices.md"
+          - "docs/research/codebase_analysis.md"
+
+        checkpoints:
+          - "information_gathered"
+
+      - id: "synthesis"
+        name: "Synthesis & Recommendations"
+        dependencies: ["information_gathering"]
+        parallel: false
+        agents:
+          - type: "researcher"
+            role: "synthesis_specialist"
+            task: "Synthesize findings and provide recommendations"
+            coordination: "hooks"
+          - type: "planner"
+            role: "action_planner"
+            task: "Create action plan based on research findings"
+            coordination: "hooks"
+
+        outputs:
+          - "docs/research_report.md"
+          - "docs/action_plan.md"
+
+        checkpoints:
+          - "synthesis_complete"
+
+  # ============================================================================
+  # PERFORMANCE OPTIMIZATION WORKFLOW
+  # ============================================================================
+  performance_optimization:
+    name: "Performance Optimization Workflow"
+    description: "Systematic performance analysis and optimization"
+
+    coordination:
+      topology: "hierarchical"
+      use_mcp: true
+      use_claude_code_tasks: true
+
+    quality_gates:
+      code_coverage:
+        threshold: 80
+        maintain_or_improve: true
+      linting: true
+      type_checking: true
+
+    phases:
+      - id: "baseline_profiling"
+        name: "Baseline Performance Profiling"
+        dependencies: []
+        parallel: false
+        agents:
+          - type: "code-analyzer"
+            role: "performance_profiler"
+            task: "Profile application and identify bottlenecks"
+            coordination: "hooks"
+
+        outputs:
+          - "reports/performance_baseline.html"
+          - "data/profiling/baseline_metrics.json"
+
+        checkpoints:
+          - "baseline_profiled"
+
+      - id: "bottleneck_analysis"
+        name: "Bottleneck Analysis"
+        dependencies: ["baseline_profiling"]
+        parallel: false
+        agents:
+          - type: "code-analyzer"
+            role: "bottleneck_analyzer"
+            task: "Analyze bottlenecks and prioritize optimizations"
+            coordination: "hooks"
+          - type: "planner"
+            role: "optimization_planner"
+            task: "Plan optimization strategy and approach"
+            coordination: "hooks"
+
+        outputs:
+          - "docs/bottleneck_analysis.md"
+          - "docs/optimization_plan.md"
+
+        checkpoints:
+          - "analysis_complete"
+
+      - id: "optimization_implementation"
+        name: "Optimization Implementation"
+        dependencies: ["bottleneck_analysis"]
+        parallel: true
+        agents:
+          - type: "coder"
+            role: "performance_optimizer"
+            task: "Implement performance optimizations"
+            coordination: "hooks"
+          - type: "tester"
+            role: "performance_tester"
+            task: "Create performance benchmarks and tests"
+            coordination: "hooks"
+
+        outputs:
+          - "src/**/optimized_files.py"
+          - "tests/performance/"
+
+        checkpoints:
+          - "optimization_implemented"
+
+      - id: "verification_benchmarking"
+        name: "Verification & Benchmarking"
+        dependencies: ["optimization_implementation"]
+        parallel: false
+        agents:
+          - type: "code-analyzer"
+            role: "performance_verifier"
+            task: "Profile optimized code and verify improvements"
+            coordination: "hooks"
+          - type: "reviewer"
+            role: "optimization_reviewer"
+            task: "Review optimizations for correctness and maintainability"
+            coordination: "hooks"
+
+        outputs:
+          - "reports/performance_comparison.html"
+          - "reports/optimization_review.md"
+
+        checkpoints:
+          - "verification_complete"
+
+  # ============================================================================
+  # MULTI-REPO SYNCHRONIZATION WORKFLOW
+  # ============================================================================
+  multi_repo_sync:
+    name: "Multi-Repository Synchronization"
+    description: "Synchronize all repositories in workspace-hub"
+
+    coordination:
+      topology: "star"
+      use_mcp: true
+      use_claude_code_tasks: true
+
+    quality_gates:
+      enabled: false
+
+    phases:
+      - id: "repo_discovery"
+        name: "Repository Discovery"
+        dependencies: []
+        parallel: false
+        agents:
+          - type: "code-analyzer"
+            role: "repo_scanner"
+            task: "Scan workspace-hub and identify all repositories"
+            coordination: "hooks"
+
+        outputs:
+          - "data/workflows/repo_inventory.json"
+
+        checkpoints:
+          - "repos_discovered"
+
+      - id: "git_sync"
+        name: "Git Pull/Push Synchronization"
+        dependencies: ["repo_discovery"]
+        parallel: true
+        agents:
+          - type: "cicd-engineer"
+            role: "git_sync_manager"
+            task: "Pull latest changes from all repositories"
+            coordination: "hooks"
+
+        outputs:
+          - "reports/git_sync_report.html"
+
+        checkpoints:
+          - "git_sync_complete"
+
+      - id: "dependency_update"
+        name: "Dependency Updates"
+        dependencies: ["git_sync"]
+        parallel: true
+        agents:
+          - type: "cicd-engineer"
+            role: "dependency_manager"
+            task: "Update dependencies across all repositories"
+            coordination: "hooks"
+
+        outputs:
+          - "reports/dependency_updates.html"
+
+        checkpoints:
+          - "dependencies_updated"
+
+      - id: "sync_verification"
+        name: "Synchronization Verification"
+        dependencies: ["dependency_update"]
+        parallel: false
+        agents:
+          - type: "reviewer"
+            role: "sync_verifier"
+            task: "Verify synchronization completed successfully"
+            coordination: "hooks"
+
+        outputs:
+          - "reports/sync_verification_report.html"
+
+        checkpoints:
+          - "sync_verified"
+
+# Template metadata for discovery
+template_metadata:
+  full_stack_development:
+    category: "development"
+    complexity: "high"
+    estimated_duration_minutes: 45
+    recommended_for:
+      - "New feature development"
+      - "Complete application development"
+      - "Full-stack projects"
+
+  bug_fix_workflow:
+    category: "maintenance"
+    complexity: "medium"
+    estimated_duration_minutes: 20
+    recommended_for:
+      - "Bug fixes"
+      - "Issue resolution"
+      - "Defect correction"
+
+  refactoring_workflow:
+    category: "improvement"
+    complexity: "medium"
+    estimated_duration_minutes: 30
+    recommended_for:
+      - "Code quality improvement"
+      - "Technical debt reduction"
+      - "Code modernization"
+
+  research_workflow:
+    category: "research"
+    complexity: "low"
+    estimated_duration_minutes: 25
+    recommended_for:
+      - "Technology research"
+      - "Problem investigation"
+      - "Best practices discovery"
+
+  performance_optimization:
+    category: "optimization"
+    complexity: "high"
+    estimated_duration_minutes: 40
+    recommended_for:
+      - "Performance improvement"
+      - "Bottleneck resolution"
+      - "Resource optimization"
+
+  multi_repo_sync:
+    category: "operations"
+    complexity: "medium"
+    estimated_duration_minutes: 15
+    recommended_for:
+      - "Repository synchronization"
+      - "Dependency updates"
+      - "Multi-repo maintenance"

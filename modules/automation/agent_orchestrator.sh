@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# AI Agent Orchestrator
-# Intelligent agent selection and task delegation based on work type
+# AI Agent Orchestrator with Intelligent Selection
+# Enhanced with multi-factor agent selection algorithm
 
 set -e
 
@@ -10,10 +10,13 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
 WORKSPACE_ROOT="/mnt/github/workspace-hub"
 REGISTRY_FILE="$WORKSPACE_ROOT/modules/config/ai-agents-registry.json"
+SELECTOR_SCRIPT="src/digitalmodel/modules/automation/intelligent_agent_selector.py"
+WEIGHTS_CONFIG="config/agent-selection-weights.yaml"
 
 # Usage function
 usage() {
@@ -34,17 +37,20 @@ usage() {
     echo "  security-audit       - Security review"
     echo ""
     echo "Options:"
-    echo "  --agent NAME         - Force specific agent"
+    echo "  --agent NAME         - Force specific agent (skip intelligent selection)"
     echo "  --with-review        - Include automated review"
     echo "  --complexity LEVEL   - simple|moderate|complex"
     echo "  --domain DOMAIN      - Specify technology domain"
     echo "  --output FILE        - Save results to FILE"
     echo "  --verbose            - Detailed output"
+    echo "  --intelligent        - Use intelligent agent selection (default)"
+    echo "  --show-reasoning     - Show selection reasoning"
+    echo "  --agent-loads JSON   - Specify current agent loads"
     echo ""
     echo "Examples:"
     echo "  $0 code-generation \"Create user authentication API\" --with-review"
-    echo "  $0 code-refactoring \"Optimize database queries\" --complexity complex"
-    echo "  $0 spec-creation \"Design payment processing feature\" --domain python"
+    echo "  $0 code-refactoring \"Optimize database queries\" --intelligent --show-reasoning"
+    echo "  $0 spec-creation \"Design payment processing\" --agent-loads '{\"agent-a\":2}'"
     exit 1
 }
 
@@ -61,6 +67,9 @@ COMPLEXITY="moderate"
 DOMAIN=""
 OUTPUT_FILE=""
 VERBOSE=false
+USE_INTELLIGENT=true
+SHOW_REASONING=false
+AGENT_LOADS=""
 
 # Parse options
 shift 2
@@ -68,6 +77,7 @@ while [ $# -gt 0 ]; do
     case $1 in
         --agent)
             FORCED_AGENT=$2
+            USE_INTELLIGENT=false
             shift
             ;;
         --with-review)
@@ -88,6 +98,16 @@ while [ $# -gt 0 ]; do
         --verbose)
             VERBOSE=true
             ;;
+        --intelligent)
+            USE_INTELLIGENT=true
+            ;;
+        --show-reasoning)
+            SHOW_REASONING=true
+            ;;
+        --agent-loads)
+            AGENT_LOADS=$2
+            shift
+            ;;
         *)
             echo "Unknown option: $1"
             usage
@@ -97,7 +117,7 @@ while [ $# -gt 0 ]; do
 done
 
 echo -e "${PURPLE}========================================${NC}"
-echo -e "${PURPLE}AI Agent Orchestrator${NC}"
+echo -e "${PURPLE}AI Agent Orchestrator (Enhanced)${NC}"
 echo -e "${PURPLE}========================================${NC}"
 echo ""
 
@@ -114,31 +134,114 @@ echo -e "${BLUE}  Complexity: $COMPLEXITY${NC}"
 [ -n "$DOMAIN" ] && echo -e "${BLUE}  Domain: $DOMAIN${NC}"
 echo ""
 
-# Select primary agent
-if [ -n "$FORCED_AGENT" ]; then
-    PRIMARY_AGENT=$FORCED_AGENT
-    echo -e "${YELLOW}Using forced agent: $PRIMARY_AGENT${NC}"
-else
-    # Get recommended agent from registry based on complexity
-    if [ "$COMPLEXITY" == "simple" ]; then
-        PRIMARY_AGENT=$(jq -r ".agentSelectionRules.complexityThresholds.simple.primary" "$REGISTRY_FILE")
-    elif [ "$COMPLEXITY" == "complex" ]; then
-        PRIMARY_AGENT=$(jq -r ".agentSelectionRules.complexityThresholds.complex.primary" "$REGISTRY_FILE")
+# Activate uv environment if available
+if [ -f ".venv/bin/activate" ]; then
+    source .venv/bin/activate
+elif [ -f ".venv/Scripts/activate" ]; then
+    source .venv/Scripts/activate
+fi
+
+# Select agent using intelligent selection or fallback
+if [ "$USE_INTELLIGENT" == "true" ] && [ -z "$FORCED_AGENT" ]; then
+    echo -e "${CYAN}========================================${NC}"
+    echo -e "${CYAN}Intelligent Agent Selection${NC}"
+    echo -e "${CYAN}========================================${NC}"
+    echo ""
+
+    # Check if Python selector exists
+    if [ ! -f "$SELECTOR_SCRIPT" ]; then
+        echo -e "${YELLOW}Warning: Intelligent selector not found at $SELECTOR_SCRIPT${NC}"
+        echo -e "${YELLOW}Falling back to registry-based selection${NC}"
+        echo ""
+        USE_INTELLIGENT=false
     else
-        # Try to get task-specific agent
-        PRIMARY_AGENT=$(jq -r ".taskTypeAgentMapping.\"${TASK_TYPE}\".primary // \"claude-sonnet-4.5\"" "$REGISTRY_FILE")
+        # Build selector command
+        SELECTOR_CMD="python $SELECTOR_SCRIPT \"$TASK_TYPE\" \"$DESCRIPTION\""
+
+        if [ -f "$WEIGHTS_CONFIG" ]; then
+            SELECTOR_CMD="$SELECTOR_CMD --config $WEIGHTS_CONFIG"
+        fi
+
+        if [ -f "$REGISTRY_FILE" ]; then
+            SELECTOR_CMD="$SELECTOR_CMD --registry $REGISTRY_FILE"
+        fi
+
+        if [ -n "$AGENT_LOADS" ]; then
+            SELECTOR_CMD="$SELECTOR_CMD --load '$AGENT_LOADS'"
+        fi
+
+        # Run intelligent selector
+        echo -e "${BLUE}Running intelligent selection algorithm...${NC}"
+        SELECTION_RESULT=$(eval $SELECTOR_CMD 2>&1)
+        SELECTOR_EXIT=$?
+
+        if [ $SELECTOR_EXIT -ne 0 ]; then
+            echo -e "${RED}Error running intelligent selector:${NC}"
+            echo "$SELECTION_RESULT"
+            echo -e "${YELLOW}Falling back to registry-based selection${NC}"
+            echo ""
+            USE_INTELLIGENT=false
+        else
+            # Parse JSON result
+            PRIMARY_AGENT=$(echo "$SELECTION_RESULT" | jq -r '.agent')
+            CONFIDENCE=$(echo "$SELECTION_RESULT" | jq -r '.confidence')
+            REASONING=$(echo "$SELECTION_RESULT" | jq -r '.reasoning')
+            ALTERNATIVES=$(echo "$SELECTION_RESULT" | jq -r '.alternatives[]?.agent // empty' | tr '\n' ', ' | sed 's/,$//')
+
+            if [ "$PRIMARY_AGENT" == "null" ] || [ -z "$PRIMARY_AGENT" ]; then
+                echo -e "${RED}No suitable agent found${NC}"
+                exit 1
+            fi
+
+            echo -e "${GREEN}✓ Selected agent: $PRIMARY_AGENT${NC}"
+            echo -e "${BLUE}  Confidence: ${CONFIDENCE}${NC}"
+
+            if [ "$SHOW_REASONING" == "true" ] || [ "$VERBOSE" == "true" ]; then
+                echo -e "${BLUE}  Reasoning: $REASONING${NC}"
+
+                # Show component scores
+                echo ""
+                echo -e "${YELLOW}Score Breakdown:${NC}"
+                echo "$SELECTION_RESULT" | jq -r '.scores | to_entries[] | "  \(.key): \(.value)"' | while read -r line; do
+                    echo -e "${BLUE}$line${NC}"
+                done
+            fi
+
+            if [ -n "$ALTERNATIVES" ]; then
+                echo -e "${BLUE}  Alternatives: $ALTERNATIVES${NC}"
+            fi
+            echo ""
+        fi
+    fi
+fi
+
+# Fallback to registry-based selection
+if [ "$USE_INTELLIGENT" == "false" ]; then
+    if [ -n "$FORCED_AGENT" ]; then
+        PRIMARY_AGENT=$FORCED_AGENT
+        echo -e "${YELLOW}Using forced agent: $PRIMARY_AGENT${NC}"
+    else
+        # Get recommended agent from registry based on complexity
+        if [ "$COMPLEXITY" == "simple" ]; then
+            PRIMARY_AGENT=$(jq -r ".agentSelectionRules.complexityThresholds.simple.primary" "$REGISTRY_FILE")
+        elif [ "$COMPLEXITY" == "complex" ]; then
+            PRIMARY_AGENT=$(jq -r ".agentSelectionRules.complexityThresholds.complex.primary" "$REGISTRY_FILE")
+        else
+            # Try to get task-specific agent
+            PRIMARY_AGENT=$(jq -r ".taskTypeAgentMapping.\"${TASK_TYPE}\".primary // \"claude-sonnet-4.5\"" "$REGISTRY_FILE")
+        fi
+
+        echo -e "${YELLOW}Selected agent: $PRIMARY_AGENT${NC}"
+        echo -e "${BLUE}  Based on: task type + complexity${NC}"
     fi
 
-    echo -e "${YELLOW}Selected agent: $PRIMARY_AGENT${NC}"
-    echo -e "${BLUE}  Based on: task type + complexity${NC}"
+    # Get alternative agents
+    ALTERNATIVES=$(jq -r ".taskTypeAgentMapping.\"${TASK_TYPE}\".alternatives[]? // empty" "$REGISTRY_FILE")
+    if [ -n "$ALTERNATIVES" ]; then
+        echo -e "${BLUE}  Alternatives: $(echo $ALTERNATIVES | tr '\n' ', ' | sed 's/,$//')${NC}"
+    fi
+    echo ""
 fi
-
-# Get alternative agents
-ALTERNATIVES=$(jq -r ".taskTypeAgentMapping.\"${TASK_TYPE}\".alternatives[]? // empty" "$REGISTRY_FILE")
-if [ -n "$ALTERNATIVES" ]; then
-    echo -e "${BLUE}  Alternatives: $(echo $ALTERNATIVES | tr '\n' ', ' | sed 's/,$//')${NC}"
-fi
-echo ""
 
 # Get agent platform and capabilities
 AGENT_PLATFORM=$(jq -r ".agents.\"${PRIMARY_AGENT}\".platform // \"unknown\"" "$REGISTRY_FILE")
@@ -241,7 +344,6 @@ fi
 
 # Generate orchestration report
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
-REPORT_CONTENT=""
 
 if [ -n "$OUTPUT_FILE" ]; then
     cat > "$OUTPUT_FILE" << EOF
@@ -260,6 +362,9 @@ $DESCRIPTION
 - **Primary Agent:** $PRIMARY_AGENT
 - **Platform:** $AGENT_PLATFORM
 - **Type:** $AGENT_TYPE
+$(if [ "$USE_INTELLIGENT" == "true" ]; then echo "- **Selection Method:** Intelligent (multi-factor scoring)"; echo "- **Confidence:** $CONFIDENCE"; else echo "- **Selection Method:** Registry-based"; fi)
+
+$(if [ "$USE_INTELLIGENT" == "true" ] && [ "$SHOW_REASONING" == "true" ]; then echo "### Selection Reasoning"; echo ""; echo "$REASONING"; echo ""; echo "### Score Breakdown"; echo ""; echo '```json'; echo "$SELECTION_RESULT" | jq '.scores'; echo '```'; fi)
 
 ## Alternative Agents
 
@@ -274,7 +379,7 @@ See terminal output for platform-specific execution commands.
 $(if [ "$WITH_REVIEW" == "true" ]; then echo "Automated review enabled with:"; echo "$REVIEWERS" | sed 's/^/- /'; else echo "No automated review requested"; fi)
 
 ---
-*Generated by agent_orchestrator.sh*
+*Generated by agent_orchestrator.sh (Enhanced with Intelligent Selection)*
 EOF
 
     echo ""
@@ -300,3 +405,7 @@ echo -e "${YELLOW}Quick Reference:${NC}"
 echo -e "${BLUE}  View agent capabilities: jq '.agents.\"$PRIMARY_AGENT\"' $REGISTRY_FILE${NC}"
 echo -e "${BLUE}  Update registry: ./modules/automation/update_ai_agents_daily.sh${NC}"
 echo -e "${BLUE}  Run gate-pass review: ./modules/automation/gate_pass_review.sh <phase> .${NC}"
+if [ "$USE_INTELLIGENT" == "true" ]; then
+    echo -e "${BLUE}  Adjust selection weights: Edit $WEIGHTS_CONFIG${NC}"
+    echo -e "${BLUE}  View selection history: sqlite3 .claude-flow/agent-performance.db${NC}"
+fi

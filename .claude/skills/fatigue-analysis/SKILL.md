@@ -1,11 +1,46 @@
 ---
 name: fatigue-analysis
-description: Perform fatigue analysis using S-N curves and damage accumulation methods. Supports 221 S-N curves from 17 international standards (DNV, API, BS, ABS, etc.) for marine and offshore structural components.
+description: Perform fatigue analysis using S-N curves and damage accumulation methods.
+  Supports 221 S-N curves from 17 international standards (DNV, API, BS, ABS, etc.)
+  for marine and offshore structural components.
+updated: '2026-01-07'
 ---
-
 # Fatigue Analysis Skill
 
 Perform fatigue analysis for marine and offshore structural components using industry-standard S-N curves and damage accumulation methods.
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+dependencies:
+  signal-analysis: '>=1.0.0,<2.0.0'
+  structural-analysis: '>=1.0.0,<2.0.0'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 

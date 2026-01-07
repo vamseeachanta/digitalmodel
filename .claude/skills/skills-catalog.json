@@ -1,0 +1,284 @@
+{
+  "version": "1.0.0",
+  "generated": "D:\\workspace-hub\\digitalmodel",
+  "skills": {
+    "aqwa-analysis": {
+      "version": "3.0.0",
+      "description": "Integrate with AQWA hydrodynamic software for RAO computation, damping analysis, and coefficient extraction. Use for AQWA file processing, RAO calculation, hydrodynamic coefficient extraction, and pre/post processing workflows.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": null,
+      "dependencies": {
+        "hydrodynamics": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "AQWA analysis",
+        "RAO extraction",
+        "added mass calculation",
+        "damping coefficient",
+        "wave diffraction",
+        "radiation analysis",
+        "AQWA-LINE",
+        "AQWA-DRIFT",
+        "AQWA-LIBRIUM",
+        "AQWA-NAUT",
+        ".LIS files",
+        ".DAT files",
+        ".MES files"
+      ]
+    },
+    "cad-engineering": {
+      "version": "1.0.0",
+      "description": "Expert CAD Engineering Specialist with comprehensive knowledge of CAD systems, file formats, and conversion technologies. Use for CAD software guidance, file format conversions, technical drawings, 3D modeling, PDF to CAD conversions, and interoperability between open-source and proprietary CAD systems.",
+      "category": "cad-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": null,
+      "dependencies": {},
+      "keywords": [
+        "CAD software",
+        "file format conversion",
+        "DWG DXF",
+        "PDF to CAD",
+        "FreeCAD",
+        "LibreCAD",
+        "OpenSCAD",
+        "AutoCAD",
+        "SolidWorks",
+        "CATIA",
+        "STEP IGES",
+        "technical drawings",
+        "3D modeling"
+      ]
+    },
+    "catenary-riser": {
+      "version": "1.0.0",
+      "description": "Analyze catenary and lazy wave riser configurations for static shape, forces, and OrcaFlex model generation. Use for riser static configuration analysis, catenary force calculations, lazy wave design, and generating OrcaFlex models from catenary parameters.",
+      "category": "general",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0"
+      },
+      "keywords": []
+    },
+    "cathodic-protection": {
+      "version": "1.0.0",
+      "description": "Expert Electrical Engineer specializing in cathodic protection (CP) systems for oil and gas industry. Use for CP system design, corrosion prevention, sacrificial anode calculations, impressed current systems, pipeline integrity, coating defects, and NACE/ISO standards compliance.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": null,
+      "dependencies": {},
+      "keywords": [
+        "cathodic protection",
+        "corrosion prevention",
+        "sacrificial anode",
+        "impressed current",
+        "ICCP system",
+        "SACP system",
+        "pipeline CP",
+        "anode design",
+        "NACE standards",
+        "ISO 15589",
+        "DNV-RP-B401",
+        "coating breakdown",
+        "stray current"
+      ]
+    },
+    "fatigue-analysis": {
+      "version": "1.0.0",
+      "description": "Perform fatigue analysis using S-N curves and damage accumulation methods. Supports 221 S-N curves from 17 international standards (DNV, API, BS, ABS, etc.) for marine and offshore structural components.",
+      "category": "general",
+      "python_min_version": "3.10",
+      "orcaflex_version": null,
+      "dependencies": {
+        "signal-analysis": ">=1.0.0,<2.0.0",
+        "structural-analysis": ">=1.0.0,<2.0.0"
+      },
+      "keywords": []
+    },
+    "freecad-automation": {
+      "version": "1.0.0",
+      "description": "AI-powered automation agent for FreeCAD CAD operations including natural language processing, batch processing, parametric design, and marine engineering applications. Use for CAD automation, drawing generation, FEM preprocessing, and integration with offshore analysis tools.",
+      "category": "cad-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": null,
+      "dependencies": {
+        "cad-engineering": ">=1.0.0,<2.0.0",
+        "gmsh-meshing": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "FreeCAD automation",
+        "parametric modeling",
+        "CAD batch processing",
+        "technical drawings",
+        "assembly management",
+        "FEM preprocessing",
+        "hull design",
+        "marine CAD",
+        ".FCStd files",
+        "Python scripting CAD"
+      ]
+    },
+    "gmsh-meshing": {
+      "version": "1.0.0",
+      "description": "Specialized AI agent for finite element mesh generation and manipulation using GMSH. Use for 1D/2D/3D mesh generation, geometry processing, quality assessment, optimization, and integration with OrcaFlex, ANSYS, and OpenFOAM.",
+      "category": "cad-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": null,
+      "dependencies": {},
+      "keywords": [
+        "mesh generation",
+        "finite element mesh",
+        "GMSH",
+        "panel mesh",
+        "mesh quality",
+        "mesh optimization",
+        "STEP to mesh",
+        "STL mesh",
+        "mooring discretization",
+        "structural mesh"
+      ]
+    },
+    "hydrodynamics": {
+      "version": "1.0.0",
+      "description": "Manage hydrodynamic coefficients, wave spectra, and environmental loading for vessel response analysis. Use for 6\u00d76 matrix management, wave spectrum modeling, OCIMF loading calculations, and RAO interpolation.",
+      "category": "general",
+      "python_min_version": "3.10",
+      "orcaflex_version": null,
+      "dependencies": {},
+      "keywords": []
+    },
+    "mooring-design": {
+      "version": "1.0.0",
+      "description": "Design and analyze mooring systems including CALM and SALM buoys, catenary moorings, and spread mooring configurations. Covers mooring line design, safety factors, environmental loading, and compliance with DNV, API, and ABS standards.",
+      "category": "general",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0",
+        "hydrodynamics": ">=1.0.0,<2.0.0"
+      },
+      "keywords": []
+    },
+    "orcaflex-file-conversion": {
+      "version": "1.0.0",
+      "description": "Convert OrcaFlex files between formats (.dat, .yml, .sim) for digital analysis and automation. Supports bidirectional conversion, batch processing, and format standardization.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {},
+      "keywords": [
+        "convert OrcaFlex files",
+        ".dat to .yml conversion",
+        ".yml to .dat conversion",
+        ".sim to .dat conversion",
+        ".sim to .yml conversion",
+        "OrcaFlex file format conversion",
+        "batch OrcaFlex conversion",
+        "digitally analyze OrcaFlex files"
+      ]
+    },
+    "orcaflex-model-generator": {
+      "version": "1.0.0",
+      "description": "Generate OrcaFlex models from templates using component assembly with lookup tables for vessels, risers, materials, and environments.",
+      "category": "general",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-file-conversion": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "generate OrcaFlex model",
+        "create riser model",
+        "SCR analysis",
+        "model from template",
+        "component assembly",
+        "parametric model generation"
+      ]
+    },
+    "orcaflex-modeling": {
+      "version": "2.0.0",
+      "description": "Setup, configure, and run OrcaFlex hydrodynamic simulations using the universal runner. Use for marine/offshore analysis including static analysis, dynamic simulations, mooring analysis, and batch processing of OrcaFlex models.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-file-conversion": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "OrcaFlex model setup",
+        "hydrodynamic simulation",
+        "mooring analysis",
+        "riser analysis",
+        "installation analysis",
+        "batch OrcaFlex processing",
+        ".yml model files",
+        ".dat model files",
+        ".sim simulation files"
+      ]
+    },
+    "orcaflex-post-processing": {
+      "version": "1.0.0",
+      "description": "Post-process OrcaFlex simulation results using OPP (OrcaFlex Post-Process). Use for extracting summary statistics, linked statistics, range graphs, time series, histograms, and generating interactive HTML reports from .sim files.",
+      "category": "general",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0",
+        "signal-analysis": ">=1.0.0,<2.0.0"
+      },
+      "keywords": []
+    },
+    "orcawave-analysis": {
+      "version": "1.0.0",
+      "description": "Expert agent for OrcaWave diffraction/radiation analysis with deep expertise in marine hydrodynamics and panel method computations. Use for wave-structure interaction, added mass/damping calculations, QTF computation, and OrcaFlex hydrodynamic database generation.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "hydrodynamics": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "OrcaWave analysis",
+        "diffraction analysis",
+        "radiation damping",
+        "added mass calculation",
+        "multi-body interaction",
+        "QTF computation",
+        "panel mesh generation",
+        "hydrodynamic database",
+        "wave-structure interaction",
+        "frequency domain analysis"
+      ]
+    },
+    "signal-analysis": {
+      "version": "1.0.0",
+      "description": "Perform signal processing, rainflow cycle counting, and spectral analysis for fatigue and time series data. Use for analyzing stress time histories, computing FFT/PSD, extracting fatigue cycles (ASTM E1049-85), and batch processing OrcaFlex signals.",
+      "category": "general",
+      "python_min_version": "3.10",
+      "orcaflex_version": null,
+      "dependencies": {},
+      "keywords": []
+    },
+    "structural-analysis": {
+      "version": "1.0.0",
+      "description": "Perform structural analysis including stress calculations, buckling checks, and capacity verification per DNV, API, and ISO standards. Covers Von Mises stress, plate buckling, member capacity, and safety factor reporting.",
+      "category": "general",
+      "python_min_version": "3.10",
+      "orcaflex_version": null,
+      "dependencies": {},
+      "keywords": []
+    },
+    "viv-analysis": {
+      "version": "1.0.0",
+      "description": "Assess vortex-induced vibration (VIV) for risers and tubular members with natural frequency and safety factor calculations. Use for VIV susceptibility analysis, natural frequency calculation, vortex shedding assessment, and tubular member fatigue from VIV.",
+      "category": "general",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "structural-analysis": ">=1.0.0,<2.0.0"
+      },
+      "keywords": []
+    }
+  }
+}

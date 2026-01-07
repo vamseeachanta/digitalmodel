@@ -1,0 +1,110 @@
+# Quality Gates CI/CD Workflow
+name: Quality Gates
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  quality-gates:
+    name: Run Quality Gates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          uv pip install -e .
+          uv pip install pytest pytest-cov ruff bandit pyyaml loguru click
+
+      - name: Create reports directory
+        run: mkdir -p reports
+
+      - name: Run Quality Gates
+        run: |
+          python -m digitalmodel.modules.automation.quality_gates_cli check --json
+        continue-on-error: false
+
+      - name: Upload quality gate results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-gate-results
+          path: |
+            reports/quality_gates_results.json
+            reports/bandit_report.json
+            coverage.json
+          retention-days: 30
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            htmlcov/
+            coverage.xml
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            try {
+              const results = JSON.parse(fs.readFileSync('reports/quality_gates_results.json', 'utf8'));
+
+              const statusEmoji = {
+                'pass': '✅',
+                'warning': '⚠️',
+                'failure': '❌',
+                'skipped': '⏭️'
+              };
+
+              let comment = '## Quality Gates Report\n\n';
+              comment += `**Overall Status:** ${statusEmoji[results.overall_status]} ${results.overall_status.toUpperCase()}\n\n`;
+              comment += `**Summary:**\n`;
+              comment += `- ✅ Passed: ${results.gates_passed}\n`;
+              comment += `- ⚠️ Warned: ${results.gates_warned}\n`;
+              comment += `- ❌ Failed: ${results.gates_failed}\n`;
+              comment += `- ⏭️ Skipped: ${results.gates_skipped}\n\n`;
+              comment += `**Gate Results:**\n\n`;
+
+              results.results.forEach(result => {
+                comment += `### ${statusEmoji[result.status]} ${result.gate_name}\n`;
+                comment += `${result.message}\n\n`;
+
+                if (Object.keys(result.metrics).length > 0) {
+                  comment += '**Metrics:**\n';
+                  for (const [key, value] of Object.entries(result.metrics)) {
+                    comment += `- ${key}: ${typeof value === 'number' ? value.toFixed(2) : value}\n`;
+                  }
+                  comment += '\n';
+                }
+              });
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (error) {
+              console.error('Failed to post comment:', error);
+            }

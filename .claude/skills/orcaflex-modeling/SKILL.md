@@ -1,24 +1,58 @@
 ---
 name: orcaflex-modeling
-description: Setup, configure, and run OrcaFlex hydrodynamic simulations using the universal runner. Use for marine/offshore analysis including static analysis, dynamic simulations, mooring analysis, and batch processing of OrcaFlex models.
+description: Setup, configure, and run OrcaFlex hydrodynamic simulations using the
+  universal runner. Use for marine/offshore analysis including static analysis, dynamic
+  simulations, mooring analysis, and batch processing of OrcaFlex models.
 version: 2.0.0
 updated: 2025-01-02
 category: offshore-engineering
 triggers:
-  - OrcaFlex model setup
-  - hydrodynamic simulation
-  - mooring analysis
-  - riser analysis
-  - installation analysis
-  - batch OrcaFlex processing
-  - .yml model files
-  - .dat model files
-  - .sim simulation files
+- OrcaFlex model setup
+- hydrodynamic simulation
+- mooring analysis
+- riser analysis
+- installation analysis
+- batch OrcaFlex processing
+- .yml model files
+- .dat model files
+- .sim simulation files
 ---
-
 # OrcaFlex Modeling Skill
 
 Create, configure, and execute OrcaFlex hydrodynamic simulations for offshore engineering analysis.
+
+## Version Metadata
+
+```yaml
+version: 2.0.0
+python_min_version: '3.10'
+dependencies:
+  orcaflex-file-conversion: '>=1.0.0,<2.0.0'
+orcaflex_version: '>=11.0'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [2.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 

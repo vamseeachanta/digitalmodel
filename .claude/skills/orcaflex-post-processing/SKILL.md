@@ -1,11 +1,47 @@
 ---
 name: orcaflex-post-processing
-description: Post-process OrcaFlex simulation results using OPP (OrcaFlex Post-Process). Use for extracting summary statistics, linked statistics, range graphs, time series, histograms, and generating interactive HTML reports from .sim files.
+description: Post-process OrcaFlex simulation results using OPP (OrcaFlex Post-Process).
+  Use for extracting summary statistics, linked statistics, range graphs, time series,
+  histograms, and generating interactive HTML reports from .sim files.
+updated: '2026-01-07'
 ---
-
 # OrcaFlex Post-Processing Skill
 
 Extract and analyze results from OrcaFlex simulation files (.sim) using the OPP (OrcaFlex Post-Process) module.
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+dependencies:
+  orcaflex-modeling: '>=2.0.0,<3.0.0'
+  signal-analysis: '>=1.0.0,<2.0.0'
+orcaflex_version: '>=11.0'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 
