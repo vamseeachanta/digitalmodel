@@ -6,8 +6,19 @@ Demonstrates using the new DataValidator with existing data procurement workflow
 
 import pandas as pd
 import logging
+import sys
+import os
 from pathlib import Path
-from src.digitalmodel.validators.data_validator import DataValidator
+
+# Set UTF-8 encoding for Windows console
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+# Add src to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+
+from digitalmodel.validators.data_validator import DataValidator
 
 # Setup logging
 logging.basicConfig(
@@ -103,7 +114,12 @@ def demo_integration_with_procurement():
 
     # Import existing validator
     try:
-        from src.data_procurement.validators.data_validator import DataValidator as ProcurementValidator
+        import importlib.util
+        spec = importlib.util.find_spec("data_procurement.validators.data_validator")
+        if spec is not None:
+            from data_procurement.validators.data_validator import DataValidator as ProcurementValidator
+        else:
+            raise ImportError("data_procurement not in path")
 
         print("\n✅ Found existing data_procurement validator")
         print("   The new validator in src/digitalmodel/validators/ provides:")
@@ -179,9 +195,11 @@ if __name__ == '__main__':
     print("integrated into digitalmodel repository.")
     print("\nInstalled components:")
     print("  ✅ src/digitalmodel/validators/data_validator.py")
+    print("  ✅ src/digitalmodel/validators/__init__.py")
     print("  ✅ config/validation/validation_config.yaml")
     print("  ✅ examples/validation_examples.py")
     print("  ✅ examples/validation_integration_demo.py (this file)")
+    print("\nNote: Import using 'from digitalmodel.validators import DataValidator'")
 
     try:
         # Run demos
