@@ -45,7 +45,7 @@ def dnv_base_config():
             },
             "environment": {
                 "seawater_resistivity_ohm_cm": 25.0,
-                "temperature_c": 10.0,
+                "seawater_temperature_C": 10.0,
             },
             "design_data": {
                 "design_life": 25.0,
