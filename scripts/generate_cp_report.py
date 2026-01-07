@@ -41,7 +41,7 @@ def create_saipem_config():
             },
             "environment": {
                 "seawater_resistivity_ohm_cm": 25.0,
-                "temperature_c": 10.0,
+                "seawater_temperature_C": 10.0,
                 "free_corrosion_potential_V": -0.630,
                 "anode_potential_V": -0.950,
             },
@@ -94,7 +94,7 @@ def create_deepwater_36inch_config():
             },
             "environment": {
                 "seawater_resistivity_ohm_cm": 20.0,  # Slightly lower in deepwater
-                "temperature_c": 4.0,  # Cold deepwater temperature
+                "seawater_temperature_C": 4.0,  # Cold deepwater temperature
                 "free_corrosion_potential_V": -0.630,
                 "anode_potential_V": -0.950,
             },
