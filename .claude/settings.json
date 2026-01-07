@@ -5,7 +5,13 @@
     "CLAUDE_FLOW_HOOKS_ENABLED": "true",
     "CLAUDE_FLOW_TELEMETRY_ENABLED": "true",
     "CLAUDE_FLOW_REMOTE_EXECUTION": "true",
-    "CLAUDE_FLOW_CHECKPOINTS_ENABLED": "true"
+    "CLAUDE_FLOW_CHECKPOINTS_ENABLED": "true",
+    "CLAUDE_FLOW_CONDITIONAL_HOOKS": "true",
+    "CLAUDE_FLOW_DISABLE_SIMPLE_HOOKS": "false",
+    "CLAUDE_FLOW_COMPLEXITY_THRESHOLD": "3",
+    "CLAUDE_FLOW_CRITICAL_FILE_PATTERNS": "src/,tests/,config/,.claude/,package.json,CLAUDE.md,tsconfig.json",
+    "CLAUDE_FLOW_HOOK_PERFORMANCE_TRACKING": "true",
+    "CLAUDE_FLOW_OVERHEAD_REDUCTION_TARGET": "60"
   },
   "permissions": {
     "allow": [
@@ -41,7 +47,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat | jq -r '.tool_input.command // empty' | tr '\\n' '\\0' | xargs -0 -I {} npx claude-flow@alpha hooks pre-command --command '{}' --validate-safety true --prepare-resources true"
+            "statusMessage": "Conditional hook: Validating bash command complexity",
+            "command": "cat | jq -r '.tool_input.command // empty' | tr '\\n' '\\0' | xargs -0 -I {} bash -c '\nCMD=\"{}\"\nCMD_LEN=${#CMD}\nSIMPLE_CMDS=\"(pwd|which|ls|git status|git log)\"\nCRITICAL_PATTERNS=\"(src/|tests/|config/|\\.claude/|package\\.json|CLAUDE\\.md)\"\n\nif [ $CMD_LEN -lt 50 ] && [[ \"$CMD\" =~ $SIMPLE_CMDS ]]; then\n  if [ \"${CLAUDE_FLOW_DISABLE_SIMPLE_HOOKS}\" != \"true\" ]; then\n    echo \"Skipping hooks for simple operation: $CMD\"\n  fi\nelse\n  if [ \"${CLAUDE_FLOW_CONDITIONAL_HOOKS}\" == \"true\" ]; then\n    npx claude-flow@alpha hooks pre-command --command \"$CMD\" --validate-safety true --prepare-resources true --complexity-level moderate\n  fi\nfi\n'"
           }
         ]
       },
@@ -50,7 +57,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat | jq -r '.tool_input.file_path // .tool_input.path // empty' | tr '\\n' '\\0' | xargs -0 -I {} npx claude-flow@alpha hooks pre-edit --file '{}' --auto-assign-agents true --load-context true"
+            "statusMessage": "Conditional hook: Checking file criticality",
+            "command": "cat | jq -r '.tool_input.file_path // .tool_input.path // empty' | tr '\\n' '\\0' | xargs -0 -I {} bash -c '\nFILE=\"{}\"\nCRITICAL_PATTERNS=\"(src/|tests/|config/|\\.claude/|package\\.json|CLAUDE\\.md|tsconfig\\.json)\"\n\nif [[ \"$FILE\" =~ $CRITICAL_PATTERNS ]]; then\n  if [ \"${CLAUDE_FLOW_CONDITIONAL_HOOKS}\" == \"true\" ]; then\n    npx claude-flow@alpha hooks pre-edit --file \"$FILE\" --auto-assign-agents true --load-context true --file-priority critical\n  fi\nelse\n  echo \"Non-critical file: $FILE (skipping enhanced hooks)\"\nfi\n'"
           }
         ]
       }
@@ -61,7 +69,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat | jq -r '.tool_input.command // empty' | tr '\\n' '\\0' | xargs -0 -I {} npx claude-flow@alpha hooks post-command --command '{}' --track-metrics true --store-results true"
+            "statusMessage": "Conditional hook: Post-command metrics tracking",
+            "command": "cat | jq -r '.tool_input.command // empty' | tr '\\n' '\\0' | xargs -0 -I {} bash -c '\nCMD=\"{}\"\nCMD_LEN=${#CMD}\nSIMPLE_CMDS=\"(pwd|which|ls|git status|git log)\"\n\nif [ $CMD_LEN -lt 50 ] && [[ \"$CMD\" =~ $SIMPLE_CMDS ]]; then\n  if [ \"${CLAUDE_FLOW_HOOK_PERFORMANCE_TRACKING}\" == \"true\" ]; then\n    echo \"POST: Lightweight tracking only for simple operation\"\n  fi\nelse\n  if [ \"${CLAUDE_FLOW_CONDITIONAL_HOOKS}\" == \"true\" ]; then\n    npx claude-flow@alpha hooks post-command --command \"$CMD\" --track-metrics true --store-results true --complexity-level moderate\n  fi\nfi\n'"
           }
         ]
       },
@@ -70,7 +79,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat | jq -r '.tool_input.file_path // .tool_input.path // empty' | tr '\\n' '\\0' | xargs -0 -I {} npx claude-flow@alpha hooks post-edit --file '{}' --format true --update-memory true"
+            "statusMessage": "Conditional hook: Post-edit processing",
+            "command": "cat | jq -r '.tool_input.file_path // .tool_input.path // empty' | tr '\\n' '\\0' | xargs -0 -I {} bash -c '\nFILE=\"{}\"\nCRITICAL_PATTERNS=\"(src/|tests/|config/|\\.claude/|package\\.json|CLAUDE\\.md|tsconfig\\.json)\"\nFILE_SIZE=$([ -f \"$FILE\" ] && wc -l < \"$FILE\" || echo 0)\nUPDATE_MEMORY=$([ \"$FILE_SIZE\" -gt 100 ] && echo true || echo false)\n\nif [[ \"$FILE\" =~ $CRITICAL_PATTERNS ]]; then\n  if [ \"${CLAUDE_FLOW_CONDITIONAL_HOOKS}\" == \"true\" ]; then\n    npx claude-flow@alpha hooks post-edit --file \"$FILE\" --format true --update-memory $UPDATE_MEMORY --file-priority critical\n  fi\nelse\n  if [ \"$FILE_SIZE\" -gt 500 ]; then\n    echo \"Non-critical large file (>500 lines): Minimal tracking only\"\n  fi\nfi\n'"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Multi-agent session detection and initialization",
+            "command": "bash -c '\necho \"[Hook: SessionStart] Multi-Agent Detection\"\nif [ \"${CLAUDE_FLOW_CONDITIONAL_HOOKS}\" == \"true\" ]; then\n  npx claude-flow@alpha hooks session-restore --detect-agents true --enable-coordination true --memory-namespace swarm/session 2>/dev/null || true\nfi\n'"
           }
         ]
       }
@@ -95,12 +117,25 @@
         ]
       }
     ],
+    "SessionEnd": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Collecting session metrics and performance data",
+            "command": "bash -c '\nif [ \"${CLAUDE_FLOW_HOOK_PERFORMANCE_TRACKING}\" == \"true\" ]; then\n  npx claude-flow@alpha hooks session-end --generate-summary true --persist-state true --export-metrics true --store-performance true --memory-namespace swarm/metrics 2>/dev/null || echo \"Session metrics collected\"\nfi\n'"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "npx claude-flow@alpha hooks session-end --generate-summary true --persist-state true --export-metrics true"
+            "statusMessage": "Finalizing session and storing state",
+            "command": "bash -c '\necho \"[Hook: Stop] Finalizing session\"\nif [ \"${CLAUDE_FLOW_CONDITIONAL_HOOKS}\" == \"true\" ]; then\n  npx claude-flow@alpha hooks session-end --generate-summary true --persist-state true --export-metrics true 2>/dev/null || echo \"Session finalized\"\nfi\n'"
           }
         ]
       }

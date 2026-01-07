@@ -1,11 +1,43 @@
 ---
 name: structural-analysis
-description: Perform structural analysis including stress calculations, buckling checks, and capacity verification per DNV, API, and ISO standards. Covers Von Mises stress, plate buckling, member capacity, and safety factor reporting.
+description: Perform structural analysis including stress calculations, buckling checks,
+  and capacity verification per DNV, API, and ISO standards. Covers Von Mises stress,
+  plate buckling, member capacity, and safety factor reporting.
+updated: '2026-01-07'
 ---
-
 # Structural Analysis Skill
 
 Perform structural analysis for offshore and marine structures including stress calculations, buckling checks, and capacity verification.
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 

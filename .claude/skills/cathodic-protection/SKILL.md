@@ -1,28 +1,60 @@
 ---
 name: cathodic-protection
-description: Expert Electrical Engineer specializing in cathodic protection (CP) systems for oil and gas industry. Use for CP system design, corrosion prevention, sacrificial anode calculations, impressed current systems, pipeline integrity, coating defects, and NACE/ISO standards compliance.
+description: Expert Electrical Engineer specializing in cathodic protection (CP) systems
+  for oil and gas industry. Use for CP system design, corrosion prevention, sacrificial
+  anode calculations, impressed current systems, pipeline integrity, coating defects,
+  and NACE/ISO standards compliance.
 version: 1.0.0
 updated: 2025-01-02
 category: offshore-engineering
 triggers:
-  - cathodic protection
-  - corrosion prevention
-  - sacrificial anode
-  - impressed current
-  - ICCP system
-  - SACP system
-  - pipeline CP
-  - anode design
-  - NACE standards
-  - ISO 15589
-  - DNV-RP-B401
-  - coating breakdown
-  - stray current
+- cathodic protection
+- corrosion prevention
+- sacrificial anode
+- impressed current
+- ICCP system
+- SACP system
+- pipeline CP
+- anode design
+- NACE standards
+- ISO 15589
+- DNV-RP-B401
+- coating breakdown
+- stray current
 ---
-
 # Cathodic Protection Skill
 
 Expert guidance on cathodic protection (CP) systems for offshore platforms, subsea pipelines, storage tanks, and onshore oil and gas facilities.
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 

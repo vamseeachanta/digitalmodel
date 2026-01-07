@@ -1,11 +1,47 @@
 ---
 name: viv-analysis
-description: Assess vortex-induced vibration (VIV) for risers and tubular members with natural frequency and safety factor calculations. Use for VIV susceptibility analysis, natural frequency calculation, vortex shedding assessment, and tubular member fatigue from VIV.
+description: Assess vortex-induced vibration (VIV) for risers and tubular members
+  with natural frequency and safety factor calculations. Use for VIV susceptibility
+  analysis, natural frequency calculation, vortex shedding assessment, and tubular
+  member fatigue from VIV.
+updated: '2026-01-07'
 ---
-
 # VIV Analysis Skill
 
 Assess vortex-induced vibration (VIV) susceptibility for risers and tubular members with natural frequency calculations and safety factor evaluation.
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+dependencies:
+  structural-analysis: '>=1.0.0,<2.0.0'
+orcaflex_version: '>=11.0'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 

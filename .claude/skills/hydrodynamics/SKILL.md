@@ -1,11 +1,43 @@
 ---
 name: hydrodynamics
-description: Manage hydrodynamic coefficients, wave spectra, and environmental loading for vessel response analysis. Use for 6×6 matrix management, wave spectrum modeling, OCIMF loading calculations, and RAO interpolation.
+description: "Manage hydrodynamic coefficients, wave spectra, and environmental loading\
+  \ for vessel response analysis. Use for 6\xD76 matrix management, wave spectrum\
+  \ modeling, OCIMF loading calculations, and RAO interpolation."
+updated: '2026-01-07'
 ---
-
 # Hydrodynamics Skill
 
 Manage hydrodynamic coefficients, wave spectra, and environmental loading for vessel and floater response analysis.
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 

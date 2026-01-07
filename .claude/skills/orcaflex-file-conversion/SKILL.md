@@ -1,23 +1,55 @@
 ---
 name: orcaflex-file-conversion
-description: Convert OrcaFlex files between formats (.dat, .yml, .sim) for digital analysis and automation. Supports bidirectional conversion, batch processing, and format standardization.
+description: Convert OrcaFlex files between formats (.dat, .yml, .sim) for digital
+  analysis and automation. Supports bidirectional conversion, batch processing, and
+  format standardization.
 version: 1.0.0
 updated: 2026-01-02
 category: offshore-engineering
 triggers:
-  - convert OrcaFlex files
-  - .dat to .yml conversion
-  - .yml to .dat conversion
-  - .sim to .dat conversion
-  - .sim to .yml conversion
-  - OrcaFlex file format conversion
-  - batch OrcaFlex conversion
-  - digitally analyze OrcaFlex files
+- convert OrcaFlex files
+- .dat to .yml conversion
+- .yml to .dat conversion
+- .sim to .dat conversion
+- .sim to .yml conversion
+- OrcaFlex file format conversion
+- batch OrcaFlex conversion
+- digitally analyze OrcaFlex files
 ---
-
 # OrcaFlex File Conversion Skill
 
 Convert OrcaFlex model files between binary (.dat, .sim) and YAML (.yml) formats for digital analysis, automation, and version control.
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+orcaflex_version: '>=11.0'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 

@@ -1,25 +1,56 @@
 ---
 name: gmsh-meshing
-description: Specialized AI agent for finite element mesh generation and manipulation using GMSH. Use for 1D/2D/3D mesh generation, geometry processing, quality assessment, optimization, and integration with OrcaFlex, ANSYS, and OpenFOAM.
+description: Specialized AI agent for finite element mesh generation and manipulation
+  using GMSH. Use for 1D/2D/3D mesh generation, geometry processing, quality assessment,
+  optimization, and integration with OrcaFlex, ANSYS, and OpenFOAM.
 version: 1.0.0
 updated: 2025-01-02
 category: cad-engineering
 triggers:
-  - mesh generation
-  - finite element mesh
-  - GMSH
-  - panel mesh
-  - mesh quality
-  - mesh optimization
-  - STEP to mesh
-  - STL mesh
-  - mooring discretization
-  - structural mesh
+- mesh generation
+- finite element mesh
+- GMSH
+- panel mesh
+- mesh quality
+- mesh optimization
+- STEP to mesh
+- STL mesh
+- mooring discretization
+- structural mesh
 ---
-
 # GMSH Meshing Skill
 
 Specialized expertise for finite element mesh generation and manipulation using GMSH with quality assessment and engineering tool integration.
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 

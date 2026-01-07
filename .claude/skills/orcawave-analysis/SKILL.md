@@ -1,25 +1,60 @@
 ---
 name: orcawave-analysis
-description: Expert agent for OrcaWave diffraction/radiation analysis with deep expertise in marine hydrodynamics and panel method computations. Use for wave-structure interaction, added mass/damping calculations, QTF computation, and OrcaFlex hydrodynamic database generation.
+description: Expert agent for OrcaWave diffraction/radiation analysis with deep expertise
+  in marine hydrodynamics and panel method computations. Use for wave-structure interaction,
+  added mass/damping calculations, QTF computation, and OrcaFlex hydrodynamic database
+  generation.
 version: 1.0.0
 updated: 2025-01-02
 category: offshore-engineering
 triggers:
-  - OrcaWave analysis
-  - diffraction analysis
-  - radiation damping
-  - added mass calculation
-  - multi-body interaction
-  - QTF computation
-  - panel mesh generation
-  - hydrodynamic database
-  - wave-structure interaction
-  - frequency domain analysis
+- OrcaWave analysis
+- diffraction analysis
+- radiation damping
+- added mass calculation
+- multi-body interaction
+- QTF computation
+- panel mesh generation
+- hydrodynamic database
+- wave-structure interaction
+- frequency domain analysis
 ---
-
 # OrcaWave Analysis Skill
 
 Specialized expertise for OrcaWave diffraction/radiation analysis with panel method computations and OrcaFlex integration.
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+dependencies:
+  hydrodynamics: '>=1.0.0,<2.0.0'
+orcaflex_version: '>=11.0'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 

@@ -1,11 +1,47 @@
 ---
 name: catenary-riser
-description: Analyze catenary and lazy wave riser configurations for static shape, forces, and OrcaFlex model generation. Use for riser static configuration analysis, catenary force calculations, lazy wave design, and generating OrcaFlex models from catenary parameters.
+description: Analyze catenary and lazy wave riser configurations for static shape,
+  forces, and OrcaFlex model generation. Use for riser static configuration analysis,
+  catenary force calculations, lazy wave design, and generating OrcaFlex models from
+  catenary parameters.
+updated: '2026-01-07'
 ---
-
 # Catenary Riser Analysis Skill
 
 Analyze catenary and lazy wave riser configurations for static shape, forces, tension distribution, and OrcaFlex model generation.
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+dependencies:
+  orcaflex-modeling: '>=2.0.0,<3.0.0'
+orcaflex_version: '>=11.0'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 

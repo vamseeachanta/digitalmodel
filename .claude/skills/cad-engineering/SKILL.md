@@ -1,28 +1,60 @@
 ---
 name: cad-engineering
-description: Expert CAD Engineering Specialist with comprehensive knowledge of CAD systems, file formats, and conversion technologies. Use for CAD software guidance, file format conversions, technical drawings, 3D modeling, PDF to CAD conversions, and interoperability between open-source and proprietary CAD systems.
+description: Expert CAD Engineering Specialist with comprehensive knowledge of CAD
+  systems, file formats, and conversion technologies. Use for CAD software guidance,
+  file format conversions, technical drawings, 3D modeling, PDF to CAD conversions,
+  and interoperability between open-source and proprietary CAD systems.
 version: 1.0.0
 updated: 2025-01-02
 category: cad-engineering
 triggers:
-  - CAD software
-  - file format conversion
-  - DWG DXF
-  - PDF to CAD
-  - FreeCAD
-  - LibreCAD
-  - OpenSCAD
-  - AutoCAD
-  - SolidWorks
-  - CATIA
-  - STEP IGES
-  - technical drawings
-  - 3D modeling
+- CAD software
+- file format conversion
+- DWG DXF
+- PDF to CAD
+- FreeCAD
+- LibreCAD
+- OpenSCAD
+- AutoCAD
+- SolidWorks
+- CATIA
+- STEP IGES
+- technical drawings
+- 3D modeling
 ---
-
 # CAD Engineering Skill
 
 Expert guidance on Computer-Aided Design systems, file formats, conversion technologies, and interoperability between CAD platforms.
+
+## Version Metadata
+
+```yaml
+version: 1.0.0
+python_min_version: '3.10'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [1.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 

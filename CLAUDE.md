@@ -217,30 +217,167 @@ Should I proceed with this organization?"
 ### Migration & Planning
 `migration-planner`, `swarm-init`
 
-## 🎯 Claude Code vs MCP Tools
+## 🎯 Tool Responsibility Matrix
 
-### Claude Code Handles ALL EXECUTION:
-- **Task tool**: Spawn and run agents concurrently for actual work
-- File operations (Read, Write, Edit, MultiEdit, Glob, Grep)
-- Code generation and programming
-- Bash commands and system operations
-- Implementation work
-- Project navigation and analysis
-- TodoWrite and task management
-- Git operations
-- Package management
-- Testing and debugging
+### The Division of Labor
 
-### MCP Tools ONLY COORDINATE:
-- Swarm initialization (topology setup)
-- Agent type definitions (coordination patterns)
-- Task orchestration (high-level planning)
-- Memory management
-- Neural features
-- Performance tracking
-- GitHub integration
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    TOOL RESPONSIBILITY MATRIX                        │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  ╔═══════════════════════════════════════════════════════════════╗ │
+│  ║  MCP TOOLS (claude-flow)         │  CLAUDE CODE TASK TOOL     ║ │
+│  ║  Strategy & Coordination          │  Execution & Implementation║ │
+│  ╠═══════════════════════════════════╪═══════════════════════════╣ │
+│  ║  What: Define HOW to coordinate   │  What: DO the actual work ║ │
+│  ║  When: Setup phase (optional)     │  When: Always for agents  ║ │
+│  ║  Output: Coordination patterns    │  Output: Code, files, tests║ │
+│  ╚═══════════════════════════════════╧═══════════════════════════╝ │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-**KEY**: MCP coordinates the strategy, Claude Code's Task tool executes with real agents.
+### MCP Tools (Coordination Only)
+
+| Category | Tool | Purpose | Output |
+|----------|------|---------|--------|
+| **Topology** | `swarm_init` | Define mesh/hierarchical/ring/star patterns | Coordination structure |
+| **Agent Types** | `agent_spawn` | Register agent types for coordination | Agent definitions |
+| **Planning** | `task_orchestrate` | High-level workflow orchestration | Execution strategy |
+| **Memory** | `memory_usage` | Store/retrieve shared state | Context persistence |
+| **Monitoring** | `swarm_status` | Track coordination health | Status metrics |
+| **Neural** | `neural_train` | Train pattern recognition | Learning models |
+| **GitHub** | `github_swarm` | Repository coordination | Integration config |
+
+**MCP tools define the "HOW" but do NOT execute code or create files.**
+
+### Claude Code Task Tool (Execution Always)
+
+| Category | Capability | Tool | Output |
+|----------|-----------|------|--------|
+| **Agent Spawning** | Spawn real agents that execute | `Task(name, desc, type)` | Running agents |
+| **File Ops** | Read/Write/Edit code | Read, Write, Edit | Files created |
+| **Code Gen** | Generate implementations | Task tool → agents code | Source code |
+| **Terminal** | Run commands | Bash | Command output |
+| **Testing** | Execute tests | Bash (pytest/jest) | Test results |
+| **Git** | Commit/push/branch | Bash (git) | Version control |
+| **Packages** | Install dependencies | Bash (uv/npm) | Installed packages |
+| **Task Mgmt** | Track todos | TodoWrite | Todo list |
+
+**Task tool executes the "WHAT" - it creates, modifies, and runs everything.**
+
+### Decision Tree: Which Tool to Use?
+
+```
+                        ┌─────────────────────┐
+                        │  Need to do work?   │
+                        └──────────┬──────────┘
+                                   │
+                   ┌───────────────┴────────────────┐
+                   │                                │
+                   ▼                                ▼
+         ┌──────────────────┐            ┌──────────────────┐
+         │ Complex multi-   │            │ Simple task or   │
+         │ agent workflow?  │            │ single agent?    │
+         └────────┬─────────┘            └────────┬─────────┘
+                  │                               │
+         ┌────────┴────────┐                      │
+         │                 │                      │
+         ▼                 ▼                      ▼
+    ┌─────────┐      ┌─────────┐          ┌─────────────┐
+    │   YES   │      │   NO    │          │ TASK TOOL   │
+    └────┬────┘      └────┬────┘          │   ONLY      │
+         │                │               └─────────────┘
+         ▼                ▼
+    ┌─────────┐      ┌─────────┐
+    │ STEP 1: │      │ TASK    │
+    │   MCP   │      │ TOOL    │
+    │ (setup) │      │ ONLY    │
+    └────┬────┘      └─────────┘
+         │
+         ▼
+    ┌─────────┐
+    │ STEP 2: │
+    │  TASK   │
+    │  TOOL   │
+    │ (execute)│
+    └─────────┘
+```
+
+### Visual Workflow Diagram
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                     AGENT EXECUTION WORKFLOW                           │
+└────────────────────────────────────────────────────────────────────────┘
+
+PHASE 1: COORDINATION SETUP (Optional - only for complex multi-agent work)
+┌─────────────────────────────────────────────────────────────────────┐
+│  [Single Message]                                                   │
+│                                                                     │
+│  mcp__claude-flow__swarm_init                                       │
+│    ↓                                                                │
+│  Creates: mesh/hierarchical/ring/star topology                      │
+│    ↓                                                                │
+│  mcp__claude-flow__agent_spawn (researcher, coder, tester...)       │
+│    ↓                                                                │
+│  Defines: Agent types and coordination patterns                     │
+│    ↓                                                                │
+│  mcp__claude-flow__memory_usage                                     │
+│    ↓                                                                │
+│  Stores: Shared context and coordination rules                      │
+└─────────────────────────────────────────────────────────────────────┘
+                                  ↓
+                        CREATES COORDINATION
+                           INFRASTRUCTURE
+                                  ↓
+PHASE 2: AGENT EXECUTION (Required - where actual work happens)
+┌─────────────────────────────────────────────────────────────────────┐
+│  [Single Message - All Parallel]                                    │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ Task("Agent 1", "Full instructions...", "researcher")        │  │
+│  │   ├─ Runs: pre-task hook (coordination)                      │  │
+│  │   ├─ Executes: Research analysis                             │  │
+│  │   ├─ Stores: Findings in memory                              │  │
+│  │   └─ Runs: post-task hook (sync)                             │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│         ║ (Parallel)                                               │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ Task("Agent 2", "Full instructions...", "coder")             │  │
+│  │   ├─ Runs: pre-task hook (coordination)                      │  │
+│  │   ├─ Reads: Memory for context                               │  │
+│  │   ├─ Writes: Code files                                      │  │
+│  │   └─ Runs: post-task hook (sync)                             │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│         ║ (Parallel)                                               │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ Task("Agent 3", "Full instructions...", "tester")            │  │
+│  │   ├─ Runs: pre-task hook (coordination)                      │  │
+│  │   ├─ Reads: Code from agent 2                                │  │
+│  │   ├─ Writes: Test files                                      │  │
+│  │   └─ Runs: post-task hook (sync)                             │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+│  + TodoWrite { todos: [8-10 todos] }  (batched)                    │
+│  + Write/Read file operations         (batched)                    │
+│  + Bash commands                      (batched)                    │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Principle: Separation of Concerns
+
+| Concern | MCP Tools | Task Tool |
+|---------|-----------|-----------|
+| **What gets done** | ❌ No | ✅ Yes |
+| **How to coordinate** | ✅ Yes | ❌ No |
+| **Create files** | ❌ Never | ✅ Always |
+| **Run code** | ❌ Never | ✅ Always |
+| **Define topology** | ✅ Yes | ❌ No |
+| **Store context** | ✅ Yes | ✅ Yes (via hooks) |
+| **Execute agents** | ❌ No | ✅ Yes |
+
+**CRITICAL**: MCP tools are OPTIONAL. Task tool is REQUIRED for all agent work.
 
 ## 🚀 Quick Setup
 
@@ -317,24 +454,205 @@ Flow-Nexus extends MCP capabilities with 70+ cloud-based orchestration tools:
 
 ## 📋 Agent Coordination Protocol
 
-### Every Agent Spawned via Task Tool MUST:
+### Conditional Hook Execution Pattern
 
-**1️⃣ BEFORE Work:**
+**Hooks are ONLY required when:**
+- Multiple agents coordinate (3+ agents)
+- Cross-session memory needed
+- Complex workflow tracking required
+- Neural pattern training active
+
+**Hooks are OPTIONAL when:**
+- Single agent working alone
+- Simple tasks (<30 min)
+- No coordination needed
+- Ad-hoc exploratory work
+
+### Hook Execution Lifecycle
+
+**1️⃣ BEFORE Work (Conditional):**
 ```bash
-npx claude-flow@alpha hooks pre-task --description "[task]"
-npx claude-flow@alpha hooks session-restore --session-id "swarm-[id]"
+# Only if: Multi-agent coordination OR session restoration needed
+if [[ $AGENT_COUNT -ge 3 ]] || [[ -n $SESSION_ID ]]; then
+  npx claude-flow@alpha hooks pre-task --description "[task]"
+  npx claude-flow@alpha hooks session-restore --session-id "swarm-[id]"
+fi
 ```
 
-**2️⃣ DURING Work:**
+**2️⃣ DURING Work (Conditional):**
 ```bash
-npx claude-flow@alpha hooks post-edit --file "[file]" --memory-key "swarm/[agent]/[step]"
-npx claude-flow@alpha hooks notify --message "[what was done]"
+# Only if: File changes need tracking OR memory coordination active
+if [[ $TRACK_CHANGES == "true" ]] || [[ $MEMORY_COORDINATION == "active" ]]; then
+  npx claude-flow@alpha hooks post-edit --file "[file]" --memory-key "swarm/[agent]/[step]"
+  npx claude-flow@alpha hooks notify --message "[what was done]"
+fi
 ```
 
-**3️⃣ AFTER Work:**
+**3️⃣ AFTER Work (Conditional):**
 ```bash
-npx claude-flow@alpha hooks post-task --task-id "[task]"
-npx claude-flow@alpha hooks session-end --export-metrics true
+# Only if: Session metrics needed OR multi-agent workflow
+if [[ $EXPORT_METRICS == "true" ]] || [[ $AGENT_COUNT -ge 3 ]]; then
+  npx claude-flow@alpha hooks post-task --task-id "[task]"
+  npx claude-flow@alpha hooks session-end --export-metrics true
+fi
+```
+
+### Simplified Pattern for Simple Tasks
+
+```javascript
+// ✅ SIMPLE: Single agent, no hooks needed
+Task("Quick Fix", "Fix typo in README.md", "coder")
+// Agent executes directly, no coordination overhead
+
+// ✅ COMPLEX: Multiple agents, hooks enabled
+Task("Backend Dev", "Build API. Run pre-task/post-task hooks.", "backend-dev")
+Task("Frontend Dev", "Build UI. Run pre-task/post-task hooks.", "coder")
+Task("Tester", "Write tests. Run pre-task/post-task hooks.", "tester")
+// Hooks coordinate between agents
+```
+
+### Memory Retention Policies
+
+**SHORT-TERM MEMORY (Session-scoped)**
+- **Duration**: Current conversation only
+- **Namespace**: `swarm/session/[id]`
+- **Storage**: In-memory (Claude Code context)
+- **Use cases**: Temporary coordination, immediate context sharing
+- **Cleanup**: Auto-cleared on conversation end
+
+```javascript
+// Store short-term coordination data
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/session/current/api-contract",
+  namespace: "coordination",
+  value: JSON.stringify({
+    endpoints: ["/api/users", "/api/posts"],
+    timestamp: Date.now(),
+    ttl: "session"  // Cleared after conversation
+  })
+}
+```
+
+**MEDIUM-TERM MEMORY (Cross-session)**
+- **Duration**: 24-72 hours
+- **Namespace**: `swarm/shared/[feature]`
+- **Storage**: File-based (`.claude-flow/memory/`)
+- **Use cases**: Multi-session features, ongoing work
+- **Cleanup**: Auto-expire after 72 hours
+
+```javascript
+// Store medium-term feature context
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/shared/auth-implementation",
+  namespace: "coordination",
+  value: JSON.stringify({
+    status: "in-progress",
+    decisions: ["Using JWT", "bcrypt for hashing"],
+    files: ["src/auth.service.ts", "tests/auth.test.ts"],
+    timestamp: Date.now(),
+    ttl: "72h"  // Expires in 3 days
+  })
+}
+```
+
+**LONG-TERM MEMORY (Persistent knowledge)**
+- **Duration**: Indefinite (until explicitly removed)
+- **Namespace**: `swarm/knowledge/[domain]`
+- **Storage**: Git-tracked (`.claude-flow/knowledge/`)
+- **Use cases**: Patterns, standards, architectural decisions
+- **Cleanup**: Manual only
+
+```javascript
+// Store long-term architectural decisions
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/knowledge/project-patterns",
+  namespace: "coordination",
+  value: JSON.stringify({
+    patterns: {
+      authentication: "JWT with refresh tokens",
+      database: "Repository pattern with TypeORM",
+      testing: "Jest with 80% coverage minimum",
+      api: "RESTful with OpenAPI specs"
+    },
+    last_updated: Date.now(),
+    ttl: "indefinite"  // Never auto-expires
+  })
+}
+```
+
+### Memory Access Patterns
+
+**1. Check Before Store (Avoid Duplicates)**
+```javascript
+// Step 1: Check if memory exists
+mcp__claude-flow__memory_usage {
+  action: "retrieve",
+  key: "swarm/shared/dependencies",
+  namespace: "coordination"
+}
+
+// Step 2: Only store if not found or needs update
+if (memory_not_found || needs_update) {
+  mcp__claude-flow__memory_usage {
+    action: "store",
+    key: "swarm/shared/dependencies",
+    namespace: "coordination",
+    value: JSON.stringify({...})
+  }
+}
+```
+
+**2. Batch Memory Operations**
+```javascript
+// ✅ CORRECT: Single message with all memory ops
+[Single Message]:
+  mcp__claude-flow__memory_usage { action: "retrieve", key: "swarm/shared/api" }
+  mcp__claude-flow__memory_usage { action: "retrieve", key: "swarm/shared/db" }
+  mcp__claude-flow__memory_usage { action: "store", key: "swarm/session/status", ... }
+
+// ❌ WRONG: Multiple messages
+Message 1: retrieve api
+Message 2: retrieve db
+Message 3: store status
+```
+
+**3. Memory Cleanup (Scheduled)**
+```bash
+# Automatic cleanup runs daily
+npx claude-flow@alpha hooks memory-cleanup --dry-run  # Preview
+npx claude-flow@alpha hooks memory-cleanup --execute  # Run
+
+# Manual cleanup
+npx claude-flow@alpha hooks memory-cleanup --namespace "swarm/session/*"
+npx claude-flow@alpha hooks memory-cleanup --older-than "7d"
+```
+
+### Memory Namespace Hierarchy
+
+```
+swarm/
+├── session/          # SHORT-TERM (auto-cleanup on conversation end)
+│   └── [id]/
+│       ├── status
+│       ├── context
+│       └── temp-data
+│
+├── shared/           # MEDIUM-TERM (expires 72h)
+│   ├── [feature]/
+│   │   ├── decisions
+│   │   ├── files
+│   │   └── dependencies
+│   └── [module]/
+│       └── state
+│
+└── knowledge/        # LONG-TERM (persistent)
+    ├── patterns/
+    ├── standards/
+    ├── architecture/
+    └── best-practices/
 ```
 
 ## 🎯 Concurrent Execution Examples
@@ -443,6 +761,57 @@ Message 4: Write "file.js"
 - Documentation: https://github.com/ruvnet/claude-flow
 - Issues: https://github.com/ruvnet/claude-flow/issues
 - Flow-Nexus Platform: https://flow-nexus.ruv.io (registration required for cloud features)
+
+---
+
+## 📖 Quick Reference Card
+
+```
+╔════════════════════════════════════════════════════════════════╗
+║              TOOL USAGE QUICK REFERENCE                        ║
+╠════════════════════════════════════════════════════════════════╣
+║                                                                ║
+║  QUESTION: Do I need to execute code/create files?             ║
+║  ├─ YES → Use Claude Code Task Tool (ALWAYS)                   ║
+║  └─ NO  → Just planning? Skip tools entirely                   ║
+║                                                                ║
+║  QUESTION: Do I have 3+ agents coordinating?                   ║
+║  ├─ YES → Optional: Use MCP for topology setup                 ║
+║  │         Required: Task tool for execution                   ║
+║  └─ NO  → Task tool only, skip MCP                             ║
+║                                                                ║
+║  QUESTION: Should I use hooks?                                 ║
+║  ├─ Multi-agent (3+) → YES                                     ║
+║  ├─ Cross-session memory → YES                                 ║
+║  ├─ Complex workflow → YES                                     ║
+║  └─ Simple/single agent → NO                                   ║
+║                                                                ║
+║  BATCHING CHECKLIST:                                           ║
+║  ☑ All Task() calls in ONE message                             ║
+║  ☑ All file ops (Read/Write/Edit) in ONE message               ║
+║  ☑ All Bash commands in ONE message                            ║
+║  ☑ All TodoWrite todos in ONE call (8-10 min)                  ║
+║  ☑ All memory operations in ONE message                        ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+MEMORY TTL QUICK GUIDE:
+┌──────────────┬─────────────┬───────────────────────┐
+│ Type         │ Duration    │ Namespace             │
+├──────────────┼─────────────┼───────────────────────┤
+│ Short-term   │ Session     │ swarm/session/[id]    │
+│ Medium-term  │ 24-72 hours │ swarm/shared/[name]   │
+│ Long-term    │ Indefinite  │ swarm/knowledge/[...]  │
+└──────────────┴─────────────┴───────────────────────┘
+
+TOOL DECISION TREE:
+Need work done? → Task Tool (Required)
+  ├─ 3+ agents? → MCP setup (Optional) + Task Tool (Required)
+  └─ 1-2 agents? → Task Tool only
+
+Files created? → Task Tool (ALWAYS)
+Coordination? → MCP Tools (OPTIONAL)
+```
 
 ---
 
