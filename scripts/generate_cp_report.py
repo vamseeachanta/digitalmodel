@@ -7,6 +7,7 @@ ABOUTME: Compares DNV RP-F103:2010 vs 2016 methodologies with Plotly visualizati
 import sys
 from pathlib import Path
 import json
+import copy
 
 # Add src to path
 src_path = Path(__file__).parent.parent / "src"
@@ -85,7 +86,7 @@ def main():
 
     # Run DNV 2010 calculation (without wet storage enhancement)
     print("Running DNV RP-F103:2010 calculation...")
-    config_2010 = config.copy()
+    config_2010 = copy.deepcopy(config)  # Deep copy to avoid mutating original config
     config_2010['inputs']['pipeline']['wet_storage_years'] = 0.0  # No wet storage in 2010
     results_standard = cp.DNV_RP_F103_2010(config_2010)
     print("✓ DNV 2010 calculation complete")
