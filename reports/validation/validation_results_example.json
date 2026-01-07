@@ -1,0 +1,119 @@
+[
+  {
+    "passed": true,
+    "issues": [],
+    "summary": {
+      "field": "moment",
+      "physical_type": "moment",
+      "limits": {
+        "min": -1000000000.0,
+        "max": 1000000000.0,
+        "typical_max": 10000000.0
+      },
+      "values_checked": 1
+    },
+    "validator_name": "PhysicalPlausibilityValidator",
+    "data_hash": "94f05a6292d3206119589358a8cc8e1f87baf943e7df286cea6f14389eec3bfc",
+    "timestamp": "2026-01-07 00:39:53.764741"
+  },
+  {
+    "passed": true,
+    "issues": [],
+    "summary": {
+      "field": "tension",
+      "physical_type": "force",
+      "limits": {
+        "min": -100000000.0,
+        "max": 100000000.0,
+        "typical_max": 1000000.0
+      },
+      "values_checked": 1
+    },
+    "validator_name": "PhysicalPlausibilityValidator",
+    "data_hash": "94f05a6292d3206119589358a8cc8e1f87baf943e7df286cea6f14389eec3bfc",
+    "timestamp": "2026-01-07 00:39:53.768351"
+  },
+  {
+    "passed": true,
+    "issues": [],
+    "summary": {
+      "field": "displacement",
+      "physical_type": "displacement",
+      "limits": {
+        "min": -100,
+        "max": 100,
+        "typical_max": 20
+      },
+      "values_checked": 1
+    },
+    "validator_name": "PhysicalPlausibilityValidator",
+    "data_hash": "94f05a6292d3206119589358a8cc8e1f87baf943e7df286cea6f14389eec3bfc",
+    "timestamp": "2026-01-07 00:39:53.774020"
+  },
+  {
+    "passed": true,
+    "issues": [],
+    "summary": {
+      "field": "rao",
+      "min": 0,
+      "max": 5,
+      "values_checked": 24
+    },
+    "validator_name": "RangeValidator",
+    "data_hash": "94f05a6292d3206119589358a8cc8e1f87baf943e7df286cea6f14389eec3bfc",
+    "timestamp": "2026-01-07 00:39:53.778851"
+  },
+  {
+    "passed": true,
+    "issues": [],
+    "summary": {
+      "coverage": 345,
+      "num_points": 24,
+      "max_gap": 15.0
+    },
+    "validator_name": "PolarDataValidator",
+    "data_hash": "94f05a6292d3206119589358a8cc8e1f87baf943e7df286cea6f14389eec3bfc",
+    "timestamp": "2026-01-07 00:39:53.786723"
+  },
+  {
+    "passed": true,
+    "issues": [],
+    "summary": {
+      "field": "stiffness_matrix",
+      "shape": [
+        6,
+        6
+      ],
+      "symmetric_check": true,
+      "positive_definite_check": true
+    },
+    "validator_name": "MatrixValidator",
+    "data_hash": "94f05a6292d3206119589358a8cc8e1f87baf943e7df286cea6f14389eec3bfc",
+    "timestamp": "2026-01-07 00:39:53.795249"
+  },
+  {
+    "passed": true,
+    "issues": [
+      {
+        "severity": 1,
+        "message": "5 outlier(s) detected (>3.0\u03c3)",
+        "validator_name": "TimeSeriesValidator",
+        "field_name": null,
+        "value": null,
+        "expected_range": null,
+        "location": null
+      }
+    ],
+    "summary": {
+      "num_points": 1000,
+      "time_range": [
+        0.0,
+        99.9
+      ],
+      "outliers_detected": 5
+    },
+    "validator_name": "TimeSeriesValidator",
+    "data_hash": "94f05a6292d3206119589358a8cc8e1f87baf943e7df286cea6f14389eec3bfc",
+    "timestamp": "2026-01-07 00:39:53.802581"
+  }
+]

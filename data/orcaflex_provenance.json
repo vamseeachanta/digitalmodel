@@ -1,0 +1,49 @@
+{
+  "simulation_results": {
+    "source": "orcaflex_model.yml",
+    "source_version": "1.0",
+    "source_hash": "unknown",
+    "transformations": [
+      {
+        "function_name": "run_orcaflex_simulation",
+        "parameters": {},
+        "output_metadata": {
+          "type": "DataFrame",
+          "shape": [
+            1000,
+            3
+          ],
+          "columns": [
+            "time",
+            "tension_line_1",
+            "tension_line_2"
+          ]
+        },
+        "timestamp": "2026-01-07T00:17:51.499340"
+      }
+    ],
+    "created_at": "2026-01-07T00:17:51.499340",
+    "metadata": {
+      "function": "run_orcaflex_simulation",
+      "module": "__main__"
+    }
+  },
+  "fatigue_analysis": {
+    "source": "simulation_results",
+    "source_version": "1.0",
+    "source_hash": "unknown",
+    "transformations": [
+      {
+        "function_name": "perform_fatigue_analysis",
+        "parameters": {},
+        "output_metadata": {},
+        "timestamp": "2026-01-07T00:17:51.499984"
+      }
+    ],
+    "created_at": "2026-01-07T00:17:51.499677",
+    "metadata": {
+      "function": "perform_fatigue_analysis",
+      "module": "__main__"
+    }
+  }
+}

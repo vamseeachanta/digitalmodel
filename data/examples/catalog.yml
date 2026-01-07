@@ -1,0 +1,11 @@
+datasets:
+  sample_data_products:
+    path: parquet\sample_data_products.parquet
+    format: parquet
+    source_excel: sample_data.xlsx
+    migrated_at: '2026-01-07T00:33:08.629386'
+  sample_data_orders:
+    path: parquet\sample_data_orders.parquet
+    format: parquet
+    source_excel: sample_data.xlsx
+    migrated_at: '2026-01-07T00:33:08.629386'
