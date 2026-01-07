@@ -114,12 +114,35 @@ These repository-specific skills complement the global skills in `~/.claude/skil
 - **Global**: General development, document handling, reporting
 - **Repository-specific**: Domain-specific marine/offshore engineering
 
+## Best Practices & Guidelines
+
+### [Interactive Plotting Best Practices](interactive-plotting-best-practices.md)
+
+Comprehensive guidelines for creating effective interactive HTML visualizations:
+
+**General Principles (All Plots)**:
+- **Clear Visual Hierarchy**: Bold labels, appropriate font sizes
+- **Subplot Organization**: Multi-panel layouts with consistent formatting
+- **Interactive Elements**: Hover info, dropdown menus, export capabilities
+- **Data Export**: Always include CSV data alongside HTML plots
+
+**Displacement RAO Plots Specifically**:
+- **Y-Axis Range Management**: Minimum 0.2 range to avoid noise from small RAO values
+
+**Key Lessons**:
+- Use bold formatting for subplot titles and axis labels with units (all plots)
+- Font sizes: titles 16px, axis labels 14px minimum (all plots)
+- Export data as CSV for reproducibility and further analysis (all plots)
+- Set minimum y-axis range (≥ 0.2) for **displacement RAO plots only** to prevent noise
+- Other plot types use context-appropriate ranges (time series, stress, fatigue)
+
 ## Related Documentation
 
 - [digitalmodel Module Documentation](../../docs/)
 - [OrcaFlex Module README](../../src/digitalmodel/modules/orcaflex/README.md)
 - [Fatigue Module Documentation](../../src/digitalmodel/modules/fatigue/)
 - [Workspace Hub Skills](../../../.claude/skills/README.md)
+- [HTML Reporting Standards](../../docs/modules/standards/HTML_REPORTING_STANDARDS.md)
 
 ---
 

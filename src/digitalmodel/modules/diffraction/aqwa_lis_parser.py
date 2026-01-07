@@ -271,76 +271,189 @@ class AQWALISParser:
             Dictionary mapping (frequency, heading) to DOF data
             DOF data is dict: {'surge': (amp, phase), 'sway': (amp, phase), ...}
         """
-        # Find RAO section
+        # Find ALL DISPLACEMENT RAO sections (NOT velocity or acceleration!)
+        # AQWA .LIS files contain 3 types:
+        # - "R.A.O.S-VARIATION..." (displacement - what we want!)
+        # - "VEL R.A.O.S-VARIATION..." (velocity)
+        # - "ACC R.A.O.S-VARIATION..." (acceleration)
+
+        # We must match EXACTLY "R.A.O.S-VARIATION", not "VEL R.A.O.S" or "ACC R.A.O.S"
+        # Check the character BEFORE the marker to ensure it's whitespace/newline
         section_marker = "R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY"
-        pos = self.find_section(section_marker)
 
-        if pos is None:
-            raise ValueError("Could not find RAO table")
+        # Find all occurrences of DISPLACEMENT RAO sections only
+        positions = []
+        search_pos = 0
+        while True:
+            pos = self.content.find(section_marker, search_pos)
+            if pos == -1:
+                break
 
-        # Extract larger section (RAO table is big)
-        table_text = self.content[pos:pos + 10000]
+            # Check character before marker (should be whitespace, not "VEL " or "ACC ")
+            if pos > 0:
+                before_text = self.content[max(0, pos-20):pos]  # Check more context
+                # Skip if preceded by "VEL" or "ACC"
+                if "VEL" in before_text or "ACC" in before_text:
+                    logger.debug(f"Skipping non-displacement RAO section (before_text: '{before_text[-10:]}')")
+                    search_pos = pos + len(section_marker)
+                    continue
+
+            positions.append(pos)
+            search_pos = pos + len(section_marker)
+
+        if not positions:
+            raise ValueError("Could not find any displacement RAO tables")
+
+        logger.info(f"Found {len(positions)} displacement RAO table sections in .LIS file")
+
+        # Collect all table text from all sections
+        # For each displacement RAO section, read until the next major section marker
+        # (which could be VEL, ACC, or another displacement section)
+        all_table_text = []
+        for i, pos in enumerate(positions):
+            # Find the next section marker (any type: displacement, VEL, or ACC)
+            next_marker = self.content.find("R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY", pos + len(section_marker))
+
+            if next_marker != -1:
+                # Read until next RAO section (any type)
+                end_pos = next_marker
+            else:
+                # Last section - but still limit reading to avoid garbage
+                # Look for major section break (multiple newlines)
+                next_break = self.content.find("\n\n\n", pos + 1000)
+                end_pos = next_break if next_break != -1 else pos + 50000  # Max 50k chars
+
+            section_text = self.content[pos:end_pos]
+            all_table_text.append(section_text)
+
+        # Combine all sections
+        table_text = "\n".join(all_table_text)
 
         # Pattern for RAO data rows
-        # Format: "  62.83   0.100   -180.00    1.5204  -90.03    0.0000  -91.02..."
-        # Period, Freq, Direction, then 6 DOFs with (AMP, PHASE) each = 12 values
-        pattern = r'\s+([\d.]+)\s+([\d.]+)\s+([-\d.]+)\s+' + \
-                  r'([\d.]+)\s+([-\d.]+)\s+' + \
-                  r'([\d.]+)\s+([-\d.]+)\s+' + \
-                  r'([\d.]+)\s+([-\d.]+)\s+' + \
-                  r'([\d.]+)\s+([-\d.]+)\s+' + \
-                  r'([\d.]+)\s+([-\d.]+)\s+' + \
-                  r'([\d.]+)\s+([-\d.]+)'
+        # AQWA format: Direction is only listed once per heading group!
+        # First row: "  22.00   0.286   -180.00    0.8926  -90.20..."
+        # Next rows: "  19.00   0.331              0.8277  -90.29..." (no direction!)
+
+        # Pattern for row WITH direction
+        pattern_with_dir = r'\s+([\d.]+)\s+([\d.]+)\s+([-\d.]+)\s+' + \
+                           r'([\d.]+)\s+([-\d.]+)\s+' + \
+                           r'([\d.]+)\s+([-\d.]+)\s+' + \
+                           r'([\d.]+)\s+([-\d.]+)\s+' + \
+                           r'([\d.]+)\s+([-\d.]+)\s+' + \
+                           r'([\d.]+)\s+([-\d.]+)\s+' + \
+                           r'([\d.]+)\s+([-\d.]+)'
+
+        # Pattern for row WITHOUT direction (just period, freq, then RAOs)
+        pattern_no_dir = r'\s+([\d.]+)\s+([\d.]+)\s+' + \
+                         r'([\d.]+)\s+([-\d.]+)\s+' + \
+                         r'([\d.]+)\s+([-\d.]+)\s+' + \
+                         r'([\d.]+)\s+([-\d.]+)\s+' + \
+                         r'([\d.]+)\s+([-\d.]+)\s+' + \
+                         r'([\d.]+)\s+([-\d.]+)\s+' + \
+                         r'([\d.]+)\s+([-\d.]+)'
 
         rao_dict = {}
+        current_heading = None
 
-        for match in re.finditer(pattern, table_text):
-            period = float(match.group(1))
-            freq = float(match.group(2))
-            heading = float(match.group(3))
+        # Split into lines for sequential processing
+        lines = table_text.split('\n')
+        logger.info(f"Processing {len(lines)} lines from displacement RAO sections")
 
-            # Sanity checks
-            if not (0.01 < freq < 100 and -180 <= heading <= 180):
+        matched_with_dir = 0
+        matched_no_dir = 0
+        skipped_lines = 0
+        unmatched_data_lines = []
+
+        for line in lines:
+            # Skip header/separator/page number lines
+            stripped = line.strip()
+            if not stripped or '---' in line or 'PERIOD' in line or 'SECS' in line:
+                skipped_lines += 1
                 continue
 
-            # Extract amplitude and phase for each DOF
-            # X (surge)
-            x_amp = float(match.group(4))
-            x_phase = float(match.group(5))
+            # Skip page numbers (lines with just a single digit or small number)
+            if stripped.isdigit() and len(stripped) <= 3:
+                skipped_lines += 1
+                continue
 
-            # Y (sway)
-            y_amp = float(match.group(6))
-            y_phase = float(match.group(7))
+            # Try pattern WITH direction first
+            match = re.match(pattern_with_dir, line)
+            if match:
+                period = float(match.group(1))
+                freq = float(match.group(2))
+                heading = float(match.group(3))
 
-            # Z (heave)
-            z_amp = float(match.group(8))
-            z_phase = float(match.group(9))
+                # Sanity checks
+                if not (0.01 < freq < 100 and -180 <= heading <= 180):
+                    continue
 
-            # RX (roll)
-            rx_amp = float(match.group(10))
-            rx_phase = float(match.group(11))
+                current_heading = heading  # Update current heading
 
-            # RY (pitch)
-            ry_amp = float(match.group(12))
-            ry_phase = float(match.group(13))
+                # Extract RAO data
+                x_amp, x_phase = float(match.group(4)), float(match.group(5))
+                y_amp, y_phase = float(match.group(6)), float(match.group(7))
+                z_amp, z_phase = float(match.group(8)), float(match.group(9))
+                rx_amp, rx_phase = float(match.group(10)), float(match.group(11))
+                ry_amp, ry_phase = float(match.group(12)), float(match.group(13))
+                rz_amp, rz_phase = float(match.group(14)), float(match.group(15))
 
-            # RZ (yaw)
-            rz_amp = float(match.group(14))
-            rz_phase = float(match.group(15))
+                # Store in dictionary
+                key = (freq, current_heading)
+                rao_dict[key] = {
+                    'surge': (x_amp, x_phase),
+                    'sway': (y_amp, y_phase),
+                    'heave': (z_amp, z_phase),
+                    'roll': (rx_amp, rx_phase),
+                    'pitch': (ry_amp, ry_phase),
+                    'yaw': (rz_amp, rz_phase)
+                }
+                matched_with_dir += 1
 
-            # Store in dictionary
-            key = (freq, heading)
-            rao_dict[key] = {
-                'surge': (x_amp, x_phase),
-                'sway': (y_amp, y_phase),
-                'heave': (z_amp, z_phase),
-                'roll': (rx_amp, rx_phase),
-                'pitch': (ry_amp, ry_phase),
-                'yaw': (rz_amp, rz_phase)
-            }
+            else:
+                # Try pattern WITHOUT direction (use current_heading)
+                match = re.match(pattern_no_dir, line)
+                if match and current_heading is not None:
+                    period = float(match.group(1))
+                    freq = float(match.group(2))
+
+                    # Sanity check
+                    if not (0.01 < freq < 100):
+                        continue
+
+                    # Extract RAO data
+                    x_amp, x_phase = float(match.group(3)), float(match.group(4))
+                    y_amp, y_phase = float(match.group(5)), float(match.group(6))
+                    z_amp, z_phase = float(match.group(7)), float(match.group(8))
+                    rx_amp, rx_phase = float(match.group(9)), float(match.group(10))
+                    ry_amp, ry_phase = float(match.group(11)), float(match.group(12))
+                    rz_amp, rz_phase = float(match.group(13)), float(match.group(14))
+
+                    # Store in dictionary with current heading
+                    key = (freq, current_heading)
+                    rao_dict[key] = {
+                        'surge': (x_amp, x_phase),
+                        'sway': (y_amp, y_phase),
+                        'heave': (z_amp, z_phase),
+                        'roll': (rx_amp, rx_phase),
+                        'pitch': (ry_amp, ry_phase),
+                        'yaw': (rz_amp, rz_phase)
+                    }
+                    matched_no_dir += 1
+                else:
+                    # Check if this looks like a data line that we failed to match
+                    if stripped and stripped[0].isdigit():
+                        unmatched_data_lines.append(line[:100])
 
         if not rao_dict:
             raise ValueError("No valid RAO data found")
+
+        logger.info(f"Parsed {matched_with_dir} lines with direction, {matched_no_dir} without direction")
+        logger.info(f"Skipped {skipped_lines} header/blank lines from {len(lines)} total lines")
+
+        if unmatched_data_lines:
+            logger.warning(f"Found {len(unmatched_data_lines)} data-like lines that didn't match patterns:")
+            for i, unmatched in enumerate(unmatched_data_lines[:5]):  # Show first 5
+                logger.warning(f"  Unmatched line {i+1}: {unmatched}")
 
         logger.info(f"Parsed RAO data for {len(rao_dict)} frequency-heading combinations")
 
