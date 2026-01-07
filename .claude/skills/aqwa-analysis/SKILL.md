@@ -527,6 +527,78 @@ The agent uses a phased approach for AQWA processing:
 5. **Validation**: Check physical consistency
 6. **Integration**: Export to OrcaFlex format
 
+### 5. Benchmark Comparison vs OrcaWave
+
+Compare AQWA results with OrcaWave for validation focusing on peak/significant values.
+
+```yaml
+aqwa_analysis:
+  benchmark_comparison:
+    flag: true
+    aqwa_results: "aqwa_results/vessel.LIS"
+    orcawave_results: "orcawave_results/vessel.sim"  # Optional
+    tolerance: 0.05  # 5% tolerance for peaks
+    peak_threshold: 0.10  # 10% of peak magnitude
+    output:
+      comparison_report: "results/aqwa_orcawave_comparison.html"
+      peak_analysis: "results/peak_values_comparison.html"
+```
+
+### Peak-Focused Validation
+
+```python
+from digitalmodel.modules.diffraction.comparison_framework import PeakRAOComparator
+from digitalmodel.modules.diffraction.aqwa_converter import AQWAConverter
+
+# Extract AQWA data
+converter = AQWAConverter(
+    analysis_folder="docs/modules/orcawave/L01_aqwa_benchmark",
+    vessel_name="SHIP_RAOS"
+)
+aqwa_results = converter.convert_to_unified_schema(water_depth=30.0)
+
+# Create comparator focused on significant values
+comparator = PeakRAOComparator(
+    aqwa_results=aqwa_results,
+    orcawave_results=None,  # Add when available
+    peak_threshold=0.10,  # Values ≥10% of peak
+    tolerance=0.05  # 5% tolerance
+)
+
+# Identify peak regions for each DOF
+comparison = comparator.compare_peaks()
+
+# Generate HTML report
+comparator.generate_peak_report_html(
+    comparison,
+    output_file="results/peak_comparison.html"
+)
+
+# Check if significant values are within 5%
+for dof, result in comparison.items():
+    if result.get('passes_5pct_tolerance'):
+        print(f"✅ {dof}: Within 5% tolerance on significant values")
+    else:
+        print(f"❌ {dof}: Exceeds 5% tolerance")
+```
+
+## Benchmark Validation Criteria
+
+**Engineering Standard Practice:**
+- 5% tolerance applies to **peak and significant values only**
+- "Significant" = RAO magnitude ≥ 10% of peak value
+- Pass requires 90% of significant points within 5% tolerance
+- Low-amplitude responses (<10% of peak) excluded from validation
+- Focus on resonance regions and operationally important periods
+
+**Typical Peak Values by DOF:**
+- **Heave**: 0.9-1.1 m/m (near natural period)
+- **Pitch**: 0.4-0.6 deg/m (near natural period)
+- **Roll**: 2-5 deg/m (beam seas, low frequency)
+- **Surge**: 0.8-1.0 m/m (following seas)
+- **Sway**: 0.8-1.0 m/m (beam seas)
+- **Yaw**: Small (<0.1 deg/m for symmetric vessels)
+
 ## Related Skills
 
 - [hydrodynamics](../hydrodynamics/SKILL.md) - Coefficient management
@@ -545,6 +617,7 @@ The agent uses a phased approach for AQWA processing:
 
 ## Version History
 
+- **3.1.0** (2026-01-05): Added peak-focused benchmark comparison framework, 5% tolerance validation for significant values, automated AQWA vs OrcaWave comparison scripts
 - **3.0.0** (2025-01-02): Merged agent capabilities from agents/aqwa/, added MCP integration, phased processing workflow, AQWA module descriptions
 - **2.0.0** (2024-11-15): Added validation and preprocessing modules
 - **1.0.0** (2024-10-01): Initial release with RAO extraction and coefficient management
