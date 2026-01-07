@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://digitalmodel.io/schemas/shackles.schema.json",
+  "title": "Shackles Data Schema",
+  "description": "JSON schema for validating shackle component data",
+  "type": "object",
+  "properties": {
+    "Size": {
+      "type": "string",
+      "description": "Shackle size designation",
+      "examples": ["1/2", "5/8", "3/4", "7/8", "1"]
+    },
+    "WLL": {
+      "type": "number",
+      "description": "Working Load Limit in tons",
+      "minimum": 0
+    },
+    "Pin_Diameter": {
+      "type": "number",
+      "description": "Pin diameter in inches",
+      "minimum": 0
+    },
+    "Body_Width": {
+      "type": "number",
+      "description": "Body width in inches",
+      "minimum": 0
+    },
+    "Weight": {
+      "type": "number",
+      "description": "Weight in lbs",
+      "minimum": 0
+    },
+    "Material": {
+      "type": "string",
+      "description": "Material specification",
+      "examples": ["Alloy Steel", "Carbon Steel", "Stainless Steel"]
+    },
+    "Standard": {
+      "type": "string",
+      "description": "Engineering standard",
+      "examples": ["API 2C", "ASME B30.26", "EN 13889"]
+    }
+  },
+  "required": ["Size", "WLL"],
+  "additionalProperties": true
+}

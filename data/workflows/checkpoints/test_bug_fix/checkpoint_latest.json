@@ -1,0 +1,190 @@
+{
+  "workflow_id": "test_bug_fix",
+  "template_name": "bug_fix_workflow",
+  "status": "pending",
+  "start_time": null,
+  "end_time": null,
+  "current_phase": null,
+  "phases": [
+    {
+      "phase_id": "investigation",
+      "name": "Bug Investigation & Root Cause Analysis",
+      "dependencies": [],
+      "parallel": false,
+      "status": "pending",
+      "start_time": null,
+      "end_time": null,
+      "checkpoints": [
+        "bug_investigation_complete"
+      ],
+      "outputs": [
+        "reports/bug_analysis.md"
+      ],
+      "agents": [
+        {
+          "agent_type": "researcher",
+          "role": "bug_analyst",
+          "task": "Analyze bug report and reproduce issue",
+          "coordination": "hooks",
+          "status": "pending",
+          "retries": 0,
+          "start_time": null,
+          "end_time": null,
+          "output": null,
+          "error": null
+        },
+        {
+          "agent_type": "code-analyzer",
+          "role": "root_cause_analyzer",
+          "task": "Identify root cause and affected components",
+          "coordination": "hooks",
+          "status": "pending",
+          "retries": 0,
+          "start_time": null,
+          "end_time": null,
+          "output": null,
+          "error": null
+        }
+      ],
+      "quality_gates": null
+    },
+    {
+      "phase_id": "fix_implementation",
+      "name": "Bug Fix Implementation",
+      "dependencies": [
+        "investigation"
+      ],
+      "parallel": false,
+      "status": "pending",
+      "start_time": null,
+      "end_time": null,
+      "checkpoints": [
+        "fix_implemented"
+      ],
+      "outputs": [
+        "src/**/fixed_files.py"
+      ],
+      "agents": [
+        {
+          "agent_type": "coder",
+          "role": "bug_fixer",
+          "task": "Implement bug fix with minimal changes",
+          "coordination": "hooks",
+          "status": "pending",
+          "retries": 0,
+          "start_time": null,
+          "end_time": null,
+          "output": null,
+          "error": null
+        }
+      ],
+      "quality_gates": null
+    },
+    {
+      "phase_id": "test_verification",
+      "name": "Test & Verification",
+      "dependencies": [
+        "fix_implementation"
+      ],
+      "parallel": true,
+      "status": "pending",
+      "start_time": null,
+      "end_time": null,
+      "checkpoints": [
+        "verification_complete"
+      ],
+      "outputs": [
+        "tests/regression/test_bug_*.py"
+      ],
+      "agents": [
+        {
+          "agent_type": "tester",
+          "role": "regression_tester",
+          "task": "Create regression test for the bug",
+          "coordination": "hooks",
+          "status": "pending",
+          "retries": 0,
+          "start_time": null,
+          "end_time": null,
+          "output": null,
+          "error": null
+        },
+        {
+          "agent_type": "tester",
+          "role": "verification_tester",
+          "task": "Verify fix doesn't break existing functionality",
+          "coordination": "hooks",
+          "status": "pending",
+          "retries": 0,
+          "start_time": null,
+          "end_time": null,
+          "output": null,
+          "error": null
+        }
+      ],
+      "quality_gates": {
+        "code_coverage": {
+          "threshold": 80
+        }
+      }
+    },
+    {
+      "phase_id": "review_approval",
+      "name": "Code Review & Approval",
+      "dependencies": [
+        "test_verification"
+      ],
+      "parallel": false,
+      "status": "pending",
+      "start_time": null,
+      "end_time": null,
+      "checkpoints": [
+        "review_approved"
+      ],
+      "outputs": [
+        "reports/bug_fix_review.md"
+      ],
+      "agents": [
+        {
+          "agent_type": "reviewer",
+          "role": "fix_reviewer",
+          "task": "Review bug fix for correctness and side effects",
+          "coordination": "hooks",
+          "status": "pending",
+          "retries": 0,
+          "start_time": null,
+          "end_time": null,
+          "output": null,
+          "error": null
+        }
+      ],
+      "quality_gates": null
+    }
+  ],
+  "global_config": {
+    "max_phases_per_workflow": 10,
+    "max_agents_per_phase": 10,
+    "max_concurrent_workflows": 3,
+    "max_workflow_duration_minutes": 60,
+    "checkpoint_dir": "data/workflows/checkpoints",
+    "retry_policy": {
+      "max_retries_per_agent": 1,
+      "max_failures_per_phase": 2
+    },
+    "default_quality_gates": {
+      "code_coverage": {
+        "enabled": true,
+        "threshold": 80,
+        "halt_on_failure": true
+      },
+      "linting": {
+        "enabled": true,
+        "halt_on_failure": true
+      },
+      "type_checking": {
+        "enabled": true,
+        "halt_on_failure": true
+      }
+    }
+  }
+}
