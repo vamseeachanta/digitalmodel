@@ -429,6 +429,7 @@ def create_interactive_comparison_plot(
 
     # Generate the Plotly HTML
     plotly_html = fig.to_html(
+        full_html=False,
         include_plotlyjs='cdn',
         config={
             'displayModeBar': True,
