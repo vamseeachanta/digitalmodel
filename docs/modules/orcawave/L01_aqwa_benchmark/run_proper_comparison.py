@@ -473,11 +473,12 @@ def main():
 
     # Extract OrcaWave data
     logger.info("\n[2/3] Extracting OrcaWave motion RAO data...")
-    owr_file = benchmark_dir / "orcawave_001_ship_raos_rev2.owr"
+    # Use matched model results (updated mass properties to match AQWA)
+    owr_file = benchmark_dir / "orcawave_001_ship_raos_rev2_matched.owr"
 
     if not owr_file.exists():
-        logger.error(f"OrcaWave results not found: {owr_file}")
-        logger.error("Run OrcaWave GUI analysis first to generate .owr file")
+        logger.error(f"OrcaWave matched results not found: {owr_file}")
+        logger.error("Run: python run_orcawave_matched_api.py")
         return 1
 
     orcawave_data = extract_orcawave_motion_raos(owr_file)
