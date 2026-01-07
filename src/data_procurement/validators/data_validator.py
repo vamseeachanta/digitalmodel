@@ -7,14 +7,43 @@ Validates scraped data for completeness, accuracy, and quality.
 import pandas as pd
 import logging
 from typing import Dict, List, Optional, Any
+from pathlib import Path
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import yaml
 
 
 class DataValidator:
     """Validates scraped marine engineering data."""
 
-    def __init__(self):
-        """Initialize data validator."""
+    def __init__(self, config_path: Optional[Path] = None):
+        """
+        Initialize data validator.
+
+        Args:
+            config_path: Optional path to YAML configuration file
+        """
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.config = self._load_config(config_path) if config_path else {}
+
+    def _load_config(self, config_path: Path) -> Dict[str, Any]:
+        """
+        Load validation configuration from YAML.
+
+        Args:
+            config_path: Path to YAML config file
+
+        Returns:
+            Configuration dictionary
+        """
+        try:
+            with open(config_path, 'r') as f:
+                config = yaml.safe_load(f)
+            self.logger.info(f"Loaded validation config from {config_path}")
+            return config
+        except Exception as e:
+            self.logger.error(f"Failed to load config: {e}")
+            return {}
 
     def validate_dataframe(
         self,
@@ -169,3 +198,155 @@ class DataValidator:
         report.append("\n" + "=" * 60)
 
         return "\n".join(report)
+
+    def generate_interactive_report(
+        self,
+        validation_results: Dict[str, Any],
+        output_path: Path
+    ) -> None:
+        """
+        Generate interactive HTML validation report with Plotly visualizations.
+
+        Args:
+            validation_results: Results from validate_dataframe()
+            output_path: Path to save HTML report
+        """
+        # Create subplots
+        fig = make_subplots(
+            rows=2, cols=2,
+            subplot_titles=(
+                'Quality Score',
+                'Missing Data by Column',
+                'Data Type Issues',
+                'Validation Summary'
+            ),
+            specs=[
+                [{'type': 'indicator'}, {'type': 'bar'}],
+                [{'type': 'bar'}, {'type': 'table'}]
+            ]
+        )
+
+        # 1. Quality Score Gauge
+        fig.add_trace(
+            go.Indicator(
+                mode="gauge+number+delta",
+                value=validation_results['quality_score'],
+                delta={'reference': 80},
+                gauge={
+                    'axis': {'range': [0, 100]},
+                    'bar': {'color': self._get_quality_color(validation_results['quality_score'])},
+                    'steps': [
+                        {'range': [0, 60], 'color': 'lightgray'},
+                        {'range': [60, 80], 'color': 'gray'},
+                        {'range': [80, 100], 'color': 'lightgreen'}
+                    ],
+                    'threshold': {
+                        'line': {'color': 'red', 'width': 4},
+                        'thickness': 0.75,
+                        'value': 80
+                    }
+                },
+                title={'text': "Quality Score"}
+            ),
+            row=1, col=1
+        )
+
+        # 2. Missing Data Bar Chart
+        if validation_results.get('missing_data'):
+            missing_data = validation_results['missing_data']
+            fig.add_trace(
+                go.Bar(
+                    x=list(missing_data.keys()),
+                    y=[v * 100 for v in missing_data.values()],
+                    name='Missing %',
+                    marker_color='indianred',
+                    hovertemplate='%{x}<br>Missing: %{y:.1f}%<extra></extra>'
+                ),
+                row=1, col=2
+            )
+
+        # 3. Data Type Issues
+        if validation_results.get('type_issues'):
+            type_issues = validation_results['type_issues']
+            issue_counts = {}
+            for issue in type_issues:
+                field = issue.split(':')[0]
+                count = int(issue.split(':')[1].split()[0])
+                issue_counts[field] = count
+
+            fig.add_trace(
+                go.Bar(
+                    x=list(issue_counts.keys()),
+                    y=list(issue_counts.values()),
+                    name='Type Issues',
+                    marker_color='orange',
+                    hovertemplate='%{x}<br>Issues: %{y}<extra></extra>'
+                ),
+                row=2, col=1
+            )
+
+        # 4. Summary Table
+        summary_data = {
+            'Metric': ['Total Rows', 'Total Columns', 'Quality Score', 'Issues Found', 'Status'],
+            'Value': [
+                str(validation_results['total_rows']),
+                str(validation_results['total_columns']),
+                f"{validation_results['quality_score']:.1f}/100",
+                str(len(validation_results['issues'])),
+                '✓ PASS' if validation_results['valid'] else '✗ FAIL'
+            ]
+        }
+
+        fig.add_trace(
+            go.Table(
+                header=dict(
+                    values=list(summary_data.keys()),
+                    fill_color='paleturquoise',
+                    align='left',
+                    font=dict(size=12, color='black')
+                ),
+                cells=dict(
+                    values=list(summary_data.values()),
+                    fill_color='lavender',
+                    align='left',
+                    font=dict(size=11)
+                )
+            ),
+            row=2, col=2
+        )
+
+        # Update layout
+        fig.update_layout(
+            title_text="Data Validation Report",
+            height=800,
+            showlegend=False,
+            template='plotly_white'
+        )
+
+        # Update axes
+        fig.update_xaxes(title_text="Column", row=1, col=2)
+        fig.update_yaxes(title_text="Missing %", row=1, col=2)
+        fig.update_xaxes(title_text="Field", row=2, col=1)
+        fig.update_yaxes(title_text="Issue Count", row=2, col=1)
+
+        # Save as HTML
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.write_html(output_path, include_plotlyjs='cdn')
+        self.logger.info(f"Interactive validation report saved to {output_path}")
+
+    def _get_quality_color(self, score: float) -> str:
+        """
+        Get color for quality score gauge.
+
+        Args:
+            score: Quality score (0-100)
+
+        Returns:
+            Color name for gauge
+        """
+        if score >= 80:
+            return 'green'
+        elif score >= 60:
+            return 'yellow'
+        else:
+            return 'red'
