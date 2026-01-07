@@ -218,7 +218,7 @@ class TestDNVCurrentDensities:
                 },
                 "environment": {
                     "seawater_resistivity_ohm_cm": 25.0,
-                    "temperature_c": 10.0,
+                    "seawater_temperature_C": 10.0,
                 },
             }
         }
@@ -233,7 +233,7 @@ class TestDNVCurrentDensities:
                 },
                 "environment": {
                     "seawater_resistivity_ohm_cm": 25.0,
-                    "temperature_c": 10.0,
+                    "seawater_temperature_C": 10.0,
                 },
             }
         }
@@ -619,7 +619,7 @@ class TestDNVOrchestration:
                 },
                 "environment": {
                     "seawater_resistivity_ohm_cm": 25.0,
-                    "temperature_c": 10.0,
+                    "seawater_temperature_C": 10.0,
                 },
                 "design_data": {
                     "design_life": 25.0,
@@ -686,7 +686,7 @@ class TestDNVPhase1Enhancements:
                 },
                 "environment": {
                     "seawater_resistivity_ohm_cm": 25.0,
-                    "temperature_c": 10.0,
+                    "seawater_temperature_C": 10.0,
                     "free_corrosion_potential_V": -0.630,  # NEW: Ecorr
                     "anode_potential_V": -0.950,  # NEW: Ea
                 },
