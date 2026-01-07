@@ -1,28 +1,61 @@
 ---
 name: aqwa-analysis
-description: Integrate with AQWA hydrodynamic software for RAO computation, damping analysis, and coefficient extraction. Use for AQWA file processing, RAO calculation, hydrodynamic coefficient extraction, and pre/post processing workflows.
+description: Integrate with AQWA hydrodynamic software for RAO computation, damping
+  analysis, and coefficient extraction. Use for AQWA file processing, RAO calculation,
+  hydrodynamic coefficient extraction, and pre/post processing workflows.
 version: 3.0.0
 updated: 2025-01-02
 category: offshore-engineering
 triggers:
-  - AQWA analysis
-  - RAO extraction
-  - added mass calculation
-  - damping coefficient
-  - wave diffraction
-  - radiation analysis
-  - AQWA-LINE
-  - AQWA-DRIFT
-  - AQWA-LIBRIUM
-  - AQWA-NAUT
-  - .LIS files
-  - .DAT files
-  - .MES files
+- AQWA analysis
+- RAO extraction
+- added mass calculation
+- damping coefficient
+- wave diffraction
+- radiation analysis
+- AQWA-LINE
+- AQWA-DRIFT
+- AQWA-LIBRIUM
+- AQWA-NAUT
+- .LIS files
+- .DAT files
+- .MES files
 ---
-
 # AQWA Analysis Skill
 
 Integrate with ANSYS AQWA hydrodynamic software for RAO computation, added mass/damping extraction, and hydrodynamic coefficient management.
+
+## Version Metadata
+
+```yaml
+version: 3.0.0
+python_min_version: '3.10'
+dependencies:
+  hydrodynamics: '>=1.0.0,<2.0.0'
+compatibility:
+  tested_python:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  os:
+  - Windows
+  - Linux
+  - macOS
+```
+
+## Changelog
+
+### [3.0.0] - 2026-01-07
+
+**Added:**
+- Initial version metadata and dependency management
+- Semantic versioning support
+- Compatibility information for Python 3.10-3.13
+
+**Changed:**
+- Enhanced skill documentation structure
+
 
 ## When to Use
 
@@ -546,8 +579,45 @@ aqwa_analysis:
 
 ### Peak-Focused Validation
 
+**Using the Standalone Comparison Script:**
+
+```bash
+# Run peak-focused comparison (AQWA vs OrcaWave)
+cd docs/modules/orcawave/L01_aqwa_benchmark
+python run_comparison_peaks.py
+
+# Output:
+# - comparison_results/peak_comparison_YYYYMMDD_HHMMSS.html
+# - Peak RAO values for all 6 DOFs
+# - Statistical analysis focused on significant values (≥10% of peak)
+```
+
+**Script Features:**
+- Extracts AQWA RAOs from `.LIS` files
+- Identifies peak values for each DOF (heave, pitch, roll, surge, sway, yaw)
+- Compares peaks with OrcaWave results (when available)
+- Applies 5% tolerance to significant values only
+- Generates interactive HTML report with visualization
+
+**For Custom Heading-by-Heading Analysis:**
+
+```bash
+# Run comprehensive heading-by-heading comparison
+cd docs/modules/orcawave/L01_aqwa_benchmark
+python run_proper_comparison.py
+
+# Output:
+# - comparison_results/final_comparison_YYYYMMDD_HHMMSS.html
+# - Heading-by-heading RAO comparison for all 6 DOFs
+# - Statistical analysis with mean/max differences
+# - Interactive plots with period-based comparison
+```
+
+**For Module-Level Integration:**
+
 ```python
-from digitalmodel.modules.diffraction.comparison_framework import PeakRAOComparator
+# Use the diffraction comparison framework module
+from digitalmodel.modules.diffraction.comparison_framework import DiffractionComparator
 from digitalmodel.modules.diffraction.aqwa_converter import AQWAConverter
 
 # Extract AQWA data
@@ -557,29 +627,21 @@ converter = AQWAConverter(
 )
 aqwa_results = converter.convert_to_unified_schema(water_depth=30.0)
 
-# Create comparator focused on significant values
-comparator = PeakRAOComparator(
-    aqwa_results=aqwa_results,
-    orcawave_results=None,  # Add when available
-    peak_threshold=0.10,  # Values ≥10% of peak
-    tolerance=0.05  # 5% tolerance
-)
+# Create diffraction comparator (requires both AQWA and OrcaWave results)
+# comparator = DiffractionComparator(
+#     aqwa_results=aqwa_results,
+#     orcawave_results=orcawave_results,  # Both required
+#     tolerance=0.05  # 5% tolerance
+# )
+#
+# # Compare RAOs
+# rao_comparison = comparator.compare_raos()
+#
+# # Generate comprehensive report
+# report = comparator.generate_report()
+# print(f"RAO comparison complete")
 
-# Identify peak regions for each DOF
-comparison = comparator.compare_peaks()
-
-# Generate HTML report
-comparator.generate_peak_report_html(
-    comparison,
-    output_file="results/peak_comparison.html"
-)
-
-# Check if significant values are within 5%
-for dof, result in comparison.items():
-    if result.get('passes_5pct_tolerance'):
-        print(f"✅ {dof}: Within 5% tolerance on significant values")
-    else:
-        print(f"❌ {dof}: Exceeds 5% tolerance")
+# Note: For actual benchmark analysis, use the standalone scripts above
 ```
 
 ## Benchmark Validation Criteria
