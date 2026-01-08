@@ -73,15 +73,16 @@ def main():
     # Initialize CP calculator
     cp = CathodicProtection()
 
-    # Run DNV RP-F103:2010 calculation
+    # Run DNV RP-F103:2010 calculation using router method
+    # Note: router() mutates config in-place and returns the modified config
     print("Running DNV RP-F103:2010 calculation...")
-    results = cp.DNV_RP_F103_2010(config)
+    config = cp.router(config)
     print("✓ Calculation complete")
     print()
 
     # Display key results
-    if 'results' in results:
-        res = results['results']
+    if 'results' in config:
+        res = config['results']
 
         print("Key Results:")
         print("-" * 80)
@@ -117,7 +118,7 @@ def main():
     report_title = f"CP Analysis: {test_name}"
 
     report_path = report_gen.generate_attenuation_report(
-        results=results,
+        results=config,
         title=report_title
     )
 
