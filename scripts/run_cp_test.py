@@ -32,10 +32,19 @@ def load_test_config(yaml_path: Path) -> dict:
     # Return in the format expected by CathodicProtection class
     # The DNV method expects: {"inputs": {...}}
     if 'inputs' in config:
-        return {'inputs': config['inputs']}
+        result = {'inputs': config['inputs']}
     else:
         # If config is already in the right format
-        return config
+        result = config
+
+    # Ensure calculation_type is set for router method
+    # This script is specifically for DNV RP-F103:2010 calculations
+    if 'inputs' not in result:
+        result['inputs'] = {}
+    if 'calculation_type' not in result['inputs']:
+        result['inputs']['calculation_type'] = 'DNV_RP_F103_2010'
+
+    return result
 
 
 def main():
