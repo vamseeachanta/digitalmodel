@@ -1,0 +1,5 @@
+coating_quality,initial_current_A,mean_current_A,final_current_A,anode_count,total_mass_kg,initial_breakdown_pct,yearly_breakdown_pct,resistance_ohm_m2,attenuation_length_m,cost_multiplier,current_change_pct,anode_change_pct,mass_change_pct,anode_spacing_m,cost_per_km
+Excellent,1214.06,872.08,530.10,356,142400,0.30,0.10,10.00,172.00,0.51,-53.30,-53.30,-48.60,28.09,14240.00
+Good,1250.00,1869.30,2488.00,762,276883,0.50,0.20,1.00,131.26,1.00,0.00,0.00,0.00,13.12,27688.30
+Average,3737.30,2866.67,1995.30,1168,424688,1.00,0.40,0.50,85.69,1.53,53.40,53.30,53.40,8.56,42468.80
+Poor,6245.67,4612.96,2980.25,1880,683396,1.50,0.60,0.10,65.55,2.47,146.80,146.70,146.80,5.32,68339.60
