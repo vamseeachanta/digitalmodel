@@ -211,7 +211,7 @@ workflow-automation = "digitalmodel.modules.workflow_automation.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["digitalmodel*"]
+include = ["digitalmodel*", "blender_automation*", "marine_engineering*", "data_procurement*"]
 exclude = ["tests*", "docs*"]
 
 [tool.black]
@@ -233,16 +233,6 @@ disallow_untyped_defs = true
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 addopts = """
-    --cov=src
-    --cov-report=term-missing
-    --cov-report=html:htmlcov
-    --cov-report=xml:coverage.xml
-    --cov-report=json:coverage.json
-    --html=reports/pytest_report.html
-    --self-contained-html
-    --json-report --json-report-file=reports/test_report.json
-    --benchmark-json=reports/benchmarks.json
-    --benchmark-compare-fail=mean:10%
     --timeout=300
     --randomly-seed=42
     --tb=short
