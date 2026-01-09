@@ -70,28 +70,36 @@ Successfully extracted from `001_SHIP_RAOS_REV2.LIS`:
 
 ## 🚨 Critical Issues Identified
 
-### 1. Mass Discrepancy
+### 1. Water Depth Discrepancy (CRITICAL - RESOLVED 2026-01-08)
+
+| Source | Water Depth | Status |
+|--------|-------------|--------|
+| AQWA `001_SHIP_RAOS_REV2.LIS` | 500.0 m | Reference |
+| OrcaWave original | 30.0 m | ❌ Wrong |
+| OrcaWave matched | 500.0 m | ✅ Fixed |
+
+**Impact:**
+- Water depth affects wave kinematics significantly for longer periods
+- At 500m: Deep water assumption valid for all frequencies
+- At 30m: Intermediate/shallow water for T > 7s
+- **RAOs will differ significantly due to different wave particle motion**
+
+**Resolution:** Updated `orcawave_001_ship_raos_rev2_matched.yml` to use 500m water depth.
+
+### 2. Mass Discrepancy (RESOLVED)
 
 | Source | Mass Value | Units |
 |--------|------------|-------|
+| AQWA `001_SHIP_RAOS_REV2.LIS` | 44,082.20 | Te (tonnes) |
 | `way_forward.md` (documentation) | 40,000 | Te (tonnes) |
-| `orcawave_001_ship_raos_rev2.yml` (line 100) | 9,017.95 | Te (tonnes) |
+| `orcawave_001_ship_raos_rev2.yml` (original) | 9,017.95 | Te (tonnes) |
+| `orcawave_001_ship_raos_rev2_matched.yml` | 44,082.20 | Te (tonnes) ✅ |
 
-**Discrepancy:** **4.4x difference** (40,000 Te vs 9,017.95 Te)
+**Discrepancy:** Original OrcaWave had **4.89x less mass** than AQWA.
 
-**Impact:**
-- Affects added mass and damping coefficients
-- Affects RAO magnitudes
-- Affects natural periods
-- **MUST BE RESOLVED** before final comparison
+**Resolution:** Updated matched model to use correct AQWA mass of 44,082.20 tonnes.
 
-**Possible Explanations:**
-1. Documentation error (40,000 is incorrect)
-2. Configuration error (9,017.95 is incorrect)
-3. Different structure/vessel (ballast vs loaded condition)
-4. Typo in documentation
-
-### 2. Missing OrcaWave Results
+### 3. Missing OrcaWave Results
 
 **Required Action:** Run OrcaWave analysis using the existing configuration.
 

@@ -32,7 +32,8 @@ BodyVolumeWarningLevel: 1e-12
 PanelAspectRatioWarningLevel: 25
 PanelsPerWavelengthWarningLevel: 5
 # Environment
-WaterDepth: 30
+# UPDATED: Matched to AQWA water depth (500m) for valid benchmark comparison
+WaterDepth: 500
 WaterDensity: 1.025
 WavesReferredToBy: period (s)
 HasWaveSpectrumForDragLinearisation: No
