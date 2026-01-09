@@ -848,3 +848,22 @@ Never save working files, text/mds and tests to the root folder.
 - **Custom viz:** D3.js (`d3js-custom-viz-agent`)
 
 **See full standards:** `docs/HTML_REPORTING_STANDARDS.md`
+
+## Automated Model Selection
+
+**Quick Start:**
+```bash
+./scripts/monitoring/suggest_model.sh <repo-name> "<task description>"
+```
+
+**Example:**
+```bash
+./scripts/monitoring/suggest_model.sh digitalmodel "Implement user authentication"
+```
+
+**Check usage:**
+```bash
+./scripts/monitoring/check_claude_usage.sh today
+```
+
+**Full documentation:** See workspace-hub docs/AI_MODEL_SELECTION_AUTOMATION.md
