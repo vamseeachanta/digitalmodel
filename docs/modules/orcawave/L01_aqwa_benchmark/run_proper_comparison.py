@@ -465,7 +465,8 @@ def main():
         analysis_folder=benchmark_dir,
         vessel_name="SHIP_RAOS"
     )
-    aqwa_results = converter.convert_to_unified_schema(water_depth=30.0)
+    # Use 500m water depth to match AQWA model (CRITICAL for valid comparison)
+    aqwa_results = converter.convert_to_unified_schema(water_depth=500.0)
 
     logger.info(f"✓ AQWA data extracted")
     logger.info(f"  - {aqwa_results.raos.surge.frequencies.count} frequencies")
@@ -474,6 +475,8 @@ def main():
     # Extract OrcaWave data
     logger.info("\n[2/3] Extracting OrcaWave motion RAO data...")
     # Use matched model results (updated mass properties to match AQWA)
+    # NOTE: This file uses 30m water depth due to memory constraints when running at 500m
+    # For proper 500m comparison, run via OrcaWave GUI which has better memory management
     owr_file = benchmark_dir / "orcawave_001_ship_raos_rev2_matched.owr"
 
     if not owr_file.exists():

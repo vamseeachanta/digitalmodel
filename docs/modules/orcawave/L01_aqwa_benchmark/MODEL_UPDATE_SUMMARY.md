@@ -12,6 +12,7 @@
 
 | Property | Value |
 |----------|-------|
+| Water Depth | 30 m |
 | Mass | 9,017.95 tonnes |
 | COG | [2.53, 0, -1.974] m |
 | Ixx | 254,937 tonne·m² |
@@ -23,6 +24,7 @@
 
 | Property | Value |
 |----------|-------|
+| Water Depth | 500 m |
 | Displacement | 44,082.20 tonnes |
 | COG | [108.882, 0.002, 8.500] m |
 | Ixx | 8.357×10⁹ kg·m² = 8,357,000 tonne·m² |
@@ -34,6 +36,7 @@
 
 | Property | Original | Updated | Change |
 |----------|----------|---------|--------|
+| **Water Depth** | 30 m | **500 m** | **Matched to AQWA** |
 | **Mass** | 9,017.95 t | **44,082.20 t** | **+388.8%** |
 | **COG X** | 2.53 m | **108.88 m** | **+43.0x** |
 | **COG Y** | 0 m | **0.002 m** | Negligible |
@@ -41,6 +44,8 @@
 | **Ixx** | 254,937 t·m² | **8,357,000 t·m²** | **+32.8x** |
 | **Iyy** | 5,979,803 t·m² | **113,000,000 t·m²** | **+18.9x** |
 | **Izz** | 5,979,803 t·m² | **122,200,000 t·m²** | **+20.4x** |
+
+> **⚠️ Water Depth Critical Fix (2026-01-08)**: Original OrcaWave model used 30m water depth vs AQWA's 500m. This significantly affects wave kinematics for longer periods and was a major source of RAO differences.
 
 ---
 
