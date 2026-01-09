@@ -480,8 +480,7 @@ class API579_components():
 
         for index in range(start_index, end_index + 1):
             for column in range(start_column, end_column + 1):
-                df.set_value(
-                    index, column,
+                df.loc[index, column] = (
                     self.cfg.Outer_Pipe['Geometry']['Design_WT'] *
                     data['wt_to_nominal_loss_area'])
 
@@ -959,32 +958,6 @@ class API579_components():
         elif data['LongitudinalFlawLengthParameter'] > 20:
             RtFloor = 0.9
 
-        if data['Rt'] > RtFloor:
-            MAWPrEvaluation = False
-            MAWPr = data['MAWP']
-            RSF = 1
-        else:
-            if Level == 1:
-                RSF = data['Rt'] / (1 - (1 - data['Rt']) / Mt)
-            elif Level == 2:
-                RSF = data['AARatio'] / (1 - (1 - data['AARatio']) / Mt)
-            if RSF >= RSFa:
-                MAWPrEvaluation = False
-                MAWPr = data['MAWP']
-            else:
-                MAWPrEvaluation = True
-                MAWPr = data['MAWP'] * RSF / RSFa
-
-        result = {
-            "MAWPrEvaluation": MAWPrEvaluation,
-            "Mt": Mt,
-            "MAWPr": MAWPr,
-            "RSF": RSF
-        }
-
-        return result
-
-    def GMLMAWPrEvaluation(self, data, cfg):
         if data['Rt'] > RtFloor:
             MAWPrEvaluation = False
             MAWPr = data['MAWP']
