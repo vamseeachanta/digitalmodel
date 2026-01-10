@@ -42,42 +42,36 @@ class SolverBenchmarks:
                 max_time_ms=100.0,
                 iterations=5,
                 tags=["execution", "speed"],
-                description="Simple solver execution",
             ),
             BenchmarkConfig(
                 name="solver_medium_execution",
                 max_time_ms=500.0,
                 iterations=3,
                 tags=["execution", "speed"],
-                description="Medium complexity solver",
             ),
             BenchmarkConfig(
                 name="solver_complex_execution",
                 max_time_ms=2000.0,
                 iterations=1,
                 tags=["execution", "speed"],
-                description="Complex solver execution",
             ),
             BenchmarkConfig(
                 name="solver_validation",
                 max_time_ms=50.0,
                 iterations=10,
                 tags=["validation"],
-                description="Input validation performance",
             ),
             BenchmarkConfig(
                 name="solver_status_check",
                 max_time_ms=10.0,
                 iterations=100,
                 tags=["status"],
-                description="Status checking performance",
             ),
             BenchmarkConfig(
                 name="solver_results_retrieval",
                 max_time_ms=20.0,
                 iterations=50,
                 tags=["retrieval"],
-                description="Results retrieval performance",
             ),
         ])
 
@@ -88,21 +82,18 @@ class SolverBenchmarks:
                 max_memory_mb=100.0,
                 iterations=3,
                 tags=["memory", "scalability"],
-                description="Memory usage with small dataset",
             ),
             BenchmarkConfig(
                 name="solver_memory_medium_dataset",
                 max_memory_mb=256.0,
                 iterations=2,
                 tags=["memory", "scalability"],
-                description="Memory usage with medium dataset",
             ),
             BenchmarkConfig(
                 name="solver_memory_large_dataset",
                 max_memory_mb=512.0,
                 iterations=1,
                 tags=["memory", "scalability"],
-                description="Memory usage with large dataset",
             ),
         ])
 
@@ -113,21 +104,18 @@ class SolverBenchmarks:
                 max_time_ms=5000.0,
                 iterations=1,
                 tags=["scalability"],
-                description="Linear scalability test",
             ),
             BenchmarkConfig(
                 name="solver_scalability_quadratic",
                 max_time_ms=10000.0,
                 iterations=1,
                 tags=["scalability"],
-                description="Quadratic scalability test",
             ),
             BenchmarkConfig(
                 name="solver_concurrent_execution",
                 max_time_ms=3000.0,
                 iterations=1,
                 tags=["concurrency"],
-                description="Concurrent solver execution",
             ),
         ])
 
@@ -155,11 +143,13 @@ class SolverBenchmarks:
             )
 
         executor = BenchmarkExecutor(config)
-        return executor.execute(
+        result = executor.execute(
             init_solver,
             category=BenchmarkCategory.SOLVER_EXECUTION,
             description=f"Initialization of {solver_class.__name__}",
         )
+        self.suite.aggregator.add_result(result)
+        return result
 
     def benchmark_solver_validation(self, solver: BaseSolver) -> BenchmarkResult:
         """
@@ -182,11 +172,13 @@ class SolverBenchmarks:
             solver.validate_inputs()
 
         executor = BenchmarkExecutor(config)
-        return executor.execute(
+        result = executor.execute(
             validate,
             category=BenchmarkCategory.SOLVER_EXECUTION,
             description=f"Validation of {solver.name}",
         )
+        self.suite.aggregator.add_result(result)
+        return result
 
     def benchmark_solver_execution(self, solver: BaseSolver) -> BenchmarkResult:
         """
@@ -209,11 +201,13 @@ class SolverBenchmarks:
             solver.solve()
 
         executor = BenchmarkExecutor(config)
-        return executor.execute(
+        result = executor.execute(
             execute,
             category=BenchmarkCategory.SOLVER_EXECUTION,
             description=f"Execution of {solver.name}",
         )
+        self.suite.aggregator.add_result(result)
+        return result
 
     def benchmark_solver_results_caching(self, solver: BaseSolver, run_count: int = 10) -> BenchmarkResult:
         """
@@ -240,11 +234,13 @@ class SolverBenchmarks:
             solver.get_results()
 
         executor = BenchmarkExecutor(config)
-        return executor.execute(
+        result = executor.execute(
             get_results,
             category=BenchmarkCategory.SOLVER_EXECUTION,
             description=f"Results caching of {solver.name}",
         )
+        self.suite.aggregator.add_result(result)
+        return result
 
     def benchmark_solver_metadata(self, solver: BaseSolver) -> BenchmarkResult:
         """
@@ -267,11 +263,13 @@ class SolverBenchmarks:
             solver.get_solver_metadata()
 
         executor = BenchmarkExecutor(config)
-        return executor.execute(
+        result = executor.execute(
             get_metadata,
             category=BenchmarkCategory.SOLVER_EXECUTION,
             description=f"Metadata retrieval of {solver.name}",
         )
+        self.suite.aggregator.add_result(result)
+        return result
 
     def benchmark_input_data_handling(self, solver: AnalysisSolver) -> BenchmarkResult:
         """
@@ -304,11 +302,13 @@ class SolverBenchmarks:
             solver.get_input_data()
 
         executor = BenchmarkExecutor(config)
-        return executor.execute(
+        result = executor.execute(
             set_and_get_data,
             category=BenchmarkCategory.SOLVER_EXECUTION,
             description=f"Input data handling of {solver.name}",
         )
+        self.suite.aggregator.add_result(result)
+        return result
 
     def benchmark_validation_error_handling(self, solver: AnalysisSolver) -> BenchmarkResult:
         """
@@ -336,11 +336,13 @@ class SolverBenchmarks:
             solver.clear_validation_errors()
 
         executor = BenchmarkExecutor(config)
-        return executor.execute(
+        result = executor.execute(
             manage_errors,
             category=BenchmarkCategory.SOLVER_EXECUTION,
             description=f"Validation error handling of {solver.name}",
         )
+        self.suite.aggregator.add_result(result)
+        return result
 
     def benchmark_solver_scaling(
         self,
@@ -418,11 +420,13 @@ class SolverBenchmarks:
                 thread.join()
 
         executor = BenchmarkExecutor(config)
-        return executor.execute(
+        result = executor.execute(
             run_concurrent,
             category=BenchmarkCategory.INTEGRATION,
             description=f"Concurrent execution of {num_instances} solvers",
         )
+        self.suite.aggregator.add_result(result)
+        return result
 
     def run_all_benchmarks(self) -> Dict[str, Any]:
         """
