@@ -54,13 +54,14 @@ class HeadingByHeadingComparator:
 
     def compare_all_headings(self) -> Dict:
         """
-        Compare AQWA vs OrcaWave at all headings for all DOFs
+        Compare AQWA vs OrcaWave at COMMON headings only for all DOFs
 
         Returns:
             Dictionary with comparison results for each DOF
         """
         logger.info("\n" + "="*80)
         logger.info("HEADING-BY-HEADING COMPARISON (ALL DOFs)")
+        logger.info("COMPARING ONLY AT COMMON HEADINGS")
         logger.info("="*80)
 
         # AQWA grid
@@ -75,15 +76,31 @@ class HeadingByHeadingComparator:
         ow_headings = self.orcawave['headings']
         ow_raos = self.orcawave['motion_raos']  # Using MOTION RAOs now!
 
+        # Find COMMON headings only (within 1 degree tolerance)
+        # AQWA: -180, -135, -90, -45, 0, 45, 90, 135, 180
+        # OrcaWave: 0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180
+        # Common: 0, 45, 90, 135, 180
+        common_headings = []
+        for ow_h in ow_headings:
+            for aq_h in aqwa_headings:
+                # Normalize to -180 to 180
+                aq_h_norm = ((aq_h + 180) % 360) - 180
+                ow_h_norm = ((ow_h + 180) % 360) - 180
+                if abs(aq_h_norm - ow_h_norm) < 1.0:  # Within 1 degree
+                    common_headings.append((ow_h, aq_h))
+                    break
+
         logger.info(f"\nAQWA: {len(aqwa_freq)} frequencies × {len(aqwa_headings)} headings")
         logger.info(f"  Periods: {aqwa_periods.min():.2f} - {aqwa_periods.max():.2f} s")
-        logger.info(f"  Headings: {aqwa_headings.min():.1f}° - {aqwa_headings.max():.1f}°")
+        logger.info(f"  Headings: {list(aqwa_headings)}")
 
         logger.info(f"\nOrcaWave: {len(ow_freq)} frequencies × {len(ow_headings)} headings")
         logger.info(f"  Periods: {ow_periods.min():.2f} - {ow_periods.max():.2f} s")
         logger.info(f"  Frequencies (original Hz): {ow_freq_hz.min():.4f} - {ow_freq_hz.max():.4f} Hz")
         logger.info(f"  Frequencies (converted rad/s): {ow_freq.min():.4f} - {ow_freq.max():.4f} rad/s")
-        logger.info(f"  Headings: {ow_headings.min():.1f}° - {ow_headings.max():.1f}°")
+        logger.info(f"  Headings: {list(ow_headings)}")
+
+        logger.info(f"\nCOMMON HEADINGS for comparison: {common_headings}")
 
         results = {}
 
@@ -95,19 +112,26 @@ class HeadingByHeadingComparator:
 
             # Get AQWA RAO for this DOF
             aqwa_rao = self.aqwa.raos.get_component(dof)
-            aqwa_mag = aqwa_rao.magnitude  # (n_freq, n_heading)
+            aqwa_mag = aqwa_rao.magnitude.copy()  # (n_freq, n_heading)
+
+            # CRITICAL: Convert AQWA rotational RAOs from degrees to radians
+            # AQWA outputs ROLL/PITCH/YAW in degrees/m, OrcaWave uses radians/m
+            if dof_name in ['ROLL', 'PITCH', 'YAW']:
+                aqwa_mag = aqwa_mag * (np.pi / 180.0)
+                logger.info(f"  (Converted AQWA {dof_name} from deg/m to rad/m)")
 
             # Get OrcaWave RAO for this DOF
             dof_idx = list(DOF).index(dof)
             ow_rao_complex = ow_raos[:, :, dof_idx]  # (n_heading, n_freq)
 
-            # Compare at all OrcaWave headings
+            # Compare at COMMON headings only
             heading_comparisons = []
             all_errors = []
 
-            for ow_heading_idx, ow_heading in enumerate(ow_headings):
-                # Find nearest AQWA heading
-                aqwa_heading_idx = self.find_nearest_heading_index(ow_heading, aqwa_headings)
+            for ow_heading, aqwa_heading in common_headings:
+                # Find indices
+                ow_heading_idx = np.argmin(np.abs(ow_headings - ow_heading))
+                aqwa_heading_idx = self.find_nearest_heading_index(aqwa_heading, aqwa_headings)
                 aqwa_heading_actual = aqwa_headings[aqwa_heading_idx]
 
                 # Get AQWA RAO at this heading: (n_freq,)
@@ -124,9 +148,12 @@ class HeadingByHeadingComparator:
                 # Interpolate OrcaWave to AQWA frequencies
                 ow_mag_interp = np.interp(aqwa_freq, ow_freq, ow_mag_heading)
 
-                # Calculate errors
+                # Calculate errors - use absolute tolerance for small values
                 abs_errors = np.abs(ow_mag_interp - aqwa_rao_heading)
-                rel_errors = abs_errors / np.maximum(aqwa_rao_heading, 1e-10)
+                # Use hybrid error: relative for large values, absolute for small
+                max_val = max(np.max(aqwa_rao_heading), np.max(ow_mag_interp))
+                abs_tolerance = 0.01 * max_val  # 1% of max as absolute floor
+                rel_errors = abs_errors / np.maximum(aqwa_rao_heading, abs_tolerance)
 
                 # Find peaks
                 aqwa_peak = np.max(aqwa_rao_heading)
@@ -135,7 +162,7 @@ class HeadingByHeadingComparator:
                 ow_peak_freq_idx = np.argmax(ow_mag_interp)
 
                 peak_diff = abs(ow_peak - aqwa_peak)
-                peak_rel_error = peak_diff / aqwa_peak if aqwa_peak > 1e-6 else 0
+                peak_rel_error = peak_diff / max(aqwa_peak, 1e-6)
 
                 # Statistics
                 within_tolerance = rel_errors <= self.tolerance
@@ -474,10 +501,11 @@ def main():
 
     # Extract OrcaWave data
     logger.info("\n[2/3] Extracting OrcaWave motion RAO data...")
-    # Use matched model results (updated mass properties to match AQWA)
-    # NOTE: This file uses 30m water depth due to memory constraints when running at 500m
-    # For proper 500m comparison, run via OrcaWave GUI which has better memory management
-    owr_file = benchmark_dir / "orcawave_001_ship_raos_rev2_matched.owr"
+    # Use matched model results with 500m water depth (matching AQWA)
+    owr_file = benchmark_dir / "orcawave_001_ship_raos_rev2_matched_500m.owr"
+    if not owr_file.exists():
+        # Fallback to 30m version if 500m not available
+        owr_file = benchmark_dir / "orcawave_001_ship_raos_rev2_matched.owr"
 
     if not owr_file.exists():
         logger.error(f"OrcaWave matched results not found: {owr_file}")

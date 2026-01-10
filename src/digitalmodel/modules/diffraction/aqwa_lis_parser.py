@@ -75,24 +75,29 @@ class AQWALISParser:
         if pos is None:
             raise ValueError("Could not find added mass frequency table")
 
-        # Extract the table (next ~500 characters should contain it)
-        table_text = self.content[pos:pos + 2000]
+        # Extract the table (next ~2000 characters should contain it)
+        table_text = self.content[pos:pos + 3000]
 
-        # Find all rows with period/frequency data
-        # Format: " 62.83   0.100  1.95E+06..."
-        pattern = r'\s+([\d.]+)\s+([\d.]+)\s+[\dE.+-]+\s+'
+        # Find all rows with period/frequency data followed by added mass values
+        # AQWA format: " 22.00   0.286  2.33E+06  2.93E+07..." (period, freq, then 12 scientific values)
+        # Pattern must match: period (decimal), freq (decimal), then at least 6 scientific notation values
+        # This ensures we only match actual data rows, not headers or other numeric content
+        pattern = r'^\s*([\d.]+)\s+([\d.]+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)'
 
         periods = []
         frequencies = []
 
-        for match in re.finditer(pattern, table_text):
+        for match in re.finditer(pattern, table_text, re.MULTILINE):
             period = float(match.group(1))
             freq = float(match.group(2))
 
-            # Sanity check: reasonable values
-            if 0.01 < freq < 100 and 0.01 < period < 1000:
-                periods.append(period)
-                frequencies.append(freq)
+            # Sanity check: reasonable values for marine structures
+            # Period typically 2-30 seconds, Frequency 0.2-3.5 rad/s
+            if 0.1 < freq < 10 and 1.0 < period < 100:
+                # Avoid duplicates
+                if freq not in frequencies:
+                    periods.append(period)
+                    frequencies.append(freq)
 
         if not frequencies:
             raise ValueError("No valid frequency data found in added mass table")
@@ -470,10 +475,12 @@ class AQWALISParser:
 
         try:
             frequencies, periods = self.extract_frequencies_and_periods()
-            headings = self.extract_headings()
             added_mass = self.parse_added_mass_table()
             damping = self.parse_damping_table()
             raos = self.parse_rao_table()
+
+            # Derive headings from actual RAO data keys (more reliable than extract_headings)
+            headings = sorted(set(h for f, h in raos.keys()))
 
             result = {
                 'frequencies': frequencies,
@@ -486,7 +493,7 @@ class AQWALISParser:
 
             logger.success(f"Successfully parsed AQWA .LIS file")
             logger.info(f"  - {len(frequencies)} frequencies")
-            logger.info(f"  - {len(headings)} headings")
+            logger.info(f"  - {len(headings)} headings: {headings}")
             logger.info(f"  - {len(added_mass)} added mass matrices")
             logger.info(f"  - {len(damping)} damping matrices")
             logger.info(f"  - {len(raos)} RAO data points")
