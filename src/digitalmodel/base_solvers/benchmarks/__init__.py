@@ -8,6 +8,7 @@ from .benchmark_suite import (
     BenchmarkConfig,
     BenchmarkResult,
     BenchmarkAggregator,
+    BenchmarkCategory,
 )
 from .solver_benchmarks import SolverBenchmarks
 from .configuration_benchmarks import ConfigurationBenchmarks
@@ -18,6 +19,7 @@ __all__ = [
     "BenchmarkConfig",
     "BenchmarkResult",
     "BenchmarkAggregator",
+    "BenchmarkCategory",
     "SolverBenchmarks",
     "ConfigurationBenchmarks",
     "BenchmarkReportGenerator",
