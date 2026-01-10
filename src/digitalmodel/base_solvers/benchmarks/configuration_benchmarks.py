@@ -482,22 +482,24 @@ class ConfigurationBenchmarks:
         logger.info("Running all configuration benchmarks")
 
         # Benchmark YAML loading
-        self.suite.aggregator.add_result(self.benchmark_yaml_loading(self.small_config_file))
-        self.suite.aggregator.add_result(self.benchmark_yaml_loading(self.medium_config_file))
-        self.suite.aggregator.add_result(self.benchmark_yaml_loading(self.large_config_file))
+        # Note: Each benchmark method already calls self.suite.aggregator.add_result()
+        # internally, so we just call the methods and discard the returned results
+        self.benchmark_yaml_loading(self.small_config_file)
+        self.benchmark_yaml_loading(self.medium_config_file)
+        self.benchmark_yaml_loading(self.large_config_file)
 
         # Benchmark ConfigLoader
-        self.suite.aggregator.add_result(self.benchmark_config_loader(self.small_config_file))
-        self.suite.aggregator.add_result(self.benchmark_config_loader(self.medium_config_file))
-        self.suite.aggregator.add_result(self.benchmark_config_loader(self.large_config_file))
+        self.benchmark_config_loader(self.small_config_file)
+        self.benchmark_config_loader(self.medium_config_file)
+        self.benchmark_config_loader(self.large_config_file)
 
         # Benchmark ConfigManager
-        self.suite.aggregator.add_result(self.benchmark_config_manager_initialization())
-        self.suite.aggregator.add_result(self.benchmark_config_get_operations())
-        self.suite.aggregator.add_result(self.benchmark_config_set_operations())
-        self.suite.aggregator.add_result(self.benchmark_nested_config_access())
-        self.suite.aggregator.add_result(self.benchmark_config_update_performance())
-        self.suite.aggregator.add_result(self.benchmark_config_copy_performance())
+        self.benchmark_config_manager_initialization()
+        self.benchmark_config_get_operations()
+        self.benchmark_config_set_operations()
+        self.benchmark_nested_config_access()
+        self.benchmark_config_update_performance()
+        self.benchmark_config_copy_performance()
 
         summary = self.suite.aggregator.get_summary()
         results = self.suite.save_results()
