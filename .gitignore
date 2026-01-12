@@ -271,3 +271,8 @@ hive-mind-prompt-*.txt
 # OrcaFlex simulation files - ignore in all projects subdirectories
 projects/**/*.sim
 src/reports/
+
+# Temporary test outputs
+pytest_output.txt
+pytest_result.txt
+test_result.txt

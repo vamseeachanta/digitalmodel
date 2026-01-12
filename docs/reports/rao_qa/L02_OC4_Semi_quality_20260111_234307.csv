@@ -1,0 +1,94 @@
+RAO Quality Check Summary
+Generated,2026-01-11T23:43:07.970105
+Source File,L02_OC4_Semi-sub.yml
+Vessel Type,semi_submersible
+Confidence,100.0%
+Overall Status,FAIL
+Pass Rate,48.1%
+
+PHASE ANGLE CHECKS
+DOF,Heading (deg),Period (s),Actual Amplitude,Expected Amplitude,Amplitude Error (%),Actual Phase (deg),Expected Phase (deg),Phase Error (deg),Status,Message
+SURGE,0.0,30.0,1.1186,1.0000,11.86,-87.7,90.0,177.7,FAIL,"Long period surge at 0.0° out of tolerance (amp err: 11.9%, phase err: 177.7°)"
+SURGE,22.5,30.0,1.0319,1.0000,3.19,-87.6,90.0,177.6,WARNING,"Long period surge at 22.5° marginal (amp err: 3.2%, phase err: 177.6°)"
+SURGE,45.0,30.0,0.7881,1.0000,21.19,-87.2,90.0,177.2,FAIL,"Long period surge at 45.0° out of tolerance (amp err: 21.2%, phase err: 177.2°)"
+SURGE,67.5,30.0,0.4274,0.0000,42.74,-86.4,0.0,86.4,FAIL,Inactive surge at 67.5° has unexpected amplitude 0.427
+SURGE,90.0,30.0,0.0082,0.0000,0.82,-5.8,0.0,5.8,PASS,Inactive surge at 90.0° correctly near zero
+SURGE,112.5,30.0,0.4276,0.0000,42.76,92.0,0.0,92.0,FAIL,Inactive surge at 112.5° has unexpected amplitude 0.428
+SURGE,135.0,30.0,0.7907,1.0000,20.93,92.7,-90.0,177.3,FAIL,"Long period surge at 135.0° out of tolerance (amp err: 20.9%, phase err: 177.3°)"
+SURGE,157.5,30.0,1.0312,1.0000,3.12,93.1,-90.0,176.9,WARNING,"Long period surge at 157.5° marginal (amp err: 3.1%, phase err: 176.9°)"
+SURGE,180.0,30.0,1.1150,1.0000,11.50,93.2,-90.0,176.8,FAIL,"Long period surge at 180.0° out of tolerance (amp err: 11.5%, phase err: 176.8°)"
+SWAY,0.0,30.0,0.0000,0.0000,0.00,16.7,0.0,16.7,PASS,Inactive sway at 0.0° correctly near zero
+SWAY,22.5,30.0,0.4283,0.0000,42.83,-86.5,0.0,86.5,FAIL,Inactive sway at 22.5° has unexpected amplitude 0.428
+SWAY,45.0,30.0,0.7893,0.0000,78.93,-86.6,0.0,86.6,FAIL,Inactive sway at 45.0° has unexpected amplitude 0.789
+SWAY,67.5,30.0,1.0298,1.0000,2.98,-86.9,90.0,176.9,WARNING,"Long period sway at 67.5° marginal (amp err: 3.0%, phase err: 176.9°)"
+SWAY,90.0,30.0,1.1162,1.0000,11.62,-87.3,90.0,177.3,FAIL,"Long period sway at 90.0° out of tolerance (amp err: 11.6%, phase err: 177.3°)"
+SWAY,112.5,30.0,1.0331,1.0000,3.31,-87.6,90.0,177.6,WARNING,"Long period sway at 112.5° marginal (amp err: 3.3%, phase err: 177.6°)"
+SWAY,135.0,30.0,0.7899,0.0000,78.99,-87.8,0.0,87.8,FAIL,Inactive sway at 135.0° has unexpected amplitude 0.790
+SWAY,157.5,30.0,0.4259,0.0000,42.59,-88.0,0.0,88.0,FAIL,Inactive sway at 157.5° has unexpected amplitude 0.426
+SWAY,180.0,30.0,0.0000,0.0000,0.00,124.5,0.0,124.5,PASS,Inactive sway at 180.0° correctly near zero
+HEAVE,0.0,30.0,1.0443,1.0000,4.43,-2.2,0.0,2.2,PASS,Long period heave at 0.0° within tolerance
+HEAVE,22.5,30.0,1.0437,1.0000,4.37,-2.2,0.0,2.2,PASS,Long period heave at 22.5° within tolerance
+HEAVE,45.0,30.0,1.0428,1.0000,4.28,-2.1,0.0,2.1,PASS,Long period heave at 45.0° within tolerance
+HEAVE,67.5,30.0,1.0426,1.0000,4.26,-2.1,0.0,2.1,PASS,Long period heave at 67.5° within tolerance
+HEAVE,90.0,30.0,1.0434,1.0000,4.34,-2.2,0.0,2.2,PASS,Long period heave at 90.0° within tolerance
+HEAVE,112.5,30.0,1.0442,1.0000,4.42,-2.2,0.0,2.2,PASS,Long period heave at 112.5° within tolerance
+HEAVE,135.0,30.0,1.0440,1.0000,4.40,-2.2,0.0,2.2,PASS,Long period heave at 135.0° within tolerance
+HEAVE,157.5,30.0,1.0430,1.0000,4.30,-2.2,0.0,2.2,PASS,Long period heave at 157.5° within tolerance
+HEAVE,180.0,30.0,1.0426,1.0000,4.26,-2.1,0.0,2.1,PASS,Long period heave at 180.0° within tolerance
+ROLL,0.0,30.0,0.0000,0.0000,0.00,-61.5,0.0,61.5,PASS,Inactive roll at 0.0° correctly near zero
+ROLL,22.5,30.0,0.0042,0.0000,0.42,-107.1,0.0,107.1,PASS,Inactive roll at 22.5° correctly near zero
+ROLL,45.0,30.0,0.0078,0.0000,0.78,-106.6,0.0,106.6,PASS,Inactive roll at 45.0° correctly near zero
+ROLL,67.5,30.0,0.0102,1.0000,98.98,-104.8,90.0,165.2,FAIL,"Long period roll at 67.5° out of tolerance (amp err: 99.0%, phase err: 165.2°)"
+ROLL,90.0,30.0,0.0109,1.0000,98.91,-102.1,90.0,167.9,FAIL,"Long period roll at 90.0° out of tolerance (amp err: 98.9%, phase err: 167.9°)"
+ROLL,112.5,30.0,0.0100,1.0000,99.00,-99.7,90.0,170.3,FAIL,"Long period roll at 112.5° out of tolerance (amp err: 99.0%, phase err: 170.3°)"
+ROLL,135.0,30.0,0.0077,0.0000,0.77,-98.0,0.0,98.0,PASS,Inactive roll at 135.0° correctly near zero
+ROLL,157.5,30.0,0.0042,0.0000,0.42,-96.8,0.0,96.8,PASS,Inactive roll at 157.5° correctly near zero
+ROLL,180.0,30.0,0.0000,0.0000,0.00,116.4,0.0,116.4,PASS,Inactive roll at 180.0° correctly near zero
+PITCH,0.0,30.0,0.0108,1.0000,98.92,80.9,-90.0,170.9,FAIL,"Long period pitch at 0.0° out of tolerance (amp err: 98.9%, phase err: 170.9°)"
+PITCH,22.5,30.0,0.0100,1.0000,99.00,80.1,-90.0,170.1,FAIL,"Long period pitch at 22.5° out of tolerance (amp err: 99.0%, phase err: 170.1°)"
+PITCH,45.0,30.0,0.0078,1.0000,99.22,77.5,-90.0,167.5,FAIL,"Long period pitch at 45.0° out of tolerance (amp err: 99.2%, phase err: 167.5°)"
+PITCH,67.5,30.0,0.0042,0.0000,0.42,71.7,0.0,71.7,PASS,Inactive pitch at 67.5° correctly near zero
+PITCH,90.0,30.0,0.0006,0.0000,0.06,-10.9,0.0,10.9,PASS,Inactive pitch at 90.0° correctly near zero
+PITCH,112.5,30.0,0.0041,0.0000,0.41,-96.6,0.0,96.6,PASS,Inactive pitch at 112.5° correctly near zero
+PITCH,135.0,30.0,0.0077,1.0000,99.23,-101.7,90.0,168.3,FAIL,"Long period pitch at 135.0° out of tolerance (amp err: 99.2%, phase err: 168.3°)"
+PITCH,157.5,30.0,0.0101,1.0000,98.99,-104.4,90.0,165.6,FAIL,"Long period pitch at 157.5° out of tolerance (amp err: 99.0%, phase err: 165.6°)"
+PITCH,180.0,30.0,0.0110,1.0000,98.90,-105.4,90.0,164.6,FAIL,"Long period pitch at 180.0° out of tolerance (amp err: 98.9%, phase err: 164.6°)"
+YAW,0.0,30.0,0.0000,0.0000,0.00,6.6,0.0,6.6,PASS,Inactive yaw at 0.0° correctly near zero
+YAW,22.5,30.0,0.0001,0.0000,0.01,-101.2,0.0,101.2,PASS,Inactive yaw at 22.5° correctly near zero
+YAW,45.0,30.0,0.0001,0.0000,0.01,-100.1,0.0,100.1,PASS,Inactive yaw at 45.0° correctly near zero
+YAW,67.5,30.0,0.0001,0.0000,0.01,76.5,0.0,76.5,PASS,Inactive yaw at 67.5° correctly near zero
+YAW,90.0,30.0,0.0002,0.0000,0.02,77.1,0.0,77.1,PASS,Inactive yaw at 90.0° correctly near zero
+YAW,112.5,30.0,0.0001,0.0000,0.01,78.1,0.0,78.1,PASS,Inactive yaw at 112.5° correctly near zero
+YAW,135.0,30.0,0.0001,0.0000,0.01,-100.8,0.0,100.8,PASS,Inactive yaw at 135.0° correctly near zero
+YAW,157.5,30.0,0.0001,0.0000,0.01,-101.8,0.0,101.8,PASS,Inactive yaw at 157.5° correctly near zero
+YAW,180.0,30.0,0.0000,0.0000,0.00,-167.5,0.0,167.5,PASS,Inactive yaw at 180.0° correctly near zero
+
+PEAK PERIOD CHECKS
+DOF,Heading (deg),Peak Period (s),Peak Amplitude,Expected Range,In Range,Amplification Factor,Status,Message
+HEAVE,0.0,19.00,1.4244,"(17.0, 25.0)",Yes,1.36,PASS,Heave peak at 19.0s within expected range [17.0-25.0]s
+HEAVE,22.5,19.00,1.4228,"(17.0, 25.0)",Yes,1.36,PASS,Heave peak at 19.0s within expected range [17.0-25.0]s
+HEAVE,45.0,19.00,1.4264,"(17.0, 25.0)",Yes,1.37,PASS,Heave peak at 19.0s within expected range [17.0-25.0]s
+HEAVE,67.5,19.00,1.4282,"(17.0, 25.0)",Yes,1.37,PASS,Heave peak at 19.0s within expected range [17.0-25.0]s
+HEAVE,90.0,19.00,1.4231,"(17.0, 25.0)",Yes,1.36,PASS,Heave peak at 19.0s within expected range [17.0-25.0]s
+HEAVE,112.5,19.00,1.4239,"(17.0, 25.0)",Yes,1.36,PASS,Heave peak at 19.0s within expected range [17.0-25.0]s
+HEAVE,135.0,19.00,1.4231,"(17.0, 25.0)",Yes,1.36,PASS,Heave peak at 19.0s within expected range [17.0-25.0]s
+HEAVE,157.5,19.00,1.4244,"(17.0, 25.0)",Yes,1.37,PASS,Heave peak at 19.0s within expected range [17.0-25.0]s
+HEAVE,180.0,19.00,1.4291,"(17.0, 25.0)",Yes,1.37,PASS,Heave peak at 19.0s within expected range [17.0-25.0]s
+ROLL,0.0,25.00,0.0000,"(17.0, 24.0)",No,3.10,WARNING,Roll peak at 25.0s near expected range [17.0-24.0]s
+ROLL,22.5,25.00,0.0073,"(17.0, 24.0)",No,1.73,WARNING,Roll peak at 25.0s near expected range [17.0-24.0]s
+ROLL,45.0,25.00,0.0130,"(17.0, 24.0)",No,1.67,WARNING,Roll peak at 25.0s near expected range [17.0-24.0]s
+ROLL,67.5,25.00,0.0169,"(17.0, 24.0)",No,1.66,WARNING,Roll peak at 25.0s near expected range [17.0-24.0]s
+ROLL,90.0,25.00,0.0181,"(17.0, 24.0)",No,1.65,WARNING,Roll peak at 25.0s near expected range [17.0-24.0]s
+ROLL,112.5,25.00,0.0163,"(17.0, 24.0)",No,1.63,WARNING,Roll peak at 25.0s near expected range [17.0-24.0]s
+ROLL,135.0,25.00,0.0124,"(17.0, 24.0)",No,1.61,WARNING,Roll peak at 25.0s near expected range [17.0-24.0]s
+ROLL,157.5,25.00,0.0069,"(17.0, 24.0)",No,1.65,WARNING,Roll peak at 25.0s near expected range [17.0-24.0]s
+ROLL,180.0,25.00,0.0000,"(17.0, 24.0)",No,3.19,WARNING,Roll peak at 25.0s near expected range [17.0-24.0]s
+PITCH,0.0,25.00,0.0175,"(17.0, 20.0)",No,1.62,FAIL,Pitch peak at 25.0s outside expected range [17.0-20.0]s
+PITCH,22.5,25.00,0.0164,"(17.0, 20.0)",No,1.63,FAIL,Pitch peak at 25.0s outside expected range [17.0-20.0]s
+PITCH,45.0,25.00,0.0129,"(17.0, 20.0)",No,1.66,FAIL,Pitch peak at 25.0s outside expected range [17.0-20.0]s
+PITCH,67.5,25.00,0.0071,"(17.0, 20.0)",No,1.67,FAIL,Pitch peak at 25.0s outside expected range [17.0-20.0]s
+PITCH,90.0,7.00,0.0028,"(17.0, 20.0)",No,4.99,FAIL,Pitch peak at 7.0s outside expected range [17.0-20.0]s
+PITCH,112.5,25.00,0.0067,"(17.0, 20.0)",No,1.61,FAIL,Pitch peak at 25.0s outside expected range [17.0-20.0]s
+PITCH,135.0,25.00,0.0127,"(17.0, 20.0)",No,1.66,FAIL,Pitch peak at 25.0s outside expected range [17.0-20.0]s
+PITCH,157.5,25.00,0.0169,"(17.0, 20.0)",No,1.67,FAIL,Pitch peak at 25.0s outside expected range [17.0-20.0]s
+PITCH,180.0,25.00,0.0184,"(17.0, 20.0)",No,1.67,FAIL,Pitch peak at 25.0s outside expected range [17.0-20.0]s
