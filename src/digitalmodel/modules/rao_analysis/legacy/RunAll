@@ -1,0 +1,3 @@
+CALL python RAOAnalysis.py RAOs_Strength_0.yml
+CALL python RAOAnalysis.py RAOs_Strength_45.yml
+CALL python RAOAnalysis.py RAOs_Strength_90.yml
