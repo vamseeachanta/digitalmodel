@@ -1,0 +1,46 @@
+RAO QUALITY CHECK - DIVERSE VESSEL TYPES
+==========================================================================================
+
+File: L02 OC4 Semi-sub_orcaflex.yml
+  Vessel Type: semi_submersible (confidence: 100.0%)
+  Results: 39/81 passed, 13 warnings, 29 failed
+  Pass Rate: 48.1% | Status: FAIL
+  Report: docs\reports\rao_qa\L02_OC4_Semi-sub_orcaflex_quality_20260112_062305.html
+
+File: L03 Semi-sub multibody analysis_orcaflex.yml
+  Vessel Type: semi_submersible (confidence: 100.0%)
+  Results: 54/144 passed, 38 warnings, 52 failed
+  Pass Rate: 37.5% | Status: FAIL
+  Report: docs\reports\rao_qa\L03_Semi-sub_multibody_analysis_orcaflex_quality_20260112_062310.html
+
+File: A01 Catenary riser.yml
+  Vessel Type: unknown (confidence: 0.0%)
+  Results: 0/0 passed, 0 warnings, 0 failed
+  Pass Rate: 0.0% | Status: UNKNOWN
+
+File: A01 Lazy wave riser.yml
+  Vessel Type: unknown (confidence: 0.0%)
+  Results: 0/0 passed, 0 warnings, 0 failed
+  Pass Rate: 0.0% | Status: UNKNOWN
+
+File: A05 Lazy wave with FPSO.yml
+  Vessel Type: unknown (confidence: 0.0%)
+  Results: 0/0 passed, 0 warnings, 0 failed
+  Pass Rate: 0.0% | Status: UNKNOWN
+
+File: C05 Single point mooring.yml
+  Vessel Type: unknown (confidence: 0.0%)
+  Results: 0/0 passed, 0 warnings, 0 failed
+  Pass Rate: 0.0% | Status: UNKNOWN
+
+File: C06 CALM buoy.yml
+  Vessel Type: unknown (confidence: 0.0%)
+  Results: 0/0 passed, 0 warnings, 0 failed
+  Pass Rate: 0.0% | Status: UNKNOWN
+
+==========================================================================================
+SUMMARY: 2 files with valid checks
+Average Pass Rate: 42.8%
+
+By Vessel Type:
+  semi_submersible: 42.8% avg (2 files)
