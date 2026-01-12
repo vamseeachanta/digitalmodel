@@ -1,0 +1,74 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<!-- My CSS and JS -->
+	<!-- Bootstrap core CSS -->
+	<link href="{{ url_for('static',filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static',filename='css/bootstrap-theme.min.css') }}" rel="stylesheet">
+	<link href="https://getbootstrap.com/docs/4.0/examples/sticky-footer-navbar/sticky-footer-navbar.css" rel="stylesheet">
+
+	<script src="https://d3js.org/d3.v5.js"></script>
+	<script src="{{ url_for('static',filename='js/d3_reusables.js') }}"></script>
+	<script src="{{ url_for('static',filename='js/web_utilities.js') }}"></script>
+	<link href="{{ url_for('static',filename='css/styles.css') }}" rel="stylesheet">
+</head>
+
+<body>
+	{% include 'header.html' %}
+
+	{% block head %}
+	{% if context.data %}
+	<title>BSEE Data | {{ context.data.field_summary_df_dict[0]['Field Nickname'] }} </title>
+	{% else %}
+	<title>BSEE Data</title>
+	{% endif %}
+	{% endblock %}
+	<main role="main" class="container">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-2 sidebar">
+					{% include 'sidebar.html' ignore missing with context %}
+				</div>
+				<div class="col-md-10 col-md-offset-2 main">
+					<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+						<h1 class="h2">BSEE Data</h1>
+					</div>
+					<div id="selectfield">
+						<label>Select GoM field:</label>
+						<form action="" method="post" name="Inputs">
+							{{form.hidden_tag()}}
+							{{ form.bseefields }}
+						</form>
+					</div>  {# selectfield #}
+
+
+					{% if context.data %}
+					<p>
+						Project Name : {{ context.FieldName | safe}}
+						<br>
+						Blocks used for analysis : {{ context.data.custom_parameters['boem_fields'] | safe}}
+						<br>
+						BSEE data last updated in Feb 2020
+					</p>
+
+					<div id="MenuHTMLContent">
+						{% block subitem_page %}
+						{% endblock %} {# subitem_page #}
+					</div>
+
+					{% endif %}
+
+					<a id=dummy_download> </a>
+				</div>
+			</div>
+		</div>
+	</main>
+	{% include 'footer.html' %}
+	<script src="{{ url_for('static',filename='js/web_utilities.js') }}"></script>
+</body>
+</html>

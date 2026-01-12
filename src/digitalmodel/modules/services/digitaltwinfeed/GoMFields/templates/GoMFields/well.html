@@ -1,0 +1,95 @@
+{% extends 'GoMFields/index.html' %}
+{% block subitem_page %}
+{% if context %}
+
+    <br>
+    <h5>Construction Data</h5>
+        <table id="wellConstructionGeneral" class="table">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Well Name</th>
+                    <th scope="col">Last BSEE Date</th>
+                    <th scope="col">Water Depth (ft)</th>
+                    <th scope="col">Total Measured Depth (ft)</th>
+                    <th scope="col">Total Vertical Depth (ft)</th>
+                    <th scope="col">Spud Date</th>
+                    <th scope="col">Total Depth Date</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <table id="wellConstructionRig" class="table">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Well Name</th>
+                    <th scope="col">Rigs</th>
+                    <th scope="col">Drilling Days</th>
+                    <th scope="col">Completion Days</th>
+                    <th scope="col">Drilling Footage</th>
+                    <th scope="col">Drilling Days per 10,000 ft</th>
+                    <th scope="col">Max Mud Weight</th>
+                    <th scope="col">Rig Last Date on Well</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+    <br>
+    <h5>Location Data</h5>
+        <table id="wellLocation" class="table">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Well Name</th>
+                    <th scope="col">Wellbore Status</th>
+                    <th scope="col">Surface Latitude</th>
+                    <th scope="col">Surface Longitude</th>
+                    <th scope="col">Bottom Latitude</th>
+                    <th scope="col">Bottom Longitude</th>
+                    <th scope="col">Horizontal Departure (ft)</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+    <br>
+    <h5>Well Paths</h5>
+    <div class="chart" id="well_path">
+        <script>
+            var well_path = {{context.plot_data.well_path | safe}};
+            Plotly.newPlot('well_path', well_path.data, well_path.layout);
+        </script>
+    </div>
+    <br>
+    <div class="chart" id="well_path_ES">
+        <script>
+            var well_path_ES = {{context.plot_data.well_path_ES | safe}};
+            Plotly.newPlot('well_path_ES', well_path_ES.data, well_path_ES.layout);
+        </script>
+    </div>
+    <br>
+
+<script>
+    var transform = {tag: 'tr',
+        children: [{"tag": "td","html": "${Well Name}"},{"tag": "td","html": "${Last BSEE Date}"},{"tag": "td","html": "${Water Depth}"},{"tag": "td","html": "${Total Measured Depth}"},{"tag": "td","html": "${Total Vertical Depth}"},{"tag": "td","html": "${Spud Date}"},{"tag": "td","html": "${Total Depth Date}"}]
+        };
+    var data = {{context['cfg']['well_construction'] | safe}};
+    $('#wellConstructionGeneral > tbody ').json2html(data, transform);
+</script>
+<script>
+    var transform = {tag: 'tr',
+        children: [{"tag": "td","html": "${Well Name}"},{"tag": "td","html": "${Rigs}"},{"tag": "td","html": "${Drilling Days}"},{"tag": "td","html": "${Completion Days}"},{"tag": "td","html": "${Drilling Footage}"},{"tag": "td","html": "${Drilling Days per 10,000 ft}"},{"tag": "td","html": "${Max Mud Weight}"},{"tag": "td","html": "${Rig Last Date on Well}"}]
+        };
+    var data = {{context['cfg']['well_construction'] | safe}};
+    $('#wellConstructionRig > tbody ').json2html(data, transform);
+</script>
+<script>
+    var transform = {tag: 'tr',
+        children: [{"tag": "td","html": "${Well Name}"},{"tag": "td","html": "${Wellbore Status}"},{"tag": "td","html": "${Surface Latitude}"},{"tag": "td","html": "${Surface Longitude}"},{"tag": "td","html": "${Bottom Latitude}"},{"tag": "td","html": "${Bottom Longitude}"},{"tag": "td","html": "${Horizontal Departure}"}]
+        };
+    var data = {{context['cfg']['well_locations'] | safe}};
+    $('#wellLocation > tbody ').json2html(data, transform);
+</script>
+
+{% endif %}
+{% endblock %} {# subitem_page #}

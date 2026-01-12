@@ -1,0 +1,11 @@
+{% extends 'bseedata/index.html' %}
+{% block subitem_page %}
+
+<div id="wellProductionInformation">
+<h4>Well Production Information </h4>
+{{context.data.well_production_summary_df_html | safe}}
+<img src="static/bseedata/images/app_ong_field_development_{{ context.data.custom_parameters['ong_app_file_name_key'] }}_well_production.png" class="img-fluid" alt="Responsive image">
+<img src="static/bseedata/images/app_ong_field_development_{{ context.data.custom_parameters['ong_app_file_name_key'] }}_production_with_time.png" class="img-fluid" alt="Responsive image">
+</div>
+
+{% endblock %} {# subitem_page #}

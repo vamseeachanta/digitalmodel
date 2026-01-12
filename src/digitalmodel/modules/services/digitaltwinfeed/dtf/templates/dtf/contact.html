@@ -1,0 +1,30 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- My CSS and JS -->
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static',filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='css/bootstrap-theme.min.css') }}" rel="stylesheet">
+    <link href="https://getbootstrap.com/docs/4.0/examples/sticky-footer-navbar/sticky-footer-navbar.css" rel="stylesheet">
+    <link href="{{ url_for('static',filename='css/styles.css') }}" rel="stylesheet">
+</head> 
+
+  <body>
+	{% include 'header.html' %}
+      <main role="main" class="container">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+              <h1 class="h2">General Contact</h1>
+          </div>
+          <!--        <p>Your feedback is valuable for the improvement of the products. For general or project queries and feedback, please submit by choosing an option and submit. We will to respond queries within 24 hours</p>-->
+          <!--        <p>Add a dropdown meanu </p>-->
+          <!--        <p>Add a text box to submit the suggestions (Size it to 1000 words?)</p>-->
+          <p>Please contact <a href="mailto:support@aceengineer.com">support@aceengineer.com</a> for project enquiries and general data services.</p>
+      </main> 
+	{% include 'footer.html' %}
+  </body>
+</html> 
