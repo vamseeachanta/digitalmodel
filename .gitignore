@@ -276,3 +276,4 @@ src/reports/
 pytest_output.txt
 pytest_result.txt
 test_result.txt
+rao_batch_results.txt
