@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {% include 'staticFiles.html' %}
+</head>
+
+  <body>
+	{% include 'header.html' %}
+    {% if context['title'] %}
+        <title>{{ context['title'] }}</title>
+    {% endif %}
+
+      <main role="main" class="container">
+          <h4 class="h4">{{context['AppNameAlias']}}</h4>
+
+            <div id="selectDropdownChoice">
+                    <form method="POST" action="">
+                    <div class="form-field">{{ form.dropDownSelection.label }} {{ form.dropDownSelection }}</div>
+                    </form>
+            </div>  {# selectDropdownChoice #}
+
+            {% if context.data %}
+                <p>
+                Project Name : {{ context.FieldName | safe}}. Blocks used for analysis : {{ context.data.custom_parameters['boem_fields'] | safe}}
+                BSEE data last updated in Feb 2020
+                </p>
+            {% endif %}
+
+            <br>
+            {% if context.menu_items %}
+            	{% include 'appMenuItemsHorizontal.html' %}
+            {% endif %}
+
+            <div id="AppMenuContent">
+                {% block subitem_page %}
+                {% endblock %} {# subitem_page #}
+            </div>
+
+      <a id=dummy_download> </a>
+    </main>
+	{% include 'footer.html' %}
+  </body>
+</html>

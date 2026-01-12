@@ -1,0 +1,54 @@
+{% extends 'bseedata/index.html' %}
+{% block subitem_page %}
+
+<script type="text/javascript">
+    field_summary_df_json = JSON.parse({{context['data']['well_high_level_df_json']  | tojson | safe }})
+</script>
+
+<div id="fieldWellsData" class="in">
+    <h2>Field Wells Data</h2>
+    <button type="button" onclick="downloadCSVFromJson('{{ context.data.field_summary_df_dict[0]['Field Nickname'] | safe}}_field_data.csv', field_summary_df_json);">Download as CSV</button>
+     <p><br></p>
+    {{context.data.well_high_level_df_html  | safe }}
+</div>
+
+<div id="chartProducersWellLocation">
+    <h4>Well Locations</h4>
+    <h5>Producing Well (Relative) Locations and Summary</h5>
+    <p>Hover on bubble for further well information. Bubble size proportional to production (MMBbl) to date. </p>
+</div>
+
+<div id="#wellLocationStatistics">
+    <h5>Well Location Statistics</h5>
+    <p>All Wellheads, Max Distance (ft): {{context.data.wellhead_distances_df_dict[0].wellhead_distances['All Wellheads, Max Distance (ft)'] }}</p>
+    <p>All Wells, Max Horizontal Departure (ft): {{context.data.wellhead_distances_df_dict[0].wellhead_distances['All Wells, Max Horizontal Departure (ft)'] }}</p>
+    <p>Producing Wellheads, Max Distance (ft): {{context.data.wellhead_distances_df_dict[0].wellhead_distances['Producing Wellheads, Max Distance (ft)']}}</p>
+    <p>Producing Wellheads, Min Distance (ft): {{context.data.wellhead_distances_df_dict[0].wellhead_distances['Producing Wellheads, Min Distance (ft)'] }}</p>
+    <p>Producing Wellheads, Max Horizontal Departure (ft): {{context.data.wellhead_distances_df_dict[0].wellhead_distances['Producing Wellheads, Max Horizontal Departure (ft)'] }}</p>
+
+    <h5>Well Paths</h5>
+    <img src="static/bseedata/images/app_ong_field_development_{{ context.data.custom_parameters['ong_app_file_name_key'] }}_well_paths.png" class="img-fluid" alt="Responsive image">
+</div>
+
+<div id="chartProducersWellheadWithBottom">
+</div>
+
+<div id="chartAllWellheadWithBottom">
+</div>
+
+<a id=dummy_download> </a>
+
+<script type="text/javascript">
+    var chartData = {{ context['data']['chartProducersWellLocation'] | safe}}
+    addChartToDOM(chartData);
+</script>
+<script type="text/javascript">
+    var chartData = {{ context.data['chartProducersWellheadWithBottom'] | safe}}
+    addChartToDOM(chartData);
+</script>
+<script type="text/javascript">
+    var chartData = {{ context.data['chartAllWellheadWithBottom'] | safe}}
+    addChartToDOM(chartData);
+</script>
+
+{% endblock %} {# subitem_page #}
