@@ -10,13 +10,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 from digitalmodel.modules.marine_analysis import RAODataValidators
 from digitalmodel.modules.marine_analysis.rao_quality_report import RAOQualityReportGenerator
 
-# Diverse vessel type files
+# Diverse vessel type files with actual RAO data
 rao_files = [
-    'src/digitalmodel/modules/rao_analysis/legacy/dataManager/FPSORAOs.yml',
-    'projects/modules/calm/baltic_039m/TEST_OPERABILITY/orcaflex/base_files/_04_vessel_type_crowley650_atb.yml',
-    'docs/modules/orcaflex/examples/raw/L01/L01 Default vessel.yml',
-    'docs/modules/orcaflex/examples/raw/A05/A05 Catenary with spar.yml',
-    'docs/modules/orcaflex/examples/raw/A05/A05 Catenary with semisub.yml',
+    'docs/modules/orcawave/examples/L02 OC4 Semi-sub/L02 OC4 Semi-sub_orcaflex.yml',
+    'docs/modules/orcawave/examples/L03 Semi-sub multibody analysis/L03 Semi-sub multibody analysis_orcaflex.yml',
+    'docs/modules/orcaflex/examples/raw/A01/A01 Catenary riser.yml',
+    'docs/modules/orcaflex/examples/raw/A01/A01 Lazy wave riser.yml',
+    'docs/modules/orcaflex/examples/raw/A05/A05 Lazy wave with FPSO.yml',
+    'docs/modules/orcaflex/examples/raw/C05/C05 Single point mooring.yml',
     'docs/modules/orcaflex/examples/raw/C06/C06 CALM buoy.yml',
 ]
 
@@ -95,4 +96,4 @@ with open('rao_diverse_results.txt', 'w') as f:
         for vt, rates in sorted(by_type.items()):
             f.write(f'  {vt}: {sum(rates)/len(rates):.1f}% avg ({len(rates)} files)\n')
 
-print("Results written to rao_diverse_results.txt")
+# Results written to rao_diverse_results.txt
