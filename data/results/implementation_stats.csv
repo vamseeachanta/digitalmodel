@@ -1,8 +1,0 @@
-component,lines_of_code,files,functions,classes,test_files,documentation_pages
-Config Registry,644,1,15,2,3,1
-Database Manager,579,1,12,1,2,1
-Validation Pipeline,1082,1,25,9,5,1
-Data Catalog,608,1,18,5,3,1
-Data Provenance,581,1,14,4,3,1
-Excel to Parquet,578,1,16,3,3,1
-Total,4072,6,100,24,19,6
