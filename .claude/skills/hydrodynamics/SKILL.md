@@ -134,6 +134,34 @@ hydrodynamics:
       interpolated_file: "results/interpolated_raos.csv"
 ```
 
+### 5. Displacement RAO Quality Checks
+
+Validate displacement RAO data for physical correctness and consistency.
+
+```yaml
+hydrodynamics:
+  rao_quality_check:
+    flag: true
+    input_file: "data/vessel_raos.yml"  # OrcaFlex format
+    vessel_type: auto  # auto, ship, fpso, semi_submersible, spar, barge
+    tolerances:
+      amplitude: 0.05  # 5% tolerance
+      phase: 10.0      # 10 degrees tolerance
+    checks:
+      - long_period_phase  # Phase angles at T → infinity
+      - peak_detection     # Natural period validation
+      - vessel_type_detection
+    output:
+      html_report: "reports/rao_qa/quality_report.html"
+      csv_summary: "reports/rao_qa/quality_summary.csv"
+```
+
+**Quality Checks:**
+- **Long Period Phase**: Validates phase angles approach expected values as period → infinity (Orcina convention)
+- **Peak Detection**: Identifies resonance peaks and validates against vessel type natural period ranges
+- **Vessel Type Detection**: Auto-detects vessel type from RAO characteristics with confidence score
+- **Active DOF Validation**: Checks appropriate DOFs are active for each wave heading
+
 ## Python API
 
 ### Coefficient Database
@@ -275,6 +303,75 @@ sym_check = validator.check_symmetry()
 pd_check = validator.check_positive_definite()
 ```
 
+### Displacement RAO Quality Checks
+
+```python
+import yaml
+from digitalmodel.modules.marine_analysis import (
+    RAODataValidators,
+    VesselType,
+    DisplacementRAOQualityReport
+)
+from digitalmodel.modules.marine_analysis.rao_quality_report import RAOQualityReportGenerator
+
+# Load OrcaFlex RAO data
+with open("vessel_raos.yml", 'r') as f:
+    rao_data = yaml.safe_load(f)
+
+# Initialize validators
+validators = RAODataValidators()
+
+# Run quality check (auto-detects vessel type)
+report = validators.validate_displacement_rao_quality(
+    rao_data,
+    source_file="vessel_raos.yml",
+    vessel_type=None,  # Auto-detect, or specify VesselType.SHIP
+    amplitude_tolerance=0.05,  # 5%
+    phase_tolerance=10.0       # degrees
+)
+
+# Access results
+print(f"Vessel Type: {report.vessel_type.value}")
+print(f"Confidence: {report.vessel_type_confidence:.1%}")
+print(f"Overall Status: {report.overall_status}")
+print(f"Pass Rate: {report.pass_rate:.1f}%")
+print(f"Total/Passed/Warnings/Failed: {report.total_checks}/{report.passed_checks}/{report.warning_checks}/{report.failed_checks}")
+
+# Check phase results
+for check in report.phase_checks:
+    if check.status == 'FAIL':
+        print(f"FAIL: {check.dof} @ {check.heading}° - {check.message}")
+
+# Check peak detection results
+for check in report.peak_checks:
+    print(f"{check.dof}: Peak at {check.peak_period:.1f}s (expected {check.expected_range[0]:.1f}-{check.expected_range[1]:.1f}s)")
+
+# Generate HTML report
+generator = RAOQualityReportGenerator(output_dir="reports/rao_qa")
+html_path = generator.generate_html_report(report, report_name="vessel_quality")
+print(f"HTML report: {html_path}")
+
+# Export CSV summary
+csv_path = generator.export_csv_summary(report, report_name="vessel_summary")
+print(f"CSV summary: {csv_path}")
+
+# Get active DOFs for a heading
+active_dofs = RAODataValidators.get_active_dofs_for_heading(180.0)
+print(f"Active DOFs at head seas: {active_dofs}")
+# Output: ['surge', 'heave', 'pitch']
+```
+
+**Expected Long Period Values (Orcina Convention):**
+
+| DOF | Head Seas (180°) | Beam Seas (90°) | Following (0°) |
+|-----|------------------|-----------------|----------------|
+| Surge | Amp=1.0, Phase=-90° | Inactive | Amp=1.0, Phase=90° |
+| Sway | Inactive | Amp=1.0, Phase=90° | Inactive |
+| Heave | Amp=1.0, Phase=0° | Amp=1.0, Phase=0° | Amp=1.0, Phase=0° |
+| Roll | Inactive | Amp=1.0, Phase=90° | Inactive |
+| Pitch | Amp=1.0, Phase=90° | Inactive | Amp=1.0, Phase=-90° |
+| Yaw | Inactive | Inactive | Inactive |
+
 ## Key Classes
 
 | Class | Purpose |
@@ -285,6 +382,8 @@ pd_check = validator.check_positive_definite()
 | `OCIMFLoading` | OCIMF wind/current calculations |
 | `CoefficientsInterpolator` | 2D interpolation (freq × direction) |
 | `HydroValidator` | Kramers-Kronig and matrix validation |
+| `RAODataValidators` | RAO quality checks (phase, peaks, vessel type) |
+| `RAOQualityReportGenerator` | HTML/CSV quality report generation |
 
 ## Wave Spectrum Types
 

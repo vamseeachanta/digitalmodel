@@ -48,7 +48,19 @@ except ImportError:
 
 # Legacy compatibility
 from .rao_processor import RAODataProcessor, RAOImportError
-from .rao_validators import RAODataValidators, ValidationReport
+from .rao_validators import (
+    RAODataValidators,
+    ValidationReport,
+    # Displacement RAO quality check exports (v2.3 - NEW)
+    VesselType,
+    VesselTypeCharacteristics,
+    VESSEL_CHARACTERISTICS,
+    LongPeriodExpectation,
+    LONG_PERIOD_EXPECTATIONS,
+    PhaseCheckResult,
+    PeakDetectionResult,
+    DisplacementRAOQualityReport
+)
 from .rao_interpolator import RAOInterpolator
 from .aqwa_reader import AQWAReader
 from .orcaflex_reader import OrcaFlexReader
@@ -75,10 +87,14 @@ __all__ = [
     'RAOPlotter',
     'RAODataProcessor', 'RAOImportError', 'RAODataValidators', 'ValidationReport',
     'RAOInterpolator', 'AQWAReader', 'OrcaFlexReader',
+    # Displacement RAO quality check exports (v2.3)
+    'VesselType', 'VesselTypeCharacteristics', 'VESSEL_CHARACTERISTICS',
+    'LongPeriodExpectation', 'LONG_PERIOD_EXPECTATIONS',
+    'PhaseCheckResult', 'PeakDetectionResult', 'DisplacementRAOQualityReport',
     # Submodules
     'profiling', 'extraction', 'validation', 'viz_tools', 'analysis',
     # Marine engineering modules
     'catenary', 'environmental_loading', 'hydrodynamic_coefficients', 'wave_spectra'
 ]
 
-__version__ = '2.2.0'
+__version__ = '2.3.0'
