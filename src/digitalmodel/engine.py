@@ -174,6 +174,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "mooring":
         mooring = Mooring()
         cfg_base = mooring.router(cfg_base)
+    elif basename == "artificial_lift":
+        from digitalmodel.modules.artificial_lift.dynacard.solver import DynacardWorkflow
+        al = DynacardWorkflow()
+        cfg_base = al.router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
