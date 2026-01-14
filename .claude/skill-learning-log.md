@@ -203,3 +203,55 @@ SKIP - Low reusability
 
 ---
 
+## 2026-01-14 02:49:02
+
+**Commit**: HEAD
+**Message**: Add OrcaFlex examples update script and Orcina reference documentation
+**Reusability Score**: 25/100
+
+**Patterns Detected**:
+
+**Recommendation**: 
+SKIP - Low reusability
+
+---
+
+## 2026-01-14 03:09:06
+
+**Commit**: HEAD
+**Message**: Add OrcaFlex YAML conversion workflow and --keep-binaries option
+**Reusability Score**: 25/100
+
+**Patterns Detected**:
+
+**Recommendation**: 
+SKIP - Low reusability
+
+---
+
+## 2026-01-14 03:28:49
+
+**Commit**: HEAD
+**Message**: Fix: Detect phase convention from RAO data header field
+**Reusability Score**: 0/100
+
+**Patterns Detected**:
+
+**Recommendation**: 
+SKIP - Low reusability
+
+---
+
+## 2026-01-14 03:33:41
+
+**Commit**: HEAD
+**Message**: Add missing OrcaFlex examples: A03, C03, F07, K01-K06, L04, L05, M01
+**Reusability Score**: 20/100
+
+**Patterns Detected**:
+
+**Recommendation**: 
+SKIP - Low reusability
+
+---
+
