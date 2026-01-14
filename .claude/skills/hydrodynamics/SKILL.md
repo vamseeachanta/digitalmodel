@@ -361,16 +361,27 @@ print(f"Active DOFs at head seas: {active_dofs}")
 # Output: ['surge', 'heave', 'pitch']
 ```
 
+**Wave Direction Convention:**
+- 0° = Head seas (waves from bow, approaching vessel)
+- 90° = Beam seas from starboard
+- 180° = Following seas (waves from stern)
+- 270° = Beam seas from port
+
 **Expected Long Period Values (Orcina Convention):**
 
-| DOF | Head Seas (180°) | Beam Seas (90°) | Following (0°) |
-|-----|------------------|-----------------|----------------|
+| DOF | Head Seas (0°) | Beam Seas (90°) | Following (180°) |
+|-----|----------------|-----------------|------------------|
 | Surge | Amp=1.0, Phase=-90° | Inactive | Amp=1.0, Phase=90° |
-| Sway | Inactive | Amp=1.0, Phase=90° | Inactive |
+| Sway | Inactive | Amp=1.0, Phase=-90° | Inactive |
 | Heave | Amp=1.0, Phase=0° | Amp=1.0, Phase=0° | Amp=1.0, Phase=0° |
-| Roll | Inactive | Amp=1.0, Phase=90° | Inactive |
+| Roll | Inactive | Amp=1.0, Phase=-90° | Inactive |
 | Pitch | Amp=1.0, Phase=90° | Inactive | Amp=1.0, Phase=-90° |
 | Yaw | Inactive | Inactive | Inactive |
+
+**Phase Convention Support:**
+- `PhaseConvention.ORCINA` - Phase lag from wave crest (OrcaFlex, OrcaWave)
+- `PhaseConvention.ISO_6954` - Phase lead over wave (AQWA, WAMIT)
+- Auto-detection based on file extension (.yml → Orcina, .lis → ISO)
 
 ## Key Classes
 

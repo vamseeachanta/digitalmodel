@@ -52,11 +52,15 @@ from .rao_validators import (
     RAODataValidators,
     ValidationReport,
     # Displacement RAO quality check exports (v2.3 - NEW)
+    PhaseConvention,
     VesselType,
     VesselTypeCharacteristics,
     VESSEL_CHARACTERISTICS,
     LongPeriodExpectation,
     LONG_PERIOD_EXPECTATIONS,
+    LONG_PERIOD_EXPECTATIONS_ORCINA,
+    LONG_PERIOD_EXPECTATIONS_ISO,
+    get_long_period_expectations,
     PhaseCheckResult,
     PeakDetectionResult,
     DisplacementRAOQualityReport
@@ -88,8 +92,10 @@ __all__ = [
     'RAODataProcessor', 'RAOImportError', 'RAODataValidators', 'ValidationReport',
     'RAOInterpolator', 'AQWAReader', 'OrcaFlexReader',
     # Displacement RAO quality check exports (v2.3)
-    'VesselType', 'VesselTypeCharacteristics', 'VESSEL_CHARACTERISTICS',
+    'PhaseConvention', 'VesselType', 'VesselTypeCharacteristics', 'VESSEL_CHARACTERISTICS',
     'LongPeriodExpectation', 'LONG_PERIOD_EXPECTATIONS',
+    'LONG_PERIOD_EXPECTATIONS_ORCINA', 'LONG_PERIOD_EXPECTATIONS_ISO',
+    'get_long_period_expectations',
     'PhaseCheckResult', 'PeakDetectionResult', 'DisplacementRAOQualityReport',
     # Submodules
     'profiling', 'extraction', 'validation', 'viz_tools', 'analysis',
