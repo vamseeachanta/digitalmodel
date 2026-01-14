@@ -51,6 +51,13 @@ class ValidationReport:
             self.is_valid = False
 
 
+class PhaseConvention(Enum):
+    """Phase convention used in RAO data."""
+    ORCINA = "orcina"          # Phase lag from wave crest (OrcaFlex, OrcaWave)
+    ISO_6954 = "iso_6954"      # Phase lead over wave elevation (AQWA, WAMIT)
+    UNKNOWN = "unknown"
+
+
 class VesselType(Enum):
     """Vessel type classification for RAO quality checks."""
     SHIP = "ship"
@@ -131,45 +138,112 @@ class LongPeriodExpectation:
 
 # Long period expectations by heading (Orcina convention)
 # Phase convention: phase lag from wave crest until maximum positive excursion
-LONG_PERIOD_EXPECTATIONS: Dict[str, Dict[float, LongPeriodExpectation]] = {
-    # Head seas (180 deg): Surge, Heave, Pitch active
+# Direction convention: 0° = head seas (waves from bow), 180° = following seas
+# This matches the standard OC4/WAMIT convention
+LONG_PERIOD_EXPECTATIONS_ORCINA: Dict[str, Dict[float, LongPeriodExpectation]] = {
+    # 0° = Head seas: waves from ahead, Surge/Heave/Pitch active
+    # 90° = Beam seas: waves from starboard, Sway/Heave/Roll active
+    # 180° = Following seas: waves from stern, Surge/Heave/Pitch active
+    # 270° = Beam seas: waves from port, Sway/Heave/Roll active
     'surge': {
-        180.0: LongPeriodExpectation('surge', 180.0, 1.0, -90.0, True),
-        0.0: LongPeriodExpectation('surge', 0.0, 1.0, 90.0, True),
-        90.0: LongPeriodExpectation('surge', 90.0, 0.0, 0.0, False),
-        270.0: LongPeriodExpectation('surge', 270.0, 0.0, 0.0, False),
+        0.0: LongPeriodExpectation('surge', 0.0, 1.0, -90.0, True),    # Head seas: max surge 90° before crest
+        180.0: LongPeriodExpectation('surge', 180.0, 1.0, 90.0, True), # Following: max surge 90° after crest
+        90.0: LongPeriodExpectation('surge', 90.0, 0.0, 0.0, False),   # Beam: no surge
+        270.0: LongPeriodExpectation('surge', 270.0, 0.0, 0.0, False), # Beam: no surge
     },
     'sway': {
-        180.0: LongPeriodExpectation('sway', 180.0, 0.0, 0.0, False),
-        0.0: LongPeriodExpectation('sway', 0.0, 0.0, 0.0, False),
-        90.0: LongPeriodExpectation('sway', 90.0, 1.0, 90.0, True),
-        270.0: LongPeriodExpectation('sway', 270.0, 1.0, -90.0, True),
+        0.0: LongPeriodExpectation('sway', 0.0, 0.0, 0.0, False),      # Head: no sway
+        180.0: LongPeriodExpectation('sway', 180.0, 0.0, 0.0, False),  # Following: no sway
+        90.0: LongPeriodExpectation('sway', 90.0, 1.0, -90.0, True),   # Beam from starboard
+        270.0: LongPeriodExpectation('sway', 270.0, 1.0, 90.0, True),  # Beam from port
     },
     'heave': {
+        0.0: LongPeriodExpectation('heave', 0.0, 1.0, 0.0, True),      # Heave in phase with wave
         180.0: LongPeriodExpectation('heave', 180.0, 1.0, 0.0, True),
-        0.0: LongPeriodExpectation('heave', 0.0, 1.0, 0.0, True),
         90.0: LongPeriodExpectation('heave', 90.0, 1.0, 0.0, True),
         270.0: LongPeriodExpectation('heave', 270.0, 1.0, 0.0, True),
     },
     'roll': {
-        180.0: LongPeriodExpectation('roll', 180.0, 0.0, 0.0, False),
-        0.0: LongPeriodExpectation('roll', 0.0, 0.0, 0.0, False),
-        90.0: LongPeriodExpectation('roll', 90.0, 1.0, 90.0, True),
-        270.0: LongPeriodExpectation('roll', 270.0, 1.0, -90.0, True),
+        0.0: LongPeriodExpectation('roll', 0.0, 0.0, 0.0, False),      # Head: no roll
+        180.0: LongPeriodExpectation('roll', 180.0, 0.0, 0.0, False),  # Following: no roll
+        90.0: LongPeriodExpectation('roll', 90.0, 1.0, -90.0, True),   # Beam from starboard
+        270.0: LongPeriodExpectation('roll', 270.0, 1.0, 90.0, True),  # Beam from port
     },
     'pitch': {
-        180.0: LongPeriodExpectation('pitch', 180.0, 1.0, 90.0, True),
-        0.0: LongPeriodExpectation('pitch', 0.0, 1.0, -90.0, True),
-        90.0: LongPeriodExpectation('pitch', 90.0, 0.0, 0.0, False),
-        270.0: LongPeriodExpectation('pitch', 270.0, 0.0, 0.0, False),
+        0.0: LongPeriodExpectation('pitch', 0.0, 1.0, 90.0, True),     # Head seas: bow up 90° after crest
+        180.0: LongPeriodExpectation('pitch', 180.0, 1.0, -90.0, True),# Following: bow up 90° before crest
+        90.0: LongPeriodExpectation('pitch', 90.0, 0.0, 0.0, False),   # Beam: no pitch
+        270.0: LongPeriodExpectation('pitch', 270.0, 0.0, 0.0, False), # Beam: no pitch
     },
     'yaw': {
+        0.0: LongPeriodExpectation('yaw', 0.0, 0.0, 0.0, False),       # Yaw negligible at long periods
         180.0: LongPeriodExpectation('yaw', 180.0, 0.0, 0.0, False),
-        0.0: LongPeriodExpectation('yaw', 0.0, 0.0, 0.0, False),
         90.0: LongPeriodExpectation('yaw', 90.0, 0.0, 0.0, False),
         270.0: LongPeriodExpectation('yaw', 270.0, 0.0, 0.0, False),
     },
 }
+
+# Long period expectations by heading (ISO 6954 convention)
+# Phase convention: phase lead over wave elevation (AQWA, WAMIT)
+# Relationship: phase_iso = -phase_orcina
+# Direction convention: 0° = head seas (same as Orcina)
+LONG_PERIOD_EXPECTATIONS_ISO: Dict[str, Dict[float, LongPeriodExpectation]] = {
+    'surge': {
+        0.0: LongPeriodExpectation('surge', 0.0, 1.0, 90.0, True),     # Head seas (ISO = -Orcina)
+        180.0: LongPeriodExpectation('surge', 180.0, 1.0, -90.0, True),# Following seas
+        90.0: LongPeriodExpectation('surge', 90.0, 0.0, 0.0, False),
+        270.0: LongPeriodExpectation('surge', 270.0, 0.0, 0.0, False),
+    },
+    'sway': {
+        0.0: LongPeriodExpectation('sway', 0.0, 0.0, 0.0, False),
+        180.0: LongPeriodExpectation('sway', 180.0, 0.0, 0.0, False),
+        90.0: LongPeriodExpectation('sway', 90.0, 1.0, 90.0, True),    # Beam from starboard (ISO = -Orcina)
+        270.0: LongPeriodExpectation('sway', 270.0, 1.0, -90.0, True), # Beam from port
+    },
+    'heave': {
+        0.0: LongPeriodExpectation('heave', 0.0, 1.0, 0.0, True),      # Heave in phase (same for both)
+        180.0: LongPeriodExpectation('heave', 180.0, 1.0, 0.0, True),
+        90.0: LongPeriodExpectation('heave', 90.0, 1.0, 0.0, True),
+        270.0: LongPeriodExpectation('heave', 270.0, 1.0, 0.0, True),
+    },
+    'roll': {
+        0.0: LongPeriodExpectation('roll', 0.0, 0.0, 0.0, False),
+        180.0: LongPeriodExpectation('roll', 180.0, 0.0, 0.0, False),
+        90.0: LongPeriodExpectation('roll', 90.0, 1.0, 90.0, True),    # Beam from starboard (ISO = -Orcina)
+        270.0: LongPeriodExpectation('roll', 270.0, 1.0, -90.0, True), # Beam from port
+    },
+    'pitch': {
+        0.0: LongPeriodExpectation('pitch', 0.0, 1.0, -90.0, True),    # Head seas (ISO = -Orcina)
+        180.0: LongPeriodExpectation('pitch', 180.0, 1.0, 90.0, True), # Following seas
+        90.0: LongPeriodExpectation('pitch', 90.0, 0.0, 0.0, False),
+        270.0: LongPeriodExpectation('pitch', 270.0, 0.0, 0.0, False),
+    },
+    'yaw': {
+        0.0: LongPeriodExpectation('yaw', 0.0, 0.0, 0.0, False),
+        180.0: LongPeriodExpectation('yaw', 180.0, 0.0, 0.0, False),
+        90.0: LongPeriodExpectation('yaw', 90.0, 0.0, 0.0, False),
+        270.0: LongPeriodExpectation('yaw', 270.0, 0.0, 0.0, False),
+    },
+}
+
+# Default for backward compatibility (Orcina/OrcaFlex)
+LONG_PERIOD_EXPECTATIONS = LONG_PERIOD_EXPECTATIONS_ORCINA
+
+
+def get_long_period_expectations(
+    convention: 'PhaseConvention' = None
+) -> Dict[str, Dict[float, LongPeriodExpectation]]:
+    """Get long period expectations for a given phase convention.
+
+    Args:
+        convention: Phase convention (ORCINA or ISO_6954). Defaults to ORCINA.
+
+    Returns:
+        Dictionary of long period expectations by DOF and heading.
+    """
+    if convention == PhaseConvention.ISO_6954:
+        return LONG_PERIOD_EXPECTATIONS_ISO
+    return LONG_PERIOD_EXPECTATIONS_ORCINA
 
 
 @dataclass
@@ -211,6 +285,7 @@ class DisplacementRAOQualityReport:
     vessel_type: VesselType = VesselType.UNKNOWN
     vessel_type_confidence: float = 0.0
     long_period_threshold: float = 20.0
+    phase_convention: 'PhaseConvention' = field(default_factory=lambda: PhaseConvention.ORCINA)
 
     # Check results
     phase_checks: List[PhaseCheckResult] = field(default_factory=list)
@@ -537,6 +612,7 @@ class RAODataValidators:
         rao_data: Dict[str, Any],
         source_file: str = "",
         vessel_type: Optional[VesselType] = None,
+        phase_convention: Optional[PhaseConvention] = None,
         amplitude_tolerance: float = 0.05,
         phase_tolerance: float = 10.0
     ) -> DisplacementRAOQualityReport:
@@ -556,6 +632,7 @@ class RAODataValidators:
                       }
             source_file: Path to source file for reporting.
             vessel_type: Optional vessel type override. If None, auto-detect.
+            phase_convention: Phase convention (ORCINA or ISO_6954). If None, auto-detect from file.
             amplitude_tolerance: Tolerance for amplitude checks (fraction, default 5%).
             phase_tolerance: Tolerance for phase checks (degrees, default 10°).
 
@@ -566,6 +643,11 @@ class RAODataValidators:
             source_file=source_file,
             timestamp=datetime.now()
         )
+
+        # Auto-detect phase convention from source file if not specified
+        if phase_convention is None:
+            phase_convention = self._detect_phase_convention(source_file)
+        report.phase_convention = phase_convention
 
         # Extract RAO data from OrcaFlex structure
         try:
@@ -595,10 +677,10 @@ class RAODataValidators:
         )
         report.long_period_threshold = characteristics.long_period_threshold
 
-        # Validate long period phase angles
+        # Validate long period phase angles using appropriate expectations
         phase_results = self._validate_long_period_phases(
             periods, headings, rao_arrays, characteristics,
-            amplitude_tolerance, phase_tolerance
+            amplitude_tolerance, phase_tolerance, phase_convention
         )
         report.phase_checks.extend(phase_results)
 
@@ -616,6 +698,43 @@ class RAODataValidators:
         report.failed_checks = sum(1 for r in all_results if r.status == 'FAIL')
 
         return report
+
+    def _detect_phase_convention(self, source_file: str) -> PhaseConvention:
+        """Auto-detect phase convention from source file extension.
+
+        Args:
+            source_file: Path to the source file.
+
+        Returns:
+            Detected phase convention.
+        """
+        if not source_file:
+            return PhaseConvention.ORCINA  # Default to Orcina
+
+        source_lower = source_file.lower()
+
+        # OrcaFlex/OrcaWave files use Orcina convention
+        if source_lower.endswith(('.yml', '.yaml', '.dat', '.sim')):
+            return PhaseConvention.ORCINA
+
+        # AQWA .lis files use ISO 6954 convention
+        if source_lower.endswith('.lis'):
+            return PhaseConvention.ISO_6954
+
+        # WAMIT output files use ISO 6954 convention
+        if source_lower.endswith(('.out', '.1', '.2', '.3', '.4')):
+            return PhaseConvention.ISO_6954
+
+        # Check for OrcaWave in path (uses Orcina)
+        if 'orcawave' in source_lower or 'orcaflex' in source_lower:
+            return PhaseConvention.ORCINA
+
+        # Check for AQWA or WAMIT in path
+        if 'aqwa' in source_lower or 'wamit' in source_lower:
+            return PhaseConvention.ISO_6954
+
+        # Default to Orcina for unknown sources
+        return PhaseConvention.ORCINA
 
     def _extract_orcaflex_raos(
         self,
@@ -685,8 +804,12 @@ class RAODataValidators:
 
                     for row in data_rows:
                         if len(row) >= 13:  # period + 6 DOFs * 2 (amp, phase)
-                            periods_list.append(row[0])
-                            periods_set.add(row[0])
+                            # Handle special values like 'Infinity' from OrcaFlex
+                            period_val = row[0]
+                            if isinstance(period_val, str):
+                                period_val = float(period_val)  # Handles 'Infinity' -> inf
+                            periods_list.append(period_val)
+                            periods_set.add(float(period_val))
                             # Order: surge_amp, surge_phase, sway_amp, sway_phase, heave_amp, heave_phase, ...
                             for i, dof in enumerate(dof_names):
                                 amp_idx = 1 + i * 2
@@ -731,6 +854,8 @@ class RAODataValidators:
             return periods, headings, rao_arrays
 
         except Exception as e:
+            import logging
+            logging.getLogger(__name__).debug(f"RAO extraction failed: {type(e).__name__}: {e}")
             return None
 
     def _detect_vessel_type(
@@ -796,15 +921,28 @@ class RAODataValidators:
         rao_arrays: Dict[str, Dict[float, Tuple[np.ndarray, np.ndarray]]],
         characteristics: VesselTypeCharacteristics,
         amplitude_tolerance: float,
-        phase_tolerance: float
+        phase_tolerance: float,
+        phase_convention: PhaseConvention = PhaseConvention.ORCINA
     ) -> List[PhaseCheckResult]:
         """Validate phase angles at long periods against expected values.
+
+        Args:
+            periods: Array of wave periods.
+            headings: Array of wave headings.
+            rao_arrays: Dictionary of RAO data by DOF and heading.
+            characteristics: Vessel type characteristics.
+            amplitude_tolerance: Tolerance for amplitude checks (fraction).
+            phase_tolerance: Tolerance for phase checks (degrees).
+            phase_convention: Phase convention used in the data (ORCINA or ISO_6954).
 
         Returns:
             List of PhaseCheckResult for each DOF/heading combination.
         """
         results = []
         long_period_threshold = characteristics.long_period_threshold
+
+        # Get expectations for the appropriate phase convention
+        expectations_dict = get_long_period_expectations(phase_convention)
 
         # Find indices of long period data
         long_period_mask = periods >= long_period_threshold
@@ -817,10 +955,10 @@ class RAODataValidators:
         long_period_indices = np.where(long_period_mask)[0]
 
         for dof, dof_data in rao_arrays.items():
-            if dof not in LONG_PERIOD_EXPECTATIONS:
+            if dof not in expectations_dict:
                 continue
 
-            dof_expectations = LONG_PERIOD_EXPECTATIONS[dof]
+            dof_expectations = expectations_dict[dof]
 
             for heading in headings:
                 if heading not in dof_data:
