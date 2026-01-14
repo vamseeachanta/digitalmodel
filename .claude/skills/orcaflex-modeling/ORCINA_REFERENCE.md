@@ -328,7 +328,27 @@ uv run python scripts/update_orcaflex_examples.py --keep-zips
 
 # Remove PDF documentation (keep only code files)
 uv run python scripts/update_orcaflex_examples.py --no-pdfs
+
+# Keep binary files for YAML conversion workflow
+uv run python scripts/update_orcaflex_examples.py --keep-binaries
 ```
+
+### YAML Conversion Workflow
+
+To convert OrcaFlex binary files (.dat, .sim) to human-readable YAML format:
+
+```bash
+# Step 1: Download examples with binary files retained
+uv run python scripts/update_orcaflex_examples.py --keep-binaries
+
+# Step 2: Convert to YAML (requires OrcaFlex license)
+uv run python scripts/convert_orcaflex_to_yml.py
+
+# Step 3: Clean up binary files (optional)
+uv run python scripts/update_orcaflex_examples.py
+```
+
+**Note:** The conversion script requires an active OrcaFlex license via OrcFxAPI.
 
 ### Script Features
 

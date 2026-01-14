@@ -1,16 +1,22 @@
 # ABOUTME: Downloads and updates OrcaFlex examples from Orcina website
-# ABOUTME: Extracts .yml and .py files, removes binary .dat/.sim files
+# ABOUTME: Extracts .yml and .py files, optionally keeps binary .dat/.sim for conversion
 
 """
 OrcaFlex Examples Updater
 
 Downloads official OrcaFlex examples from Orcina website and extracts
-only the text-readable files (.yml, .py) for use as reference examples.
+files for use as reference examples.
 
 Usage:
     python scripts/update_orcaflex_examples.py
     python scripts/update_orcaflex_examples.py --categories a c k
     python scripts/update_orcaflex_examples.py --dry-run
+    python scripts/update_orcaflex_examples.py --keep-binaries  # For conversion workflow
+
+Workflow for YAML conversion:
+    1. python scripts/update_orcaflex_examples.py --keep-binaries
+    2. python scripts/convert_orcaflex_to_yml.py
+    3. python scripts/update_orcaflex_examples.py  # To clean up binaries
 """
 
 import argparse
@@ -75,12 +81,14 @@ class OrcaFlexExamplesUpdater:
         dry_run: bool = False,
         keep_zips: bool = False,
         keep_pdfs: bool = True,
+        keep_binaries: bool = False,
     ):
         self.output_dir = Path(output_dir)
         self.categories = categories or list(CATEGORIES.keys())
         self.dry_run = dry_run
         self.keep_zips = keep_zips
         self.keep_pdfs = keep_pdfs
+        self.keep_binaries = keep_binaries
         self.session = requests.Session()
         self.session.headers.update(
             {
@@ -153,6 +161,10 @@ class OrcaFlexExamplesUpdater:
         """Remove binary files and keep only text-readable files."""
         if self.dry_run:
             logger.info(f"[DRY-RUN] Would clean: {directory}")
+            return {"removed": 0, "kept": 0}
+
+        if self.keep_binaries:
+            logger.info("Keeping binary files (.dat, .sim) for conversion workflow")
             return {"removed": 0, "kept": 0}
 
         stats = {"removed": 0, "kept": 0}
@@ -370,6 +382,11 @@ Examples:
         action="store_true",
         help="Remove PDF documentation files",
     )
+    parser.add_argument(
+        "--keep-binaries",
+        action="store_true",
+        help="Keep binary .dat/.sim files for YAML conversion workflow",
+    )
 
     args = parser.parse_args()
 
@@ -379,6 +396,7 @@ Examples:
         dry_run=args.dry_run,
         keep_zips=args.keep_zips,
         keep_pdfs=not args.no_pdfs,
+        keep_binaries=args.keep_binaries,
     )
 
     try:
