@@ -172,7 +172,7 @@ VesselTypes:
     RAOResponseUnits: degrees
     RAOWaveUnit: amplitude
     WavesReferredToBy: period (s)
-    RAOPhaseConvention: leads
+    RAOPhaseConvention: lags
     RAOPhaseUnitsConvention: degrees
     RAOPhaseRelativeToConvention: crest
     SurgePositive: forward
