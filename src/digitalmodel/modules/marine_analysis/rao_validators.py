@@ -644,9 +644,9 @@ class RAODataValidators:
             timestamp=datetime.now()
         )
 
-        # Auto-detect phase convention from source file if not specified
+        # Auto-detect phase convention from data or source file if not specified
         if phase_convention is None:
-            phase_convention = self._detect_phase_convention(source_file)
+            phase_convention = self._detect_phase_convention(source_file, rao_data)
         report.phase_convention = phase_convention
 
         # Extract RAO data from OrcaFlex structure
@@ -699,23 +699,40 @@ class RAODataValidators:
 
         return report
 
-    def _detect_phase_convention(self, source_file: str) -> PhaseConvention:
-        """Auto-detect phase convention from source file extension.
+    def _detect_phase_convention(
+        self,
+        source_file: str,
+        rao_data: Optional[Dict[str, Any]] = None
+    ) -> PhaseConvention:
+        """Auto-detect phase convention from RAO data or source file.
+
+        Priority:
+        1. Explicit RAOPhaseConvention field in data (if present)
+        2. File extension heuristics
+        3. Default to Orcina
 
         Args:
             source_file: Path to the source file.
+            rao_data: Optional RAO data dictionary to check for explicit convention.
 
         Returns:
             Detected phase convention.
         """
+        # Priority 1: Check for explicit RAOPhaseConvention in data
+        if rao_data:
+            convention_str = self._find_phase_convention_in_data(rao_data)
+            if convention_str:
+                convention_lower = convention_str.lower().strip()
+                if convention_lower in ('leads', 'lead', 'leading'):
+                    return PhaseConvention.ISO_6954
+                elif convention_lower in ('lags', 'lag', 'lagging'):
+                    return PhaseConvention.ORCINA
+
+        # Priority 2: File extension heuristics
         if not source_file:
             return PhaseConvention.ORCINA  # Default to Orcina
 
         source_lower = source_file.lower()
-
-        # OrcaFlex/OrcaWave files use Orcina convention
-        if source_lower.endswith(('.yml', '.yaml', '.dat', '.sim')):
-            return PhaseConvention.ORCINA
 
         # AQWA .lis files use ISO 6954 convention
         if source_lower.endswith('.lis'):
@@ -724,6 +741,11 @@ class RAODataValidators:
         # WAMIT output files use ISO 6954 convention
         if source_lower.endswith(('.out', '.1', '.2', '.3', '.4')):
             return PhaseConvention.ISO_6954
+
+        # OrcaFlex/OrcaWave files typically use Orcina convention
+        # But may have explicit override in data (checked above)
+        if source_lower.endswith(('.yml', '.yaml', '.dat', '.sim')):
+            return PhaseConvention.ORCINA
 
         # Check for OrcaWave in path (uses Orcina)
         if 'orcawave' in source_lower or 'orcaflex' in source_lower:
@@ -735,6 +757,43 @@ class RAODataValidators:
 
         # Default to Orcina for unknown sources
         return PhaseConvention.ORCINA
+
+    def _find_phase_convention_in_data(self, data: Dict[str, Any]) -> Optional[str]:
+        """Recursively search for RAOPhaseConvention field in data.
+
+        Args:
+            data: Dictionary to search.
+
+        Returns:
+            Convention string if found, None otherwise.
+        """
+        if not isinstance(data, dict):
+            return None
+
+        # Check direct keys
+        if 'RAOPhaseConvention' in data:
+            return str(data['RAOPhaseConvention'])
+
+        # Check VesselTypes
+        if 'VesselTypes' in data and isinstance(data['VesselTypes'], list):
+            for vessel_type in data['VesselTypes']:
+                if isinstance(vessel_type, dict) and 'RAOPhaseConvention' in vessel_type:
+                    return str(vessel_type['RAOPhaseConvention'])
+
+        # Recurse into nested dictionaries
+        for key, value in data.items():
+            if isinstance(value, dict):
+                result = self._find_phase_convention_in_data(value)
+                if result:
+                    return result
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):
+                        result = self._find_phase_convention_in_data(item)
+                        if result:
+                            return result
+
+        return None
 
     def _extract_orcaflex_raos(
         self,
