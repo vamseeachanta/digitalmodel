@@ -1,0 +1,34 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=ft
+TileMode=TileVertical
+
+[2]
+FormType=Table
+Minimized=False
+ResultType=Summary
+ObjectType=Line
+ObjectName=Riser
+
+[1]
+FormType=View
+Minimized=False
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=RangeGraph
+Period=StaticState
+
+[0_Yaxis]
+ObjectType=Line
+ObjectName=Riser
+VarName=x drag coefficient
+RangeGraphType=Envelope
+
+[0_Curve_xdragcoefficient]
+Visible=True
+Width=1
+Style=psSolid
+Colour=128
+IncludeInLegend=True
+

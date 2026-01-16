@@ -272,6 +272,12 @@ hive-mind-prompt-*.txt
 projects/**/*.sim
 src/reports/
 
+# Large OrcaFlex/OrcaWave files (>100MB) - GitHub limit
+data/**/*.sim
+data/**/*.owr
+docs/**/*.sim
+docs/**/*.owr
+
 # Temporary test outputs
 pytest_output.txt
 pytest_result.txt

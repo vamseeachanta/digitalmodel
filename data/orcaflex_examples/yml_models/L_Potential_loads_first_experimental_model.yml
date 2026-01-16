@@ -1,0 +1,26 @@
+﻿%YAML 1.1
+# Type: Diffraction
+# Program: OrcaWave 11.5b
+# File: P:\006 Examples\4 Examples Development (Rev Controlled)\L Diffraction\L06 Full QTF diffraction analysis\L06 Potential loads (first experimental model).yml
+# Created: 09:58 on 12/11/2025
+# User: louise
+# Machine: WS-LOUISE
+---
+RestartingFrom: L06 Parent model for full QTF experiments.owd
+SolveType: Full QTF calculation
+QTFMinPeriodOrFrequency: 0
+QTFMaxPeriodOrFrequency: 12
+QTFFrequencyTypes: Sum frequencies
+IncludeMeanDriftFullQTFs: No
+QTFCalculationMethod: Both
+PreferredQTFCalculationMethod: Direct method
+FreeSurfacePanelledZoneType: Automatically generated
+FreeSurfacePanelledZonePanelSize: 1.25
+FreeSurfacePanelledZoneInnerRadius: 85
+FreeSurfaceQuadratureZoneNumberOfAnnuli: 9
+FreeSurfaceQuadratureZoneRadiusStep: 48.666666666666664
+FreeSurfaceQuadratureZoneNumberOfRadialNodes: 12
+FreeSurfaceQuadratureZoneNumberOfAzimuthalNodes: 32
+FreeSurfaceOuterCircleNumberOfSegments: 197
+FreeSurfaceAsymptoticZoneExpansionOrder: 24
+...

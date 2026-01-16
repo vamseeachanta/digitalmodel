@@ -1,0 +1,59 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=ft
+TileMode=TileVertical
+
+[2]
+FormType=View
+Minimized=False
+CentreX=1315.14423268844
+CentreY=121.491795640829
+CentreZ=-977.170569043714
+Azimuth=270
+Elevation=0
+Gamma=0
+Size=5089.20688298134
+Shaded=False
+
+[1]
+FormType=Graph
+Minimized=False
+ResultType=RangeGraph
+Period=LatestWave
+
+[1_Yaxis]
+ObjectType=Line
+ObjectName=Riser with Flexjoint
+VarName=API RP 2RD Utilisation
+Arclength=Infinity
+RadialPos=Inner
+Theta=0
+AxisMin=0.4
+AxisMax=0.75
+
+[1_Xaxis]
+AxisMin=0
+AxisMax=5625.00000000001
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=RangeGraph
+Period=LatestWave
+
+[0_Yaxis]
+ObjectType=Line
+ObjectName=Riser with Flexjoint
+VarName=API RP 2RD Utilisation
+Arclength=Infinity
+RadialPos=Inner
+Theta=0
+Mode=Specified Arc Lengths
+FromArclength=~
+ToArclength=500
+AxisMin=0.5
+AxisMax=0.75
+
+[0_Xaxis]
+AxisMin=0
+AxisMax=500
+

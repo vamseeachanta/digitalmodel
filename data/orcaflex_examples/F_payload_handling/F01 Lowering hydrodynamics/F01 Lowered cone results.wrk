@@ -1,0 +1,58 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileVertical
+ReplayTime=3.1
+
+[2]
+FormType=View
+Minimized=False
+CentreX=-2.00387656754911
+CentreY=108.791999278086
+CentreZ=1.22742406132378
+Azimuth=90
+Elevation=0
+Gamma=0
+Size=40.3569411115122
+Shaded=True
+Solid=True
+
+[1]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[1_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Spar Cone
+VarName=Slam Force
+PositionX=0
+PositionY=0
+PositionZ=0
+AxisMin=0
+AxisMax=120
+
+[1_Xaxis]
+AxisMin=-10
+AxisMax=40
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[0_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Slam Buoy
+VarName=Slam Force
+PositionX=0
+PositionY=0
+PositionZ=0
+AxisMin=0
+AxisMax=120
+
+[0_Xaxis]
+AxisMin=-10
+AxisMax=40
+

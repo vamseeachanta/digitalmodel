@@ -1,0 +1,79 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileVertical
+
+[3]
+FormType=Values
+Minimized=False
+ResultType=TimeHistory
+Period=StaticState
+
+[3_Var0]
+ObjectType=Constraint
+ObjectName=PHC device linear
+VarName=Displacement
+
+[3_Var1]
+ObjectType=Constraint
+ObjectName=PHC device linear
+VarName=In-frame connection force
+
+[3_Var2]
+ObjectType=Constraint
+ObjectName=PHC device nonlinear
+VarName=Displacement
+
+[3_Var3]
+ObjectType=Constraint
+ObjectName=PHC device nonlinear
+VarName=In-frame connection force
+
+[2]
+FormType=View
+Minimized=False
+CentreX=-0.21545293364932117
+CentreY=-6.534546242462969
+CentreZ=4.025277313823517
+Azimuth=266.1
+Elevation=0
+Gamma=0
+Size=2.690834911332761
+Shaded=True
+Solid=True
+
+[1]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[1_Yaxis]
+ObjectType=Constraint
+ObjectName=PHC device nonlinear
+VarName=z
+
+[1_Curve_Timehistory]
+Visible=True
+Width=1
+Style=psSolid
+Colour=128
+IncludeInLegend=True
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[0_Yaxis]
+ObjectType=Constraint
+ObjectName=PHC device linear
+VarName=z
+
+[0_Curve_Timehistory]
+Visible=True
+Width=1
+Style=psSolid
+Colour=128
+IncludeInLegend=True
+

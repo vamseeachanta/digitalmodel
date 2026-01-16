@@ -1,0 +1,68 @@
+[OrcaFlex Workspace]
+TileMode=TileVertical
+ReplayTime=45.6
+
+[3]
+FormType=View
+Minimized=False
+CentreX=394.194066313955
+CentreY=-2.54077234946028
+CentreZ=-511.647586962188
+Azimuth=270
+Elevation=0
+Size=2053.46734349852
+Shaded=False
+
+[2]
+FormType=Graph
+Minimized=False
+ResultType=XYGraph
+Period=LatestWave
+
+[2_Yaxis]
+ObjectType=Line
+ObjectName=Riser
+VarName=API RP 2RD Utilisation
+Arclength=-Infinity
+RadialPos=Inner
+Theta=0
+
+[2_Xaxis]
+ObjectType=Line
+ObjectName=Riser
+VarName=End Force Ez-Angle
+Arclength=-Infinity
+RadialPos=Inner
+Theta=0
+
+[1]
+FormType=Graph
+Minimized=False
+ResultType=RangeGraph
+Period=InstantaneousValue
+
+[1_Yaxis]
+ObjectType=Line
+ObjectName=Riser
+VarName=API RP 2RD Utilisation
+Arclength=Infinity
+RadialPos=Inner
+Theta=0
+Mode=Specified Arc Lengths
+FromArclength=~
+ToArclength=50
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=RangeGraph
+Period=InstantaneousValue
+
+[0_Yaxis]
+ObjectType=Line
+ObjectName=Riser
+VarName=API RP 2RD Utilisation
+Arclength=Infinity
+RadialPos=Inner
+Theta=0
+

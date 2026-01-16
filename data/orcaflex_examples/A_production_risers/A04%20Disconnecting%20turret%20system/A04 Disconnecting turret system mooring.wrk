@@ -1,0 +1,22 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileVertical
+ReplayTime=20.1
+
+[1]
+FormType=View
+Minimized=False
+CentreX=-105.08813160869
+CentreY=-28.2228268227999
+CentreZ=-194.668440560358
+Azimuth=343.7
+Elevation=7.5
+Gamma=0
+Size=62.5988092575751
+Shaded=True
+Solid=True
+
+[0]
+FormType=View
+Minimized=False
+

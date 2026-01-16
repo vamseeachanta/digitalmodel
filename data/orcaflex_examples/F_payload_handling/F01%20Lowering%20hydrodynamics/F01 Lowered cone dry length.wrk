@@ -1,0 +1,57 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileVertical
+ReplayTime=4.5
+
+[2]
+FormType=View
+Minimized=False
+CentreX=-1.0383359378692
+CentreY=9.24493984420243
+CentreZ=10.4248853371068
+Azimuth=270
+Elevation=0
+Gamma=0
+Size=46.6535764375877
+Shaded=False
+
+[1]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[1_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Lumped Cone
+VarName=Dry Length
+PositionX=0
+PositionY=0
+PositionZ=0
+AxisMin=0
+AxisMax=10
+
+[1_Xaxis]
+AxisMin=-10
+AxisMax=40
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[0_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Spar Cone
+VarName=Dry Length
+PositionX=0
+PositionY=0
+PositionZ=0
+AxisMin=0
+AxisMax=10
+
+[0_Xaxis]
+AxisMin=-10
+AxisMax=40
+

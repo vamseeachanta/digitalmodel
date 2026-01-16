@@ -1,0 +1,59 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileVertical
+ReplayTime=13.3
+
+[2]
+FormType=View
+Minimized=False
+CentreX=3.69999999999998
+CentreY=-7.98536584079024E-15
+CentreZ=-1
+Azimuth=90
+Elevation=0
+Gamma=0
+Size=8
+Shaded=True
+Solid=True
+Host=Arch Supports 4 down
+
+[1]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[1_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Arch Supports 1 down
+VarName=Max Support Lift Out
+PositionX=0
+PositionY=0
+PositionZ=0
+AxisMin=0.275
+AxisMax=0.3
+
+[1_Xaxis]
+AxisMin=-12
+AxisMax=60
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[0_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Arch Supports 1 down
+VarName=Supports Force
+PositionX=0
+PositionY=0
+PositionZ=0
+AxisMin=130
+AxisMax=139
+
+[0_Xaxis]
+AxisMin=-12
+AxisMax=60
+
