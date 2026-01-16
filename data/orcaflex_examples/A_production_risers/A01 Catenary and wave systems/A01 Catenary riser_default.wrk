@@ -1,0 +1,61 @@
+[OrcaFlex Workspace]
+TileMode=TileVertical
+
+[3]
+FormType=View
+Minimized=False
+CentreX=-9.01365675471746
+CentreY=0
+CentreZ=-46.7869339903722
+Azimuth=270
+Elevation=0
+Size=132.165852138511
+Shaded=False
+
+[2]
+FormType=View
+Minimized=False
+CentreX=-13.2984403076025
+CentreY=9.48463816941565
+CentreZ=-46.1809074428197
+Azimuth=270
+Elevation=0
+Size=127.99114542837
+Shaded=True
+
+[1]
+FormType=Graph
+Minimized=False
+ResultType=XYGraph
+Period=LatestWave
+
+[1_Yaxis]
+ObjectType=Line
+ObjectName=Catenary Hose
+VarName=End Force
+Arclength=-Infinity
+RadialPos=Inner
+Theta=0
+
+[1_Xaxis]
+ObjectType=Line
+ObjectName=Catenary Hose
+VarName=End Force Ez-Angle
+Arclength=-Infinity
+RadialPos=Inner
+Theta=0
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=RangeGraph
+Period=LatestWave
+
+[0_Yaxis]
+ObjectType=Line
+ObjectName=Catenary Hose
+VarName=x-Drag Coefficient
+Arclength=Infinity
+RadialPos=Inner
+Theta=0
+

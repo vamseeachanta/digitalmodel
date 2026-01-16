@@ -1,0 +1,97 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileVertical
+
+[4]
+FormType=View
+Minimized=False
+CentreX=-1.24547565093782
+CentreY=-20.315908555452
+CentreZ=14.0144969171649
+Azimuth=270
+Elevation=0
+Gamma=0
+Size=51.3775907493855
+Shaded=False
+
+[3]
+FormType=View
+Minimized=False
+CentreX=-95.6024649062766
+CentreY=155.235261987224
+CentreZ=-9.58110400843868
+Azimuth=296.5
+Elevation=6.20000000000001
+Gamma=0
+Size=187.2
+Shaded=True
+Solid=True
+
+[2]
+FormType=Values
+Minimized=False
+ResultType=TimeHistory
+Period=InstantaneousValue
+
+[2_Var0]
+ObjectType=Line
+ObjectName=Crane Wire
+VarName=Effective tension
+Arclength=-Infinity
+
+[2_Var1]
+ObjectType=Link
+ObjectName=Sling 1
+VarName=Tension
+
+[2_Var2]
+ObjectType=Link
+ObjectName=Sling 2
+VarName=Tension
+
+[2_Var3]
+ObjectType=Link
+ObjectName=Sling 3
+VarName=Tension
+
+[2_Var4]
+ObjectType=Link
+ObjectName=Sling 4
+VarName=Tension
+
+[1]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[1_Yaxis]
+ObjectType=Vessel
+ObjectName=Support Vessel
+VarName=Rotation 1
+
+[1_Curve_Timehistory]
+Visible=True
+Width=1
+Style=psSolid
+Colour=128
+IncludeInLegend=True
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[0_Yaxis]
+ObjectType=Vessel
+ObjectName=Offloading Vessel
+VarName=Rotation 1
+
+[0_Curve_Timehistory]
+Visible=True
+Width=1
+Style=psSolid
+Colour=128
+IncludeInLegend=True
+

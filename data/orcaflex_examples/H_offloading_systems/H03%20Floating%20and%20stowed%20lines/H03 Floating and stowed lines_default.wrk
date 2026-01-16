@@ -1,0 +1,57 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileVertical
+ReplayTime=-9
+
+[2]
+FormType=View
+Minimized=False
+CentreX=-175.863067658088
+CentreY=118.223754249019
+CentreZ=18.8612507808441
+Azimuth=112.6
+Elevation=40.8
+Gamma=0
+Size=215.338649325011
+Shaded=True
+
+[1]
+FormType=Graph
+Minimized=False
+ResultType=RangeGraph
+Period=Stage 1
+
+[1_Yaxis]
+ObjectType=Line
+ObjectName=Hose
+VarName=Solid Contact Force
+Arclength=Infinity
+RadialPos=Inner
+Theta=0
+AxisMin=0
+AxisMax=25
+
+[1_Xaxis]
+AxisMin=0
+AxisMax=264.425
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=Stage 1
+
+[0_Yaxis]
+ObjectType=Line
+ObjectName=Hose
+VarName=Solid Contact Force
+Arclength=11
+RadialPos=Inner
+Theta=0
+AxisMin=0
+AxisMax=25
+
+[0_Xaxis]
+AxisMin=0
+AxisMax=60
+

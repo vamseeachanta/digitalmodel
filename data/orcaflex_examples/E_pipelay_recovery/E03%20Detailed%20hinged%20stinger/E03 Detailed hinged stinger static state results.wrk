@@ -1,0 +1,112 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileHorizontal
+
+[1]
+FormType=View
+Minimized=False
+CentreX=-25.7352597686814
+CentreY=0
+CentreZ=-0.0531505815557622
+Azimuth=270
+Elevation=0
+Gamma=0
+Size=40.9488102869177
+Shaded=False
+
+[0]
+FormType=Values
+Minimized=False
+ResultType=TimeHistory
+Period=StaticState
+
+[0_Var0]
+ObjectType=6D Buoy
+ObjectName=6D BuoyS1
+VarName=Support Reaction Force
+PositionX=0
+PositionY=0
+PositionZ=0
+SupportIndex=1
+
+[0_Var1]
+ObjectType=6D Buoy
+ObjectName=6D BuoyS2
+VarName=Support Reaction Force
+PositionX=0
+PositionY=0
+PositionZ=0
+SupportIndex=1
+
+[0_Var2]
+ObjectType=6D Buoy
+ObjectName=6D BuoyS3
+VarName=Support Reaction Force
+PositionX=0
+PositionY=0
+PositionZ=0
+SupportIndex=1
+
+[0_Var3]
+ObjectType=6D Buoy
+ObjectName=6D BuoyS4
+VarName=Support Reaction Force
+PositionX=0
+PositionY=0
+PositionZ=0
+SupportIndex=1
+
+[0_Var4]
+ObjectType=6D Buoy
+ObjectName=6D BuoyS5
+VarName=Support Reaction Force
+PositionX=0
+PositionY=0
+PositionZ=0
+SupportIndex=1
+
+[0_Var5]
+ObjectType=6D Buoy
+ObjectName=6D BuoyS6
+VarName=Support Reaction Force
+PositionX=0
+PositionY=0
+PositionZ=0
+SupportIndex=1
+
+[0_Var6]
+ObjectType=6D Buoy
+ObjectName=6D BuoyS7
+VarName=Support Reaction Force
+PositionX=0
+PositionY=0
+PositionZ=0
+SupportIndex=1
+
+[0_Var7]
+ObjectType=6D Buoy
+ObjectName=6D BuoyS8
+VarName=Support Reaction Force
+PositionX=0
+PositionY=0
+PositionZ=0
+SupportIndex=1
+
+[0_Var8]
+ObjectType=6D Buoy
+ObjectName=6D BuoyS9
+VarName=Support Reaction Force
+PositionX=0
+PositionY=0
+PositionZ=0
+SupportIndex=1
+
+[0_Var9]
+ObjectType=6D Buoy
+ObjectName=6D BuoyS10
+VarName=Support Reaction Force
+PositionX=0
+PositionY=0
+PositionZ=0
+SupportIndex=1
+

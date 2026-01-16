@@ -1,0 +1,89 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileVertical
+
+[3]
+FormType=View
+Minimized=False
+
+[2]
+FormType=Graph
+Minimized=False
+ResultType=RangeGraph
+Period=Stage 1
+
+[2_Yaxis]
+ObjectType=Turbine
+ObjectName=15MW RWT
+VarName=Mach number
+BladeIndex=1
+BladeArclength=116.56103802101558
+RangeGraphType=Envelope
+
+[2_Curve_Minimum]
+Visible=True
+Width=1
+Style=psSolid
+Colour=16711680
+IncludeInLegend=True
+
+[2_Curve_Maximum]
+Visible=True
+Width=1
+Style=psSolid
+Colour=32768
+IncludeInLegend=True
+
+[2_Curve_Mean]
+Visible=True
+Width=1
+Style=psSolid
+Colour=128
+IncludeInLegend=True
+
+[2_Curve_StdDev]
+Visible=False
+Width=1
+Style=psSolid
+Colour=16711935
+IncludeInLegend=True
+StdDevInterval=2
+
+[1]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=Stage 1
+
+[1_Yaxis]
+ObjectType=Turbine
+ObjectName=15MW RWT
+VarName=Induction weight
+
+[1_Curve_Timehistory]
+Visible=True
+Width=1
+Style=psSolid
+Colour=128
+IncludeInLegend=True
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=Stage 1
+
+[0_Yaxis]
+ObjectType=Turbine
+ObjectName=15MW RWT
+VarName=Axial induction factor
+BladeIndex=1
+BladeArclength=58.5815
+
+[0_Curve_Timehistory]
+Visible=True
+Width=1
+Style=psSolid
+Colour=128
+IncludeInLegend=True
+

@@ -1,0 +1,110 @@
+Loading: docs\modules\orcaflex\examples\raw\A05\A05 Lazy wave with FPSO.yml
+
+============================================================
+RAO QUALITY CHECK RESULTS
+============================================================
+Model: A05 Lazy wave with FPSO.yml
+Detected Vessel Type: ship
+Vessel Type Confidence: 87.5%
+Phase Convention: orcina
+
+Overall Status: FAIL
+Pass Rate: 44.3%
+Total Checks: 79
+Passed: 35
+Warnings: 25
+Failed: 19
+
+============================================================
+PHASE CHECK RESULTS
+============================================================
+DOF       Heading   Expected     Actual    Error   Status
+-------- -------- ---------- ---------- -------- --------
+surge         0.0      -90.0       90.0    180.0 [WARN]
+surge        22.5      -90.0       90.0    180.0 [WARN]
+surge        45.0      -90.0       90.0    180.0 [FAIL]
+surge        67.5        0.0       90.0     90.0 [FAIL]
+surge        90.0        0.0       90.0     90.0 [PASS]
+surge       112.5        0.0      -90.0     90.0 [FAIL]
+surge       135.0       90.0      -90.0    180.0 [FAIL]
+surge       157.5       90.0      -90.0    180.0 [WARN]
+surge       180.0       90.0      -90.0    180.0 [WARN]
+sway          0.0        0.0        0.0      0.0 [PASS]
+sway         22.5        0.0       90.0     90.0 [FAIL]
+sway         45.0        0.0       90.0     90.0 [FAIL]
+sway         67.5      -90.0       90.0    180.0 [WARN]
+sway         90.0      -90.0       90.0    180.0 [WARN]
+sway        112.5      -90.0       90.0    180.0 [WARN]
+sway        135.0        0.0       90.0     90.0 [FAIL]
+sway        157.5        0.0       90.0     90.0 [FAIL]
+sway        180.0        0.0        0.0      0.0 [PASS]
+heave         0.0        0.0        0.0      0.0 [PASS]
+heave        22.5        0.0        0.0      0.0 [PASS]
+heave        45.0        0.0        0.0      0.0 [PASS]
+heave        67.5        0.0        0.0      0.0 [PASS]
+heave        90.0        0.0        0.0      0.0 [PASS]
+heave       112.5        0.0        0.0      0.0 [PASS]
+heave       135.0        0.0        0.0      0.0 [PASS]
+heave       157.5        0.0        0.0      0.0 [PASS]
+heave       180.0        0.0        0.0      0.0 [PASS]
+roll          0.0        0.0        0.0      0.0 [PASS]
+roll         22.5        0.0        0.0      0.0 [PASS]
+roll         45.0        0.0        0.0      0.0 [PASS]
+roll         67.5      -90.0        0.0     90.0 [FAIL]
+roll         90.0      -90.0        0.0     90.0 [FAIL]
+roll        112.5      -90.0        0.0     90.0 [FAIL]
+roll        135.0        0.0        0.0      0.0 [PASS]
+roll        157.5        0.0        0.0      0.0 [PASS]
+roll        180.0        0.0        0.0      0.0 [PASS]
+pitch         0.0       90.0        0.0     90.0 [FAIL]
+pitch        22.5       90.0        0.0     90.0 [FAIL]
+pitch        45.0       90.0        0.0     90.0 [FAIL]
+pitch        67.5        0.0        0.0      0.0 [PASS]
+pitch        90.0        0.0        0.0      0.0 [PASS]
+pitch       112.5        0.0        0.0      0.0 [PASS]
+pitch       135.0      -90.0        0.0     90.0 [FAIL]
+pitch       157.5      -90.0        0.0     90.0 [FAIL]
+pitch       180.0      -90.0        0.0     90.0 [FAIL]
+yaw           0.0        0.0        0.0      0.0 [PASS]
+yaw          22.5        0.0        0.0      0.0 [PASS]
+yaw          45.0        0.0        0.0      0.0 [PASS]
+yaw          67.5        0.0        0.0      0.0 [PASS]
+yaw          90.0        0.0        0.0      0.0 [PASS]
+yaw         112.5        0.0        0.0      0.0 [PASS]
+yaw         135.0        0.0        0.0      0.0 [PASS]
+yaw         157.5        0.0        0.0      0.0 [PASS]
+yaw         180.0        0.0        0.0      0.0 [PASS]
+
+============================================================
+PEAK DETECTION RESULTS
+============================================================
+DOF            Peak   Expected Range   Status Message
+-------- ---------- ---------------- -------- ------------------------------
+heave          7.0s            8-12s [WARN] Heave peak at 7.0s near expected range [8.0-12.0]s
+heave          6.5s            8-12s [WARN] Heave peak at 6.5s near expected range [8.0-12.0]s
+heave          6.0s            8-12s [FAIL] Heave peak at 6.0s outside expected range [8.0-12.0]s
+heave          7.5s            8-12s [WARN] Heave peak at 7.5s near expected range [8.0-12.0]s
+heave          7.0s            8-12s [WARN] Heave peak at 7.0s near expected range [8.0-12.0]s
+heave          7.0s            8-12s [WARN] Heave peak at 7.0s near expected range [8.0-12.0]s
+heave          5.5s            8-12s [FAIL] Heave peak at 5.5s outside expected range [8.0-12.0]s
+heave          6.5s            8-12s [WARN] Heave peak at 6.5s near expected range [8.0-12.0]s
+heave          6.5s            8-12s [WARN] Heave peak at 6.5s near expected range [8.0-12.0]s
+roll           9.0s           10-25s [WARN] Roll peak at 9.0s near expected range [10.0-25.0]s
+roll           9.0s           10-25s [WARN] Roll peak at 9.0s near expected range [10.0-25.0]s
+roll           8.5s           10-25s [WARN] Roll peak at 8.5s near expected range [10.0-25.0]s
+roll           8.5s           10-25s [WARN] Roll peak at 8.5s near expected range [10.0-25.0]s
+roll           8.5s           10-25s [WARN] Roll peak at 8.5s near expected range [10.0-25.0]s
+roll           9.0s           10-25s [WARN] Roll peak at 9.0s near expected range [10.0-25.0]s
+roll           9.0s           10-25s [WARN] Roll peak at 9.0s near expected range [10.0-25.0]s
+pitch          9.0s             5-8s [WARN] Pitch peak at 9.0s near expected range [5.0-8.0]s
+pitch          8.5s             5-8s [WARN] Pitch peak at 8.5s near expected range [5.0-8.0]s
+pitch          7.0s             5-8s [PASS] Pitch peak at 7.0s within expected range [5.0-8.0]s
+pitch          6.5s             5-8s [PASS] Pitch peak at 6.5s within expected range [5.0-8.0]s
+pitch          6.5s             5-8s [PASS] Pitch peak at 6.5s within expected range [5.0-8.0]s
+pitch          6.5s             5-8s [PASS] Pitch peak at 6.5s within expected range [5.0-8.0]s
+pitch          7.5s             5-8s [PASS] Pitch peak at 7.5s within expected range [5.0-8.0]s
+pitch          9.0s             5-8s [WARN] Pitch peak at 9.0s near expected range [5.0-8.0]s
+pitch          9.0s             5-8s [WARN] Pitch peak at 9.0s near expected range [5.0-8.0]s
+
+============================================================
+Quality check complete.

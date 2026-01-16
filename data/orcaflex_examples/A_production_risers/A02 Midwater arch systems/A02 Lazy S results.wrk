@@ -1,0 +1,60 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileVertical
+
+[3]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[3_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Arch
+VarName=X
+PositionX=0
+PositionY=0
+PositionZ=0
+
+[2]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[2_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Arch
+VarName=Rotation 3
+PositionX=0
+PositionY=0
+PositionZ=0
+
+[1]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[1_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Arch
+VarName=Rotation 2
+PositionX=0
+PositionY=0
+PositionZ=0
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[0_Yaxis]
+ObjectType=Line
+ObjectName=ArchTie_S
+VarName=Effective Tension
+Arclength=Infinity
+RadialPos=Inner
+Theta=0
+

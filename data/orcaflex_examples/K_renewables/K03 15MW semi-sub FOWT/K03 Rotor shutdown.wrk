@@ -1,0 +1,97 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileVertical
+ReplayTime=0
+
+[4]
+FormType=View
+Minimized=False
+CentreX=-202.2925100052878
+CentreY=-2.3512114045825774
+CentreZ=149.61680090693474
+Azimuth=360
+Elevation=0
+Gamma=0
+Size=414.7199999999998
+Shaded=True
+Solid=True
+
+[3]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=Stage 1
+
+[3_Yaxis]
+ObjectType=Turbine
+ObjectName=15MW RWT
+VarName=Blade pitch
+BladeIndex=1
+
+[3_Curve_Timehistory]
+Visible=True
+Width=1
+Style=psSolid
+Colour=128
+IncludeInLegend=True
+
+[2]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=Stage 1
+
+[2_Yaxis]
+ObjectType=Turbine
+ObjectName=15MW RWT
+VarName=Main shaft angular velocity
+
+[2_Curve_Timehistory]
+Visible=True
+Width=1
+Style=psSolid
+Colour=128
+IncludeInLegend=True
+
+[1]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[1_Yaxis]
+ObjectType=Environment Data
+ObjectName=Environment
+VarName=Wind speed
+PositionX=0
+PositionY=0
+PositionZ=150
+
+[1_Curve_Timehistory]
+Visible=True
+Width=1
+Style=psSolid
+Colour=128
+IncludeInLegend=True
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[0_Yaxis]
+ObjectType=Environment Data
+ObjectName=Environment
+VarName=Wind speed
+PositionX=0
+PositionY=0
+PositionZ=0
+
+[0_Curve_Timehistory]
+Visible=True
+Width=1
+Style=psSolid
+Colour=128
+IncludeInLegend=True
+

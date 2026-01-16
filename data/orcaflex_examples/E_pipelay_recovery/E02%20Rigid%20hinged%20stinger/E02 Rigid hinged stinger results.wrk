@@ -1,0 +1,78 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileVertical
+
+[3]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[3_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Stinger Buoy
+VarName=Support Contact Clearance
+PositionX=0
+PositionY=0
+PositionZ=0
+SupportIndex=9
+AxisMin=-0.045
+AxisMax=-0.01
+
+[3_Xaxis]
+AxisMin=-10
+AxisMax=100
+
+[2]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=WholeSimulation
+
+[2_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Stinger Buoy
+VarName=Support Reaction Force
+PositionX=0
+PositionY=0
+PositionZ=0
+SupportIndex=9
+AxisMin=15
+AxisMax=50
+
+[2_Xaxis]
+AxisMin=-10
+AxisMax=100
+
+[1]
+FormType=View
+Minimized=False
+CentreX=52.5414206946225
+CentreY=0.72699773358182
+CentreZ=-3.91970955871894
+Azimuth=309.7
+Elevation=4
+Gamma=0
+Size=3.20612619819731
+Shaded=False
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=TimeHistory
+Period=Stage 1
+
+[0_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Stinger Buoy
+VarName=Rotation 2
+PositionX=0
+PositionY=0
+PositionZ=0
+AxisMin=4
+AxisMax=5.4
+
+[0_Xaxis]
+AxisMin=0
+AxisMax=100
+

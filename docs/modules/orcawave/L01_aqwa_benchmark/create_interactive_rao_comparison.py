@@ -208,6 +208,14 @@ def create_interactive_comparison_plot(
 
     logger.info(f"Found {len(heading_pairs)} matching heading pairs")
 
+    # Find index for 90°/90° heading pair to use as default
+    default_heading_idx = 0
+    for idx, (aqwa_h, ow_h) in enumerate(heading_pairs):
+        if abs(aqwa_h - 90.0) < 1.0 and abs(ow_h - 90.0) < 1.0:
+            default_heading_idx = idx
+            logger.info(f"Setting default heading to 90°/90° (index {idx})")
+            break
+
     # DOF names and units
     dofs = [
         ('surge', 'Surge', 'm/m'),
@@ -276,7 +284,7 @@ def create_interactive_comparison_plot(
                     marker=dict(size=7, symbol='circle', line=dict(width=1, color='white')),
                     legendgroup=f'heading_{heading_idx}',
                     showlegend=(dof_idx == 0),  # Only show in legend once
-                    visible=(heading_idx == 0),  # Initially show first heading only
+                    visible=(heading_idx == default_heading_idx),  # Show 90°/90° by default
                     hovertemplate=(
                         f'<b>AQWA {aqwa_h}°</b><br>'
                         'Period: %{x:.2f}s<br>'
@@ -297,7 +305,7 @@ def create_interactive_comparison_plot(
                     line=dict(color=color, width=2.5, dash='dash'),
                     legendgroup=f'heading_{heading_idx}',
                     showlegend=(dof_idx == 0),
-                    visible=(heading_idx == 0),
+                    visible=(heading_idx == default_heading_idx),
                     hovertemplate=(
                         f'<b>OrcaWave {orcawave_h}°</b><br>'
                         'Period: %{x:.2f}s<br>'
@@ -361,25 +369,29 @@ def create_interactive_comparison_plot(
                 buttons=buttons,
                 direction="down",
                 showactive=True,
+                active=default_heading_idx + 1,  # +1 because "All Headings" is at index 0
                 x=0.02,
                 xanchor="left",
-                y=1.15,
+                y=1.12,
                 yanchor="top",
                 bgcolor="white",
                 bordercolor="#3498db",
                 borderwidth=2,
-                font=dict(size=11, family='Arial, sans-serif')
+                font=dict(size=12, family='Arial, sans-serif')
             )
         ],
+        margin=dict(t=150),  # Add top margin for "Select Heading" label
         annotations=[
             dict(
                 text="<b>Select Heading:</b>",
                 x=0.02,
                 xanchor="left",
-                y=1.18,
-                yanchor="top",
+                xref="paper",
+                y=1.15,
+                yanchor="bottom",
+                yref="paper",
                 showarrow=False,
-                font=dict(size=13, color="#2c3e50", family='Arial, sans-serif'),
+                font=dict(size=14, color="#2c3e50", family='Arial, sans-serif'),
             )
         ]
     )
