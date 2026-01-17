@@ -1,0 +1,54 @@
+default:
+  Analysis: NULL
+  plot_fatigue_life: False
+  plot_damage_distribution: True
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: False
+
+FatigueLifeReadingSets:
+  - 
+    io: C:\Users\achantv\OneDrive\OneDrive - Occidental Petroleum Corporation\Temp\KM\QA\Rev7\WI_repaired.xlsx
+    sheet_name: Damage Tables
+    KeyWords: ['Arc Length']
+    RowsToSkip: 2
+    RowsToRead: 2308
+    Label: ['Top of Riser (0-12ft)', 'Riser OD, D Curve (> 12 ft)','Riser ID, E Curve (> 12 ft)', 'Riser ID, F Curve (> 12 ft)']
+    Columns: ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
+    FactorOfSafety: 10
+
+FatigueLifePlotSettings:
+  Name: Fatigue Analysis
+  PltSupTitle: Fatigue Life Along the riser
+  PltTitle: " "
+  PltXLabel: Arc Length (m)
+  PltYLabel: Fatigue Life (years)
+  PltLabel:
+    - Top of Riser
+    - Riser, OD, BS D, SCF1.2
+    - Riser, ID, E SCF1.2
+    - Riser, ID, F SCF1.2
+  LifeLimit: 25
+  XLimRanges: 
+    - [0, 50]
+    - [0, 1600]
+  YLimRanges: 
+    - [10, 10000]
+    - [10, 100000]
+  LineStyles: ["-.", "--","-", ":"]
+  Colors : ['blue', 'green', 'cyan', 'magenta', 'yellow', 'black']
+
+
+DamageContributionReadingSets:
+  - 
+    io: C:\Users\achantv\OneDrive\OneDrive - Occidental Petroleum Corporation\Temp\KM\QA\Rev7\WI_repaired.xlsx
+    sheet_name: Governing Location
+    KeyWords: ["1562.74711825743m (Segment 509); BS F Curve; Radial Position: Inner, SCF: 1.2; Thickness Correction Factor: 1"]
+    RowsToSkip: 3
+    RowsToRead: 461
+    DirectionSets:
+    
+    Label: ['Top of Riser (0-12ft)', 'Riser OD, D Curve (> 12 ft)','Riser ID, E Curve (> 12 ft)', 'Riser ID, F Curve (> 12 ft)']
+    Columns: 1st Row
+    FactorOfSafety: 10

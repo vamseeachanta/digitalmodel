@@ -1,0 +1,148 @@
+Analyze:
+  - 16OD_SE1200_HE1500_100year, NEAR Beam sea SB.yml
+  - 16OD_SE1200_HE1500_100year, Quartering sea PS.yml
+  - 16OD_SE1200_HE1500_100year, TRANSVERSE Head Sea.yml
+  - 16OD_SE1200_HE1500_100yr Wave, Far BeamSea PS.yml
+
+PostProcess:
+  - 
+    PlotSettings: 
+      Name: Static Analysis
+      SupTitle: Frontier Deepwater Feasibility Analysis
+      Title: SLWR Configuration Development Analysis
+      SubTitle: 
+
+    File: 
+      - 
+        Name: SLWR_16OD_SE1200_HE1500_100year, NEAR Beam sea SB.sim		
+        Label: NEAR Beam sea SB, Dynamic
+      - 
+        Name: SLWR_16OD_SE1200_HE1500_100year, Quartering sea PS.sim		
+        Label: Quartering sea PS, Dynamic
+      -
+        Name: SLWR_16OD_SE1200_HE1500_100year, TRANSVERSE Head Sea.sim		
+        Label: TRANSVERSE Head Sea, Dynamic
+      -
+        Name: SLWR_16OD_SE1200_HE1500_100yr Wave, Far BeamSea PS.sim		
+        Label: Far BeamSea PS, Dynamic
+
+    Summary:
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData: 
+          - Max
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 100
+        Variable: Effective Tension
+        xlabel: Arc Length (m)
+        ylabel: Effective Tension (kN)
+        suptitle: Effective Tension Response
+        Label: SLWR_16OD_SE1200_HE1500_NoLoad_Effective_Tension
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData: 
+          - Max
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 100
+        Variable: Bend Moment
+        xlabel: Arc Length (m)
+        ylabel: Bend Moment (kN.m)
+        suptitle: Bending Moment Response
+        Label: SLWR_16OD_SE1200_HE1500_NoLoad_Bending_Moment
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData: 
+          - Max
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 100
+        Variable: Effective Tension
+        xlabel: Arc Length (m)
+        ylabel: Effective Tension (kN)
+        suptitle: Effective Tension Response
+        Label: SLWR_16OD_SE1200_HE1500_Effective_Tension_Top
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData: 
+          - Max
+        SimulationPeriod:  SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 100
+        Variable: Max von Mises Stress
+        xlabel: Arc Length (m)
+        ylabel: Max von Mises Stress
+        suptitle: Max von Mises Stress Response
+        FileName: SLWR_16OD_SE1200_HE1500_NoLoad_Max von Mises Stress
+
+
+    RangeGraph:
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData: 
+          - Max
+        SimulationPeriod: pnWholeSimulation
+        ArcLength:
+        Variable: Effective Tension
+        xlabel: Arc Length (m)
+        ylabel: Effective Tension (kN)
+        suptitle: Effective Tension Response
+        FileName: SLWR_16OD_SE1200_HE1500_NoLoad_Effective_Tension
+      -
+        Command: Range Graph
+        ObjectName: SLWR
+        AdditionalData: 
+          - Max
+        SimulationPeriod: pnWholeSimulation
+        ArcLength:
+        Variable: Bend Moment
+        xlabel: Arc Length (m)
+        ylabel: Bend Moment (kN.m)
+        suptitle: Bending Moment Response
+        FileName: SLWR_16OD_SE1200_HE1500_NoLoad_Bending_Moment
+      -
+         Command: Range Graph
+        ObjectName: SCR
+        AdditionalData: 
+          - Max
+        SimulationPeriod: pnWholeSimulation
+        ArcLength:
+        Variable: Max von Mises Stress
+
+        xlabel: Arc Length (m)
+        ylabel: Max von Mises Stress
+        suptitle: Max von Mises Stress Response
+        FileName: SLWR_16OD_SE1200_HE1500_NoLoad_Max von Mises Stress
+
+    TimeHistory:
+      -
+        Command: Time History
+        ObjectName: SLWR
+        AdditionalData: 
+          - End A
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        Variable: Effective Tension
+      -
+        Command: Time History
+        ObjectName: SLWR
+        AdditionalData: 
+          - End A
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        Variable: Bend Moment
+      -
+        Command: Time History
+        ObjectName: SLWR
+        AdditionalData: 
+          - End A
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        Variable: Max von Mises Stress

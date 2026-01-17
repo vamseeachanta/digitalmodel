@@ -35,26 +35,40 @@ log_usage() {
     echo "$(date +%Y-%m-%d_%H:%M:%S)|${model}|${repository}|${task}|${tokens}" >> "$USAGE_LOG"
 }
 
-# Function to get usage summary
-get_usage_summary() {
-    local period="$1"  # today, week, month
+# Function to filter log entries by date range
+filter_log_by_period() {
+    local period="$1"
+    local start_date end_date
+
+    end_date=$(date +%Y-%m-%d)
 
     case "$period" in
         today)
-            filter_date=$(date +%Y-%m-%d)
+            start_date="$end_date"
             ;;
         week)
-            # Last 7 days
-            filter_date=$(date -d '7 days ago' +%Y-%m-%d)
+            start_date=$(date -d '7 days ago' +%Y-%m-%d)
             ;;
         month)
-            # Last 30 days
-            filter_date=$(date -d '30 days ago' +%Y-%m-%d)
+            start_date=$(date -d '30 days ago' +%Y-%m-%d)
             ;;
         *)
-            filter_date=$(date +%Y-%m-%d)
+            start_date="$end_date"
             ;;
     esac
+
+    # Use awk to filter entries within date range
+    awk -F'[_|]' -v start="$start_date" -v end="$end_date" '
+        /^[0-9]{4}-[0-9]{2}-[0-9]{2}/ {
+            entry_date = $1
+            if (entry_date >= start && entry_date <= end) print $0
+        }
+    ' "$USAGE_LOG" 2>/dev/null
+}
+
+# Function to get usage summary
+get_usage_summary() {
+    local period="$1"  # today, week, month
 
     # Count usage by model (handle empty log file)
     if [ ! -f "$USAGE_LOG" ]; then
@@ -62,9 +76,12 @@ get_usage_summary() {
         sonnet_count=0
         haiku_count=0
     else
-        opus_count=$(grep "$filter_date" "$USAGE_LOG" 2>/dev/null | grep -c "opus" || true)
-        sonnet_count=$(grep "$filter_date" "$USAGE_LOG" 2>/dev/null | grep -c "sonnet" || true)
-        haiku_count=$(grep "$filter_date" "$USAGE_LOG" 2>/dev/null | grep -c "haiku" || true)
+        local filtered_entries
+        filtered_entries=$(filter_log_by_period "$period")
+
+        opus_count=$(echo "$filtered_entries" | grep -c "opus" || true)
+        sonnet_count=$(echo "$filtered_entries" | grep -c "sonnet" || true)
+        haiku_count=$(echo "$filtered_entries" | grep -c "haiku" || true)
 
         # Ensure counts are numeric
         opus_count=${opus_count:-0}
@@ -223,8 +240,8 @@ $(get_usage_summary week)
 
 EOF
 
-    # Group by repository
-    grep "$(date -d '7 days ago' +%Y-%m-%d)" "$USAGE_LOG" 2>/dev/null | \
+    # Group by repository (using date range filter)
+    filter_log_by_period "week" | \
         awk -F'|' '{print $3}' | sort | uniq -c | sort -rn | \
         while read count repo; do
             echo "- **${repo}:** ${count} tasks" >> "$report_file"

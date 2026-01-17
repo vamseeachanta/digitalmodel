@@ -1,0 +1,40 @@
+default:
+  Analysis: NULL
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+FatigueLifeReadingSets:
+  - 
+    io: M:\182\Rev7\Fatigue\GI_repaired.xlsx
+    sheet_name: Damage Tables
+    KeyWords: ['Arc Length']
+    RowsToSkip: 2
+    RowsToRead: 2119
+    Label: ['Top of Riser (0-20ft)', 'Riser OD, D Curve (>20ft)','Riser ID, E Curve (>20ft)', 'Riser ID, F Curve (>20ft)']
+    Columns: ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
+    FactorOfSafety: 10
+
+FatigueLifePlotSettings:
+  Name: Fatigue Analysis
+  PltSupTitle: Fatigue Life Along the riser
+  PltTitle: " "
+  PltXLabel: Arc Length (m)
+  PltYLabel: Fatigue Life (years)
+  PltLabel:
+    - Top of Riser, BS C, SCF1.1
+    - Riser, OD, BS D, SCF1.2
+    - Riser, ID, BS E SCF1.2 (Sensitivity)
+    - Riser, ID, BS F SCF1.2
+  LifeLimit: 25
+  XLimRanges: 
+    - [0, 50]
+    - [0, 1700]
+    - [1360, 1420]
+  YLimRanges: 
+    - [10, 10000]
+    - [10, 100000]
+    - [10, 100000]
+  LineStyles: ["-.", "--","-", ":"]
+  Colors : ['blue', 'green', 'cyan', 'magenta', 'yellow', 'black']

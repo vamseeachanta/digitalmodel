@@ -1,7 +1,273 @@
 import logging
 import math
+import re
 
 from assetutilities.common.update_deep import update_deep_dictionary
+
+
+def _extract_year_from_code(specification_code):
+    match = re.search(r"(19|20)\\d{2}", specification_code)
+    if match:
+        return int(match.group(0))
+    return None
+
+
+def _resolve_pressure_value(value):
+    if value is None:
+        return 0.0
+    if isinstance(value, dict):
+        return float(value.get("fluid_density", 0.0)) * float(
+            value.get("fluid_column", 0.0)
+        ) * 12.0
+    return float(value)
+
+
+def _is_dnv_f101(specification_code):
+    code = specification_code.upper()
+    return "F101" in code and "DNV" in code
+
+
+def _is_dnv_f201(specification_code):
+    code = specification_code.upper()
+    return "F201" in code and "DNV" in code
+
+
+class DNVWallThickness:
+    def __init__(self, cfg, pipe_flag, load_condition_index, specification_code):
+        self.cfg = cfg
+        self.pipe_flag = pipe_flag
+        self.load_condition_index = load_condition_index
+        self.specification_code = specification_code
+        self.design_factors = self._resolve_design_factors()
+
+    def _resolve_design_factors(self):
+        defaults = {
+            "internal_pressure": {
+                "gamma_m": 1.15,
+                "gamma_sc": 1.046,
+                "alpha_u": 0.96,
+                "alpha_fab": 1.0,
+                "alpha_mpt": 0.75,
+                "alpha_spt": 1.0,
+            },
+            "external_pressure": {
+                "gamma_m": 1.15,
+                "gamma_sc": 1.046,
+                "alpha_fab": 1.0,
+                "ovality": 0.005,
+            },
+            "collapse_propagation": {
+                "gamma_m": 1.15,
+                "gamma_sc": 1.046,
+                "alpha_fab": 1.0,
+            },
+        }
+
+        design_factors = self.cfg.get("DesignFactors", {})
+        year = _extract_year_from_code(self.specification_code)
+        year_keys = []
+        if year is not None:
+            year_keys = [
+                f"DNV-OS-F101-{year}",
+                f"DNV-ST-F101-{year}",
+                f"DNVGL-ST-F101-{year}",
+                f"DNV-F101-{year}",
+                f"DNV-OS-F201-{year}",
+                f"DNV-F201-{year}",
+            ]
+        candidate_keys = [
+            self.specification_code,
+            *year_keys,
+            "DNV-OS-F101",
+            "DNV-ST-F101",
+            "DNVGL-ST-F101",
+            "DNV-F101",
+            "DNV-OS-F201",
+            "DNV-F201",
+        ]
+        for key in candidate_keys:
+            if key in design_factors:
+                overrides = design_factors[key]
+                for section in defaults:
+                    if section in overrides and isinstance(overrides[section], dict):
+                        defaults[section].update(overrides[section])
+                for top_key, top_value in overrides.items():
+                    if top_key in defaults:
+                        continue
+                    for section in defaults:
+                        if top_key in defaults[section]:
+                            defaults[section][top_key] = top_value
+                break
+
+        return defaults
+
+    def _get_temperature_derating(self):
+        try:
+            return float(
+                self.cfg["Design"][self.load_condition_index]["Material"][
+                    "temperature_derating"
+                ][self.pipe_flag][self.specification_code]
+            )
+        except KeyError:
+            return 1.0
+
+    def _get_material_strengths(self):
+        alpha_u = self.design_factors["internal_pressure"]["alpha_u"]
+        temp_derating = self._get_temperature_derating()
+        smys = float(self.cfg[self.pipe_flag]["Material"]["SMYS"])
+        smus = float(self.cfg[self.pipe_flag]["Material"]["SMUS"])
+        fy = smys * alpha_u * temp_derating
+        fu = smus * alpha_u * temp_derating
+        return fy, fu
+
+    def _get_material_modulus(self):
+        material = self.cfg[self.pipe_flag]["Material"]
+        E = float(material.get("E", 0.0))
+        poisson = material.get(
+            "Poissons_Ratio",
+            material.get("Poissionsratio", material.get("PoissonRatio", 0.3)),
+        )
+        return E, float(poisson)
+
+    def _get_pressures(self):
+        design = self.cfg["Design"][self.load_condition_index]
+        p_internal = _resolve_pressure_value(design["InternalPressure"][self.pipe_flag])
+        p_external = _resolve_pressure_value(design["ExternalPressure"][self.pipe_flag])
+        min_internal = design.get("MinimumInternalPressure")
+        if isinstance(min_internal, dict):
+            min_internal = min_internal.get(self.pipe_flag)
+        min_internal = _resolve_pressure_value(min_internal)
+        return p_internal, p_external, min_internal
+
+    def _get_nominal_od(self):
+        return float(self.cfg[self.pipe_flag]["Geometry"]["Nominal_OD"])
+
+    def _get_internal_minus_external(self):
+        p_internal, p_external, _ = self._get_pressures()
+        return max(0.0, p_internal - p_external)
+
+    def _get_external_minus_min_internal(self):
+        _, p_external, p_internal_min = self._get_pressures()
+        return max(0.0, p_external - p_internal_min), p_internal_min
+
+    def _pressure_containment_allowable(self, thickness):
+        if thickness <= 0.0:
+            return 0.0
+        D = self._get_nominal_od()
+        fy, fu = self._get_material_strengths()
+        fcb = min(fy, fu / 1.15)
+        gamma_m = self.design_factors["internal_pressure"]["gamma_m"]
+        gamma_sc = self.design_factors["internal_pressure"]["gamma_sc"]
+        return (
+            (2.0 / math.sqrt(3.0))
+            * (2.0 * thickness / (D - thickness))
+            * fcb
+            / (gamma_m * gamma_sc)
+        )
+
+    def get_burst_pressure(self, thickness):
+        _, p_external, _ = self._get_pressures()
+        return self._pressure_containment_allowable(thickness) + p_external
+
+    def get_burst_minimum_thickness(self):
+        p_design = self._get_internal_minus_external()
+        if p_design <= 0.0:
+            return 0.0
+        D = self._get_nominal_od()
+        fy, fu = self._get_material_strengths()
+        fcb = min(fy, fu / 1.15)
+        gamma_m = self.design_factors["internal_pressure"]["gamma_m"]
+        gamma_sc = self.design_factors["internal_pressure"]["gamma_sc"]
+        strength_term = (2.0 / math.sqrt(3.0)) * fcb / (gamma_m * gamma_sc)
+        if strength_term <= 0.0:
+            return 0.0
+        return (p_design * D) / (p_design + 2.0 * strength_term)
+
+    def _collapse_pressure(self, thickness):
+        if thickness <= 0.0:
+            return None
+        D = self._get_nominal_od()
+        if thickness >= D:
+            return None
+        E, poisson = self._get_material_modulus()
+        fy, _ = self._get_material_strengths()
+        if E <= 0.0 or fy <= 0.0:
+            return None
+        ovality = self.design_factors["external_pressure"]["ovality"]
+        alpha_fab = self.design_factors["external_pressure"]["alpha_fab"]
+        d_over_t = D / thickness
+        t_over_d = thickness / D
+        pel = 2.0 * E * (t_over_d**3) / (1.0 - poisson**2)
+        pp = 2.0 * fy * alpha_fab * t_over_d
+
+        b = -pel
+        c = -(pp**2 + pp * pel * ovality * d_over_t)
+        d = pel * (pp**2)
+        u = (-(b**2) / 3.0 + c) / 3.0
+        v = (2.0 * b**3 / 27.0 - b * c / 3.0 + d) / 2.0
+        if u >= 0.0:
+            return None
+        cos_arg = -v / math.sqrt(-u**3)
+        cos_arg = max(-1.0, min(1.0, cos_arg))
+        phi = math.acos(cos_arg)
+        y = -2.0 * math.sqrt(-u) * math.cos(phi / 3.0 + 60.0 * math.pi / 180.0)
+        return y - b / 3.0
+
+    def get_collapse_pressure(self, thickness):
+        _, _, p_internal_min = self._get_pressures()
+        gamma_m = self.design_factors["external_pressure"]["gamma_m"]
+        gamma_sc = self.design_factors["external_pressure"]["gamma_sc"]
+        pc = self._collapse_pressure(thickness)
+        if pc is None:
+            return 0.0
+        return pc / (gamma_m * gamma_sc) + p_internal_min
+
+    def get_collapse_minimum_thickness(self):
+        p_delta, p_internal_min = self._get_external_minus_min_internal()
+        gamma_m = self.design_factors["external_pressure"]["gamma_m"]
+        gamma_sc = self.design_factors["external_pressure"]["gamma_sc"]
+        target = p_delta * gamma_m * gamma_sc
+        if target <= 0.0:
+            return 0.0
+
+        D = self._get_nominal_od()
+        t_min = max(1e-6, 0.001 * D)
+        t_max = 0.45 * D
+        for _ in range(60):
+            t_mid = 0.5 * (t_min + t_max)
+            pc = self._collapse_pressure(t_mid)
+            if pc is None:
+                t_min = t_mid
+                continue
+            if pc >= target:
+                t_max = t_mid
+            else:
+                t_min = t_mid
+        return t_max
+
+    def get_propagation_pressure(self, thickness):
+        _, _, p_internal_min = self._get_pressures()
+        gamma_m = self.design_factors["collapse_propagation"]["gamma_m"]
+        gamma_sc = self.design_factors["collapse_propagation"]["gamma_sc"]
+        alpha_fab = self.design_factors["collapse_propagation"]["alpha_fab"]
+        D = self._get_nominal_od()
+        fy, _ = self._get_material_strengths()
+        if fy <= 0.0 or alpha_fab <= 0.0 or D <= 0.0:
+            return 0.0
+        p_prop = 35.0 * fy * alpha_fab * ((thickness / D) ** 2.5)
+        return p_prop / (gamma_m * gamma_sc) + p_internal_min
+
+    def get_propagation_minimum_thickness(self):
+        p_delta, _ = self._get_external_minus_min_internal()
+        gamma_m = self.design_factors["collapse_propagation"]["gamma_m"]
+        gamma_sc = self.design_factors["collapse_propagation"]["gamma_sc"]
+        alpha_fab = self.design_factors["collapse_propagation"]["alpha_fab"]
+        D = self._get_nominal_od()
+        fy, _ = self._get_material_strengths()
+        target = p_delta * gamma_m * gamma_sc
+        if target <= 0.0 or fy <= 0.0 or alpha_fab <= 0.0:
+            return 0.0
+        return D * ((target / (35.0 * fy * alpha_fab)) ** (1.0 / 2.5))
 
 
 class PipeCapacity:
@@ -268,6 +534,13 @@ class PipeCapacity:
             minimum_thickness = cfr_30_part_250.get_burst_minimum_thickness(
                 pipe_flag, load_condition_index
             )
+
+        if _is_dnv_f101(specification_code) or _is_dnv_f201(specification_code):
+            dnv = DNVWallThickness(
+                self.cfg, pipe_flag, load_condition_index, specification_code
+            )
+            pressure = dnv.get_burst_pressure(thickness)
+            minimum_thickness = dnv.get_burst_minimum_thickness()
 
         return minimum_thickness, pressure
 
@@ -553,6 +826,13 @@ class PipeCapacity:
             pressure = api_tr_5c3.get_collapse_pressure()
             minimum_thickness = api_tr_5c3.get_collapse_minimum_thickness()
 
+        if _is_dnv_f101(specification_code) or _is_dnv_f201(specification_code):
+            dnv = DNVWallThickness(
+                self.cfg, pipe_flag, load_condition_index, specification_code
+            )
+            pressure = dnv.get_collapse_pressure(thickness)
+            minimum_thickness = dnv.get_collapse_minimum_thickness()
+
         return minimum_thickness, pressure
 
     def evaluate_collapse_pressure_API_STD_2RD(
@@ -604,6 +884,13 @@ class PipeCapacity:
                     pipe_flag, specification_code, load_condition_index
                 )
             )
+
+        if _is_dnv_f101(specification_code) or _is_dnv_f201(specification_code):
+            dnv = DNVWallThickness(
+                self.cfg, pipe_flag, load_condition_index, specification_code
+            )
+            pressure = dnv.get_propagation_pressure(thickness)
+            minimum_thickness = dnv.get_propagation_minimum_thickness()
 
         return minimum_thickness, pressure
 

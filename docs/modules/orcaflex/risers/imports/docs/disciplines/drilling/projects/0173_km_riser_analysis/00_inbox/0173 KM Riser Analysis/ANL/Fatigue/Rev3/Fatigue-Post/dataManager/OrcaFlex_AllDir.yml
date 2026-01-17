@@ -1,0 +1,32 @@
+Default:
+  Analysis: NULL
+  logLevel: DEBUG
+
+FatigueLifeReadingSets:
+  - 
+    io: K:\\0173 KM Extreme\\SLWR\\Fatigue\\Rev2\\FTG_Allruns_Post.xlsx
+    sheet_name: Damage Tables
+    KeyWords: ['Arc Length']
+    RowsToSkip: 2
+    RowsToRead: 3339
+    Label: ['Top of Riser (0-30ft)', 'Riser OD, D Curve (> 30 ft)','Riser ID, D Curve (> 30 ft)']
+    Columns: ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
+    FactorOfSafety: 10
+
+FatigueLifePlotSettings:
+  Name: Screening Repsonse
+  PltSupTitle: Frontier Deepwater Feasibility Analysis
+  PltTitle: Fatigue Life Along the riser
+  PltXLabel: Arc Length (m)
+  PltYLabel: Fatigue Life (years)
+  PltLabel:
+    - Top of Riser
+    - Riser, OD
+    - Riser, ID
+  LifeLimit: 25
+  XLimRanges: 
+    - [0, 50]
+    - [0, 7000]
+  YLimRanges: 
+    - [1, 1000]
+    - [1, 1000000]
