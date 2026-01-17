@@ -1,0 +1,126 @@
+Environment:
+  Density: 1.025
+  HorizontalWaterDensityFactor: '~'
+  KinematicViscosity: 1.35e-06
+  ReynoldsNumberCalculation: Flow Direction
+  SeaTemperature: 10
+  SeabedModel: Linear
+  SeabedNormalStiffness: 1019.367991845056
+  SeabedOrigin: [0, 0]
+  SeabedShearStiffness: '~'
+  SeabedSlope: 0
+  SeabedSlopeDirection: 0
+  SeabedType: Flat
+  VerticalDensityVariation: Constant
+  WaterDepth: 1347.2
+  WaterSurfaceZ: 0
+General:
+  BuoysIncludedInStatics: Individually Specified
+  ImplicitConstantTimeStep: 0.1
+  ImplicitUseVariableTimeStep: 'No'
+  LogPrecision: Single
+  SimulationIntegrationMethod: Implicit
+  StageDuration: [8, 16]
+  StaticsMethod: Whole System statics
+  TargetLogSampleInterval: 0.1
+  UnitsSystem: SI
+LineTypes:
+- AllowableStress: '~'
+  AllowableTension: '~'
+  AxialDragLiftDiameter: '~'
+  BendingStressLoadingFactor: 1
+  BulkModulus: Infinity
+  CG: [0, 0]
+  Ca: [1, '~', 0]
+  Category: General
+  Cd: [1.2, '~', 0.008]
+  Cl: 0
+  ClashStiffness: 0
+  Cm: ['~', '~', '~']
+  CompressionIsLimited: 'No'
+  ContactDiameter: '~'
+  CorrosionThickness: 0.0059943999999999996
+  EA: 3196661.2550426205
+  EI: [15246.14245414644, '~']
+  GJ: 11727.80188936866
+  ID: 0.16827499999999998
+  MassPerUnitLength: 0.19839708817355337
+  MinRadius: ['~', '~']
+  Name: MainPipe
+  NormalDragLiftDiameter: '~'
+  OD: 0.38408864
+  Pen: [2, Solid, Yellow]
+  PoissonRatio: 0.3
+  RayleighDampingCoefficients: (no damping)
+  SMYS: 206842.35
+  SeabedAxialFrictionCoefficient: 0.45
+  SeabedNormalFrictionCoefficient: 0.6
+  ShearStressLoadingFactor: 1
+  StressID: 0.16827499999999998
+  StressOD: 0.219075
+  TensileStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+- AllowableStress: '~'
+  AllowableTension: '~'
+  AxialDragLiftDiameter: '~'
+  BendingStressLoadingFactor: 1
+  BulkModulus: Infinity
+  CG: [0, 0]
+  Ca: [1, '~', 0]
+  Category: General
+  Cd: [1.2, '~', 0.008]
+  Cl: 0
+  ClashStiffness: 0
+  Cm: ['~', '~', '~']
+  CompressionIsLimited: 'No'
+  ContactDiameter: '~'
+  CorrosionThickness: 0.0059943999999999996
+  EA: 3196661.2550426205
+  EI: [15246.14245414644, '~']
+  GJ: 11727.80188936866
+  ID: 0.16827499999999998
+  MassPerUnitLength: 0.4587317219032727
+  MinRadius: ['~', '~']
+  Name: BuoyPipe
+  NormalDragLiftDiameter: '~'
+  OD: 0.8770874
+  Pen: [2, Solid, Yellow]
+  PoissonRatio: 0.3
+  RayleighDampingCoefficients: (no damping)
+  SMYS: 206842.35
+  SeabedAxialFrictionCoefficient: 0.45
+  SeabedNormalFrictionCoefficient: 0.6
+  ShearStressLoadingFactor: 1
+  StressID: 0.16827499999999998
+  StressOD: 0.219075
+  TensileStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+Lines:
+- AsLaidTension: 0
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec, ConnectionGamma, ReleaseStage:
+  - [Fixed, 0, 0, -15.12, 172, 0, 0, '~']
+  - [Fixed, 2324.658640779579, 0, -1347.0154563, 0, 0, 0, '~']
+  ConnectionStiffnessX, ConnectionStiffnessY:
+  - [0, '~']
+  - [0, '~']
+  ContentsDensity: 0.4004616
+  ContentsFlowRate: 0
+  ContentsMethod: Uniform
+  ContentsPressure: 5171.05875
+  ContentsPressureRefZ: -15.12
+  DragFormulation: Standard
+  DynamicsVIV: None
+  IncludeAxialContentsInertia: 'Yes'
+  IncludeSeabedFrictionInStatics: 'Yes'
+  IncludeTorsion: 'No'
+  IncludedInStatics: 'Yes'
+  LayAzimuth: 180
+  LineType, Length, TargetSegmentLength:
+  - [MainPipe, 1706.7127423050001, 5]
+  - [BuoyPipe, 616.3208383007704, 5]
+  - [MainPipe, 911.1617610333991, 5]
+  Name: SLWR
+  PyModel: (none)
+  StaticsStep1: Catenary
+  StaticsVIV: None
+  TopEnd: End A

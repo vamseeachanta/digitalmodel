@@ -140,7 +140,9 @@ class LinePropertyManager:
             # Update current state
             if line_name in self.current_state:
                 self.current_state[line_name].sections = sections.copy()
-                self.current_state[line_name].total_length = sum(s for s in sections if s else 0)
+                self.current_state[line_name].total_length = sum(
+                    s for s in sections if s is not None
+                )
         
         # Apply to model
         self.model.set_line_lengths(validated_lengths)

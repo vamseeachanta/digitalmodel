@@ -1,0 +1,1385 @@
+default:
+  analysis:
+    host:
+      id: 1
+      type: drilling
+      raos:
+        Extreme: data_manager\data\vessels\host_id_1_extreme_disp_raos.yml
+        Fatigue: data_manager\data\vessels\host_id_1_extreme_disp_raos.yml
+    well:
+      id: 1
+    riser:
+      type:
+        drilling: true
+        intervention: false
+        top_tensioned: false
+      shape: vertical
+    loading_type:
+      Extreme: true
+      Fatigue: true
+      VIV: true
+  Constants:
+    g: 9.81
+  units:
+    verticalDistance: m
+    Temperature: deg F
+    Pressure: psi
+    EffectiveTension: kN
+    BendingMoment: kNm
+    YieldStrength: psi
+    E: psi
+    NominalID: inch
+    NominalOD: inch
+    NominalWT: inch
+    Rho: kg/m3
+    MassPerUnitLength: kg/m
+    WeightPerUnitLength: N/m
+    SoilStiffness: kN/m/m
+    BuoyancyCoverage: Percentage
+    elevations:
+    - Start elevations above Mudline (m)
+    - End elevations above Mudline (m)
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false
+  extract: null
+  transform:
+    from_xlsx_to_yaml_file: false
+    repeat_patterns: true
+    replace: false
+  load: null
+Analysis:
+  fe_folder: K:\Dropbox\Dropbox\Engineering\0185 ECS FFS Engineering\COD\results\
+  custom_folder: null
+  file_name: app_vertical_riser_fe_fatigue_models_lid002_2500ft_WT0750_064pcf
+  file_name_for_overwrite: app_vertical_riser_fe_fatigue_models_lid002_2500ft_WT0750_064pcf
+  result_folder: K:\Dropbox\Dropbox\Engineering\0185 ECS FFS Engineering\COD\results\
+  log_folder: K:\Dropbox\Dropbox\Engineering\0185 ECS FFS Engineering\COD\logs\
+  start_time: 2019-07-02 18:38:59.716632
+  cfg_array_file_names: null
+  result:
+    component_bottom_elevation_from_end_A:
+    - 0.0
+    - 0.0
+    - 4.572
+    - 4.572
+    - 9.144
+    - 12.192
+    - 12.192
+    - 30.48
+    - 30.48
+    - 30.48
+    - 33.528
+    - 33.528
+    - 39.623999999999995
+    - 39.623999999999995
+    - 39.623999999999995
+    - 51.815999999999995
+    - 120.39599999999999
+    - 714.756
+    - 714.756
+    - 714.756
+    - 714.756
+    - 783.336
+    - 783.336
+    - 789.432
+    - 796.4424
+    - 796.4424
+    - 796.4424
+    - 823.8744
+    - 869.5944000000001
+    component_bottom_effective_tension:
+    - 0.0
+    - 189.02409409462115
+    - 167.90553217251556
+    - 167.90553217251556
+    - 99.20088806900623
+    - 0.0
+    - 0.0
+    - 3577.3310593242118
+    - 3577.3310593242118
+    - 3577.3310593242118
+    - 3522.6283312552055
+    - 3522.6283312552055
+    - 3457.507032
+    - 3457.507032
+    - 3457.507032
+    - 3381.86016
+    - 3021.425064
+    - 3252.815496
+    - 3252.815496
+    - 3252.815496
+    - 3252.815496
+    - 2892.3804
+    - 2892.3804
+    - 1779.9264
+    - -66.74724000000015
+    - -66.74724000000015
+    - -66.74724000000015
+    - -354.2743983226115
+    - -718.2610300906418
+  fe_filename: K:\Dropbox\Dropbox\Engineering\0185 ECS FFS Engineering\COD\results\app_vertical_riser_fe_fatigue_models_lid002_2500ft_WT0750_064pcf_shear7_FE.yml
+stack_up:
+  from_xlsx:
+  - label: stack_up_table
+    io: data_manager\data\drilling_riser_template.xlsx
+    sheet_name: SU_Configuration 2500ft WD
+    index_col: null
+    skiprows: 0
+    skipfooter: 0
+    columns: null
+    replace: null
+  - label: riser_joints
+    io: data_manager\data\drilling_riser_template.xlsx
+    sheet_name: Joints
+    index_col: null
+    skiprows: 0
+    skipfooter: 0
+    columns: null
+    replace: null
+  - label: tensioners
+    io: data_manager\data\drilling_riser_template.xlsx
+    sheet_name: Tensioners
+    index_col: null
+    skiprows: 0
+    skipfooter: 0
+    columns: null
+    replace: null
+  - label: flexible_joints
+    io: data_manager\data\drilling_riser_template.xlsx
+    sheet_name: Flexible Jts
+    index_col: null
+    skiprows: 0
+    skipfooter: 0
+    columns: null
+    replace: null
+  - label: geotechnical
+    io: data_manager\data\drilling_riser_template.xlsx
+    sheet_name: geotechnical
+    index_col: null
+    skiprows: 0
+    skipfooter: 0
+    columns: null
+    replace: null
+  - label: hosts
+    io: data_manager\data\drilling_riser_template.xlsx
+    sheet_name: hosts
+    index_col: null
+    skiprows: 0
+    skipfooter: 0
+    columns: null
+    replace: null
+  overpull:
+    drilling:
+      bottom_of_component: LMRP
+      value: 400
+      unit: kips
+    top_tensioned:
+      bottom_of_component: Wellhead
+      value: 100
+      unit: kips
+    intervention:
+      bottom_of_component: EDP
+      value: 125
+      unit: kips
+  stroke_setting:
+    initial_down_stroke: 0.25
+    model_stroke_in_and_out_limits: true
+Material:
+  Steel:
+    E: 30000000.0
+    Rho: 0.2817929
+    Poissionsratio: 0.3
+    ThermalExpansionCoefficient: 6.5e-06
+    Grades:
+      ASTM A106 Grade A:
+        SMYS: 30000
+        SMUS: 48000
+        Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
+      ASTM A106 Grade B:
+        SMYS: 35000
+        SMUS: 60000
+        Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
+      ASTM A106 Grade C:
+        SMYS: 40000
+        SMUS: 70000
+        Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
+      API 5L X60:
+        SMYS: 60000
+        SMUS: null
+        Reference: null
+      API 5L X70:
+        SMYS: 70300
+        SMUS: null
+        Reference: null
+      API 5L X65:
+        SMYS: 65300
+        SMUS: 77500
+        Reference: null
+      API 5L X80:
+        SMYS: 80000
+        SMUS: 95000
+        Reference: Assumed
+      P110:
+        SMYS: 110000
+        SMUS: 125000
+        Reference: Assumed
+      S125:
+        SMYS: 125000
+        SMUS: 140000
+        Reference: Assumed
+    G: 11538461.538461538
+  Fluid:
+    Rho: 1025
+  SeaWater:
+    Rho: 1025
+  MarineGrowth:
+    Density: null
+plot_settings:
+- file_name: effective_tension
+  label:
+  - effective tension
+  x:
+  - component_bottom_effective_tension
+  y:
+  - component_bottom_elevation_above_mudline
+  size: half_letter
+  orientation: portrait
+  plt_kind: line
+  xlabel: Effective Tension (kN)
+  ylabel: Elevation Above Mudline (m)
+  suptitle: Effective Tension along Riser
+  title: ' '
+  xticklabels:
+  - Drillships
+  - Semisubmersibles
+  grid: true
+  legend: true
+  legend_location: outside
+  marker: null
+  ylim: null
+- file_name: effective_tension_top
+  label:
+  - effective tension
+  x:
+  - component_bottom_effective_tension
+  y:
+  - component_bottom_elevation_above_mudline
+  size: half_letter
+  orientation: portrait
+  plt_kind: line
+  xlabel: Effective Tension (kN)
+  ylabel: Elevation Above Mudline (m)
+  suptitle: Effective Tension along Riser
+  title: ' '
+  xticklabels:
+  - Drillships
+  - Semisubmersibles
+  grid: true
+  legend: true
+  legend_location: outside
+  marker: null
+  ylim:
+  - 0
+  - 50
+- file_name: effective_tension_bottom
+  label:
+  - effective tension
+  x:
+  - component_bottom_effective_tension
+  y:
+  - component_bottom_elevation_above_mudline
+  size: half_letter
+  orientation: portrait
+  plt_kind: line
+  xlabel: Effective Tension (kN)
+  ylabel: Elevation Above Mudline (m)
+  suptitle: Effective Tension along Riser
+  title: ' '
+  xticklabels:
+  - Drillships
+  - Semisubmersibles
+  grid: true
+  legend: true
+  legend_location: outside
+  marker: null
+  ylim:
+  - 2800
+  - 3000
+- file_name: diameters
+  label:
+  - StressOD
+  - StressID
+  - drag_diameter
+  - buoyancy_diameter
+  - internal_fluid_ID
+  x:
+  - StressOD
+  - StressID
+  - drag_diameter
+  - buoyancy_diameter
+  - internal_fluid_ID
+  y:
+  - component_bottom_elevation_above_mudline
+  size: half_letter
+  orientation: portrait
+  plt_kind: line
+  xlabel: Diameters (m)
+  ylabel: Elevation Above Mudline (m)
+  suptitle: Diameters along Riser
+  title: ' '
+  xticklabels:
+  - Drillships
+  - Semisubmersibles
+  grid: true
+  legend: true
+  legend_location: outside
+  marker: null
+  ylim: null
+- file_name: area_moments
+  label:
+  - Area
+  - Area Moment of Intertia
+  - Polar Moment
+  x:
+  - A
+  - I
+  - J
+  y:
+  - component_bottom_elevation_above_mudline
+  size: half_letter
+  orientation: portrait
+  plt_kind: line
+  xlabel: Area Moments (m4)
+  ylabel: Elevation Above Mudline (m)
+  suptitle: Area Moments along Riser
+  title: ' '
+  xticklabels:
+  - Drillships
+  - Semisubmersibles
+  grid: true
+  legend: true
+  legend_location: outside
+  marker: null
+  ylim: null
+- file_name: stiffness
+  label:
+  - Bending
+  - Axial
+  - Torsional
+  x:
+  - EI
+  - EA
+  - GJ
+  y:
+  - component_bottom_elevation_above_mudline
+  size: half_letter
+  orientation: portrait
+  plt_kind: line
+  xlabel: Stiffness (kgm2)
+  ylabel: Elevation Above Mudline (m)
+  suptitle: Stiffness along Riser
+  title: ' '
+  xticklabels:
+  - Drillships
+  - Semisubmersibles
+  grid: true
+  legend: true
+  legend_location: outside
+  marker: null
+  ylim: null
+- file_name: weights
+  label:
+  - stack_in_service_weight
+  - dry_weight_per_unit_length
+  - wet_weight_per_unit_length
+  - internal_fluid_weight_per_unit_length
+  - internal_fluid_weight_in_seawater_per_unit_length
+  x:
+  - stack_in_service_weight
+  - dry_weight_per_unit_length
+  - wet_weight_per_unit_length
+  - internal_fluid_weight_per_unit_length
+  - internal_fluid_weight_in_seawater_per_unit_length
+  y:
+  - component_bottom_elevation_above_mudline
+  size: half_letter
+  orientation: portrait
+  plt_kind: line
+  xlabel: weights (kN)
+  ylabel: Elevation Above Mudline (m)
+  suptitle: Weights along Riser
+  title: ' '
+  xticklabels:
+  - Drillships
+  - Semisubmersibles
+  grid: true
+  legend: true
+  legend_location: outside
+  marker: null
+  ylim: null
+FEASettings:
+  AnchorAdjustment: null
+  EndOrientation:
+    SLWR:
+      A:
+        Azimuth: calculated
+        Declination: calculated
+        Gamma: 0
+      B:
+        Azimuth: calculated
+        Declination: 90
+        Gamma: 0
+    SCR:
+      A:
+        Azimuth: calculated
+        Declination: calculated
+        Gamma: 0
+      B:
+        Azimuth: calculated
+        Declination: 90
+        Gamma: 0
+  Seabed:
+    FrictionCoefficient:
+      Normal: 0.6
+      Axial: 0.45
+    Stiffness:
+      Extreme: 10000
+      Fatigue: 1000
+  DesignPressure:
+    Surface: 0
+    TDP: null
+  Hydrodynamic:
+    Extreme:
+      MainPipe:
+        Ca:
+        - 1.5
+        - '~'
+        - 0
+        Cd:
+        - 1.5
+        - '~'
+        - 0.008
+      BuoyPipe:
+        Ca:
+        - 1
+        - '~'
+        - 0.001
+        Cd:
+        - 1
+        - '~'
+        - 0.001
+      BuoyPipeStartEnd:
+        Ca:
+        - 1
+        - '~'
+        - 0.053570901
+        Cd:
+        - 1
+        - '~'
+        - 0.080356352
+    Fatigue:
+      MainPipe:
+        Ca:
+        - 1.5
+        - '~'
+        - 0
+        Cd:
+        - 1.35
+        - '~'
+        - 0.008
+      BuoyPipe:
+        Ca:
+        - 1
+        - '~'
+        - 0.001
+        Cd:
+        - 0.9
+        - '~'
+        - 0.001
+      BuoyPipeStartEnd:
+        Ca:
+        - 1
+        - '~'
+        - 0.053570901
+        Cd:
+        - 1
+        - '~'
+        - 0.080356352
+  CorrosionAllowance:
+    Extreme: 0.236
+    Fatigue: 0.118
+  Damping:
+    Extreme:
+      Name: SteelDamping
+      Mode: Stiffness Proportional
+      DampingRatio: 0.5
+      Period1: '~'
+      ApplyToGeometricStiffness: false
+    Fatigue:
+      Name: SteelDamping
+      Mode: Stiffness Proportional
+      DampingRatio: 0.5
+      Period1: '~'
+      ApplyToGeometricStiffness: false
+  Mesh:
+    Vertical: null
+    SCR:
+      Top:
+        L: 25
+        Size: 0.5
+      Buoyancy:
+        L: null
+        Size: 2
+      BeforeTDP:
+        L: 250
+        Size: 1
+      AfterTDP:
+        L: 250
+        Size: 1
+  Stage:
+    Extreme:
+      Duration:
+      - 8
+      - 120
+      TargetLogSampleInterval: 0.3
+      ImplicitConstantTimeStep: 0.02
+    Fatigue:
+      Duration:
+      - 8
+      - 600
+      TargetLogSampleInterval: 0.3
+      ImplicitConstantTimeStep: 0.2
+  FlexJointStiffness:
+    ConnectionLabel: FJProfile
+    Extreme:
+    - - 0.0
+      - 0.0
+    - - 0.01
+      - 7.36
+    - - 0.02
+      - 11.4
+    - - 0.03
+      - 14.72
+    - - 0.04
+      - 17.65
+    - - 0.05
+      - 20.33
+    - - 0.06
+      - 22.81
+    - - 0.07
+      - 25.14
+    - - 0.08
+      - 27.35
+    - - 0.09
+      - 29.46
+    - - 0.1
+      - 31.49
+    - - 0.2
+      - 48.78
+    - - 0.3
+      - 63.01
+    - - 0.4
+      - 75.56
+    - - 0.5
+      - 87.0
+    - - 0.6
+      - 97.61
+    - - 0.7
+      - 107.59
+    - - 0.8
+      - 117.05
+    - - 0.9
+      - 126.1
+    - - 1.0
+      - 134.77
+    - - 1.5
+      - 174.1
+    - - 2.0
+      - 208.77
+    - - 3.0
+      - 269.67
+    - - 4.0
+      - 323.41
+    - - 6.0
+      - 417.78
+    - - 8.0
+      - 501.02
+    - - 10.0
+      - 576.77
+    - - 12.0
+      - 647.16
+    - - 13.25
+      - 688.96
+    - - 22.0
+      - 1143.94
+    Fatigue:
+    - - 0.0
+      - 0.0
+    - - 0.01
+      - 4.28
+    - - 0.02
+      - 6.77
+    - - 0.03
+      - 8.85
+    - - 0.04
+      - 10.7
+    - - 0.05
+      - 12.4
+    - - 0.06
+      - 13.99
+    - - 0.07
+      - 15.49
+    - - 0.08
+      - 16.91
+    - - 0.09
+      - 18.28
+    - - 0.1
+      - 19.6
+    - - 0.2
+      - 30.99
+    - - 0.3
+      - 40.51
+    - - 0.4
+      - 48.99
+    - - 0.5
+      - 56.77
+    - - 0.6
+      - 64.04
+    - - 0.7
+      - 70.91
+    - - 0.8
+      - 77.44
+    - - 0.9
+      - 83.71
+    - - 1.0
+      - 89.75
+    - - 1.5
+      - 117.31
+    - - 2.0
+      - 141.87
+    - - 3.0
+      - 185.49
+    - - 4.0
+      - 224.33
+    - - 6.0
+      - 293.27
+    - - 8.0
+      - 354.54
+    - - 10.0
+      - 410.96
+    - - 11.8
+      - 458.33
+EnvironmentLoad:
+  Extreme:
+  - Wave:
+      SimulationTimeOrigin: 6595.1
+      KinematicStretchingMethod: Vertical Stretching
+      UserSpecifiedRandomWaveSeeds: true
+      WaveFrequencySpectrumDiscretisationMethod: Equal energy
+      WaveTrains:
+      - Name: Wave1
+        WaveType: Ochi-Hubble
+        WaveDirection: 270
+        WaveOrigin:
+        - 0
+        - 0
+        WaveTimeOrigin: 0
+        WaveNumberOfSpectralDirections: 1
+        WaveOchiHubbleParameters: Specified
+        WaveHs1: 0.0001
+        Wavefm1: 0.05235602
+        WaveLambda1: 8
+        WaveHs2: 0.0001
+        Wavefm2: 0.0892857143
+        WaveLambda2: 2
+        WaveSeed: 848251
+        WaveNumberOfComponents: 500
+        WaveSpectrumMinRelFrequency: 0.5
+        WaveSpectrumMaxRelFrequency: 10
+        WaveSpectrumMaxComponentFrequencyRange: 0.05
+      WaveKinematicsCutoffDepth: 200
+      WaveCalculationMethod: Instantaneous Position (exact)
+      WaveCalculationTimeInterval: 0
+      WaveCalculationSpatialInterval: 0
+    Vessel:
+      Orientation:
+      - 0
+      - 0
+      - 0
+      Draft: Ballast
+      InitialPosition:
+      - 0
+      - 0
+      - 0
+      Offset: None
+      OffsetPercentWD: 6
+    MultipleCurrentDataCanBeDefined: true
+    Currents:
+    - Name: Current1
+      CurrentRamp: false
+      HorizontalCurrentFactor: '~'
+      CurrentMethod: Interpolated
+      RefCurrentSpeed: 0
+      RefCurrentDirection: 180
+      CurrentDepth, CurrentFactor, CurrentRotation:
+      - - 0
+        - 1
+        - 0
+      - - 100
+        - 1
+        - 0
+    - Name: Zero_Current
+      CurrentRamp: false
+      HorizontalCurrentFactor: '~'
+      CurrentMethod: Interpolated
+      RefCurrentSpeed: 0
+      RefCurrentDirection: 180
+      CurrentDepth, CurrentFactor, CurrentRotation:
+      - - 0
+        - 1
+        - 0
+      - - 100
+        - 1
+        - 0
+    - Name: Current2
+      CurrentRamp: false
+      HorizontalCurrentFactor: '~'
+      CurrentMethod: Interpolated
+      RefCurrentSpeed: 0
+      RefCurrentDirection: 180
+      CurrentDepth, CurrentFactor, CurrentRotation:
+      - - 0
+        - 1
+        - 0
+      - - 100
+        - 1
+        - 0
+    - Name: N10
+      CurrentRamp: false
+      HorizontalCurrentFactor: '~'
+      CurrentMethod: Interpolated
+      RefCurrentSpeed: 1
+      RefCurrentDirection: 90
+      CurrentDepth, CurrentFactor, CurrentRotation:
+      - - 0
+        - 0.9
+        - 0
+      - - 10
+        - 0.9
+        - 0
+      - - 20
+        - 0.81
+        - 0
+      - - 50
+        - 0.9
+        - 0
+      - - 100
+        - 0.738
+        - 0
+      - - 125
+        - 0.702
+        - 0
+      - - 150
+        - 0.603
+        - 0
+      - - 200
+        - 0.54
+        - 0
+      - - 300
+        - 0.711
+        - 0
+      - - 400
+        - 0.522
+        - 0
+      - - 450
+        - 0.459
+        - 0
+      - - 500
+        - 0.423
+        - 0
+      - - 627
+        - 0.477
+        - 0
+      - - 746
+        - 0.343
+        - 0
+      - - 750
+        - 0.2
+        - 0
+    - Name: NNW100
+      CurrentRamp: false
+      HorizontalCurrentFactor: '~'
+      CurrentMethod: Interpolated
+      RefCurrentSpeed: 1
+      RefCurrentDirection: 180
+      CurrentDepth, CurrentFactor, CurrentRotation:
+      - - 0
+        - 2.1
+        - 0
+      - - 10
+        - 2.1
+        - 0
+      - - 20
+        - 1.91
+        - 0
+      - - 50
+        - 1.88
+        - 0
+      - - 100
+        - 1.56
+        - 0
+      - - 125
+        - 1.49
+        - 0
+      - - 150
+        - 1.49
+        - 0
+      - - 200
+        - 1.47
+        - 0
+      - - 300
+        - 0.59
+        - 0
+      - - 310
+        - 0.58
+        - 0
+      - - 400
+        - 0.4
+        - 0
+      - - 442
+        - 0.35
+        - 0
+      - - 500
+        - 0.31
+        - 0
+      - - 746
+        - 0.31
+        - 0
+      - - 750
+        - 0.18
+        - 0
+    ActiveCurrent: N10
+    CodeChecks:
+      APISTD2RDFd1: 0.8
+      APISTD2RDFd2: 0.8
+      APISTD2RDDelta: 0.01
+      APISTD2RDAlphaFab: 1
+      APISTD2RDk: 0.45
+  Fatigue:
+  - Wave:
+      SimulationTimeOrigin: 0
+      KinematicStretchingMethod: Vertical Stretching
+      UserSpecifiedRandomWaveSeeds: true
+      WaveFrequencySpectrumDiscretisationMethod: Equal energy
+      WaveTrains:
+      - Name: Wave1
+        WaveType: JONSWAP
+        WaveDirection: 45
+        WaveHs: 0.5
+        WaveOrigin:
+        - 0
+        - 0
+        WaveTimeOrigin: 0
+        WaveNumberOfSpectralDirections: 1
+        WaveJONSWAPParameters: Partially Specified
+        WaveGamma: 2.2
+        WaveTp: 3.0
+        WaveNumberOfComponents: 300
+        WaveSpectrumMinRelFrequency: 0.5
+        WaveSpectrumMaxRelFrequency: 10
+        WaveSpectrumMaxComponentFrequencyRange: 0.05
+      WaveKinematicsCutoffDepth: 200
+      WaveCalculationMethod: Instantaneous Position (exact)
+      WaveCalculationTimeInterval: 0
+      WaveCalculationSpatialInterval: 0
+    Vessel:
+      Orientation:
+      - 0
+      - 0
+      - 0
+      Draft: Ballast
+      InitialPosition:
+      - 0
+      - 0
+      - 0
+      Offset: None
+      OffsetPercentWD: 0
+    MultipleCurrentDataCanBeDefined: false
+    Current:
+      RefCurrentSpeed: 0
+      RefCurrentDirection: 0
+      CurrentDepth, CurrentFactor, CurrentRotation:
+      - - 0
+        - 1.0
+        - 0
+      - - 36.5
+        - 1.0
+        - 0
+      - - 64.5
+        - 0.95
+        - 0
+      - - 100
+        - 0.77
+        - -45
+      - - 400
+        - 0.51
+        - -45
+      - - 750
+        - 0.4
+        - -157.5
+    CodeChecks:
+      APISTD2RDFd1: 0.8
+      APISTD2RDFd2: 0.8
+      APISTD2RDDelta: 0.01
+      APISTD2RDAlphaFab: 1
+      APISTD2RDk: 0.45
+replace: TBA
+output_files:
+- settings:
+    single_file: true
+    multiple_file: false
+    file_name:
+      prefix: null
+      suffix: wave_fe_script
+      fields: null
+      extension: txt
+  header:
+  - text: // Standard Header Line 1
+    fields: null
+  - text: // Standard Header Line 2
+    fields: null
+  repeat_patterns:
+  - text: LoadData app_vertical_riser_2500ft_WT0750_064pcf_Wave1_FE.yml
+    fields: null
+  - text: Select General
+    fields: null
+  - text: StageDuration[2]= 3600.0
+    fields: null
+  - text: Select Environment
+    fields: null
+  - text: Select WaveTrain "Wave1"
+    fields: null
+  - text: WaveHs= {0}
+    fields:
+    - from_xlsx:
+      - label: Hs
+        io: data_manager\data\metocean_data_template.xlsx
+        sheet_name: Wave
+        index_col: null
+        skiprows: 0
+        skipfooter: 0
+        filter:
+        - column: location_id
+          value: 2
+        - column: loading_type
+          value: long-term
+        column: Hs
+        loop_level: 0
+        scale: 0.3048
+  - text: Select Environment
+    fields: null
+  - text: Select WaveTrain "Wave1"
+    fields: null
+  - text: WaveTp= {0}
+    fields:
+    - from_xlsx:
+      - label: Tp
+        io: data_manager\data\metocean_data_template.xlsx
+        sheet_name: Wave
+        index_col: null
+        skiprows: 0
+        skipfooter: 0
+        filter:
+        - column: location_id
+          value: 2
+        - column: loading_type
+          value: long-term
+        column: Tp
+        loop_level: 0
+  - text: Select Environment
+    fields: null
+  - text: Select WaveTrain "Wave1"
+    fields: null
+  - text: WaveSeed= {0}
+    fields:
+    - from_xlsx:
+      - label: Seed
+        io: data_manager\data\metocean_data_template.xlsx
+        sheet_name: Seeds
+        index_col: null
+        skiprows: 0
+        skipfooter: 0
+        filter: null
+        column: Seed
+        loop_level: 0
+  - text: Select Environment
+    fields: null
+  - text: Select WaveTrain "Wave1"
+    fields: null
+  - text: WaveDirection= 0
+    fields: null
+  - text: SaveData M:\0185\WaveFatigue\Rev1\lid02_{:03d}_2500ft_WT_0875_64ppg_Dr000_Hs{:05.2f}m_Tp{:05.2f}s.dat
+    fields:
+    - from_range:
+      - 0
+      - 17
+    - from_xlsx:
+      - label: Hs
+        io: data_manager\data\metocean_data_template.xlsx
+        sheet_name: Wave
+        index_col: null
+        skiprows: 0
+        skipfooter: 0
+        filter:
+        - column: location_id
+          value: 2
+        - column: loading_type
+          value: long-term
+        scale: 0.3048
+        column: Hs
+        loop_level: 0
+    - from_xlsx:
+      - label: Tp
+        io: data_manager\data\metocean_data_template.xlsx
+        sheet_name: Wave
+        index_col: null
+        skiprows: 0
+        skipfooter: 0
+        filter:
+        - column: location_id
+          value: 2
+        - column: loading_type
+          value: long-term
+        column: Tp
+        loop_level: 0
+  - text: ' '
+    fields: null
+  footer:
+  - text: // Standard Footer Line 1
+    fields: null
+  - text: // Standard Footer Line 2
+    fields: null
+- settings:
+    single_file: true
+    multiple_file: false
+    file_name:
+      prefix: null
+      suffix: orcaflex_fatigue_analysis
+      fields: null
+      extension: yml
+  header:
+  - text: null
+    from_file:
+      flag: true
+      io: data_manager\data\orcaflex\fatigue_analysis_example1.yml
+      start_line: 1
+      end_line: 32
+    fields: null
+  - text: 'LoadCases:'
+    fields: null
+  repeat_patterns:
+  - text: '-'
+    fields: null
+  - text: '  LoadCaseFileName: M:\0185\WaveFatigue\Rev2\lid02_{:03d}_2500ft_WT0750_064pcf_Dr000_Hs{:05.2f}m_Tp{:05.2f}s.sim'
+    fields:
+    - from_range:
+      - 0
+      - 17
+    - from_xlsx:
+      - label: Hs
+        io: data_manager\data\metocean_data_template.xlsx
+        sheet_name: Wave
+        index_col: null
+        skiprows: 0
+        skipfooter: 0
+        filter:
+        - column: location_id
+          value: 2
+        - column: loading_type
+          value: long-term
+        scale: 0.3048
+        column: Hs
+        loop_level: 0
+    - from_xlsx:
+      - label: Tp
+        io: data_manager\data\metocean_data_template.xlsx
+        sheet_name: Wave
+        index_col: null
+        skiprows: 0
+        skipfooter: 0
+        filter:
+        - column: location_id
+          value: 2
+        - column: loading_type
+          value: long-term
+        column: Tp
+        loop_level: 0
+  - text: '  LoadCaseLineName: vertical'
+    fields: null
+  - text: '  PeriodFrom: 100'
+    fields: null
+  - text: '  PeriodTo: 3600'
+    fields: null
+  - text: '  LoadCaseExposureTime: {0}'
+    fields:
+    - from_xlsx:
+      - label: Hs
+        io: data_manager\data\metocean_data_template.xlsx
+        sheet_name: Wave
+        index_col: null
+        skiprows: 0
+        skipfooter: 0
+        filter:
+        - column: location_id
+          value: 2
+        - column: loading_type
+          value: long-term
+        scale: 87.66
+        column: probability
+        loop_level: 0
+- settings:
+    single_file: true
+    multiple_file: false
+    file_name:
+      prefix: null
+      suffix: histogram
+      fields: null
+      extension: yml
+  header:
+  - text: null
+    from_file:
+      flag: true
+      io: data_manager\data\orcaflex\orcaflex_analysis_py_histograms.yml
+      start_line: 1
+      end_line: 43
+    fields: null
+  - text: 'Files:'
+    fields: null
+  repeat_patterns:
+  - text: '-'
+    fields: null
+  - text: '  Label: Dr000_Hs{:05.2f}m,Tp{:05.2f}s'
+    fields:
+    - from_xlsx:
+      - label: Hs
+        io: data_manager\data\metocean_data_template.xlsx
+        sheet_name: Wave
+        index_col: null
+        skiprows: 0
+        skipfooter: 0
+        filter:
+        - column: location_id
+          value: 2
+        - column: loading_type
+          value: long-term
+        scale: 0.3048
+        column: Hs
+        loop_level: 0
+    - from_xlsx:
+      - label: Tp
+        io: data_manager\data\metocean_data_template.xlsx
+        sheet_name: Wave
+        index_col: null
+        skiprows: 0
+        skipfooter: 0
+        filter:
+        - column: location_id
+          value: 2
+        - column: loading_type
+          value: long-term
+        column: Tp
+        loop_level: 0
+  - text: '  Name: M:\0185\WaveFatigue\Rev2\lid02_{:03d}_2500ft_WT0750_064pcf_Dr000_Hs{:05.2f}m_Tp{:05.2f}s.dat'
+    fields:
+    - from_range:
+      - 0
+      - 17
+    - from_xlsx:
+      - label: Hs
+        io: data_manager\data\metocean_data_template.xlsx
+        sheet_name: Wave
+        index_col: null
+        skiprows: 0
+        skipfooter: 0
+        filter:
+        - column: location_id
+          value: 2
+        - column: loading_type
+          value: long-term
+        scale: 0.3048
+        column: Hs
+        loop_level: 0
+    - from_xlsx:
+      - label: Tp
+        io: data_manager\data\metocean_data_template.xlsx
+        sheet_name: Wave
+        index_col: null
+        skiprows: 0
+        skipfooter: 0
+        filter:
+        - column: location_id
+          value: 2
+        - column: loading_type
+          value: long-term
+        column: Tp
+        loop_level: 0
+  - text: '  ObjectName: vertical'
+    fields: null
+  - text: '  probability: {0}'
+    fields:
+    - from_xlsx:
+      - label: Hs
+        io: data_manager\data\metocean_data_template.xlsx
+        sheet_name: Wave
+        index_col: null
+        skiprows: 0
+        skipfooter: 0
+        filter:
+        - column: location_id
+          value: 2
+        - column: loading_type
+          value: long-term
+        scale: 1
+        column: probability
+        loop_level: 0
+  - text: '  simulation_duration: 3500'
+    fields: null
+  - text: ' '
+    fields: null
+  footer:
+  - from_file:
+      flag: true
+      io: data_manager\data\orcaflex\orcaflex_analysis_py_histograms.yml
+      start_line: 50
+      end_line: 147
+    fields: null
+files:
+  from_xlsx:
+  - io: data_manager\data\ETL_py_GI_Extreme_LoadCases.xlsx
+    sheet_name: seed1
+    index_col: null
+    skiprows: 10
+    skipfooter: 142
+    columns:
+    - // Wave Name
+    - Select Current
+    - SaveData
+    label: seed1
+    replace:
+    - column: // Wave Name
+      to_replace: S100
+      replace_with: 100yr Wave Near
+    - column: // Wave Name
+      to_replace: N100
+      replace_with: 100yr Wave Far
+    - column: // Wave Name
+      to_replace: SE100
+      replace_with: 100yr Wave Near Trans
+    - column: // Wave Name
+      to_replace: NE100
+      replace_with: 100yr Wave Far Trans
+    - column: // Wave Name
+      to_replace: NW100
+      replace_with: 100yr Wave Far Trans
+    - column: // Wave Name
+      to_replace: SW100
+      replace_with: 100yr Wave Near Trans
+    - column: // Wave Name
+      to_replace: S10
+      replace_with: 10yr Wave Near
+    - column: // Wave Name
+      to_replace: N10
+      replace_with: 10yr Wave Far
+    - column: // Wave Name
+      to_replace: SE10
+      replace_with: 10yr Wave Near Trans
+    - column: // Wave Name
+      to_replace: NE10
+      replace_with: 10yr Wave Far Trans
+    - column: // Wave Name
+      to_replace: NW10
+      replace_with: 10yr Wave Far Trans
+    - column: // Wave Name
+      to_replace: SW10
+      replace_with: 10yr Wave Near Trans
+    - column: // Wave Name
+      to_replace: W100
+      replace_with: 100yr Wave Trans
+    - column: // Wave Name
+      to_replace: E100
+      replace_with: 100yr Wave Trans
+    - column: // Wave Name
+      to_replace: W10
+      replace_with: 10yr Wave Trans
+    - column: // Wave Name
+      to_replace: E10
+      replace_with: 10yr Wave Trans
+    - column: // Wave Name
+      to_replace: SW10
+      replace_with: 10yr Wave Near Trans
+    - column: Select Current
+      to_replace: S100
+      replace_with: 100yr Current Near
+    - column: Select Current
+      to_replace: N100
+      replace_with: 100yr Current Far
+    - column: Select Current
+      to_replace: SE100
+      replace_with: 100yr Current Near Trans
+    - column: Select Current
+      to_replace: NE100
+      replace_with: 100yr Current Far Trans
+    - column: Select Current
+      to_replace: NW100
+      replace_with: 100yr Current Far Trans
+    - column: Select Current
+      to_replace: SW100
+      replace_with: 100yr Current Near Trans
+    - column: Select Current
+      to_replace: S10
+      replace_with: 10yr Current Near
+    - column: Select Current
+      to_replace: N10
+      replace_with: 10yr Current Far
+    - column: Select Current
+      to_replace: SE10
+      replace_with: 10yr Current Near Trans
+    - column: Select Current
+      to_replace: NE10
+      replace_with: 10yr Current Far Trans
+    - column: Select Current
+      to_replace: NW10
+      replace_with: 10yr Current Far Trans
+    - column: Select Current
+      to_replace: SW10
+      replace_with: 10yr Current Near Trans
+    - column: Select Current
+      to_replace: W100
+      replace_with: 100yr Current Trans
+    - column: Select Current
+      to_replace: E100
+      replace_with: 100yr Current Trans
+    - column: Select Current
+      to_replace: W10
+      replace_with: 10yr Current Trans
+    - column: Select Current
+      to_replace: E10
+      replace_with: 10yr Current Trans
+    - column: SaveData
+      to_replace: .dat
+      replace_with: .sim
+transform:
+  df_row_to_array:
+    df_label: Files
+    Lines:
+    - Name: SaveData
+    - Label:
+      - // Wave Name
+      - Select Current
+    - ObjectName: SLWR
+cfg_variations:
+  pre_analysis: null
+  post_analysis: null

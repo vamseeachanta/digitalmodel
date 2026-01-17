@@ -1,0 +1,70 @@
+Default:
+  Analysis: NULL
+  logLevel: DEBUG
+
+FatigueLifeReadingSets:
+  - 
+    io: K:\0173 KM Extreme\SLWR\Fatigue\FatigueProcess_fatigueLoadingTemplateWH045_Test.xlsx
+    sheet_name: Damage Tables
+    KeyWords: ['Arc Length']
+    RowsToSkip: 2
+    RowsToRead: 3339
+    Label: ['Top of Riser (0-30ft)', 'Riser OD, D Curve (> 30 ft)','Riser ID, D Curve (> 30 ft)']
+    Columns: ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
+    FactorOfSafety: 10
+  - 
+    io: K:\0173 KM Extreme\SLWR\Fatigue\Rev3\out\FTG_Allruns_Corrected_Runs_Petrobras_DirProb_ThkCorr_1.0_Repaired.xlsx
+    sheet_name: Damage Tables
+    KeyWords: ['Arc length']
+    RowsToSkip: 2
+    RowsToRead: 3339
+    Label: ['Top of Riser (0-30ft)', 'Riser OD, D Curve (> 30 ft)','Riser ID, D Curve (> 30 ft)']
+    Columns: ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
+    FactorOfSafety: 10
+  - 
+    io: K:\0173 KM Extreme\SLWR\Fatigue\Rev3\out\SE2000_repaired.xlsx
+    sheet_name: Damage Tables
+    KeyWords: ['Arc length']
+    RowsToSkip: 2
+    RowsToRead: 3339
+    Label: ['Top of Riser (0-30ft)', 'Riser OD, D Curve (> 30 ft)','Riser ID, D Curve (> 30 ft)']
+    Columns: ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
+    FactorOfSafety: 10
+  - 
+    io: K:\0173 KM Extreme\SLWR\Fatigue\Rev3\out\60m_repaired.xlsx
+    sheet_name: Damage Tables
+    KeyWords: ['Arc length']
+    RowsToSkip: 2
+    RowsToRead: 3339
+    Label: ['Top of Riser (0-30ft)', 'Riser OD, D Curve (> 30 ft)','Riser ID, D Curve (> 30 ft)']
+    Columns: ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
+    FactorOfSafety: 10
+  - 
+    io: K:\0173 KM Extreme\SLWR\Fatigue\Rev3\out\40m_repaired.xlsx
+    sheet_name: Damage Tables
+    KeyWords: ['Arc length']
+    RowsToSkip: 2
+    RowsToRead: 3339
+    Label: ['Top of Riser (0-30ft)', 'Riser OD, D Curve (> 30 ft)','Riser ID, D Curve (> 30 ft)']
+    Columns: ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
+    FactorOfSafety: 10
+
+FatigueLifePlotSettings:
+  Name: Screening Repsonse
+  PltSupTitle: Fatigue Life Along the riser
+  PltTitle: 0-30 ft-BS C, SCF1.1; 30+ ft, OD- BS D, SCF1.2; 30+ ft, ID - BS E, SCF1.2
+  PltXLabel: Arc Length (m)
+  PltYLabel: Fatigue Life (years)
+  PltLabel:
+    - Top of Riser
+    - Riser, OD
+    - Riser, ID
+  LifeLimit: 25
+  XLimRanges: 
+    - [0, 50]
+    - [0, 7000]
+  YLimRanges: 
+    - [1, 1000]
+    - [1, 1000000]
+  LineStyles: ["-.", "--","-", ":"]
+  Colors : ['blue', 'green', 'cyan', 'magenta', 'yellow', 'black']

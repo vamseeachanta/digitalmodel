@@ -1,0 +1,55 @@
+﻿%YAML 1.1
+# Type: Fatigue
+# Program: OrcaFlex 10.2b
+# File: D:\10528\Fatigue\FatigueFormat.yml
+# Created: 1:36 PM on 10/26/2018
+# User: vamsea
+# Machine: HOUKOGT-MICHM
+---
+Title: 
+DamageCalculation: Homogeneous pipe stress
+AnalysisType: Rainflow
+UnitsSystem: SI
+CriticalDamageFactor: 0.1
+ThetaCount: 16
+SNCurves:
+  - SNcurveName: S-N Curve1
+    SNcurveSpecificationMethod: Parameters
+    SNcurvem1: 3
+    SNcurveloga1: 20.61
+    SNcurveRegionBoundary: Infinity
+    SNcurveEnduranceLimit: 0
+    SNcurveMeanStressModel: None
+  - SNcurveName: S-N Curve2
+    SNcurveSpecificationMethod: Parameters
+    SNcurvem1: 3
+    SNcurveloga1: 20.61
+    SNcurveRegionBoundary: Infinity
+    SNcurveEnduranceLimit: 0
+    SNcurveMeanStressModel: None
+LoadCases:
+  - LoadCaseFileName: SLWR_16OD_SE0500_HE0800_No Load, No Offset.sim
+    LoadCaseLineName: 
+    PeriodFrom: 0
+    PeriodTo: 0
+    LoadCaseExposureTime: 0
+  - LoadCaseFileName: SLWR_16OD_SE0500_HE0800_No Load, No Offset.sim
+    LoadCaseLineName: 
+    PeriodFrom: 0
+    PeriodTo: 0
+    LoadCaseExposureTime: 0
+AnalysisData:
+  - ArcLengthInterval: [0, 0]
+    RadialPosition: Outer
+    SCF: 1
+    ThicknessCorrectionFactor: 1
+    AnalysisDataSNcurve: S-N Curve1
+  - ArcLengthInterval: [0, 0]
+    RadialPosition: Inner
+    SCF: 1
+    ThicknessCorrectionFactor: 1
+    AnalysisDataSNcurve: S-N Curve2
+OutputLoadCaseTables: Yes
+OutputDetailedLoadCaseTables: Yes
+LoadCaseDamageUnits: Damage per year
+...
