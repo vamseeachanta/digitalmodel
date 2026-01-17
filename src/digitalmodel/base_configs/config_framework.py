@@ -170,7 +170,7 @@ class SchemaValidator:
 
     def __init__(self):
         """Initialize schema validator."""
-        self.schema = self.BASE_SCHEMA.copy()
+        self.schema = deepcopy(self.BASE_SCHEMA)
 
     def validate(self, config: Dict[str, Any]) -> tuple[bool, List[str]]:
         """

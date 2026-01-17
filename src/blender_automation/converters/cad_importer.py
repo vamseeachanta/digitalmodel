@@ -245,16 +245,37 @@ if bpy.context.selected_objects:
                 else:
                     # Subsequent imports append to existing scene
                     if merge:
-                        # Append to existing blend file
-                        script = f"""
+                        # Import CAD file to temp blend, then append to output
+                        import tempfile
+                        temp_blend = Path(tempfile.mktemp(suffix=".blend"))
+
+                        # Import CAD file to temporary blend file
+                        result = self.import_file(file_path, temp_blend)
+
+                        if result["success"]:
+                            # Append all objects from temp blend to output blend
+                            script = f"""
 import bpy
-bpy.ops.wm.append(filepath='{file_path}')
+import os
+
+# Append all objects from temp blend file
+temp_blend = r'{temp_blend}'
+with bpy.data.libraries.load(temp_blend, link=False) as (data_from, data_to):
+    data_to.objects = data_from.objects
+
+# Add objects to scene
+for obj in data_to.objects:
+    if obj is not None:
+        bpy.context.scene.collection.objects.link(obj)
 """
-                        result = self.blender.run_script(
-                            script,
-                            background=True,
-                            blend_file=output_blend
-                        )
+                            result = self.blender.run_script(
+                                script,
+                                background=True,
+                                blend_file=output_blend
+                            )
+
+                            # Cleanup temp blend file
+                            temp_blend.unlink(missing_ok=True)
                     else:
                         result = self.import_file(file_path)
 
