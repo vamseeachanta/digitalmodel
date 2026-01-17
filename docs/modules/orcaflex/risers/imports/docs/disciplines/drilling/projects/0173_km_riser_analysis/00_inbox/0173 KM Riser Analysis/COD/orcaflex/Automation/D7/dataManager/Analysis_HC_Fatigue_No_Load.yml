@@ -1,0 +1,192 @@
+Analyze:
+#  - GA-02_R_SubCase-1_8000DP.yml
+#  - GA-06_H_R_SubCase-1_8000DP.yml
+#  - GA-02_R_SubCase-1.yml
+#  - GA-06_H_R_SubCase-1.yml
+
+PostProcess:
+  - 
+    PlotSettings: 
+      Name: Static Analysis
+      SupTitle: Frontier Deepwater Feasibility Analysis
+      Title: SLWR Configuration Development Analysis
+      SubTitle: 
+
+    File: 
+      - 
+        Name: HC_Fatigue_NoLoad_750psi.sim
+        Label: HC_Fatigue_NoLoad_750psi
+
+
+    SummaryFileName: Table_Offset
+    Summary:
+      -
+        Command: Range Graph
+        ObjectName: Line1
+        AdditionalData: 
+          - Max
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 100
+        Variable: Effective Tension
+        xlabel: Arc Length (m)
+        ylabel: Effective Tension (kN)
+        suptitle: Effective Tension Response
+        Label: Effective_Tension
+      -
+        Command: Range Graph
+        ObjectName: Line1
+        AdditionalData: 
+          - Max
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 100
+        Variable: Bend Moment
+        xlabel: Arc Length (m)
+        ylabel: Bend Moment (kN.m)
+        suptitle: Bending Moment Response
+        Label: Bending_Moment
+      -
+        Command: Range Graph
+        ObjectName: Line1
+        AdditionalData: 
+          - Max
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 100
+        Variable: Effective Tension
+        xlabel: Arc Length (m)
+        ylabel: Effective Tension (kN)
+        suptitle: Effective Tension Response
+        Label: Effective_Tension_Top
+      -
+        Command: Range Graph
+        ObjectName: Line1
+        AdditionalData: 
+          - Max          
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+        Variable: X
+        xlabel: Arc Length (m)
+        ylabel: X
+        suptitle: Position_X Response
+        Label: Position_X
+      -
+        Command: Range Graph
+        ObjectName: Line1
+        AdditionalData: 
+          - Max          
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+        Variable: Y
+        xlabel: Arc Length (m)
+        ylabel: Y
+        suptitle: Position_Y Response
+        Label: Position_Y
+      -
+        Command: Range Graph
+        ObjectName: Line1
+        AdditionalData: 
+          - Max          
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+        Variable: Z
+        xlabel: Arc Length (m)
+        ylabel: Position_Z 
+        suptitle: Position_Z Response
+        Label: Position_Z
+      -
+        Command: Range Graph
+        ObjectName: Line1
+        AdditionalData: 
+          - Max          
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+        Variable: Dynamic Y
+        xlabel: Arc Length (m)
+        ylabel: Dyanmic X
+        suptitle: Dynamic_X Response
+        Label: Dynamic_X
+      -
+        Command: Range Graph
+        ObjectName: Line1
+        AdditionalData: 
+          - Max          
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+        Variable: Dynamic Y
+        xlabel: Arc Length (m)
+        ylabel: Dynamic Y
+        suptitle: Dynamic_Y Response
+        Label: Dynamic_Y
+      -
+        Command: Range Graph
+        ObjectName: Line1
+        AdditionalData: 
+          - Max          
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+        Variable: Z
+        xlabel: Arc Length (m)
+        ylabel: Z
+        suptitle: Dynamic_Z Response
+        Label: Dynamic_Z
+
+    RangeGraph:
+      -
+        Command: Range Graph
+        ObjectName: Line1
+        AdditionalData: 
+          - Max
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+        Variable: Effective Tension
+        xlabel: Arc Length (m)
+        ylabel: Effective Tension (kN)
+        suptitle: Effective Tension Response
+        FileName: Effective_Tension
+      -
+        Command: Range Graph
+        ObjectName: Line1
+        AdditionalData: 
+          - Max
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+        Variable: Bend Moment
+        xlabel: Arc Length (m)
+        ylabel: Bend Moment (kN.m)
+        suptitle: Bending Moment Response
+        FileName: Bending_Moment
+      -
+        Command: Range Graph
+        ObjectName: Line1
+        AdditionalData: 
+          - Max
+        SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+        ArcLength:
+          - 0
+          - 100
+        Variable: Effective Tension
+        xlabel: Arc Length (m)
+        ylabel: Effective Tension (kN)
+        suptitle: Effective Tension Response
+        FileName: Effective_Tension_Top
+
+    TimeHistory:
+      -
+        Command: Time History
+        ObjectName: Line1
+        AdditionalData: 
+          - End A
+        SimulationPeriod: pnWholeSimulation
+        Variable: Effective Tension
+      -
+        Command: Time History
+        ObjectName: Line1
+        AdditionalData: 
+          - End A
+        SimulationPeriod: pnWholeSimulation
+        Variable: Bend Moment
