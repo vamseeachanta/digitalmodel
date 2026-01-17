@@ -1,0 +1,26 @@
+RAO:
+  FileName: FPSORAOs.yml
+  VesselType: StrengthRAOs
+  RAODirection:
+    - 90
+  Draught:
+    - Min
+    - 50%
+    - Max
+
+WaveData:
+  -
+    Name: 1yr Wave
+    ReturnPeriod: 1 yr
+    SignificantHeight: 3.5
+    PeakPeriod: 12
+  -
+    Name: 10yr Wave
+    ReturnPeriod: 10 yr
+    SignificantHeight: 5.8
+    PeakPeriod: 15.1
+  -
+    Name: 100yr Wave
+    ReturnPeriod: 100 yr
+    SignificantHeight: 7.0
+    PeakPeriod: 16.3

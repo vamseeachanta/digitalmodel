@@ -1,0 +1,250 @@
+SHEAR7 4.6 generated at 8:59 PM on 9/22/2019.
+OrcaFlex 10.0e: Reference_TTR_Model_VA_Metric.sim (modified 9:03 PM on 9/22/2019 by OrcaFlex 10.0e).
+*** BLOCK 1. unit system ***
+0  Unit system, 0=SI, 1=US
+*** BLOCK 2. structural and hydrodynamic data ***
+999  Structural model type, .mds file is used to import the modal response
+1683.5628  Total cylinder length
+775  Number of segments
+1025  Fluid density
+1.35E-6  Kinematic viscosity
+0.003  Structural damping ratio
+1382476  Effective tension at x/L=0
+8  Number of Zones
+0  0.0011043722  zone start, finish (x/L)
+0.9144  0.9144  0.8382  Diameter, stress OD and stress ID
+0.010087034  1473.0452  207776.39  I, Mass per unit length, tension variation
+2.12E11  1  Young's modulus, S-N Curve ID ('Curve1')
+0.4 0.18  1  1  Bandwidth, Strouhal no., lift reduction factor, zone CL type
+1  0.2  0.18  0.2  added mass, damping coeffs. still water, low vel, high vel
+0.0011043722  0.0018104463  zone start, finish (x/L)
+0.6858  0.6858  0.47625  Diameter, stress OD and stress ID
+0.0083329678  1711.0493  10587.462  I, Mass per unit length, tension variation
+2.12E11  1  Young's modulus, S-N Curve ID ('Curve1')
+0.4 0.18  1  1  Bandwidth, Strouhal no., lift reduction factor, zone CL type
+1  0.2  0.18  0.2  added mass, damping coeffs. still water, low vel, high vel
+0.0018104463  0.010410066  zone start, finish (x/L)
+0.365125  0.365125  0.2159  Diameter, stress OD and stress ID
+0.0007657864  605.18309  5070.5014  I, Mass per unit length, tension variation
+2.12E11  1  Young's modulus, S-N Curve ID ('Curve1')
+0.4 0.18  1  1  Bandwidth, Strouhal no., lift reduction factor, zone CL type
+1  0.2  0.18  0.2  added mass, damping coeffs. still water, low vel, high vel
+0.010410066  0.88322622  zone start, finish (x/L)
+0.32385  0.32385  0.298704  Diameter, stress OD and stress ID
+0.00020914451  262.50498  1746.8161  I, Mass per unit length, tension variation
+2.12E11  1  Young's modulus, S-N Curve ID ('Curve1')
+0.4 0.18  1  1  Bandwidth, Strouhal no., lift reduction factor, zone CL type
+1  0.2  0.18  0.2  added mass, damping coeffs. still water, low vel, high vel
+0.88322622  0.89408889  zone start, finish (x/L)
+0.8128  0.8128  0.217678  Diameter, stress OD and stress ID
+0.021313991  4019.4535  6023.7939  I, Mass per unit length, tension variation
+2.12E11  1  Young's modulus, S-N Curve ID ('Curve1')
+0.4 0.18  1  1  Bandwidth, Strouhal no., lift reduction factor, zone CL type
+1  0.2  0.18  0.2  added mass, damping coeffs. still water, low vel, high vel
+0.89408889  0.99818955  zone start, finish (x/L)
+0.32385  0.32385  0.298704  Diameter, stress OD and stress ID
+0.00020914451  262.50498  -10928.4  I, Mass per unit length, tension variation
+2.12E11  1  Young's modulus, S-N Curve ID ('Curve1')
+0.4 0.18  1  1  Bandwidth, Strouhal no., lift reduction factor, zone CL type
+1  0.2  0.18  0.2  added mass, damping coeffs. still water, low vel, high vel
+0.99818955  0.99891373  zone start, finish (x/L)
+0.9144  0.9144  0.3556  Diameter, stress OD and stress ID
+5.6603774E-7  4879.0534  -2217834.8  I, Mass per unit length, tension variation
+2.12E11  1  Young's modulus, S-N Curve ID ('Curve1')
+0.4 0.18  1  1  Bandwidth, Strouhal no., lift reduction factor, zone CL type
+1  0.2  0.18  0.2  added mass, damping coeffs. still water, low vel, high vel
+0.99891373  1  zone start, finish (x/L)
+0.9144  0.9144  0.3556  Diameter, stress OD and stress ID
+5.6603774E-7  4879.0534  47847.169  I, Mass per unit length, tension variation
+2.12E11  1  Young's modulus, S-N Curve ID ('Curve1')
+0.4 0.18  1  1  Bandwidth, Strouhal no., lift reduction factor, zone CL type
+1  0.2  0.18  0.2  added mass, damping coeffs. still water, low vel, high vel
+*** BLOCK 3. current data ***
+166  1  1  Number, probability, ID
+0  3.6576E-5  x/L, current velocity
+0.0059378719  3.6576E-5
+0.011875744  3.6576E-5
+0.017813616  3.6576E-5
+0.023751488  3.6576E-5
+0.02968936  3.6576E-5
+0.035627231  3.6576E-5
+0.041565103  3.6576E-5
+0.047502975  3.6576E-5
+0.053440847  3.6576E-5
+0.059378719  3.6576E-5
+0.065316591  3.6576E-5
+0.071254463  3.6576E-5
+0.077192335  3.6576E-5
+0.083130207  3.6576E-5
+0.089068079  3.6576E-5
+0.095005951  3.6576E-5
+0.10094382  3.6576E-5
+0.10688169  3.6576E-5
+0.11281957  3.6576E-5
+0.11875744  3.6576E-5
+0.12469531  3.6576E-5
+0.13063318  3.6576E-5
+0.13657105  3.6576E-5
+0.14250893  3.6576E-5
+0.1484468  3.6576E-5
+0.15438467  3.6576E-5
+0.16032254  3.6576E-5
+0.16626041  3.6576E-5
+0.17219829  3.6576E-5
+0.17813616  3.6576E-5
+0.18407403  3.6576E-5
+0.1900119  3.6576E-5
+0.19594977  3.6576E-5
+0.20188764  3.6576E-5
+0.20782552  3.6576E-5
+0.21376339  3.6576E-5
+0.21970126  3.6576E-5
+0.22563913  3.6576E-5
+0.231577  3.6576E-5
+0.23751488  3.6576E-5
+0.24345275  3.6576E-5
+0.24939062  3.6576E-5
+0.25532849  3.6576E-5
+0.26126636  3.6576E-5
+0.26720424  3.6576E-5
+0.27314211  3.6576E-5
+0.27907998  3.6576E-5
+0.28501785  3.6576E-5
+0.29095572  3.6576E-5
+0.2968936  3.6576E-5
+0.30283147  3.6576E-5
+0.30876934  3.6576E-5
+0.31470721  3.6576E-5
+0.32064508  3.6576E-5
+0.32658296  3.6576E-5
+0.33252083  3.6576E-5
+0.3384587  3.6576E-5
+0.34439657  3.6576E-5
+0.35033444  3.6576E-5
+0.35627231  3.6576E-5
+0.36221019  3.6576E-5
+0.36814806  3.6576E-5
+0.37408593  3.6576E-5
+0.3800238  3.6576E-5
+0.38596167  3.6576E-5
+0.39189955  3.6576E-5
+0.39783742  3.6576E-5
+0.40377529  3.6576E-5
+0.40971316  3.6576E-5
+0.41565103  3.6576E-5
+0.42158891  3.6576E-5
+0.42752678  3.6576E-5
+0.43346465  3.6576E-5
+0.43940252  3.6576E-5
+0.44534039  3.6576E-5
+0.45127827  3.6576E-5
+0.45721614  3.6576E-5
+0.46315401  3.6576E-5
+0.46909188  3.6576E-5
+0.47502975  3.6576E-5
+0.48096762  3.6576E-5
+0.4869055  3.6576E-5
+0.49284337  3.6576E-5
+0.49878124  3.6576E-5
+0.50471911  3.6576E-5
+0.51065698  3.6576E-5
+0.51659486  3.6576E-5
+0.52253273  3.6576E-5
+0.5284706  3.6576E-5
+0.53440847  3.6576E-5
+0.54034634  3.6576E-5
+0.54628422  3.6576E-5
+0.55222209  3.6576E-5
+0.55815996  3.6576E-5
+0.56409783  3.6576E-5
+0.5700357  3.6576E-5
+0.57597358  3.6576E-5
+0.58191145  3.6576E-5
+0.58784932  3.6576E-5
+0.59378719  3.6576E-5
+0.59972506  3.6576E-5
+0.60566293  3.6576E-5
+0.61160081  3.6576E-5
+0.61753868  3.6576E-5
+0.62347655  3.6576E-5
+0.62941442  3.6576E-5
+0.63535229  3.6576E-5
+0.64129017  3.6576E-5
+0.64722804  3.6576E-5
+0.65316591  3.6576E-5
+0.65910378  3.6576E-5
+0.66504165  3.6576E-5
+0.67097953  3.6576E-5
+0.6769174  3.6576E-5
+0.68285527  3.6576E-5
+0.68879314  3.6576E-5
+0.69473101  3.6576E-5
+0.70066889  3.6576E-5
+0.70660676  3.6576E-5
+0.71254463  3.6576E-5
+0.7184825  3.6576E-5
+0.72442037  3.6576E-5
+0.73035824  3.6576E-5
+0.73629612  3.6576E-5
+0.74223399  3.6576E-5
+0.74817186  3.6576E-5
+0.75410973  3.6576E-5
+0.7600476  3.6576E-5
+0.76598548  3.6576E-5
+0.77192335  3.6576E-5
+0.77786122  3.6576E-5
+0.78379909  3.6576E-5
+0.78973696  3.6576E-5
+0.79567484  3.6576E-5
+0.80161271  3.6576E-5
+0.80755058  3.6576E-5
+0.81348845  3.6576E-5
+0.81942632  3.6576E-5
+0.8253642  3.6576E-5
+0.83130207  3.6576E-5
+0.83723994  3.6576E-5
+0.84317781  3.6576E-5
+0.84911568  3.6576E-5
+0.85505356  3.6576E-5
+0.86099143  3.6576E-5
+0.8669293  3.6576E-5
+0.87286717  3.6576E-5
+0.87880504  3.6576E-5
+0.88474291  3.6576E-5
+0.89068079  3.6576E-5
+0.89661866  3.6576E-5
+0.90255653  3.6576E-5
+0.9084944  3.6576E-5
+0.91443227  3.6576E-5
+0.92037015  3.6576E-5
+0.92630802  3.6576E-5
+0.93224589  3.6576E-5
+0.93818376  3.6576E-5
+0.94412163  3.6576E-5
+0.95005951  3.6576E-5
+0.95599738  3.6576E-5
+0.96193525  3.6576E-5
+0.96787312  3.6576E-5
+0.97381099  3.6576E-5
+0.97974887  3.6576E-5
+*** BLOCK 4. S-N and scf data ***
+1  Number of SN curves defined
+1 1  SN Curve ID (Curve1), Number of SN segments
+0  Endurance limit
+10000000  1E9  S, N
+1E10  1
+1  Global SCF
+0  Number of stress concentration points
+*** BLOCK 5. computation/output options ***
+2  Calculation option, 2=Response defined by common.mds file
+0  1  0.0059397844  Output summary locations: start, end, increment (x/L)
+9.80665  g
+0.05 0.3  Power ratio cutoff level, primary zone amplitude limit
+1  Power ratio exponent
+0  flag for importing nodal effective tension and mass (1=y;0=n)
+0  flag for MATLAB animation data output (1=y;0=n)
+1  flag for generating .scr file (1=y;0=n)
+0  flag for generating .dmg file (1=y;0=n)
+0  flag for generating .fat file (1=y;0=n)
+0  flag for out file selection, (0=.out;1=.out1;2=.out1+.out2)
+*** BLOCK 6. supplemental data (not used) ***

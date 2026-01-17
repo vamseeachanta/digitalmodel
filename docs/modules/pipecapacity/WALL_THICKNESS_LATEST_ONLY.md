@@ -1,0 +1,198 @@
+# Wall Thickness Formulas - Latest Versions Only
+
+Latest formula sets per standard bucket. For full context and variable definitions,
+see `WALL_THICKNESS_CODES_ONLY.md`.
+
+## DNV
+
+- Latest year detected: 20
+- Source: `/mnt/ace/O&G-Standards/_ocr_text/DNV/DNV OS F101 (2010) Submarine Pipeline Systems.txt`
+  - `'“a(D=t,)-t, 2-(D*-(D-2:+1,)') (5.40)`
+  - `412 For HFW pipe with SMYS = 415 MPa with wall`
+  - `Mj(O=f,(D-0 4 (521)`
+  - `Q = (amps x volts) / (travel speed x thickness) + 5%`
+  - `S,(t)=f,-4-(D-1)-t (5.20)`
+  - `T pop=TwetT sare`
+  - `T= TwetTsatetTo`
+  - `Tr=Astat*Tpopt Tc`
+  - `p= (ee) for 15<D/t, < 60 (5.24)`
+  - `t - = 0.78 -| ---0.01]-|1+5.75--""-~ ]. :`
+  - `thickness = 12.7 mm, there shall be no opening of the weld`
+## API 579 / ASME FFS-1
+
+- Latest year detected: 20
+- Source: `/mnt/ace/O&G-Standards/_ocr_text/API/API 579-1 ASME FFS-1, Errata (2009) Fitness for Service.txt`
+  - `1. L, =max| d,, (d,/2 +t, +t,) | (thickness averaging zone in the horizontal direction, see paragraph`
+  - `2. L,, = min| 2.5¢,, (2.51, +t, ) (thickness averaging zone in the vertical direction on the outside of the`
+  - `3. Ly, = min[2.5¢,, 2.5t, | (thickness averaging zone in the vertical direction on the inside of the shell, see`
+  - `F Table F.11 AT =T -T,,, where T and T,,, are in °F F-68`
+  - `T= +- (6.24)`
+  - `t, = ty -FCA (4.3)`
+  - `t, =, LOSS - FCA (6.1)`
+  - `t,, = RSF, (6.16)`
+  - `t,=t,,, -LOSS--FCA (7.5)`
+  - `t. = tym ~ LOSS - FCA (4.2)`
+  - `t.=t,,-FCA (6.2)`
+  - `t.=t,,-FCA (7.6)`
+- Source: `/mnt/ace/O&G-Standards/_ocr_text/API/API 579-1 ASME FFS-1, Second Edition (2007) Fitness-for-Service.txt`
+  - `(Note 2) MAT =18 for 0<t<0.394`
+  - `3.6 P = 0.57`
+  - `3.7 T, = 100.0(1.0-R,,) for R,>0.6 (see Note 2)`
+  - `= for 0.50<t<6.0`
+  - `MAT = for 0.394 <t<6.0`
+  - `MAT = max [ (MAT rer -T,), -104° C(-155°F)| (3.6)`
+  - `MAT = max| (MAT grep, -T,), - 48°C (-55" F) | (3.8)`
+  - `MAT = max| (MAT rep, -T,), - 48°C (-55’ F) | (3.5)`
+  - `MAT =-20 for 0<t<0.394`
+  - `MAT =-55 for 0<t<0.394`
+  - `MAT =-55 for 0<t<0.50`
+  - `MAT =101.29 255.50 , 287.86 196.42 | 69-457 2.8082 for 0.394<1<6.0`
+  - `R,= in (Thickness Basis) (3.2)`
+  - `T, = 200.0 to 275 for R, <0.30 (see Note 4 in Figure 3.6)`
+  - `T, =105.0 to 275 = for R, <0.40 (see Note 2 in Figure 3.6)`
+  - `T, =140.0 to275 for R, <0.35 (see Note 3 in Figure 3.6)`
+- Source: `/mnt/ace/O&G-Standards/_ocr_text/API/API 579-1 ASME FFS-1, 2nd Ed & errata (2001 & 2009) Fitness for Service.txt`
+  - `(Note 2) MAT =18 for 0<t<0.394`
+  - `3.6 P = 0.57`
+  - `3.7 T, = 100.0(1.0-R,,) for R,>0.6 (see Note 2)`
+  - `= for 0.50<t<6.0`
+  - `F Table F.11 AT =T -T,,, where T and T,,, are in °F F-68`
+  - `MAT = for 0.394 <t<6.0`
+  - `MAT = max [ (MAT rer -T,), -104° C(-155°F)| (3.6)`
+  - `MAT = max| (MAT grep, -T,), - 48°C (-55" F) | (3.8)`
+  - `MAT = max| (MAT rep, -T,), - 48°C (-55’ F) | (3.5)`
+  - `MAT =-20 for 0<t<0.394`
+  - `MAT =-55 for 0<t<0.394`
+  - `MAT =-55 for 0<t<0.50`
+  - `MAT =101.29 255.50 , 287.86 196.42 | 69-457 2.8082 for 0.394<1<6.0`
+  - `R,= in (Thickness Basis) (3.2)`
+- Source: `/mnt/ace/O&G-Standards/_ocr_text/API/API 579-1 ASME FFS-1, 2nd Ed (2001) Fitness for Service.txt`
+  - `(Note 2) MAT =18 for 0<t<0.394`
+  - `3.6 P = 0.57`
+  - `3.7 T, = 100.0(1.0-R,,) for R,>0.6 (see Note 2)`
+  - `= for 0.50<t<6.0`
+  - `MAT = for 0.394 <t<6.0`
+  - `MAT = max [ (MAT rer -T,), -104° C(-155°F)| (3.6)`
+  - `MAT = max| (MAT grep, -T,), - 48°C (-55" F) | (3.8)`
+  - `MAT = max| (MAT rep, -T,), - 48°C (-55’ F) | (3.5)`
+  - `MAT =-20 for 0<t<0.394`
+  - `MAT =-55 for 0<t<0.394`
+  - `MAT =-55 for 0<t<0.50`
+  - `MAT =101.29 255.50 , 287.86 196.42 | 69-457 2.8082 for 0.394<1<6.0`
+  - `R,= in (Thickness Basis) (3.2)`
+  - `T, = 200.0 to 275 for R, <0.30 (see Note 4 in Figure 3.6)`
+  - `T, =105.0 to 275 = for R, <0.40 (see Note 2 in Figure 3.6)`
+  - `T, =140.0 to275 for R, <0.35 (see Note 3 in Figure 3.6)`
+- Source: `/mnt/ace/O&G-Standards/_ocr_text/API/API 579-1／ASME FFS-1 Fitness-for-Service Evaluation - 2016.txt`
+  - `4 = Ne`
+  - `A, <0.0 then c, = LOSS, + FCA (2C.104)`
+  - `A, =(D, -d,-21, )t. fis (2C.103)`
+  - `A, =dt,F + 21,t,F (1-f,,) (2C.91)`
+  - `A, =max| (d,(Er-Ft,)-B), (2(r+1,)-(E¢- Ft, )-B)| (20.92)`
+  - `A, =min [(5(:, ty) frat)s (S(t, tn) Seat )] (2C.97)`
+  - `A, =min[(5(¢,-t,,) fiat)» (2(4, -tm):(2-54, +4.) fr) | (2C.100)`
+  - `Ag=W fa (2C.102)`
+  - `Ay =Wifs (2C.101)`
+  - `Ay =Wihs (20.98)`
+  - `B=21,(Et-Ft,)(1-f,,) (20.93)`
+  - `MAwpP! =-25E(t=ta) (2C.16)`
+  - `P, =(w, - j-d,)t,,,| --~- (2C.4)`
+  - `Pp, =min[(N,d,1,6,,), (N,d,t,0,,) (2C.3)`
+  - `mawpt =-2SE=tu)eos[a] (20.48)`
+  - `t= _ ae (2C.37)`
+  - `tin = (+) 1 |+t, (20.18)`
+  - `~ D-0.8(t=1,)cos[a]`
+  - `“t= a = (2C.47)`
+## API RP 1111
+
+- Latest year detected: 20
+- Source: `/mnt/ace/O&G-Standards/_ocr_text/API/API RP 1111 4th Ed (2009) Design, Construction, Operation, and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design).txt`
+  - `=1+0.810 (S+ U)/ P; for flowline`
+  - `A= A,-A,= gD -Di)`
+  - `Di/t=1+0.90 (S+U)/Py`
+  - `NOTE - Equation (13) is acceptable for a maximum D/t = 50. Refer to the OMAE article for utilizing ratios higher than 50`
+  - `T, = 6,4`
+  - `T, = SA`
+  - `Teg = T,-PjA;+ PA`
+## Other
+
+- Latest year detected: 20
+- Source: `/mnt/ace/O&G-Standards/_ocr_text/API/2016-API579-Part2a.txt`
+  - `=F )w, (0. nly | t,(0.7S,) (2C.123)`
+  - `A =max| (d,(A¢- Ft,)- B), (2(¢+4)-(At- Ft.) - B)|`
+  - `A, =min[(5(t,- tn) fat)s (2(6 fn): (2-56 +4) F ») |`
+  - `A.=dt.F+2t,t.F(1- f,)`
+  - `Ay = W, fg`
+  - `Ay = w, fa`
+  - `Ay=min[(5t-t) fz), (56- fo). (24-4 £2) |`
+  - `B,= 121.5K, ) | t (2C.164)`
+  - `B= 2t,(Et-Ft,)(1- fn)`
+  - `D, = 2, (t- MA)`
+  - `Mawr’ =-25E(¢-MA) (2C.147)`
+  - `We =2D 49S, )+=d,t,(0.7S`
+  - `We =min[ Wi, Wi, We | (2C.122)`
+  - `Wey = (A, +A tA + Ay t Ag + Ay +26, £,)5`
+  - `Wry =(A, + A, + Ay + Ay +20, -0° £,)S`
+  - `ix) If L<0.5Jd,¢, , then use ¢, = t, in Equations (2C.111) and (2C.112)`
+  - `t = _ (2C.30)`
+  - `t =R -|-1 20.12`
+  - `t= PD +¢`
+- Source: `/mnt/ace/O&G-Standards/_ocr_text/API/2016-API579-Part2b.txt`
+  - `3168316H of =148 MPa (21.4 ksi) 8.9906963E-10 -3.3393727E-09`
+  - `347&347H I =165 MPa (24.0 ksi) A; 1.8974804E-09 B; | -1,5387323E-09`
+  - `=o (A+AT+A T+ AL + AT +AT’)`
+  - `A213 Type T,, = 204°C (400° F) 1 -7.4852863E-04 1 | -2.4368121E-03`
+  - `A213 Type T,,,, = 204° C (400° F) -8.7683155E-04 -1.6314830E-03`
+  - `T gy = 132° C (1350? F)`
+  - `T,,, =149°C (300° F)`
+  - `T.,,, = 732°C (1350° F)`
+  - `Tm = 149° C (300° F)`
+  - `aes Tye T.,, = 843°C (1550°F) 1.3646107E-07 3.7350778E-06`
+  - `andeaGlu ore= =143 MPa (20.8 Asi) -6.3277196E-09 -3.7649126E-09`
+  - `faa rope T.,, = 204°C (400° F) -3.3500871E-03 -1,8958334E-03`
+  - `o,= T __(ottz) (2E.11)`
+  - `ol =179 MPa (26.0 ksi)`
+  - `ols» =362 MPa (52.5 ksi)`
+  - `oye» =175 MPa (25.4 ksi)`
+  - `pee Type T,,, = 843°C (1550° F) Ap 8.1021768E-07 Bo 3.3229020E-06`
+  - `so4usoaH 7, =843°C (1550° F) 6.0887433E-06 4.2634694E-06`
+  - `“e==t(an,) +6; (2N,)`
+- Source: `/mnt/ace/O&G-Standards/_ocr_text/API/2016-API579-Part4.txt`
+  - `1. L,=0.78,/R,t, - thickness averaging zone for the small end cylinder (see paragraph 4.3.3.4.b)`
+  - `2. L,=0.78,/Rstcg - thickness averaging zone for the small end cone (see paragraph 4.3.3.4.b)`
+  - `3. L,,=min[2.5¢,, 2.5, | - thickness averaging zone in the vertical direction on the inside of the shell (see`
+  - `3. L,=1.0./ Rtg - thickness averaging zone for the large end cone (see paragraph 4.3.3.4.b)`
+  - `=`
+  - `= Ap vessel stiffening ring cross-sectional area or the remaining wall thickness area`
+  - `L, =max{ d,, (d,/2+¢, +¢,)] - thickness averaging zone in the horizontal direction (see paragraph`
+  - `L,=1.0,/8,¢, - thickness averaging zone for the large end cylinder (see paragraph 4.3.3.4.b)`
+  - `Notes: L, =1.0,/ Rt, is thickness averaging zone for the cylinder`
+  - `Point Thickness - FCA, = tin bom ~ FCA ny = bon`
+  - `Thickness thy = max[0.2,,,, 2.5 mm (0.10 inches)]`
+- Source: `/mnt/ace/O&G-Standards/_ocr_text/API/2016-API579-Part5.txt`
+  - `A; = Total original area associated with length s‘ and thickness ¢, or A! = s't`
+  - `A=s't (5.19)`
+  - `groove depth, i.e. a=(1-R)t, the crack length shall equal the groove length, and the fracture`
+  - `t, =1,,,-LOSS-FCA (5.3)`
+  - `t.=t,-FCA (5.4)`
+- Source: `/mnt/ace/O&G-Standards/_ocr_text/API/API RP 579 (2000).txt`
+  - `(15, - FCA = 10.07mm) > (t%,, = 4.90mm) True`
+  - `(t;, - FCA = 10.07 mm) > (t&,, = 10.13mm) False`
+  - `4) For spheres and formed heads, ¢,,, = min(t! ty | in a Level 1 or 2`
+  - `= 0.463"`
+  - `Design Conditions = 220 psig @ 350°F`
+  - `Design Conditions = 300 psig @ 250°F`
+  - `Inside Diameter = 90 inches`
+  - `Nominal Thickness = 0.50 inches`
+  - `The (Cov = 95%) < 10% ; therefore, the average thickness to be used in the calculation is the`
+  - `Thickness = 1.125 inches`
+  - `Uniform Metal Loss = 0.0 inches`
+  - `inside Diameter = 42 inches`
+  - `leur Institut Jocument provided by IHS Licensee= , User=`
+  - `o,=0° = AG + as] = 200psig (E- 06] =17285 psi`
+  - `t =v`
+  - `t, = 1.095"-0.05"= 1.045"`
+  - `t=2 _ 055"+0.36"+0.48"`
+  - `tsp =| 9-*-(t,, - FCA) ps -- (4.13)`
+
+See `WALL_THICKNESS_LATEST_ONLY_LATEX.md` for LaTeX-formatted equations.
