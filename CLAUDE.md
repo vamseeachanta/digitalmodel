@@ -1,5 +1,24 @@
 # Claude Code Configuration - SPARC Development Environment
 
+## 🚨 CROSS-REVIEW POLICY (MANDATORY)
+
+**ALL work performed by Claude Code or Google Gemini MUST be reviewed by OpenAI Codex.**
+
+### Core Rule
+Before presenting ANY work to the user:
+1. **Commit changes** immediately after task completion
+2. **Submit for Codex review** via post-commit hook
+3. **Implement feedback** from Codex (maximum 3 iterations)
+4. **Present to user** only after Codex approval OR 3 iterations complete
+
+### Quick Reference
+- Max iterations: 3
+- Review scope: All code commits by Claude/Gemini
+- Reviewer: OpenAI Codex
+- Full policy: See workspace-hub @docs/modules/ai/CROSS_REVIEW_POLICY.md
+
+---
+
 ## Interactive Engagement (MANDATORY)
 
 **YOU MUST ask clarifying questions BEFORE starting any task.**
