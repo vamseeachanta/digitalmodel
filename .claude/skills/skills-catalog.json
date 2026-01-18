@@ -251,6 +251,130 @@
         "frequency domain analysis"
       ]
     },
+    "orcawave-mesh-generation": {
+      "version": "1.0.0",
+      "description": "Panel mesh generation and optimization specialist for OrcaWave diffraction analysis. Handles CAD-to-panel mesh conversion, mesh quality validation, convergence studies, and GDF file generation for hydrodynamic computations.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "gmsh-meshing": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "panel mesh generation",
+        "OrcaWave mesh",
+        "GDF file creation",
+        "mesh convergence study",
+        "waterline refinement",
+        "mesh quality validation",
+        "CAD to panel mesh",
+        "STL to GDF conversion",
+        "mesh aspect ratio",
+        "watertight mesh"
+      ]
+    },
+    "orcawave-aqwa-benchmark": {
+      "version": "1.0.0",
+      "description": "Cross-validation specialist for comparing OrcaWave and AQWA diffraction analysis results. Provides statistical comparison, peak value validation, and automated benchmark reporting for hydrodynamic coefficient verification.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcawave-analysis": ">=1.0.0,<2.0.0",
+        "aqwa-analysis": ">=3.0.0,<4.0.0"
+      },
+      "keywords": [
+        "AQWA OrcaWave comparison",
+        "diffraction benchmark",
+        "RAO validation",
+        "hydrodynamic coefficient comparison",
+        "cross-tool validation",
+        "panel method benchmark",
+        "added mass comparison",
+        "damping comparison"
+      ]
+    },
+    "orcawave-qtf-analysis": {
+      "version": "1.0.0",
+      "description": "Second-order wave force specialist for QTF (Quadratic Transfer Function) computation in OrcaWave. Handles mean drift, difference-frequency, sum-frequency forces, and slow-drift response analysis for offshore structures.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcawave-analysis": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "QTF computation",
+        "quadratic transfer function",
+        "mean drift force",
+        "second order wave forces",
+        "difference frequency",
+        "sum frequency",
+        "slow drift",
+        "Newman approximation",
+        "full QTF"
+      ]
+    },
+    "orcawave-to-orcaflex": {
+      "version": "1.0.0",
+      "description": "Integration specialist for converting OrcaWave diffraction results to OrcaFlex vessel types. Handles hydrodynamic database generation, RAO import, viscous damping addition, and coordinate system transformations.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcawave-analysis": ">=1.0.0,<2.0.0",
+        "orcaflex-vessel-setup": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "OrcaWave to OrcaFlex",
+        "hydrodynamic database",
+        "vessel type creation",
+        "RAO import",
+        "diffraction to time domain",
+        "added mass damping export",
+        "OrcaFlex vessel setup"
+      ]
+    },
+    "orcawave-multi-body": {
+      "version": "1.0.0",
+      "description": "Multi-body hydrodynamic interaction specialist for OrcaWave. Handles coupled vessel analysis, side-by-side operations, FPSO-tanker interactions, gap resonance, and hydrodynamic shielding effects.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcawave-analysis": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "multi-body hydrodynamics",
+        "side-by-side operation",
+        "coupled vessel analysis",
+        "FPSO tanker interaction",
+        "gap resonance",
+        "hydrodynamic shielding",
+        "STS transfer",
+        "offloading operation"
+      ]
+    },
+    "orcawave-damping-sweep": {
+      "version": "1.0.0",
+      "description": "Viscous damping analysis specialist for OrcaWave. Handles parametric damping studies, roll damping optimization, critical damping calculations, and comparison with model test data for vessel motion tuning.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcawave-analysis": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "damping sweep",
+        "roll damping",
+        "viscous damping study",
+        "critical damping",
+        "damping optimization",
+        "bilge keel effect",
+        "damping coefficient tuning",
+        "model test comparison"
+      ]
+    },
     "signal-analysis": {
       "version": "1.0.0",
       "description": "Perform signal processing, rainflow cycle counting, and spectral analysis for fatigue and time series data. Use for analyzing stress time histories, computing FFT/PSD, extracting fatigue cycles (ASTM E1049-85), and batch processing OrcaFlex signals.",
