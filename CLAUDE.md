@@ -1,5 +1,28 @@
 # Claude Code Configuration - SPARC Development Environment
 
+## Plan Mode Convention (MANDATORY)
+When using plan mode, save plan files to: `specs/modules/<module>/`
+- `<module>` = relevant module name (e.g., orcaflex, orcawave, mooring, fatigue, structural)
+- Example: `specs/modules/orcaflex/riser-analysis-plan.md`
+- Example: `specs/modules/hydrodynamics/rao-import-plan.md`
+- Example: `specs/modules/fatigue/sn-curve-plan.md`
+
+**Templates**: Use `specs/templates/plan-template.md` (full) or `plan-template-minimal.md`
+
+**Required Metadata**:
+- `title`, `description`, `version`, `module` (core identification)
+- `session.id`, `session.agent` (AI agent tracking for continuity)
+- `status`, `progress`, `created`, `updated` (status tracking)
+- `review` section with iteration tracking (cross-review process)
+
+**Cross-Review Requirement (MANDATORY)**:
+- Minimum **3 review iterations** with OpenAI Codex AND Google Gemini
+- Both reviewers must approve before plan proceeds to implementation
+- Document all feedback and changes in the Review Iteration Log
+- Update `review.current_iteration` and `review.ready_for_next_step` status
+
+---
+
 ## 🚨 CROSS-REVIEW POLICY (MANDATORY)
 
 **ALL work performed by Claude Code or Google Gemini MUST be reviewed by OpenAI Codex.**

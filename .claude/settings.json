@@ -141,6 +141,7 @@
       }
     ]
   },
+  "plansDirectory": "specs/modules",
   "includeCoAuthoredBy": true,
   "enabledMcpjsonServers": ["claude-flow", "ruv-swarm"],
   "statusLine": {
