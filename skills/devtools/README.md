@@ -5,7 +5,7 @@
 
 ## Overview
 
-This library contains 5 development tools skills for building efficient local development environments. Each skill provides patterns for containerization, CLI productivity, editor customization, and advanced git workflows used across the workspace-hub ecosystem.
+This library contains 7 development tools skills for building efficient local development environments. Each skill provides patterns for containerization, CLI productivity, editor customization, and advanced git workflows used across the workspace-hub ecosystem.
 
 ## Quick Start
 
@@ -28,6 +28,8 @@ cat skills/devtools/docker/SKILL.md
 | [vscode-extensions](./vscode-extensions/SKILL.md) | VS Code customization | Extensions, keybindings, tasks, debugging |
 | [raycast-alfred](./raycast-alfred/SKILL.md) | macOS launcher automation | Scripts, workflows, clipboard, snippets |
 | [git-advanced](./git-advanced/SKILL.md) | Advanced git operations | Worktrees, bisect, reflog, rerere, hooks |
+| [uv-package-manager](./uv-package-manager/SKILL.md) | Fast Python package management | venv, sync, lock files, pip replacement |
+| [pyproject-toml](./pyproject-toml/SKILL.md) | Python project configuration | Build system, dependencies, tool settings |
 
 ## Skill Categories
 
@@ -43,6 +45,10 @@ cat skills/devtools/docker/SKILL.md
 
 ### Version Control
 - **git-advanced** - Advanced git techniques
+
+### Python Tooling
+- **uv-package-manager** - Fast Python package management with UV
+- **pyproject-toml** - Modern Python project configuration
 
 ## Skill Selection Guide
 
