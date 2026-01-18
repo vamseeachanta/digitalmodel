@@ -286,3 +286,7 @@ rao_batch_results.txt
 
 debug_output.txt
 rao_diverse_results.txt
+
+# Large OrcaFlex YAML files (>100MB)
+docs/modules/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/fsts_fst1_l015_fst2_l015_lwl.yml
+docs/modules/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/fsts_fst1_l015_fst2_l015_hwl.yml
