@@ -5,7 +5,7 @@
 
 ## Overview
 
-This library contains 7 production-ready skills for data analysis, visualization, and exploratory data analysis (EDA). Each skill covers a specific aspect of the data analysis workflow with patterns for performance, interactivity, and presentation. Skills follow the Anthropic Skills format with practical examples from real-world data projects.
+This library contains 8 production-ready skills for data analysis, visualization, and exploratory data analysis (EDA). Each skill covers a specific aspect of the data analysis workflow with patterns for performance, interactivity, and presentation. Skills follow the Anthropic Skills format with practical examples from real-world data projects.
 
 ## Quick Start
 
@@ -30,6 +30,7 @@ cat skills/data-analysis/polars/SKILL.md
 | [ydata-profiling](./ydata-profiling/SKILL.md) | Automated data profiling | HTML reports, correlations, quality metrics |
 | [great-tables](./great-tables/SKILL.md) | Publication-quality tables | Styling, formatting, export options |
 | [sweetviz](./sweetviz/SKILL.md) | EDA comparison reports | Target analysis, dataset comparison |
+| [bsee-sodir-extraction](./bsee-sodir-extraction/SKILL.md) | Energy regulatory data extraction | BSEE, SODIR, production, HSE data |
 
 ## Skill Categories
 
@@ -47,6 +48,9 @@ cat skills/data-analysis/polars/SKILL.md
 
 ### Presentation & Reporting
 - **great-tables** - Beautiful tables for reports and publications
+
+### Domain-Specific Data
+- **bsee-sodir-extraction** - BSEE/SODIR energy regulatory data extraction
 
 ## Skill Selection Guide
 
