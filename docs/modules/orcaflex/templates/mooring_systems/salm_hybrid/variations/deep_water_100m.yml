@@ -1,0 +1,35 @@
+# Variation: Deep Water 100m SALM
+# IMPORTANT: When overriding objects, must include ALL properties
+
+Environment:
+  WaterDepth: 100
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [50, 0.7, 0]
+    - [100, 0.4, 0]
+
+3DBuoys:
+  - Name: SALM_Buoy
+    Connection: Free
+    InitialX: 0
+    InitialY: 0
+    InitialZ: -1.5
+    Mass: 55000
+    Volume: 300
+    Height: 6
+
+Lines:
+  # Longer anchor leg for deeper water
+  - Name: Anchor_Leg
+    EndAConnection: Anchored
+    EndAX: 25
+    EndAY: 0
+    EndAZ: -100
+    EndBConnection: SALM_Buoy
+    EndBX: 0
+    EndBY: 0
+    EndBZ: -4.5
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [SALM_Chain, 110, 3]

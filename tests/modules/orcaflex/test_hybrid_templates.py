@@ -50,6 +50,7 @@ class TestHybridTemplates:
         TEMPLATES_DIR / "risers" / "lazy_wave_hybrid" / "base" / "lwr_base.yml",
         TEMPLATES_DIR / "risers" / "pliant_wave_hybrid" / "base" / "pwr_base.yml",
         TEMPLATES_DIR / "risers" / "steep_wave_hybrid" / "base" / "swr_base.yml",
+        TEMPLATES_DIR / "risers" / "ttr_hybrid" / "base" / "ttr_base.yml",
     ])
     def test_riser_base_models_load(self, template_path):
         """Test that riser base models load successfully."""
@@ -65,6 +66,7 @@ class TestHybridTemplates:
         TEMPLATES_DIR / "risers" / "lazy_wave_hybrid" / "base" / "lwr_base.yml",
         TEMPLATES_DIR / "risers" / "pliant_wave_hybrid" / "base" / "pwr_base.yml",
         TEMPLATES_DIR / "risers" / "steep_wave_hybrid" / "base" / "swr_base.yml",
+        TEMPLATES_DIR / "risers" / "ttr_hybrid" / "base" / "ttr_base.yml",
     ])
     def test_riser_base_models_converge(self, template_path):
         """Test that riser base models pass static analysis."""
@@ -128,6 +130,7 @@ class TestHybridTemplates:
         TEMPLATES_DIR / "mooring_systems" / "calm_buoy_hybrid" / "base" / "calm_buoy_base.yml",
         TEMPLATES_DIR / "mooring_systems" / "spread_mooring_hybrid" / "base" / "spread_mooring_base.yml",
         TEMPLATES_DIR / "mooring_systems" / "turret_mooring_hybrid" / "base" / "turret_mooring_base.yml",
+        TEMPLATES_DIR / "mooring_systems" / "salm_hybrid" / "base" / "salm_base.yml",
     ])
     def test_mooring_base_models_load(self, template_path):
         """Test that mooring base models load successfully."""
@@ -142,6 +145,7 @@ class TestHybridTemplates:
         TEMPLATES_DIR / "mooring_systems" / "calm_buoy_hybrid" / "base" / "calm_buoy_base.yml",
         TEMPLATES_DIR / "mooring_systems" / "spread_mooring_hybrid" / "base" / "spread_mooring_base.yml",
         TEMPLATES_DIR / "mooring_systems" / "turret_mooring_hybrid" / "base" / "turret_mooring_base.yml",
+        TEMPLATES_DIR / "mooring_systems" / "salm_hybrid" / "base" / "salm_base.yml",
     ])
     def test_mooring_base_models_converge(self, template_path):
         """Test that mooring base models pass static analysis."""
@@ -159,6 +163,8 @@ class TestHybridTemplates:
         TEMPLATES_DIR / "risers" / "lazy_wave_hybrid" / "cases" / "case_deep_water.yml",
         TEMPLATES_DIR / "risers" / "pliant_wave_hybrid" / "cases" / "case_deep_water.yml",
         TEMPLATES_DIR / "risers" / "steep_wave_hybrid" / "cases" / "case_deep_water.yml",
+        TEMPLATES_DIR / "risers" / "ttr_hybrid" / "cases" / "case_deep_water.yml",
+        TEMPLATES_DIR / "risers" / "ttr_hybrid" / "cases" / "case_12inch.yml",
         # Pipeline cases
         TEMPLATES_DIR / "pipelines" / "pipeline_hybrid" / "cases" / "case_deep_water.yml",
         TEMPLATES_DIR / "pipelines" / "pipeline_hybrid" / "cases" / "case_20inch.yml",
@@ -172,6 +178,8 @@ class TestHybridTemplates:
         TEMPLATES_DIR / "mooring_systems" / "spread_mooring_hybrid" / "cases" / "case_twelve_leg.yml",
         TEMPLATES_DIR / "mooring_systems" / "turret_mooring_hybrid" / "cases" / "case_deep_water.yml",
         TEMPLATES_DIR / "mooring_systems" / "turret_mooring_hybrid" / "cases" / "case_external_turret.yml",
+        TEMPLATES_DIR / "mooring_systems" / "salm_hybrid" / "cases" / "case_deep_water.yml",
+        TEMPLATES_DIR / "mooring_systems" / "salm_hybrid" / "cases" / "case_wire_rope.yml",
     ])
     def test_case_files_converge(self, template_path):
         """Test that case files (base + variation) pass static analysis."""
