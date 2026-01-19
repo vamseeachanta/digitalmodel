@@ -1,6 +1,6 @@
 # Lines Configuration
 # Generated from: C06 CALM buoy.yml
-# Date: 2026-01-18 21:51:50
+# Date: 2026-01-18 22:18:04
 Lines:
 - Name: Mooring1
   IncludeTorsion: No

@@ -1,6 +1,6 @@
 # LineTypes Configuration
 # Generated from: L03 Semi-sub multibody analysis.yml
-# Date: 2026-01-18 21:52:31
+# Date: 2026-01-18 22:18:55
 LineTypes:
 - Name: Mooring line
   Category: General

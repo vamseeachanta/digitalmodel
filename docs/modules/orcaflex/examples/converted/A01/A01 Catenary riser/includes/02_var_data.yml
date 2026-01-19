@@ -1,6 +1,6 @@
 # VariableData Configuration
 # Generated from: A01 Catenary riser.yml
-# Date: 2026-01-18 21:51:41
+# Date: 2026-01-18 22:17:56
 VariableData:
   Dragcoefficient:
   - Name: Generic Drag

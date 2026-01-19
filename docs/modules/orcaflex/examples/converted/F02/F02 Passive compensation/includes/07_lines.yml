@@ -1,6 +1,6 @@
 # Lines Configuration
 # Generated from: F02 Passive compensation.yml
-# Date: 2026-01-18 21:52:04
+# Date: 2026-01-18 22:18:18
 Lines:
 - Name: Crane wire
   IncludeTorsion: No

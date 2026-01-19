@@ -7,17 +7,15 @@
 # Machine: ACMA-ANSYS05
 ---
 # Input Parameters (for parametric analysis)
-_inputs:
-  current_speed: 2
-  wind_speed: 0
-  water_density: 1.025
-  stage_durations:
-  - 13
-  - 500
-  hs: 5
-  tp: 13
-  wave_direction: 120
-
+# See inputs/parameters.yml for extracted values:
+#   current_speed: 2
+#   wind_speed: 0
+#   water_density: 1.025
+#   stage_durations: [13, 500]
+#   hs: 5
+#   tp: 13
+#   wave_direction: 120
+#
 # Include files
 - includefile: includes/01_general.yml
 - includefile: includes/02_var_data.yml

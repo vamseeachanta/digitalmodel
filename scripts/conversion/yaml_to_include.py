@@ -182,13 +182,17 @@ class OrcaFlexYAMLConverter:
 # Program: OrcaFlex 11.5
 ---"""
 
-        # Build input parameters block
-        inputs_yaml = yaml.dump(
-            {'_inputs': self.input_params},
-            Dumper=OrcaFlexDumper,
-            default_flow_style=False,
-            sort_keys=False,
-        ) if self.input_params else ""
+        # Build input parameters as comments (not YAML block to keep file valid)
+        inputs_comments = ""
+        if self.input_params:
+            inputs_comments = "# Input Parameters (for parametric analysis)\n"
+            inputs_comments += "# See inputs/parameters.yml for extracted values:\n"
+            for key, value in self.input_params.items():
+                if isinstance(value, list):
+                    inputs_comments += f"#   {key}: {value}\n"
+                else:
+                    inputs_comments += f"#   {key}: {value}\n"
+            inputs_comments += "#\n"
 
         # Build include directives
         includes = []
@@ -198,9 +202,7 @@ class OrcaFlexYAMLConverter:
         includes_block = '\n'.join(includes)
 
         content = f"""{header}
-# Input Parameters (for parametric analysis)
-{inputs_yaml}
-# Include files
+{inputs_comments}# Include files
 {includes_block}
 """
         return content

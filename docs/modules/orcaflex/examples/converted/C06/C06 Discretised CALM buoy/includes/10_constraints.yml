@@ -1,6 +1,6 @@
 # Constraints Configuration
 # Generated from: C06 Discretised CALM buoy.yml
-# Date: 2026-01-18 21:51:51
+# Date: 2026-01-18 22:18:05
 Constraints:
 - Name: Rotation
   InFrameConnection: Main

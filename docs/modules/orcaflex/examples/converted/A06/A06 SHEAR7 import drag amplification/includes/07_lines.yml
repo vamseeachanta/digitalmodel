@@ -1,6 +1,6 @@
 # Lines Configuration
 # Generated from: A06 SHEAR7 import drag amplification.yml
-# Date: 2026-01-18 21:51:47
+# Date: 2026-01-18 22:18:01
 Lines:
 - Name: Riser
   IncludeTorsion: No
