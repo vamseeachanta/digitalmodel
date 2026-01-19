@@ -4,7 +4,7 @@
 # Category is provided by parent object, not in library file
 OD: 0.084
 ID: 0
-MassPerUnitLength: 0.141
+MassPerUnitLength: 0.088
 CompressionIsLimited: Yes
 EA: 612000
 EI: [0, ~]

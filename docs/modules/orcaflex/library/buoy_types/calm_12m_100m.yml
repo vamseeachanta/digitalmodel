@@ -1,16 +1,16 @@
 # CALM_12m_100m - Library Component
 # Category: buoy_types
-# Generated: 2026-01-19 06:14:39
 # Description: Medium CALM buoy for tanker operations
+# NOTE: Simplified buoy model (mass represents excess mass above buoyancy)
 # NOTE: No section header - properties only for IncludeFile
 BuoyType: Spar buoy
 Connection: Free
 DampingRelativeTo: Earth
-Mass: 95000.0
+Mass: 250
 MomentsOfInertia:
-- 1015312
-- 1015312
-- 1710000
+- 1000
+- 1000
+- 1000
 CentreOfMass:
 - 0
 - 0

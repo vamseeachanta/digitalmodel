@@ -2,6 +2,10 @@
 # CALM Buoy Base Model - Hybrid Template
 # Uses library components via IncludeFile for reusable equipment
 #
+# Configuration: 6-leg catenary mooring in 100m water depth
+# Based on validated C06 CALM buoy example geometry
+# Anchor radius: ~300m, Line length: ~350m
+#
 # Usage:
 #   1. Use directly for basic analysis
 #   2. Use with BaseFile + variation for parametric studies
@@ -65,18 +69,19 @@ LineTypes:
 
 Lines:
   # Mooring Leg 1 (0 degrees)
+  # Anchor radius: 300m, Line length: 350m (similar to C06)
   - Name: Mooring_1
     EndAConnection: CALM_Buoy
     EndAX: 6.0
     EndAY: 0
     EndAZ: -2.25
     EndBConnection: Anchored
-    EndBX: 750
+    EndBX: 300
     EndBY: 0
     EndBZ: -100
     IncludedInStatics: Yes
     LineType, Length, TargetSegmentLength:
-      - [Chain_84mm, 800, 10]
+      - [Chain_84mm, 350, 10]
 
   # Mooring Leg 2 (60 degrees)
   - Name: Mooring_2
@@ -85,12 +90,12 @@ Lines:
     EndAY: 5.196
     EndAZ: -2.25
     EndBConnection: Anchored
-    EndBX: 375
-    EndBY: 649.5
+    EndBX: 150
+    EndBY: 260
     EndBZ: -100
     IncludedInStatics: Yes
     LineType, Length, TargetSegmentLength:
-      - [Chain_84mm, 800, 10]
+      - [Chain_84mm, 350, 10]
 
   # Mooring Leg 3 (120 degrees)
   - Name: Mooring_3
@@ -99,12 +104,12 @@ Lines:
     EndAY: 5.196
     EndAZ: -2.25
     EndBConnection: Anchored
-    EndBX: -375
-    EndBY: 649.5
+    EndBX: -150
+    EndBY: 260
     EndBZ: -100
     IncludedInStatics: Yes
     LineType, Length, TargetSegmentLength:
-      - [Chain_84mm, 800, 10]
+      - [Chain_84mm, 350, 10]
 
   # Mooring Leg 4 (180 degrees)
   - Name: Mooring_4
@@ -113,12 +118,12 @@ Lines:
     EndAY: 0
     EndAZ: -2.25
     EndBConnection: Anchored
-    EndBX: -750
+    EndBX: -300
     EndBY: 0
     EndBZ: -100
     IncludedInStatics: Yes
     LineType, Length, TargetSegmentLength:
-      - [Chain_84mm, 800, 10]
+      - [Chain_84mm, 350, 10]
 
   # Mooring Leg 5 (240 degrees)
   - Name: Mooring_5
@@ -127,12 +132,12 @@ Lines:
     EndAY: -5.196
     EndAZ: -2.25
     EndBConnection: Anchored
-    EndBX: -375
-    EndBY: -649.5
+    EndBX: -150
+    EndBY: -260
     EndBZ: -100
     IncludedInStatics: Yes
     LineType, Length, TargetSegmentLength:
-      - [Chain_84mm, 800, 10]
+      - [Chain_84mm, 350, 10]
 
   # Mooring Leg 6 (300 degrees)
   - Name: Mooring_6
@@ -141,9 +146,9 @@ Lines:
     EndAY: -5.196
     EndAZ: -2.25
     EndBConnection: Anchored
-    EndBX: 375
-    EndBY: -649.5
+    EndBX: 150
+    EndBY: -260
     EndBZ: -100
     IncludedInStatics: Yes
     LineType, Length, TargetSegmentLength:
-      - [Chain_84mm, 800, 10]
+      - [Chain_84mm, 350, 10]
