@@ -1,5 +1,5 @@
 # OrcaFlex Library Index
-# Generated: 2026-01-19 08:13:51
+# Generated: 2026-01-19 13:38:09
 #
 # Usage in model files:
 #   LineTypes:
@@ -232,6 +232,25 @@ line_types:
   - EI
   - GJ
   - PoissonRatio
+- file: lwr_12inch_buoyancy.yml
+  path: line_types\lwr_12inch_buoyancy.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - CompressionIsLimited
+  - EA
+  - EI
+  - GJ
+  - PoissonRatio
+  - Cd
+  - Ca
+  - NormalDragLiftDiameter
+  - AxialDragLiftDiameter
+  - SeabedLateralFrictionCoefficient
+  - OuterContactDiameter
+  - StressOD
+  - StressID
 - file: pipe_10inch_bundle.yml
   path: line_types\pipe_10inch_bundle.yml
   properties:
