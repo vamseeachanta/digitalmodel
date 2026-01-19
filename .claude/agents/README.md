@@ -7,6 +7,8 @@ description: Sub-agent definitions organized by type and purpose with specific c
 
 # Claude Code Agents Directory Structure
 
+> **Architecture Note**: This folder contains **framework/workflow agents**. For domain-specific agents (OrcaFlex, AQWA, etc.), see `agents/`. For the full architecture explanation, see [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
+
 This directory contains sub-agent definitions organized by type and purpose. Each agent has specific capabilities, tool restrictions, and naming conventions that trigger automatic delegation.
 
 ## Directory Structure

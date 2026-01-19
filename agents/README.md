@@ -1,5 +1,7 @@
 # AI Agents Library
 
+> **Architecture Note**: This folder contains **domain-specific agents**. For framework/workflow agents, see `.claude/agents/`. For the full architecture explanation, see [.claude/docs/ARCHITECTURE.md](../.claude/docs/ARCHITECTURE.md).
+
 This folder contains specialized AI agents for various development tasks.
 Agents are sourced from AITmpl and Claude Code Templates.
 
