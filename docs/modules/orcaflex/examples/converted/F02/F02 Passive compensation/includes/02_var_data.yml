@@ -1,0 +1,59 @@
+# VariableData Configuration
+# Generated from: F02 Passive compensation.yml
+# Date: 2026-01-18 21:52:03
+VariableData:
+  Constrainttranslationalstiffness:
+  - Name: Nonlinear heave stiffness
+    IndependentValue, DependentValue:
+    - - -0.05
+      - -500
+    - - 0
+      - 195
+    - - 0.05
+      - 195.64
+    - - 0.1
+      - 196.3
+    - - 0.2
+      - 200.8
+    - - 0.3
+      - 209.8
+    - - 0.4
+      - 223.4
+    - - 0.5
+      - 241.5
+    - - 0.6
+      - 264.2
+    - - 0.7
+      - 291.3
+    - - 0.8
+      - 323
+    - - 0.9
+      - 359.3
+    - - 1
+      - 400
+    Hysteretic: No
+  Constrainttranslationaldamping:
+  - Name: Nonlinear heave damping
+    IndependentValue, DependentValue:
+    - - -1
+      - -450
+    - - -0.8
+      - -432
+    - - -0.6
+      - -378
+    - - -0.4
+      - -288
+    - - -0.2
+      - -162
+    - - 0
+      - 0
+    - - 0.2
+      - 22.4
+    - - 0.4
+      - 31.6
+    - - 0.6
+      - 38.7
+    - - 0.8
+      - 44.7
+    - - 1
+      - 50

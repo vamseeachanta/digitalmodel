@@ -1,0 +1,58 @@
+# Shapes Configuration
+# Generated from: E05 Pipe davit lift.yml
+# Date: 2026-01-18 21:52:00
+Shapes:
+- Name: stern post
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Workboat
+  Origin:
+  - -30
+  - -12
+  - 7
+  Azimuth: 90
+  Declination: 135
+  Length: 10
+  OuterDiameter: 1.5
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Red
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: post
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Workboat
+  Origin:
+  - 0
+  - -12
+  - 7
+  Azimuth: 90
+  Declination: 135
+  Length: 10
+  OuterDiameter: 1.5
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Red
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: bow post
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Workboat
+  Origin:
+  - 30
+  - -12
+  - 7
+  Azimuth: 90
+  Declination: 135
+  Length: 10
+  OuterDiameter: 1.5
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Red
+  ShadedDrawingCullingMode: Anticlockwise

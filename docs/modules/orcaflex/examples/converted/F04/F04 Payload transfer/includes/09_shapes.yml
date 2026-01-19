@@ -1,0 +1,341 @@
+# Shapes Configuration
+# Generated from: F04 Payload transfer.yml
+# Date: 2026-01-18 21:52:04
+Shapes:
+- Name: Support Deck
+  ShapeType: Elastic solid
+  Shape: Block
+  Connection: Support Vessel
+  Origin:
+  - -49
+  - -10
+  - -12.100000000000001
+  Size:
+  - 83
+  - 20
+  - 13.8
+  Orientation:
+  - 0
+  - 0
+  - 0
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  Hidden: Yes
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Offloading Deck
+  ShapeType: Elastic solid
+  Shape: Block
+  Connection: Offloading Vessel
+  Origin:
+  - -49
+  - -10
+  - -12.100000000000001
+  Size:
+  - 83
+  - 20
+  - 13.8
+  Orientation:
+  - 0
+  - 0
+  - 0
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  Hidden: Yes
+  OutsidePen:
+  - 1
+  - Solid
+  - Lime
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Pedestal 1
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Slew Constraint
+  Origin:
+  - 0
+  - 0
+  - -2.2
+  Azimuth: 0
+  Declination: 0
+  Length: 2.2
+  OuterDiameter: 8
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - $B5B5B5
+- Name: Pedestal 2
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Slew Constraint
+  Origin:
+  - 0
+  - 0
+  - 0
+  Azimuth: 0
+  Declination: 0
+  Length: 5
+  OuterDiameter: 4
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - $B5B5B5
+- Name: Pedestal 3
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Slew Constraint
+  Origin:
+  - -1
+  - -1
+  - 0
+  Size:
+  - 2
+  - 2
+  - 10
+  Orientation:
+  - 0
+  - 0
+  - 0
+  OutsidePen:
+  - 1
+  - Solid
+  - $B5B5B5
+- Name: Pedestal 4
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Slew Constraint
+  Origin:
+  - 0
+  - -1
+  - 10
+  Orientation:
+  - 90
+  - 90
+  - 90
+  IncludedAngleOfRevolution: 180
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 2
+  - - 0.5
+    - 2
+  - - 2
+    - 2
+  OutsidePen:
+  - 1
+  - Solid
+  - $B5B5B5
+- Name: Boom 1
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Slew Constraint
+  Origin:
+  - 0
+  - -1.0999999999999996
+  - 10
+  Orientation:
+  - 90
+  - 90
+  - 90
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 1
+  - - 0.5
+    - 1
+  - - 2.2
+    - 1
+  OutsidePen:
+  - 1
+  - Solid
+  - Black
+- Name: Boom 2
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Luff Constraint 1
+  Origin:
+  - 0
+  - -0.75
+  - 0
+  Orientation:
+  - 90
+  - 90
+  - -90.00000000000001
+  IncludedAngleOfRevolution: 180
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 2
+  - - 0.5
+    - 2
+  - - 1.5
+    - 2
+  OutsidePen:
+  - 1
+  - Solid
+  - Gray
+- Name: Boom 3
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Luff Constraint 1
+  Origin:
+  - -1.0000000000000009
+  - -0.75
+  - -2.7755575615628914e-16
+  Size:
+  - 2
+  - 1.5
+  - 20
+  Orientation:
+  - 0
+  - 0
+  - 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Gray
+- Name: Boom 4
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Luff Constraint 1
+  Origin:
+  - 0
+  - -0.75
+  - 20
+  Orientation:
+  - 90
+  - 90
+  - 90
+  IncludedAngleOfRevolution: 180
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 2
+  - - 0.5
+    - 2
+  - - 1.5
+    - 2
+  OutsidePen:
+  - 1
+  - Solid
+  - Gray
+- Name: Boom 5
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Luff Constraint 1
+  Origin:
+  - 0
+  - -0.8499999999999996
+  - 20
+  Orientation:
+  - 90
+  - 90
+  - 90
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 1
+  - - 0.5
+    - 1
+  - - 1.7
+    - 1
+  OutsidePen:
+  - 1
+  - Solid
+  - Black
+- Name: Jib
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Luff Constraint 2
+  Origin:
+  - -0.49999999999999933
+  - -0.5
+  - -1.3322676295501878e-15
+  Size:
+  - 1
+  - 1
+  - 7.5
+  Orientation:
+  - 0
+  - 0
+  - 0
+  OutsidePen:
+  - 1
+  - Solid
+  - $B5B5B5
+- Name: Jib Extension 1
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Extension Constraint
+  Origin:
+  - -0.4499999999999992
+  - -0.4500000000000002
+  - -1.970645868709653e-15
+  Size:
+  - 0.9
+  - 0.9
+  - 8
+  Orientation:
+  - 0
+  - 0
+  - 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Gray
+- Name: Jib Extension 2
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Extension Constraint
+  Origin:
+  - 2.6645352591003757e-15
+  - -0.4500000000000002
+  - 8
+  Orientation:
+  - 90
+  - 90
+  - 90.00000000000003
+  IncludedAngleOfRevolution: 180
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.9
+  - - 0.5
+    - 0.9
+  - - 0.9
+    - 0.9
+  OutsidePen:
+  - 1
+  - Solid
+  - Gray
+- Name: Jib Extension 3
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Extension Constraint
+  Origin:
+  - 2.6645352591003757e-15
+  - -0.5099999999999998
+  - 8
+  Orientation:
+  - 90
+  - 90
+  - 90.00000000000003
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.5
+  - - 0.5
+    - 0.5
+  - - 1.02
+    - 0.5
+  OutsidePen:
+  - 1
+  - Solid
+  - Black

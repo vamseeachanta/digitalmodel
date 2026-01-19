@@ -1,0 +1,49 @@
+# General Configuration
+# Generated from: A05 Catenary with semisub.yml
+# Date: 2026-01-18 21:50:53
+General:
+  UnitsSystem: User
+  LengthUnits: ft
+  MassUnits: lb
+  ForceUnits: kpf
+  g: 32.1740485564304
+  TemperatureUnits: °C
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 14
+  - 70
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 7014.16687494235
+  DefaultViewCentre:
+  - 2872.11325939088
+  - 0
+  - -3219.75453248327
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+Groups:
+  Structure:
+    Semi: Model
+    Riser with Flexjoint: Model
+    Riser with TSJ: Model
+  State:
+    Collapsed:
+    - Variable data

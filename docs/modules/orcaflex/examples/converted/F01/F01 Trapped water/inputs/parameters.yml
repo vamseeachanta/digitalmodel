@@ -1,0 +1,14 @@
+# Input Parameters for Parametric Analysis
+# Source: F01 Trapped water.yml
+# Generated: 2026-01-18 21:52:02
+
+water_depth: 100
+current_speed: 1
+wind_speed: 0
+water_density: 1.025
+stage_durations:
+- 8
+- 20
+- 20
+wave_direction: 90
+

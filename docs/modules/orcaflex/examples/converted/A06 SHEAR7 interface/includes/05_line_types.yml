@@ -1,0 +1,90 @@
+# LineTypes Configuration
+# Generated from: A06 SHEAR7 interface.yml
+# Date: 2026-01-18 21:51:02
+LineTypes:
+- Name: Flexjoint
+  Category: Homogeneous pipe
+  OD: 0.71875
+  ID: 0.5937499999999999
+  MaterialDensity: 490.0594905227362
+  E: 4.427712057427831e6
+  PoissonRatio: 0.293
+  ExpansionTable: None
+  Cdn: 1.2
+  Cdz: 0
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 1.26
+  SeabedAxialFrictionCoefficient: 0.73
+  ClashStiffness: 0
+  AllowableStress: 9144
+  CoatingThickness: 0
+  LiningThickness: 0
+  AdditionalEI: 0
+  APIRP2RDTcorr: 0.00650000000000011
+  APIRP2RDSMYS: 9403.200000000004
+  Pen:
+  - 3
+  - Solid
+  - Lime
+- Name: Riser Pipe
+  Category: Homogeneous pipe
+  OD: 0.71875
+  ID: 0.5937499999999999
+  MaterialDensity: 490.0594905227362
+  E: 4.427712057427831e6
+  PoissonRatio: 0.293
+  ExpansionTable: None
+  Cdn: 1.2
+  Cdz: 0
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 1.26
+  SeabedAxialFrictionCoefficient: 0.73
+  ClashStiffness: 0
+  AllowableStress: 9144
+  CoatingThickness: 0.019684999999999998
+  CoatingMaterialDensity: 57.60000000000002
+  LiningThickness: 0
+  AdditionalEI: 0
+  APIRP2RDTcorr: 0.00650000000000011
+  APIRP2RDSMYS: 9403.200000000004
+  Pen:
+  - 2
+  - Solid
+  - Red
+- Name: Flowline
+  Category: Homogeneous pipe
+  OD: 0.71875
+  ID: 0.6145833333333329
+  MaterialDensity: 490.0594905227362
+  E: 4.427712057427831e6
+  PoissonRatio: 0.293
+  ExpansionTable: None
+  Cdn: 1.2
+  Cdz: 0
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 1.26
+  SeabedAxialFrictionCoefficient: 0.73
+  ClashStiffness: 0
+  AllowableStress: 9144
+  CoatingThickness: 0.019684999999999998
+  CoatingMaterialDensity: 57.60000000000002
+  LiningThickness: 0
+  AdditionalEI: 0
+  APIRP2RDTcorr: 0.00333333333333343
+  APIRP2RDSMYS: 9403.200000000004
+  Pen:
+  - 3
+  - Solid
+  - $0080FF

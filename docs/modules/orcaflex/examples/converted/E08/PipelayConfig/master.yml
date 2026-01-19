@@ -1,0 +1,5 @@
+# the name of the file containing the base OrcaFlex model
+# Input Parameters (for parametric analysis)
+
+# Include files
+- includefile: includes/01_general.yml

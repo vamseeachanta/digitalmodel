@@ -1,0 +1,115 @@
+# Lines Configuration
+# Template: CALM Buoy Mooring System - 6-leg catenary mooring
+Lines:
+  # Mooring Leg 1 (0 degrees)
+  - Name: Mooring Leg 1
+    LineType: Chain_84mm_R4
+    EndAConnection: CALM Buoy
+    EndAX: 5.0
+    EndAY: 0
+    EndAZ: -2.25
+    EndAzimuth: 0
+    EndBConnection: Anchored
+    EndBAnchorX: 750
+    EndBAnchorY: 0
+    Length[1]: 800
+    NumberOfSegments[1]: 100
+    TargetSegmentLength[1]: 8
+    IncludedInStatics: Yes
+
+  # Mooring Leg 2 (60 degrees)
+  - Name: Mooring Leg 2
+    LineType: Chain_84mm_R4
+    EndAConnection: CALM Buoy
+    EndAX: 2.5
+    EndAY: 4.33
+    EndAZ: -2.25
+    EndAzimuth: 60
+    EndBConnection: Anchored
+    EndBAnchorX: 375
+    EndBAnchorY: 649.5
+    Length[1]: 800
+    NumberOfSegments[1]: 100
+    TargetSegmentLength[1]: 8
+    IncludedInStatics: Yes
+
+  # Mooring Leg 3 (120 degrees)
+  - Name: Mooring Leg 3
+    LineType: Chain_84mm_R4
+    EndAConnection: CALM Buoy
+    EndAX: -2.5
+    EndAY: 4.33
+    EndAZ: -2.25
+    EndAzimuth: 120
+    EndBConnection: Anchored
+    EndBAnchorX: -375
+    EndBAnchorY: 649.5
+    Length[1]: 800
+    NumberOfSegments[1]: 100
+    TargetSegmentLength[1]: 8
+    IncludedInStatics: Yes
+
+  # Mooring Leg 4 (180 degrees)
+  - Name: Mooring Leg 4
+    LineType: Chain_84mm_R4
+    EndAConnection: CALM Buoy
+    EndAX: -5.0
+    EndAY: 0
+    EndAZ: -2.25
+    EndAzimuth: 180
+    EndBConnection: Anchored
+    EndBAnchorX: -750
+    EndBAnchorY: 0
+    Length[1]: 800
+    NumberOfSegments[1]: 100
+    TargetSegmentLength[1]: 8
+    IncludedInStatics: Yes
+
+  # Mooring Leg 5 (240 degrees)
+  - Name: Mooring Leg 5
+    LineType: Chain_84mm_R4
+    EndAConnection: CALM Buoy
+    EndAX: -2.5
+    EndAY: -4.33
+    EndAZ: -2.25
+    EndAzimuth: 240
+    EndBConnection: Anchored
+    EndBAnchorX: -375
+    EndBAnchorY: -649.5
+    Length[1]: 800
+    NumberOfSegments[1]: 100
+    TargetSegmentLength[1]: 8
+    IncludedInStatics: Yes
+
+  # Mooring Leg 6 (300 degrees)
+  - Name: Mooring Leg 6
+    LineType: Chain_84mm_R4
+    EndAConnection: CALM Buoy
+    EndAX: 2.5
+    EndAY: -4.33
+    EndAZ: -2.25
+    EndAzimuth: 300
+    EndBConnection: Anchored
+    EndBAnchorX: 375
+    EndBAnchorY: -649.5
+    Length[1]: 800
+    NumberOfSegments[1]: 100
+    TargetSegmentLength[1]: 8
+    IncludedInStatics: Yes
+
+  # Hawser to vessel
+  - Name: Hawser
+    LineType: Hawser_HMPE_80mm
+    EndAConnection: CALM Buoy
+    EndAX: 0
+    EndAY: 0
+    EndAZ: 2.25
+    EndAzimuth: 0
+    EndBConnection: Vessel
+    EndBX: 50
+    EndBY: 0
+    EndBZ: -5
+    Length[1]: 80
+    NumberOfSegments[1]: 20
+    TargetSegmentLength[1]: 4
+    IncludedInStatics: Yes

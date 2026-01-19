@@ -1,0 +1,318 @@
+# 6DBuoys Configuration
+# Generated from: CALMBuoy_Vessel_2Drafts.yml
+# Date: 2026-01-18 21:49:20
+6DBuoys:
+- Name: CALM Base
+  BuoyType: Spar buoy
+  Connection: Free
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -0.6391782261746406
+  - -0.019621615167135367
+  - -7.205894223049404
+  InitialAttitude:
+  - 0.030620624729453618
+  - -1.0112710295520602
+  - 0.0004845209054230985
+  Mass: 254
+  MomentsOfInertia:
+  - 2411.5
+  - 2411.5
+  - 3781.25
+  CentreOfMass:
+  - 0
+  - 0
+  - 0.5
+  StackBaseCentre:
+  - 0
+  - 0
+  - -2.5
+  BulkModulus: Infinity
+  MunkMomentCoefficient: 0
+  NormalDragAreaCalculatedFromGeometry: Yes
+  StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+  Cylinders:
+  - CylinderOuterDiameter: 12
+    CylinderInnerDiameter: 0
+    CylinderLength: 1.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 1.05
+    - 1.13
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 0.92
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 12
+    CylinderInnerDiameter: 0
+    CylinderLength: 1.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 1.05
+    - 1.13
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 0.92
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 12
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.8
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 1.05
+    - 1.13
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 0.92
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 16
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.19999999999999998
+    CylinderAxialDragArea: 65.57
+    DragForceCoefficient:
+    - 1.05
+    - 1.13
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 0.92
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 200
+    - 200
+    UnitDampingMoment:
+    - 3000
+    - 4000
+  - CylinderOuterDiameter: 12
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 95.03
+    DragForceCoefficient:
+    - 1.05
+    - 1.13
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 0.92
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: CALM Top
+  BuoyType: Spar buoy
+  Connection: Free
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -0.6709476584574913
+  - -0.020583491901746232
+  - -5.4115691456572526
+  InitialAttitude:
+  - 0.030467713448923926
+  - -1.0058610232871976
+  - 1.6909389651824682
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  StackBaseCentre:
+  - 0
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MunkMomentCoefficient: 0
+  NormalDragAreaCalculatedFromGeometry: Yes
+  StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+  Cylinders:
+  - CylinderOuterDiameter: 2.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 1.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 1.05
+    - 1.13
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 7.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 1.05
+    - 1.13
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 12
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 1.05
+    - 1.13
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 0.92
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise

@@ -1,0 +1,56 @@
+# Vessels Configuration
+# Generated from: A04 Disconnecting turret system.yml
+# Date: 2026-01-18 21:51:46
+Vessels:
+- Name: FPSO
+  VesselType: Vessel Moored FPSO
+  Draught: Draught1
+  Length: 206
+  Connection: Free
+  InitialPosition:
+  - 0
+  - 0
+  - -14
+  Orientation:
+  - 0
+  - 0
+  - 180
+  IncludedInStatics: None
+  PrimaryMotion: Prescribed
+  SuperimposedMotion: RAOs + harmonics
+  ImposedMotionConsistentWithSolver: No
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: No
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: No
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  PrimaryMotionIsTreatedAs: Low frequency
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  ? PrescribedMotionMode, PrescribedMotionSpeedValue, PrescribedMotionDirectionRelativeTo, PrescribedMotionDirectionValue, PrescribedMotionRateOfTurn
+  : - - Constant speed
+      - 0
+      - Vessel heading
+      - 0
+      - 0
+    - - Constant speed
+      - 0
+      - Vessel heading
+      - 0
+      - 0
+    - - Speed change
+      - 2
+      - Vessel heading
+      - 0
+      - 0
+    - - Speed change
+      - 0
+      - Vessel heading
+      - 0
+      - 0
+  ShadedDrawingCullingMode: Anticlockwise

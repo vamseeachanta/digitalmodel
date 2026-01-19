@@ -1,0 +1,120 @@
+# Links Configuration
+# Generated from: F01 Trapped water.yml
+# Date: 2026-01-18 21:52:02
+Links:
+- Name: 1 Bridle2
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Shackle2
+    - 0
+    - 0
+    - 0
+  - - Lumped Buoy1
+    - -9.184850993605146e-17
+    - 1.4999999999999998
+    - 5
+  ReleaseStage: ~
+  UnstretchedLength: 7
+  Stiffness: 100e3
+- Name: 2 Bridle2
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Shackle2
+    - 0
+    - 0
+    - 0
+  - - Lumped Buoy1
+    - -9.184850993605151e-17
+    - 1.5000000000000002
+    - -5
+  ReleaseStage: ~
+  UnstretchedLength: 7
+  Stiffness: 100e3
+- Name: 1 Bridle1
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Shackle1
+    - 0
+    - 0
+    - 0
+  - - Hollow Spar Buoy
+    - -9.184850993605146e-17
+    - 1.4999999999999998
+    - 5
+  ReleaseStage: ~
+  UnstretchedLength: 7
+  Stiffness: 100e3
+- Name: 2 Bridle1
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Shackle1
+    - 0
+    - 0
+    - 0
+  - - Hollow Spar Buoy
+    - -9.184850993605151e-17
+    - 1.5000000000000002
+    - -5
+  ReleaseStage: ~
+  UnstretchedLength: 7
+  Stiffness: 100e3
+- Name: 1 Bridle3
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Shackle3
+    - 0
+    - 0
+    - 0
+  - - Lumped Buoy2
+    - -9.184850993605146e-17
+    - 1.4999999999999998
+    - 5
+  ReleaseStage: ~
+  UnstretchedLength: 7
+  Stiffness: 100e3
+  Hidden: Yes
+- Name: 2 Bridle3
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Shackle3
+    - 0
+    - 0
+    - 0
+  - - Lumped Buoy2
+    - -9.184850993605151e-17
+    - 1.5000000000000002
+    - -5
+  ReleaseStage: ~
+  UnstretchedLength: 7
+  Stiffness: 100e3
+  Hidden: Yes
+- Name: 1 Bridle4
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Shackle4
+    - 0
+    - 0
+    - 0
+  - - Lumped Buoy3
+    - -9.184850993605146e-17
+    - 1.4999999999999998
+    - 5
+  ReleaseStage: ~
+  UnstretchedLength: 7
+  Stiffness: 100e3
+  Hidden: Yes
+- Name: 2 Bridle4
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Shackle4
+    - 0
+    - 0
+    - 0
+  - - Lumped Buoy3
+    - -9.184850993605151e-17
+    - 1.5000000000000002
+    - -5
+  ReleaseStage: ~
+  UnstretchedLength: 7
+  Stiffness: 100e3
+  Hidden: Yes

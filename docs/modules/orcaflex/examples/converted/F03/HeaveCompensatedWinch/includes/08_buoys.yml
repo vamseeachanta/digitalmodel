@@ -1,0 +1,154 @@
+# 6DBuoys Configuration
+# Generated from: HeaveCompensatedWinch.yml
+# Date: 2026-01-18 21:52:04
+6DBuoys:
+- Name: Template
+  BuoyType: Lumped buoy
+  Connection: Free
+  DegreesOfFreedomInStatics: X,Y,Z
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 0
+  - 0
+  - -65
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 30
+  MomentsOfInertia:
+  - 100
+  - 100
+  - 100
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 10
+  BulkModulus: Infinity
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 1
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 3
+    - 3
+    - 1.5
+  - - -3
+    - 3
+    - 1.5
+  - - -3
+    - -3
+    - 1.5
+  - - 3
+    - -3
+    - 1.5
+  - - 3
+    - 3
+    - -0.5
+  - - -3
+    - 3
+    - -0.5
+  - - -3
+    - -3
+    - -0.5
+  - - 3
+    - -3
+    - -0.5
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise

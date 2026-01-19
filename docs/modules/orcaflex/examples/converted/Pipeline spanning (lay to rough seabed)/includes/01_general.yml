@@ -1,0 +1,50 @@
+# General Configuration
+# Generated from: Pipeline spanning (lay to rough seabed).yml
+# Date: 2026-01-18 21:51:40
+General:
+  UnitsSystem: SI
+  LineResetRepresentation: Quick
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: Parent lines excluded
+  LineStaticsStep2Policy: Parent lines excluded
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.05
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.2
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 500
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 127.3997232492998
+  DefaultViewCentre:
+  - 1.1414396682996026
+  - 87.5
+  - -89.1033296539318
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+Groups:
+  Structure:
+    Modelling Lay: Model
+    Laid Line: Modelling Lay
+    Laying Vessel: Modelling Lay
+    Laying Winch: Modelling Lay
+    Deck: Modelling Lay
+    Chute: Modelling Lay
+    Temp Link1: Modelling Lay
+    Temp Link2: Modelling Lay
+    Temp Link3: Modelling Lay
+  State:
+    Collapsed: []

@@ -1,0 +1,144 @@
+# General Configuration
+# Generated from: C09 Fenders.yml
+# Date: 2026-01-18 21:51:53
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: X,Y,Z
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMaxIterations: 2400
+  StaticsMinDamping: 50
+  StaticsMaxDamping: 500
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.01
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 20
+  - 300
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 17.69843532243762
+  DefaultViewCentre:
+  - -17.998230508987106
+  - 40.68078655874214
+  - 1.3005002795169978
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+FrictionCoefficients:
+  FrictionCoefficient6DBuoyName, 6DBuoyFrictionCoefficientShapeName, 6DBuoyFrictionCoefficient:
+  - - (all 6D buoys)
+    - Vessel Contact
+    - 0.2
+Groups:
+  Structure:
+    Barge: Model
+    Quayside: Model
+    Vessel Contact: Model
+    Moorings: Model
+    Mooring line 1: Moorings
+    Mooring line 2: Moorings
+    Mooring line 3: Moorings
+    Mooring line 4: Moorings
+    Fenders: Model
+    Top Level Fenders: Fenders
+    Fender A1: Top Level Fenders
+    Fender Contact Face Upper 1: Fender A1
+    Fender Constraint Upper 1: Fender A1
+    Cell Fender Upper 1 Body (Quayside): Fender A1
+    Cell Fender Upper 1 Body (Vessel side): Fender A1
+    Fender A2: Top Level Fenders
+    Fender Contact Face Upper 2: Fender A2
+    Fender Constraint Upper 2: Fender A2
+    Cell Fender Upper 2 Body (Quayside): Fender A2
+    Cell Fender Upper 2 Body (Vessel side): Fender A2
+    Fender A3: Top Level Fenders
+    Fender Contact Face Upper 3: Fender A3
+    Fender Constraint Upper 3: Fender A3
+    Cell Fender Upper 3 Body (Quayside): Fender A3
+    Cell Fender Upper 3 Body (Vessel side): Fender A3
+    Fender A4: Top Level Fenders
+    Fender Contact Face Upper 4: Fender A4
+    Fender Constraint Upper 4: Fender A4
+    Cell Fender Upper 4 Body (Quayside): Fender A4
+    Cell Fender Upper 4 Body (Vessel side): Fender A4
+    Fender A5: Top Level Fenders
+    Fender Contact Face Upper 5: Fender A5
+    Fender Constraint Upper 5: Fender A5
+    Cell Fender Upper 5 Body (Quayside): Fender A5
+    Cell Fender Upper 5 Body (Vessel side): Fender A5
+    Fender A6: Top Level Fenders
+    Fender Contact Face Upper 6: Fender A6
+    Fender Constraint Upper 6: Fender A6
+    Cell Fender Upper 6 Body (Quayside): Fender A6
+    Cell Fender Upper 6 Body (Vessel side): Fender A6
+    Fender A7: Top Level Fenders
+    Fender Contact Face Upper 7: Fender A7
+    Fender Constraint Upper 7: Fender A7
+    Cell Fender Upper 7 Body (Quayside): Fender A7
+    Cell Fender Upper 7 Body (Vessel side): Fender A7
+    Low Level Fenders: Fenders
+    Fender A8: Low Level Fenders
+    Fender Contact FaceLower 1: Fender A8
+    Fender Constraint Lower 1: Fender A8
+    Cell Fender Lower 1 Body (Quayside): Fender A8
+    Cell Fender Lower 1 Body (Vessel side): Fender A8
+    Fender A9: Low Level Fenders
+    Fender Contact FaceLower 2: Fender A9
+    Fender Constraint Lower 2: Fender A9
+    Cell Fender Lower 2 Body (Quayside): Fender A9
+    Cell Fender Lower 2 Body (Vessel side): Fender A9
+    Fender A10: Low Level Fenders
+    Fender Contact FaceLower 3: Fender A10
+    Fender Constraint Lower 3: Fender A10
+    Cell Fender Lower 3 Body (Quayside): Fender A10
+    Cell Fender Lower 3 Body (Vessel side): Fender A10
+    Fender A11: Low Level Fenders
+    Fender Contact FaceLower 4: Fender A11
+    Fender Constraint Lower 4: Fender A11
+    Cell Fender Lower 4 Body (Quayside): Fender A11
+    Cell Fender Lower 4 Body (Vessel side): Fender A11
+    Fender A12: Low Level Fenders
+    Fender Contact FaceLower 5: Fender A12
+    Fender Constraint Lower 5: Fender A12
+    Cell Fender Lower 5 Body (Quayside): Fender A12
+    Cell Fender Lower 5 Body (Vessel side): Fender A12
+    Fender A13: Low Level Fenders
+    Fender Contact FaceLower 6: Fender A13
+    Fender Constraint Lower 6: Fender A13
+    Cell Fender Lower 6 Body (Quayside): Fender A13
+    Cell Fender Lower 6 Body (Vessel side): Fender A13
+    Fender A14: Low Level Fenders
+    Fender Contact FaceLower 7: Fender A14
+    Fender Constraint Lower 7: Fender A14
+    Cell Fender Lower 7 Body (Quayside): Fender A14
+    Cell Fender Lower 7 Body (Vessel side): Fender A14
+  State:
+    Collapsed:
+    - Variable data
+    - Fender A2
+    - Fender A3
+    - Fender A4
+    - Fender A5
+    - Fender A6
+    - Fender A7
+    - Low Level Fenders
+    - Fender A8
+    - Fender A9
+    - Fender A10
+    - Fender A11
+    - Fender A12
+    - Fender A13
+    - Fender A14

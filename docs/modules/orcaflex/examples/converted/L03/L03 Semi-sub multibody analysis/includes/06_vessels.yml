@@ -1,0 +1,232 @@
+# Vessels Configuration
+# Generated from: L03 Semi-sub multibody analysis.yml
+# Date: 2026-01-18 21:52:31
+Vessels:
+- Name: Aft offset column (pink)
+  VesselType: Aft offset column type
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - -28.87
+  - 0
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: 6 DOF
+  PrimaryMotion: Calculated (6 DOF)
+  SuperimposedMotion: None
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: Yes
+  IncludeWaveDriftLoad2ndOrder: Yes
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: Yes
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: Yes
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  PrimaryMotionIsTreatedAs: Both low and wave frequency
+  PrimaryMotionDividingPeriod: 40
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  MorisonElements:
+  - MorisonElementType: UC morison
+    Position:
+    - 0
+    - 0
+    - -14
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 26
+    MorisonElementNumberOfSegments: 13
+  - MorisonElementType: BC morison
+    Position:
+    - 0
+    - 0
+    - -20
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 6
+    MorisonElementNumberOfSegments: 4
+  Pen:
+  - 1
+  - Solid
+  - Fuchsia
+- Name: Port offset column (red)
+  VesselType: Port offset column type
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 14.435
+  - 25.002
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: 6 DOF
+  PrimaryMotion: Calculated (6 DOF)
+  SuperimposedMotion: None
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: Yes
+  IncludeWaveDriftLoad2ndOrder: Yes
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: Yes
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: Yes
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  PrimaryMotionIsTreatedAs: Both low and wave frequency
+  PrimaryMotionDividingPeriod: 40
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  MorisonElements:
+  - MorisonElementType: UC morison
+    Position:
+    - 0
+    - 0
+    - -14
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 26
+    MorisonElementNumberOfSegments: 13
+  - MorisonElementType: BC morison
+    Position:
+    - 0
+    - 0
+    - -20
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 6
+    MorisonElementNumberOfSegments: 4
+- Name: Stbd offset column (green)
+  VesselType: Stbd offset column type
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 14.435
+  - -25.002
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: 6 DOF
+  PrimaryMotion: Calculated (6 DOF)
+  SuperimposedMotion: None
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: Yes
+  IncludeWaveDriftLoad2ndOrder: Yes
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: Yes
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: Yes
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  PrimaryMotionIsTreatedAs: Both low and wave frequency
+  PrimaryMotionDividingPeriod: 40
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  MorisonElements:
+  - MorisonElementType: UC morison
+    Position:
+    - 0
+    - 0
+    - -14
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 26
+    MorisonElementNumberOfSegments: 13
+  - MorisonElementType: BC morison
+    Position:
+    - 0
+    - 0
+    - -20
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 6
+    MorisonElementNumberOfSegments: 4
+  Pen:
+  - 1
+  - Solid
+  - Lime
+- Name: Centre column (inc inertia compensation)(blue)
+  VesselType: Centre column type
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 0
+  - 0
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: 6 DOF
+  PrimaryMotion: Calculated (6 DOF)
+  SuperimposedMotion: None
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: Yes
+  IncludeWaveDriftLoad2ndOrder: Yes
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: Yes
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: Yes
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  PrimaryMotionIsTreatedAs: Both low and wave frequency
+  PrimaryMotionDividingPeriod: 40
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  MorisonElements:
+  - MorisonElementType: MC morison
+    Position:
+    - 0
+    - 0
+    - -20
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 30
+    MorisonElementNumberOfSegments: 15
+  CompensatingMass: 264.8944546
+  CentreOfCompensatingMass:
+  - -9.94e-11
+  - -5.14e-11
+  - -1.635078933
+  CompensatingMomentOfInertiaX, CompensatingMomentOfInertiaY, CompensatingMomentOfInertiaZ:
+  - - 71.69268592035149e3
+    - 1.9654174820971093e-07
+    - -9.340191269302522e-07
+  - - 1.9654174820971093e-07
+    - 71.69268592089214e3
+    - -2.2916754005564144e-07
+  - - -9.340191269302522e-07
+    - -2.2916754005564144e-07
+    - 65.6631120734274e3
+  Pen:
+  - 1
+  - Solid
+  - Aqua

@@ -1,0 +1,15 @@
+# Input Parameters for Parametric Analysis
+# Source: A02 Steep S.yml
+# Generated: 2026-01-18 21:50:21
+
+water_depth: 100
+current_speed: 1
+wind_speed: 0
+water_density: 1.025
+stage_durations:
+- 8
+- 48
+hs: 7
+tp: 8
+wave_direction: 0
+

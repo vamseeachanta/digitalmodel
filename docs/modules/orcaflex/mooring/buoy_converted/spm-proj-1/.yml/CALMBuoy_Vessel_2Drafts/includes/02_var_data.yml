@@ -1,0 +1,41 @@
+# VariableData Configuration
+# Generated from: CALMBuoy_Vessel_2Drafts.yml
+# Date: 2026-01-18 21:53:25
+VariableData:
+  Externalfunctions:
+  - Name: Thruster
+    Source: External file
+    FileName: DynamicPositioningSystem1001.py
+    FunctionName: Thruster
+    InitialValue: 0
+    TimeStep: Inner time step
+  Axialstiffness:
+  - Name: Stiffness1
+    IndependentValue, DependentValue:
+    - - 0
+      - 0
+    - - 2.76567
+      - 355.2178972
+    - - 5.0545
+      - 709.9037778
+    - - 7.43869
+      - 1338.569966
+    - - 9.44142
+      - 2045.065352
+    - - 11.7302
+      - 3182.258352
+    - - 13.2561
+      - 4083.836714
+    - - 14.9728
+      - 5298.63852
+    - - 16.0218
+      - 6199.694091
+    - - 17.4523
+      - 7218.541604
+    - - 19.1689
+      - 8198.58984
+    - - 21.3624
+      - 9140.054064
+    - - 24.4
+      - 10.2508e3
+    Hysteretic: No

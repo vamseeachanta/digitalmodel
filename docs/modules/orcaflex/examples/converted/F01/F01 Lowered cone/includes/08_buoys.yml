@@ -1,0 +1,1173 @@
+# 6DBuoys Configuration
+# Generated from: F01 Lowered cone.yml
+# Date: 2026-01-18 21:52:00
+6DBuoys:
+- Name: Lumped Cone
+  BuoyType: Lumped buoy
+  Connection: Free
+  DegreesOfFreedomInStatics: X,Y,Z
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -10
+  - 20
+  - 9.8
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 300
+  MomentsOfInertia:
+  - 4125
+  - 4125
+  - 2250
+  CentreOfMass:
+  - 0
+  - 0
+  - 2.5
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 281.762
+  BulkModulus: Infinity
+  Height: 10
+  CentreOfVolume:
+  - 0
+  - 0
+  - 2.567
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 52.5
+  - 52.5
+  - 78.54
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0.85
+  - 0.85
+  - 1.12
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0.6
+  - 0.6
+  - 1.183031542
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 5
+    - 0
+    - 0
+  - - 4.619397663
+    - 1.913417162
+    - 0
+  - - 3.535533906
+    - 3.535533906
+    - 0
+  - - 1.913417162
+    - 4.619397663
+    - 0
+  - - 3.06287e-16
+    - 5
+    - 0
+  - - -1.913417162
+    - 4.619397663
+    - 0
+  - - -3.535533906
+    - 3.535533906
+    - 0
+  - - -4.619397663
+    - 1.913417162
+    - 0
+  - - -5
+    - 6.12574e-16
+    - 0
+  - - -4.619397663
+    - -1.913417162
+    - 0
+  - - -3.535533906
+    - -3.535533906
+    - 0
+  - - -1.913417162
+    - -4.619397663
+    - 0
+  - - -9.18861e-16
+    - -5
+    - 0
+  - - 1.913417162
+    - -4.619397663
+    - 0
+  - - 3.535533906
+    - -3.535533906
+    - 0
+  - - 4.619397663
+    - -1.913417162
+    - 0
+  - - 0
+    - 0
+    - 10
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 5
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 9
+    - ~
+  - - 9
+    - 10
+    - ~
+  - - 10
+    - 11
+    - ~
+  - - 11
+    - 12
+    - ~
+  - - 12
+    - 13
+    - ~
+  - - 13
+    - 14
+    - ~
+  - - 14
+    - 15
+    - ~
+  - - 15
+    - 16
+    - ~
+  - - 16
+    - 1
+    - ~
+  - - 1
+    - 17
+    - ~
+  - - 2
+    - 17
+    - ~
+  - - 3
+    - 17
+    - ~
+  - - 4
+    - 17
+    - ~
+  - - 5
+    - 17
+    - ~
+  - - 6
+    - 17
+    - ~
+  - - 7
+    - 17
+    - ~
+  - - 8
+    - 17
+    - ~
+  - - 9
+    - 17
+    - ~
+  - - 10
+    - 17
+    - ~
+  - - 11
+    - 17
+    - ~
+  - - 12
+    - 17
+    - ~
+  - - 13
+    - 17
+    - ~
+  - - 14
+    - 17
+    - ~
+  - - 15
+    - 17
+    - ~
+  - - 16
+    - 17
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Spar Cone
+  BuoyType: Spar buoy
+  Connection: Free
+  DegreesOfFreedomInStatics: X,Y,Z
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 10
+  - 20
+  - 9.8
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 300
+  MomentsOfInertia:
+  - 4125
+  - 4125
+  - 2250
+  CentreOfMass:
+  - 0
+  - 0
+  - 2.5
+  StackBaseCentre:
+  - 0
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MunkMomentCoefficient: 0
+  NormalDragAreaCalculatedFromGeometry: Yes
+  StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+  Cylinders:
+  - CylinderOuterDiameter: 0.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 1
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 1.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 2
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 2.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 3
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 3.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 4
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 4.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 5.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 7
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 7.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 8
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 8.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 10
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 78.54
+    DragForceCoefficient:
+    - 0.85
+    - 1.12
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 5
+    CylinderSlamForceDataExit: 2.5
+    AddedMassForceCoefficient:
+    - 0.6
+    - 1.183031542
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - Lime
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Slam Buoy
+  BuoyType: Lumped buoy
+  Connection: Lumped Cone
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 0
+  - 0
+  - 0.25
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 0.5
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 78.54
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0
+  Hidden: Yes
+  Pen:
+  - 1
+  - Solid
+  - Aqua
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 5
+    - 0
+    - -0.25
+  - - 4.619397663
+    - 1.913417162
+    - -0.25
+  - - 3.535533906
+    - 3.535533906
+    - -0.25
+  - - 1.913417162
+    - 4.619397663
+    - -0.25
+  - - 306e-18
+    - 5
+    - -0.25
+  - - -1.913417162
+    - 4.619397663
+    - -0.25
+  - - -3.535533906
+    - 3.535533906
+    - -0.25
+  - - -4.619397663
+    - 1.913417162
+    - -0.25
+  - - -5
+    - 613e-18
+    - -0.25
+  - - -4.619397663
+    - -1.913417162
+    - -0.25
+  - - -3.535533906
+    - -3.535533906
+    - -0.25
+  - - -1.913417162
+    - -4.619397663
+    - -0.25
+  - - -919e-18
+    - -5
+    - -0.25
+  - - 1.913417162
+    - -4.619397663
+    - -0.25
+  - - 3.535533906
+    - -3.535533906
+    - -0.25
+  - - 4.619397663
+    - -1.913417162
+    - -0.25
+  - - 5
+    - 0
+    - 0.25
+  - - 4.619397663
+    - 1.913417162
+    - 0.25
+  - - 3.535533906
+    - 3.535533906
+    - 0.25
+  - - 1.913417162
+    - 4.619397663
+    - 0.25
+  - - 306e-18
+    - 5
+    - 0.25
+  - - -1.913417162
+    - 4.619397663
+    - 0.25
+  - - -3.535533906
+    - 3.535533906
+    - 0.25
+  - - -4.619397663
+    - 1.913417162
+    - 0.25
+  - - -5
+    - 613e-18
+    - 0.25
+  - - -4.619397663
+    - -1.913417162
+    - 0.25
+  - - -3.535533906
+    - -3.535533906
+    - 0.25
+  - - -1.913417162
+    - -4.619397663
+    - 0.25
+  - - -919e-18
+    - -5
+    - 0.25
+  - - 1.913417162
+    - -4.619397663
+    - 0.25
+  - - 3.535533906
+    - -3.535533906
+    - 0.25
+  - - 4.619397663
+    - -1.913417162
+    - 0.25
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 5
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 9
+    - ~
+  - - 9
+    - 10
+    - ~
+  - - 10
+    - 11
+    - ~
+  - - 11
+    - 12
+    - ~
+  - - 12
+    - 13
+    - ~
+  - - 13
+    - 14
+    - ~
+  - - 14
+    - 15
+    - ~
+  - - 15
+    - 16
+    - ~
+  - - 16
+    - 1
+    - ~
+  - - 17
+    - 18
+    - ~
+  - - 18
+    - 19
+    - ~
+  - - 19
+    - 20
+    - ~
+  - - 20
+    - 21
+    - ~
+  - - 21
+    - 22
+    - ~
+  - - 22
+    - 23
+    - ~
+  - - 23
+    - 24
+    - ~
+  - - 24
+    - 25
+    - ~
+  - - 25
+    - 26
+    - ~
+  - - 26
+    - 27
+    - ~
+  - - 27
+    - 28
+    - ~
+  - - 28
+    - 29
+    - ~
+  - - 29
+    - 30
+    - ~
+  - - 30
+    - 31
+    - ~
+  - - 31
+    - 32
+    - ~
+  - - 32
+    - 33
+    - ~
+  - - 17
+    - 32
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise

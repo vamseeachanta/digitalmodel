@@ -1,0 +1,47 @@
+# Shapes Configuration
+# Generated from: A04 Disconnecting turret system.yml
+# Date: 2026-01-18 21:51:46
+Shapes:
+- Name: Turret Bearing Plate
+  ShapeType: Elastic solid
+  Shape: Block
+  Connection: FPSO
+  Origin:
+  - -10
+  - -10
+  - 18
+  Size:
+  - 20
+  - 20
+  - 6
+  Orientation:
+  - 0
+  - 0
+  - 0
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  NumberOfLines: 13
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Moonpool
+  ShapeType: Trapped water
+  Shape: Cylinder
+  Connection: FPSO
+  Origin:
+  - 0
+  - 0
+  - 4
+  Azimuth: 0
+  Declination: 0
+  Length: 20
+  OuterDiameter: 20
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  NumberOfLines: 13
+  ShadedDrawingCullingMode: Anticlockwise

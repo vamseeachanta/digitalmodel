@@ -1,0 +1,13 @@
+# Input Parameters for Parametric Analysis
+# Source: F07 Suction anchor lowering.yml
+# Generated: 2026-01-18 21:52:06
+
+current_speed: 1
+wind_speed: 10
+water_density: 1.025
+stage_durations:
+- 20
+- 150
+- 250
+wave_direction: 45
+

@@ -1,0 +1,135 @@
+# General Configuration
+# Generated from: A02 Lazy S simple.yml
+# Date: 2026-01-18 21:51:44
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: All
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMinDamping: 2
+  StaticsMaxDamping: 20
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 12
+  - 60
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  NorthDirectionDefined: Yes
+  NorthDirection: 90
+  DefaultViewMode: Shaded
+  DefaultShadedFillMode: Solid
+  DefaultViewSize: 137.96771311481
+  DefaultViewCentre:
+  - -92.313639564558
+  - 11.6326814445932
+  - -48.3571197030238
+  DefaultViewAzimuth: 272.6
+  DefaultViewElevation: 0
+FrictionCoefficients:
+  ? FrictionCoefficientLineTypeName, LineTypeFrictionCoefficientShapeName, LineTypeLateralCoefficient, LineTypeAxialCoefficient
+  : - - (all line types)
+      - (all shapes)
+      - 0.2
+      - ~
+Groups:
+  Structure:
+    Vessel group: Model
+    FPSO: Vessel group
+    Turret: Vessel group
+    Arch structure: Model
+    Arch: Arch structure
+    Vertical support: Arch structure
+    Gutter E: Vertical support
+    Clamp: Vertical support
+    Gutter W: Vertical support
+    Horizontal support: Arch structure
+    Wall 1: Horizontal support
+    Wall up 1: Wall 1
+    Wall mid 1: Wall 1
+    Wall dn 1: Wall 1
+    Wall 2: Horizontal support
+    Wall up 2: Wall 2
+    Wall mid 2: Wall 2
+    Wall dn 2: Wall 2
+    Wall 3: Horizontal support
+    Wall up 3: Wall 3
+    Wall mid 3: Wall 3
+    Wall dn 3: Wall 3
+    Wall 4: Horizontal support
+    Wall up 4: Wall 4
+    Wall mid 4: Wall 4
+    Wall dn 4: Wall 4
+    Wall 5: Horizontal support
+    Wall up 5: Wall 5
+    Wall mid 5: Wall 5
+    Wall dn 5: Wall 5
+    Arch drawing: Arch structure
+    Vertical images: Arch drawing
+    Trough shape E: Vertical images
+    Clamp shape: Vertical images
+    Trough shape W: Vertical images
+    Horizontal images: Arch drawing
+    Wall drawing 1: Horizontal images
+    Wall up 1 draw: Wall drawing 1
+    Wall mid 1 draw: Wall drawing 1
+    Wall dn 1 draw: Wall drawing 1
+    Wall drawing 2: Horizontal images
+    Wall up 2 draw: Wall drawing 2
+    Wall mid 2 draw: Wall drawing 2
+    Wall dn 2 draw: Wall drawing 2
+    Wall drawing 3: Horizontal images
+    Wall up 3 draw: Wall drawing 3
+    Wall mid 3 draw: Wall drawing 3
+    Wall dn 3 draw: Wall drawing 3
+    Wall drawing 4: Horizontal images
+    Wall up 4 draw: Wall drawing 4
+    Wall mid 4 draw: Wall drawing 4
+    Wall dn 4 draw: Wall drawing 4
+    Wall drawing 5: Horizontal images
+    Wall up 5 draw: Wall drawing 5
+    Wall mid 5 draw: Wall drawing 5
+    Wall dn 5 draw: Wall drawing 5
+    Tank images: Arch drawing
+    Tank shape E: Tank images
+    Tank shape W: Tank images
+    Tethers and bridles: Model
+    Northern set: Tethers and bridles
+    Bridle_NE: Northern set
+    Bridle_NW: Northern set
+    ArchTie_N: Northern set
+    Southern set: Tethers and bridles
+    Bridle_SE: Southern set
+    Bridle_SW: Southern set
+    ArchTie_S: Southern set
+    Gravity base set: Tethers and bridles
+    North post: Gravity base set
+    South post: Gravity base set
+    Gravity base: Gravity base set
+    Risers and umbilicals: Model
+    10" riser N: Risers and umbilicals
+    10" riser N clamp: Risers and umbilicals
+    Umbilical: Risers and umbilicals
+    Umbilical clamp: Risers and umbilicals
+    8" riser: Risers and umbilicals
+    8" riser clamp: Risers and umbilicals
+    10" riser S: Risers and umbilicals
+    10" riser S clamp: Risers and umbilicals
+  State:
+    Collapsed:
+    - Vertical support
+    - Horizontal support
+    - Arch drawing

@@ -1,0 +1,31 @@
+# LineTypes Configuration
+# Generated from: K06 FPV module.yml
+# Date: 2026-01-18 21:52:24
+LineTypes:
+- Name: Steel tubular
+  Category: Homogeneous pipe
+  OD: 0.08
+  ID: 0.06
+  MaterialDensity: 7850
+  E: 212e6
+  PoissonRatio: 0.293
+  ExpansionTable: None
+  Cdn: 1.2
+  Cdz: 0.008
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0
+  LiningThickness: 0
+  AdditionalEI: 0
+  Pen:
+  - 1
+  - Solid
+  - Silver

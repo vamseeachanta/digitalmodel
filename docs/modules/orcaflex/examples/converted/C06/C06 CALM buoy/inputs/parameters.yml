@@ -1,0 +1,13 @@
+# Input Parameters for Parametric Analysis
+# Source: C06 CALM buoy.yml
+# Generated: 2026-01-18 21:51:50
+
+water_depth: 100
+current_speed: 1
+wind_speed: 12
+water_density: 1.025
+stage_durations:
+- 10
+- 100
+wave_direction: 180
+

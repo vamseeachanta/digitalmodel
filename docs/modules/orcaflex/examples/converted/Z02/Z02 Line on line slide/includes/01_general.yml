@@ -1,0 +1,122 @@
+# General Configuration
+# Generated from: Z02 Line on line slide.yml
+# Date: 2026-01-18 21:52:53
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Explicit time domain
+  AlwaysUseRecommendedTimeSteps: Yes
+  InnerTimeStep: 4.6e-06
+  TargetOuterTimeStep: 130e-6
+  RecommendedInnerTimeStepRatio: 10
+  RecommendedOuterTimeStepToInnerMultiple: 30
+  RecommendedOuterTimeStepToWavePeriodRatio: 40
+  TensionTargetDamping: 10
+  BendingTargetDamping: 10
+  TorsionTargetDamping: 10
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 1
+  - 10
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Shaded
+  DefaultShadedFillMode: Solid
+  DefaultViewSize: 7.63308681367782
+  DefaultViewCentre:
+  - 23.3595389147886
+  - -1.03846722631318
+  - -93.3152995787426
+  DefaultViewAzimuth: 347.8
+  DefaultViewElevation: 12.4
+3DBuoys:
+- Name: TBar connection
+  Connection: Free
+  IncludedInStatics: Yes
+  InitialPosition:
+  - 0.12622360339942562
+  - 0
+  - -90.683837842179
+  Mass: 10e-6
+  Volume: 10e-6
+  BulkModulus: Infinity
+  Height: 0.05
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+LineContactData:
+  PenetratorData: []
+  Relationships:
+  - Name: Relationship1
+    Enabled: Yes
+    PenetratingLine: Ropeway
+    PenetratingLineIs: Inside
+    SplinedLine: Tube
+    PenetratorLocations: (each node)
+    PenetratorCount: 1
+    ContainmentEnabled: Yes
+    NormalStiffness: 10e3
+    ShearStiffness: 100
+    LateralFrictionCoefficient: 0.15
+    AxialFrictionCoefficient: ~
+Groups:
+  Structure:
+    Travelling Block: Model
+    Tube: Travelling Block
+    Block connection: Travelling Block
+    TBar vertical: Travelling Block
+    TBar connection: Travelling Block
+    TBar horizontal: Travelling Block
+    Stop: Travelling Block
+    Hole: Travelling Block
+    Ropeway Set: Model
+    Platform: Ropeway Set
+    Ropeway: Ropeway Set
+    BrakeLine: Ropeway Set
+    OrcaDog: Model
+    DogBuoy: OrcaDog
+    Tail: OrcaDog
+    Ear1: OrcaDog
+    Ear2: OrcaDog
+    Nose: OrcaDog
+    Tongue1: OrcaDog
+    Tongue2: OrcaDog
+    Eye1: OrcaDog
+    Eye2: OrcaDog
+    Shades1: OrcaDog
+    Shades2: OrcaDog
+    Shades3: OrcaDog
+    Shades4: OrcaDog
+    Shades5: OrcaDog
+    Paw1: OrcaDog
+    Paw2: OrcaDog
+    Camera: Model
+  State:
+    Collapsed:
+    - Variable data

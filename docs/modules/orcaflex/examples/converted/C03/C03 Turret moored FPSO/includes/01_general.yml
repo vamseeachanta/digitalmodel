@@ -1,0 +1,86 @@
+# General Configuration
+# Generated from: C03 Turret moored FPSO.yml
+# Date: 2026-01-18 21:51:49
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  ImplicitTolerance: 1e-6
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 13
+  - 500
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 149.22602038258458
+  DefaultViewCentre:
+  - 2.638157577949474
+  - 5.382339051699933
+  - -43.18898260962379
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+ClumpTypes:
+- Name: Flange
+  Mass: 1.5789
+  Volume: 0
+  Height: 0.1
+  AlignWith: Line axes
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+FrictionCoefficients:
+  ? FrictionCoefficientLineTypeName, LineTypeFrictionCoefficientShapeName, LineTypeLateralCoefficient, LineTypeAxialCoefficient
+  : - - Dummy friction line
+      - Buoy hull
+      - 0.2
+      - ~
+Groups:
+  Structure:
+    Vessel: Model
+    Turret buoy gear: Model
+    Turret buoy: Turret buoy gear
+    Buoy hull: Turret buoy gear
+    Fore friction: Turret buoy gear
+    Aft friction: Turret buoy gear
+    Stbd friction: Turret buoy gear
+    Port friction: Turret buoy gear
+    Buoy rotation marker: Turret buoy gear
+    Turret rotation: Turret buoy gear
+    Moorings: Model
+    Leg1: Moorings
+    Leg2: Moorings
+    Leg3: Moorings
+    Risers: Model
+    10" Prod 1: Risers
+    5" GL 1: Risers
+    Umb 1: Risers
+    10" Prod 3: Risers
+    5" GL 3: Risers
+    Umb 3: Risers
+  State:
+    Collapsed: []

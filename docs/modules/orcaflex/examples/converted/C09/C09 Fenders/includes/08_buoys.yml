@@ -1,0 +1,4064 @@
+# 6DBuoys Configuration
+# Generated from: C09 Fenders.yml
+# Date: 2026-01-18 21:51:53
+6DBuoys:
+- Name: Fender Contact Face Upper 1
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Upper 1
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Fender Contact Face Upper 2
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Upper 2
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Fender Contact Face Upper 3
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Upper 3
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Fender Contact Face Upper 4
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Upper 4
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Fender Contact Face Upper 5
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Upper 5
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Fender Contact Face Upper 6
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Upper 6
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Fender Contact Face Upper 7
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Upper 7
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Fender Contact FaceLower 1
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Lower 1
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Fender Contact FaceLower 2
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Lower 2
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Fender Contact FaceLower 3
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Lower 3
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Fender Contact FaceLower 4
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Lower 4
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Fender Contact FaceLower 5
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Lower 5
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Fender Contact FaceLower 6
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Lower 6
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Fender Contact FaceLower 7
+  BuoyType: Lumped buoy
+  Connection: Fender Constraint Lower 7
+  DampingRelativeTo: Fluid
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3000000000000007
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0.3
+  Pen:
+  - 5
+  - Solid
+  - Fuchsia
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0
+    - 0
+    - 0.31
+  - - 0
+    - 0.15499999999999997
+    - 0.268467875173176
+  - - 0
+    - 0.26846787517317594
+    - 0.15500000000000003
+  - - 0
+    - 0.31
+    - 1.8982025386783976e-17
+  - - 0
+    - 0.268467875173176
+    - -0.15499999999999994
+  - - 0
+    - 0.1550000000000001
+    - -0.26846787517317594
+  - - 0
+    - 3.796405077356795e-17
+    - -0.31
+  - - 0
+    - -0.15499999999999992
+    - -0.26846787517317605
+  - - 0
+    - -0.2684678751731759
+    - -0.15500000000000014
+  - - 0
+    - -0.31
+    - -5.694607616035192e-17
+  - - 0
+    - -0.2684678751731761
+    - 0.1549999999999998
+  - - 0
+    - -0.15500000000000014
+    - 0.2684678751731759
+  - - 0
+    - 0
+    - 0.155
+  - - 0
+    - 0.07749999999999999
+    - 0.134233937586588
+  - - 0
+    - 0.13423393758658797
+    - 0.07750000000000001
+  - - 0
+    - 0.155
+    - 9.491012693391988e-18
+  - - 0
+    - 0.134233937586588
+    - -0.07749999999999997
+  - - 0
+    - 0.07750000000000005
+    - -0.13423393758658797
+  - - 0
+    - 1.8982025386783976e-17
+    - -0.155
+  - - 0
+    - -0.07749999999999996
+    - -0.13423393758658803
+  - - 0
+    - -0.13423393758658794
+    - -0.07750000000000007
+  - - 0
+    - -0.155
+    - -2.847303808017596e-17
+  - - 0
+    - -0.13423393758658805
+    - 0.0774999999999999
+  - - 0
+    - -0.07750000000000007
+    - 0.13423393758658794
+  - - 0
+    - 0
+    - 0.0775
+  - - 0
+    - 0.0775
+    - 0
+  - - 0
+    - 0
+    - -0.0775
+  - - 0
+    - -0.0775
+    - 0
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - 0.2
+  - - 2
+    - 3
+    - 0.2
+  - - 3
+    - 4
+    - 0.2
+  - - 4
+    - 5
+    - 0.2
+  - - 5
+    - 6
+    - 0.2
+  - - 6
+    - 7
+    - 0.2
+  - - 7
+    - 8
+    - 0.2
+  - - 8
+    - 9
+    - 0.2
+  - - 9
+    - 10
+    - 0.2
+  - - 10
+    - 11
+    - 0.2
+  - - 11
+    - 12
+    - 0.2
+  - - 12
+    - 1
+    - 0.2
+  - - 13
+    - 14
+    - 0.2
+  - - 14
+    - 15
+    - 0.2
+  - - 15
+    - 16
+    - 0.2
+  - - 16
+    - 17
+    - 0.2
+  - - 17
+    - 18
+    - 0.2
+  - - 18
+    - 19
+    - 0.2
+  - - 19
+    - 20
+    - 0.2
+  - - 20
+    - 21
+    - 0.2
+  - - 21
+    - 22
+    - 0.2
+  - - 22
+    - 23
+    - 0.2
+  - - 23
+    - 24
+    - 0.2
+  - - 24
+    - 13
+    - 0.2
+  - - 1
+    - 13
+    - 0.2
+  - - 2
+    - 14
+    - 0.2
+  - - 3
+    - 15
+    - 0.2
+  - - 4
+    - 16
+    - 0.2
+  - - 5
+    - 17
+    - 0.2
+  - - 6
+    - 18
+    - 0.2
+  - - 7
+    - 19
+    - 0.2
+  - - 8
+    - 20
+    - 0.2
+  - - 9
+    - 21
+    - 0.2
+  - - 10
+    - 22
+    - 0.2
+  - - 11
+    - 23
+    - 0.2
+  - - 12
+    - 24
+    - 0.2
+  - - 25
+    - 27
+    - 0.2
+  - - 26
+    - 28
+    - 0.2
+  ShadedDrawingCullingMode: Anticlockwise

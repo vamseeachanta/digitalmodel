@@ -1,0 +1,68 @@
+# Environment Configuration
+# Generated from: H03 Floating and stowed lines.yml
+# Date: 2026-01-18 21:52:07
+Environment:
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-06
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 1.025
+  SeabedType: Flat
+  SeabedOrigin:
+  - 0
+  - 0
+  WaterDepth: 50
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 100
+  SeabedDamping: 100
+  WaveTrains:
+  - Name: Wave 1
+    WaveType: Dean stream
+    WaveDirection: 200
+    WaveHeight: 13.2
+    WavePeriod: 12
+    WaveOrigin:
+    - 0
+    - 0
+    WaveTimeOrigin: 0
+    WaveStreamFunctionOrder: 5
+    WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel: ~
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  MultipleCurrentDataCanBeDefined: No
+  CurrentModel: Variation scheme
+  CurrentRamped: No
+  CurrentApplyVerticalStretching: No
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  RefCurrentSpeed: 1.67
+  RefCurrentDirection: 160
+  CurrentDepth, CurrentFactor, CurrentRotation:
+  - - 0
+    - 1
+    - 0
+  - - 10
+    - 0.581
+    - 0
+  - - 50
+    - 0
+    - 0
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: Yes
+  IncludeBuoyWingWindLoads: Yes
+  WindRamping: From mean
+  WindType: Constant
+  AirDensity: 0.00128
+  AirSpeedOfSound: 343
+  WindSpeed: 0
+  WindDirection: 0
+  VerticalWindVariationFactor: ~
+  SeaSurfaceTranslucency: 30

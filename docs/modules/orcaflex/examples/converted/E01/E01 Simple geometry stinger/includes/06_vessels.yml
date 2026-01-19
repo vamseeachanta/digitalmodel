@@ -1,0 +1,104 @@
+# Vessels Configuration
+# Generated from: E01 Simple geometry stinger.yml
+# Date: 2026-01-18 21:51:56
+Vessels:
+- Name: Vessel1
+  VesselType: Vessel Type1
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 50
+  - 0
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: None
+  PrimaryMotion: None
+  SuperimposedMotion: RAOs + harmonics
+  ImposedMotionConsistentWithSolver: No
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: No
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: No
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  SupportGeometrySpecification: Simple
+  SupportPathOriginPos:
+  - -30
+  - 0
+  - 9
+  SupportPathOriginOrientation:
+  - 180
+  - 0
+  - 0
+  SupportReleaseStage: ~
+  SupportCoordinateSystems:
+  - SupportCoordinateSystemName: Vessel Coordinate System
+    SupportCoordinateSystemPos:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystemOrientation:
+    - 180
+    - 0
+    - 0
+  - SupportCoordinateSystemName: Stinger Coordinate System
+    SupportCoordinateSystemPos:
+    - -50
+    - 0
+    - 0
+    SupportCoordinateSystemOrientation:
+    - 180
+    - 0
+    - 0
+  SupportedLine:
+  - Pipe
+  SupportPathSectionLength, SupportPathSectionBendRadius:
+  - - 20
+    - Infinity
+  - - 100
+    - 150
+  SupportType, SupportArclength, SupportzOffset:
+  - - U Support Single Section
+    - 5
+    - 1
+  - - U Support Single Section
+    - 10
+    - 1
+  - - U Support Single Section
+    - 15
+    - 1
+  - - U Support Single Section
+    - 20
+    - 1
+  - - U Support Single Section
+    - 32
+    - 1
+  - - U Support Single Section
+    - 44
+    - 1
+  - - U Support Single Section
+    - 56
+    - 1
+  - - U Support Single Section
+    - 68
+    - 1
+  - - U Support Single Section
+    - 80
+    - 1
+  - - U Support Single Section
+    - 92
+    - 1
+  - - U Support Single Section
+    - 104
+    - 1
+  ShadedDrawingCullingMode: Anticlockwise

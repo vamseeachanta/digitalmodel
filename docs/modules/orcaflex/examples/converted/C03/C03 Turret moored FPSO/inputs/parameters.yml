@@ -1,0 +1,14 @@
+# Input Parameters for Parametric Analysis
+# Source: C03 Turret moored FPSO.yml
+# Generated: 2026-01-18 21:51:49
+
+current_speed: 2
+wind_speed: 0
+water_density: 1.025
+stage_durations:
+- 13
+- 500
+hs: 5
+tp: 13
+wave_direction: 120
+

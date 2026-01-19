@@ -1,0 +1,85 @@
+# LineTypes Configuration
+# Generated from: K02 10MW fixed-bottom OWT.yml
+# Date: 2026-01-18 21:52:10
+LineTypes:
+- Name: Tower line type
+  Category: Homogeneous pipe
+  OD: Tower OD
+  ID: Tower ID
+  MaterialDensity: 8.5
+  E: 210e6
+  PoissonRatio: 0.3
+  ExpansionTable: None
+  Cdn: 1
+  Cdz: 0.008
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0
+  LiningThickness: 0
+  AdditionalEI: 0
+  Pen:
+  - 5
+  - Solid
+  - White
+- Name: Monopile (above mudline) line type
+  Category: Homogeneous pipe
+  OD: 9
+  ID: Monopile ID
+  MaterialDensity: 8.5
+  E: 210e6
+  PoissonRatio: 0.3
+  ExpansionTable: None
+  Cdn: 1
+  Cdz: 0.008
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0
+  LiningThickness: 0
+  AdditionalEI: 0
+  Pen:
+  - 5
+  - Solid
+  - Gray
+- Name: Monopile (below mudline) line type
+  Category: Homogeneous pipe
+  OD: 9
+  ID: 8.8
+  MaterialDensity: 8.5
+  E: 210e6
+  PoissonRatio: 0.3
+  ExpansionTable: None
+  Cdn: 1
+  Cdz: 0.008
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0
+  LiningThickness: 0
+  AdditionalEI: 0
+  Pen:
+  - 5
+  - Solid
+  - Gray

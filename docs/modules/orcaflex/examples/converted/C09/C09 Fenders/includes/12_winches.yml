@@ -1,0 +1,96 @@
+# Winches Configuration
+# Generated from: C09 Fenders.yml
+# Date: 2026-01-18 21:51:53
+Winches:
+- Name: Mooring line 1
+  WinchType: Simple
+  Connection, ConnectionX, ConnectionY, ConnectionZ:
+  - - Barge
+    - -43.868073955378165
+    - -7.9559961297647
+    - 6.682604807835402
+  - - Fixed
+    - -32.504931484233936
+    - 53.556508183337115
+    - 4.9803039367192
+  Stiffness: 252.50000000000003e3
+  Damping: 0.01
+  ReleaseStage: ~
+  WinchControlType: By stage
+  StageMode, StageValue:
+  - - Specified tension
+    - 1.3685337
+  - - Specified payout
+    - 0
+  - - Specified payout
+    - 0
+  Hidden: Yes
+- Name: Mooring line 2
+  WinchType: Simple
+  Connection, ConnectionX, ConnectionY, ConnectionZ:
+  - - Barge
+    - 34.51318248795226
+    - -7.674430936458884
+    - 6.7533468611419964
+  - - Fixed
+    - -30.371443877382166
+    - -50.44101815144264
+    - 4.977831371561449
+  Stiffness: 252.50000000000003e3
+  Damping: 0.01
+  ReleaseStage: ~
+  WinchControlType: By stage
+  StageMode, StageValue:
+  - - Specified tension
+    - 2.38683882
+  - - Specified payout
+    - 0
+  - - Specified payout
+    - 0
+  Hidden: Yes
+- Name: Mooring line 3
+  WinchType: Simple
+  Connection, ConnectionX, ConnectionY, ConnectionZ:
+  - - Barge
+    - -43.628182060564896
+    - -7.901474910287413
+    - 6.753346861141997
+  - - Fixed
+    - -32.52474419938998
+    - 51.890042345232324
+    - 4.99272126983564
+  Stiffness: 252.50000000000003e3
+  Damping: 0.01
+  ReleaseStage: ~
+  WinchControlType: By stage
+  StageMode, StageValue:
+  - - Specified tension
+    - 1.356521799
+  - - Specified payout
+    - 0
+  - - Specified payout
+    - 0
+  Hidden: Yes
+- Name: Mooring line 4
+  WinchType: Simple
+  Connection, ConnectionX, ConnectionY, ConnectionZ:
+  - - Barge
+    - 34.591637591246105
+    - -7.782962496367227
+    - 6.742823714049635
+  - - Fixed
+    - -30.380711579544734
+    - -35.750308709860775
+    - 4.999892742552781
+  Stiffness: 252.50000000000003e3
+  Damping: 0.01
+  ReleaseStage: ~
+  WinchControlType: By stage
+  StageMode, StageValue:
+  - - Specified tension
+    - 1.329451312
+  - - Specified payout
+    - 0
+  - - Specified payout
+    - 0
+  Hidden: Yes

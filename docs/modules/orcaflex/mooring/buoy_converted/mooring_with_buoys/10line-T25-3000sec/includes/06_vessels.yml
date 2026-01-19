@@ -1,0 +1,59 @@
+# Vessels Configuration
+# Generated from: 10line-T25-3000sec.yml
+# Date: 2026-01-18 21:53:18
+Vessels:
+- Name: Vessel
+  VesselType: Vessel TypeA
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - -5.527545484305804
+  - 4.672083328539948
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: 3 DOF
+  PrimaryMotion: Calculated (3 DOF)
+  SuperimposedMotion: RAOs + harmonics
+  IncludeAppliedLoads: Yes
+  IncludeWaveLoad1stOrder: No
+  IncludeWaveDriftLoad2ndOrder: Yes
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: Yes
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: Yes
+  IncludeWindLoad: Yes
+  PrimaryMotionIsTreatedAs: Low frequency
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Subtraction, legacy
+  GlobalAppliedLoads:
+  - Origin:
+    - 0
+    - 0
+    - 0
+    Force:
+    - 0
+    - 0
+    - 0
+    Moment:
+    - 0
+    - 0
+    - 0
+  LocalAppliedLoads:
+  - Origin:
+    - 0
+    - 0
+    - 0
+    Force:
+    - 0
+    - 0
+    - 0
+    Moment:
+    - 0
+    - 0
+    - 0

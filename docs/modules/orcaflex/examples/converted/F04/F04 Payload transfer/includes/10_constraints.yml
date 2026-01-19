@@ -1,0 +1,243 @@
+# Constraints Configuration
+# Generated from: F04 Payload transfer.yml
+# Date: 2026-01-18 21:52:04
+Constraints:
+- Name: Slew Constraint
+  InFrameConnection: Offloading Vessel
+  InFrameInitialPosition:
+  - -30.000002540047873
+  - -1.8369703542541047e-15
+  - 4
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Imposed motion
+  SolutionMethod: Direct
+  ImposedModelType: Time history
+  ImposedMotionConsistentWithSolver: Yes
+  TimeHistoryDataSource: Internal
+  TimeHistoryInterpolation: Linear
+  TimeHistoryTimeOrigin: 0
+  TimeHistoryMinSampleInterval: 0
+  TimeHistoryRampingMode: Full
+  ? TimeHistoryDataTime, TimeHistoryDatax, TimeHistoryDatay, TimeHistoryDataz, TimeHistoryDataRx, TimeHistoryDataRy, TimeHistoryDataRz
+  : - - -10
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 20
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 40
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 90
+    - - 140
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 90
+  Hidden: Yes
+  OutFrameAxesPen:
+  - 1
+  - Dot
+  - $D8D8D8
+- Name: Luff Constraint 1
+  InFrameConnection: Slew Constraint
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 10
+  InFrameInitialAttitude:
+  - 0
+  - 40.00000000000001
+  - 0
+  ConstraintType: Imposed motion
+  SolutionMethod: Direct
+  ImposedModelType: Time history
+  ImposedMotionConsistentWithSolver: Yes
+  TimeHistoryDataSource: Internal
+  TimeHistoryInterpolation: Linear
+  TimeHistoryTimeOrigin: 0
+  TimeHistoryMinSampleInterval: 0
+  TimeHistoryRampingMode: Full
+  ? TimeHistoryDataTime, TimeHistoryDatax, TimeHistoryDatay, TimeHistoryDataz, TimeHistoryDataRx, TimeHistoryDataRy, TimeHistoryDataRz
+  : - - -10
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 20
+      - 0
+      - 0
+      - 0
+      - 0
+      - -20
+      - 0
+    - - 35
+      - 0
+      - 0
+      - 0
+      - 0
+      - -20
+      - 0
+    - - 55
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 140
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+  Hidden: Yes
+  InFrameAxesPen:
+  - 1
+  - Solid
+  - $0080FF
+  OutFrameLabelsDrawn: Yes
+  OutFrameAxesPen:
+  - 1
+  - Dot
+  - $80BFFF
+- Name: Luff Constraint 2
+  InFrameConnection: Luff Constraint 1
+  InFrameInitialPosition:
+  - 1.7763568394002505e-15
+  - 0
+  - 20
+  InFrameInitialAttitude:
+  - 0
+  - 89.99999999999999
+  - 0
+  ConstraintType: Imposed motion
+  SolutionMethod: Direct
+  ImposedModelType: Time history
+  ImposedMotionConsistentWithSolver: Yes
+  TimeHistoryDataSource: Internal
+  TimeHistoryInterpolation: Linear
+  TimeHistoryTimeOrigin: 0
+  TimeHistoryMinSampleInterval: 0
+  TimeHistoryRampingMode: Full
+  ? TimeHistoryDataTime, TimeHistoryDatax, TimeHistoryDatay, TimeHistoryDataz, TimeHistoryDataRx, TimeHistoryDataRy, TimeHistoryDataRz
+  : - - -10
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 35
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 60
+      - 0
+      - 0
+      - 0
+      - 0
+      - -40
+      - 0
+    - - 140
+      - 0
+      - 0
+      - 0
+      - 0
+      - -40
+      - 0
+  Hidden: Yes
+  InFrameAxesPen:
+  - 1
+  - Solid
+  - Lime
+  OutFrameAxesPen:
+  - 1
+  - Dot
+  - $6AFF6A
+- Name: Extension Constraint
+  InFrameConnection: Luff Constraint 2
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Imposed motion
+  SolutionMethod: Direct
+  ImposedModelType: Time history
+  ImposedMotionConsistentWithSolver: Yes
+  TimeHistoryDataSource: Internal
+  TimeHistoryInterpolation: Linear
+  TimeHistoryTimeOrigin: 0
+  TimeHistoryMinSampleInterval: 0
+  TimeHistoryRampingMode: Full
+  ? TimeHistoryDataTime, TimeHistoryDatax, TimeHistoryDatay, TimeHistoryDataz, TimeHistoryDataRx, TimeHistoryDataRy, TimeHistoryDataRz
+  : - - -10
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 60
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 75
+      - 0
+      - 0
+      - 7
+      - 0
+      - 0
+      - 0
+    - - 140
+      - 0
+      - 0
+      - 7
+      - 0
+      - 0
+      - 0
+  Hidden: Yes
+  InFrameAxesPen:
+  - 1
+  - Solid
+  - $C08000
+  OutFrameAxesPen:
+  - 1
+  - Dot
+  - $FFBB2F

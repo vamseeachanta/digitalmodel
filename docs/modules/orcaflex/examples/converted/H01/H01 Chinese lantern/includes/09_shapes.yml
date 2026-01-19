@@ -1,0 +1,60 @@
+# Shapes Configuration
+# Generated from: H01 Chinese lantern.yml
+# Date: 2026-01-18 21:52:06
+Shapes:
+- Name: Base1
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Anchored
+  Origin:
+  - -11.682408883346517
+  - -52.2403876506104
+  - 3.552713678800501e-15
+  Size:
+  - 6
+  - 6
+  - 2.4
+  Orientation:
+  - 0
+  - 0
+  - 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  NumberOfLines: 2
+  ShadedDrawingFileName: '%ApplicationFolder%\Shaded Drawing Samples\Subsea Template\Subsea Template.x'
+  ShadedDrawingDrawSize: 11
+  ShadedDrawingCullingMode: Anticlockwise
+  ShadedDrawingOrigin:
+  - 3
+  - 3
+  - 0
+- Name: Base
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Anchored
+  Origin:
+  - -3
+  - -3
+  - 0
+  Size:
+  - 6
+  - 6
+  - 2.4
+  Orientation:
+  - 0
+  - 0
+  - 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  NumberOfLines: 2
+  ShadedDrawingFileName: '%ApplicationFolder%\Shaded Drawing Samples\Subsea Template\Subsea Template.x'
+  ShadedDrawingDrawSize: 11
+  ShadedDrawingCullingMode: Anticlockwise
+  ShadedDrawingOrigin:
+  - 3
+  - 3
+  - 0

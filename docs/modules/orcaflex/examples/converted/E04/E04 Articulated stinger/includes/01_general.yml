@@ -1,0 +1,193 @@
+# General Configuration
+# Generated from: E04 Articulated stinger.yml
+# Date: 2026-01-18 21:51:59
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: None
+  WholeSystemStaticsEnabled: Yes
+  StaticsMinDamping: 3
+  StaticsMaxDamping: 30
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 8
+  - 300
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 63.50145533894011
+  DefaultViewCentre:
+  - -32.31740647032274
+  - 0
+  - -0.06058235531055403
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+SupportTypes:
+- Name: Support Type1
+  Geometry: V shaped
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  Diameter: 0.2
+  VSupportLength: 1
+  VSupportAngle: 30
+Groups:
+  Structure:
+    Vessel1: Model
+    Pipe: Model
+    Stinger: Model
+    Section1: Stinger
+    Box1_6D Buoy: Section1
+    Port Side1: Section1
+    Box1_Line14: Port Side1
+    Box1_Line15: Port Side1
+    Box1_Line16: Port Side1
+    Box1_Line17: Port Side1
+    Box1_Line18: Port Side1
+    Box1_Line19: Port Side1
+    Box1_Line20: Port Side1
+    Box1_Line21: Port Side1
+    Box1_Line22: Port Side1
+    Box1_Line23: Port Side1
+    Box1_Line24: Port Side1
+    Box1_Line25: Port Side1
+    Box1_Line26: Port Side1
+    Stb Side1: Section1
+    Box1_Line1: Stb Side1
+    Box1_Line2: Stb Side1
+    Box1_Line3: Stb Side1
+    Box1_Line4: Stb Side1
+    Box1_Line5: Stb Side1
+    Box1_Line6: Stb Side1
+    Box1_Line7: Stb Side1
+    Box1_Line8: Stb Side1
+    Box1_Line9: Stb Side1
+    Box1_Line10: Stb Side1
+    Box1_Line11: Stb Side1
+    Box1_Line12: Stb Side1
+    Box1_Line13: Stb Side1
+    Cross Braces: Section1
+    Box1_Line27: Cross Braces
+    Box1_Line28: Cross Braces
+    Box1_Line29: Cross Braces
+    Box1_Line30: Cross Braces
+    Box1_Line31: Cross Braces
+    Box1_Line32: Cross Braces
+    Box1_Line33: Cross Braces
+    Section2: Stinger
+    Box2_6D Buoy: Section2
+    Port Side2: Section2
+    Box2_Line48: Port Side2
+    Box2_Line49: Port Side2
+    Box2_Line50: Port Side2
+    Box2_Line51: Port Side2
+    Box2_Line52: Port Side2
+    Box2_Line53: Port Side2
+    Box2_Line54: Port Side2
+    Box2_Line55: Port Side2
+    Box2_Line56: Port Side2
+    Box2_Line57: Port Side2
+    Box2_Line58: Port Side2
+    Box2_Line59: Port Side2
+    Box2_Line60: Port Side2
+    Stb Side2: Section2
+    Box2_Line61: Stb Side2
+    Box2_Line36: Stb Side2
+    Box2_Line37: Stb Side2
+    Box2_Line38: Stb Side2
+    Box2_Line39: Stb Side2
+    Box2_Line40: Stb Side2
+    Box2_Line41: Stb Side2
+    Box2_Line42: Stb Side2
+    Box2_Line43: Stb Side2
+    Box2_Line44: Stb Side2
+    Box2_Line45: Stb Side2
+    Box2_Line46: Stb Side2
+    Box2_Line47: Stb Side2
+    Cross Braces2: Section2
+    Box1_Line34_Hinge: Cross Braces2
+    Box2_Line62: Cross Braces2
+    Box2_Line68_Hinge: Cross Braces2
+    Box2_Line64: Cross Braces2
+    Box2_Line65: Cross Braces2
+    Box2_Line66: Cross Braces2
+    Box2_Line67: Cross Braces2
+    Box2_Line63: Cross Braces2
+    Section3: Stinger
+    Box3_6D Buoy: Section3
+    Port Side3: Section3
+    Box3_Line82: Port Side3
+    Box3_Line83: Port Side3
+    Box3_Line84: Port Side3
+    Box3_Line85: Port Side3
+    Box3_Line86: Port Side3
+    Box3_Line87: Port Side3
+    Box3_Line88: Port Side3
+    Box3_Line89: Port Side3
+    Box3_Line90: Port Side3
+    Box3_Line91: Port Side3
+    Box3_Line92: Port Side3
+    Box3_Line93: Port Side3
+    Box3_Line94: Port Side3
+    Stb Side3: Section3
+    Box3_Line95: Stb Side3
+    Box3_Line70: Stb Side3
+    Box3_Line71: Stb Side3
+    Box3_Line72: Stb Side3
+    Box3_Line73: Stb Side3
+    Box3_Line74: Stb Side3
+    Box3_Line75: Stb Side3
+    Box3_Line76: Stb Side3
+    Box3_Line77: Stb Side3
+    Box3_Line78: Stb Side3
+    Box3_Line79: Stb Side3
+    Box3_Line80: Stb Side3
+    Box3_Line81: Stb Side3
+    Cross Braces3: Section3
+    Box3_Line96: Cross Braces3
+    Box3_Line97: Cross Braces3
+    Box3_Line98: Cross Braces3
+    Box3_Line99: Cross Braces3
+    Box3_Line100: Cross Braces3
+    Box3_Line101: Cross Braces3
+    Box3_Line102: Cross Braces3
+    Stinger Hinges: Stinger
+    Main Stinger Hinge: Stinger Hinges
+    Section1 to Section2 Hinge: Stinger Hinges
+    Section2 to Section3 Hinge: Stinger Hinges
+    Roller Boxes: Model
+    Roller Box1: Roller Boxes
+    Roller Box2: Roller Boxes
+    Roller Box3: Roller Boxes
+    Roller Box4: Roller Boxes
+    Roller Box5: Roller Boxes
+    Roller Box6: Roller Boxes
+    Roller Box Hinges: Roller Boxes
+    Roller Box Hinge1: Roller Box Hinges
+    Roller Box Hinge2: Roller Box Hinges
+    Roller Box Hinge3: Roller Box Hinges
+    Roller Box Hinge4: Roller Box Hinges
+    Roller Box Hinge5: Roller Box Hinges
+    Roller box Hinge6: Roller Box Hinges
+  State:
+    Collapsed:
+    - Port Side1
+    - Stb Side1
+    - Cross Braces
+    - Section2
+    - Port Side2
+    - Section3
+    - Port Side3

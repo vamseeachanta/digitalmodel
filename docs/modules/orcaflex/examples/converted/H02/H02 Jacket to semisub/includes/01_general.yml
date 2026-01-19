@@ -1,0 +1,52 @@
+# General Configuration
+# Generated from: H02 Jacket to semisub.yml
+# Date: 2026-01-18 21:52:07
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: None
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.01
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.01
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 60
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 126.22950819672131
+  DefaultViewCentre:
+  - 42.07650273224044
+  - -7.72907288887894e-15
+  - -24.644808743169403
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+FrictionCoefficients:
+  ? FrictionCoefficientLineTypeName, LineTypeFrictionCoefficientShapeName, LineTypeLateralCoefficient, LineTypeAxialCoefficient
+  : - - 60mm cable
+      - Structure Shape
+      - 0.4
+      - ~
+Groups:
+  Structure:
+    Platform: Model
+    Semisub: Model
+    Cable: Model
+    Pontoon Contact Shape: Model
+    Structure Shape: Model
+  State:
+    Collapsed:
+    - Variable data

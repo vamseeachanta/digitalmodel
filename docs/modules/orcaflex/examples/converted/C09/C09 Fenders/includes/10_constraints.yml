@@ -1,0 +1,396 @@
+# Constraints Configuration
+# Generated from: C09 Fenders.yml
+# Date: 2026-01-18 21:51:53
+Constraints:
+- Name: Fender Constraint Upper 1
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - -30
+  - 4
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Fender Constraint Upper 2
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - -20
+  - 4
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Fender Constraint Upper 3
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - -10
+  - 4
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Fender Constraint Upper 4
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - 0
+  - 4
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Fender Constraint Upper 5
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - 10
+  - 4
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Fender Constraint Upper 6
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - 20
+  - 4
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Fender Constraint Upper 7
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - 30
+  - 4
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Fender Constraint Lower 1
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - -30
+  - 1.5
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Fender Constraint Lower 2
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - -20
+  - 1.5
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Fender Constraint Lower 3
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - -10
+  - 1.5
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Fender Constraint Lower 4
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - 0
+  - 1.5
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Fender Constraint Lower 5
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - 10
+  - 1.5
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Fender Constraint Lower 6
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - 20
+  - 1.5
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Fender Constraint Lower 7
+  InFrameConnection: Fixed
+  InFrameInitialPosition:
+  - -20.3
+  - 30
+  - 1.5
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: Fender non-linear stiffness
+  RotationalStiffness: 0
+  TranslationalDamping: Fender non-linear damping
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No

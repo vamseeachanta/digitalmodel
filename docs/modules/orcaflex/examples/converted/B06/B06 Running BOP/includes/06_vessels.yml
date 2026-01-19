@@ -1,0 +1,35 @@
+# Vessels Configuration
+# Generated from: B06 Running BOP.yml
+# Date: 2026-01-18 21:51:48
+Vessels:
+- Name: Semisub
+  VesselType: Semi Sub
+  Draught: Operational
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 0
+  - 0
+  - -2.80730007562608
+  Orientation:
+  - 0
+  - 0
+  - 30
+  IncludedInStatics: None
+  PrimaryMotion: None
+  SuperimposedMotion: RAOs + harmonics
+  ImposedMotionConsistentWithSolver: No
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: No
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: No
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  PenMode: Use vessel type's own pen
+  ShadedDrawingCullingMode: Anticlockwise

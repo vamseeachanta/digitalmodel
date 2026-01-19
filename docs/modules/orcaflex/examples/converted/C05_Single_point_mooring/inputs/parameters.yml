@@ -1,0 +1,13 @@
+# Input Parameters for Parametric Analysis
+# Source: C05 Single point mooring.yml
+# Generated: 2026-01-18 21:48:09
+
+water_depth: 220
+current_speed: 1
+wind_speed: 35
+water_density: 1.025
+stage_durations:
+- 100
+- 3600
+wave_direction: 180
+

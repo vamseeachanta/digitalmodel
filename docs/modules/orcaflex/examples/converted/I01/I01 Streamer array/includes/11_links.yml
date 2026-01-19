@@ -1,0 +1,25 @@
+# Links Configuration
+# Generated from: I01 Streamer array.yml
+# Date: 2026-01-18 21:52:08
+Links:
+- Name: Link A
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Gun Umbilical
+    - 0
+    - 0
+    - 70
+    - End A
+  - - Leader B
+    - 0
+    - 0
+    - 70
+    - End A
+  ReleaseStage: ~
+  UnstretchedLength: 10
+  Stiffness: 100
+  Pen:
+  - 1
+  - Solid
+  - $C0FF00
+  ShadedDrawingDiameter: 0.02

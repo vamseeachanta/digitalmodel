@@ -1,0 +1,338 @@
+# Lines Configuration
+# Generated from: D04 J-tube pull in.yml
+# Date: 2026-01-18 21:51:55
+Lines:
+- Name: Riser
+  IncludeTorsion: No
+  TopEnd: End B
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Fixed
+      - 43
+      - 0
+      - -37
+      - 0
+      - 0
+      - 0
+      - ~
+    - - Vessel1
+      - -9.036645014416997
+      - -0.08959558
+      - 6.83213973
+      - 180
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - -0.1
+      - 0.001
+      - Yes
+      - Yes
+    - - 255
+      - 0.1
+      - 0.001
+      - Yes
+      - Yes
+  LineType, Length, TargetSegmentLength:
+  - - Wire
+    - 88
+    - 1
+  - - Pullhead
+    - 2
+    - 1
+  - - Riser Props
+    - 40
+    - 1
+  - - Riser Props
+    - 90
+    - 2
+  - - Riser Props
+    - 7
+    - 1
+  - - Riser Props
+    - 70
+    - 1
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Spline
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 180
+  AsLaidTension: 0
+  SplineOrder: 3
+  SplineControlPointX, SplineControlPointY, SplineControlPointZ:
+  - - 43
+    - 0
+    - -37
+  - - 40.013905219906384
+    - 0.005519188269692905
+    - -65.56481189532062
+  - - 41.325706945928864
+    - 0.011936217530860063
+    - -93.56051282983069
+  - - 39.65598979096804
+    - 0.009758579173084406
+    - -116.6728315787459
+  - - 4.788281252202175
+    - -0.005946790106439019
+    - -117.52304212133032
+  - - -14.761658565466668
+    - -0.02006458974992078
+    - -112.27083921803043
+  - - -25.76573149906764
+    - -0.045259909362704166
+    - -1.6368100730296788
+  - - -31.129514165611468
+    - -0.059674389744153254
+    - 14.936997758858872
+  - - -51.79282876
+    - -0.08959558
+    - 6.83213973
+  FullStaticsConvergenceControlMethod: Mag. of std. error / change
+  FullStaticsMinDamping: 3
+  FullStaticsMaxDamping: 30
+  FullStaticsMagOfStdChange: 0.05
+  DrawShadedNodesAsSpheres: Yes
+- Name: J Tube
+  IncludeTorsion: Yes
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Fixed
+      - 43
+      - 0
+      - -38
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Free
+      - 34.542811477920196
+      - 4.3768970776568536e-06
+      - -113.2533438854182
+      - 179.999985396241
+      - 134.77622888004223
+      - 179.9999900428768
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - Infinity
+    - ~
+    - Infinity
+  - []
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength, PreBendCurvaturex, PreBendCurvaturey:
+  - - J Tube Line
+    - 10
+    - 2
+    - 0
+    - 0
+  - - J Tube Line
+    - 5
+    - 1
+    - 0
+    - 0.157
+  - - J Tube Line
+    - 5
+    - 1
+    - 0
+    - -0.157
+  - - J Tube Line
+    - 50
+    - 2
+    - 0
+    - 0
+  - - J Tube Line
+    - 3
+    - 1
+    - 0
+    - 0.26
+  - - J Tube Line
+    - 5
+    - 1
+    - 0
+    - 0
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Free flooding
+  IncludeAxialContentsInertia: Yes
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  FullStaticsMinDamping: 2
+- Name: Tower
+  IncludeTorsion: Yes
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Fixed
+      - 46
+      - 0
+      - -55
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Fixed
+      - 46
+      - 0
+      - -120
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - Infinity
+    - ~
+    - Infinity
+  - - Infinity
+    - ~
+    - Infinity
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Tower LineType
+    - 65
+    - 5
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Free flooding
+  IncludeAxialContentsInertia: Yes
+  IncludedInStatics: Yes
+  StaticsStep1: User specified
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  StartingShapeOrientationsSpecified: Yes
+  StartingShapeX, StartingShapeY, StartingShapeZ, StartingShapeAzm, StartingShapeDec, StartingShapeGamma:
+  - - 46
+    - 0
+    - -55
+    - 0
+    - 180
+    - 0
+  - - 45.999941791462795
+    - 8.462227105662631e-10
+    - -60.00005020617562
+    - 179.99913679390738
+    - 179.9989019335701
+    - 179.9991368074089
+  - - 45.99980834937954
+    - 2.887374506431359e-09
+    - -65.00009202774167
+    - 179.9990899752936
+    - 179.99827577880848
+    - 179.99909000229664
+  - - 45.999640831767316
+    - 5.625964267457306e-09
+    - -70.00012544677526
+    - 179.99904632911287
+    - 179.99802115582867
+    - 179.9990463682184
+  - - 45.99946297386337
+    - 8.636046072522064e-09
+    - -75.0001504820018
+    - 179.99901816098784
+    - 179.99803879124403
+    - 179.99901821219584
+  - - 45.99929853521144
+    - 1.149166761841187e-08
+    - -80.00016713418242
+    - 179.99899219587405
+    - 179.99832869779806
+    - 179.9989922591845
+  - - 45.999171275891094
+    - 1.3766864519940163e-08
+    - -85.00017540388696
+    - 179.99895104114665
+    - 179.9988908780381
+    - 179.99895111655954
+  - - 45.99910497742859
+    - 1.503565944708484e-08
+    - -90.0001753069096
+    - 179.99876731945554
+    - 179.9996404771442
+    - 179.99876740218372
+  - - 45.99910852737795
+    - 1.5116853285227018e-08
+    - -95.00016682683783
+    - 359.9991945213472
+    - 179.99950830939255
+    - -0.0008053886093429486
+  - - 45.999190792620674
+    - 1.3829243966091694e-08
+    - -100.00014996255088
+    - 359.9990624916555
+    - 179.99855549825097
+    - -0.0009374109857322072
+  - - 45.9993606397367
+    - 1.0991633517655509e-08
+    - -105.00012471250919
+    - 359.99902702397753
+    - 179.9975010758562
+    - -0.000972871348412919
+  - - 45.99962752589607
+    - 6.422850244813322e-09
+    - -110.00009152108481
+    - 359.9990162214585
+    - 179.9970328850028
+    - -0.0009837087587917853
+  - - 45.999878495086875
+    - 2.0999629804908352e-09
+    - -115.00004994683707
+    - 359.9990120106036
+    - 179.99786586165195
+    - -0.0009879545050205517
+  - - 46
+    - 0
+    - -120
+    - 0
+    - 180
+    - 0

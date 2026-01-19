@@ -1,0 +1,102 @@
+# CALM Buoy Mooring System Configuration Template
+# This file defines the parametric inputs for generating CALM buoy models
+
+model_name: "CALM_Buoy_Mooring"
+description: "Catenary Anchor Leg Mooring buoy system template"
+
+# Buoy Configuration
+buoy:
+  type: CALM_12m_100m           # Reference from buoys.csv
+  diameter: 12.0                # m
+  height: 4.5                   # m (draft will be calculated)
+  mass: 95000                   # kg
+  initial_position: [0, 0, 0]   # [x, y, z] in m (z=0 at water surface)
+
+# Mooring Leg Configuration
+mooring:
+  num_legs: 6                   # Typically 6-8 for CALM buoys
+  leg_arrangement: symmetric    # symmetric | asymmetric
+
+  # Chain specifications
+  chain:
+    type: Studless_Chain_R4_84mm
+    diameter: 0.084             # m
+    grade: R4                   # R3, R4, R5
+    length_per_leg: 800         # m
+
+  # Anchor configuration
+  anchor:
+    type: drag_embedment        # drag_embedment | suction_pile | gravity
+    radius: 750                 # m from buoy center
+    holding_capacity: 2000      # kN
+
+  # Connection hardware
+  connector:
+    top: SWIVEL_200T            # Reference from connectors.csv
+    bottom: SHACKLE_200T        # Reference from connectors.csv
+
+# Hawser Configuration (tanker connection)
+hawser:
+  type: HMPE_Rope_80mm
+  diameter: 0.08                # m
+  length: 80                    # m
+  pretension: 50                # kN
+  connection:
+    buoy_side: HAWSER_CONN_150T # Reference from connectors.csv
+    vessel_side: QUICK_RELEASE_100T
+
+# Environment
+environment:
+  region: west_africa           # west_africa | gulf_of_mexico | north_sea | offshore_brazil
+  water_depth: 100              # m
+
+  # Wave conditions (for parametric studies)
+  wave:
+    type: JONSWAP
+    hs: 3.5                     # m, significant wave height
+    tp: 12.0                    # s, peak period
+    gamma: 3.3                  # JONSWAP peakedness
+    direction: 180              # deg from North
+
+  # Current
+  current:
+    surface_speed: 1.2          # m/s
+    direction: 120              # deg from North
+    profile: linear             # linear | power_law | custom
+
+  # Wind
+  wind:
+    speed: 12                   # m/s at 10m
+    direction: 165              # deg from North
+    type: NPD                   # constant | NPD | API
+
+# Vessel Configuration (for tanker mooring)
+vessel:
+  enabled: Yes
+  type: Tanker_Aframax
+  draft: ballast                # ballast | laden | intermediate
+  initial_offset:
+    x: -90                      # m from buoy (negative = downwind)
+    y: 130                      # m from buoy
+    heading: -55                # deg
+
+# Analysis Settings
+analysis:
+  static:
+    enabled: Yes
+    min_damping: 1.5
+
+  dynamic:
+    enabled: Yes
+    duration: 3600              # s (1 hour)
+    timestep: 0.1               # s
+    ramp_time: 100              # s
+
+  stages:
+    - duration: 10              # Build-up stage
+    - duration: 100             # Analysis stage
+
+# Output Settings
+output:
+  log_interval: 0.1             # s
+  precision: Single

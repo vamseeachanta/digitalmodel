@@ -1,0 +1,60 @@
+# VariableData Configuration
+# Generated from: K03 15MW semi-sub FOWT.yml
+# Date: 2026-01-18 21:52:14
+VariableData:
+  Externalfunctions:
+  - Name: Controller
+    Source: External file
+    FileName: BladedControllerWrapper.dll
+    FunctionName: BladedController
+    InitialValue: 0
+    TimeStep: Outer time step
+  Linetypediameter:
+  - Name: Tower ID
+    IndependentValue, DependentValue:
+    - - 0
+      - 6.4881
+    - - 12.386
+      - 9.9801
+    - - 25.386
+      - 9.9802
+    - - 38.386
+      - 9.9488
+    - - 51.386
+      - 9.9437
+    - - 64.386
+      - 9.9088
+    - - 77.386
+      - 9.9021
+    - - 90.386
+      - 9.8668
+    - - 103.386
+      - 9.8606
+    - - 116.386
+      - 9.8259
+    - - 129.386
+      - 9.82
+  - Name: Tower OD
+    IndependentValue, DependentValue:
+    - - 0
+      - 6.5
+    - - 12.386
+      - 10
+    - - 25.386
+      - 10
+    - - 38.386
+      - 10
+    - - 51.386
+      - 10
+    - - 64.386
+      - 10
+    - - 77.386
+      - 10
+    - - 90.386
+      - 10
+    - - 103.386
+      - 10
+    - - 116.386
+      - 10
+    - - 129.386
+      - 10

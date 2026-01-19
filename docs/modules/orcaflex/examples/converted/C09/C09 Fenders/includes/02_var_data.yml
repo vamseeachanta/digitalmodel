@@ -1,0 +1,71 @@
+# VariableData Configuration
+# Generated from: C09 Fenders.yml
+# Date: 2026-01-18 21:51:53
+VariableData:
+  Constrainttranslationalstiffness:
+  - Name: Fender non-linear stiffness
+    IndependentValue, DependentValue:
+    - - -0.5
+      - -14e3
+    - - -0.45
+      - -11.3e3
+    - - -0.4
+      - -8870
+    - - -0.35
+      - -6750
+    - - -0.3
+      - -4910
+    - - -0.25
+      - -3360
+    - - -0.2
+      - -2110
+    - - -0.15
+      - -1150
+    - - -0.1
+      - -473
+    - - -0.05
+      - -90.9
+    - - 0
+      - 0
+    - - 0.05
+      - 90.9
+    - - 0.1
+      - 473
+    - - 0.15
+      - 1150
+    - - 0.2
+      - 2110
+    - - 0.25
+      - 3360
+    - - 0.3
+      - 4910
+    - - 0.35
+      - 6750
+    - - 0.4
+      - 8870
+    - - 0.45
+      - 11.3e3
+    - - 0.5
+      - 14e3
+    Hysteretic: No
+  Constrainttranslationaldamping:
+  - Name: Fender non-linear damping
+    IndependentValue, DependentValue:
+    - - -1
+      - -0.8
+    - - -0.8
+      - -0.48
+    - - -0.6
+      - -0.3
+    - - -0.4
+      - -0.08
+    - - 0
+      - 0
+    - - 0.4
+      - 0.08
+    - - 0.6
+      - 0.3
+    - - 0.8
+      - 0.48
+    - - 1
+      - 0.8

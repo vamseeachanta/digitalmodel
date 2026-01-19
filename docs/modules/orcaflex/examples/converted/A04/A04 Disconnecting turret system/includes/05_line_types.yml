@@ -1,0 +1,620 @@
+# LineTypes Configuration
+# Generated from: A04 Disconnecting turret system.yml
+# Date: 2026-01-18 21:51:46
+LineTypes:
+- Name: 10"Product
+  Category: General
+  OD: 0.3556
+  ID: 0.254
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.1842262
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.85
+  - ~
+  EI:
+  - 124.86942768
+  - ~
+  EA: 711.2e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Red
+- Name: 10"P+Buoys
+  Category: General
+  OD: 0.80097534061659
+  ID: 0.254
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.354673511646561
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.85
+  - ~
+  EI:
+  - 124.86942768
+  - ~
+  EA: 711.2e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 1.18
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0.558450154888133
+  - ~
+  - 0.441549845111868
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 10"P+Buoys drag
+  - ~
+  - 0.202386788720375
+  Cl: 0
+  NormalDragLiftDiameter: 0.3556
+  AxialDragLiftDiameter: 0.3556
+  StressOD: 0.3556
+  StressID: 0.254
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 3
+  - Solid
+  - Red
+- Name: 9" Gas Inj
+  Category: General
+  OD: 0.32004
+  ID: 0.2286
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.16580358
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.6
+  - ~
+  EI:
+  - 81.926831500848
+  - ~
+  EA: 640.08e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Lime
+- Name: 9"GI+Buoys
+  Category: General
+  OD: 0.700958931179281
+  ID: 0.2286
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.29724497637813
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.6
+  - ~
+  EI:
+  - 81.926831500848
+  - ~
+  EA: 640.08e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 1.05
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0.563696205387613
+  - ~
+  - 0.436303794612387
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 9"GI+Buoys drag1
+  - ~
+  - 0.191250037911928
+  Cl: 0
+  NormalDragLiftDiameter: 0.32004
+  AxialDragLiftDiameter: 0.32004
+  StressOD: 0.32004
+  StressID: 0.2286
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 3
+  - Solid
+  - Lime
+- Name: 5"Gas Lift
+  Category: General
+  OD: 0.1778
+  ID: 0.127
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.0921131
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 2.5
+  - ~
+  EI:
+  - 7.80433923
+  - ~
+  EA: 355.6e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $FF8000
+- Name: 5"GL+Buoys
+  Category: General
+  OD: 0.571919935080827
+  ID: 0.127
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.193869316741557
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 2.5
+  - ~
+  EI:
+  - 7.80433923
+  - ~
+  EA: 355.6e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 0.95
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0.531928369819349
+  - ~
+  - 0.468071630180651
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 5"GL+Buoys drag
+  - ~
+  - 0.285813743371364
+  Cl: 0
+  NormalDragLiftDiameter: 0.1778
+  AxialDragLiftDiameter: 0.1778
+  StressOD: 0.1778
+  StressID: 0.127
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 3
+  - Solid
+  - $FF8000
+- Name: Umbilical
+  Category: General
+  OD: 0.248
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.1107072
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.29999995231628
+  - ~
+  EI:
+  - 45.758976
+  - ~
+  EA: 357.12e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $C080FF
+- Name: Umb+Buoys
+  Category: General
+  OD: 0.584970084705192
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.209303974223217
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.29999995231628
+  - ~
+  EI:
+  - 45.758976
+  - ~
+  EA: 357.12e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 0.9
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0.556167626172594
+  - ~
+  - 0.443832373827406
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Umb+Buoys drag
+  - ~
+  - 0.207241935483871
+  Cl: 0
+  NormalDragLiftDiameter: 0.248
+  AxialDragLiftDiameter: 0.248
+  StressOD: 0.248
+  StressID: 0
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 3
+  - Solid
+  - $C080FF
+- Name: 12" Chain
+  Category: General
+  OD: 0.576072
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 2.034576576
+  CompressionIsLimited: Yes
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 9.383207040000001e6
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 1.09728
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0.5
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 2.6
+  - ~
+  - 1.4
+  Cl: 0
+  NormalDragLiftDiameter: 0.3048
+  AxialDragLiftDiameter: 0.0970208533088194
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $FFFF80
+- Name: Cage Struts
+  Category: General
+  OD: 1
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.18
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 120
+  - ~
+  EA: 700e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 80
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 10e3
+  Ca:
+  - 0
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 0
+  - ~
+  - 0
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $8000FF
+- Name: Turret Contact
+  Category: General
+  OD: 1e-6
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 1e-6
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 120
+  - ~
+  EA: 700e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 80
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 10
+  InnerContactDiameter: ~
+  ClashStiffness: 10e3
+  Ca:
+  - 0
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 0
+  - ~
+  - 0
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $FFFF80

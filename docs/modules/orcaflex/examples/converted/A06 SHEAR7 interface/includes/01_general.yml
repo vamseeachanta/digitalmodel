@@ -1,0 +1,59 @@
+# General Configuration
+# Generated from: A06 SHEAR7 interface.yml
+# Date: 2026-01-18 21:51:02
+General:
+  UnitsSystem: User
+  LengthUnits: ft
+  MassUnits: lb
+  ForceUnits: kpf
+  g: 32.1740485564304
+  TemperatureUnits: °C
+  DynamicsEnabled: No
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 6876.0711074990595
+  DefaultViewCentre:
+  - 3036.7759158406
+  - -209.96027216453297
+  - -3163.59612468947
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+SHEAR7Data:
+  SHEAR7ExecutableLocation: \\orcfile2\apps\Shear7\v4.12a\bin\shear7_4.12a.exe
+  SHEAR7LiftFileLocation: \\orcfile2\apps\Shear7\v4.12a\bin\common.s7CL
+  SHEAR7Version: 4.12
+  SHEAR7OutputAnm: No
+  SHEAR7OutputDmg: No
+  SHEAR7OutputFat: No
+  SHEAR7OutputStr: No
+  SHEAR7OutputCurv: No
+  SHEAR7OutputZetaHyst: No
+  SHEAR7OutputTimeHistories: No
+  SHEAR7OutFileSelection: out
+  SHEAR7SNData:
+  - Name: Curve1
+    SHEAR7SNCurveS, SHEAR7SNCurveN:
+    - - 208.85434233150136
+      - 1e9
+    - - 208.85434233150136e3
+      - 1
+    SHEAR7SNCurveEnduranceLimit: 0
+CodeChecks:
+  APIRP2RDDesignCaseFactor: 1.2
+Groups:
+  Structure:
+    Riser: Model
+  State:
+    Collapsed:
+    - Variable data

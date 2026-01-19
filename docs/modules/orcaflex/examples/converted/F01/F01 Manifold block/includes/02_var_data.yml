@@ -1,0 +1,13 @@
+# VariableData Configuration
+# Generated from: F01 Manifold block.yml
+# Date: 2026-01-18 21:52:01
+VariableData:
+  Payoutrate:
+  - Name: Winch Payout
+    IndependentValue, DependentValue:
+    - - -10
+      - 0
+    - - 0
+      - 0.125
+    - - 40
+      - 0.125

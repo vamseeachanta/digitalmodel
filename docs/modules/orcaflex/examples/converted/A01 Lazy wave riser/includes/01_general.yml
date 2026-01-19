@@ -1,0 +1,67 @@
+# General Configuration
+# Generated from: A01 Lazy wave riser.yml
+# Date: 2026-01-18 21:50:04
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 7
+  - 35
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Shaded
+  DefaultShadedFillMode: Solid
+  DefaultViewSize: 182.54537275993
+  DefaultViewCentre:
+  - 12.0037664043145
+  - 66.2132063567069
+  - -44.7905896888973
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+ClumpTypes:
+- Name: Module
+  Mass: 0.438
+  Volume: 1.032
+  Height: 1
+  AlignWith: Line axes
+  DragArea:
+  - 1.2
+  - ~
+  - 1.031658689
+  Cd:
+  - 0.6444
+  - ~
+  - 1.027879287
+  Ca:
+  - 1
+  - ~
+  - 0.5
+  Pen:
+  - 4
+  - Solid
+  - Fuchsia
+Groups:
+  Structure:
+    FPSO: Model
+    10" Lazy Wave Distributed: Model
+    10" Lazy Wave Discrete: Model
+  State:
+    Collapsed:
+    - Variable data

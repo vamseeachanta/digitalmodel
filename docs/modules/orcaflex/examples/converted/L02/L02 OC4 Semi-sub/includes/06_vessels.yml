@@ -1,0 +1,296 @@
+# Vessels Configuration
+# Generated from: L02 OC4 Semi-sub.yml
+# Date: 2026-01-18 21:52:26
+Vessels:
+- Name: OC4 Semisub
+  VesselType: OrcaWave OC4 Semi
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 0
+  - 0
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: 6 DOF
+  PrimaryMotion: Calculated (6 DOF)
+  SuperimposedMotion: None
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: Yes
+  IncludeWaveDriftLoad2ndOrder: Yes
+  IncludeWaveDriftDamping: Yes
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: Yes
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: Yes
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  PrimaryMotionIsTreatedAs: Both low and wave frequency
+  PrimaryMotionDividingPeriod: 40
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  MorisonElements:
+  - MorisonElementType: UC morison
+    Position:
+    - 14.429999999999998
+    - -25
+    - -14
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 26
+    MorisonElementNumberOfSegments: 13
+  - MorisonElementType: BC morison
+    Position:
+    - 14.429999999999998
+    - -25
+    - -20
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 6
+    MorisonElementNumberOfSegments: 4
+  - MorisonElementType: UC morison
+    Position:
+    - -28.870000000000008
+    - 0
+    - -14
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 26
+    MorisonElementNumberOfSegments: 13
+  - MorisonElementType: BC morison
+    Position:
+    - -28.870000000000008
+    - 0
+    - -20
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 6
+    MorisonElementNumberOfSegments: 4
+  - MorisonElementType: UC morison
+    Position:
+    - 14.429999999999998
+    - 25
+    - -14
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 26
+    MorisonElementNumberOfSegments: 13
+  - MorisonElementType: BC morison
+    Position:
+    - 14.429999999999998
+    - 25
+    - -20
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 6
+    MorisonElementNumberOfSegments: 4
+  - MorisonElementType: MC morison
+    Position:
+    - 0
+    - 0
+    - -20
+    Orientation:
+    - 0
+    - 0
+    - 0
+    MorisonElementLength: 30
+    MorisonElementNumberOfSegments: 15
+  - MorisonElementType: Pontoon morison
+    Position:
+    - 9.200000000000001
+    - 22
+    - 10
+    Orientation:
+    - 210
+    - 90
+    - 0
+    MorisonElementLength: 38
+    MorisonElementNumberOfSegments: 1
+  - MorisonElementType: Pontoon morison
+    Position:
+    - -23.67
+    - -3
+    - 10
+    Orientation:
+    - -30
+    - 90
+    - 0
+    MorisonElementLength: 38
+    MorisonElementNumberOfSegments: 1
+  - MorisonElementType: Pontoon morison
+    Position:
+    - 14.43
+    - -19
+    - 10
+    Orientation:
+    - 90
+    - 90
+    - 0
+    MorisonElementLength: 38
+    MorisonElementNumberOfSegments: 1
+  - MorisonElementType: Pontoon morison
+    Position:
+    - 4
+    - 19
+    - -17
+    Orientation:
+    - 210
+    - 90
+    - 0
+    MorisonElementLength: 26
+    MorisonElementNumberOfSegments: 1
+  - MorisonElementType: Pontoon morison
+    Position:
+    - -18.47
+    - -6
+    - -17
+    Orientation:
+    - -30
+    - 90
+    - 0
+    MorisonElementLength: 26
+    MorisonElementNumberOfSegments: 1
+  - MorisonElementType: Pontoon morison
+    Position:
+    - 14.43
+    - -13
+    - -17
+    Orientation:
+    - 90
+    - 90
+    - 0
+    MorisonElementLength: 26
+    MorisonElementNumberOfSegments: 1
+  - MorisonElementType: Pontoon morison
+    Position:
+    - 1.625
+    - 2.815
+    - 10
+    Orientation:
+    - 60
+    - 90
+    - 0
+    MorisonElementLength: 19.62
+    MorisonElementNumberOfSegments: 1
+  - MorisonElementType: Pontoon morison
+    Position:
+    - -3.25
+    - 0
+    - 10
+    Orientation:
+    - 180
+    - 90
+    - 0
+    MorisonElementLength: 19.62
+    MorisonElementNumberOfSegments: 1
+  - MorisonElementType: Pontoon morison
+    Position:
+    - 1.625
+    - -2.815
+    - 10
+    Orientation:
+    - 300
+    - 90
+    - 0
+    MorisonElementLength: 19.62
+    MorisonElementNumberOfSegments: 1
+  - MorisonElementType: Pontoon morison
+    Position:
+    - 1.625
+    - 2.815
+    - -17
+    Orientation:
+    - 60
+    - 90
+    - 0
+    MorisonElementLength: 13.620000000000001
+    MorisonElementNumberOfSegments: 1
+  - MorisonElementType: Pontoon morison
+    Position:
+    - -3.25
+    - 0
+    - -17
+    Orientation:
+    - 180
+    - 90
+    - 0
+    MorisonElementLength: 13.620000000000001
+    MorisonElementNumberOfSegments: 1
+  - MorisonElementType: Pontoon morison
+    Position:
+    - 1.625
+    - -2.815
+    - -17
+    Orientation:
+    - 300
+    - 90
+    - 0
+    MorisonElementLength: 13.620000000000001
+    MorisonElementNumberOfSegments: 1
+  - MorisonElementType: Pontoon morison
+    Position:
+    - 1.625
+    - 2.815
+    - -16.2
+    Orientation:
+    - 60
+    - 37.7
+    - 0
+    MorisonElementLength: 32.04
+    MorisonElementNumberOfSegments: 13
+  - MorisonElementType: Pontoon morison
+    Position:
+    - -3.25
+    - 0
+    - -16.2
+    Orientation:
+    - 180
+    - 37.7
+    - 0
+    MorisonElementLength: 32.04
+    MorisonElementNumberOfSegments: 13
+  - MorisonElementType: Pontoon morison
+    Position:
+    - 1.625
+    - -2.815
+    - -16.2
+    Orientation:
+    - 300
+    - 37.7
+    - 0
+    MorisonElementLength: 32.04
+    MorisonElementNumberOfSegments: 13
+  CompensatingMass: 599.718
+  CentreOfCompensatingMass:
+  - -0.24
+  - 0
+  - 70.308
+  CompensatingMomentOfInertiaX, CompensatingMomentOfInertiaY, CompensatingMomentOfInertiaZ:
+  - - 471.517558829861e3
+    - 0
+    - 1655.8069275445
+  - - 0
+    - 461.299502937156e3
+    - 0
+  - - 1655.8069275445
+    - 0
+    - 28.2086203623193e3
+  Pen:
+  - 1
+  - Solid
+  - Yellow

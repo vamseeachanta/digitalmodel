@@ -1,0 +1,38 @@
+# Vessels Configuration
+# Generated from: HeaveCompensatedWinch.yml
+# Date: 2026-01-18 21:52:04
+Vessels:
+- Name: Vessel
+  VesselType: Vessel Type
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 55
+  - 0
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: None
+  PrimaryMotion: None
+  SuperimposedMotion: RAOs + harmonics
+  ImposedMotionConsistentWithSolver: No
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: No
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: Yes
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  ShadedDrawingCullingMode: Anticlockwise
+  ShadedDrawingOrientation:
+  - ~
+  - ~
+  - 0

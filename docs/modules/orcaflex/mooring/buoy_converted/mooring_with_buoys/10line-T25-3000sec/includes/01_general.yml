@@ -1,0 +1,79 @@
+# General Configuration
+# Generated from: 10line-T25-3000sec.yml
+# Date: 2026-01-18 21:53:18
+General:
+  Comments: "\r\n\r\nThe CALM buoy is modelled using a Spar Buoy."
+  UnitsSystem: US
+  LineResetRepresentation: Quick
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: All
+  LineStaticsStep1Policy: Parent lines excluded
+  LineStaticsStep2Policy: Parent lines excluded
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Explicit time domain
+  AlwaysUseRecommendedTimeSteps: No
+  InnerTimeStep: 0.0031
+  TargetOuterTimeStep: 0.093
+  RecommendedInnerTimeStepRatio: 10
+  RecommendedOuterTimeStepToInnerMultiple: 30
+  RecommendedOuterTimeStepToWavePeriodRatio: 40
+  TensionTargetDamping: 10
+  BendingTargetDamping: 10
+  TorsionTargetDamping: 10
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.5
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 3000
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 682.6518673117668
+  DefaultViewCentre:
+  - -169.72401614847865
+  - 25.34837963507439
+  - -182.15117867491043
+  DefaultViewAzimuth: 90
+  DefaultViewElevation: 25
+ClumpTypes:
+- Name: Clump Type1
+  Mass: 0.22046226218487758
+  Volume: 7.0629333442977
+  Height: 13.123359580052488
+  Offset: 0
+  AlignWith: Global axes
+  DragArea:
+  - 6.458346250025831
+  - ~
+  - 6.458346250025831
+  Cd:
+  - 1.1
+  - ~
+  - 1.1
+  Ca:
+  - 1
+  - ~
+  - 1
+Groups:
+  Structure:
+    Vessel: Model
+    Line1: Model
+    Line3: Model
+    Line4: Model
+    Line6: Model
+    Line7: Model
+    Line8: Model
+    Line9: Model
+    Line10: Model
+    Line2: Model
+    Line5: Model
+  State:
+    Collapsed: []

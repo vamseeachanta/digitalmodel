@@ -1,0 +1,1398 @@
+# 6DBuoys Configuration
+# Generated from: K01 5MW spar FOWT.yml
+# Date: 2026-01-18 21:52:08
+6DBuoys:
+- Name: Nacelle
+  BuoyType: Lumped buoy
+  Connection: Free
+  DegreesOfFreedomInStatics: All
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 0
+  - 0
+  - 90
+  InitialAttitude:
+  - 0
+  - -4.999999999999999
+  - 0
+  Mass: 240
+  MomentsOfInertia:
+  - 350.02376000000004
+  - 5409.8704259999995
+  - 2607.89
+  CentreOfMass:
+  - -1.9112957510527588
+  - 0
+  - -0.046155233805827284
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 114.294
+  BulkModulus: Infinity
+  Height: 3.5
+  CentreOfVolume:
+  - -1.9112957510527588
+  - 0
+  - -0.046155233805827284
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 8
+  - 50
+  - 32.656
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 1
+  - 1.2
+  - 1.2
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - White
+  CentreOfVolumeOriginColour: Red
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 3.107
+    - 1.143
+    - 1.75
+  - - -11.178
+    - 1.143
+    - 1.75
+  - - -11.178
+    - -1.143
+    - 1.75
+  - - 3.107
+    - -1.143
+    - 1.75
+  - - 3.107
+    - 1.143
+    - -1.75
+  - - -11.178
+    - 1.143
+    - -1.75
+  - - -11.178
+    - -1.143
+    - -1.75
+  - - 3.107
+    - -1.143
+    - -1.75
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+- Name: Spar
+  BuoyType: Spar buoy
+  Connection: Free
+  DegreesOfFreedomInStatics: All
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 0
+  - 0
+  - -120.22903570013435
+  InitialAttitude:
+  - 0
+  - 0
+  - 180
+  Mass: 7466.33
+  MomentsOfInertia:
+  - 4.22923e6
+  - 4.22923e6
+  - 164.23e3
+  CentreOfMass:
+  - 0
+  - 0
+  - 30.084500000000002
+  StackBaseCentre:
+  - 0
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MunkMomentCoefficient: 0
+  NormalDragAreaCalculatedFromGeometry: Yes
+  StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+  Cylinders:
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 6.681
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 7.0440000000000005
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 7.406000000000001
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 7.769
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 8.131
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 8.494
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 8.856
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.219
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 10
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 10
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 10
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 10
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 10
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 10
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 10
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 10
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 10
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 9.4
+    CylinderInnerDiameter: 0
+    CylinderLength: 10
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.6000000000000001
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.969954
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  CylinderNumLinesDrawn: 7
+  Pen:
+  - 1
+  - Solid
+  - Gray

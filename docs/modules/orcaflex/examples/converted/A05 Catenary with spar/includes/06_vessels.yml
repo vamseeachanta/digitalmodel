@@ -1,0 +1,36 @@
+# Vessels Configuration
+# Generated from: A05 Catenary with spar.yml
+# Date: 2026-01-18 21:50:53
+Vessels:
+- Name: Spar
+  VesselType: Spar Displacement RAOs
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - -295
+  - 0
+  - -225
+  Orientation:
+  - 0
+  - -6
+  - 0
+  IncludedInStatics: None
+  PrimaryMotion: None
+  SuperimposedMotion: RAOs + harmonics
+  ImposedMotionConsistentWithSolver: No
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: No
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: No
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  Hidden: Yes
+  PenMode: Use vessel type's own pen
+  ShadedDrawingCullingMode: Anticlockwise

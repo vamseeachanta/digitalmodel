@@ -1,0 +1,75 @@
+# Environment Configuration
+# Generated from: A04 Disconnecting turret system.yml
+# Date: 2026-01-18 21:51:46
+Environment:
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-06
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 1.025
+  SeabedType: Flat
+  SeabedOrigin:
+  - 0
+  - 0
+  WaterDepth: 200
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 100
+  WaveTrains:
+  - Name: Wave1
+    WaveType: Dean stream
+    WaveDirection: 0
+    WaveHeight: 14.2
+    WavePeriod: 17.5
+    WaveOrigin:
+    - 0
+    - 0
+    WaveTimeOrigin: 0
+    WaveStreamFunctionOrder: 5
+    WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel: ~
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  MultipleCurrentDataCanBeDefined: No
+  CurrentModel: Variation scheme
+  CurrentRamped: No
+  CurrentApplyVerticalStretching: No
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  RefCurrentSpeed: 1
+  RefCurrentDirection: 0
+  CurrentDepth, CurrentFactor, CurrentRotation:
+  - - 0
+    - 0.6
+    - -25
+  - - 20
+    - 0.5
+    - -10
+  - - 100
+    - 0.45
+    - 0
+  - - 150
+    - 0.4
+    - 30
+  - - 190
+    - 0.2
+    - 45
+  - - 200
+    - 0.1
+    - 60
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: Yes
+  IncludeBuoyWingWindLoads: Yes
+  WindRamping: From mean
+  WindType: Constant
+  AirDensity: 0.00128
+  AirSpeedOfSound: 343
+  WindSpeed: 0
+  WindDirection: 0
+  VerticalWindVariationFactor: ~

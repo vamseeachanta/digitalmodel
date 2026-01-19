@@ -1,0 +1,15 @@
+# Input Parameters for Parametric Analysis
+# Source: A05 Catenary with spar.yml
+# Generated: 2026-01-18 21:51:47
+
+water_depth: 5900
+current_speed: 1
+wind_speed: 0
+water_density: 64
+stage_durations:
+- 14
+- 70
+hs: 90
+tp: 14
+wave_direction: 180
+
