@@ -71,10 +71,11 @@ src/.../modules/    = HOW to implement (code level)
 | Folder | Purpose |
 |--------|---------|
 | `.claude/` | Claude Code configuration and agents |
+| `.claude-flow/` | Unified runtime state, memory, and metrics |
 | `.agent-os/` | Agent operating system standards |
 | `.ai/` | AI-specific configurations |
-| `.hive-mind/` | Collective intelligence runtime |
-| `.swarm/` | Swarm coordination runtime |
+
+> **Note**: `.hive-mind/` and `.swarm/` have been consolidated into `.claude-flow/`. Historical backups are in `.claude-flow/archives/`.
 
 ## File Naming Conventions
 
