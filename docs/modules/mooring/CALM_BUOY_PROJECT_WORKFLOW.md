@@ -577,7 +577,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Validate all projects
         run: |
-          python run_validation.py --projects projects/**/project_config.yml
+          python scripts/run_validation.py --projects projects/**/project_config.yml
 ```
 
 ---

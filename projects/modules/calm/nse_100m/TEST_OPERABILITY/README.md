@@ -49,7 +49,7 @@ python scripts/generate_calm_buoy_project.py \
 ### 3. Run Validation
 
 ```bash
-python run_validation.py \
+python scripts/run_validation.py \
   --files projects\TEST_OPERABILITY/orcaflex/NSE_CALM_001_calm_buoy.yml
 ```
 

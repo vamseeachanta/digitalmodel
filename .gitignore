@@ -25,8 +25,17 @@
 /*.tmp
 /nul
 /coverage.xml
+/coverage.json
 /.command-*
 /agos
+/tools
+
+# Claude temp working directories
+tmpclaude-*-cwd
+
+# Temp test directories
+/temp_test_conversion/
+/temp_workflow_test/
 
 # Prevent config files in root (except whitelisted)
 /*.yml
