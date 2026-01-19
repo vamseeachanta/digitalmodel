@@ -42,22 +42,50 @@ def csv_row_to_line_type(row: Dict[str, Any]) -> Dict[str, Any]:
     """
     Convert a CSV row to line type properties.
 
+    Supports multiple CSV column naming conventions:
+    - OD_m, ID_m, MassPerUnitLength_kg_m (standard)
+    - OD, ID, Mass (risers.csv format)
+    - Diameter_m, Mass_kg_per_m (alternative)
+
     Args:
         row: Dictionary with CSV column values
 
     Returns:
         Dictionary of OrcaFlex line type properties (no section header)
     """
+    # Handle different column naming conventions for outer diameter
+    od = float(row.get("OD_m", row.get("OD", row.get("Diameter_m", 0.1))))
+
+    # Handle different column naming conventions for inner diameter
+    # Note: "ID" in risers.csv is inner diameter, not identifier
+    id_val = float(row.get("ID_m", row.get("ID", 0)) if row.get("ID_m") or row.get("ID") else 0)
+
+    # Handle different column naming conventions for mass
+    mass = float(row.get("MassPerUnitLength_kg_m", row.get("Mass_kg_per_m", row.get("Mass", 0.1))))
+
+    # Handle EA (axial stiffness) - may be in kN or N
+    ea_raw = row.get("EA_kN", row.get("EA", 100000))
+    ea = float(ea_raw)
+
+    # Handle EI (bending stiffness) if provided
+    ei_raw = row.get("EI_kNm2", row.get("EI"))
+    if ei_raw:
+        ei = [float(ei_raw), None]
+    else:
+        ei = [0, None]
+
+    # Handle Poisson ratio
+    poisson = float(row.get("PoissonRatio", row.get("Poisson", 0.5)))
+
     props = {
-        "Category": "General",
-        "OD": float(row.get("OD_m", row.get("Diameter_m", 0.1))),
-        "ID": float(row.get("ID_m", 0)),
-        "MassPerUnitLength": float(row.get("MassPerUnitLength_kg_m", row.get("Mass_kg_per_m", 0.1))),
-        "EA": float(row.get("EA_kN", row.get("EA", 100000))),
+        "OD": od,
+        "ID": id_val,
+        "MassPerUnitLength": mass,
+        "EA": ea,
         "CompressionIsLimited": True,
-        "EI": [0, None],
+        "EI": ei,
         "GJ": 0,
-        "PoissonRatio": 0.5,
+        "PoissonRatio": poisson,
     }
 
     # Optional properties
@@ -263,9 +291,16 @@ class LibraryGenerator:
                 if name_column:
                     name = row[name_column]
                 else:
-                    # Auto-detect name column
-                    for col in ["Name", "ID", "LineTypeID", "BuoyID", "VesselID"]:
-                        if col in row:
+                    # Auto-detect name column - prioritize specific ID columns over generic "ID"
+                    # (generic "ID" may be inner diameter in line type CSVs)
+                    name_columns = [
+                        "Name", "RiserID", "RiserName", "PipelineID", "PipelineName",
+                        "UmbilicalID", "UmbilicalName", "LineTypeID", "LineName",
+                        "BuoyID", "BuoyName", "VesselID", "VesselName",
+                        "ChainID", "ChainName", "ComponentID", "ComponentName"
+                    ]
+                    for col in name_columns:
+                        if col in row and row[col]:
                             name = row[col]
                             break
                     else:
