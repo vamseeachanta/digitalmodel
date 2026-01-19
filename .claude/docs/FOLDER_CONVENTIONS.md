@@ -72,10 +72,12 @@ src/.../modules/    = HOW to implement (code level)
 |--------|---------|
 | `.claude/` | Claude Code configuration and agents |
 | `.claude-flow/` | Unified runtime state, memory, and metrics |
-| `.agent-os/` | Agent operating system standards |
-| `.ai/` | AI-specific configurations |
+| `.agent-os/` | Agent OS standards and tooling (Python implementations) |
+| `.ai/` | Project-specific AI configs and guidance (markdown/settings) |
 
-> **Note**: `.hive-mind/` and `.swarm/` have been consolidated into `.claude-flow/`. Historical backups are in `.claude-flow/archives/`.
+> **Notes**:
+> - `.hive-mind/` and `.swarm/` have been consolidated into `.claude-flow/`. Backups in `.claude-flow/archives/`.
+> - `.agent-os/` and `.ai/` are intentionally separate - see `.agent-os/integration.md` for details.
 
 ## File Naming Conventions
 
