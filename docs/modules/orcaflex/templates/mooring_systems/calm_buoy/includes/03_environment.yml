@@ -22,19 +22,16 @@ Environment:
   SeabedNormalStiffness: 100
   SeabedShearStiffness: 100
 
-  # Waves - JONSWAP spectrum
+  # Waves - Dean Stream (regular wave for statics)
   KinematicStretchingMethod: Vertical stretching
   WaveTrains:
     - Name: Wave 1
-      WaveType: JONSWAP
+      WaveType: Dean stream
       WaveDirection: 180       # Parametric: _inputs.wave_direction
-      WaveHs: 3.5              # Parametric: _inputs.hs
-      WaveTp: 12.0             # Parametric: _inputs.tp
-      WaveGamma: 3.3
+      WaveHeight: 3.5          # Parametric: _inputs.hs (use as regular wave height)
+      WavePeriod: 12.0         # Parametric: _inputs.tp
       WaveOrigin: [0, 0]
       WaveTimeOrigin: 0
-      WaveSeed: 12345
-      NumberOfWaveComponents: 200
 
   # Wave calculation
   WaveKinematicsCutoffDepth: Infinity
@@ -56,21 +53,12 @@ Environment:
     - [50, 0.7, 10]
     - [100, 0.3, 20]
 
-  # Wind
+  # Wind - Constant
   IncludeVesselWindLoads: Yes
   IncludeLineWindLoads: Yes
   IncludeBuoyWindLoads: Yes
   IncludeBuoyWingWindLoads: Yes
-  WindRamping: From mean
-  WindType: NPD spectrum
+  WindType: Constant
   AirDensity: 0.00128
-  AirSpeedOfSound: 343
-  WindSpectrumElevation: ~
-  WindSpectrumFMin: 0
-  WindSpectrumFMax: Infinity
-  WindTimeOrigin: 0
-  WindSeed: 12345
-  NumberOfWindComponents: 1000
   WindSpeed: 12                # Parametric: _inputs.wind_speed
   WindDirection: 165
-  VerticalWindVariationFactor: ~

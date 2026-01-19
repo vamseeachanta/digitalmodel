@@ -584,7 +584,7 @@ python scripts/generate_calm_buoy_project.py \
 
 **Scripts:**
 - Generation: `scripts/generate_calm_buoy_project.py`
-- Validation: `run_validation.py`
+- Validation: `scripts/run_validation.py`
 
 ---
 

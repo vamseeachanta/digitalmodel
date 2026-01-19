@@ -314,7 +314,7 @@ ls specs/modules/orcaflex/modular-input-file/output/_*.yml
 
 📋 **Template Reference:** `templates/calm_buoy/project_template.yml`
 
-🧪 **Validation Framework:** Run `python run_validation.py --help`
+🧪 **Validation Framework:** Run `python scripts/run_validation.py --help`
 
 ---
 
@@ -328,7 +328,7 @@ ls specs/modules/orcaflex/modular-input-file/output/_*.yml
 | **OrcaFlex Templates** | `specs/modules/orcaflex/modular-input-file/output/` |
 | **Reference Data** | `data/raw/`, `data/processed/`, `data/results/` |
 | **Generation Script** | `scripts/generate_calm_buoy_project.py` |
-| **Validation Script** | `run_validation.py` |
+| **Validation Script** | `scripts/run_validation.py` |
 | **Documentation** | `docs/CALM_BUOY_*.md` |
 
 ---
