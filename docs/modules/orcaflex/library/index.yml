@@ -1,0 +1,168 @@
+# OrcaFlex Library Index
+# Generated: 2026-01-19 06:14:39
+#
+# Usage in model files:
+#   LineTypes:
+#     - Name: Chain_84mm
+#       IncludeFile: library/line_types/chain_84mm_r4.yml
+#
+buoy_types:
+- file: calm_10m_100m.yml
+  path: buoy_types\calm_10m_100m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: calm_12m_100m.yml
+  path: buoy_types\calm_12m_100m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: calm_15m_200m.yml
+  path: buoy_types\calm_15m_200m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: calm_18m_300m.yml
+  path: buoy_types\calm_18m_300m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: metocean_3m.yml
+  path: buoy_types\metocean_3m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: metocean_5m.yml
+  path: buoy_types\metocean_5m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: navigation_2m.yml
+  path: buoy_types\navigation_2m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: pick_up_1m.yml
+  path: buoy_types\pick_up_1m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: spar_10m.yml
+  path: buoy_types\spar_10m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: spar_6m.yml
+  path: buoy_types\spar_6m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: spm_10m.yml
+  path: buoy_types\spm_10m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: spm_8m.yml
+  path: buoy_types\spm_8m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+connectors: []
+line_types: []
+vessel_types: []

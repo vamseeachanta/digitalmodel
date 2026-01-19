@@ -1,0 +1,51 @@
+# Variation: Deep Water 200m
+# Only the changes from base model
+# NOTE: Overrides specific properties, base model values remain for others
+Environment:
+  WaterDepth: 200
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [100, 0.5, 0]
+    - [200, 0.2, 0]
+
+Lines:
+  # Update anchor positions and lengths for deeper water
+  - Name: Mooring_1
+    EndBX: 1200
+    EndBZ: -200
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm, 1300, 10]
+
+  - Name: Mooring_2
+    EndBX: 600
+    EndBY: 1039.2
+    EndBZ: -200
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm, 1300, 10]
+
+  - Name: Mooring_3
+    EndBX: -600
+    EndBY: 1039.2
+    EndBZ: -200
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm, 1300, 10]
+
+  - Name: Mooring_4
+    EndBX: -1200
+    EndBZ: -200
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm, 1300, 10]
+
+  - Name: Mooring_5
+    EndBX: -600
+    EndBY: -1039.2
+    EndBZ: -200
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm, 1300, 10]
+
+  - Name: Mooring_6
+    EndBX: 600
+    EndBY: -1039.2
+    EndBZ: -200
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm, 1300, 10]
