@@ -1,6 +1,6 @@
 # VesselTypes Configuration
 # Generated from: A05 Lazy wave with FPSO.yml
-# Date: 2026-01-18 21:51:47
+# Date: 2026-01-18 22:18:01
 VesselTypes:
 - Name: FPSO Type
   Length: 337.92650918635167

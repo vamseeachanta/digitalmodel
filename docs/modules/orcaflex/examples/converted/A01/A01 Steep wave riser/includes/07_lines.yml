@@ -1,6 +1,6 @@
 # Lines Configuration
 # Generated from: A01 Steep wave riser.yml
-# Date: 2026-01-18 21:51:43
+# Date: 2026-01-18 22:17:57
 Lines:
 - Name: 10" Steep Wave1
   IncludeTorsion: No

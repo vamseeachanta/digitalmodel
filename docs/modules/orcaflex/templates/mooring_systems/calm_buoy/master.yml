@@ -4,16 +4,16 @@
 # Template: CALM Buoy Mooring System
 # Description: 6-leg catenary anchor leg mooring buoy with tanker connection
 ---
-# Input Parameters (modify for parametric analysis)
-_inputs:
-  water_depth: 100              # m
-  hs: 3.5                       # m, significant wave height
-  tp: 12.0                      # s, peak period
-  wave_direction: 180           # deg
-  current_speed: 1.2            # m/s
-  wind_speed: 12                # m/s
-  num_mooring_legs: 6
-
+# Input Parameters (for parametric analysis)
+# See inputs/parameters.yml for modifiable values:
+#   water_depth: 100              # m
+#   hs: 3.5                       # m, significant wave height
+#   tp: 12.0                      # s, peak period
+#   wave_direction: 180           # deg
+#   current_speed: 1.2            # m/s
+#   wind_speed: 12                # m/s
+#   num_mooring_legs: 6
+#
 # Include files - load in order
 - includefile: includes/01_general.yml
 - includefile: includes/02_var_data.yml

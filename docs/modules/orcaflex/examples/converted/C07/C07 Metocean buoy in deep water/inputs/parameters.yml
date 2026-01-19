@@ -1,6 +1,6 @@
 # Input Parameters for Parametric Analysis
 # Source: C07 Metocean buoy in deep water.yml
-# Generated: 2026-01-18 21:51:51
+# Generated: 2026-01-18 22:18:05
 
 water_depth: 500
 current_speed: 1.125

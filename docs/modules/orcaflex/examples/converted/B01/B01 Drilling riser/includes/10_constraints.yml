@@ -1,6 +1,6 @@
 # Constraints Configuration
 # Generated from: B01 Drilling riser.yml
-# Date: 2026-01-18 21:51:48
+# Date: 2026-01-18 22:18:02
 Constraints:
 - Name: Rotary Table
   InFrameConnection: Semisub

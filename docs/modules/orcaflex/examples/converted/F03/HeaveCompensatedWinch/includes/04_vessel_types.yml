@@ -1,6 +1,6 @@
 # VesselTypes Configuration
 # Generated from: HeaveCompensatedWinch.yml
-# Date: 2026-01-18 21:52:04
+# Date: 2026-01-18 22:18:18
 VesselTypes:
 - Name: Vessel Type
   Length: 100

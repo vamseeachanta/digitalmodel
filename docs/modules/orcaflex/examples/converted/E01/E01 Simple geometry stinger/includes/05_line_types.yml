@@ -1,6 +1,6 @@
 # LineTypes Configuration
 # Generated from: E01 Simple geometry stinger.yml
-# Date: 2026-01-18 21:51:56
+# Date: 2026-01-18 22:18:10
 LineTypes:
 - Name: 250mm OD x 15mm WT Steel Pipe
   Category: Homogeneous pipe

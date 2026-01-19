@@ -2,7 +2,5 @@
 # Type: Model
 # Program: OrcaFlex 11.5
 ---
-# Input Parameters (for parametric analysis)
-
 # Include files
 - includefile: includes/01_general.yml

@@ -1,6 +1,6 @@
 # Constraints Configuration
 # Generated from: K02 10MW fixed-bottom OWT.yml
-# Date: 2026-01-18 21:52:10
+# Date: 2026-01-18 22:18:26
 Constraints:
 - Name: 'Soil-h=0m: Rz'
   InFrameConnection: 'Soil-h=0m: Ry-Rx'

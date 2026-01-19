@@ -1,6 +1,6 @@
 # Lines Configuration
 # Generated from: K03 15MW semi-sub FOWT.yml
-# Date: 2026-01-18 21:52:15
+# Date: 2026-01-18 22:18:32
 Lines:
 - Name: Tower
   IncludeTorsion: Yes

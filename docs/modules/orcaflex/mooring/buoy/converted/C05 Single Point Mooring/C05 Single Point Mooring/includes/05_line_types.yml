@@ -1,0 +1,112 @@
+# LineTypes Configuration
+# Generated from: C05 Single Point Mooring.yml
+# Date: 2026-01-18 22:19:49
+LineTypes:
+- Name: 5" chain
+  Category: General
+  OD: 0.23814
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.3476844
+  CompressionIsLimited: Yes
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 1.603476e6
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 10
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 0.4536
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0.07
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1
+  - ~
+  - 0.4
+  Cl: 0
+  NormalDragLiftDiameter: 0.28476
+  AxialDragLiftDiameter: 0.024064227395494575
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+- Name: 275mm PE
+  Category: General
+  OD: 0.23650000000000002
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.06033362500000001
+  CompressionIsLimited: Yes
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 82.43125000000001e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 10
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1.2
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Blue

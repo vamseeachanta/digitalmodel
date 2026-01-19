@@ -7,15 +7,13 @@
 # Machine: ACMA-ANSYS05
 ---
 # Input Parameters (for parametric analysis)
-_inputs:
-  water_depth: 80
-  wind_speed: 0
-  water_density: 1.025
-  stage_durations:
-  - 10
-  - 60
-  wave_direction: 177.5
-
+# See inputs/parameters.yml for extracted values:
+#   water_depth: 80
+#   wind_speed: 0
+#   water_density: 1.025
+#   stage_durations: [10, 60]
+#   wave_direction: 177.5
+#
 # Include files
 - includefile: includes/01_general.yml
 - includefile: includes/02_var_data.yml

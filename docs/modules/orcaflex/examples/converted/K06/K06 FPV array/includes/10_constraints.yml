@@ -1,6 +1,6 @@
 # Constraints Configuration
 # Generated from: K06 FPV array.yml
-# Date: 2026-01-18 21:52:23
+# Date: 2026-01-18 22:18:44
 Constraints:
 - Name: PanelTilt1-1
   InFrameConnection: CDout1-1

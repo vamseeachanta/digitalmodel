@@ -1,6 +1,6 @@
 # VesselTypes Configuration
 # Generated from: C06 Discretised CALM buoy.yml
-# Date: 2026-01-18 21:51:51
+# Date: 2026-01-18 22:18:04
 VesselTypes:
 - Name: Vessel Type1
   Length: 103

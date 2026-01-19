@@ -1,6 +1,6 @@
 # 6DBuoys Configuration
 # Generated from: K02 10MW fixed-bottom OWT.yml
-# Date: 2026-01-18 21:52:10
+# Date: 2026-01-18 22:18:25
 6DBuoys:
 - Name: Nacelle
   BuoyType: Lumped buoy

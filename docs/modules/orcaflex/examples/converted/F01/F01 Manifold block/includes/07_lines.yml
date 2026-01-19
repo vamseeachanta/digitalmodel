@@ -1,6 +1,6 @@
 # Lines Configuration
 # Generated from: F01 Manifold block.yml
-# Date: 2026-01-18 21:52:01
+# Date: 2026-01-18 22:18:15
 Lines:
 - Name: Frame 1
   IncludeTorsion: No
