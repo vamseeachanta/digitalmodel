@@ -1,0 +1,34 @@
+# SPM_8m - Library Component
+# Category: buoy_types
+# Generated: 2026-01-19 06:14:39
+# Description: Single point mooring buoy
+# NOTE: No section header - properties only for IncludeFile
+BuoyType: Spar buoy
+Connection: Free
+DampingRelativeTo: Earth
+Mass: 45000.0
+MomentsOfInertia:
+- 213750
+- 213750
+- 360000
+CentreOfMass:
+- 0
+- 0
+- 0
+StackBaseCentre:
+- 0
+- 0
+- -1.5
+BulkModulus: Infinity
+NormalDragAreaCalculatedFromGeometry: Yes
+Cylinders:
+- CylinderOuterDiameter: 8.0
+  CylinderInnerDiameter: 0
+  CylinderLength: 3.0
+  CylinderAxialDragArea: 0
+  DragForceCoefficient:
+  - 0.75
+  - 1.1
+  AddedMassForceCoefficient:
+  - 1.0
+  - 0.08

@@ -1,0 +1,34 @@
+# CALM_10m_100m - Library Component
+# Category: buoy_types
+# Generated: 2026-01-19 06:14:39
+# Description: Standard CALM buoy for shallow water tanker operations
+# NOTE: No section header - properties only for IncludeFile
+BuoyType: Spar buoy
+Connection: Free
+DampingRelativeTo: Earth
+Mass: 75000.0
+MomentsOfInertia:
+- 545312
+- 545312
+- 937500
+CentreOfMass:
+- 0
+- 0
+- 0
+StackBaseCentre:
+- 0
+- 0
+- -1.75
+BulkModulus: Infinity
+NormalDragAreaCalculatedFromGeometry: Yes
+Cylinders:
+- CylinderOuterDiameter: 10.0
+  CylinderInnerDiameter: 0
+  CylinderLength: 3.5
+  CylinderAxialDragArea: 0
+  DragForceCoefficient:
+  - 0.8
+  - 1.13
+  AddedMassForceCoefficient:
+  - 1.0
+  - 0.07
