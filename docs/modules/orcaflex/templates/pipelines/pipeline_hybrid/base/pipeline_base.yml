@@ -1,0 +1,84 @@
+%YAML 1.1
+# Pipeline Base Model - Hybrid Template
+# Uses library components via IncludeFile for reusable line types
+#
+# Configuration: Seabed pipeline (flowline/export line)
+# Water depth: 500m
+# Pipeline: 16-inch X65 steel
+#
+# Pipeline lies on seabed from manifold to platform/PLEM
+# Both ends anchored (fixed)
+#
+# Usage:
+#   1. Use directly for basic analysis
+#   2. Use with BaseFile + variation for parametric studies
+---
+General:
+  UnitsSystem: SI
+  StageDuration: [30, 300]
+  StaticsMinDamping: 5
+  StaticsMaxDamping: 50
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitConstantTimeStep: 0.1
+
+Environment:
+  WaterDepth: 500
+  WaterSurfaceZ: 0
+  Density: 1025
+  KinematicViscosity: 1.35e-6
+  # Seabed - Flat
+  SeabedType: Flat
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 50
+  # Waves - minimal for seabed pipeline
+  WaveTrains:
+    - Name: Wave1
+      WaveType: Dean stream
+      WaveDirection: 180
+      WaveHeight: 2.0
+      WavePeriod: 10.0
+      WaveOrigin: [0, 0]
+  # Current - bottom current only relevant
+  CurrentModel: Variation scheme
+  RefCurrentSpeed: 0.5
+  RefCurrentDirection: 90
+  VerticalCurrentVariationMethod: Interpolated
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [400, 0.3, 0]
+    - [500, 0.1, 0]
+
+LineTypes:
+  # 16-inch export pipeline
+  - Name: Pipe_16inch_X65
+    Category: General
+    IncludeFile: ../../../../library/line_types/pipe_16inch_x65.yml
+
+  # 20-inch trunk line (for variations)
+  - Name: Pipe_20inch_X70
+    Category: General
+    IncludeFile: ../../../../library/line_types/pipe_20inch_x70.yml
+
+  # 12-inch flowline (for variations)
+  - Name: Pipe_12inch_X65
+    Category: General
+    IncludeFile: ../../../../library/line_types/pipe_12inch_x65.yml
+
+Lines:
+  # Seabed Pipeline - 16-inch X65
+  # 2km pipeline from manifold to platform
+  - Name: Pipeline_Main
+    EndAConnection: Anchored
+    EndAX: 0
+    EndAY: 0
+    EndAZ: -500
+    EndBConnection: Anchored
+    EndBX: 2000
+    EndBY: 0
+    EndBZ: -500
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Pipe_16inch_X65, 2000, 20]
+
