@@ -1,0 +1,32 @@
+# LineTypes Configuration
+# Generated from: M01 Pipeline walking.yml
+# Date: 2026-01-18 21:52:53
+LineTypes:
+- Name: Pipeline type
+  Category: Homogeneous pipe
+  OD: 0.2731
+  ID: 0.24292
+  MaterialDensity: 7.85
+  E: 212e6
+  PoissonRatio: 0.293
+  ExpansionTable: Expansion table steel
+  Cdn: 1.2
+  Cdz: 0.008
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: 0.5
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0.03
+  CoatingMaterialDensity: 0.825
+  LiningThickness: 0
+  AdditionalEI: 0
+  Pen:
+  - 3
+  - Solid
+  - Yellow

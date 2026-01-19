@@ -1,0 +1,1284 @@
+# Shapes Configuration
+# Generated from: K06 FPV array.yml
+# Date: 2026-01-18 21:52:23
+Shapes:
+- Name: Label1-1
+  ShapeType: Label
+  Connection: PanelTilt1-1
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft1-1
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label1-2
+  ShapeType: Label
+  Connection: PanelTilt1-2
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft1-2
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label1-3
+  ShapeType: Label
+  Connection: PanelTilt1-3
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft1-3
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label1-4
+  ShapeType: Label
+  Connection: PanelTilt1-4
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft1-4
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label1-5
+  ShapeType: Label
+  Connection: PanelTilt1-5
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft1-5
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label1-6
+  ShapeType: Label
+  Connection: PanelTilt1-6
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft1-6
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label1-7
+  ShapeType: Label
+  Connection: PanelTilt1-7
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft1-7
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label1-8
+  ShapeType: Label
+  Connection: PanelTilt1-8
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft1-8
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label2-1
+  ShapeType: Label
+  Connection: PanelTilt2-1
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft2-1
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label2-2
+  ShapeType: Label
+  Connection: PanelTilt2-2
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft2-2
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label2-3
+  ShapeType: Label
+  Connection: PanelTilt2-3
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft2-3
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label2-4
+  ShapeType: Label
+  Connection: PanelTilt2-4
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft2-4
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label2-5
+  ShapeType: Label
+  Connection: PanelTilt2-5
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft2-5
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label2-6
+  ShapeType: Label
+  Connection: PanelTilt2-6
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft2-6
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label2-7
+  ShapeType: Label
+  Connection: PanelTilt2-7
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft2-7
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label2-8
+  ShapeType: Label
+  Connection: PanelTilt2-8
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft2-8
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label3-1
+  ShapeType: Label
+  Connection: PanelTilt3-1
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft3-1
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label3-2
+  ShapeType: Label
+  Connection: PanelTilt3-2
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft3-2
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label3-3
+  ShapeType: Label
+  Connection: PanelTilt3-3
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft3-3
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label3-4
+  ShapeType: Label
+  Connection: PanelTilt3-4
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft3-4
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label3-5
+  ShapeType: Label
+  Connection: PanelTilt3-5
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft3-5
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label3-6
+  ShapeType: Label
+  Connection: PanelTilt3-6
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft3-6
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label3-7
+  ShapeType: Label
+  Connection: PanelTilt3-7
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft3-7
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label3-8
+  ShapeType: Label
+  Connection: PanelTilt3-8
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft3-8
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label4-1
+  ShapeType: Label
+  Connection: PanelTilt4-1
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft4-1
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label4-2
+  ShapeType: Label
+  Connection: PanelTilt4-2
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft4-2
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label4-3
+  ShapeType: Label
+  Connection: PanelTilt4-3
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft4-3
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label4-4
+  ShapeType: Label
+  Connection: PanelTilt4-4
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft4-4
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label4-5
+  ShapeType: Label
+  Connection: PanelTilt4-5
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft4-5
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label4-6
+  ShapeType: Label
+  Connection: PanelTilt4-6
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft4-6
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label4-7
+  ShapeType: Label
+  Connection: PanelTilt4-7
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft4-7
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label4-8
+  ShapeType: Label
+  Connection: PanelTilt4-8
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft4-8
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label5-1
+  ShapeType: Label
+  Connection: PanelTilt5-1
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft5-1
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label5-2
+  ShapeType: Label
+  Connection: PanelTilt5-2
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft5-2
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label5-3
+  ShapeType: Label
+  Connection: PanelTilt5-3
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft5-3
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label5-4
+  ShapeType: Label
+  Connection: PanelTilt5-4
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft5-4
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label5-5
+  ShapeType: Label
+  Connection: PanelTilt5-5
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft5-5
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label5-6
+  ShapeType: Label
+  Connection: PanelTilt5-6
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft5-6
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label5-7
+  ShapeType: Label
+  Connection: PanelTilt5-7
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft5-7
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label5-8
+  ShapeType: Label
+  Connection: PanelTilt5-8
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft5-8
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label6-1
+  ShapeType: Label
+  Connection: PanelTilt6-1
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft6-1
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label6-2
+  ShapeType: Label
+  Connection: PanelTilt6-2
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft6-2
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label6-3
+  ShapeType: Label
+  Connection: PanelTilt6-3
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft6-3
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label6-4
+  ShapeType: Label
+  Connection: PanelTilt6-4
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft6-4
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label6-5
+  ShapeType: Label
+  Connection: PanelTilt6-5
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft6-5
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label6-6
+  ShapeType: Label
+  Connection: PanelTilt6-6
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft6-6
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label6-7
+  ShapeType: Label
+  Connection: PanelTilt6-7
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft6-7
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label6-8
+  ShapeType: Label
+  Connection: PanelTilt6-8
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft6-8
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label7-1
+  ShapeType: Label
+  Connection: PanelTilt7-1
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft7-1
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label7-2
+  ShapeType: Label
+  Connection: PanelTilt7-2
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft7-2
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label7-3
+  ShapeType: Label
+  Connection: PanelTilt7-3
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft7-3
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label7-4
+  ShapeType: Label
+  Connection: PanelTilt7-4
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft7-4
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label7-5
+  ShapeType: Label
+  Connection: PanelTilt7-5
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft7-5
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label7-6
+  ShapeType: Label
+  Connection: PanelTilt7-6
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft7-6
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label7-7
+  ShapeType: Label
+  Connection: PanelTilt7-7
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft7-7
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label7-8
+  ShapeType: Label
+  Connection: PanelTilt7-8
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft7-8
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label8-1
+  ShapeType: Label
+  Connection: PanelTilt8-1
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft8-1
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label8-2
+  ShapeType: Label
+  Connection: PanelTilt8-2
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft8-2
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label8-3
+  ShapeType: Label
+  Connection: PanelTilt8-3
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft8-3
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label8-4
+  ShapeType: Label
+  Connection: PanelTilt8-4
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft8-4
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label8-5
+  ShapeType: Label
+  Connection: PanelTilt8-5
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft8-5
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label8-6
+  ShapeType: Label
+  Connection: PanelTilt8-6
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft8-6
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label8-7
+  ShapeType: Label
+  Connection: PanelTilt8-7
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft8-7
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre
+- Name: Label8-8
+  ShapeType: Label
+  Connection: PanelTilt8-8
+  Origin:
+  - 0
+  - 1
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  Labels:
+  - LabelPosition:
+    - 0
+    - 0
+    - 0
+    LabelText: Raft8-8
+    LabelColor: White
+    LabelHorizontalAlignment: Centre
+    LabelVerticalAlignment: Centre

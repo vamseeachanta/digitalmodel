@@ -1,0 +1,31 @@
+# Constraints Configuration
+# Generated from: A04 Disconnecting turret system.yml
+# Date: 2026-01-18 21:51:46
+Constraints:
+- Name: Latch
+  InFrameConnection: FPSO
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 18
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - -180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: 2
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: 0
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No

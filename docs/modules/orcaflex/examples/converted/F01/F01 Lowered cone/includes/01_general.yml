@@ -1,0 +1,43 @@
+# General Configuration
+# Generated from: F01 Lowered cone.yml
+# Date: 2026-01-18 21:52:00
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMinDamping: 3
+  StaticsMaxDamping: 30
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 40
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+Groups:
+  Structure:
+    Orca-Installer1: Model
+    SPAR - Green: Model
+    Spar Cone: SPAR - Green
+    Winch Spar: SPAR - Green
+    LUMP - Pink: Model
+    Lumped Cone: LUMP - Pink
+    Winch Lumped: LUMP - Pink
+    Slam Buoy: LUMP - Pink
+  State:
+    Collapsed:
+    - Variable data

@@ -1,0 +1,60 @@
+# Environment Configuration
+# Generated from: A06 SHEAR7 import drag amplification.yml
+# Date: 2026-01-18 21:51:02
+Environment:
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.4999999999999999e-05
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 64.00000000000001
+  SeabedType: Flat
+  SeabedOrigin:
+  - 0
+  - 0
+  WaterDepth: 5900
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 25.000000000000004
+  SeabedShearStiffness: 3.500000000000001
+  WaveTrains:
+  - Name: Wave1
+    WaveType: Dean stream
+    WaveDirection: 180
+    WaveHeight: 0
+    WavePeriod: 14
+    WaveOrigin:
+    - 0
+    - 0
+    WaveTimeOrigin: 0
+    WaveStreamFunctionOrder: 5
+    WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel: ~
+  WaveKinematicsCutoffDepth: Infinity
+  MultipleCurrentDataCanBeDefined: No
+  CurrentModel: Variation scheme
+  CurrentRamped: No
+  CurrentApplyVerticalStretching: No
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  RefCurrentSpeed: 0.9842519685039368
+  RefCurrentDirection: 180
+  CurrentDepth, CurrentFactor, CurrentRotation:
+  - - 0
+    - 1
+    - 0
+  - - 5900
+    - 1
+    - 0
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: Yes
+  IncludeBuoyWingWindLoads: Yes
+  WindRamping: From mean
+  WindType: Constant
+  AirDensity: 0.07990778953746511
+  AirSpeedOfSound: 1125.3280839895012
+  WindSpeed: 0
+  WindDirection: 0
+  VerticalWindVariationFactor: ~

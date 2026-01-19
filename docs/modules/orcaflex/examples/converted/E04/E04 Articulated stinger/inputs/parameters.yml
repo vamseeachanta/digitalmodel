@@ -1,0 +1,13 @@
+# Input Parameters for Parametric Analysis
+# Source: E04 Articulated stinger.yml
+# Generated: 2026-01-18 21:51:59
+
+water_depth: 100
+current_speed: 0.5
+wind_speed: 0
+water_density: 1.025
+stage_durations:
+- 8
+- 300
+wave_direction: 180
+

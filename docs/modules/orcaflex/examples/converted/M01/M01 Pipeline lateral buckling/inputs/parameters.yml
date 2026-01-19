@@ -1,0 +1,12 @@
+# Input Parameters for Parametric Analysis
+# Source: M01 Pipeline lateral buckling.yml
+# Generated: 2026-01-18 21:52:53
+
+wind_speed: 0
+water_density: 1.025
+stage_durations:
+- 550
+hs: 0
+tp: 8
+wave_direction: 180
+

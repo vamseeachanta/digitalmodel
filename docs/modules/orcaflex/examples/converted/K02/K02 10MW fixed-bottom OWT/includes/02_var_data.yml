@@ -1,0 +1,94 @@
+# VariableData Configuration
+# Generated from: K02 10MW fixed-bottom OWT.yml
+# Date: 2026-01-18 21:52:10
+VariableData:
+  Externalfunctions:
+  - Name: Controller
+    Source: External file
+    FileName: BladedControllerWrapper.py
+    FunctionName: BladedController
+    InitialValue: 0
+    TimeStep: Outer time step
+  Linetypediameter:
+  - Name: Tower ID
+    IndependentValue, DependentValue:
+    - - 0
+      - 5.44
+    - - 11.08
+      - 5.73
+    - - 21.59
+      - 6
+    - - 32.09
+      - 6.26
+    - - 42.6
+      - 6.53
+    - - 53.1
+      - 6.8
+    - - 63.61
+      - 7.07
+    - - 74.11
+      - 7.34
+    - - 84.62
+      - 7.61
+    - - 95.12
+      - 7.88
+    - - 105.63
+      - 8.16
+  - Name: Tower OD
+    IndependentValue, DependentValue:
+    - - 0
+      - 5.5
+    - - 11.08
+      - 5.79
+    - - 21.59
+      - 6.07
+    - - 32.09
+      - 6.35
+    - - 42.6
+      - 6.63
+    - - 53.1
+      - 6.91
+    - - 63.61
+      - 7.19
+    - - 74.11
+      - 7.46
+    - - 84.62
+      - 7.74
+    - - 95.12
+      - 8.02
+    - - 105.63
+      - 8.3
+  - Name: Monopile ID
+    IndependentValue, DependentValue:
+    - - 0
+      - 8.7
+    - - 2
+      - 8.7
+    - - 4
+      - 8.7
+    - - 6
+      - 8.7
+    - - 8
+      - 8.69
+    - - 10
+      - 8.69
+    - - 12
+      - 8.69
+    - - 14
+      - 8.69
+    - - 16
+      - 8.69
+    - - 18
+      - 8.69
+    - - 20
+      - 8.69
+    - - 24
+      - 8.8
+    - - 28
+      - 8.8
+    - - 32
+      - 8.8
+    - - 36
+      - 8.8
+    - - 40
+      - 8.8

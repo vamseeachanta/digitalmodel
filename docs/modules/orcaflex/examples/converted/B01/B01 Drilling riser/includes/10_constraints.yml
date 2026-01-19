@@ -1,0 +1,32 @@
+# Constraints Configuration
+# Generated from: B01 Drilling riser.yml
+# Date: 2026-01-18 21:51:48
+Constraints:
+- Name: Rotary Table
+  InFrameConnection: Semisub
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 25
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: 0
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No

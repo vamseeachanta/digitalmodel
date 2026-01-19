@@ -1,0 +1,47 @@
+# Shapes Configuration
+# Generated from: Pipeline spanning (lay to rough seabed).yml
+# Date: 2026-01-18 21:51:41
+Shapes:
+- Name: Deck
+  ShapeType: Elastic solid
+  Shape: Block
+  Connection: Laying Vessel
+  Origin:
+  - -49.99999999999999
+  - -15
+  - -23.25
+  Size:
+  - 300
+  - 30
+  - 30
+  Orientation:
+  - 0
+  - 0
+  - 0
+  NormalStiffness: 200
+  ShearStiffness: ~
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Chute
+  ShapeType: Elastic solid
+  Shape: Cylinder
+  Connection: Laying Vessel
+  Origin:
+  - -49.99999999999999
+  - -8
+  - 1.75
+  Azimuth: 90
+  Declination: 90
+  Length: 16
+  OuterDiameter: 10
+  InnerDiameter: 0
+  NormalStiffness: 1000
+  ShearStiffness: ~
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise

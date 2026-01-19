@@ -1,0 +1,64 @@
+# Vessels Configuration
+# Generated from: H02 Jacket to semisub.yml
+# Date: 2026-01-18 21:52:07
+Vessels:
+- Name: Platform
+  VesselType: Jacket
+  Draught: Draught 1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 0
+  - 0
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: None
+  PrimaryMotion: None
+  SuperimposedMotion: None
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: No
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: No
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Semisub
+  VesselType: Semi
+  Draught: Draught 1
+  Length: 67.08
+  Connection: Free
+  InitialPosition:
+  - 90
+  - 0
+  - 4.91
+  Orientation:
+  - 0
+  - 0
+  - 90
+  IncludedInStatics: None
+  PrimaryMotion: None
+  SuperimposedMotion: RAOs + harmonics
+  ImposedMotionConsistentWithSolver: No
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: No
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: No
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  PenMode: Use vessel type's own pen
+  ShadedDrawingCullingMode: Anticlockwise

@@ -1,0 +1,32 @@
+# Constraints Configuration
+# Generated from: C06 Discretised CALM buoy.yml
+# Date: 2026-01-18 21:48:39
+Constraints:
+- Name: Rotation
+  InFrameConnection: Main
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 1.75
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  TranslationalStiffness: 0
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No

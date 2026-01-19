@@ -1,0 +1,29 @@
+%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\examples\raw\K01\K01 5MW spar FOWT.yml
+# Created: 3:30 AM on 1/14/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+# Input Parameters (for parametric analysis)
+_inputs:
+  current_speed: 0
+  wind_speed: 15
+  water_density: 1.025
+  stage_durations:
+  - 250
+  - 250
+  hs: 6
+  tp: 10
+  wave_direction: 180
+
+# Include files
+- includefile: includes/01_general.yml
+- includefile: includes/02_var_data.yml
+- includefile: includes/03_environment.yml
+- includefile: includes/05_line_types.yml
+- includefile: includes/07_lines.yml
+- includefile: includes/08_buoys.yml
+- includefile: includes/09_shapes.yml
+- includefile: includes/15_turbines.yml

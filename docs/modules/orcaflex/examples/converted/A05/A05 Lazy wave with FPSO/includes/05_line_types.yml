@@ -1,0 +1,152 @@
+# LineTypes Configuration
+# Generated from: A05 Lazy wave with FPSO.yml
+# Date: 2026-01-18 21:51:47
+LineTypes:
+- Name: Flex joint
+  Category: Homogeneous pipe
+  OD: 1
+  ID: 0.833333333333333
+  MaterialDensity: 490.059490522736
+  E: 4.42771205742783e6
+  PoissonRatio: 0.3
+  ExpansionTable: None
+  Cdn: Generic Drag
+  Cdz: 0.008
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: 0.3
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0
+  LiningThickness: 0
+  AdditionalEI: 0
+  APIRP2RDTcorr: 0.00833333333333326
+  APIRP2RDSMYS: 9403.2
+  Pen:
+  - 2
+  - Solid
+  - $FFFF80
+- Name: Lazy Straked
+  Category: Homogeneous pipe
+  OD: 1
+  ID: 0.833333333333333
+  MaterialDensity: 490.059490522736
+  E: 4.42771205742783e6
+  PoissonRatio: 0.3
+  ExpansionTable: None
+  Cdn: 1.6
+  Cdz: 0.25
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: 0.3
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: Coating and Strakes
+  LiningThickness: 0.01
+  LiningMaterialDensity: 30
+  AdditionalEI: 0
+  APIRP2RDTcorr: 0.00833333333333326
+  APIRP2RDSMYS: 9403.2
+  Pen:
+  - 2
+  - Solid
+  - $FFFF80
+- Name: Lazy Bare
+  Category: Homogeneous pipe
+  OD: 1
+  ID: 0.833333333333333
+  MaterialDensity: 490.059490522736
+  E: 4.42771205742783e6
+  PoissonRatio: 0.3
+  ExpansionTable: None
+  Cdn: Generic Drag
+  Cdz: 0.008
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: 0.3
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0.02
+  CoatingMaterialDensity: 50.0000000000001
+  LiningThickness: 0.01
+  LiningMaterialDensity: 30
+  AdditionalEI: 0
+  APIRP2RDTcorr: 0.00833333333333326
+  APIRP2RDSMYS: 9403.2
+  Pen:
+  - 2
+  - Solid
+  - $FFFF80
+- Name: Lazy Buoyed
+  Category: General
+  OD: 2.22863108489382
+  ID: 0.813333333333333
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 198.623920105366
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 112.529603199694e3
+  - ~
+  EA: 1.06257461382006e6
+  PoissonRatio: 0.3
+  ExpansionTable: None
+  GJ: 86.5612332305335e3
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 6.39763779527559
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0.598266961162241
+  - ~
+  - 0.401733038837759
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Lazy Buoyed drag
+  - ~
+  - 0.100807126929134
+  Cl: 0
+  NormalDragLiftDiameter: 1.04
+  AxialDragLiftDiameter: 1.04
+  StressOD: 1
+  StressID: 0.833333333333333
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  APIRP2RDTcorr: 0.00833333333333326
+  APIRP2RDSMYS: 9403.2
+  Pen:
+  - 4
+  - Solid
+  - Red

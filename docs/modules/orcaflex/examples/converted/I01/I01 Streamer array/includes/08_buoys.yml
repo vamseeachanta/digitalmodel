@@ -1,0 +1,184 @@
+# 6DBuoys Configuration
+# Generated from: I01 Streamer array.yml
+# Date: 2026-01-18 21:52:08
+6DBuoys:
+- Name: Diverter
+  BuoyType: Towed fish
+  Connection: Free
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -48.09392692619179
+  - -2.531385981556956
+  - 0
+  InitialAttitude:
+  - 18
+  - 1
+  - 3
+  Mass: 1
+  MomentsOfInertia:
+  - 0.16
+  - 5.41
+  - 5.41
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  StackBaseCentre:
+  - -4
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MunkMomentCoefficient: 0
+  NormalDragAreaCalculatedFromGeometry: No
+  Cylinders:
+  - CylinderOuterDiameter: 0.8
+    CylinderInnerDiameter: 0
+    CylinderLength: 2
+    DragArea:
+    - 0
+    - 0
+    DragForceCoefficient:
+    - 0
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.8
+    CylinderInnerDiameter: 0
+    CylinderLength: 2
+    DragArea:
+    - 0
+    - 0
+    DragForceCoefficient:
+    - 0
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.8
+    CylinderInnerDiameter: 0
+    CylinderLength: 2
+    DragArea:
+    - 0
+    - 0
+    DragForceCoefficient:
+    - 0
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.8
+    CylinderInnerDiameter: 0
+    CylinderLength: 2
+    DragArea:
+    - 0
+    - 0
+    DragForceCoefficient:
+    - 0
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Wings:
+  - Name: Wing A
+    WingSpan: 2.2
+    WingChord: 8
+    CentreOfWing:
+    - 0
+    - 0
+    - -1.6
+    Orientation:
+    - 0
+    - 0
+    - 0
+    WingType: Prandtl199
+  CylinderNumLinesDrawn: 2
+  Pen:
+  - 1
+  - Solid
+  - Yellow
+  ShadedDrawingCullingMode: Anticlockwise

@@ -1,0 +1,72 @@
+# Vessels Configuration
+# Generated from: F04 Payload transfer.yml
+# Date: 2026-01-18 21:52:04
+Vessels:
+- Name: Offloading Vessel
+  VesselType: Vessel type1
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - -20
+  - -50
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - -90
+  IncludedInStatics: None
+  PrimaryMotion: Calculated (6 DOF)
+  SuperimposedMotion: None
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: Yes
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: Yes
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  PrimaryMotionIsTreatedAs: Wave frequency
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  Pen:
+  - 1
+  - Solid
+  - $00FF80
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Support Vessel
+  VesselType: Vessel type1
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 14
+  - 0
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 90
+  IncludedInStatics: None
+  PrimaryMotion: Calculated (6 DOF)
+  SuperimposedMotion: None
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: Yes
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: Yes
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  PrimaryMotionIsTreatedAs: Wave frequency
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  Pen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise

@@ -1,0 +1,14 @@
+# Input Parameters for Parametric Analysis
+# Source: K01 5MW spar FOWT.yml
+# Generated: 2026-01-18 21:52:08
+
+current_speed: 0
+wind_speed: 15
+water_density: 1.025
+stage_durations:
+- 250
+- 250
+hs: 6
+tp: 10
+wave_direction: 180
+

@@ -1,0 +1,38 @@
+# Shapes Configuration
+# Generated from: K01 5MW spar FOWT.yml
+# Date: 2026-01-18 21:52:08
+Shapes:
+- Name: Nose cone
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: NREL-5MW
+  Origin:
+  - -1.0880185641326534e-14
+  - -3.6915504601027874e-10
+  - -2.7500000000000067
+  Orientation:
+  - 269.9999644599718
+  - 180
+  - -90.00003554002818
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.01
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 3
+  - - 1
+    - 2.8000000000000003
+  - - 1.5
+    - 2.6
+  - - 2
+    - 2.4000000000000004
+  - - 2.05
+    - 2.35
+  OutsidePen:
+  - 1
+  - Solid
+  - White
+  InsidePen:
+  - 1
+  - Solid
+  - White

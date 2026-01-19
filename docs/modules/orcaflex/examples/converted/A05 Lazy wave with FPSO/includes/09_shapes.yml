@@ -1,0 +1,22 @@
+# Shapes Configuration
+# Generated from: A05 Lazy wave with FPSO.yml
+# Date: 2026-01-18 21:50:54
+Shapes:
+- Name: Turret Shape
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: FPSO
+  Origin:
+  - 0
+  - 0
+  - 65.6167979002624
+  Azimuth: 0
+  Declination: 0
+  Length: 65.6167979002624
+  OuterDiameter: 49.2125984251968
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise

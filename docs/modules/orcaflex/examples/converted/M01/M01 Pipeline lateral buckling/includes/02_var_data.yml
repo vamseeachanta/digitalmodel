@@ -1,0 +1,16 @@
+# VariableData Configuration
+# Generated from: M01 Pipeline lateral buckling.yml
+# Date: 2026-01-18 21:52:53
+VariableData:
+  Seabedtangentialresistance:
+  - Name: Tangential resistance profile
+    IndependentValue, DependentValue:
+    - - 0
+      - 0
+    - - 0.011075575
+      - 4.418445871
+    - - 0.49965
+      - 0.396297566
+    - - 1
+      - 0.396297566
+    UnloadingStiffness: ~

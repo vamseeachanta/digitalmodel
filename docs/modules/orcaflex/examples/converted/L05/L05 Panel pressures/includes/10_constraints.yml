@@ -1,0 +1,352 @@
+# Constraints Configuration
+# Generated from: L05 Panel pressures.yml
+# Date: 2026-01-18 21:52:53
+Constraints:
+- Name: KS-SP Ry
+  InFrameConnection: Keystone
+  InFrameInitialPosition:
+  - -5.749999999999997
+  - -9.959292143521045
+  - -16.5
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - -119.99999999999999
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.130936643e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  HideAfterOutFrameRelease: No
+- Name: KS-SP Rz
+  InFrameConnection: KS-SP Ry
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 2.717471388e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  HideAfterOutFrameRelease: No
+- Name: SP-SC Ry
+  InFrameConnection: Starboard pontoon
+  InFrameInitialPosition:
+  - 17.009999999999998
+  - 2.842170943040401e-14
+  - -16.5
+  InFrameInitialAttitude:
+  - 180
+  - 0
+  - -179.99999999999997
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.518511807e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  HideAfterOutFrameRelease: No
+- Name: SP-SC Rz
+  InFrameConnection: SP-SC Ry
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 3.648756465e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  HideAfterOutFrameRelease: No
+- Name: KS-PP Ry
+  InFrameConnection: Keystone
+  InFrameInitialPosition:
+  - -5.749999999999997
+  - 9.959292143521045
+  - -16.5
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 119.99999999999997
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.130936643e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  HideAfterOutFrameRelease: No
+- Name: KS-PP Rz
+  InFrameConnection: KS-PP Ry
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 2.717471388e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  HideAfterOutFrameRelease: No
+- Name: PP-PC Ry
+  InFrameConnection: Port pontoon
+  InFrameInitialPosition:
+  - 17.01000000000001
+  - 4.440892098500626e-15
+  - -16.5
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.518511807e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  HideAfterOutFrameRelease: No
+- Name: PP-PC Rz
+  InFrameConnection: PP-PC Ry
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 3.648756465e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  HideAfterOutFrameRelease: No
+- Name: KS-FP Ry
+  InFrameConnection: Keystone
+  InFrameInitialPosition:
+  - 11.5
+  - 0
+  - -16.5
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.130936643e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  HideAfterOutFrameRelease: No
+- Name: KS-FP Rz
+  InFrameConnection: KS-FP Ry
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 2.717471388e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  HideAfterOutFrameRelease: No
+- Name: FP-FC Ry
+  InFrameConnection: Fore pontoon
+  InFrameInitialPosition:
+  - 17.01
+  - 0
+  - -16.5
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.518511807e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  HideAfterOutFrameRelease: No
+- Name: FP-FC Rz
+  InFrameConnection: FP-FC Ry
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 3.648756465e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  HideAfterOutFrameRelease: No

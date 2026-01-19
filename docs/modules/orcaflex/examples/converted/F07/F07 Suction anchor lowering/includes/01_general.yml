@@ -1,0 +1,134 @@
+# General Configuration
+# Generated from: F07 Suction anchor lowering.yml
+# Date: 2026-01-18 21:52:06
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.01
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.01
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 20
+  - 150
+  - 250
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 190.03725381543612
+  DefaultViewCentre:
+  - -8.633474537637056
+  - 40.375242441313354
+  - -14.473072044099093
+  DefaultViewAzimuth: 270.0000000000009
+  DefaultViewElevation: 0
+3DBuoys:
+- Name: Master link
+  Connection: Free
+  IncludedInStatics: Yes
+  InitialPosition:
+  - -71.90511974507163
+  - -0.051444259700774445
+  - 36.44882790469854
+  Mass: 0.5
+  Volume: 0.1
+  BulkModulus: Infinity
+  Height: 5
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+FrictionCoefficients:
+  FrictionCoefficient6DBuoyName, 6DBuoyFrictionCoefficientShapeName, 6DBuoyFrictionCoefficient:
+  - - (all 6D buoys)
+    - (all shapes)
+    - 0.2
+Groups:
+  Structure:
+    Installation vessel: Model
+    Suction pile group: Model
+    Suction anchor: Suction pile group
+    Extra mass from trapped water: Suction pile group
+    Axial added mass when top cap hits sea surface: Suction pile group
+    Visuals: Suction pile group
+    Cans on deck: Visuals
+    Can 1: Cans on deck
+    Suction can bottom1: Can 1
+    Suction can top1: Can 1
+    Suction can vent 3: Can 1
+    Suction can vent 4: Can 1
+    Suction cap cross beam1: Can 1
+    Deck can - main 1: Can 1
+    Sea fastening 1: Can 1
+    Sea fastening 2: Can 1
+    Sea fastening 3: Can 1
+    Sea fastening 4: Can 1
+    Can 2: Cans on deck
+    Suction can bottom2: Can 2
+    Suction can top2: Can 2
+    Suction can vent 5: Can 2
+    Suction can vent 6: Can 2
+    Suction cap cross beam2: Can 2
+    Deck can - main 2: Can 2
+    Sea fastening 5: Can 2
+    Sea fastening 6: Can 2
+    Sea fastening 7: Can 2
+    Sea fastening 8: Can 2
+    Can 3: Cans on deck
+    Suction can bottom3: Can 3
+    Suction can top3: Can 3
+    Suction can vent 7: Can 3
+    Suction can vent 8: Can 3
+    Suction cap cross beam3: Can 3
+    Deck can - main 3: Can 3
+    Sea fastening 9: Can 3
+    Sea fastening 10: Can 3
+    Sea fastening 11: Can 3
+    Sea fastening 12: Can 3
+    Can on crane: Visuals
+    Suction can bottom: Can on crane
+    Suction can top: Can on crane
+    Suction can vent 1: Can on crane
+    Suction can vent 2: Can on crane
+    Suction cap cross beam: Can on crane
+    Rigging: Model
+    Master link: Rigging
+    Sling 1: Rigging
+    Sling 2: Rigging
+    Sling 3: Rigging
+    Sling 4: Rigging
+    Tugger winch 1: Rigging
+    Tugger winch 2: Rigging
+    Crane: Model
+    Crane arm: Crane
+    Crane wire: Crane
+    Main crane: Crane
+    Crane base: Crane
+  State:
+    Collapsed:
+    - Variable data

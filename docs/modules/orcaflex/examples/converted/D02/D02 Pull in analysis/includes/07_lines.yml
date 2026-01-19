@@ -1,0 +1,237 @@
+# Lines Configuration
+# Generated from: D02 Pull in analysis.yml
+# Date: 2026-01-18 21:51:54
+Lines:
+- Name: Pipe
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Free
+      - 66.38999999999999
+      - 610.949
+      - -136.85
+      - 50.78
+      - 90
+      - 0
+      - ~
+    - - Free
+      - 363.50150620402354
+      - 825.9268264163715
+      - -136.929
+      - 34.391000000000005
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - []
+  - []
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Pullhead
+    Length: 2
+    NumberOfSegments: 1
+    ClashCheck: Yes
+    DisturbanceVessel: (none)
+  - LineType: Pipe Type
+    Length: 28
+    TargetSegmentLength: 1
+    ClashCheck: Yes
+    DisturbanceVessel: (none)
+  - LineType: Pipe Type
+    Length: 490
+    TargetSegmentLength: 5
+    DisturbanceVessel: (none)
+  - LineType: Pipe Type
+    Length: 30
+    TargetSegmentLength: 10
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Prescribed
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  AsLaidTension: 0
+  TrackEndAAzimuth: 50.779999999999994
+  TrackSectionLength, TrackSectionTurn:
+  - - 71.30438609334925
+    - 0
+  - - 30.049
+    - 43.041999999999994
+  - - 31.804699999999997
+    - 0
+  - - 113.833
+    - -163.05399999999997
+  - - 42.595
+    - 0
+  - - 125.0041
+    - 179.05499999999998
+  - - 4.906
+    - 0
+  - - 52.657
+    - -75.42599999999999
+  - - 39.9980458600998
+    - -0.006318996680519717
+  FullStaticsConvergenceControlMethod: Mag. of std. error / change
+  FullStaticsMaxIterations: 2000
+  FullStaticsMinDamping: 2
+  FullStaticsMaxDamping: 20
+  FullStaticsMagOfStdChange: 0.01
+  NodePen:
+  - 3
+  - Solid
+  - $0080FF
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Gateway 1
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Anchored
+      - 44.9
+      - 526.3
+      - 1
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Anchored
+      - 44.9
+      - 526.3
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Gateway
+    Length: 0.9
+    NumberOfSegments: 1
+    ClashCheck: Yes
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: None
+  StaticsSeabedFrictionPolicy: None
+  DrawContact: No
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Gateway 2
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Anchored
+      - 46.3
+      - 524.9
+      - 1
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Anchored
+      - 46.3
+      - 524.9
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Gateway
+    Length: 0.9
+    NumberOfSegments: 1
+    ClashCheck: Yes
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: None
+  StaticsSeabedFrictionPolicy: None
+  DrawContact: No
+  ContactPen:
+  - 5
+  - Solid
+  - White

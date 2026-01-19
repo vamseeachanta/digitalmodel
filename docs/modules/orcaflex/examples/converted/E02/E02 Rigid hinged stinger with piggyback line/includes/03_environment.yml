@@ -1,0 +1,70 @@
+# Environment Configuration
+# Generated from: E02 Rigid hinged stinger with piggyback line.yml
+# Date: 2026-01-18 21:51:57
+Environment:
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-06
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 1.025
+  SeabedType: Flat
+  SeabedOrigin:
+  - 0
+  - 0
+  WaterDepth: 100
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 100
+  KinematicStretchingMethod: Vertical stretching
+  UserSpecifiedRandomWaveSeeds: No
+  WaveFrequencySpectrumDiscretisationMethod: Equal energy
+  WaveTrains:
+  - Name: Wave1
+    WaveType: JONSWAP
+    WaveDirection: 135
+    WaveOrigin:
+    - 0
+    - 0
+    WaveTimeOrigin: 0
+    WaveNumberOfSpectralDirections: 1
+    WaveJONSWAPParameters: Automatic
+    WaveHs: 1
+    WaveTz: 8
+    WaveNumberOfComponents: 100
+    WaveSpectrumMinRelFrequency: 0.5
+    WaveSpectrumMaxRelFrequency: 10
+    WaveSpectrumMaxComponentFrequencyRange: 0.05
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  MultipleCurrentDataCanBeDefined: No
+  CurrentModel: Variation scheme
+  CurrentRamped: Yes
+  CurrentApplyVerticalStretching: No
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  RefCurrentSpeed: 1
+  RefCurrentDirection: 160
+  CurrentDepth, CurrentFactor, CurrentRotation:
+  - - 0
+    - 1
+    - 0
+  - - 100
+    - 1
+    - 0
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: Yes
+  IncludeBuoyWingWindLoads: Yes
+  WindRamping: From mean
+  WindType: Constant
+  AirDensity: 0.00128
+  AirSpeedOfSound: 343
+  WindSpeed: 0
+  WindDirection: 0
+  VerticalWindVariationFactor: ~

@@ -1,0 +1,121 @@
+# Winches Configuration
+# Generated from: E05 Pipe davit lift.yml
+# Date: 2026-01-18 21:52:00
+Winches:
+- Name: Winch A
+  WinchType: Simple
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Workboat
+    - -30
+    - -12
+    - 7
+  - - Pipeline
+    - 0
+    - 0
+    - 10
+    - End A
+  Stiffness: 100e3
+  Damping: 0.1
+  ReleaseStage: ~
+  WinchControlType: By stage
+  StageMode, StageValue:
+  - - Specified tension
+    - 0
+  - - Specified tension
+    - 0
+  - - Specified payout rate change
+    - -0.153
+  - - Specified payout rate
+    - -0.153
+  - - Specified payout rate
+    - -0.153
+  - - Specified payout rate change
+    - 0.103
+  - - Specified payout rate
+    - -0.05
+  - - Specified payout rate change
+    - 0.05
+  - - Specified payout
+    - 0
+  Pen:
+  - 1
+  - Solid
+  - Blue
+- Name: Winch B
+  WinchType: Simple
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Workboat
+    - 0
+    - -12
+    - 7
+  - - Pipeline
+    - 0
+    - 0
+    - 40
+    - End A
+  Stiffness: 100e3
+  Damping: 0.1
+  ReleaseStage: ~
+  WinchControlType: By stage
+  StageMode, StageValue:
+  - - Specified tension
+    - 0
+  - - Specified tension
+    - 0
+  - - Specified payout rate change
+    - -0.14
+  - - Specified payout rate
+    - -0.14
+  - - Specified payout rate
+    - -0.14
+  - - Specified payout rate change
+    - 0.065
+  - - Specified payout rate
+    - -0.075
+  - - Specified payout rate change
+    - 0.075
+  - - Specified payout
+    - 0
+  Pen:
+  - 1
+  - Solid
+  - Blue
+- Name: Winch C
+  WinchType: Simple
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Workboat
+    - 30
+    - -12
+    - 7
+  - - Pipeline
+    - 0
+    - 0
+    - 70
+    - End A
+  Stiffness: 100e3
+  Damping: 0.1
+  ReleaseStage: ~
+  WinchControlType: By stage
+  StageMode, StageValue:
+  - - Specified tension
+    - 0
+  - - Specified tension
+    - 0
+  - - Specified payout rate change
+    - -0.117
+  - - Specified payout rate
+    - -0.117
+  - - Specified payout rate
+    - -0.117
+  - - Specified payout rate change
+    - 0.042
+  - - Specified payout rate
+    - -0.075
+  - - Specified payout rate change
+    - 0.075
+  - - Specified payout
+    - 0
+  Pen:
+  - 1
+  - Solid
+  - Blue

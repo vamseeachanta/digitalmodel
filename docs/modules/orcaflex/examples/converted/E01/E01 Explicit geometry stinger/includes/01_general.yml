@@ -1,0 +1,227 @@
+# General Configuration
+# Generated from: E01 Explicit geometry stinger.yml
+# Date: 2026-01-18 21:51:56
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 6
+  - 150
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 456.192
+  DefaultViewCentre:
+  - -103.45202421303344
+  - 0
+  - -51.4739865771812
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+SupportTypes:
+- Name: U Support Single Section
+  Geometry: U shaped
+  NormalStiffness: 10e3
+  ShearStiffness: 100
+  Diameter: 0.4
+  USupportHorizontalLength: 2
+  USupportVerticalLength: 1
+  Pen:
+  - 4
+  - Solid
+  - Fuchsia
+- Name: Flat Support 1m
+  Geometry: Flat
+  NormalStiffness: 10e3
+  ShearStiffness: 100
+  Diameter: 0.4
+  FlatSupportLength: 1
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Flat Support 2m
+  Geometry: Flat
+  NormalStiffness: 10e3
+  ShearStiffness: 100
+  Diameter: 0.4
+  FlatSupportLength: 2
+  Pen:
+  - 4
+  - Solid
+  - Blue
+LineContactData:
+  PenetratorData:
+  - PenetratorLocationsDataSetName: Port Side Rollers
+    ? Penetratorx, Penetratory, Penetratorz, PenetratorzRelativeTo, PenetratorContactDiameter, PenetratorContactArea, PenetratorContactLength
+    : - - 10.925
+        - 1
+        - 0
+        - End A
+        - 21
+        - 1
+        - ~
+      - - 10.925
+        - 1
+        - 27.925
+        - End A
+        - 21
+        - 1
+        - ~
+      - - 10.925
+        - 1
+        - 55.851
+        - End A
+        - 21
+        - 1
+        - ~
+      - - 10.925
+        - 1
+        - 83.776
+        - End A
+        - 21
+        - 1
+        - ~
+  - PenetratorLocationsDataSetName: Starboard Side Rollers
+    ? Penetratorx, Penetratory, Penetratorz, PenetratorzRelativeTo, PenetratorContactDiameter, PenetratorContactArea, PenetratorContactLength
+    : - - -10.925
+        - 1
+        - 0
+        - End A
+        - 21
+        - 1
+        - ~
+      - - -10.925
+        - 1
+        - 27.925
+        - End A
+        - 21
+        - 1
+        - ~
+      - - -10.925
+        - 1
+        - 55.851
+        - End A
+        - 21
+        - 1
+        - ~
+      - - -10.925
+        - 1
+        - 83.776
+        - End A
+        - 21
+        - 1
+        - ~
+  - PenetratorLocationsDataSetName: Guides
+    ? Penetratorx, Penetratory, Penetratorz, PenetratorzRelativeTo, PenetratorContactDiameter, PenetratorContactArea, PenetratorContactLength
+    : - - 0
+        - 2
+        - 0
+        - End A
+        - 2
+        - 1
+        - ~
+      - - 0
+        - 2
+        - 27.925
+        - End A
+        - 2
+        - 1
+        - ~
+      - - 0
+        - 2
+        - 55.851
+        - End A
+        - 2
+        - 1
+        - ~
+      - - 0
+        - 2
+        - 83.776
+        - End A
+        - 2
+        - 1
+        - ~
+  - PenetratorLocationsDataSetName: Port Lower Rollers
+    ? Penetratorx, Penetratory, Penetratorz, PenetratorzRelativeTo, PenetratorContactDiameter, PenetratorContactArea, PenetratorContactLength
+    : - - 1
+        - -9.2
+        - 0
+        - End A
+        - 21
+        - 1
+        - ~
+      - - 1
+        - -9.2
+        - 27.925
+        - End A
+        - 21
+        - 1
+        - ~
+      - - 1
+        - -9.2
+        - 55.851
+        - End A
+        - 21
+        - 1
+        - ~
+      - - 1
+        - -9.2
+        - 83.776
+        - End A
+        - 21
+        - 1
+        - ~
+  - PenetratorLocationsDataSetName: Starboard Lower Rollers
+    ? Penetratorx, Penetratory, Penetratorz, PenetratorzRelativeTo, PenetratorContactDiameter, PenetratorContactArea, PenetratorContactLength
+    : - - -1
+        - -9.2
+        - 0
+        - End A
+        - 21
+        - 1
+        - ~
+      - - -1
+        - -9.2
+        - 27.925
+        - End A
+        - 21
+        - 1
+        - ~
+      - - -1
+        - -9.2
+        - 55.851
+        - End A
+        - 21
+        - 1
+        - ~
+      - - -1
+        - -9.2
+        - 83.776
+        - End A
+        - 21
+        - 1
+        - ~
+Groups:
+  Structure:
+    Vessel1: Model
+    Pipe: Model
+  State:
+    Collapsed:
+    - Variable data

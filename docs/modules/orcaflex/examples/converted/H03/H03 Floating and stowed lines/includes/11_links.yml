@@ -1,0 +1,49 @@
+# Links Configuration
+# Generated from: H03 Floating and stowed lines.yml
+# Date: 2026-01-18 21:52:07
+Links:
+- Name: snapping link
+  LinkType: Spring/damper
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Hose
+    - 0
+    - 0
+    - 30.87
+    - End A
+  - - Chain
+    - 0
+    - 0
+    - 0
+    - End B
+  ReleaseStage: ~
+  LinearSpring: No
+  SpringLength, SpringTension:
+  - - 0
+    - 0
+  - - 1.005
+    - 250
+  - - 1.006
+    - 0
+  - - 2
+    - 0
+  LinearDamper: Yes
+  DampingConstant: 0
+- Name: temp parallel
+  LinkType: Spring/damper
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Hose
+    - 0
+    - 0
+    - 30.87
+    - End A
+  - - Chain
+    - 0
+    - 0
+    - 0
+    - End B
+  ReleaseStage: 0
+  LinearSpring: Yes
+  UnstretchedLength: 1
+  Stiffness: 115.6e3
+  LinearDamper: Yes
+  DampingConstant: 0

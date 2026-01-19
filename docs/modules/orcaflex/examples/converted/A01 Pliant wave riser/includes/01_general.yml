@@ -1,0 +1,74 @@
+# General Configuration
+# Generated from: A01 Pliant wave riser.yml
+# Date: 2026-01-18 21:50:04
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 7
+  - 35
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Shaded
+  DefaultShadedFillMode: Solid
+  DefaultViewSize: 245.10596026490066
+  DefaultViewCentre:
+  - -5.525391934428904
+  - 6.4496168626526895
+  - -49.412615613729
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+ClumpTypes:
+- Name: Clamp Type
+  Mass: 0.470203849
+  Volume: 0.059898579
+  Height: 0.48
+  AlignWith: Line axes
+  DragArea:
+  - 0
+  - ~
+  - 0
+  Cd:
+  - 0
+  - ~
+  - 0
+  Ca:
+  - 0
+  - ~
+  - 0
+  Pen:
+  - 3
+  - Solid
+  - Fuchsia
+Groups:
+  Structure:
+    FPSO: Model
+    Pliant Wave: Model
+    Simple Tether: Pliant Wave
+    10" Pliant Simple: Simple Tether
+    Tether Pliant Simple: Simple Tether
+    Detailed Tether: Pliant Wave
+    10" Pliant Detailed Up: Detailed Tether
+    10" Pliant Detailed Dn: Detailed Tether
+    Tether Pliant Detailed: Detailed Tether
+    Clamp: Detailed Tether
+  State:
+    Collapsed:
+    - Variable data

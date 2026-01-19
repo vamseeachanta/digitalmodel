@@ -1,0 +1,188 @@
+# Vessels Configuration
+# Generated from: E01 Explicit geometry stinger.yml
+# Date: 2026-01-18 21:51:56
+Vessels:
+- Name: Vessel1
+  VesselType: Vessel Type1
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 50
+  - 0
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: None
+  PrimaryMotion: None
+  SuperimposedMotion: RAOs + harmonics
+  ImposedMotionConsistentWithSolver: No
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: No
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: No
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  SupportGeometrySpecification: Explicit
+  SupportReleaseStage: ~
+  SupportCoordinateSystems:
+  - SupportCoordinateSystemName: Vessel Supports Origin
+    SupportCoordinateSystemPos:
+    - -30
+    - 0
+    - 9
+    SupportCoordinateSystemOrientation:
+    - 180
+    - 0
+    - 0
+  - SupportCoordinateSystemName: Stinger Supports Origin
+    SupportCoordinateSystemPos:
+    - -50
+    - 0
+    - 6.5
+    SupportCoordinateSystemOrientation:
+    - 180
+    - 0
+    - 0
+  SupportedLine:
+  - Pipe
+  Supports:
+  - SupportType: U Support Single Section
+    SupportCoordinateSystem: Vessel Supports Origin
+    SupportPosition:
+    - 5
+    - 0
+    - 1
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+  - SupportType: U Support Single Section
+    SupportCoordinateSystem: Vessel Supports Origin
+    SupportPosition:
+    - 10
+    - 0
+    - 1
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+  - SupportType: U Support Single Section
+    SupportCoordinateSystem: Vessel Supports Origin
+    SupportPosition:
+    - 15
+    - 0
+    - 1
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+  - SupportType: U Support Single Section
+    SupportCoordinateSystem: Vessel Supports Origin
+    SupportPosition:
+    - 20
+    - 0
+    - 1
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+  - SupportType: U Support Single Section
+    SupportCoordinateSystem: Stinger Supports Origin
+    SupportPosition:
+    - 12.06711879
+    - 0
+    - 3.017057652
+    SupportOrientation:
+    - 0
+    - 4.58366236104655
+    - 0
+  - SupportType: U Support Single Section
+    SupportCoordinateSystem: Stinger Supports Origin
+    SupportPosition:
+    - 24.0570492
+    - 0
+    - 1.57131979
+    SupportOrientation:
+    - 0
+    - 9.16732472209318
+    - 0
+  - SupportType: U Support Single Section
+    SupportCoordinateSystem: Stinger Supports Origin
+    SupportPosition:
+    - 35.89309659
+    - 0
+    - -0.827965797
+    SupportOrientation:
+    - 0
+    - 13.7509870831398
+    - 0
+  - SupportType: U Support Single Section
+    SupportCoordinateSystem: Stinger Supports Origin
+    SupportPosition:
+    - 47.49955065
+    - 0
+    - -4.16545187
+    SupportOrientation:
+    - 0
+    - 18.3346494441863
+    - 0
+  - SupportType: U Support Single Section
+    SupportCoordinateSystem: Stinger Supports Origin
+    SupportPosition:
+    - 58.80216969
+    - 0
+    - -8.419789906
+    SupportOrientation:
+    - 0
+    - 22.9183118052329
+    - 0
+  - SupportType: U Support Single Section
+    SupportCoordinateSystem: Stinger Supports Origin
+    SupportPosition:
+    - 69.72865551
+    - 0
+    - -13.56376666
+    SupportOrientation:
+    - 0
+    - 27.5019741662795
+    - 0
+  - SupportType: Flat Support 2m
+    SupportCoordinateSystem: Stinger Supports Origin
+    SupportPosition:
+    - 80.20911589
+    - 0
+    - -19.56447824
+    SupportOrientation:
+    - 0
+    - 32.08563653
+    - 0
+  - SupportType: Flat Support 1m
+    SupportCoordinateSystem: Stinger Supports Origin
+    SupportPosition:
+    - 80.47470899
+    - -1
+    - -19.14085068
+    SupportOrientation:
+    - 90
+    - 90
+    - 122.0856365
+  - SupportType: Flat Support 1m
+    SupportCoordinateSystem: Stinger Supports Origin
+    SupportPosition:
+    - 80.47470899
+    - 1
+    - -19.14085068
+    SupportOrientation:
+    - 270
+    - 90
+    - 57.91436347
+  ShadedDrawingCullingMode: Anticlockwise

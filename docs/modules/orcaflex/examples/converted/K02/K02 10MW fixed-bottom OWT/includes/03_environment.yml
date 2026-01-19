@@ -1,0 +1,76 @@
+# Environment Configuration
+# Generated from: K02 10MW fixed-bottom OWT.yml
+# Date: 2026-01-18 21:52:10
+Environment:
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-06
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 1.025
+  SeabedType: Flat
+  SeabedOrigin:
+  - 0
+  - 0
+  SeabedOriginDepth: 30
+  NominalDepth: ~
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 0
+  SeabedShearStiffness: 100
+  KinematicStretchingMethod: Vertical stretching
+  UserSpecifiedRandomWaveSeeds: No
+  WaveFrequencySpectrumDiscretisationMethod: Equal energy
+  WaveTrains:
+  - Name: Wave1
+    WaveType: JONSWAP
+    WaveDirection: 180
+    WaveOrigin:
+    - 0
+    - 0
+    WaveTimeOrigin: 0
+    WaveNumberOfSpectralDirections: 1
+    WaveJONSWAPParameters: Automatic
+    WaveHs: 5
+    WaveTz: 6.51155
+    WaveNumberOfComponents: 200
+    WaveSpectrumMinRelFrequency: 0.5
+    WaveSpectrumMaxRelFrequency: 10
+    WaveSpectrumMaxComponentFrequencyRange: 0.05
+  WaveKinematicsCutoffDepth: 30
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  MultipleCurrentDataCanBeDefined: No
+  CurrentModel: Variation scheme
+  CurrentRamped: No
+  CurrentApplyVerticalStretching: No
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  RefCurrentSpeed: 0
+  RefCurrentDirection: 180
+  CurrentDepth, CurrentFactor, CurrentRotation:
+  - - 0
+    - 1
+    - 0
+  - - 100
+    - 1
+    - 0
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: Yes
+  IncludeBuoyWingWindLoads: Yes
+  WindRamping: Unramped
+  WindType: Full field
+  AirDensity: 0.001225
+  AirSpeedOfSound: 343
+  WindTimeOrigin: 0
+  WindOrigin:
+  - 0
+  - 0
+  - ~
+  WindFullFieldFormat: TurbSim
+  WindFullFieldTurbSimFileName: wind.bts
+  WindDirection: 180

@@ -1,0 +1,100 @@
+# General Configuration
+# Generated from: F04 Payload transfer.yml
+# Date: 2026-01-18 21:52:04
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.02
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 140
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+3DBuoys:
+- Name: Master Link
+  Connection: Free
+  IncludedInStatics: Yes
+  InitialPosition:
+  - -20.000000000000004
+  - -38.98410519863474
+  - 15
+  Mass: 1
+  Volume: 0.2
+  BulkModulus: Infinity
+  Height: 0.5
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+FrictionCoefficients:
+  FrictionCoefficient6DBuoyName, 6DBuoyFrictionCoefficientShapeName, 6DBuoyFrictionCoefficient:
+  - - (all 6D buoys)
+    - (all shapes)
+    - 0.2
+Groups:
+  Structure:
+    Payload: Model
+    Offloading Set: Model
+    Offloading Vessel: Offloading Set
+    Offloading Deck: Offloading Set
+    Crane System: Offloading Set
+    Crane Line: Crane System
+    Crane Wire: Crane Line
+    Master Link: Crane Line
+    Sling 1: Crane Line
+    Sling 2: Crane Line
+    Sling 3: Crane Line
+    Sling 4: Crane Line
+    Crane Assembly: Crane Line
+    Slew Constraint: Crane Assembly
+    Luff Constraint 1: Crane Assembly
+    Luff Constraint 2: Crane Assembly
+    Extension Constraint: Crane Assembly
+    Crane Drawing Shapes: Crane Assembly
+    Pedestal 1: Crane Drawing Shapes
+    Pedestal 2: Crane Drawing Shapes
+    Pedestal 3: Crane Drawing Shapes
+    Pedestal 4: Crane Drawing Shapes
+    Boom 1: Crane Drawing Shapes
+    Boom 2: Crane Drawing Shapes
+    Boom 3: Crane Drawing Shapes
+    Boom 4: Crane Drawing Shapes
+    Boom 5: Crane Drawing Shapes
+    Jib: Crane Drawing Shapes
+    Jib Extension 1: Crane Drawing Shapes
+    Jib Extension 2: Crane Drawing Shapes
+    Jib Extension 3: Crane Drawing Shapes
+    Support Set: Model
+    Support Deck: Support Set
+    Support Vessel: Support Set
+  State:
+    Collapsed:
+    - Variable data

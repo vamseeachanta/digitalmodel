@@ -1,0 +1,176 @@
+# Lines Configuration
+# Generated from: F06 Spool piece manoeuvring.yml
+# Date: 2026-01-18 21:52:05
+Lines:
+- Name: Spool
+  IncludeTorsion: Yes
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Bend angle
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Running tool1
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Running tool2
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - Infinity
+    - ~
+    - Infinity
+  - - Infinity
+    - ~
+    - Infinity
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength, PreBendBendAngle, PreBendBendAxisDirection:
+  - - 10.75x0.19 Jumper No slam
+    - 0.781
+    - 0.3
+    - 0
+  - - 10.75x0.19 Jumper Slam
+    - 1.28648
+    - 0.3
+    - 90
+    - 0
+  - - 10.75x0.19 Jumper Slam
+    - 1.562
+    - 0.3
+    - 0
+  - - 10.75x0.19 Jumper Slam
+    - 1.28648
+    - 0.3
+    - 90
+    - 0
+  - - 10.75x0.19 Jumper No slam
+    - 2.962
+    - 0.3
+    - 0
+  - - 10.75x0.19 Jumper Slam
+    - 1.28648
+    - 0.3
+    - 90
+    - 190
+  - - 10.75x0.19 Jumper Slam
+    - 16.362
+    - 0.3
+    - 0
+  - - 10.75x0.19 Jumper Slam
+    - 1.28648
+    - 0.3
+    - 90
+    - 190
+  - - 10.75x0.19 Jumper No slam
+    - 0.362
+    - 0.3
+    - 0
+  - - 10.75x0.19 Jumper Slam
+    - 1.28648
+    - 0.3
+    - 90
+    - 110
+  - - 10.75x0.19 Jumper Slam
+    - 2.362
+    - 0.3
+    - 0
+  - - 10.75x0.19 Jumper Slam
+    - 1.28648
+    - 0.3
+    - 90
+    - 110
+  - - 10.75x0.19 Jumper No slam
+    - 2.781
+    - 0.3
+    - 0
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Free flooding
+  IncludeAxialContentsInertia: Yes
+  IncludedInStatics: Yes
+  StaticsStep1: Quick
+  StaticsStep2: None
+  StaticsSeabedFrictionPolicy: None
+- Name: Crane wire
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Bend angle
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Vessel
+      - -22.01589226131739
+      - 20
+      - 24.178587984887244
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Master link
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - 22
+      - Payout rate1
+      - 0.001
+      - Yes
+      - Yes
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Crane wire type
+    - 30
+    - 2
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 180
+  AsLaidTension: 0
+  DrawNodesAsDiscs: No

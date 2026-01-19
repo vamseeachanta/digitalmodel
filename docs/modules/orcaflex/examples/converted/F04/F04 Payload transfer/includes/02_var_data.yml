@@ -1,0 +1,19 @@
+# VariableData Configuration
+# Generated from: F04 Payload transfer.yml
+# Date: 2026-01-18 21:52:04
+VariableData:
+  Payoutrate:
+  - Name: Payout rate1
+    IndependentValue, DependentValue:
+    - - -10
+      - 0
+    - - 95
+      - 0
+    - - 100
+      - 0.4
+    - - 120
+      - 0.4
+    - - 125
+      - 0
+    - - 140
+      - 0

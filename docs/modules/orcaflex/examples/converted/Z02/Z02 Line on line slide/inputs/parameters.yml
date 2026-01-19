@@ -1,0 +1,15 @@
+# Input Parameters for Parametric Analysis
+# Source: Z02 Line on line slide.yml
+# Generated: 2026-01-18 21:52:53
+
+water_depth: 100
+current_speed: 0
+wind_speed: 1
+water_density: 0.00128
+stage_durations:
+- 1
+- 10
+hs: 0
+tp: 8
+wave_direction: 180
+
