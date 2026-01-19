@@ -1,23 +1,35 @@
 # Implementation Plan: OrcaFlex Include-Based Model System
 
-## Objective
-1. Convert all 114 existing flat YAML files to include-based format (Format B)
-2. Create a master file + include structure enabling parametric analysis and component reuse
-3. Use converted examples as basis for CALM buoy mooring template
+## Status: COMPLETED (January 2026)
 
-## Scope
-- **Phase 1**: Convert 114 YAML files to include-based format
-- **Phase 2**: Create equipment CSVs and CALM buoy template using new format
+## Objective (Revised)
+1. ~~Convert all 114 existing flat YAML files~~ → Keep flat files as reference
+2. Create hybrid templates using object-level IncludeFile for equipment reuse
+3. Establish library of reusable components (line types, buoy types)
 
-## Deliverables
-**Phase 1 - Conversion (114 files)**:
-- Include-based structure for each model (5-7 include files per model)
-- Master files with input parameter blocks
-- Reusable component library
+## Scope (Revised)
+- **Phase 1**: ~~Convert 114 YAML files~~ → DEPRIORITIZED (flat files work fine)
+- **Phase 2**: Create CALM buoy + SCR riser hybrid templates using library components
 
-**Phase 2 - CALM Template (8 files)**:
-- 3 equipment CSV files (buoys, connectors, fairleads)
-- 5 CALM buoy template files (README, config, model, 2 examples)
+## Deliverables (Completed)
+
+**Library Components (33 files)**:
+- 21 line types (risers, pipelines, umbilicals, chains, hawsers)
+- 12 buoy types (CALM, SPM, metocean, spar, navigation, pickup)
+- Library generator with 21 unit tests
+
+**CALM Buoy Hybrid Template (5 files)**:
+- Base model (100m water depth, 6-leg mooring)
+- Deep water variation (200m)
+- Case file combining base + variation
+- README with key findings
+
+**SCR Hybrid Template (6 files)**:
+- Base model (1200m water depth, 10-inch X65)
+- Deep water variation (1500m)
+- 12-inch riser variation
+- Case files for each variation
+- README with documentation
 
 ---
 
@@ -278,20 +290,26 @@ model_name/
 
 ## Success Criteria
 
-### Phase 1
-- [ ] All 114 flat YAML files converted to include-based format
-- [ ] Master files created with _inputs parameter blocks
-- [ ] Include files properly split by section (general, environment, vessels, lines)
-- [ ] Python conversion script automated for batch processing
-- [ ] Converted models validate without errors
+### Phase 1 - DEPRIORITIZED
+**Decision**: Keep flat YAML files as reference examples. Hybrid approach only for new models.
 
-### Phase 2
-- [ ] All 3 equipment CSV files created with 5+ entries each
-- [ ] CALM buoy template directory created with include-based structure
-- [ ] `example_basic/master.yml` loads successfully in OrcaFlex
-- [ ] Generated model achieves static convergence
-- [ ] Template documented in README.md
-- [ ] `model-preparation/plan.md` updated to recommend Format B
+- [x] Validated that section-level includes do NOT work in OrcaFlex
+- [x] Documented object-level IncludeFile approach
+- [ ] ~~All 114 flat YAML files converted~~ (Deprioritized - flat files kept)
+
+### Phase 2 - COMPLETED
+- [x] Equipment CSV files exist with 5+ entries each
+- [x] CALM buoy hybrid template created (base + variations)
+- [x] Template loads successfully in OrcaFlex
+- [x] Static convergence validated
+- [x] Template documented in README.md
+- [x] Model-preparation plan updated
+
+### Additional Accomplishments
+- [x] Library generator fixed and tested (21 unit tests)
+- [x] 33 library components generated (21 line types, 12 buoy types)
+- [x] SCR hybrid template created with variations
+- [x] Key findings documented (IncludeFile at object level only)
 
 ---
 
