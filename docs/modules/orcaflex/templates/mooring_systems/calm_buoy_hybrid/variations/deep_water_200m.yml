@@ -1,6 +1,6 @@
 # Variation: Deep Water 200m
-# Only the changes from base model
-# NOTE: Overrides specific properties, base model values remain for others
+# IMPORTANT: When overriding Lines, must include ALL properties
+# because OrcaFlex replaces the entire object definition
 Environment:
   WaterDepth: 200
   CurrentDepth, CurrentFactor, CurrentRotation:
@@ -9,43 +9,87 @@ Environment:
     - [200, 0.2, 0]
 
 Lines:
-  # Update anchor positions and lengths for deeper water
+  # Mooring Leg 1 (0 degrees) - Scaled for 200m depth
+  # Anchor radius: 600m, Line length: 700m
   - Name: Mooring_1
-    EndBX: 1200
+    EndAConnection: CALM_Buoy
+    EndAX: 6.0
+    EndAY: 0
+    EndAZ: -2.25
+    EndBConnection: Anchored
+    EndBX: 600
+    EndBY: 0
     EndBZ: -200
+    IncludedInStatics: Yes
     LineType, Length, TargetSegmentLength:
-      - [Chain_84mm, 1300, 10]
+      - [Chain_84mm, 700, 10]
 
+  # Mooring Leg 2 (60 degrees)
   - Name: Mooring_2
-    EndBX: 600
-    EndBY: 1039.2
+    EndAConnection: CALM_Buoy
+    EndAX: 3.0
+    EndAY: 5.196
+    EndAZ: -2.25
+    EndBConnection: Anchored
+    EndBX: 300
+    EndBY: 520
     EndBZ: -200
+    IncludedInStatics: Yes
     LineType, Length, TargetSegmentLength:
-      - [Chain_84mm, 1300, 10]
+      - [Chain_84mm, 700, 10]
 
+  # Mooring Leg 3 (120 degrees)
   - Name: Mooring_3
-    EndBX: -600
-    EndBY: 1039.2
+    EndAConnection: CALM_Buoy
+    EndAX: -3.0
+    EndAY: 5.196
+    EndAZ: -2.25
+    EndBConnection: Anchored
+    EndBX: -300
+    EndBY: 520
     EndBZ: -200
+    IncludedInStatics: Yes
     LineType, Length, TargetSegmentLength:
-      - [Chain_84mm, 1300, 10]
+      - [Chain_84mm, 700, 10]
 
+  # Mooring Leg 4 (180 degrees)
   - Name: Mooring_4
-    EndBX: -1200
-    EndBZ: -200
-    LineType, Length, TargetSegmentLength:
-      - [Chain_84mm, 1300, 10]
-
-  - Name: Mooring_5
+    EndAConnection: CALM_Buoy
+    EndAX: -6.0
+    EndAY: 0
+    EndAZ: -2.25
+    EndBConnection: Anchored
     EndBX: -600
-    EndBY: -1039.2
+    EndBY: 0
     EndBZ: -200
+    IncludedInStatics: Yes
     LineType, Length, TargetSegmentLength:
-      - [Chain_84mm, 1300, 10]
+      - [Chain_84mm, 700, 10]
 
-  - Name: Mooring_6
-    EndBX: 600
-    EndBY: -1039.2
+  # Mooring Leg 5 (240 degrees)
+  - Name: Mooring_5
+    EndAConnection: CALM_Buoy
+    EndAX: -3.0
+    EndAY: -5.196
+    EndAZ: -2.25
+    EndBConnection: Anchored
+    EndBX: -300
+    EndBY: -520
     EndBZ: -200
+    IncludedInStatics: Yes
     LineType, Length, TargetSegmentLength:
-      - [Chain_84mm, 1300, 10]
+      - [Chain_84mm, 700, 10]
+
+  # Mooring Leg 6 (300 degrees)
+  - Name: Mooring_6
+    EndAConnection: CALM_Buoy
+    EndAX: 3.0
+    EndAY: -5.196
+    EndAZ: -2.25
+    EndBConnection: Anchored
+    EndBX: 300
+    EndBY: -520
+    EndBZ: -200
+    IncludedInStatics: Yes
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm, 700, 10]
