@@ -85,40 +85,68 @@ Lines:
     Connection: [FPSO, Anchored]
 ```
 
-#### Format B: Include-Based Structure (RECOMMENDED for All New Models)
+#### Format B: Hybrid Include-Based Structure (RECOMMENDED for All New Models)
+
+**VALIDATED January 2026**: OrcaFlex IncludeFile works at **object property level**, not section level.
+
 ```yaml
 %YAML 1.1
-# Type: Model
-# Program: OrcaFlex 11.5
+# CALM Buoy Hybrid Template - Uses library components
 ---
-# Input Parameters (for parametric analysis)
-_inputs:
-  water_depth: 100
-  hs: 3.5
-  tp: 12.0
-  current_speed: 1.2
+General:
+  UnitsSystem: SI
+  StageDuration: [10, 100]
 
-# Include files - load in order
-- includefile: includes/01_general.yml
-- includefile: includes/02_var_data.yml
-- includefile: includes/03_environment.yml
-- includefile: includes/04_vessel_types.yml
-- includefile: includes/05_line_types.yml
-- includefile: includes/06_vessels.yml
-- includefile: includes/07_lines.yml
-- includefile: includes/08_buoys.yml
+Environment:
+  WaterDepth: 100
+  # ... environment settings inline
+
+LineTypes:
+  - Name: Chain_84mm
+    Category: General                              # Required BEFORE IncludeFile
+    IncludeFile: ../../../../library/line_types/chain_84mm_r4.yml
+
+6DBuoys:
+  - Name: CALM_Buoy
+    IncludeFile: ../../../../library/buoy_types/calm_12m_100m.yml
+    InitialPosition: [0, 0, -0.8]                  # Override after include
+
+Lines:
+  - Name: Mooring_1
+    EndAConnection: CALM_Buoy
+    EndAX: 6.0
+    EndBConnection: Anchored
+    EndBX: 750
+    EndBZ: -100
+    LineType, Length, TargetSegmentLength:        # Multi-column format REQUIRED
+      - [Chain_84mm, 800, 10]
 ```
 
-**Benefits of Format B:**
-- **Modularity**: Reuse components across models
-- **Parametric Analysis**: Input parameter blocks for easy variation
-- **Version Control**: Track changes to specific sections
-- **Maintainability**: Smaller, focused files
-- **Template Library**: Available at `templates/mooring_systems/` and `templates/risers/`
+**Key Format Requirements (Validated with OrcaFlex):**
+1. **IncludeFile** works at object level, NOT section level
+2. **LineTypes** require `Category: General` BEFORE IncludeFile
+3. **Lines** must use multi-column format: `LineType, Length, TargetSegmentLength:`
+4. **Library files** must have NO section headers (properties only)
 
-**Conversion Tool**: Use `scripts/conversion/yaml_to_include.py` to convert flat YAML to include-based format.
+**Parametric Studies via BaseFile + Variation:**
+```yaml
+# case_deep_water.yml - Combines base + variation
+BaseFile: ../base/calm_buoy_base.yml
+IncludeFile: ../variations/deep_water_200m.yml
+```
 
-**⚠️ WARNING**: Hybrid YAML (mixing formats) is NOT supported.
+**Benefits of Hybrid Format B:**
+- **Equipment Standardization**: Library components for LineTypes, BuoyTypes
+- **Parametric Analysis**: BaseFile + IncludeFile variations
+- **Version Control**: Separate base/variation files
+- **Reusability**: Same library used across multiple models
+- **Template Library**: Available at `templates/mooring_systems/calm_buoy_hybrid/`
+
+**Library Location**: `docs/modules/orcaflex/library/`
+- `line_types/` - Chain, hawser, wire rope components
+- `buoy_types/` - CALM, SPM, metocean buoy components
+
+**⚠️ WARNING**: Section-level includes (old Format B) are NOT supported by OrcaFlex.
 
 ### Standard YAML Section Hierarchy
 ```yaml
@@ -747,20 +775,28 @@ After model creation, verify by:
 
 ## Summary
 
-The OrcaFlex module provides a comprehensive toolkit of **18 skills** covering the complete model lifecycle from creation to compliance verification. Based on analysis of **441 YAML model files** (now converted to include-based format), the recommended approach is:
+The OrcaFlex module provides a comprehensive toolkit of **18 skills** covering the complete model lifecycle from creation to compliance verification. Based on analysis of **441 YAML model files** and **validated testing** with OrcaFlex (January 2026), the recommended approach is:
 
-1. **Use Include-Based Format B** for new models (master.yml + includes/)
-2. **Reference component libraries** (CSV catalogs) for vessels, lines, materials, equipment
-3. **Follow naming conventions** for files and objects
-4. **Store coefficients in VariableData** lookup tables
-5. **Use two-stage analysis** (static setup + dynamic)
-6. **Leverage skills** for specific tasks (setup, debug, analyze, validate)
-7. **Review existing templates** at `templates/mooring_systems/` and `templates/risers/`
-8. **Use conversion script** `scripts/conversion/yaml_to_include.py` for legacy flat files
+1. **Use Hybrid Format B** for new models (object-level IncludeFile + BaseFile variations)
+2. **Reference library components** for reusable equipment (LineTypes, BuoyTypes)
+3. **Use BaseFile + IncludeFile** for parametric studies
+4. **Follow multi-column format** for Lines: `LineType, Length, TargetSegmentLength:`
+5. **Store coefficients in VariableData** lookup tables
+6. **Use two-stage analysis** (static setup + dynamic)
+7. **Leverage skills** for specific tasks (setup, debug, analyze, validate)
+8. **Review validated templates** at `templates/mooring_systems/calm_buoy_hybrid/`
 
-**New Resources:**
-- **115 converted example models**: `examples/converted/` (include-based format)
-- **CALM Buoy Template**: `templates/mooring_systems/calm_buoy/`
+**Validated Resources (January 2026):**
+- **Library Components**: `library/line_types/`, `library/buoy_types/` (properties-only files)
+- **CALM Buoy Hybrid Template**: `templates/mooring_systems/calm_buoy_hybrid/` (base + variations + cases)
 - **Equipment CSVs**: `templates/components/equipment/` (buoys, connectors, fairleads)
+- **Library Generator**: `src/digitalmodel/modules/orcaflex/library_generator.py`
+- **Prototype Tests**: `prototype_include/` (validated test files)
+
+**Key Technical Findings:**
+- IncludeFile works at **object property level**, NOT section level
+- LineTypes require `Category: General` BEFORE IncludeFile
+- Library files must have NO section headers
+- Section-level includes are NOT supported by OrcaFlex
 
 The system enables engineers to generate valid OrcaFlex models efficiently using proven engineering standards and patterns extracted from 441 production-quality model files.
