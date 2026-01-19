@@ -1,0 +1,132 @@
+# Variation: Deep Water 500m
+# IMPORTANT: When overriding Lines, must include ALL properties
+
+Environment:
+  WaterDepth: 500
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [100, 0.8, 0]
+    - [250, 0.5, 0]
+    - [400, 0.3, 0]
+    - [500, 0.15, 0]
+
+Lines:
+  # Mooring Line 1 - 0 degrees (bow)
+  - Name: Mooring_L1
+    EndAConnection: Anchored
+    EndAX: 1200
+    EndAY: 0
+    EndAZ: -500
+    EndBConnection: FPSO
+    EndBX: 130
+    EndBY: 0
+    EndBZ: -10
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1800, 15]
+
+  # Mooring Line 2 - 45 degrees
+  - Name: Mooring_L2
+    EndAConnection: Anchored
+    EndAX: 849
+    EndAY: 849
+    EndAZ: -500
+    EndBConnection: FPSO
+    EndBX: 92
+    EndBY: 92
+    EndBZ: -10
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1800, 15]
+
+  # Mooring Line 3 - 90 degrees (starboard)
+  - Name: Mooring_L3
+    EndAConnection: Anchored
+    EndAX: 0
+    EndAY: 1200
+    EndAZ: -500
+    EndBConnection: FPSO
+    EndBX: 0
+    EndBY: 30
+    EndBZ: -10
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1800, 15]
+
+  # Mooring Line 4 - 135 degrees
+  - Name: Mooring_L4
+    EndAConnection: Anchored
+    EndAX: -849
+    EndAY: 849
+    EndAZ: -500
+    EndBConnection: FPSO
+    EndBX: -92
+    EndBY: 92
+    EndBZ: -10
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1800, 15]
+
+  # Mooring Line 5 - 180 degrees (stern)
+  - Name: Mooring_L5
+    EndAConnection: Anchored
+    EndAX: -1200
+    EndAY: 0
+    EndAZ: -500
+    EndBConnection: FPSO
+    EndBX: -130
+    EndBY: 0
+    EndBZ: -10
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1800, 15]
+
+  # Mooring Line 6 - 225 degrees
+  - Name: Mooring_L6
+    EndAConnection: Anchored
+    EndAX: -849
+    EndAY: -849
+    EndAZ: -500
+    EndBConnection: FPSO
+    EndBX: -92
+    EndBY: -92
+    EndBZ: -10
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1800, 15]
+
+  # Mooring Line 7 - 270 degrees (port)
+  - Name: Mooring_L7
+    EndAConnection: Anchored
+    EndAX: 0
+    EndAY: -1200
+    EndAZ: -500
+    EndBConnection: FPSO
+    EndBX: 0
+    EndBY: -30
+    EndBZ: -10
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1800, 15]
+
+  # Mooring Line 8 - 315 degrees
+  - Name: Mooring_L8
+    EndAConnection: Anchored
+    EndAX: 849
+    EndAY: -849
+    EndAZ: -500
+    EndBConnection: FPSO
+    EndBX: 92
+    EndBY: -92
+    EndBZ: -10
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1800, 15]

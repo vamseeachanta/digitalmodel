@@ -1,0 +1,3 @@
+# Case: Deep Water Spread Mooring (500m)
+BaseFile: ../base/spread_mooring_base.yml
+IncludeFile: ../variations/deep_water_500m.yml
