@@ -1,7 +1,7 @@
 ---
 name: module-based-refactor
 description: Reorganize a repository from flat structure to module-based 5-layer architecture. Use for codebase restructuring, module organization, import path updates, git history preservation, artifact cleanup, directory consolidation, and hidden folder merging.
-version: 3.0.0
+version: 3.1.0
 updated: 2026-01-20
 category: meta
 triggers:
@@ -26,7 +26,7 @@ Reorganize a repository from flat structure to a consistent module-based 5-layer
 ## Version Metadata
 
 ```yaml
-version: 3.0.0
+version: 3.1.0
 python_min_version: '3.10'
 dependencies: []
 compatibility:
@@ -1156,6 +1156,103 @@ include = ["digitalmodel*"]
 | **Test data** | *.csv, *.json at root | Move to tests/test_data/ |
 | **Config files** | *.yaml, *.toml, *.json | Keep at root or move to config/ |
 
+## Complete Refactor Session Workflow
+
+A full repository refactor typically follows this 4-phase workflow. Each phase should be committed separately for clean git history and easy rollback.
+
+### Phase 1: Module Reorganization
+
+Move code to the 5-layer module-based architecture.
+
+```bash
+# 1a. Move source modules
+git mv src/<pkg>/<module> src/<pkg>/modules/<module>
+
+# 1b. Move tests
+git mv tests/<module> tests/modules/<module>
+
+# 1c. Move specs
+git mv specs/<module> specs/modules/<module>
+
+# 1d. Update imports across codebase
+find . -name "*.py" -exec sed -i 's/from <pkg>.<module>/from <pkg>.modules.<module>/g' {} \;
+
+# 1e. Commit Phase 1
+git commit -m "refactor: Reorganize repository to module-based 5-layer architecture"
+```
+
+### Phase 2: Hidden Folder Consolidation
+
+Merge legacy AI/agent folders into `.claude/`.
+
+```bash
+# 2a. Consolidate .agent-os/ + .ai/ into .claude/
+# Example: 519 + 129 + 52 = 670 files after merge
+git mv .agent-os/commands .claude/commands/legacy-scripts
+git mv .agent-os/standards .claude/standards
+git mv .ai/implementation-history .claude/implementation-history
+
+# 2b. Delete dead folders
+rm -rf .agent-runtime .common .specify
+
+# 2c. Commit Phase 2
+git commit -m "refactor: Consolidate .agent-os + .ai into .claude (670 files)"
+```
+
+### Phase 3: Final Cleanup
+
+Remove legacy configurations and consolidate scripts.
+
+```bash
+# 3a. Delete legacy config folders
+rm -rf .drcode/        # Legacy AI config (confirmed deletable)
+rm -rf .benchmarks/    # Empty benchmark folder
+
+# 3b. Consolidate scripts
+git mv .git-commands/* scripts/git/
+rm -rf .git-commands/
+
+# 3c. Move registries to docs
+git mv .slash-commands/* .claude/docs/commands/
+rm -rf .slash-commands/
+
+# 3d. Commit Phase 3
+git commit -m "chore: Delete legacy config and consolidate scripts"
+```
+
+### Phase 4: Documentation
+
+Update README and skill documentation with learnings.
+
+```bash
+# 4a. Update README structure section
+# - Document new module-based architecture
+# - Remove references to deleted folders
+
+# 4b. Update skills with session learnings
+# - Add new patterns discovered
+# - Update version numbers
+# - Add changelog entries
+
+# 4c. Commit Phase 4
+git commit -m "docs: Update README structure and skill documentation"
+```
+
+### Commit Strategy: Atomic Commits Per Phase
+
+| Phase | Commit Message Pattern | Scope |
+|-------|------------------------|-------|
+| 1 | `refactor: Reorganize repository to module-based 5-layer architecture` | src, tests, specs, imports |
+| 2 | `refactor: Consolidate <folders> into .claude (N files)` | Hidden folder merges |
+| 3 | `chore: Delete legacy config and consolidate scripts` | Cleanup operations |
+| 4 | `docs: Update README structure and skill documentation` | Documentation updates |
+
+**Benefits of Atomic Commits:**
+- Easy to review changes in each phase
+- Simple rollback if issues discovered
+- Clear git history for future reference
+- Supports incremental verification after each phase
+
 ## Quick Start Commands
 
 ```bash
@@ -1182,6 +1279,11 @@ uv run pytest tests/ -v && git status
 
 ## Version History
 
+- **3.1.0** (2026-01-20): Added Complete Refactor Session Workflow
+  - Added 4-phase workflow documentation (Module Reorganization, Hidden Folder Consolidation, Final Cleanup, Documentation)
+  - Added Commit Strategy section with atomic commits per phase pattern
+  - Documented real-world session flow with specific examples
+  - Added benefits of atomic commits for review, rollback, and history
 - **3.0.0** (2026-01-20): Major update with hidden folder consolidation patterns
   - Added Pre-consolidation Analysis section for analyzing hidden folder overlaps
   - Added Hidden Folder Consolidation Patterns section with real-world examples

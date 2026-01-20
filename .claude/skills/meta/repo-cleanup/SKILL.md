@@ -1,7 +1,7 @@
 ---
 name: repo-cleanup
 description: Systematic cleanup of repository clutter including build artifacts, duplicates, temp files, and consolidation of scattered directories. Use for repository maintenance, artifact removal, directory consolidation, and gitignore updates.
-version: 2.0.0
+version: 2.1.0
 updated: 2026-01-20
 category: meta
 triggers:
@@ -24,7 +24,7 @@ Quick cleanup of repository clutter including build artifacts, duplicates, temp 
 ## Version Metadata
 
 ```yaml
-version: 2.0.0
+version: 2.1.0
 python_min_version: '3.10'
 dependencies: []
 compatibility:
@@ -554,6 +554,100 @@ tests/*.json
 - [ ] `git status` shows clean or expected state
 - [ ] Tests still pass after cleanup
 
+## Final Cleanup Checklist
+
+Based on actual cleanup sessions, these folders have been verified for removal or consolidation.
+
+### Folders to DELETE (Confirmed Safe)
+
+| Folder | Reason | Verification |
+|--------|--------|--------------|
+| `.drcode/` | Legacy AI config (Dr. Code) | Not referenced in any scripts or CI |
+| `.benchmarks/` | Empty benchmark folder | `ls .benchmarks/` returns empty or missing |
+| `.agent-runtime/` | Dead symlinks only | `find .agent-runtime -type l ! -exec test -e {} \;` |
+| `.common/` | Orphaned utilities | No imports reference this folder |
+| `.specify/` | Stale specification templates | Specs moved to `specs/templates/` |
+
+### Folders to CONSOLIDATE
+
+| Source | Destination | Command |
+|--------|-------------|---------|
+| `.slash-commands/` | `.claude/docs/commands/` | `git mv .slash-commands/* .claude/docs/commands/` |
+| `.git-commands/` | `scripts/git/` | `git mv .git-commands/* scripts/git/` |
+| `.agent-os/` | `.claude/` | See module-based-refactor skill |
+| `.ai/` | `.claude/` | See module-based-refactor skill |
+
+### Folders to KEEP
+
+| Folder | Reason |
+|--------|--------|
+| `.githooks/` | Standard location for git hooks |
+| `.github/` | GitHub workflows and templates |
+| `.claude/` | Authoritative AI configuration |
+| `.vscode/` | Team VS Code settings (if tracked) |
+
+### Cleanup Commands
+
+```bash
+# Delete legacy config folders
+rm -rf .drcode/
+rm -rf .benchmarks/
+
+# Consolidate slash-commands to docs
+mkdir -p .claude/docs/commands
+git mv .slash-commands/* .claude/docs/commands/ 2>/dev/null
+rm -rf .slash-commands/
+
+# Consolidate git-commands to scripts
+mkdir -p scripts/git
+git mv .git-commands/* scripts/git/ 2>/dev/null
+rm -rf .git-commands/
+
+# Verify cleanup
+ls -la .* 2>/dev/null | grep "^d"
+```
+
+## README Update Checklist
+
+After cleanup, update the README to reflect the new structure.
+
+### Structure Section Updates
+
+- [ ] Update directory tree to show new structure
+- [ ] Remove references to deleted folders
+- [ ] Add `.claude/` folder description
+- [ ] Document `scripts/git/` consolidation
+- [ ] Note module-based architecture in src/
+
+### Example README Structure Section
+
+```markdown
+## Repository Structure
+
+project/
+├── .claude/              # AI configuration and documentation
+│   ├── agents/           # Agent definitions
+│   ├── docs/             # Reference documentation
+│   ├── skills/           # Skill definitions
+│   └── settings.json     # Claude Code settings
+├── .githooks/            # Git hooks
+├── scripts/              # Utility scripts
+│   └── git/              # Git-related scripts
+├── src/<pkg>/modules/    # Source modules (5-layer architecture)
+├── tests/modules/        # Test modules
+├── specs/modules/        # Specification modules
+├── docs/modules/         # Documentation modules
+└── examples/modules/     # Example modules
+```
+
+### References to Remove
+
+- [ ] `.agent-os/` - consolidated to `.claude/`
+- [ ] `.ai/` - consolidated to `.claude/`
+- [ ] `.drcode/` - deleted (legacy)
+- [ ] `.slash-commands/` - consolidated to `.claude/docs/commands/`
+- [ ] `.git-commands/` - consolidated to `scripts/git/`
+
 ## Best Practices
 
 1. **Always verify before deleting** - Use `find` and `ls` before `rm`
@@ -578,6 +672,15 @@ tests/*.json
 
 ## Version History
 
+- **2.1.0** (2026-01-20): Added Final Cleanup Checklist and README Update Checklist
+  - Added Final Cleanup Checklist with verified DELETE/CONSOLIDATE/KEEP tables
+  - Confirmed .drcode/ as safe to delete (legacy AI config)
+  - Added .slash-commands/ consolidation to .claude/docs/commands/
+  - Added .git-commands/ consolidation to scripts/git/
+  - Added .benchmarks/ as safe to delete if empty
+  - Added README Update Checklist for structure documentation
+  - Added example README structure section template
+  - Added references to remove checklist
 - **2.0.0** (2026-01-20): Major update with hidden folder cleanup learnings
   - Added Hidden Folder Cleanup section with legacy AI folder patterns
   - Added Consolidation Merge Strategies for conflict resolution
