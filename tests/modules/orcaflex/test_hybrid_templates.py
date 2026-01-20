@@ -51,6 +51,7 @@ class TestHybridTemplates:
         TEMPLATES_DIR / "risers" / "pliant_wave_hybrid" / "base" / "pwr_base.yml",
         TEMPLATES_DIR / "risers" / "steep_wave_hybrid" / "base" / "swr_base.yml",
         TEMPLATES_DIR / "risers" / "ttr_hybrid" / "base" / "ttr_base.yml",
+        TEMPLATES_DIR / "risers" / "flexible_riser_hybrid" / "base" / "flexible_riser_base.yml",
     ])
     def test_riser_base_models_load(self, template_path):
         """Test that riser base models load successfully."""
@@ -67,6 +68,7 @@ class TestHybridTemplates:
         TEMPLATES_DIR / "risers" / "pliant_wave_hybrid" / "base" / "pwr_base.yml",
         TEMPLATES_DIR / "risers" / "steep_wave_hybrid" / "base" / "swr_base.yml",
         TEMPLATES_DIR / "risers" / "ttr_hybrid" / "base" / "ttr_base.yml",
+        TEMPLATES_DIR / "risers" / "flexible_riser_hybrid" / "base" / "flexible_riser_base.yml",
     ])
     def test_riser_base_models_converge(self, template_path):
         """Test that riser base models pass static analysis."""
@@ -125,6 +127,30 @@ class TestHybridTemplates:
         model = OrcFxAPI.Model(str(template_path))
         model.CalculateStatics()
 
+    # Subsea templates (jumpers, flying leads)
+    @pytest.mark.parametrize("template_path", [
+        TEMPLATES_DIR / "subsea" / "jumper_hybrid" / "base" / "jumper_base.yml",
+    ])
+    def test_subsea_base_models_load(self, template_path):
+        """Test that subsea base models load successfully."""
+        if not template_path.exists():
+            pytest.skip(f"Template not found: {template_path}")
+
+        model = OrcFxAPI.Model(str(template_path))
+        assert model is not None
+        assert model.environment.WaterDepth > 0
+
+    @pytest.mark.parametrize("template_path", [
+        TEMPLATES_DIR / "subsea" / "jumper_hybrid" / "base" / "jumper_base.yml",
+    ])
+    def test_subsea_base_models_converge(self, template_path):
+        """Test that subsea base models pass static analysis."""
+        if not template_path.exists():
+            pytest.skip(f"Template not found: {template_path}")
+
+        model = OrcFxAPI.Model(str(template_path))
+        model.CalculateStatics()
+
     # Mooring system templates
     @pytest.mark.parametrize("template_path", [
         TEMPLATES_DIR / "mooring_systems" / "calm_buoy_hybrid" / "base" / "calm_buoy_base.yml",
@@ -165,6 +191,8 @@ class TestHybridTemplates:
         TEMPLATES_DIR / "risers" / "steep_wave_hybrid" / "cases" / "case_deep_water.yml",
         TEMPLATES_DIR / "risers" / "ttr_hybrid" / "cases" / "case_deep_water.yml",
         TEMPLATES_DIR / "risers" / "ttr_hybrid" / "cases" / "case_12inch.yml",
+        TEMPLATES_DIR / "risers" / "flexible_riser_hybrid" / "cases" / "case_deep_water.yml",
+        TEMPLATES_DIR / "risers" / "flexible_riser_hybrid" / "cases" / "case_large_bore.yml",
         # Pipeline cases
         TEMPLATES_DIR / "pipelines" / "pipeline_hybrid" / "cases" / "case_deep_water.yml",
         TEMPLATES_DIR / "pipelines" / "pipeline_hybrid" / "cases" / "case_20inch.yml",
@@ -172,6 +200,9 @@ class TestHybridTemplates:
         # Umbilical cases
         TEMPLATES_DIR / "umbilicals" / "umbilical_hybrid" / "cases" / "case_deep_water.yml",
         TEMPLATES_DIR / "umbilicals" / "umbilical_hybrid" / "cases" / "case_steel_tube.yml",
+        # Subsea cases
+        TEMPLATES_DIR / "subsea" / "jumper_hybrid" / "cases" / "case_deep_water.yml",
+        TEMPLATES_DIR / "subsea" / "jumper_hybrid" / "cases" / "case_rigid.yml",
         # Mooring cases
         TEMPLATES_DIR / "mooring_systems" / "calm_buoy_hybrid" / "cases" / "case_deep_water.yml",
         TEMPLATES_DIR / "mooring_systems" / "spread_mooring_hybrid" / "cases" / "case_deep_water.yml",

@@ -1,6 +1,6 @@
 # OrcaFlex Hybrid Templates
 
-**Status**: ✅ 9 Validated Templates | 58 Automated Tests | 33 Library Components
+**Status**: ✅ 11 Validated Templates | 58 Automated Tests | 33 Library Components
 
 Validated OrcaFlex model templates using the hybrid approach: object-level IncludeFile for library components + BaseFile/IncludeFile for parametric variations.
 
@@ -25,13 +25,14 @@ model.CalculateStatics()
 
 ## Available Templates
 
-### Risers (3 templates)
+### Risers (4 templates)
 
 | Template | Water Depth | Description | Variations |
 |----------|-------------|-------------|------------|
 | [SCR Hybrid](risers/scr_hybrid/) | 1200m | Steel Catenary Riser, 10" X65 | 1500m deep, 12" pipe |
 | [Lazy Wave Hybrid](risers/lazy_wave_hybrid/) | 1000m | Lazy Wave with buoyancy section | 1200m deep |
 | [Pliant Wave Hybrid](risers/pliant_wave_hybrid/) | 800m | Pliant Wave configuration | 1200m deep |
+| [TTR Hybrid](risers/ttr_hybrid/) | 1500m | Top Tensioned Riser | TBD |
 
 ### Pipelines (1 template)
 
@@ -45,11 +46,12 @@ model.CalculateStatics()
 |----------|-------------|-------------|------------|
 | [Umbilical Hybrid](umbilicals/umbilical_hybrid/) | 800m | Dynamic flexible umbilical | 1200m deep, steel tube |
 
-### Mooring Systems (3 templates)
+### Mooring Systems (4 templates)
 
 | Template | Water Depth | Description | Variations |
 |----------|-------------|-------------|------------|
 | [CALM Buoy Hybrid](mooring_systems/calm_buoy_hybrid/) | 100m | 6-leg CALM buoy mooring | 200m deep |
+| [SALM Hybrid](mooring_systems/salm_hybrid/) | 150m | Single Anchor Leg Mooring | TBD |
 | [Spread Mooring Hybrid](mooring_systems/spread_mooring_hybrid/) | 200m | 8-leg spread mooring for FPSO | 500m deep, 12-leg |
 | [Turret Mooring Hybrid](mooring_systems/turret_mooring_hybrid/) | 300m | Internal turret with weathervaning | 600m deep, external turret |
 
@@ -174,13 +176,15 @@ templates/
 ├── risers/
 │   ├── scr_hybrid/                     # ✅ Validated
 │   ├── lazy_wave_hybrid/               # ✅ Validated
-│   └── pliant_wave_hybrid/             # ✅ Validated
+│   ├── pliant_wave_hybrid/             # ✅ Validated
+│   └── ttr_hybrid/                     # ✅ Validated
 ├── pipelines/
 │   └── pipeline_hybrid/                # ✅ Validated
 ├── umbilicals/
 │   └── umbilical_hybrid/               # ✅ Validated
 └── mooring_systems/
     ├── calm_buoy_hybrid/               # ✅ Validated
+    ├── salm_hybrid/                    # ✅ Validated
     ├── spread_mooring_hybrid/          # ✅ Validated
     └── turret_mooring_hybrid/          # ✅ Validated
 ```
