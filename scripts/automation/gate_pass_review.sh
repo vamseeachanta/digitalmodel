@@ -12,7 +12,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 WORKSPACE_ROOT="/mnt/github/workspace-hub"
-REGISTRY_FILE="$WORKSPACE_ROOT/modules/config/ai-agents-registry.json"
+REGISTRY_FILE="$WORKSPACE_ROOT/config/ai-agents-registry.json"
 
 # Usage function
 usage() {

@@ -11,7 +11,7 @@ from pathlib import Path
 # Add src to path for direct execution
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from marine_engineering.catenary import (
+from digitalmodel.modules.marine_engineering.catenary import (
     LazyWaveSolver,
     LazyWaveConfiguration
 )

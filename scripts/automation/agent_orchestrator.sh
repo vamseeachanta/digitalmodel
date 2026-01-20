@@ -14,7 +14,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 WORKSPACE_ROOT="/mnt/github/workspace-hub"
-REGISTRY_FILE="$WORKSPACE_ROOT/modules/config/ai-agents-registry.json"
+REGISTRY_FILE="$WORKSPACE_ROOT/config/ai-agents-registry.json"
 SELECTOR_SCRIPT="src/digitalmodel/modules/automation/intelligent_agent_selector.py"
 WEIGHTS_CONFIG="config/agent-selection-weights.yaml"
 
@@ -339,7 +339,7 @@ if [ "$WITH_REVIEW" == "true" ]; then
     echo -e "${PURPLE}Review Execution:${NC}"
     echo -e "${GREEN}# After task completion, run:${NC}"
     REVIEW_PHASE=$(echo "$TASK_TYPE" | sed 's/-/ /g')
-    echo -e "${GREEN}./modules/automation/gate_pass_review.sh $REVIEW_PHASE . --auto${NC}"
+    echo -e "${GREEN}./scripts/automation/gate_pass_review.sh $REVIEW_PHASE . --auto${NC}"
 fi
 
 # Generate orchestration report
@@ -403,8 +403,8 @@ echo ""
 # Show quick reference
 echo -e "${YELLOW}Quick Reference:${NC}"
 echo -e "${BLUE}  View agent capabilities: jq '.agents.\"$PRIMARY_AGENT\"' $REGISTRY_FILE${NC}"
-echo -e "${BLUE}  Update registry: ./modules/automation/update_ai_agents_daily.sh${NC}"
-echo -e "${BLUE}  Run gate-pass review: ./modules/automation/gate_pass_review.sh <phase> .${NC}"
+echo -e "${BLUE}  Update registry: ./scripts/automation/update_ai_agents_daily.sh${NC}"
+echo -e "${BLUE}  Run gate-pass review: ./scripts/automation/gate_pass_review.sh <phase> .${NC}"
 if [ "$USE_INTELLIGENT" == "true" ]; then
     echo -e "${BLUE}  Adjust selection weights: Edit $WEIGHTS_CONFIG${NC}"
     echo -e "${BLUE}  View selection history: sqlite3 .claude-flow/agent-performance.db${NC}"

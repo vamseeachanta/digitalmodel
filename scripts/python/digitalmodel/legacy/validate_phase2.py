@@ -53,7 +53,7 @@ except ImportError:
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from marine_engineering.environmental_loading.ocimf import (
+from digitalmodel.modules.marine_engineering.environmental_loading.ocimf import (
     OCIMFDatabase,
     EnvironmentalForces,
     EnvironmentalConditions,

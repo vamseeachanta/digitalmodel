@@ -6,6 +6,7 @@ the project root, ensuring portable and consistent data access across all
 repositories.
 """
 
+import os
 from pathlib import Path
 from typing import Union
 
@@ -14,13 +15,13 @@ def get_project_root() -> Path:
     """
     Get the project root directory.
 
-    Assumes this file is located in modules/reporting/utils/
-    and project root is 3 levels up.
+    Assumes this file is located in src/digitalmodel/modules/reporting/
+    and project root is 5 levels up.
 
     Returns:
         Path object pointing to project root
     """
-    return Path(__file__).parent.parent.parent.parent
+    return Path(__file__).parent.parent.parent.parent.parent
 
 
 def get_data_path(filename: str, data_type: str = 'processed') -> Path:

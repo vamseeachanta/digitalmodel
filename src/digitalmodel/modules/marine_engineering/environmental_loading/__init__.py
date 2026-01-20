@@ -13,7 +13,7 @@ Main classes:
     - EnvironmentalForceResults: Force calculation results
 
 Example:
-    >>> from marine_engineering.environmental_loading import (
+    >>> from digitalmodel.modules.marine_engineering.environmental_loading import (
     ...     OCIMFDatabase, EnvironmentalForces, EnvironmentalConditions,
     ...     VesselGeometry
     ... )

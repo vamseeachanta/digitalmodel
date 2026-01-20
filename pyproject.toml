@@ -211,7 +211,7 @@ workflow-automation = "digitalmodel.modules.workflow_automation.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["digitalmodel*", "blender_automation*", "marine_engineering*", "data_procurement*"]
+include = ["digitalmodel*"]
 exclude = ["tests*", "docs*"]
 
 [tool.black]

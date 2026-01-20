@@ -19,11 +19,11 @@ import numpy as np
 import pytest
 
 # Skip entire module if required modules not available
-pytest.importorskip("marine_engineering.mooring.catenary",
-                    reason="marine_engineering.mooring.catenary not implemented yet")
+pytest.importorskip("digitalmodel.modules.marine_engineering.mooring.catenary",
+                    reason="digitalmodel.modules.marine_engineering.mooring.catenary not implemented yet")
 
-from marine_engineering.mooring.catenary import CatenarySolver
-from marine_engineering.mooring.component_database import ComponentDatabase
+from digitalmodel.modules.marine_engineering.mooring.catenary import CatenarySolver
+from digitalmodel.modules.marine_engineering.mooring.component_database import ComponentDatabase
 
 
 class TestPhase1Integration:

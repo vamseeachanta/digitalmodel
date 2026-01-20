@@ -63,7 +63,7 @@ def demo_basic_selection():
 
     # Create temp config for demo
     config_path = "config/agent-selection-weights.yaml"
-    registry_path = "modules/config/ai-agents-registry.json"
+    registry_path = "config/ai-agents-registry.json"
 
     # Check if files exist, otherwise skip
     if not Path(registry_path).exists():
@@ -305,7 +305,7 @@ def main():
         print("  1. Configure weights in config/agent-selection-weights.yaml")
         print("  2. Ensure agent registry is up to date")
         print("  3. Use CLI: python -m src.digitalmodel.modules.automation.intelligent_agent_selector")
-        print("  4. Or use bash wrapper: ./modules/automation/agent_orchestrator.sh")
+        print("  4. Or use bash wrapper: ./scripts/automation/agent_orchestrator.sh")
         print()
 
     finally:
