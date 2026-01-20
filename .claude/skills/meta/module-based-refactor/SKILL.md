@@ -1,8 +1,8 @@
 ---
 name: module-based-refactor
-description: Reorganize a repository from flat structure to module-based 5-layer architecture. Use for codebase restructuring, module organization, import path updates, git history preservation, artifact cleanup, and directory consolidation.
-version: 2.0.0
-updated: 2025-01-20
+description: Reorganize a repository from flat structure to module-based 5-layer architecture. Use for codebase restructuring, module organization, import path updates, git history preservation, artifact cleanup, directory consolidation, and hidden folder merging.
+version: 3.0.0
+updated: 2026-01-20
 category: meta
 triggers:
 - repository reorganization
@@ -15,6 +15,8 @@ triggers:
 - artifact cleanup
 - directory consolidation
 - hidden folder cleanup
+- hidden folder consolidation
+- merge hidden folders
 ---
 
 # Module-Based Refactor Skill
@@ -24,7 +26,7 @@ Reorganize a repository from flat structure to a consistent module-based 5-layer
 ## Version Metadata
 
 ```yaml
-version: 2.0.0
+version: 3.0.0
 python_min_version: '3.10'
 dependencies: []
 compatibility:
@@ -124,6 +126,70 @@ ls *_output.* test_*.txt *.html 2>/dev/null
 ls *.egg-info dist/ build/ 2>/dev/null
 ```
 
+## Pre-consolidation Analysis
+
+Before merging hidden folders, perform a thorough analysis to understand scope and identify conflicts.
+
+### 1. Count Tracked Files per Hidden Folder
+
+```bash
+# Count tracked files in each hidden folder
+git ls-files .claude/ | wc -l
+git ls-files .agent-os/ | wc -l
+git ls-files .ai/ | wc -l
+
+# Example output:
+# .claude/: 519 files
+# .agent-os/: 129 files
+# .ai/: 52 files
+# Total after merge: 519 + 129 + 52 = 700 files (minus overlaps)
+```
+
+### 2. Identify Overlapping Content
+
+```bash
+# Compare directory structures
+ls -la .claude/ .agent-os/ .ai/ 2>/dev/null
+
+# Find common subdirectory names
+comm -12 <(ls .claude/ | sort) <(ls .agent-os/ | sort)
+comm -12 <(ls .claude/ | sort) <(ls .ai/ | sort)
+
+# Common overlap patterns:
+# - commands/ in both .claude/ and .agent-os/
+# - hooks/ in both .claude/ and .agent-os/
+# - docs/ in multiple locations
+```
+
+### 3. Determine Authoritative Source
+
+```bash
+# Check which folder has more recent commits
+git log --oneline -5 -- .claude/
+git log --oneline -5 -- .agent-os/
+git log --oneline -5 -- .ai/
+
+# Check file modification dates
+find .claude/ -type f -printf '%T+ %p\n' | sort -r | head -10
+find .agent-os/ -type f -printf '%T+ %p\n' | sort -r | head -10
+
+# Check for unique content in each folder
+diff -rq .claude/docs/ .agent-os/docs/ 2>/dev/null | head -20
+```
+
+### 4. Create Merge Plan
+
+Based on analysis, plan the merge strategy:
+
+| Source Folder | Destination | Strategy | Reason |
+|---------------|-------------|----------|--------|
+| .agent-os/commands/ | .claude/commands/legacy-scripts/ | Rename to avoid conflict | .claude/commands/ already exists |
+| .agent-os/hooks/ | .claude/hooks/legacy/ | Rename to avoid conflict | .claude/hooks/ already exists |
+| .agent-os/docs/ | .claude/docs/ | Merge | Unique documentation content |
+| .agent-os/standards/ | .claude/standards/ | Copy (new) | Does not exist in .claude/ |
+| .ai/implementation-history/ | .claude/implementation-history/ | Copy (new) | Unique content |
+| Conflicting README.md | README-legacy.md | Rename | Preserve both versions |
+
 ## Parallel Execution Strategy
 
 ### Agent Spawn Patterns
@@ -160,6 +226,42 @@ Task("Move aqwa module", "git mv all aqwa files across 5 layers", "coder")
 Task("Move catenary module", "git mv all catenary files across 5 layers", "coder")
 Task("Move orcaflex module", "git mv all orcaflex files across 5 layers", "coder")
 Task("Move mooring module", "git mv all mooring files across 5 layers", "coder")
+```
+
+#### Phase 3.5: Hidden Folder Consolidation (PARALLEL by folder)
+
+```javascript
+// Each hidden folder can be consolidated in parallel (no cross-dependencies)
+Task("Consolidate .agent-os", "Merge .agent-os/ into .claude/ with conflict resolution", "Bash")
+Task("Consolidate .ai", "Merge .ai/ into .claude/ preserving unique content", "Bash")
+Task("Consolidate .drcode", "Review and merge .drcode/ artifacts if valuable", "Bash")
+```
+
+**Consolidation Commands Pattern:**
+
+```bash
+# Phase 3.5a: Consolidate .agent-os/ (129 files)
+# Move conflicting directories with rename
+git mv .agent-os/commands .claude/commands/legacy-scripts
+git mv .agent-os/hooks .claude/hooks/legacy
+
+# Move non-conflicting directories directly
+git mv .agent-os/standards .claude/standards
+git mv .agent-os/docs/* .claude/docs/
+
+# Handle conflicting README
+git mv .agent-os/README.md .claude/README-agent-os-legacy.md
+
+# Phase 3.5b: Consolidate .ai/ (52 files)
+# Move unique content
+git mv .ai/implementation-history .claude/implementation-history
+git mv .ai/docs/* .claude/docs/
+
+# Handle conflicting README
+git mv .ai/README.md .claude/README-ai-legacy.md
+
+# Phase 3.5c: Remove empty source folders
+rm -rf .agent-os/ .ai/
 ```
 
 #### Phase 4: Import Updates (PARALLEL by file type)
@@ -201,6 +303,7 @@ Task("Final structure review", "Compare actual structure to target structure", "
 | Directory creation | NO | Order matters for parent dirs |
 | Module moves (same module) | NO | Files may reference each other |
 | Module moves (different modules) | YES | Independent file sets |
+| Hidden folder consolidation | YES | Each folder merged independently |
 | Import updates (same file) | NO | Would cause conflicts |
 | Import updates (different files) | YES | No file conflicts |
 | Cleanup tasks | YES | Independent operations |
@@ -639,6 +742,210 @@ scripts/scratch_*.py             # Should be in examples/experiments/
 # Resolution: Move to examples/experiments/ or examples/prototypes/
 ```
 
+## Hidden Folder Consolidation Patterns
+
+When consolidating multiple hidden folders into a single authoritative location (.claude/), follow these patterns based on real-world experience.
+
+### Real-World Example: digitalmodel Repository
+
+**Before consolidation:**
+```
+.claude/      519 tracked files (authoritative)
+.agent-os/    129 tracked files (legacy)
+.ai/           52 tracked files (legacy)
+```
+
+**After consolidation:**
+```
+.claude/      670 tracked files (519 + 129 + 52, minus duplicates)
+```
+
+### Merge Patterns by Content Type
+
+#### 1. Conflicting Directories (Rename to Preserve Both)
+
+```bash
+# When both source and destination have the same directory name
+# Pattern: Move to a subdirectory with 'legacy-' prefix
+
+# commands/ exists in both .agent-os/ and .claude/
+git mv .agent-os/commands .claude/commands/legacy-scripts
+
+# hooks/ exists in both .agent-os/ and .claude/
+git mv .agent-os/hooks .claude/hooks/legacy
+
+# Result: Original .claude/commands/ preserved, .agent-os/commands/ accessible at legacy-scripts/
+```
+
+#### 2. Non-Conflicting Directories (Direct Move)
+
+```bash
+# When destination doesn't have the directory
+# Pattern: Direct git mv
+
+# standards/ only exists in .agent-os/
+git mv .agent-os/standards .claude/standards
+
+# implementation-history/ only exists in .ai/
+git mv .ai/implementation-history .claude/implementation-history
+
+# Result: Clean move preserving git history
+```
+
+#### 3. Mergeable Directories (Combine Content)
+
+```bash
+# When both have the same directory with different files
+# Pattern: Move individual files or use merge strategy
+
+# docs/ has different files in each location
+git mv .agent-os/docs/unique-file.md .claude/docs/
+git mv .ai/docs/another-file.md .claude/docs/
+
+# Or merge entire directories (may require manual review)
+cp -r .agent-os/docs/* .claude/docs/
+git add .claude/docs/
+git rm -r .agent-os/docs/
+```
+
+#### 4. Conflicting Files (Rename with Suffix)
+
+```bash
+# When same filename exists in multiple locations
+# Pattern: Rename with source identifier
+
+# README.md exists in .claude/, .agent-os/, and .ai/
+git mv .agent-os/README.md .claude/README-agent-os-legacy.md
+git mv .ai/README.md .claude/README-ai-legacy.md
+
+# Or use descriptive names
+git mv .agent-os/README.md .claude/docs/agent-os-overview.md
+git mv .ai/README.md .claude/docs/ai-folder-overview.md
+```
+
+### Consolidation Checklist
+
+- [ ] Count files in each source folder: `git ls-files <dir> | wc -l`
+- [ ] Identify overlapping directory names
+- [ ] Identify overlapping file names
+- [ ] Create merge plan with conflict resolution strategy
+- [ ] Execute moves in parallel per source folder
+- [ ] Verify no files were lost: compare totals
+- [ ] Remove empty source folders
+- [ ] Update any references to old paths
+- [ ] Commit with descriptive message noting file counts
+
+### Common Consolidation Scenarios
+
+| Scenario | Source | Destination | Strategy |
+|----------|--------|-------------|----------|
+| Duplicate commands | .agent-os/commands/ | .claude/commands/legacy-scripts/ | Rename |
+| Duplicate hooks | .agent-os/hooks/ | .claude/hooks/legacy/ | Rename |
+| Unique standards | .agent-os/standards/ | .claude/standards/ | Direct move |
+| Unique history | .ai/implementation-history/ | .claude/implementation-history/ | Direct move |
+| Overlapping docs | .agent-os/docs/ | .claude/docs/ | Merge content |
+| Conflicting README | .agent-os/README.md | .claude/README-legacy.md | Rename |
+
+## Metrics Tracking
+
+Track quantitative metrics throughout the consolidation process to verify completeness and document changes.
+
+### Pre-consolidation Metrics
+
+```bash
+# Capture baseline metrics before any changes
+echo "=== Pre-consolidation File Counts ==="
+echo ".claude/: $(git ls-files .claude/ | wc -l) files"
+echo ".agent-os/: $(git ls-files .agent-os/ | wc -l) files"
+echo ".ai/: $(git ls-files .ai/ | wc -l) files"
+echo "Total: $(git ls-files .claude/ .agent-os/ .ai/ | wc -l) files"
+
+# Save to file for comparison
+git ls-files .claude/ .agent-os/ .ai/ | wc -l > /tmp/pre_consolidation_count.txt
+```
+
+### Post-consolidation Verification
+
+```bash
+# Verify file counts after consolidation
+echo "=== Post-consolidation File Counts ==="
+echo ".claude/: $(git ls-files .claude/ | wc -l) files"
+
+# Compare to expected total
+expected=$(cat /tmp/pre_consolidation_count.txt)
+actual=$(git ls-files .claude/ | wc -l)
+echo "Expected: $expected files"
+echo "Actual: $actual files"
+
+if [ "$actual" -ge "$expected" ]; then
+    echo "SUCCESS: All files accounted for"
+else
+    echo "WARNING: $(($expected - $actual)) files may be missing"
+fi
+```
+
+### Git Commit Metrics
+
+```bash
+# Check what the commit will include
+git diff --stat --staged
+
+# Example output:
+# 181 files changed, 2847 insertions(+), 1523 deletions(-)
+
+# The numbers indicate:
+# - files changed: Total files moved/renamed
+# - insertions: Lines added (includes moved content)
+# - deletions: Lines removed (includes content moved from old location)
+```
+
+### Metrics Documentation Template
+
+Document consolidation metrics in commit message or notes:
+
+```markdown
+## Consolidation Metrics
+
+**Operation**: Hidden folder consolidation to .claude/
+
+**File Counts**:
+- Before: .claude/ (519) + .agent-os/ (129) + .ai/ (52) = 700 total
+- After: .claude/ (670 files)
+- Difference: 30 files were duplicates/merged
+
+**Git Stats**: 181 files changed, +2847/-1523 lines
+
+**Decisions Made**:
+- Moved: 151 files (no conflicts)
+- Renamed: 25 files (conflict resolution)
+- Merged: 5 files (content combined)
+- Deleted: 0 files (none removed)
+
+**Source Folders Removed**:
+- .agent-os/ (fully merged)
+- .ai/ (fully merged)
+```
+
+### Tracking Delete vs Move Decisions
+
+```bash
+# Create a decision log during consolidation
+cat > consolidation_log.md << 'EOF'
+# Consolidation Decision Log
+
+| File/Directory | Action | Reason |
+|----------------|--------|--------|
+| .agent-os/commands/ | MOVED to .claude/commands/legacy-scripts/ | Conflict with existing |
+| .agent-os/standards/ | MOVED to .claude/standards/ | No conflict |
+| .agent-os/temp/ | DELETED | Runtime data, not needed |
+| .ai/implementation-history/ | MOVED to .claude/implementation-history/ | Unique valuable content |
+| .ai/.cache/ | DELETED | Cache data, regenerated |
+EOF
+
+# Track in git for documentation
+git add consolidation_log.md
+```
+
 ## Post-cleanup Verification
 
 ### 1. Import Verification for Python Modules
@@ -875,6 +1182,16 @@ uv run pytest tests/ -v && git status
 
 ## Version History
 
+- **3.0.0** (2026-01-20): Major update with hidden folder consolidation patterns
+  - Added Pre-consolidation Analysis section for analyzing hidden folder overlaps
+  - Added Hidden Folder Consolidation Patterns section with real-world examples
+  - Added Phase 3.5: Hidden Folder Consolidation to Parallel Execution Strategy
+  - Added Metrics Tracking section for quantitative verification
+  - Added merge patterns: Conflicting Directories, Non-Conflicting Directories, Mergeable Directories, Conflicting Files
+  - Added Consolidation Checklist and Common Consolidation Scenarios table
+  - Added Metrics Documentation Template for commit messages
+  - Updated Parallel vs Sequential Decision Matrix with hidden folder consolidation
+  - Real-world example: .agent-os/ (129 files) + .ai/ (52 files) merged into .claude/ (519 -> 670 files)
 - **2.0.0** (2025-01-20): Major update with comprehensive cleanup categories
   - Added Pre-flight Checks section
   - Added Parallel Execution Strategy with agent spawn patterns
