@@ -1,8 +1,8 @@
 ---
 name: module-based-refactor
-description: Reorganize a repository from flat structure to module-based 5-layer architecture. Use for codebase restructuring, module organization, import path updates, and git history preservation during refactoring.
-version: 1.0.0
-updated: 2025-01-19
+description: Reorganize a repository from flat structure to module-based 5-layer architecture. Use for codebase restructuring, module organization, import path updates, git history preservation, artifact cleanup, and directory consolidation.
+version: 2.0.0
+updated: 2025-01-20
 category: meta
 triggers:
 - repository reorganization
@@ -12,16 +12,19 @@ triggers:
 - import path migration
 - git mv refactor
 - 5-layer architecture
+- artifact cleanup
+- directory consolidation
+- hidden folder cleanup
 ---
 
 # Module-Based Refactor Skill
 
-Reorganize a repository from flat structure to a consistent module-based 5-layer architecture while preserving git history.
+Reorganize a repository from flat structure to a consistent module-based 5-layer architecture while preserving git history. Includes comprehensive cleanup of artifacts, runtime data, and hidden folders.
 
 ## Version Metadata
 
 ```yaml
-version: 1.0.0
+version: 2.0.0
 python_min_version: '3.10'
 dependencies: []
 compatibility:
@@ -43,6 +46,166 @@ compatibility:
 - Standardizing project structure across multiple layers (src, tests, specs, docs, examples)
 - Migrating import paths while preserving git history
 - Creating a scalable architecture for growing codebases
+- Cleaning up root-level artifacts (log files, temp files, build artifacts)
+- Consolidating duplicate directories (agents/, coordination/, memory/)
+- Reviewing and removing obsolete hidden folders
+- Relocating test outputs and prototype code
+
+## Pre-flight Checks
+
+**CRITICAL**: Run these checks before starting any reorganization.
+
+### 1. Git Tracking Status
+
+```bash
+# Check what is tracked vs untracked
+git ls-files | head -50
+git ls-files --others --exclude-standard | head -50
+
+# List all untracked files at root level
+git ls-files --others --exclude-standard | grep -v "/"
+
+# Check for ignored files that might need cleanup
+git status --ignored
+```
+
+### 2. Duplicate Directory Detection
+
+```bash
+# Find duplicate agent directories
+ls -la agents/ .claude/agents/ .claude/agent-library/ 2>/dev/null
+
+# Find duplicate coordination/memory directories
+ls -la coordination/ memory/ .claude-flow/ 2>/dev/null
+
+# Find duplicate skill locations
+find . -type d -name "skills" 2>/dev/null
+```
+
+### 3. Identify Runtime vs Config Files
+
+```bash
+# Runtime data (should NOT be in git)
+find . -name "*.log" -o -name "*.tmp" -o -name "__pycache__" 2>/dev/null
+
+# Config files (SHOULD be in git)
+find . -name "*.json" -o -name "*.yaml" -o -name "*.toml" 2>/dev/null | head -30
+
+# Large files that might be test data
+find . -size +1M -type f 2>/dev/null
+```
+
+### 4. Hidden Folder Inventory
+
+```bash
+# List all hidden folders at root
+ls -la .* 2>/dev/null | grep "^d"
+
+# Common hidden folders to review:
+# .agent-os/     - May contain duplicate agent configs
+# .ai/           - Legacy AI coordination
+# .drcode/       - DR Code artifacts
+# .claude/       - Claude configuration (KEEP)
+# .claude-flow/  - Runtime data (consider .gitignore)
+# .git/          - Git data (KEEP)
+# .venv/         - Virtual environment (should be ignored)
+```
+
+### 5. Identify Stale Artifacts
+
+```bash
+# Find log files in root
+ls *.log 2>/dev/null
+
+# Find test output files
+ls *_output.* test_*.txt *.html 2>/dev/null
+
+# Find build artifacts
+ls *.egg-info dist/ build/ 2>/dev/null
+```
+
+## Parallel Execution Strategy
+
+### Agent Spawn Patterns
+
+Use parallel subagents for faster reorganization. Tasks that don't have dependencies can run simultaneously.
+
+#### Phase 1: Analysis (PARALLEL)
+
+```javascript
+// All analysis tasks can run in parallel
+Task("Analyze source structure", "List all directories in src/ and identify modules vs infrastructure", "explorer")
+Task("Analyze test structure", "List all directories in tests/ and identify test modules", "explorer")
+Task("Analyze specs/docs", "List all directories in specs/ and docs/", "explorer")
+Task("Inventory root artifacts", "List all files at root level, identify logs/temp/build artifacts", "explorer")
+Task("Hidden folder audit", "List all hidden folders, check git tracking status", "explorer")
+```
+
+#### Phase 2: Directory Creation (SEQUENTIAL)
+
+```bash
+# Must be sequential - directories must exist before moves
+mkdir -p src/<package>/modules
+mkdir -p tests/modules
+mkdir -p specs/modules
+mkdir -p docs/modules
+mkdir -p examples/modules
+```
+
+#### Phase 3: Module Moves (PARALLEL by module)
+
+```javascript
+// Each module can be moved in parallel (no cross-dependencies)
+Task("Move aqwa module", "git mv all aqwa files across 5 layers", "coder")
+Task("Move catenary module", "git mv all catenary files across 5 layers", "coder")
+Task("Move orcaflex module", "git mv all orcaflex files across 5 layers", "coder")
+Task("Move mooring module", "git mv all mooring files across 5 layers", "coder")
+```
+
+#### Phase 4: Import Updates (PARALLEL by file type)
+
+```javascript
+// Import updates can be parallelized by file type
+Task("Update source imports", "Update imports in src/**/*.py", "coder")
+Task("Update test imports", "Update imports in tests/**/*.py", "coder")
+Task("Update example imports", "Update imports in examples/**/*.py", "coder")
+```
+
+#### Phase 5: Cleanup (PARALLEL)
+
+```javascript
+// Cleanup tasks are independent
+Task("Remove root artifacts", "Delete log files, temp files from root", "coder")
+Task("Consolidate agent dirs", "Move agents/ content to .claude/agent-library/", "coder")
+Task("Clean hidden folders", "Remove obsolete .agent-os/, .ai/, .drcode/", "coder")
+Task("Update .gitignore", "Add runtime data patterns to .gitignore", "coder")
+```
+
+#### Phase 6: Verification (PARALLEL then SEQUENTIAL)
+
+```javascript
+// Parallel verification
+Task("Verify imports", "Test all import statements work", "tester")
+Task("Verify git status", "Check git status is clean, no broken files", "tester")
+Task("Run test suite", "Run pytest to verify nothing broken", "tester")
+
+// Sequential final review
+Task("Final structure review", "Compare actual structure to target structure", "reviewer")
+```
+
+### Parallel vs Sequential Decision Matrix
+
+| Task Type | Parallel? | Reason |
+|-----------|-----------|--------|
+| Analysis/Inventory | YES | Read-only, no conflicts |
+| Directory creation | NO | Order matters for parent dirs |
+| Module moves (same module) | NO | Files may reference each other |
+| Module moves (different modules) | YES | Independent file sets |
+| Import updates (same file) | NO | Would cause conflicts |
+| Import updates (different files) | YES | No file conflicts |
+| Cleanup tasks | YES | Independent operations |
+| Test execution | NO | May have shared fixtures |
+| Verification | MIXED | Some parallel, final review sequential |
 
 ## Target Structure
 
@@ -323,13 +486,48 @@ git mv docs/aqwa docs/modules/aqwa
 - [ ] All tests pass before refactor
 - [ ] Created backup branch
 - [ ] Documented current structure
+- [ ] **Pre-flight checks completed** (see Pre-flight Checks section)
+- [ ] Duplicate directories identified
+- [ ] Runtime vs config files categorized
+- [ ] Hidden folders inventoried
 
 ### During Refactor
+
+#### Module Structure
 - [ ] All modules moved to modules/ subdirectory using `git mv`
 - [ ] tests/modules/ created and populated
 - [ ] specs/modules/ created (with .gitkeep if empty)
 - [ ] docs/modules/ created (with .gitkeep if empty)
 - [ ] examples/modules/ created (with .gitkeep if empty)
+
+#### Root-Level Artifact Cleanup
+- [ ] Log files removed (*.log)
+- [ ] Temp files removed (*.tmp, *.temp)
+- [ ] Build artifacts removed (dist/, build/, *.egg-info/)
+- [ ] Cache files removed (__pycache__/, .pytest_cache/)
+- [ ] Test output files relocated or removed
+- [ ] Prototype/experimental code relocated to examples/ or removed
+
+#### Directory Consolidation
+- [ ] agents/ content moved to .claude/agent-library/
+- [ ] coordination/ content moved to .claude-flow/
+- [ ] memory/ content moved to .claude-flow/
+- [ ] Duplicate skill directories merged
+- [ ] Empty directories removed
+
+#### Hidden Folder Review
+- [ ] .agent-os/ - reviewed and cleaned (usually remove)
+- [ ] .ai/ - reviewed and cleaned (usually remove)
+- [ ] .drcode/ - reviewed and cleaned (usually remove)
+- [ ] .claude/ - kept and organized
+- [ ] .claude-flow/ - added to .gitignore if runtime data
+- [ ] .venv/ - confirmed in .gitignore
+
+#### Test Output Relocation
+- [ ] HTML reports moved to tests/reports/ or removed
+- [ ] Coverage reports moved to tests/coverage/ or removed
+- [ ] Screenshot outputs moved to tests/snapshots/ or removed
+- [ ] Benchmark results moved to tests/benchmarks/ or removed
 
 ### Post-Refactor
 - [ ] `__init__.py` files created with proper exports
@@ -338,6 +536,243 @@ git mv docs/aqwa docs/modules/aqwa
 - [ ] Tests pass after refactor
 - [ ] No broken imports found
 - [ ] Git history preserved (verify with `git log --follow`)
+- [ ] **Post-cleanup verification completed** (see Post-cleanup Verification section)
+- [ ] .gitignore updated with new patterns
+- [ ] No untracked files at root level (except intended ones)
+
+## Common Patterns Found During Reorganization
+
+Based on real-world reorganization experience, these patterns frequently appear:
+
+### 1. Duplicate Agent Directories
+
+```
+# Pattern: Multiple locations for agent definitions
+agents/                          # Root-level (often untracked)
+.claude/agents/                  # Claude-specific
+.claude/agent-library/           # Preferred location
+.agent-os/agents/                # Legacy AI OS structure
+
+# Resolution: Consolidate to .claude/agent-library/
+git mv agents/* .claude/agent-library/
+rm -rf agents/
+```
+
+### 2. Scattered Runtime Data
+
+```
+# Pattern: Runtime data mixed with config
+coordination/                    # Untracked runtime state
+memory/                          # Untracked memory store
+.claude-flow/                    # Runtime data (should be ignored)
+
+# Resolution:
+# - Move to .claude-flow/ (single location)
+# - Add .claude-flow/ to .gitignore
+# - Delete untracked coordination/ and memory/
+```
+
+### 3. Untracked Artifacts in Root
+
+```
+# Pattern: Various artifacts accumulate in root
+*.log                            # Log files from various tools
+*.html                           # Test reports, visualizations
+*_output.*                       # Output files from scripts
+*.sim                            # Simulation files
+*.dat                            # Data files
+
+# Resolution:
+# - Delete if not needed
+# - Move to inputs/ or outputs/ if needed
+# - Add patterns to .gitignore
+```
+
+### 4. Multiple Skill/Command Locations
+
+```
+# Pattern: Skills defined in multiple places
+.claude/skills/                  # Claude skills
+skills/                          # Root-level skills
+.agent-os/skills/                # Legacy location
+commands/                        # Alternative naming
+
+# Resolution: Consolidate to .claude/skills/
+```
+
+### 5. Legacy Hidden Folders
+
+```
+# Pattern: Accumulation of AI tool folders
+.agent-os/                       # Custom agent OS (usually obsolete)
+.ai/                             # Generic AI folder
+.drcode/                         # DR Code specific
+.cursor/                         # Cursor editor
+.vscode/                         # VS Code settings
+
+# Resolution:
+# - .vscode/, .cursor/ - keep if used, add to .gitignore
+# - .agent-os/, .ai/, .drcode/ - usually safe to remove
+# - Check for any unique configs before deleting
+```
+
+### 6. Test Data in Wrong Locations
+
+```
+# Pattern: Test data scattered
+tests/test_data/                 # Correct location
+test_data/                       # Root level (wrong)
+data/                            # Ambiguous location
+fixtures/                        # Sometimes at root
+
+# Resolution: Move all to tests/test_data/ or tests/fixtures/
+```
+
+### 7. Prototype Code Mixed with Production
+
+```
+# Pattern: Experimental code in src/
+src/package/experimental/        # Should be separate
+src/package/prototype_*.py       # Should be in examples/
+scripts/scratch_*.py             # Should be in examples/experiments/
+
+# Resolution: Move to examples/experiments/ or examples/prototypes/
+```
+
+## Post-cleanup Verification
+
+### 1. Import Verification for Python Modules
+
+```bash
+# Create a verification script
+cat > verify_imports.py << 'EOF'
+#!/usr/bin/env python
+"""Verify all imports work after reorganization."""
+import sys
+from pathlib import Path
+
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+
+# Test all module imports
+modules_to_test = [
+    "digitalmodel",
+    "digitalmodel.modules",
+    "digitalmodel.modules.aqwa",
+    "digitalmodel.modules.catenary",
+    "digitalmodel.modules.orcaflex",
+    "digitalmodel.modules.mooring",
+    "digitalmodel.modules.fea_model",
+    "digitalmodel.modules.pipe_capacity",
+]
+
+failed = []
+for module in modules_to_test:
+    try:
+        __import__(module)
+        print(f"✓ {module}")
+    except ImportError as e:
+        print(f"✗ {module}: {e}")
+        failed.append(module)
+
+if failed:
+    print(f"\n{len(failed)} imports failed!")
+    sys.exit(1)
+else:
+    print(f"\nAll {len(modules_to_test)} imports successful!")
+EOF
+
+# Run verification
+uv run python verify_imports.py
+```
+
+### 2. Git Status Review
+
+```bash
+# Check for any unintended changes
+git status
+
+# Verify no broken file references
+git diff --name-status
+
+# Check for files that should be tracked but aren't
+git ls-files --others --exclude-standard
+
+# Verify history preservation for moved files
+git log --follow --oneline -- src/digitalmodel/modules/aqwa/aqwa_reader.py
+```
+
+### 3. Directory Structure Validation
+
+```bash
+# Verify target structure exists
+echo "=== Source Modules ==="
+ls -la src/digitalmodel/modules/
+
+echo "=== Test Modules ==="
+ls -la tests/modules/
+
+echo "=== Spec Modules ==="
+ls -la specs/modules/
+
+echo "=== Doc Modules ==="
+ls -la docs/modules/
+
+echo "=== Example Modules ==="
+ls -la examples/modules/
+
+# Verify no modules remain at old locations
+echo "=== Check for stragglers ==="
+ls src/digitalmodel/ | grep -v "modules\|__\|\.py"
+```
+
+### 4. Test Suite Execution
+
+```bash
+# Run full test suite
+uv run pytest tests/ -v
+
+# Run with coverage to verify all code is reachable
+uv run pytest tests/ --cov=src/digitalmodel --cov-report=term-missing
+
+# Run specific module tests
+uv run pytest tests/modules/aqwa/ -v
+```
+
+### 5. Clean Root Verification
+
+```bash
+# List root directory contents - should be minimal
+ls -la | grep -v "^d" | grep -v "^\."
+
+# Expected root files:
+# - pyproject.toml
+# - README.md
+# - LICENSE
+# - .gitignore
+# - CLAUDE.md (optional)
+
+# Anything else should be questioned
+```
+
+### 6. Gitignore Verification
+
+```bash
+# Check .gitignore has all necessary patterns
+cat .gitignore | grep -E "(log|tmp|cache|pycache|claude-flow)"
+
+# Recommended patterns to add:
+# *.log
+# *.tmp
+# __pycache__/
+# .pytest_cache/
+# .claude-flow/
+# dist/
+# build/
+# *.egg-info/
+# .coverage
+# htmlcov/
+```
 
 ## Common Issues and Solutions
 
@@ -399,8 +834,52 @@ include = ["digitalmodel*"]
 - Git mv documentation: https://git-scm.com/docs/git-mv
 - PEP 420 - Implicit Namespace Packages
 
+## Cleanup Categories Quick Reference
+
+| Category | Examples | Action |
+|----------|----------|--------|
+| **Root-level artifacts** | *.log, *.tmp, *.html | Delete or move to outputs/ |
+| **Build artifacts** | dist/, build/, *.egg-info | Delete (regenerated on build) |
+| **Cache files** | __pycache__/, .pytest_cache/ | Delete and .gitignore |
+| **Runtime data** | coordination/, memory/ | Move to .claude-flow/ |
+| **Duplicate dirs** | agents/, .claude/agents/ | Consolidate to .claude/agent-library/ |
+| **Legacy hidden** | .agent-os/, .ai/, .drcode/ | Review and usually delete |
+| **Test outputs** | reports/, coverage/, snapshots/ | Move under tests/ |
+| **Prototype code** | scratch_*.py, experimental/ | Move to examples/ |
+| **Test data** | *.csv, *.json at root | Move to tests/test_data/ |
+| **Config files** | *.yaml, *.toml, *.json | Keep at root or move to config/ |
+
+## Quick Start Commands
+
+```bash
+# 1. Pre-flight check (run first)
+git status && git ls-files --others --exclude-standard | wc -l
+
+# 2. Find all hidden folders
+ls -la .* 2>/dev/null | grep "^d"
+
+# 3. Find duplicates
+find . -type d -name "agents" -o -name "skills" -o -name "memory" 2>/dev/null
+
+# 4. Find artifacts at root
+ls *.log *.tmp *.html *.sim 2>/dev/null
+
+# 5. Create module structure
+mkdir -p src/<pkg>/modules tests/modules specs/modules docs/modules examples/modules
+
+# 6. Verify after cleanup
+uv run pytest tests/ -v && git status
+```
+
 ---
 
 ## Version History
 
+- **2.0.0** (2025-01-20): Major update with comprehensive cleanup categories
+  - Added Pre-flight Checks section
+  - Added Parallel Execution Strategy with agent spawn patterns
+  - Added Common Patterns Found During Reorganization
+  - Added Post-cleanup Verification section
+  - Expanded Checklist with cleanup categories
+  - Added Quick Reference tables and Quick Start commands
 - **1.0.0** (2025-01-19): Initial release based on digitalmodel repository refactor experience
