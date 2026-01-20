@@ -206,7 +206,7 @@ scripts/automation/
 
 config/
 ├── ai-agents-registry.json (NEW)
-├── workflow-templates.json (NEW)
+├── workflow-templates-enhanced.yaml (UPDATED - merged JSON content)
 └── ... (existing files)
 
 docs/modules/orcaflex/
@@ -218,7 +218,8 @@ src/digitalmodel/modules/
 ├── orcaflex/
 │   └── utils/
 │       └── validate_bom.py (NEW)
-└── visualization/
-    ├── report_generator.py (NEW)
-    └── path_utils.py (NEW)
+└── reporting/ (NEW MODULE)
+    ├── __init__.py
+    ├── report_generator.py
+    └── path_utils.py
 ```
