@@ -23,12 +23,12 @@ import logging
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from marine_engineering.mooring_analysis.catenary_solver import (
+from digitalmodel.modules.marine_engineering.mooring_analysis.catenary_solver import (
     CatenarySolver,
     CatenaryInput,
     CatenaryResults
 )
-from marine_engineering.environmental_loading.ocimf import OCIMFWindForce
+from digitalmodel.modules.marine_engineering.environmental_loading.ocimf import OCIMFWindForce
 
 # Configure logging
 logging.basicConfig(

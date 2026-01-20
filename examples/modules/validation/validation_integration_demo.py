@@ -117,7 +117,7 @@ def demo_integration_with_procurement():
         import importlib.util
         spec = importlib.util.find_spec("data_procurement.validators.data_validator")
         if spec is not None:
-            from data_procurement.validators.data_validator import DataValidator as ProcurementValidator
+            from digitalmodel.modules.data_procurement.validators.data_validator import DataValidator as ProcurementValidator
         else:
             raise ImportError("data_procurement not in path")
 

@@ -733,3 +733,254 @@ template_metadata:
       - "Repository synchronization"
       - "Dependency updates"
       - "Multi-repo maintenance"
+
+# ============================================================================
+# LEGACY WORKFLOWS (Migrated from modules/config/workflow-templates.json)
+# These workflows use gate-pass reviews at each phase
+# ============================================================================
+
+legacy_workflows:
+  sparc_complete:
+    name: "Complete SPARC Workflow"
+    description: "Full SPARC methodology with gate-pass reviews at each phase"
+    phases:
+      - name: "specification"
+        agents:
+          primary: "spec-kit-analyzer"
+          support: ["claude-flow-researcher", "agent-os-planner"]
+        tasks:
+          - "Analyze requirements"
+          - "Create spec with spec-kit"
+          - "Validate with Agent OS instructions"
+          - "Document in .agent-os/specs/"
+        gate_pass:
+          enabled: true
+          reviewer: "claude-flow-researcher"
+          min_score: 90
+        outputs:
+          - ".agent-os/specs/[spec-name]/spec.md"
+          - ".agent-os/specs/[spec-name]/sub-specs/technical-spec.md"
+
+      - name: "pseudocode"
+        agents:
+          primary: "claude-flow-architect"
+          support: ["claude-sonnet-4.5"]
+        tasks:
+          - "Design algorithms"
+          - "Analyze complexity"
+          - "Document edge cases"
+          - "Create pseudocode specifications"
+        gate_pass:
+          enabled: true
+          reviewer: "claude-flow-architect"
+          min_score: 85
+        outputs:
+          - ".agent-os/specs/[spec-name]/sub-specs/pseudocode.md"
+
+      - name: "architecture"
+        agents:
+          primary: "claude-flow-architect"
+          support: ["claude-sonnet-4.5", "claude-flow-reviewer"]
+        tasks:
+          - "Design system architecture"
+          - "Define database schema"
+          - "Plan API endpoints"
+          - "Document architectural decisions"
+        gate_pass:
+          enabled: true
+          reviewer: "claude-flow-architect"
+          min_score: 88
+        outputs:
+          - ".agent-os/specs/[spec-name]/sub-specs/architecture.md"
+          - ".agent-os/specs/[spec-name]/sub-specs/database-schema.md"
+          - ".agent-os/specs/[spec-name]/sub-specs/api-spec.md"
+
+      - name: "refinement_tdd"
+        agents:
+          primary: "claude-flow-coder"
+          support: ["claude-flow-tester", "factory-ai-droid"]
+        tasks:
+          - "Write tests first (TDD)"
+          - "Implement functionality"
+          - "Run tests continuously"
+          - "Refactor with confidence"
+        gate_pass:
+          enabled: true
+          reviewer: "claude-flow-reviewer"
+          min_score: 90
+        outputs:
+          - "tests/"
+          - "src/"
+          - "Test coverage report"
+
+      - name: "completion"
+        agents:
+          primary: "claude-sonnet-4.5"
+          support: ["claude-flow-reviewer", "claude-flow-tester"]
+        tasks:
+          - "Integration validation"
+          - "Final code review"
+          - "Documentation completion"
+          - "Deployment preparation"
+        gate_pass:
+          enabled: true
+          reviewer: "claude-sonnet-4.5"
+          min_score: 92
+        outputs:
+          - "Pull request"
+          - "Deployment checklist"
+          - "Updated roadmap"
+
+    coordination:
+      platform: "claude-flow"
+      hooks:
+        pre_task: "npx claude-flow@alpha hooks pre-task"
+        post_edit: "npx claude-flow@alpha hooks post-edit"
+        post_task: "npx claude-flow@alpha hooks post-task"
+        session_restore: "npx claude-flow@alpha hooks session-restore"
+        session_end: "npx claude-flow@alpha hooks session-end"
+      memory:
+        enabled: true
+        keys:
+          - "swarm/[agent]/context"
+          - "swarm/[agent]/decisions"
+          - "swarm/[agent]/artifacts"
+
+  feature_development:
+    name: "Feature Development Workflow"
+    description: "Rapid feature development with factory.ai and claude-flow"
+    phases:
+      - name: "planning"
+        agents:
+          primary: "agent-os-planner"
+          support: ["spec-kit-analyzer"]
+        tasks:
+          - "Create feature spec"
+          - "Break down into tasks"
+          - "Estimate complexity"
+        gate_pass:
+          enabled: true
+          reviewer: "claude-flow-researcher"
+          min_score: 85
+
+      - name: "implementation"
+        agents:
+          primary: "factory-ai-droid"
+          support: ["claude-flow-coder", "claude-sonnet-4.5"]
+        tasks:
+          - "Generate initial code"
+          - "Implement core features"
+          - "Add error handling"
+        gate_pass:
+          enabled: true
+          reviewer: "claude-flow-reviewer"
+          min_score: 88
+
+      - name: "testing"
+        agents:
+          primary: "claude-flow-tester"
+          support: ["factory-ai-droid"]
+        tasks:
+          - "Write comprehensive tests"
+          - "Achieve 90% coverage"
+          - "Test edge cases"
+        gate_pass:
+          enabled: true
+          reviewer: "claude-flow-tester"
+          min_score: 90
+
+      - name: "review_deploy"
+        agents:
+          primary: "claude-flow-reviewer"
+          support: ["claude-sonnet-4.5"]
+        tasks:
+          - "Code review"
+          - "Security check"
+          - "Create PR"
+          - "Deploy to staging"
+        gate_pass:
+          enabled: true
+          reviewer: "claude-sonnet-4.5"
+          min_score: 92
+
+  documentation_workflow:
+    name: "Documentation Workflow"
+    description: "Comprehensive documentation creation and maintenance"
+    phases:
+      - name: "planning"
+        agents:
+          primary: "claude-sonnet-4.5"
+          support: ["spec-kit-analyzer"]
+        tasks:
+          - "Define documentation scope"
+          - "Identify target audiences"
+          - "Create outline"
+        gate_pass:
+          enabled: false
+
+      - name: "generation"
+        agents:
+          primary: "claude-sonnet-4.5"
+          support: ["factory-ai-droid"]
+        tasks:
+          - "Generate API documentation"
+          - "Create user guides"
+          - "Write technical specs"
+        gate_pass:
+          enabled: true
+          reviewer: "claude-flow-reviewer"
+          min_score: 85
+
+      - name: "validation"
+        agents:
+          primary: "claude-flow-reviewer"
+          support: ["spec-kit-analyzer"]
+        tasks:
+          - "Verify accuracy"
+          - "Check completeness"
+          - "Ensure clarity"
+        gate_pass:
+          enabled: true
+          reviewer: "claude-sonnet-4.5"
+          min_score: 90
+
+# Integration patterns for combining multiple agent platforms
+integration_patterns:
+  factory_ai_claude_flow:
+    description: "Combine factory.ai bulk operations with claude-flow coordination"
+    pattern:
+      - "1. Initialize claude-flow swarm for coordination"
+      - "2. Use factory.ai for bulk code generation/refactoring"
+      - "3. claude-flow agents review and validate changes"
+      - "4. Gate-pass review before committing"
+      - "5. claude-flow orchestrates PR creation"
+    example:
+      task: "Refactor 50 Python files to use async/await"
+      execution:
+        - "npx claude-flow@alpha swarm init --topology mesh"
+        - "droid exec 'refactor all Python files to use async/await'"
+        - "./scripts/automation/gate_pass_review.sh refinement . --auto"
+        - "npx claude-flow@alpha hooks post-task"
+
+  spec_kit_agent_os:
+    description: "Evolve specs with spec-kit and execute with agent-os"
+    pattern:
+      - "1. Create initial spec with agent-os"
+      - "2. Evolve with spec-kit based on feedback"
+      - "3. agent-os breaks down into tasks"
+      - "4. Execute tasks with appropriate agents"
+      - "5. Update spec based on implementation learnings"
+
+  multi_agent_review:
+    description: "Multiple agents review work from different perspectives"
+    pattern:
+      - "1. Primary agent implements feature"
+      - "2. Security agent reviews for vulnerabilities"
+      - "3. Performance agent reviews for optimization"
+      - "4. Testing agent validates coverage"
+      - "5. Architecture agent validates design patterns"
+    agents:
+      - "claude-flow-reviewer (general quality)"
+      - "claude-flow-architect (design patterns)"
+      - "claude-flow-tester (test coverage)"
+      - "claude-sonnet-4.5 (comprehensive review)"

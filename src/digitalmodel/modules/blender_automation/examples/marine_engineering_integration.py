@@ -4,7 +4,7 @@ Demonstrates using blender_automation with marine engineering CAD models.
 """
 
 from pathlib import Path
-from blender_automation import (
+from digitalmodel.modules.blender_automation import (
     BlenderWrapper,
     SceneManager,
     CADImporter,
@@ -236,7 +236,7 @@ def example_subsea_equipment_catalog():
 
     if equipment_dir.exists():
         # Find all equipment models
-        from blender_automation.utils import find_cad_files
+        from digitalmodel.modules.blender_automation.utils import find_cad_files
 
         equipment_files = find_cad_files(
             equipment_dir,

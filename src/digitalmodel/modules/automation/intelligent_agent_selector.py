@@ -148,7 +148,7 @@ class IntelligentAgentSelector:
     def __init__(
         self,
         config_path: str = "config/agent-selection-weights.yaml",
-        registry_path: str = "modules/config/ai-agents-registry.json",
+        registry_path: str = "config/ai-agents-registry.json",
         performance_db: str = ".claude-flow/agent-performance.db"
     ):
         """Initialize agent selector.
@@ -538,7 +538,7 @@ def main():
     )
     parser.add_argument(
         "--registry",
-        default="modules/config/ai-agents-registry.json",
+        default="config/ai-agents-registry.json",
         help="Path to agent registry"
     )
     parser.add_argument(

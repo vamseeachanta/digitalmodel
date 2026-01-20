@@ -12,9 +12,9 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 WORKSPACE_ROOT="/mnt/github/workspace-hub"
-REGISTRY_FILE="$WORKSPACE_ROOT/modules/config/ai-agents-registry.json"
+REGISTRY_FILE="$WORKSPACE_ROOT/config/ai-agents-registry.json"
 BACKUP_DIR="$WORKSPACE_ROOT/.agent-backups"
-UPDATE_LOG="$WORKSPACE_ROOT/modules/config/agent-updates.log"
+UPDATE_LOG="$WORKSPACE_ROOT/config/agent-updates.log"
 
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}Daily AI Agents Registry Update${NC}"
@@ -89,9 +89,9 @@ SYNC_COUNT=0
 for dir in "$WORKSPACE_ROOT"/*/; do
     if [ -d "${dir}.git" ]; then
         REPO_NAME=$(basename "$dir")
-        TARGET_DIR="${dir}modules/config"
+        TARGET_DIR="${dir}config"
 
-        # Create modules/config if it doesn't exist
+        # Create config directory if it doesn't exist
         mkdir -p "$TARGET_DIR"
 
         # Copy registry
@@ -109,7 +109,7 @@ echo ""
 echo -e "${YELLOW}Generating update report...${NC}"
 
 # Generate update report
-REPORT_FILE="$WORKSPACE_ROOT/modules/config/agent-update-report-$(date +%Y%m%d).md"
+REPORT_FILE="$WORKSPACE_ROOT/config/agent-update-report-$(date +%Y%m%d).md"
 
 cat > "$REPORT_FILE" << EOF
 # AI Agents Registry Update Report

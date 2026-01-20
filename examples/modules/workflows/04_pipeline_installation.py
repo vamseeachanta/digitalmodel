@@ -19,8 +19,8 @@ import logging
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from marine_engineering.catenary.solver import CatenarySolver
-from marine_engineering.catenary.utils import calculate_catenary_profile
+from digitalmodel.modules.marine_engineering.catenary.solver import CatenarySolver
+from digitalmodel.modules.marine_engineering.catenary.utils import calculate_catenary_profile
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

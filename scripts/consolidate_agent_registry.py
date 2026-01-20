@@ -1,6 +1,6 @@
 """
 ABOUTME: Consolidates agent definitions from multiple sources into a unified registry.
-This script parses agent definitions from .claude/agents/*/*.md files and modules/config/ai-agents-registry.json.
+This script parses agent definitions from .claude/agents/*/*.md files and config/ai-agents-registry.json.
 """
 
 import json
@@ -331,7 +331,7 @@ def create_consolidated_registry(
                 'description': registry_agent.get('description', f"Agent: {agent_name}"),
                 'capabilities': list(registry_agent.get('capabilities', {}).keys()),
                 'type': registry_agent.get('type', 'specialist'),
-                'definition_file': 'modules/config/ai-agents-registry.json',
+                'definition_file': 'config/ai-agents-registry.json',
                 'platform': registry_agent.get('platform', 'unknown'),
                 'alias': generate_alias(agent_name)
             }
@@ -350,7 +350,7 @@ def create_consolidated_registry(
             'total_agents': len(consolidated_agents),
             'sync_sources': [
                 '.claude/agents/*/*.md',
-                'modules/config/ai-agents-registry.json'
+                'config/ai-agents-registry.json'
             ],
             'auto_sync_enabled': True
         },
@@ -456,7 +456,7 @@ def main():
     parser.add_argument(
         '--registry-file',
         type=Path,
-        default=Path('modules/config/ai-agents-registry.json'),
+        default=Path('config/ai-agents-registry.json'),
         help='Existing registry file with performance data'
     )
     parser.add_argument(

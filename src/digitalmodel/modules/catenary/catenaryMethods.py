@@ -10,11 +10,11 @@ def catenaryEquation(data):
     """
     DEPRECATED: This legacy dict-based catenary API is deprecated.
 
-    Please use the modern API from marine_engineering.catenary instead:
-        from marine_engineering.catenary import CatenarySolver, CatenaryInput
+    Please use the modern API from digitalmodel.modules.marine_engineering.catenary instead:
+        from digitalmodel.modules.marine_engineering.catenary import CatenarySolver, CatenaryInput
 
     For backward compatibility, use the adapter:
-        from marine_engineering.catenary import catenaryEquation
+        from digitalmodel.modules.marine_engineering.catenary import catenaryEquation
 
     This function will be removed in a future version.
     """
@@ -67,9 +67,9 @@ def catenaryForces(data):
     """
     DEPRECATED: This legacy dict-based catenary forces API is deprecated.
 
-    Please use the modern API from marine_engineering.catenary instead.
+    Please use the modern API from digitalmodel.modules.marine_engineering.catenary instead.
     For backward compatibility, use:
-        from marine_engineering.catenary import catenaryForces
+        from digitalmodel.modules.marine_engineering.catenary import catenaryForces
     """
     warnings.warn(
         "digitalmodel.modules.catenary.catenaryMethods.catenaryForces is deprecated. "
