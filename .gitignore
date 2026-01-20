@@ -300,3 +300,7 @@ AqwaServerLogFile.txt
 dat_files_list.txt
 cache/
 .temp/
+
+# Benchmark generated outputs
+benchmarks/reports/
+benchmarks/results/
