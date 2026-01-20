@@ -76,12 +76,29 @@ __all__ = [
     'ModelInterface',
     'AnalysisConfiguration',
     'CORE_AVAILABLE',
+
+    # Template generator
+    'TemplateManager',
+    'TemplateGenerator',
+    'ModelValidator',
+    'TEMPLATE_GENERATOR_AVAILABLE',
 ]
+
+# Template generator
+try:
+    from .template_generator import TemplateManager, TemplateGenerator, ModelValidator
+    TEMPLATE_GENERATOR_AVAILABLE = True
+except ImportError:
+    TEMPLATE_GENERATOR_AVAILABLE = False
+    TemplateManager = None
+    TemplateGenerator = None
+    ModelValidator = None
 
 # CLI Commands available
 CLI_COMMANDS = {
     'orcaflex-universal': 'Universal OrcaFlex simulation runner',
     'run-to-sim': 'Run OrcaFlex models to generate .sim files',
+    'template-generator': 'Generate OrcaFlex models from hybrid templates',
 }
 
 def get_version():
@@ -100,6 +117,7 @@ def check_availability():
         'post_processing': POST_PROCESSING_AVAILABLE,
         'orcaflex_api': ORCAFLEX_AVAILABLE,
         'core': CORE_AVAILABLE,
+        'template_generator': TEMPLATE_GENERATOR_AVAILABLE,
     }
 
 def list_cli_commands():

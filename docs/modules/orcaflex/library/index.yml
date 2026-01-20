@@ -163,7 +163,157 @@ buoy_types:
   - BulkModulus
   - NormalDragAreaCalculatedFromGeometry
   - Cylinders
-connectors: []
+anchors:
+- file: drag_embedment_15t.yml
+  path: anchors\drag_embedment_15t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - InitialPosition
+  - InitialAttitude
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: drag_embedment_25t.yml
+  path: anchors\drag_embedment_25t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - InitialPosition
+  - InitialAttitude
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: suction_pile_large.yml
+  path: anchors\suction_pile_large.yml
+  properties:
+  - BuoyType
+  - Connection
+  - InitialPosition
+  - InitialAttitude
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: suction_pile_medium.yml
+  path: anchors\suction_pile_medium.yml
+  properties:
+  - BuoyType
+  - Connection
+  - InitialPosition
+  - InitialAttitude
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: driven_pile.yml
+  path: anchors\driven_pile.yml
+  properties:
+  - BuoyType
+  - Connection
+  - InitialPosition
+  - InitialAttitude
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: gravity_anchor.yml
+  path: anchors\gravity_anchor.yml
+  properties:
+  - BuoyType
+  - Connection
+  - InitialPosition
+  - InitialAttitude
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+connectors:
+- file: chain_stopper_200t.yml
+  path: connectors\chain_stopper_200t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: swivel_150t.yml
+  path: connectors\swivel_150t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: shackle_bow_100t.yml
+  path: connectors\shackle_bow_100t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: shackle_anchor_150t.yml
+  path: connectors\shackle_anchor_150t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: quick_release_100t.yml
+  path: connectors\quick_release_100t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
 line_types:
 - file: chain_84mm_r4.yml
   path: line_types\chain_84mm_r4.yml
