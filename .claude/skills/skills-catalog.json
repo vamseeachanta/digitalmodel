@@ -160,6 +160,89 @@
       },
       "keywords": []
     },
+    "orcaflex-batch-manager": {
+      "version": "1.0.0",
+      "description": "Manage large-scale OrcaFlex batch processing with parallel execution, adaptive worker scaling, memory optimization, and progress tracking for efficient simulation campaigns.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0"
+      },
+      "keywords": [
+        "batch processing",
+        "parallel simulations",
+        "batch manager",
+        "run multiple models",
+        "simulation campaign",
+        "large batch",
+        "parallel OrcaFlex",
+        "job queue"
+      ]
+    },
+    "orcaflex-code-check": {
+      "version": "1.0.0",
+      "description": "Verify OrcaFlex model results against industry standards (DNV, API, ISO). Perform capacity checks, safety factor verification, and compliance reporting for offshore structures.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0",
+        "structural-analysis": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "code check",
+        "standards compliance",
+        "DNV check",
+        "API check",
+        "ISO check",
+        "safety factor",
+        "capacity check",
+        "design verification"
+      ]
+    },
+    "orcaflex-environment-config": {
+      "version": "1.0.0",
+      "description": "Configure OrcaFlex environmental conditions including wave spectra (JONSWAP, Dean Stream), current profiles, wind loading, and seabed properties for offshore analysis.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0",
+        "hydrodynamics": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "environment setup",
+        "wave configuration",
+        "current profile",
+        "wind setup",
+        "JONSWAP spectrum",
+        "sea state",
+        "environmental loading",
+        "seabed properties"
+      ]
+    },
+    "orcaflex-extreme-analysis": {
+      "version": "1.0.0",
+      "description": "Extract extreme response values with linked statistics from OrcaFlex simulations. Use for design load identification, max/min extraction with associated values, and extreme event characterization.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0",
+        "orcaflex-post-processing": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "extreme analysis",
+        "max tension",
+        "linked statistics",
+        "extreme values",
+        "design loads",
+        "maximum response",
+        "associated values",
+        "peak extraction"
+      ]
+    },
     "orcaflex-file-conversion": {
       "version": "1.0.0",
       "description": "Convert OrcaFlex files between formats (.dat, .yml, .sim) for digital analysis and automation. Supports bidirectional conversion, batch processing, and format standardization.",
@@ -176,6 +259,67 @@
         "OrcaFlex file format conversion",
         "batch OrcaFlex conversion",
         "digitally analyze OrcaFlex files"
+      ]
+    },
+    "orcaflex-installation-analysis": {
+      "version": "1.0.0",
+      "description": "Create and analyze OrcaFlex models for offshore installation sequences including subsea structure lowering, pipeline installation, and crane operations. Generate models at multiple water depths and orientations for installation feasibility studies.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0"
+      },
+      "keywords": [
+        "installation analysis",
+        "subsea installation",
+        "structure lowering",
+        "crane operation",
+        "installation sequence",
+        "depth variation",
+        "installation feasibility",
+        "heavy lift",
+        "payload handling"
+      ]
+    },
+    "orcaflex-line-wizard": {
+      "version": "1.0.0",
+      "description": "Configure OrcaFlex line properties and use the Line Setup Wizard for automatic tension/length calculations. Use for mooring line configuration, riser setup, and achieving target line properties.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0"
+      },
+      "keywords": [
+        "line setup wizard",
+        "line configuration",
+        "target tension",
+        "line length calculation",
+        "mooring line setup",
+        "riser configuration",
+        "line properties",
+        "segment configuration"
+      ]
+    },
+    "orcaflex-modal-analysis": {
+      "version": "1.0.0",
+      "description": "Perform modal and frequency analysis on OrcaFlex models to extract natural frequencies, mode shapes, and identify dominant DOF responses. Use for VIV assessment, resonance identification, and structural dynamics characterization.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0"
+      },
+      "keywords": [
+        "modal analysis",
+        "natural frequency",
+        "mode shapes",
+        "frequency analysis",
+        "eigenvalue analysis",
+        "resonance identification",
+        "DOF analysis",
+        "structural dynamics"
       ]
     },
     "orcaflex-model-generator": {
@@ -217,6 +361,49 @@
         ".sim simulation files"
       ]
     },
+    "orcaflex-mooring-iteration": {
+      "version": "1.0.0",
+      "description": "Iterate mooring line lengths to achieve target pretensions using scipy optimization, Newton-Raphson, or EA-based methods. Use for mooring system design, pretension optimization, and CALM/SALM buoy configuration.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0"
+      },
+      "keywords": [
+        "mooring tension iteration",
+        "pretension optimization",
+        "line length adjustment",
+        "mooring design",
+        "target tension",
+        "tension matching",
+        "mooring optimization",
+        "CALM mooring",
+        "SALM mooring"
+      ]
+    },
+    "orcaflex-operability": {
+      "version": "1.0.0",
+      "description": "Perform operability analysis combining multiple sea states to assess system availability and weather downtime. Generate operability envelopes, critical heading analysis, and downtime calculations from wave scatter diagrams.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0",
+        "orcaflex-post-processing": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "operability analysis",
+        "weather downtime",
+        "operability envelope",
+        "sea state analysis",
+        "weather window",
+        "operational limits",
+        "critical headings",
+        "wave scatter",
+        "annual downtime"
+      ]
+    },
     "orcaflex-post-processing": {
       "version": "1.0.0",
       "description": "Post-process OrcaFlex simulation results using OPP (OrcaFlex Post-Process). Use for extracting summary statistics, linked statistics, range graphs, time series, histograms, and generating interactive HTML reports from .sim files.",
@@ -228,6 +415,110 @@
         "signal-analysis": ">=1.0.0,<2.0.0"
       },
       "keywords": []
+    },
+    "orcaflex-rao-import": {
+      "version": "1.0.0",
+      "description": "Import RAO (Response Amplitude Operator) data from external sources including AQWA, OrcaFlex, and CSV files. Includes validation, interpolation, and conversion for OrcaFlex vessel type creation.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0",
+        "hydrodynamics": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "RAO import",
+        "import vessel RAOs",
+        "AQWA to OrcaFlex",
+        "RAO conversion",
+        "vessel hydrodynamics",
+        "transfer functions",
+        "motion RAOs",
+        "RAO interpolation"
+      ]
+    },
+    "orcaflex-results-comparison": {
+      "version": "1.0.0",
+      "description": "Compare results across multiple OrcaFlex simulations for design verification, sensitivity studies, and configuration comparison. Includes pretension, stiffness, and force distribution analysis.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0",
+        "orcaflex-post-processing": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "compare simulations",
+        "results comparison",
+        "sensitivity study",
+        "design comparison",
+        "configuration comparison",
+        "pretension comparison",
+        "stiffness comparison",
+        "mooring comparison"
+      ]
+    },
+    "orcaflex-static-debug": {
+      "version": "1.0.0",
+      "description": "Troubleshoot and resolve OrcaFlex static analysis convergence issues. Diagnose common problems including line connectivity, tensions, environmental conditions, and numerical instabilities.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0"
+      },
+      "keywords": [
+        "static convergence",
+        "static analysis failed",
+        "convergence issues",
+        "static not converging",
+        "OrcaFlex statics",
+        "model not converging",
+        "catenary convergence",
+        "unstable statics"
+      ]
+    },
+    "orcaflex-vessel-setup": {
+      "version": "1.0.0",
+      "description": "Configure 6-DOF vessels in OrcaFlex with hydrodynamic properties, RAO import from AQWA, and vessel type creation. Covers initial position, orientation, calculation settings, and motion options.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0",
+        "hydrodynamics": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "vessel setup",
+        "create vessel",
+        "vessel configuration",
+        "6-DOF vessel",
+        "vessel type",
+        "vessel properties",
+        "vessel initialization",
+        "AQWA vessel import"
+      ]
+    },
+    "orcaflex-visualization": {
+      "version": "1.0.0",
+      "description": "Generate visualizations from OrcaFlex simulations including model views, time series plots, range graphs, and interactive HTML reports using Plotly for comprehensive analysis presentation.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0",
+        "orcaflex-post-processing": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "visualization",
+        "plot results",
+        "model view",
+        "time series plot",
+        "range graph",
+        "animation",
+        "HTML report",
+        "interactive plot"
+      ]
     },
     "orcawave-analysis": {
       "version": "1.0.0",
@@ -251,14 +542,61 @@
         "frequency domain analysis"
       ]
     },
+    "orcawave-aqwa-benchmark": {
+      "version": "1.0.0",
+      "description": "Cross-validation specialist for comparing OrcaWave and AQWA diffraction analysis results. Provides statistical comparison, peak value validation, and automated benchmark reporting for hydrodynamic coefficient verification.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": null,
+      "dependencies": {
+        "numpy": ">=1.24.0",
+        "pandas": ">=2.0.0",
+        "plotly": ">=5.15.0",
+        "scipy": ">=1.11.0"
+      },
+      "keywords": [
+        "AQWA OrcaWave comparison",
+        "diffraction benchmark",
+        "RAO validation",
+        "hydrodynamic coefficient comparison",
+        "cross-tool validation",
+        "panel method benchmark",
+        "added mass comparison",
+        "damping comparison"
+      ]
+    },
+    "orcawave-damping-sweep": {
+      "version": "1.0.0",
+      "description": "Viscous damping analysis specialist for OrcaWave. Handles parametric damping studies, roll damping optimization, critical damping calculations, and comparison with model test data for vessel motion tuning.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": null,
+      "dependencies": {
+        "numpy": ">=1.24.0",
+        "scipy": ">=1.11.0",
+        "plotly": ">=5.15.0"
+      },
+      "keywords": [
+        "damping sweep",
+        "roll damping",
+        "viscous damping study",
+        "critical damping",
+        "damping optimization",
+        "bilge keel effect",
+        "damping coefficient tuning",
+        "model test comparison"
+      ]
+    },
     "orcawave-mesh-generation": {
       "version": "1.0.0",
       "description": "Panel mesh generation and optimization specialist for OrcaWave diffraction analysis. Handles CAD-to-panel mesh conversion, mesh quality validation, convergence studies, and GDF file generation for hydrodynamic computations.",
       "category": "offshore-engineering",
       "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
+      "orcaflex_version": null,
       "dependencies": {
-        "gmsh-meshing": ">=1.0.0,<2.0.0"
+        "gmsh": ">=4.11.0",
+        "numpy": ">=1.24.0",
+        "trimesh": ">=3.20.0"
       },
       "keywords": [
         "panel mesh generation",
@@ -273,25 +611,25 @@
         "watertight mesh"
       ]
     },
-    "orcawave-aqwa-benchmark": {
+    "orcawave-multi-body": {
       "version": "1.0.0",
-      "description": "Cross-validation specialist for comparing OrcaWave and AQWA diffraction analysis results. Provides statistical comparison, peak value validation, and automated benchmark reporting for hydrodynamic coefficient verification.",
+      "description": "Multi-body hydrodynamic interaction specialist for OrcaWave. Handles coupled vessel analysis, side-by-side operations, FPSO-tanker interactions, gap resonance, and hydrodynamic shielding effects.",
       "category": "offshore-engineering",
       "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
+      "orcaflex_version": null,
       "dependencies": {
-        "orcawave-analysis": ">=1.0.0,<2.0.0",
-        "aqwa-analysis": ">=3.0.0,<4.0.0"
+        "numpy": ">=1.24.0",
+        "scipy": ">=1.11.0"
       },
       "keywords": [
-        "AQWA OrcaWave comparison",
-        "diffraction benchmark",
-        "RAO validation",
-        "hydrodynamic coefficient comparison",
-        "cross-tool validation",
-        "panel method benchmark",
-        "added mass comparison",
-        "damping comparison"
+        "multi-body hydrodynamics",
+        "side-by-side operation",
+        "coupled vessel analysis",
+        "FPSO tanker interaction",
+        "gap resonance",
+        "hydrodynamic shielding",
+        "STS transfer",
+        "offloading operation"
       ]
     },
     "orcawave-qtf-analysis": {
@@ -299,9 +637,10 @@
       "description": "Second-order wave force specialist for QTF (Quadratic Transfer Function) computation in OrcaWave. Handles mean drift, difference-frequency, sum-frequency forces, and slow-drift response analysis for offshore structures.",
       "category": "offshore-engineering",
       "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
+      "orcaflex_version": null,
       "dependencies": {
-        "orcawave-analysis": ">=1.0.0,<2.0.0"
+        "numpy": ">=1.24.0",
+        "scipy": ">=1.11.0"
       },
       "keywords": [
         "QTF computation",
@@ -322,8 +661,9 @@
       "python_min_version": "3.10",
       "orcaflex_version": ">=11.0",
       "dependencies": {
-        "orcawave-analysis": ">=1.0.0,<2.0.0",
-        "orcaflex-vessel-setup": ">=1.0.0,<2.0.0"
+        "numpy": ">=1.24.0",
+        "pandas": ">=2.0.0",
+        "pyyaml": ">=6.0"
       },
       "keywords": [
         "OrcaWave to OrcaFlex",
@@ -333,46 +673,6 @@
         "diffraction to time domain",
         "added mass damping export",
         "OrcaFlex vessel setup"
-      ]
-    },
-    "orcawave-multi-body": {
-      "version": "1.0.0",
-      "description": "Multi-body hydrodynamic interaction specialist for OrcaWave. Handles coupled vessel analysis, side-by-side operations, FPSO-tanker interactions, gap resonance, and hydrodynamic shielding effects.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcawave-analysis": ">=1.0.0,<2.0.0"
-      },
-      "keywords": [
-        "multi-body hydrodynamics",
-        "side-by-side operation",
-        "coupled vessel analysis",
-        "FPSO tanker interaction",
-        "gap resonance",
-        "hydrodynamic shielding",
-        "STS transfer",
-        "offloading operation"
-      ]
-    },
-    "orcawave-damping-sweep": {
-      "version": "1.0.0",
-      "description": "Viscous damping analysis specialist for OrcaWave. Handles parametric damping studies, roll damping optimization, critical damping calculations, and comparison with model test data for vessel motion tuning.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcawave-analysis": ">=1.0.0,<2.0.0"
-      },
-      "keywords": [
-        "damping sweep",
-        "roll damping",
-        "viscous damping study",
-        "critical damping",
-        "damping optimization",
-        "bilge keel effect",
-        "damping coefficient tuning",
-        "model test comparison"
       ]
     },
     "signal-analysis": {
@@ -403,295 +703,6 @@
         "structural-analysis": ">=1.0.0,<2.0.0"
       },
       "keywords": []
-    },
-    "orcaflex-modal-analysis": {
-      "version": "1.0.0",
-      "description": "Perform modal and frequency analysis on OrcaFlex models to extract natural frequencies, mode shapes, and identify dominant DOF responses. Use for VIV assessment, resonance identification, and structural dynamics characterization.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0"
-      },
-      "keywords": [
-        "modal analysis",
-        "natural frequency",
-        "mode shapes",
-        "frequency analysis",
-        "eigenvalue analysis",
-        "resonance identification",
-        "DOF analysis",
-        "structural dynamics"
-      ]
-    },
-    "orcaflex-installation-analysis": {
-      "version": "1.0.0",
-      "description": "Create and analyze OrcaFlex models for offshore installation sequences including subsea structure lowering, pipeline installation, and crane operations. Generate models at multiple water depths and orientations for installation feasibility studies.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0"
-      },
-      "keywords": [
-        "installation analysis",
-        "subsea installation",
-        "structure lowering",
-        "crane operation",
-        "installation sequence",
-        "depth variation",
-        "heavy lift",
-        "payload handling"
-      ]
-    },
-    "orcaflex-mooring-iteration": {
-      "version": "1.0.0",
-      "description": "Iterate mooring line lengths to achieve target pretensions using scipy optimization, Newton-Raphson, or EA-based methods. Use for mooring system design, pretension optimization, and CALM/SALM buoy configuration.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0"
-      },
-      "keywords": [
-        "mooring tension iteration",
-        "pretension optimization",
-        "line length adjustment",
-        "mooring design",
-        "target tension",
-        "tension matching",
-        "CALM mooring",
-        "SALM mooring"
-      ]
-    },
-    "orcaflex-static-debug": {
-      "version": "1.0.0",
-      "description": "Troubleshoot and resolve OrcaFlex static analysis convergence issues. Diagnose common problems including line connectivity, tensions, environmental conditions, and numerical instabilities.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0"
-      },
-      "keywords": [
-        "static convergence",
-        "static analysis failed",
-        "convergence issues",
-        "static not converging",
-        "OrcaFlex statics",
-        "model not converging",
-        "catenary convergence",
-        "unstable statics"
-      ]
-    },
-    "orcaflex-line-wizard": {
-      "version": "1.0.0",
-      "description": "Configure OrcaFlex line properties and use the Line Setup Wizard for automatic tension/length calculations. Use for mooring line configuration, riser setup, and achieving target line properties.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0"
-      },
-      "keywords": [
-        "line setup wizard",
-        "line configuration",
-        "target tension",
-        "line length calculation",
-        "mooring line setup",
-        "riser configuration",
-        "line properties",
-        "segment configuration"
-      ]
-    },
-    "orcaflex-operability": {
-      "version": "1.0.0",
-      "description": "Perform operability analysis combining multiple sea states to assess system availability and weather downtime. Generate operability envelopes, critical heading analysis, and downtime calculations from wave scatter diagrams.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0",
-        "orcaflex-post-processing": ">=1.0.0,<2.0.0"
-      },
-      "keywords": [
-        "operability analysis",
-        "weather downtime",
-        "operability envelope",
-        "sea state analysis",
-        "weather window",
-        "operational limits",
-        "critical headings",
-        "wave scatter",
-        "annual downtime"
-      ]
-    },
-    "orcaflex-extreme-analysis": {
-      "version": "1.0.0",
-      "description": "Extract extreme response values with linked statistics from OrcaFlex simulations. Use for design load identification, max/min extraction with associated values, and extreme event characterization.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0",
-        "orcaflex-post-processing": ">=1.0.0,<2.0.0"
-      },
-      "keywords": [
-        "extreme analysis",
-        "max tension",
-        "linked statistics",
-        "extreme values",
-        "design loads",
-        "maximum response",
-        "associated values",
-        "peak extraction"
-      ]
-    },
-    "orcaflex-results-comparison": {
-      "version": "1.0.0",
-      "description": "Compare results across multiple OrcaFlex simulations for design verification, sensitivity studies, and configuration comparison. Includes pretension, stiffness, and force distribution analysis.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0",
-        "orcaflex-post-processing": ">=1.0.0,<2.0.0"
-      },
-      "keywords": [
-        "compare simulations",
-        "results comparison",
-        "sensitivity study",
-        "design comparison",
-        "configuration comparison",
-        "pretension comparison",
-        "stiffness comparison",
-        "mooring comparison"
-      ]
-    },
-    "orcaflex-code-check": {
-      "version": "1.0.0",
-      "description": "Verify OrcaFlex model results against industry standards (DNV, API, ISO). Perform capacity checks, safety factor verification, and compliance reporting for offshore structures.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0",
-        "structural-analysis": ">=1.0.0,<2.0.0"
-      },
-      "keywords": [
-        "code check",
-        "standards compliance",
-        "DNV check",
-        "API check",
-        "ISO check",
-        "safety factor",
-        "capacity check",
-        "design verification"
-      ]
-    },
-    "orcaflex-rao-import": {
-      "version": "1.0.0",
-      "description": "Import RAO (Response Amplitude Operator) data from external sources including AQWA, OrcaFlex, and CSV files. Includes validation, interpolation, and conversion for OrcaFlex vessel type creation.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0",
-        "hydrodynamics": ">=1.0.0,<2.0.0"
-      },
-      "keywords": [
-        "RAO import",
-        "import vessel RAOs",
-        "AQWA to OrcaFlex",
-        "RAO conversion",
-        "vessel hydrodynamics",
-        "transfer functions",
-        "motion RAOs",
-        "RAO interpolation"
-      ]
-    },
-    "orcaflex-vessel-setup": {
-      "version": "1.0.0",
-      "description": "Configure 6-DOF vessels in OrcaFlex with hydrodynamic properties, RAO import from AQWA, and vessel type creation. Covers initial position, orientation, calculation settings, and motion options.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0",
-        "hydrodynamics": ">=1.0.0,<2.0.0"
-      },
-      "keywords": [
-        "vessel setup",
-        "create vessel",
-        "vessel configuration",
-        "6-DOF vessel",
-        "vessel type",
-        "vessel properties",
-        "vessel initialization",
-        "AQWA vessel import"
-      ]
-    },
-    "orcaflex-environment-config": {
-      "version": "1.0.0",
-      "description": "Configure OrcaFlex environmental conditions including wave spectra (JONSWAP, Dean Stream), current profiles, wind loading, and seabed properties for offshore analysis.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0",
-        "hydrodynamics": ">=1.0.0,<2.0.0"
-      },
-      "keywords": [
-        "environment setup",
-        "wave configuration",
-        "current profile",
-        "wind setup",
-        "JONSWAP spectrum",
-        "sea state",
-        "environmental loading",
-        "seabed properties"
-      ]
-    },
-    "orcaflex-batch-manager": {
-      "version": "1.0.0",
-      "description": "Manage large-scale OrcaFlex batch processing with parallel execution, adaptive worker scaling, memory optimization, and progress tracking for efficient simulation campaigns.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0"
-      },
-      "keywords": [
-        "batch processing",
-        "parallel simulations",
-        "batch manager",
-        "run multiple models",
-        "simulation campaign",
-        "large batch",
-        "parallel OrcaFlex",
-        "job queue"
-      ]
-    },
-    "orcaflex-visualization": {
-      "version": "1.0.0",
-      "description": "Generate visualizations from OrcaFlex simulations including model views, time series plots, range graphs, and interactive HTML reports using Plotly for comprehensive analysis presentation.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0",
-        "orcaflex-post-processing": ">=1.0.0,<2.0.0"
-      },
-      "keywords": [
-        "visualization",
-        "plot results",
-        "model view",
-        "time series plot",
-        "range graph",
-        "animation",
-        "HTML report",
-        "interactive plot"
-      ]
     }
   }
 }
