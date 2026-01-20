@@ -1,7 +1,7 @@
 ---
 name: repo-cleanup
 description: Systematic cleanup of repository clutter including build artifacts, duplicates, temp files, and consolidation of scattered directories. Use for repository maintenance, artifact removal, directory consolidation, and gitignore updates.
-version: 2.1.0
+version: 2.2.0
 updated: 2026-01-20
 category: meta
 triggers:
@@ -24,7 +24,7 @@ Quick cleanup of repository clutter including build artifacts, duplicates, temp 
 ## Version Metadata
 
 ```yaml
-version: 2.1.0
+version: 2.2.0
 python_min_version: '3.10'
 dependencies: []
 compatibility:
@@ -149,6 +149,31 @@ Editor and IDE generated files.
 
 **Note:** Some IDE settings may be intentionally tracked. Check `.gitignore` first.
 
+### 6. Benchmark Artifacts
+
+Benchmark directories often contain mixed content that needs separation.
+
+| Pattern | Description | Action |
+|---------|-------------|--------|
+| `benchmarks/reports/` | Timestamped HTML reports | Add to .gitignore |
+| `benchmarks/results/` | Timestamped CSV/JSON | Add to .gitignore |
+| `benchmarks/legacy_projects/` | Reference test data | Move to tests/fixtures/ |
+| `benchmarks/*.py` | Benchmark scripts | Keep tracked |
+
+**Cleanup commands:**
+```bash
+# Move test fixtures to proper location
+mkdir -p tests/fixtures/orcaflex
+git mv benchmarks/legacy_projects/* tests/fixtures/orcaflex/
+
+# Untrack generated outputs
+git rm -r --cached benchmarks/reports benchmarks/results
+
+# Add to .gitignore
+echo "benchmarks/reports/" >> .gitignore
+echo "benchmarks/results/" >> .gitignore
+```
+
 ## Consolidation Patterns
 
 ### Agent Directories
@@ -226,6 +251,21 @@ mkdir -p tests/outputs
 mv tests/*.html tests/outputs/
 mv tests/*.json tests/outputs/
 mv tests/test_results/ tests/outputs/
+```
+
+### Plan Files
+
+Completed specification plans should be archived.
+
+**Pattern:**
+- Active plans: `specs/modules/<plan>.md`
+- Completed plans: `specs/archive/<plan>.md`
+
+**Commands:**
+```bash
+# Archive completed plan (check status: completed in YAML frontmatter)
+mkdir -p specs/archive
+git mv specs/modules/<completed-plan>.md specs/archive/
 ```
 
 ## Hidden Folder Cleanup
@@ -498,6 +538,10 @@ cache/
 .coordination/
 .session/
 
+# Benchmark generated outputs
+benchmarks/reports/
+benchmarks/results/
+
 # Test outputs
 tests/outputs/
 tests/*.html
@@ -541,6 +585,9 @@ tests/*.json
 - [ ] Runtime data moved to `.claude-flow/`
 - [ ] Prototypes moved to `examples/prototypes/`
 - [ ] Test outputs moved to `tests/outputs/`
+- [ ] Benchmark test fixtures moved to `tests/fixtures/`
+- [ ] Benchmark generated outputs untracked and gitignored
+- [ ] Completed plan files archived to `specs/archive/`
 
 ### Hidden Folder Review
 - [ ] `.agent-os/` reviewed and consolidated
@@ -672,6 +719,11 @@ project/
 
 ## Version History
 
+- **2.2.0** (2026-01-20): Added Benchmark Cleanup and Plan File Archival patterns
+  - Added Benchmark Artifacts section for handling benchmark directories
+  - Added Plan Files section for archiving completed specifications
+  - Added benchmark patterns to .gitignore recommendations
+  - Updated checklist with benchmark and plan archival items
 - **2.1.0** (2026-01-20): Added Final Cleanup Checklist and README Update Checklist
   - Added Final Cleanup Checklist with verified DELETE/CONSOLIDATE/KEEP tables
   - Confirmed .drcode/ as safe to delete (legacy AI config)

@@ -1,7 +1,7 @@
 ---
 name: hidden-folder-audit
 description: Audit and consolidate hidden folders in a repository. Identifies duplicates, dead directories, and consolidation opportunities for .agent-os/, .ai/, .claude/, and other hidden folders.
-version: 1.1.0
+version: 1.2.0
 updated: 2026-01-20
 category: meta
 triggers:
@@ -19,7 +19,7 @@ Systematic audit and consolidation of hidden (dot) folders in a repository. Iden
 ## Version Metadata
 
 ```yaml
-version: 1.1.0
+version: 1.2.0
 python_min_version: '3.10'
 dependencies: []
 compatibility:
@@ -154,6 +154,7 @@ Based on actual cleanup sessions, this table provides verified recommendations.
 | `.slash-commands/` | Command registry | **CONSOLIDATE** | Move to `.claude/docs/commands/` |
 | `.git-commands/` | Git helper scripts | **CONSOLIDATE** | Move to `scripts/git/` |
 | `.benchmarks/` | Benchmark data | **DELETE** | Usually empty, delete if so |
+| `benchmarks/` | Benchmark data and reports | **SPLIT** | Move fixtures to tests/fixtures/, gitignore reports/results |
 | `.agent-runtime/` | Dead symlinks, orphaned state | **DELETE** | After verifying dead links |
 | `.common/` | Orphaned utilities | **DELETE** | Relocate useful scripts first |
 | `.specify/` | Stale specification templates | **DELETE** | Migrate to `specs/templates/` |
@@ -162,6 +163,40 @@ Based on actual cleanup sessions, this table provides verified recommendations.
 | `.mypy_cache/` | MyPy type checker cache | **DELETE** | Regenerated automatically |
 | `.coordination/` | Multi-agent coordination | **MIGRATE** | Move to `.claude-flow/` |
 | `.session/` | Session state files | **MIGRATE** | Move to `.claude-flow/` |
+
+## Related Directory Patterns
+
+Some non-hidden directories follow similar cleanup/consolidation patterns.
+
+### specs/archive/
+
+Standard location for completed specification plans.
+
+```bash
+# Archive completed plans (check YAML frontmatter for status: completed)
+mkdir -p specs/archive
+git mv specs/modules/<completed-plan>.md specs/archive/
+```
+
+### benchmarks/
+
+Benchmark directories typically contain mixed content requiring separation.
+
+| Subdirectory | Content | Action |
+|--------------|---------|--------|
+| `legacy_projects/` | Reference test data (*.dat, *.csv) | Move to `tests/fixtures/` |
+| `reports/` | Timestamped HTML reports | Add to .gitignore |
+| `results/` | Timestamped CSV/JSON | Add to .gitignore |
+| Root `*.py` files | Benchmark scripts | Keep tracked |
+
+```bash
+# Separate fixtures from generated outputs
+mkdir -p tests/fixtures/orcaflex
+git mv benchmarks/legacy_projects/* tests/fixtures/orcaflex/
+git rm -r --cached benchmarks/reports benchmarks/results
+echo "benchmarks/reports/" >> .gitignore
+echo "benchmarks/results/" >> .gitignore
+```
 
 ## Consolidation Commands
 
@@ -343,6 +378,19 @@ ls -la scripts/git/ 2>/dev/null || echo "scripts/git/ does not exist"
 # Verify .claude/docs/commands/ if .slash-commands was consolidated
 echo "=== .claude/docs/commands/ ==="
 ls -la .claude/docs/commands/ 2>/dev/null || echo ".claude/docs/commands/ does not exist"
+
+# Verify specs/archive exists for completed plans
+echo "=== specs/archive/ ==="
+ls -la specs/archive/ 2>/dev/null || echo "specs/archive/ does not exist"
+
+# Verify benchmark structure
+echo "=== benchmarks/ Structure ==="
+ls -la benchmarks/ 2>/dev/null || echo "benchmarks/ does not exist"
+
+# Check for legacy_projects in benchmarks (should be moved)
+if [ -d "benchmarks/legacy_projects" ]; then
+  echo "[WARN] benchmarks/legacy_projects/ should be moved to tests/fixtures/"
+fi
 ```
 
 ### Verify Git Status
@@ -429,6 +477,12 @@ fi
 
 ## Version History
 
+- **1.2.0** (2026-01-20): Added Related Directory Patterns section
+  - Added benchmarks/ entry to reference table (SPLIT action)
+  - Added Related Directory Patterns section for non-hidden directories
+  - Added specs/archive/ as standard location for completed plans
+  - Added benchmarks/ separation pattern (fixtures vs generated outputs)
+  - Updated verification commands for new patterns
 - **1.1.0** (2026-01-20): Updated reference table and added verification commands
   - Updated Common Hidden Folders Reference table with verified recommendations
   - Added .drcode/ as DELETE (confirmed legacy AI config)

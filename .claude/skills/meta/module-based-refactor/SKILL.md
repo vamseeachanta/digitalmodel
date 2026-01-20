@@ -1,7 +1,7 @@
 ---
 name: module-based-refactor
 description: Reorganize a repository from flat structure to module-based 5-layer architecture. Use for codebase restructuring, module organization, import path updates, git history preservation, artifact cleanup, directory consolidation, and hidden folder merging.
-version: 3.1.0
+version: 3.2.0
 updated: 2026-01-20
 category: meta
 triggers:
@@ -26,7 +26,7 @@ Reorganize a repository from flat structure to a consistent module-based 5-layer
 ## Version Metadata
 
 ```yaml
-version: 3.1.0
+version: 3.2.0
 python_min_version: '3.10'
 dependencies: []
 compatibility:
@@ -632,6 +632,15 @@ git mv docs/aqwa docs/modules/aqwa
 - [ ] Screenshot outputs moved to tests/snapshots/ or removed
 - [ ] Benchmark results moved to tests/benchmarks/ or removed
 
+#### Plan File Archival
+- [ ] Completed plan files archived to specs/archive/
+- [ ] Plan files checked for `status: completed` in YAML frontmatter
+
+#### Benchmark Reorganization
+- [ ] Benchmark test fixtures moved to tests/fixtures/<tool_name>/
+- [ ] Benchmark generated outputs (reports/, results/) added to .gitignore
+- [ ] Empty benchmark structure maintained with .gitkeep
+
 ### Post-Refactor
 - [ ] `__init__.py` files created with proper exports
 - [ ] All import references updated
@@ -1155,6 +1164,73 @@ include = ["digitalmodel*"]
 | **Prototype code** | scratch_*.py, experimental/ | Move to examples/ |
 | **Test data** | *.csv, *.json at root | Move to tests/test_data/ |
 | **Config files** | *.yaml, *.toml, *.json | Keep at root or move to config/ |
+| **Benchmark fixtures** | legacy test data files | Move to tests/fixtures/<tool_name>/ |
+| **Benchmark outputs** | timestamped reports/results | Add to .gitignore |
+| **Completed plans** | status: completed in frontmatter | Archive to specs/archive/ |
+
+## Benchmark Directory Reorganization
+
+Benchmark directories often contain mixed content: test fixtures that should be tracked vs generated outputs that should be ignored.
+
+### Pattern: Separate Tracked Fixtures from Gitignored Outputs
+
+```bash
+# 1. Identify benchmark content types
+ls -la benchmarks/
+
+# Common benchmark content:
+# - legacy_projects/     -> Test fixtures (track in git)
+# - reports/             -> Generated HTML reports (gitignore)
+# - results/             -> Generated CSV/JSON results (gitignore)
+
+# 2. Move test fixtures to tests/fixtures/
+git mv benchmarks/legacy_projects/ tests/fixtures/orcaflex/
+
+# 3. Add generated output directories to .gitignore
+cat >> .gitignore << 'EOF'
+
+# Benchmark generated outputs
+benchmarks/reports/
+benchmarks/results/
+EOF
+
+# 4. Create .gitkeep for empty benchmark structure
+mkdir -p benchmarks/reports benchmarks/results
+touch benchmarks/.gitkeep
+```
+
+### Benchmark Content Classification
+
+| Content Type | Examples | Action |
+|--------------|----------|--------|
+| **Test fixtures** | legacy_projects/*.dat, reference_data/*.csv | `git mv` to tests/fixtures/<tool_name>/ |
+| **Generated reports** | *_report_YYYYMMDD.html, benchmark_*.html | Add to .gitignore |
+| **Generated results** | results_YYYYMMDD.csv, output_*.json | Add to .gitignore |
+| **Benchmark scripts** | run_benchmarks.py, compare_results.py | Keep in benchmarks/ or scripts/benchmarks/ |
+
+### Example: OrcaFlex Benchmark Reorganization
+
+```bash
+# Before:
+benchmarks/
+├── legacy_projects/          # Test fixture OrcaFlex files (tracked)
+│   ├── model1.dat
+│   └── model2.dat
+├── reports/                  # Generated HTML reports (untracked)
+│   └── benchmark_20260120.html
+└── results/                  # Generated CSV results (untracked)
+    └── results_20260120.csv
+
+# After:
+tests/fixtures/orcaflex/      # Moved from benchmarks/legacy_projects/
+├── model1.dat
+└── model2.dat
+
+benchmarks/                   # Clean benchmark directory
+├── .gitkeep
+├── reports/                  # .gitignore'd
+└── results/                  # .gitignore'd
+```
 
 ## Complete Refactor Session Workflow
 
@@ -1220,9 +1296,9 @@ rm -rf .slash-commands/
 git commit -m "chore: Delete legacy config and consolidate scripts"
 ```
 
-### Phase 4: Documentation
+### Phase 4: Documentation and Archival
 
-Update README and skill documentation with learnings.
+Update README and skill documentation with learnings. Archive completed plans.
 
 ```bash
 # 4a. Update README structure section
@@ -1234,9 +1310,37 @@ Update README and skill documentation with learnings.
 # - Update version numbers
 # - Add changelog entries
 
-# 4c. Commit Phase 4
+# 4c. Archive completed plan files
+# Check plan files in specs/modules/ for status: completed in YAML frontmatter
+# Move completed plans to specs/archive/ to keep specs/modules/ clean
+git mv specs/modules/<completed-plan>.md specs/archive/
+
+# 4d. Commit Phase 4
 git commit -m "docs: Update README structure and skill documentation"
 ```
+
+### Plan File Archival Pattern
+
+Completed plans in `specs/modules/` should be archived to maintain a clean working directory.
+
+```bash
+# Check plan file YAML frontmatter for completion status
+grep -l "status: completed" specs/modules/*.md
+
+# Archive completed plans using git mv to preserve history
+git mv specs/modules/<completed-plan>.md specs/archive/
+
+# Example: Archive a completed refactor plan
+git mv specs/modules/module-based-refactor-plan.md specs/archive/
+
+# Verify archive directory exists
+mkdir -p specs/archive
+```
+
+**When to Archive:**
+- Plan file has `status: completed` in YAML frontmatter
+- All tasks in the plan have been implemented and verified
+- The refactor session is complete and committed
 
 ### Commit Strategy: Atomic Commits Per Phase
 
@@ -1271,7 +1375,10 @@ ls *.log *.tmp *.html *.sim 2>/dev/null
 # 5. Create module structure
 mkdir -p src/<pkg>/modules tests/modules specs/modules docs/modules examples/modules
 
-# 6. Verify after cleanup
+# 6. Archive completed plan files
+git mv specs/modules/<completed-plan>.md specs/archive/
+
+# 7. Verify after cleanup
 uv run pytest tests/ -v && git status
 ```
 
@@ -1279,6 +1386,13 @@ uv run pytest tests/ -v && git status
 
 ## Version History
 
+- **3.2.0** (2026-01-20): Added Plan File Archival and Benchmark Reorganization patterns
+  - Added Plan File Archival pattern to archive completed plans to specs/archive/
+  - Added Benchmark Directory Reorganization pattern for separating fixtures from outputs
+  - Added benchmark-related gitignore patterns (reports/, results/)
+  - Updated checklist with plan archival and benchmark reorganization items
+  - Updated Quick Start Commands with plan archival command
+  - Updated Phase 4 to include archival step
 - **3.1.0** (2026-01-20): Added Complete Refactor Session Workflow
   - Added 4-phase workflow documentation (Module Reorganization, Hidden Folder Consolidation, Final Cleanup, Documentation)
   - Added Commit Strategy section with atomic commits per phase pattern
