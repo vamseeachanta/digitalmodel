@@ -291,3 +291,12 @@ src\digitalmodel\tests\test_data\aqwa\ef_server\02_S04_HR_EXT_FORCE.PLD
 # ==========================================
 
 _dev-private/
+
+# ==========================================
+# Additional Generated Files (added 2026-01-20)
+# ==========================================
+
+AqwaServerLogFile.txt
+dat_files_list.txt
+cache/
+.temp/
