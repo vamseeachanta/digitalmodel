@@ -1,8 +1,8 @@
 ---
 name: repo-cleanup
 description: Systematic cleanup of repository clutter including build artifacts, duplicates, temp files, and consolidation of scattered directories. Use for repository maintenance, artifact removal, directory consolidation, and gitignore updates.
-version: 1.0.0
-updated: 2025-01-20
+version: 2.0.0
+updated: 2026-01-20
 category: meta
 triggers:
 - repository cleanup
@@ -24,7 +24,7 @@ Quick cleanup of repository clutter including build artifacts, duplicates, temp 
 ## Version Metadata
 
 ```yaml
-version: 1.0.0
+version: 2.0.0
 python_min_version: '3.10'
 dependencies: []
 compatibility:
@@ -228,6 +228,144 @@ mv tests/*.json tests/outputs/
 mv tests/test_results/ tests/outputs/
 ```
 
+## Hidden Folder Cleanup
+
+Legacy AI and agent hidden folders often accumulate during development. These need review and consolidation.
+
+### Common Hidden Folders
+
+| Folder | Description | Action |
+|--------|-------------|--------|
+| `.agent-os/` | Legacy agent OS framework | Consolidate to `.claude/` |
+| `.ai/` | Legacy AI configuration | Consolidate to `.claude/` |
+| `.agent-runtime/` | Runtime symlinks (often dead) | Delete if dead links |
+| `.common/` | Orphaned utility scripts | Delete or relocate to `scripts/` |
+| `.specify/` | Stale specification templates | Delete if unused |
+| `.drcode/` | External tool config (Dr. Code) | Keep if actively used |
+| `.slash-commands/` | Command registry | Keep |
+
+### Discovery Commands
+
+```bash
+# List all hidden directories with sizes
+du -sh .*/ 2>/dev/null | grep -v "^\./\.git"
+
+# Find dead symlinks in hidden folders
+find .agent-runtime -type l ! -exec test -e {} \; -print 2>/dev/null
+
+# Count files in each hidden directory
+for dir in .claude .agent-os .ai .common .specify; do
+  if [ -d "$dir" ]; then
+    count=$(find "$dir" -type f | wc -l)
+    echo "$dir: $count files"
+  fi
+done
+```
+
+### Cleanup Commands
+
+```bash
+# Remove dead symlink directories
+rm -rf .agent-runtime/
+
+# Remove stale template directories
+rm -rf .specify/
+
+# Remove orphaned utilities (after relocating useful scripts)
+rm -rf .common/
+
+# Consolidate .agent-os to .claude
+git mv .agent-os/agents/* .claude/agents/ 2>/dev/null
+git mv .agent-os/skills/* .claude/skills/ 2>/dev/null
+git mv .agent-os/docs/* .claude/docs/ 2>/dev/null
+rm -rf .agent-os/
+
+# Consolidate .ai to .claude
+git mv .ai/config/* .claude/config/ 2>/dev/null
+git mv .ai/prompts/* .claude/prompts/ 2>/dev/null
+rm -rf .ai/
+```
+
+## Consolidation Merge Strategies
+
+When merging folders, file conflicts are common. Use these strategies to preserve important content while eliminating duplicates.
+
+### Conflict Resolution Patterns
+
+| Conflict Type | Strategy | Example |
+|--------------|----------|---------|
+| Same filename | Rename with suffix | `README.md` -> `README-legacy.md` |
+| Similar content | Use subdirectory | `commands/` -> `commands/legacy-scripts/` |
+| Unique content | Preserve in dedicated folder | Keep `implementation-history/` |
+| Clear duplicates | Delete after verification | Remove exact copies |
+
+### Merge Commands
+
+```bash
+# Rename conflicting files before merge
+mv .agent-os/README.md .agent-os/README-legacy.md
+
+# Create legacy subdirectory for scripts
+mkdir -p .claude/commands/legacy-scripts
+git mv .agent-os/commands/* .claude/commands/legacy-scripts/
+
+# Preserve unique historical content
+git mv .agent-os/implementation-history/ .claude/docs/implementation-history/
+
+# Find and remove exact duplicates (verify first)
+md5sum .claude/agents/*.md .agent-os/agents/*.md | sort | uniq -w32 -d
+```
+
+### Pre-Merge Checklist
+
+- [ ] Compare file lists between source and target
+- [ ] Identify naming conflicts
+- [ ] Decide rename vs. subdirectory strategy
+- [ ] Document unique content to preserve
+- [ ] Verify duplicates before deletion
+
+## File Count Verification
+
+Track consolidation progress with file counts to ensure nothing is lost.
+
+### Progress Tracking Commands
+
+```bash
+# Count tracked files in each hidden folder
+for dir in .claude .agent-os .ai; do
+  count=$(git ls-files "$dir" 2>/dev/null | wc -l)
+  echo "$dir: $count files"
+done
+
+# Count all files (tracked + untracked)
+for dir in .claude .agent-os .ai .common .specify; do
+  if [ -d "$dir" ]; then
+    tracked=$(git ls-files "$dir" 2>/dev/null | wc -l)
+    total=$(find "$dir" -type f | wc -l)
+    echo "$dir: $tracked tracked, $total total"
+  fi
+done
+
+# Before/after comparison
+echo "=== Before Consolidation ===" > consolidation-log.txt
+for dir in .claude .agent-os .ai; do
+  count=$(git ls-files "$dir" 2>/dev/null | wc -l)
+  echo "$dir: $count files" >> consolidation-log.txt
+done
+```
+
+### Verification After Merge
+
+```bash
+# Verify no files were lost
+expected_count=150  # Set to sum of source folders
+actual_count=$(git ls-files .claude | wc -l)
+echo "Expected: $expected_count, Actual: $actual_count"
+
+# List any untracked files that might have been missed
+git status --porcelain | grep "^??" | grep -E "^\?\? \.(claude|agent-os|ai)/"
+```
+
 ## Discovery Commands
 
 ### List Untracked Files
@@ -404,6 +542,13 @@ tests/*.json
 - [ ] Prototypes moved to `examples/prototypes/`
 - [ ] Test outputs moved to `tests/outputs/`
 
+### Hidden Folder Review
+- [ ] `.agent-os/` reviewed and consolidated
+- [ ] `.ai/` reviewed and consolidated
+- [ ] `.agent-runtime/` deleted if dead symlinks
+- [ ] `.common/` relocated or deleted
+- [ ] `.specify/` deleted if stale
+
 ### Post-Cleanup
 - [ ] `.gitignore` updated with new patterns
 - [ ] `git status` shows clean or expected state
@@ -433,4 +578,10 @@ tests/*.json
 
 ## Version History
 
+- **2.0.0** (2026-01-20): Major update with hidden folder cleanup learnings
+  - Added Hidden Folder Cleanup section with legacy AI folder patterns
+  - Added Consolidation Merge Strategies for conflict resolution
+  - Added File Count Verification for tracking consolidation progress
+  - Updated Cleanup Checklist with hidden folder review items
+  - Documented patterns for .agent-os, .ai, .agent-runtime, .common, .specify, .drcode, .slash-commands
 - **1.0.0** (2025-01-20): Initial release based on digitalmodel repository cleanup session
