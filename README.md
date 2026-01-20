@@ -332,26 +332,33 @@ print(f"Buckling Capacity: {capacity:.2f} kN")
 
 ```
 digitalmodel/
-├── data/                    # Engineering data and databases
-│   └── fatigue/            # S-N curve database ⭐
-│       ├── fatigue_curves_structured.csv
-│       ├── fatigue_curves_references.csv
-│       └── README.md
-├── src/digitalmodel/        # Core library
-│   ├── fatigue/            # Fatigue analysis
-│   ├── stress/             # Stress analysis
-│   ├── analysis/           # Structural analysis
-│   ├── reservoir/          # Reservoir engineering
-│   ├── common/             # Shared utilities
-│   └── modules/            # Specialized modules
-├── examples/                # Working examples
-│   ├── fatigue/            # Fatigue examples ⭐
-│   ├── stress/             # Stress examples
-│   └── *.py                # Various demos
-├── docs/                    # Documentation
-│   └── modules/            # Module-specific docs
-├── tests/                   # Test suite
-└── tools/                   # Development tools
+├── src/digitalmodel/
+│   └── modules/                    # 45+ specialized analysis modules
+│       ├── aqwa/                   # AQWA hydrodynamic analysis
+│       ├── blender_automation/     # 3D model generation
+│       ├── catenary/               # Catenary calculations
+│       ├── data_procurement/       # Data scraping/validation
+│       ├── fatigue_analysis/       # S-N curves, damage accumulation
+│       ├── marine_engineering/     # Environmental loading, wave spectra
+│       ├── mooring/                # Mooring system design
+│       ├── orcaflex/               # OrcaFlex simulation interface
+│       ├── pipe_capacity/          # Pipe stress calculations
+│       ├── reporting/              # Interactive HTML reports
+│       └── ...                     # 35+ more modules
+├── tests/modules/                  # Test suites (mirrors src structure)
+├── specs/modules/                  # Module specifications (39 specs)
+├── docs/modules/                   # Module documentation
+├── examples/modules/               # Working examples per module
+├── config/                         # Configuration files
+│   └── templates/                  # Project templates
+├── data/                           # Engineering databases
+│   └── fatigue/                    # S-N curve library (17 standards)
+├── scripts/                        # Automation scripts
+├── .claude/                        # AI orchestration (670+ files)
+│   ├── agents/                     # Agent definitions
+│   ├── skills/                     # Skill library
+│   └── commands/                   # CLI commands
+└── .claude-flow/                   # Runtime coordination
 ```
 
 ---
