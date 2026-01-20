@@ -13,8 +13,8 @@
 
 ## Deliverables (Completed)
 
-**Library Components (40 files)**:
-- 28 line types (risers, pipelines, umbilicals, chains, hawsers, wire ropes, polyester ropes)
+**Library Components (45 files)**:
+- 33 line types (risers, pipelines, umbilicals, chains, hawsers, wire ropes, polyester ropes)
 - 12 buoy types (CALM, SPM, metocean, spar, navigation, pickup)
 - Library generator with 21 unit tests
 
@@ -307,34 +307,37 @@ model_name/
 
 ### Additional Accomplishments
 - [x] Library generator fixed and tested (21 unit tests)
-- [x] 40 library components generated (28 line types, 12 buoy types)
+- [x] 45 library components generated (33 line types, 12 buoy types)
 - [x] Wire rope library (64mm, 76mm, 84mm) for mooring applications
 - [x] Polyester rope library (120mm, 140mm, 160mm) for deepwater mooring
+- [x] Chain library expanded (R3, R4, R5 grades; 76mm-120mm sizes)
 - [x] SCR hybrid template created with variations
 - [x] Key findings documented (IncludeFile at object level only)
 
 ### Phase 3 - COMPLETED (January 2026)
 
-**9 Hybrid Templates Created:**
+**11 Hybrid Templates Created:**
 
 | Template | Category | Base Water Depth | Variations |
 |----------|----------|-----------------|------------|
 | CALM Buoy | Mooring | 100m | Deep water (200m) |
 | Spread Mooring | Mooring | 200m | Deep water (500m), 12-leg |
 | Turret Mooring | Mooring | 300m | Deep water (600m), External turret |
+| SALM | Mooring | 50m | Deep water (100m), Wire rope |
 | SCR | Riser | 1200m | Deep water (1500m), 12-inch |
 | Lazy Wave | Riser | 1200m | Deep water (1500m) |
 | Pliant Wave | Riser | 1000m | Deep water (1500m) |
 | Steep Wave | Riser | 1000m | Deep water (1500m) |
+| TTR | Riser | 1500m | Deep water (2000m), 12-inch |
 | Pipeline | Pipeline | 100m | Deep water (500m), 20-inch, 12-inch flowline |
 | Umbilical | Umbilical | 1000m | Deep water (1500m), Steel tube |
 
 **Test Suite:**
-- [x] 61 tests in `tests/modules/orcaflex/test_hybrid_templates.py`
+- [x] 75 tests in `tests/modules/orcaflex/test_hybrid_templates.py`
 - [x] All base models load successfully
 - [x] All base models pass static convergence
 - [x] All case files (base + variation) pass static analysis
-- [x] Library components validated (21 line types, 12 buoy types)
+- [x] Library components validated (33 line types, 12 buoy types)
 - [x] Template structure conventions verified
 
 ---
