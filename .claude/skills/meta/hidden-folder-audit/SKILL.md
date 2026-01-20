@@ -1,8 +1,8 @@
 ---
 name: hidden-folder-audit
 description: Audit and consolidate hidden folders in a repository. Identifies duplicates, dead directories, and consolidation opportunities for .agent-os/, .ai/, .claude/, and other hidden folders.
-version: 1.0.0
-updated: 2025-01-20
+version: 1.1.0
+updated: 2026-01-20
 category: meta
 triggers:
 - hidden folder audit
@@ -19,7 +19,7 @@ Systematic audit and consolidation of hidden (dot) folders in a repository. Iden
 ## Version Metadata
 
 ```yaml
-version: 1.0.0
+version: 1.1.0
 python_min_version: '3.10'
 dependencies: []
 compatibility:
@@ -135,27 +135,33 @@ Create a migration plan based on analysis.
 
 ## Common Hidden Folders Reference
 
-| Folder | Purpose | Typical Action |
-|--------|---------|----------------|
-| `.claude/` | Claude Code configuration, agents, skills, docs | **KEEP** (authoritative for AI tools) |
-| `.claude-flow/` | Runtime data, state, coordination | **KEEP** (gitignore, runtime only) |
-| `.agent-os/` | Legacy agent OS configuration | **CONSOLIDATE** to `.claude/` |
-| `.ai/` | Legacy AI configuration | **CONSOLIDATE** to `.claude/` |
-| `.agent-runtime/` | Dead symlinks, orphaned state | **DELETE** after backup |
-| `.common/` | Orphaned utilities | **DELETE** or **RELOCATE** to `src/` |
-| `.specify/` | Stale specification templates | **DELETE** (migrate to `specs/templates/`) |
-| `.drcode/` | External tool (Dr. Code) config | **KEEP** if actively used |
-| `.github/` | GitHub workflows, templates | **KEEP** (required by GitHub) |
-| `.vscode/` | VS Code settings | **KEEP** (team settings) |
-| `.idea/` | JetBrains IDE settings | **KEEP** or gitignore |
-| `.git/` | Git repository data | **NEVER TOUCH** |
-| `.gitignore` | Git ignore patterns | **KEEP** (update as needed) |
-| `.env` | Environment variables | **KEEP** (gitignore, never commit) |
-| `.pytest_cache/` | Pytest cache | **DELETE** (regenerated) |
-| `.ruff_cache/` | Ruff linter cache | **DELETE** (regenerated) |
-| `.mypy_cache/` | MyPy type checker cache | **DELETE** (regenerated) |
-| `.coordination/` | Multi-agent coordination | **MIGRATE** to `.claude-flow/` |
-| `.session/` | Session state files | **MIGRATE** to `.claude-flow/` |
+Based on actual cleanup sessions, this table provides verified recommendations.
+
+| Folder | Purpose | Action | Notes |
+|--------|---------|--------|-------|
+| `.claude/` | Claude Code configuration, agents, skills, docs | **KEEP** | Authoritative for AI tools |
+| `.claude-flow/` | Runtime data, state, coordination | **KEEP** | Add to .gitignore |
+| `.githooks/` | Git hooks | **KEEP** | Standard location |
+| `.github/` | GitHub workflows, templates | **KEEP** | Required by GitHub |
+| `.git/` | Git repository data | **NEVER TOUCH** | - |
+| `.gitignore` | Git ignore patterns | **KEEP** | Update as needed |
+| `.vscode/` | VS Code settings | **KEEP** | Team settings if tracked |
+| `.idea/` | JetBrains IDE settings | **KEEP** | Or add to .gitignore |
+| `.env` | Environment variables | **KEEP** | Must be in .gitignore |
+| `.agent-os/` | Legacy agent OS configuration | **CONSOLIDATE** | Merge into `.claude/` |
+| `.ai/` | Legacy AI configuration | **CONSOLIDATE** | Merge into `.claude/` |
+| `.drcode/` | External tool (Dr. Code) config | **DELETE** | Legacy AI config, confirmed deletable |
+| `.slash-commands/` | Command registry | **CONSOLIDATE** | Move to `.claude/docs/commands/` |
+| `.git-commands/` | Git helper scripts | **CONSOLIDATE** | Move to `scripts/git/` |
+| `.benchmarks/` | Benchmark data | **DELETE** | Usually empty, delete if so |
+| `.agent-runtime/` | Dead symlinks, orphaned state | **DELETE** | After verifying dead links |
+| `.common/` | Orphaned utilities | **DELETE** | Relocate useful scripts first |
+| `.specify/` | Stale specification templates | **DELETE** | Migrate to `specs/templates/` |
+| `.pytest_cache/` | Pytest cache | **DELETE** | Regenerated automatically |
+| `.ruff_cache/` | Ruff linter cache | **DELETE** | Regenerated automatically |
+| `.mypy_cache/` | MyPy type checker cache | **DELETE** | Regenerated automatically |
+| `.coordination/` | Multi-agent coordination | **MIGRATE** | Move to `.claude-flow/` |
+| `.session/` | Session state files | **MIGRATE** | Move to `.claude-flow/` |
 
 ## Consolidation Commands
 
@@ -295,6 +301,108 @@ __pycache__/
 - [ ] Document new standard in CLAUDE.md or equivalent
 - [ ] Remove references to legacy folders in docs
 
+## Verification Commands
+
+Use these commands to verify the final state after audit and cleanup.
+
+### Verify Hidden Folder State
+
+```bash
+# List remaining hidden folders (should be minimal)
+echo "=== Remaining Hidden Folders ==="
+find . -maxdepth 1 -type d -name ".*" ! -name ".git" | sort
+
+# Expected remaining folders:
+# .claude/       - AI configuration (authoritative)
+# .claude-flow/  - Runtime data (gitignored)
+# .github/       - GitHub workflows
+# .githooks/     - Git hooks
+# .vscode/       - VS Code settings (if tracked)
+
+# Verify no legacy folders remain
+echo "=== Checking for Legacy Folders ==="
+for dir in .agent-os .ai .drcode .slash-commands .git-commands .benchmarks .agent-runtime .common .specify; do
+  if [ -d "$dir" ]; then
+    echo "WARNING: $dir still exists!"
+  fi
+done
+echo "Check complete."
+```
+
+### Verify Consolidation Targets
+
+```bash
+# Verify .claude/ structure
+echo "=== .claude/ Structure ==="
+ls -la .claude/
+
+# Verify scripts/git/ exists if .git-commands was consolidated
+echo "=== scripts/git/ ==="
+ls -la scripts/git/ 2>/dev/null || echo "scripts/git/ does not exist"
+
+# Verify .claude/docs/commands/ if .slash-commands was consolidated
+echo "=== .claude/docs/commands/ ==="
+ls -la .claude/docs/commands/ 2>/dev/null || echo ".claude/docs/commands/ does not exist"
+```
+
+### Verify Git Status
+
+```bash
+# Check for untracked hidden folders
+echo "=== Untracked Hidden Folders ==="
+git status --porcelain | grep "^??" | grep "^\./\." || echo "None found"
+
+# Verify .gitignore includes runtime folders
+echo "=== .gitignore Hidden Folder Entries ==="
+grep -E "^\.(claude-flow|coordination|session)" .gitignore || echo "No runtime folders in .gitignore"
+
+# Count tracked files in .claude/
+echo "=== .claude/ Tracked Files ==="
+git ls-files .claude/ | wc -l
+```
+
+### Final State Checklist
+
+```bash
+# Run all verification checks
+echo "=== Final State Verification ==="
+
+# 1. Only expected hidden folders exist
+hidden_count=$(find . -maxdepth 1 -type d -name ".*" ! -name ".git" ! -name ".claude" ! -name ".claude-flow" ! -name ".github" ! -name ".githooks" ! -name ".vscode" | wc -l)
+if [ "$hidden_count" -eq 0 ]; then
+  echo "[OK] No unexpected hidden folders"
+else
+  echo "[WARN] $hidden_count unexpected hidden folders found"
+fi
+
+# 2. Legacy folders are gone
+legacy_count=0
+for dir in .agent-os .ai .drcode .slash-commands .git-commands .benchmarks; do
+  [ -d "$dir" ] && legacy_count=$((legacy_count + 1))
+done
+if [ "$legacy_count" -eq 0 ]; then
+  echo "[OK] All legacy folders removed"
+else
+  echo "[WARN] $legacy_count legacy folders remain"
+fi
+
+# 3. .claude/ has expected subdirectories
+for subdir in agents docs skills; do
+  if [ -d ".claude/$subdir" ]; then
+    echo "[OK] .claude/$subdir exists"
+  else
+    echo "[WARN] .claude/$subdir missing"
+  fi
+done
+
+# 4. Git working directory is clean
+if git diff --quiet 2>/dev/null; then
+  echo "[OK] Git working directory is clean"
+else
+  echo "[INFO] Git has uncommitted changes"
+fi
+```
+
 ## Best Practices
 
 1. **Always backup before deleting** - Create a backup branch or copy
@@ -321,4 +429,17 @@ __pycache__/
 
 ## Version History
 
+- **1.1.0** (2026-01-20): Updated reference table and added verification commands
+  - Updated Common Hidden Folders Reference table with verified recommendations
+  - Added .drcode/ as DELETE (confirmed legacy AI config)
+  - Added .slash-commands/ as CONSOLIDATE to .claude/docs/commands/
+  - Added .git-commands/ as CONSOLIDATE to scripts/git/
+  - Added .benchmarks/ as DELETE (usually empty)
+  - Added .githooks/ as KEEP (standard location)
+  - Added Verification Commands section with:
+    - Verify Hidden Folder State commands
+    - Verify Consolidation Targets commands
+    - Verify Git Status commands
+    - Final State Checklist script
+  - Added Notes column to reference table for additional context
 - **1.0.0** (2025-01-20): Initial release based on digitalmodel repository hidden folder audit session
