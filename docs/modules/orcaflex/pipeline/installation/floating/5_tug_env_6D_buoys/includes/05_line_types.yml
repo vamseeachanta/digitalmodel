@@ -1,0 +1,148 @@
+# LineTypes Configuration
+# Generated from: 5 tug_env - 6D buoys.yml
+# Date: 2026-01-21 14:02:14
+LineTypes:
+- Name: X65+coating+CWC120
+  Category: Homogeneous pipe
+  OD: 0.762
+  ID: 0.7112
+  MaterialDensity: 7.85
+  E: 207e6
+  PoissonRatio: 0.293
+  ExpansionTable: None
+  Cdn: 1.18
+  Cdz: 0.008
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: coating+CWC120
+  LiningThickness: 0
+  AdditionalEI: 0
+  DNVSTF101Pmin: ~
+  DNVSTF101T2: ~
+  DNVSTF101Fy: 450e3
+  DNVSTF101Fu: 0
+  DNVSTF101E: 0
+  DNVSTF101AlphaH: 0
+  DNVSTF101O0: 0
+  DNVSTF101SimplifiedStrainLimit: 0.25
+  DNVSTF101GammaSCLB: 0
+  DNVSTF101GammaSCDC: 0
+  DNVSTF101GammaM: 0
+  DNVSTF101AlphaFab: 0
+  DNVSTF101AlphaGW: 0
+  DNVSTF101AlphaPm: 0
+  DNVSTF101AlphaEpsilonC: 0
+  DNVSTF101AlphaMat: ~
+  DNVSTF101TCRA: 0
+  DNVSTF101FyCRA: 0
+  DNVSTF101FuCRA: 0
+- Name: X65+coating+CWC90
+  Category: Homogeneous pipe
+  OD: 0.762
+  ID: 0.7112
+  MaterialDensity: 7.85
+  E: 207e6
+  PoissonRatio: 0.293
+  ExpansionTable: None
+  Cdn: 1.18
+  Cdz: 0.008
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: coating+CWC90
+  LiningThickness: 0
+  AdditionalEI: 0
+  DNVSTF101Pmin: ~
+  DNVSTF101T2: ~
+  DNVSTF101Fy: 450e3
+  DNVSTF101Fu: 0
+  DNVSTF101E: 0
+  DNVSTF101AlphaH: 0
+  DNVSTF101O0: 0
+  DNVSTF101SimplifiedStrainLimit: 0.25
+  DNVSTF101GammaSCLB: 0
+  DNVSTF101GammaSCDC: 0
+  DNVSTF101GammaM: 0
+  DNVSTF101AlphaFab: 0
+  DNVSTF101AlphaGW: 0
+  DNVSTF101AlphaPm: 0
+  DNVSTF101AlphaEpsilonC: 0
+  DNVSTF101AlphaMat: ~
+  DNVSTF101TCRA: 0
+  DNVSTF101FyCRA: 0
+  DNVSTF101FuCRA: 0
+  Pen:
+  - 1
+  - Solid
+  - $4080FF
+- Name: Winch wire_LT
+  Category: General
+  OD: 0.08000000000000002
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.03989700000000001
+  CompressionIsLimited: Yes
+  AllowableTension: 6300
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 404.00000000000006e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 80
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1.2
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Lime

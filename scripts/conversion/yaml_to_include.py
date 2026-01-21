@@ -34,6 +34,10 @@ SECTION_MAPPING = {
     'Links': '11_links.yml',
     'Winches': '12_winches.yml',
     'Supports': '13_supports.yml',
+    'SupportTypes': '13_supports.yml',      # Support type definitions
+    'MorisonElementTypes': '14_morison.yml', # Morison element definitions
+    '3DBuoys': '08_buoys.yml',               # Combine with 6DBuoys
+    'Groups': '10_groups.yml',               # Model grouping
     'TurbineTypes': '14_turbine_types.yml',
     'Turbines': '15_turbines.yml',
     'DragChainTypes': '16_drag_chain_types.yml',
@@ -45,15 +49,17 @@ SECTION_MAPPING = {
 # Parameters to extract for input block
 INPUT_PARAMETERS = {
     'Environment': {
-        'WaterDepth': 'water_depth',
+        'SeabedOriginDepth': 'water_depth',
         'WaveHeight': 'hs',
         'WavePeriod': 'tp',
         'RefCurrentSpeed': 'current_speed',
+        'RefCurrentDirection': 'current_direction',
         'WindSpeed': 'wind_speed',
         'Density': 'water_density',
     },
     'General': {
         'StageDuration': 'stage_durations',
+        'ImplicitConstantTimeStep': 'time_step',
     },
 }
 
