@@ -7,6 +7,7 @@ design verification, and OrcaFlex model generation.
 import click
 import json
 import sys
+import numpy as np
 from pathlib import Path
 from typing import Optional
 
