@@ -10,12 +10,21 @@ Pipe capacity calculations focused on wall thickness sizing, verification, and p
 
 ## Available Content
 
+<<<<<<< Updated upstream
 - `WALL_THICKNESS_IMPLEMENTED_CALCS.md` - Step-by-step implementations with LaTeX and code references.
 - `WALL_THICKNESS_CODES_ONLY.md` - Raw OCR snippets organized by standard.
 - `WALL_THICKNESS_LATEST_ONLY.md` - Latest formula sets per standard bucket.
 - `WALL_THICKNESS_LATEST_ONLY_LATEX.md` - LaTeX-formatted latest equations.
 - `WALL_THICKNESS_LATEST_TO_OLDER.md` - Formulas ordered latest-to-older per standard.
 - `WALL_THICKNESS_CODES_STANDARDS.md` - Source inventory and extraction notes.
+=======
+- `WALL_THICKNESS_CODES_STANDARDS.md` - Extracts from codes/standards only (fresh start).
+- `WALL_THICKNESS_CALCULATIONS.md` - Consolidated formulas from scripts and key standards.
+- `PDF_EXTRACTS.md` - Auto-extracted snippets from PDFs containing wall thickness formulas.
+- `PDF_FORMULA_CANDIDATES.md` - Formula-like lines extracted from PDF text.
+- `PDF_VERIFIED_FORMULAS.md` - Extracted formulas from selected reports.
+- `SOURCES.md` - Full source inventory (PDFs + script/text/data references).
+>>>>>>> Stashed changes
 
 ## Navigation
 
