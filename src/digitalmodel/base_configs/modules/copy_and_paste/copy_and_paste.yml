@@ -1,0 +1,23 @@
+basename: copy_and_paste
+
+default:
+  log_level: DEBUG
+  Analysis: NULL
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
+
+copy_cfgs:
+
+  - 
+    source_dir: C:\3.NL\2-DYN\common\
+    destination_dirs: 
+      - C:\3.NL\2-DYN\car-858m\C000\
+      - C:\\3.NL\2-DYN\car-858m\C180\
+      - C:\\3.NL\2-DYN\car-925m\C180\
+      - C:\\3.NL\2-DYN\orl-718m\C000\
+    files:
+      - _01_Seven Arctic_v11.yml
+      - _02_stern_chute.yml
+

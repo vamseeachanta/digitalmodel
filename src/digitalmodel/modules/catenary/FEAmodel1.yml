@@ -1,0 +1,114 @@
+General:
+  UnitsSystem: SI
+  StaticsMethod: Whole System statics
+  BuoysIncludedInStatics: Individually Specified
+  StageDuration: [8, 60]
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  SimulationIntegrationMethod: Implicit
+  ImplicitUseVariableTimeStep: 'No'
+  ImplicitConstantTimeStep: 0.02
+VariableData:
+  BendingConnectionStiffness:
+  - Name: FJProfile
+    IndependentValue, DependentValue:
+    - [0.0, 0.0]
+    - [0.01, 6.01]
+    - [0.02, 9.2]
+    - [0.03, 11.81]
+    - [0.04, 14.09]
+    - [0.05, 16.16]
+    - [0.06, 18.07]
+    - [0.07, 19.87]
+    - [0.08, 21.57]
+    - [0.09, 23.19]
+    - [0.1, 24.74]
+    - [0.2, 37.87]
+    - [0.3, 48.59]
+    - [0.4, 57.98]
+    - [0.5, 66.51]
+    - [0.6, 74.39]
+    - [0.7, 81.78]
+    - [0.8, 88.77]
+    - [0.9, 95.43]
+    - [1.0, 101.82]
+    - [1.5, 130.63]
+    - [2.0, 155.89]
+    - [3.0, 199.99]
+    - [4.0, 238.66]
+    - [6.0, 306.14]
+    - [8.0, 365.33]
+    - [10.0, 419.1]
+    - [11.93, 467.14]
+    - [22.0, 861.44]
+  LineTypeOuterDiameter:
+  - Name: FJExtension
+    IndependentValue, DependentValue:
+    - [0, 0.47091599999999995]
+    - [9.144, 0.4064]
+Environment:
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-06
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow Direction
+  HorizontalWaterDensityFactor: '~'
+  VerticalDensityVariation: Constant
+  Density: 1.025
+  SeabedType: Flat
+  SeabedOrigin: [0, 0]
+  WaterDepth: 4000
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Linear
+  SeabedNormalStiffness: 5588.0
+  SeabedShearStiffness: '~'
+  SimulationTimeOrigin: 8880
+  KinematicStretchingMethod: Vertical Stretching
+  UserSpecifiedRandomWaveSeeds: true
+  WaveFrequencySpectrumDiscretisationMethod: Equal energy
+  WaveTrains:
+  - Name: 100year, TRANSVERSE Head Sea
+    WaveType: JONSWAP
+    WaveDirection: 90
+    WaveHs: 11.5
+    WaveTz: 11.979821458663
+    WaveOrigin: [0, 0]
+    WaveTimeOrigin: 0
+    WaveNumberOfSpectralDirections: 1
+    WaveJONSWAPParameters: Partially Specified
+    WaveGamma: 1.63
+    WaveSeed: 1350834434
+    WaveNumberOfComponents: 100
+    WaveSpectrumMinRelFrequency: 0.5
+    WaveSpectrumMaxRelFrequency: 10
+    WaveSpectrumMaxComponentFrequencyRange: 0.05
+  WaveKinematicsCutoffDepth: 200
+  WaveCalculationMethod: Instantaneous Position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  MultipleCurrentDataCanBeDefined: 'No'
+  CurrentRamp: 'No'
+  HorizontalCurrentFactor: '~'
+  CurrentMethod: Interpolated
+  RefCurrentSpeed: 0.77
+  RefCurrentDirection: 90
+  CurrentDepth, CurrentFactor, CurrentRotation:
+  - [0, 1.0, 0]
+  - [36.5, 1.0, 0]
+  - [64.5, 0.97, 0]
+  - [100, 0.9, 0]
+  - [400, 0.32, 0]
+  - [800, 0.4, 0]
+  - [1200, 0.26, 90]
+  - [1600, 0.26, 67.5]
+  - [2000, 0.49, 67.5]
+  - [2200, 0.49, 67.5]
+  - [4000, 0.49, 67.5]
+  IncludeVesselWindLoads: 'Yes'
+  IncludeLineWindLoads: 'Yes'
+  IncludeBuoyWingWindLoads: 'Yes'
+  VerticalWindVariationFactor: '~'
+  AirDensity: 0.00128
+  WindType: Constant
+  WindSpeed: 0
+  WindDirection: 0

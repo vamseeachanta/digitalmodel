@@ -1,0 +1,177 @@
+LineTypes:
+- Name: MainPipe
+  Category: General
+  OD: 0.57380124
+  ID: 0.31851599999999997
+  CG: [0, 0]
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.4957906940360391
+  CompressionIsLimited: 'No'
+  AllowableTension: '~'
+  MinRadius: ['~', '~']
+  EI: [172460.1818729064, '~']
+  EA: 10349678.173031172
+  PoissonRatio: 0.3
+  GJ: 132661.67838146238
+  Cd: [1.5, '~', 0.008]
+  Cl: 0
+  NormalDragLiftDiameter: '~'
+  AxialDragLiftDiameter: '~'
+  Ca: [1.5, '~', 0]
+  Cm: ['~', '~', '~']
+  ContactDiameter: '~'
+  ClashStiffness: 0
+  StressOD: 0.4064
+  StressID: 0.31851599999999997
+  AllowableStress: '~'
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedNormalFrictionCoefficient: 0.6
+  SeabedAxialFrictionCoefficient: 0.45
+  RayleighDampingCoefficients: (no damping)
+  CorrosionThickness: 0.0059943999999999996
+  SMYS: 450226.8485
+  APIRP2RDCorrosionThickness: 0.0059943999999999996
+  APIRP2RDSMYS: 450226.8485
+  APISTD2RDE: 206842350.0
+  APISTD2RDS: 450226.8485
+  APISTD2RDU: 535032.212
+  APISTD2RDDelta: 0.01
+  APISTD2RDFd1: 0.8
+  APISTD2RDFd2: 0.8
+  APISTD2RDAlphaFab: 1
+  APISTD2RDk: 0.45
+  Pen: [2, Solid, Yellow]
+- Name: BuoyPipe
+  Category: General
+  OD: 1.3463835973842353
+  ID: 0.31851599999999997
+  CG: [0, 0]
+  BulkModulus: Infinity
+  MassPerUnitLength: 1.1813018849414088
+  CompressionIsLimited: 'No'
+  AllowableTension: '~'
+  MinRadius: ['~', '~']
+  EI: [172460.1818729064, '~']
+  EA: 10349678.173031172
+  PoissonRatio: 0.3
+  GJ: 132661.67838146238
+  Cd: [1, '~', 0.143]
+  Cl: 0
+  NormalDragLiftDiameter: '~'
+  AxialDragLiftDiameter: '~'
+  Ca: [1, '~', 0.22]
+  Cm: ['~', '~', '~']
+  ContactDiameter: '~'
+  ClashStiffness: 0
+  StressOD: 0.4064
+  StressID: 0.31851599999999997
+  AllowableStress: '~'
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedNormalFrictionCoefficient: 0.6
+  SeabedAxialFrictionCoefficient: 0.45
+  RayleighDampingCoefficients: (no damping)
+  CorrosionThickness: 0.0059943999999999996
+  SMYS: 450226.8485
+  APIRP2RDCorrosionThickness: 0.0059943999999999996
+  APIRP2RDSMYS: 450226.8485
+  APISTD2RDE: 206842350.0
+  APISTD2RDS: 450226.8485
+  APISTD2RDU: 535032.212
+  APISTD2RDDelta: 0.01
+  APISTD2RDFd1: 0.8
+  APISTD2RDFd2: 0.8
+  APISTD2RDAlphaFab: 1
+  APISTD2RDk: 0.45
+  Pen: [2, Solid, Red]
+- Name: FJExtension1
+  Category: Homogeneous Pipe
+  OD: FJExtension
+  ID: 0.3305048
+  MaterialDensity: 7.85
+  E: 206842350.0
+  PoissonRatio: 0.3
+  Cdn: 1
+  Cdz: 0.008
+  Cl: 0
+  Can: 1
+  Caz: 0
+  SeabedNormalFrictionCoefficient: 0.6
+  SeabedAxialFrictionCoefficient: 0.45
+  ClashStiffness: 0
+  AllowableStress: 450226.8485
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0
+  LiningThickness: 0
+  APIRP2RDCorrosionThickness: 0.0059943999999999996
+  APIRP2RDSMYS: 450226.8485
+  APISTD2RDE: 206842350.0
+  APISTD2RDS: 450226.8485
+  APISTD2RDU: 535032.212
+  APISTD2RDDelta: 0.01
+  APISTD2RDFd1: 0.8
+  APISTD2RDFd2: 0.8
+  APISTD2RDAlphaFab: 1
+  APISTD2RDk: 0.45
+  Pen: [2, Solid, $C080FF]
+Vessels:
+- Name: Vessel1
+  VesselType: Vessel Type1
+  Draught: Full
+  Length: '~'
+  InitialPosition: [1.469576158976824e-14, 240.0, -24.5]
+  Orientation: [0, 0, 270]
+  IncludedInStatics: None
+  PrimaryMotion: None
+  SuperimposedMotion: Displacement RAOs + Harmonic Motion
+  IncludeAppliedLoads: 'No'
+  IncludeWaveLoad1stOrder: 'No'
+  IncludeWaveDriftLoad2ndOrder: 'No'
+  IncludeWaveDriftDamping: 'No'
+  IncludeSumFrequencyLoad: 'No'
+  IncludeAddedMassAndDamping: 'No'
+  IncludeManoeuvringLoad: 'No'
+  IncludeOtherDamping: 'No'
+  IncludeCurrentLoad: 'No'
+  IncludeWindLoad: 'No'
+Lines:
+- Name: SLWR
+  IncludeTorsion: 'No'
+  TopEnd: End A
+  PyModel: (none)
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec, ConnectionGamma, ReleaseStage:
+  - [Vessel1, 80, 32, 11.21, 90, 172, 98, '~']
+  - [Anchored, 4287.002727350443, -80, 0.2794, 0, 90, 0, '~']
+  ConnectionStiffnessX, ConnectionStiffnessY:
+  - [FJProfile, FJProfile]
+  - [0, '~']
+  LineType, Length, TargetSegmentLength:
+  - [FJExtension1, 9.144, 0.5]
+  - [MainPipe, 15.856, 1.5]
+  - [MainPipe, 3593.9083281564053, 5]
+  - [BuoyPipe, 1512.1163007433422, 5]
+  - [MainPipe, 864.2395128057635, 5]
+  - [MainPipe, 10, 2]
+  - [MainPipe, 240, 1]
+  - [MainPipe, 240, 1]
+  - [MainPipe, 10, 2]
+  - [MainPipe, 550, 5]
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: 'Yes'
+  ContentsDensity: 0.4004616
+  ContentsPressureRefZ: 0
+  ContentsPressure: 5171.05875
+  ContentsFlowRate: 0
+  IncludedInStatics: 'Yes'
+  StaticsStep1: Catenary
+  IncludeSeabedFrictionInStatics: 'Yes'
+  LayAzimuth: 180
+  AsLaidTension: 0
