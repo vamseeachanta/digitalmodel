@@ -1,0 +1,98 @@
+# OrcaFlex Modular Model Generator - Input Specification
+# 30-inch Pipeline Floating Installation with 5 Tugs
+#
+# This specification file is used by the modular generator to produce
+# a complete OrcaFlex modular model structure.
+#
+# Usage:
+#   uv run python -m digitalmodel.modules.orcaflex.modular_generator generate \
+#       --input spec.yml --output generated/
+
+metadata:
+  name: "30in_pipeline_installation"
+  description: "30-inch pipeline floating installation with 5 tugs"
+  structure: pipeline
+  operation: installation/floating
+  project: "SESA"
+
+environment:
+  water:
+    depth: 8                          # Water depth (m)
+    density: 1.03                     # Seawater density (te/m3)
+  seabed:
+    slope: 0.57                       # Seabed slope (deg)
+    stiffness:
+      normal: 1000                    # Normal stiffness (kN/m/m2)
+      shear: 100                      # Shear stiffness (kN/m/m2)
+  waves:
+    type: dean_stream                 # Wave theory type
+    height: 0                         # Significant wave height Hs (m)
+    period: 8                         # Peak wave period Tp (s)
+    direction: 180                    # Wave direction (deg from North)
+  current:
+    speed: 1                          # Surface current speed (m/s)
+    direction: 270                    # Current direction (deg from North)
+    profile:                          # [depth (m), factor]
+      - [0, 0.46]                     # Surface: 46% of ref speed
+      - [6, 0.39]                     # 6m depth: 39% of ref speed
+      - [15, 0.33]                    # 15m depth: 33% of ref speed
+  wind:
+    speed: 8.87                       # Wind speed (m/s)
+    direction: 270                    # Wind direction (deg from North)
+
+pipeline:
+  name: "30'' Line"                   # Pipeline name for OrcaFlex
+  material: X65                       # API 5L X65 grade steel
+  dimensions:
+    outer_diameter: 0.762             # 30-inch OD (m)
+    wall_thickness: 0.0254            # 1-inch wall (m)
+  coatings:
+    corrosion:                        # Anti-corrosion coating (FBE/3LPE)
+      thickness: 0.0042               # Coating thickness (m)
+      density: 0.95                   # Coating density (te/m3)
+    weight:                           # Concrete weight coatings
+      - name: CWC120                  # 120mm concrete weight coating
+        thickness: 0.12               # Coating thickness (m)
+        density: 2.978                # Concrete density (te/m3)
+      - name: CWC90                   # 90mm concrete weight coating
+        thickness: 0.09               # Coating thickness (m)
+        density: 2.978                # Concrete density (te/m3)
+  segments:
+    - type: X65+coating+CWC120        # Heavy section (near shore)
+      length: 1894.4                  # Total length (m)
+      segment_length: 3.9             # OrcaFlex mesh segment length (m)
+    - type: X65+coating+CWC90         # Lighter section (offshore)
+      length: 3005.6                  # Total length (m)
+      segment_length: 5.4             # OrcaFlex mesh segment length (m)
+
+equipment:
+  tugs:
+    count: 5                          # Number of support tugs
+    spacing: 816.6                    # Distance between tugs (m)
+    first_position: [716.7, -20, 0]   # First tug position [x, y, z] (m)
+    properties:
+      mass: 30                        # Tug mass (te)
+      volume: 100                     # Displaced volume (m3)
+  rollers:
+    position: [5, 0, -2]              # Roller system position [x, y, z] (m)
+    supports: 4                       # Number of support points
+  buoyancy_modules:
+    spacing: 3.9                      # Module spacing along pipeline (m)
+    properties:
+      mass: 0.05                      # Module mass (te)
+      volume: 4.91                    # Displaced volume (m3)
+  ramps:
+    - name: "Ramp inclined"           # Inclined ramp for seabed approach
+      type: block
+      origin: [-126.35, -25, -5]      # Position [x, y, z] (m)
+      Size: [150, 50, 10]             # Dimensions [L, W, H] (m)
+      Rotation: [0, 2.27, 0]          # Rotation [rx, ry, rz] (deg)
+    - name: "Ramp-curve"              # Curved plate for smooth transition
+      type: curved_plate
+      Size: [10, 10, 10]              # Dimensions (m)
+      Rotation: [0, 0, 0]             # No rotation
+
+simulation:
+  time_step: 0.1                      # Outer time step (s)
+  stages: [8, 16]                     # Stage durations [build-up, main] (s)
+  north_direction: 70                 # Model North direction (deg)
