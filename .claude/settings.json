@@ -71,6 +71,10 @@
             "type": "command",
             "statusMessage": "Conditional hook: Post-command metrics tracking",
             "command": "cat | jq -r '.tool_input.command // empty' | tr '\\n' '\\0' | xargs -0 -I {} bash -c '\nCMD=\"{}\"\nCMD_LEN=${#CMD}\nSIMPLE_CMDS=\"(pwd|which|ls|git status|git log)\"\n\nif [ $CMD_LEN -lt 50 ] && [[ \"$CMD\" =~ $SIMPLE_CMDS ]]; then\n  if [ \"${CLAUDE_FLOW_HOOK_PERFORMANCE_TRACKING}\" == \"true\" ]; then\n    echo \"POST: Lightweight tracking only for simple operation\"\n  fi\nelse\n  if [ \"${CLAUDE_FLOW_CONDITIONAL_HOOKS}\" == \"true\" ]; then\n    npx claude-flow@alpha hooks post-command --command \"$CMD\" --track-metrics true --store-results true --complexity-level moderate\n  fi\nfi\n'"
+          },
+          {
+            "type": "command",
+            "command": "cat | /mnt/github/workspace-hub/digitalmodel/.claude/hooks/capture-corrections.sh"
           }
         ]
       },
@@ -143,7 +147,10 @@
   },
   "plansDirectory": "specs/modules",
   "includeCoAuthoredBy": true,
-  "enabledMcpjsonServers": ["claude-flow", "ruv-swarm"],
+  "enabledMcpjsonServers": [
+    "claude-flow",
+    "ruv-swarm"
+  ],
   "statusLine": {
     "type": "command",
     "command": ".claude/statusline-command.sh"
