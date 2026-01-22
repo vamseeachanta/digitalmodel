@@ -11531,9 +11531,6 @@ Lines:
   StaticsStep1: User specified
   StaticsStep2: Full statics
   StaticsSeabedFrictionPolicy: None
-  StartingShapeOrientationsSpecified: Yes
-  StartingShapeX, StartingShapeY, StartingShapeZ, StartingShapeAzm, StartingShapeDec, StartingShapeGamma:
-  - - -101
     - 0
     - 4.505
     - 0
@@ -18896,8 +18893,6 @@ Lines:
   StaticsStep1: User specified
   StaticsStep2: Full statics
   StaticsSeabedFrictionPolicy: None
-  StartingShapeX, StartingShapeY, StartingShapeZ:
-  - - 4795.153012033483
     - -13.310772936509457
     - -1.3179089554170074
   - - 4800.150186681224
