@@ -45,42 +45,33 @@ Lines:
       - 0
       - 0.001
   LineType, Length, TargetSegmentLength:
-  - - X65+coating+CWC120
-    - 11.7
-    - 0.1
-  - - X65+coating+CWC120
-    - 1879.8
-    - 3.9
-  - - X65+coating+CWC120
-    - 2.9
-    - 0.1
-  - - X65+coating+CWC90
-    - 1
-    - 0.1
-  - - X65+coating+CWC90
-    - 3002.4
-    - 5.4
-  - - X65+coating+CWC90
-    - 2.2
+  - - 24in_X65+coating+CWC80
+    - 10
+    - 2
+  - - 24in_X65+coating+CWC80
+    - 2000
+    - 2
+  - - 24in_X65+coating+CWC80
+    - 3142
     - 0.1
   Attachments:
   - AttachmentType: BM
-    AttachmentName: Attached 6D buoy3
+    AttachmentName: Attached 6D buoy1
     AttachmentPosition:
-    - -1.25
+    - -0.5
     - 0
-    - 3.9
+    - 1.5
     - End A
     AttachmentOrientation:
     - 0
     - 0
     - 0
   - AttachmentType: BM
-    AttachmentName: Attached 6D buoy4
+    AttachmentName: Attached 6D buoy2
     AttachmentPosition:
-    - -1.25
+    - -0.5
     - 0
-    - 7.8
+    - 3.0
     - End A
     AttachmentOrientation:
     - 0
@@ -89,9 +80,9 @@ Lines:
   - AttachmentType: BM
     AttachmentName: Attached 6D buoy5
     AttachmentPosition:
-    - -1.25
+    - -0.5
     - 0
-    - 11.7
+    - 4.5
     - End A
     AttachmentOrientation:
     - 0
@@ -100,9 +91,9 @@ Lines:
   - AttachmentType: BM
     AttachmentName: Attached 6D buoy6
     AttachmentPosition:
-    - -1.25
+    - -0.5
     - 0
-    - 15.6
+    - 6.0
     - End A
     AttachmentOrientation:
     - 0

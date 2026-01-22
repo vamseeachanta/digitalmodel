@@ -3,19 +3,13 @@
 # Date: 2026-01-21 14:02:14
 VariableData:
   Coatingsorlinings:
-  - Name: coating+CWC120
+  - Name: 3LPP+CWC80
     LayerThickness, LayerMaterialDensity:
-    - - 0.0042
-      - 0.95
-    - - 0.12
-      - 2.978
-  - Name: coating+CWC90
+    - - 0.0035
+      - 1.1
+    - - 0.08
+      - 3.0
+  - Name: 3LPP
     LayerThickness, LayerMaterialDensity:
-    - - 0.0042
-      - 0.95
-    - - 0.09
-      - 2.978
-  - Name: coating
-    LayerThickness, LayerMaterialDensity:
-    - - 0.0042
-      - 0.95
+    - - 0.0035
+      - 1.1
