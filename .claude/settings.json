@@ -39,7 +39,7 @@
           {
             "type": "command",
             "statusMessage": "Logging session activity",
-            "command": "bash -c 'INPUT=$(cat); HOOK=\"\"; [ -f \"/d/workspace-hub/.claude/hooks/session-logger.sh\" ] && HOOK=\"/d/workspace-hub/.claude/hooks/session-logger.sh\"; [ -z \"$HOOK\" ] && [ -f \"/mnt/github/workspace-hub/.claude/hooks/session-logger.sh\" ] && HOOK=\"/mnt/github/workspace-hub/.claude/hooks/session-logger.sh\"; [ -n \"$HOOK\" ] && echo \"$INPUT\" | bash \"$HOOK\" pre'"
+            "command": "bash -c 'INPUT=$(cat); WS=\"/d/workspace-hub\"; [ ! -d \"$WS\" ] && WS=\"/mnt/github/workspace-hub\"; LOG=\"$WS/.claude/skills/session-logs/session_$(date +%Y%m%d).jsonl\"; mkdir -p \"$(dirname $LOG)\" 2>/dev/null; TOOL=$(echo \"$INPUT\" | jq -r \".tool_name // \\\"unknown\\\"\" 2>/dev/null); echo \"{\\\"ts\\\":\\\"$(date -Iseconds)\\\",\\\"hook\\\":\\\"pre\\\",\\\"tool\\\":\\\"$TOOL\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\"}\" >> \"$LOG\"'"
           }
         ]
       }
@@ -51,7 +51,7 @@
           {
             "type": "command",
             "statusMessage": "Logging session activity (post)",
-            "command": "bash -c 'INPUT=$(cat); HOOK=\"\"; [ -f \"/d/workspace-hub/.claude/hooks/session-logger.sh\" ] && HOOK=\"/d/workspace-hub/.claude/hooks/session-logger.sh\"; [ -z \"$HOOK\" ] && [ -f \"/mnt/github/workspace-hub/.claude/hooks/session-logger.sh\" ] && HOOK=\"/mnt/github/workspace-hub/.claude/hooks/session-logger.sh\"; [ -n \"$HOOK\" ] && echo \"$INPUT\" | bash \"$HOOK\" post'"
+            "command": "bash -c 'INPUT=$(cat); WS=\"/d/workspace-hub\"; [ ! -d \"$WS\" ] && WS=\"/mnt/github/workspace-hub\"; LOG=\"$WS/.claude/skills/session-logs/session_$(date +%Y%m%d).jsonl\"; mkdir -p \"$(dirname $LOG)\" 2>/dev/null; TOOL=$(echo \"$INPUT\" | jq -r \".tool_name // \\\"unknown\\\"\" 2>/dev/null); echo \"{\\\"ts\\\":\\\"$(date -Iseconds)\\\",\\\"hook\\\":\\\"post\\\",\\\"tool\\\":\\\"$TOOL\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\"}\" >> \"$LOG\"'"
           }
         ]
       },
