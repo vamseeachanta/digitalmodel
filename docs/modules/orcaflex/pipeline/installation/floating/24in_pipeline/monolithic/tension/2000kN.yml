@@ -1,0 +1,15 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\pipeline\installation\floating\24in_pipeline\monolithic\tension\2500kN.yml
+# Created: 3:45 PM on 1/22/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+BaseFile: ../basefile/vessel_end_winch.yml
+Winches:
+  vessel_winch:
+    StageValue[1]: 2000
+    StageValue[2]: 2000
+    StageValue[3]: 2000
+...

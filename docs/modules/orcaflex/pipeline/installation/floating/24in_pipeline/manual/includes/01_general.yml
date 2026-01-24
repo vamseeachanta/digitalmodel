@@ -25,5 +25,5 @@ General:
   - 8
   - 16
   RestartStateRecordingPeriodicCount: 0
-  RestartStateRecordingTest: ~
+  RestartStateRecordingTest: 
   NorthDirection: 70
