@@ -165,6 +165,7 @@ dependencies = [
     "xmltodict>=0.13.0,<1.0.0",
     "markitdown",
     "fastmcp>=2.12.4,<3.0.0",
+    "munch>=4.0.0",
 ]
 
 [project.optional-dependencies]
