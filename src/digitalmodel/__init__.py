@@ -25,3 +25,8 @@ try:
 except ImportError as e:
     import warnings
     warnings.warn(f"Could not import some digitalmodel modules: {e}")
+
+try:
+    from digitalmodel.modules.digitalmarketing.digitalmarketing import DigitalMarketing
+except ImportError:
+    DigitalMarketing = None
