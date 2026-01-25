@@ -1,0 +1,104 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: bm
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.BD_WHBENDINGMOMENT, TIMESTAMP, "2019-10-24 03:00:00", "2019-10-24 04:00:00"]
+      -
+        label: acc
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.YT_BOPYELLOWMRU_ACCMRU, TIMESTAMP, "2019-10-24 03:00:00", "2019-10-24 04:00:00"]
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+        pd_parse_dates_columns: [TIMESTAMP]
+
+plot_settings: []
+
+plot_multiple:
+  -
+    file_name_extension: event_2019_24_10_0300H
+    nrows: 2
+    ncols: 1
+    suptitle: Yellowtail Well, Noble Bob Douglas, 2019-10-24 03:00:00
+    sets:
+      -
+        df: input_data_bm
+        label: [Bending Moment]
+        x: [TIMESTAMP]
+        y: [MAGNITUDE]
+        scale:
+          columns: [MAGNITUDE]
+          factors: [0.000737562]
+        size: A4
+        orientation: portrait
+        title: Bending Moment
+        plt_kind: line
+        xlabel: Date
+        ylabel: Bending Moment (ft-kips)
+        xticklabels: NULL
+        autofmt:
+          xdate: True
+        grid: True
+        legend: True
+        legend_location: best
+        marker: NULL
+      -
+        df: input_data_acc
+        title: Acceleration, Yellow Pod
+        label: [Forward, Starboard]
+        x: [TIMESTAMP]
+        y: [ACCMRU_FWD, ACCMRU_STBD]
+        scale:
+          columns: [ACCMRU_FWD, ACCMRU_STBD]
+          factors: [1, 1]
+        size: A4
+        orientation: portrait
+        plt_kind: line
+        xlabel: Date
+        ylabel: Acceleration (radians - unknown)
+        xticklabels: NULL
+        autofmt:
+          xdate: True
+        grid: True
+        legend: True
+        legend_location: best
+        marker: NULL
+

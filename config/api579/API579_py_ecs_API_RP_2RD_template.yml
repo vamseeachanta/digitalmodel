@@ -1,0 +1,162 @@
+default:
+  Analysis:
+    GML:
+      data_source: simulated # xlsx, simulated
+      Circumference: True
+      Length: False
+      FCARate: Historical
+      FCA:
+        - 0.00
+        - 0.04
+        - 0.08
+        - 0.12
+        - 0.14
+        - 0.16
+        - 0.17
+        - 0.18
+        - 0.19
+        - 0.20
+
+    LML: False
+
+    B31G: False
+
+  Units: inch
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  settings:
+   StartWTFactor : 1
+   AssessmentLengthCeilingFactor_Circumference: NULL
+   AssessmentLengthCeilingFactor_Length: 1.0
+   CorrosionAllowance: 0.0
+
+API579Parameters:
+  Age: 15
+  FCARateFloor: 0.00118
+
+Outer_Pipe:
+  Geometry:
+    Nominal_ID: NULL
+    Nominal_OD: 21
+    Design_WT : 0.875
+    Corrosion_Allowance: 0.0
+    tmin: 0.655
+  Material:
+    Material: Steel
+    Material_Grade: API 5L X80
+    WeldFactor:
+       Seamless: 1.0
+    Insulation: NULL
+    Buoyancy: NULL
+
+Design:
+  -
+    Load Condition: {Outer_Pipe: internal_pressure}
+    InternalPressure: {Outer_Pipe: 0}
+    ExternalPressure: {Outer_Pipe: 0}
+    BendingMoment: 100
+    EffectiveTension: 9200
+    AxialForce: NULL
+    InternalFluid: {Outer_Pipe: 0.03703047}
+    ExternalFluid: {Outer_Pipe: 0.03703047}
+    Temperature:
+      Ambient: {Outer_Pipe: 50}
+      Operating: {Outer_Pipe: 82}
+      Maximum: NULL
+    Torsion: 0
+    Condition: Restrained
+    allowable_stress_to_yield_ratio: 0.67
+    Code:
+       - {Outer_Pipe: API RP 16Q-2017}
+Material:
+   Steel:
+     E: 30000000.00
+     Rho: 0.2817929
+     Poissionsratio: 0.30
+     ThermalExpansionCoefficient: 6.5E-6
+     Grades:
+        API 5L X80:
+           SMYS: 80000
+           SMUS: 95000
+           Reference: Assumed
+
+DesignFactors:
+   API RP 16Q-2017:
+      internal_pressure :
+        Fd: 0.67
+
+
+gml_simulated_grid:
+  -
+    Label: 4 by 4
+    axial_length: 4 #8, 16, 32
+    circumferencial_length: 4
+    grid_length: 50
+    axial_division: 1
+    circumferencial_division: 1
+    wt_to_nominal_loss_area: 0.85
+    wt_to_nominal_outside_loss_area: 0.95
+    Contour:
+      xlim: NULL
+      ylim: NULL
+      zlim: [0.675, 0.90]
+  -
+    Label: 8 by 8
+    axial_length: 8
+    circumferencial_length: 8
+    grid_length: 50
+    axial_division: 1
+    circumferencial_division: 1
+    wt_to_nominal_loss_area: 0.85
+    wt_to_nominal_outside_loss_area: 0.95
+    Contour:
+      xlim: NULL
+      ylim: NULL
+      zlim: [0.675, 0.90]
+  -
+    Label: 16 by 16
+    axial_length: 16
+    circumferencial_length: 16
+    grid_length: 50
+    axial_division: 1
+    circumferencial_division: 1
+    wt_to_nominal_loss_area: 0.85
+    wt_to_nominal_outside_loss_area: 0.95
+    Contour:
+      xlim: NULL
+      ylim: NULL
+      zlim: [0.675, 0.90]
+  -
+    Label: 32 by 32
+    axial_length: 32
+    circumferencial_length: 32
+    grid_length: 50
+    axial_division: 1
+    circumferencial_division: 1
+    wt_to_nominal_loss_area: 0.85
+    wt_to_nominal_outside_loss_area: 0.95
+    Contour:
+      xlim: NULL
+      ylim: NULL
+      zlim: [0.675, 0.90]
+
+PlotSettings:
+  Data:
+    PltSupTitle: Drilling Riser Fitness for Service
+    PltTitle: Main Pipe, WT Grid
+    PltXLabel: Circumference (inch)
+    PltYLabel: Length (inch)
+  LML:
+    PltSupTitle: Marco Polo, GC 518, 6 inch FFS
+    PltTitle: Local Metal Loss, Levels 1 & 2
+    PltXLabel: Future Corrosion Allowance (inch)
+    PltYLabel: Maximum Allowable Working Pressure (psi)
+    ylim: [5000, 12000]
+  GML:
+    PltSupTitle: Drilling Riser Fitness for Service
+    PltTitle: Main Pipe, General Metal Loss, Level 2
+    PltXLabel: Future Corrosion Allowance (inch)
+    PltYLabel: Maximum Allowable Working Pressure (psi)
+    ylim: [0, 6000]

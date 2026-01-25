@@ -1,0 +1,30 @@
+default:
+  log_level: DEBUG
+  database_runs: False
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+    run_example: False
+
+input_data:
+  source: url
+  download_to: data_manager/data/bsee
+  sets:
+    -
+      label:
+      io: https://www.data.bsee.gov/Well/Files/APIRawData.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'replace'
+
+db:
+  server_type: postgresql
+  connection_string: ${BSEE_DATABASE_URL}  # Set via environment variable
+  server: postgres-Heroku
+  user: NULL
+  password: NULL
+  database: bsee

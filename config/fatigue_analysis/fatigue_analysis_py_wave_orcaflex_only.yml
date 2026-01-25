@@ -1,0 +1,143 @@
+default:
+  Analysis:
+    wave_fatigue:
+      orcaflex: True
+    viv_fatigue:
+      shear7: False
+  plot_fatigue_life: False
+  plot_damage_distribution: True
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: False
+
+FatigueLifeReadingSets:
+  - 
+    io: K:\0173 KM Extreme\SLWR\Fatigue\FatigueProcess_fatigueLoadingTemplateWH045_Test.xlsx
+    sheet_name: Damage Tables
+    KeyWords: ['Arc Length']
+    RowsToSkip: 2
+    RowsToRead: 3339
+    Label: ['Top of Riser (0-30ft)', 'Riser OD, D Curve (> 30 ft)','Riser ID, D Curve (> 30 ft)']
+    Columns: ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
+    FactorOfSafety: 10
+  -
+    io: K:\0173 KM Extreme\SLWR\Fatigue\Rev3\out\FTG_Allruns_Corrected_Runs_Petrobras_DirProb_ThkCorr_1.0_Repaired.xlsx
+    sheet_name: Damage Tables
+    KeyWords: ['Arc length']
+    RowsToSkip: 2
+    RowsToRead: 3339
+    Label: ['Top of Riser (0-30ft)', 'Riser OD, D Curve (> 30 ft)','Riser ID, D Curve (> 30 ft)']
+    Columns: ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
+    FactorOfSafety: 10
+
+FatigueLifePlotSettings:
+  Name: Screening Repsonse
+  PltSupTitle: Fatigue Life Along the riser
+  PltTitle: 0-30 ft-BS C, SCF1.1; 30+ ft, OD- BS D, SCF1.2; 30+ ft, ID - BS E, SCF1.2
+  PltXLabel: Arc Length (m)
+  PltYLabel: Fatigue Life (years)
+  PltLabel:
+    - Top of Riser
+    - Riser, OD
+    - Riser, ID
+  LifeLimit: 25
+  XLimRanges: 
+    - [0, 50]
+    - [0, 7000]
+  YLimRanges: 
+    - [1, 1000]
+    - [1, 1000000]
+  LineStyles: ["-.", "--","-", ":"]
+  Colors : ['blue', 'green', 'cyan', 'magenta', 'yellow', 'black']
+
+DamageContribution:
+  ReadingSets:
+    -
+      io: data_manager/data/WI_repaired.xlsx
+      sheet_name: Governing Location
+      KeyWords: ["1562.74711825743m (Segment 509); BS F Curve; Radial Position: Inner, SCF: 1.2; Thickness Correction Factor: 1"]
+      RowsToSkip: 3
+      RowsToRead: 461
+      direction_sets:
+        type: Range
+        columns: [60 W of S, 45 W of S, 30 W of S]
+        sets:
+          -
+            start_row: 0
+            end_row: 152
+          -
+            start_row: 153
+            end_row: 305
+          -
+            start_row: 306
+            end_row: 458
+      viz:
+        df_columns: NULL
+        plt_kind: line
+        marker:
+          type: o
+          size: 3
+          edge_color: None
+        xlabel: Seastate Number
+        ylabel: Damage Contribution (%)
+        suptitle: Damage Contribution by Seastate
+        title: 12 inch Water Injection Riser
+        ylim: [0, 3]
+        xticklabels: NULL
+        grid: True
+        legend: True
+        legend_location: outside
+      Columns: 1st Row
+      label: 12 inch Water Injection Riser
+    -
+      io: data_manager/data/GI_repaired.xlsx
+      sheet_name: Governing Location
+      KeyWords: ["1391.20228320051m (Segment 395); BS F Curve; Radial Position: Inner, SCF: 1.2; Thickness Correction Factor: 1"]
+      RowsToSkip: 3
+      RowsToRead: 461
+      direction_sets:
+        type: Range
+        columns: [60 W of S, 45 W of S, 30 W of S]
+        sets:
+          -
+            start_row: 0
+            end_row: 152
+          -
+            start_row: 153
+            end_row: 305
+          -
+            start_row: 306
+            end_row: 458
+      viz:
+        df_columns: NULL
+        plt_kind: line
+        marker:
+          type: o
+          size: 3
+          edge_color: None
+        xlabel: Seastate Number
+        ylabel: Damage Contribution (%)
+        suptitle: Damage Contribution by Seastate
+        title: 6 inch Gas Injection Riser
+        ylim: [0, 3]
+        xticklabels: NULL
+        grid: True
+        legend: True
+        legend_location: outside
+      Columns: 1st Row
+      label: 6 inch Gas Injection Riser
+  viz:
+    df_columns: [min, 25%, 50%, 75%, max]
+    plt_kind: bar
+    xlabel: Wave Direction Towards
+    ylabel: '% Damage'
+    suptitle: Fatigue Damage Contibution by Direction
+    title: "  "
+    xticklabels: [Drillships, Semisubmersibles]
+    marker: NULL
+    ylim: NULL
+    grid: False
+    legend: True
+    legend_location: outside
+

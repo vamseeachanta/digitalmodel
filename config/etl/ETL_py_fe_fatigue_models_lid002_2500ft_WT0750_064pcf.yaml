@@ -1,0 +1,478 @@
+---
+parameters:
+  model_id: &model_id 2500ft_WT0750_064pcf
+  location_id: &location_id 2
+  location_id_str: &location_id_str "2"
+  load_range: &load_range 17
+
+  wave_fe_script_repeat_patterns_text_1: &wave_fe_script_repeat_patterns_text_1 ["LoadData app_vertical_riser_", *model_id,"_Wave1_FE.yml"]
+  wave_fe_script_repeat_patterns_text_15: &wave_fe_script_repeat_patterns_text_15 ["SaveData M:\\0185\\WaveFatigue\\Rev1\\", "lid0", *location_id_str, "_{:03d}_", *model_id, "_Dr000_Hs{:05.2f}m_Tp{:05.2f}s.dat"]
+  orcaflex_fatigue_analysis_repeat_patterns_text_2: &orcaflex_fatigue_analysis_repeat_patterns_text_2 ["  LoadCaseFileName: M:\\0185\\WaveFatigue\\Rev2\\lid0", *location_id_str, "_{:03d}_", *model_id, "_Dr000_Hs{:05.2f}m_Tp{:05.2f}s.sim"]
+  wave_histogram_header_text_2: &wave_histogram_header_text_2 ["      io: K:\\Dropbox\\Dropbox\\Engineering\\0185 ECS FFS Engineering\\COD\\results\\results\\", "app_fatigue_analysis_app_ETL_shear7_lid00", *location_id_str,"_", *model_id, "_combined_damage_damage_results.csv"]
+  wave_histogram_repeat_patterns_text_3: &wave_histogram_repeat_patterns_text_3 ["  Name: M:\\0185\\WaveFatigue\\Rev2\\lid0", *location_id_str,"_{:03d}_", *model_id, "_Dr000_Hs{:05.2f}m_Tp{:05.2f}s.dat"]
+
+default:
+  Constants:
+    g : 9.81
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+  extract: NULL
+
+  transform:
+    from_xlsx_to_yaml_file: False
+    repeat_patterns: True
+    replace: False
+
+  load: NULL
+
+replace: TBA
+
+Analysis:
+  custom_folder: NULL
+
+output_files:
+  -
+    settings:
+      single_file: True
+      multiple_file: False
+      file_name:
+        prefix: NULL
+        suffix: wave_fe_script
+        fields: NULL
+        extension: txt
+
+    header:
+      -
+        text: // Standard Header Line 1
+        fields: NULL
+      -
+        text: // Standard Header Line 2
+        fields: NULL
+    repeat_patterns:
+      -
+        text: *wave_fe_script_repeat_patterns_text_1
+        fields: NULL
+      -
+        text: Select General
+        fields: NULL
+      -
+        text: StageDuration[2]= 3600.0
+        fields: NULL
+      -
+        text: Select Environment
+        fields: NULL
+      -
+        text: Select WaveTrain "Wave1"
+        fields: NULL
+      -
+        text: WaveHs= {0}
+        fields:
+          -
+            from_xlsx:
+              -
+                label: Hs
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Wave
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+
+                column: Hs
+                loop_level: 0
+                scale: 0.3048
+      -
+        text: Select Environment
+        fields: NULL
+      -
+        text: Select WaveTrain "Wave1"
+        fields: NULL
+      -
+        text: WaveTp= {0}
+        fields:
+          -
+            from_xlsx:
+              -
+                label: Tp
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Wave
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+
+                column: Tp
+                loop_level: 0
+      -
+        text: Select Environment
+        fields: NULL
+      -
+        text: Select WaveTrain "Wave1"
+        fields: NULL
+      -
+        text: WaveSeed= {0}
+        fields:
+          -
+            from_xlsx:
+              -
+                label: Seed
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Seeds
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                column: Seed
+                loop_level: 0
+      -
+        text: Select Environment
+        fields: NULL
+      -
+        text: Select WaveTrain "Wave1"
+        fields: NULL
+      -
+        text: WaveDirection= 0
+        fields: NULL
+      -
+        text: *wave_fe_script_repeat_patterns_text_15
+        fields:
+          -
+            from_range:
+              - 0
+              - *load_range
+          -
+            from_xlsx:
+              -
+                label: Hs
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Wave
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+                scale: 0.3048
+
+                column: Hs
+                loop_level: 0
+          -
+            from_xlsx:
+              -
+                label: Tp
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Wave
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+
+                column: Tp
+                loop_level: 0
+      -
+        text: " "
+        fields: NULL
+    footer:
+      -
+        text: // Standard Footer Line 1
+        fields: NULL
+      -
+        text: // Standard Footer Line 2
+        fields: NULL
+
+  -
+    settings:
+      single_file: True
+      multiple_file: False
+      file_name:
+        prefix: NULL
+        suffix: orcaflex_fatigue_analysis
+        fields: NULL
+        extension: yml
+
+    header:
+      -
+        text: NULL
+        from_file:
+          flag: True
+          io: data_manager\data\orcaflex\fatigue_analysis_example1.yml
+          start_line: 1
+          end_line: 34
+        fields: NULL
+      -
+        text: "LoadCases:"
+        fields: NULL
+    repeat_patterns:
+      -
+        text: "-"
+        fields: NULL
+      -
+        text: *orcaflex_fatigue_analysis_repeat_patterns_text_2
+        fields:
+          -
+            from_range:
+              - 0
+              - *load_range
+          -
+            from_xlsx:
+              -
+                label: Hs
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Wave
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+                scale: 0.3048
+
+                column: Hs
+                loop_level: 0
+          -
+            from_xlsx:
+              -
+                label: Tp
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Wave
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+
+                column: Tp
+                loop_level: 0
+      -
+        text: "  LoadCaseLineName: vertical"
+        fields: NULL
+      -
+        text: "  PeriodFrom: 100"
+        fields: NULL
+      -
+        text: "  PeriodTo: 3600"
+        fields: NULL
+      -
+        text: "  LoadCaseExposureTime: {0}"
+        fields:
+          -
+            from_xlsx:
+              -
+                label: Hs
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Wave
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+                scale: 87.66
+
+                column: probability
+                loop_level: 0
+
+  -
+    settings:
+      single_file: True
+      multiple_file: False
+      file_name:
+        prefix: NULL
+        suffix: wave_histogram
+        fields: NULL
+        extension: yml
+
+    header:
+      -
+        text: NULL
+        from_file:
+          flag: True
+          io: tests\cfg\ETL_py_wave_histogram_generator.yml
+          start_line: 1
+          end_line: 23
+        fields: NULL
+      -
+        text: *wave_histogram_header_text_2
+        fields: NULL
+      -
+        text: NULL
+        from_file:
+          flag: True
+          io: tests\cfg\ETL_py_wave_histogram_generator.yml
+          start_line: 25
+          end_line: 49
+        fields: NULL
+      -
+        text: "Files:"
+        fields: NULL
+    repeat_patterns:
+      -
+        text: "-"
+        fields: NULL
+      -
+        text: "  Label: Dr000_Hs{:05.2f}m,Tp{:05.2f}s"
+        fields:
+          -
+            from_xlsx:
+              -
+                label: Hs
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Wave
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+                scale: 0.3048
+
+                column: Hs
+                loop_level: 0
+          -
+            from_xlsx:
+              -
+                label: Tp
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Wave
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+
+                column: Tp
+                loop_level: 0
+      -
+        text: *wave_histogram_repeat_patterns_text_3
+        fields:
+          -
+            from_range:
+              - 0
+              - *load_range
+          -
+            from_xlsx:
+              -
+                label: Hs
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Wave
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+                scale: 0.3048
+
+                column: Hs
+                loop_level: 0
+          -
+            from_xlsx:
+              -
+                label: Tp
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Wave
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+
+                column: Tp
+                loop_level: 0
+      -
+        text: "  ObjectName: vertical"
+        fields: NULL
+      -
+        text: "  probability: {0}"
+        fields:
+          -
+            from_xlsx:
+              -
+                label: Hs
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Wave
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+                scale: 1
+
+                column: probability
+                loop_level: 0
+      -
+        text: "  simulation_duration: 3500"
+        fields: NULL
+      -
+        text: " "
+        fields: NULL
+    footer:
+      -
+        from_file:
+          flag: True
+          io: tests\cfg\ETL_py_wave_histogram_generator.yml
+          start_line: 65
+          end_line: 100
+        fields: NULL
+...

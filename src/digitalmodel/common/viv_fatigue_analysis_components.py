@@ -608,7 +608,7 @@ class VIVFatigueAnalysisComponents:
         self.viv_histogram_df_array.append(self.sum_df)
 
     def qa_histograms(self):
-        from common.ETL_components import ETL_components
+        from digitalmodel.common.ETL_components import ETL_components
 
         etl_components = ETL_components(cfg=None)
         self.sum_df = etl_components.get_sum_df_from_df_array(
@@ -616,7 +616,7 @@ class VIVFatigueAnalysisComponents:
         )
 
     def save_viv_histograms(self):
-        from common.data import SaveData
+        from digitalmodel.common.data import SaveData
 
         save_data = SaveData()
         cfg_temp = {
@@ -764,7 +764,7 @@ class VIVFatigueAnalysisComponents:
             )
 
     def save_combined_histograms(self):
-        from common.data import SaveData
+        from digitalmodel.common.data import SaveData
 
         save_data = SaveData()
         df_array = [

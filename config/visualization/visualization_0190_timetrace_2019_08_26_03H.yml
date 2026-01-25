@@ -1,0 +1,396 @@
+---
+parameters:
+  start_datetime: &start_datetime "2019-08-26 03:00:00"
+  end_datetime: &end_datetime "2019-08-26 04:00:00"
+  file_io_02: &file_io_02 data_manager\data\shear7\lid_02_cp03_2500ft_WT0750_064pcf.plt
+  label_02: &label_02 label 2
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+
+  input_data:
+    source: db
+    save_data_to_xlsx: False
+    sets:
+      -
+        label: bm
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.BD_WHBENDINGMOMENT, TIMESTAMP, *start_datetime, *end_datetime]
+      -
+        label: vm
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.BD_VESSEL, TIMESTAMP, *start_datetime, *end_datetime]
+      -
+        label: acc_blue
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.BD_BOPBLUEMRUACC, TIMESTAMP, *start_datetime, *end_datetime]
+      -
+        label: acc_yellow
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.YT_BOPYELLOWMRU_ACCMRU, TIMESTAMP, *start_datetime, *end_datetime]
+      -
+        label: angles_ufj
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.BD_UFJPrimaryMRU, TIMESTAMP, *start_datetime, *end_datetime]
+      -
+        label: angles_lrj_blue
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.BD_LRJBLUEMRU, TIMESTAMP, *start_datetime, *end_datetime]
+      -
+        label: angles_lrj_yellow
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.YT_LRJYELLOWMRU, TIMESTAMP, *start_datetime, *end_datetime]
+      -
+        label: angles_bop_blue
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.BD_BOPBLUEMRU, TIMESTAMP, *start_datetime, *end_datetime]
+      -
+        label: angles_bop_yellow
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.YT_BOPYELLOWMRU, TIMESTAMP, *start_datetime, *end_datetime]
+
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+        pd_parse_dates_columns: [TIMESTAMP]
+
+plot_settings: []
+
+plot_multiple:
+
+  -
+    file_name_extension: bm
+    nrows: 1
+    ncols: 1
+    suptitle: *start_datetime
+    sets:
+
+    -
+      title: Bending Moment
+      xlabel: Date
+      ylabel: Bending Moment (ft-kips)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [0, 2000]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_bm
+          label: [Bending Moment]
+          x: [TIMESTAMP]
+          y: [MAGNITUDE]
+          scale:
+            columns: [MAGNITUDE]
+            factors: [0.000737562]
+          plt_kind: line
+          marker: NULL
+
+  -
+    file_name_extension: v_position
+    nrows: 1
+    ncols: 1
+    suptitle: *start_datetime
+    sets:
+
+    -
+      title: Vessel Position
+      xlabel: Easting (ft)
+      ylabel: Northing (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+#      ylim: [0, 500]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_vm
+          label: [position]
+          x: [POSEAST]
+          y: [POSNORTH]
+          scale:
+            columns: [POSEAST, POSNORTH]
+            factors: [3.281, 3.281]
+          plt_kind: line
+          marker: NULL
+
+  -
+    file_name_extension: v_motions
+    nrows: 1
+    ncols: 1
+    suptitle: *start_datetime
+    sets:
+
+    -
+      title: Vessel Motions
+      xlabel: Date Time
+      ylabel: Distance (ft)/Angle (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+#      ylim: [0, 500]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_vm
+          label: [Heave, Pitch, Roll]
+          x: [TIMESTAMP]
+          y: [HEAVE, PITCH, ROLL]
+          scale:
+            columns: [HEAVE, PITCH, ROLL]
+            factors: [3.281, 57.3, 57.3]
+          plt_kind: line
+          marker: NULL
+
+  -
+    file_name_extension: BOP_acc
+    nrows: 2
+    ncols: 1
+    suptitle: *start_datetime
+    sets:
+
+    -
+      title: BOP Acceleration, Blue MRU
+      xlabel: Date Time
+      ylabel: Acceleration (ft/s2 - assumed)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+#      ylim: [0, 500]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_acc_blue
+          label: [Forward, Starboard]
+          x: [TIMESTAMP]
+          y: [ACCFWD, ACCSTBD]
+          scale:
+            columns: [ACCFWD, ACCSTBD]
+            factors: [3.281, 3.281]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: BOP Acceleration, Yellow MRU
+      xlabel: Date Time
+      ylabel: Acceleration (ft/s2 - assumed)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+#      ylim: [0, 500]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_acc_yellow
+          label: [Forward, Starboard]
+          x: [TIMESTAMP]
+          y: [ACCMRU_FWD, ACCMRU_STBD]
+          scale:
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+            factors: [3.281, 3.281]
+          plt_kind: line
+          marker: NULL
+
+  -
+    file_name_extension: pitch
+    nrows: 1
+    ncols: 1
+    suptitle: *start_datetime
+    sets:
+
+    -
+      title: Pitch
+      xlabel: Date Time
+      ylabel: Angle (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+#      ylim: [0, 500]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_angles_ufj
+          label: [UFJ]
+          x: [TIMESTAMP]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_angles_lrj_blue
+          label: [LRJ-BlueMRU]
+          x: [TIMESTAMP]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+       -
+          df: input_data_angles_lrj_yellow
+          label: [LRJ-YellowMRU]
+          x: [TIMESTAMP]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+       -
+          df: input_data_angles_bop_blue
+          label: [BOP-BlueMRU]
+          x: [TIMESTAMP]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+       -
+          df: input_data_angles_bop_yellow
+          label: [BOP-YellowMRU]
+          x: [TIMESTAMP]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+  -
+    file_name_extension: roll
+    nrows: 1
+    ncols: 1
+    suptitle: *start_datetime
+    sets:
+
+    -
+      title: Pitch
+      xlabel: Date Time
+      ylabel: Angle (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+#      ylim: [0, 500]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_angles_ufj
+          label: [UFJ]
+          x: [TIMESTAMP]
+          y: [ROLL]
+          scale:
+            columns: [ROLL]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_angles_lrj_blue
+          label: [LRJ-BlueMRU]
+          x: [TIMESTAMP]
+          y: [ROLL]
+          scale:
+            columns: [ROLL]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+       -
+          df: input_data_angles_lrj_yellow
+          label: [LRJ-YellowMRU]
+          x: [TIMESTAMP]
+          y: [ROLL]
+          scale:
+            columns: [ROLL]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+       -
+          df: input_data_angles_bop_blue
+          label: [BOP-BlueMRU]
+          x: [TIMESTAMP]
+          y: [ROLL]
+          scale:
+            columns: [ROLL]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+       -
+          df: input_data_angles_bop_yellow
+          label: [BOP-YellowMRU]
+          x: [TIMESTAMP]
+          y: [ROLL]
+          scale:
+            columns: [ROLL]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+

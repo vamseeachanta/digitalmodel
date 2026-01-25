@@ -1,0 +1,27 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+    run_example: False
+
+input_data:
+  source: csv
+  sets:
+    -
+      label: 2018_Hist
+      io: data_manager\data\bsee\2018 Hist.csv
+      replace:
+      output:
+        target: db
+        if_exists: 'replace'
+
+db:
+  server_type: mssql
+  server: localhost\SQLEXPRESS
+  user: NULL
+  password: NULL
+  database: master

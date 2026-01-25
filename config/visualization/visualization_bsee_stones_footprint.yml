@@ -1,0 +1,66 @@
+---
+parameters:
+  start_datetime_range1: &start_datetime_range1 "2019-08-01 00:00:00"
+  end_datetime_range1: &end_datetime_range1 "2019-09-01 00:00:00"
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+
+    run_example: False
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: well_data
+        schema: master
+        query:
+           sql: SELECT * FROM [master].[dbo].[bsee_2020_03_20_APD] WHERE [Surface Area Code] = 'WR' and [Surface Block Number] in (508) and [Well Type] in ('Exploratory')
+#          sql: SELECT * FROM [master].[dbo].[2018sands] WHERE BOEM_FIELD in ('WR508')
+  db:
+    dev:
+      server_type: mssql
+      server: localhost\SQLEXPRESS
+      user: NULL
+      password: NULL
+      database: master
+
+plot_settings: []
+
+plot_multiple:
+
+  -
+    file_name_extension: NULL
+    suptitle: Subsea Wellhead Locations at Stones
+    sets:
+    -
+      title: Field Names - WR508
+      xlabel: Easting
+      ylabel: Northing
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+
+       -
+          df: input_data_well_data
+          label: ['']
+          x: [Surf X Coord Loc]
+          y: [Surf Y Coord Loc]
+          scale:
+            columns: [Surf Y Coord Loc]
+            factors: [1]
+          plt_kind: scatter
+          marker:
+            type: 'o'
+            size: 8
+            edge_color: None
