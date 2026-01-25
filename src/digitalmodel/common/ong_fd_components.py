@@ -4,7 +4,10 @@ import logging
 import json
 from digitalmodel.common.data import DateTimeUtility
 
-from digitalmodel.common.bsee_data_manager import BSEEData
+try:
+    from digitalmodel.common.bsee_data_manager import BSEEData
+except ImportError:
+    BSEEData = None  # BSEE module optional - use worldenergydata for BSEE functionality
 from digitalmodel.common.database import get_db_connection
 from digitalmodel.common.database import Database
 from digitalmodel.common.data import AttributeDict, transform_df_datetime_to_str

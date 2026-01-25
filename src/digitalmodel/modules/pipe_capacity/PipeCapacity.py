@@ -1,7 +1,7 @@
 import logging
 import math
 
-from common.update_deep import update_deep_dictionary
+from digitalmodel.common.update_deep import update_deep_dictionary
 
 
 class PipeCapacity():
@@ -549,8 +549,8 @@ class VonMises_Pipe():
     def get_stress(self):
         import copy
 
-        from common.data import AttributeDict
-        from custom.PipeSizing import PipeSizing
+        from digitalmodel.common.data import AttributeDict
+        from digitalmodel.modules.pipe_capacity.PipeSizing import PipeSizing
         cfg_temp = AttributeDict(copy.deepcopy(self.cfg))
         cfg_temp['Outer_Pipe']['Geometry']['Design_WT'] = self.t
         cfg_temp['Outer_Pipe']['Geometry']['Nominal_ID'] = cfg_temp['Outer_Pipe']['Geometry']['Nominal_OD'] - 2*cfg_temp['Outer_Pipe']['Geometry']['Design_WT']

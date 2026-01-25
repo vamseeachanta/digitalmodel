@@ -9,7 +9,7 @@ python plateBuckling.py
 
 from math import sqrt
 
-from DataProvision.parameters_Col_All import *
+from digitalmodel.modules.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *
 
 # How to access objects from above dictionaries (also same for JSON format files)
 
