@@ -187,8 +187,9 @@ class TestPropertyBasedMaterial:
         assert EI > 0, "Flexural stiffness must be positive"
 
         # Scaling properties
-        assert EA / E == A, "Axial stiffness scales linearly with modulus"
-        assert EI / E == I, "Flexural stiffness scales linearly with modulus"
+        # Use math.isclose for floating point comparison to handle precision issues
+        assert math.isclose(EA / E, A, rel_tol=1e-9), "Axial stiffness scales linearly with modulus"
+        assert math.isclose(EI / E, I, rel_tol=1e-9), "Flexural stiffness scales linearly with modulus"
 
         # Physical reasonableness
         assert EA < E * (math.pi / 4) * od**2, "Axial stiffness less than solid section"
@@ -209,7 +210,8 @@ class TestPropertyBasedMaterial:
 
         # Fundamental properties
         assert mass_per_length > 0, "Mass per length must be positive"
-        assert mass_per_length / rho == A, "Mass scales linearly with density"
+        # Use math.isclose for floating point comparison to handle precision issues
+        assert math.isclose(mass_per_length / rho, A, rel_tol=1e-9), "Mass scales linearly with density"
 
         # Physical reasonableness for steel pipes
         if rho > 7000:  # Steel density range
@@ -218,7 +220,10 @@ class TestPropertyBasedMaterial:
             mass_kg_m = A_m2 * rho
 
             # Typical steel pipe mass range
-            assert 1 < mass_kg_m < 1000, "Mass per meter should be reasonable for steel pipes"
+            # Small thin-wall pipes can have mass as low as ~0.1 kg/m
+            # Large thick-wall pipes (50" OD, 3" WT) can exceed 2000 kg/m
+            # Upper bound based on maximum geometry: 60" OD with maximum WT
+            assert 0.1 < mass_kg_m < 5000, "Mass per meter should be reasonable for steel pipes"
 
 
 class TestPropertyBasedSystemBehavior:
@@ -290,8 +295,9 @@ class TestPropertyBasedSystemBehavior:
         area_scale_ratio = A_scaled / A_base
         moment_scale_ratio = I_scaled / I_base
 
-        assert abs(area_scale_ratio - scale_factor**2) < 1e-10, "Area scales as length squared"
-        assert abs(moment_scale_ratio - scale_factor**4) < 1e-10, "Moment scales as length to fourth"
+        # Use relative tolerance for floating point comparison (large scale factors cause precision issues)
+        assert math.isclose(area_scale_ratio, scale_factor**2, rel_tol=1e-9), "Area scales as length squared"
+        assert math.isclose(moment_scale_ratio, scale_factor**4, rel_tol=1e-9), "Moment scales as length to fourth"
 
     @given(
         geometry=valid_pipe_geometry(),
@@ -486,9 +492,11 @@ class TestPropertyBasedValidationScenarios:
         assert mass_per_length > 0, "Mass per length must be positive"
 
         # For typical steel pipes
+        # Note: Thin-wall small pipes can have low mass (~2 kg/m) and stiffness (~1e5 N*m^2)
+        # Thick-wall large pipes (15" OD, 3" WT) can exceed 500 kg/m
         if 6 <= od <= 24 and 7000 <= rho <= 8500:  # Common pipe sizes and steel density
-            assert 10 < mass_per_length < 500, "Mass per length in reasonable range (kg/m)"
-            assert 1e6 < EI < 1e12, "Flexural stiffness in reasonable range (N⋅m²)"
+            assert 1 < mass_per_length < 1000, "Mass per length in reasonable range (kg/m)"
+            assert 1e5 < EI < 1e12, "Flexural stiffness in reasonable range (N*m^2)"
 
 
 if __name__ == "__main__":
