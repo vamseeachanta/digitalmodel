@@ -1,0 +1,197 @@
+default:
+  Analysis:
+    GML:
+      Circumference: True
+      Length: False
+    LML: False
+    B31G: False
+  Units: inch
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+Outer_Pipe:
+  Geometry:
+    Nominal_ID: NULL
+    Nominal_OD: 8.625
+    Design_WT : 1.05
+    Corrosion_Allowance: 0.0
+  Material:
+    Material: Steel
+    Material_Grade: API 5L X70
+    WeldFactor:
+       Seamless: 1.0
+    Insulation: NULL
+    Buoyancy: NULL
+  Code:
+     - API RP 1111-2009 Risers
+  Manufacturing:
+    Coupling Mass Ratio: 0.0
+Inner_Pipe: NULL
+
+Design:
+  -
+    Load Condition: {Outer_Pipe: internal_pressure}
+    InternalPressure: {Outer_Pipe: 9300}
+    InternalFluid: {Outer_Pipe: 0.03703047}
+    ExternalPressure: {Outer_Pipe: 0}
+    ExternalFluid: {Outer_Pipe: 0.03703047}
+    Temperature:
+      Ambient: {Outer_Pipe: 50}
+      Operating: {Outer_Pipe: 82}
+      Maximum: NULL
+    BendingMoment: 0
+    AxialForce: 0
+    Torsion: 0
+    Condition: Restrained
+    Code:
+       - {Outer_Pipe: API RP 1111-2009 Risers}
+
+
+Material:
+   Steel:
+     E: 29000000.00
+     Rho: 0.2817929
+     Poissionsratio: 0.30
+     ThermalExpansionCoefficient: 6.5E-6
+     Grades:
+        ASTM A106 Grade C:
+           SMYS: 40000
+           SMUS: 70000
+           Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
+        API 5L X70:
+           SMYS: 70300
+           SMUS: 82700
+           Reference:
+
+DesignFactors:
+   API RP 1111-2009 Risers:
+      internal_pressure :
+        Fd: 0.60
+      collapse_propagation :
+        Fp: 0.80
+      D_over_T_Trasition_Ratio: 15
+   API RP 1111-2009 Pipelines:
+      internal_pressure :
+        Fd: 0.72
+      collapse_propagation :
+        Fp: 0.80
+      D_over_T_Trasition_Ratio: 30
+   ASME B31.4-2016 Chapter IX Platform Piping:
+      internal_pressure : 0.60
+      Longitudinal : 0.80
+      EquivalentStress : 0.90
+      D_over_T_Trasition_Ratio: 30
+   ASME B31.8-2016 Chapter VIII Platform Piping:
+      internal_pressure : 0.50
+      Longitudinal : 0.80
+      EquivalentStress : 0.90
+      D_over_T_Trasition_Ratio: 30
+
+
+
+ReadingSets:
+  -
+    io: tests\data\Lucius PR-02_rev1.xlsx
+    sheet_name: C-scans - p1.1
+    index_col: 0
+    skiprows: 71
+    skipfooter: 43
+    DataCorrectionFactor: 1.00
+    DataFill: True
+    Label: Measured WT @ 4 circum. locations
+    Contour:
+      xlim: NULL
+      ylim: NULL
+      zlim: [1.028, 1.052]
+    FCARate: Historical
+    FCA:
+      - 0.00
+      - 0.04
+      - 0.08
+      - 0.12
+      - 0.16
+      - 0.20
+      - 0.24
+      - 0.28
+      - 0.32
+      - 0.36
+      - 0.40
+
+
+API579Parameters:
+  Age: 15
+  FCARateFloor: 0.00118
+
+Geometry:
+   NominalID: NULL
+   NominalOD: 8.625
+   DesignWT : 1.05
+   StartWTFactor : 1
+   tmin: 0.869
+   AssessmentLengthCeilingFactor_Circumference: NULL
+   AssessmentLengthCeilingFactor_Length: 1.0
+   CorrosionAllowance: 0.0
+
+
+
+LML:
+  LTA:
+    -
+      io: dataManager\API579\CT - Sample WT Profile (Simulated3).xlsx
+      sheet_name: Sheet1
+      index_col: 0
+      skiprows: 0
+      skipfooter: 0
+      DataCorrectionFactor: 1.00
+      Label: Measured WT @ 4 cricumferential locations
+      sIndex:
+        - 8
+        - 18
+      cIndex:
+        - 10
+        - 13
+      s: NULL
+      c: NULL
+      Contour:
+        xlim: NULL
+        ylim: NULL
+        zlim: [1.172, 1.280]
+      FCA:
+        - 0.00
+        - 0.04
+        - 0.08
+        - 0.12
+        - 0.16
+        - 0.20
+        - 0.24
+        - 0.28
+        - 0.32
+        - 0.36
+        - 0.40
+        - 0.44
+      Lmsd: 15
+      MtType: Cylindrical
+      FCAs: NULL
+      FCAc: NULL
+      FCANonFlawRatio: 0.25
+
+PlotSettings:
+  Data:
+    PltSupTitle: Lucius, PR-02
+    PltTitle: Measured WT
+    PltXLabel: Circumference (inch)
+    PltYLabel: Length (inch)
+  LML:
+    PltSupTitle: Lucius, PR-02
+    PltTitle: Local Metal Loss, Levels 1 & 2
+    PltXLabel: Future Corrosion Allowance (inch)
+    PltYLabel: Maximum Allowable Working Pressure (psi)
+    ylim: [5000, 12000]
+  GML:
+    PltSupTitle: Lucius, PR-02
+    PltTitle: General Metal Loss, Level 2
+    PltXLabel: Future Corrosion Allowance (inch)
+    PltYLabel: Maximum Allowable Working Pressure (psi)
+    ylim: [5000, 12000]

@@ -1,0 +1,7 @@
+name: PlateBuckling
+channels:
+  - defaults
+dependencies:
+
+  - pip:
+    - munch

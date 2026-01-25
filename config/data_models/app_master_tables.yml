@@ -1,0 +1,79 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+    run_example: False
+
+
+db_tables:
+  drop_first:
+    - ApplicationRuns
+    - Project
+
+  sets:
+#    -
+#      io: data_manager\data\mssql\definitions\tables\Location.sql
+#      table: Location
+#      if_exists: 'drop'
+#    -
+#      io: data_manager\data\mssql\definitions\tables\ReferenceCode.sql
+#      table: ReferenceCode
+#      if_exists: 'drop'
+    -
+      io: data_manager\data\mssql\definitions\tables\Application.sql
+      table: Application
+      if_exists: 'drop'
+#    -
+#      io: data_manager\data\mssql\definitions\tables\Client.sql
+#      table: Client
+#      if_exists: 'drop'
+#
+#    -
+#      io: data_manager\data\mssql\definitions\tables\Project.sql
+#      table: Project
+#      if_exists: 'drop'
+#    -
+#      io: data_manager\data\mssql\definitions\tables\ApplicationRuns.sql
+#      table: ApplicationRuns
+#      if_exists: 'drop'
+#
+
+input_data:
+  source: csv
+  sets:
+    -
+      io: data_manager\data\mssql\definitions\data\Application.csv
+      header: 'infer'
+      output:
+        target: db
+        if_exists: append
+    -
+      io: data_manager\data\mssql\definitions\data\ReferenceCode.csv
+      header: 'infer'
+      output:
+        target: db
+        if_exists: append
+    -
+      io: data_manager\data\mssql\definitions\data\Client.csv
+      header: 'infer'
+      output:
+        target: db
+        if_exists: append
+
+    -
+      io: data_manager\data\mssql\definitions\data\Project.csv
+      header: 'infer'
+      output:
+        target: db
+        if_exists: append
+
+db:
+  server_type: mssql
+  server: localhost\SQLEXPRESS
+  user: NULL
+  password: NULL
+  database: master

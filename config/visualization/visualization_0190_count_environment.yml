@@ -1,0 +1,86 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+        pd_parse_dates_columns: [StartTime, EndTime]
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: ws_aft_upgrade
+        schema: XOM
+        query:
+          filename: get_records_count_for_table.sql
+          arguments: [BD_ENVIRONMENT, WINDSPEED, 2]
+      -
+        label: ws_bef_upgrade
+        schema: XOM
+        query:
+          filename: get_records_count_for_table.sql
+          arguments: [BD18_ENVIRONMENT, WINDSPEED, 2]
+
+plot_settings: []
+
+plot_multiple:
+  -
+    file_name_extension: Wind
+    nrows: 1
+    ncols: 1
+    suptitle: Yellowtail Well, Noble Bob Douglas
+    sets:
+    -
+      title: Wind Speed
+      xlabel: Date
+      ylabel: Count (#)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_ws_aft_upgrade
+          label: [after upgrade]
+          x: [StartTime]
+          y: [TableRows]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_ws_bef_upgrade
+          label: [before Upgrade]
+          x: [StartTime]
+          y: [TableRows]
+          plt_kind: scatter
+          marker: NULL

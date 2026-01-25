@@ -1,0 +1,80 @@
+default:
+  settings:
+    service_life:
+      values: [2, 5]
+      solution_step: 0.1
+    factor_of_safety: 3
+    yield_discontinuity: False
+    scf_bending: 1.1
+    a_array:
+      start: 0.5
+      end: 15
+      step: 0.1
+    c_array: [1, 5, 10, 15, 20, 25, 30, 35, 40, 50, 60, 80, 100, 120, 150, 180, 200]
+    location_array: [internal_surface, external_surface]
+    orientation_array: [circumferential]
+    theta_array: [90]
+
+loading:
+  primary_membrane_stress:
+    value: 64000
+    membrane_factor: 0.5
+    bending_factor: 0.5
+
+  secondary_membrane_stress:
+    stress_to_yield:
+      axial: 0.3
+      circumferential: 0.2
+    membrane_factor: 1
+    bending_factor: 0
+  histograms:
+    from_xlsx:
+      -
+        label: combined_histograms
+        io: data_manager\data\risers\histograms\2500ft_WT0750_064pcf_combined_histograms.xlsx
+        sheet_name: combined_fatigue
+        component_index: [10, 11]
+#        component_index: [10]
+        component_label: [Buoyancy Jt. at Bottom, Slick jt. at bottom]
+        bending_factor: 1.0
+        index_col: NULL
+        skiprows: 0
+        skipfooter: 0
+        columns: NULL
+        replace: NULL
+        column_to_analyze: NULL
+
+Outer_Pipe:
+  Geometry:
+    Nominal_OD: 21
+    Nominal_ID: NULL
+    Design_WT : 1.00
+    Corrosion_Allowance: 0.0
+  Material:
+    Material: Steel
+    Material_Grade: API 5L X80
+    WeldFactor:
+       Seamless: 1.0
+    Insulation: NULL
+    Buoyancy: NULL
+  Manufacturing:
+    Coupling Mass Ratio: 0.1
+
+Inner_Pipe: NULL
+
+
+Material:
+   Steel:
+     E: 30000000.00
+     Rho: 0.2817929
+     Poissionsratio: 0.30
+     ThermalExpansionCoefficient: 6.5E-6
+     Grades:
+        API 5L X80:
+           SMYS: 80000
+           SMUS: 95000
+           Reference: Assumed
+     cov:
+      E: 0.05
+      SMYS: 0.07
+      SMUS: 0.05
