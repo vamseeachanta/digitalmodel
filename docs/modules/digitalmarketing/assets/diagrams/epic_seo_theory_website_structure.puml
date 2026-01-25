@@ -1,0 +1,25 @@
+@startuml epic_seo_theory_content
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title SEO Theory \n Content
+
+@startwbs
+<style>
+wbsDiagram {
+  .greenyellow {
+      BackgroundColor GreenYellow
+  }
+}
+</style>
+* Functional Website <<greenyellow>>
+
+
+@endwbs
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer

@@ -178,6 +178,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.modules.artificial_lift.dynacard.solver import DynacardWorkflow
         al = DynacardWorkflow()
         cfg_base = al.router(cfg_base)
+    elif basename == "digitalmarketing":
+        from digitalmodel.modules.digitalmarketing.digitalmarketing import DigitalMarketing
+        dm = DigitalMarketing()
+        cfg_base = dm.router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
