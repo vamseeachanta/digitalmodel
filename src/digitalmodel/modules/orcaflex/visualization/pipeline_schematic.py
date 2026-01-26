@@ -292,18 +292,37 @@ class PipelineSchematicGenerator:
                 else:
                     continue
 
-                # Determine BC type
-                if "buoy" in name.lower() and connection != "Fixed":
-                    bc_type = BoundaryConditionType.FREE_6DOF
+                # Determine BC type based on name, connection, and properties
+                name_lower = name.lower()
+                volume = buoy.get("Volume", 0)
+                buoy_type = buoy.get("BuoyType", "").lower()
+
+                # Buoyancy modules: connected to pipeline with volume > 0
+                if (connection.lower() == "pipeline" or "pipeline" in connection.lower()) and volume > 0:
+                    bcs.append(
+                        BoundaryCondition(
+                            name=f"Buoyancy - {name}",
+                            bc_type=BoundaryConditionType.DISTRIBUTED_BUOYANCY,
+                            position=pos,
+                            properties={
+                                "connection": connection,
+                                "volume": volume,
+                                "connection_z": buoy.get("ConnectionzRelativeTo", ""),
+                            },
+                        )
+                    )
+                # 6D Buoy vessel connection (free floating)
+                elif "buoy" in name_lower and connection != "Fixed":
                     bcs.append(
                         BoundaryCondition(
                             name=f"End B - {name}",
-                            bc_type=bc_type,
+                            bc_type=BoundaryConditionType.FREE_6DOF,
                             position=pos,
                             properties={"connection": connection},
                         )
                     )
-                elif "roller" in name.lower():
+                # Roller supports
+                elif "roller" in name_lower:
                     bcs.append(
                         BoundaryCondition(
                             name=name,
@@ -312,7 +331,8 @@ class PipelineSchematicGenerator:
                             properties={"connection": connection},
                         )
                     )
-                elif "tug" in name.lower():
+                # Tug supports
+                elif "tug" in name_lower:
                     bcs.append(
                         BoundaryCondition(
                             name=name,
