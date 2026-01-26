@@ -79,17 +79,10 @@ class ConfigMinimizer(BaseMinimizer):
         """
         if preserve:
             return None
-        
+
         try:
-            # Check file size
-            file_size = file_path.stat().st_size
-            
-            # If already small enough, return as-is
-            if file_size <= self.max_size:
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    return f.read()
-            
             # Determine file type and use appropriate minimizer
+            # Always apply config-specific minimization for truncation and redaction
             ext = file_path.suffix.lower()
             filename = file_path.name.lower()
             

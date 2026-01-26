@@ -7,6 +7,7 @@ Validates data extraction, transformation, and output generation.
 """
 
 import pytest
+import numpy as np
 import pandas as pd
 from pathlib import Path
 
@@ -319,7 +320,11 @@ class TestAqwaLISFilesEdgeCases:
 
     def test_csv_save_disabled(self, parser, tmp_path):
         """Test CSV saving when disabled"""
-        df = pd.DataFrame({'freq': [0.1]})
+        # Use Index to avoid pyarrow string conversion issues
+        df = pd.DataFrame(
+            data=np.array([[0.1]]),
+            columns=pd.Index(["freq"], dtype=object)
+        )
 
         result_item = {
             "save_csv": False,
@@ -334,10 +339,8 @@ class TestAqwaLISFilesEdgeCases:
 
         csv_file = parser.save_to_csv(df, result_item, cfg, "test")
 
-        # Should return None or empty when save_csv is False
-        # (based on implementation, it may still return filename)
-        # Just verify no exception is raised
-        assert True
+        # Should return None when save_csv is False
+        assert csv_file is None
 
 
 if __name__ == "__main__":

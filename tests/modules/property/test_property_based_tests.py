@@ -80,15 +80,17 @@ class TestMathematicalProperties:
         # Property: exp(log(x)) = x
         assert abs(exp_log_x - x) < 1e-10
 
-    @given(st.lists(st.floats(min_value=-1000, max_value=1000, allow_nan=False), min_size=1))
+    @given(st.lists(st.floats(min_value=-1000, max_value=1000, allow_nan=False, allow_infinity=False), min_size=1))
     def test_statistics_properties(self, numbers: List[float]):
         """Test properties of statistical calculations."""
         total = sum(numbers)
         count = len(numbers)
         average = total / count
 
-        # Property: Average is between min and max
-        assert min(numbers) <= average <= max(numbers)
+        # Property: Average is between min and max (allow floating-point tolerance)
+        min_val = min(numbers)
+        max_val = max(numbers)
+        assert min_val - 1e-10 <= average <= max_val + 1e-10
 
         # Property: Sum of deviations from mean is close to zero
         deviations = [x - average for x in numbers]
@@ -139,18 +141,22 @@ class TestStringProperties:
         if " " not in text:
             assert replaced == text
 
-        # Property: All spaces are replaced
-        assert " " not in replaced
+        # Property: All original spaces are replaced (check by counting)
+        # The number of occurrences of replacement should account for replaced spaces
+        space_count = text.count(" ")
+        if " " not in replacement:
+            # If replacement contains no space, no spaces should remain from original
+            assert replaced.count(" ") == 0 or " " not in text
 
 
 @pytest.mark.property
 class TestFileProcessingProperties:
     """Property-based tests for file processing operations."""
 
-    @given(st.lists(st.text(min_size=1), min_size=1))
+    @given(st.lists(st.text(min_size=1, alphabet=st.characters(blacklist_characters="\n")), min_size=1))
     def test_file_line_processing_properties(self, lines: List[str]):
         """Test properties of line-by-line file processing."""
-        # Simulate file content
+        # Simulate file content (lines should not contain newlines for this property to hold)
         content = "\n".join(lines)
         processed_lines = content.split("\n")
 

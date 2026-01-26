@@ -13,6 +13,12 @@ from pathlib import Path
 import hashlib
 
 
+@pytest.fixture
+def temp_directory(tmp_path):
+    """Provide a temporary directory for tests."""
+    return tmp_path
+
+
 @pytest.mark.security
 class TestInputValidation:
     """Security tests for input validation."""
@@ -22,6 +28,14 @@ class TestInputValidation:
 
         def safe_file_access(base_dir, filename):
             """Safely access files within base directory."""
+            import urllib.parse
+
+            # Decode URL-encoded paths (e.g., %2e%2e%2f -> ../)
+            filename = urllib.parse.unquote(filename)
+
+            # Normalize Windows-style backslashes to forward slashes for cross-platform security
+            filename = filename.replace('\\', '/')
+
             # Normalize and resolve paths
             base_path = Path(base_dir).resolve()
             file_path = (base_path / filename).resolve()
@@ -153,8 +167,9 @@ class TestInputValidation:
         large_file = temp_directory / "large.txt"
         large_file.write_bytes(b"x" * (2 * 1024 * 1024))  # 2MB file
 
-        executable_file = temp_directory / "malicious.exe"
-        executable_file.write_bytes(b"MZ\x90\x00")  # PE header
+        # Executable content disguised with allowed extension
+        executable_file = temp_directory / "malicious.txt"
+        executable_file.write_bytes(b"MZ\x90\x00")  # PE header in a .txt file
 
         # Test valid file
         assert validate_file_upload(safe_file) is True
@@ -169,7 +184,7 @@ class TestInputValidation:
         with pytest.raises(ValueError, match="File too large"):
             validate_file_upload(large_file)
 
-        # Test executable file
+        # Test executable content detection (bypassing extension check)
         with pytest.raises(ValueError, match="Executable files not allowed"):
             validate_file_upload(executable_file)
 
@@ -181,12 +196,12 @@ class TestDataProtection:
     def test_sensitive_data_masking(self):
         """Test masking of sensitive data in logs and outputs."""
 
-        def mask_sensitive_data(data):
+        def mask_sensitive_data(data, key=None):
             """Mask sensitive information in data."""
             import re
 
             if isinstance(data, dict):
-                return {k: mask_sensitive_data(v) for k, v in data.items()}
+                return {k: mask_sensitive_data(v, key=k) for k, v in data.items()}
             elif isinstance(data, list):
                 return [mask_sensitive_data(item) for item in data]
             elif isinstance(data, str):
@@ -198,10 +213,13 @@ class TestDataProtection:
                 # Mask email
                 data = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
                              'email@masked.com', data)
-                # Mask passwords
+                # Mask passwords in config strings like: password="value" or password: value
                 if 'password' in data.lower():
-                    data = re.sub(r'(password["\']?\s*[:=]\s*["\']?)([^"\'\\s]+)',
+                    data = re.sub(r'(password["\']?\s*[:=]\s*["\']?)([^"\'\s]+)',
                                  r'\1********', data, flags=re.IGNORECASE)
+                # Mask values where the dict key indicates it's a password field
+                if key and 'password' in str(key).lower():
+                    data = '********'
                 return data
             else:
                 return data
@@ -280,9 +298,23 @@ class TestDataProtection:
             return secrets.token_urlsafe(length)
 
         def generate_secure_password(length=16):
-            """Generate secure password."""
+            """Generate secure password with guaranteed character types."""
+            # Ensure at least one of each required type
+            password_chars = [
+                secrets.choice(string.ascii_lowercase),
+                secrets.choice(string.ascii_uppercase),
+                secrets.choice(string.digits),
+                secrets.choice("!@#$%^&*")
+            ]
+            # Fill the rest randomly
             alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
-            return ''.join(secrets.choice(alphabet) for _ in range(length))
+            password_chars.extend(
+                secrets.choice(alphabet) for _ in range(length - 4)
+            )
+            # Shuffle to avoid predictable positions
+            import random
+            random.shuffle(password_chars)
+            return ''.join(password_chars)
 
         # Test token generation
         token1 = generate_secure_token()
@@ -439,7 +471,7 @@ class TestSecureCommunication:
             'subject': 'CN=example.com',
             'issuer': 'CN=Valid CA',
             'not_before': '2023-01-01T00:00:00',
-            'not_after': '2025-12-31T23:59:59',
+            'not_after': '2030-12-31T23:59:59',
             'signature': 'valid_signature'
         }
 

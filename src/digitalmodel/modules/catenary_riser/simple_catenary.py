@@ -185,7 +185,7 @@ class SimpleCatenaryAnalyzer:
         T_top² = H² + (w*s)²
         where s = (H/w) * sinh(z*w/H)
 
-        Solve iteratively using Newton-Raphson.
+        Uses bisection method for robustness.
 
         Args:
             T_top: Top tension (N)
@@ -197,33 +197,84 @@ class SimpleCatenaryAnalyzer:
         Returns:
             Horizontal tension H (N)
         """
-        # Initial guess: H ≈ T_top (assumes small vertical component)
-        H = T_top * 0.8
-
-        for i in range(max_iter):
+        def calc_top_tension(H: float) -> float:
+            """Calculate top tension for given H"""
             a = H / w
-            s = a * np.sinh(z / a)
+            ratio = z / a
 
-            # Residual
-            T_calc = np.sqrt(H**2 + (w * s)**2)
-            residual = T_calc - T_top
+            # Protect against overflow - sinh overflows around ratio > 710
+            # Use approximation for large ratios
+            if ratio > 10:
+                # For large ratio: sinh(x) ≈ exp(x)/2
+                # s = a * sinh(ratio) ≈ a * exp(ratio) / 2
+                # But exp(ratio) overflows for ratio > ~700
+                # Instead, compute log of s and T
+                log_s = ratio + np.log(a / 2)
+                log_ws = np.log(w) + log_s
+                # T = sqrt(H² + (ws)²)
+                # For large ws >> H: T ≈ ws
+                return w * np.exp(log_s)
+            else:
+                s = a * np.sinh(ratio)
+                return np.sqrt(H**2 + (w * s)**2)
 
-            if abs(residual) < tol:
-                logger.debug(f"Converged in {i+1} iterations: H = {H:.2f} N")
-                return H
+        # For a catenary, T_top has a MINIMUM at some optimal H
+        # - At very low H: T is very large (long arc, deep sag)
+        # - At optimal H: T is at minimum
+        # - At very high H: T increases again (nearly straight riser)
+        #
+        # We want the high-H solution (more practical, nearly straight riser)
 
-            # Derivative
-            ds_dH = np.sinh(z / a) / w - (z / a) * np.cosh(z / a) / w
-            dT_dH = (H + w**2 * s * ds_dH) / T_calc
+        # Find the optimal H that gives minimum T (using scipy if available, else estimate)
+        # For now, estimate optimal H ≈ 0.83 * w * z (empirical)
+        H_optimal = 0.83 * w * z
+        T_min = calc_top_tension(H_optimal)
 
-            # Update
-            H = H - residual / dT_dH
+        if T_top < T_min * 0.99:
+            logger.warning(
+                f"Requested top tension {T_top:.0f} N is less than minimum "
+                f"achievable {T_min:.0f} N for {z:.0f}m depth."
+            )
+            return H_optimal  # Return H at minimum as best approximation
 
-            # Keep H positive
-            H = max(H, 100.0)
+        # Search for H on the high-H side (H > H_optimal)
+        # In this region, T increases as H increases
 
-        logger.warning(f"Did not converge in {max_iter} iterations")
-        return H
+        # Upper bound: H < T_top (horizontal can't exceed total)
+        H_max = T_top * 0.999
+
+        # Lower bound: start just above optimal point
+        H_min = H_optimal * 1.05
+
+        # Verify bounds
+        T_at_min = calc_top_tension(H_min)
+        T_at_max = calc_top_tension(H_max)
+
+        # Adjust bounds if needed
+        while T_at_min > T_top and H_min > H_optimal:
+            H_min = (H_min + H_optimal) / 2
+            T_at_min = calc_top_tension(H_min)
+
+        if T_at_max < T_top:
+            logger.warning(f"Cannot achieve T_top={T_top:.0f}N with H < {H_max:.0f}N")
+            return H_max
+
+        # Bisection: on high-H side, T increases with H
+        for i in range(max_iter):
+            H_mid = (H_min + H_max) / 2
+            T_mid = calc_top_tension(H_mid)
+
+            if abs(T_mid - T_top) < tol * T_top:
+                logger.debug(f"Bisection converged in {i+1} iterations: H = {H_mid:.2f} N")
+                return H_mid
+
+            if T_mid < T_top:
+                H_min = H_mid  # T too low, need larger H
+            else:
+                H_max = H_mid  # T too high, need smaller H
+
+        # Return best estimate
+        return (H_min + H_max) / 2
 
     def _solve_H_from_geometry(
         self,

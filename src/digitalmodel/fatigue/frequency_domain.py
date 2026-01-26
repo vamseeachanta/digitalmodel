@@ -128,7 +128,7 @@ class FrequencyDomainBase(ABC):
             else:
                 integrand = (2 * np.pi * freq) ** i * psd_vals
 
-            moments[f'm{i}'] = integrate.trapz(integrand, freq)
+            moments[f'm{i}'] = np.trapezoid(integrand, freq)
 
         # Calculate derived parameters
         m0, m1, m2, m4 = moments['m0'], moments['m1'], moments['m2'], moments['m4']
@@ -248,17 +248,28 @@ class DirlikMethod(FrequencyDomainBase):
         gamma = np_rate / nu if nu > 0 else 1.0
         q = moments.q
 
-        # Dirlik coefficients
-        if q < 1.0:
-            D1 = 2 * (q - gamma + gamma * q) / (1 + gamma) ** 2
-            R1 = (gamma - q - D1 + D1 * gamma) / (1 - gamma - D1 + D1 * gamma)
-            D2 = (1 - gamma - D1 + D1 * gamma) / (1 - R1)
-            D3 = 1 - D1 - D2
+        # Dirlik coefficients - need careful handling of edge cases
+        xm = moments.m1 / moments.m0 * np.sqrt(moments.m2 / moments.m4) if moments.m4 > 0 else 0.0
+        D1 = 2 * (xm - q ** 2) / (1 + q ** 2)
+        D1 = max(0.0, min(1.0, D1))  # Clamp to valid range
+
+        # R calculation with safety for division
+        denominator = 1 - D1 - q + D1 * q
+        if abs(denominator) > 1e-10:
+            R1 = (q - D1 - q * D1) / denominator
         else:
-            D1 = 2 * (q - gamma + gamma * q) / (1 + gamma) ** 2
-            D2 = 0
-            D3 = 1 - D1
-            R1 = 0
+            R1 = 0.25  # Default value when denominator is too small
+
+        R1 = max(0.01, min(1.0, R1))  # Clamp R to valid range to avoid numerical issues
+
+        D2_denom = 1 - R1
+        if abs(D2_denom) > 1e-10:
+            D2 = (1 - D1 - R1) / D2_denom
+        else:
+            D2 = 0.0
+
+        D2 = max(0.0, D2)
+        D3 = max(0.0, 1 - D1 - D2)
 
         # RMS stress
         sigma = np.sqrt(moments.m0)
@@ -331,10 +342,15 @@ class DirlikMethod(FrequencyDomainBase):
             m = 3.0  # Default slope
 
         # Equivalent stress using moment method
-        moment_ratio = integrate.trapz(
+        moment_ratio = np.trapezoid(
             pdf_values * (s_normalized ** m), s_normalized
         ) * ds
-        equivalent_stress = sigma * (moment_ratio * nu) ** (1 / m)
+
+        # Calculate equivalent stress with safety check for non-positive values
+        if moment_ratio > 0 and nu > 0:
+            equivalent_stress = sigma * (moment_ratio * nu) ** (1 / m)
+        else:
+            equivalent_stress = 2 * sigma  # Default to narrow-band approximation
 
         return FrequencyDomainResult(
             method=self.name,

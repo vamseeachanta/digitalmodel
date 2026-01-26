@@ -55,11 +55,17 @@ class TextMinimizer(BaseMinimizer):
         """
         if preserve:
             return None
-        
+
         try:
             # Check file size
             file_size = file_path.stat().st_size
-            
+
+            # Use specialized handlers for certain file types
+            if file_path.suffix.lower() == '.csv':
+                return self.minimize_csv(file_path)
+            if file_path.suffix.lower() == '.log':
+                return self.minimize_log(file_path)
+
             # If already small enough, return as-is
             if file_size <= self.max_size:
                 with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
@@ -67,52 +73,65 @@ class TextMinimizer(BaseMinimizer):
             
             # For larger files, keep first and last lines
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                lines = []
+                first_lines = []
+                last_lines = []
                 line_count = 0
-                
-                # Read all lines (memory efficient for reasonable files)
+
+                # Read all lines, keeping track of first N and last N
                 for line in f:
-                    lines.append(line)
                     line_count += 1
-                    
-                    # For very large files, limit memory usage
-                    if len(lines) > self.lines_to_keep * 3:
-                        # Keep first N lines
-                        if len(lines) > self.lines_to_keep * 2:
-                            # Start removing middle lines
-                            lines = lines[:self.lines_to_keep] + lines[-self.lines_to_keep:]
-                            break
+
+                    # Keep first N lines
+                    if len(first_lines) < self.lines_to_keep:
+                        first_lines.append(line)
+                    else:
+                        # Circular buffer for last N lines
+                        last_lines.append(line)
+                        if len(last_lines) > self.lines_to_keep:
+                            last_lines.pop(0)
+
+                # Combine for further processing
+                lines = first_lines + last_lines
             
             if line_count <= self.lines_to_keep * 2:
                 # File is small enough to keep entirely
                 return ''.join(lines)
             
-            # Create minimized version
-            minimized = []
-            
-            # Add header
-            minimized.append(f"# Minimized version of: {file_path.name}\n")
-            minimized.append(f"# Original size: {file_size} bytes, {line_count} lines\n")
-            minimized.append(f"# Showing first {self.lines_to_keep} and last {self.lines_to_keep} lines\n")
-            minimized.append("\n")
-            
-            # Add first lines
-            minimized.extend(lines[:self.lines_to_keep])
-            
-            # Add separator
-            minimized.append(f"\n... ({line_count - self.lines_to_keep * 2} lines omitted) ...\n\n")
-            
-            # Add last lines
-            if len(lines) > self.lines_to_keep:
-                minimized.extend(lines[-self.lines_to_keep:])
-            
-            result = ''.join(minimized)
-            
-            # Ensure we don't exceed max size
-            if len(result.encode('utf-8')) > self.max_size:
-                # Truncate to fit
-                result = result[:self.max_size - 100] + "\n... (truncated to fit size limit) ..."
-            
+            # Create minimized version - keep first and last lines with omitted marker
+            first_lines = lines[:self.lines_to_keep]
+            last_lines = lines[-self.lines_to_keep:] if len(lines) > self.lines_to_keep else []
+            omitted_count = line_count - len(first_lines) - len(last_lines)
+
+            # Build result with essential content first
+            result_parts = []
+            result_parts.extend(first_lines)
+            if omitted_count > 0:
+                result_parts.append(f"\n[... omitted ... ({omitted_count} lines)]\n\n")
+            result_parts.extend(last_lines)
+
+            result = ''.join(result_parts)
+
+            # Only add header if we have space
+            header = (
+                f"# Minimized version of: {file_path.name}\n"
+                f"# Original size: {file_size} bytes, {line_count} lines\n\n"
+            )
+
+            if len((header + result).encode('utf-8')) <= self.max_size:
+                result = header + result
+            elif len(result.encode('utf-8')) > self.max_size:
+                # Still too big - reduce lines kept
+                reduced_keep = max(2, self.lines_to_keep // 2)
+                first_lines = lines[:reduced_keep]
+                last_lines = lines[-reduced_keep:] if len(lines) > reduced_keep else []
+                omitted_count = line_count - len(first_lines) - len(last_lines)
+                result_parts = []
+                result_parts.extend(first_lines)
+                if omitted_count > 0:
+                    result_parts.append(f"\n... ({omitted_count} lines omitted) ...\n\n")
+                result_parts.extend(last_lines)
+                result = ''.join(result_parts)
+
             return result
             
         except Exception as e:

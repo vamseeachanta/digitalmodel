@@ -22,25 +22,30 @@ class FileScanner:
         self,
         source_path: Path,
         exclude_patterns: Optional[List[str]] = None,
-        include_patterns: Optional[List[str]] = None
+        include_patterns: Optional[List[str]] = None,
+        follow_symlinks: bool = False
     ):
         """
         Initialize file scanner.
-        
+
         Args:
             source_path: Path to source folder
             exclude_patterns: Glob patterns to exclude
             include_patterns: Glob patterns to include (if specified, only these are included)
+            follow_symlinks: Whether to follow symbolic links
         """
         self.source_path = Path(source_path)
+        self.root_path = self.source_path  # Alias for tests
         self.exclude_patterns = exclude_patterns or []
         self.include_patterns = include_patterns or []
-        
+        self.follow_symlinks = follow_symlinks
+
         # Registries
         self.file_registry = {}
         self.symlink_registry = {}
+        self.symlinks = self.symlink_registry  # Alias for tests
         self.directory_structure = set()
-        
+
         # Statistics
         self.total_files = 0
         self.total_size = 0
@@ -84,27 +89,41 @@ class FileScanner:
             for filename in files:
                 filepath = Path(root) / filename
                 relative_path = filepath.relative_to(self.source_path)
-                
+
                 # Check if file should be processed
                 if not self.should_process(relative_path):
                     logger.debug(f"Skipping excluded file: {relative_path}")
                     continue
-                
-                # Check for symlinks
-                if filepath.is_symlink():
-                    self.register_symlink(filepath, 'file')
+
+                # Check for symlinks - wrapped in try/except for permission errors
+                try:
+                    if filepath.is_symlink():
+                        self.register_symlink(filepath, 'file')
+                        continue
+                except (PermissionError, OSError) as e:
+                    logger.warning(f"Permission error checking symlink {filepath}: {e}")
+                    self.scan_errors.append({
+                        'path': str(filepath),
+                        'error': str(e)
+                    })
                     continue
-                
+
                 try:
                     file_info = self.analyze_file(filepath)
                     self.register_file(file_info)
-                    
+
                     file_count += 1
                     if progress_callback and file_count % 100 == 0:
                         progress_callback(file_count, str(relative_path))
-                    
+
                     yield file_info
-                    
+
+                except (PermissionError, OSError) as e:
+                    logger.warning(f"Permission error scanning {filepath}: {e}")
+                    self.scan_errors.append({
+                        'path': str(filepath),
+                        'error': str(e)
+                    })
                 except Exception as e:
                     logger.warning(f"Error scanning {filepath}: {e}")
                     self.scan_errors.append({
@@ -147,18 +166,19 @@ class FileScanner:
     def analyze_file(self, filepath: Path) -> Dict:
         """
         Analyze single file and return metadata.
-        
+
         Args:
             filepath: Path to file
-            
+
         Returns:
             Dictionary with file metadata
         """
         stat = filepath.stat()
-        
+
         file_info = {
             'path': filepath,
             'relative_path': filepath.relative_to(self.source_path),
+            'name': filepath.name,  # Added for test compatibility
             'size': stat.st_size,
             'modified': datetime.fromtimestamp(stat.st_mtime),
             'created': datetime.fromtimestamp(stat.st_ctime),
@@ -168,17 +188,17 @@ class FileScanner:
             'is_binary': None,  # Will be determined if needed
             'hash': None  # Will be calculated if needed
         }
-        
+
         # Calculate hash for small files (< 1MB)
         if stat.st_size < 1_000_000:
             try:
                 file_info['hash'] = self.calculate_hash(filepath)
             except Exception as e:
                 logger.debug(f"Could not hash {filepath}: {e}")
-        
+
         # Detect if binary
         file_info['is_binary'] = self.is_binary_file(filepath)
-        
+
         return file_info
     
     def register_file(self, file_info: Dict) -> None:
@@ -231,22 +251,35 @@ class FileScanner:
     def calculate_hash(self, filepath: Path, algorithm='md5') -> str:
         """
         Calculate file hash.
-        
+
         Args:
             filepath: Path to file
             algorithm: Hash algorithm to use
-            
+
         Returns:
             Hex digest of file hash
         """
         hash_func = hashlib.new(algorithm)
-        
+
         with open(filepath, 'rb') as f:
             # Read in chunks to handle large files
             for chunk in iter(lambda: f.read(8192), b''):
                 hash_func.update(chunk)
-        
+
         return hash_func.hexdigest()
+
+    def calculate_file_hash(self, filepath: Path, algorithm='md5') -> str:
+        """
+        Calculate file hash (alias for calculate_hash).
+
+        Args:
+            filepath: Path to file
+            algorithm: Hash algorithm to use
+
+        Returns:
+            Hex digest of file hash
+        """
+        return self.calculate_hash(filepath, algorithm)
     
     def is_binary_file(self, filepath: Path) -> bool:
         """

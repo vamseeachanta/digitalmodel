@@ -135,14 +135,14 @@ class MetadataGenerator(BaseMetadataGenerator):
         return all_metadata
     
     def generate_all_metadata(
-        self, 
+        self,
         scan_results: Dict,
         patterns: Dict,
         preservation_stats: Dict
     ) -> None:
         """
         Generate all metadata files.
-        
+
         Args:
             scan_results: Results from file scanner
             patterns: Detected patterns
@@ -150,11 +150,17 @@ class MetadataGenerator(BaseMetadataGenerator):
         """
         # Generate GO_BY_METADATA.json
         self.create_go_by_metadata(scan_results, patterns, preservation_stats)
-        
+
         # Generate AGENT_OVERVIEW.md
         self.create_agent_overview(scan_results, patterns)
-        
-        # Generate additional metadata as needed
+
+        # Call all registered generators
+        for generator in self.generators:
+            try:
+                generator.generate_metadata(scan_results, patterns, preservation_stats)
+            except Exception as e:
+                logger.warning(f"Error in generator {generator.__class__.__name__}: {e}")
+
         logger.info("Generated all metadata files")
     
     def create_go_by_metadata(

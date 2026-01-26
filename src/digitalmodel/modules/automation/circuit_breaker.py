@@ -352,26 +352,35 @@ class CircuitBreaker:
         # Execute with timeout
         try:
             import signal
+            import threading
 
             def timeout_handler(signum, frame):
                 raise TimeoutError(f"Agent execution exceeded {self.config.timeout}s")
 
             # Set timeout (Unix only, Windows will skip)
-            try:
-                signal.signal(signal.SIGALRM, timeout_handler)
-                signal.alarm(self.config.timeout)
-            except AttributeError:
-                pass  # Windows doesn't have SIGALRM
+            # Also skip if not in main thread (signals only work in main thread)
+            can_use_signal = (
+                hasattr(signal, 'SIGALRM') and
+                threading.current_thread() is threading.main_thread()
+            )
+
+            if can_use_signal:
+                try:
+                    signal.signal(signal.SIGALRM, timeout_handler)
+                    signal.alarm(self.config.timeout)
+                except (AttributeError, ValueError):
+                    can_use_signal = False
 
             try:
                 result = agent_function(**args, **kwargs)
                 self._record_success()
                 return result
             finally:
-                try:
-                    signal.alarm(0)  # Cancel timeout
-                except AttributeError:
-                    pass
+                if can_use_signal:
+                    try:
+                        signal.alarm(0)  # Cancel timeout
+                    except (AttributeError, ValueError):
+                        pass
 
         except Exception as e:
             self._record_failure()

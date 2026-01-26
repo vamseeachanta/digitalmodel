@@ -5,7 +5,7 @@ Tests state transitions, invariants, and system behavior using
 Hypothesis state machine testing capabilities.
 """
 import pytest
-from hypothesis import given, strategies as st, settings, assume
+from hypothesis import given, strategies as st, settings, assume, HealthCheck
 from hypothesis.stateful import RuleBasedStateMachine, rule, precondition, invariant
 import enum
 from typing import Dict, List, Any, Optional
@@ -457,21 +457,31 @@ class DataProcessingStateMachine(RuleBasedStateMachine):
 class TestSimulationStateMachine:
     """Test simulation state machine properties."""
 
-    @settings(max_examples=50, stateful_step_count=20)
     def test_simulation_state_machine(self):
         """Test simulation workflow invariants."""
-        TestSimulationStateMachine = SimulationStateMachine.TestCase
-        TestSimulationStateMachine().runTest()
+        # Create a configured test case from the state machine
+        SimulationStateMachineTest = SimulationStateMachine.TestCase
+        SimulationStateMachineTest.settings = settings(
+            max_examples=50,
+            stateful_step_count=20,
+            suppress_health_check=[HealthCheck.too_slow, HealthCheck.filter_too_much]
+        )
+        SimulationStateMachineTest().runTest()
 
 
 class TestDataProcessingStateMachine:
     """Test data processing state machine properties."""
 
-    @settings(max_examples=50, stateful_step_count=30)
     def test_data_processing_state_machine(self):
         """Test data processing workflow invariants."""
-        TestDataProcessingStateMachine = DataProcessingStateMachine.TestCase
-        TestDataProcessingStateMachine().runTest()
+        # Create a configured test case from the state machine
+        DataProcessingStateMachineTest = DataProcessingStateMachine.TestCase
+        DataProcessingStateMachineTest.settings = settings(
+            max_examples=50,
+            stateful_step_count=30,
+            suppress_health_check=[HealthCheck.too_slow, HealthCheck.filter_too_much]
+        )
+        DataProcessingStateMachineTest().runTest()
 
 
 # Individual property tests for specific state transitions

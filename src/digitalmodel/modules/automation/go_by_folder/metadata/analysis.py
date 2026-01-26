@@ -204,7 +204,13 @@ class AnalysisMetadataGenerator(BaseMetadataGenerator):
         
         # Identify common patterns
         if 'naming_conventions' in patterns:
-            variations['common_patterns'] = list(patterns['naming_conventions'].keys())
+            naming_conv = patterns['naming_conventions']
+            if isinstance(naming_conv, dict):
+                variations['common_patterns'] = list(naming_conv.keys())
+            elif isinstance(naming_conv, list):
+                variations['common_patterns'] = naming_conv
+            else:
+                variations['common_patterns'] = []
         
         # Suggest templates
         variations['suggested_templates'] = self._suggest_templates(patterns)
@@ -225,7 +231,7 @@ class AnalysisMetadataGenerator(BaseMetadataGenerator):
             })
         
         # Suggest parameter template
-        if 'parameter_variations' in patterns:
+        if 'parameter_variations' in patterns and isinstance(patterns['parameter_variations'], dict):
             params = list(patterns['parameter_variations'].keys())[:3]
             if params:
                 param_str = '_'.join([f'{{{p}}}' for p in params])
@@ -425,8 +431,8 @@ class AnalysisMetadataGenerator(BaseMetadataGenerator):
             })
         
         # Template for parameter variations
-        if patterns.get('parameter_variations'):
-            params = patterns['parameter_variations']
+        params = patterns.get('parameter_variations', {})
+        if params and isinstance(params, dict):
             param_list = list(params.keys())[:3]  # Take first 3 parameters
             
             templates['templates'].append({

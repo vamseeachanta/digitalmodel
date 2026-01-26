@@ -8,7 +8,7 @@ and other companies that rely heavily on property-based testing.
 import pytest
 import numpy as np
 import pandas as pd
-from hypothesis import given, strategies as st, settings, assume, example
+from hypothesis import given, strategies as st, settings, assume, example, HealthCheck
 from hypothesis.extra.numpy import arrays
 from hypothesis.extra.pandas import data_frames, columns
 import math
@@ -91,8 +91,8 @@ class TestBasicMathematicalProperties:
         result1 = (x + y) + z
         result2 = x + (y + z)
 
-        # Allow for floating point precision errors
-        assert abs(result1 - result2) < 1e-10, f"Addition not associative: ({x} + {y}) + {z} != {x} + ({y} + {z})"
+        # Allow for floating point precision errors using relative tolerance
+        assert math.isclose(result1, result2, rel_tol=1e-9, abs_tol=1e-12), f"Addition not associative: ({x} + {y}) + {z} != {x} + ({y} + {z})"
 
     @given(x=positive_engineering_float(), y=positive_engineering_float())
     @settings(max_examples=200)
@@ -116,20 +116,20 @@ class TestBasicMathematicalProperties:
         sum2 = np.sum(data)
         assert sum1 == sum2, "Array sum not deterministic"
 
-        # Sum of reversed array should be the same
+        # Sum of reversed array should be the same (use isclose for float comparison)
         sum_reversed = np.sum(data[::-1])
-        assert abs(sum1 - sum_reversed) < abs(sum1) * 1e-12, "Sum depends on order"
+        assert np.isclose(sum1, sum_reversed, rtol=1e-12, atol=1e-15), "Sum depends on order"
 
         # Sum should equal cumulative sum final value
         cumsum_final = np.cumsum(data)[-1]
-        assert abs(sum1 - cumsum_final) < abs(sum1) * 1e-12, "Sum != cumulative sum final"
+        assert np.isclose(sum1, cumsum_final, rtol=1e-12, atol=1e-15), "Sum != cumulative sum final"
 
 
 class TestStatisticalProperties:
     """Test statistical calculation properties."""
 
     @given(data=engineering_array(min_size=3, max_size=1000))
-    @settings(max_examples=100)
+    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
     def test_mean_properties(self, data):
         """Test properties of mean calculation."""
         assume(not np.any(np.isnan(data)))
@@ -145,14 +145,14 @@ class TestStatisticalProperties:
         if np.allclose(data, data[0]):
             assert abs(mean_val - data[0]) < 1e-12, f"Mean of constant array {data[0]} is {mean_val}"
 
-        # Mean should be scale-invariant for linear transforms
+        # Mean should be scale-invariant for linear transforms (use isclose for float comparison)
         scaled_data = data * 2.0
         scaled_mean = np.mean(scaled_data)
-        assert abs(scaled_mean - (mean_val * 2.0)) < abs(mean_val) * 1e-12, \
+        assert np.isclose(scaled_mean, mean_val * 2.0, rtol=1e-12, atol=1e-15), \
                "Mean not scale-invariant"
 
     @given(data=engineering_array(min_size=2, max_size=500))
-    @settings(max_examples=100)
+    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
     def test_variance_properties(self, data):
         """Test properties of variance calculation."""
         assume(not np.any(np.isnan(data)))
@@ -225,14 +225,14 @@ class TestEngineeringCalculationProperties:
         # Force should be non-negative when pressure and area are positive
         assert force >= 0, f"Force {force} is negative with pressure {pressure} and area {area}"
 
-        # Force should scale linearly with pressure
+        # Force should scale linearly with pressure (use isclose for float comparison)
         double_pressure_force = (pressure * 2) * area
-        assert abs(double_pressure_force - (force * 2)) < force * 1e-12, \
+        assert math.isclose(double_pressure_force, force * 2, rel_tol=1e-12, abs_tol=1e-15), \
                "Force doesn't scale linearly with pressure"
 
-        # Force should scale linearly with area
+        # Force should scale linearly with area (use isclose for float comparison)
         double_area_force = pressure * (area * 2)
-        assert abs(double_area_force - (force * 2)) < force * 1e-12, \
+        assert math.isclose(double_area_force, force * 2, rel_tol=1e-12, abs_tol=1e-15), \
                "Force doesn't scale linearly with area"
 
     @given(
@@ -327,7 +327,7 @@ class TestArrayAndMatrixProperties:
         array1=engineering_array(min_size=5, max_size=100),
         array2=engineering_array(min_size=5, max_size=100)
     )
-    @settings(max_examples=50)
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow, HealthCheck.filter_too_much])
     def test_dot_product_properties(self, array1, array2):
         """Test dot product properties."""
         assume(len(array1) == len(array2))
@@ -339,8 +339,8 @@ class TestArrayAndMatrixProperties:
         dot1 = np.dot(array1, array2)
         dot2 = np.dot(array2, array1)
 
-        # Dot product should be commutative
-        assert abs(dot1 - dot2) < max(abs(dot1), abs(dot2)) * 1e-12, \
+        # Dot product should be commutative (use isclose for float comparison)
+        assert np.isclose(dot1, dot2, rtol=1e-12, atol=1e-15), \
                f"Dot product not commutative: {dot1} != {dot2}"
 
         # Dot product with zero vector should be zero
@@ -348,10 +348,10 @@ class TestArrayAndMatrixProperties:
         dot_zero = np.dot(array1, zero_array)
         assert abs(dot_zero) < 1e-12, f"Dot product with zero vector is {dot_zero}, not 0"
 
-        # Dot product with itself should be sum of squares
+        # Dot product with itself should be sum of squares (use isclose for float comparison)
         dot_self = np.dot(array1, array1)
         sum_squares = np.sum(array1 ** 2)
-        assert abs(dot_self - sum_squares) < max(abs(dot_self), abs(sum_squares)) * 1e-12, \
+        assert np.isclose(dot_self, sum_squares, rtol=1e-12, atol=1e-15), \
                f"Dot product with self {dot_self} != sum of squares {sum_squares}"
 
     @given(

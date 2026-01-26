@@ -277,7 +277,7 @@ size_analysis = json.load(open('metadata/SIZE_ANALYSIS.json'))
 # Work with preserved originals
 originals_dir = Path('_originals')
 for original in originals_dir.iterdir():
-    print(f"Original: {original.name}")
+    print(f"Original: {{original.name}}")
 ```
 
 ### Pattern Usage

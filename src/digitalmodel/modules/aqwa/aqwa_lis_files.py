@@ -217,6 +217,7 @@ class AqwaLISFiles:
 
     def save_to_csv(self, df, result_item, cfg, input_file):
         save_csv = result_item.get("save_csv", True)
+        csv_filename = None
         if save_csv:
             sheetname = result_item["inject_into"]["sheetname"]
             csv_filename = os.path.join(

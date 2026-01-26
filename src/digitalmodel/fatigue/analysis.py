@@ -168,30 +168,41 @@ class MultislopeSNCurve(SNCurveBase):
     def get_allowable_cycles(self, stress_range: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """Calculate allowable cycles using appropriate slope"""
         S = np.asarray(stress_range, dtype=float)
+        scalar_input = S.ndim == 0
+        if scalar_input:
+            S = S.reshape(1)
+
         N = np.zeros_like(S)
 
-        # Below fatigue limit
+        # Below fatigue limit - set to infinite life first
         below_limit = S <= self.fatigue_limit
         N[below_limit] = np.inf
+
+        # Above fatigue limit - calculate using appropriate slope
+        above_limit = S > self.fatigue_limit
 
         # Apply appropriate slope based on stress level
         for i in range(len(self.slopes)):
             if i == 0:
-                # First slope for high stress
-                mask = S > self.fatigue_limit
+                # First slope for high stress (above first transition stress)
                 if len(self.transition_stresses) > 0:
-                    mask &= S > self.transition_stresses[0]
+                    mask = above_limit & (S > self.transition_stresses[0])
+                else:
+                    mask = above_limit
             elif i < len(self.transition_stresses):
-                # Intermediate slopes
-                mask = (S <= self.transition_stresses[i-1]) & (S > self.transition_stresses[i])
+                # Intermediate slopes (between transition stresses)
+                mask = above_limit & (S <= self.transition_stresses[i-1]) & (S > self.transition_stresses[i])
             else:
-                # Last slope for low stress
-                mask = S <= self.transition_stresses[-1] if self.transition_stresses else (S > self.fatigue_limit)
+                # Last slope for low stress (below last transition stress but above fatigue limit)
+                if self.transition_stresses:
+                    mask = above_limit & (S <= self.transition_stresses[-1])
+                else:
+                    mask = above_limit
 
             if np.any(mask):
                 N[mask] = self.constants[i] * (S[mask] ** (-self.slopes[i]))
 
-        return N if isinstance(stress_range, np.ndarray) else float(N)
+        return float(N[0]) if scalar_input else N
 
     def get_stress_range(self, cycles: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """Calculate stress range for given cycles (inverse function)"""
@@ -427,18 +438,36 @@ class FatigueAnalysisEngine:
 
         # Calculate spectral moments and damage
         logger.info(f"Using {self.config.frequency_method} method")
-        freq_result = freq_method.calculate_damage(stress_psd, frequency, self.sn_curve)
+        freq_result = freq_method.calculate_damage_rate(frequency, stress_psd, self.sn_curve)
+
+        # Extract values from FrequencyDomainResult dataclass
+        damage_rate = freq_result.damage_rate
+        equivalent_cycles_per_sec = freq_result.expected_cycles_per_second
 
         # Scale by duration
-        total_damage = freq_result['damage_rate'] * duration
-
-        # Calculate equivalent cycles per second
-        equivalent_cycles_per_sec = freq_result.get('equivalent_cycles_per_sec', 0.0)
+        total_damage = damage_rate * duration
         total_equivalent_cycles = equivalent_cycles_per_sec * duration
+
+        # Convert dataclass to dict for validation and storage
+        freq_result_dict = {
+            'method': freq_result.method,
+            'damage_rate': freq_result.damage_rate,
+            'expected_cycles_per_second': freq_result.expected_cycles_per_second,
+            'fatigue_life': freq_result.fatigue_life,
+            'equivalent_stress': freq_result.equivalent_stress,
+            'spectral_moments': {
+                'm0': freq_result.spectral_moments.m0,
+                'm1': freq_result.spectral_moments.m1,
+                'm2': freq_result.spectral_moments.m2,
+                'm4': freq_result.spectral_moments.m4,
+                'irregularity_factor': freq_result.spectral_moments.nu
+            },
+            'parameters': freq_result.parameters
+        }
 
         # Engineering validation for frequency domain
         engineering_validation = self._perform_frequency_validation(
-            stress_psd, frequency, freq_result
+            stress_psd, frequency, freq_result_dict
         )
 
         # Compile results
@@ -450,13 +479,13 @@ class FatigueAnalysisEngine:
                 'frequency_range': (float(frequency[0]), float(frequency[-1])),
                 'n_frequency_points': len(frequency),
                 'peak_frequency': float(frequency[np.argmax(stress_psd)]),
-                'rms_stress': float(np.sqrt(np.trapz(stress_psd, frequency))),
+                'rms_stress': float(np.sqrt(np.trapezoid(stress_psd, frequency))),
                 'duration': duration
             },
-            'frequency_results': freq_result,
+            'frequency_results': freq_result_dict,
             'damage_results': {
                 'method': f"Frequency Domain - {self.config.frequency_method}",
-                'damage_rate': freq_result['damage_rate'],
+                'damage_rate': damage_rate,
                 'total_damage': total_damage,
                 'safety_factor': 1.0 / total_damage if total_damage > 0 else np.inf,
                 'equivalent_cycles_total': total_equivalent_cycles,
@@ -742,7 +771,7 @@ class FatigueAnalysisEngine:
         validation = FatigueValidationResults()
 
         # Check PSD characteristics
-        rms_stress = np.sqrt(np.trapz(psd, frequency))
+        rms_stress = np.sqrt(np.trapezoid(psd, frequency))
         peak_freq = frequency[np.argmax(psd)]
 
         if rms_stress > 100:

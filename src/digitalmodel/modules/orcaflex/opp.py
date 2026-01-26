@@ -6,7 +6,12 @@ import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from typing import Dict, List, Tuple
 from digitalmodel.modules.orcaflex.output_control import OutputController
-from assetutilities.common.path_resolver import PathResolver
+
+# Optional import - PathResolver may not be available in all environments
+try:
+    from assetutilities.common.path_resolver import PathResolver
+except ImportError:
+    PathResolver = None
 
 from assetutilities.common.data import PandasChainedAssignent
 

@@ -1,5 +1,6 @@
 import os
 import json
+from pathlib import Path
 import pytest
 import numpy as np
 from digitalmodel.modules.artificial_lift.dynacard.models import (
@@ -9,6 +10,12 @@ from digitalmodel.modules.artificial_lift.dynacard.solver import DynacardWorkflo
 
 # Reference data from legacy system
 REFERENCE_FILE = "/mnt/github/workspace-hub/client_projects/energy_firm_data_analytics/dynacard/Code/Oxy.Cipher.DynaCard/tests/testdata/11708328.json"
+
+
+def _reference_file_available() -> bool:
+    """Check if the reference file exists."""
+    return Path(REFERENCE_FILE).exists()
+
 
 def load_reference_data():
     with open(REFERENCE_FILE, 'r') as f:
@@ -37,6 +44,10 @@ def load_reference_data():
     
     return ctx, ref_dh_pos, ref_dh_load
 
+@pytest.mark.skipif(
+    not _reference_file_available(),
+    reason=f"Reference file not available: {REFERENCE_FILE}"
+)
 def test_solver_parity_with_legacy_gold_standard():
     """
     Test-Driven Update: Compare new solver results with legacy outputs.

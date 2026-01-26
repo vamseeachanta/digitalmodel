@@ -36,23 +36,30 @@ class GoByLearningSystem:
     
     def load_learning_data(self) -> Dict:
         """Load existing learning data."""
+        data = None
         if self.learning_file.exists():
             try:
                 with open(self.learning_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+                    data = json.load(f)
             except Exception as e:
                 logger.warning(f"Could not load learning data: {e}")
-        
-        return {
-            'version': '1.0',
-            'created': datetime.now().isoformat(),
-            'sessions': [],
-            'patterns': {},
-            'file_type_strategies': {},
-            'common_errors': {},
-            'optimization_hints': {},
-            'naming_patterns': defaultdict(int)
-        }
+
+        if data is None:
+            data = {
+                'version': '1.0',
+                'created': datetime.now().isoformat(),
+                'sessions': [],
+                'patterns': {},
+                'file_type_strategies': {},
+                'common_errors': {},
+                'optimization_hints': {},
+            }
+
+        # Ensure naming_patterns is a defaultdict
+        naming_patterns = data.get('naming_patterns', {})
+        data['naming_patterns'] = defaultdict(int, naming_patterns)
+
+        return data
     
     def save_learning_data(self) -> None:
         """Save learning data to file."""

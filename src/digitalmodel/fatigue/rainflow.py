@@ -27,6 +27,10 @@ import logging
 from pathlib import Path
 import warnings
 
+# Configure pandas to use Python strings instead of pyarrow strings for compatibility
+# with pandas 3.0+ which may have issues with pyarrow string backend
+pd.options.mode.string_storage = 'python'
+
 # Optional numba import for performance
 try:
     from numba import jit, njit
@@ -281,11 +285,11 @@ class RainflowCounter:
         if self.params.cycle_combination:
             ranges, counts = self._combine_similar_cycles(ranges, counts)
 
-        # Create cycle DataFrame
-        cycle_df = pd.DataFrame({
-            'range': ranges,
-            'count': counts
-        }).sort_values('range').reset_index(drop=True)
+        # Create cycle DataFrame - ensure numpy arrays for pandas 3.0 compatibility
+        cycle_df = pd.DataFrame()
+        cycle_df['range'] = np.asarray(ranges, dtype=float)
+        cycle_df['count'] = np.asarray(counts, dtype=float)
+        cycle_df = cycle_df.sort_values('range').reset_index(drop=True)
 
         # Calculate statistics
         stats = self._calculate_statistics(
@@ -379,7 +383,10 @@ class RainflowCounter:
             return ranges, counts
 
         # Use pandas groupby for efficient combination
-        df = pd.DataFrame({'range': ranges, 'count': counts})
+        # Note: Convert to explicit numpy arrays for pandas 3.0 compatibility
+        df = pd.DataFrame()
+        df['range'] = np.asarray(ranges, dtype=float)
+        df['count'] = np.asarray(counts, dtype=float)
 
         # Define tolerance for "similar" ranges
         tolerance = self.params.bin_width or (np.max(ranges) - np.min(ranges)) / 1000
@@ -427,7 +434,7 @@ class RainflowCounter:
 
     def _empty_result(self) -> CycleResults:
         """Return empty result structure"""
-        empty_df = pd.DataFrame(columns=['range', 'count'])
+        empty_df = pd.DataFrame({'range': pd.Series([], dtype=float), 'count': pd.Series([], dtype=float)})
         empty_stats = CycleStatistics(
             total_cycles=0, unique_ranges=0, max_range=0, min_range=0,
             mean_range=0, weighted_mean_range=0, range_std=0,

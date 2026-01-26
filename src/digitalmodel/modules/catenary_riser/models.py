@@ -215,7 +215,16 @@ class BuoyancyModule:
     outer_coating_density: Optional[float] = None  # kg/m³
 
     def buoyancy_force_per_length(self, external_fluid: FluidProperties) -> float:
-        """Net buoyancy force per unit length (N/m)"""
+        """
+        Net buoyancy force per unit length (N/m).
+
+        Returns a negative value for upward (buoyant) force.
+        When added to riser weight, this reduces the effective weight.
+
+        Sign convention:
+        - Negative = upward force (buoyancy exceeds module weight)
+        - Positive = downward force (module weight exceeds buoyancy)
+        """
         # Volume displaced
         if self.outer_coating_thickness:
             D_outer = self.outer_diameter + 2 * self.outer_coating_thickness
@@ -235,11 +244,12 @@ class BuoyancyModule:
         else:
             w_coat = 0.0
 
-        # Buoyancy
+        # Buoyancy force (upward)
         w_displaced = V_displaced * external_fluid.density * 9.81
 
-        # Net buoyancy (upward force)
-        return w_displaced - w_buoy - w_coat
+        # Net force: module weight minus buoyancy
+        # Negative when buoyancy exceeds weight (upward force)
+        return w_buoy + w_coat - w_displaced
 
 
 # ============================================================================

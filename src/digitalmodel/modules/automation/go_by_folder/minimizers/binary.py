@@ -143,18 +143,18 @@ class BinaryMinimizer(BaseMinimizer):
     def _create_generic_stub(self, file_path: Path, metadata: dict) -> str:
         """
         Create generic stub file.
-        
+
         Args:
             file_path: Original file path
             metadata: File metadata
-            
+
         Returns:
             Stub content
         """
         stub = f"""# Binary File Stub
 # Original: {metadata['filename']}
 # Type: {metadata['type']}
-# Size: {metadata['size']:,} bytes ({metadata['size_mb']:.2f} MB)
+# Size: {metadata['size']} bytes ({metadata['size_mb']:.2f} MB)
 # Extension: {metadata['extension']}
 
 This is a placeholder for the binary file.
@@ -181,7 +181,7 @@ To use this file:
         stub = f"""# OrcaFlex Model Stub
 # Original: {metadata['filename']}
 # Type: OrcaFlex Simulation File
-# Size: {metadata['size']:,} bytes ({metadata['size_mb']:.2f} MB)
+# Size: {metadata['size']} bytes ({metadata['size_mb']:.2f} MB)
 
 ## Model Information
 This is a placeholder for an OrcaFlex simulation file.
@@ -222,7 +222,7 @@ They contain complete model data including geometry, properties, and results.
         stub = f"""# Image File Stub
 # Original: {metadata['filename']}
 # Type: {metadata['type']}
-# Size: {metadata['size']:,} bytes ({metadata['size_mb']:.2f} MB)
+# Size: {metadata['size']} bytes ({metadata['size_mb']:.2f} MB)
 # Dimensions: {dimensions}
 
 ## Image Information
@@ -252,7 +252,7 @@ This is a placeholder for an image file.
         stub = f"""# Document File Stub
 # Original: {metadata['filename']}
 # Type: {metadata['type']}
-# Size: {metadata['size']:,} bytes ({metadata['size_mb']:.2f} MB)
+# Size: {metadata['size']} bytes ({metadata['size_mb']:.2f} MB)
 
 ## Document Information
 This is a placeholder for a document file.

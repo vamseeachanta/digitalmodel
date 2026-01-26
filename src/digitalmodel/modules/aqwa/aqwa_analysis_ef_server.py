@@ -4,19 +4,41 @@ import os
 
 # Third party imports
 import pandas as pd
-from assetutilities.common.data_exploration import DataExploration
-from assetutilities.common.file_management import FileManagement
+try:
+    from assetutilities.common.data_exploration import DataExploration
+    _HAS_DATA_EXPLORATION = True
+except ImportError:
+    _HAS_DATA_EXPLORATION = False
+    DataExploration = None
+
+try:
+    from assetutilities.common.file_management import FileManagement
+    _HAS_FILE_MANAGEMENT = True
+except ImportError:
+    _HAS_FILE_MANAGEMENT = False
+    FileManagement = None
+
 from colorama import Fore, Style
 from colorama import init as colorama_init
 
-# Reader imports
-from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
-from digitalmodel.custom.aqwa.ef_server.AqwaServerMgr import *
+# Reader imports - these may also be unavailable
+try:
+    from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
+    _HAS_AQWA_UTILS = True
+except ImportError:
+    _HAS_AQWA_UTILS = False
+    AqwaUtilities = None
+
+try:
+    from digitalmodel.custom.aqwa.ef_server.AqwaServerMgr import *
+    _HAS_AQWA_SERVER = True
+except ImportError:
+    _HAS_AQWA_SERVER = False
 
 colorama_init()
-fm = FileManagement()
-au = AqwaUtilities()
-de = DataExploration()
+fm = FileManagement() if _HAS_FILE_MANAGEMENT else None
+au = AqwaUtilities() if _HAS_AQWA_UTILS else None
+de = DataExploration() if _HAS_DATA_EXPLORATION else None
 
 
 class AqwaEFServer:
