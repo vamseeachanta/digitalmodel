@@ -84,7 +84,8 @@ class TestFormulaValidation:
         nu = 0.3
         expected_G = E / (2 * (1 + nu))
 
-        self.pipe_sizing.get_fea_properties("Outer_Pipe")
+        # Must call pipe_properties first to populate section_properties
+        self.pipe_sizing.pipe_properties("Outer_Pipe")
         calculated_G = self.cfg["Material"]["steel"]["G"]
 
         assert abs(calculated_G - expected_G) < 1e-6
@@ -161,6 +162,7 @@ class TestUnitConsistency:
         # Area should have dimensions [L²]
         # Moment of inertia should have dimensions [L⁴]
         # This is a basic sanity check
+        import copy
 
         cfg = {
             "Outer_Pipe": {
@@ -192,17 +194,21 @@ class TestUnitConsistency:
 
         pipe_sizing = PipeSizing(cfg)
         pipe_sizing.pipe_properties("Outer_Pipe")
+        A_original = cfg["Outer_Pipe"]["section_properties"]["pipe"]["A"]
 
         # Check that area scales as L²
         scale_factor = 2.0
-        cfg_scaled = cfg.copy()
+        # Use deep copy to prevent mutation of original config
+        cfg_scaled = copy.deepcopy(cfg)
+        # Remove section_properties from scaled config so it gets recalculated
+        if "section_properties" in cfg_scaled["Outer_Pipe"]:
+            del cfg_scaled["Outer_Pipe"]["section_properties"]
         cfg_scaled["Outer_Pipe"]["Geometry"]["Nominal_OD"] *= scale_factor
         cfg_scaled["Outer_Pipe"]["Geometry"]["Nominal_ID"] *= scale_factor
 
         pipe_sizing_scaled = PipeSizing(cfg_scaled)
         pipe_sizing_scaled.pipe_properties("Outer_Pipe")
 
-        A_original = cfg["Outer_Pipe"]["section_properties"]["pipe"]["A"]
         A_scaled = cfg_scaled["Outer_Pipe"]["section_properties"]["pipe"]["A"]
 
         # Area should scale as scale_factor²
@@ -420,8 +426,11 @@ class TestRealWorldScenarios:
         EI = E * I_m4  # N⋅m²
         mass_per_length = A_m2 * rho  # kg/m
 
-        # Verify against expected ranges for 12-inch X65 pipe
-        assert 40 < mass_per_length < 60  # kg/m (typical range)
+        # Verify against expected ranges for 12-inch X65 pipe with 0.562" wall
+        # A_m2 = pi/4 * ((0.324)^2 - (0.295)^2) = 0.01388 m^2 approximately
+        # mass_per_length = 0.01388 * 7850 = ~109 kg/m
+        # This is correct for thick-walled 12" pipe (0.562" wall thickness)
+        assert 100 < mass_per_length < 120  # kg/m (actual range for this pipe)
         assert EI > 1e6  # N⋅m² (reasonable stiffness)
 
     def test_extreme_but_valid_cases(self):

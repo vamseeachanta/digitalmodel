@@ -132,6 +132,8 @@ class PipeSizing:
                 + self.cfg["Inner_Pipe"]["section_properties"]["pipe"]["GJ"]
             )
 
+            # Initialize section_properties structure before updating
+            self.cfg["equivalent_pipe"]["section_properties"] = {"pipe": {}}
             self.cfg["equivalent_pipe"]["section_properties"]["pipe"].update(
                 {"MassPerUnitLength": MassPerUnitLength, "EI": EI, "EA": EA, "GJ": GJ}
             )
