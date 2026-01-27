@@ -17,6 +17,12 @@ from pathlib import Path
 # X65 yield strength
 X65_YIELD_MPa = 65 * 6.89476  # 448.2 MPa
 
+# Utilization limit (0.90 for design margin)
+UTIL_LIMIT = 0.90
+
+# Base case tension (kN)
+BASE_TENSION_kN = 900
+
 # Find sim files in runs/ directory
 runs_dir = Path(__file__).parent.parent / 'runs'
 sim_files = sorted(runs_dir.glob('*.sim'))
@@ -176,7 +182,7 @@ for sim_file in sim_files:
         'MaxBendStress_MPa': round(max_bend_stress_mpa, 1),
         'BendUtil': round(bend_util, 3),
         'CombinedUtil': round(combined_util, 3),
-        'Status': 'FAIL' if combined_util > 1.0 else 'OK',
+        'Status': 'FAIL' if combined_util > UTIL_LIMIT else 'OK',
         'HasDynamic': has_dynamic,
     })
 
@@ -192,7 +198,7 @@ styles = {
     ('95NE', '135deg'): {'color': 'darkgreen', 'dash': 'dash', 'name': '95%NE 135 deg'},
 }
 
-def create_chart(df, y_col, title, y_label, hline=None, hline_text=None):
+def create_chart(df, y_col, title, y_label, hline=None, hline_text=None, hline_color='red'):
     fig = go.Figure()
     for (env, heading), style in styles.items():
         subset = df[(df['Environment'] == env) & (df['Heading'] == heading)].sort_values('Tension_kN')
@@ -203,7 +209,7 @@ def create_chart(df, y_col, title, y_label, hline=None, hline_text=None):
             marker=dict(size=10),
         ))
     if hline:
-        fig.add_hline(y=hline, line_dash='dot', line_color='black',
+        fig.add_hline(y=hline, line_dash='dot', line_color=hline_color,
                       annotation_text=hline_text, annotation_position='right')
     fig.update_layout(
         title=dict(text=title, font=dict(size=14)),
@@ -217,15 +223,141 @@ def create_chart(df, y_col, title, y_label, hline=None, hline_text=None):
 
 # Create charts
 fig1 = create_chart(df, 'EndA_Max_kN', 'End A Max Tension', 'Tension (kN)')
-fig2 = create_chart(df, 'CombinedUtil', 'Combined Utilization (X65)', 'Utilization', 1.0, 'Unity')
-fig3 = create_chart(df, 'MaxBendStress_MPa', 'Max Bending Stress', 'Stress (MPa)', X65_YIELD_MPa, 'X65 Yield')
+fig2 = create_chart(df, 'CombinedUtil', 'Combined Utilization (X65)', 'Utilization', UTIL_LIMIT, f'Limit ({UTIL_LIMIT})')
+fig3 = create_chart(df, 'MaxBendStress_MPa', 'Max Bending Stress', 'Stress (MPa)', X65_YIELD_MPa * UTIL_LIMIT, f'Limit ({UTIL_LIMIT} x Yield)')
 fig4 = create_chart(df, 'MaxStrain_pct', 'Max Strain', 'Strain (%)')
 fig5 = create_chart(df, 'GlobalY_Max_m', 'Global Y Max', 'Y (m)')
-fig6 = create_chart(df, 'BendUtil', 'Bending Utilization', 'Utilization', 1.0, 'Unity')
+fig6 = create_chart(df, 'BendUtil', 'Bending Utilization', 'Utilization', UTIL_LIMIT, f'Limit ({UTIL_LIMIT})')
 
-# Generate table HTML
+# ============================================================================
+# BASE CASE (900 kN) ANALYSIS
+# ============================================================================
+
+# Filter for base case
+df_base = df[df['Tension_kN'] == BASE_TENSION_kN].copy()
+base_table_html = df_base.to_html(index=False, classes='results-table', border=0)
+base_table_html = base_table_html.replace('>FAIL<', ' class="fail">FAIL<').replace('>OK<', ' class="ok">OK<')
+
+# Full results table
 table_html = df.to_html(index=False, classes='results-table', border=0)
 table_html = table_html.replace('>FAIL<', ' class="fail">FAIL<').replace('>OK<', ' class="ok">OK<')
+
+# ============================================================================
+# SENSITIVITY ANALYSIS DATA
+# ============================================================================
+
+# Create sensitivity analysis charts
+
+# 1. Environment Intensity Sensitivity (1-yr vs 95%NE for 900 kN only)
+def create_env_sensitivity_chart():
+    """Compare max utilization by environment intensity for base case."""
+    fig = go.Figure()
+
+    # Filter base case data
+    base_data = df[df['Tension_kN'] == BASE_TENSION_kN]
+
+    # Group by heading, compare 1yr vs 95%NE
+    for heading in ['090deg', '135deg']:
+        heading_data = base_data[base_data['Heading'] == heading]
+
+        fig.add_trace(go.Bar(
+            name=heading.replace('deg', ' deg'),
+            x=['1-Year Return', '95% Non-Exceedance'],
+            y=[
+                heading_data[heading_data['Environment'] == '001yr']['CombinedUtil'].values[0] if len(heading_data[heading_data['Environment'] == '001yr']) > 0 else 0,
+                heading_data[heading_data['Environment'] == '95NE']['CombinedUtil'].values[0] if len(heading_data[heading_data['Environment'] == '95NE']) > 0 else 0,
+            ],
+        ))
+
+    fig.add_hline(y=UTIL_LIMIT, line_dash='dot', line_color='red',
+                  annotation_text=f'Limit ({UTIL_LIMIT})', annotation_position='right')
+
+    fig.update_layout(
+        title=f'Environment Intensity Sensitivity ({BASE_TENSION_kN} kN Base Case)',
+        xaxis_title='Environment',
+        yaxis_title='Combined Utilization',
+        barmode='group',
+        height=400,
+        legend=dict(orientation='h', yanchor='top', y=-0.15, xanchor='center', x=0.5),
+    )
+    return fig
+
+
+# 2. Tension Level Sensitivity (all tensions at worst environment)
+def create_tension_sensitivity_chart():
+    """Compare max utilization by tension level at worst-case environment (1-yr 135deg)."""
+    fig = go.Figure()
+
+    # Filter for worst case environment (1-yr return, typically 135deg heading is worse)
+    tensions = sorted(df['Tension_kN'].unique())
+
+    for heading in ['090deg', '135deg']:
+        utils = []
+        for t in tensions:
+            row = df[(df['Tension_kN'] == t) & (df['Environment'] == '001yr') & (df['Heading'] == heading)]
+            utils.append(row['CombinedUtil'].values[0] if len(row) > 0 else 0)
+
+        fig.add_trace(go.Scatter(
+            x=tensions,
+            y=utils,
+            mode='lines+markers',
+            name=f'1-Year {heading.replace("deg", " deg")}',
+            line=dict(width=2),
+            marker=dict(size=10),
+        ))
+
+    fig.add_hline(y=UTIL_LIMIT, line_dash='dot', line_color='red',
+                  annotation_text=f'Limit ({UTIL_LIMIT})', annotation_position='right')
+
+    fig.update_layout(
+        title='Tension Level Sensitivity (1-Year Return Environment)',
+        xaxis_title='Lay Tension (kN)',
+        yaxis_title='Combined Utilization',
+        height=400,
+        legend=dict(orientation='h', yanchor='top', y=-0.15, xanchor='center', x=0.5),
+    )
+    return fig
+
+
+# 3. Max Utilization Summary Table
+def create_sensitivity_summary():
+    """Create summary table of max utilization by parameter."""
+    summary_data = []
+
+    # By Environment
+    for env in ['001yr', '95NE']:
+        env_data = df[df['Environment'] == env]
+        max_util = env_data['CombinedUtil'].max()
+        worst_case = env_data.loc[env_data['CombinedUtil'].idxmax()]
+        summary_data.append({
+            'Parameter': 'Environment',
+            'Value': '1-Year Return' if env == '001yr' else '95% Non-Exceedance',
+            'Max Utilization': round(max_util, 3),
+            'Status': 'FAIL' if max_util > UTIL_LIMIT else 'OK',
+            'Worst Case': f"{int(worst_case['Tension_kN'])} kN, {worst_case['Heading']}"
+        })
+
+    # By Tension
+    for tension in sorted(df['Tension_kN'].unique()):
+        t_data = df[df['Tension_kN'] == tension]
+        max_util = t_data['CombinedUtil'].max()
+        worst_case = t_data.loc[t_data['CombinedUtil'].idxmax()]
+        summary_data.append({
+            'Parameter': 'Tension',
+            'Value': f'{tension} kN',
+            'Max Utilization': round(max_util, 3),
+            'Status': 'FAIL' if max_util > UTIL_LIMIT else 'OK',
+            'Worst Case': f"{worst_case['Environment']}, {worst_case['Heading']}"
+        })
+
+    return pd.DataFrame(summary_data)
+
+
+fig_env_sens = create_env_sensitivity_chart()
+fig_tension_sens = create_tension_sensitivity_chart()
+sensitivity_summary_df = create_sensitivity_summary()
+sensitivity_table_html = sensitivity_summary_df.to_html(index=False, classes='results-table', border=0)
+sensitivity_table_html = sensitivity_table_html.replace('>FAIL<', ' class="fail">FAIL<').replace('>OK<', ' class="ok">OK<')
 
 # Build HTML
 html_template = """<!DOCTYPE html>
@@ -237,6 +369,7 @@ html_template = """<!DOCTYPE html>
         body {{ font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }}
         h1 {{ text-align: center; color: #333; }}
         h2 {{ color: #333; border-bottom: 2px solid #333; padding-bottom: 5px; }}
+        h3 {{ color: #555; margin-top: 20px; }}
         .subtitle {{ text-align: center; color: #666; margin-bottom: 20px; }}
         .section {{ max-width: 1400px; margin: 0 auto 30px auto; }}
         .chart-container {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }}
@@ -253,14 +386,38 @@ html_template = """<!DOCTYPE html>
         .legend-note {{ text-align: center; color: #666; font-size: 12px; margin: 10px 0; }}
         .fail {{ color: red; font-weight: bold; }}
         .ok {{ color: green; font-weight: bold; }}
+        .base-case-note {{ background: #e8f4e8; border-left: 4px solid #28a745; padding: 10px 15px; margin: 10px 0; }}
+        .sensitivity-note {{ background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px 15px; margin: 10px 0; }}
+        .util-limit-note {{ background: #f8d7da; border-left: 4px solid #dc3545; padding: 10px 15px; margin: 10px 0; font-weight: bold; }}
+        .toc {{ background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }}
+        .toc ul {{ list-style: none; padding-left: 0; }}
+        .toc li {{ margin: 5px 0; }}
+        .toc a {{ color: #4472C4; text-decoration: none; }}
+        .toc a:hover {{ text-decoration: underline; }}
     </style>
 </head>
 <body>
     <h1>24in Pipeline Installation Analysis</h1>
-    <p class="subtitle">LatestWave Period | X65 Steel (Yield = 448.2 MPa)</p>
+    <p class="subtitle">LatestWave Period | X65 Steel (Yield = 448.2 MPa) | Utilization Limit = {util_limit}</p>
 
     <div class="section">
-        <h2>Environmental Conditions</h2>
+        <div class="toc">
+            <strong>Contents</strong>
+            <ul>
+                <li><a href="#env-conditions">1. Environmental Conditions</a></li>
+                <li><a href="#base-case">2. Base Case Results ({base_tension} kN)</a></li>
+                <li><a href="#sensitivity">3. Sensitivity Analysis</a></li>
+                <li><a href="#full-results">4. Full Results (All Cases)</a></li>
+            </ul>
+        </div>
+
+        <div class="util-limit-note">
+            Design Utilization Limit: {util_limit} (shown as red dotted line in all charts)
+        </div>
+    </div>
+
+    <div class="section" id="env-conditions">
+        <h2>1. Environmental Conditions</h2>
         <div class="info-box">
             <table class="env-table">
                 <tr>
@@ -276,8 +433,49 @@ html_template = """<!DOCTYPE html>
         </div>
     </div>
 
-    <div class="section">
-        <h2>Interactive Charts</h2>
+    <div class="section" id="base-case">
+        <h2>2. Base Case Results ({base_tension} kN Lay Tension)</h2>
+        <div class="base-case-note">
+            The {base_tension} kN lay tension has been selected as the base case for this pipeline installation analysis.
+            Results below show all environmental load conditions at this tension level.
+        </div>
+
+        <h3>2.1 Base Case Summary Table</h3>
+        <div class="info-box">
+            {base_table_html}
+        </div>
+
+        <h3>2.2 Arc-Length Distributions</h3>
+        <p class="legend-note">
+            <a href="charts_tension_{base_tension}kN.html" target="_blank">View detailed {base_tension} kN arc-length distribution charts</a>
+        </p>
+    </div>
+
+    <div class="section" id="sensitivity">
+        <h2>3. Sensitivity Analysis</h2>
+        <div class="sensitivity-note">
+            Sensitivity analysis evaluates the effect of varying input parameters (environment intensity and lay tension)
+            on the maximum combined utilization. Results are compared against the design limit of {util_limit}.
+        </div>
+
+        <h3>3.1 Sensitivity Summary</h3>
+        <div class="info-box">
+            {sensitivity_table_html}
+        </div>
+
+        <h3>3.2 Environment Intensity Sensitivity</h3>
+        <p class="legend-note">Comparing 1-Year Return vs 95% Non-Exceedance environments at {base_tension} kN base case</p>
+        <div class="chart-container">
+            <div class="chart" id="chart_env_sens"></div>
+        </div>
+
+        <h3>3.3 Lay Tension Sensitivity</h3>
+        <p class="legend-note">Comparing utilization across all tension levels (900-2500 kN) at 1-Year Return environment</p>
+        <div class="chart-container">
+            <div class="chart" id="chart_tension_sens"></div>
+        </div>
+
+        <h3>3.4 Full Parameter Space</h3>
         <p class="legend-note">Click legend items to toggle visibility. Double-click to isolate a trace.</p>
         <div class="chart-container">
             <div class="chart" id="chart1"></div>
@@ -289,11 +487,27 @@ html_template = """<!DOCTYPE html>
         </div>
     </div>
 
-    <div class="section">
-        <h2>Results Summary Table</h2>
+    <div class="section" id="full-results">
+        <h2>4. Full Results (All Cases)</h2>
         <div class="info-box">
             {table_html}
         </div>
+
+        <h3>Detailed Arc-Length Charts</h3>
+        <p class="legend-note">
+            <strong>By Load Condition:</strong>
+            <a href="charts_env_001yr_090deg.html">1yr 090</a> |
+            <a href="charts_env_001yr_135deg.html">1yr 135</a> |
+            <a href="charts_env_95NE_090deg.html">95%NE 090</a> |
+            <a href="charts_env_95NE_135deg.html">95%NE 135</a>
+            <br>
+            <strong>By Tension:</strong>
+            <a href="charts_tension_900kN.html">900kN</a> |
+            <a href="charts_tension_1250kN.html">1250kN</a> |
+            <a href="charts_tension_1500kN.html">1500kN</a> |
+            <a href="charts_tension_2000kN.html">2000kN</a> |
+            <a href="charts_tension_2500kN.html">2500kN</a>
+        </p>
     </div>
 
     <script>
@@ -303,6 +517,8 @@ html_template = """<!DOCTYPE html>
         var chart4 = {chart4_json};
         var chart5 = {chart5_json};
         var chart6 = {chart6_json};
+        var chart_env_sens = {chart_env_sens_json};
+        var chart_tension_sens = {chart_tension_sens_json};
 
         Plotly.newPlot('chart1', chart1.data, chart1.layout);
         Plotly.newPlot('chart2', chart2.data, chart2.layout);
@@ -310,12 +526,18 @@ html_template = """<!DOCTYPE html>
         Plotly.newPlot('chart4', chart4.data, chart4.layout);
         Plotly.newPlot('chart5', chart5.data, chart5.layout);
         Plotly.newPlot('chart6', chart6.data, chart6.layout);
+        Plotly.newPlot('chart_env_sens', chart_env_sens.data, chart_env_sens.layout);
+        Plotly.newPlot('chart_tension_sens', chart_tension_sens.data, chart_tension_sens.layout);
     </script>
 </body>
 </html>
 """
 
 html_content = html_template.format(
+    base_tension=BASE_TENSION_kN,
+    util_limit=UTIL_LIMIT,
+    base_table_html=base_table_html,
+    sensitivity_table_html=sensitivity_table_html,
     table_html=table_html,
     chart1_json=fig1.to_json(),
     chart2_json=fig2.to_json(),
@@ -323,6 +545,8 @@ html_content = html_template.format(
     chart4_json=fig4.to_json(),
     chart5_json=fig5.to_json(),
     chart6_json=fig6.to_json(),
+    chart_env_sens_json=fig_env_sens.to_json(),
+    chart_tension_sens_json=fig_tension_sens.to_json(),
 )
 
 output_html = Path(__file__).parent / 'results_interactive.html'
@@ -356,7 +580,7 @@ env_colors = {
 }
 
 
-def create_rangegraph_chart(data_list, y_col, title, y_label, xlim=None, hline=None, hline_text=None, color_by='tension'):
+def create_rangegraph_chart(data_list, y_col, title, y_label, xlim=None, hline=None, hline_text=None, color_by='tension', hline_color='red'):
     """Create arc-length distribution chart with Min/Max envelope or Max only."""
     fig = go.Figure()
 
@@ -398,7 +622,7 @@ def create_rangegraph_chart(data_list, y_col, title, y_label, xlim=None, hline=N
             ))
 
     if hline is not None:
-        fig.add_hline(y=hline, line_dash='dot', line_color='black',
+        fig.add_hline(y=hline, line_dash='dot', line_color=hline_color,
                       annotation_text=hline_text, annotation_position='top right')
 
     layout_kwargs = dict(
@@ -423,10 +647,10 @@ def create_dual_view_charts(data_list, color_by='tension'):
 
     chart_configs = [
         ('tension', 'Tension_Max_kN', 'Effective Tension', 'Tension (kN)', None, None),
-        ('bend_stress', 'BendStress_Max_MPa', 'Max Bending Stress', 'Stress (MPa)', X65_YIELD_MPa, 'X65 Yield'),
+        ('bend_stress', 'BendStress_Max_MPa', 'Max Bending Stress', 'Stress (MPa)', X65_YIELD_MPa * UTIL_LIMIT, f'Limit ({UTIL_LIMIT} x Yield)'),
         ('strain', 'Strain_Max_pct', 'Direct Tensile Strain', 'Strain (%)', None, None),
         ('y_pos', 'Y_Max_m', 'Global Y Position', 'Y (m)', None, None),
-        ('util', 'CombinedUtil', 'Combined Utilization', 'Utilization', 1.0, 'Unity'),
+        ('util', 'CombinedUtil', 'Combined Utilization', 'Utilization', UTIL_LIMIT, f'Limit ({UTIL_LIMIT})'),
     ]
 
     for key, y_col, title, y_label, hline, hline_text in chart_configs:
