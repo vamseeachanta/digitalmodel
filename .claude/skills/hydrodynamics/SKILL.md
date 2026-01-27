@@ -444,7 +444,9 @@ frequency_rad_s,frequency_hz,period_s,spectral_density
 
 ## Related Skills
 
+- [diffraction-analysis](../diffraction-analysis/SKILL.md) - **Master skill** for all diffraction workflows
 - [aqwa-analysis](../aqwa-analysis/SKILL.md) - Extract coefficients from AQWA
+- [bemrosetta](../bemrosetta/SKILL.md) - AQWA → OrcaFlex conversion with QTF and mesh support
 - [orcaflex-modeling](../orcaflex-modeling/SKILL.md) - Apply in OrcaFlex models
 - [viv-analysis](../viv-analysis/SKILL.md) - Hydrodynamic coefficient usage
 

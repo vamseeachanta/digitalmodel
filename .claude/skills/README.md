@@ -6,12 +6,16 @@
 
 ## Overview
 
-This collection provides **10 specialized skills** for marine and offshore engineering workflows. These skills are automatically activated when Claude Code determines they're relevant to the current task.
+This collection provides **12 specialized skills** for marine and offshore engineering workflows. These skills are automatically activated when Claude Code determines they're relevant to the current task.
 
 ## Available Skills
 
 | Skill | Description |
 |-------|-------------|
+| [diffraction-analysis](diffraction-analysis/SKILL.md) | **Master skill** for hydrodynamic diffraction analysis - AQWA, OrcaWave, BEMRosetta integration |
+| [aqwa-analysis](aqwa-analysis/SKILL.md) | AQWA hydrodynamic software integration for RAO and coefficient extraction |
+| [bemrosetta](bemrosetta/SKILL.md) | BEMRosetta hydrodynamic converter - AQWA to OrcaFlex with QTF and mesh support |
+| [hydrodynamics](hydrodynamics/SKILL.md) | Hydrodynamic coefficients, wave spectra, and OCIMF environmental loading |
 | [fatigue-analysis](fatigue-analysis/SKILL.md) | Perform fatigue analysis using S-N curves and damage accumulation (DNV, API, BS, ABS standards) |
 | [structural-analysis](structural-analysis/SKILL.md) | Perform structural analysis (stress, buckling, capacity checks) per design codes |
 | [mooring-design](mooring-design/SKILL.md) | Design and analyze mooring systems (CALM, SALM, catenary) with safety factors |
@@ -20,8 +24,6 @@ This collection provides **10 specialized skills** for marine and offshore engin
 | [signal-analysis](signal-analysis/SKILL.md) | Signal processing, rainflow counting (ASTM E1049-85), FFT/PSD spectral analysis |
 | [catenary-riser](catenary-riser/SKILL.md) | Catenary and lazy wave riser static analysis with OrcaFlex model generation |
 | [viv-analysis](viv-analysis/SKILL.md) | Vortex-induced vibration assessment for risers and tubular members |
-| [aqwa-analysis](aqwa-analysis/SKILL.md) | AQWA hydrodynamic software integration for RAO and coefficient extraction |
-| [hydrodynamics](hydrodynamics/SKILL.md) | Hydrodynamic coefficients, wave spectra, and OCIMF environmental loading |
 
 ## Skill Categories
 
@@ -40,10 +42,12 @@ This collection provides **10 specialized skills** for marine and offshore engin
 
 - **mooring-design**: CALM/SALM buoy design, catenary analysis, safety factor calculations
 
-### Hydrodynamics
+### Hydrodynamics & Diffraction
 
+- **diffraction-analysis**: Master skill for all diffraction analysis workflows (AQWA, OrcaWave, BEMRosetta)
 - **hydrodynamics**: 6×6 coefficient matrices, wave spectra (JONSWAP, PM), OCIMF loading
 - **aqwa-analysis**: RAO extraction, added mass/damping, AQWA file processing
+- **bemrosetta**: AQWA → OrcaFlex conversion, QTF handling, mesh format conversion (GDF/DAT/STL)
 
 ### OrcaFlex Integration
 
@@ -85,6 +89,14 @@ Reference skills directly in prompts:
 ```
 digitalmodel/.claude/skills/
 ├── README.md                    # This file
+├── diffraction-analysis/        # Master diffraction skill
+│   └── SKILL.md
+├── aqwa-analysis/
+│   └── SKILL.md
+├── bemrosetta/                  # BEMRosetta converter
+│   └── SKILL.md
+├── hydrodynamics/
+│   └── SKILL.md
 ├── fatigue-analysis/
 │   └── SKILL.md
 ├── structural-analysis/
@@ -99,11 +111,7 @@ digitalmodel/.claude/skills/
 │   └── SKILL.md
 ├── catenary-riser/
 │   └── SKILL.md
-├── viv-analysis/
-│   └── SKILL.md
-├── aqwa-analysis/
-│   └── SKILL.md
-└── hydrodynamics/
+└── viv-analysis/
     └── SKILL.md
 ```
 

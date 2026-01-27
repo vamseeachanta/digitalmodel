@@ -209,6 +209,7 @@ signal-analysis = "digitalmodel.modules.signal_analysis.cli:main"
 hydrodynamics = "digitalmodel.modules.hydrodynamics.cli:main"
 gmsh-meshing = "digitalmodel.modules.gmsh_meshing.cli:main"
 workflow-automation = "digitalmodel.modules.workflow_automation.cli:main"
+bemrosetta = "digitalmodel.modules.bemrosetta.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

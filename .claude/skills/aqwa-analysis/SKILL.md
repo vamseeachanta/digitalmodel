@@ -663,6 +663,8 @@ aqwa_results = converter.convert_to_unified_schema(water_depth=30.0)
 
 ## Related Skills
 
+- [diffraction-analysis](../diffraction-analysis/SKILL.md) - **Master skill** for all diffraction workflows
+- [bemrosetta](../bemrosetta/SKILL.md) - AQWA → OrcaFlex conversion with QTF and mesh support
 - [hydrodynamics](../hydrodynamics/SKILL.md) - Coefficient management
 - [orcaflex-modeling](../orcaflex-modeling/SKILL.md) - Apply RAOs in OrcaFlex
 - [orcawave-analysis](../orcawave-analysis/SKILL.md) - Benchmark validation
