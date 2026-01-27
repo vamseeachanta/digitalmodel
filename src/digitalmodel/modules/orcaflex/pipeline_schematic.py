@@ -1147,12 +1147,11 @@ class PipelineSchematicGenerator:
                 "ViewAzimuth": 270,  # Looking down from above
                 "ViewElevation": 90,  # Top-down view
                 "ViewGamma": 0,
-                "GraphicsMode": "WireFrame",
                 "FileWidth": 1920,
                 "FileHeight": 1080,
                 "BackgroundColour": 16777215,  # White
-                "DrawSeaSurface": False,
-                "DrawSeabed": True,
+                "DrawSeaSurface": "No",
+                "DrawSeabed": "Yes",
             },
             "elevation": {
                 "ViewCentre": [x_center, 0, z_center],
@@ -1160,12 +1159,11 @@ class PipelineSchematicGenerator:
                 "ViewAzimuth": 270,  # Looking from +Y toward -Y
                 "ViewElevation": 0,  # Side view
                 "ViewGamma": 0,
-                "GraphicsMode": "WireFrame",
                 "FileWidth": 1920,
                 "FileHeight": 600,
                 "BackgroundColour": 16777215,  # White
-                "DrawSeaSurface": True,
-                "DrawSeabed": True,
+                "DrawSeaSurface": "Yes",
+                "DrawSeabed": "Yes",
             },
         }
 
@@ -1506,34 +1504,31 @@ class OrcaFlexViewCapture:
             "ViewAzimuth": 270,
             "ViewElevation": 90,
             "ViewGamma": 0,
-            "GraphicsMode": "WireFrame",
             "FileWidth": 1920,
             "FileHeight": 1080,
             "BackgroundColour": 16777215,
-            "DrawSeaSurface": False,
-            "DrawSeabed": True,
+            "DrawSeaSurface": "No",
+            "DrawSeabed": "Yes",
         },
         "elevation": {
             "ViewAzimuth": 270,
             "ViewElevation": 0,
             "ViewGamma": 0,
-            "GraphicsMode": "WireFrame",
             "FileWidth": 1920,
             "FileHeight": 600,
             "BackgroundColour": 16777215,
-            "DrawSeaSurface": True,
-            "DrawSeabed": True,
+            "DrawSeaSurface": "Yes",
+            "DrawSeabed": "Yes",
         },
         "isometric": {
             "ViewAzimuth": 315,
             "ViewElevation": 30,
             "ViewGamma": 0,
-            "GraphicsMode": "WireFrame",
             "FileWidth": 1920,
             "FileHeight": 1080,
             "BackgroundColour": 16777215,
-            "DrawSeaSurface": True,
-            "DrawSeabed": True,
+            "DrawSeaSurface": "Yes",
+            "DrawSeabed": "Yes",
         },
     }
 
