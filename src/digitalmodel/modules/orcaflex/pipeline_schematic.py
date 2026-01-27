@@ -166,6 +166,9 @@ class PipelineSchematicGenerator:
             elif key == "6DBuoys":
                 # Special handling for 6DBuoys which can be list or dict
                 self._merge_6dbuoys(value, overlay)
+            elif key == "Lines":
+                # Special handling for Lines which can be list or dict
+                self._merge_lines(value, overlay)
             elif isinstance(value, dict) and isinstance(overlay.get(key), dict):
                 self._merge_yaml(value, overlay[key])
             elif isinstance(value, list) and isinstance(overlay.get(key), list):
@@ -173,6 +176,35 @@ class PipelineSchematicGenerator:
                 for item in value:
                     if item not in overlay[key]:
                         overlay[key].append(item)
+
+    def _merge_lines(self, base_lines, overlay: Dict) -> None:
+        """Merge Lines from base file into overlay, handling list/dict formats."""
+        overlay_lines = overlay.get("Lines", {})
+
+        # Convert base list format to dict if needed
+        base_dict = {}
+        if isinstance(base_lines, list):
+            for line in base_lines:
+                if isinstance(line, dict) and "Name" in line:
+                    name = line["Name"]
+                    base_dict[name] = line
+        elif isinstance(base_lines, dict):
+            base_dict = base_lines
+
+        # Ensure overlay Lines is a dict
+        if not isinstance(overlay_lines, dict):
+            overlay["Lines"] = {}
+            overlay_lines = overlay["Lines"]
+
+        # Merge each line from base into overlay
+        for name, line_data in base_dict.items():
+            if name not in overlay_lines:
+                overlay_lines[name] = line_data
+            elif isinstance(line_data, dict) and isinstance(overlay_lines.get(name), dict):
+                # Merge line properties (preserves overlay values, adds missing from base)
+                for prop_key, prop_value in line_data.items():
+                    if prop_key not in overlay_lines[name]:
+                        overlay_lines[name][prop_key] = prop_value
 
     def _merge_6dbuoys(self, base_buoys, overlay: Dict) -> None:
         """Merge 6DBuoys from base file into overlay, handling list/dict formats."""
@@ -363,7 +395,86 @@ class PipelineSchematicGenerator:
                             )
                         )
 
+        # 4. Pipeline attachments (buoyancy modules)
+        attachments = pipeline.get("Attachments", [])
+        if attachments and shape_data:
+            # Calculate arc lengths along pipeline for interpolation
+            coords = np.array(shape_data)
+            path_x, path_y, path_z = coords[:, 0], coords[:, 1], coords[:, 2]
+            arc_lengths = self._calculate_arc_lengths(path_x, path_y, path_z)
+
+            # Group attachments by type and collect arc length info
+            bm_attachments = [a for a in attachments if a.get("AttachmentType") == "BM"]
+
+            if bm_attachments:
+                # Get arc length range for buoyancy modules
+                arc_positions = []
+                for att in bm_attachments:
+                    att_pos = att.get("AttachmentPosition", [0, 0, 0])
+                    if len(att_pos) >= 3:
+                        arc_len = att_pos[2]  # Arc length is 3rd element
+                        arc_positions.append(arc_len)
+
+                if arc_positions:
+                    min_arc = min(arc_positions)
+                    max_arc = max(arc_positions)
+                    count = len(arc_positions)
+
+                    # Get positions at start, middle, and end of buoyancy region
+                    key_arcs = [min_arc, (min_arc + max_arc) / 2, max_arc]
+                    for i, arc in enumerate(key_arcs):
+                        pos = self._interpolate_position(arc, arc_lengths, path_x, path_y, path_z)
+                        label = ["Start", "Middle", "End"][i]
+                        bcs.append(
+                            BoundaryCondition(
+                                name=f"Buoyancy Zone {label}",
+                                bc_type=BoundaryConditionType.DISTRIBUTED_BUOYANCY,
+                                position=pos,
+                                properties={
+                                    "total_count": count,
+                                    "arc_start": min_arc,
+                                    "arc_end": max_arc,
+                                    "zone": label,
+                                },
+                            )
+                        )
+
         return bcs
+
+    def _calculate_arc_lengths(
+        self, x: np.ndarray, y: np.ndarray, z: np.ndarray
+    ) -> np.ndarray:
+        """Calculate cumulative arc length along pipeline path."""
+        dx = np.diff(x)
+        dy = np.diff(y)
+        dz = np.diff(z)
+        segment_lengths = np.sqrt(dx**2 + dy**2 + dz**2)
+        arc_lengths = np.zeros(len(x))
+        arc_lengths[1:] = np.cumsum(segment_lengths)
+        return arc_lengths
+
+    def _interpolate_position(
+        self,
+        arc_length: float,
+        arc_lengths: np.ndarray,
+        x: np.ndarray,
+        y: np.ndarray,
+        z: np.ndarray,
+    ) -> Tuple[float, float, float]:
+        """Interpolate position along pipeline at given arc length."""
+        # Find the segment containing this arc length
+        idx = np.searchsorted(arc_lengths, arc_length)
+        if idx == 0:
+            return (float(x[0]), float(y[0]), float(z[0]))
+        if idx >= len(arc_lengths):
+            return (float(x[-1]), float(y[-1]), float(z[-1]))
+
+        # Linear interpolation within segment
+        t = (arc_length - arc_lengths[idx - 1]) / (arc_lengths[idx] - arc_lengths[idx - 1])
+        px = x[idx - 1] + t * (x[idx] - x[idx - 1])
+        py = y[idx - 1] + t * (y[idx] - y[idx - 1])
+        pz = z[idx - 1] + t * (z[idx] - z[idx - 1])
+        return (float(px), float(py), float(pz))
 
     def _get_water_depth(self) -> float:
         """Get water depth from environment settings."""

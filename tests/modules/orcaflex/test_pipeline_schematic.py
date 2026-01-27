@@ -11,7 +11,7 @@ from pathlib import Path
 import tempfile
 import shutil
 
-from digitalmodel.modules.orcaflex.visualization.pipeline_schematic import (
+from digitalmodel.modules.orcaflex.pipeline_schematic import (
     PipelineSchematicGenerator,
     BoundaryConditionType,
     BoundaryCondition,
