@@ -3,16 +3,31 @@ Pipeline Installation Schematic Visualization Module.
 
 Creates plan and elevation view schematics for OrcaFlex pipeline installation
 models with boundary condition markups.
+
+Supports two modes:
+1. YAML-only mode: Generates Plotly schematics from YAML model data
+2. OrcaFlex API mode: Captures actual screenshots from OrcaFlex and combines
+   with boundary condition overlays
 """
 
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
+import base64
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import yaml
+from loguru import logger
+
+# Optional OrcaFlex API import
+try:
+    import OrcFxAPI
+    ORCAFLEX_AVAILABLE = True
+except ImportError:
+    ORCAFLEX_AVAILABLE = False
+    logger.debug("OrcFxAPI not available - API screenshot mode disabled")
 
 
 class BoundaryConditionType(Enum):
@@ -1038,3 +1053,613 @@ class PipelineSchematicGenerator:
         print(f"Elevation view saved: {elevation_path}")
 
         return plan_path, elevation_path
+
+    # =========================================================================
+    # OrcaFlex API Screenshot Methods
+    # =========================================================================
+
+    def capture_orcaflex_screenshots(
+        self,
+        sim_file: Optional[str] = None,
+        view_params: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Path]:
+        """
+        Capture plan and elevation screenshots using OrcaFlex API.
+
+        Args:
+            sim_file: Path to .sim or .dat file. If None, uses YAML file path
+                      with .sim extension.
+            view_params: Optional custom view parameters. If None, uses defaults.
+
+        Returns:
+            Dict with 'plan' and 'elevation' keys containing image paths.
+
+        Raises:
+            RuntimeError: If OrcaFlex API is not available.
+        """
+        if not ORCAFLEX_AVAILABLE:
+            raise RuntimeError(
+                "OrcFxAPI not available. Install OrcaFlex or run on licensed machine."
+            )
+
+        # Determine simulation file path
+        if sim_file is None:
+            sim_file = str(self.yaml_file.with_suffix(".sim"))
+            if not Path(sim_file).exists():
+                sim_file = str(self.yaml_file.with_suffix(".dat"))
+
+        if not Path(sim_file).exists():
+            raise FileNotFoundError(f"Simulation file not found: {sim_file}")
+
+        logger.info(f"Loading OrcaFlex model: {sim_file}")
+        model = OrcFxAPI.Model(sim_file)
+
+        # Get view parameters
+        params = view_params or self._get_default_view_params(model)
+
+        screenshots = {}
+
+        # Capture plan view (XY - top down)
+        if "plan" in params:
+            plan_path = self.output_dir / f"{self.yaml_file.stem}_orcaflex_plan.jpg"
+            self._capture_view(model, params["plan"], plan_path)
+            screenshots["plan"] = plan_path
+            logger.info(f"Plan view saved: {plan_path}")
+
+        # Capture elevation view (XZ - side)
+        if "elevation" in params:
+            elev_path = self.output_dir / f"{self.yaml_file.stem}_orcaflex_elevation.jpg"
+            self._capture_view(model, params["elevation"], elev_path)
+            screenshots["elevation"] = elev_path
+            logger.info(f"Elevation view saved: {elev_path}")
+
+        return screenshots
+
+    def _get_default_view_params(self, model) -> Dict[str, Dict]:
+        """
+        Get default view parameters for plan and elevation views.
+
+        Calculates appropriate view center and size based on model extents.
+        """
+        data = self.parse_model()
+
+        # Calculate model extents
+        x_min, x_max = float(np.min(data.path_x)), float(np.max(data.path_x))
+        y_min, y_max = float(np.min(data.path_y)), float(np.max(data.path_y))
+        z_min, z_max = float(np.min(data.path_z)), float(np.max(data.path_z))
+
+        x_center = (x_min + x_max) / 2
+        y_center = (y_min + y_max) / 2
+        z_center = (z_min + z_max) / 2
+
+        x_range = x_max - x_min
+        y_range = max(y_max - y_min, 100)  # Minimum 100m for visibility
+        z_range = max(z_max - z_min, 50)
+
+        # View size with padding
+        plan_size = max(x_range, y_range) * 1.2
+        elev_size = max(x_range, z_range) * 1.2
+
+        return {
+            "plan": {
+                "ViewCentre": [x_center, y_center, 0],
+                "ViewSize": plan_size,
+                "ViewAzimuth": 270,  # Looking down from above
+                "ViewElevation": 90,  # Top-down view
+                "ViewGamma": 0,
+                "GraphicsMode": "WireFrame",
+                "FileWidth": 1920,
+                "FileHeight": 1080,
+                "BackgroundColour": 16777215,  # White
+                "DrawSeaSurface": False,
+                "DrawSeabed": True,
+            },
+            "elevation": {
+                "ViewCentre": [x_center, 0, z_center],
+                "ViewSize": elev_size,
+                "ViewAzimuth": 270,  # Looking from +Y toward -Y
+                "ViewElevation": 0,  # Side view
+                "ViewGamma": 0,
+                "GraphicsMode": "WireFrame",
+                "FileWidth": 1920,
+                "FileHeight": 600,
+                "BackgroundColour": 16777215,  # White
+                "DrawSeaSurface": True,
+                "DrawSeabed": True,
+            },
+        }
+
+    def _capture_view(
+        self,
+        model,
+        params: Dict[str, Any],
+        output_path: Path,
+    ) -> None:
+        """Capture a single view using OrcaFlex API."""
+        viewparams = model.defaultViewParameters
+
+        # Apply view parameters
+        for key, value in params.items():
+            try:
+                if key == "ViewCentre":
+                    for i, v in enumerate(value):
+                        viewparams.ViewCentre[i] = v
+                elif key == "RelativeToObject" and value:
+                    viewparams.RelativeToObject = model[value]
+                elif hasattr(viewparams, key):
+                    setattr(viewparams, key, value)
+            except Exception as e:
+                logger.warning(f"Could not set view parameter {key}: {e}")
+
+        # Save the view
+        model.SaveModelView(str(output_path), viewparams)
+
+    def generate_combined_report(
+        self,
+        sim_file: Optional[str] = None,
+        include_api_screenshots: bool = True,
+        view_params: Optional[Dict[str, Any]] = None,
+        output_filename: Optional[str] = None,
+    ) -> Path:
+        """
+        Generate HTML report with OrcaFlex API screenshots and Plotly schematics.
+
+        This combines:
+        1. OrcaFlex API screenshots (actual model visualization)
+        2. Plotly boundary condition schematics (interactive with BC markups)
+
+        Args:
+            sim_file: Path to .sim or .dat file for API screenshots.
+            include_api_screenshots: Whether to capture OrcaFlex API screenshots.
+            view_params: Custom view parameters for API screenshots.
+            output_filename: Optional custom filename for the report.
+
+        Returns:
+            Path to the generated HTML file.
+        """
+        data = self.parse_model()
+
+        # Capture OrcaFlex screenshots if requested and available
+        screenshots = {}
+        if include_api_screenshots and ORCAFLEX_AVAILABLE:
+            try:
+                screenshots = self.capture_orcaflex_screenshots(sim_file, view_params)
+            except Exception as e:
+                logger.warning(f"Could not capture OrcaFlex screenshots: {e}")
+
+        # Create Plotly figures
+        plan_view = self.create_plan_view()
+        elevation_view = self.create_elevation_view()
+        legend_fig = self.create_boundary_condition_legend()
+
+        # Generate HTML
+        output_file = output_filename or f"{data.model_name}_combined_report.html"
+        output_path = self.output_dir / output_file
+
+        html_content = self._generate_combined_html_content(
+            plan_view, elevation_view, legend_fig, data, screenshots
+        )
+
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(html_content)
+
+        logger.info(f"Combined report generated: {output_path}")
+        return output_path
+
+    def _generate_combined_html_content(
+        self,
+        plan_view: go.Figure,
+        elevation_view: go.Figure,
+        legend_fig: go.Figure,
+        data: PipelineData,
+        screenshots: Dict[str, Path],
+    ) -> str:
+        """Generate HTML content with both API screenshots and Plotly schematics."""
+        from datetime import datetime
+
+        plan_json = plan_view.to_json()
+        elevation_json = elevation_view.to_json()
+        legend_json = legend_fig.to_json()
+
+        # Count boundary conditions by type
+        bc_counts = {}
+        for bc in data.boundary_conditions:
+            bc_type_name = bc.bc_type.value.replace("_", " ").title()
+            bc_counts[bc_type_name] = bc_counts.get(bc_type_name, 0) + 1
+
+        bc_summary_html = "".join(
+            f'<div class="stat-card"><div class="stat-label">{name}</div>'
+            f'<div class="stat-value">{count}</div></div>'
+            for name, count in bc_counts.items()
+        )
+
+        # Encode screenshots as base64 for embedding
+        screenshot_html = ""
+        if screenshots:
+            screenshot_html = '<div class="screenshot-section">'
+            screenshot_html += '<h2 style="margin-bottom: 20px; color: #2C3E50;">OrcaFlex Model Views</h2>'
+            screenshot_html += '<div class="screenshot-grid">'
+
+            for view_name, img_path in screenshots.items():
+                if img_path.exists():
+                    with open(img_path, "rb") as img_file:
+                        img_base64 = base64.b64encode(img_file.read()).decode("utf-8")
+                    view_title = view_name.replace("_", " ").title()
+                    screenshot_html += f'''
+                    <div class="screenshot-card">
+                        <h3>{view_title} View (OrcaFlex)</h3>
+                        <img src="data:image/jpeg;base64,{img_base64}" alt="{view_title}" />
+                    </div>'''
+
+            screenshot_html += '</div></div>'
+
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline Schematic - {data.model_name}</title>
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f7fa;
+            padding: 20px;
+            color: #2d3748;
+        }}
+        .container {{ max-width: 1800px; margin: 0 auto; }}
+        .header {{
+            background: linear-gradient(135deg, #2C3E50 0%, #3498DB 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }}
+        .header h1 {{ font-size: 2.2em; margin-bottom: 15px; }}
+        .header p {{ font-size: 1.1em; opacity: 0.95; margin: 5px 0; }}
+        .stats {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }}
+        .stat-card {{
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }}
+        .stat-label {{ font-size: 0.85em; color: #718096; margin-bottom: 5px; text-transform: uppercase; }}
+        .stat-value {{ font-size: 1.8em; font-weight: 700; color: #2C3E50; }}
+        .stat-unit {{ font-size: 0.5em; color: #a0aec0; }}
+        .plot-container {{
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }}
+        .plot-container h2 {{
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            color: #2d3748;
+            border-bottom: 2px solid #3498DB;
+            padding-bottom: 10px;
+        }}
+        .plot {{ width: 100%; }}
+        .screenshot-section {{
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }}
+        .screenshot-grid {{
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }}
+        .screenshot-card {{
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }}
+        .screenshot-card h3 {{
+            background: #f7fafc;
+            padding: 12px 15px;
+            font-size: 1.1em;
+            color: #2d3748;
+            border-bottom: 1px solid #e2e8f0;
+        }}
+        .screenshot-card img {{
+            width: 100%;
+            display: block;
+        }}
+        .two-col {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }}
+        @media (max-width: 1200px) {{ .two-col {{ grid-template-columns: 1fr; }} }}
+        .footer {{
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 25px;
+            text-align: center;
+            color: #718096;
+            font-size: 0.9em;
+        }}
+        .bc-section {{ margin-top: 20px; }}
+        .bc-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }}
+        .section-divider {{
+            border-top: 3px solid #3498DB;
+            margin: 30px 0;
+            padding-top: 20px;
+        }}
+        .section-title {{
+            font-size: 1.5em;
+            color: #2C3E50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }}
+        .section-title::before {{
+            content: "";
+            width: 4px;
+            height: 24px;
+            background: #3498DB;
+            border-radius: 2px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Pipeline Installation Schematic</h1>
+            <p><strong>Model:</strong> {data.model_name}</p>
+            <p><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            <p><strong>Pipeline Length:</strong> {data.pipeline_length:.1f} m</p>
+            <p><strong>Water Depth:</strong> {data.water_depth:.1f} m</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Pipeline Length</div>
+                <div class="stat-value">{data.pipeline_length:.0f}<span class="stat-unit">m</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Water Depth</div>
+                <div class="stat-value">{data.water_depth:.1f}<span class="stat-unit">m</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Boundary Conditions</div>
+                <div class="stat-value">{len(data.boundary_conditions)}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Path Points</div>
+                <div class="stat-value">{len(data.path_x)}</div>
+            </div>
+        </div>
+
+        <div class="bc-section">
+            <h3 style="margin-bottom: 15px; color: #2C3E50;">Boundary Conditions Summary</h3>
+            <div class="bc-grid">{bc_summary_html}</div>
+        </div>
+
+        {screenshot_html}
+
+        <div class="section-divider">
+            <div class="section-title">Interactive Schematic Views</div>
+        </div>
+
+        <div class="plot-container">
+            <h2>Plan View (XY Plane - Top Down) with Boundary Conditions</h2>
+            <div id="plan-view" class="plot"></div>
+        </div>
+
+        <div class="plot-container">
+            <h2>Elevation View (XZ Plane - Side Profile) with Boundary Conditions</h2>
+            <div id="elevation-view" class="plot"></div>
+        </div>
+
+        <div class="plot-container">
+            <h2>Boundary Condition Legend</h2>
+            <div id="legend" class="plot"></div>
+        </div>
+
+        <div class="footer">
+            <p>Pipeline Schematic Visualization | OrcaFlex Model Analysis</p>
+            <p>Interactive: Hover for details, click and drag to zoom, double-click to reset</p>
+        </div>
+    </div>
+
+    <script>
+        var planData = {plan_json};
+        Plotly.newPlot('plan-view', planData.data, planData.layout, {{responsive: true}});
+
+        var elevationData = {elevation_json};
+        Plotly.newPlot('elevation-view', elevationData.data, elevationData.layout, {{responsive: true}});
+
+        var legendData = {legend_json};
+        Plotly.newPlot('legend', legendData.data, legendData.layout, {{responsive: true}});
+    </script>
+</body>
+</html>"""
+
+
+# =============================================================================
+# Standalone OrcaFlex View Capture Utility
+# =============================================================================
+
+class OrcaFlexViewCapture:
+    """
+    Utility class for capturing OrcaFlex model views.
+
+    This can be used independently of PipelineSchematicGenerator for
+    capturing screenshots from any OrcaFlex model.
+    """
+
+    # Default view configurations
+    DEFAULT_VIEWS = {
+        "plan": {
+            "ViewAzimuth": 270,
+            "ViewElevation": 90,
+            "ViewGamma": 0,
+            "GraphicsMode": "WireFrame",
+            "FileWidth": 1920,
+            "FileHeight": 1080,
+            "BackgroundColour": 16777215,
+            "DrawSeaSurface": False,
+            "DrawSeabed": True,
+        },
+        "elevation": {
+            "ViewAzimuth": 270,
+            "ViewElevation": 0,
+            "ViewGamma": 0,
+            "GraphicsMode": "WireFrame",
+            "FileWidth": 1920,
+            "FileHeight": 600,
+            "BackgroundColour": 16777215,
+            "DrawSeaSurface": True,
+            "DrawSeabed": True,
+        },
+        "isometric": {
+            "ViewAzimuth": 315,
+            "ViewElevation": 30,
+            "ViewGamma": 0,
+            "GraphicsMode": "WireFrame",
+            "FileWidth": 1920,
+            "FileHeight": 1080,
+            "BackgroundColour": 16777215,
+            "DrawSeaSurface": True,
+            "DrawSeabed": True,
+        },
+    }
+
+    def __init__(self, model_file: str, output_dir: Optional[str] = None):
+        """
+        Initialize the view capture utility.
+
+        Args:
+            model_file: Path to OrcaFlex model file (.dat, .sim, .yml).
+            output_dir: Output directory for captured images.
+        """
+        if not ORCAFLEX_AVAILABLE:
+            raise RuntimeError("OrcFxAPI not available")
+
+        self.model_file = Path(model_file)
+        self.output_dir = Path(output_dir) if output_dir else self.model_file.parent
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+        self._model = None
+
+    def load_model(self, calculate_statics: bool = True) -> None:
+        """Load the OrcaFlex model."""
+        logger.info(f"Loading model: {self.model_file}")
+        self._model = OrcFxAPI.Model(str(self.model_file))
+
+        if calculate_statics:
+            logger.info("Calculating statics...")
+            self._model.CalculateStatics()
+
+    def capture_view(
+        self,
+        view_name: str,
+        view_params: Optional[Dict[str, Any]] = None,
+        output_filename: Optional[str] = None,
+    ) -> Path:
+        """
+        Capture a single view.
+
+        Args:
+            view_name: Name of the view (used in filename and for default params).
+            view_params: Custom view parameters (merged with defaults).
+            output_filename: Custom output filename.
+
+        Returns:
+            Path to the captured image.
+        """
+        if self._model is None:
+            self.load_model()
+
+        # Get default params and merge with custom
+        params = self.DEFAULT_VIEWS.get(view_name, {}).copy()
+        if view_params:
+            params.update(view_params)
+
+        # Set up view parameters
+        viewparams = self._model.defaultViewParameters
+        for key, value in params.items():
+            try:
+                if key == "ViewCentre":
+                    for i, v in enumerate(value):
+                        viewparams.ViewCentre[i] = v
+                elif key == "RelativeToObject" and value:
+                    viewparams.RelativeToObject = self._model[value]
+                elif hasattr(viewparams, key):
+                    setattr(viewparams, key, value)
+            except Exception as e:
+                logger.warning(f"Could not set {key}: {e}")
+
+        # Generate output path
+        filename = output_filename or f"{self.model_file.stem}_{view_name}.jpg"
+        output_path = self.output_dir / filename
+
+        # Capture and save
+        self._model.SaveModelView(str(output_path), viewparams)
+        logger.info(f"View captured: {output_path}")
+
+        return output_path
+
+    def capture_all_views(
+        self,
+        views: Optional[List[str]] = None,
+        custom_params: Optional[Dict[str, Dict]] = None,
+    ) -> Dict[str, Path]:
+        """
+        Capture multiple views.
+
+        Args:
+            views: List of view names to capture. Defaults to ["plan", "elevation"].
+            custom_params: Dict of view_name -> custom parameters.
+
+        Returns:
+            Dict mapping view names to output paths.
+        """
+        if views is None:
+            views = ["plan", "elevation"]
+
+        custom_params = custom_params or {}
+        results = {}
+
+        for view_name in views:
+            params = custom_params.get(view_name)
+            results[view_name] = self.capture_view(view_name, params)
+
+        return results
+
+    def set_visualization_settings(
+        self,
+        hide_items: Optional[List[str]] = None,
+        sea_surface_style: str = "Clear",
+    ) -> None:
+        """
+        Configure model visualization settings.
+
+        Args:
+            hide_items: List of object names to hide.
+            sea_surface_style: Pen style for sea surface.
+        """
+        if self._model is None:
+            self.load_model(calculate_statics=False)
+
+        env = self._model["Environment"]
+        env.SeaSurfacePenStyle = sea_surface_style
+
+        if hide_items:
+            all_objects = [str(obj) for obj in self._model.objects]
+            for item in hide_items:
+                if item in all_objects:
+                    self._model[item].Hidden = "Yes"
+                    logger.debug(f"Hidden: {item}")
