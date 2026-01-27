@@ -447,7 +447,7 @@ html_template = """<!DOCTYPE html>
 
         <h3>2.2 Arc-Length Distributions</h3>
         <p class="legend-note">
-            <a href="charts_tension_{base_tension}kN.html" target="_blank">View detailed {base_tension} kN arc-length distribution charts</a>
+            <a href="24in_arclength_tension_0{base_tension}kN.html" target="_blank">View detailed {base_tension} kN arc-length distribution charts</a>
         </p>
     </div>
 
@@ -496,17 +496,17 @@ html_template = """<!DOCTYPE html>
         <h3>Detailed Arc-Length Charts</h3>
         <p class="legend-note">
             <strong>By Load Condition:</strong>
-            <a href="charts_env_001yr_090deg.html">1yr 090</a> |
-            <a href="charts_env_001yr_135deg.html">1yr 135</a> |
-            <a href="charts_env_95NE_090deg.html">95%NE 090</a> |
-            <a href="charts_env_95NE_135deg.html">95%NE 135</a>
+            <a href="24in_arclength_env_1yr_090.html">1yr 090</a> |
+            <a href="24in_arclength_env_1yr_135.html">1yr 135</a> |
+            <a href="24in_arclength_env_95NE_090.html">95%NE 090</a> |
+            <a href="24in_arclength_env_95NE_135.html">95%NE 135</a>
             <br>
             <strong>By Tension:</strong>
-            <a href="charts_tension_900kN.html">900kN</a> |
-            <a href="charts_tension_1250kN.html">1250kN</a> |
-            <a href="charts_tension_1500kN.html">1500kN</a> |
-            <a href="charts_tension_2000kN.html">2000kN</a> |
-            <a href="charts_tension_2500kN.html">2500kN</a>
+            <a href="24in_arclength_tension_0900kN.html">900kN</a> |
+            <a href="24in_arclength_tension_1250kN.html">1250kN</a> |
+            <a href="24in_arclength_tension_1500kN.html">1500kN</a> |
+            <a href="24in_arclength_tension_2000kN.html">2000kN</a> |
+            <a href="24in_arclength_tension_2500kN.html">2500kN</a>
         </p>
     </div>
 
@@ -549,13 +549,13 @@ html_content = html_template.format(
     chart_tension_sens_json=fig_tension_sens.to_json(),
 )
 
-output_html = Path(__file__).parent / 'results_interactive.html'
+output_html = Path(__file__).parent / '24in_main_report.html'
 with open(output_html, 'w', encoding='utf-8') as f:
     f.write(html_content)
 print(f'Interactive HTML saved to: {output_html}')
 
 # Also save CSV
-output_csv = Path(__file__).parent / 'results_summary_latestwave.csv'
+output_csv = Path(__file__).parent / '24in_results_summary.csv'
 df.to_csv(output_csv, index=False)
 print(f'CSV saved to: {output_csv}')
 
@@ -724,18 +724,18 @@ def generate_chart_page(charts, title, subtitle, output_path):
     <p class="subtitle">{subtitle}</p>
 
     <div class="nav">
-        <a href="results_interactive.html">Summary Report</a> |
+        <a href="24in_main_report.html">Summary Report</a> |
         <strong>By Load Condition:</strong>
-        <a href="charts_env_001yr_090deg.html">1yr 090</a>
-        <a href="charts_env_001yr_135deg.html">1yr 135</a>
-        <a href="charts_env_95NE_090deg.html">95%NE 090</a>
-        <a href="charts_env_95NE_135deg.html">95%NE 135</a> |
+        <a href="24in_arclength_env_1yr_090.html">1yr 090</a>
+        <a href="24in_arclength_env_1yr_135.html">1yr 135</a>
+        <a href="24in_arclength_env_95NE_090.html">95%NE 090</a>
+        <a href="24in_arclength_env_95NE_135.html">95%NE 135</a> |
         <strong>By Tension:</strong>
-        <a href="charts_tension_900kN.html">900kN</a>
-        <a href="charts_tension_1250kN.html">1250kN</a>
-        <a href="charts_tension_1500kN.html">1500kN</a>
-        <a href="charts_tension_2000kN.html">2000kN</a>
-        <a href="charts_tension_2500kN.html">2500kN</a>
+        <a href="24in_arclength_tension_0900kN.html">900kN</a>
+        <a href="24in_arclength_tension_1250kN.html">1250kN</a>
+        <a href="24in_arclength_tension_1500kN.html">1500kN</a>
+        <a href="24in_arclength_tension_2000kN.html">2000kN</a>
+        <a href="24in_arclength_tension_2500kN.html">2500kN</a>
     </div>
 
     <div class="section">
@@ -757,6 +757,10 @@ def generate_chart_page(charts, title, subtitle, output_path):
 print('Generating arc-length distribution charts...')
 load_conditions = [('001yr', '090deg'), ('001yr', '135deg'), ('95NE', '090deg'), ('95NE', '135deg')]
 
+# Map env names for file naming
+env_name_map = {'001yr': '1yr', '95NE': '95NE'}
+heading_name_map = {'090deg': '090', '135deg': '135'}
+
 for env, heading in load_conditions:
     filtered = [d for d in rangegraph_data if d['env'] == env and d['heading'] == heading]
     if not filtered:
@@ -765,7 +769,9 @@ for env, heading in load_conditions:
     charts = create_dual_view_charts(filtered, color_by='tension')
     title = f'Arc-Length Distributions - {env} {heading}'
     subtitle = f'Comparing all tension levels | LatestWave Period'
-    output_path = Path(__file__).parent / f'charts_env_{env}_{heading}.html'
+    env_short = env_name_map.get(env, env)
+    heading_short = heading_name_map.get(heading, heading)
+    output_path = Path(__file__).parent / f'24in_arclength_env_{env_short}_{heading_short}.html'
     generate_chart_page(charts, title, subtitle, output_path)
     print(f'  Saved: {output_path.name}')
 
@@ -780,7 +786,9 @@ for tension in tensions:
     charts = create_dual_view_charts(filtered, color_by='env')
     title = f'Arc-Length Distributions - {tension} kN'
     subtitle = f'Comparing all load conditions | LatestWave Period'
-    output_path = Path(__file__).parent / f'charts_tension_{tension}kN.html'
+    # Zero-pad tension for consistent sorting (0900, 1250, 1500, 2000, 2500)
+    tension_str = f'{tension:04d}' if tension < 1000 else str(tension)
+    output_path = Path(__file__).parent / f'24in_arclength_tension_{tension_str}kN.html'
     generate_chart_page(charts, title, subtitle, output_path)
     print(f'  Saved: {output_path.name}')
 
