@@ -3,9 +3,10 @@
   WaveTrains:
     Wave1:
       WaveType: Airy
-      WaveHeight: 1
-      WavePeriod: 7
-  RefCurrentSpeed: 0.4
-  RefCurrentDirection: 0
-  WindSpeed: 15.7
-  WindDirection: 0
+      WaveHeight: 1.16
+      WavePeriod: 10.6
+      WaveDirection: 50
+  RefCurrentSpeed: 0.8
+  RefCurrentDirection: 50
+  WindSpeed: 7.45
+  WindDirection: 50
