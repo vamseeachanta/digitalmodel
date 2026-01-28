@@ -6,7 +6,7 @@
 # User: ansystech
 # Machine: ACMA-ANSYS05
 ---
-BaseFile: ../basefile/vessel_end_winch.yml
+BaseFile: ../basefile/D24inL5200mBuoy7kNSpacing1500mm.yml
 Winches:
   vessel_winch:
     StageValue[1]: 900
