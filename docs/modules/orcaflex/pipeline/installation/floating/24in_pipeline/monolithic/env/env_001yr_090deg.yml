@@ -1,0 +1,13 @@
+﻿Environment:
+  WaveTrains:
+    Wave1:
+      WaveHeight: 3
+      WavePeriod: 10
+      WaveDirection: 90
+  RefCurrentSpeed: 0.4
+  RefCurrentDirection: 90
+  CurrentFactor[1]: 1
+  CurrentFactor[2]: 1
+  CurrentFactor[3]: 0.2
+  WindSpeed: 16
+  WindDirection: 90
