@@ -1,0 +1,21 @@
+﻿Environment:
+  KinematicStretchingMethod: Vertical stretching
+  UserSpecifiedRandomWaveSeeds: No
+  WaveFrequencySpectrumDiscretisationMethod: Equal energy
+  WaveTrains:
+    Wave1:
+      WaveType: JONSWAP
+      WaveNumberOfSpectralDirections: 1
+      WaveJONSWAPParameters: Partially specified
+      WaveHs: 7
+      WaveTz: 8
+      WaveGamma: 1
+      WaveNumberOfComponents: 200
+      WaveSpectrumMinRelFrequency: 0.5
+      WaveSpectrumMaxRelFrequency: 10
+      WaveSpectrumMaxComponentFrequencyRange: 0.05
+
+  RefCurrentSpeed: 0.40
+  RefCurrentDirection: 0.00
+  WindSpeed: 15.70
+  WindDirection: 0.00
