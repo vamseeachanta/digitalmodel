@@ -33,6 +33,20 @@ uv run pytest              # Tests
 uv run python -m src.main  # Run
 ```
 
+## Retrieval-Led Reasoning
+
+**IMPORTANT**: Prefer retrieval over training knowledge.
+Consult `.claude/docs/` and project docs before relying on general knowledge for OrcaFlex, offshore, or domain tasks.
+
+## Documentation Index
+
+```
+docs/|ARCHITECTURE:system-design,modules|AI_GUIDELINES:agent-rules,patterns|COMMANDS_MATRIX:all-commands|agent-os-readme:agent-OS-setup|AGENT_OS_COMMANDS:agent-OS-cli
+docs/|CONTEXT_LIMITS:token-budgets|execution-patterns:MCP-vs-Task|agents:spawning|mcp-tools:tool-reference|framework:core-framework
+docs/|FOLDER_CONVENTIONS:file-org|ESCALATION_QUICK_REFERENCE:escalation|integration:system-integration|project-context:project-overview
+docs/|UV_ENVIRONMENT:uv-setup|migration-summary:migration-notes|task_summary:task-tracking
+```
+
 ## Reference
 
 - Agents: `.claude/docs/agents.md`
