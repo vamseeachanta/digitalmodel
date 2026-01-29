@@ -33,10 +33,13 @@ jobs:
     - name: Install uv
       uses: astral-sh/setup-uv@v3
 
+    - name: Create virtual environment
+      run: uv venv
+
     - name: Install dependencies
       run: |
-        uv pip install --system -e .
-        uv pip install --system pytest pytest-cov pytest-xdist numpy pyyaml
+        uv pip install -e .
+        uv pip install pytest pytest-cov pytest-xdist numpy pyyaml
 
     - name: Run unit tests
       run: |
@@ -69,9 +72,12 @@ jobs:
     - name: Install uv
       uses: astral-sh/setup-uv@v3
 
+    - name: Create virtual environment
+      run: uv venv
+
     - name: Install dependencies
       run: |
-        uv pip install --system ruff black isort mypy
+        uv pip install ruff black isort mypy
 
     - name: Run ruff
       run: |

@@ -32,9 +32,12 @@ jobs:
       with:
         enable-cache: true
 
+    - name: Create virtual environment
+      run: uv venv
+
     - name: Install dependencies
       run: |
-        uv pip install --system -e ".[dev]"
+        uv pip install -e ".[dev]"
 
     - name: Run workflow automation tests
       run: |
