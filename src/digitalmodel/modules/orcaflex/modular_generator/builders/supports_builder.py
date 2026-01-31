@@ -3,8 +3,10 @@
 from typing import Any
 
 from .base import BaseBuilder
+from .registry import BuilderRegistry
 
 
+@BuilderRegistry.register("13_supports.yml", order=50)
 class SupportsBuilder(BaseBuilder):
     """Builds the SupportTypes section of the OrcaFlex model.
 

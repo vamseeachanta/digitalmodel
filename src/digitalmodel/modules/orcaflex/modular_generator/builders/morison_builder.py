@@ -3,8 +3,10 @@
 from typing import Any
 
 from .base import BaseBuilder
+from .registry import BuilderRegistry
 
 
+@BuilderRegistry.register("14_morison.yml", order=60)
 class MorisonBuilder(BaseBuilder):
     """Builds the MorisonElementTypes section of the OrcaFlex model.
 

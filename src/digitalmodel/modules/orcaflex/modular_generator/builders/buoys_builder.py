@@ -10,6 +10,7 @@ IMPORTANT: OrcaFlex separates 6D buoys (6 degrees of freedom) and
 from typing import Any
 
 from .base import BaseBuilder
+from .registry import BuilderRegistry
 
 
 # Default wireframe for box-shaped buoys (cube vertices and edges)
@@ -40,6 +41,7 @@ DEFAULT_WIREFRAME_EDGES = [
 ]
 
 
+@BuilderRegistry.register("08_buoys.yml", order=80)
 class BuoysBuilder(BaseBuilder):
     """Builds the Buoys section of the OrcaFlex model.
 

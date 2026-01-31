@@ -3,6 +3,7 @@
 from typing import Any
 
 from .base import BaseBuilder
+from .registry import BuilderRegistry
 
 
 # Mapping from spec wave types to OrcaFlex wave type strings
@@ -17,6 +18,7 @@ WAVE_TYPE_MAP = {
 }
 
 
+@BuilderRegistry.register("03_environment.yml", order=30)
 class EnvironmentBuilder(BaseBuilder):
     """Builds the Environment section of the OrcaFlex model.
 

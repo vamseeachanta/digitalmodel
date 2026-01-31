@@ -7,6 +7,7 @@ referencing coating names from the VarDataBuilder via context.
 from typing import Any
 
 from .base import BaseBuilder
+from .registry import BuilderRegistry
 
 
 # Default material properties by grade
@@ -43,6 +44,7 @@ DEFAULT_HYDRO_COEFFS = {
 }
 
 
+@BuilderRegistry.register("05_line_types.yml", order=40)
 class LineTypeBuilder(BaseBuilder):
     """Builds the LineTypes section of the OrcaFlex model.
 

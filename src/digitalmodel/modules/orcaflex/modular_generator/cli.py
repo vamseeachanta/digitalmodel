@@ -24,7 +24,8 @@ import yaml
 from pydantic import ValidationError
 
 from .schema import ProjectInputSpec
-from . import ModularModelGenerator, INCLUDE_ORDER
+from . import ModularModelGenerator
+from .builders.registry import BuilderRegistry
 
 
 def print_error(message: str) -> None:
@@ -205,41 +206,23 @@ def cmd_generate(args: argparse.Namespace) -> int:
     try:
         generator = ModularModelGenerator(input_path)
 
-        # Import builder classes for progress display
-        from .builders.general_builder import GeneralBuilder
-        from .builders.environment_builder import EnvironmentBuilder
-        from .builders.vardata_builder import VarDataBuilder
-        from .builders.linetype_builder import LineTypeBuilder
-        from .builders.supports_builder import SupportsBuilder
-        from .builders.morison_builder import MorisonBuilder
-        from .builders.shapes_builder import ShapesBuilder
-        from .builders.buoys_builder import BuoysBuilder
-        from .builders.lines_builder import LinesBuilder
-        from .builders.groups_builder import GroupsBuilder
+        from .builders.context import BuilderContext
+        from .builders.registry import BuilderRegistry
 
-        # Builder registry with friendly names
-        builder_info = {
-            '01_general.yml': ('GeneralBuilder', GeneralBuilder),
-            '02_var_data.yml': ('VarDataBuilder', VarDataBuilder),
-            '03_environment.yml': ('EnvironmentBuilder', EnvironmentBuilder),
-            '05_line_types.yml': ('LineTypeBuilder', LineTypeBuilder),
-            '13_supports.yml': ('SupportsBuilder', SupportsBuilder),
-            '14_morison.yml': ('MorisonBuilder', MorisonBuilder),
-            '09_shapes.yml': ('ShapesBuilder', ShapesBuilder),
-            '08_buoys.yml': ('BuoysBuilder', BuoysBuilder),
-            '07_lines.yml': ('LinesBuilder', LinesBuilder),
-            '10_groups.yml': ('GroupsBuilder', GroupsBuilder),
-        }
+        context = BuilderContext()
 
-        context = {}
-
-        for file_name in INCLUDE_ORDER:
-            builder_name, builder_class = builder_info[file_name]
+        for file_name, builder_class in BuilderRegistry.get_ordered_builders():
+            builder_name = builder_class.__name__
             print_progress(f"Running {builder_name}...")
 
             builder = builder_class(spec, context)
+
+            if not builder.should_generate():
+                print_progress(f"Skipped {file_name} (no data)")
+                continue
+
             data = builder.build()
-            context.update(builder.get_generated_entities())
+            context.update_from_dict(builder.get_generated_entities())
 
             file_path = includes_dir / file_name
             with open(file_path, 'w') as f:
@@ -275,7 +258,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
             f'# Model: {spec.metadata.name}',
             '',
         ]
-        for file_name in INCLUDE_ORDER:
+        for file_name in BuilderRegistry.get_include_order():
             master_lines.append(f'- includefile: includes/{file_name}')
 
         master_path = output_dir / 'master.yml'
@@ -297,7 +280,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
     print(f"  {output_dir}/")
     print(f"    master.yml")
     print(f"    includes/")
-    for file_name in INCLUDE_ORDER:
+    for file_name in BuilderRegistry.get_include_order():
         print(f"      {file_name}")
     print(f"    inputs/")
     print(f"      parameters.yml")

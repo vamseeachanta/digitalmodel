@@ -7,8 +7,10 @@ logical collections for easier model management and results processing.
 from typing import Any
 
 from .base import BaseBuilder
+from .registry import BuilderRegistry
 
 
+@BuilderRegistry.register("10_groups.yml", order=100)
 class GroupsBuilder(BaseBuilder):
     """Builds the Groups section of the OrcaFlex model.
 
@@ -34,27 +36,27 @@ class GroupsBuilder(BaseBuilder):
         structure_group = {}
 
         # Collect line names from context
-        line_names = self.context.get("line_names", [])
+        line_names = self.context.line_names
         for name in line_names:
             structure_group[name] = "Model"
 
         # Collect 6D buoy names from context
-        buoy_names_6d = self.context.get("buoy_names_6d", [])
+        buoy_names_6d = self.context.buoy_names_6d
         for name in buoy_names_6d:
             structure_group[name] = "Model"
 
         # Collect 3D buoy names from context
-        buoy_names_3d = self.context.get("buoy_names_3d", [])
+        buoy_names_3d = self.context.buoy_names_3d
         for name in buoy_names_3d:
             structure_group[name] = "Model"
 
         # Collect shape names from context
-        shape_names = self.context.get("shape_names", [])
+        shape_names = self.context.shape_names
         for name in shape_names:
             structure_group[name] = "Model"
 
         # Add any additional entities that might have been registered
-        additional_lines = self.context.get("additional_line_names", [])
+        additional_lines = self.context.additional_line_names
         for name in additional_lines:
             structure_group[name] = "Model"
 
@@ -130,11 +132,11 @@ class GroupsBuilder(BaseBuilder):
         all_names = []
 
         # From context
-        all_names.extend(self.context.get("line_names", []))
-        all_names.extend(self.context.get("buoy_names_6d", []))
-        all_names.extend(self.context.get("buoy_names_3d", []))
-        all_names.extend(self.context.get("shape_names", []))
-        all_names.extend(self.context.get("additional_line_names", []))
+        all_names.extend(self.context.line_names)
+        all_names.extend(self.context.buoy_names_6d)
+        all_names.extend(self.context.buoy_names_3d)
+        all_names.extend(self.context.shape_names)
+        all_names.extend(self.context.additional_line_names)
 
         # Remove duplicates while preserving order
         seen = set()

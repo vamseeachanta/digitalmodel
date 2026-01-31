@@ -7,6 +7,7 @@ including Block and Curved plate shapes with stiffness properties.
 from typing import Any
 
 from .base import BaseBuilder
+from .registry import BuilderRegistry
 
 
 # Default stiffness values for shapes
@@ -16,6 +17,7 @@ DEFAULT_STIFFNESS = {
 }
 
 
+@BuilderRegistry.register("09_shapes.yml", order=70)
 class ShapesBuilder(BaseBuilder):
     """Builds the Shapes section of the OrcaFlex model.
 

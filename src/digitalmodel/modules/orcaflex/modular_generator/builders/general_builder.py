@@ -3,8 +3,10 @@
 from typing import Any
 
 from .base import BaseBuilder
+from .registry import BuilderRegistry
 
 
+@BuilderRegistry.register("01_general.yml", order=10)
 class GeneralBuilder(BaseBuilder):
     """Builds the General section of the OrcaFlex model.
 

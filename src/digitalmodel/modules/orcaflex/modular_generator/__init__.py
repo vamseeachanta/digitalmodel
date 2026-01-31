@@ -1,35 +1,32 @@
 """OrcaFlex Modular Model Generator from Project Spec."""
 
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any
+
 import yaml
 
 from .schema import ProjectInputSpec
 from .builders.base import BaseBuilder
-from .builders.general_builder import GeneralBuilder
-from .builders.environment_builder import EnvironmentBuilder
-from .builders.vardata_builder import VarDataBuilder
-from .builders.linetype_builder import LineTypeBuilder
-from .builders.supports_builder import SupportsBuilder
-from .builders.morison_builder import MorisonBuilder
-from .builders.shapes_builder import ShapesBuilder
-from .builders.buoys_builder import BuoysBuilder
-from .builders.lines_builder import LinesBuilder
-from .builders.groups_builder import GroupsBuilder
+from .builders.context import BuilderContext
+from .builders.registry import BuilderRegistry
 
-# Critical: Explicit include order per OrcaFlex requirements
-INCLUDE_ORDER = [
-    '01_general.yml',
-    '02_var_data.yml',
-    '03_environment.yml',
-    '05_line_types.yml',
-    '13_supports.yml',
-    '14_morison.yml',
-    '09_shapes.yml',
-    '08_buoys.yml',
-    '07_lines.yml',
-    '10_groups.yml',
-]
+# Import builders to trigger @BuilderRegistry.register decorators
+from .builders import (  # noqa: F401
+    GeneralBuilder,
+    VarDataBuilder,
+    EnvironmentBuilder,
+    LineTypeBuilder,
+    SupportsBuilder,
+    MorisonBuilder,
+    ShapesBuilder,
+    BuoysBuilder,
+    LinesBuilder,
+    GroupsBuilder,
+)
+
+# Backward-compatible constant: ordered list of include file names
+INCLUDE_ORDER = BuilderRegistry.get_include_order()
+
 
 class ModularModelGenerator:
     """Generates complete OrcaFlex modular model structure from spec file."""
@@ -51,31 +48,20 @@ class ModularModelGenerator:
         includes_dir.mkdir(parents=True, exist_ok=True)
         inputs_dir.mkdir(parents=True, exist_ok=True)
 
-        # Context for cross-builder entity sharing
-        context: Dict[str, Any] = {}
+        # Typed context for cross-builder entity sharing
+        context = BuilderContext()
 
-        # Builder registry mapping file names to builder classes
-        builders = {
-            '01_general.yml': GeneralBuilder,
-            '02_var_data.yml': VarDataBuilder,
-            '03_environment.yml': EnvironmentBuilder,
-            '05_line_types.yml': LineTypeBuilder,
-            '13_supports.yml': SupportsBuilder,
-            '14_morison.yml': MorisonBuilder,
-            '09_shapes.yml': ShapesBuilder,
-            '08_buoys.yml': BuoysBuilder,
-            '07_lines.yml': LinesBuilder,
-            '10_groups.yml': GroupsBuilder,
-        }
-
-        # Generate includes in explicit dependency order
-        for file_name in INCLUDE_ORDER:
-            builder_class = builders[file_name]
+        # Generate includes in registry-defined dependency order
+        for file_name, builder_class in BuilderRegistry.get_ordered_builders():
             builder = builder_class(self.spec, context)
+
+            if not builder.should_generate():
+                continue
+
             data = builder.build()
 
             # Update context with generated entities for cross-references
-            context.update(builder.get_generated_entities())
+            context.update_from_dict(builder.get_generated_entities())
 
             # Write include file
             file_path = includes_dir / file_name
@@ -105,13 +91,14 @@ class ModularModelGenerator:
             yaml.dump(params, f, default_flow_style=False)
 
     def _write_master(self, path: Path) -> None:
+        include_order = BuilderRegistry.get_include_order()
         lines = [
             '%YAML 1.1',
             '# Type: Model',
             f'# Generated from: {self.spec_file.name}',
             '',
         ]
-        for file_name in INCLUDE_ORDER:
+        for file_name in include_order:
             lines.append(f'- includefile: includes/{file_name}')
 
         with open(path, 'w') as f:

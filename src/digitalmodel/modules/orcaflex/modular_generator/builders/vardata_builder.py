@@ -3,8 +3,10 @@
 from typing import Any
 
 from .base import BaseBuilder
+from .registry import BuilderRegistry
 
 
+@BuilderRegistry.register("02_var_data.yml", order=20)
 class VarDataBuilder(BaseBuilder):
     """Builds the VariableData section of the OrcaFlex model.
 

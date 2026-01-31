@@ -9,8 +9,10 @@ This builder generates Lines with pipeline configuration including:
 from typing import Any
 
 from .base import BaseBuilder
+from .registry import BuilderRegistry
 
 
+@BuilderRegistry.register("07_lines.yml", order=90)
 class LinesBuilder(BaseBuilder):
     """Builds the Lines section of the OrcaFlex model.
 
@@ -36,8 +38,8 @@ class LinesBuilder(BaseBuilder):
         lines_list = []
 
         # Get end buoy name from context (populated by BuoysBuilder)
-        end_buoy_name = self.context.get("end_buoy_name", "6D buoy1")
-        bm_buoy_name = self.context.get("bm_buoy_name", "BM")
+        end_buoy_name = self.context.end_buoy_name
+        bm_buoy_name = self.context.bm_buoy_name
 
         # Build main pipeline line
         main_line = self._build_pipeline_line(
