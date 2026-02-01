@@ -89,11 +89,19 @@ source ~/.bashrc
 
 **Install OrcaFlex Demo:**
 
-Download the OrcaFlex Demo installer from [Orcina](https://www.orcina.com/orcaflex/demo/) and run:
+Download the OrcaFlex Demo zip from [Orcina](https://www.orcina.com/orcaflex/demo/).
+The zip contains `Setup.exe`, `OrcaFlex64.msi`, and `configuration.xml`.
 
 ```bash
-wine OrcaFlexDemoSetup.exe
+# Extract the zip
+unzip OrcaFlexDemo.zip -d /tmp/orcaflex-demo-install
+
+# Install via MSI (recommended — more reliable under Wine than Setup.exe)
+wine msiexec /i /tmp/orcaflex-demo-install/OrcaFlex64.msi /qn
 ```
+
+> **Note**: The `/qn` flag runs a silent install. The OrcaWave Demo is bundled
+> with the OrcaFlex Demo installer — no separate download needed.
 
 Default install location: `~/.wine/drive_c/Program Files (x86)/Orcina/OrcaFlex/Demo/`
 
@@ -103,6 +111,12 @@ Default install location: `~/.wine/drive_c/Program Files (x86)/Orcina/OrcaFlex/D
 wine "$HOME/.wine/drive_c/Program Files (x86)/Orcina/OrcaFlex/Demo/OrcaFlexDemo64.exe"
 ```
 
+**Launch OrcaWave Demo GUI:**
+
+```bash
+wine "$HOME/.wine/drive_c/Program Files (x86)/Orcina/OrcaFlex/Demo/OrcaWaveDemo64.exe"
+```
+
 **Key files in the Demo installation:**
 
 | File | Description |
@@ -110,7 +124,22 @@ wine "$HOME/.wine/drive_c/Program Files (x86)/Orcina/OrcaFlex/Demo/OrcaFlexDemo6
 | `OrcaFlexDemo64.exe` | OrcaFlex Demo (64-bit) |
 | `OrcaFlexDemo.exe` | OrcaFlex Demo (32-bit) |
 | `OrcaWaveDemo64.exe` | OrcaWave Demo (64-bit) |
+| `OrcaWaveDemo.exe` | OrcaWave Demo (32-bit) |
+| `OrcaFlexHelp.exe` | OrcaFlex help viewer |
+| `OrcaWaveHelp.exe` | OrcaWave help viewer |
 | `OrcFxAPI/` | C/C++, Python, MATLAB, .NET API bindings |
+| `lib64/` | 64-bit native DLLs (OpenBLAS, YAML, etc.) |
+| `lib32/` | 32-bit native DLLs |
+
+**Verified working configuration (Feb 2025):**
+
+| Component | Version / Detail |
+|-----------|-----------------|
+| Ubuntu | 24.04 LTS (noble) |
+| Wine | wine-stable from WineHQ (`/opt/wine-stable/bin/`) |
+| OrcaFlex Demo | Dec 2025 build (`OrcaFlexDemo64.exe` 28 MB) |
+| OrcaWave Demo | Dec 2025 build (`OrcaWaveDemo64.exe` 14 MB) |
+| OrcFxAPI (Python) | 11.5.3 (pip, runs natively without Wine) |
 
 **Python API (headless, no Wine needed):**
 
