@@ -397,5 +397,108 @@ def batch(config_file):
         sys.exit(1)
 
 
+# ---------------------------------------------------------------------------
+# WRK-061: Spec converter commands
+# ---------------------------------------------------------------------------
+
+@cli.command("convert-spec")
+@click.argument("spec_path", type=click.Path(exists=True))
+@click.option(
+    "--solver",
+    "-s",
+    type=click.Choice(["aqwa", "orcawave", "all"], case_sensitive=False),
+    default="all",
+    help="Target solver (default: all)",
+)
+@click.option(
+    "--format",
+    "-f",
+    "fmt",
+    type=click.Choice(["single", "modular"], case_sensitive=False),
+    default="single",
+    help="Output format (default: single)",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    default="output",
+    help="Output directory (default: output)",
+)
+def convert_spec(spec_path, solver, fmt, output):
+    """Convert a DiffractionSpec YAML to solver input files.
+
+    SPEC_PATH: Path to a spec.yml file conforming to DiffractionSpec schema.
+
+    Example:
+        diffraction convert-spec analysis.yml --solver aqwa --format single
+        diffraction convert-spec analysis.yml --solver all -o ./output
+    """
+    from digitalmodel.modules.diffraction.spec_converter import SpecConverter
+
+    click.echo("=" * 80)
+    click.echo("Spec Converter")
+    click.echo("=" * 80)
+    click.echo(f"Spec file : {spec_path}")
+    click.echo(f"Solver    : {solver}")
+    click.echo(f"Format    : {fmt}")
+    click.echo(f"Output    : {output}")
+    click.echo()
+
+    try:
+        converter = SpecConverter(Path(spec_path))
+
+        if solver == "all":
+            results = converter.convert_all(format=fmt, output_dir=Path(output))
+            click.echo(click.style("[OK] Conversion complete:", fg="green"))
+            for name, path in results.items():
+                click.echo(f"  {name}: {path}")
+        else:
+            result_path = converter.convert(
+                solver=solver, format=fmt, output_dir=Path(output)
+            )
+            click.echo(click.style("[OK] Conversion complete:", fg="green"))
+            click.echo(f"  {solver}: {result_path}")
+
+    except Exception as e:
+        click.echo(click.style(f"\n[ERROR] {e}", fg="red", bold=True))
+        sys.exit(1)
+
+
+@cli.command("validate-spec")
+@click.argument("spec_path", type=click.Path(exists=True))
+def validate_spec(spec_path):
+    """Validate a DiffractionSpec YAML file and report issues.
+
+    SPEC_PATH: Path to a spec.yml file conforming to DiffractionSpec schema.
+
+    Example:
+        diffraction validate-spec analysis.yml
+    """
+    from digitalmodel.modules.diffraction.spec_converter import SpecConverter
+
+    click.echo("=" * 80)
+    click.echo("Spec Validator")
+    click.echo("=" * 80)
+    click.echo(f"Spec file: {spec_path}")
+    click.echo()
+
+    try:
+        converter = SpecConverter(Path(spec_path))
+        issues = converter.validate()
+
+        if issues:
+            click.echo(click.style(f"[WARN] {len(issues)} issue(s) found:", fg="yellow"))
+            for issue in issues:
+                click.echo(f"  - {issue}")
+            sys.exit(1)
+        else:
+            click.echo(click.style("[OK] Spec is valid.", fg="green"))
+
+    except Exception as e:
+        click.echo(click.style(f"\n[ERROR] {e}", fg="red", bold=True))
+        sys.exit(1)
+
+
 if __name__ == '__main__':
     cli()
