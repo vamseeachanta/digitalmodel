@@ -18,24 +18,10 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
+from digitalmodel.modules.orcaflex.yaml_utils import OrcaFlexDumper
 
-class OrcaFlexLibraryDumper(yaml.SafeDumper):
-    """Custom YAML dumper for OrcaFlex library components."""
-    pass
-
-
-def represent_none(dumper, data):
-    """Represent None as ~ (OrcaFlex format)."""
-    return dumper.represent_scalar('tag:yaml.org,2002:null', '~')
-
-
-def represent_bool(dumper, data):
-    """Represent bool as Yes/No (OrcaFlex format)."""
-    return dumper.represent_scalar('tag:yaml.org,2002:bool', 'Yes' if data else 'No')
-
-
-OrcaFlexLibraryDumper.add_representer(type(None), represent_none)
-OrcaFlexLibraryDumper.add_representer(bool, represent_bool)
+# Backward-compat alias
+OrcaFlexLibraryDumper = OrcaFlexDumper
 
 
 def csv_row_to_line_type(row: Dict[str, Any]) -> Dict[str, Any]:
