@@ -478,6 +478,54 @@ orcaflex-universal --mock --test
 run-to-sim --mock --all
 ```
 
+### YAML File Validation Tests
+```bash
+# Runs on all platforms — validates YAML structure and cross-references
+uv run pytest tests/modules/orcaflex/test_load_orcaflex_files.py -v
+```
+
+Two-level validation:
+1. **YAML structure** (all platforms) — parses YAML files and checks for expected
+   OrcaFlex top-level keys, cross-references (e.g., coating name resolution)
+2. **OrcFxAPI model loading** (Windows only) — full engine validation via
+   `OrcFxAPI.Model().LoadData()`, catches errors the YAML checks cannot
+
+### Windows Setup for Full Validation
+
+On Windows, OrcFxAPI runs natively and enables full model validation that is
+not possible on Linux. To transfer this work to a Windows machine:
+
+1. **Clone the repo**:
+   ```powershell
+   git clone <repo-url>
+   cd digitalmodel
+   ```
+
+2. **Install dependencies** (Python 3.10+):
+   ```powershell
+   pip install uv
+   uv sync
+   ```
+
+3. **Install OrcaFlex Demo** from [Orcina](https://www.orcina.com/orcaflex/demo/):
+   - Download and run the installer (`Setup.exe` or `OrcaFlex64.msi`)
+   - Default location: `C:\Program Files (x86)\Orcina\OrcaFlex\Demo\`
+
+4. **Install OrcFxAPI**:
+   ```powershell
+   uv pip install OrcFxAPI
+   python -c "import OrcFxAPI; print(OrcFxAPI.__version__)"
+   ```
+
+5. **Run full test suite**:
+   ```powershell
+   uv run pytest tests/modules/orcaflex/test_load_orcaflex_files.py -v
+   ```
+   On Windows, `test_orcaflex_api_load` tests will execute (they are skipped
+   on Linux). These load each model file through the OrcaFlex engine and catch
+   errors like missing data sources, invalid references, and structural issues
+   that YAML-level checks cannot detect.
+
 ---
 
 ## Related Modules
@@ -518,9 +566,10 @@ OrcaFlex Demo is a GUI application that cannot be used for headless/automated fi
   manually dismissed. The process does not exit on its own.
 - **Exit codes**: The process must be killed via timeout; the exit code is always
   `124` (SIGTERM) regardless of success or failure.
-- **Conclusion**: Programmatic file validation on Linux must use Python YAML parsing
-  with cross-reference checks (see `test_load_orcaflex_files.py`), not the GUI.
-  Full OrcFxAPI model loading requires Windows or Wine Python.
+- **Conclusion**: Programmatic file validation on Linux is limited to Python YAML
+  parsing with cross-reference checks (see `test_load_orcaflex_files.py`).
+  Full OrcFxAPI engine validation (`Model().LoadData()`) requires Windows — see
+  "Windows Setup for Full Validation" in the Testing section.
 
 ---
 
