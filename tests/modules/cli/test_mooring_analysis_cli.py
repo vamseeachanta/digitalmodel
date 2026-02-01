@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from digitalmodel.modules.mooring_analysis.cli import cli
-from tests.cli.conftest import assert_cli_success, assert_cli_failure, assert_json_output, assert_output_contains
+from tests.modules.cli.conftest import assert_cli_success, assert_cli_failure, assert_json_output, assert_output_contains
 
 
 class TestCatenaryCommand:

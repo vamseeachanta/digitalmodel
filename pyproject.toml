@@ -166,6 +166,7 @@ dependencies = [
     "markitdown",
     "fastmcp>=2.12.4,<3.0.0",
     "munch>=4.0.0",
+    "tqdm>=4.67.1",
 ]
 
 [project.optional-dependencies]

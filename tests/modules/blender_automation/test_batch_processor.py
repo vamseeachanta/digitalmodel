@@ -8,7 +8,7 @@ from pathlib import Path
 import tempfile
 import time
 
-from src.blender_automation.utils.batch_processor import BatchProcessor
+from digitalmodel.modules.blender_automation.utils.batch_processor import BatchProcessor
 
 
 class TestBatchProcessor:

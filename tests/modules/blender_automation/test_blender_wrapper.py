@@ -8,7 +8,7 @@ from pathlib import Path
 import tempfile
 import subprocess
 
-from src.blender_automation.core.blender_wrapper import BlenderWrapper, BlenderContext
+from digitalmodel.modules.blender_automation.core.blender_wrapper import BlenderWrapper, BlenderContext
 
 
 class TestBlenderWrapper:

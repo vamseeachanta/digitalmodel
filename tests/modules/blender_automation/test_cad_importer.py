@@ -7,7 +7,7 @@ import pytest
 from pathlib import Path
 import tempfile
 
-from src.blender_automation.converters.cad_importer import CADImporter
+from digitalmodel.modules.blender_automation.converters.cad_importer import CADImporter
 
 
 class TestCADImporter:

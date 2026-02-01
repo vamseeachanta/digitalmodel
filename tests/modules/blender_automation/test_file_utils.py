@@ -7,7 +7,7 @@ import pytest
 from pathlib import Path
 import tempfile
 
-from src.blender_automation.utils.file_utils import (
+from digitalmodel.modules.blender_automation.utils.file_utils import (
     find_blender_executable,
     verify_blender_installation,
     find_blend_files,

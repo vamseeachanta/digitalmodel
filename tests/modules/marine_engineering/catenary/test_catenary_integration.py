@@ -12,11 +12,11 @@ import pytest
 import numpy as np
 import warnings
 import math
-from src.marine_engineering.catenary import (
+from digitalmodel.modules.marine_engineering.catenary import (
     CatenarySolver, CatenaryInput, CatenaryResults,
     catenaryEquation, catenaryForces  # Adapter functions
 )
-from src.marine_engineering.catenary.simplified import SimplifiedCatenarySolver
+from digitalmodel.modules.marine_engineering.catenary.simplified import SimplifiedCatenarySolver
 
 
 class TestUnifiedModuleIntegration:

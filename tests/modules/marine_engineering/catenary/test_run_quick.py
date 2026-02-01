@@ -2,20 +2,15 @@
 Quick validation script to test catenary module without pytest conftest issues.
 """
 
-import sys
 import warnings
-from pathlib import Path
-
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 # Test imports
 print("Testing imports...")
-from digitalmodel.modules.marine_analysis.catenary import (
+from digitalmodel.modules.marine_engineering.catenary import (
     CatenarySolver, CatenaryInput,
     catenaryEquation, catenaryForces
 )
-from digitalmodel.modules.marine_analysis.catenary.simplified import SimplifiedCatenarySolver
+from digitalmodel.modules.marine_engineering.catenary.simplified import SimplifiedCatenarySolver
 
 print("[OK] Imports successful")
 

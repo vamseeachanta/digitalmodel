@@ -10,7 +10,7 @@ Tests verify:
 
 import math
 import pytest
-from src.marine_engineering.catenary.simplified import (
+from digitalmodel.modules.marine_engineering.catenary.simplified import (
     SimplifiedCatenarySolver,
     SimplifiedCatenaryInput,
     SimplifiedCatenaryResults,
@@ -164,7 +164,7 @@ class TestSimplifiedCatenarySolverForceBased:
         # Need F > w*d/2 = 981*500/2 = 245,250 N
         result = solver.solve_from_force(
             force=500000.0,  # 50 tons = 500 kN
-            weight_per_length=981.0,  # 100 kg/m * 9.81 m/s²
+            weight_per_length=981.0,  # 100 kg/m * 9.81 m/sï¿½
             vertical_distance=500.0
         )
 

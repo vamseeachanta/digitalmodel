@@ -15,9 +15,6 @@ from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 
-# Import the module to test
-import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
 from digitalmodel.modules.orcaflex.examples_integration.downloader import OrcaflexExampleDownloader
 
 
