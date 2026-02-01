@@ -141,15 +141,17 @@ wine "$HOME/.wine/drive_c/Program Files (x86)/Orcina/OrcaFlex/Demo/OrcaWaveDemo6
 | OrcaWave Demo | Dec 2025 build (`OrcaWaveDemo64.exe` 14 MB) |
 | OrcFxAPI (Python) | 11.5.3 (pip, runs natively without Wine) |
 
-**Python API (headless, no Wine needed):**
+**Python API (requires Windows or Wine Python):**
 
 ```bash
 pip install OrcFxAPI
 python -c "import OrcFxAPI; print(OrcFxAPI.__version__)"
 ```
 
-The Python API (`OrcFxAPI`) runs natively on Linux without Wine and is the recommended
-approach for batch simulations and automation via the `orcaflex-universal` CLI.
+> **Important**: `OrcFxAPI` does **not** run natively on Linux. It depends on `winreg`
+> (Windows registry) to locate OrcaFlex DLLs. On Linux, the Python API must be run
+> through Wine's Python or within a Windows environment. For Linux automation, use
+> the OrcaFlex GUI via Wine or run the Python API through Wine's Python interpreter.
 
 ---
 
@@ -499,7 +501,7 @@ run-to-sim --mock --all
 ## Limitations
 
 1. **OrcaFlex License**: Full functionality requires OrcaFlex installation
-2. **Platform**: Tested on Windows and Linux (Wine required for GUI on Linux; Python API runs natively)
+2. **Platform**: Tested on Windows and Linux (Wine required for both GUI and Python API on Linux)
 3. **File Size**: Large .sim files may require significant memory
 4. **Parallel Limits**: Maximum 30 workers (configurable)
 5. **Wine on Linux**: WineHQ repo `Suites` must match Ubuntu codename; Wine installs to `/opt/wine-stable/bin/` (not on PATH by default)
