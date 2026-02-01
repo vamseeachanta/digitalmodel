@@ -67,6 +67,61 @@ run-to-sim --version
 - OrcaFlex (optional - mock mode available)
 - OrcFxAPI (for full functionality)
 
+### Linux Setup (Wine)
+
+OrcaFlex is a Windows application. On Linux, it runs via Wine.
+
+**Install Wine (Ubuntu 24.04 noble):**
+
+```bash
+# Add WineHQ repository (ensure Suites matches your Ubuntu codename)
+# Check with: lsb_release -cs
+sudo apt install -y wine-stable
+
+# Wine installs to /opt/wine-stable/bin/ — add to PATH:
+echo 'export PATH="/opt/wine-stable/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+> **Troubleshooting**: If `apt install wine-stable` fails with dependency errors,
+> check `/etc/apt/sources.list.d/` for WineHQ `.sources` files. The `Suites:` field
+> must match your Ubuntu codename (e.g., `noble` for 24.04, not `focal` or `jammy`).
+
+**Install OrcaFlex Demo:**
+
+Download the OrcaFlex Demo installer from [Orcina](https://www.orcina.com/orcaflex/demo/) and run:
+
+```bash
+wine OrcaFlexDemoSetup.exe
+```
+
+Default install location: `~/.wine/drive_c/Program Files (x86)/Orcina/OrcaFlex/Demo/`
+
+**Launch OrcaFlex Demo GUI:**
+
+```bash
+wine "$HOME/.wine/drive_c/Program Files (x86)/Orcina/OrcaFlex/Demo/OrcaFlexDemo64.exe"
+```
+
+**Key files in the Demo installation:**
+
+| File | Description |
+|------|-------------|
+| `OrcaFlexDemo64.exe` | OrcaFlex Demo (64-bit) |
+| `OrcaFlexDemo.exe` | OrcaFlex Demo (32-bit) |
+| `OrcaWaveDemo64.exe` | OrcaWave Demo (64-bit) |
+| `OrcFxAPI/` | C/C++, Python, MATLAB, .NET API bindings |
+
+**Python API (headless, no Wine needed):**
+
+```bash
+pip install OrcFxAPI
+python -c "import OrcFxAPI; print(OrcFxAPI.__version__)"
+```
+
+The Python API (`OrcFxAPI`) runs natively on Linux without Wine and is the recommended
+approach for batch simulations and automation via the `orcaflex-universal` CLI.
+
 ---
 
 ## CLI Commands
@@ -415,9 +470,10 @@ run-to-sim --mock --all
 ## Limitations
 
 1. **OrcaFlex License**: Full functionality requires OrcaFlex installation
-2. **Platform**: Tested on Windows and Linux
+2. **Platform**: Tested on Windows and Linux (Wine required for GUI on Linux; Python API runs natively)
 3. **File Size**: Large .sim files may require significant memory
 4. **Parallel Limits**: Maximum 30 workers (configurable)
+5. **Wine on Linux**: WineHQ repo `Suites` must match Ubuntu codename; Wine installs to `/opt/wine-stable/bin/` (not on PATH by default)
 
 ---
 
