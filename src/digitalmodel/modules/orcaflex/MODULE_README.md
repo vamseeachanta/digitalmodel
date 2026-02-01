@@ -505,6 +505,22 @@ run-to-sim --mock --all
 3. **File Size**: Large .sim files may require significant memory
 4. **Parallel Limits**: Maximum 30 workers (configurable)
 5. **Wine on Linux**: WineHQ repo `Suites` must match Ubuntu codename; Wine installs to `/opt/wine-stable/bin/` (not on PATH by default)
+6. **GUI Automation**: OrcaFlex Demo GUI cannot be automated headlessly (see below)
+
+### GUI Automation Limitation
+
+OrcaFlex Demo is a GUI application that cannot be used for headless/automated file validation:
+
+- **On success**: The GUI opens and stays running with the model loaded. There is no
+  way to detect "load succeeded" without human observation.
+- **On error**: The GUI displays a modal dialog (e.g., "Failed to set
+  CoatingThickness=3LPP+CWC80 (Data source does not exist)") that blocks until
+  manually dismissed. The process does not exit on its own.
+- **Exit codes**: The process must be killed via timeout; the exit code is always
+  `124` (SIGTERM) regardless of success or failure.
+- **Conclusion**: Programmatic file validation on Linux must use Python YAML parsing
+  with cross-reference checks (see `test_load_orcaflex_files.py`), not the GUI.
+  Full OrcFxAPI model loading requires Windows or Wine Python.
 
 ---
 
