@@ -15,12 +15,15 @@ from .builders import (  # noqa: F401
     GeneralBuilder,
     VarDataBuilder,
     EnvironmentBuilder,
+    VesselTypeBuilder,
     LineTypeBuilder,
+    VesselBuilder,
     SupportsBuilder,
     MorisonBuilder,
     ShapesBuilder,
     BuoysBuilder,
     LinesBuilder,
+    WinchBuilder,
     GroupsBuilder,
 )
 
@@ -50,6 +53,7 @@ class ModularModelGenerator:
 
         # Typed context for cross-builder entity sharing
         context = BuilderContext()
+        generated_files = []
 
         # Generate includes in registry-defined dependency order
         for file_name, builder_class in BuilderRegistry.get_ordered_builders():
@@ -67,12 +71,13 @@ class ModularModelGenerator:
             file_path = includes_dir / file_name
             with open(file_path, 'w') as f:
                 yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+            generated_files.append(file_name)
 
         # Generate parameters.yml
         self._write_parameters(inputs_dir / 'parameters.yml')
 
-        # Generate master.yml
-        self._write_master(output_dir / 'master.yml')
+        # Generate master.yml (only include files that were actually generated)
+        self._write_master(output_dir / 'master.yml', generated_files)
 
     def _write_parameters(self, path: Path) -> None:
         params = {
@@ -90,8 +95,8 @@ class ModularModelGenerator:
         with open(path, 'w') as f:
             yaml.dump(params, f, default_flow_style=False)
 
-    def _write_master(self, path: Path) -> None:
-        include_order = BuilderRegistry.get_include_order()
+    def _write_master(self, path: Path, generated_files: list[str] | None = None) -> None:
+        include_order = generated_files or BuilderRegistry.get_include_order()
         lines = [
             '%YAML 1.1',
             '# Type: Model',

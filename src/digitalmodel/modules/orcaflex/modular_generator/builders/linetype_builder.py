@@ -30,6 +30,12 @@ MATERIAL_PROPERTIES = {
         "PoissonRatio": 0.293,
         "DNVSTF101Fy": 360e3,
     },
+    "X60": {
+        "MaterialDensity": 7.85,
+        "E": 207e6,
+        "PoissonRatio": 0.293,
+        "DNVSTF101Fy": 415e3,
+    },
 }
 
 # Default hydrodynamic coefficients for pipes
@@ -126,7 +132,7 @@ class LineTypeBuilder(BaseBuilder):
             line_type_names.append(segment_type)
 
         # Optionally add winch wire line type if needed for installation models
-        if self.spec.equipment.tugs:
+        if self.spec.equipment.tugs or self.spec.equipment.tensioner:
             winch_wire = self._build_winch_wire_line_type()
             line_types_list.append(winch_wire)
             line_type_names.append("Winch wire_LT")

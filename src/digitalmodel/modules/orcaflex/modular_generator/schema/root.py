@@ -70,6 +70,12 @@ class ProjectInputSpec(BaseModel):
                 # This could be intentional for staged installation
                 pass  # Could add warning logging here
 
+        # Check S-lay equipment consistency
+        if self.equipment.stinger and not self.equipment.vessel:
+            raise ValueError("Stinger requires a vessel to be defined")
+        if self.equipment.tensioner and not self.equipment.vessel:
+            raise ValueError("Tensioner requires a vessel to be defined")
+
         return self
 
     def get_total_pipeline_length(self) -> float:
@@ -108,3 +114,11 @@ class ProjectInputSpec(BaseModel):
             current += bm.spacing
 
         return positions
+
+    def is_s_lay(self) -> bool:
+        """Check if this is an S-lay installation model."""
+        return self.equipment.vessel is not None
+
+    def is_floating(self) -> bool:
+        """Check if this is a floating installation model."""
+        return self.equipment.tugs is not None

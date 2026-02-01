@@ -47,6 +47,16 @@ class BuilderContext:
     main_pipeline_name: str = ""
     additional_line_names: list[str] = field(default_factory=list)
 
+    # From VesselTypeBuilder
+    vessel_type_names: list[str] = field(default_factory=list)
+
+    # From VesselBuilder
+    vessel_names: list[str] = field(default_factory=list)
+    main_vessel_name: str = ""
+
+    # From WinchBuilder
+    winch_names: list[str] = field(default_factory=list)
+
     # From GroupsBuilder
     group_names: list[str] = field(default_factory=list)
 

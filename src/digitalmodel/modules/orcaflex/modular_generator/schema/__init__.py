@@ -25,8 +25,15 @@ from .equipment import (
     Equipment,
     Ramp,
     Rollers,
+    Stinger,
+    StingerRoller,
+    StingerSection,
+    Tensioner,
     TugProperties,
     Tugs,
+    Vessel,
+    VesselMooring,
+    VesselProperties,
 )
 from .metadata import Metadata
 from .pipeline import Coating, Coatings, Dimensions, Pipeline, Segment
@@ -65,6 +72,14 @@ __all__ = [
     "BuoyancyModules",
     "Ramp",
     "Equipment",
+    # Equipment (S-lay)
+    "VesselProperties",
+    "VesselMooring",
+    "Vessel",
+    "StingerSection",
+    "StingerRoller",
+    "Stinger",
+    "Tensioner",
     # Simulation
     "Simulation",
 ]

@@ -15,6 +15,9 @@ from .shapes_builder import ShapesBuilder
 from .buoys_builder import BuoysBuilder
 from .lines_builder import LinesBuilder
 from .groups_builder import GroupsBuilder
+from .vessel_type_builder import VesselTypeBuilder
+from .vessel_builder import VesselBuilder
+from .winch_builder import WinchBuilder
 
 __all__ = [
     'BaseBuilder',
@@ -23,4 +26,5 @@ __all__ = [
     'GeneralBuilder', 'EnvironmentBuilder', 'VarDataBuilder',
     'LineTypeBuilder', 'SupportsBuilder', 'MorisonBuilder',
     'ShapesBuilder', 'BuoysBuilder', 'LinesBuilder', 'GroupsBuilder',
+    'VesselTypeBuilder', 'VesselBuilder', 'WinchBuilder',
 ]

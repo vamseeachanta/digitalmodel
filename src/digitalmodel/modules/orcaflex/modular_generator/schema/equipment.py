@@ -174,6 +174,113 @@ class Ramp(BaseModel):
         return v
 
 
+class VesselProperties(BaseModel):
+    """Physical properties of the installation vessel."""
+
+    loa: float = Field(..., gt=0, description="Length overall (m)")
+    beam: float = Field(..., gt=0, description="Beam width (m)")
+    depth: float = Field(default=9.5, gt=0, description="Vessel depth (m)")
+    draft: float = Field(..., gt=0, description="Operational draft (m)")
+    displacement: float | None = Field(default=None, ge=0, description="Displacement (te)")
+    gmt: float = Field(..., description="Transverse metacentric height (m)")
+    cog: list[float] = Field(
+        ..., min_length=3, max_length=3, description="Centre of gravity [x, y, z] (m)"
+    )
+    gyration_radii: list[float] = Field(
+        ..., min_length=3, max_length=3, description="Radii of gyration [Rxx, Ryy, Rzz] (m)"
+    )
+    rao_reference: str | None = Field(default=None, description="RAO data file reference")
+
+    @field_validator("cog", "gyration_radii")
+    @classmethod
+    def validate_vector3(cls, v: list[float]) -> list[float]:
+        if len(v) != 3:
+            raise ValueError(f"Must have exactly 3 components, got {len(v)}")
+        return v
+
+
+class VesselMooring(BaseModel):
+    """Vessel mooring system configuration."""
+
+    drums: int = Field(default=8, ge=1, le=16, description="Number of mooring drums/lines")
+    winch_capacity: float = Field(default=735.75, gt=0, description="Winch capacity (kN)")
+    pattern: str | None = Field(default=None, description="Mooring pattern description")
+
+
+class Vessel(BaseModel):
+    """Installation vessel definition for S-lay operations."""
+
+    name: str = Field(..., min_length=1, description="Vessel name")
+    properties: VesselProperties = Field(..., description="Vessel physical properties")
+    mooring: VesselMooring | None = Field(default=None, description="Mooring configuration")
+    position: list[float] = Field(
+        default=[0, 0, 0], min_length=3, max_length=3, description="Initial position [x, y, z] (m)"
+    )
+    orientation: list[float] = Field(
+        default=[0, 0, 0], min_length=3, max_length=3, description="Initial orientation [rx, ry, rz] (deg)"
+    )
+
+    @field_validator("position", "orientation")
+    @classmethod
+    def validate_vector3(cls, v: list[float]) -> list[float]:
+        if len(v) != 3:
+            raise ValueError(f"Must have exactly 3 components, got {len(v)}")
+        return v
+
+
+class StingerSection(BaseModel):
+    """Individual stinger section definition."""
+
+    length: float = Field(..., gt=0, description="Section length (m)")
+    bend_radius: float = Field(..., gt=0, description="Bend radius (m)")
+
+
+class StingerRoller(BaseModel):
+    """Roller position on stinger for pipeline support."""
+
+    arc_length: float = Field(..., ge=0, description="Arc length from stinger origin (m)")
+    support_type: str = Field(default="Support type2", description="Support type name")
+    z_offset: float = Field(default=0, description="Vertical offset from stinger path (m)")
+
+
+class Stinger(BaseModel):
+    """Stinger configuration for S-lay vessel."""
+
+    radius: float = Field(..., gt=0, description="Stinger radius (m)")
+    sections: list[StingerSection] = Field(
+        default_factory=list, description="Stinger sections"
+    )
+    rollers: list[StingerRoller] = Field(
+        default_factory=list, description="Roller positions on stinger"
+    )
+    origin_position: list[float] = Field(
+        default=[0, 0, 0], min_length=3, max_length=3, description="Stinger origin on vessel [x, y, z] (m)"
+    )
+    origin_orientation: list[float] = Field(
+        default=[180, 0, 0], min_length=3, max_length=3, description="Stinger orientation [rx, ry, rz] (deg)"
+    )
+
+    @field_validator("origin_position", "origin_orientation")
+    @classmethod
+    def validate_vector3(cls, v: list[float]) -> list[float]:
+        if len(v) != 3:
+            raise ValueError(f"Must have exactly 3 components, got {len(v)}")
+        return v
+
+
+class Tensioner(BaseModel):
+    """Tensioner configuration for S-lay pipeline installation."""
+
+    name: str = Field(default="Tensioner", description="Tensioner name")
+    capacity_kn: float = Field(..., gt=0, description="Maximum capacity (kN)")
+    stiffness: float | None = Field(default=None, ge=0, description="Tensioner stiffness (kN/m)")
+    damping: float | None = Field(default=None, ge=0, description="Tensioner damping (kN.s/m)")
+    position_on_vessel: list[float] | None = Field(
+        default=None, min_length=3, max_length=3, description="Position on vessel [x, y, z] (m)"
+    )
+    tension_value: float = Field(..., gt=0, description="Applied tension (kN)")
+
+
 class Equipment(BaseModel):
     """
     Complete equipment specification for installation operations.
@@ -190,3 +297,6 @@ class Equipment(BaseModel):
     ramps: list[Ramp] = Field(
         default_factory=list, description="Ramp/shape definitions"
     )
+    vessel: Vessel | None = Field(default=None, description="Installation vessel")
+    stinger: Stinger | None = Field(default=None, description="Stinger configuration")
+    tensioner: Tensioner | None = Field(default=None, description="Tensioner configuration")

@@ -148,40 +148,72 @@ class LinesBuilder(BaseBuilder):
     def _build_connection_data(self, end_buoy_name: str) -> dict[str, list]:
         """Build connection specification data for End A and End B.
 
+        Connection logic depends on installation type:
+        - Floating: End A=Fixed, End B=end buoy
+        - S-lay: End A=Free (vessel/stinger), End B=Anchored
+
         Args:
-            end_buoy_name: Name of the 6D buoy for End B connection.
+            end_buoy_name: Name of the 6D buoy for End B connection (floating).
 
         Returns:
             Dictionary with 'connections', 'stiffness', and 'arclength' keys.
         """
-        # Calculate End A position (fixed at seabed/ramp)
-        # These values depend on seabed slope and ramp configuration
         seabed_slope = self.spec.environment.seabed.slope
+        is_s_lay = self.spec.is_s_lay()
 
-        # End A: Fixed connection at ramp start
-        # Position and orientation depend on installation configuration
-        end_a = [
-            "Fixed",  # Connection type
-            -101,  # X position (before pipeline start)
-            0,  # Y position
-            4.505,  # Z position (slightly above seabed)
-            0,  # Azimuth
-            90 + seabed_slope,  # Declination (aligned with seabed slope)
-            0,  # Gamma
-            None,  # ReleaseStage
-        ]
+        if is_s_lay:
+            vessel_name = self.spec.equipment.vessel.name
 
-        # End B: Connected to free 6D buoy
-        end_b = [
-            end_buoy_name,  # Connection to 6D buoy
-            0,  # X offset
-            0,  # Y offset
-            0,  # Z offset
-            0,  # Azimuth
-            90,  # Declination (horizontal)
-            0,  # Gamma
-            None,  # ReleaseStage
-        ]
+            # End A: Free - pipeline pays out from vessel
+            end_a = [
+                vessel_name,  # Connected to vessel
+                0,  # X offset
+                0,  # Y offset
+                0,  # Z offset
+                0,  # Azimuth
+                90,  # Declination
+                0,  # Gamma
+                None,  # ReleaseStage
+                None,  # zRelativeTo
+            ]
+
+            # End B: Anchored at seabed
+            end_b = [
+                "Anchored",  # Anchored at seabed
+                0,  # X position
+                0,  # Y position
+                0,  # Z position (at seabed)
+                0,  # Azimuth
+                90 + seabed_slope,  # Declination
+                0,  # Gamma
+                None,  # ReleaseStage
+                None,  # zRelativeTo
+            ]
+        else:
+            # Floating installation (existing logic)
+            end_a = [
+                "Fixed",  # Connection type
+                -101,  # X position (before pipeline start)
+                0,  # Y position
+                4.505,  # Z position (slightly above seabed)
+                0,  # Azimuth
+                90 + seabed_slope,  # Declination
+                0,  # Gamma
+                None,  # ReleaseStage
+                None,  # zRelativeTo
+            ]
+
+            end_b = [
+                end_buoy_name,  # Connection to 6D buoy
+                0,  # X offset
+                0,  # Y offset
+                0,  # Z offset
+                0,  # Azimuth
+                90,  # Declination (horizontal)
+                0,  # Gamma
+                None,  # ReleaseStage
+                None,  # zRelativeTo
+            ]
 
         # Connection stiffness (End A, End B)
         stiffness = [

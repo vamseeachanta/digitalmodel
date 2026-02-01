@@ -54,6 +54,15 @@ class BuoysBuilder(BaseBuilder):
     Reference: 08_buoys.yml in modular include format.
     """
 
+    def should_generate(self) -> bool:
+        """Skip buoy generation for pure S-lay models.
+
+        S-lay models use vessel connection instead of tug/buoy system.
+        Floating models require tugs, rollers, and buoyancy modules.
+        """
+        # Generate if floating (tugs present) or if no vessel (backward compat)
+        return not self.spec.is_s_lay()
+
     def build(self) -> dict[str, Any]:
         """Build the 6DBuoys and 3DBuoys sections from equipment configuration.
 

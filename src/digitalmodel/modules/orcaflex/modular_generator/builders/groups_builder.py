@@ -60,6 +60,16 @@ class GroupsBuilder(BaseBuilder):
         for name in additional_lines:
             structure_group[name] = "Model"
 
+        # Collect vessel names from context
+        vessel_names = self.context.vessel_names
+        for name in vessel_names:
+            structure_group[name] = "Model"
+
+        # Collect winch names from context
+        winch_names = self.context.winch_names
+        for name in winch_names:
+            structure_group[name] = "Model"
+
         # If no entities from context, build from spec directly
         if not structure_group:
             structure_group = self._build_from_spec()
@@ -110,6 +120,14 @@ class GroupsBuilder(BaseBuilder):
         for ramp in equipment.ramps:
             structure_group[ramp.name] = "Model"
 
+        # Add vessel (S-lay)
+        if equipment.vessel:
+            structure_group[equipment.vessel.name] = "Model"
+
+        # Add tensioner (S-lay)
+        if equipment.tensioner:
+            structure_group[equipment.tensioner.name] = "Model"
+
         # Add default entities
         structure_group["6D buoy1"] = "Model"
         structure_group["Mid-pipe"] = "Model"
@@ -137,6 +155,8 @@ class GroupsBuilder(BaseBuilder):
         all_names.extend(self.context.buoy_names_3d)
         all_names.extend(self.context.shape_names)
         all_names.extend(self.context.additional_line_names)
+        all_names.extend(self.context.vessel_names)
+        all_names.extend(self.context.winch_names)
 
         # Remove duplicates while preserving order
         seen = set()
