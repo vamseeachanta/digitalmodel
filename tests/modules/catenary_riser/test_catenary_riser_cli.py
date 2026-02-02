@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 from click.testing import CliRunner
 
-from digitalmodel.modules.catenary_riser.cli import cli
+from digitalmodel.catenary_riser.cli import cli
 
 
 # ============================================================================

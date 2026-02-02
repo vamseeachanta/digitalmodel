@@ -22,7 +22,7 @@ mock_modules = {
     'digitalmodel.common.cathodic_protection': MagicMock(),
     'digitalmodel.common.code_dnvrph103_hydrodynamics_circular': MagicMock(),
     'digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular': MagicMock(),
-    'digitalmodel.modules.signal_analysis.fatigue': MagicMock(),
+    'digitalmodel.signal_analysis.fatigue': MagicMock(),
     'digitalmodel.common.ship_design': MagicMock(),
     'digitalmodel.modules.mooring.mooring': MagicMock(),
     'digitalmodel.modules.orcaflex.orcaflex': MagicMock(),

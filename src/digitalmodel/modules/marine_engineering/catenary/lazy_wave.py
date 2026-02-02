@@ -7,7 +7,7 @@ Handles multi-segment catenary with buoyancy modules:
 - Touch-down section (buoyancy to seabed)
 
 This module ports the legacy lazy-wave implementation from
-digitalmodel.modules.catenary.catenaryMethods with improved type safety
+digitalmodel.catenary.catenaryMethods with improved type safety
 and modern Python patterns.
 
 Mathematical Background:

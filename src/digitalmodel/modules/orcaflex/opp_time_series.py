@@ -8,7 +8,7 @@ import pandas as pd
 
 # Reader imports
 from digitalmodel.common.ETL_components import ETL_components
-from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents
+from digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents
 from digitalmodel.modules.orcaflex.orcaflex_objects import OrcaFlexObjects
 
 try:

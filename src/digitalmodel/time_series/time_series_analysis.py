@@ -6,7 +6,7 @@ import logging
 from assetutilities.common.update_deep import update_deep_dictionary
 
 # Reader imports
-from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter
+from digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter
 
 tca = TimeSeriesComponentsAdapter()
 

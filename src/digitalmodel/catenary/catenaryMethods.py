@@ -3,7 +3,7 @@ import pandas as pd
 import warnings
 
 import matplotlib.pyplot as plt
-from digitalmodel.modules.catenary.pipeProperties import pipeProperties
+from digitalmodel.catenary.pipeProperties import pipeProperties
 
 
 def catenaryEquation(data):
@@ -19,7 +19,7 @@ def catenaryEquation(data):
     This function will be removed in a future version.
     """
     warnings.warn(
-        "digitalmodel.modules.catenary.catenaryMethods.catenaryEquation is deprecated. "
+        "digitalmodel.catenary.catenaryMethods.catenaryEquation is deprecated. "
         "Use marine_engineering.catenary.CatenarySolver for new code, or "
         "marine_engineering.catenary.catenaryEquation for backward compatibility.",
         DeprecationWarning,
@@ -72,7 +72,7 @@ def catenaryForces(data):
         from digitalmodel.modules.marine_engineering.catenary import catenaryForces
     """
     warnings.warn(
-        "digitalmodel.modules.catenary.catenaryMethods.catenaryForces is deprecated. "
+        "digitalmodel.catenary.catenaryMethods.catenaryForces is deprecated. "
         "Use marine_engineering.catenary.catenaryForces for backward compatibility.",
         DeprecationWarning,
         stacklevel=2

@@ -1,5 +1,5 @@
 """
-DEPRECATED: This module is being replaced by digitalmodel.modules.signal_analysis
+DEPRECATED: This module is being replaced by digitalmodel.signal_analysis
 
 Please migrate to the new signal analysis module:
 - RainflowCounter for rainflow counting
@@ -18,7 +18,7 @@ import warnings
 
 # Issue deprecation warning
 warnings.warn(
-    "TimeSeriesComponents is deprecated. Use digitalmodel.modules.signal_analysis instead",
+    "TimeSeriesComponents is deprecated. Use digitalmodel.signal_analysis instead",
     DeprecationWarning,
     stacklevel=2
 )

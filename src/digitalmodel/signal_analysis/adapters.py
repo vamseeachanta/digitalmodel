@@ -432,7 +432,7 @@ def create_migration_guide():
     
     New code:
     ```python
-    from digitalmodel.modules.signal_analysis import RainflowCounter, SpectralAnalyzer
+    from digitalmodel.signal_analysis import RainflowCounter, SpectralAnalyzer
     
     # Rainflow counting
     counter = RainflowCounter()
@@ -447,7 +447,7 @@ def create_migration_guide():
     
     For gradual migration:
     ```python
-    from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter
+    from digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter
     
     # Drop-in replacement
     tsc = TimeSeriesComponentsAdapter(cfg)

@@ -3,17 +3,17 @@
 Command-line interface for OrcaFlex Time Series Analysis
 
 Usage:
-    python -m digitalmodel.modules.signal_analysis.orcaflex [options]
+    python -m digitalmodel.signal_analysis.orcaflex [options]
     
 Examples:
     # Single file analysis
-    python -m digitalmodel.modules.signal_analysis.orcaflex --file data.csv
+    python -m digitalmodel.signal_analysis.orcaflex --file data.csv
     
     # Pattern-based processing
-    python -m digitalmodel.modules.signal_analysis.orcaflex --pattern "*.csv" --directory ./data
+    python -m digitalmodel.signal_analysis.orcaflex --pattern "*.csv" --directory ./data
     
     # Batch processing with parallel execution
-    python -m digitalmodel.modules.signal_analysis.orcaflex --directory ./data --recursive --parallel 4
+    python -m digitalmodel.signal_analysis.orcaflex --directory ./data --recursive --parallel 4
 """
 
 import sys

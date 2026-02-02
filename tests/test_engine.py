@@ -41,7 +41,7 @@ def mock_imports():
         'ansys.dpf',
         'digitalmodel.common.code_dnvrph103_hydrodynamics_circular',
         'digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular',
-        'digitalmodel.modules.signal_analysis.fatigue',
+        'digitalmodel.signal_analysis.fatigue',
         'digitalmodel.common.ship_design',
         'digitalmodel.modules.mooring.mooring',
         'digitalmodel.modules.orcaflex.orcaflex',
@@ -238,8 +238,8 @@ class TestModuleRouting:
         """Test routing to catenary module."""
         cfg = {"basename": "catenary_analysis"}
 
-        # Catenary is dynamically imported inside the function from digitalmodel.modules.catenary.catenary
-        with patch('digitalmodel.modules.catenary.catenary.Catenary') as mock_catenary:
+        # Catenary is dynamically imported inside the function from digitalmodel.catenary.catenary
+        with patch('digitalmodel.catenary.catenary.Catenary') as mock_catenary:
             mock_instance = MagicMock()
             mock_instance.router.return_value = cfg
             mock_catenary.return_value = mock_instance
@@ -534,8 +534,8 @@ class TestDynamicImports:
         """Test catenary module with dynamic import."""
         cfg = {"basename": "catenary_special"}
 
-        # Catenary is dynamically imported inside the function from digitalmodel.modules.catenary.catenary
-        with patch('digitalmodel.modules.catenary.catenary.Catenary') as mock_catenary:
+        # Catenary is dynamically imported inside the function from digitalmodel.catenary.catenary
+        with patch('digitalmodel.catenary.catenary.Catenary') as mock_catenary:
             mock_instance = MagicMock()
             mock_instance.router.return_value = cfg
             mock_catenary.return_value = mock_instance

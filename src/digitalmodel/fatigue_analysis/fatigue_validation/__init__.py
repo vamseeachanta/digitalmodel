@@ -9,7 +9,7 @@ This module provides comprehensive validation for fatigue analysis input files:
 - Level 3: S-N curve compliance, DFF ranges, SCF limits
 
 Usage:
-    from digitalmodel.modules.fatigue_analysis.fatigue_validation import FatigueValidator
+    from digitalmodel.fatigue_analysis.fatigue_validation import FatigueValidator
 
     validator = FatigueValidator()
     results = validator.validate_all('/path/to/fatigue_config.yml')

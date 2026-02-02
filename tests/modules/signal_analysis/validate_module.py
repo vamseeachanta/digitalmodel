@@ -16,13 +16,13 @@ def validate_imports():
     """Validate all module imports"""
     print("Validating imports...")
     try:
-        from src.digitalmodel.modules.signal_analysis import (
+        from src.digitalmodel.signal_analysis import (
             RainflowCounter, SpectralAnalyzer, TimeSeriesProcessor
         )
-        from src.digitalmodel.modules.signal_analysis.fatigue.damage import FatigueDamageCalculator
-        from src.digitalmodel.modules.signal_analysis.fatigue.curves import SNCurve
-        from src.digitalmodel.modules.signal_analysis.filters.frequency import FrequencyFilter
-        from src.digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter
+        from src.digitalmodel.signal_analysis.fatigue.damage import FatigueDamageCalculator
+        from src.digitalmodel.signal_analysis.fatigue.curves import SNCurve
+        from src.digitalmodel.signal_analysis.filters.frequency import FrequencyFilter
+        from src.digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter
         print("  [OK] All imports successful")
         return True
     except ImportError as e:
@@ -33,7 +33,7 @@ def validate_rainflow():
     """Validate rainflow counting functionality"""
     print("\nValidating rainflow counting...")
     try:
-        from src.digitalmodel.modules.signal_analysis import RainflowCounter
+        from src.digitalmodel.signal_analysis import RainflowCounter
         
         # Generate test signal
         signal = np.array([0, 2, -1, 3, -2, 1, -3, 2, -1, 0])
@@ -56,7 +56,7 @@ def validate_spectral():
     """Validate spectral analysis functionality"""
     print("\nValidating spectral analysis...")
     try:
-        from src.digitalmodel.modules.signal_analysis import SpectralAnalyzer
+        from src.digitalmodel.signal_analysis import SpectralAnalyzer
         
         # Generate test signal
         fs = 100
@@ -81,9 +81,9 @@ def validate_fatigue():
     """Validate fatigue analysis functionality"""
     print("\nValidating fatigue analysis...")
     try:
-        from src.digitalmodel.modules.signal_analysis import RainflowCounter
-        from src.digitalmodel.modules.signal_analysis.fatigue.damage import FatigueDamageCalculator
-        from src.digitalmodel.modules.signal_analysis.fatigue.curves import SNCurve
+        from src.digitalmodel.signal_analysis import RainflowCounter
+        from src.digitalmodel.signal_analysis.fatigue.damage import FatigueDamageCalculator
+        from src.digitalmodel.signal_analysis.fatigue.curves import SNCurve
         
         # Generate test cycles
         signal = 10 * np.sin(np.linspace(0, 20*np.pi, 1000)) + 50
@@ -111,7 +111,7 @@ def validate_filtering():
     """Validate filtering functionality"""
     print("\nValidating signal filtering...")
     try:
-        from src.digitalmodel.modules.signal_analysis.filters.frequency import FrequencyFilter
+        from src.digitalmodel.signal_analysis.filters.frequency import FrequencyFilter
         
         # Generate test signal
         fs = 1000
@@ -136,7 +136,7 @@ def validate_timeseries():
     """Validate time series processing"""
     print("\nValidating time series processing...")
     try:
-        from src.digitalmodel.modules.signal_analysis import TimeSeriesProcessor
+        from src.digitalmodel.signal_analysis import TimeSeriesProcessor
         
         # Generate test signal with trend and outliers
         t = np.linspace(0, 10, 100)
@@ -162,7 +162,7 @@ def validate_compatibility():
     """Validate backward compatibility"""
     print("\nValidating backward compatibility...")
     try:
-        from src.digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter
+        from src.digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter
         
         # Legacy config
         cfg = {'fft': {'window': {'size': 256}}}

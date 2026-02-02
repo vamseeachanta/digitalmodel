@@ -38,6 +38,12 @@ _MOVED_MODULES: set[str] = {
     "hydrodynamics",
     "structural_analysis",
     "viv_analysis",
+    # Phase 4 Batch 3
+    "signal_analysis",
+    "fatigue_analysis",
+    "mooring_analysis",
+    "catenary",
+    "catenary_riser",
 }
 
 

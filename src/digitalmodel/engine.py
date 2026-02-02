@@ -13,9 +13,9 @@ from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
 from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
     DNVRPH103_hydrodynamics_rectangular,
 )
-from digitalmodel.modules.signal_analysis.fatigue import FatigueDamageCalculator as FatigueAnalysis
+from digitalmodel.signal_analysis.fatigue import FatigueDamageCalculator as FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
-from digitalmodel.modules.mooring_analysis import MooringDesigner
+from digitalmodel.mooring_analysis import MooringDesigner
 from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
 from digitalmodel.modules.orcaflex.orcaflex_file_management import (
     OrcaflexFileManagement,
@@ -91,7 +91,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     logger.info(f"{basename}, application ... START")
 
     if "catenary" in basename:
-        from digitalmodel.modules.catenary.catenary import Catenary
+        from digitalmodel.catenary.catenary import Catenary
 
         catenary = Catenary()
         cfg_base = catenary.router(cfg_base)
@@ -173,10 +173,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
     elif basename == "mooring":
         logger.info("Mooring analysis routed to mooring_analysis module")
-        from digitalmodel.modules.mooring_analysis.cli import cli as mooring_cli
+        from digitalmodel.mooring_analysis.cli import cli as mooring_cli
         raise NotImplementedError(
             "Mooring via engine requires mooring_analysis CLI or direct API. "
-            "Use: python -m digitalmodel.modules.mooring_analysis.cli"
+            "Use: python -m digitalmodel.mooring_analysis.cli"
         )
     elif basename == "artificial_lift":
         from digitalmodel.modules.artificial_lift.dynacard.solver import DynacardWorkflow

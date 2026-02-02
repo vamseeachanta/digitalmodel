@@ -20,8 +20,8 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from digitalmodel.modules.fatigue_analysis.rainflow_counter import RainflowCounter
-from digitalmodel.modules.fatigue_analysis.fatigue_damage_calculator import (
+from digitalmodel.fatigue_analysis.rainflow_counter import RainflowCounter
+from digitalmodel.fatigue_analysis.fatigue_damage_calculator import (
     FatigueDamageCalculator, calculate_combined_damage
 )
 

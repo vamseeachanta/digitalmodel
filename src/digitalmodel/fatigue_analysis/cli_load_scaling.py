@@ -38,7 +38,7 @@ import time
 MODULE_DIR = Path(__file__).parent
 sys.path.insert(0, str(MODULE_DIR.parent.parent))
 
-from digitalmodel.modules.fatigue_analysis.load_scaling import LoadScalingProcessor
+from digitalmodel.fatigue_analysis.load_scaling import LoadScalingProcessor
 
 # Configure logging
 def setup_logging(verbose: bool = False):

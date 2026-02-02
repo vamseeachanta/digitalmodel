@@ -5,7 +5,7 @@ Provides dict-based interface matching legacy catenaryMethods.py
 while using modern solvers internally.
 
 This module bridges the gap between:
-  - Legacy: digitalmodel.modules.catenary.catenaryMethods (dict-based)
+  - Legacy: digitalmodel.catenary.catenaryMethods (dict-based)
   - Modern: marine_engineering.catenary solvers (dataclass-based)
 
 Usage:
@@ -51,7 +51,7 @@ def catenaryEquation(data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Legacy API compatibility wrapper.
 
-    Matches signature of digitalmodel.modules.catenary.catenaryMethods.catenaryEquation()
+    Matches signature of digitalmodel.catenary.catenaryMethods.catenaryEquation()
 
     This function provides backward compatibility with the legacy dict-based API
     while using modern solver implementations internally.
@@ -263,7 +263,7 @@ def catenaryForces(data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Legacy API for catenary forces calculation.
 
-    Matches signature of digitalmodel.modules.catenary.catenaryMethods.catenaryForces()
+    Matches signature of digitalmodel.catenary.catenaryMethods.catenaryForces()
 
     Calculates forces on a catenary given:
       - weightPerUnitLength: Weight per unit length [N/m]

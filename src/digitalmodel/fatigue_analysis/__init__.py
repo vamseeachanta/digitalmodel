@@ -15,10 +15,10 @@ Key Features:
 
 Usage:
     # Command line interface
-    python -m digitalmodel.modules.fatigue_analysis --help
-    
+    python -m digitalmodel.fatigue_analysis --help
+
     # Python API
-    from digitalmodel.modules.fatigue_analysis import ReferenceSeaStateProcessor
+    from digitalmodel.fatigue_analysis import ReferenceSeaStateProcessor
     processor = ReferenceSeaStateProcessor(data_path="./data")
     processor.run_analysis()
 """

@@ -13,13 +13,13 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from src.digitalmodel.modules.signal_analysis import (
+from src.digitalmodel.signal_analysis import (
     RainflowCounter, SpectralAnalyzer, TimeSeriesProcessor
 )
-from src.digitalmodel.modules.signal_analysis.fatigue.damage import FatigueDamageCalculator
-from src.digitalmodel.modules.signal_analysis.fatigue.curves import SNCurve
-from src.digitalmodel.modules.signal_analysis.filters.frequency import FrequencyFilter
-from src.digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter
+from src.digitalmodel.signal_analysis.fatigue.damage import FatigueDamageCalculator
+from src.digitalmodel.signal_analysis.fatigue.curves import SNCurve
+from src.digitalmodel.signal_analysis.filters.frequency import FrequencyFilter
+from src.digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter
 
 
 class TestSignalAnalysisIntegration:
@@ -359,13 +359,13 @@ class TestSignalAnalysisIntegration:
 
 def test_module_imports():
     """Test that all modules can be imported"""
-    from src.digitalmodel.modules.signal_analysis import (
+    from src.digitalmodel.signal_analysis import (
         RainflowCounter, SpectralAnalyzer, TimeSeriesProcessor
     )
-    from src.digitalmodel.modules.signal_analysis.fatigue.damage import FatigueDamageCalculator
-    from src.digitalmodel.modules.signal_analysis.fatigue.curves import SNCurve
-    from src.digitalmodel.modules.signal_analysis.filters.frequency import FrequencyFilter
-    from src.digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter
+    from src.digitalmodel.signal_analysis.fatigue.damage import FatigueDamageCalculator
+    from src.digitalmodel.signal_analysis.fatigue.curves import SNCurve
+    from src.digitalmodel.signal_analysis.filters.frequency import FrequencyFilter
+    from src.digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter
     
     print("All modules imported successfully")
 

@@ -250,7 +250,7 @@ class OPPTimeSeriesV2:
         """
         self.logger.info("Processing histograms with new rainflow counter")
         
-        from digitalmodel.modules.signal_analysis import RainflowCounter
+        from digitalmodel.signal_analysis import RainflowCounter
         
         histogram_cfg = cfg.get("histogram_settings", {})
         model = cfg.get("model_dict", {}).get("model")
@@ -293,7 +293,7 @@ class OPPTimeSeriesV2:
         """
         self.logger.info("Processing RAOs with new spectral analyzer")
         
-        from digitalmodel.modules.signal_analysis import SpectralAnalyzer
+        from digitalmodel.signal_analysis import SpectralAnalyzer
         
         rao_cfg = cfg.get("RAOs", {})
         model = cfg.get("model_dict", {}).get("model")

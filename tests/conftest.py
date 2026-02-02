@@ -45,10 +45,10 @@ _mock_catenary_riser_summary = _create_mock_catenary_riser_summary()
 try:
     import digitalmodel
     import digitalmodel.modules
-    import digitalmodel.modules.catenary
+    import digitalmodel.catenary
 except ImportError:
     pass  # Package not installed, tests will fail with clear import errors
 
 # Only register the mock for the specific problematic module
-if 'digitalmodel.modules.catenary.catenary_riser_summary' not in sys.modules:
-    sys.modules['digitalmodel.modules.catenary.catenary_riser_summary'] = _mock_catenary_riser_summary
+if 'digitalmodel.catenary.catenary_riser_summary' not in sys.modules:
+    sys.modules['digitalmodel.catenary.catenary_riser_summary'] = _mock_catenary_riser_summary

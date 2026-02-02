@@ -6,7 +6,7 @@ simple catenary analysis, effective weight, and lazy wave configurations.
 
 import pytest
 import numpy as np
-from digitalmodel.modules.catenary_riser import (
+from digitalmodel.catenary_riser import (
     # Models
     RiserConfiguration,
     BuoyancyModule,

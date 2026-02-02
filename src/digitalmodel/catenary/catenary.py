@@ -1,7 +1,7 @@
 from typing import Dict, Any
 
-from digitalmodel.modules.catenary.catenary_equation import CatenaryCalculator
-from digitalmodel.modules.catenary.catenary_riser import catenary_riser
+from digitalmodel.catenary.catenary_equation import CatenaryCalculator
+from digitalmodel.catenary.catenary_riser import catenary_riser
 
 catenary_calculator = CatenaryCalculator()
 

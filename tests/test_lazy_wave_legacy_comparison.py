@@ -20,7 +20,7 @@ from digitalmodel.modules.marine_engineering.catenary.lazy_wave import (
 )
 
 # Import legacy functions
-from digitalmodel.modules.catenary.catenaryMethods import (
+from digitalmodel.catenary.catenaryMethods import (
     sagHogEquation,
     lazyWaveCatenaryEquation,
     catenaryEquation
