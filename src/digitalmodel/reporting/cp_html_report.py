@@ -15,7 +15,7 @@ import json
 class CPHTMLReportGenerator:
     """Generate interactive HTML reports for cathodic protection analysis."""
 
-    def __init__(self, output_dir: str = "src/reports/cp"):
+    def __init__(self, output_dir: str = "reports/cp"):
         """
         Initialize report generator.
 
@@ -408,7 +408,7 @@ class CPHTMLReportGenerator:
 
 def generate_cp_report(
     results: Dict[str, Any],
-    output_dir: str = "src/reports/cp",
+    output_dir: str = "reports/cp",
     comparison_results: Optional[Dict[str, Any]] = None,
     title: str = "Cathodic Protection Analysis"
 ) -> Path:

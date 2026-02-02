@@ -525,7 +525,7 @@ def main():
     print()
 
     # Create output directories
-    reports_dir = Path("src/reports/cp")
+    reports_dir = Path("reports/cp")
     reports_dir.mkdir(parents=True, exist_ok=True)
 
     data_dir = Path("data/results")
