@@ -306,3 +306,4 @@ benchmarks/reports/
 benchmarks/results/
 # OrcaFlex simulation files (large binary)
 docs/modules/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/runs/*.sim
+.benchmarks/
