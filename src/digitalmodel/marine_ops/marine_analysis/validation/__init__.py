@@ -9,7 +9,7 @@ Modules:
     validate_catenary: Catenary mooring solver validation
 
 Example:
-    >>> from digitalmodel.marine_analysis.validation import validate_phase2
+    >>> from digitalmodel.marine_ops.marine_analysis.validation import validate_phase2
     >>> results = validate_phase2.run_full_validation()
     >>> print(results.generate_report())
 """

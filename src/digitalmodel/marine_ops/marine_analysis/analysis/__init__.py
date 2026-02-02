@@ -8,7 +8,7 @@ Modules:
     hydro_usage_example: Example usage patterns for hydrodynamic analysis
 
 Example:
-    >>> from digitalmodel.marine_analysis.analysis import excel_analyzer
+    >>> from digitalmodel.marine_ops.marine_analysis.analysis import excel_analyzer
     >>> analyzer = excel_analyzer.MarineExcelAnalyzer('vessel_data.xlsx')
     >>> summary = analyzer.analyze_stability()
 """

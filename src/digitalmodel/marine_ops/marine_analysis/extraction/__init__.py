@@ -10,7 +10,7 @@ Modules:
     run_extraction: Batch extraction convenience wrapper
 
 Example:
-    >>> from digitalmodel.marine_analysis.extraction import extract_ocimf
+    >>> from digitalmodel.marine_ops.marine_analysis.extraction import extract_ocimf
     >>> data = extract_ocimf.extract_vessel_data('tanker_vlcc')
     >>> print(data.wind_coefficients)
 """

@@ -7,7 +7,7 @@ This module provides production-ready RAO plotting functionality:
 - Comparison plots across headings
 
 Usage:
-    from digitalmodel.marine_analysis.visualization import RAOPlotter
+    from digitalmodel.marine_ops.marine_analysis.visualization import RAOPlotter
 
     plotter = RAOPlotter('path/to/file.lis', output_dir='path/to/output')
     plotter.generate_all_plots()

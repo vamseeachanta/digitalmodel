@@ -9,7 +9,7 @@ This module bridges the gap between:
   - Modern: marine_engineering.catenary solvers (dataclass-based)
 
 Usage:
-    from digitalmodel.marine_analysis.catenary.adapter import catenaryEquation
+    from digitalmodel.marine_ops.marine_analysis.catenary.adapter import catenaryEquation
 
     # Force-based method (legacy API)
     result = catenaryEquation({
@@ -30,10 +30,10 @@ import warnings
 import math
 import numpy as np
 
-# Import modern solvers from mooring_analysis module
+# Import modern solvers from catenary.solver module
 # (The new catenary module structure will be created later)
 try:
-    from digitalmodel.marine_analysis.mooring_analysis.catenary_solver import (
+    from digitalmodel.marine_ops.marine_analysis.catenary.solver import (
         CatenarySolver,
         CatenaryInput,
         CatenaryResults

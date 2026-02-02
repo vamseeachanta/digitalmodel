@@ -16,7 +16,7 @@ Constants:
     DOF_INDEX: Mapping from DOF names to indices
 
 Example:
-    >>> from digitalmodel.marine_analysis.hydrodynamic_coefficients import CoefficientDatabase
+    >>> from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients import CoefficientDatabase
     >>>
     >>> # Load from CSV files
     >>> db = CoefficientDatabase.from_csv("data/hydrodynamic/")
@@ -25,7 +25,7 @@ Example:
     >>> A33 = db.get_added_mass(frequency=0.8, dof_i=2, dof_j=2)
     >>>
     >>> # Create visualizations
-    >>> from digitalmodel.marine_analysis.hydrodynamic_coefficients import HydrodynamicPlotter
+    >>> from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients import HydrodynamicPlotter
     >>> plotter = HydrodynamicPlotter(db)
     >>> plotter.plot_frequency_response(dof='Heave', save_path='heave_response.png')
 """

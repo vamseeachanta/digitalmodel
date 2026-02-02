@@ -19,7 +19,7 @@ if sys.platform == 'win32' and 'pytest' not in sys.modules:
 # Add scripts to path
 sys.path.insert(0, os.path.dirname(__file__))
 
-from digitalmodel.marine_analysis.extraction.extract_hydro import HydrodynamicCoefficientExtractor
+from digitalmodel.marine_ops.marine_analysis.extraction.extract_hydro import HydrodynamicCoefficientExtractor
 import numpy as np
 
 

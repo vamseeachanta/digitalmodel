@@ -10,7 +10,7 @@ Modules:
     run_analysis: Convenience wrapper for running performance analysis
 
 Example:
-    >>> from digitalmodel.marine_analysis.profiling import profile_modules
+    >>> from digitalmodel.marine_ops.marine_analysis.profiling import profile_modules
     >>> results = profile_modules.profile_module('wave_spectra')
     >>> print(results.summary())
 """

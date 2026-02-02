@@ -9,7 +9,7 @@ Modules:
     ocimf_charts: OCIMF wind/current coefficient visualizations
 
 Example:
-    >>> from digitalmodel.marine_analysis.visualization import ocimf_charts
+    >>> from digitalmodel.marine_ops.marine_analysis.visualization import ocimf_charts
     >>> ocimf_charts.plot_wind_coefficients(vessel_data)
     >>> ocimf_charts.save_polar_diagrams('output/polar.png')
 """

@@ -51,15 +51,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 # Import Phase 1 & 2 modules
 try:
-    from digitalmodel.marine_analysis.wave_spectra import WaveSpectrum, JONSWAP
-    from digitalmodel.marine_analysis.environmental_loading.ocimf import (
+    from digitalmodel.marine_ops.marine_analysis.wave_spectra import WaveSpectrum, JONSWAP
+    from digitalmodel.marine_ops.marine_analysis.environmental_loading.ocimf import (
         OCIMFDatabase, EnvironmentalForces, EnvironmentalConditions, VesselGeometry
     )
-    from digitalmodel.marine_analysis.hydrodynamic_coefficients import (
+    from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients import (
         CoefficientDatabase, HydrodynamicPlotter
     )
     from digitalmodel.subsea.mooring_analysis import MooringSystem
-    from digitalmodel.marine_analysis.catenary import CatenarySolver
+    from digitalmodel.marine_ops.marine_analysis.catenary import CatenarySolver
     MODULES_AVAILABLE = True
 except ImportError as e:
     MODULES_AVAILABLE = False
