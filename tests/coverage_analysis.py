@@ -98,13 +98,13 @@ def execute_direct_coverage():
             'digitalmodel.modules.orcaflex.orcaflex_installation',
             'digitalmodel.modules.orcaflex.orcaflex_modal_analysis',
             'digitalmodel.modules.orcaflex.umbilical_analysis_components',
-            'digitalmodel.modules.pipe_capacity.pipe_capacity',
-            'digitalmodel.modules.pipeline.pipeline',
-            'digitalmodel.modules.rao_analysis.rao_analysis',
-            'digitalmodel.modules.time_series.time_series_analysis',
+            'digitalmodel.pipe_capacity.pipe_capacity',
+            'digitalmodel.pipeline.pipeline',
+            'digitalmodel.rao_analysis.rao_analysis',
+            'digitalmodel.time_series.time_series_analysis',
             'digitalmodel.transformation.transformation',
             'digitalmodel.vertical_riser.vertical_riser',
-            'digitalmodel.modules.viv_analysis.viv_analysis',
+            'digitalmodel.viv_analysis.viv_analysis',
             'digitalmodel.common.plate_buckling', 'loguru',
             'digitalmodel.modules.orcaflex.output_control'
         ]

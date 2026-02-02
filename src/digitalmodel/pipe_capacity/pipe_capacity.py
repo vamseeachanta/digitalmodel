@@ -1,5 +1,5 @@
 # Reader imports
-from digitalmodel.modules.pipe_capacity.common.pipe_components import PipeComponents
+from digitalmodel.pipe_capacity.common.pipe_components import PipeComponents
 
 pipe_comps = PipeComponents()
 

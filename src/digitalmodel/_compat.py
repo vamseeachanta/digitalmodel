@@ -30,6 +30,14 @@ _MOVED_MODULES: set[str] = {
     "services",
     "skills",
     "visualization",
+    # Phase 4 Batch 2
+    "rao_analysis",
+    "time_series",
+    "pipe_capacity",
+    "pipeline",
+    "hydrodynamics",
+    "structural_analysis",
+    "viv_analysis",
 }
 
 

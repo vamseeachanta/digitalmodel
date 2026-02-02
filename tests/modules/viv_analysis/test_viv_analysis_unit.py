@@ -6,7 +6,7 @@ vortex shedding, screening, and fatigue calculations per DNV-RP-C205 and DNV-RP-
 
 import pytest
 import numpy as np
-from digitalmodel.modules.viv_analysis import (
+from digitalmodel.viv_analysis import (
     # Models
     BoundaryCondition,
     CurrentProfileType,

@@ -8,6 +8,10 @@ import json
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
+pytest.importorskip(
+    "tests.cli.conftest",
+    reason="module tests.cli.conftest not available"
+)
 from digitalmodel.modules.workflow_automation.cli import cli
 from tests.cli.conftest import assert_cli_success, assert_cli_failure, assert_json_output, assert_output_contains
 

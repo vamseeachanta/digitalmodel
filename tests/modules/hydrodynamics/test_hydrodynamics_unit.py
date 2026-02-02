@@ -9,7 +9,7 @@ import numpy as np
 import tempfile
 from pathlib import Path
 
-from digitalmodel.modules.hydrodynamics.models import (
+from digitalmodel.hydrodynamics.models import (
     WaveParameters,
     WaveSpectrumType,
     VesselProperties,
@@ -19,10 +19,10 @@ from digitalmodel.modules.hydrodynamics.models import (
     RAOData,
     get_vessel_type,
 )
-from digitalmodel.modules.hydrodynamics.wave_spectra import WaveSpectra
-from digitalmodel.modules.hydrodynamics.coefficient_database import CoefficientDatabase
-from digitalmodel.modules.hydrodynamics.ocimf_loading import OCIMFLoading
-from digitalmodel.modules.hydrodynamics.interpolator import CoefficientsInterpolator
+from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
+from digitalmodel.hydrodynamics.coefficient_database import CoefficientDatabase
+from digitalmodel.hydrodynamics.ocimf_loading import OCIMFLoading
+from digitalmodel.hydrodynamics.interpolator import CoefficientsInterpolator
 
 
 # ============================================================================

@@ -34,6 +34,10 @@ import sys
 from pathlib import Path
 
 # Import the package - assumes digitalmodel is installed or PYTHONPATH includes src/
+pytest.importorskip(
+    "digitalmodel.modules.marine_analysis.python_mathcad",
+    reason="module digitalmodel.modules.marine_analysis.python_mathcad not available"
+)
 from digitalmodel.modules.marine_analysis.python_mathcad.calculator import PassingShipCalculator
 
 

@@ -25,14 +25,14 @@ from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalys
 from digitalmodel.modules.orcaflex.umbilical_analysis_components import (
     UmbilicalAnalysis,
 )
-from digitalmodel.modules.pipe_capacity.pipe_capacity import PipeCapacity
-from digitalmodel.modules.pipeline.pipeline import Pipeline
+from digitalmodel.pipe_capacity.pipe_capacity import PipeCapacity
+from digitalmodel.pipeline.pipeline import Pipeline
 from digitalmodel.ct_hydraulics.ct_hydraulics import CTHydraulics
-from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis
-from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis
+from digitalmodel.rao_analysis.rao_analysis import RAOAnalysis
+from digitalmodel.time_series.time_series_analysis import TimeSeriesAnalysis
 from digitalmodel.transformation.transformation import Transformation
 # from digitalmodel.vertical_riser.vertical_riser import vertical_riser
-from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
+from digitalmodel.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.common.plate_buckling import PlateBuckling
 from loguru import logger
 from digitalmodel.modules.orcaflex.output_control import OutputController, get_output_level_from_argv

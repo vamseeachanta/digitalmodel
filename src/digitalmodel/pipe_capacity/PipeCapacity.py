@@ -550,7 +550,7 @@ class VonMises_Pipe():
         import copy
 
         from digitalmodel.common.data import AttributeDict
-        from digitalmodel.modules.pipe_capacity.PipeSizing import PipeSizing
+        from digitalmodel.pipe_capacity.PipeSizing import PipeSizing
         cfg_temp = AttributeDict(copy.deepcopy(self.cfg))
         cfg_temp['Outer_Pipe']['Geometry']['Design_WT'] = self.t
         cfg_temp['Outer_Pipe']['Geometry']['Nominal_ID'] = cfg_temp['Outer_Pipe']['Geometry']['Nominal_OD'] - 2*cfg_temp['Outer_Pipe']['Geometry']['Design_WT']

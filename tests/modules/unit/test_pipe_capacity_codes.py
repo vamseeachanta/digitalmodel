@@ -1,6 +1,6 @@
 import pytest
 
-from digitalmodel.modules.pipe_capacity.custom import PipeCapacity as pc_module
+from digitalmodel.pipe_capacity.custom import PipeCapacity as pc_module
 
 
 def _base_cfg(spec_code):

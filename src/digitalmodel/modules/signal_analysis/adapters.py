@@ -423,7 +423,7 @@ def create_migration_guide():
     
     Old code:
     ```python
-    from digitalmodel.modules.time_series.time_series_components import TimeSeriesComponents
+    from digitalmodel.time_series.time_series_components import TimeSeriesComponents
     
     tsc = TimeSeriesComponents(cfg)
     cycles_df, cycles_dict = tsc.get_rainflow_count_from_time_series(signal)
