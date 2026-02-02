@@ -16,9 +16,9 @@ import os
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 try:
-    from digitalmodel.common.basic_statistics import *
-    from digitalmodel.common.fatigue_analysis import *
-    from digitalmodel.common.FEAComponents import *
+    from digitalmodel.infrastructure.common.basic_statistics import *
+    from digitalmodel.infrastructure.common.fatigue_analysis import *
+    from digitalmodel.infrastructure.common.FEAComponents import *
 except ImportError:
     # Skip if modules not available
     pytest.skip("DigitalModel modules not available", allow_module_level=True)

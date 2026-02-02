@@ -17,8 +17,8 @@ from typing import Dict, Tuple
 import tempfile
 import yaml
 
-from digitalmodel.marine_analysis.python_code_passing_ship import calculator
-from digitalmodel.marine_analysis.python_code_passing_ship.configuration import (
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import calculator
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.configuration import (
     VesselConfig, EnvironmentalConfig, CalculationConfig, PassingShipConfig
 )
 

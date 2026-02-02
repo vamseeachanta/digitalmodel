@@ -15,7 +15,7 @@ from pathlib import Path
 import tempfile
 import shutil
 
-from digitalmodel.marine_analysis.hydrodynamic_coefficients import (
+from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients import (
     CoefficientDatabase,
     FrequencyDependentMatrix,
     KramersKronigValidator,

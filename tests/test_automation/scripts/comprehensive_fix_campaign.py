@@ -87,7 +87,7 @@ class ComprehensiveTestFixCampaign:
             if 'orcaflex_license_path' in issues:
                 content = content.replace(
                     'digitalmodel.custom.orcaflex_utilities',
-                    'digitalmodel.orcaflex.orcaflex_utilities'
+                    'digitalmodel.solvers.orcaflex.orcaflex_utilities'
                 )
             
             # Write back if changes made

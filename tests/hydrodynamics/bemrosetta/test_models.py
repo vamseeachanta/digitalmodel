@@ -14,21 +14,21 @@ class TestQTFTypeEnum:
 
     def test_qtf_type_values(self):
         """Test QTF type enum values."""
-        from digitalmodel.bemrosetta.models import QTFType
+        from digitalmodel.hydrodynamics.bemrosetta.models import QTFType
 
         assert QTFType.SUM_FREQUENCY.value == "sum"
         assert QTFType.DIFFERENCE_FREQUENCY.value == "difference"
 
     def test_qtf_type_is_enum(self):
         """Test QTFType is proper enum."""
-        from digitalmodel.bemrosetta.models import QTFType
+        from digitalmodel.hydrodynamics.bemrosetta.models import QTFType
 
         assert hasattr(QTFType, "SUM_FREQUENCY")
         assert hasattr(QTFType, "DIFFERENCE_FREQUENCY")
 
     def test_qtf_type_mean_drift(self):
         """Test MEAN_DRIFT type exists."""
-        from digitalmodel.bemrosetta.models import QTFType
+        from digitalmodel.hydrodynamics.bemrosetta.models import QTFType
 
         assert QTFType.MEAN_DRIFT.value == "mean_drift"
 
@@ -38,7 +38,7 @@ class TestMeshFormatEnum:
 
     def test_mesh_format_values(self):
         """Test supported mesh format values."""
-        from digitalmodel.bemrosetta.models import MeshFormat
+        from digitalmodel.hydrodynamics.bemrosetta.models import MeshFormat
 
         assert MeshFormat.GDF.value == "gdf"
         assert MeshFormat.DAT.value == "dat"
@@ -46,7 +46,7 @@ class TestMeshFormatEnum:
 
     def test_mesh_format_additional_types(self):
         """Test additional mesh format types."""
-        from digitalmodel.bemrosetta.models import MeshFormat
+        from digitalmodel.hydrodynamics.bemrosetta.models import MeshFormat
 
         assert MeshFormat.MSH.value == "msh"
         assert MeshFormat.PNL.value == "pnl"
@@ -58,8 +58,8 @@ class TestBEMSolverMetadata:
 
     def test_creation_default(self):
         """Test creation with default values."""
-        from digitalmodel.bemrosetta.models import BEMSolverMetadata
-        from digitalmodel.bemrosetta.models.solver_metadata import BEMSolverType
+        from digitalmodel.hydrodynamics.bemrosetta.models import BEMSolverMetadata
+        from digitalmodel.hydrodynamics.bemrosetta.models.solver_metadata import BEMSolverType
 
         metadata = BEMSolverMetadata()
 
@@ -72,8 +72,8 @@ class TestBEMSolverMetadata:
 
     def test_creation_with_solver_type(self):
         """Test creation with specific solver type."""
-        from digitalmodel.bemrosetta.models import BEMSolverMetadata
-        from digitalmodel.bemrosetta.models.solver_metadata import BEMSolverType
+        from digitalmodel.hydrodynamics.bemrosetta.models import BEMSolverMetadata
+        from digitalmodel.hydrodynamics.bemrosetta.models.solver_metadata import BEMSolverType
 
         metadata = BEMSolverMetadata(
             solver_type=BEMSolverType.WAMIT,
@@ -95,7 +95,7 @@ class TestBEMSolverMetadata:
 
     def test_is_deep_water_property(self):
         """Test deep water detection."""
-        from digitalmodel.bemrosetta.models import BEMSolverMetadata
+        from digitalmodel.hydrodynamics.bemrosetta.models import BEMSolverMetadata
 
         # Infinite depth
         metadata_deep = BEMSolverMetadata(water_depth=float("inf"))
@@ -111,8 +111,8 @@ class TestBEMSolverMetadata:
 
     def test_has_qtf_property(self):
         """Test QTF availability detection by solver type."""
-        from digitalmodel.bemrosetta.models import BEMSolverMetadata
-        from digitalmodel.bemrosetta.models.solver_metadata import BEMSolverType
+        from digitalmodel.hydrodynamics.bemrosetta.models import BEMSolverMetadata
+        from digitalmodel.hydrodynamics.bemrosetta.models.solver_metadata import BEMSolverType
 
         # Solvers that support QTF
         for solver in [BEMSolverType.AQWA, BEMSolverType.WAMIT, BEMSolverType.ORCAWAVE]:
@@ -125,7 +125,7 @@ class TestBEMSolverMetadata:
 
     def test_to_dict_infinite_depth(self):
         """Test to_dict handles infinite depth correctly."""
-        from digitalmodel.bemrosetta.models import BEMSolverMetadata
+        from digitalmodel.hydrodynamics.bemrosetta.models import BEMSolverMetadata
 
         metadata = BEMSolverMetadata(water_depth=float("inf"))
         result = metadata.to_dict()
@@ -134,7 +134,7 @@ class TestBEMSolverMetadata:
 
     def test_to_dict_finite_depth(self):
         """Test to_dict with finite depth."""
-        from digitalmodel.bemrosetta.models import BEMSolverMetadata
+        from digitalmodel.hydrodynamics.bemrosetta.models import BEMSolverMetadata
 
         metadata = BEMSolverMetadata(water_depth=200.0)
         result = metadata.to_dict()
@@ -143,7 +143,7 @@ class TestBEMSolverMetadata:
 
     def test_default_units(self):
         """Test default units are set."""
-        from digitalmodel.bemrosetta.models import BEMSolverMetadata
+        from digitalmodel.hydrodynamics.bemrosetta.models import BEMSolverMetadata
 
         metadata = BEMSolverMetadata()
 
@@ -153,8 +153,8 @@ class TestBEMSolverMetadata:
 
     def test_from_dict(self):
         """Test creating metadata from dictionary."""
-        from digitalmodel.bemrosetta.models import BEMSolverMetadata
-        from digitalmodel.bemrosetta.models.solver_metadata import BEMSolverType
+        from digitalmodel.hydrodynamics.bemrosetta.models import BEMSolverMetadata
+        from digitalmodel.hydrodynamics.bemrosetta.models.solver_metadata import BEMSolverType
 
         data = {
             "solver_type": "WAMIT",
@@ -176,7 +176,7 @@ class TestQTFData:
 
     def test_creation(self):
         """Test QTF data creation."""
-        from digitalmodel.bemrosetta.models import QTFData, QTFType
+        from digitalmodel.hydrodynamics.bemrosetta.models import QTFData, QTFType
 
         qtf = QTFData(
             qtf_type=QTFType.DIFFERENCE_FREQUENCY,
@@ -190,7 +190,7 @@ class TestQTFData:
 
     def test_default_dof_names(self):
         """Test default DOF names."""
-        from digitalmodel.bemrosetta.models import QTFData, QTFType
+        from digitalmodel.hydrodynamics.bemrosetta.models import QTFData, QTFType
 
         qtf = QTFData(qtf_type=QTFType.SUM_FREQUENCY)
 
@@ -199,7 +199,7 @@ class TestQTFData:
 
     def test_with_frequencies_and_headings(self):
         """Test QTF data with frequency and heading arrays."""
-        from digitalmodel.bemrosetta.models import QTFData, QTFType
+        from digitalmodel.hydrodynamics.bemrosetta.models import QTFData, QTFType
 
         frequencies = np.linspace(0.1, 2.0, 10)
         headings = np.array([0.0, 45.0, 90.0, 135.0, 180.0])
@@ -215,7 +215,7 @@ class TestQTFData:
 
     def test_to_dict(self):
         """Test QTF data serialization."""
-        from digitalmodel.bemrosetta.models import QTFData, QTFType
+        from digitalmodel.hydrodynamics.bemrosetta.models import QTFData, QTFType
 
         frequencies = np.linspace(0.1, 2.0, 5)
         headings = np.array([0.0, 90.0, 180.0])
@@ -237,7 +237,7 @@ class TestQTFData:
 
     def test_from_dict(self):
         """Test QTF data deserialization."""
-        from digitalmodel.bemrosetta.models import QTFData, QTFType
+        from digitalmodel.hydrodynamics.bemrosetta.models import QTFData, QTFType
 
         data = {
             "qtf_type": "difference",
@@ -261,7 +261,7 @@ class TestQTFComponent:
 
     def test_creation(self):
         """Test QTF component creation."""
-        from digitalmodel.bemrosetta.models.qtf_data import QTFComponent, QTFType
+        from digitalmodel.hydrodynamics.bemrosetta.models.qtf_data import QTFComponent, QTFType
 
         frequencies = np.array([0.1, 0.5, 1.0])
         amplitude = np.random.rand(3, 3)
@@ -283,7 +283,7 @@ class TestQTFComponent:
 
     def test_complex_qtf_property(self):
         """Test complex QTF calculation."""
-        from digitalmodel.bemrosetta.models.qtf_data import QTFComponent, QTFType
+        from digitalmodel.hydrodynamics.bemrosetta.models.qtf_data import QTFComponent, QTFType
 
         frequencies = np.array([0.1, 0.5])
         amplitude = np.array([[1.0, 2.0], [3.0, 4.0]])
@@ -306,7 +306,7 @@ class TestQTFComponent:
 
     def test_mean_drift_extraction(self):
         """Test mean drift force extraction from diagonal."""
-        from digitalmodel.bemrosetta.models.qtf_data import QTFComponent, QTFType
+        from digitalmodel.hydrodynamics.bemrosetta.models.qtf_data import QTFComponent, QTFType
 
         frequencies = np.array([0.1, 0.5, 1.0])
         amplitude = np.array([
@@ -333,7 +333,7 @@ class TestQTFComponent:
 
     def test_dimension_validation(self):
         """Test that dimension mismatch raises error."""
-        from digitalmodel.bemrosetta.models.qtf_data import QTFComponent, QTFType
+        from digitalmodel.hydrodynamics.bemrosetta.models.qtf_data import QTFComponent, QTFType
 
         frequencies = np.array([0.1, 0.5, 1.0])
         # Wrong dimensions
@@ -357,7 +357,7 @@ class TestPanelMesh:
 
     def test_creation_quad_panels(self, sample_panel_mesh):
         """Test mesh creation with quad panels."""
-        from digitalmodel.bemrosetta.models import PanelMesh
+        from digitalmodel.hydrodynamics.bemrosetta.models import PanelMesh
 
         mesh = PanelMesh(
             vertices=sample_panel_mesh["vertices"].astype(np.float64),
@@ -370,7 +370,7 @@ class TestPanelMesh:
 
     def test_creation_triangle_panels(self):
         """Test mesh creation with triangle panels."""
-        from digitalmodel.bemrosetta.models import PanelMesh
+        from digitalmodel.hydrodynamics.bemrosetta.models import PanelMesh
 
         vertices = np.array([
             [0.0, 0.0, 0.0],
@@ -393,7 +393,7 @@ class TestPanelMesh:
 
     def test_panel_properties_computed(self, sample_panel_mesh):
         """Test that panel properties are automatically computed."""
-        from digitalmodel.bemrosetta.models import PanelMesh
+        from digitalmodel.hydrodynamics.bemrosetta.models import PanelMesh
 
         mesh = PanelMesh(
             vertices=sample_panel_mesh["vertices"].astype(np.float64),
@@ -409,7 +409,7 @@ class TestPanelMesh:
 
     def test_total_area(self, sample_panel_mesh):
         """Test total area calculation."""
-        from digitalmodel.bemrosetta.models import PanelMesh
+        from digitalmodel.hydrodynamics.bemrosetta.models import PanelMesh
 
         mesh = PanelMesh(
             vertices=sample_panel_mesh["vertices"].astype(np.float64),
@@ -421,7 +421,7 @@ class TestPanelMesh:
 
     def test_bounding_box(self, sample_panel_mesh):
         """Test bounding box calculation."""
-        from digitalmodel.bemrosetta.models import PanelMesh
+        from digitalmodel.hydrodynamics.bemrosetta.models import PanelMesh
 
         mesh = PanelMesh(
             vertices=sample_panel_mesh["vertices"].astype(np.float64),
@@ -439,7 +439,7 @@ class TestPanelMesh:
 
     def test_symmetry_settings(self, sample_panel_mesh):
         """Test mesh with symmetry enabled."""
-        from digitalmodel.bemrosetta.models import PanelMesh
+        from digitalmodel.hydrodynamics.bemrosetta.models import PanelMesh
 
         mesh = PanelMesh(
             vertices=sample_panel_mesh["vertices"].astype(np.float64),
@@ -451,7 +451,7 @@ class TestPanelMesh:
 
     def test_precomputed_properties(self, sample_panel_mesh):
         """Test mesh with precomputed normals/areas/centers."""
-        from digitalmodel.bemrosetta.models import PanelMesh
+        from digitalmodel.hydrodynamics.bemrosetta.models import PanelMesh
 
         precomputed_normals = np.zeros((5, 3), dtype=np.float64)
         precomputed_normals[:, 2] = 1.0  # All pointing up
@@ -473,7 +473,7 @@ class TestPanelMesh:
 
     def test_translate(self, sample_panel_mesh):
         """Test mesh translation."""
-        from digitalmodel.bemrosetta.models import PanelMesh
+        from digitalmodel.hydrodynamics.bemrosetta.models import PanelMesh
 
         mesh = PanelMesh(
             vertices=sample_panel_mesh["vertices"].astype(np.float64),
@@ -488,7 +488,7 @@ class TestPanelMesh:
 
     def test_scale(self, sample_panel_mesh):
         """Test mesh scaling."""
-        from digitalmodel.bemrosetta.models import PanelMesh
+        from digitalmodel.hydrodynamics.bemrosetta.models import PanelMesh
 
         mesh = PanelMesh(
             vertices=sample_panel_mesh["vertices"].astype(np.float64),
@@ -507,7 +507,7 @@ class TestMeshQualityReport:
 
     def test_creation(self):
         """Test report creation."""
-        from digitalmodel.bemrosetta.models import MeshQualityReport
+        from digitalmodel.hydrodynamics.bemrosetta.models import MeshQualityReport
 
         report = MeshQualityReport(
             n_panels=100,
@@ -526,7 +526,7 @@ class TestMeshQualityReport:
 
     def test_add_error_marks_invalid(self):
         """Test that adding error marks report as invalid."""
-        from digitalmodel.bemrosetta.models import MeshQualityReport
+        from digitalmodel.hydrodynamics.bemrosetta.models import MeshQualityReport
 
         report = MeshQualityReport(n_panels=100, n_vertices=80)
         assert report.is_valid is True
@@ -538,7 +538,7 @@ class TestMeshQualityReport:
 
     def test_add_warning(self):
         """Test adding warnings."""
-        from digitalmodel.bemrosetta.models import MeshQualityReport
+        from digitalmodel.hydrodynamics.bemrosetta.models import MeshQualityReport
 
         report = MeshQualityReport(n_panels=100, n_vertices=80)
         report.add_warning("High aspect ratio")
@@ -548,7 +548,7 @@ class TestMeshQualityReport:
 
     def test_to_dict(self):
         """Test report serialization."""
-        from digitalmodel.bemrosetta.models import MeshQualityReport
+        from digitalmodel.hydrodynamics.bemrosetta.models import MeshQualityReport
 
         report = MeshQualityReport(
             n_panels=50,
@@ -573,8 +573,8 @@ class TestConversionResult:
 
     def test_successful_conversion(self):
         """Test successful conversion result."""
-        from digitalmodel.bemrosetta.models import ConversionResult
-        from digitalmodel.bemrosetta.models.conversion_result import ConversionStatus
+        from digitalmodel.hydrodynamics.bemrosetta.models import ConversionResult
+        from digitalmodel.hydrodynamics.bemrosetta.models.conversion_result import ConversionStatus
 
         result = ConversionResult(
             status=ConversionStatus.SUCCESS,
@@ -587,8 +587,8 @@ class TestConversionResult:
 
     def test_failed_conversion(self):
         """Test failed conversion result."""
-        from digitalmodel.bemrosetta.models import ConversionResult
-        from digitalmodel.bemrosetta.models.conversion_result import ConversionStatus
+        from digitalmodel.hydrodynamics.bemrosetta.models import ConversionResult
+        from digitalmodel.hydrodynamics.bemrosetta.models.conversion_result import ConversionStatus
 
         result = ConversionResult(
             status=ConversionStatus.FAILED,
@@ -603,8 +603,8 @@ class TestConversionResult:
 
     def test_partial_conversion(self):
         """Test partial conversion with warnings."""
-        from digitalmodel.bemrosetta.models import ConversionResult
-        from digitalmodel.bemrosetta.models.conversion_result import ConversionStatus
+        from digitalmodel.hydrodynamics.bemrosetta.models import ConversionResult
+        from digitalmodel.hydrodynamics.bemrosetta.models.conversion_result import ConversionStatus
 
         result = ConversionResult(
             status=ConversionStatus.PARTIAL,
@@ -619,8 +619,8 @@ class TestConversionResult:
 
     def test_add_warning_changes_status(self):
         """Test that adding warning changes status from SUCCESS to PARTIAL."""
-        from digitalmodel.bemrosetta.models import ConversionResult
-        from digitalmodel.bemrosetta.models.conversion_result import ConversionStatus
+        from digitalmodel.hydrodynamics.bemrosetta.models import ConversionResult
+        from digitalmodel.hydrodynamics.bemrosetta.models.conversion_result import ConversionStatus
 
         result = ConversionResult(
             status=ConversionStatus.SUCCESS,
@@ -635,8 +635,8 @@ class TestConversionResult:
 
     def test_add_error_changes_status(self):
         """Test that adding error changes status to FAILED."""
-        from digitalmodel.bemrosetta.models import ConversionResult
-        from digitalmodel.bemrosetta.models.conversion_result import ConversionStatus
+        from digitalmodel.hydrodynamics.bemrosetta.models import ConversionResult
+        from digitalmodel.hydrodynamics.bemrosetta.models.conversion_result import ConversionStatus
 
         result = ConversionResult(
             status=ConversionStatus.SUCCESS,
@@ -652,8 +652,8 @@ class TestConversionResult:
     def test_to_dict(self):
         """Test conversion result serialization."""
         from pathlib import Path
-        from digitalmodel.bemrosetta.models import ConversionResult
-        from digitalmodel.bemrosetta.models.conversion_result import ConversionStatus
+        from digitalmodel.hydrodynamics.bemrosetta.models import ConversionResult
+        from digitalmodel.hydrodynamics.bemrosetta.models.conversion_result import ConversionStatus
 
         result = ConversionResult(
             status=ConversionStatus.SUCCESS,
@@ -673,8 +673,8 @@ class TestConversionResult:
 
     def test_summary(self):
         """Test human-readable summary generation."""
-        from digitalmodel.bemrosetta.models import ConversionResult
-        from digitalmodel.bemrosetta.models.conversion_result import ConversionStatus
+        from digitalmodel.hydrodynamics.bemrosetta.models import ConversionResult
+        from digitalmodel.hydrodynamics.bemrosetta.models.conversion_result import ConversionStatus
 
         result = ConversionResult(
             status=ConversionStatus.SUCCESS,
@@ -695,8 +695,8 @@ class TestIntegrationWithDiffractionModule:
 
     def test_metadata_compatible_with_rao_set(self):
         """Verify metadata can integrate with diffraction RAOSet."""
-        from digitalmodel.bemrosetta.models import BEMSolverMetadata
-        from digitalmodel.bemrosetta.models.solver_metadata import BEMSolverType
+        from digitalmodel.hydrodynamics.bemrosetta.models import BEMSolverMetadata
+        from digitalmodel.hydrodynamics.bemrosetta.models.solver_metadata import BEMSolverType
 
         metadata = BEMSolverMetadata(
             solver_type=BEMSolverType.WAMIT,
@@ -714,7 +714,7 @@ class TestIntegrationWithDiffractionModule:
 
     def test_qtf_dof_names_standard_convention(self):
         """Verify QTF DOF names follow standard convention."""
-        from digitalmodel.bemrosetta.models import QTFData, QTFType
+        from digitalmodel.hydrodynamics.bemrosetta.models import QTFData, QTFType
 
         qtf = QTFData(qtf_type=QTFType.DIFFERENCE_FREQUENCY)
 

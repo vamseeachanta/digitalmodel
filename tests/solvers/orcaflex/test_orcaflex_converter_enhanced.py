@@ -22,7 +22,7 @@ import tempfile
 from pathlib import Path
 import shutil
 
-from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.solvers.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 
 
 # Test data paths
@@ -458,7 +458,7 @@ class TestCLI:
         if not sample_dat_files:
             pytest.skip("No .dat files available")
 
-        from digitalmodel.orcaflex.convert_cli import convert_single
+        from digitalmodel.solvers.orcaflex.convert_cli import convert_single
 
         dat_file = sample_dat_files[0]
         output_file = temp_output_dir / "output.yml"
@@ -478,7 +478,7 @@ class TestCLI:
         if not sample_dat_files:
             pytest.skip("No .dat files available")
 
-        from digitalmodel.orcaflex.convert_cli import convert_batch
+        from digitalmodel.solvers.orcaflex.convert_cli import convert_batch
 
         input_dir = sample_dat_files[0].parent
 

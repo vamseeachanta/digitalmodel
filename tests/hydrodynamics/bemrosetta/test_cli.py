@@ -17,7 +17,7 @@ import numpy as np
 from pathlib import Path
 from click.testing import CliRunner
 
-from digitalmodel.bemrosetta.cli import cli, main
+from digitalmodel.hydrodynamics.bemrosetta.cli import cli, main
 
 
 # ============================================================================

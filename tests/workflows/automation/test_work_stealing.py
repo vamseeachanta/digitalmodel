@@ -7,7 +7,7 @@ import random
 from collections import defaultdict
 from typing import List
 
-from digitalmodel.automation.work_stealing_scheduler import (
+from digitalmodel.workflows.automation.work_stealing_scheduler import (
     WorkStealingScheduler,
     Agent,
     Task,

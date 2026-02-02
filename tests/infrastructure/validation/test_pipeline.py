@@ -10,7 +10,7 @@ from typing import List, Dict, Any
 import hashlib
 import time
 
-from digitalmodel.validation.pipeline import (
+from digitalmodel.infrastructure.validation.pipeline import (
     ValidationSeverity,
     ValidationResult,
     ValidationIssue,

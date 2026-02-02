@@ -5,10 +5,10 @@ from pathlib import Path
 import pytest
 import yaml
 
-from digitalmodel.orcaflex.format_converter.single_to_modular import (
+from digitalmodel.solvers.orcaflex.format_converter.single_to_modular import (
     SingleToModularConverter,
 )
-from digitalmodel.orcaflex.format_converter.modular_to_single import (
+from digitalmodel.solvers.orcaflex.format_converter.modular_to_single import (
     ModularToSingleConverter,
 )
 

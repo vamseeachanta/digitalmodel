@@ -12,12 +12,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 import numpy as np
 import pytest
-from digitalmodel.marine_engineering.catenary import CatenarySolver, CatenaryInput, CatenaryResults
+from digitalmodel.marine_ops.marine_engineering.catenary import CatenarySolver, CatenaryInput, CatenaryResults
 
 
 def test_import():
     """Test that module imports correctly."""
-    from digitalmodel.marine_engineering.catenary import CatenarySolver, CatenaryInput, CatenaryResults
+    from digitalmodel.marine_ops.marine_engineering.catenary import CatenarySolver, CatenaryInput, CatenaryResults
     assert CatenarySolver is not None
     assert CatenaryInput is not None
     assert CatenaryResults is not None
@@ -128,7 +128,7 @@ def test_input_validation():
 
 def test_utils_module():
     """Test utility functions."""
-    from digitalmodel.marine_engineering.catenary.utils import (
+    from digitalmodel.marine_ops.marine_engineering.catenary.utils import (
         safe_sinh, safe_cosh, validate_catenary_inputs,
         catenary_parameter, estimate_initial_tension
     )

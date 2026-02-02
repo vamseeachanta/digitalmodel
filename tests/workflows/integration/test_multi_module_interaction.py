@@ -52,7 +52,7 @@ class TestModuleInteractions:
         """Test interaction between fatigue and stress analysis modules."""
         # Mock stress analysis module
         with patch('digitalmodel.calculations.stress_analysis') as mock_stress, \
-             patch('digitalmodel.common.fatigue_analysis') as mock_fatigue:
+             patch('digitalmodel.infrastructure.common.fatigue_analysis') as mock_fatigue:
             
             # Configure stress analysis to provide input for fatigue
             stress_results = {
@@ -306,8 +306,8 @@ class TestModuleInteractions:
         }
 
         # Mock corrosion and cathodic protection modules
-        with patch('digitalmodel.common.corrosion_analysis') as mock_corrosion, \
-             patch('digitalmodel.common.cathodic_protection') as mock_cp:
+        with patch('digitalmodel.infrastructure.common.corrosion_analysis') as mock_corrosion, \
+             patch('digitalmodel.infrastructure.common.cathodic_protection') as mock_cp:
             
             # Configure corrosion analysis
             corrosion_results = {
@@ -371,8 +371,8 @@ class TestModuleInteractions:
         }
 
         # Mock signal processing and fatigue modules
-        with patch('digitalmodel.signal_analysis.signal_processing') as mock_signal, \
-             patch('digitalmodel.common.fatigue_analysis') as mock_fatigue:
+        with patch('digitalmodel.signal_processing.signal_analysis.signal_processing') as mock_signal, \
+             patch('digitalmodel.infrastructure.common.fatigue_analysis') as mock_fatigue:
             
             # Configure signal processing to extract cycles
             processed_results = {
@@ -489,7 +489,7 @@ class TestDataSharing:
         }
 
         # Mock configuration manager
-        with patch('digitalmodel.common.config_manager') as mock_config:
+        with patch('digitalmodel.infrastructure.common.config_manager') as mock_config:
             mock_config.get_shared_config.return_value = shared_config
             mock_config.update_config.return_value = True
 
@@ -510,7 +510,7 @@ class TestDataSharing:
     def test_inter_module_data_exchange(self):
         """Test data exchange between modules through shared data store."""
         # Mock shared data store
-        with patch('digitalmodel.common.data_store') as mock_store:
+        with patch('digitalmodel.infrastructure.common.data_store') as mock_store:
             
             # Configure data store
             stored_data = {}
@@ -545,7 +545,7 @@ class TestDataSharing:
         }
 
         # Mock dependency resolver
-        with patch('digitalmodel.common.dependency_resolver') as mock_resolver:
+        with patch('digitalmodel.infrastructure.common.dependency_resolver') as mock_resolver:
             mock_resolver.resolve_dependencies.return_value = [
                 "material_properties",
                 "geometry", 

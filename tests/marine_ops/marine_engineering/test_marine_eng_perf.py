@@ -18,15 +18,15 @@ import numpy as np
 from pathlib import Path
 import tempfile
 
-from digitalmodel.marine_analysis.wave_spectra.spectra import (
+from digitalmodel.marine_ops.marine_analysis.wave_spectra.spectra import (
     JONSWAPSpectrum, PiersonMoskowitzSpectrum, WaveSpectrumParameters
 )
-from digitalmodel.marine_analysis.environmental_loading.ocimf import (
+from digitalmodel.marine_ops.marine_analysis.environmental_loading.ocimf import (
     OCIMFDatabase, EnvironmentalForces, EnvironmentalConditions,
     VesselGeometry, create_sample_database
 )
-from digitalmodel.marine_analysis.catenary.solver import CatenarySolver, CatenaryInput
-from digitalmodel.marine_analysis.hydrodynamic_coefficients.coefficients import (
+from digitalmodel.marine_ops.marine_analysis.catenary.solver import CatenarySolver, CatenaryInput
+from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients.coefficients import (
     CoefficientDatabase, FrequencyDependentMatrix
 )
 

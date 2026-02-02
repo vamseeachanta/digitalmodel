@@ -6,7 +6,7 @@ import numpy as np
 from pathlib import Path
 from datetime import datetime
 
-from digitalmodel.orcaflex.mooring_analysis.comprehensive_analysis.models import (
+from digitalmodel.solvers.orcaflex.mooring_analysis.comprehensive_analysis.models import (
     PretensionLineData,
     PretensionData,
     PretensionMetrics,
@@ -292,7 +292,7 @@ class TestComprehensiveModels:
     
     def test_comprehensive_results_success_rate(self):
         """Test ComprehensiveResults success rate calculation."""
-        from digitalmodel.orcaflex.mooring_analysis.comprehensive_analysis.config import AnalysisConfig
+        from digitalmodel.solvers.orcaflex.mooring_analysis.comprehensive_analysis.config import AnalysisConfig
         
         config = AnalysisConfig()
         context = ContextInfo()

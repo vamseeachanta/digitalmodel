@@ -9,7 +9,7 @@ import yaml
 import tempfile
 from pathlib import Path
 
-from digitalmodel.orcaflex.library_generator import (
+from digitalmodel.solvers.orcaflex.library_generator import (
     csv_row_to_line_type,
     csv_row_to_buoy_type,
     csv_row_to_vessel_type,

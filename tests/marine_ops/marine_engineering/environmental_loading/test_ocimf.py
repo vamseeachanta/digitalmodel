@@ -16,7 +16,7 @@ from pathlib import Path
 import tempfile
 import shutil
 
-from digitalmodel.marine_analysis.environmental_loading import (
+from digitalmodel.marine_ops.marine_analysis.environmental_loading import (
     OCIMFDatabase,
     EnvironmentalForces,
     OCIMFCoefficients,

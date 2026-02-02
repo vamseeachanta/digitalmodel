@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from digitalmodel.diffraction.input_schemas import DiffractionSpec
+from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 
 
 # Fixtures directory for YAML specs
@@ -49,7 +49,7 @@ class TestAQWABackendSingleFile:
 
     def test_generate_single_creates_dat_file(self, tmp_path: Path):
         """generate_single produces a .dat file in output directory."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -61,7 +61,7 @@ class TestAQWABackendSingleFile:
 
     def test_single_file_contains_all_decks(self, tmp_path: Path):
         """Single .dat file must contain DECK 0 through DECK 6 markers."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -75,7 +75,7 @@ class TestAQWABackendSingleFile:
 
     def test_single_file_contains_job_card(self, tmp_path: Path):
         """Deck 0 must contain a JOB AQWA card."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -86,7 +86,7 @@ class TestAQWABackendSingleFile:
 
     def test_single_file_contains_end_cards(self, tmp_path: Path):
         """Each deck body should be terminated with END."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -108,7 +108,7 @@ class TestAQWABackendModular:
 
     def test_generate_modular_creates_directory(self, tmp_path: Path):
         """generate_modular produces multiple deck files in output directory."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -119,7 +119,7 @@ class TestAQWABackendModular:
 
     def test_modular_creates_expected_deck_files(self, tmp_path: Path):
         """Modular output creates individual files per deck."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -133,7 +133,7 @@ class TestAQWABackendModular:
     def test_modular_concatenation_matches_single(self, tmp_path: Path):
         """Concatenating modular deck files should produce content equivalent
         to the single-file output (same deck structure and card content)."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -173,7 +173,7 @@ class TestWaterDepthMapping:
 
     def test_finite_water_depth(self, tmp_path: Path):
         """Finite water depth appears in DPTH card."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -191,7 +191,7 @@ class TestWaterDepthMapping:
 
     def test_infinite_water_depth(self, tmp_path: Path):
         """Infinite water depth uses large value in DPTH card."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_fpso_turret_spec()
         backend = AQWABackend()
@@ -218,7 +218,7 @@ class TestFrequencyMapping:
 
     def test_explicit_frequencies_to_hrtz(self, tmp_path: Path):
         """Explicit frequency values appear as HRTZ cards in deck 6."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -233,7 +233,7 @@ class TestFrequencyMapping:
 
     def test_frequency_range_to_hrtz(self, tmp_path: Path):
         """Frequency range generates correct count of HRTZ cards."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_semisub_spec()
         backend = AQWABackend()
@@ -248,7 +248,7 @@ class TestFrequencyMapping:
 
     def test_frequencies_converted_to_hz(self, tmp_path: Path):
         """AQWA HRTZ cards use Hz (not rad/s). Verify conversion."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -277,7 +277,7 @@ class TestHeadingMapping:
 
     def test_explicit_headings_to_dirn(self, tmp_path: Path):
         """Explicit heading values appear as DIRN cards in deck 6."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -292,7 +292,7 @@ class TestHeadingMapping:
 
     def test_heading_range_to_dirn(self, tmp_path: Path):
         """Heading range generates correct DIRN card count."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_semisub_spec()
         backend = AQWABackend()
@@ -307,7 +307,7 @@ class TestHeadingMapping:
 
     def test_heading_values_in_degrees(self, tmp_path: Path):
         """DIRN cards contain heading values in degrees."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -332,7 +332,7 @@ class TestMassInertiaDeck:
 
     def test_mass_card_contains_vessel_mass(self, tmp_path: Path):
         """Deck 3 MATE section has correct mass from spec."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -356,7 +356,7 @@ class TestMassInertiaDeck:
 
     def test_inertia_deck_from_radii_of_gyration(self, tmp_path: Path):
         """Deck 4 GEOM/PMAS card computed from radii of gyration."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -371,7 +371,7 @@ class TestMassInertiaDeck:
 
     def test_inertia_deck_from_tensor(self, tmp_path: Path):
         """Deck 4 GEOM/PMAS card uses inertia tensor when provided."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_semisub_spec()
         backend = AQWABackend()
@@ -391,7 +391,7 @@ class TestMultiBodySpec:
 
     def test_multi_body_structure_count(self, tmp_path: Path):
         """FPSO turret spec with 2 bodies generates 2 STRC markers."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_fpso_turret_spec()
         backend = AQWABackend()
@@ -407,7 +407,7 @@ class TestMultiBodySpec:
 
     def test_multi_body_mass_per_structure(self, tmp_path: Path):
         """Each body in multi-body spec gets its own mass card."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_fpso_turret_spec()
         backend = AQWABackend()
@@ -438,7 +438,7 @@ class TestEnvironmentDeck:
 
     def test_glob_deck_has_water_density(self, tmp_path: Path):
         """Deck 5 GLOB contains DENS card with water density."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -453,7 +453,7 @@ class TestEnvironmentDeck:
 
     def test_glob_deck_has_gravity(self, tmp_path: Path):
         """Deck 5 GLOB contains ACCG card with gravity."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -477,7 +477,7 @@ class TestDeckCardGeneration:
 
     def test_deck0_job_cards(self):
         """Deck 0 generates JOB, TITLE, and OPTIONS cards."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -489,7 +489,7 @@ class TestDeckCardGeneration:
 
     def test_deck5_glob_cards(self):
         """Deck 5 generates GLOB, DPTH, DENS, ACCG cards."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -504,7 +504,7 @@ class TestDeckCardGeneration:
 
     def test_deck6_frequency_cards(self):
         """Deck 6 generates FDR1, HRTZ, and DIRN cards."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -518,7 +518,7 @@ class TestDeckCardGeneration:
 
     def test_deck3_mass_cards(self):
         """Deck 3 generates MATE and mass line cards."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -530,7 +530,7 @@ class TestDeckCardGeneration:
 
     def test_deck4_inertia_cards(self):
         """Deck 4 generates GEOM and PMAS cards."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -552,7 +552,7 @@ class TestOptionsMapping:
 
     def test_lhfr_option_when_remove_irregular_frequencies(self, tmp_path: Path):
         """OPTIONS LHFR set when remove_irregular_frequencies is True."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()
@@ -567,7 +567,7 @@ class TestOptionsMapping:
 
     def test_mqtf_option_when_qtf_enabled(self, tmp_path: Path):
         """OPTIONS MQTF set when qtf_calculation is True."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_semisub_spec()
         backend = AQWABackend()
@@ -591,7 +591,7 @@ class TestMetadataInOutput:
 
     def test_title_card_contains_project_name(self, tmp_path: Path):
         """TITLE card should contain the spec project name."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
         spec = _load_ship_spec()
         backend = AQWABackend()

@@ -4,16 +4,16 @@
 import pytest
 from pathlib import Path
 
-from digitalmodel.artificial_lift.dynacard.data_loader import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.data_loader import (
     load_from_json_file,
 )
-from digitalmodel.artificial_lift.dynacard.load_analysis import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.load_analysis import (
     LoadRatioCalculator,
     calculate_load_ratios,
     calculate_peak_load_ratio,
     calculate_low_load_ratio,
 )
-from digitalmodel.artificial_lift.dynacard.models import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
     DynacardAnalysisContext,
     CardData,
     RodSection,

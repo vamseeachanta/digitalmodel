@@ -6,7 +6,7 @@ to ensure it works without FutureWarning for DataFrame concatenation
 import warnings
 import pandas as pd
 import numpy as np
-from digitalmodel.orcaflex.opp_summary import OPPSummary
+from digitalmodel.solvers.orcaflex.opp_summary import OPPSummary
 
 
 def test_add_file_result_to_all_results_no_warning():

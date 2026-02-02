@@ -109,7 +109,7 @@ class TestFullPipelineWorkflow:
         # Mock pipeline analysis modules
         with patch('digitalmodel.analysis.pipeline_analysis') as mock_pipeline, \
              patch('digitalmodel.calculations.lateral_buckling') as mock_buckling, \
-             patch('digitalmodel.common.fatigue_analysis') as mock_fatigue:
+             patch('digitalmodel.infrastructure.common.fatigue_analysis') as mock_fatigue:
             
             # Configure mocks for realistic pipeline analysis
             mock_pipeline.analyze_pipeline.return_value = {
@@ -208,7 +208,7 @@ class TestFullPipelineWorkflow:
             yaml.dump(fatigue_config, f)
 
         # Mock fatigue analysis modules
-        with patch('digitalmodel.common.fatigue_analysis') as mock_fatigue, \
+        with patch('digitalmodel.infrastructure.common.fatigue_analysis') as mock_fatigue, \
              patch('digitalmodel.calculations.stress_analysis') as mock_stress:
             
             # Configure realistic fatigue analysis

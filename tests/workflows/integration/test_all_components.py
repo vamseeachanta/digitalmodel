@@ -8,14 +8,14 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-from digitalmodel.config.registry import ConfigRegistry
-from digitalmodel.core.database_manager import DatabaseManager
-from digitalmodel.validation.pipeline import (
+from digitalmodel.infrastructure.config.registry import ConfigRegistry
+from digitalmodel.infrastructure.core.database_manager import DatabaseManager
+from digitalmodel.infrastructure.validation.pipeline import (
     ValidationPipeline, RangeValidator, MatrixValidator,
     PhysicalPlausibilityValidator, TimeSeriesValidator
 )
 from digitalmodel.data.catalog import DataCatalog, CatalogEntry, CatalogDiscovery
-from digitalmodel.core.provenance import DataProvenance, ProvenanceTracker, compute_hash
+from digitalmodel.infrastructure.core.provenance import DataProvenance, ProvenanceTracker, compute_hash
 from digitalmodel.data.migration import (
     ExcelToParquetConverter, convert_excel_to_parquet, validate_data_integrity
 )

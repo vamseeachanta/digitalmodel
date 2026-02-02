@@ -10,7 +10,7 @@ import shutil
 import json
 from datetime import datetime
 
-from digitalmodel.automation.rollback_manager import (
+from digitalmodel.workflows.automation.rollback_manager import (
     RollbackManager,
     Checkpoint,
 )

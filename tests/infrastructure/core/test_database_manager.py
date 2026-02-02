@@ -16,7 +16,7 @@ class TestDatabaseManagerConfiguration:
 
     def test_load_config_from_env_vars(self):
         """Should load database config from environment variables"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         with patch.dict(os.environ, {
             'DB_HOST': 'localhost',
@@ -36,7 +36,7 @@ class TestDatabaseManagerConfiguration:
 
     def test_env_vars_override_config_file(self):
         """Environment variables should take precedence over config file"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         config_file = {
             'host': 'config-host',
@@ -59,7 +59,7 @@ class TestDatabaseManagerConfiguration:
 
     def test_different_pool_sizes_per_database(self):
         """Different databases should have appropriate pool sizes"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         # PostgreSQL: 20 connections
         pg_manager = DatabaseManager(db_type='postgresql')
@@ -84,7 +84,7 @@ class TestConnectionPooling:
     @patch('sqlalchemy.create_engine')
     def test_creates_engine_with_queue_pool(self, mock_create_engine):
         """Should create engine with QueuePool configuration"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         manager = DatabaseManager(db_type='postgresql', config={
             'host': 'localhost',
@@ -104,7 +104,7 @@ class TestConnectionPooling:
     @patch('sqlalchemy.create_engine')
     def test_pool_pre_ping_enabled(self, mock_create_engine):
         """Should enable pool_pre_ping for auto-reconnect"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         manager = DatabaseManager(db_type='postgresql')
         manager.get_connection()
@@ -115,7 +115,7 @@ class TestConnectionPooling:
     @patch('sqlalchemy.create_engine')
     def test_configurable_pool_size_and_overflow(self, mock_create_engine):
         """Should support custom pool size and max overflow"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         manager = DatabaseManager(
             db_type='postgresql',
@@ -136,7 +136,7 @@ class TestRetryLogic:
     @patch('sqlalchemy.create_engine')
     def test_retry_on_operational_error(self, mock_create_engine, mock_sleep):
         """Should retry connection on OperationalError"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         # Simulate failure then success
         mock_engine = MagicMock()
@@ -158,7 +158,7 @@ class TestRetryLogic:
     @patch('sqlalchemy.create_engine')
     def test_exponential_backoff(self, mock_create_engine, mock_sleep):
         """Should use exponential backoff: 1s, 2s, 4s"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         mock_engine = MagicMock()
         mock_engine.connect.side_effect = [
@@ -179,7 +179,7 @@ class TestRetryLogic:
     @patch('sqlalchemy.create_engine')
     def test_no_retry_on_authentication_error(self, mock_create_engine):
         """Should NOT retry on authentication failures"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         mock_engine = MagicMock()
         auth_error = DatabaseError("authentication failed", None, None)
@@ -198,7 +198,7 @@ class TestRetryLogic:
     @patch('sqlalchemy.create_engine')
     def test_no_retry_on_permission_error(self, mock_create_engine):
         """Should NOT retry on permission errors"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         mock_engine = MagicMock()
         perm_error = DatabaseError("permission denied", None, None)
@@ -216,7 +216,7 @@ class TestRetryLogic:
     @patch('sqlalchemy.create_engine')
     def test_max_retries_exceeded(self, mock_create_engine):
         """Should raise error after max retries exceeded"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         mock_engine = MagicMock()
         mock_engine.connect.side_effect = OperationalError("Connection refused", None, None)
@@ -237,7 +237,7 @@ class TestHighAvailabilityFailover:
     @patch('sqlalchemy.create_engine')
     def test_supports_multiple_connection_strings(self, mock_create_engine):
         """Should accept list of connection strings for HA"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         connection_strings = [
             "postgresql://primary:5432/db",
@@ -257,7 +257,7 @@ class TestHighAvailabilityFailover:
     @patch('sqlalchemy.create_engine')
     def test_writes_go_to_primary(self, mock_create_engine):
         """Write connections should always use primary"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         connection_strings = [
             "postgresql://primary:5432/db",
@@ -281,7 +281,7 @@ class TestHighAvailabilityFailover:
     @patch('sqlalchemy.create_engine')
     def test_reads_round_robin_across_all(self, mock_create_engine):
         """Read connections should round-robin across all servers"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         connection_strings = [
             "postgresql://primary:5432/db",
@@ -312,7 +312,7 @@ class TestHighAvailabilityFailover:
     @patch('sqlalchemy.create_engine')
     def test_failover_to_replica_on_primary_failure(self, mock_create_engine):
         """Should failover to replica if primary fails"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         connection_strings = [
             "postgresql://primary:5432/db",
@@ -348,7 +348,7 @@ class TestMongoDBIntegration:
     @patch('motor.motor_asyncio.AsyncIOMotorClient')
     def test_uses_motor_for_async(self, mock_motor_client):
         """Should use motor for async MongoDB connections"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         manager = DatabaseManager(db_type='mongodb', config={
             'host': 'localhost',
@@ -363,7 +363,7 @@ class TestMongoDBIntegration:
     @patch('motor.motor_asyncio.AsyncIOMotorClient')
     def test_mongodb_pool_size_default_10(self, mock_motor_client):
         """MongoDB should default to pool size of 10"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         manager = DatabaseManager(db_type='mongodb')
 
@@ -372,7 +372,7 @@ class TestMongoDBIntegration:
     @patch('motor.motor_asyncio.AsyncIOMotorClient')
     def test_mongodb_similar_interface_to_sql(self, mock_motor_client):
         """MongoDB manager should have similar interface to SQL managers"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         mongo_manager = DatabaseManager(db_type='mongodb')
         sql_manager = DatabaseManager(db_type='postgresql')
@@ -392,7 +392,7 @@ class TestMSAccessHandling:
     @patch('sqlalchemy.create_engine')
     def test_access_single_connection_only(self, mock_create_engine):
         """MS Access should use single connection (no pooling)"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         manager = DatabaseManager(db_type='access')
 
@@ -401,7 +401,7 @@ class TestMSAccessHandling:
     @patch('sqlalchemy.create_engine')
     def test_access_warns_in_production(self, mock_create_engine):
         """Should warn when Access is used in production"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         with patch.dict(os.environ, {'ENVIRONMENT': 'production'}):
             with pytest.warns(UserWarning, match="MS Access.*production"):
@@ -410,7 +410,7 @@ class TestMSAccessHandling:
     @patch('sqlalchemy.create_engine')
     def test_access_ok_in_development(self, mock_create_engine):
         """Should not warn in development environment"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         with patch.dict(os.environ, {'ENVIRONMENT': 'development'}):
             # Should not raise warning
@@ -423,7 +423,7 @@ class TestMetricsTracking:
     @patch('sqlalchemy.create_engine')
     def test_tracks_active_connections(self, mock_create_engine):
         """Should track number of active connections"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         mock_engine = MagicMock()
         mock_create_engine.return_value = mock_engine
@@ -441,7 +441,7 @@ class TestMetricsTracking:
     @patch('sqlalchemy.create_engine')
     def test_tracks_pool_size(self, mock_create_engine):
         """Should track configured pool size"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         manager = DatabaseManager(db_type='postgresql', pool_size=25)
 
@@ -451,7 +451,7 @@ class TestMetricsTracking:
     @patch('sqlalchemy.create_engine')
     def test_tracks_connection_errors(self, mock_create_engine):
         """Should track connection error count"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         mock_engine = MagicMock()
         mock_engine.connect.side_effect = OperationalError("Error", None, None)
@@ -472,7 +472,7 @@ class TestMetricsTracking:
     @patch('time.time')
     def test_tracks_query_times(self, mock_time, mock_create_engine):
         """Should track query execution times"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         # Simulate time passage
         mock_time.side_effect = [0.0, 0.5, 1.0, 1.3]
@@ -494,7 +494,7 @@ class TestMetricsTracking:
     @patch('sqlalchemy.create_engine')
     def test_tracks_failure_rate(self, mock_create_engine):
         """Should track connection failure rate"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         mock_engine = MagicMock()
         # 2 failures, 1 success
@@ -518,7 +518,7 @@ class TestContextManager:
     @patch('sqlalchemy.create_engine')
     def test_context_manager_returns_connection(self, mock_create_engine):
         """Context manager should return valid connection"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         mock_engine = MagicMock()
         mock_connection = MagicMock()
@@ -533,7 +533,7 @@ class TestContextManager:
     @patch('sqlalchemy.create_engine')
     def test_context_manager_closes_connection(self, mock_create_engine):
         """Context manager should close connection on exit"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         mock_engine = MagicMock()
         mock_connection = MagicMock()
@@ -550,7 +550,7 @@ class TestContextManager:
     @patch('sqlalchemy.create_engine')
     def test_context_manager_closes_on_exception(self, mock_create_engine):
         """Context manager should close connection even on exception"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         mock_engine = MagicMock()
         mock_connection = MagicMock()
@@ -573,7 +573,7 @@ class TestBackwardCompatibility:
 
     def test_supports_legacy_db_properties_dict(self):
         """Should support legacy db_properties dict format"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         # Legacy format from existing database.py
         db_properties = {
@@ -594,7 +594,7 @@ class TestBackwardCompatibility:
 
     def test_provides_legacy_get_db_connection_wrapper(self):
         """Should provide wrapper for legacy get_db_connection function"""
-        from digitalmodel.core.database_manager import get_db_connection_pooled
+        from digitalmodel.infrastructure.core.database_manager import get_db_connection_pooled
 
         db_properties = {
             'server_type': 'postgresql',
@@ -611,7 +611,7 @@ class TestBackwardCompatibility:
     @patch('sqlalchemy.create_engine')
     def test_connection_string_compatibility(self, mock_create_engine):
         """Should work with existing connection_string parameter"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         connection_string = "postgresql://user:pass@localhost:5432/testdb"
 
@@ -633,7 +633,7 @@ class TestHealthCheck:
     @patch('sqlalchemy.create_engine')
     def test_health_check_returns_status(self, mock_create_engine):
         """Health check should return connection status"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         mock_engine = MagicMock()
         mock_connection = MagicMock()
@@ -651,7 +651,7 @@ class TestHealthCheck:
     @patch('sqlalchemy.create_engine')
     def test_health_check_detects_failure(self, mock_create_engine):
         """Health check should detect connection failures"""
-        from digitalmodel.core.database_manager import DatabaseManager
+        from digitalmodel.infrastructure.core.database_manager import DatabaseManager
 
         mock_engine = MagicMock()
         mock_engine.connect.side_effect = OperationalError("Error", None, None)

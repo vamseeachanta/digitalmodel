@@ -10,9 +10,9 @@ import pandas as pd
 import pytest
 from lxml import etree
 
-from digitalmodel.gis.core.crs import CRSDefinition
-from digitalmodel.gis.integrations.temporal_export import TemporalExporter
-from digitalmodel.gis.layers.feature_layer import FeatureLayer
+from digitalmodel.specialized.gis.core.crs import CRSDefinition
+from digitalmodel.specialized.gis.integrations.temporal_export import TemporalExporter
+from digitalmodel.specialized.gis.layers.feature_layer import FeatureLayer
 
 KML_NS = "http://www.opengis.net/kml/2.2"
 

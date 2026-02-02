@@ -11,7 +11,7 @@ from pathlib import Path
 import tempfile
 from unittest.mock import MagicMock, patch
 
-from src.digitalmodel.marine_analysis.python_code_passing_ship.visualization import (
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.visualization import (
     ForceDistributionPlotter,
     ParametricStudyVisualizer,
     PlotExporter,
@@ -21,7 +21,7 @@ from src.digitalmodel.marine_analysis.python_code_passing_ship.visualization imp
     create_parametric_study,
     create_comparison_plots,
 )
-from src.digitalmodel.marine_analysis.python_code_passing_ship.calculator import ForceResults
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.calculator import ForceResults
 
 
 class TestForceDistributionPlotter:

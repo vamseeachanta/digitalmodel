@@ -73,7 +73,7 @@ def test_basic_functionality():
     
     print("\n4. Testing Fatigue Analysis...")
     try:
-        from digitalmodel.signal_analysis.fatigue import (
+        from digitalmodel.signal_processing.signal_analysis.fatigue import (
             FatigueDamageCalculator, SNCurve
         )
         
@@ -90,7 +90,7 @@ def test_basic_functionality():
     
     print("\n5. Testing Backward Compatibility...")
     try:
-        from digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter
+        from digitalmodel.signal_processing.signal_analysis.adapters import TimeSeriesComponentsAdapter
         
         cfg = {'default': {'analysis': {'fft': {}}}}
         adapter = TimeSeriesComponentsAdapter(cfg)
@@ -120,7 +120,7 @@ def test_orcaflex_integration():
     print("="*60)
     
     try:
-        from digitalmodel.orcaflex.time_trace_processor import (
+        from digitalmodel.solvers.orcaflex.time_trace_processor import (
             OrcaFlexTimeTraceProcessor, TimeTraceConfig, create_default_config
         )
         

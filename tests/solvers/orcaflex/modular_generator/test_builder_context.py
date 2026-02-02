@@ -43,7 +43,7 @@ class TestBuilderContext:
         assert builder_context.line_type_names == ["lt1"]
 
     def test_multiple_builders_share_context(self):
-        from digitalmodel.orcaflex.modular_generator.builders.context import (
+        from digitalmodel.solvers.orcaflex.modular_generator.builders.context import (
             BuilderContext,
         )
 

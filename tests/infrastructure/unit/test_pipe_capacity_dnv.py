@@ -1,4 +1,4 @@
-from digitalmodel.pipe_capacity.custom.PipeCapacity import DNVWallThickness
+from digitalmodel.structural.pipe_capacity.custom.PipeCapacity import DNVWallThickness
 
 
 def _make_cfg(

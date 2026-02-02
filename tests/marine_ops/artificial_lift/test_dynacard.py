@@ -1,10 +1,10 @@
 import pytest
 import numpy as np
-from digitalmodel.artificial_lift.dynacard.models import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
     DynacardAnalysisContext, CardData, RodSection, PumpProperties, SurfaceUnit
 )
-from digitalmodel.artificial_lift.dynacard.solver import DynacardWorkflow
-from digitalmodel.artificial_lift.dynacard.physics import DynacardPhysicsSolver
+from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
+from digitalmodel.marine_ops.artificial_lift.dynacard.physics import DynacardPhysicsSolver
 
 @pytest.fixture
 def sample_context():

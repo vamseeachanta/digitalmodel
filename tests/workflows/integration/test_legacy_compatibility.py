@@ -488,7 +488,7 @@ report_format = pdf
     def test_backward_compatibility_validation(self):
         """Test that migrated modules maintain backward compatibility."""
         # Mock backward compatibility checker
-        with patch('digitalmodel.validation.compatibility_checker') as mock_checker:
+        with patch('digitalmodel.infrastructure.validation.compatibility_checker') as mock_checker:
             
             compatibility_report = {
                 "overall_compatibility": 95.2,  # Percentage

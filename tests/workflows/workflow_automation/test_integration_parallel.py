@@ -15,7 +15,7 @@ from digitalmodel.workflow_automation import (
     ParallelExecutor,
     AdaptiveParallelExecutor,
 )
-from digitalmodel.workflow_automation.parallel import ParallelExecutionResult
+from digitalmodel.workflows.workflow_automation.parallel import ParallelExecutionResult
 
 
 class TestParallelExecution:
@@ -337,7 +337,7 @@ class TestParallelIntegrationWithOrchestrator:
 
     def test_orchestrator_worker_configuration(self):
         """Test orchestrator with custom worker count"""
-        from digitalmodel.workflow_automation.models import WorkflowConfig
+        from digitalmodel.workflows.workflow_automation.models import WorkflowConfig
 
         config = WorkflowConfig(max_parallel_tasks=8)
 

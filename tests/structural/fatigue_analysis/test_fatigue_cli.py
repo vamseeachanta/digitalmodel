@@ -18,7 +18,7 @@ from io import StringIO
 # Add module path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from digitalmodel.fatigue_analysis.__main__ import (
+from digitalmodel.structural.fatigue_analysis.__main__ import (
     parse_arguments,
     validate_inputs,
     setup_logging,
@@ -132,7 +132,7 @@ class TestInputValidation:
         args.struts = "1,2,3"
         args.sample = False
         
-        with patch('digitalmodel.fatigue_analysis.__main__.logging') as mock_logging:
+        with patch('digitalmodel.structural.fatigue_analysis.__main__.logging') as mock_logging:
             result = validate_inputs(args)
             assert result is True
             mock_logging.error.assert_not_called()
@@ -147,7 +147,7 @@ class TestInputValidation:
         args.struts = "1,2,3"
         args.sample = False
         
-        with patch('digitalmodel.fatigue_analysis.__main__.logging') as mock_logging:
+        with patch('digitalmodel.structural.fatigue_analysis.__main__.logging') as mock_logging:
             result = validate_inputs(args)
             assert result is False
             mock_logging.error.assert_called()
@@ -162,7 +162,7 @@ class TestInputValidation:
         args.stress_table = None
         args.struts = "1,9,10"  # Invalid: > 8
         
-        with patch('digitalmodel.fatigue_analysis.__main__.logging') as mock_logging:
+        with patch('digitalmodel.structural.fatigue_analysis.__main__.logging') as mock_logging:
             result = validate_inputs(args)
             assert result is False
             assert any("between 1 and 8" in str(call) for call in mock_logging.error.call_args_list)
@@ -177,7 +177,7 @@ class TestInputValidation:
         args.stress_table = str(tmp_path / "missing_stress.csv")
         args.struts = "1,2"
         
-        with patch('digitalmodel.fatigue_analysis.__main__.logging') as mock_logging:
+        with patch('digitalmodel.structural.fatigue_analysis.__main__.logging') as mock_logging:
             result = validate_inputs(args)
             assert result is False
             assert mock_logging.error.call_count >= 3  # Three missing files
@@ -188,7 +188,7 @@ class TestLogging:
     
     def test_normal_logging(self):
         """Test normal logging setup"""
-        with patch('digitalmodel.fatigue_analysis.__main__.logging') as mock_logging:
+        with patch('digitalmodel.structural.fatigue_analysis.__main__.logging') as mock_logging:
             setup_logging(verbose=False)
             mock_logging.basicConfig.assert_called_once()
             config_call = mock_logging.basicConfig.call_args
@@ -196,7 +196,7 @@ class TestLogging:
     
     def test_verbose_logging(self):
         """Test verbose logging setup"""
-        with patch('digitalmodel.fatigue_analysis.__main__.logging') as mock_logging:
+        with patch('digitalmodel.structural.fatigue_analysis.__main__.logging') as mock_logging:
             setup_logging(verbose=True)
             mock_logging.basicConfig.assert_called_once()
             config_call = mock_logging.basicConfig.call_args
@@ -225,9 +225,9 @@ class TestAnalysisExecution:
         args.verbose = False
         args.export_intermediate = False
         
-        with patch('digitalmodel.fatigue_analysis.__main__.IntegratedFatigueProcessor') as MockProcessor:
-            with patch('digitalmodel.fatigue_analysis.__main__.ProductionDataHandler') as MockHandler:
-                with patch('digitalmodel.fatigue_analysis.__main__.main') as mock_main:
+        with patch('digitalmodel.structural.fatigue_analysis.__main__.IntegratedFatigueProcessor') as MockProcessor:
+            with patch('digitalmodel.structural.fatigue_analysis.__main__.ProductionDataHandler') as MockHandler:
+                with patch('digitalmodel.structural.fatigue_analysis.__main__.main') as mock_main:
                     mock_main.return_value = ([], {})
                     
                     result = run_analysis(args)
@@ -260,9 +260,9 @@ class TestAnalysisExecution:
         args.verbose = False
         args.export_intermediate = False
         
-        with patch('digitalmodel.fatigue_analysis.__main__.IntegratedFatigueProcessor') as MockProcessor:
-            with patch('digitalmodel.fatigue_analysis.__main__.ProductionDataHandler') as MockHandler:
-                with patch('digitalmodel.fatigue_analysis.__main__.main') as mock_main:
+        with patch('digitalmodel.structural.fatigue_analysis.__main__.IntegratedFatigueProcessor') as MockProcessor:
+            with patch('digitalmodel.structural.fatigue_analysis.__main__.ProductionDataHandler') as MockHandler:
+                with patch('digitalmodel.structural.fatigue_analysis.__main__.main') as mock_main:
                     mock_main.return_value = ([{"test": "result"}], {"summary": "data"})
                     
                     result = run_analysis(args)
@@ -294,15 +294,15 @@ class TestAnalysisExecution:
         args.verbose = False
         args.export_intermediate = False
         
-        with patch('digitalmodel.fatigue_analysis.__main__.IntegratedFatigueProcessor') as MockProcessor:
-            with patch('digitalmodel.fatigue_analysis.__main__.ProductionDataHandler') as MockHandler:
+        with patch('digitalmodel.structural.fatigue_analysis.__main__.IntegratedFatigueProcessor') as MockProcessor:
+            with patch('digitalmodel.structural.fatigue_analysis.__main__.ProductionDataHandler') as MockHandler:
                 mock_handler = MagicMock()
                 mock_handler.configurations = {
                     'config1': MagicMock(description="Test Config", weight=50.0)
                 }
                 MockHandler.return_value = mock_handler
                 
-                with patch('digitalmodel.fatigue_analysis.__main__.logging') as mock_logging:
+                with patch('digitalmodel.structural.fatigue_analysis.__main__.logging') as mock_logging:
                     result = run_analysis(args)
                     
                     # Should not run actual analysis in dry-run
@@ -343,9 +343,9 @@ class TestAnalysisExecution:
         args.verbose = False
         args.export_intermediate = False
         
-        with patch('digitalmodel.fatigue_analysis.__main__.IntegratedFatigueProcessor') as MockProcessor:
-            with patch('digitalmodel.fatigue_analysis.__main__.ProductionDataHandler') as MockHandler:
-                with patch('digitalmodel.fatigue_analysis.__main__.main') as mock_main:
+        with patch('digitalmodel.structural.fatigue_analysis.__main__.IntegratedFatigueProcessor') as MockProcessor:
+            with patch('digitalmodel.structural.fatigue_analysis.__main__.ProductionDataHandler') as MockHandler:
+                with patch('digitalmodel.structural.fatigue_analysis.__main__.main') as mock_main:
                     mock_processor = MagicMock()
                     MockProcessor.return_value = mock_processor
                     mock_main.return_value = ([], {})
@@ -393,11 +393,11 @@ class TestEndToEnd:
         
         with patch('sys.argv', test_args):
             # Mock the main function to avoid actual processing
-            with patch('digitalmodel.fatigue_analysis.__main__.run_analysis') as mock_run:
+            with patch('digitalmodel.structural.fatigue_analysis.__main__.run_analysis') as mock_run:
                 mock_run.return_value = True
                 
                 # Import and run main
-                from digitalmodel.fatigue_analysis.__main__ import main
+                from digitalmodel.structural.fatigue_analysis.__main__ import main
                 
                 with pytest.raises(SystemExit) as exc_info:
                     main()

@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 import hashlib
 
-from digitalmodel.automation.go_by_folder.scanner import FileScanner
+from digitalmodel.workflows.automation.go_by_folder.scanner import FileScanner
 
 
 class TestFileScanner:

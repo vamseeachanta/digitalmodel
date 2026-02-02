@@ -7,10 +7,10 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from digitalmodel.gis.core.crs import CRSDefinition, CRSType
-from digitalmodel.gis.core.geometry import GeoBoundingBox, GeoPoint
-from digitalmodel.gis.layers.feature_layer import FeatureLayer
-from digitalmodel.gis.layers.well_layer import WellLayer
+from digitalmodel.specialized.gis.core.crs import CRSDefinition, CRSType
+from digitalmodel.specialized.gis.core.geometry import GeoBoundingBox, GeoPoint
+from digitalmodel.specialized.gis.layers.feature_layer import FeatureLayer
+from digitalmodel.specialized.gis.layers.well_layer import WellLayer
 
 
 # ------------------------------------------------------------------

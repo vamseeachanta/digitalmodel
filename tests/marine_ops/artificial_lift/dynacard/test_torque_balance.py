@@ -6,16 +6,16 @@ import pytest
 import numpy as np
 from pathlib import Path
 
-from digitalmodel.artificial_lift.dynacard.data_loader import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.data_loader import (
     load_from_json_file,
 )
-from digitalmodel.artificial_lift.dynacard.torque_balance import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.torque_balance import (
     TorqueBalanceCalculator,
     calculate_torque_balance,
     estimate_optimal_counterbalance,
     calculate_torque_objective,
 )
-from digitalmodel.artificial_lift.dynacard.models import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
     DynacardAnalysisContext,
     CardData,
     RodSection,
@@ -23,7 +23,7 @@ from digitalmodel.artificial_lift.dynacard.models import (
     SurfaceUnit,
     TorqueBalanceAnalysis,
 )
-from digitalmodel.artificial_lift.dynacard.exceptions import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.exceptions import (
     ValidationError,
     ConfigurationError,
 )

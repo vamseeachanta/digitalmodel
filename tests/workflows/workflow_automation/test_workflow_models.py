@@ -6,7 +6,7 @@ WorkflowDefinition, and dependency ordering.
 
 import pytest
 from datetime import datetime
-from digitalmodel.workflow_automation.models import (
+from digitalmodel.workflows.workflow_automation.models import (
     WorkflowDefinition,
     WorkflowTask,
     WorkflowResult,

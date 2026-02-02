@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 import tempfile
 import shutil
 
-from digitalmodel.automation.circuit_breaker import (
+from digitalmodel.workflows.automation.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
     CircuitState,

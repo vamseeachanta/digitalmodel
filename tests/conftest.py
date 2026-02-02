@@ -50,5 +50,5 @@ except ImportError:
     pass  # Package not installed, tests will fail with clear import errors
 
 # Only register the mock for the specific problematic module
-if 'digitalmodel.catenary.catenary_riser_summary' not in sys.modules:
-    sys.modules['digitalmodel.catenary.catenary_riser_summary'] = _mock_catenary_riser_summary
+if 'digitalmodel.subsea.catenary.catenary_riser_summary' not in sys.modules:
+    sys.modules['digitalmodel.subsea.catenary.catenary_riser_summary'] = _mock_catenary_riser_summary

@@ -3,10 +3,10 @@ import json
 from pathlib import Path
 import pytest
 import numpy as np
-from digitalmodel.artificial_lift.dynacard.models import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
     DynacardAnalysisContext, CardData, RodSection, PumpProperties, SurfaceUnit
 )
-from digitalmodel.artificial_lift.dynacard.solver import DynacardWorkflow
+from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
 
 # Reference data from legacy system
 REFERENCE_FILE = "/mnt/github/workspace-hub/client_projects/energy_firm_data_analytics/dynacard/Code/Oxy.Cipher.DynaCard/tests/testdata/11708328.json"

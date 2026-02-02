@@ -23,7 +23,7 @@ from digitalmodel.signal_analysis import (
     RainflowCounter, SpectralAnalyzer, TimeSeriesProcessor
 )
 try:
-    from digitalmodel.signal_analysis.fatigue import FatigueDamageCalculator, SNCurve
+    from digitalmodel.signal_processing.signal_analysis.fatigue import FatigueDamageCalculator, SNCurve
 except ImportError:
     FatigueDamageCalculator = None
     SNCurve = None

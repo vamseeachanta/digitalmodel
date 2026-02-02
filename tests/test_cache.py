@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from digitalmodel.core.cache import (
+from digitalmodel.infrastructure.core.cache import (
     CacheClient,
     CacheConfig,
     CacheStats,

@@ -7,7 +7,7 @@ and force calculations against known reference values.
 
 import numpy as np
 import pytest
-from digitalmodel.marine_analysis.python_code_passing_ship import formulations
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import formulations
 
 
 class TestSectionalAreaFunctions:

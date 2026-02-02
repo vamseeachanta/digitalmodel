@@ -116,7 +116,7 @@ class DomainAutoFixEngine:
             },
             FailurePattern.ORCAFLEX_LICENSE_PATH: {
                 'detection': r'digitalmodel\.custom\.orcaflex_utilities',
-                'fix_template': 'digitalmodel.orcaflex.orcaflex_utilities',
+                'fix_template': 'digitalmodel.solvers.orcaflex.orcaflex_utilities',
                 'confidence': 0.98
             },
             FailurePattern.ENGINE_NOT_MOCKED: {
@@ -255,7 +255,7 @@ class DomainAutoFixEngine:
             elif match.pattern == FailurePattern.ORCAFLEX_LICENSE_PATH:
                 # Fix OrcaFlex license path
                 old_code = 'digitalmodel.custom.orcaflex_utilities'
-                new_code = 'digitalmodel.orcaflex.orcaflex_utilities'
+                new_code = 'digitalmodel.solvers.orcaflex.orcaflex_utilities'
                 
                 return AutoFix(
                     pattern=match.pattern,

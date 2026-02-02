@@ -6,17 +6,17 @@ import pytest
 import numpy as np
 from pathlib import Path
 
-from digitalmodel.artificial_lift.dynacard.data_loader import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.data_loader import (
     load_from_json_file,
 )
-from digitalmodel.artificial_lift.dynacard.ideal_card import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.ideal_card import (
     IdealCardCalculator,
     generate_ideal_card,
     calculate_shape_similarity,
     calculate_ideal_fluid_load,
     generate_rectangular_pump_card,
 )
-from digitalmodel.artificial_lift.dynacard.models import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
     DynacardAnalysisContext,
     CardData,
     RodSection,

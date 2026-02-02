@@ -16,7 +16,7 @@ import numpy as np
 import pytest
 import yaml
 
-from digitalmodel.diffraction.input_schemas import DiffractionSpec
+from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -38,7 +38,7 @@ def _load_semisub_spec() -> DiffractionSpec:
 
 def _generate_aqwa_dat(spec: DiffractionSpec, tmp_path: Path) -> Path:
     """Generate an AQWA .dat file from a spec using the forward backend."""
-    from digitalmodel.diffraction.aqwa_backend import AQWABackend
+    from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
     backend = AQWABackend()
     return backend.generate_single(spec, tmp_path)
@@ -46,7 +46,7 @@ def _generate_aqwa_dat(spec: DiffractionSpec, tmp_path: Path) -> Path:
 
 def _generate_orcawave_yml(spec: DiffractionSpec, tmp_path: Path) -> Path:
     """Generate an OrcaWave .yml file from a spec using the forward backend."""
-    from digitalmodel.diffraction.orcawave_backend import (
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
         OrcaWaveBackend,
     )
 
@@ -64,7 +64,7 @@ class TestAQWAInputParserBasic:
 
     def test_parse_returns_diffraction_spec(self, tmp_path: Path):
         """Parsing an AQWA .dat file returns a DiffractionSpec instance."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -78,7 +78,7 @@ class TestAQWAInputParserBasic:
 
     def test_parsed_spec_has_vessel(self, tmp_path: Path):
         """Parsed spec should have a vessel (single-body case)."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -96,7 +96,7 @@ class TestAQWAInputParserEnvironment:
 
     def test_water_depth(self, tmp_path: Path):
         """Parsed spec has correct water depth from DPTH card."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -110,7 +110,7 @@ class TestAQWAInputParserEnvironment:
 
     def test_water_density(self, tmp_path: Path):
         """Parsed spec has correct water density from DENS card."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -126,7 +126,7 @@ class TestAQWAInputParserEnvironment:
 
     def test_gravity(self, tmp_path: Path):
         """Parsed spec has correct gravity from ACCG card."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -140,7 +140,7 @@ class TestAQWAInputParserEnvironment:
 
     def test_deep_water_detection(self, tmp_path: Path):
         """AQWA deep-water depth (>=10000) maps to 'infinite'."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -163,7 +163,7 @@ class TestAQWAInputParserFrequencies:
 
     def test_frequency_count(self, tmp_path: Path):
         """Parsed spec has correct number of frequencies."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -178,7 +178,7 @@ class TestAQWAInputParserFrequencies:
 
     def test_frequency_values_converted_to_rad_s(self, tmp_path: Path):
         """AQWA stores Hz; parsed spec should have rad/s values."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -200,7 +200,7 @@ class TestAQWAInputParserHeadings:
 
     def test_heading_count(self, tmp_path: Path):
         """Parsed spec has correct number of headings."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -215,7 +215,7 @@ class TestAQWAInputParserHeadings:
 
     def test_heading_values(self, tmp_path: Path):
         """Parsed headings match original spec values."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -237,7 +237,7 @@ class TestAQWAInputParserMass:
 
     def test_vessel_mass(self, tmp_path: Path):
         """Parsed spec has correct mass from MATE section."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -257,7 +257,7 @@ class TestAQWAInputParserInertia:
 
     def test_inertia_tensor_values(self, tmp_path: Path):
         """Parsed spec has correct inertia from PMAS section."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -290,7 +290,7 @@ class TestAQWAInputParserMetadata:
 
     def test_project_name_from_title(self, tmp_path: Path):
         """Parsed spec extracts project name from TITLE card."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -309,7 +309,7 @@ class TestAQWAInputParserRoundTrip:
 
     def test_round_trip_key_fields(self, tmp_path: Path):
         """Round-trip preserves key fields: depth, density, freq count, heading count."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -344,7 +344,7 @@ class TestAQWAInputParserRoundTrip:
 
     def test_round_trip_produces_valid_yaml(self, tmp_path: Path):
         """Round-trip result can be saved to YAML and reloaded."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -371,7 +371,7 @@ class TestOrcaWaveInputParserBasic:
 
     def test_parse_returns_diffraction_spec(self, tmp_path: Path):
         """Parsing an OrcaWave .yml file returns a DiffractionSpec instance."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -385,7 +385,7 @@ class TestOrcaWaveInputParserBasic:
 
     def test_parsed_spec_has_vessel(self, tmp_path: Path):
         """Parsed spec should have a vessel (single-body case)."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -403,7 +403,7 @@ class TestOrcaWaveInputParserEnvironment:
 
     def test_water_depth(self, tmp_path: Path):
         """Parsed spec has correct water depth."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -417,7 +417,7 @@ class TestOrcaWaveInputParserEnvironment:
 
     def test_water_density(self, tmp_path: Path):
         """Parsed spec has correct water density (converted from t/m3 to kg/m3)."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -433,7 +433,7 @@ class TestOrcaWaveInputParserEnvironment:
 
     def test_infinite_water_depth(self, tmp_path: Path):
         """OrcaWave 'Infinity' maps to spec 'infinite'."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -454,7 +454,7 @@ class TestOrcaWaveInputParserVessel:
 
     def test_vessel_name(self, tmp_path: Path):
         """Parsed spec has correct vessel name from BodyName."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -468,7 +468,7 @@ class TestOrcaWaveInputParserVessel:
 
     def test_vessel_mass(self, tmp_path: Path):
         """Parsed spec has correct mass (converted from tonnes to kg)."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -484,7 +484,7 @@ class TestOrcaWaveInputParserVessel:
 
     def test_vessel_cog(self, tmp_path: Path):
         """Parsed spec has correct centre of gravity."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -504,7 +504,7 @@ class TestOrcaWaveInputParserFrequencies:
 
     def test_frequency_count(self, tmp_path: Path):
         """Parsed spec has correct number of frequencies."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -519,7 +519,7 @@ class TestOrcaWaveInputParserFrequencies:
 
     def test_frequency_values_from_periods(self, tmp_path: Path):
         """OrcaWave periods are correctly converted to rad/s in spec."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -541,7 +541,7 @@ class TestOrcaWaveInputParserHeadings:
 
     def test_heading_count(self, tmp_path: Path):
         """Parsed spec has correct number of headings."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -556,7 +556,7 @@ class TestOrcaWaveInputParserHeadings:
 
     def test_heading_values(self, tmp_path: Path):
         """Parsed headings match original spec values."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -578,7 +578,7 @@ class TestOrcaWaveInputParserInertia:
 
     def test_inertia_tensor_from_matrix(self, tmp_path: Path):
         """Parsed spec has correct inertia tensor (converted from t.m2 to kg.m2)."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -608,7 +608,7 @@ class TestOrcaWaveInputParserRoundTrip:
 
     def test_round_trip_key_fields(self, tmp_path: Path):
         """Round-trip preserves key fields."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -643,7 +643,7 @@ class TestOrcaWaveInputParserRoundTrip:
 
     def test_round_trip_produces_valid_yaml(self, tmp_path: Path):
         """Round-trip result can be saved to YAML and reloaded."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -670,10 +670,10 @@ class TestCrossConversion:
 
     def test_aqwa_to_orcawave_pipeline(self, tmp_path: Path):
         """AQWA .dat -> parse to spec -> generate OrcaWave .yml works end-to-end."""
-        from digitalmodel.diffraction.orcawave_backend import (
+        from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             AQWAInputParser,
         )
 
@@ -706,8 +706,8 @@ class TestCrossConversion:
 
     def test_orcawave_to_aqwa_pipeline(self, tmp_path: Path):
         """OrcaWave .yml -> parse to spec -> generate AQWA .dat works end-to-end."""
-        from digitalmodel.diffraction.aqwa_backend import AQWABackend
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
@@ -741,7 +741,7 @@ class TestParseExistingOrcaWaveFile:
 
     def test_parse_l01_default_vessel(self):
         """Parse the L01 Default vessel example OrcaWave .yml file."""
-        from digitalmodel.diffraction.reverse_parsers import (
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 

@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from digitalmodel.orcaflex.format_converter.format_detector import (
+from digitalmodel.solvers.orcaflex.format_converter.format_detector import (
     FormatType,
     detect_format,
 )

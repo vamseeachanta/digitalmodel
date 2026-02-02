@@ -6,12 +6,12 @@ dependency resolution, and result caching.
 
 import pytest
 from datetime import datetime
-from digitalmodel.workflow_automation.models import (
+from digitalmodel.workflows.workflow_automation.models import (
     WorkflowDefinition,
     WorkflowTask,
     TaskStatus,
 )
-from digitalmodel.workflow_automation.orchestrator import WorkflowOrchestrator
+from digitalmodel.workflows.workflow_automation.orchestrator import WorkflowOrchestrator
 
 
 class TestWorkflowOrchestrator:

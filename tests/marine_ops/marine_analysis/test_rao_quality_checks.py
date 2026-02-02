@@ -10,7 +10,7 @@ from pathlib import Path
 import tempfile
 import yaml
 
-from digitalmodel.marine_analysis.rao_validators import (
+from digitalmodel.marine_ops.marine_analysis.rao_validators import (
     RAODataValidators,
     ValidationReport,
     VesselType,
@@ -22,7 +22,7 @@ from digitalmodel.marine_analysis.rao_validators import (
     PeakDetectionResult,
     DisplacementRAOQualityReport,
 )
-from digitalmodel.marine_analysis.rao_quality_report import RAOQualityReportGenerator
+from digitalmodel.marine_ops.marine_analysis.rao_quality_report import RAOQualityReportGenerator
 
 
 def create_synthetic_orcaflex_rao_data(

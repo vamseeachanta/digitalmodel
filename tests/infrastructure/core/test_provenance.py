@@ -13,7 +13,7 @@ import hashlib
 import pandas as pd
 import numpy as np
 
-from digitalmodel.core.provenance import (
+from digitalmodel.infrastructure.core.provenance import (
     DataProvenance,
     TransformationRecord,
     ProvenanceTracker,

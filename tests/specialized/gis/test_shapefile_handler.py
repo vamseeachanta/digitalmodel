@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
-from digitalmodel.gis.io.shapefile_handler import (
+from digitalmodel.specialized.gis.io.shapefile_handler import (
     HAS_GEOPANDAS,
     ShapefileHandler,
 )
@@ -198,7 +198,7 @@ class TestMissingGeopandas:
         self, tmp_path: Path
     ) -> None:
         with patch(
-            "digitalmodel.gis.io.shapefile_handler.HAS_GEOPANDAS",
+            "digitalmodel.specialized.gis.io.shapefile_handler.HAS_GEOPANDAS",
             False,
         ):
             with pytest.raises(ImportError, match="geopandas is required"):
@@ -208,7 +208,7 @@ class TestMissingGeopandas:
         self, tmp_path: Path
     ) -> None:
         with patch(
-            "digitalmodel.gis.io.shapefile_handler.HAS_GEOPANDAS",
+            "digitalmodel.specialized.gis.io.shapefile_handler.HAS_GEOPANDAS",
             False,
         ):
             with pytest.raises(ImportError, match="geopandas is required"):

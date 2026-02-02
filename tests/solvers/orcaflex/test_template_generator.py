@@ -125,7 +125,7 @@ class TestTemplateManager:
 
     def test_discover_templates_finds_hybrid_dirs(self):
         """Test that discover_templates finds directories ending in _hybrid."""
-        from digitalmodel.orcaflex.template_generator import TemplateManager
+        from digitalmodel.solvers.orcaflex.template_generator import TemplateManager
 
         if not TEMPLATES_DIR.exists():
             pytest.skip("Templates directory not found")
@@ -142,7 +142,7 @@ class TestTemplateManager:
 
     def test_discover_templates_returns_correct_structure(self):
         """Test that discovered templates have required fields."""
-        from digitalmodel.orcaflex.template_generator import TemplateManager
+        from digitalmodel.solvers.orcaflex.template_generator import TemplateManager
 
         if not TEMPLATES_DIR.exists():
             pytest.skip("Templates directory not found")
@@ -159,7 +159,7 @@ class TestTemplateManager:
 
     def test_get_template_by_name(self):
         """Test getting a specific template by name."""
-        from digitalmodel.orcaflex.template_generator import TemplateManager
+        from digitalmodel.solvers.orcaflex.template_generator import TemplateManager
 
         if not TEMPLATES_DIR.exists():
             pytest.skip("Templates directory not found")
@@ -178,7 +178,7 @@ class TestTemplateManager:
 
     def test_list_variations_for_template(self):
         """Test listing available variations for a template."""
-        from digitalmodel.orcaflex.template_generator import TemplateManager
+        from digitalmodel.solvers.orcaflex.template_generator import TemplateManager
 
         if not TEMPLATES_DIR.exists():
             pytest.skip("Templates directory not found")
@@ -200,7 +200,7 @@ class TestTemplateGenerator:
 
     def test_merge_yaml_files(self, sample_base_template, sample_variation):
         """Test that YAML files are merged correctly."""
-        from digitalmodel.orcaflex.template_generator import TemplateGenerator
+        from digitalmodel.solvers.orcaflex.template_generator import TemplateGenerator
 
         generator = TemplateGenerator()
         merged = generator.merge_yaml_files(sample_base_template, sample_variation)
@@ -212,7 +212,7 @@ class TestTemplateGenerator:
 
     def test_generate_case_file(self, sample_base_template, sample_variation, temp_output_dir):
         """Test generating a combined case file."""
-        from digitalmodel.orcaflex.template_generator import TemplateGenerator
+        from digitalmodel.solvers.orcaflex.template_generator import TemplateGenerator
 
         output_file = temp_output_dir / "generated_model.yml"
 
@@ -234,7 +234,7 @@ class TestTemplateGenerator:
 
     def test_generate_with_basefile_reference(self, temp_output_dir, sample_base_template, sample_variation):
         """Test generating with BaseFile + IncludeFile reference (OrcaFlex format)."""
-        from digitalmodel.orcaflex.template_generator import TemplateGenerator
+        from digitalmodel.solvers.orcaflex.template_generator import TemplateGenerator
 
         output_file = temp_output_dir / "case_output.yml"
 
@@ -262,7 +262,7 @@ class TestModelValidator:
 
     def test_validate_yaml_syntax(self, sample_base_template):
         """Test that valid YAML files pass syntax validation."""
-        from digitalmodel.orcaflex.template_generator import ModelValidator
+        from digitalmodel.solvers.orcaflex.template_generator import ModelValidator
 
         validator = ModelValidator()
         result = validator.validate_syntax(sample_base_template)
@@ -272,7 +272,7 @@ class TestModelValidator:
 
     def test_validate_yaml_syntax_invalid(self, temp_output_dir):
         """Test that invalid YAML fails syntax validation."""
-        from digitalmodel.orcaflex.template_generator import ModelValidator
+        from digitalmodel.solvers.orcaflex.template_generator import ModelValidator
 
         invalid_file = temp_output_dir / "invalid.yml"
         invalid_file.write_text("invalid: yaml: content: [bad")
@@ -285,7 +285,7 @@ class TestModelValidator:
 
     def test_validate_required_sections(self, sample_base_template):
         """Test validation of required OrcaFlex sections."""
-        from digitalmodel.orcaflex.template_generator import ModelValidator
+        from digitalmodel.solvers.orcaflex.template_generator import ModelValidator
 
         validator = ModelValidator()
         result = validator.validate_structure(sample_base_template)
@@ -297,7 +297,7 @@ class TestModelValidator:
 
     def test_validate_with_orcaflex_static(self, sample_base_template, mock_orcfxapi):
         """Test validation using OrcaFlex static analysis (mocked)."""
-        from digitalmodel.orcaflex.template_generator import ModelValidator
+        from digitalmodel.solvers.orcaflex.template_generator import ModelValidator
 
         validator = ModelValidator()
         result = validator.validate_with_orcaflex(sample_base_template)
@@ -311,7 +311,7 @@ class TestCLI:
 
     def test_list_templates_command(self, capsys):
         """Test the list-templates command."""
-        from digitalmodel.orcaflex.template_generator import main
+        from digitalmodel.solvers.orcaflex.template_generator import main
 
         if not TEMPLATES_DIR.exists():
             pytest.skip("Templates directory not found")
@@ -327,7 +327,7 @@ class TestCLI:
 
     def test_generate_command(self, temp_output_dir, sample_base_template, sample_variation, capsys):
         """Test the generate command."""
-        from digitalmodel.orcaflex.template_generator import main
+        from digitalmodel.solvers.orcaflex.template_generator import main
 
         output_file = temp_output_dir / "cli_output.yml"
 
@@ -343,7 +343,7 @@ class TestCLI:
 
     def test_validate_command(self, sample_base_template, capsys):
         """Test the validate command."""
-        from digitalmodel.orcaflex.template_generator import main
+        from digitalmodel.solvers.orcaflex.template_generator import main
 
         exit_code = main([
             'validate',
@@ -357,7 +357,7 @@ class TestCLI:
 
     def test_help_command(self, capsys):
         """Test that help displays usage information."""
-        from digitalmodel.orcaflex.template_generator import main
+        from digitalmodel.solvers.orcaflex.template_generator import main
 
         with pytest.raises(SystemExit) as exc_info:
             main(['--help'])
@@ -367,7 +367,7 @@ class TestCLI:
 
     def test_missing_required_args(self, capsys):
         """Test that missing required arguments show error."""
-        from digitalmodel.orcaflex.template_generator import main
+        from digitalmodel.solvers.orcaflex.template_generator import main
 
         # Generate without output should fail
         exit_code = main(['generate', '--base', 'nonexistent.yml'])
@@ -381,7 +381,7 @@ class TestIntegration:
     @pytest.mark.skipif(not TEMPLATES_DIR.exists(), reason="Templates directory not found")
     def test_full_workflow_calm_buoy(self, temp_output_dir):
         """Test full workflow: discover -> generate -> validate."""
-        from digitalmodel.orcaflex.template_generator import (
+        from digitalmodel.solvers.orcaflex.template_generator import (
             TemplateManager, TemplateGenerator, ModelValidator
         )
 

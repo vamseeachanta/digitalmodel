@@ -19,14 +19,14 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import tempfile
 
-from digitalmodel.marine_analysis.environmental_loading.ocimf import (
+from digitalmodel.marine_ops.marine_analysis.environmental_loading.ocimf import (
     OCIMFDatabase,
     EnvironmentalConditions,
     VesselGeometry,
     EnvironmentalForces,
     create_sample_database
 )
-from digitalmodel.marine_analysis.catenary.adapter import catenaryEquation, catenaryForces
+from digitalmodel.marine_ops.marine_analysis.catenary.adapter import catenaryEquation, catenaryForces
 
 
 class TestOCIMFMooringIntegration:

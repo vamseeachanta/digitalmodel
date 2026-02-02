@@ -8,14 +8,14 @@ import json
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from digitalmodel.mooring_analysis.cli import cli
-from tests.modules.cli.conftest import assert_cli_success, assert_cli_failure, assert_json_output, assert_output_contains
+from digitalmodel.subsea.mooring_analysis.cli import cli
+from tests.specialized.cli.conftest import assert_cli_success, assert_cli_failure, assert_json_output, assert_output_contains
 
 
 class TestCatenaryCommand:
     """Tests for the 'catenary' command"""
 
-    @patch('digitalmodel.mooring_analysis.cli.CatenaryAnalyzer')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.CatenaryAnalyzer')
     def test_basic_catenary_with_horizontal_tension(self, mock_analyzer, cli_runner):
         """Test basic catenary calculation with horizontal tension"""
         # Setup mocks
@@ -58,7 +58,7 @@ class TestCatenaryCommand:
             'Horizontal Stiffness:'
         )
 
-    @patch('digitalmodel.mooring_analysis.cli.CatenaryAnalyzer')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.CatenaryAnalyzer')
     def test_catenary_with_fairlead_tension(self, mock_analyzer, cli_runner):
         """Test catenary calculation solving for horizontal tension from fairlead tension"""
         mock_instance = MagicMock()
@@ -93,7 +93,7 @@ class TestCatenaryCommand:
         assert 'Fairlead Tension:' in result.output
         assert '550.00 kN' in result.output
 
-    @patch('digitalmodel.mooring_analysis.cli.CatenaryAnalyzer')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.CatenaryAnalyzer')
     def test_catenary_with_json_output(self, mock_analyzer, cli_runner, temp_output_dir):
         """Test catenary calculation with JSON output file"""
         mock_instance = MagicMock()
@@ -166,7 +166,7 @@ class TestCatenaryCommand:
         assert_cli_failure(result)
         assert 'horizontal-tension' in result.output or 'fairlead-tension' in result.output
 
-    @patch('digitalmodel.mooring_analysis.cli.CatenaryAnalyzer')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.CatenaryAnalyzer')
     def test_catenary_custom_line_properties(self, mock_analyzer, cli_runner):
         """Test catenary with custom line diameter and EA"""
         mock_instance = MagicMock()
@@ -202,7 +202,7 @@ class TestCatenaryCommand:
         assert_cli_success(result)
         assert 'Horizontal Tension:' in result.output
 
-    @patch('digitalmodel.mooring_analysis.cli.CatenaryAnalyzer')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.CatenaryAnalyzer')
     def test_catenary_analysis_exception_handling(self, mock_analyzer, cli_runner):
         """Test error handling when catenary analysis fails"""
         mock_instance = MagicMock()
@@ -220,7 +220,7 @@ class TestCatenaryCommand:
         assert_cli_failure(result)
         assert 'Error' in result.output
 
-    @patch('digitalmodel.mooring_analysis.cli.CatenaryAnalyzer')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.CatenaryAnalyzer')
     def test_catenary_large_values(self, mock_analyzer, cli_runner):
         """Test catenary with large water depth and line length"""
         mock_instance = MagicMock()
@@ -258,8 +258,8 @@ class TestCatenaryCommand:
 class TestDesignCommand:
     """Tests for the 'design' command"""
 
-    @patch('digitalmodel.mooring_analysis.cli.MooringDesigner')
-    @patch('digitalmodel.mooring_analysis.cli.get_material')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.MooringDesigner')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.get_material')
     def test_basic_design_verification(self, mock_get_material, mock_designer, cli_runner):
         """Test basic mooring design verification"""
         # Mock material
@@ -319,8 +319,8 @@ class TestDesignCommand:
             'Min Safety Factor:'
         )
 
-    @patch('digitalmodel.mooring_analysis.cli.MooringDesigner')
-    @patch('digitalmodel.mooring_analysis.cli.get_material')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.MooringDesigner')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.get_material')
     def test_design_with_different_system_types(self, mock_get_material, mock_designer, cli_runner):
         """Test design verification with CALM system"""
         mock_material = MagicMock()
@@ -368,8 +368,8 @@ class TestDesignCommand:
         assert_cli_success(result)
         assert 'CALM' in result.output
 
-    @patch('digitalmodel.mooring_analysis.cli.MooringDesigner')
-    @patch('digitalmodel.mooring_analysis.cli.get_material')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.MooringDesigner')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.get_material')
     def test_design_with_damaged_line_analysis(self, mock_get_material, mock_designer, cli_runner):
         """Test design verification including damaged line case"""
         mock_material = MagicMock()
@@ -432,8 +432,8 @@ class TestDesignCommand:
         assert 'Min Safety Factor:' in result.output
         assert '2.8' in result.output
 
-    @patch('digitalmodel.mooring_analysis.cli.MooringDesigner')
-    @patch('digitalmodel.mooring_analysis.cli.get_material')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.MooringDesigner')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.get_material')
     def test_design_with_json_output(self, mock_get_material, mock_designer, cli_runner, temp_output_dir):
         """Test design verification with JSON output"""
         mock_material = MagicMock()
@@ -494,7 +494,7 @@ class TestDesignCommand:
         assert data['summary']['overall_status'] == 'PASS'
         assert len(data['results']) > 0
 
-    @patch('digitalmodel.mooring_analysis.cli.get_material')
+    @patch('digitalmodel.subsea.mooring_analysis.cli.get_material')
     def test_design_with_different_material(self, mock_get_material, cli_runner):
         """Test design with different material specification"""
         mock_material = MagicMock()

@@ -12,7 +12,7 @@ pytest.importorskip(
     "tests.cli.conftest",
     reason="module tests.cli.conftest not available"
 )
-from digitalmodel.workflow_automation.cli import cli
+from digitalmodel.workflows.workflow_automation.cli import cli
 from tests.cli.conftest import assert_cli_success, assert_cli_failure, assert_json_output, assert_output_contains
 
 
@@ -48,9 +48,9 @@ class TestListCommand:
 class TestRiserAnalysisCommand:
     """Tests for the 'riser-analysis' command"""
 
-    @patch('digitalmodel.workflow_automation.cli.generate_workflow_report')
-    @patch('digitalmodel.workflow_automation.cli.WorkflowOrchestrator')
-    @patch('digitalmodel.workflow_automation.cli.CompleteRiserAnalysisWorkflow')
+    @patch('digitalmodel.workflows.workflow_automation.cli.generate_workflow_report')
+    @patch('digitalmodel.workflows.workflow_automation.cli.WorkflowOrchestrator')
+    @patch('digitalmodel.workflows.workflow_automation.cli.CompleteRiserAnalysisWorkflow')
     def test_basic_riser_analysis(self, mock_workflow_class, mock_orchestrator_class,
                                    mock_report_gen, cli_runner):
         """Test basic riser analysis workflow execution"""
@@ -125,9 +125,9 @@ class TestRiserAnalysisCommand:
             internal_fluid='oil'
         )
 
-    @patch('digitalmodel.workflow_automation.cli.generate_workflow_report')
-    @patch('digitalmodel.workflow_automation.cli.WorkflowOrchestrator')
-    @patch('digitalmodel.workflow_automation.cli.CompleteRiserAnalysisWorkflow')
+    @patch('digitalmodel.workflows.workflow_automation.cli.generate_workflow_report')
+    @patch('digitalmodel.workflows.workflow_automation.cli.WorkflowOrchestrator')
+    @patch('digitalmodel.workflows.workflow_automation.cli.CompleteRiserAnalysisWorkflow')
     def test_riser_analysis_with_custom_material(self, mock_workflow_class, mock_orchestrator_class,
                                                    mock_report_gen, cli_runner):
         """Test riser analysis with custom material and fluid"""
@@ -172,9 +172,9 @@ class TestRiserAnalysisCommand:
             internal_fluid='gas'
         )
 
-    @patch('digitalmodel.workflow_automation.cli.generate_workflow_report')
-    @patch('digitalmodel.workflow_automation.cli.WorkflowOrchestrator')
-    @patch('digitalmodel.workflow_automation.cli.CompleteRiserAnalysisWorkflow')
+    @patch('digitalmodel.workflows.workflow_automation.cli.generate_workflow_report')
+    @patch('digitalmodel.workflows.workflow_automation.cli.WorkflowOrchestrator')
+    @patch('digitalmodel.workflows.workflow_automation.cli.CompleteRiserAnalysisWorkflow')
     def test_riser_analysis_with_json_output(self, mock_workflow_class, mock_orchestrator_class,
                                               mock_report_gen, cli_runner, temp_output_dir):
         """Test riser analysis with JSON output"""
@@ -214,8 +214,8 @@ class TestRiserAnalysisCommand:
         # Verify save_results was called
         mock_orchestrator.save_results.assert_called_once_with(mock_result, str(output_file))
 
-    @patch('digitalmodel.workflow_automation.cli.WorkflowOrchestrator')
-    @patch('digitalmodel.workflow_automation.cli.CompleteRiserAnalysisWorkflow')
+    @patch('digitalmodel.workflows.workflow_automation.cli.WorkflowOrchestrator')
+    @patch('digitalmodel.workflows.workflow_automation.cli.CompleteRiserAnalysisWorkflow')
     def test_riser_analysis_with_failed_tasks(self, mock_workflow_class, mock_orchestrator_class,
                                                cli_runner):
         """Test riser analysis workflow with failed tasks"""
@@ -264,9 +264,9 @@ class TestRiserAnalysisCommand:
 class TestMooringDesignCommand:
     """Tests for the 'mooring-design' command"""
 
-    @patch('digitalmodel.workflow_automation.cli.generate_workflow_report')
-    @patch('digitalmodel.workflow_automation.cli.WorkflowOrchestrator')
-    @patch('digitalmodel.workflow_automation.cli.MooringSystemDesignWorkflow')
+    @patch('digitalmodel.workflows.workflow_automation.cli.generate_workflow_report')
+    @patch('digitalmodel.workflows.workflow_automation.cli.WorkflowOrchestrator')
+    @patch('digitalmodel.workflows.workflow_automation.cli.MooringSystemDesignWorkflow')
     def test_basic_mooring_design(self, mock_workflow_class, mock_orchestrator_class,
                                    mock_report_gen, cli_runner):
         """Test basic mooring system design workflow"""
@@ -313,9 +313,9 @@ class TestMooringDesignCommand:
             '2.15'
         )
 
-    @patch('digitalmodel.workflow_automation.cli.generate_workflow_report')
-    @patch('digitalmodel.workflow_automation.cli.WorkflowOrchestrator')
-    @patch('digitalmodel.workflow_automation.cli.MooringSystemDesignWorkflow')
+    @patch('digitalmodel.workflows.workflow_automation.cli.generate_workflow_report')
+    @patch('digitalmodel.workflows.workflow_automation.cli.WorkflowOrchestrator')
+    @patch('digitalmodel.workflows.workflow_automation.cli.MooringSystemDesignWorkflow')
     def test_mooring_design_semisubmersible(self, mock_workflow_class, mock_orchestrator_class,
                                              mock_report_gen, cli_runner):
         """Test mooring design for semisubmersible vessel"""
@@ -359,9 +359,9 @@ class TestMooringDesignCommand:
             current_speed=2.0
         )
 
-    @patch('digitalmodel.workflow_automation.cli.generate_workflow_report')
-    @patch('digitalmodel.workflow_automation.cli.WorkflowOrchestrator')
-    @patch('digitalmodel.workflow_automation.cli.MooringSystemDesignWorkflow')
+    @patch('digitalmodel.workflows.workflow_automation.cli.generate_workflow_report')
+    @patch('digitalmodel.workflows.workflow_automation.cli.WorkflowOrchestrator')
+    @patch('digitalmodel.workflows.workflow_automation.cli.MooringSystemDesignWorkflow')
     def test_mooring_design_with_json_output(self, mock_workflow_class, mock_orchestrator_class,
                                               mock_report_gen, cli_runner, temp_output_dir):
         """Test mooring design with JSON output"""
@@ -399,9 +399,9 @@ class TestMooringDesignCommand:
 class TestStructuralCheckCommand:
     """Tests for the 'structural-check' command"""
 
-    @patch('digitalmodel.workflow_automation.cli.generate_workflow_report')
-    @patch('digitalmodel.workflow_automation.cli.WorkflowOrchestrator')
-    @patch('digitalmodel.workflow_automation.cli.PlatformStructuralWorkflow')
+    @patch('digitalmodel.workflows.workflow_automation.cli.generate_workflow_report')
+    @patch('digitalmodel.workflows.workflow_automation.cli.WorkflowOrchestrator')
+    @patch('digitalmodel.workflows.workflow_automation.cli.PlatformStructuralWorkflow')
     def test_basic_structural_check(self, mock_workflow_class, mock_orchestrator_class,
                                      mock_report_gen, cli_runner):
         """Test basic platform structural check workflow"""
@@ -446,9 +446,9 @@ class TestStructuralCheckCommand:
             'PASS'
         )
 
-    @patch('digitalmodel.workflow_automation.cli.generate_workflow_report')
-    @patch('digitalmodel.workflow_automation.cli.WorkflowOrchestrator')
-    @patch('digitalmodel.workflow_automation.cli.PlatformStructuralWorkflow')
+    @patch('digitalmodel.workflows.workflow_automation.cli.generate_workflow_report')
+    @patch('digitalmodel.workflows.workflow_automation.cli.WorkflowOrchestrator')
+    @patch('digitalmodel.workflows.workflow_automation.cli.PlatformStructuralWorkflow')
     def test_structural_check_custom_material(self, mock_workflow_class, mock_orchestrator_class,
                                                mock_report_gen, cli_runner):
         """Test structural check with custom material and stress"""
@@ -493,9 +493,9 @@ class TestStructuralCheckCommand:
             applied_stress=250.0
         )
 
-    @patch('digitalmodel.workflow_automation.cli.generate_workflow_report')
-    @patch('digitalmodel.workflow_automation.cli.WorkflowOrchestrator')
-    @patch('digitalmodel.workflow_automation.cli.PlatformStructuralWorkflow')
+    @patch('digitalmodel.workflows.workflow_automation.cli.generate_workflow_report')
+    @patch('digitalmodel.workflows.workflow_automation.cli.WorkflowOrchestrator')
+    @patch('digitalmodel.workflows.workflow_automation.cli.PlatformStructuralWorkflow')
     def test_structural_check_with_json_output(self, mock_workflow_class, mock_orchestrator_class,
                                                 mock_report_gen, cli_runner, temp_output_dir):
         """Test structural check with JSON output"""

@@ -22,12 +22,12 @@ setattr(_aqwa_pkg, "aqwa_analysis_raos", _aqwa_raos)
 setattr(_aqwa_pkg, "aqwa_utilities", _aqwa_utilities)
 
 
-from digitalmodel.aqwa.aqwa_dat_files import (
+from digitalmodel.hydrodynamics.aqwa.aqwa_dat_files import (
     DATDeckOneMetadata,
     DATFrequencyGrid,
     DATInspectionResult,
 )
-from digitalmodel.aqwa.viscous_damping_determination import (
+from digitalmodel.hydrodynamics.aqwa.viscous_damping_determination import (
     ViscousDampingDetermination,
 )
 

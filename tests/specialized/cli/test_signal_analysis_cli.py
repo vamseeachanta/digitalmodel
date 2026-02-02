@@ -10,14 +10,14 @@ import pandas as pd
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from digitalmodel.signal_analysis.cli import cli
-from tests.modules.cli.conftest import assert_cli_success, assert_cli_failure, assert_json_output, assert_output_contains
+from digitalmodel.signal_processing.signal_analysis.cli import cli
+from tests.specialized.cli.conftest import assert_cli_success, assert_cli_failure, assert_json_output, assert_output_contains
 
 
 class TestRainflowCommand:
     """Tests for the 'rainflow' command"""
 
-    @patch('digitalmodel.signal_analysis.cli.RainflowCounter')
+    @patch('digitalmodel.signal_processing.signal_analysis.cli.RainflowCounter')
     def test_basic_rainflow_counting(self, mock_counter, cli_runner, temp_output_dir):
         """Test basic rainflow cycle counting"""
         # Create test input file
@@ -62,7 +62,7 @@ class TestRainflowCommand:
             'Mean Range:'
         )
 
-    @patch('digitalmodel.signal_analysis.cli.RainflowCounter')
+    @patch('digitalmodel.signal_processing.signal_analysis.cli.RainflowCounter')
     def test_rainflow_astm_method(self, mock_counter, cli_runner, temp_output_dir):
         """Test rainflow with ASTM method"""
         input_file = temp_output_dir / "signal.txt"
@@ -91,7 +91,7 @@ class TestRainflowCommand:
         assert_cli_success(result)
         assert 'ASTM' in result.output
 
-    @patch('digitalmodel.signal_analysis.cli.RainflowCounter')
+    @patch('digitalmodel.signal_processing.signal_analysis.cli.RainflowCounter')
     def test_rainflow_with_json_output(self, mock_counter, cli_runner, temp_output_dir):
         """Test rainflow counting with JSON output"""
         input_file = temp_output_dir / "signal.csv"
@@ -149,7 +149,7 @@ class TestRainflowCommand:
 class TestFFTCommand:
     """Tests for the 'fft' command"""
 
-    @patch('digitalmodel.signal_analysis.cli.SpectralAnalyzer')
+    @patch('digitalmodel.signal_processing.signal_analysis.cli.SpectralAnalyzer')
     def test_basic_fft_analysis(self, mock_analyzer, cli_runner, temp_output_dir):
         """Test basic FFT spectral analysis"""
         # Create test signal
@@ -193,7 +193,7 @@ class TestFFTCommand:
             '5.0000 Hz'
         )
 
-    @patch('digitalmodel.signal_analysis.cli.SpectralAnalyzer')
+    @patch('digitalmodel.signal_processing.signal_analysis.cli.SpectralAnalyzer')
     def test_fft_welch_method(self, mock_analyzer, cli_runner, temp_output_dir):
         """Test FFT with Welch method"""
         input_file = temp_output_dir / "signal.txt"
@@ -224,7 +224,7 @@ class TestFFTCommand:
         assert_cli_success(result)
         assert 'WELCH' in result.output
 
-    @patch('digitalmodel.signal_analysis.cli.SpectralAnalyzer')
+    @patch('digitalmodel.signal_processing.signal_analysis.cli.SpectralAnalyzer')
     def test_fft_peak_identification(self, mock_analyzer, cli_runner, temp_output_dir):
         """Test FFT with custom number of peaks"""
         input_file = temp_output_dir / "signal.csv"
@@ -256,7 +256,7 @@ class TestFFTCommand:
 
         assert_cli_success(result)
 
-    @patch('digitalmodel.signal_analysis.cli.SpectralAnalyzer')
+    @patch('digitalmodel.signal_processing.signal_analysis.cli.SpectralAnalyzer')
     def test_fft_with_json_output(self, mock_analyzer, cli_runner, temp_output_dir):
         """Test FFT with JSON output"""
         input_file = temp_output_dir / "signal.csv"
@@ -305,7 +305,7 @@ class TestFFTCommand:
 class TestPSDCommand:
     """Tests for the 'psd' command"""
 
-    @patch('digitalmodel.signal_analysis.cli.SpectralAnalyzer')
+    @patch('digitalmodel.signal_processing.signal_analysis.cli.SpectralAnalyzer')
     def test_basic_psd_computation(self, mock_analyzer, cli_runner, temp_output_dir):
         """Test basic power spectral density computation"""
         input_file = temp_output_dir / "signal.csv"
@@ -337,7 +337,7 @@ class TestPSDCommand:
             'Peak Frequency:'
         )
 
-    @patch('digitalmodel.signal_analysis.cli.SpectralAnalyzer')
+    @patch('digitalmodel.signal_processing.signal_analysis.cli.SpectralAnalyzer')
     def test_psd_with_json_output(self, mock_analyzer, cli_runner, temp_output_dir):
         """Test PSD computation with JSON output"""
         input_file = temp_output_dir / "signal.txt"
@@ -391,7 +391,7 @@ class TestPSDCommand:
 class TestFilterCommand:
     """Tests for the 'filter' command"""
 
-    @patch('digitalmodel.signal_analysis.cli.TimeSeriesProcessor')
+    @patch('digitalmodel.signal_processing.signal_analysis.cli.TimeSeriesProcessor')
     def test_lowpass_filter(self, mock_processor, cli_runner, temp_output_dir):
         """Test lowpass filter application"""
         # Create input file
@@ -430,7 +430,7 @@ class TestFilterCommand:
         # Check output file was created
         assert output_file.exists()
 
-    @patch('digitalmodel.signal_analysis.cli.TimeSeriesProcessor')
+    @patch('digitalmodel.signal_processing.signal_analysis.cli.TimeSeriesProcessor')
     def test_filter_output_creation(self, mock_processor, cli_runner, temp_output_dir):
         """Test that filter creates output file"""
         input_file = temp_output_dir / "signal.txt"

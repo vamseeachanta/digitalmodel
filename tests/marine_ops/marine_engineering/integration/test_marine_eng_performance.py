@@ -17,14 +17,14 @@ import tempfile
 import psutil
 import os
 
-from digitalmodel.marine_analysis.wave_spectra.spectra import (
+from digitalmodel.marine_ops.marine_analysis.wave_spectra.spectra import (
     JONSWAPSpectrum,
     WaveSpectrumParameters
 )
-from digitalmodel.marine_analysis.hydrodynamic_coefficients.coefficients import (
+from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients.coefficients import (
     CoefficientDatabase
 )
-from digitalmodel.marine_analysis.environmental_loading.ocimf import (
+from digitalmodel.marine_ops.marine_analysis.environmental_loading.ocimf import (
     OCIMFDatabase,
     EnvironmentalConditions,
     VesselGeometry,

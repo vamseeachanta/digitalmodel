@@ -26,9 +26,9 @@ def mock_redis():
 @pytest.fixture
 def cache_with_redis(mock_redis):
     """Cache instance with mocked Redis backend."""
-    from digitalmodel.core.cache import Cache
+    from digitalmodel.infrastructure.core.cache import Cache
 
-    with patch('digitalmodel.core.cache.redis.Redis', return_value=mock_redis):
+    with patch('digitalmodel.infrastructure.core.cache.redis.Redis', return_value=mock_redis):
         cache = Cache(redis_url="redis://localhost:6379")
         yield cache
 
@@ -36,9 +36,9 @@ def cache_with_redis(mock_redis):
 @pytest.fixture
 def cache_without_redis():
     """Cache instance with in-memory fallback (no Redis)."""
-    from digitalmodel.core.cache import Cache
+    from digitalmodel.infrastructure.core.cache import Cache
 
-    with patch('digitalmodel.core.cache.redis.Redis', side_effect=Exception("Redis unavailable")):
+    with patch('digitalmodel.infrastructure.core.cache.redis.Redis', side_effect=Exception("Redis unavailable")):
         cache = Cache(redis_url="redis://localhost:6379")
         yield cache
 
@@ -48,28 +48,28 @@ class TestCacheInitialization:
 
     def test_redis_backend_initialization(self, mock_redis):
         """Test successful Redis backend initialization."""
-        from digitalmodel.core.cache import Cache
+        from digitalmodel.infrastructure.core.cache import Cache
 
-        with patch('digitalmodel.core.cache.redis.Redis', return_value=mock_redis):
+        with patch('digitalmodel.infrastructure.core.cache.redis.Redis', return_value=mock_redis):
             cache = Cache(redis_url="redis://localhost:6379")
             assert cache.backend_type == "redis"
             assert cache._redis_client is not None
 
     def test_fallback_to_memory_on_redis_failure(self):
         """Test fallback to in-memory cache when Redis fails."""
-        from digitalmodel.core.cache import Cache
+        from digitalmodel.infrastructure.core.cache import Cache
 
-        with patch('digitalmodel.core.cache.redis.Redis', side_effect=Exception("Connection failed")):
+        with patch('digitalmodel.infrastructure.core.cache.redis.Redis', side_effect=Exception("Connection failed")):
             cache = Cache(redis_url="redis://localhost:6379")
             assert cache.backend_type == "memory"
             assert cache._memory_cache is not None
 
     def test_default_redis_url_from_env(self, monkeypatch):
         """Test Redis URL defaults to environment variable."""
-        from digitalmodel.core.cache import Cache
+        from digitalmodel.infrastructure.core.cache import Cache
 
         monkeypatch.setenv("DM_REDIS_URL", "redis://custom:6380")
-        with patch('digitalmodel.core.cache.redis.Redis') as mock_redis_class:
+        with patch('digitalmodel.infrastructure.core.cache.redis.Redis') as mock_redis_class:
             cache = Cache()
             # Verify Redis was initialized with custom URL
             mock_redis_class.assert_called_once()
@@ -400,10 +400,10 @@ class TestCacheStatistics:
 
     def test_stats_persist_across_backends(self):
         """Test stats persist when switching between Redis and memory."""
-        from digitalmodel.core.cache import Cache
+        from digitalmodel.infrastructure.core.cache import Cache
 
         # Start with Redis, record some hits
-        with patch('digitalmodel.core.cache.redis.Redis') as mock_redis_class:
+        with patch('digitalmodel.infrastructure.core.cache.redis.Redis') as mock_redis_class:
             mock_redis = MagicMock()
             mock_redis.ping.return_value = True
             mock_redis.get.return_value = pickle.dumps(42)

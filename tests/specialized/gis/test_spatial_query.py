@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from digitalmodel.gis.core.geometry import GeoBoundingBox, GeoPoint
-from digitalmodel.gis.core.spatial_query import SpatialQuery
-from digitalmodel.gis.layers.feature_layer import FeatureLayer
+from digitalmodel.specialized.gis.core.geometry import GeoBoundingBox, GeoPoint
+from digitalmodel.specialized.gis.core.spatial_query import SpatialQuery
+from digitalmodel.specialized.gis.layers.feature_layer import FeatureLayer
 
 
 # ------------------------------------------------------------------

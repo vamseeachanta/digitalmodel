@@ -4,9 +4,9 @@ from unittest.mock import patch, MagicMock
 
 # Mock the imports to avoid module dependency issues  
 with patch.dict('sys.modules', {
-    'digitalmodel.common.basic_statistics': MagicMock()
+    'digitalmodel.infrastructure.common.basic_statistics': MagicMock()
 }):
-    from digitalmodel.common.basic_statistics import BasicStatistics
+    from digitalmodel.infrastructure.common.basic_statistics import BasicStatistics
 
 # Create mock instance with proper histogram behavior
 bs = MagicMock()

@@ -185,7 +185,7 @@ class TestPerformanceBenchmarks:
         stress_history = large_dataset["time_series"]["stress"]
         
         # Mock fatigue analysis with realistic computation
-        with patch('digitalmodel.common.fatigue_analysis') as mock_fatigue:
+        with patch('digitalmodel.infrastructure.common.fatigue_analysis') as mock_fatigue:
             
             def realistic_fatigue_analysis(stress_data):
                 # Simulate rainflow counting algorithm
@@ -239,7 +239,7 @@ class TestPerformanceBenchmarks:
         chunks = [pipeline_segments[i:i+chunk_size] for i in range(0, len(pipeline_segments), chunk_size)]
         
         # Mock parallel processor
-        with patch('digitalmodel.common.parallel_processing') as mock_parallel:
+        with patch('digitalmodel.infrastructure.common.parallel_processing') as mock_parallel:
             
             def process_chunk(chunk_data):
                 # Simulate processing time per chunk
@@ -272,7 +272,7 @@ class TestPerformanceBenchmarks:
     def test_memory_efficiency(self, large_dataset, performance_tracker):
         """Test memory efficiency with large datasets."""
         # Mock memory-efficient processor
-        with patch('digitalmodel.common.memory_efficient_processor') as mock_processor:
+        with patch('digitalmodel.infrastructure.common.memory_efficient_processor') as mock_processor:
             
             def memory_efficient_processing(data):
                 # Simulate streaming/chunked processing

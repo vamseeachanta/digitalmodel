@@ -7,14 +7,14 @@ import pytest
 import numpy as np
 from pathlib import Path
 
-from digitalmodel.artificial_lift.dynacard.data_loader import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.data_loader import (
     load_from_json_file,
 )
-from digitalmodel.artificial_lift.dynacard.gear_box_loading import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.gear_box_loading import (
     GearBoxLoadingCalculator,
     calculate_gear_box_loading,
 )
-from digitalmodel.artificial_lift.dynacard.models import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
     DynacardAnalysisContext,
     CardData,
     RodSection,
@@ -23,7 +23,7 @@ from digitalmodel.artificial_lift.dynacard.models import (
     GearBoxLoadingAnalysis,
     TorqueStatistics,
 )
-from digitalmodel.artificial_lift.dynacard.exceptions import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.exceptions import (
     ValidationError,
     ConfigurationError,
 )

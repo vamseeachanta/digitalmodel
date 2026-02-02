@@ -6,11 +6,11 @@ import warnings
 
 # Test imports
 print("Testing imports...")
-from digitalmodel.marine_engineering.catenary import (
+from digitalmodel.marine_ops.marine_engineering.catenary import (
     CatenarySolver, CatenaryInput,
     catenaryEquation, catenaryForces
 )
-from digitalmodel.marine_engineering.catenary.simplified import SimplifiedCatenarySolver
+from digitalmodel.marine_ops.marine_engineering.catenary.simplified import SimplifiedCatenarySolver
 
 print("[OK] Imports successful")
 

@@ -8,7 +8,7 @@ from datetime import datetime
 import tempfile
 import shutil
 
-from digitalmodel.orcaflex.mooring_analysis.comprehensive_analysis.config import (
+from digitalmodel.solvers.orcaflex.mooring_analysis.comprehensive_analysis.config import (
     AnalysisConfig,
     ConvergenceCriteria,
     StiffnessConfig,

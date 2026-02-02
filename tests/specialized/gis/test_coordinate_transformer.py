@@ -9,7 +9,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from digitalmodel.gis.core.coordinate_transformer import (
+from digitalmodel.specialized.gis.core.coordinate_transformer import (
     CoordinateTransformer,
     utm_to_wgs84,
     wgs84_to_utm,

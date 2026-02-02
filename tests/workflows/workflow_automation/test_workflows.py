@@ -5,7 +5,7 @@ riser analysis, mooring design, and structural workflows.
 """
 
 import pytest
-from digitalmodel.workflow_automation.workflows import (
+from digitalmodel.workflows.workflow_automation.workflows import (
     CompleteRiserAnalysisWorkflow,
     MooringSystemDesignWorkflow,
     PlatformStructuralWorkflow,

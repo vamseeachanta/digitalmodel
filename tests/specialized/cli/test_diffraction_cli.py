@@ -8,16 +8,16 @@ import json
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from digitalmodel.diffraction.cli import cli
-from tests.modules.cli.conftest import assert_cli_success, assert_cli_failure, assert_output_contains
+from digitalmodel.hydrodynamics.diffraction.cli import cli
+from tests.specialized.cli.conftest import assert_cli_success, assert_cli_failure, assert_output_contains
 
 
 class TestConvertAQWACommand:
     """Tests for the 'convert-aqwa' command"""
 
-    @patch('digitalmodel.diffraction.cli.validate_results')
-    @patch('digitalmodel.diffraction.cli.AQWAConverter')
-    @patch('digitalmodel.diffraction.cli.OrcaFlexExporter')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.validate_results')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.AQWAConverter')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.OrcaFlexExporter')
     def test_basic_aqwa_conversion(self, mock_exporter, mock_converter, mock_validate, cli_runner, tmp_path):
         """Test basic AQWA to OrcaFlex conversion"""
         # Setup mocks
@@ -78,9 +78,9 @@ class TestConvertAQWACommand:
         assert_cli_failure(result)
         assert 'Error' in result.output or 'required' in result.output.lower()
 
-    @patch('digitalmodel.diffraction.cli.validate_results')
-    @patch('digitalmodel.diffraction.cli.AQWAConverter')
-    @patch('digitalmodel.diffraction.cli.OrcaFlexExporter')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.validate_results')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.AQWAConverter')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.OrcaFlexExporter')
     def test_convert_aqwa_with_formats(self, mock_exporter, mock_converter, mock_validate, cli_runner, tmp_path):
         """Test conversion with specific export formats"""
         mock_converter_instance = MagicMock()
@@ -108,8 +108,8 @@ class TestConvertAQWACommand:
 
         assert_cli_success(result)
 
-    @patch('digitalmodel.diffraction.cli.OrcaFlexExporter')
-    @patch('digitalmodel.diffraction.cli.AQWAConverter')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.OrcaFlexExporter')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.AQWAConverter')
     def test_convert_aqwa_no_validate(self, mock_converter, mock_exporter, cli_runner, tmp_path):
         """Test conversion with validation disabled"""
         mock_converter_instance = MagicMock()
@@ -146,7 +146,7 @@ class TestConvertOrcaWaveCommand:
         not pytest.importorskip('OrcFxAPI', reason='OrcFxAPI not available'),
         reason="OrcaWave conversion requires OrcFxAPI"
     )
-    @patch('digitalmodel.diffraction.cli.OrcaWaveConverter')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.OrcaWaveConverter')
     def test_basic_orcawave_conversion(self, mock_converter, cli_runner, tmp_path):
         """Test basic OrcaWave to OrcaFlex conversion"""
         mock_converter_instance = MagicMock()
@@ -169,9 +169,9 @@ class TestConvertOrcaWaveCommand:
 class TestCompareCommand:
     """Tests for the 'compare' command"""
 
-    @patch('digitalmodel.diffraction.cli.OrcaFlexExporter')
-    @patch('digitalmodel.diffraction.cli.AQWAConverter')
-    @patch('digitalmodel.diffraction.cli.compare_diffraction_results')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.OrcaFlexExporter')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.AQWAConverter')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.compare_diffraction_results')
     def test_basic_comparison(self, mock_compare, mock_converter, mock_exporter, cli_runner, tmp_path):
         """Test comparison of AQWA and OrcaWave results"""
         # Mock converter
@@ -216,7 +216,7 @@ class TestCompareCommand:
 class TestBatchProcessCommand:
     """Tests for the 'batch-process' command"""
 
-    @patch('digitalmodel.diffraction.cli.process_batch_from_config_file')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.process_batch_from_config_file')
     def test_batch_processing(self, mock_process, cli_runner, tmp_path):
         """Test batch processing from config file"""
         mock_process.return_value = {'vessels_processed': 3}
@@ -288,8 +288,8 @@ class TestCLIHelp:
 class TestValidationIntegration:
     """Integration tests for validation workflows"""
 
-    @patch('digitalmodel.diffraction.cli.AQWAConverter')
-    @patch('digitalmodel.diffraction.cli.validate_results')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.AQWAConverter')
+    @patch('digitalmodel.hydrodynamics.diffraction.cli.validate_results')
     def test_conversion_with_validation(self, mock_validate, mock_converter, cli_runner, tmp_path):
         """Test conversion with automatic validation"""
         mock_converter_instance = MagicMock()

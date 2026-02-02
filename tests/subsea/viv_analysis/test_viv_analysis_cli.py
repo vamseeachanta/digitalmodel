@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 from click.testing import CliRunner
 
-from digitalmodel.viv_analysis.cli import cli
+from digitalmodel.subsea.viv_analysis.cli import cli
 
 
 # ============================================================================

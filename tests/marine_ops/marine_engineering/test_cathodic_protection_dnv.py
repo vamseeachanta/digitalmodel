@@ -5,7 +5,7 @@ ABOUTME: Tests all helper methods and main orchestration for submarine pipeline 
 
 import pytest
 import math
-from digitalmodel.common.cathodic_protection import CathodicProtection
+from digitalmodel.infrastructure.common.cathodic_protection import CathodicProtection
 
 
 @pytest.fixture

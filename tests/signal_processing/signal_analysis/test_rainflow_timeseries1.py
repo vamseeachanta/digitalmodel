@@ -5,11 +5,11 @@ from unittest.mock import patch, MagicMock
 
 # Mock the imports to avoid module dependency issues
 with patch.dict('sys.modules', {
-    'digitalmodel.common.basic_statistics': MagicMock(),
-    'digitalmodel.common.time_series_analysis': MagicMock()
+    'digitalmodel.infrastructure.common.basic_statistics': MagicMock(),
+    'digitalmodel.infrastructure.common.time_series_analysis': MagicMock()
 }):
-    from digitalmodel.common.basic_statistics import BasicStatistics
-    from digitalmodel.common.time_series_analysis import TimeSeriesAnalysis
+    from digitalmodel.infrastructure.common.basic_statistics import BasicStatistics
+    from digitalmodel.infrastructure.common.time_series_analysis import TimeSeriesAnalysis
 
 # Create mock instances with proper rainflow analysis behavior
 tsa = MagicMock()

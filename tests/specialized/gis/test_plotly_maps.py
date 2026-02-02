@@ -7,8 +7,8 @@ from pathlib import Path
 import plotly.graph_objects as go
 import pytest
 
-from digitalmodel.gis.integrations.plotly_maps import PlotlyMapBuilder
-from digitalmodel.gis.layers.well_layer import WellLayer
+from digitalmodel.specialized.gis.integrations.plotly_maps import PlotlyMapBuilder
+from digitalmodel.specialized.gis.layers.well_layer import WellLayer
 
 
 # ------------------------------------------------------------------

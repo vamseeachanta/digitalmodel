@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
-from digitalmodel.digitalmarketing.digitalmarketing import DigitalMarketing
+from digitalmodel.specialized.digitalmarketing.digitalmarketing import DigitalMarketing
 
 
 class TestDigitalMarketing:
@@ -19,7 +19,7 @@ class TestDigitalMarketing:
         """Test routing to SEO analysis."""
         dm = DigitalMarketing()
 
-        with patch('digitalmodel.digitalmarketing.seo.seo_analysis.SEOAnalysis') as mock_seo:
+        with patch('digitalmodel.specialized.digitalmarketing.seo.seo_analysis.SEOAnalysis') as mock_seo:
             mock_instance = MagicMock()
             mock_instance.run.return_value = seo_config
             mock_seo.return_value = mock_instance

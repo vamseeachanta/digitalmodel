@@ -11,15 +11,15 @@ import numpy as np
 import pytest
 import yaml
 
-from digitalmodel.bemrosetta.converters.base import BaseConverter
-from digitalmodel.bemrosetta.converters.to_orcaflex import (
+from digitalmodel.hydrodynamics.bemrosetta.converters.base import BaseConverter
+from digitalmodel.hydrodynamics.bemrosetta.converters.to_orcaflex import (
     OrcaFlexConverter,
     convert_to_orcaflex,
 )
-from digitalmodel.bemrosetta.core.exceptions import ConverterError
-from digitalmodel.bemrosetta.models import ConversionResult, QTFData
-from digitalmodel.bemrosetta.models.conversion_result import ConversionStatus
-from digitalmodel.bemrosetta.models.qtf_data import QTFComponent, QTFType
+from digitalmodel.hydrodynamics.bemrosetta.core.exceptions import ConverterError
+from digitalmodel.hydrodynamics.bemrosetta.models import ConversionResult, QTFData
+from digitalmodel.hydrodynamics.bemrosetta.models.conversion_result import ConversionStatus
+from digitalmodel.hydrodynamics.bemrosetta.models.qtf_data import QTFComponent, QTFType
 from digitalmodel.diffraction import DiffractionResults
 
 
@@ -332,7 +332,7 @@ class TestConvertToOrcaflexFunction:
     ):
         """convert_to_orcaflex should return successful ConversionResult."""
         with patch(
-            "digitalmodel.bemrosetta.converters.to_orcaflex.OrcaFlexConverter"
+            "digitalmodel.hydrodynamics.bemrosetta.converters.to_orcaflex.OrcaFlexConverter"
         ) as MockConverter:
             mock_instance = MockConverter.return_value
             mock_instance.convert.return_value = tmp_path
@@ -347,7 +347,7 @@ class TestConvertToOrcaflexFunction:
     ):
         """convert_to_orcaflex should pass QTF data to converter."""
         with patch(
-            "digitalmodel.bemrosetta.converters.to_orcaflex.OrcaFlexConverter"
+            "digitalmodel.hydrodynamics.bemrosetta.converters.to_orcaflex.OrcaFlexConverter"
         ) as MockConverter:
             mock_instance = MockConverter.return_value
             mock_instance.convert.return_value = tmp_path
@@ -363,7 +363,7 @@ class TestConvertToOrcaflexFunction:
     ):
         """convert_to_orcaflex should return failed result on exception."""
         with patch(
-            "digitalmodel.bemrosetta.converters.to_orcaflex.OrcaFlexConverter"
+            "digitalmodel.hydrodynamics.bemrosetta.converters.to_orcaflex.OrcaFlexConverter"
         ) as MockConverter:
             mock_instance = MockConverter.return_value
             mock_instance.convert.side_effect = Exception("Conversion failed")

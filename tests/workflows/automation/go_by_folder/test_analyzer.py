@@ -6,7 +6,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from digitalmodel.automation.go_by_folder.analyzer import PatternAnalyzer
+from digitalmodel.workflows.automation.go_by_folder.analyzer import PatternAnalyzer
 
 
 class TestPatternAnalyzer:

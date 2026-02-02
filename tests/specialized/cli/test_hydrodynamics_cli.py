@@ -10,14 +10,14 @@ import pandas as pd
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from digitalmodel.hydrodynamics.cli import cli
-from tests.modules.cli.conftest import assert_cli_success, assert_cli_failure, assert_output_contains
+from digitalmodel.hydrodynamics.hydrodynamics.cli import cli
+from tests.specialized.cli.conftest import assert_cli_success, assert_cli_failure, assert_output_contains
 
 
 class TestSpectrumCommand:
     """Tests for the 'spectrum' command"""
 
-    @patch('digitalmodel.hydrodynamics.cli.WaveSpectra')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.WaveSpectra')
     def test_basic_jonswap_spectrum(self, mock_spectra, cli_runner):
         """Test basic JONSWAP wave spectrum generation"""
         mock_generator = MagicMock()
@@ -58,7 +58,7 @@ class TestSpectrumCommand:
             'Spectral Width:'
         )
 
-    @patch('digitalmodel.hydrodynamics.cli.WaveSpectra')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.WaveSpectra')
     def test_spectrum_pierson_moskowitz(self, mock_spectra, cli_runner):
         """Test Pierson-Moskowitz spectrum type"""
         mock_generator = MagicMock()
@@ -90,7 +90,7 @@ class TestSpectrumCommand:
         assert_cli_success(result)
         assert 'PM' in result.output.upper()
 
-    @patch('digitalmodel.hydrodynamics.cli.WaveSpectra')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.WaveSpectra')
     def test_spectrum_with_custom_parameters(self, mock_spectra, cli_runner):
         """Test spectrum with custom gamma and frequency range"""
         mock_generator = MagicMock()
@@ -125,7 +125,7 @@ class TestSpectrumCommand:
         assert_cli_success(result)
         assert 'Hs:' in result.output
 
-    @patch('digitalmodel.hydrodynamics.cli.WaveSpectra')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.WaveSpectra')
     def test_spectrum_with_csv_output(self, mock_spectra, cli_runner, temp_output_dir):
         """Test spectrum generation with CSV output"""
         mock_generator = MagicMock()
@@ -167,7 +167,7 @@ class TestSpectrumCommand:
         assert 'spectral_density' in df.columns
         assert len(df) == 100
 
-    @patch('digitalmodel.hydrodynamics.cli.WaveSpectra')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.WaveSpectra')
     def test_spectrum_statistics_validation(self, mock_spectra, cli_runner):
         """Test that spectrum statistics are displayed correctly"""
         mock_generator = MagicMock()
@@ -215,8 +215,8 @@ class TestSpectrumCommand:
 class TestOCIMFWindCommand:
     """Tests for the 'ocimf-wind' command"""
 
-    @patch('digitalmodel.hydrodynamics.cli.OCIMFLoading')
-    @patch('digitalmodel.hydrodynamics.cli.get_vessel_type')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.OCIMFLoading')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.get_vessel_type')
     def test_wind_load_standard_vessel(self, mock_get_vessel, mock_ocimf, cli_runner):
         """Test OCIMF wind load calculation for standard vessel type"""
         # Mock vessel
@@ -259,7 +259,7 @@ class TestOCIMFWindCommand:
             'Yaw (Mz):'
         )
 
-    @patch('digitalmodel.hydrodynamics.cli.OCIMFLoading')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.OCIMFLoading')
     def test_wind_load_custom_vessel(self, mock_ocimf, cli_runner):
         """Test OCIMF wind load with custom vessel dimensions"""
         mock_ocimf_instance = MagicMock()
@@ -284,8 +284,8 @@ class TestOCIMFWindCommand:
         assert_cli_success(result)
         assert 'Custom Vessel' in result.output or 'L=250.0m' in result.output
 
-    @patch('digitalmodel.hydrodynamics.cli.OCIMFLoading')
-    @patch('digitalmodel.hydrodynamics.cli.get_vessel_type')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.OCIMFLoading')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.get_vessel_type')
     def test_wind_load_varying_direction(self, mock_get_vessel, mock_ocimf, cli_runner):
         """Test wind load with different wind directions"""
         mock_vessel = MagicMock()
@@ -315,8 +315,8 @@ class TestOCIMFWindCommand:
         assert_cli_success(result)
         assert '90.0°' in result.output
 
-    @patch('digitalmodel.hydrodynamics.cli.OCIMFLoading')
-    @patch('digitalmodel.hydrodynamics.cli.get_vessel_type')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.OCIMFLoading')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.get_vessel_type')
     def test_wind_load_with_json_output(self, mock_get_vessel, mock_ocimf, cli_runner, temp_output_dir):
         """Test wind load calculation with JSON output"""
         mock_vessel = MagicMock()
@@ -375,8 +375,8 @@ class TestOCIMFWindCommand:
 class TestOCIMFCurrentCommand:
     """Tests for the 'ocimf-current' command"""
 
-    @patch('digitalmodel.hydrodynamics.cli.OCIMFLoading')
-    @patch('digitalmodel.hydrodynamics.cli.get_vessel_type')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.OCIMFLoading')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.get_vessel_type')
     def test_current_load_standard_vessel(self, mock_get_vessel, mock_ocimf, cli_runner):
         """Test OCIMF current load calculation for standard vessel"""
         mock_vessel = MagicMock()
@@ -411,7 +411,7 @@ class TestOCIMFCurrentCommand:
             'Current Loads:'
         )
 
-    @patch('digitalmodel.hydrodynamics.cli.OCIMFLoading')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.OCIMFLoading')
     def test_current_load_custom_vessel(self, mock_ocimf, cli_runner):
         """Test current load with custom vessel dimensions"""
         mock_ocimf_instance = MagicMock()
@@ -437,8 +437,8 @@ class TestOCIMFCurrentCommand:
         assert_cli_success(result)
         assert '30.0°' in result.output
 
-    @patch('digitalmodel.hydrodynamics.cli.OCIMFLoading')
-    @patch('digitalmodel.hydrodynamics.cli.get_vessel_type')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.OCIMFLoading')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.get_vessel_type')
     def test_current_load_with_json_output(self, mock_get_vessel, mock_ocimf, cli_runner, temp_output_dir):
         """Test current load with JSON output"""
         mock_vessel = MagicMock()
@@ -488,8 +488,8 @@ class TestOCIMFCurrentCommand:
 class TestCombinedEnvCommand:
     """Tests for the 'combined-env' command"""
 
-    @patch('digitalmodel.hydrodynamics.cli.OCIMFLoading')
-    @patch('digitalmodel.hydrodynamics.cli.get_vessel_type')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.OCIMFLoading')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.get_vessel_type')
     def test_combined_environmental_loads(self, mock_get_vessel, mock_ocimf, cli_runner):
         """Test combined wind and current environmental loads"""
         mock_vessel = MagicMock()
@@ -538,8 +538,8 @@ class TestCombinedEnvCommand:
             'Resultant'
         )
 
-    @patch('digitalmodel.hydrodynamics.cli.OCIMFLoading')
-    @patch('digitalmodel.hydrodynamics.cli.get_vessel_type')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.OCIMFLoading')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.get_vessel_type')
     def test_combined_different_vessel_types(self, mock_get_vessel, mock_ocimf, cli_runner):
         """Test combined loads for different vessel types"""
         mock_vessel = MagicMock()
@@ -580,8 +580,8 @@ class TestCombinedEnvCommand:
         assert_cli_success(result)
         assert 'Semisubmersible' in result.output
 
-    @patch('digitalmodel.hydrodynamics.cli.OCIMFLoading')
-    @patch('digitalmodel.hydrodynamics.cli.get_vessel_type')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.OCIMFLoading')
+    @patch('digitalmodel.hydrodynamics.hydrodynamics.cli.get_vessel_type')
     def test_combined_with_json_output(self, mock_get_vessel, mock_ocimf, cli_runner, temp_output_dir):
         """Test combined environmental loads with JSON output"""
         mock_vessel = MagicMock()

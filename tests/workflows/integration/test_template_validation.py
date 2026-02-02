@@ -208,7 +208,7 @@ class TestInputTemplateValidation:
             yaml.dump(pipeline_template, f)
 
         # Mock template validator and processor
-        with patch('digitalmodel.validation.template_validator') as mock_validator, \
+        with patch('digitalmodel.infrastructure.validation.template_validator') as mock_validator, \
              patch('digitalmodel.analysis.pipeline_processor') as mock_processor:
             
             # Configure validator
@@ -265,7 +265,7 @@ class TestInputTemplateValidation:
             yaml.dump(plate_template, f)
 
         # Mock template validator and processor
-        with patch('digitalmodel.validation.template_validator') as mock_validator, \
+        with patch('digitalmodel.infrastructure.validation.template_validator') as mock_validator, \
              patch('digitalmodel.analysis.plate_processor') as mock_processor:
             
             # Configure validator
@@ -320,7 +320,7 @@ class TestInputTemplateValidation:
             yaml.dump(fatigue_template, f)
 
         # Mock template validator and processor
-        with patch('digitalmodel.validation.template_validator') as mock_validator, \
+        with patch('digitalmodel.infrastructure.validation.template_validator') as mock_validator, \
              patch('digitalmodel.analysis.fatigue_processor') as mock_processor:
             
             # Configure validator
@@ -386,7 +386,7 @@ class TestInputTemplateValidation:
         }
 
         # Mock cross-validator
-        with patch('digitalmodel.validation.cross_validator') as mock_cross_validator:
+        with patch('digitalmodel.infrastructure.validation.cross_validator') as mock_cross_validator:
             
             cross_validation_result = {
                 "consistent": True,
@@ -429,7 +429,7 @@ class TestInputTemplateValidation:
             yaml.dump(invalid_template, f)
 
         # Mock validator with error detection
-        with patch('digitalmodel.validation.template_validator') as mock_validator:
+        with patch('digitalmodel.infrastructure.validation.template_validator') as mock_validator:
             
             validation_result = {
                 "valid": False,
@@ -467,7 +467,7 @@ class TestInputTemplateValidation:
             yaml.dump(old_version_template, f)
 
         # Mock version compatibility checker
-        with patch('digitalmodel.validation.version_checker') as mock_version_checker:
+        with patch('digitalmodel.infrastructure.validation.version_checker') as mock_version_checker:
             
             compatibility_result = {
                 "compatible": True,
@@ -497,7 +497,7 @@ class TestInputTemplateValidation:
         import time
         
         # Mock performance validator
-        with patch('digitalmodel.validation.performance_validator') as mock_perf_validator:
+        with patch('digitalmodel.infrastructure.validation.performance_validator') as mock_perf_validator:
             
             def slow_validation(*args, **kwargs):
                 time.sleep(0.01)  # Simulate validation work

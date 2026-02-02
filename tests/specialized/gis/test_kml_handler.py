@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 from lxml import etree
 
-from digitalmodel.gis.io.kml_handler import KMLHandler
+from digitalmodel.specialized.gis.io.kml_handler import KMLHandler
 
 
 # ---------------------------------------------------------------------------

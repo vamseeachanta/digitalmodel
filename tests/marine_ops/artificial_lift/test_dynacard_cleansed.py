@@ -3,10 +3,10 @@ import json
 import pytest
 import glob
 import numpy as np
-from digitalmodel.artificial_lift.dynacard.models import (
+from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
     DynacardAnalysisContext, CardData, RodSection, PumpProperties, SurfaceUnit
 )
-from digitalmodel.artificial_lift.dynacard.solver import DynacardWorkflow
+from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
 
 # Path to local cleansed test data
 LOCAL_DATA_DIR = os.path.join(os.path.dirname(__file__), "test_data")

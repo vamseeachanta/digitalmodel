@@ -204,7 +204,7 @@ class TestCLIModuleIntegration:
         """Test Python import works after CLI installation"""
         result = subprocess.run(
             [sys.executable, '-c',
-             'import digitalmodel.orcaflex; print(digitalmodel.orcaflex.__version__)'],
+             'import digitalmodel.orcaflex; print(digitalmodel.solvers.orcaflex.__version__)'],
             capture_output=True,
             text=True
         )

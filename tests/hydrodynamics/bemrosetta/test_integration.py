@@ -43,21 +43,21 @@ from digitalmodel.bemrosetta import (
 )
 
 # Submodule imports
-from digitalmodel.bemrosetta.parsers import AQWAParser, QTFParser, AQWAParseResult
-from digitalmodel.bemrosetta.converters import OrcaFlexConverter, convert_to_orcaflex
-from digitalmodel.bemrosetta.mesh import (
+from digitalmodel.hydrodynamics.bemrosetta.parsers import AQWAParser, QTFParser, AQWAParseResult
+from digitalmodel.hydrodynamics.bemrosetta.converters import OrcaFlexConverter, convert_to_orcaflex
+from digitalmodel.hydrodynamics.bemrosetta.mesh import (
     GDFHandler,
     DATHandler,
     STLHandler,
     convert_mesh,
 )
-from digitalmodel.bemrosetta.validators import (
+from digitalmodel.hydrodynamics.bemrosetta.validators import (
     CoefficientValidator,
     CausalityChecker,
     validate_coefficients,
     check_causality,
 )
-from digitalmodel.bemrosetta.core.interfaces import ValidationReport
+from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ValidationReport
 
 
 class TestModuleIntegration:

@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
-from digitalmodel.automation.quality_gates import (
+from digitalmodel.workflows.automation.quality_gates import (
     GateStatus,
     QualityGateValidator,
 )
@@ -97,7 +97,7 @@ def validator(tmp_path, mock_config):
     with open(config_file, "w") as f:
         yaml.dump(mock_config, f)
 
-    with patch("digitalmodel.automation.quality_gates.Path.cwd", return_value=tmp_path):
+    with patch("digitalmodel.workflows.automation.quality_gates.Path.cwd", return_value=tmp_path):
         validator = QualityGateValidator(config_path=config_file)
         return validator
 
@@ -121,7 +121,7 @@ class TestQualityGateValidator:
         with open(config_file, "w") as f:
             yaml.dump(mock_config, f)
 
-        with patch("digitalmodel.automation.quality_gates.Path.cwd", return_value=tmp_path):
+        with patch("digitalmodel.workflows.automation.quality_gates.Path.cwd", return_value=tmp_path):
             validator = QualityGateValidator(config_path=config_file, strict_mode=True)
             assert validator.strict_mode is True
 
@@ -138,7 +138,7 @@ class TestQualityGateValidator:
 
     def test_check_dependencies_met(self, validator):
         """Test dependency check when all dependencies met."""
-        from digitalmodel.automation.quality_gates import GateResult
+        from digitalmodel.workflows.automation.quality_gates import GateResult
 
         results = [
             GateResult("tests", GateStatus.PASS, "All tests passed"),
@@ -149,7 +149,7 @@ class TestQualityGateValidator:
 
     def test_check_dependencies_not_met(self, validator):
         """Test dependency check when dependency failed."""
-        from digitalmodel.automation.quality_gates import GateResult
+        from digitalmodel.workflows.automation.quality_gates import GateResult
 
         results = [
             GateResult("tests", GateStatus.FAILURE, "Tests failed"),
@@ -400,7 +400,7 @@ class MyClass:
 
     def test_build_report(self, validator):
         """Test report building from results."""
-        from digitalmodel.automation.quality_gates import GateResult
+        from digitalmodel.workflows.automation.quality_gates import GateResult
 
         results = [
             GateResult("tests", GateStatus.PASS, "Tests passed"),
@@ -419,7 +419,7 @@ class MyClass:
 
     def test_build_report_strict_mode(self, validator):
         """Test report building with strict mode (warnings become failures)."""
-        from digitalmodel.automation.quality_gates import GateResult
+        from digitalmodel.workflows.automation.quality_gates import GateResult
 
         validator.strict_mode = True
 
@@ -434,7 +434,7 @@ class MyClass:
 
     def test_export_results(self, validator, tmp_path):
         """Test JSON export of results."""
-        from digitalmodel.automation.quality_gates import GateResult, QualityGateReport
+        from digitalmodel.workflows.automation.quality_gates import GateResult, QualityGateReport
 
         results = [
             GateResult("tests", GateStatus.PASS, "Tests passed", metrics={"exit_code": 0}),

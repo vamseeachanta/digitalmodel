@@ -11,7 +11,7 @@ def main():
     
     # Run universal runner with this directory
     cmd = [
-        sys.executable, '-m', 'digitalmodel.orcaflex.universal',
+        sys.executable, '-m', 'digitalmodel.solvers.orcaflex.universal',
         '--input-directory', str(current_dir),
         '--pattern', '*.yml',
         '--parallel', '4'

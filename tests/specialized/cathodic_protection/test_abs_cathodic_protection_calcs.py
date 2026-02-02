@@ -5,7 +5,7 @@ import math
 import pytest  # noqa
 
 # Reader imports
-from digitalmodel.common.cathodic_protection import CathodicProtection
+from digitalmodel.infrastructure.common.cathodic_protection import CathodicProtection
 
 
 def test_abs_anode_performance_long_flush():

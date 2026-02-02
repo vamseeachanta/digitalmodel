@@ -1,0 +1,32 @@
+{
+  "basic_math": {
+    "max_time_ms": 1.0,
+    "max_memory_mb": 10.0,
+    "target_throughput": 1000000.0
+  },
+  "array_operations": {
+    "max_time_ms": 10.0,
+    "max_memory_mb": 50.0,
+    "target_throughput": 100000.0
+  },
+  "dataframe_operations": {
+    "max_time_ms": 100.0,
+    "max_memory_mb": 100.0,
+    "target_throughput": 10000.0
+  },
+  "file_io": {
+    "max_time_ms": 50.0,
+    "max_memory_mb": 20.0,
+    "target_throughput": 1000.0
+  },
+  "statistical_calculations": {
+    "max_time_ms": 5.0,
+    "max_memory_mb": 25.0,
+    "target_throughput": 50000.0
+  },
+  "matrix_operations": {
+    "max_time_ms": 20.0,
+    "max_memory_mb": 75.0,
+    "target_throughput": 5000.0
+  }
+}

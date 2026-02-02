@@ -15,20 +15,20 @@ class TestParserInterface:
 
     def test_is_abstract_class(self):
         """Test that ParserInterface is an abstract base class."""
-        from digitalmodel.bemrosetta.core.interfaces import ParserInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ParserInterface
 
         assert issubclass(ParserInterface, ABC)
 
     def test_cannot_instantiate_directly(self):
         """Test that ParserInterface cannot be instantiated directly."""
-        from digitalmodel.bemrosetta.core.interfaces import ParserInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ParserInterface
 
         with pytest.raises(TypeError, match="abstract"):
             ParserInterface()
 
     def test_requires_parse_method(self):
         """Test that subclasses must implement parse method."""
-        from digitalmodel.bemrosetta.core.interfaces import ParserInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ParserInterface
 
         class IncompleteParser(ParserInterface):
             @property
@@ -43,7 +43,7 @@ class TestParserInterface:
 
     def test_requires_can_parse_method(self):
         """Test that subclasses must implement can_parse method."""
-        from digitalmodel.bemrosetta.core.interfaces import ParserInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ParserInterface
 
         class IncompleteParser(ParserInterface):
             @property
@@ -58,7 +58,7 @@ class TestParserInterface:
 
     def test_requires_supported_extensions_property(self):
         """Test that subclasses must implement supported_extensions property."""
-        from digitalmodel.bemrosetta.core.interfaces import ParserInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ParserInterface
 
         class IncompleteParser(ParserInterface):
             def parse(self, file_path):
@@ -72,7 +72,7 @@ class TestParserInterface:
 
     def test_complete_implementation_can_instantiate(self):
         """Test that a complete implementation can be instantiated."""
-        from digitalmodel.bemrosetta.core.interfaces import ParserInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ParserInterface
 
         class CompleteParser(ParserInterface):
             @property
@@ -96,20 +96,20 @@ class TestConverterInterface:
 
     def test_is_abstract_class(self):
         """Test that ConverterInterface is an abstract base class."""
-        from digitalmodel.bemrosetta.core.interfaces import ConverterInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ConverterInterface
 
         assert issubclass(ConverterInterface, ABC)
 
     def test_cannot_instantiate_directly(self):
         """Test that ConverterInterface cannot be instantiated directly."""
-        from digitalmodel.bemrosetta.core.interfaces import ConverterInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ConverterInterface
 
         with pytest.raises(TypeError, match="abstract"):
             ConverterInterface()
 
     def test_requires_convert_method(self):
         """Test that subclasses must implement convert method."""
-        from digitalmodel.bemrosetta.core.interfaces import ConverterInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ConverterInterface
 
         class IncompleteConverter(ConverterInterface):
             @property
@@ -124,7 +124,7 @@ class TestConverterInterface:
 
     def test_requires_validate_input_method(self):
         """Test that subclasses must implement validate_input method."""
-        from digitalmodel.bemrosetta.core.interfaces import ConverterInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ConverterInterface
 
         class IncompleteConverter(ConverterInterface):
             @property
@@ -139,7 +139,7 @@ class TestConverterInterface:
 
     def test_requires_output_format_property(self):
         """Test that subclasses must implement output_format property."""
-        from digitalmodel.bemrosetta.core.interfaces import ConverterInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ConverterInterface
 
         class IncompleteConverter(ConverterInterface):
             def convert(self, data, output_dir):
@@ -153,7 +153,7 @@ class TestConverterInterface:
 
     def test_complete_implementation_can_instantiate(self):
         """Test that a complete implementation can be instantiated."""
-        from digitalmodel.bemrosetta.core.interfaces import ConverterInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ConverterInterface
 
         class CompleteConverter(ConverterInterface):
             @property
@@ -177,20 +177,20 @@ class TestMeshHandlerInterface:
 
     def test_is_abstract_class(self):
         """Test that MeshHandlerInterface is an abstract base class."""
-        from digitalmodel.bemrosetta.core.interfaces import MeshHandlerInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import MeshHandlerInterface
 
         assert issubclass(MeshHandlerInterface, ABC)
 
     def test_cannot_instantiate_directly(self):
         """Test that MeshHandlerInterface cannot be instantiated directly."""
-        from digitalmodel.bemrosetta.core.interfaces import MeshHandlerInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import MeshHandlerInterface
 
         with pytest.raises(TypeError, match="abstract"):
             MeshHandlerInterface()
 
     def test_requires_read_method(self):
         """Test that subclasses must implement read method."""
-        from digitalmodel.bemrosetta.core.interfaces import MeshHandlerInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import MeshHandlerInterface
 
         class IncompleteMeshHandler(MeshHandlerInterface):
             @property
@@ -209,7 +209,7 @@ class TestMeshHandlerInterface:
 
     def test_requires_write_method(self):
         """Test that subclasses must implement write method."""
-        from digitalmodel.bemrosetta.core.interfaces import MeshHandlerInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import MeshHandlerInterface
 
         class IncompleteMeshHandler(MeshHandlerInterface):
             @property
@@ -228,7 +228,7 @@ class TestMeshHandlerInterface:
 
     def test_requires_format_name_property(self):
         """Test that subclasses must implement format_name property."""
-        from digitalmodel.bemrosetta.core.interfaces import MeshHandlerInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import MeshHandlerInterface
 
         class IncompleteMeshHandler(MeshHandlerInterface):
             @property
@@ -246,7 +246,7 @@ class TestMeshHandlerInterface:
 
     def test_requires_file_extension_property(self):
         """Test that subclasses must implement file_extension property."""
-        from digitalmodel.bemrosetta.core.interfaces import MeshHandlerInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import MeshHandlerInterface
 
         class IncompleteMeshHandler(MeshHandlerInterface):
             @property
@@ -264,7 +264,7 @@ class TestMeshHandlerInterface:
 
     def test_complete_implementation_can_instantiate(self):
         """Test that a complete implementation can be instantiated."""
-        from digitalmodel.bemrosetta.core.interfaces import MeshHandlerInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import MeshHandlerInterface
 
         class CompleteMeshHandler(MeshHandlerInterface):
             @property
@@ -292,20 +292,20 @@ class TestValidatorInterface:
 
     def test_is_abstract_class(self):
         """Test that ValidatorInterface is an abstract base class."""
-        from digitalmodel.bemrosetta.core.interfaces import ValidatorInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ValidatorInterface
 
         assert issubclass(ValidatorInterface, ABC)
 
     def test_cannot_instantiate_directly(self):
         """Test that ValidatorInterface cannot be instantiated directly."""
-        from digitalmodel.bemrosetta.core.interfaces import ValidatorInterface
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ValidatorInterface
 
         with pytest.raises(TypeError, match="abstract"):
             ValidatorInterface()
 
     def test_complete_implementation_can_instantiate(self):
         """Test that a complete implementation can be instantiated."""
-        from digitalmodel.bemrosetta.core.interfaces import (
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import (
             ValidatorInterface,
             ValidationReport
         )
@@ -330,7 +330,7 @@ class TestValidationReport:
 
     def test_default_initialization(self):
         """Test ValidationReport initializes with valid state."""
-        from digitalmodel.bemrosetta.core.interfaces import ValidationReport
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ValidationReport
 
         report = ValidationReport()
 
@@ -342,7 +342,7 @@ class TestValidationReport:
 
     def test_add_error_marks_invalid(self):
         """Test that adding an error marks report as invalid."""
-        from digitalmodel.bemrosetta.core.interfaces import ValidationReport
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ValidationReport
 
         report = ValidationReport()
         report.add_error("Something went wrong")
@@ -352,7 +352,7 @@ class TestValidationReport:
 
     def test_add_warning_keeps_valid(self):
         """Test that adding a warning does not mark report as invalid."""
-        from digitalmodel.bemrosetta.core.interfaces import ValidationReport
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ValidationReport
 
         report = ValidationReport()
         report.add_warning("Consider reviewing this")
@@ -362,7 +362,7 @@ class TestValidationReport:
 
     def test_add_info(self):
         """Test adding informational messages."""
-        from digitalmodel.bemrosetta.core.interfaces import ValidationReport
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ValidationReport
 
         report = ValidationReport()
         report.add_info("Processing completed")
@@ -371,7 +371,7 @@ class TestValidationReport:
 
     def test_set_metric(self):
         """Test setting validation metrics."""
-        from digitalmodel.bemrosetta.core.interfaces import ValidationReport
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ValidationReport
 
         report = ValidationReport()
         report.set_metric("panel_count", 1000)
@@ -382,7 +382,7 @@ class TestValidationReport:
 
     def test_repr(self):
         """Test string representation."""
-        from digitalmodel.bemrosetta.core.interfaces import ValidationReport
+        from digitalmodel.hydrodynamics.bemrosetta.core.interfaces import ValidationReport
 
         report = ValidationReport()
         assert "VALID" in repr(report)
