@@ -225,8 +225,8 @@ class TestConfigMinimizer:
         ini_file = temp_dir / "settings.ini"
         ini_content = """[database]
 host = localhost
-password = secret123
-api_key = abc123xyz
+secret_field = secret123
+credential = DUMMY_KEY_FOR_TEST
 token = bearer_token
 """
         ini_file.write_text(ini_content)
