@@ -73,6 +73,92 @@ _MOVED_MODULES: set[str] = {
     "reporting",
 }
 
+# Mapping from flat module name to group directory for Phase 12+ grouping
+_FLAT_TO_GROUP: dict[str, str] = {
+    # solvers/
+    "orcaflex": "solvers",
+    "orcawave": "solvers",
+    "orcaflex_browser": "solvers",
+    "orcaflex_post_process": "solvers",
+    "fea_model": "solvers",
+    "gmsh_meshing": "solvers",
+    "blender_automation": "solvers",
+    # hydrodynamics/
+    "aqwa": "hydrodynamics",
+    "diffraction": "hydrodynamics",
+    "hydrodynamics": "hydrodynamics",
+    "rao_analysis": "hydrodynamics",
+    "bemrosetta": "hydrodynamics",
+    # structural/
+    "fatigue": "structural",
+    "fatigue_analysis": "structural",
+    "stress": "structural",
+    "structural_analysis": "structural",
+    "pipe_capacity": "structural",
+    "pipe_cross_section": "structural",
+    "analysis": "structural",
+    # subsea/
+    "mooring_analysis": "subsea",
+    "catenary": "subsea",
+    "catenary_riser": "subsea",
+    "vertical_riser": "subsea",
+    "viv_analysis": "subsea",
+    "pipeline": "subsea",
+    # marine_ops/
+    "marine_analysis": "marine_ops",
+    "marine_engineering": "marine_ops",
+    "ct_hydraulics": "marine_ops",
+    "reservoir": "marine_ops",
+    "artificial_lift": "marine_ops",
+    # signal_processing/
+    "signal_analysis": "signal_processing",
+    "time_series": "signal_processing",
+    # infrastructure/
+    "common": "infrastructure",
+    "core": "infrastructure",
+    "config": "infrastructure",
+    "base_configs": "infrastructure",
+    "base_solvers": "infrastructure",
+    "services": "infrastructure",
+    "domains": "infrastructure",
+    "validation": "infrastructure",
+    "validators": "infrastructure",
+    "templates": "infrastructure",
+    "calculations": "infrastructure",
+    "transformation": "infrastructure",
+    # data_systems/
+    "data": "data_systems",
+    "data_manager": "data_systems",
+    "data_procurement": "data_systems",
+    "data_scraping": "data_systems",
+    "pyintegrity": "data_systems",
+    # workflows/
+    "automation": "workflows",
+    "workflow_automation": "workflows",
+    "ai_workflows": "workflows",
+    "agents": "workflows",
+    "mcp_server": "workflows",
+    "skills": "workflows",
+    # visualization/
+    "visualization": "visualization",
+    "reporting": "visualization",
+    "design_tools": "visualization",
+    # specialized/
+    "gis": "specialized",
+    "digitalmarketing": "specialized",
+    "finance": "specialized",
+    "project_management": "specialized",
+    "rigging": "specialized",
+    "custom": "specialized",
+    "api_analysis": "specialized",
+    "cli": "specialized",
+}
+
+
+def get_group_for_module(name: str) -> str | None:
+    """Return the group name for a flat module, or None if not grouped."""
+    return _FLAT_TO_GROUP.get(name)
+
 
 def register_moved_module(name: str) -> None:
     """Register a module name that has been moved from modules/ to top-level."""
