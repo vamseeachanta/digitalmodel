@@ -61,6 +61,14 @@ _MOVED_MODULES: set[str] = {
     "ai_workflows",
     "api_analysis",
     "gmsh_meshing",
+    # Phase 4 Batch 6
+    "design_tools",
+    "mcp_server",
+    "orcaflex_browser",
+    "data_scraping",
+    "blender_automation",
+    "diffraction_cli",
+    "standards_lookup",
 }
 
 
