@@ -165,7 +165,7 @@ ls examples/ | grep calm
 # (mixed with 20+ other files)
 
 # After: Clear path
-ls examples/modules/calm_buoy/
+ls examples/calm_buoy/
 # north_sea_calm_project.yml  README.md
 ```
 
@@ -176,7 +176,7 @@ cat examples/fpso_mooring_analysis.py
 # (no context about related files)
 
 # After: Module README explains everything
-cat examples/modules/fpso/README.md
+cat examples/fpso/README.md
 # - All related files listed
 # - Usage examples
 # - Standards referenced
@@ -189,8 +189,8 @@ cat examples/modules/fpso/README.md
 examples/new_example.py  # (where does this go?)
 
 # After: Clear placement
-examples/modules/<module_name>/new_example.py
-examples/modules/<module_name>/README.md  # (update)
+examples/<module_name>/new_example.py
+examples/<module_name>/README.md  # (update)
 ```
 
 ### 4. **Learning Path**
@@ -212,38 +212,38 @@ examples/README.md  # → Beginners section
 ### By Asset Type
 ```bash
 # CALM Buoy
-ls examples/modules/calm_buoy/
+ls examples/calm_buoy/
 
 # FPSO
-ls examples/modules/fpso/
+ls examples/fpso/
 
 # General mooring
-ls examples/modules/mooring/
+ls examples/mooring/
 ```
 
 ### By Analysis Type
 ```bash
 # Fatigue
-ls examples/modules/fatigue/
+ls examples/fatigue/
 
 # Stress
-ls examples/modules/stress/
+ls examples/stress/
 
 # Hydrodynamics
-ls examples/modules/hydrodynamics/
+ls examples/hydrodynamics/
 ```
 
 ### By Standard
 ```bash
 # API standards
-ls examples/modules/api_standards/
+ls examples/api_standards/
 
 # OCIMF guidelines
-ls examples/modules/ocimf/
+ls examples/ocimf/
 
 # DNV standards (multiple modules)
-ls examples/modules/fatigue/
-ls examples/modules/stress/
+ls examples/fatigue/
+ls examples/stress/
 ```
 
 ---
@@ -285,9 +285,9 @@ ls examples/modules/stress/
 python examples/north_sea_calm_project.yml  # (doesn't work - YAML not executable)
 
 # New way (clear documentation)
-cat examples/modules/calm_buoy/README.md
+cat examples/calm_buoy/README.md
 python scripts/generate_calm_buoy_project.py \
-  --config examples/modules/calm_buoy/north_sea_calm_project.yml \
+  --config examples/calm_buoy/north_sea_calm_project.yml \
   --validate
 ```
 
@@ -298,8 +298,8 @@ python scripts/generate_calm_buoy_project.py \
 python examples/fpso_mooring_analysis.py
 
 # New way (with module context)
-cat examples/modules/fpso/README.md
-python examples/modules/fpso/fpso_mooring_analysis.py
+cat examples/fpso/README.md
+python examples/fpso/fpso_mooring_analysis.py
 # (README explains output, related files, next steps)
 ```
 
@@ -311,7 +311,7 @@ python examples/fatigue_analysis_examples.py
 # (user doesn't know about advanced examples in subdirectory)
 
 # New way (clear hierarchy)
-cat examples/modules/fatigue/README.md
+cat examples/fatigue/README.md
 # → Basic: fatigue_analysis_examples.py
 # → Advanced: advanced_examples/complete_fatigue_analysis.py
 ```
@@ -392,7 +392,7 @@ Old documentation files preserved:
 ### Find an Example
 ```bash
 # By module
-ls examples/modules/<module_name>/
+ls examples/<module_name>/
 
 # By file type
 find examples/modules -name "*.py"
@@ -406,16 +406,16 @@ find examples/modules -name "*.yml"
 cat examples/README.md
 
 # Module specific
-cat examples/modules/<module_name>/README.md
+cat examples/<module_name>/README.md
 ```
 
 ### Run an Example
 ```bash
 # Python script
-python examples/modules/<module_name>/<script>.py
+python examples/<module_name>/<script>.py
 
 # Jupyter notebook
-jupyter notebook examples/modules/<module_name>/<notebook>.ipynb
+jupyter notebook examples/<module_name>/<notebook>.ipynb
 ```
 
 ---

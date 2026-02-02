@@ -289,7 +289,7 @@ class OperabilityAnalyzer:
    - Add `_resolve_metocean_condition()` method
    - Update load case processing to use return periods
 
-2. `examples/modules/calm_buoy/north_sea_calm_project_human.yml`
+2. `examples/calm_buoy/north_sea_calm_project_human.yml`
    - Update load cases to use "design_1yr" condition
    - Add example operability load cases
 
@@ -382,7 +382,7 @@ Human Input:
 
 ```bash
 python scripts/generate_calm_buoy_project.py \
-  --config examples/modules/calm_buoy/north_sea_calm_project_human.yml \
+  --config examples/calm_buoy/north_sea_calm_project_human.yml \
   --output projects/NSE_OPERABILITY \
   --operability-directions 12 \
   --validate
