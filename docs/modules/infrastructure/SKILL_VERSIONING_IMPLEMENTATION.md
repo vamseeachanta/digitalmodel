@@ -267,7 +267,7 @@ Independent skills (no dependencies):
 ### Recommend Skills for Task
 
 ```python
-from digitalmodel.modules.skills.skill_resolver import SkillResolver
+from digitalmodel.skills.skill_resolver import SkillResolver
 
 resolver = SkillResolver()
 recommendations = resolver.recommend_skills(

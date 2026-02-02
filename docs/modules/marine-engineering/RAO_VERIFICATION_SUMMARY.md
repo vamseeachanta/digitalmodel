@@ -127,7 +127,7 @@ All three routes successfully extracted RAO data from floating structure file.
 
 **Use Unified Reader v2.0**:
 ```python
-from digitalmodel.modules.marine_analysis import read_rao_file
+from digitalmodel.marine_analysis import read_rao_file
 
 # One line to read all RAO types
 rao_data = read_rao_file('vessel.lis')
@@ -152,7 +152,7 @@ acc = rao_data.acceleration
 
 **Legacy code continues to work**:
 ```python
-from digitalmodel.modules.marine_analysis import RAODataProcessor
+from digitalmodel.marine_analysis import RAODataProcessor
 
 processor = RAODataProcessor()
 rao_data = processor.import_aqwa_lis_file('vessel.lis')
@@ -162,7 +162,7 @@ rao_data = processor.import_aqwa_lis_file('vessel.lis')
 **Migration Path** (when ready):
 ```python
 # Step 1: Replace import
-from digitalmodel.modules.marine_analysis import read_rao_file
+from digitalmodel.marine_analysis import read_rao_file
 
 # Step 2: Update read call
 rao_data = read_rao_file('vessel.lis')

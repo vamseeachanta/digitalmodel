@@ -129,7 +129,7 @@ catenary:
 ### Simple Catenary Equation
 
 ```python
-from digitalmodel.modules.catenary.catenary_equation import CatenaryEquation
+from digitalmodel.catenary.catenary_equation import CatenaryEquation
 import numpy as np
 
 catenary = CatenaryEquation()
@@ -150,8 +150,8 @@ tensions = catenary.get_tension(arc_lengths)
 ### Catenary Riser Analysis
 
 ```python
-from digitalmodel.modules.catenary.catenary_riser import CatenaryRiser
-from digitalmodel.modules.catenary.pipe_properties import PipeProperties
+from digitalmodel.catenary.catenary_riser import CatenaryRiser
+from digitalmodel.catenary.pipe_properties import PipeProperties
 
 pipe = PipeProperties(
     outer_diameter=0.2032,
@@ -174,7 +174,7 @@ print(f"Total length: {results['total_length']:.1f} m")
 ### Lazy Wave Catenary
 
 ```python
-from digitalmodel.modules.catenary.lazy_wave_catenary import LazyWaveCatenary
+from digitalmodel.catenary.lazy_wave_catenary import LazyWaveCatenary
 
 lazy_wave = LazyWaveCatenary()
 config = {
@@ -196,7 +196,7 @@ hog_bend = results["hog_bend"]
 ### OrcaFlex Model Building
 
 ```python
-from digitalmodel.modules.catenary.orcaflex_model import OrcaFlexModelBuilder
+from digitalmodel.catenary.orcaflex_model import OrcaFlexModelBuilder
 
 builder = OrcaFlexModelBuilder()
 builder.set_line_from_catenary(

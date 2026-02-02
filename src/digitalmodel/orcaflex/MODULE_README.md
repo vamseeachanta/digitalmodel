@@ -341,7 +341,7 @@ All OrcaFlex analyses follow a standardized structure:
 ### With Mooring Analysis
 
 ```python
-from digitalmodel.modules.mooring_analysis import MooringDesigner
+from digitalmodel.mooring_analysis import MooringDesigner
 from digitalmodel.orcaflex import UniversalOrcaFlexRunner
 
 # 1. Design mooring system
@@ -359,9 +359,9 @@ sim_results = runner.run(models=['mooring_model.yml'])
 ### With Fatigue Analysis
 
 ```python
-from digitalmodel.modules.fatigue_analysis import FatigueDamageCalculator
+from digitalmodel.fatigue_analysis import FatigueDamageCalculator
 from digitalmodel.orcaflex import run_models
-from digitalmodel.modules.signal_analysis import TimeSeriesProcessor
+from digitalmodel.signal_analysis import TimeSeriesProcessor
 
 # 1. Run OrcaFlex simulation
 run_models(models=['riser_analysis.yml'])

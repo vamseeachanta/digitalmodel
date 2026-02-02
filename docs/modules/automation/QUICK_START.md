@@ -84,7 +84,7 @@ python examples/agent_selection_demo.py
 ### Select Agent
 
 ```python
-from digitalmodel.modules.automation import IntelligentAgentSelector
+from digitalmodel.automation import IntelligentAgentSelector
 
 selector = IntelligentAgentSelector()
 result = selector.select_agent(
@@ -98,7 +98,7 @@ print(f"Use: {result['agent']} (confidence: {result['confidence']:.1%})")
 ### Record Performance
 
 ```python
-from digitalmodel.modules.automation import AgentPerformanceTracker
+from digitalmodel.automation import AgentPerformanceTracker
 
 tracker = AgentPerformanceTracker()
 tracker.record_task(
@@ -202,7 +202,7 @@ jq '.agents | keys' modules/config/ai-agents-registry.json
 # Run tasks to build history
 # After each task, record result:
 python -c "
-from digitalmodel.modules.automation import AgentPerformanceTracker
+from digitalmodel.automation import AgentPerformanceTracker
 tracker = AgentPerformanceTracker()
 tracker.record_task('agent-a', 'code-gen', True, 45.0)
 "

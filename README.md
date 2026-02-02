@@ -348,7 +348,7 @@ digitalmodel/
 ├── tests/modules/                  # Test suites (mirrors src structure)
 ├── specs/modules/                  # Module specifications (39 specs)
 ├── docs/modules/                   # Module documentation
-├── examples/modules/               # Working examples per module
+├── examples/               # Working examples per module
 ├── config/                         # Configuration files
 │   └── templates/                  # Project templates
 ├── data/                           # Engineering databases

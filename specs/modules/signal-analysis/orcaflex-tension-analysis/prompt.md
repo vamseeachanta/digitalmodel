@@ -122,7 +122,7 @@ Additional Requirements:
 ### Quick Start Implementation
 ```python
 # Minimal implementation example
-from digitalmodel.modules.signal_analysis import RainflowCounter, SpectralAnalyzer
+from digitalmodel.signal_analysis import RainflowCounter, SpectralAnalyzer
 import pandas as pd
 
 # Read data

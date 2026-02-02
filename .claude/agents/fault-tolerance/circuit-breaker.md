@@ -146,8 +146,8 @@ All failure types are tracked together for simplicity.
 ## Usage Example
 
 ```python
-from digitalmodel.modules.automation.circuit_breaker import CircuitBreaker
-from digitalmodel.modules.automation.rollback_manager import RollbackManager
+from digitalmodel.automation.circuit_breaker import CircuitBreaker
+from digitalmodel.automation.rollback_manager import RollbackManager
 
 # Initialize
 breaker = CircuitBreaker(agent_type="coder")

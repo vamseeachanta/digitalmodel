@@ -13,8 +13,8 @@ from scipy import signal
 from collections import Counter
 
 # Import from signal_analysis module
-from src.digitalmodel.modules.signal_analysis.core.rainflow import RainflowCounter
-from src.digitalmodel.modules.signal_analysis.core.spectral import SpectralAnalyzer
+from src.digitalmodel.signal_analysis.core.rainflow import RainflowCounter
+from src.digitalmodel.signal_analysis.core.spectral import SpectralAnalyzer
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')

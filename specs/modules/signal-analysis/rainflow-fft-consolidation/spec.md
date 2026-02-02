@@ -261,7 +261,7 @@ class TimeSeriesProcessor:
 
 **Usage Example**:
 ```python
-from digitalmodel.modules.time_series import TimeSeriesComponents
+from digitalmodel.time_series import TimeSeriesComponents
 
 tsc = TimeSeriesComponents(cfg)
 

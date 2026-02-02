@@ -64,7 +64,7 @@ python scripts/agent_dashboard_cli.py generate && python scripts/agent_dashboard
 ### Python API
 
 ```python
-from digitalmodel.modules.visualization.agent_dashboard import (
+from digitalmodel.visualization.agent_dashboard import (
     AgentDashboard,
     generate_dashboard,
     view_dashboard

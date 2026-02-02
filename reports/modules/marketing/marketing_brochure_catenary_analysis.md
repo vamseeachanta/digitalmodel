@@ -48,7 +48,7 @@ The Digital Model Catenary Analysis Module provides comprehensive catenary equat
 #### Analytical Catenary Solver (Irvine Method)
 
 ```python
-from digitalmodel.modules.catenary import CatenarySolver
+from digitalmodel.catenary import CatenarySolver
 
 # Initialize analytical solver
 solver = CatenarySolver(method='analytical')
@@ -81,7 +81,7 @@ print(f"Angle at fairlead: {result['fairlead_angle']:.1f} deg")
 #### Numerical Catenary Solver (Complex Cases)
 
 ```python
-from digitalmodel.modules.catenary import NumericalCatenarySolver
+from digitalmodel.catenary import NumericalCatenarySolver
 
 # Initialize numerical solver
 solver_num = NumericalCatenarySolver(
@@ -122,7 +122,7 @@ print(f"Curvature at touchdown: {result['touchdown_curvature']:.4f} 1/m")
 **Chain-Wire-Polyester Mooring Line:**
 
 ```python
-from digitalmodel.modules.catenary import MultiSegmentCatenary
+from digitalmodel.catenary import MultiSegmentCatenary
 
 # Define line segments
 segments = [
@@ -174,7 +174,7 @@ for i, seg in enumerate(result['segments']):
 **Buoyancy-Distributed SCR:**
 
 ```python
-from digitalmodel.modules.catenary import LazyWaveRiser
+from digitalmodel.catenary import LazyWaveRiser
 
 # Define riser with buoyancy modules
 riser = LazyWaveRiser(
@@ -224,7 +224,7 @@ else:
 **Touchdown Zone Analysis:**
 
 ```python
-from digitalmodel.modules.catenary import SoilInteraction
+from digitalmodel.catenary import SoilInteraction
 
 # Define soil properties
 soil = SoilInteraction(

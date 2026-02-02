@@ -318,7 +318,7 @@ tech_dict = mapper.convert_dict_to_technical(human_config)
   - Ready to copy and customize
 
 ### Examples
-- **`examples/modules/calm_buoy/north_sea_calm_project_human.yml`**
+- **`examples/calm_buoy/north_sea_calm_project_human.yml`**
   - Real-world North Sea example
   - Human-friendly format
   - Tested and validated
@@ -477,7 +477,7 @@ Human Input:
 ## Support
 
 - **Template**: `templates/calm_buoy/project_template_human_friendly.yml`
-- **Example**: `examples/modules/calm_buoy/north_sea_calm_project_human.yml`
+- **Example**: `examples/calm_buoy/north_sea_calm_project_human.yml`
 - **Converter**: `scripts/convert_yaml_format.py`
 - **Mapper**: `scripts/yaml_key_mapper.py`
 - **Generator**: `scripts/generate_calm_buoy_project.py` (supports both formats)

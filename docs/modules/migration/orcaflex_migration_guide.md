@@ -22,7 +22,7 @@ This guide helps you migrate OrcaFlex post-processing code to use the new integr
 #### Old Code
 ```python
 from digitalmodel.orcaflex.opp_time_series import OPPTimeSeries
-from digitalmodel.modules.time_series.time_series_components import TimeSeriesComponents
+from digitalmodel.time_series.time_series_components import TimeSeriesComponents
 
 opp = OPPTimeSeries()
 tsc = TimeSeriesComponents(cfg)
@@ -252,7 +252,7 @@ dominant_freq = results['spectral']['Line1.Tension']['dominant_frequency']
 
 ### Using Adapter (Temporary)
 ```python
-from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter
+from digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter
 
 # Works with deprecation warning
 adapter = TimeSeriesComponentsAdapter(old_cfg)

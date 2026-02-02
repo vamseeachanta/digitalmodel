@@ -126,9 +126,9 @@ python scripts/validate_phase2.py --output results/
 #### New Way (Module CLI)
 ```python
 # New module-based CLI
-python -m digitalmodel.modules.marine_analysis profile --module wave_spectra
-python -m digitalmodel.modules.marine_analysis extract --type ocimf --input database.xlsx
-python -m digitalmodel.modules.marine_analysis validate --phase 2 --output tests/outputs/
+python -m digitalmodel.marine_analysis profile --module wave_spectra
+python -m digitalmodel.marine_analysis extract --type ocimf --input database.xlsx
+python -m digitalmodel.marine_analysis validate --phase 2 --output tests/outputs/
 ```
 
 #### Old Way (Direct Imports)
@@ -142,12 +142,12 @@ from profile_marine_modules import ProfilerTool
 #### New Way (Package Imports)
 ```python
 # New imports (RECOMMENDED)
-from digitalmodel.modules.marine_analysis.profiling import profile_modules
-from digitalmodel.modules.marine_analysis.extraction import extract_ocimf
-from digitalmodel.modules.marine_analysis.validation import validate_phase2
+from digitalmodel.marine_analysis.profiling import profile_modules
+from digitalmodel.marine_analysis.extraction import extract_ocimf
+from digitalmodel.marine_analysis.validation import validate_phase2
 
 # Or use the unified interface
-from digitalmodel.modules.marine_analysis import profiling, extraction, validation
+from digitalmodel.marine_analysis import profiling, extraction, validation
 
 # Run profiling
 profiler = profiling.profile_modules.ProfilerTool()
@@ -175,9 +175,9 @@ from scripts.extract_ocimf_database import OCIMFExtractor
 from scripts.validate_phase2 import Phase2Validator
 
 # NEW (CORRECT)
-from digitalmodel.modules.marine_analysis.profiling.profile_modules import ProfilerTool
-from digitalmodel.modules.marine_analysis.extraction.extract_ocimf import OCIMFExtractor
-from digitalmodel.modules.marine_analysis.validation.validate_phase2 import Phase2Validator
+from digitalmodel.marine_analysis.profiling.profile_modules import ProfilerTool
+from digitalmodel.marine_analysis.extraction.extract_ocimf import OCIMFExtractor
+from digitalmodel.marine_analysis.validation.validate_phase2 import Phase2Validator
 ```
 
 #### Update Output Paths
@@ -213,46 +213,46 @@ The new module provides a unified CLI interface:
 ### Profile Command
 ```bash
 # Profile all modules
-python -m digitalmodel.modules.marine_analysis profile --module all
+python -m digitalmodel.marine_analysis profile --module all
 
 # Profile specific module
-python -m digitalmodel.modules.marine_analysis profile --module wave_spectra --output tests/outputs/profiling/
+python -m digitalmodel.marine_analysis profile --module wave_spectra --output tests/outputs/profiling/
 ```
 
 ### Extract Command
 ```bash
 # Extract OCIMF data
-python -m digitalmodel.modules.marine_analysis extract --type ocimf --input database.xlsx --output tests/outputs/extraction/
+python -m digitalmodel.marine_analysis extract --type ocimf --input database.xlsx --output tests/outputs/extraction/
 
 # Extract hydrodynamic coefficients
-python -m digitalmodel.modules.marine_analysis extract --type hydro --input aqwa_output.lis --output tests/outputs/extraction/
+python -m digitalmodel.marine_analysis extract --type hydro --input aqwa_output.lis --output tests/outputs/extraction/
 
 # Extract mooring components
-python -m digitalmodel.modules.marine_analysis extract --type mooring --input mooring_db.xlsx --output tests/outputs/extraction/
+python -m digitalmodel.marine_analysis extract --type mooring --input mooring_db.xlsx --output tests/outputs/extraction/
 ```
 
 ### Validate Command
 ```bash
 # Run Phase 2 validation
-python -m digitalmodel.modules.marine_analysis validate --phase 2 --output tests/outputs/validation/
+python -m digitalmodel.marine_analysis validate --phase 2 --output tests/outputs/validation/
 ```
 
 ### Visualize Command
 ```bash
 # Generate integration charts
-python -m digitalmodel.modules.marine_analysis visualize --type integration --input data/ --output tests/outputs/visualization/
+python -m digitalmodel.marine_analysis visualize --type integration --input data/ --output tests/outputs/visualization/
 
 # Generate OCIMF charts
-python -m digitalmodel.modules.marine_analysis visualize --type ocimf --input ocimf_data.csv --output tests/outputs/visualization/
+python -m digitalmodel.marine_analysis visualize --type ocimf --input ocimf_data.csv --output tests/outputs/visualization/
 
 # Generate performance charts
-python -m digitalmodel.modules.marine_analysis visualize --type performance --input profiling_results/ --output tests/outputs/visualization/
+python -m digitalmodel.marine_analysis visualize --type performance --input profiling_results/ --output tests/outputs/visualization/
 ```
 
 ### Analyze Command
 ```bash
 # Analyze Excel file
-python -m digitalmodel.modules.marine_analysis analyze --input vessel_data.xlsx --output tests/outputs/analysis/
+python -m digitalmodel.marine_analysis analyze --input vessel_data.xlsx --output tests/outputs/analysis/
 ```
 
 ## Breaking Changes
@@ -328,7 +328,7 @@ After migrating your code, verify:
 ## Additional Resources
 
 - Module API Documentation: `src/digitalmodel/modules/marine_analysis/README.md`
-- CLI Help: `python -m digitalmodel.modules.marine_analysis --help`
+- CLI Help: `python -m digitalmodel.marine_analysis --help`
 - Examples: `src/digitalmodel/modules/marine_analysis/analysis/hydro_usage_example.py`
 
 ---

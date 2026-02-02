@@ -114,14 +114,14 @@ For existing code using TimeSeriesComponents:
    cycles = tsc.get_rainflow_count_from_time_series(signal)
    
    # New
-   from digitalmodel.modules.signal_analysis import RainflowCounter
+   from digitalmodel.signal_analysis import RainflowCounter
    counter = RainflowCounter()
    cycles = counter.count_cycles(signal)
    ```
 
 2. **Using Adapter** (Temporary):
    ```python
-   from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter
+   from digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter
    adapter = TimeSeriesComponentsAdapter(legacy_cfg)
    # Continue using legacy methods with deprecation warnings
    ```

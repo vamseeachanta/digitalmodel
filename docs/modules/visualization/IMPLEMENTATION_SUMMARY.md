@@ -131,7 +131,7 @@ python scripts/agent_dashboard_cli.py view
 
 ### Python API
 ```python
-from digitalmodel.modules.visualization.agent_dashboard import generate_dashboard
+from digitalmodel.visualization.agent_dashboard import generate_dashboard
 
 # Generate and get output path
 output_path = generate_dashboard(

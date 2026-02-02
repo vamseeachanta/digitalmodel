@@ -314,7 +314,7 @@ Not implemented (as per specifications):
 ### With uv Environment
 
 ```bash
-uv run python -c "from digitalmodel.modules.automation import WorkflowExecutor"
+uv run python -c "from digitalmodel.automation import WorkflowExecutor"
 # ✓ Import successful
 ```
 

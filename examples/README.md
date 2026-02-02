@@ -10,19 +10,17 @@ Examples are organized by engineering discipline and asset type:
 
 ```
 examples/
-├── modules/
-│   ├── calm_buoy/          # CALM buoy mooring systems
-│   ├── fpso/               # FPSO mooring and analysis
-│   ├── mooring/            # General mooring design
-│   ├── fatigue/            # Fatigue life assessment
-│   ├── hydrodynamics/      # Hydrodynamic analysis
-│   ├── stress/             # Structural stress analysis
-│   ├── api_standards/      # API code implementations
-│   ├── ocimf/              # OCIMF guidelines
-│   ├── reservoir/          # Reservoir engineering
-│   ├── input_files/        # Sample input configurations
-│   └── tutorials/          # Step-by-step tutorials
-│
+├── calm_buoy/              # CALM buoy mooring systems
+├── fpso/                   # FPSO mooring and analysis
+├── mooring/                # General mooring design
+├── fatigue/                # Fatigue life assessment
+├── hydrodynamics/          # Hydrodynamic analysis
+├── stress/                 # Structural stress analysis
+├── api_standards/          # API code implementations
+├── ocimf/                  # OCIMF guidelines
+├── reservoir/              # Reservoir engineering
+├── input_files/            # Sample input configurations
+├── tutorials/              # Step-by-step tutorials
 ├── QUICKSTART.md           # Quick start guide
 ├── QUICK_START_FPSO.md     # FPSO-specific quick start
 ├── README_fpso_analysis.md # FPSO analysis details
@@ -38,115 +36,115 @@ examples/
 ```bash
 # Generate OrcaFlex model from YAML configuration
 python scripts/generate_calm_buoy_project.py \
-  --config examples/modules/calm_buoy/north_sea_calm_project.yml \
+  --config examples/calm_buoy/north_sea_calm_project.yml \
   --validate
 
 # Documentation
-cat examples/modules/calm_buoy/README.md
+cat examples/calm_buoy/README.md
 ```
 
 **Key Files:**
-- `modules/calm_buoy/north_sea_calm_project.yml` - Complete CALM buoy configuration
+- `./calm_buoy/north_sea_calm_project.yml` - Complete CALM buoy configuration
 
 ### FPSO Mooring Analysis
 
 ```bash
 # Run FPSO mooring analysis
-python examples/modules/fpso/fpso_mooring_analysis.py
+python examples/fpso/fpso_mooring_analysis.py
 
 # Interactive notebook
-jupyter notebook examples/modules/fpso/fpso_mooring_analysis.ipynb
+jupyter notebook examples/fpso/fpso_mooring_analysis.ipynb
 ```
 
 **Key Files:**
-- `modules/fpso/fpso_mooring_analysis.py` - FPSO analysis script
-- `modules/fpso/fpso_mooring_analysis.ipynb` - Interactive notebook
+- `./fpso/fpso_mooring_analysis.py` - FPSO analysis script
+- `./fpso/fpso_mooring_analysis.ipynb` - Interactive notebook
 
 ### Mooring Line Design
 
 ```bash
 # Lazy wave configuration example
-python examples/modules/mooring/lazy_wave_example.py
+python examples/mooring/lazy_wave_example.py
 ```
 
 **Key Files:**
-- `modules/mooring/lazy_wave_example.py` - Lazy wave riser design
+- `./mooring/lazy_wave_example.py` - Lazy wave riser design
 
 ### Fatigue Analysis
 
 ```bash
 # Basic fatigue analysis
-python examples/modules/fatigue/fatigue_analysis_examples.py
+python examples/fatigue/fatigue_analysis_examples.py
 
 # Complete fatigue workflow
-python examples/modules/fatigue/advanced_examples/complete_fatigue_analysis.py
+python examples/fatigue/advanced_examples/complete_fatigue_analysis.py
 ```
 
 **Key Files:**
-- `modules/fatigue/fatigue_analysis_examples.py` - Basic examples
-- `modules/fatigue/advanced_examples/` - Advanced workflows
+- `./fatigue/fatigue_analysis_examples.py` - Basic examples
+- `./fatigue/advanced_examples/` - Advanced workflows
 
 ### Hydrodynamic Analysis
 
 ```bash
 # Generate hydrodynamic charts
-python examples/modules/hydrodynamics/generate_hydro_charts.py
+python examples/hydrodynamics/generate_hydro_charts.py
 
 # Interactive analysis
-jupyter notebook examples/modules/hydrodynamics/hydro_coefficients_example.ipynb
+jupyter notebook examples/hydrodynamics/hydro_coefficients_example.ipynb
 ```
 
 **Key Files:**
-- `modules/hydrodynamics/generate_hydro_charts.py` - Chart generation
-- `modules/hydrodynamics/hydro_coefficients_example.ipynb` - Interactive analysis
+- `./hydrodynamics/generate_hydro_charts.py` - Chart generation
+- `./hydrodynamics/hydro_coefficients_example.ipynb` - Interactive analysis
 
 ### Stress Analysis
 
 ```bash
 # Plate capacity examples
-python examples/modules/stress/plate_capacity_examples.py
+python examples/stress/plate_capacity_examples.py
 
 # Von Mises stress
-python examples/modules/stress/stress_examples/vm_stress_example.py
+python examples/stress/stress_examples/vm_stress_example.py
 ```
 
 **Key Files:**
-- `modules/stress/plate_capacity_examples.py` - Plate analysis
-- `modules/stress/stress_examples/` - Detailed stress workflows
+- `./stress/plate_capacity_examples.py` - Plate analysis
+- `./stress/stress_examples/` - Detailed stress workflows
 
 ### API Standards Implementation
 
 ```bash
 # API Std 2RD pipeline design
-python examples/modules/api_standards/apistd2rd_demo.py
+python examples/api_standards/apistd2rd_demo.py
 ```
 
 **Key Files:**
-- `modules/api_standards/apistd2rd_demo.py` - API 2RD demonstration
+- `./api_standards/apistd2rd_demo.py` - API 2RD demonstration
 
 ### OCIMF Guidelines
 
 ```bash
 # OCIMF MEG4/SMOG examples
-python examples/modules/ocimf/ocimf_demo.py
+python examples/ocimf/ocimf_demo.py
 
 # Interactive visualization
-jupyter notebook examples/modules/ocimf/ocimf_visualization_example.ipynb
+jupyter notebook examples/ocimf/ocimf_visualization_example.ipynb
 ```
 
 **Key Files:**
-- `modules/ocimf/ocimf_demo.py` - OCIMF standards
-- `modules/ocimf/ocimf_visualization_example.ipynb` - Visualizations
+- `./ocimf/ocimf_demo.py` - OCIMF standards
+- `./ocimf/ocimf_visualization_example.ipynb` - Visualizations
 
 ### Reservoir Engineering
 
 ```bash
 # Reservoir analysis
-python examples/modules/reservoir/reservoir_analysis_examples.py
+python examples/reservoir/reservoir_analysis_examples.py
 ```
 
 **Key Files:**
-- `modules/reservoir/reservoir_analysis_examples.py` - Production forecasting
+- `./reservoir/reservoir_analysis_examples.py` - Production forecasting
 
 ---
 
@@ -156,12 +154,12 @@ python examples/modules/reservoir/reservoir_analysis_examples.py
 
 1. **Start with tutorials:**
    ```bash
-   jupyter notebook examples/modules/tutorials/01_getting_started.ipynb
+   jupyter notebook examples/tutorials/01_getting_started.ipynb
    ```
 
 2. **Run simple examples:**
-   - `modules/stress/stress_examples/simple_demo.py`
-   - `modules/mooring/lazy_wave_example.py`
+   - `./stress/stress_examples/simple_demo.py`
+   - `./mooring/lazy_wave_example.py`
 
 3. **Read documentation:**
    - `QUICKSTART.md` - General quick start
@@ -175,18 +173,18 @@ python examples/modules/reservoir/reservoir_analysis_examples.py
    - Fatigue life assessment
 
 2. **Jupyter notebooks:**
-   - `modules/fpso/fpso_mooring_analysis.ipynb`
-   - `modules/hydrodynamics/hydro_coefficients_example.ipynb`
-   - `modules/ocimf/ocimf_visualization_example.ipynb`
+   - `./fpso/fpso_mooring_analysis.ipynb`
+   - `./hydrodynamics/hydro_coefficients_example.ipynb`
+   - `./ocimf/ocimf_visualization_example.ipynb`
 
 3. **Input file customization:**
-   - `modules/input_files/` - Sample YAML configurations
+   - `./input_files/` - Sample YAML configurations
 
 ### Advanced
 
 1. **Complete workflows:**
-   - `modules/fatigue/advanced_examples/complete_fatigue_analysis.py`
-   - `modules/stress/stress_examples/nonlinear_example.py`
+   - `./fatigue/advanced_examples/complete_fatigue_analysis.py`
+   - `./stress/stress_examples/nonlinear_example.py`
 
 2. **Multi-fidelity analysis:**
    - CALM buoy preliminary → detailed
@@ -225,7 +223,7 @@ pip install -r examples/requirements.txt
 
 ## 📊 Data Files
 
-### Input Files (`modules/input_files/`)
+### Input Files (`./input_files/`)
 
 Sample YAML configurations for various analyses:
 - `api_std_2rd/pipeline_example_basic.yml` - Pipeline design
@@ -247,7 +245,7 @@ Examples generate outputs in:
 
 ```bash
 # Copy template
-cp examples/modules/calm_buoy/north_sea_calm_project.yml projects/my_calm.yml
+cp examples/calm_buoy/north_sea_calm_project.yml projects/my_calm.yml
 
 # Edit configuration
 vim projects/my_calm.yml
@@ -266,7 +264,7 @@ firefox projects/CALM_001/reports/validation/*.html
 
 ```bash
 # Run analysis
-python examples/modules/fpso/fpso_mooring_analysis.py
+python examples/fpso/fpso_mooring_analysis.py
 
 # Review results in outputs/
 ls -lh examples/outputs/fpso_*
@@ -276,8 +274,8 @@ ls -lh examples/outputs/fpso_*
 
 ```bash
 # Complete fatigue workflow
-python examples/modules/fatigue/advanced_examples/complete_fatigue_analysis.py \
-  --input examples/modules/input_files/fatigue_analysis/offshore_structure_fatigue.yml \
+python examples/fatigue/advanced_examples/complete_fatigue_analysis.py \
+  --input examples/input_files/fatigue_analysis/offshore_structure_fatigue.yml \
   --output examples/output/fatigue_results
 ```
 
@@ -285,8 +283,8 @@ python examples/modules/fatigue/advanced_examples/complete_fatigue_analysis.py \
 
 ```bash
 # Pipeline design per API 2RD
-python examples/modules/api_standards/apistd2rd_demo.py \
-  --input examples/modules/input_files/api_std_2rd/pipeline_example_basic.yml
+python examples/api_standards/apistd2rd_demo.py \
+  --input examples/input_files/api_std_2rd/pipeline_example_basic.yml
 ```
 
 ---
@@ -297,7 +295,7 @@ python examples/modules/api_standards/apistd2rd_demo.py \
 
 - **CALM Buoy:** `docs/CALM_BUOY_PROJECT_WORKFLOW.md`
 - **FPSO:** `README_fpso_analysis.md`
-- **Tutorials:** `modules/tutorials/README.md`
+- **Tutorials:** `./tutorials/README.md`
 
 ### General Guides
 
@@ -317,26 +315,26 @@ See `src/digitalmodel/` for module source code and docstrings.
 
 | Asset Type | Module | Key Files |
 |------------|--------|-----------|
-| CALM Buoy | `modules/calm_buoy/` | `north_sea_calm_project.yml` |
-| FPSO | `modules/fpso/` | `fpso_mooring_analysis.py` |
-| Mooring Lines | `modules/mooring/` | `lazy_wave_example.py` |
+| CALM Buoy | `./calm_buoy/` | `north_sea_calm_project.yml` |
+| FPSO | `./fpso/` | `fpso_mooring_analysis.py` |
+| Mooring Lines | `./mooring/` | `lazy_wave_example.py` |
 
 ### By Analysis Type
 
 | Analysis | Module | Key Files |
 |----------|--------|-----------|
-| Fatigue | `modules/fatigue/` | `fatigue_analysis_examples.py` |
-| Stress | `modules/stress/` | `plate_capacity_examples.py` |
-| Hydrodynamics | `modules/hydrodynamics/` | `generate_hydro_charts.py` |
-| Reservoir | `modules/reservoir/` | `reservoir_analysis_examples.py` |
+| Fatigue | `./fatigue/` | `fatigue_analysis_examples.py` |
+| Stress | `./stress/` | `plate_capacity_examples.py` |
+| Hydrodynamics | `./hydrodynamics/` | `generate_hydro_charts.py` |
+| Reservoir | `./reservoir/` | `reservoir_analysis_examples.py` |
 
 ### By Standard
 
 | Standard | Module | Key Files |
 |----------|--------|-----------|
-| API | `modules/api_standards/` | `apistd2rd_demo.py` |
-| OCIMF | `modules/ocimf/` | `ocimf_demo.py` |
-| DNV | `modules/fatigue/`, `modules/stress/` | Multiple files |
+| API | `./api_standards/` | `apistd2rd_demo.py` |
+| OCIMF | `./ocimf/` | `ocimf_demo.py` |
+| DNV | `./fatigue/`, `./stress/` | Multiple files |
 
 ---
 
@@ -346,17 +344,17 @@ When adding new examples:
 
 1. **Place in appropriate module directory:**
    ```
-   examples/modules/<module_name>/your_example.py
+   examples/<module_name>/your_example.py
    ```
 
 2. **Update module README:**
    ```
-   examples/modules/<module_name>/README.md
+   examples/<module_name>/README.md
    ```
 
 3. **Add input files if needed:**
    ```
-   examples/modules/input_files/<module_name>/your_input.yml
+   examples/input_files/<module_name>/your_input.yml
    ```
 
 4. **Include docstrings and comments:**
@@ -369,7 +367,7 @@ When adding new examples:
 
 5. **Test the example:**
    ```bash
-   python examples/modules/<module_name>/your_example.py
+   python examples/<module_name>/your_example.py
    ```
 
 ---
@@ -387,7 +385,7 @@ When adding new examples:
 
 - **Issues:** https://github.com/your-org/digitalmodel/issues
 - **Documentation:** `docs/` directory
-- **Module READMEs:** Each `modules/*/README.md`
+- **Module READMEs:** Each `./*/README.md`
 
 ---
 

@@ -807,7 +807,7 @@ pytest tests/test_reporting.py -v
 
 import pytest
 from click.testing import CliRunner
-from digitalmodel.modules.structural_analysis.cli import cli
+from digitalmodel.structural_analysis.cli import cli
 import json
 
 

@@ -167,7 +167,7 @@ hydrodynamics:
 ### Coefficient Database
 
 ```python
-from digitalmodel.modules.hydrodynamics.coefficient_database import CoefficientDatabase
+from digitalmodel.hydrodynamics.coefficient_database import CoefficientDatabase
 
 # Initialize database
 db = CoefficientDatabase()
@@ -190,7 +190,7 @@ frequencies = db.get_frequencies("FPSO")
 ### Frequency-Dependent Matrices
 
 ```python
-from digitalmodel.modules.hydrodynamics.freq_dependent import FrequencyDependentMatrix
+from digitalmodel.hydrodynamics.freq_dependent import FrequencyDependentMatrix
 
 # Initialize with frequency-dependent data
 fdm = FrequencyDependentMatrix()
@@ -207,7 +207,7 @@ A_inf = fdm.get_infinite_frequency_added_mass()
 ### Wave Spectra
 
 ```python
-from digitalmodel.modules.hydrodynamics.wave_spectra import WaveSpectra
+from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 
 # Create JONSWAP spectrum
 spectrum = WaveSpectra()
@@ -233,7 +233,7 @@ Tz = np.sqrt(m0/m2)  # Zero-crossing period
 ### OCIMF Loading
 
 ```python
-from digitalmodel.modules.hydrodynamics.ocimf_loading import OCIMFLoading
+from digitalmodel.hydrodynamics.ocimf_loading import OCIMFLoading
 
 # Initialize calculator
 ocimf = OCIMFLoading()
@@ -265,7 +265,7 @@ current_load = ocimf.current_load(
 ### Coefficient Interpolation
 
 ```python
-from digitalmodel.modules.hydrodynamics.interpolator import CoefficientsInterpolator
+from digitalmodel.hydrodynamics.interpolator import CoefficientsInterpolator
 
 # Initialize interpolator
 interp = CoefficientsInterpolator()
@@ -285,7 +285,7 @@ interpolated = interp.interpolate_directions(new_dirs)
 ### Causality Validation
 
 ```python
-from digitalmodel.modules.hydrodynamics.validation import HydroValidator
+from digitalmodel.hydrodynamics.validation import HydroValidator
 
 # Initialize validator
 validator = HydroValidator()
@@ -307,12 +307,12 @@ pd_check = validator.check_positive_definite()
 
 ```python
 import yaml
-from digitalmodel.modules.marine_analysis import (
+from digitalmodel.marine_analysis import (
     RAODataValidators,
     VesselType,
     DisplacementRAOQualityReport
 )
-from digitalmodel.modules.marine_analysis.rao_quality_report import RAOQualityReportGenerator
+from digitalmodel.marine_analysis.rao_quality_report import RAOQualityReportGenerator
 
 # Load OrcaFlex RAO data
 with open("vessel_raos.yml", 'r') as f:

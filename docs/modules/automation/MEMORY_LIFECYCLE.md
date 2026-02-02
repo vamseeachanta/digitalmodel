@@ -27,14 +27,14 @@ Memory Lifecycle System
 
 ## Installation
 
-The memory lifecycle system is part of the `digitalmodel.modules.automation` package and requires no additional dependencies beyond the standard library.
+The memory lifecycle system is part of the `digitalmodel.automation` package and requires no additional dependencies beyond the standard library.
 
 ```bash
 # Install dependencies (if not already installed)
 uv pip install pyyaml schedule
 
 # Verify installation
-python -c "from digitalmodel.modules.automation.memory_lifecycle import MemoryLifecycleManager; print('OK')"
+python -c "from digitalmodel.automation.memory_lifecycle import MemoryLifecycleManager; print('OK')"
 ```
 
 ## Configuration
@@ -77,7 +77,7 @@ namespaces:
 ### Basic Operations
 
 ```python
-from digitalmodel.modules.automation.memory_lifecycle import MemoryLifecycleManager
+from digitalmodel.automation.memory_lifecycle import MemoryLifecycleManager
 
 # Initialize manager
 manager = MemoryLifecycleManager()

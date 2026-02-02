@@ -141,7 +141,7 @@ Expected outputs:
 
 Use the GMSHAgent class:
 ```python
-from digitalmodel.modules.gmsh import GMSHAgent
+from digitalmodel.gmsh import GMSHAgent
 agent = GMSHAgent(config="config.yml")
 # Implementation here
 ```
@@ -161,7 +161,7 @@ uv pip install gmsh numpy scipy pyvista pyyaml click
 python agents/gmsh/run_gmsh_agent.py --show-capabilities
 
 # Batch processing
-python -m digitalmodel.modules.gmsh.agent \
+python -m digitalmodel.gmsh.agent \
     --input-directory ./geometries \
     --output-directory ./meshes \
     --config mesh_config.yml

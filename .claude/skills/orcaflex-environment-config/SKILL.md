@@ -217,7 +217,7 @@ headings:
 ### Basic Environment Setup
 
 ```python
-from digitalmodel.modules.fea_model.environment_components import Environment
+from digitalmodel.fea_model.environment_components import Environment
 
 def setup_environment(config: dict) -> dict:
     """

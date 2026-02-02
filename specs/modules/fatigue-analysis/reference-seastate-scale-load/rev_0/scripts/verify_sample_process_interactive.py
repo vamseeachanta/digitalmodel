@@ -17,12 +17,12 @@ import logging
 
 # Setup path
 sys.path.insert(0, 'D:/github/digitalmodel/src')
-from digitalmodel.modules.fatigue_analysis.integrated_processor import IntegratedFatigueProcessor
-from digitalmodel.modules.fatigue_analysis.strut_foundation_processor import (
+from digitalmodel.fatigue_analysis.integrated_processor import IntegratedFatigueProcessor
+from digitalmodel.fatigue_analysis.strut_foundation_processor import (
     ProductionDataHandler, LoadScaler, FatigueCondition
 )
-from digitalmodel.modules.fatigue_analysis.rainflow_counter import RainflowCounter
-from digitalmodel.modules.fatigue_analysis.fatigue_damage_calculator import (
+from digitalmodel.fatigue_analysis.rainflow_counter import RainflowCounter
+from digitalmodel.fatigue_analysis.fatigue_damage_calculator import (
     FatigueDamageCalculator, SNCurveParameters
 )
 

@@ -79,7 +79,7 @@ python run_load_scaling.py custom_config.yml --verbose -o test_output/
 ### As Python Module
 ```bash
 # From repository root
-python -m digitalmodel.modules.fatigue_analysis.load_scaling specs/modules/fatigue-analysis/reference-seastate-scale-load/input/load_scaling_config.yml
+python -m digitalmodel.fatigue_analysis.load_scaling specs/modules/fatigue-analysis/reference-seastate-scale-load/input/load_scaling_config.yml
 ```
 
 ### Direct Module Execution

@@ -765,7 +765,7 @@ def test_{module_name}_with_error():
     elif test_type == 'complex':
         return f"""
 import pytest
-from digitalmodel.modules.{module_name} import main_function
+from digitalmodel.{module_name} import main_function
 
 class Test{module_name.title()}:
     def test_complex_scenario(self):

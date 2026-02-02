@@ -133,7 +133,7 @@ Summary statistics for all processed conditions.
 ### 1. Basic Usage
 
 ```python
-from digitalmodel.modules.fatigue_analysis.load_scaling import LoadScaler
+from digitalmodel.fatigue_analysis.load_scaling import LoadScaler
 
 # Initialize the scaler
 scaler = LoadScaler(
@@ -290,7 +290,7 @@ The load scaling module outputs are designed to feed directly into the next stag
 scaled_loads_dir = "output/scaled_loads/"
 
 # Input to Rainflow Counting
-from digitalmodel.modules.fatigue_analysis.rainflow_counting import RainflowCounter
+from digitalmodel.fatigue_analysis.rainflow_counting import RainflowCounter
 
 counter = RainflowCounter()
 counter.process_batch(scaled_loads_dir, pattern="*.npz")

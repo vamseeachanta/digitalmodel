@@ -326,7 +326,7 @@ def example_6_custom_workflow():
     print("Preprocessing complete")
     
     # Custom analysis using signal_analysis module directly
-    from src.digitalmodel.modules.signal_analysis import (
+    from src.digitalmodel.signal_analysis import (
         RainflowCounter, SpectralAnalyzer
     )
     
@@ -335,7 +335,7 @@ def example_6_custom_workflow():
     tension = processed_traces['Line1.Tension'].values
     
     # Apply custom filter before counting
-    from src.digitalmodel.modules.signal_analysis.filters import FrequencyFilter
+    from src.digitalmodel.signal_analysis.filters import FrequencyFilter
     filter_obj = FrequencyFilter(filter_type='butterworth', order=4)
     
     # Remove high-frequency noise

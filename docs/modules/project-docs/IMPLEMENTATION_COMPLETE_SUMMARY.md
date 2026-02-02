@@ -335,16 +335,16 @@ print(f"Safety factor: {results.safety_factor:.2f}")
 
 ```bash
 # Profile module performance
-python -m digitalmodel.modules.marine_analysis profile --module catenary
+python -m digitalmodel.marine_analysis profile --module catenary
 
 # Extract OCIMF data
-python -m digitalmodel.modules.marine_analysis extract --type ocimf
+python -m digitalmodel.marine_analysis extract --type ocimf
 
 # Validate implementation
-python -m digitalmodel.modules.marine_analysis validate --phase 2
+python -m digitalmodel.marine_analysis validate --phase 2
 
 # Generate charts
-python -m digitalmodel.modules.marine_analysis visualize --type integration
+python -m digitalmodel.marine_analysis visualize --type integration
 ```
 
 ---

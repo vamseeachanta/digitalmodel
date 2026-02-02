@@ -446,7 +446,7 @@ class ParametricStudy(BaseModel):
 **Usage Example**:
 ```python
 from digitalmodel.reporting import StandardReport, ParameterSet, AnalysisResult
-from digitalmodel.modules.structural_analysis import calculate_stress
+from digitalmodel.structural_analysis import calculate_stress
 
 # Run analysis
 result = calculate_stress(sigma_x=100, sigma_y=80, material="S355")
@@ -659,8 +659,8 @@ Create `tests/integration/`:
 # tests/integration/test_full_workflow.py
 import pytest
 from digitalmodel.orcaflex import run_simulation
-from digitalmodel.modules.signal_analysis import extract_time_series
-from digitalmodel.modules.fatigue_analysis import calculate_damage
+from digitalmodel.signal_analysis import extract_time_series
+from digitalmodel.fatigue_analysis import calculate_damage
 
 def test_orcaflex_to_fatigue_workflow():
     """
@@ -692,7 +692,7 @@ Create `tests/cli/`:
 ```python
 # tests/cli/test_structural_cli.py
 from click.testing import CliRunner
-from digitalmodel.modules.structural_analysis.cli import cli
+from digitalmodel.structural_analysis.cli import cli
 
 def test_stress_calculation_cli():
     runner = CliRunner()

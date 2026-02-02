@@ -22,8 +22,8 @@ The `artificial_lift` module provides specialized engineering analysis for Sucke
 ## Future Reuse
 ### Running Analysis via Code
 ```python
-from digitalmodel.modules.artificial_lift.dynacard.solver import DynacardWorkflow
-from digitalmodel.modules.artificial_lift.dynacard.models import DynacardAnalysisContext
+from digitalmodel.artificial_lift.dynacard.solver import DynacardWorkflow
+from digitalmodel.artificial_lift.dynacard.models import DynacardAnalysisContext
 
 # Initialize context with well data and surface card
 ctx = DynacardAnalysisContext(...)

@@ -299,25 +299,25 @@ output:
 ### Command Line
 ```bash
 # Single file analysis
-python -m digitalmodel.modules.signal_analysis.timeseries_analyzer \
+python -m digitalmodel.signal_analysis.timeseries_analyzer \
     --config analysis_config.yml \
     --input fat002_fsts_l015_mwl_wave02_Strut1.csv
 
 # Pattern-based processing
-python -m digitalmodel.modules.signal_analysis.timeseries_analyzer \
+python -m digitalmodel.signal_analysis.timeseries_analyzer \
     --pattern "fat*.csv" \
     --directory "D:/1522/ctr7/orcaflex/rev_a08/output/csv" \
     --auto-columns
 
 # Directory processing with profile
-python -m digitalmodel.modules.signal_analysis.timeseries_analyzer \
+python -m digitalmodel.signal_analysis.timeseries_analyzer \
     --directory "/path/to/data" \
     --recursive \
     --profile orcaflex_standard \
     --parallel 4
 
 # Multiple specific files
-python -m digitalmodel.modules.signal_analysis.timeseries_analyzer \
+python -m digitalmodel.signal_analysis.timeseries_analyzer \
     --files file1.csv file2.csv file3.csv \
     --time-column "Time (s)" \
     --data-pattern "Tension*"
@@ -325,7 +325,7 @@ python -m digitalmodel.modules.signal_analysis.timeseries_analyzer \
 
 ### Python API
 ```python
-from digitalmodel.modules.signal_analysis import TimeSeriesAnalyzer
+from digitalmodel.signal_analysis import TimeSeriesAnalyzer
 
 # Initialize with auto-detection
 analyzer = TimeSeriesAnalyzer(auto_detect_columns=True)
@@ -373,9 +373,9 @@ results = analyzer.batch_process(
 - matplotlib >= 3.5.0
 
 ### Internal Modules
-- digitalmodel.modules.signal_analysis
-- digitalmodel.modules.signal_analysis.core.rainflow
-- digitalmodel.modules.signal_analysis.core.spectral
+- digitalmodel.signal_analysis
+- digitalmodel.signal_analysis.core.rainflow
+- digitalmodel.signal_analysis.core.spectral
 
 ## Deliverables
 

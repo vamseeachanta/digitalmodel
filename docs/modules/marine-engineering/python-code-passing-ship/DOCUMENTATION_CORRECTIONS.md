@@ -6,7 +6,7 @@ Based on verification testing, the following corrections are needed in the docum
 
 ### Current (Incorrect) Example in README.md:
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import PassingShipCalculator
+from digitalmodel.marine_analysis.python_code_passing_ship import PassingShipCalculator
 
 # Initialize calculator with configuration
 calculator = PassingShipCalculator('config.yaml')
@@ -14,7 +14,7 @@ calculator = PassingShipCalculator('config.yaml')
 
 ### Correct Usage:
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import (
+from digitalmodel.marine_analysis.python_code_passing_ship import (
     PassingShipCalculator, VesselConfig, EnvironmentalConfig, CalculationConfig
 )
 

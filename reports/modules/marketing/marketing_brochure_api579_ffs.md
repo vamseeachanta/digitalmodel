@@ -246,7 +246,7 @@ Next Inspection Interval:
 ### Quick Start Example
 
 ```python
-from digitalmodel.modules.ffs import API579Part4, API579Part5, Component
+from digitalmodel.ffs import API579Part4, API579Part5, Component
 
 # Define component
 vessel = Component(
@@ -288,7 +288,7 @@ print(f"Allowable RSF: {lta_result['RSF_allow']:.2f}")
 print(f"Assessment: {lta_result['acceptance']}")
 
 # Corrosion rate trending
-from digitalmodel.modules.ffs import CorrosionAnalysis
+from digitalmodel.ffs import CorrosionAnalysis
 
 measurements = [
     {'year': 1998, 'thickness': 25.4},

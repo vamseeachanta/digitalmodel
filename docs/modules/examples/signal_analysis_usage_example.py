@@ -18,12 +18,12 @@ from pathlib import Path
 # Add project to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.digitalmodel.modules.signal_analysis import (
+from src.digitalmodel.signal_analysis import (
     RainflowCounter, SpectralAnalyzer, TimeSeriesProcessor
 )
-from src.digitalmodel.modules.signal_analysis.fatigue.damage import FatigueDamageCalculator
-from src.digitalmodel.modules.signal_analysis.fatigue.curves import SNCurve
-from src.digitalmodel.modules.signal_analysis.filters.frequency import FrequencyFilter
+from src.digitalmodel.signal_analysis.fatigue.damage import FatigueDamageCalculator
+from src.digitalmodel.signal_analysis.fatigue.curves import SNCurve
+from src.digitalmodel.signal_analysis.filters.frequency import FrequencyFilter
 
 
 def example_1_basic_rainflow_counting():
@@ -349,7 +349,7 @@ def example_6_backward_compatibility():
     print("\nUsing legacy configuration with adapter...")
     
     # Import adapter
-    from src.digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter
+    from src.digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter
     
     # Create adapter with legacy config
     adapter = TimeSeriesComponentsAdapter(legacy_cfg)

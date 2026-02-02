@@ -349,7 +349,7 @@ class WorkflowOrchestrator:
             Function result
         """
         # Import module
-        module_path = f"digitalmodel.modules.{task.module}"
+        module_path = f"digitalmodel.{task.module}"
         try:
             module = importlib.import_module(module_path)
         except ImportError:

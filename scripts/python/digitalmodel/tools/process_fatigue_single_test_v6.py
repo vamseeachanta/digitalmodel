@@ -14,7 +14,7 @@ import logging
 # Add the project root to path
 sys.path.insert(0, r'D:\github\digitalmodel\src')
 
-from digitalmodel.modules.signal_analysis.orcaflex import TimeSeriesAnalyzer
+from digitalmodel.signal_analysis.orcaflex import TimeSeriesAnalyzer
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')

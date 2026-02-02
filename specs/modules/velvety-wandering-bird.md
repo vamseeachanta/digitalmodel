@@ -1,7 +1,7 @@
 ---
 title: "Flatten and simplify digitalmodel module structure"
-description: "Restructure the repository so all modules live directly under src/digitalmodel/ instead of nested in modules/. Fix naming violations, consolidate duplicates, absorb top-level packages."
-version: "1.0"
+description: "Complete repo-wide restructuring: src/ flattening (done), then tests/, examples/, scripts/, and output directory cleanup."
+version: "2.0"
 module: "digitalmodel"
 
 session:
@@ -23,8 +23,8 @@ review:
       feedback: ""
   ready_for_next_step: false
 
-status: "draft"
-progress: 0
+status: "in-progress"
+progress: 60
 priority: "high"
 complexity: "complex"
 tags: [architecture, refactoring, discoverability, module-structure]
@@ -36,174 +36,250 @@ target_completion: ""
 links:
   spec: "specs/modules/velvety-wandering-bird.md"
   work_item: "WRK-066"
-  branch: "refactor/wrk-066-flatten-module-structure"
+  branch: "refactor/wrk-066-flatten-repo-structure"
 ---
 
 # Flatten and Simplify digitalmodel Module Structure
 
-> **Module**: digitalmodel | **Status**: draft | **Work Item**: WRK-066
+> **Module**: digitalmodel | **Status**: in-progress | **Work Item**: WRK-066
 
 ## Summary
 
-The current layout has 3 layers of confusion:
-1. **25 framework packages** directly under `src/digitalmodel/` (core, fatigue, mooring, stress, etc.)
-2. **50 domain modules** nested under `src/digitalmodel/modules/` (orcaflex, fatigue_analysis, etc.)
-3. **4 separate packages** at `src/` top-level outside digitalmodel (blender_automation, data_procurement, marine_engineering, reports)
+Phases 0-6 (src/ flattening) are **complete** — merged to main via PR #129. All 47 modules moved from `digitalmodel.X` to `digitalmodel.X` with MetaPathFinder backward compat.
 
-Plus: 3 kebab-case dirs that can't be imported, duplicate modules in multiple locations, and dead/stub modules.
-
-**Target state**: Everything flat under `src/digitalmodel/`. Import is `digitalmodel.orcaflex`, not `digitalmodel.orcaflex`.
+Phases 7-11 address the **rest of the repo**: tests, examples, scripts, and output directories still reference the old `modules/` layout.
 
 ---
 
-## Current Problems
+## Remaining Problems
 
-| Problem | Examples | Count |
+| Problem | Location | Count |
 |---------|----------|-------|
-| Modules buried in `modules/` subdir | `digitalmodel.orcaflex` instead of `digitalmodel.orcaflex` | 50 dirs |
-| Duplicate modules | fatigue/ + modules/fatigue_analysis/, mooring/ + modules/mooring/, reporting in 2 places, data_procurement in 3 places, marine_engineering in 3 places | 6 sets |
-| Kebab-case dirs (not importable) | `design-tools/`, `mcp-server/`, `orcaflex-browser/` | 3 dirs |
-| Empty/dead modules | `structuralstrength/` (empty), `static/` (CSS/JS only) | 2 dirs |
-| Packages outside digitalmodel | `src/blender_automation/`, `src/data_procurement/`, `src/marine_engineering/`, `src/reports/` | 4 pkgs |
-| Duplicate config dirs | `config/` (real code) + `configs/` (build artifacts) | 2 dirs |
-| Duplicate validators | `validation/` + `validators/` | 2 dirs |
-
-**Import impact**: ~1,218 import statements across ~373 files reference `digitalmodel.modules.*`
+| Tests mirror old `modules/` structure | `tests/modules/` | 47 subdirs, 337 files |
+| Duplicate test directories | `tests/X/` AND `tests/modules/X/` | 13 sets |
+| Unorganized root test files | `tests/*.py` | 46 files |
+| Legacy `digitalmodel.*` imports in tests | 8 test `.py` files | 12 references |
+| Legacy `digitalmodel.*` imports in scripts | 15 script files | 29+ references |
+| Examples mirror old `modules/` structure | `examples/modules/` | 24 subdirs |
+| Empty output directories | `results/` | 0 files |
+| Massive coverage output | `htmlcov/` | 149 MB, 1735 files |
 
 ---
 
-## Phases
+## Completed Phases (0-6) — src/ Flattening
 
-### Phase 0: Safety Net
+| Phase | Status | Commit |
+|-------|--------|--------|
+| Phase 0: Safety Net | Done | `dbb1ff2a5` |
+| Phase 1: Fix Naming | Done | `7b80d968d` |
+| Phase 2: Remove Dead Code | Done | `da47916d3` |
+| Phase 3: Consolidate Duplicates | Done | `8b51d1c9c` |
+| Phase 4: Flatten modules/ (6 batches) | Done | `4734d5efb`..`924393cf6` |
+| Phase 5: Absorb Top-Level Packages | Done | `52648a6cd` |
+| Phase 6: Cleanup | Done | `c23008bb9` |
 
-- [ ] Tag current state: `git tag pre-restructure-v1`
-- [ ] Create migration compat module `src/digitalmodel/_compat.py` with `sys.modules` aliasing
-- [ ] Build import map script (crawl all `from digitalmodel.modules.` imports, output JSON)
-- [ ] Add `tests/test_restructure_compat.py` — asserts both old and new import paths work
+All squash-merged to main as commit `72187cd11`.
 
-### Phase 1: Fix Naming Violations
+---
 
-Rename 3 kebab-case directories to valid Python names:
+## Phase 7: Flatten tests/modules/ Directory
 
-| From | To |
-|------|----|
-| `modules/design-tools/` | `modules/design_tools/` |
-| `modules/mcp-server/` | `modules/mcp_server/` |
-| `modules/orcaflex-browser/` | `modules/orcaflex_browser/` |
+**Goal**: Move all test subdirs from `tests/modules/X/` to `tests/X/`, matching the flattened src layout.
 
-- [ ] `git mv` each directory
-- [ ] Update `pyproject.toml` uv workspace member path (`src/modules/mcp-server/orcawave-mcp` -> correct path)
-- [ ] Add `__init__.py` where missing
-- [ ] Update any filesystem-path references in scripts/docs
+### 7A — Resolve 13 Duplicate Test Directories
 
-**Risk**: Low — these dirs were never importable via Python.
+These directories exist at BOTH `tests/X/` and `tests/modules/X/`:
 
-### Phase 2: Remove Dead Code and Clean Artifacts
+| Directory | Resolution |
+|-----------|------------|
+| `blender_automation` | Merge into `tests/blender_automation/` |
+| `cli` | Merge into `tests/cli/` |
+| `contracts` | Merge into `tests/contracts/` |
+| `core` | Merge into `tests/core/` |
+| `custom` | Merge into `tests/custom/` |
+| `data` | Merge into `tests/data/` |
+| `factories` | Merge into `tests/factories/` |
+| `fatigue` | Merge into `tests/fatigue/` |
+| `property` | Merge into `tests/property/` |
+| `integration` | Merge into `tests/integration/` |
+| `marine_engineering` | Merge into `tests/marine_engineering/` |
+| `security` | Merge into `tests/security/` |
+| `stress` | Merge into `tests/stress/` |
 
-- [ ] Delete `modules/structuralstrength/` (empty dir, zero references)
-- [ ] Move `modules/static/` CSS/JS to `assets/static/` (not a Python module)
-- [ ] Relocate `configs/` contents (coverage.json, pytest.ini, etc.) to repo root, delete `configs/` dir
-- [ ] Merge `validators/data_validator.py` into `validation/`, delete `validators/`
+**Per duplicate**:
+- [ ] Compare contents — identify unique vs overlapping test files
+- [ ] Move unique files from `tests/modules/X/` to `tests/X/`
+- [ ] For overlapping files, keep the more complete version
+- [ ] Delete `tests/modules/X/` after merge
+- [ ] Run tests to verify nothing broke
 
-### Phase 3: Consolidate Duplicates
+### 7B — Move Remaining 34 Non-Duplicate Directories
 
-Resolve each duplicate so every concept has exactly one canonical location.
+Move from `tests/modules/X/` to `tests/X/`:
 
-**3A — mooring**
-- [ ] Move `digitalmodel/mooring/calm_buoy/` into `modules/mooring_analysis/calm_buoy/`
-- [ ] Delete `digitalmodel/mooring/` (framework-level dir)
-- [ ] Keep `modules/mooring/` stub for engine.py (flattens in Phase 4)
-
-**3B — fatigue**
-- [ ] Rename `digitalmodel/fatigue/` to `digitalmodel/fatigue_core/` (SN curve library, frequency domain)
-- [ ] Keep `modules/fatigue_analysis/` as-is (application-level rainflow, CLI)
-- [ ] Add backward-compat re-export in `digitalmodel/fatigue/__init__.py`
-
-**3C — reporting**
-- [ ] Move `modules/reporting/report_generator.py` + `path_utils.py` into `digitalmodel/reporting/`
-- [ ] Update `digitalmodel/reporting/__init__.py` to export PlotlyReportGenerator
-- [ ] Replace `modules/reporting/` with re-export shim
-
-**3D — data_procurement**
-- [ ] Delete `src/data_procurement/` (top-level skeleton, subset of modules version)
-- [ ] Keep `digitalmodel/data_procurement/` (API clients: metocean, vessel, mooring, riser)
-- [ ] Rename `modules/data_procurement/` to `modules/data_scraping/` (web scrapers for PDFs)
-
-**3E — marine_engineering**
-- [ ] Delete `src/marine_engineering/` (top-level partial copy)
-- [ ] Keep `modules/marine_engineering/` as canonical (catenary, hydro, OCIMF, wave spectra)
-
-**3F — blender_automation**
-- [ ] Delete `src/blender_automation/` (lacks `__init__.py`, incomplete)
-- [ ] Keep `modules/blender_automation/` as canonical
-
-### Phase 4: Flatten modules/ Directory
-
-Move all ~50 subdirectories from `modules/X/` to `digitalmodel/X/`.
-
-**Backward compatibility**: Add `__getattr__` to `modules/__init__.py`:
-
-```python
-def __getattr__(name):
-    if name in _MOVED_MODULES:
-        warnings.warn(f"digitalmodel.modules.{name} is deprecated. Use digitalmodel.{name}", DeprecationWarning)
-        mod = importlib.import_module(f"digitalmodel.{name}")
-        sys.modules[f"digitalmodel.modules.{name}"] = mod
-        return mod
-    raise AttributeError(...)
+```
+analysis, aqwa, artificial_lift, automation, bemrosetta,
+catenary_riser, cathodic_protection, code_dnvrph103, diffraction,
+digitalmarketing, fea, fatigue_analysis, gis, gmsh_meshing,
+hydrodynamics, installation, marine_analysis, mooring,
+mooring_analysis, orcaflex, performance, pipe_cross_section,
+pipeline, rao_analysis, security, ship_design, signal_analysis,
+structural_analysis, time_series, umbilical_analysis, unit, utils,
+validation, viv_analysis, workflow_automation
 ```
 
-**Move in batches** (commit per batch, test between batches):
-
-| Batch | Modules | Rationale |
-|-------|---------|-----------|
-| 1 | transformation, vertical_riser, rigging, ct_hydraulics, pipe_cross_section, fea_model, pyintegrity, finance, project_management, digitalmarketing, services, skills, visualization | Leaf modules, no cross-deps |
-| 2 | rao_analysis, time_series, pipe_capacity, pipeline, hydrodynamics, structural, structural_analysis, viv_analysis | Core analysis |
-| 3 | signal_analysis, fatigue_analysis, mooring_analysis, catenary, catenary_riser, mooring | Signal + fatigue + mooring chain |
-| 4 | orcaflex, aqwa, diffraction, bemrosetta, gis, orcawave | Large/complex modules |
-| 5 | automation, workflow_automation, marine_analysis, marine_engineering, orcaflex_post_process, artificial_lift, ai_workflows, api_analysis | Remaining |
-| 6 | design_tools, mcp_server, orcaflex_browser, data_scraping, blender_automation, reporting | Previously renamed/merged |
-
-**Per batch**:
-- [ ] `git mv modules/X/ digitalmodel/X/` (check for name collisions first)
-- [ ] Update internal imports within moved modules
-- [ ] Run test suite
+**Per batch** (commit after each batch):
+- [ ] `git mv tests/modules/X/ tests/X/` (check for collisions first)
+- [ ] Run `uv run pytest` to verify
 - [ ] Commit
 
-**After all batches**:
-- [ ] Update 16 CLI entry points in `pyproject.toml` (remove `.modules.` from paths)
-- [ ] Update `engine.py` imports
-- [ ] Update `__init__.py` re-exports
+### 7C — Organize 46 Root Test Files
 
-### Phase 5: Absorb Remaining Top-Level Packages
+Move loose test files in `tests/` root into appropriate subdirectories:
 
-- [ ] Delete `src/blender_automation/` (already handled in 3F)
-- [ ] Delete `src/marine_engineering/` (already handled in 3E)
-- [ ] Delete `src/data_procurement/` (already handled in 3D)
-- [ ] Move `src/reports/cp/` into `digitalmodel/reporting/cp_assets/`, delete `src/reports/`
-- [ ] Verify `pyproject.toml` `include = ["digitalmodel*"]` covers everything
+| File Pattern | Move To |
+|-------------|---------|
+| `test_engine*.py`, `simple_engine_test.py`, `additional_engine_tests.py` | `tests/engine/` |
+| `test_catenary*.py`, `test_lazy_wave*.py`, `solve_catenary*.py`, `check_catenary_geometry.py` | `tests/catenary/` |
+| `test_fatigue*.py`, `test_complete_fatigue_pipeline.py`, `test_rainflow*.py` | `tests/fatigue/` |
+| `test_wall_thickness*.py`, `test_plate_capacity.py` | `tests/structural_analysis/` |
+| `test_orcaflex_agent.py` | `tests/orcaflex/` |
+| `test_aqwa.py` | `tests/aqwa/` |
+| `test_reporting.py` | `tests/reporting/` |
+| `test_config*.py` | `tests/core/` |
+| `test_workflow*.py` | `tests/workflow_automation/` |
+| `test_restructure_compat.py` | `tests/compat/` (keep — tests backward compat) |
+| `test_module_reorganization.py` | `tests/compat/` |
+| `conftest.py`, `__init__.py` | Stay in `tests/` root |
+| `coverage_analysis.py`, `establish_baseline.py`, `final_coverage_report.py` | `scripts/coverage/` (not tests) |
+| `test_performance_baselines.py`, `test_solver_benchmarks.py` | `tests/benchmarks/` |
+| `test_quality_metrics.py` | `tests/validation/` |
+| `test_skill_resolver.py`, `test_agent_dashboard.py`, `test_memory_lifecycle.py` | `tests/core/` |
+| `test_validation_utils.py` | `tests/validation/` |
 
-### Phase 6: Cleanup
+### 7D — Delete tests/modules/
 
-- [ ] Remove `modules/` directory entirely (move compat shim to `_compat.py`)
-- [ ] Add deprecation timeline to CHANGELOG (6 months warning, 12 months removal)
-- [ ] Update README import examples
-- [ ] Update `docs/` references
+- [ ] After all moves, verify `tests/modules/` is empty
+- [ ] `rm -rf tests/modules/`
+- [ ] Update `pyproject.toml` testpaths if needed (currently `["tests"]` — should still work)
+- [ ] Commit
 
 ---
 
-## Name Collision Resolution
+## Phase 8: Fix Legacy Import References
 
-These `modules/` dirs would collide with existing framework-level dirs when flattened:
+**Goal**: Update all remaining `digitalmodel.*` references outside of the compat layer.
 
-| Module | Existing dir | Resolution |
-|--------|-------------|------------|
-| `modules/mooring/` | `digitalmodel/mooring/` | Phase 3A deletes framework-level mooring/ first |
-| `modules/reporting/` | `digitalmodel/reporting/` | Phase 3C merges into framework-level reporting/ |
-| `modules/data_procurement/` | `digitalmodel/data_procurement/` | Phase 3D renames to data_scraping/ |
-| `modules/marine_engineering/` | (none after 3E) | Clean move |
-| `modules/blender_automation/` | (none after 3F) | Clean move |
-| `modules/stress/` | `digitalmodel/stress/` | Need to audit — merge or rename |
+### 8A — Test Files (12 references in 8 files)
+
+| File | Action |
+|------|--------|
+| `tests/test_restructure_compat.py` | **Keep** — this tests backward compat deliberately |
+| `tests/test_engine_isolated.py` | Update imports to `digitalmodel.X` |
+| `tests/test_engine.py` | Update imports to `digitalmodel.X` |
+| `tests/simple_engine_test.py` | Update imports to `digitalmodel.X` |
+| `tests/modules/integration/test_multi_module_interaction.py` | Update imports (moves in Phase 7) |
+| `tests/coverage_analysis.py` | Update imports |
+| `tests/additional_engine_tests.py` | Update imports |
+| `tests/modules/analysis/*.md` | Update documentation references |
+
+### 8B — Script Files (15 files with references)
+
+| File(s) | Action |
+|---------|--------|
+| `scripts/import_map.json` | Regenerate with `scripts/build_import_map.py` |
+| `scripts/build_import_map.py` | **Keep** — scans for old imports by design |
+| `scripts/initialize_skill_metadata.py` | Update imports |
+| `scripts/demo_skill_resolver.py` | Update imports |
+| `scripts/agent_dashboard_cli.py` | Update imports |
+| `scripts/python/digitalmodel/tools/process_fatigue_*.py` (8 files) | Update imports |
+| `scripts/python/digitalmodel/tools/migrate_to_signal_analysis.py` | Update imports |
+
+### 8C — Verification
+
+- [ ] `grep -r "digitalmodel\.modules\." tests/ scripts/ examples/ --include="*.py"` returns only compat test + import map script
+- [ ] Commit
+
+---
+
+## Phase 9: Flatten examples/modules/ Directory
+
+**Goal**: Move all example subdirs from `examples/modules/X/` to `examples/X/`.
+
+### 9A — Move 24 Example Directories
+
+```
+api_standards, artificial_lift, calm_buoy, core, diffraction,
+fatigue, fea, fpso, hydrodynamics, input_files, metocean, mooring,
+ocimf, orcaflex, reservoir, _shared, stress, structural_analysis,
+tutorials, utilities, validation, vessel, workflows
+```
+
+- [ ] `git mv examples/modules/X/ examples/X/` for each
+- [ ] Update any internal path references in example scripts
+- [ ] Delete `examples/modules/` directory
+- [ ] Update `examples/README.md` if it references `modules/` paths
+- [ ] Commit
+
+---
+
+## Phase 10: Root-Level Cleanup
+
+**Goal**: Clean up repo root directories and stale artifacts.
+
+### 10A — Delete Empty/Stale Directories
+
+| Directory | Action | Reason |
+|-----------|--------|--------|
+| `results/` | Delete | Empty — 0 files, only placeholder subdirs |
+| `htmlcov/` | Ensure in .gitignore, delete local | 149 MB generated coverage output |
+| `.benchmarks/` | Delete if empty | Stale benchmark artifacts |
+| `coordination/` | Delete if empty | Unused coordination dir |
+| `projects/` | Delete if empty | Unused projects dir |
+
+### 10B — Consolidate Output Directories
+
+Current state: `reports/` (171 files), `outputs/` (27 files), `results/` (empty).
+
+- [ ] Keep `reports/` as canonical output directory (already in .gitignore)
+- [ ] Move `outputs/` contents to `reports/outputs/` if needed, or keep separate
+- [ ] Ensure all output dirs are in `.gitignore`
+- [ ] Delete `results/`
+
+### 10C — Move Non-Test Scripts Out of tests/
+
+These files in `tests/` root are not tests:
+
+| File | Move To |
+|------|---------|
+| `coverage_analysis.py` | `scripts/coverage/` |
+| `establish_baseline.py` | `scripts/coverage/` |
+| `final_coverage_report.py` | `scripts/coverage/` |
+
+- [ ] `git mv` each file
+- [ ] Commit
+
+---
+
+## Phase 11: Final Verification and Documentation
+
+### 11A — Structural Verification
+
+- [ ] `ls tests/` shows flat module directories (no `modules/` subdir)
+- [ ] `ls examples/` shows flat module directories (no `modules/` subdir)
+- [ ] `grep -r "digitalmodel\.modules\." . --include="*.py"` returns only:
+  - `src/digitalmodel/modules/__init__.py` (compat shim)
+  - `src/digitalmodel/_compat.py` (compat registry)
+  - `tests/test_restructure_compat.py` (compat tests)
+  - `scripts/build_import_map.py` (import scanner)
+- [ ] `uv run pytest` — full test suite passes
+- [ ] All 16 CLI entry points resolve
+
+### 11B — Update Documentation
+
+- [ ] Update `examples/README.md` with new paths
+- [ ] Update any `docs/` references to `modules/` paths
+- [ ] Update `tests/modules/analysis/*.md` docs (moved in Phase 7)
 
 ---
 
@@ -211,27 +287,27 @@ These `modules/` dirs would collide with existing framework-level dirs when flat
 
 | File | Why |
 |------|-----|
-| `src/digitalmodel/__init__.py` | Re-exports 12 classes from modules — update every phase |
-| `src/digitalmodel/modules/__init__.py` | Becomes `__getattr__` compat shim in Phase 4 |
-| `pyproject.toml` | 16 CLI entry points + package discovery + uv workspace |
-| `src/digitalmodel/engine.py` | 20 imports from `digitalmodel.modules.*` |
+| `src/digitalmodel/modules/__init__.py` | MetaPathFinder compat shim — do not modify |
+| `src/digitalmodel/_compat.py` | Moved modules registry — do not modify |
+| `tests/conftest.py` | Shared test fixtures — may need path updates |
+| `pyproject.toml` | testpaths, CLI entry points |
+| `.gitignore` | Output directory patterns |
 
 ---
 
 ## Verification
 
 After each phase:
-1. `uv run pytest` — full test suite must pass
-2. `uv run python -c "from digitalmodel import OrcaFlex, Aqwa, Mooring"` — top-level re-exports work
-3. `uv run python -c "from digitalmodel.orcaflex import OrcaFlex"` — backward compat works (Phases 4+)
-4. `uv run digital_model --help` — CLI entry point works
-5. Verify all 16 CLI commands resolve: `run-to-sim --help`, `aqwa --help`, etc.
+1. `uv run pytest` — test suite passes
+2. `grep -r "digitalmodel\.modules\." --include="*.py"` — only compat layer references remain
+3. No broken imports in tests or scripts
 
-Final verification:
-- `ls src/` shows only `digitalmodel/` (no other packages)
-- `ls src/digitalmodel/modules/` is gone or empty compat shim
-- No `from digitalmodel.modules.` in source (only in compat layer)
-- Deprecation warnings emit when using old paths
+Final state:
+- `tests/modules/` does not exist
+- `examples/modules/` does not exist
+- All test files organized by module in `tests/X/`
+- Zero `digitalmodel.*` imports outside compat layer
+- Clean repo root (no empty dirs, no stale outputs)
 
 ---
 
@@ -239,13 +315,12 @@ Final verification:
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| Phase 0: Safety Net | Pending | |
-| Phase 1: Fix Naming | Pending | |
-| Phase 2: Remove Dead Code | Pending | |
-| Phase 3: Consolidate Duplicates | Pending | |
-| Phase 4: Flatten modules/ | Pending | Largest phase (~50 dirs, ~1218 imports) |
-| Phase 5: Absorb Top-Level | Pending | |
-| Phase 6: Cleanup | Pending | |
+| Phase 0-6: src/ Flattening | Done | Merged to main (PR #129) |
+| Phase 7: Flatten tests/modules/ | Pending | 47 subdirs, 13 duplicates |
+| Phase 8: Fix Legacy Imports | Pending | 12 test + 15 script references |
+| Phase 9: Flatten examples/modules/ | Pending | 24 subdirs |
+| Phase 10: Root-Level Cleanup | Pending | Empty dirs, output consolidation |
+| Phase 11: Final Verification | Pending | Docs, structural checks |
 
 ---
 
@@ -268,4 +343,5 @@ Final verification:
 
 | Date | Session ID | Agent | Notes |
 |------|------------|-------|-------|
-| 2026-02-01 | velvety-wandering-bird | claude-opus-4.5 | Plan created, linked to WRK-066 |
+| 2026-02-01 | velvety-wandering-bird | claude-opus-4.5 | Plan created, Phases 0-6 implemented and merged |
+| 2026-02-01 | velvety-wandering-bird | claude-opus-4.5 | Phases 7-11 planned for repo-wide restructuring |

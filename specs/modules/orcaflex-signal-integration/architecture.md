@@ -119,7 +119,7 @@ class OrcaFlexTimeTraceProcessor:
     
     def _perform_fatigue_analysis(self, traces: pd.DataFrame) -> Dict:
         """Perform fatigue analysis on time traces"""
-        from digitalmodel.modules.signal_analysis import (
+        from digitalmodel.signal_analysis import (
             RainflowCounter, 
             FatigueDamageCalculator,
             SNCurve
@@ -311,7 +311,7 @@ class ResultsAggregator:
                        summary_df: pd.DataFrame,
                        output_path: Path):
         """Generate comprehensive report"""
-        from digitalmodel.modules.reporting import ReportGenerator
+        from digitalmodel.reporting import ReportGenerator
         
         report = ReportGenerator()
         report.add_summary_table(summary_df)

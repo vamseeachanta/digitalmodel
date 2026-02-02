@@ -162,7 +162,7 @@ modules/
    ```bash
    # Verify Python imports
    uv run python -c "from digitalmodel.orcaflex.utils.validate_bom import BOMValidator"
-   uv run python -c "from digitalmodel.modules.reporting.report_generator import PlotlyReportGenerator"
+   uv run python -c "from digitalmodel.reporting.report_generator import PlotlyReportGenerator"
 
    # Verify scripts execute
    bash scripts/automation/agent_orchestrator.sh --help

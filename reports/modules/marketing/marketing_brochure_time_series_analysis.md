@@ -45,7 +45,7 @@ The Digital Model Time Series Analysis Module provides comprehensive signal proc
 #### ASTM-Compliant Rainflow Counting
 
 ```python
-from digitalmodel.modules.signal_analysis import RainflowCounter
+from digitalmodel.signal_analysis import RainflowCounter
 
 # Initialize counter with ASTM E1049-85 method
 counter = RainflowCounter(method='astm')
@@ -77,7 +77,7 @@ stats = counter.get_statistics(cycles)
 | **Window-Averaged FFT** | Smooth spectra | ★★★★☆ | ★★★★☆ |
 
 ```python
-from digitalmodel.modules.signal_analysis import SpectralAnalyzer
+from digitalmodel.signal_analysis import SpectralAnalyzer
 
 # Initialize with Welch's method for best accuracy
 analyzer = SpectralAnalyzer(sampling_rate=1000, method='welch')
@@ -105,7 +105,7 @@ peaks = analyzer.find_peaks(spectrum, n_peaks=5)
 - **Elliptic** - Steepest rolloff, both passband and stopband ripple
 
 ```python
-from digitalmodel.modules.signal_analysis.filters import FrequencyFilter
+from digitalmodel.signal_analysis.filters import FrequencyFilter
 
 # Initialize Butterworth lowpass filter
 freq_filter = FrequencyFilter(filter_type='butterworth', order=4)
@@ -126,7 +126,7 @@ notch = freq_filter.bandstop_filter(signal, low=48, high=52, fs=1000)
 **Comprehensive Signal Conditioning:**
 
 ```python
-from digitalmodel.modules.signal_analysis import TimeSeriesProcessor
+from digitalmodel.signal_analysis import TimeSeriesProcessor
 
 processor = TimeSeriesProcessor()
 
@@ -152,7 +152,7 @@ stats = processor.calculate_statistics(signal)
 **Complete Miner's Rule Implementation:**
 
 ```python
-from digitalmodel.modules.signal_analysis.fatigue import (
+from digitalmodel.signal_analysis.fatigue import (
     FatigueDamageCalculator, SNCurve
 )
 
@@ -307,7 +307,7 @@ RECOMMENDATION: Natural heave period (11.5s) matches typical North Sea swell
 
 ```python
 # Complete workflow: Load → Filter → Analyze → Report
-from digitalmodel.modules.signal_analysis import (
+from digitalmodel.signal_analysis import (
     TimeSeriesProcessor, RainflowCounter, SpectralAnalyzer
 )
 import numpy as np

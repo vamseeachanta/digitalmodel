@@ -514,7 +514,7 @@ agents:
 Generate workflows programmatically:
 
 ```python
-from digitalmodel.modules.automation.workflow_executor import WorkflowExecutor
+from digitalmodel.automation.workflow_executor import WorkflowExecutor
 
 executor = WorkflowExecutor('config/workflow-templates-enhanced.yaml')
 execution = executor.create_workflow_execution('template_name')
