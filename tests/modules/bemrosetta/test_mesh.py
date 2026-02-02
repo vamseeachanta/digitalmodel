@@ -15,8 +15,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from src.digitalmodel.modules.bemrosetta.models import PanelMesh, MeshQualityReport
-from src.digitalmodel.modules.bemrosetta.core.exceptions import MeshError
+from src.digitalmodel.bemrosetta.models import PanelMesh, MeshQualityReport
+from src.digitalmodel.bemrosetta.core.exceptions import MeshError
 
 
 class TestBaseMeshHandler:
@@ -25,7 +25,7 @@ class TestBaseMeshHandler:
     @pytest.fixture
     def handler(self):
         """Create a BaseMeshHandler instance for testing."""
-        from src.digitalmodel.modules.bemrosetta.mesh import BaseMeshHandler
+        from src.digitalmodel.bemrosetta.mesh import BaseMeshHandler
 
         # Create concrete subclass for testing abstract base
         class TestHandler(BaseMeshHandler):
@@ -184,7 +184,7 @@ class TestGDFHandler:
     @pytest.fixture
     def handler(self):
         """Create a GDFHandler instance."""
-        from src.digitalmodel.modules.bemrosetta.mesh import GDFHandler
+        from src.digitalmodel.bemrosetta.mesh import GDFHandler
         return GDFHandler()
 
     @pytest.fixture
@@ -297,7 +297,7 @@ class TestDATHandler:
     @pytest.fixture
     def handler(self):
         """Create a DATHandler instance."""
-        from src.digitalmodel.modules.bemrosetta.mesh import DATHandler
+        from src.digitalmodel.bemrosetta.mesh import DATHandler
         return DATHandler()
 
     @pytest.fixture
@@ -380,7 +380,7 @@ class TestSTLHandler:
     @pytest.fixture
     def handler(self):
         """Create a STLHandler instance."""
-        from src.digitalmodel.modules.bemrosetta.mesh import STLHandler
+        from src.digitalmodel.bemrosetta.mesh import STLHandler
         return STLHandler()
 
     @pytest.fixture
@@ -578,7 +578,7 @@ class TestConvertMesh:
     @pytest.fixture
     def gdf_file(self, sample_mesh, tmp_path):
         """Create a GDF file for testing."""
-        from src.digitalmodel.modules.bemrosetta.mesh import GDFHandler
+        from src.digitalmodel.bemrosetta.mesh import GDFHandler
         handler = GDFHandler()
         gdf_path = tmp_path / "input.gdf"
         handler.write(sample_mesh, gdf_path)
@@ -586,7 +586,7 @@ class TestConvertMesh:
 
     def test_convert_gdf_to_stl(self, gdf_file, tmp_path):
         """Test converting GDF to STL."""
-        from src.digitalmodel.modules.bemrosetta.mesh import convert_mesh
+        from src.digitalmodel.bemrosetta.mesh import convert_mesh
 
         output_file = tmp_path / "output.stl"
         result = convert_mesh(gdf_file, output_file)
@@ -596,7 +596,7 @@ class TestConvertMesh:
 
     def test_convert_gdf_to_dat(self, gdf_file, tmp_path):
         """Test converting GDF to DAT."""
-        from src.digitalmodel.modules.bemrosetta.mesh import convert_mesh
+        from src.digitalmodel.bemrosetta.mesh import convert_mesh
 
         output_file = tmp_path / "output.dat"
         result = convert_mesh(gdf_file, output_file)
@@ -606,7 +606,7 @@ class TestConvertMesh:
 
     def test_convert_stl_to_gdf(self, sample_mesh, tmp_path):
         """Test converting STL to GDF."""
-        from src.digitalmodel.modules.bemrosetta.mesh import STLHandler, convert_mesh
+        from src.digitalmodel.bemrosetta.mesh import STLHandler, convert_mesh
 
         # Create STL file first
         stl_handler = STLHandler()
@@ -621,7 +621,7 @@ class TestConvertMesh:
 
     def test_convert_explicit_formats(self, gdf_file, tmp_path):
         """Test conversion with explicit format specification."""
-        from src.digitalmodel.modules.bemrosetta.mesh import convert_mesh
+        from src.digitalmodel.bemrosetta.mesh import convert_mesh
 
         output_file = tmp_path / "output.mesh"  # Non-standard extension
         result = convert_mesh(
@@ -634,7 +634,7 @@ class TestConvertMesh:
 
     def test_convert_unsupported_format_raises(self, gdf_file, tmp_path):
         """Test that unsupported formats raise MeshError."""
-        from src.digitalmodel.modules.bemrosetta.mesh import convert_mesh
+        from src.digitalmodel.bemrosetta.mesh import convert_mesh
 
         output_file = tmp_path / "output.xyz"
 
@@ -643,7 +643,7 @@ class TestConvertMesh:
 
     def test_convert_missing_input_raises(self, tmp_path):
         """Test that missing input file raises MeshError."""
-        from src.digitalmodel.modules.bemrosetta.mesh import convert_mesh
+        from src.digitalmodel.bemrosetta.mesh import convert_mesh
 
         missing_file = tmp_path / "missing.gdf"
         output_file = tmp_path / "output.stl"

@@ -86,7 +86,7 @@ Successfully implemented comprehensive testing infrastructure for the AQWA modul
 
 ```toml
 [project.scripts]
-aqwa = "digitalmodel.modules.aqwa.aqwa_cli:main"
+aqwa = "digitalmodel.aqwa.aqwa_cli:main"
 ```
 
 **Usage**:

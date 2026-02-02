@@ -526,7 +526,7 @@ for i, file in enumerate(large_file_list):
 ### OrcaFlex Module
 
 ```python
-from digitalmodel.modules.orcaflex_modeling import run_simulation
+from digitalmodel.orcaflex_modeling import run_simulation
 from digitalmodel.core.provenance import ProvenanceTracker, track_provenance
 
 tracker = ProvenanceTracker()

@@ -42,10 +42,10 @@ except ImportError:
 ### Verify Converter Availability
 
 ```python
-from digitalmodel.modules.diffraction import ORCAWAVE_AVAILABLE
+from digitalmodel.diffraction import ORCAWAVE_AVAILABLE
 
 if ORCAWAVE_AVAILABLE:
-    from digitalmodel.modules.diffraction import OrcaWaveConverter
+    from digitalmodel.diffraction import OrcaWaveConverter
     print("OrcaWave converter ready")
 else:
     print("OrcFxAPI required for OrcaWave converter")
@@ -58,7 +58,7 @@ else:
 ### Basic Usage
 
 ```python
-from digitalmodel.modules.diffraction import OrcaWaveConverter
+from digitalmodel.diffraction import OrcaWaveConverter
 
 # Initialize converter with OrcaFlex model file
 converter = OrcaWaveConverter(
@@ -70,7 +70,7 @@ converter = OrcaWaveConverter(
 results = converter.convert_to_unified_schema(water_depth=1200.0)
 
 # Export to OrcaFlex formats
-from digitalmodel.modules.diffraction import OrcaFlexExporter
+from digitalmodel.diffraction import OrcaFlexExporter
 
 exporter = OrcaFlexExporter(results, output_dir="output/")
 output_files = exporter.export_all()
@@ -79,7 +79,7 @@ output_files = exporter.export_all()
 ### One-Step Conversion
 
 ```python
-from digitalmodel.modules.diffraction import convert_orcawave_results
+from digitalmodel.diffraction import convert_orcawave_results
 
 # Convert and export in one step
 output_dir = convert_orcawave_results(
@@ -98,7 +98,7 @@ output_dir = convert_orcawave_results(
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.diffraction import OrcaWaveConverter
+from digitalmodel.diffraction import OrcaWaveConverter
 
 # Option A: With vessel name specified
 converter = OrcaWaveConverter(
@@ -137,7 +137,7 @@ print(f"Headings: {len(results.raos.surge.headings.values)}")
 ### 3. Validate Results
 
 ```python
-from digitalmodel.modules.diffraction import validate_results
+from digitalmodel.diffraction import validate_results
 
 # Run validation
 validation_report = validate_results(results)
@@ -156,7 +156,7 @@ else:
 ### 4. Export to OrcaFlex Format
 
 ```python
-from digitalmodel.modules.diffraction import OrcaFlexExporter
+from digitalmodel.diffraction import OrcaFlexExporter
 from pathlib import Path
 
 exporter = OrcaFlexExporter(
@@ -222,8 +222,8 @@ Frequency-dependent 6×6 damping matrices:
 ### Adding Converter to Workflow
 
 ```python
-from digitalmodel.modules.orcawave.diffraction.orchestrator import OrcaWaveOrchestrator
-from digitalmodel.modules.diffraction import OrcaWaveConverter, OrcaFlexExporter
+from digitalmodel.orcawave.diffraction.orchestrator import OrcaWaveOrchestrator
+from digitalmodel.diffraction import OrcaWaveConverter, OrcaFlexExporter
 
 # Run OrcaWave analysis
 orchestrator = OrcaWaveOrchestrator(vessel_name="sea_cypress")
@@ -250,7 +250,7 @@ exporter.export_all()
 **1. OrcFxAPI Not Available**
 ```python
 try:
-    from digitalmodel.modules.diffraction import OrcaWaveConverter
+    from digitalmodel.diffraction import OrcaWaveConverter
 except ImportError as e:
     print("OrcFxAPI is required. Install OrcaFlex with Python API.")
 ```
@@ -334,7 +334,7 @@ except RuntimeError as e:
 ### Workflow 1: Simple Conversion
 
 ```python
-from digitalmodel.modules.diffraction import convert_orcawave_results
+from digitalmodel.diffraction import convert_orcawave_results
 
 output_dir = convert_orcawave_results(
     model_file="analysis/fpso.sim",
@@ -348,7 +348,7 @@ print(f"Results exported to: {output_dir}")
 ### Workflow 2: With Validation
 
 ```python
-from digitalmodel.modules.diffraction import (
+from digitalmodel.diffraction import (
     OrcaWaveConverter,
     validate_results,
     OrcaFlexExporter
@@ -373,7 +373,7 @@ else:
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.diffraction import OrcaWaveConverter, OrcaFlexExporter
+from digitalmodel.diffraction import OrcaWaveConverter, OrcaFlexExporter
 
 models = [
     ("fpso_a.sim", "FPSO_A", 1200.0),

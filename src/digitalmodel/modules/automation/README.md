@@ -157,7 +157,7 @@ python scripts/memory_cleanup_hook.py \
 
 ## Related Modules
 
-- `digitalmodel.modules.orcaflex` - OrcaFlex simulation automation
+- `digitalmodel.orcaflex` - OrcaFlex simulation automation
 - `digitalmodel.modules.signal_analysis` - Signal processing
 - `digitalmodel.modules.cathodic_protection` - CP system design
 

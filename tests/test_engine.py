@@ -44,11 +44,11 @@ def mock_imports():
         'digitalmodel.signal_analysis.fatigue',
         'digitalmodel.common.ship_design',
         'digitalmodel.modules.mooring.mooring',
-        'digitalmodel.modules.orcaflex.orcaflex',
-        'digitalmodel.modules.orcaflex.orcaflex_file_management',
-        'digitalmodel.modules.orcaflex.orcaflex_installation',
-        'digitalmodel.modules.orcaflex.orcaflex_modal_analysis',
-        'digitalmodel.modules.orcaflex.umbilical_analysis_components',
+        'digitalmodel.orcaflex.orcaflex',
+        'digitalmodel.orcaflex.orcaflex_file_management',
+        'digitalmodel.orcaflex.orcaflex_installation',
+        'digitalmodel.orcaflex.orcaflex_modal_analysis',
+        'digitalmodel.orcaflex.umbilical_analysis_components',
         'digitalmodel.pipe_capacity.pipe_capacity',
         'digitalmodel.pipeline.pipeline',
         'digitalmodel.rao_analysis.rao_analysis',
@@ -197,7 +197,7 @@ class TestEngineConfiguration:
 
         # Test quiet mode
         with patch('digitalmodel.engine.get_output_level_from_argv') as mock_output:
-            from digitalmodel.modules.orcaflex.output_control import OutputController
+            from digitalmodel.orcaflex.output_control import OutputController
             mock_output.return_value = OutputController.QUIET
 
             with patch('digitalmodel.engine.Mooring') as mock_mooring:

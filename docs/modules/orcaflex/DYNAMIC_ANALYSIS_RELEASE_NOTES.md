@@ -22,7 +22,7 @@ The Universal OrcaFlex Runner now supports full dynamic time-domain analysis cap
 --both      # Run both analyses
 
 # With simulation time
-python -m digitalmodel.modules.orcaflex.universal --dynamic simulation_time=200
+python -m digitalmodel.orcaflex.universal --dynamic simulation_time=200
 ```
 
 ### 3. Simulation Time Control
@@ -177,14 +177,14 @@ git pull origin master
 uv pip install -r requirements.txt
 
 # Verify installation
-python -m digitalmodel.modules.orcaflex.universal --help
+python -m digitalmodel.orcaflex.universal --help
 ```
 
 ## Quick Start
 
 ```bash
 # Run your first dynamic analysis
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     --dynamic \
     pattern="*.yml" \
     simulation_time=200 \

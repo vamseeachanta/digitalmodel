@@ -204,7 +204,7 @@ class TestCLIModuleIntegration:
         """Test Python import works after CLI installation"""
         result = subprocess.run(
             [sys.executable, '-c',
-             'import digitalmodel.modules.orcaflex; print(digitalmodel.modules.orcaflex.__version__)'],
+             'import digitalmodel.orcaflex; print(digitalmodel.orcaflex.__version__)'],
             capture_output=True,
             text=True
         )
@@ -215,7 +215,7 @@ class TestCLIModuleIntegration:
         """Test CLI commands list from module"""
         result = subprocess.run(
             [sys.executable, '-c',
-             'from digitalmodel.modules.orcaflex import list_cli_commands; '
+             'from digitalmodel.orcaflex import list_cli_commands; '
              'cmds = list_cli_commands(); '
              'print(cmds)'],
             capture_output=True,

@@ -77,7 +77,7 @@ diffraction batch fleet_config.json
 ### Programmatic API - Convert AQWA Results
 
 ```python
-from digitalmodel.modules.diffraction import convert_aqwa_results
+from digitalmodel.diffraction import convert_aqwa_results
 
 # Convert and export in one step
 output_dir = convert_aqwa_results(
@@ -99,7 +99,7 @@ output_dir = convert_aqwa_results(
 ### Manual Workflow with Validation
 
 ```python
-from digitalmodel.modules.diffraction import (
+from digitalmodel.diffraction import (
     AQWAConverter,
     OrcaFlexExporter,
     validate_results
@@ -139,7 +139,7 @@ for output_type, file_path in output_files.items():
 **NEW in Version 3.0.0** - OrcaWave converter for extracting diffraction data from OrcaFlex models:
 
 ```python
-from digitalmodel.modules.diffraction import (
+from digitalmodel.diffraction import (
     ORCAWAVE_AVAILABLE,
     convert_orcawave_results
 )
@@ -163,7 +163,7 @@ else:
 **Manual OrcaWave Workflow**:
 
 ```python
-from digitalmodel.modules.diffraction import (
+from digitalmodel.diffraction import (
     OrcaWaveConverter,
     OrcaFlexExporter,
     validate_results
@@ -298,7 +298,7 @@ class AddedMassSet:
 ### Automatic Validation
 
 ```python
-from digitalmodel.modules.diffraction import validate_results
+from digitalmodel.diffraction import validate_results
 
 # Run complete validation suite
 report = validate_results(results)
@@ -440,7 +440,7 @@ model.RunSimulation()
 ### Custom RAO Processing
 
 ```python
-from digitalmodel.modules.diffraction import DiffractionResults, RAOSet
+from digitalmodel.diffraction import DiffractionResults, RAOSet
 
 # Access specific RAO data
 raos = results.raos

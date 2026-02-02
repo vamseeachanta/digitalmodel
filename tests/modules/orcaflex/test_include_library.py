@@ -228,7 +228,7 @@ class TestCSVToLibraryConversion:
         }
 
         # Conversion function (to be implemented)
-        from digitalmodel.modules.orcaflex.library_generator import csv_row_to_line_type
+        from digitalmodel.orcaflex.library_generator import csv_row_to_line_type
         result = csv_row_to_line_type(csv_row)
 
         for key, value in expected_props.items():
@@ -251,7 +251,7 @@ class TestCSVToLibraryConversion:
             "BuoyType": "Spar buoy",
         }
 
-        from digitalmodel.modules.orcaflex.library_generator import csv_row_to_buoy_type
+        from digitalmodel.orcaflex.library_generator import csv_row_to_buoy_type
         result = csv_row_to_buoy_type(csv_row)
 
         assert result["Mass"] == 95000

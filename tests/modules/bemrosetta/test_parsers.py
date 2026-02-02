@@ -14,10 +14,10 @@ import numpy as np
 from pathlib import Path
 from unittest.mock import patch, mock_open
 
-from digitalmodel.modules.bemrosetta.parsers import BaseParser, AQWAParser, QTFParser
-from digitalmodel.modules.bemrosetta.core.exceptions import ParserError
-from digitalmodel.modules.bemrosetta.models import BEMSolverMetadata, QTFData, QTFType
-from digitalmodel.modules.bemrosetta.models.solver_metadata import BEMSolverType
+from digitalmodel.bemrosetta.parsers import BaseParser, AQWAParser, QTFParser
+from digitalmodel.bemrosetta.core.exceptions import ParserError
+from digitalmodel.bemrosetta.models import BEMSolverMetadata, QTFData, QTFType
+from digitalmodel.bemrosetta.models.solver_metadata import BEMSolverType
 
 
 # ============================================================================

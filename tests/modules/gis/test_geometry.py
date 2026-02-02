@@ -1,4 +1,4 @@
-"""Tests for digitalmodel.modules.gis.core.geometry."""
+"""Tests for digitalmodel.gis.core.geometry."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import math
 
 import pytest
 
-from digitalmodel.modules.gis.core.geometry import (
+from digitalmodel.gis.core.geometry import (
     EARTH_RADIUS_METERS,
     GeoBoundingBox,
     GeoPoint,

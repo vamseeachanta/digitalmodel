@@ -11,7 +11,7 @@ import sys
 # Add project to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.digitalmodel.modules.orcaflex.time_trace_processor import (
+from src.digitalmodel.orcaflex.time_trace_processor import (
     OrcaFlexTimeTraceProcessor,
     TimeTraceConfig,
     create_default_config

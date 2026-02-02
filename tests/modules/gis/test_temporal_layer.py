@@ -8,9 +8,9 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from digitalmodel.modules.gis.core.crs import CRSDefinition, CRSType
-from digitalmodel.modules.gis.layers.feature_layer import FeatureLayer
-from digitalmodel.modules.gis.layers.temporal_layer import TemporalLayer
+from digitalmodel.gis.core.crs import CRSDefinition, CRSType
+from digitalmodel.gis.layers.feature_layer import FeatureLayer
+from digitalmodel.gis.layers.temporal_layer import TemporalLayer
 
 
 # ------------------------------------------------------------------

@@ -11,7 +11,7 @@ sys.path.insert(0, str(project_root))
 
 def run_analysis():
     """Run the OrcaFlex analysis for orcaflex_file_preparation."""
-    from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+    from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
     
     current_dir = Path(__file__).parent.parent
     config_file = Path(__file__).parent / 'orcaflex_file_preparation_config.yml'

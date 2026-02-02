@@ -116,7 +116,7 @@ for trace in time_traces:
     cycles = tsc.get_rainflow_count_from_time_series(trace)
     
 # New
-from digitalmodel.modules.orcaflex.time_trace_processor import OrcaFlexTimeTraceProcessor
+from digitalmodel.orcaflex.time_trace_processor import OrcaFlexTimeTraceProcessor
 processor = OrcaFlexTimeTraceProcessor(config)
 results = processor.process()  # Handles all traces automatically
 ```

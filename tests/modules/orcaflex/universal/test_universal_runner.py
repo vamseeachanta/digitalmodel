@@ -19,7 +19,7 @@ from unittest.mock import patch, MagicMock
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / "src"))
 
-from digitalmodel.modules.orcaflex.universal import (
+from digitalmodel.orcaflex.universal import (
     UniversalOrcaFlexRunner,
     PathResolver,
     ModelDiscovery,

@@ -18,7 +18,7 @@ if sys.platform == 'win32':
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from digitalmodel.modules.orcaflex.modular_input_validation.utils import (
+from digitalmodel.orcaflex.modular_input_validation.utils import (
     load_yaml_file,
     extract_includefiles,
     resolve_include_path,

@@ -1,7 +1,7 @@
 """Backward compatibility layer for digitalmodel.modules.* -> digitalmodel.* migration.
 
 This module provides sys.modules aliasing so that imports like:
-    from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
+    from digitalmodel.orcaflex.orcaflex import OrcaFlex
 continue to work after modules have been flattened to:
     from digitalmodel.orcaflex.orcaflex import OrcaFlex
 
@@ -44,6 +44,13 @@ _MOVED_MODULES: set[str] = {
     "mooring_analysis",
     "catenary",
     "catenary_riser",
+    # Phase 4 Batch 4
+    "orcaflex",
+    "aqwa",
+    "diffraction",
+    "bemrosetta",
+    "gis",
+    "orcawave",
 }
 
 

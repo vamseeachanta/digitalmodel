@@ -5,8 +5,8 @@
     "dm_fsts_lngc.yml": "PASS",
     "backup_dm_fsts_backup_20250825.yml": "PASS",
     "backup_dm_fsts_lngc_backup_20250825.yml": "PASS",
-    "digitalmodel.modules.orcaflex.performance_monitor": "PASS",
-    "digitalmodel.modules.orcaflex.orcaflex_optimized_parallel_v2": "PASS",
+    "digitalmodel.orcaflex.performance_monitor": "PASS",
+    "digitalmodel.orcaflex.orcaflex_optimized_parallel_v2": "PASS",
     "agent_config": "PASS",
     "claude_md": "PASS"
   },

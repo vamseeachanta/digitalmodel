@@ -2,7 +2,7 @@
 """Advanced tests: parallel processing and larger batches."""
 
 from pathlib import Path
-from digitalmodel.modules.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 import time
 
 print("="*70)

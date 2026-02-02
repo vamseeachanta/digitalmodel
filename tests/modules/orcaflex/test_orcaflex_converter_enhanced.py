@@ -22,7 +22,7 @@ import tempfile
 from pathlib import Path
 import shutil
 
-from digitalmodel.modules.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 
 
 # Test data paths
@@ -450,7 +450,7 @@ class TestCLI:
 
     def test_cli_import(self):
         """Test that CLI module can be imported."""
-        from digitalmodel.modules.orcaflex import convert_cli
+        from digitalmodel.orcaflex import convert_cli
         assert hasattr(convert_cli, 'main')
 
     def test_cli_single_file(self, sample_dat_files, temp_output_dir):
@@ -458,7 +458,7 @@ class TestCLI:
         if not sample_dat_files:
             pytest.skip("No .dat files available")
 
-        from digitalmodel.modules.orcaflex.convert_cli import convert_single
+        from digitalmodel.orcaflex.convert_cli import convert_single
 
         dat_file = sample_dat_files[0]
         output_file = temp_output_dir / "output.yml"
@@ -478,7 +478,7 @@ class TestCLI:
         if not sample_dat_files:
             pytest.skip("No .dat files available")
 
-        from digitalmodel.modules.orcaflex.convert_cli import convert_batch
+        from digitalmodel.orcaflex.convert_cli import convert_batch
 
         input_dir = sample_dat_files[0].parent
 

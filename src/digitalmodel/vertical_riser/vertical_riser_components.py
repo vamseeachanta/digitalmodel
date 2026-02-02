@@ -7,7 +7,7 @@ from digitalmodel.custom.PipeSizing import PipeSizing
 from digitalmodel.common.typical_riser_stack_up_calculations import (
     TypicalRiserStackUpCalculations,
 )
-from digitalmodel.modules.orcaflex.orcaflex_model_components import (
+from digitalmodel.orcaflex.orcaflex_model_components import (
     OrcaflexModelComponents,
 )
 from digitalmodel.common.shear7_model_components import Shear7ModelComponents

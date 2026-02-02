@@ -188,7 +188,7 @@ Combine AQWA and OrcaWave in one batch:
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.diffraction import (
+from digitalmodel.diffraction import (
     BatchProcessor,
     BatchConfiguration
 )

@@ -658,7 +658,7 @@ Create `tests/integration/`:
 ```python
 # tests/integration/test_full_workflow.py
 import pytest
-from digitalmodel.modules.orcaflex import run_simulation
+from digitalmodel.orcaflex import run_simulation
 from digitalmodel.modules.signal_analysis import extract_time_series
 from digitalmodel.modules.fatigue_analysis import calculate_damage
 

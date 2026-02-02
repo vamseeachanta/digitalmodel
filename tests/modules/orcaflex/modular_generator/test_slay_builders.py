@@ -7,13 +7,13 @@ from pathlib import Path
 import pytest
 import yaml
 
-from digitalmodel.modules.orcaflex.modular_generator.schema import ProjectInputSpec
-from digitalmodel.modules.orcaflex.modular_generator.builders.context import BuilderContext
-from digitalmodel.modules.orcaflex.modular_generator.builders.vessel_type_builder import VesselTypeBuilder
-from digitalmodel.modules.orcaflex.modular_generator.builders.vessel_builder import VesselBuilder
-from digitalmodel.modules.orcaflex.modular_generator.builders.winch_builder import WinchBuilder
-from digitalmodel.modules.orcaflex.modular_generator.builders.buoys_builder import BuoysBuilder
-from digitalmodel.modules.orcaflex.modular_generator.builders.lines_builder import LinesBuilder
+from digitalmodel.orcaflex.modular_generator.schema import ProjectInputSpec
+from digitalmodel.orcaflex.modular_generator.builders.context import BuilderContext
+from digitalmodel.orcaflex.modular_generator.builders.vessel_type_builder import VesselTypeBuilder
+from digitalmodel.orcaflex.modular_generator.builders.vessel_builder import VesselBuilder
+from digitalmodel.orcaflex.modular_generator.builders.winch_builder import WinchBuilder
+from digitalmodel.orcaflex.modular_generator.builders.buoys_builder import BuoysBuilder
+from digitalmodel.orcaflex.modular_generator.builders.lines_builder import LinesBuilder
 
 
 SLAY_SPEC_DIR = Path(__file__).parent.parent.parent.parent.parent / (
@@ -257,7 +257,7 @@ class TestSlayEndToEnd:
     """End-to-end test: generate S-lay model from spec."""
 
     def test_generate_slay_model(self, slay_spec, tmp_path):
-        from digitalmodel.modules.orcaflex.modular_generator import ModularModelGenerator
+        from digitalmodel.orcaflex.modular_generator import ModularModelGenerator
 
         spec_file = SLAY_SPEC_DIR / "SB-SA" / "spec.yml"
         generator = ModularModelGenerator(spec_file)
@@ -277,7 +277,7 @@ class TestSlayEndToEnd:
 
     def test_floating_model_unchanged(self, floating_spec, tmp_path):
         """Floating model generation should be unaffected by S-lay changes."""
-        from digitalmodel.modules.orcaflex.modular_generator import ModularModelGenerator
+        from digitalmodel.orcaflex.modular_generator import ModularModelGenerator
 
         generator = ModularModelGenerator(FLOATING_SPEC_FILE)
         output_dir = tmp_path / "floating_output"

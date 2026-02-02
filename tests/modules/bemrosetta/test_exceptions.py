@@ -13,7 +13,7 @@ class TestBEMRosettaError:
 
     def test_basic_initialization(self):
         """Test basic exception initialization with message only."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import BEMRosettaError
+        from digitalmodel.bemrosetta.core.exceptions import BEMRosettaError
 
         error = BEMRosettaError("Test error message")
 
@@ -25,7 +25,7 @@ class TestBEMRosettaError:
 
     def test_full_initialization(self):
         """Test exception with all optional parameters."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import BEMRosettaError
+        from digitalmodel.bemrosetta.core.exceptions import BEMRosettaError
 
         error = BEMRosettaError(
             message="Full test error",
@@ -41,7 +41,7 @@ class TestBEMRosettaError:
 
     def test_string_representation(self):
         """Test string representation includes all components."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import BEMRosettaError
+        from digitalmodel.bemrosetta.core.exceptions import BEMRosettaError
 
         error = BEMRosettaError(
             message="Detailed error",
@@ -58,7 +58,7 @@ class TestBEMRosettaError:
 
     def test_to_dict_serialization(self):
         """Test conversion to dictionary for serialization."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import BEMRosettaError
+        from digitalmodel.bemrosetta.core.exceptions import BEMRosettaError
 
         error = BEMRosettaError(
             message="Serialization test",
@@ -77,7 +77,7 @@ class TestBEMRosettaError:
 
     def test_is_exception_subclass(self):
         """Test that BEMRosettaError is a proper Exception subclass."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import BEMRosettaError
+        from digitalmodel.bemrosetta.core.exceptions import BEMRosettaError
 
         assert issubclass(BEMRosettaError, Exception)
 
@@ -90,7 +90,7 @@ class TestParserError:
 
     def test_basic_initialization(self):
         """Test basic ParserError initialization."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ParserError
+        from digitalmodel.bemrosetta.core.exceptions import ParserError
 
         error = ParserError("Failed to parse file")
 
@@ -99,7 +99,7 @@ class TestParserError:
 
     def test_with_file_path(self):
         """Test ParserError with file_path parameter."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ParserError
+        from digitalmodel.bemrosetta.core.exceptions import ParserError
 
         error = ParserError(
             message="Invalid file format",
@@ -110,7 +110,7 @@ class TestParserError:
 
     def test_with_line_number(self):
         """Test ParserError with line_number parameter."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ParserError
+        from digitalmodel.bemrosetta.core.exceptions import ParserError
 
         error = ParserError(
             message="Syntax error",
@@ -122,7 +122,7 @@ class TestParserError:
 
     def test_is_bemrosetta_error_subclass(self):
         """Test that ParserError inherits from BEMRosettaError."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import (
+        from digitalmodel.bemrosetta.core.exceptions import (
             BEMRosettaError,
             ParserError
         )
@@ -131,7 +131,7 @@ class TestParserError:
 
     def test_has_suggestions(self):
         """Test that ParserError includes helpful suggestions."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ParserError
+        from digitalmodel.bemrosetta.core.exceptions import ParserError
 
         error = ParserError("Parse failed")
 
@@ -143,7 +143,7 @@ class TestConverterError:
 
     def test_basic_initialization(self):
         """Test basic ConverterError initialization."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ConverterError
+        from digitalmodel.bemrosetta.core.exceptions import ConverterError
 
         error = ConverterError("Conversion failed")
 
@@ -152,7 +152,7 @@ class TestConverterError:
 
     def test_with_source_format(self):
         """Test ConverterError with source_format parameter."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ConverterError
+        from digitalmodel.bemrosetta.core.exceptions import ConverterError
 
         error = ConverterError(
             message="Format not supported",
@@ -163,7 +163,7 @@ class TestConverterError:
 
     def test_with_target_format(self):
         """Test ConverterError with target_format parameter."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ConverterError
+        from digitalmodel.bemrosetta.core.exceptions import ConverterError
 
         error = ConverterError(
             message="Cannot convert to target",
@@ -176,7 +176,7 @@ class TestConverterError:
 
     def test_is_bemrosetta_error_subclass(self):
         """Test that ConverterError inherits from BEMRosettaError."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import (
+        from digitalmodel.bemrosetta.core.exceptions import (
             BEMRosettaError,
             ConverterError
         )
@@ -189,7 +189,7 @@ class TestValidationError:
 
     def test_basic_initialization(self):
         """Test basic ValidationError initialization."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ValidationError
+        from digitalmodel.bemrosetta.core.exceptions import ValidationError
 
         error = ValidationError("Validation failed")
 
@@ -198,7 +198,7 @@ class TestValidationError:
 
     def test_with_validation_errors_list(self):
         """Test ValidationError with list of specific errors."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ValidationError
+        from digitalmodel.bemrosetta.core.exceptions import ValidationError
 
         validation_errors = [
             "Missing required field: vessel_name",
@@ -213,7 +213,7 @@ class TestValidationError:
 
     def test_with_field_name(self):
         """Test ValidationError with specific field name."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ValidationError
+        from digitalmodel.bemrosetta.core.exceptions import ValidationError
 
         error = ValidationError(
             message="Invalid field value",
@@ -224,7 +224,7 @@ class TestValidationError:
 
     def test_is_bemrosetta_error_subclass(self):
         """Test that ValidationError inherits from BEMRosettaError."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import (
+        from digitalmodel.bemrosetta.core.exceptions import (
             BEMRosettaError,
             ValidationError
         )
@@ -237,7 +237,7 @@ class TestMeshError:
 
     def test_basic_initialization(self):
         """Test basic MeshError initialization."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import MeshError
+        from digitalmodel.bemrosetta.core.exceptions import MeshError
 
         error = MeshError("Mesh processing failed")
 
@@ -246,7 +246,7 @@ class TestMeshError:
 
     def test_with_mesh_file(self):
         """Test MeshError with mesh_file parameter."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import MeshError
+        from digitalmodel.bemrosetta.core.exceptions import MeshError
 
         error = MeshError(
             message="Invalid mesh format",
@@ -257,7 +257,7 @@ class TestMeshError:
 
     def test_with_element_count(self):
         """Test MeshError with element_count parameter."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import MeshError
+        from digitalmodel.bemrosetta.core.exceptions import MeshError
 
         error = MeshError(
             message="Too many elements",
@@ -268,7 +268,7 @@ class TestMeshError:
 
     def test_is_bemrosetta_error_subclass(self):
         """Test that MeshError inherits from BEMRosettaError."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import (
+        from digitalmodel.bemrosetta.core.exceptions import (
             BEMRosettaError,
             MeshError
         )
@@ -281,7 +281,7 @@ class TestExecutableNotFoundError:
 
     def test_basic_initialization(self):
         """Test basic ExecutableNotFoundError initialization."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ExecutableNotFoundError
+        from digitalmodel.bemrosetta.core.exceptions import ExecutableNotFoundError
 
         error = ExecutableNotFoundError("BEMRosetta_cl.exe not found")
 
@@ -290,7 +290,7 @@ class TestExecutableNotFoundError:
 
     def test_with_executable_path(self):
         """Test ExecutableNotFoundError with executable_path parameter."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ExecutableNotFoundError
+        from digitalmodel.bemrosetta.core.exceptions import ExecutableNotFoundError
 
         error = ExecutableNotFoundError(
             message="Executable not found",
@@ -301,7 +301,7 @@ class TestExecutableNotFoundError:
 
     def test_has_suggestions(self):
         """Test that ExecutableNotFoundError includes helpful suggestions."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ExecutableNotFoundError
+        from digitalmodel.bemrosetta.core.exceptions import ExecutableNotFoundError
 
         error = ExecutableNotFoundError("Not found")
 
@@ -312,7 +312,7 @@ class TestExecutableNotFoundError:
 
     def test_is_bemrosetta_error_subclass(self):
         """Test that ExecutableNotFoundError inherits from BEMRosettaError."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import (
+        from digitalmodel.bemrosetta.core.exceptions import (
             BEMRosettaError,
             ExecutableNotFoundError
         )
@@ -325,7 +325,7 @@ class TestExceptionRaising:
 
     def test_raise_and_catch_hierarchy(self):
         """Test exception can be caught at different hierarchy levels."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import (
+        from digitalmodel.bemrosetta.core.exceptions import (
             BEMRosettaError,
             ParserError
         )
@@ -339,7 +339,7 @@ class TestExceptionRaising:
 
     def test_exception_chaining(self):
         """Test exception chaining with __cause__."""
-        from digitalmodel.modules.bemrosetta.core.exceptions import ParserError
+        from digitalmodel.bemrosetta.core.exceptions import ParserError
 
         original = ValueError("Original error")
 

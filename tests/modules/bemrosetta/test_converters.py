@@ -11,16 +11,16 @@ import numpy as np
 import pytest
 import yaml
 
-from digitalmodel.modules.bemrosetta.converters.base import BaseConverter
-from digitalmodel.modules.bemrosetta.converters.to_orcaflex import (
+from digitalmodel.bemrosetta.converters.base import BaseConverter
+from digitalmodel.bemrosetta.converters.to_orcaflex import (
     OrcaFlexConverter,
     convert_to_orcaflex,
 )
-from digitalmodel.modules.bemrosetta.core.exceptions import ConverterError
-from digitalmodel.modules.bemrosetta.models import ConversionResult, QTFData
-from digitalmodel.modules.bemrosetta.models.conversion_result import ConversionStatus
-from digitalmodel.modules.bemrosetta.models.qtf_data import QTFComponent, QTFType
-from digitalmodel.modules.diffraction import DiffractionResults
+from digitalmodel.bemrosetta.core.exceptions import ConverterError
+from digitalmodel.bemrosetta.models import ConversionResult, QTFData
+from digitalmodel.bemrosetta.models.conversion_result import ConversionStatus
+from digitalmodel.bemrosetta.models.qtf_data import QTFComponent, QTFType
+from digitalmodel.diffraction import DiffractionResults
 
 
 class TestBaseConverter:
@@ -332,7 +332,7 @@ class TestConvertToOrcaflexFunction:
     ):
         """convert_to_orcaflex should return successful ConversionResult."""
         with patch(
-            "digitalmodel.modules.bemrosetta.converters.to_orcaflex.OrcaFlexConverter"
+            "digitalmodel.bemrosetta.converters.to_orcaflex.OrcaFlexConverter"
         ) as MockConverter:
             mock_instance = MockConverter.return_value
             mock_instance.convert.return_value = tmp_path
@@ -347,7 +347,7 @@ class TestConvertToOrcaflexFunction:
     ):
         """convert_to_orcaflex should pass QTF data to converter."""
         with patch(
-            "digitalmodel.modules.bemrosetta.converters.to_orcaflex.OrcaFlexConverter"
+            "digitalmodel.bemrosetta.converters.to_orcaflex.OrcaFlexConverter"
         ) as MockConverter:
             mock_instance = MockConverter.return_value
             mock_instance.convert.return_value = tmp_path
@@ -363,7 +363,7 @@ class TestConvertToOrcaflexFunction:
     ):
         """convert_to_orcaflex should return failed result on exception."""
         with patch(
-            "digitalmodel.modules.bemrosetta.converters.to_orcaflex.OrcaFlexConverter"
+            "digitalmodel.bemrosetta.converters.to_orcaflex.OrcaFlexConverter"
         ) as MockConverter:
             mock_instance = MockConverter.return_value
             mock_instance.convert.side_effect = Exception("Conversion failed")
@@ -459,7 +459,7 @@ def mock_diffraction_results_no_damping():
 @pytest.fixture
 def mock_diffraction_results_complete(sample_frequencies, sample_headings):
     """Create complete mock DiffractionResults for integration testing."""
-    from digitalmodel.modules.diffraction import (
+    from digitalmodel.diffraction import (
         DiffractionResults,
         RAOSet,
         AddedMassSet,

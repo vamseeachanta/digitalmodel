@@ -34,7 +34,7 @@ fsts-l015-test-cases/
 ### Using the Analysis Module
 ```bash
 # Run comparative analysis on test data
-python -m digitalmodel.modules.orcaflex.analysis \
+python -m digitalmodel.orcaflex.analysis \
     --input-directory tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output/.csv \
     --output-directory tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output
 ```
@@ -42,7 +42,7 @@ python -m digitalmodel.modules.orcaflex.analysis \
 ### Using Configuration Files
 ```bash
 # Run with specific test configuration
-python -m digitalmodel.modules.orcaflex.mooring \
+python -m digitalmodel.orcaflex.mooring \
     --config tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts/dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml
 ```
 

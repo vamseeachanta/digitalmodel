@@ -6,8 +6,8 @@ Quick test to verify the AQWA parser works with real .LIS files.
 """
 
 from pathlib import Path
-from digitalmodel.modules.diffraction.aqwa_lis_parser import parse_aqwa_lis_file
-from digitalmodel.modules.diffraction import AQWAConverter, validate_results, OrcaFlexExporter
+from digitalmodel.diffraction.aqwa_lis_parser import parse_aqwa_lis_file
+from digitalmodel.diffraction import AQWAConverter, validate_results, OrcaFlexExporter
 
 def test_aqwa_parser():
     """Test AQWA parser with real .LIS file"""

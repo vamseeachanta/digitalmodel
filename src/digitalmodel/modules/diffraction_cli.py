@@ -170,7 +170,7 @@ def list_tools():
 def run_aqwa(args):
     """Execute AQWA analysis"""
 
-    from digitalmodel.modules.aqwa.aqwa_analysis import AqwaAnalysis
+    from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis
 
     # Build configuration
     if args.config:
@@ -235,7 +235,7 @@ def run_orcawave(args):
 
     # OrcaWave orchestrator imports
     try:
-        from digitalmodel.modules.orcawave.diffraction.orchestrator import OrcaWaveOrchestrator
+        from digitalmodel.orcawave.diffraction.orchestrator import OrcaWaveOrchestrator
     except ImportError:
         print("Error: OrcaWave module not found")
         print("Ensure repository is properly set up and dependencies installed")

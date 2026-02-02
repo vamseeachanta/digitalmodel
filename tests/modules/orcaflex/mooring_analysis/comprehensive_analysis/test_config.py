@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 import yaml
 
-from digitalmodel.modules.orcaflex.mooring_analysis.comprehensive_analysis.config import (
+from digitalmodel.orcaflex.mooring_analysis.comprehensive_analysis.config import (
     AnalysisConfig,
     ConvergenceCriteria,
     StiffnessConfig,

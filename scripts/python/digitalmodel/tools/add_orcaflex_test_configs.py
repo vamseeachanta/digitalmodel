@@ -70,7 +70,7 @@ sys.path.insert(0, str(project_root))
 
 def run_analysis():
     """Run the OrcaFlex analysis for {test_name}."""
-    from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+    from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
     
     current_dir = Path(__file__).parent.parent
     config_file = Path(__file__).parent / '{test_name}_config.yml'
@@ -109,7 +109,7 @@ echo Running {test_name} analysis...
 cd /d "%~dp0\\.."
 
 REM Use the universal runner
-python -m digitalmodel.modules.orcaflex.universal ^
+python -m digitalmodel.orcaflex.universal ^
     --input-directory . ^
     --config scripts/{test_name}_config.yml ^
     --parallel 4
@@ -132,7 +132,7 @@ echo "Running {test_name} analysis..."
 cd "$(dirname "$0")/.."
 
 # Use the universal runner
-python -m digitalmodel.modules.orcaflex.universal \\
+python -m digitalmodel.orcaflex.universal \\
     --input-directory . \\
     --config scripts/{test_name}_config.yml \\
     --parallel 4

@@ -680,7 +680,7 @@ class Transform():
     def gis_deg_to_distance(self, df, cfg):
         warnings.warn(
             "gis_deg_to_distance is deprecated. Use "
-            "digitalmodel.modules.gis.CoordinateTransformer instead.",
+            "digitalmodel.gis.CoordinateTransformer instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -713,7 +713,7 @@ class Transform():
     def gis_distance_to_deg(self):
         warnings.warn(
             "gis_distance_to_deg is deprecated. Use "
-            "digitalmodel.modules.gis.CoordinateTransformer instead.",
+            "digitalmodel.gis.CoordinateTransformer instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -722,7 +722,7 @@ class Transform():
     def get_gis_converted_df_superseded(self, data_set_cfg, df):
         warnings.warn(
             "get_gis_converted_df_superseded is deprecated. Use "
-            "digitalmodel.modules.gis.FeatureLayer.reproject() instead.",
+            "digitalmodel.gis.FeatureLayer.reproject() instead.",
             DeprecationWarning,
             stacklevel=2,
         )

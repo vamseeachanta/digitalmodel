@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from digitalmodel.modules.gis.scripts.qgis.qgis_processing import QGISScriptGenerator
+from digitalmodel.gis.scripts.qgis.qgis_processing import QGISScriptGenerator
 
 
 # ---------------------------------------------------------------------------

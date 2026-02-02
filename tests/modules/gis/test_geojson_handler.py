@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from digitalmodel.modules.gis.io.geojson_handler import GeoJSONHandler
+from digitalmodel.gis.io.geojson_handler import GeoJSONHandler
 
 
 class TestRead:

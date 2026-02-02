@@ -194,7 +194,7 @@ The module consolidates extensive existing functionality:
 ### Mooring Analysis
 ```python
 from digitalmodel.modules.mooring_analysis import MooringDesigner
-from digitalmodel.modules.orcaflex import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex import UniversalOrcaFlexRunner
 
 # 1. Design mooring system
 designer = MooringDesigner(system)
@@ -207,7 +207,7 @@ results = runner.run(models=['mooring_model.yml'])
 
 ### Fatigue Analysis
 ```python
-from digitalmodel.modules.orcaflex import run_models
+from digitalmodel.orcaflex import run_models
 from digitalmodel.modules.fatigue_analysis import FatigueDamageCalculator
 
 # 1. Run simulation

@@ -28,7 +28,7 @@ MODULE_NAME_RE = re.compile(
 def extract_module_name(dotted_path: str) -> str:
     """Extract the top-level module name from a dotted import path.
 
-    Example: 'digitalmodel.modules.orcaflex.orcaflex' -> 'orcaflex'
+    Example: 'digitalmodel.orcaflex.orcaflex' -> 'orcaflex'
     """
     match = MODULE_NAME_RE.match(dotted_path)
     if match:

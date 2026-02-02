@@ -85,11 +85,11 @@ src/digitalmodel/modules/<software>/<asset_category>_validation/
 
 ```python
 # Use existing model interfaces
-from digitalmodel.modules.orcaflex.core.model_interface import ModelInterface
-from digitalmodel.modules.orcaflex.core.logging_config import OrcaFlexLogger
+from digitalmodel.orcaflex.core.model_interface import ModelInterface
+from digitalmodel.orcaflex.core.logging_config import OrcaFlexLogger
 
 # Leverage existing API abstraction
-from digitalmodel.modules.orcaflex.core.exceptions import (
+from digitalmodel.orcaflex.core.exceptions import (
     OrcaFlexError, ModelError, LicenseError
 )
 ```
@@ -562,7 +562,7 @@ repos:
     hooks:
       - id: validate-orcaflex-input
         name: Validate OrcaFlex Modular Input Files
-        entry: python -m digitalmodel.modules.orcaflex.modular_input_validation
+        entry: python -m digitalmodel.orcaflex.modular_input_validation
         language: python
         files: '\.(yml|yaml)$'
         pass_filenames: true
@@ -597,7 +597,7 @@ jobs:
 
       - name: Run validation
         run: |
-          python -m digitalmodel.modules.orcaflex.modular_input_validation \
+          python -m digitalmodel.orcaflex.modular_input_validation \
             --report-all \
             --output-dir validation_results/ \
             specs/modules/orcaflex/modular-input-file/output/*.yml

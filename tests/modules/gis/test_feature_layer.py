@@ -7,9 +7,9 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from digitalmodel.modules.gis.core.crs import CRSDefinition, CRSType
-from digitalmodel.modules.gis.core.geometry import GeoPoint
-from digitalmodel.modules.gis.layers.feature_layer import FeatureLayer
+from digitalmodel.gis.core.crs import CRSDefinition, CRSType
+from digitalmodel.gis.core.geometry import GeoPoint
+from digitalmodel.gis.layers.feature_layer import FeatureLayer
 
 
 # ------------------------------------------------------------------

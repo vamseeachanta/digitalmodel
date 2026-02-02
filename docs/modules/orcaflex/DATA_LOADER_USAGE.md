@@ -4,7 +4,7 @@
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.orcaflex.modular_input_validation.data_loader import CALMBuoyDataLoader
+from digitalmodel.orcaflex.modular_input_validation.data_loader import CALMBuoyDataLoader
 
 # Initialize loader
 data_dir = Path('/path/to/digitalmodel/data')
@@ -149,7 +149,7 @@ data.mooring_line_properties  # Dict[str, Dict]
 ## Validation Example
 
 ```python
-from digitalmodel.modules.orcaflex.modular_input_validation.data_loader import CALMBuoyDataLoader
+from digitalmodel.orcaflex.modular_input_validation.data_loader import CALMBuoyDataLoader
 
 # Load reference data
 loader = CALMBuoyDataLoader(Path('data'))

@@ -18,7 +18,7 @@ if sys.platform == 'win32':
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from digitalmodel.modules.orcaflex.operability_analysis import OperabilityAnalyzer
+from digitalmodel.orcaflex.operability_analysis import OperabilityAnalyzer
 
 
 def load_project_config(config_path: Path) -> dict:

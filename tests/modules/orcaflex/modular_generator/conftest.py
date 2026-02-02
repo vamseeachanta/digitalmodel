@@ -16,7 +16,7 @@ SPEC_FILE = SPEC_DIR / "spec.yml"
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 # Source package path
-SRC_PACKAGE = "digitalmodel.modules.orcaflex.modular_generator"
+SRC_PACKAGE = "digitalmodel.orcaflex.modular_generator"
 
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def spec_data() -> dict:
 @pytest.fixture
 def validated_spec(spec_data):
     """Load and validate the 30in pipeline spec."""
-    from digitalmodel.modules.orcaflex.modular_generator.schema import ProjectInputSpec
+    from digitalmodel.orcaflex.modular_generator.schema import ProjectInputSpec
 
     return ProjectInputSpec(**spec_data)
 
@@ -41,7 +41,7 @@ def golden_output(validated_spec, tmp_path):
     Returns:
         Dict mapping filename -> parsed YAML content for each include file.
     """
-    from digitalmodel.modules.orcaflex.modular_generator import ModularModelGenerator
+    from digitalmodel.orcaflex.modular_generator import ModularModelGenerator
 
     # Generate to temp directory
     output_dir = tmp_path / "golden"
@@ -71,7 +71,7 @@ def golden_output(validated_spec, tmp_path):
 @pytest.fixture
 def builder_context():
     """Create a fresh BuilderContext instance."""
-    from digitalmodel.modules.orcaflex.modular_generator.builders.context import (
+    from digitalmodel.orcaflex.modular_generator.builders.context import (
         BuilderContext,
     )
 

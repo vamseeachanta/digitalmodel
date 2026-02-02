@@ -5,7 +5,7 @@
 # a complete OrcaFlex modular model structure.
 #
 # Usage:
-#   uv run python -m digitalmodel.modules.orcaflex.modular_generator generate \
+#   uv run python -m digitalmodel.orcaflex.modular_generator generate \
 #       --input spec.yml --output generated/
 
 metadata:

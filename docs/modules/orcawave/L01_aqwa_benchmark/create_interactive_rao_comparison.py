@@ -15,7 +15,7 @@ from loguru import logger
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
-from digitalmodel.modules.diffraction.aqwa_lis_parser import AQWALISParser
+from digitalmodel.diffraction.aqwa_lis_parser import AQWALISParser
 import OrcFxAPI as ofx
 
 

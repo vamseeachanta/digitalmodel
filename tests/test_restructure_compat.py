@@ -57,9 +57,9 @@ class TestCurrentImports:
     @pytest.mark.parametrize(
         "module_path",
         [
-            "digitalmodel.modules.orcaflex",
-            "digitalmodel.modules.aqwa",
-            "digitalmodel.modules.diffraction",
+            "digitalmodel.orcaflex",
+            "digitalmodel.aqwa",
+            "digitalmodel.diffraction",
             "digitalmodel.modules.pipeline",
             "digitalmodel.signal_analysis",
             "digitalmodel.fatigue_analysis",
@@ -98,12 +98,12 @@ class TestCLIEntryPoints:
 
     ENTRY_POINTS = {
         "digital_model": "digitalmodel.__main__",
-        "run-to-sim": "digitalmodel.modules.orcaflex.run_to_sim_cli",
-        "orcaflex-universal": "digitalmodel.modules.orcaflex.universal_cli",
-        "orcaflex-convert": "digitalmodel.modules.orcaflex.format_converter.cli",
+        "run-to-sim": "digitalmodel.orcaflex.run_to_sim_cli",
+        "orcaflex-universal": "digitalmodel.orcaflex.universal_cli",
+        "orcaflex-convert": "digitalmodel.orcaflex.format_converter.cli",
         "create-go-by": "digitalmodel.modules.automation.go_by_folder.cli",
-        "aqwa": "digitalmodel.modules.aqwa.aqwa_cli",
-        "diffraction": "digitalmodel.modules.diffraction.cli",
+        "aqwa": "digitalmodel.aqwa.aqwa_cli",
+        "diffraction": "digitalmodel.diffraction.cli",
         "structural-analysis": "digitalmodel.structural_analysis.cli",
         "mooring-analysis": "digitalmodel.mooring_analysis.cli",
         "viv-analysis": "digitalmodel.viv_analysis.cli",
@@ -112,7 +112,7 @@ class TestCLIEntryPoints:
         "hydrodynamics": "digitalmodel.hydrodynamics.cli",
         "gmsh-meshing": "digitalmodel.modules.gmsh_meshing.cli",
         "workflow-automation": "digitalmodel.modules.workflow_automation.cli",
-        "bemrosetta": "digitalmodel.modules.bemrosetta.cli",
+        "bemrosetta": "digitalmodel.bemrosetta.cli",
     }
 
     @pytest.mark.parametrize("name,module_path", ENTRY_POINTS.items())

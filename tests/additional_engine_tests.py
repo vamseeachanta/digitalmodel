@@ -21,18 +21,18 @@ mock_modules = {
     'assetutilities.common.update_deep': MagicMock(),
     'assetutilities.common.yml_utilities': MagicMock(),
     'digitalmodel.aqwa': MagicMock(),
-    'digitalmodel.modules.aqwa.mes_files': MagicMock(),
+    'digitalmodel.aqwa.mes_files': MagicMock(),
     'digitalmodel.common.cathodic_protection': MagicMock(),
     'digitalmodel.common.code_dnvrph103_hydrodynamics_circular': MagicMock(),
     'digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular': MagicMock(),
     'digitalmodel.signal_analysis.fatigue': MagicMock(),
     'digitalmodel.common.ship_design': MagicMock(),
     'digitalmodel.modules.mooring.mooring': MagicMock(),
-    'digitalmodel.modules.orcaflex.orcaflex': MagicMock(),
-    'digitalmodel.modules.orcaflex.orcaflex_file_management': MagicMock(),
-    'digitalmodel.modules.orcaflex.orcaflex_installation': MagicMock(),
-    'digitalmodel.modules.orcaflex.orcaflex_modal_analysis': MagicMock(),
-    'digitalmodel.modules.orcaflex.umbilical_analysis_components': MagicMock(),
+    'digitalmodel.orcaflex.orcaflex': MagicMock(),
+    'digitalmodel.orcaflex.orcaflex_file_management': MagicMock(),
+    'digitalmodel.orcaflex.orcaflex_installation': MagicMock(),
+    'digitalmodel.orcaflex.orcaflex_modal_analysis': MagicMock(),
+    'digitalmodel.orcaflex.umbilical_analysis_components': MagicMock(),
     'digitalmodel.pipe_capacity.pipe_capacity': MagicMock(),
     'digitalmodel.pipeline.pipeline': MagicMock(),
     'digitalmodel.rao_analysis.rao_analysis': MagicMock(),
@@ -42,7 +42,7 @@ mock_modules = {
     'digitalmodel.viv_analysis.viv_analysis': MagicMock(),
     'digitalmodel.common.plate_buckling': MagicMock(),
     'loguru': MagicMock(),
-    'digitalmodel.modules.orcaflex.output_control': MagicMock(),
+    'digitalmodel.orcaflex.output_control': MagicMock(),
 }
 
 for module_name, mock_obj in mock_modules.items():
@@ -130,7 +130,7 @@ def test_output_control_levels():
 
     # Test QUIET output level
     with patch('digitalmodel.engine.get_output_level_from_argv') as mock_output:
-        from digitalmodel.modules.orcaflex.output_control import OutputController
+        from digitalmodel.orcaflex.output_control import OutputController
         mock_output.return_value = OutputController.QUIET
 
         with patch('digitalmodel.engine.logger'):

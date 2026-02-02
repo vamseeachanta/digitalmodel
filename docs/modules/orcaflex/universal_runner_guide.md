@@ -1,7 +1,7 @@
 # OrcaFlex Universal Runner Module Guide
 
 ## Overview
-The `digitalmodel.modules.orcaflex.universal` module provides a command-line interface for batch processing OrcaFlex model files (.yml, .dat, .sim) to generate simulation files.
+The `digitalmodel.orcaflex.universal` module provides a command-line interface for batch processing OrcaFlex model files (.yml, .dat, .sim) to generate simulation files.
 
 ## Installation
 Ensure digitalmodel is installed with OrcaFlex support:
@@ -16,13 +16,13 @@ pip install -e /path/to/digitalmodel
 The module can process OrcaFlex YAML model files and generate corresponding .sim files:
 
 ```bash
-python -m digitalmodel.modules.orcaflex.universal pattern="*.yml" input_directory="." output_directory="."
+python -m digitalmodel.orcaflex.universal pattern="*.yml" input_directory="." output_directory="."
 ```
 
 **Note:** If no pattern is specified, the module defaults to `"*.yml"` (all YAML files), NOT all files:
 ```bash
 # This will process all .yml files (default pattern)
-python -m digitalmodel.modules.orcaflex.universal input_directory="." output_directory="."
+python -m digitalmodel.orcaflex.universal input_directory="." output_directory="."
 ```
 
 ### Common Usage Patterns
@@ -30,29 +30,29 @@ python -m digitalmodel.modules.orcaflex.universal input_directory="." output_dir
 #### 1. Process specific model files by pattern
 ```bash
 # Process all yml files matching a pattern
-python -m digitalmodel.modules.orcaflex.universal pattern="fsts*180km3*pb*.yml" input_directory="." output_directory="."
+python -m digitalmodel.orcaflex.universal pattern="fsts*180km3*pb*.yml" input_directory="." output_directory="."
 
 # Process all yml files in current directory
-python -m digitalmodel.modules.orcaflex.universal pattern="*.yml" input_directory="." output_directory="."
+python -m digitalmodel.orcaflex.universal pattern="*.yml" input_directory="." output_directory="."
 ```
 
 #### 2. Process with different file types
 ```bash
 # Process .dat files
-python -m digitalmodel.modules.orcaflex.universal pattern="*.dat" input_directory="." output_directory="."
+python -m digitalmodel.orcaflex.universal pattern="*.dat" input_directory="." output_directory="."
 
 # Process existing .sim files
-python -m digitalmodel.modules.orcaflex.universal pattern="*.sim" input_directory="." output_directory="."
+python -m digitalmodel.orcaflex.universal pattern="*.sim" input_directory="." output_directory="."
 ```
 
 #### 3. Mock mode (no OrcaFlex license required)
 ```bash
-python -m digitalmodel.modules.orcaflex.universal --mock pattern="*.yml" input_directory="." output_directory="."
+python -m digitalmodel.orcaflex.universal --mock pattern="*.yml" input_directory="." output_directory="."
 ```
 
 #### 4. Verbose output for debugging
 ```bash
-python -m digitalmodel.modules.orcaflex.universal --verbose pattern="*.yml" input_directory="." output_directory="."
+python -m digitalmodel.orcaflex.universal --verbose pattern="*.yml" input_directory="." output_directory="."
 ```
 
 ## Command-Line Options
@@ -82,29 +82,29 @@ Keyword Arguments:
 ### Example 1: Process FSTS Models
 ```bash
 cd /path/to/orcaflex/models
-python -m digitalmodel.modules.orcaflex.universal pattern="fsts*.yml" input_directory="." output_directory="."
+python -m digitalmodel.orcaflex.universal pattern="fsts*.yml" input_directory="." output_directory="."
 ```
 
 ### Example 2: Process with Parallel Workers
 ```bash
 # Default: 30 workers
-python -m digitalmodel.modules.orcaflex.universal pattern="*.yml" parallel=true
+python -m digitalmodel.orcaflex.universal pattern="*.yml" parallel=true
 
 # Increase to 40 workers
-python -m digitalmodel.modules.orcaflex.universal pattern="*.yml" max_workers=40 parallel=true
+python -m digitalmodel.orcaflex.universal pattern="*.yml" max_workers=40 parallel=true
 
 # Increase to 60 workers for large batches
-python -m digitalmodel.modules.orcaflex.universal pattern="*.yml" max_workers=60
+python -m digitalmodel.orcaflex.universal pattern="*.yml" max_workers=60
 ```
 
 ### Example 3: Recursive Directory Search
 ```bash
-python -m digitalmodel.modules.orcaflex.universal pattern="*.yml" recursive=true input_directory="/path/to/models"
+python -m digitalmodel.orcaflex.universal pattern="*.yml" recursive=true input_directory="/path/to/models"
 ```
 
 ### Example 4: Generate Report
 ```bash
-python -m digitalmodel.modules.orcaflex.universal pattern="*.yml" --report processing_report.json
+python -m digitalmodel.orcaflex.universal pattern="*.yml" --report processing_report.json
 ```
 
 ## Supported Model Types
@@ -172,7 +172,7 @@ The module can be integrated into automated workflows:
 
 ```bash
 # In a batch script or CI pipeline
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     pattern="release_*.yml" \
     input_directory="./models" \
     output_directory="./simulations" \

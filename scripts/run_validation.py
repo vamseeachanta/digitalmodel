@@ -7,7 +7,7 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from digitalmodel.modules.orcaflex.modular_input_validation import (
+from digitalmodel.orcaflex.modular_input_validation import (
     ModularInputValidator,
     ValidationConfig
 )

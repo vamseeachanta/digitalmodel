@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from digitalmodel.modules.diffraction.input_schemas import (
+from digitalmodel.diffraction.input_schemas import (
     DiffractionSpec,
     FrequencyInputType,
 )
@@ -62,7 +62,7 @@ class TestOrcaWaveBackendSingleMode:
 
     def test_generates_single_yml_file(self, tmp_path: Path):
         """generate_single creates exactly one .yml file."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -75,7 +75,7 @@ class TestOrcaWaveBackendSingleMode:
 
     def test_single_yml_contains_required_sections(self, tmp_path: Path):
         """Single output contains all required OrcaWave top-level keys."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -98,7 +98,7 @@ class TestOrcaWaveBackendSingleMode:
 
     def test_units_system_is_si(self, tmp_path: Path):
         """OrcaWave output uses SI units."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -111,7 +111,7 @@ class TestOrcaWaveBackendSingleMode:
 
     def test_environment_mapping(self, tmp_path: Path):
         """Environment section maps water depth and density correctly."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -126,7 +126,7 @@ class TestOrcaWaveBackendSingleMode:
 
     def test_wave_headings_mapped(self, tmp_path: Path):
         """Wave headings list is correctly transcribed."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -139,7 +139,7 @@ class TestOrcaWaveBackendSingleMode:
 
     def test_solve_type_set(self, tmp_path: Path):
         """SolveType is set to potential and source formulations."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -152,7 +152,7 @@ class TestOrcaWaveBackendSingleMode:
 
     def test_load_rao_method_mapping(self, tmp_path: Path):
         """LoadRAOCalculationMethod maps correctly from spec."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -174,7 +174,7 @@ class TestBodyPropertyMapping:
 
     def test_single_body_count(self, tmp_path: Path):
         """Single-vessel spec produces exactly one body."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -187,7 +187,7 @@ class TestBodyPropertyMapping:
 
     def test_body_name(self, tmp_path: Path):
         """Body name taken from vessel spec."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -200,7 +200,7 @@ class TestBodyPropertyMapping:
 
     def test_body_mass_in_tonnes(self, tmp_path: Path):
         """BodyMass is in tonnes for SI (spec is in kg)."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -215,7 +215,7 @@ class TestBodyPropertyMapping:
 
     def test_body_centre_of_mass(self, tmp_path: Path):
         """BodyCentreOfMass maps from vessel COG."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -228,7 +228,7 @@ class TestBodyPropertyMapping:
 
     def test_body_mesh_file_reference(self, tmp_path: Path):
         """BodyMeshFileName references the mesh file from spec."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -244,7 +244,7 @@ class TestBodyPropertyMapping:
 
     def test_body_mesh_format_mapping(self, tmp_path: Path):
         """Mesh format maps to OrcaWave conventions."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -258,7 +258,7 @@ class TestBodyPropertyMapping:
 
     def test_body_mesh_symmetry_mapping(self, tmp_path: Path):
         """Mesh symmetry maps to OrcaWave symmetry convention."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -273,7 +273,7 @@ class TestBodyPropertyMapping:
 
     def test_body_inertia_from_radii_of_gyration(self, tmp_path: Path):
         """Inertia tensor built from mass and radii of gyration."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -311,7 +311,7 @@ class TestBodyPropertyMapping:
 
     def test_body_inertia_from_tensor(self, tmp_path: Path):
         """Inertia tensor from explicit tensor dict."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -336,7 +336,7 @@ class TestBodyPropertyMapping:
 
     def test_body_connection_parent_free(self, tmp_path: Path):
         """Single vessel body has connection parent = Free."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -353,7 +353,7 @@ class TestBodyPropertyMapping:
         Note: YAML 1.1 maps Yes/No to bool on load, so we check True/False.
         The actual .yml file written contains unquoted Yes/No for OrcaWave.
         """
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -369,7 +369,7 @@ class TestBodyPropertyMapping:
 
         Note: YAML 1.1 maps Yes/No to bool on load.
         """
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -399,7 +399,7 @@ class TestFrequencyMapping:
 
     def test_frequencies_as_periods_in_orcawave(self, tmp_path: Path):
         """OrcaWave always uses periods; freq values must be converted."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -426,7 +426,7 @@ class TestFrequencyMapping:
 
     def test_period_input_stays_as_periods(self, tmp_path: Path):
         """If input is already periods, they pass through."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -443,7 +443,7 @@ class TestFrequencyMapping:
 
     def test_periods_sorted_ascending(self, tmp_path: Path):
         """OrcaWave expects periods sorted in ascending order."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -466,7 +466,7 @@ class TestMultiBodyGeneration:
 
     def test_multi_body_count(self, tmp_path: Path):
         """Multi-body spec produces correct number of bodies."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -479,7 +479,7 @@ class TestMultiBodyGeneration:
 
     def test_multi_body_names(self, tmp_path: Path):
         """Multi-body body names match vessel names."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -493,7 +493,7 @@ class TestMultiBodyGeneration:
 
     def test_multi_body_connection_parent(self, tmp_path: Path):
         """Connection parent maps from spec."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -507,7 +507,7 @@ class TestMultiBodyGeneration:
 
     def test_multi_body_position(self, tmp_path: Path):
         """Body mesh position maps from spec body position."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -521,7 +521,7 @@ class TestMultiBodyGeneration:
 
     def test_infinite_water_depth(self, tmp_path: Path):
         """Infinite water depth mapped to OrcaWave convention."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -547,7 +547,7 @@ class TestSolverSettingsMapping:
 
         Note: YAML 1.1 maps Yes/No to bool on load.
         """
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -561,7 +561,7 @@ class TestSolverSettingsMapping:
 
     def test_qtf_settings_when_disabled(self, tmp_path: Path):
         """QTF fields present but disabled when qtf_calculation=False."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -574,7 +574,7 @@ class TestSolverSettingsMapping:
 
     def test_qtf_settings_when_enabled(self, tmp_path: Path):
         """QTF fields enabled when qtf_calculation=True."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -596,7 +596,7 @@ class TestOrcaWaveBackendModularMode:
 
     def test_modular_generates_master_file(self, tmp_path: Path):
         """generate_modular creates a master.yml."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -609,7 +609,7 @@ class TestOrcaWaveBackendModularMode:
 
     def test_modular_generates_section_files(self, tmp_path: Path):
         """generate_modular creates separate section files."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -633,7 +633,7 @@ class TestOrcaWaveBackendModularMode:
 
     def test_modular_environment_file_content(self, tmp_path: Path):
         """Environment modular file has correct water depth and density."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -647,7 +647,7 @@ class TestOrcaWaveBackendModularMode:
 
     def test_modular_bodies_file_content(self, tmp_path: Path):
         """Bodies modular file has correct body structure."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -662,7 +662,7 @@ class TestOrcaWaveBackendModularMode:
 
     def test_modular_frequencies_file_content(self, tmp_path: Path):
         """Frequencies modular file has period list."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -677,7 +677,7 @@ class TestOrcaWaveBackendModularMode:
 
     def test_modular_headings_file_content(self, tmp_path: Path):
         """Headings modular file has correct heading list."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 
@@ -691,7 +691,7 @@ class TestOrcaWaveBackendModularMode:
 
     def test_modular_all_files_are_valid_yaml(self, tmp_path: Path):
         """All generated modular files are valid YAML."""
-        from digitalmodel.modules.diffraction.orcawave_backend import (
+        from digitalmodel.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
 

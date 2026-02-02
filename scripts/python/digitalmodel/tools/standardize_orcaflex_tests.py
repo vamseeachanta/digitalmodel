@@ -166,16 +166,16 @@ This directory contains test cases for {parent_name + ' ' if parent_name else ''
 ### Using the Universal OrcaFlex Runner
 ```bash
 # Run all models in this directory
-python -m digitalmodel.modules.orcaflex.universal --input-directory {folder.relative_to(self.base_path)}
+python -m digitalmodel.orcaflex.universal --input-directory {folder.relative_to(self.base_path)}
 
 # Run with specific pattern
-python -m digitalmodel.modules.orcaflex.universal --pattern "*.yml" --input-directory {folder.relative_to(self.base_path)}
+python -m digitalmodel.orcaflex.universal --pattern "*.yml" --input-directory {folder.relative_to(self.base_path)}
 ```
 
 ### Using Configuration Files
 ```bash
 # Run with specific configuration
-python -m digitalmodel.modules.orcaflex.mooring --config {folder.relative_to(self.base_path)}/scripts/<config_file>.yml
+python -m digitalmodel.orcaflex.mooring --config {folder.relative_to(self.base_path)}/scripts/<config_file>.yml
 ```
 
 ## Test Files
@@ -259,7 +259,7 @@ def main():
     
     # Run universal runner with this directory
     cmd = [
-        sys.executable, '-m', 'digitalmodel.modules.orcaflex.universal',
+        sys.executable, '-m', 'digitalmodel.orcaflex.universal',
         '--input-directory', str(current_dir),
         '--pattern', '*.yml',
         '--parallel', '4'

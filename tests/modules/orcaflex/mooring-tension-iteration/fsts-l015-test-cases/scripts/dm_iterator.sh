@@ -4,7 +4,7 @@
 /d/github/digitalmodel/.venv/Scripts/python -m digitalmodel config/dm_ofx_anal_mooring_fsts_l015_125km3_sb.yml
 # batch run all yml files and save sim files to same directory
 /d/github/digitalmodel/.venv/Scripts/python run_models_to_sim.py dat=true input_directory="../run_files/dat/" output_directory="../run_files/sim/"
-# /d/github/digitalmodel/.venv/Scripts/python -m digitalmodel.modules.orcaflex.universal pattern="fsts*180km3*pb_*.yml" input_directory="." output_directory="." validate=false
+# /d/github/digitalmodel/.venv/Scripts/python -m digitalmodel.orcaflex.universal pattern="fsts*180km3*pb_*.yml" input_directory="." output_directory="." validate=false
 
 # postprocess to get results
 /d/github/digitalmodel/.venv/Scripts/python -m digitalmodel config/dm_ofx_post_fsts_lngc.yml --max_workers 30

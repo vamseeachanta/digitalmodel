@@ -14,7 +14,7 @@ Demonstrates all conversion capabilities with practical examples:
 """
 
 from pathlib import Path
-from digitalmodel.modules.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 
 
 # ============================================================================
@@ -324,25 +324,25 @@ def example_7_cli_usage():
     print("\nCLI Commands:\n")
 
     print("1. Single file conversion:")
-    print("   python -m digitalmodel.modules.orcaflex.convert_cli model.dat")
+    print("   python -m digitalmodel.orcaflex.convert_cli model.dat")
 
     print("\n2. Specify output format:")
-    print("   python -m digitalmodel.modules.orcaflex.convert_cli model.yml --format dat")
+    print("   python -m digitalmodel.orcaflex.convert_cli model.yml --format dat")
 
     print("\n3. Batch conversion:")
-    print("   python -m digitalmodel.modules.orcaflex.convert_cli --batch models/ output/")
+    print("   python -m digitalmodel.orcaflex.convert_cli --batch models/ output/")
 
     print("\n4. Batch with pattern:")
-    print("   python -m digitalmodel.modules.orcaflex.convert_cli --batch models/ output/ --pattern '*.dat'")
+    print("   python -m digitalmodel.orcaflex.convert_cli --batch models/ output/ --pattern '*.dat'")
 
     print("\n5. Parallel processing:")
-    print("   python -m digitalmodel.modules.orcaflex.convert_cli --batch models/ output/ --parallel --workers 8")
+    print("   python -m digitalmodel.orcaflex.convert_cli --batch models/ output/ --parallel --workers 8")
 
     print("\n6. Mock mode:")
-    print("   python -m digitalmodel.modules.orcaflex.convert_cli --batch models/ output/ --mock")
+    print("   python -m digitalmodel.orcaflex.convert_cli --batch models/ output/ --mock")
 
     print("\n7. Get help:")
-    print("   python -m digitalmodel.modules.orcaflex.convert_cli --help")
+    print("   python -m digitalmodel.orcaflex.convert_cli --help")
 
 
 # ============================================================================
@@ -377,7 +377,7 @@ converter_to_dat = OrcaFlexConverterEnhanced(
 converter_to_dat.convert_batch()
 
 # 4. Run OrcaFlex simulations with universal runner
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 runner = UniversalOrcaFlexRunner(
     input_directory="models_executable/",
@@ -386,7 +386,7 @@ runner = UniversalOrcaFlexRunner(
 runner.run_batch(pattern="*.dat")
 
 # 5. Post-process results
-from digitalmodel.modules.orcaflex.opp import OrcaFlexPostProcess
+from digitalmodel.orcaflex.opp import OrcaFlexPostProcess
 
 opp = OrcaFlexPostProcess()
 opp.process_all(sim_directory="results/.sim/")

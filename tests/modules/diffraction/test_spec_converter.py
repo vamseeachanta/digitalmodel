@@ -45,7 +45,7 @@ class TestSpecConverterConvertAQWA:
     def test_convert_aqwa_single_produces_dat_file(
         self, ship_spec_path: Path, tmp_path: Path
     ) -> None:
-        from digitalmodel.modules.diffraction.spec_converter import SpecConverter
+        from digitalmodel.diffraction.spec_converter import SpecConverter
 
         converter = SpecConverter(ship_spec_path)
         result = converter.convert(
@@ -60,7 +60,7 @@ class TestSpecConverterConvertAQWA:
     def test_convert_aqwa_modular_produces_directory(
         self, ship_spec_path: Path, tmp_path: Path
     ) -> None:
-        from digitalmodel.modules.diffraction.spec_converter import SpecConverter
+        from digitalmodel.diffraction.spec_converter import SpecConverter
 
         converter = SpecConverter(ship_spec_path)
         output_dir = tmp_path / "aqwa_modular"
@@ -79,7 +79,7 @@ class TestSpecConverterConvertOrcaWave:
     def test_convert_orcawave_single_produces_yml_file(
         self, ship_spec_path: Path, tmp_path: Path
     ) -> None:
-        from digitalmodel.modules.diffraction.spec_converter import SpecConverter
+        from digitalmodel.diffraction.spec_converter import SpecConverter
 
         converter = SpecConverter(ship_spec_path)
         result = converter.convert(
@@ -94,7 +94,7 @@ class TestSpecConverterConvertOrcaWave:
     def test_convert_orcawave_modular_produces_directory(
         self, ship_spec_path: Path, tmp_path: Path
     ) -> None:
-        from digitalmodel.modules.diffraction.spec_converter import SpecConverter
+        from digitalmodel.diffraction.spec_converter import SpecConverter
 
         converter = SpecConverter(ship_spec_path)
         output_dir = tmp_path / "orcawave_modular"
@@ -116,7 +116,7 @@ class TestSpecConverterConvertAll:
     def test_convert_all_returns_both_solvers(
         self, ship_spec_path: Path, tmp_path: Path
     ) -> None:
-        from digitalmodel.modules.diffraction.spec_converter import SpecConverter
+        from digitalmodel.diffraction.spec_converter import SpecConverter
 
         converter = SpecConverter(ship_spec_path)
         results = converter.convert_all(output_dir=tmp_path)
@@ -129,7 +129,7 @@ class TestSpecConverterConvertAll:
     def test_convert_all_creates_solver_subdirectories(
         self, ship_spec_path: Path, tmp_path: Path
     ) -> None:
-        from digitalmodel.modules.diffraction.spec_converter import SpecConverter
+        from digitalmodel.diffraction.spec_converter import SpecConverter
 
         converter = SpecConverter(ship_spec_path)
         results = converter.convert_all(output_dir=tmp_path)
@@ -146,7 +146,7 @@ class TestSpecConverterValidate:
     def test_validate_valid_spec_returns_no_issues(
         self, ship_spec_path: Path
     ) -> None:
-        from digitalmodel.modules.diffraction.spec_converter import SpecConverter
+        from digitalmodel.diffraction.spec_converter import SpecConverter
 
         converter = SpecConverter(ship_spec_path)
         issues = converter.validate()
@@ -169,7 +169,7 @@ class TestSpecConverterValidate:
         with open(bad_spec_path, "w") as f:
             yaml.dump(bad_data, f)
 
-        from digitalmodel.modules.diffraction.spec_converter import SpecConverter
+        from digitalmodel.diffraction.spec_converter import SpecConverter
 
         with pytest.raises(Exception):
             # Should raise a validation error on construction
@@ -182,7 +182,7 @@ class TestSpecConverterMultiBody:
     def test_convert_aqwa_multibody(
         self, fpso_spec_path: Path, tmp_path: Path
     ) -> None:
-        from digitalmodel.modules.diffraction.spec_converter import SpecConverter
+        from digitalmodel.diffraction.spec_converter import SpecConverter
 
         converter = SpecConverter(fpso_spec_path)
         result = converter.convert(
@@ -196,7 +196,7 @@ class TestSpecConverterMultiBody:
     def test_convert_orcawave_multibody(
         self, fpso_spec_path: Path, tmp_path: Path
     ) -> None:
-        from digitalmodel.modules.diffraction.spec_converter import SpecConverter
+        from digitalmodel.diffraction.spec_converter import SpecConverter
 
         converter = SpecConverter(fpso_spec_path)
         result = converter.convert(
@@ -218,7 +218,7 @@ class TestCLIConvertSpec:
     def test_convert_spec_aqwa_exit_0(
         self, ship_spec_path: Path, tmp_path: Path
     ) -> None:
-        from digitalmodel.modules.diffraction.cli import cli
+        from digitalmodel.diffraction.cli import cli
 
         runner = CliRunner()
         result = runner.invoke(
@@ -236,7 +236,7 @@ class TestCLIConvertSpec:
     def test_convert_spec_orcawave_exit_0(
         self, ship_spec_path: Path, tmp_path: Path
     ) -> None:
-        from digitalmodel.modules.diffraction.cli import cli
+        from digitalmodel.diffraction.cli import cli
 
         runner = CliRunner()
         result = runner.invoke(
@@ -254,7 +254,7 @@ class TestCLIConvertSpec:
     def test_convert_spec_all_generates_both(
         self, ship_spec_path: Path, tmp_path: Path
     ) -> None:
-        from digitalmodel.modules.diffraction.cli import cli
+        from digitalmodel.diffraction.cli import cli
 
         runner = CliRunner()
         result = runner.invoke(
@@ -272,7 +272,7 @@ class TestCLIConvertSpec:
         assert "orcawave" in result.output.lower()
 
     def test_convert_spec_help(self) -> None:
-        from digitalmodel.modules.diffraction.cli import cli
+        from digitalmodel.diffraction.cli import cli
 
         runner = CliRunner()
         result = runner.invoke(cli, ["convert-spec", "--help"])
@@ -286,7 +286,7 @@ class TestCLIValidateSpec:
     def test_validate_spec_valid_exit_0(
         self, ship_spec_path: Path
     ) -> None:
-        from digitalmodel.modules.diffraction.cli import cli
+        from digitalmodel.diffraction.cli import cli
 
         runner = CliRunner()
         result = runner.invoke(
@@ -305,7 +305,7 @@ class TestCLIValidateSpec:
         with open(bad_spec_path, "w") as f:
             yaml.dump(bad_data, f)
 
-        from digitalmodel.modules.diffraction.cli import cli
+        from digitalmodel.diffraction.cli import cli
 
         runner = CliRunner()
         result = runner.invoke(
@@ -315,7 +315,7 @@ class TestCLIValidateSpec:
         assert result.exit_code != 0
 
     def test_validate_spec_help(self) -> None:
-        from digitalmodel.modules.diffraction.cli import cli
+        from digitalmodel.diffraction.cli import cli
 
         runner = CliRunner()
         result = runner.invoke(cli, ["validate-spec", "--help"])

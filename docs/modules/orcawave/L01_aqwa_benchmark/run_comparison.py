@@ -24,10 +24,10 @@ from datetime import datetime
 repo_root = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(repo_root / "src"))
 
-from digitalmodel.modules.diffraction.aqwa_lis_parser import AQWALISParser
-from digitalmodel.modules.diffraction.aqwa_converter import AQWAConverter
-from digitalmodel.modules.diffraction.comparison_framework import DiffractionComparator, ComparisonReport
-from digitalmodel.modules.diffraction.output_schemas import DiffractionResults
+from digitalmodel.diffraction.aqwa_lis_parser import AQWALISParser
+from digitalmodel.diffraction.aqwa_converter import AQWAConverter
+from digitalmodel.diffraction.comparison_framework import DiffractionComparator, ComparisonReport
+from digitalmodel.diffraction.output_schemas import DiffractionResults
 from loguru import logger
 
 
@@ -91,7 +91,7 @@ def extract_orcawave_data(sim_file: Path) -> DiffractionResults:
         return None
 
     # Use OrcaWave converter
-    from digitalmodel.modules.diffraction.orcawave_converter import OrcaWaveConverter
+    from digitalmodel.diffraction.orcawave_converter import OrcaWaveConverter
 
     converter = OrcaWaveConverter(vessel=vessel)
     results = converter.convert()

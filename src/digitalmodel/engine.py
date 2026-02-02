@@ -16,13 +16,13 @@ from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
 from digitalmodel.signal_analysis.fatigue import FatigueDamageCalculator as FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
 from digitalmodel.mooring_analysis import MooringDesigner
-from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
-from digitalmodel.modules.orcaflex.orcaflex_file_management import (
+from digitalmodel.orcaflex.orcaflex import OrcaFlex
+from digitalmodel.orcaflex.orcaflex_file_management import (
     OrcaflexFileManagement,
 )
-from digitalmodel.modules.orcaflex.orcaflex_installation import OrcInstallation
-from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
-from digitalmodel.modules.orcaflex.umbilical_analysis_components import (
+from digitalmodel.orcaflex.orcaflex_installation import OrcInstallation
+from digitalmodel.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
+from digitalmodel.orcaflex.umbilical_analysis_components import (
     UmbilicalAnalysis,
 )
 from digitalmodel.pipe_capacity.pipe_capacity import PipeCapacity
@@ -35,7 +35,7 @@ from digitalmodel.transformation.transformation import Transformation
 from digitalmodel.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.common.plate_buckling import PlateBuckling
 from loguru import logger
-from digitalmodel.modules.orcaflex.output_control import OutputController, get_output_level_from_argv
+from digitalmodel.orcaflex.output_control import OutputController, get_output_level_from_argv
 
 library_name = "digitalmodel"
 wwyaml = WorkingWithYAML()

@@ -5,7 +5,7 @@ ABOUTME: Comprehensive examples for OrcaFlex Model Generator - demonstrates comp
 """
 
 from pathlib import Path
-from digitalmodel.modules.orcaflex.model_generator import OrcaFlexModelGenerator, generate_model
+from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator, generate_model
 import pandas as pd
 
 print("="*80)

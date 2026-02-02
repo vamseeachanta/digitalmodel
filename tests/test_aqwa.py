@@ -127,7 +127,7 @@ class TestAqwaRouter:
     @patch('digitalmodel.aqwa.a_pre')
     @patch('digitalmodel.aqwa.a_post')
     @patch('digitalmodel.aqwa.mes_files')
-    @patch('digitalmodel.modules.aqwa.aqwa_router.ViscousDampingDetermination')
+    @patch('digitalmodel.aqwa.aqwa_router.ViscousDampingDetermination')
     def test_router_analysis_viscous_damping_enabled(
         self,
         mock_viscous,
@@ -164,7 +164,7 @@ class TestAqwaRouter:
     @patch('digitalmodel.aqwa.a_pre')
     @patch('digitalmodel.aqwa.a_post')
     @patch('digitalmodel.aqwa.mes_files')
-    @patch('digitalmodel.modules.aqwa.aqwa_router.ViscousDampingDetermination')
+    @patch('digitalmodel.aqwa.aqwa_router.ViscousDampingDetermination')
     def test_router_analysis_viscous_damping_disabled_fallback(
         self,
         mock_viscous,

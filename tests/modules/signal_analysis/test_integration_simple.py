@@ -120,7 +120,7 @@ def test_orcaflex_integration():
     print("="*60)
     
     try:
-        from digitalmodel.modules.orcaflex.time_trace_processor import (
+        from digitalmodel.orcaflex.time_trace_processor import (
             OrcaFlexTimeTraceProcessor, TimeTraceConfig, create_default_config
         )
         

@@ -143,7 +143,7 @@ class TestGeneratorBackwardCompat:
 
     def test_round_trip_generation(self, validated_spec, tmp_path):
         """Generate twice and verify output is identical."""
-        from digitalmodel.modules.orcaflex.modular_generator import (
+        from digitalmodel.orcaflex.modular_generator import (
             ModularModelGenerator,
         )
 

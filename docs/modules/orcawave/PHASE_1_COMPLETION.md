@@ -175,7 +175,7 @@ python src/digitalmodel/modules/aqwa/aqwa_cli.py \
 
 **Python API**:
 ```python
-from digitalmodel.modules.aqwa.aqwa_analysis import AqwaAnalysis
+from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis
 
 cfg = {
     'Analysis': {

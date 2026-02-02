@@ -15,7 +15,7 @@ from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 
-from digitalmodel.modules.orcaflex.examples_integration.downloader import OrcaflexExampleDownloader
+from digitalmodel.orcaflex.examples_integration.downloader import OrcaflexExampleDownloader
 
 
 class TestOrcaflexExampleDownloader(unittest.TestCase):
@@ -77,7 +77,7 @@ class TestOrcaflexExampleDownloader(unittest.TestCase):
             'abc123'
         )
     
-    @patch('digitalmodel.modules.orcaflex.examples_integration.downloader.requests.Session')
+    @patch('digitalmodel.orcaflex.examples_integration.downloader.requests.Session')
     def test_rate_limiting(self, mock_session_class):
         """Test rate limiting between requests."""
         mock_session = MagicMock()
@@ -101,7 +101,7 @@ class TestOrcaflexExampleDownloader(unittest.TestCase):
         time_diff = second_call_time - first_call_time
         self.assertGreaterEqual(time_diff, 0.1, "Rate limiting should enforce delay")
     
-    @patch('digitalmodel.modules.orcaflex.examples_integration.downloader.requests.Session.get')
+    @patch('digitalmodel.orcaflex.examples_integration.downloader.requests.Session.get')
     def test_retry_logic(self, mock_get):
         """Test retry logic with exponential backoff."""
         # Configure mock to fail twice then succeed
@@ -122,7 +122,7 @@ class TestOrcaflexExampleDownloader(unittest.TestCase):
         self.assertIsNotNone(response)
         self.assertEqual(mock_get.call_count, 3)
     
-    @patch('digitalmodel.modules.orcaflex.examples_integration.downloader.requests.Session.get')
+    @patch('digitalmodel.orcaflex.examples_integration.downloader.requests.Session.get')
     def test_max_retries_exceeded(self, mock_get):
         """Test behavior when max retries is exceeded."""
         # Configure mock to always fail
@@ -140,7 +140,7 @@ class TestOrcaflexExampleDownloader(unittest.TestCase):
         self.assertIsNone(response)
         self.assertEqual(mock_get.call_count, 3)  # Initial + 2 retries
     
-    @patch('digitalmodel.modules.orcaflex.examples_integration.downloader.requests.Session.get')
+    @patch('digitalmodel.orcaflex.examples_integration.downloader.requests.Session.get')
     def test_parse_categories_mock(self, mock_get):
         """Test parsing categories with mock HTML."""
         # Mock HTML response
@@ -182,7 +182,7 @@ class TestOrcaflexExampleDownloader(unittest.TestCase):
             self.assertEqual(len(self.downloader.manifest['categories']), 2)
             self.assertIn('Mooring Systems', self.downloader.manifest['categories'])
     
-    @patch('digitalmodel.modules.orcaflex.examples_integration.downloader.OrcaflexExampleDownloader._download_with_retry')
+    @patch('digitalmodel.orcaflex.examples_integration.downloader.OrcaflexExampleDownloader._download_with_retry')
     def test_download_example(self, mock_download):
         """Test downloading a single example file."""
         # Mock response

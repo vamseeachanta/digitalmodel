@@ -6,11 +6,11 @@ from pathlib import Path
 
 from lxml import etree
 
-from digitalmodel.modules.gis.integrations.google_earth_export import (
+from digitalmodel.gis.integrations.google_earth_export import (
     GoogleEarthExporter,
 )
-from digitalmodel.modules.gis.layers.feature_layer import FeatureLayer
-from digitalmodel.modules.gis.layers.well_layer import WellLayer
+from digitalmodel.gis.layers.feature_layer import FeatureLayer
+from digitalmodel.gis.layers.well_layer import WellLayer
 
 KML_NS = "http://www.opengis.net/kml/2.2"
 

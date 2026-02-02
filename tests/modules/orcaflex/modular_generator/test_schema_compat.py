@@ -9,14 +9,14 @@ class TestSchemaImports:
     """Verify all classes are importable from the schema package."""
 
     def test_import_project_input_spec(self):
-        from digitalmodel.modules.orcaflex.modular_generator.schema import (
+        from digitalmodel.orcaflex.modular_generator.schema import (
             ProjectInputSpec,
         )
 
         assert ProjectInputSpec is not None
 
     def test_import_enums(self):
-        from digitalmodel.modules.orcaflex.modular_generator.schema import (
+        from digitalmodel.orcaflex.modular_generator.schema import (
             RampType,
             StructureType,
             WaveType,
@@ -27,7 +27,7 @@ class TestSchemaImports:
         assert RampType.BLOCK.value == "block"
 
     def test_import_metadata(self):
-        from digitalmodel.modules.orcaflex.modular_generator.schema import Metadata
+        from digitalmodel.orcaflex.modular_generator.schema import Metadata
 
         m = Metadata(
             name="test",
@@ -39,7 +39,7 @@ class TestSchemaImports:
         assert m.name == "test"
 
     def test_import_environment_classes(self):
-        from digitalmodel.modules.orcaflex.modular_generator.schema import (
+        from digitalmodel.orcaflex.modular_generator.schema import (
             Current,
             CurrentProfile,
             Environment,
@@ -54,7 +54,7 @@ class TestSchemaImports:
         assert w.depth == 10
 
     def test_import_pipeline_classes(self):
-        from digitalmodel.modules.orcaflex.modular_generator.schema import (
+        from digitalmodel.orcaflex.modular_generator.schema import (
             Coating,
             Coatings,
             Dimensions,
@@ -66,7 +66,7 @@ class TestSchemaImports:
         assert d.outer_diameter == 0.5
 
     def test_import_equipment_classes(self):
-        from digitalmodel.modules.orcaflex.modular_generator.schema import (
+        from digitalmodel.orcaflex.modular_generator.schema import (
             BuoyancyModuleProperties,
             BuoyancyModules,
             Equipment,
@@ -80,7 +80,7 @@ class TestSchemaImports:
         assert e.tugs is None
 
     def test_import_simulation(self):
-        from digitalmodel.modules.orcaflex.modular_generator.schema import Simulation
+        from digitalmodel.orcaflex.modular_generator.schema import Simulation
 
         s = Simulation()
         assert s.time_step == 0.1
@@ -90,7 +90,7 @@ class TestSchemaValidation:
     """Test schema validation with valid and invalid inputs."""
 
     def test_valid_spec_loads(self, spec_data):
-        from digitalmodel.modules.orcaflex.modular_generator.schema import (
+        from digitalmodel.orcaflex.modular_generator.schema import (
             ProjectInputSpec,
         )
 
@@ -118,7 +118,7 @@ class TestSchemaValidation:
     def test_invalid_water_depth_negative(self):
         from pydantic import ValidationError
 
-        from digitalmodel.modules.orcaflex.modular_generator.schema import Water
+        from digitalmodel.orcaflex.modular_generator.schema import Water
 
         with pytest.raises(ValidationError):
             Water(depth=-1, density=1.025)
@@ -126,7 +126,7 @@ class TestSchemaValidation:
     def test_invalid_water_depth_too_deep(self):
         from pydantic import ValidationError
 
-        from digitalmodel.modules.orcaflex.modular_generator.schema import Water
+        from digitalmodel.orcaflex.modular_generator.schema import Water
 
         with pytest.raises(ValidationError):
             Water(depth=6000, density=1.025)
@@ -134,7 +134,7 @@ class TestSchemaValidation:
     def test_invalid_wall_thickness(self):
         from pydantic import ValidationError
 
-        from digitalmodel.modules.orcaflex.modular_generator.schema import Dimensions
+        from digitalmodel.orcaflex.modular_generator.schema import Dimensions
 
         with pytest.raises(ValidationError):
             Dimensions(outer_diameter=0.5, wall_thickness=0.3)
@@ -142,7 +142,7 @@ class TestSchemaValidation:
     def test_invalid_current_profile_not_monotonic(self):
         from pydantic import ValidationError
 
-        from digitalmodel.modules.orcaflex.modular_generator.schema import Current
+        from digitalmodel.orcaflex.modular_generator.schema import Current
 
         with pytest.raises(ValidationError):
             Current(speed=1.0, direction=0, profile=[[10, 1.0], [5, 0.8]])

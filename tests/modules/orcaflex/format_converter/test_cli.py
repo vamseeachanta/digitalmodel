@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from digitalmodel.modules.orcaflex.format_converter.cli import create_parser, main
+from digitalmodel.orcaflex.format_converter.cli import create_parser, main
 
 
 class TestCLIDetect:

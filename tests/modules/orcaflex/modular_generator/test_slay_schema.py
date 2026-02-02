@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from digitalmodel.modules.orcaflex.modular_generator.schema import (
+from digitalmodel.orcaflex.modular_generator.schema import (
     Equipment,
     ProjectInputSpec,
     Stinger,

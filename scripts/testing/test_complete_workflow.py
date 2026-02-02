@@ -5,8 +5,8 @@ ABOUTME: Complete workflow test - validates integration of model generator and c
 """
 
 from pathlib import Path
-from digitalmodel.modules.orcaflex.model_generator import OrcaFlexModelGenerator, generate_model
-from digitalmodel.modules.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator, generate_model
+from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 import yaml
 import time
 

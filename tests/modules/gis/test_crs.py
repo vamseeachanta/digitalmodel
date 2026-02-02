@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from digitalmodel.modules.gis.core.crs import CRSDefinition, CRSType, detect_utm_zone
+from digitalmodel.gis.core.crs import CRSDefinition, CRSType, detect_utm_zone
 
 
 # ------------------------------------------------------------------

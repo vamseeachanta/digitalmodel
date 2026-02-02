@@ -89,7 +89,7 @@ python run_batch_analysis.py --config dm_fsts.yml
 ##### Manual Override (if needed)
 ```python
 # To override thread count programmatically
-from digitalmodel.modules.orcaflex.performance_monitor import ResourceManager
+from digitalmodel.orcaflex.performance_monitor import ResourceManager
 
 resource_mgr = ResourceManager()
 optimal_threads = resource_mgr.calculate_optimal_threads(file_paths)

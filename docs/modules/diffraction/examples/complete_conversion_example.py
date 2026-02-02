@@ -18,7 +18,7 @@ from pathlib import Path
 from datetime import datetime
 
 # Import Phase 2 modules
-from digitalmodel.modules.diffraction import (
+from digitalmodel.diffraction import (
     # Data structures
     DiffractionResults,
     RAOSet,

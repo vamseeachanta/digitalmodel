@@ -206,7 +206,7 @@ class TestBasenameExtraction:
             "meta": {"basename": "catenary"}
         }
 
-        with patch('digitalmodel.modules.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
+        with patch('digitalmodel.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
             mock_instance = Mock()
             mock_orcaflex.return_value = mock_instance
             mock_instance.router.return_value = config
@@ -239,7 +239,7 @@ class TestModuleRouting:
         """Test OrcaFlex module routing and interaction"""
         config = {"basename": "orcaflex"}
 
-        with patch('digitalmodel.modules.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
+        with patch('digitalmodel.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
             mock_instance = Mock()
             mock_orcaflex.return_value = mock_instance
             mock_instance.router.return_value = {"processed": True}
@@ -328,7 +328,7 @@ class TestModuleRouting:
             "structure": {"flag": True}
         }
 
-        with patch('digitalmodel.modules.orcaflex.orcaflex_installation.OrcInstallation') as mock_install:
+        with patch('digitalmodel.orcaflex.orcaflex_installation.OrcInstallation') as mock_install:
             mock_instance = Mock()
             mock_install.return_value = mock_instance
             mock_instance.create_model_for_water_depth.return_value = {"installed": True}
@@ -346,7 +346,7 @@ class TestModuleRouting:
             "structure": {"flag": False}
         }
 
-        with patch('digitalmodel.modules.orcaflex.orcaflex_installation.OrcInstallation') as mock_install:
+        with patch('digitalmodel.orcaflex.orcaflex_installation.OrcInstallation') as mock_install:
             mock_instance = Mock()
             mock_install.return_value = mock_instance
 
@@ -369,9 +369,9 @@ class TestModuleRouting:
 
     @pytest.mark.parametrize("basename,module_path,class_name", [
         ("aqwa", "digitalmodel.aqwa.Aqwa", "Aqwa"),
-        ("modal_analysis", "digitalmodel.modules.orcaflex.orcaflex_modal_analysis.OrcModalAnalysis", "OrcModalAnalysis"),
-        ("umbilical_analysis", "digitalmodel.modules.orcaflex.umbilical_analysis_components.UmbilicalAnalysis", "UmbilicalAnalysis"),
-        ("orcaflex_file_management", "digitalmodel.modules.orcaflex.orcaflex_file_management.OrcaflexFileManagement", "OrcaflexFileManagement"),
+        ("modal_analysis", "digitalmodel.orcaflex.orcaflex_modal_analysis.OrcModalAnalysis", "OrcModalAnalysis"),
+        ("umbilical_analysis", "digitalmodel.orcaflex.umbilical_analysis_components.UmbilicalAnalysis", "UmbilicalAnalysis"),
+        ("orcaflex_file_management", "digitalmodel.orcaflex.orcaflex_file_management.OrcaflexFileManagement", "OrcaflexFileManagement"),
         ("rao_analysis", "digitalmodel.modules.rao_analysis.rao_analysis.RAOAnalysis", "RAOAnalysis"),
         ("ship_design", "digitalmodel.common.ship_design.ShipDesign", "ShipDesign"),
         ("fatigue_analysis", "digitalmodel.modules.signal_analysis.fatigue.FatigueDamageCalculator", "FatigueAnalysis"),
@@ -416,12 +416,12 @@ class TestOutputControl:
 
     def test_quiet_mode_configuration(self, standard_mocks):
         """Test quiet mode sets correct flags"""
-        from digitalmodel.modules.orcaflex.output_control import OutputController
+        from digitalmodel.orcaflex.output_control import OutputController
 
         standard_mocks['output_controller'].return_value = OutputController.QUIET
         config = {"basename": "orcaflex"}
 
-        with patch('digitalmodel.modules.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
+        with patch('digitalmodel.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
             mock_instance = Mock()
             mock_orcaflex.return_value = mock_instance
             mock_instance.router.return_value = config
@@ -437,12 +437,12 @@ class TestOutputControl:
 
     def test_verbose_mode_configuration(self, standard_mocks):
         """Test verbose mode sets correct flags"""
-        from digitalmodel.modules.orcaflex.output_control import OutputController
+        from digitalmodel.orcaflex.output_control import OutputController
 
         standard_mocks['output_controller'].return_value = OutputController.VERBOSE
         config = {"basename": "orcaflex"}
 
-        with patch('digitalmodel.modules.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
+        with patch('digitalmodel.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
             mock_instance = Mock()
             mock_orcaflex.return_value = mock_instance
             mock_instance.router.return_value = config
@@ -461,7 +461,7 @@ class TestOutputControl:
         standard_mocks['output_controller'].return_value = None
         config = {"basename": "orcaflex"}
 
-        with patch('digitalmodel.modules.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
+        with patch('digitalmodel.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
             mock_instance = Mock()
             mock_orcaflex.return_value = mock_instance
             mock_instance.router.return_value = config
@@ -551,7 +551,7 @@ class TestFinalProcessing:
         config = {"basename": "orcaflex", "original": True}
         expected_result = {"basename": "orcaflex", "original": True, "processed": True}
 
-        with patch('digitalmodel.modules.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
+        with patch('digitalmodel.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
             mock_instance = Mock()
             mock_orcaflex.return_value = mock_instance
             mock_instance.router.return_value = expected_result
@@ -586,7 +586,7 @@ class TestEngineIntegration:
         yaml_file.write_text(yaml_content)
 
         # Test with minimal mocking (only the actual module)
-        with patch('digitalmodel.modules.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
+        with patch('digitalmodel.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
             mock_instance = Mock()
             mock_orcaflex.return_value = mock_instance
             mock_instance.router.return_value = {"integration_test": True}
@@ -664,7 +664,7 @@ class TestEngineProperties:
 
         # Mock the appropriate module for this basename
         module_mocks = {
-            'orcaflex': 'digitalmodel.modules.orcaflex.orcaflex.OrcaFlex',
+            'orcaflex': 'digitalmodel.orcaflex.orcaflex.OrcaFlex',
             'catenary': 'digitalmodel.modules.catenary.catenary.Catenary',
             'aqwa': 'digitalmodel.aqwa.Aqwa',
             # ... add other mappings as needed
@@ -739,7 +739,7 @@ class TestEngineProperties:
         # Ensure we have a valid basename
         config_structure["basename"] = "orcaflex"
 
-        with patch('digitalmodel.modules.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
+        with patch('digitalmodel.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
             mock_instance = Mock()
             mock_orcaflex.return_value = mock_instance
             mock_instance.router.return_value = config_structure
@@ -765,7 +765,7 @@ class TestEnginePerformance:
         """Baseline performance test for engine function"""
         config = {"basename": "orcaflex"}
 
-        with patch('digitalmodel.modules.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
+        with patch('digitalmodel.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
             mock_instance = Mock()
             mock_orcaflex.return_value = mock_instance
             mock_instance.router.return_value = config
@@ -785,7 +785,7 @@ class TestEnginePerformance:
             **{f"param_{i}": f"value_{i}" for i in range(config_size)}
         }
 
-        with patch('digitalmodel.modules.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
+        with patch('digitalmodel.orcaflex.orcaflex.OrcaFlex') as mock_orcaflex:
             mock_instance = Mock()
             mock_orcaflex.return_value = mock_instance
             mock_instance.router.return_value = config
