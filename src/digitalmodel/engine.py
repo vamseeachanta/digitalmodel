@@ -15,7 +15,7 @@ from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
 )
 from digitalmodel.modules.signal_analysis.fatigue import FatigueDamageCalculator as FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
-from digitalmodel.modules.mooring.mooring import Mooring
+from digitalmodel.modules.mooring_analysis import MooringDesigner
 from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
 from digitalmodel.modules.orcaflex.orcaflex_file_management import (
     OrcaflexFileManagement,
@@ -172,8 +172,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         cfg_base = pb.router(cfg_base)
 
     elif basename == "mooring":
-        mooring = Mooring()
-        cfg_base = mooring.router(cfg_base)
+        logger.info("Mooring analysis routed to mooring_analysis module")
+        from digitalmodel.modules.mooring_analysis.cli import cli as mooring_cli
+        raise NotImplementedError(
+            "Mooring via engine requires mooring_analysis CLI or direct API. "
+            "Use: python -m digitalmodel.modules.mooring_analysis.cli"
+        )
     elif basename == "artificial_lift":
         from digitalmodel.modules.artificial_lift.dynacard.solver import DynacardWorkflow
         al = DynacardWorkflow()

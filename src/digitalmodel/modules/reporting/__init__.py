@@ -1,11 +1,17 @@
-"""
-Reporting Module
+"""Backward compatibility shim for digitalmodel.modules.reporting.
 
-Interactive HTML report generation with Plotly visualizations.
+Use digitalmodel.reporting instead.
 """
+import warnings
 
-from .report_generator import PlotlyReportGenerator
-from .path_utils import (
+warnings.warn(
+    "digitalmodel.modules.reporting is deprecated. Use digitalmodel.reporting instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+from digitalmodel.reporting.report_generator import PlotlyReportGenerator
+from digitalmodel.reporting.path_utils import (
     get_project_root,
     get_data_path,
     get_report_path,
@@ -14,10 +20,10 @@ from .path_utils import (
 )
 
 __all__ = [
-    'PlotlyReportGenerator',
-    'get_project_root',
-    'get_data_path',
-    'get_report_path',
-    'ensure_report_dir',
-    'relative_path_from_report',
+    "PlotlyReportGenerator",
+    "get_project_root",
+    "get_data_path",
+    "get_report_path",
+    "ensure_report_dir",
+    "relative_path_from_report",
 ]

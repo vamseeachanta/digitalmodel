@@ -115,13 +115,13 @@ def demo_integration_with_procurement():
     # Import existing validator
     try:
         import importlib.util
-        spec = importlib.util.find_spec("data_procurement.validators.data_validator")
+        spec = importlib.util.find_spec("data_scraping.validators.data_validator")
         if spec is not None:
-            from digitalmodel.modules.data_procurement.validators.data_validator import DataValidator as ProcurementValidator
+            from digitalmodel.modules.data_scraping.validators.data_validator import DataValidator as ProcurementValidator
         else:
-            raise ImportError("data_procurement not in path")
+            raise ImportError("data_scraping not in path")
 
-        print("\n✅ Found existing data_procurement validator")
+        print("\n✅ Found existing data_scraping validator")
         print("   The new validator in src/digitalmodel/validators/ provides:")
         print("   - Interactive Plotly reports (4-panel dashboard)")
         print("   - YAML configuration support")
@@ -132,7 +132,7 @@ def demo_integration_with_procurement():
         print("   - Use new validator for reporting and quality scoring")
 
     except ImportError:
-        print("\n⚠️  Existing data_procurement validator not found in import path")
+        print("\n⚠️  Existing data_scraping validator not found in import path")
         print("   The new validator is standalone and ready to use!")
 
 

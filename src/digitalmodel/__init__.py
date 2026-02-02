@@ -12,7 +12,7 @@ from . import modules
 # Expose modules at top level for backward compatibility with engine.py imports
 try:
     from digitalmodel.modules.aqwa.aqwa_router import Aqwa
-    from digitalmodel.modules.mooring.mooring import Mooring
+    from digitalmodel.modules.mooring_analysis import MooringDesigner
     from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
     from digitalmodel.modules.ct_hydraulics.ct_hydraulics import CTHydraulics
     from digitalmodel.modules.pipe_capacity.pipe_capacity import PipeCapacity
