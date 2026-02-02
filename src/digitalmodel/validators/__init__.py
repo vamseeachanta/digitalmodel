@@ -1,9 +1,15 @@
-"""
-Data Validators Module
+# ABOUTME: Backward-compatibility shim for validators package
+# Moved to digitalmodel.validation as part of Phase 2D restructuring
+# This shim will be removed in a future release
 
-Provides data validation utilities with quality scoring and interactive reporting.
-"""
+import warnings
 
-from .data_validator import DataValidator
+warnings.warn(
+    "digitalmodel.validators is deprecated. Use digitalmodel.validation instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
-__all__ = ['DataValidator']
+from digitalmodel.validation.data_validator import DataValidator
+
+__all__ = ["DataValidator"]

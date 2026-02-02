@@ -16,6 +16,7 @@ from .pipeline import (
     ValidationCache,
     generate_html_report,
 )
+from .data_validator import DataValidator
 
 __all__ = [
     "ValidationSeverity",
@@ -31,4 +32,5 @@ __all__ = [
     "ValidationPipeline",
     "ValidationCache",
     "generate_html_report",
+    "DataValidator",
 ]
