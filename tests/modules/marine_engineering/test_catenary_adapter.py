@@ -18,7 +18,7 @@ from pathlib import Path
 src_path = Path(__file__).parent.parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
-from digitalmodel.modules.marine_analysis.catenary.adapter import (
+from digitalmodel.marine_analysis.catenary.adapter import (
     catenaryEquation,
     catenaryForces,
     validate_catenary_data,
@@ -506,7 +506,7 @@ class TestAdapterMetadata:
 
     def test_module_exports(self):
         """Test that module exports expected functions."""
-        from digitalmodel.modules.marine_analysis.catenary import adapter
+        from digitalmodel.marine_analysis.catenary import adapter
 
         assert hasattr(adapter, 'catenaryEquation')
         assert hasattr(adapter, 'catenaryForces')

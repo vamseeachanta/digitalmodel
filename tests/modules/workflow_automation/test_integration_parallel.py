@@ -8,14 +8,14 @@ import pytest
 import time
 from datetime import datetime
 
-from digitalmodel.modules.workflow_automation import (
+from digitalmodel.workflow_automation import (
     WorkflowOrchestrator,
     WorkflowDefinition,
     WorkflowTask,
     ParallelExecutor,
     AdaptiveParallelExecutor,
 )
-from digitalmodel.modules.workflow_automation.parallel import ParallelExecutionResult
+from digitalmodel.workflow_automation.parallel import ParallelExecutionResult
 
 
 class TestParallelExecution:
@@ -337,7 +337,7 @@ class TestParallelIntegrationWithOrchestrator:
 
     def test_orchestrator_worker_configuration(self):
         """Test orchestrator with custom worker count"""
-        from digitalmodel.modules.workflow_automation.models import WorkflowConfig
+        from digitalmodel.workflow_automation.models import WorkflowConfig
 
         config = WorkflowConfig(max_parallel_tasks=8)
 

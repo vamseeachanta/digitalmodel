@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
 # Import the unified RAO reader
-from digitalmodel.modules.marine_analysis.unified_rao_reader import read_rao_file
+from digitalmodel.marine_analysis.unified_rao_reader import read_rao_file
 
 def generate_rao_plots(lis_file, output_dir):
     """Generate comprehensive RAO plots."""

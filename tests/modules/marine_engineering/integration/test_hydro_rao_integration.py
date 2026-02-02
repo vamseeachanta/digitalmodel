@@ -20,7 +20,7 @@ from pathlib import Path
 import tempfile
 import pandas as pd
 
-from digitalmodel.modules.marine_analysis.hydrodynamic_coefficients.coefficients import (
+from digitalmodel.marine_analysis.hydrodynamic_coefficients.coefficients import (
     CoefficientDatabase,
     FrequencyDependentMatrix,
     DOF_NAMES,

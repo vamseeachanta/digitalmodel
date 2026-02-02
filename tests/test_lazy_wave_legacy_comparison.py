@@ -14,7 +14,7 @@ import os
 # Add legacy module to path for testing
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from digitalmodel.modules.marine_engineering.catenary.lazy_wave import (
+from digitalmodel.marine_engineering.catenary.lazy_wave import (
     LazyWaveSolver,
     LazyWaveConfiguration
 )

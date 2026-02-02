@@ -7,7 +7,7 @@ import pytest
 import tempfile
 import shutil
 
-from digitalmodel.modules.automation import (
+from digitalmodel.automation import (
     WorkflowExecutor,
     WorkflowExecution,
     PhaseStatus,

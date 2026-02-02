@@ -8,7 +8,7 @@ import pytest
 import tempfile
 from datetime import datetime
 
-from digitalmodel.modules.workflow_automation import (
+from digitalmodel.workflow_automation import (
     WorkflowOrchestrator,
     WorkflowDefinition,
     WorkflowTask,

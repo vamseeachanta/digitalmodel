@@ -9,10 +9,10 @@ from plotly.subplots import make_subplots
 # Add src to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 
-from digitalmodel.modules.artificial_lift.dynacard.models import (
+from digitalmodel.artificial_lift.dynacard.models import (
     DynacardAnalysisContext, CardData, RodSection, PumpProperties, SurfaceUnit
 )
-from digitalmodel.modules.artificial_lift.dynacard.solver import DynacardWorkflow
+from digitalmodel.artificial_lift.dynacard.solver import DynacardWorkflow
 
 LEGACY_DATA_DIR = "/mnt/github/workspace-hub/client_projects/energy_firm_data_analytics/dynacard/Code/Oxy.Cipher.DynaCard/tests/testdata"
 

@@ -3,12 +3,12 @@
 
 import pytest
 import numpy as np
-from digitalmodel.modules.artificial_lift.dynacard import (
+from digitalmodel.artificial_lift.dynacard import (
     PumpDiagnostics,
     CardData,
     AnalysisResults,
 )
-from digitalmodel.modules.artificial_lift.dynacard.constants import (
+from digitalmodel.artificial_lift.dynacard.constants import (
     PUMP_TAGGING_LOAD_THRESHOLD_LBS,
     FLUID_POUND_LOAD_DIFF_THRESHOLD_LBS,
     GAS_INTERFERENCE_MIN_LOAD_THRESHOLD_LBS,

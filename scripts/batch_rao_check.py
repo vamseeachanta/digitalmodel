@@ -7,8 +7,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from digitalmodel.modules.marine_analysis import RAODataValidators
-from digitalmodel.modules.marine_analysis.rao_quality_report import RAOQualityReportGenerator
+from digitalmodel.marine_analysis import RAODataValidators
+from digitalmodel.marine_analysis.rao_quality_report import RAOQualityReportGenerator
 
 # Diverse vessel type files with actual RAO data
 rao_files = [

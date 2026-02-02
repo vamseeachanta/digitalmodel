@@ -14,7 +14,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from digitalmodel.modules.automation.workflow_executor import WorkflowExecutor
+from digitalmodel.automation.workflow_executor import WorkflowExecutor
 
 console = Console()
 

@@ -10,7 +10,7 @@ Tests verify:
 
 import math
 import pytest
-from digitalmodel.modules.marine_engineering.catenary.simplified import (
+from digitalmodel.marine_engineering.catenary.simplified import (
     SimplifiedCatenarySolver,
     SimplifiedCatenaryInput,
     SimplifiedCatenaryResults,

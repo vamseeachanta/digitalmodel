@@ -46,7 +46,7 @@ def test_basic_usage_example():
     """Test the basic usage example from README.md."""
     print("\n=== Testing Basic Usage Example ===")
     
-    from digitalmodel.modules.marine_analysis.python_code_passing_ship import (
+    from digitalmodel.marine_analysis.python_code_passing_ship import (
         PassingShipCalculator, VesselConfig, EnvironmentalConfig, CalculationConfig
     )
     
@@ -128,7 +128,7 @@ def test_cli_module_entry():
     try:
         # Test module entry point with help
         result = subprocess.run(
-            [sys.executable, '-m', 'digitalmodel.modules.marine_analysis.python_code_passing_ship', '--help'],
+            [sys.executable, '-m', 'digitalmodel.marine_analysis.python_code_passing_ship', '--help'],
             capture_output=True,
             text=True
         )
@@ -140,7 +140,7 @@ def test_cli_module_entry():
         # Test with actual config (dry run to avoid long computation)
         with tempfile.TemporaryDirectory() as tmpdir:
             result = subprocess.run(
-                [sys.executable, '-m', 'digitalmodel.modules.marine_analysis.python_code_passing_ship',
+                [sys.executable, '-m', 'digitalmodel.marine_analysis.python_code_passing_ship',
                  '--config', config_path,
                  '--output-directory', tmpdir,
                  '--dry-run'],
@@ -159,7 +159,7 @@ def test_configuration_examples():
     """Test configuration examples from the documentation."""
     print("\n=== Testing Configuration Examples ===")
     
-    from digitalmodel.modules.marine_analysis.python_code_passing_ship.configuration import ShipConfiguration
+    from digitalmodel.marine_analysis.python_code_passing_ship.configuration import ShipConfiguration
     
     # Test basic configuration
     config_data = create_test_config()
@@ -200,7 +200,7 @@ def test_api_reference_examples():
     """Test examples from the API reference."""
     print("\n=== Testing API Reference Examples ===")
     
-    from digitalmodel.modules.marine_analysis.python_code_passing_ship.formulations import (
+    from digitalmodel.marine_analysis.python_code_passing_ship.formulations import (
         sectional_area_curve,
         F_kernel,
         G_kernel,
@@ -247,7 +247,7 @@ def test_export_functionality():
     """Test the export functionality examples."""
     print("\n=== Testing Export Functionality ===")
     
-    from digitalmodel.modules.marine_analysis.python_code_passing_ship.exporters import (
+    from digitalmodel.marine_analysis.python_code_passing_ship.exporters import (
         export_to_json,
         export_to_csv
     )
@@ -288,7 +288,7 @@ def test_visualization_examples():
     """Test visualization code examples."""
     print("\n=== Testing Visualization Examples ===")
     
-    from digitalmodel.modules.marine_analysis.python_code_passing_ship.visualization import (
+    from digitalmodel.marine_analysis.python_code_passing_ship.visualization import (
         plot_force_distribution,
         create_comparison_plot
     )

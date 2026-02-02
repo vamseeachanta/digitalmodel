@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from digitalmodel.modules.automation.intelligent_agent_selector import (
+from digitalmodel.automation.intelligent_agent_selector import (
     AgentPerformanceTracker,
     IntelligentAgentSelector,
 )
@@ -589,7 +589,7 @@ class TestCLIIntegration:
     ):
         """Test CLI outputs valid JSON."""
         import sys
-        from digitalmodel.modules.automation.intelligent_agent_selector import main
+        from digitalmodel.automation.intelligent_agent_selector import main
 
         # Mock command line arguments
         sys.argv = [
@@ -601,7 +601,7 @@ class TestCLIIntegration:
         ]
 
         # Temporarily override database path
-        import digitalmodel.modules.automation.intelligent_agent_selector as module
+        import digitalmodel.automation.intelligent_agent_selector as module
         original_db = module.AgentPerformanceTracker.__init__.__defaults__
         module.AgentPerformanceTracker.__init__.__defaults__ = (temp_db,)
 

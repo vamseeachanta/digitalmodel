@@ -20,7 +20,7 @@ class TestModuleIntegration:
         project_path = enhanced_mock_file_system
 
         # Mock the automation components
-        with patch('digitalmodel.modules.automation.go_by_folder.scanner.FileScanner') as mock_scanner:
+        with patch('digitalmodel.automation.go_by_folder.scanner.FileScanner') as mock_scanner:
             mock_scanner_instance = Mock()
             mock_scanner_instance.scan_files.return_value = [
                 {"path": project_path / "src" / "main.py", "size": 100, "hash": "abc123"},
@@ -29,7 +29,7 @@ class TestModuleIntegration:
             mock_scanner.return_value = mock_scanner_instance
 
             # Test the integration
-            from digitalmodel.modules.automation.go_by_folder.scanner import FileScanner
+            from digitalmodel.automation.go_by_folder.scanner import FileScanner
 
             scanner = FileScanner(str(project_path))
             files = scanner.scan_files()

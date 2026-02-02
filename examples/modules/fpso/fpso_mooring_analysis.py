@@ -57,20 +57,20 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / 'src'))
 
 # Import marine engineering modules
-from digitalmodel.modules.marine_engineering.wave_spectra import JONSWAPSpectrum
-from digitalmodel.modules.marine_engineering.environmental_loading import (
+from digitalmodel.marine_engineering.wave_spectra import JONSWAPSpectrum
+from digitalmodel.marine_engineering.environmental_loading import (
     OCIMFDatabase,
     EnvironmentalForces,
     EnvironmentalConditions,
     VesselGeometry,
     create_sample_database,
 )
-from digitalmodel.modules.marine_engineering.mooring_analysis import (
+from digitalmodel.marine_engineering.mooring_analysis import (
     ComponentDatabase,
     CatenarySolver,
     MooringLine,
 )
-from digitalmodel.modules.marine_engineering.hydrodynamic_coefficients import (
+from digitalmodel.marine_engineering.hydrodynamic_coefficients import (
     HydroCoefficients,
     load_sample_coefficients,
 )

@@ -179,7 +179,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
             "Use: python -m digitalmodel.mooring_analysis.cli"
         )
     elif basename == "artificial_lift":
-        from digitalmodel.modules.artificial_lift.dynacard.solver import DynacardWorkflow
+        from digitalmodel.artificial_lift.dynacard.solver import DynacardWorkflow
         al = DynacardWorkflow()
         cfg_base = al.router(cfg_base)
     elif basename == "digitalmarketing":

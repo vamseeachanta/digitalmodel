@@ -11,7 +11,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
-from digitalmodel.modules.automation.memory_lifecycle import (
+from digitalmodel.automation.memory_lifecycle import (
     MemoryLifecycleManager,
     RetentionPolicy,
     ConflictStrategy,

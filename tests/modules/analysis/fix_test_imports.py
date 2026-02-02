@@ -155,7 +155,7 @@ Ensures proper Python path setup for all test modules.
 
 This file is automatically loaded by pytest and configures the Python path
 to include the src/ directory, allowing tests to import from both:
-- digitalmodel.modules.marine_analysis (package imports)
+- digitalmodel.marine_analysis (package imports)
 - marine_engineering (direct module imports)
 
 Generated: 2025-10-03
@@ -206,7 +206,7 @@ print("[conftest] Python path configured for marine engineering tests")
         import_patterns = {
             'src.marine_engineering': 0,
             'marine_engineering': 0,
-            'digitalmodel.modules.marine_analysis': 0
+            'digitalmodel.marine_analysis': 0
         }
 
         print(f"\n📊 Analyzing {len(test_files)} test files...")
@@ -223,14 +223,14 @@ print("[conftest] Python path configured for marine engineering tests")
                 import_patterns['marine_engineering'] += 1
                 print(f"  ⚠️  {test_file.name}: uses 'marine_engineering' imports")
 
-            if 'from digitalmodel.modules.marine_analysis' in content:
-                import_patterns['digitalmodel.modules.marine_analysis'] += 1
-                print(f"  ✅ {test_file.name}: uses 'digitalmodel.modules.marine_analysis' imports")
+            if 'from digitalmodel.marine_analysis' in content:
+                import_patterns['digitalmodel.marine_analysis'] += 1
+                print(f"  ✅ {test_file.name}: uses 'digitalmodel.marine_analysis' imports")
 
         print(f"\n📈 Import Pattern Summary:")
         print(f"   - src.marine_engineering: {import_patterns['src.marine_engineering']} files")
         print(f"   - marine_engineering: {import_patterns['marine_engineering']} files")
-        print(f"   - digitalmodel.modules.marine_analysis: {import_patterns['digitalmodel.modules.marine_analysis']} files")
+        print(f"   - digitalmodel.marine_analysis: {import_patterns['digitalmodel.marine_analysis']} files")
 
         print("\n⚠️  Note: Standardizing imports requires manual review")
         print("   Reason: Need to verify module availability in target location")
@@ -250,7 +250,7 @@ print("[conftest] Python path configured for marine engineering tests")
         print("\n🧪 Test 1: Import UnifiedRAOReader")
         try:
             sys.path.insert(0, str(self.src_dir))
-            from digitalmodel.modules.marine_analysis import UnifiedRAOReader
+            from digitalmodel.marine_analysis import UnifiedRAOReader
             print("   ✅ Successfully imported UnifiedRAOReader")
         except Exception as e:
             print(f"   ❌ Failed to import: {e}")
@@ -259,7 +259,7 @@ print("[conftest] Python path configured for marine engineering tests")
         # Test 2: Try importing RAOPlotter
         print("\n🧪 Test 2: Import RAOPlotter")
         try:
-            from digitalmodel.modules.marine_analysis import RAOPlotter
+            from digitalmodel.marine_analysis import RAOPlotter
             if RAOPlotter is None:
                 print("   ⚠️  RAOPlotter is None (optional dependency missing)")
             else:

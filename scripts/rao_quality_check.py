@@ -30,12 +30,12 @@ from typing import List, Optional
 # Add package to path for development
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from digitalmodel.modules.marine_analysis import (
+from digitalmodel.marine_analysis import (
     RAODataValidators,
     VesselType,
     DisplacementRAOQualityReport,
 )
-from digitalmodel.modules.marine_analysis.rao_quality_report import RAOQualityReportGenerator
+from digitalmodel.marine_analysis.rao_quality_report import RAOQualityReportGenerator
 
 
 def parse_args():

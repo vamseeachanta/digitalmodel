@@ -7,10 +7,10 @@ from pathlib import Path
 import json
 import yaml
 
-from digitalmodel.modules.automation.go_by_folder.minimizers.text import TextMinimizer
-from digitalmodel.modules.automation.go_by_folder.minimizers.code import CodeMinimizer
-from digitalmodel.modules.automation.go_by_folder.minimizers.config import ConfigMinimizer
-from digitalmodel.modules.automation.go_by_folder.minimizers.binary import BinaryMinimizer
+from digitalmodel.automation.go_by_folder.minimizers.text import TextMinimizer
+from digitalmodel.automation.go_by_folder.minimizers.code import CodeMinimizer
+from digitalmodel.automation.go_by_folder.minimizers.config import ConfigMinimizer
+from digitalmodel.automation.go_by_folder.minimizers.binary import BinaryMinimizer
 
 
 class TestTextMinimizer:

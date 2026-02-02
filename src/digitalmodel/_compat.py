@@ -51,6 +51,16 @@ _MOVED_MODULES: set[str] = {
     "bemrosetta",
     "gis",
     "orcawave",
+    # Phase 4 Batch 5
+    "automation",
+    "workflow_automation",
+    "marine_analysis",
+    "marine_engineering",
+    "orcaflex_post_process",
+    "artificial_lift",
+    "ai_workflows",
+    "api_analysis",
+    "gmsh_meshing",
 }
 
 

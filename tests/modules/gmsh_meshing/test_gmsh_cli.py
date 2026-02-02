@@ -7,8 +7,8 @@ interface functionality.
 import pytest
 from click.testing import CliRunner
 
-from digitalmodel.modules.gmsh_meshing.cli import cli
-from digitalmodel.modules.gmsh_meshing.mesh_generator import GMSH_AVAILABLE
+from digitalmodel.gmsh_meshing.cli import cli
+from digitalmodel.gmsh_meshing.mesh_generator import GMSH_AVAILABLE
 
 
 # ============================================================================

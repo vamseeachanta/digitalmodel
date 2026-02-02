@@ -8,7 +8,7 @@ import pytest
 import tempfile
 from pathlib import Path
 
-from digitalmodel.modules.workflow_automation import (
+from digitalmodel.workflow_automation import (
     WorkflowTemplate,
     TemplateLibrary,
     create_riser_analysis_template,

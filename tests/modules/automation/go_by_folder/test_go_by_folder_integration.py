@@ -8,11 +8,11 @@ import yaml
 from pathlib import Path
 import shutil
 
-from digitalmodel.modules.automation.go_by_folder.orchestrator import CreateGoBy
-from digitalmodel.modules.automation.go_by_folder.scanner import FileScanner
-from digitalmodel.modules.automation.go_by_folder.analyzer import PatternAnalyzer
-from digitalmodel.modules.automation.go_by_folder.checkpoint import CheckpointManager
-from digitalmodel.modules.automation.go_by_folder.analysis_mode import AnalysisMode
+from digitalmodel.automation.go_by_folder.orchestrator import CreateGoBy
+from digitalmodel.automation.go_by_folder.scanner import FileScanner
+from digitalmodel.automation.go_by_folder.analyzer import PatternAnalyzer
+from digitalmodel.automation.go_by_folder.checkpoint import CheckpointManager
+from digitalmodel.automation.go_by_folder.analysis_mode import AnalysisMode
 
 
 class TestEndToEnd:
@@ -198,7 +198,7 @@ class TestCLIIntegration:
     
     def test_cli_argument_parsing(self):
         """Test CLI argument parsing."""
-        from digitalmodel.modules.automation.go_by_folder.cli import create_parser, parse_size
+        from digitalmodel.automation.go_by_folder.cli import create_parser, parse_size
         
         parser = create_parser()
         
@@ -222,7 +222,7 @@ class TestCLIIntegration:
     
     def test_config_file_loading(self, temp_dir):
         """Test loading configuration from YAML file."""
-        from digitalmodel.modules.automation.go_by_folder.cli import load_config_file
+        from digitalmodel.automation.go_by_folder.cli import load_config_file
         
         config_file = temp_dir / "config.yaml"
         config_data = {

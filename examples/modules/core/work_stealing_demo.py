@@ -9,7 +9,7 @@ from pathlib import Path
 # Add src to path for direct execution
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from digitalmodel.modules.automation import (
+from digitalmodel.automation import (
     WorkStealingScheduler,
     Agent,
     Task

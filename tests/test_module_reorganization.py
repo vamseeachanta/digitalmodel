@@ -14,27 +14,27 @@ class TestModuleStructure:
 
     def test_profiling_submodule_exists(self):
         """Test that profiling submodule exists and is importable."""
-        from digitalmodel.modules.marine_analysis import profiling
+        from digitalmodel.marine_analysis import profiling
         assert profiling is not None
 
     def test_extraction_submodule_exists(self):
         """Test that extraction submodule exists and is importable."""
-        from digitalmodel.modules.marine_analysis import extraction
+        from digitalmodel.marine_analysis import extraction
         assert extraction is not None
 
     def test_validation_submodule_exists(self):
         """Test that validation submodule exists and is importable."""
-        from digitalmodel.modules.marine_analysis import validation
+        from digitalmodel.marine_analysis import validation
         assert validation is not None
 
     def test_visualization_submodule_exists(self):
         """Test that visualization submodule exists and is importable."""
-        from digitalmodel.modules.marine_analysis import viz_tools
+        from digitalmodel.marine_analysis import viz_tools
         assert viz_tools is not None
 
     def test_analysis_submodule_exists(self):
         """Test that analysis submodule exists and is importable."""
-        from digitalmodel.modules.marine_analysis import analysis
+        from digitalmodel.marine_analysis import analysis
         assert analysis is not None
 
 
@@ -44,7 +44,7 @@ class TestProfilingModule:
     def test_profile_modules_import(self):
         """Test profile_modules can be imported."""
         try:
-            from digitalmodel.modules.marine_analysis.profiling import profile_modules
+            from digitalmodel.marine_analysis.profiling import profile_modules
             assert profile_modules is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -52,7 +52,7 @@ class TestProfilingModule:
     def test_performance_charts_import(self):
         """Test performance_charts can be imported."""
         try:
-            from digitalmodel.modules.marine_analysis.profiling import performance_charts
+            from digitalmodel.marine_analysis.profiling import performance_charts
             assert performance_charts is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -60,7 +60,7 @@ class TestProfilingModule:
     def test_optimization_report_import(self):
         """Test optimization_report can be imported."""
         try:
-            from digitalmodel.modules.marine_analysis.profiling import optimization_report
+            from digitalmodel.marine_analysis.profiling import optimization_report
             assert optimization_report is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -72,7 +72,7 @@ class TestExtractionModule:
     def test_extract_ocimf_import(self):
         """Test extract_ocimf can be imported."""
         try:
-            from digitalmodel.modules.marine_analysis.extraction import extract_ocimf
+            from digitalmodel.marine_analysis.extraction import extract_ocimf
             assert extract_ocimf is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -80,7 +80,7 @@ class TestExtractionModule:
     def test_extract_hydro_import(self):
         """Test extract_hydro can be imported."""
         try:
-            from digitalmodel.modules.marine_analysis.extraction import extract_hydro
+            from digitalmodel.marine_analysis.extraction import extract_hydro
             assert extract_hydro is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -88,7 +88,7 @@ class TestExtractionModule:
     def test_extract_mooring_import(self):
         """Test extract_mooring can be imported."""
         try:
-            from digitalmodel.modules.marine_analysis.extraction import extract_mooring
+            from digitalmodel.marine_analysis.extraction import extract_mooring
             assert extract_mooring is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -100,7 +100,7 @@ class TestValidationModule:
     def test_validate_phase2_import(self):
         """Test validate_phase2 can be imported."""
         try:
-            from digitalmodel.modules.marine_analysis.validation import validate_phase2
+            from digitalmodel.marine_analysis.validation import validate_phase2
             assert validate_phase2 is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -108,7 +108,7 @@ class TestValidationModule:
     def test_validate_catenary_import(self):
         """Test validate_catenary can be imported."""
         try:
-            from digitalmodel.modules.marine_analysis.validation import validate_catenary
+            from digitalmodel.marine_analysis.validation import validate_catenary
             assert validate_catenary is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -120,7 +120,7 @@ class TestVisualizationModule:
     def test_integration_charts_import(self):
         """Test integration_charts can be imported."""
         try:
-            from digitalmodel.modules.marine_analysis.visualization import integration_charts
+            from digitalmodel.marine_analysis.visualization import integration_charts
             assert integration_charts is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -128,7 +128,7 @@ class TestVisualizationModule:
     def test_ocimf_charts_import(self):
         """Test ocimf_charts can be imported."""
         try:
-            from digitalmodel.modules.marine_analysis.visualization import ocimf_charts
+            from digitalmodel.marine_analysis.visualization import ocimf_charts
             assert ocimf_charts is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -140,7 +140,7 @@ class TestAnalysisModule:
     def test_excel_analyzer_import(self):
         """Test excel_analyzer can be imported."""
         try:
-            from digitalmodel.modules.marine_analysis.analysis import excel_analyzer
+            from digitalmodel.marine_analysis.analysis import excel_analyzer
             assert excel_analyzer is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -148,7 +148,7 @@ class TestAnalysisModule:
     def test_hydro_usage_example_import(self):
         """Test hydro_usage_example can be imported."""
         try:
-            from digitalmodel.modules.marine_analysis.analysis import hydro_usage_example
+            from digitalmodel.marine_analysis.analysis import hydro_usage_example
             assert hydro_usage_example is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -205,7 +205,7 @@ class TestCLIInterface:
     def test_main_module_imports(self):
         """Test that __main__ module can be imported."""
         try:
-            from digitalmodel.modules.marine_analysis import __main__
+            from digitalmodel.marine_analysis import __main__
             assert __main__ is not None
             assert hasattr(__main__, 'main'), "__main__ should have a main() function"
         except ImportError as e:
@@ -217,7 +217,7 @@ class TestVersioning:
 
     def test_module_version(self):
         """Test that module has a version."""
-        from digitalmodel.modules.marine_analysis import __version__
+        from digitalmodel.marine_analysis import __version__
         assert __version__ is not None
         assert isinstance(__version__, str)
         assert __version__ == '2.1.0', "Version should be 2.1.0 after reorganization"

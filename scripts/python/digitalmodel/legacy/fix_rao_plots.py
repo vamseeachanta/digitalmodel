@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
-from digitalmodel.modules.marine_analysis.unified_rao_reader import read_rao_file
+from digitalmodel.marine_analysis.unified_rao_reader import read_rao_file
 
 def main():
     """Main function to generate fixed RAO plots."""

@@ -9,7 +9,7 @@ import time
 import tempfile
 from datetime import datetime
 
-from digitalmodel.modules.workflow_automation import (
+from digitalmodel.workflow_automation import (
     WorkflowOrchestrator,
     WorkflowDefinition,
     WorkflowTask,
@@ -341,7 +341,7 @@ class TestMemoryUsage:
 
     def test_parallel_executor_overhead(self):
         """Measure parallel executor memory overhead"""
-        from digitalmodel.modules.workflow_automation import AdaptiveParallelExecutor
+        from digitalmodel.workflow_automation import AdaptiveParallelExecutor
 
         # Create executor
         executor = AdaptiveParallelExecutor(max_workers=4)

@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 from pydantic import ValidationError
 
-from digitalmodel.modules.marine_analysis.python_code_passing_ship.configuration import (
+from digitalmodel.marine_analysis.python_code_passing_ship.configuration import (
     VesselConfig,
     EnvironmentalConfig,
     CalculationConfig,

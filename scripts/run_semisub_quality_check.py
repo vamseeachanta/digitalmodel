@@ -5,7 +5,7 @@ import yaml
 from pathlib import Path
 
 # Import after module setup to avoid stdout issues
-from digitalmodel.modules.marine_analysis import (
+from digitalmodel.marine_analysis import (
     RAODataValidators,
     VesselType,
     PhaseConvention

@@ -7,18 +7,18 @@ analysis, and mesh statistics calculations.
 import pytest
 import numpy as np
 
-from digitalmodel.modules.gmsh_meshing.models import (
+from digitalmodel.gmsh_meshing.models import (
     MeshQuality,
     MeshStatistics,
     GeometryType,
     ElementType,
     MeshAlgorithm,
 )
-from digitalmodel.modules.gmsh_meshing.quality_analyzer import MeshQualityAnalyzer
+from digitalmodel.gmsh_meshing.quality_analyzer import MeshQualityAnalyzer
 
 # Skip GMSH tests if not installed
 try:
-    from digitalmodel.modules.gmsh_meshing.mesh_generator import GMSHMeshGenerator, GMSH_AVAILABLE
+    from digitalmodel.gmsh_meshing.mesh_generator import GMSHMeshGenerator, GMSH_AVAILABLE
 except ImportError:
     GMSH_AVAILABLE = False
 

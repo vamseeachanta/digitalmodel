@@ -10,7 +10,7 @@ from pathlib import Path
 # Add src to path for development
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from digitalmodel.modules.automation.quality_gates_cli import cli
+from digitalmodel.automation.quality_gates_cli import cli
 
 if __name__ == "__main__":
     cli()

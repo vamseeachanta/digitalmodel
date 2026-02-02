@@ -101,7 +101,7 @@ class TestCLIEntryPoints:
         "run-to-sim": "digitalmodel.orcaflex.run_to_sim_cli",
         "orcaflex-universal": "digitalmodel.orcaflex.universal_cli",
         "orcaflex-convert": "digitalmodel.orcaflex.format_converter.cli",
-        "create-go-by": "digitalmodel.modules.automation.go_by_folder.cli",
+        "create-go-by": "digitalmodel.automation.go_by_folder.cli",
         "aqwa": "digitalmodel.aqwa.aqwa_cli",
         "diffraction": "digitalmodel.diffraction.cli",
         "structural-analysis": "digitalmodel.structural_analysis.cli",
@@ -110,8 +110,8 @@ class TestCLIEntryPoints:
         "catenary-riser": "digitalmodel.catenary_riser.cli",
         "signal-analysis": "digitalmodel.signal_analysis.cli",
         "hydrodynamics": "digitalmodel.hydrodynamics.cli",
-        "gmsh-meshing": "digitalmodel.modules.gmsh_meshing.cli",
-        "workflow-automation": "digitalmodel.modules.workflow_automation.cli",
+        "gmsh-meshing": "digitalmodel.gmsh_meshing.cli",
+        "workflow-automation": "digitalmodel.workflow_automation.cli",
         "bemrosetta": "digitalmodel.bemrosetta.cli",
     }
 
