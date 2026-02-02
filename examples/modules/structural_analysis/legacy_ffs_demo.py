@@ -7,7 +7,7 @@ import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 
 from digitalmodel.common.visualizations_interactive import generate_interactive_heatmap
-from digitalmodel.modules.structural_analysis.legacy.ffs.engine import LegacyFFSEngine
+from digitalmodel.structural_analysis.legacy.ffs.engine import LegacyFFSEngine
 
 def simulate_metal_loss_grid(rows=20, cols=36):
     """

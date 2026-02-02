@@ -15,7 +15,7 @@ The Unified RAO Reader provides a single, consistent interface for reading Respo
 ### Basic Usage (3 Lines of Code)
 
 ```python
-from digitalmodel.modules.marine_analysis import read_rao_file
+from digitalmodel.marine_analysis import read_rao_file
 
 rao_data = read_rao_file('vessel_analysis.lis')
 print(rao_data.get_available_types())  # [DISPLACEMENT, VELOCITY, ACCELERATION]
@@ -24,7 +24,7 @@ print(rao_data.get_available_types())  # [DISPLACEMENT, VELOCITY, ACCELERATION]
 ### Complete Example
 
 ```python
-from digitalmodel.modules.marine_analysis import UnifiedRAOReader, RAOType
+from digitalmodel.marine_analysis import UnifiedRAOReader, RAOType
 
 # Create reader
 reader = UnifiedRAOReader()
@@ -181,7 +181,7 @@ Leading positive convention (ISO 6954):
 ### Task 1: Extract RAO Data for Analysis
 
 ```python
-from digitalmodel.modules.marine_analysis import read_rao_file
+from digitalmodel.marine_analysis import read_rao_file
 import numpy as np
 
 # Read data
@@ -209,7 +209,7 @@ print(f"  at heading: {peak_heading:.1f}°")
 ### Task 2: Compare Multiple Vessels
 
 ```python
-from digitalmodel.modules.marine_analysis import UnifiedRAOReader
+from digitalmodel.marine_analysis import UnifiedRAOReader
 
 reader = UnifiedRAOReader()
 
@@ -239,7 +239,7 @@ print(f"Best vessel: {best_vessel}")
 ### Task 3: Export to CSV for External Tools
 
 ```python
-from digitalmodel.modules.marine_analysis import read_rao_file
+from digitalmodel.marine_analysis import read_rao_file
 import pandas as pd
 
 rao_data = read_rao_file('vessel.lis')
@@ -275,7 +275,7 @@ df.to_csv('rao_export.csv', index=False)
 ### Task 4: Validate Data Quality
 
 ```python
-from digitalmodel.modules.marine_analysis import read_rao_file
+from digitalmodel.marine_analysis import read_rao_file
 import numpy as np
 
 rao_data = read_rao_file('vessel.lis')
@@ -307,7 +307,7 @@ if heave_max > 2.0:
 ### Task 5: Backward Compatibility with Legacy Code
 
 ```python
-from digitalmodel.modules.marine_analysis import read_rao_file
+from digitalmodel.marine_analysis import read_rao_file
 
 # Read using new unified reader
 rao_data = read_rao_file('vessel.lis')
@@ -327,7 +327,7 @@ legacy_dict = rao_data.displacement.to_dict()
 # }
 
 # Use with legacy processor
-from digitalmodel.modules.marine_analysis import RAODataProcessor
+from digitalmodel.marine_analysis import RAODataProcessor
 
 processor = RAODataProcessor()
 # ... legacy code continues
@@ -340,7 +340,7 @@ processor = RAODataProcessor()
 ### Standard Pattern
 
 ```python
-from digitalmodel.modules.marine_analysis import (
+from digitalmodel.marine_analysis import (
     UnifiedRAOReader,
     RAOReaderError
 )
@@ -389,7 +389,7 @@ rao_data = reader.read(
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.marine_analysis import UnifiedRAOReader
+from digitalmodel.marine_analysis import UnifiedRAOReader
 
 reader = UnifiedRAOReader()
 
@@ -463,7 +463,7 @@ SourceFormat.ORCAFLEX_YML
 ### Old Way (v1.x)
 
 ```python
-from digitalmodel.modules.marine_analysis import RAODataProcessor
+from digitalmodel.marine_analysis import RAODataProcessor
 
 processor = RAODataProcessor()
 rao_data = processor.import_aqwa_lis_file('vessel.lis')
@@ -473,7 +473,7 @@ rao_data = processor.import_aqwa_lis_file('vessel.lis')
 ### New Way (v2.0)
 
 ```python
-from digitalmodel.modules.marine_analysis import read_rao_file
+from digitalmodel.marine_analysis import read_rao_file
 
 rao_data = read_rao_file('vessel.lis')
 # All RAO types, simple API, backward compatible
@@ -490,7 +490,7 @@ rao_data = read_rao_file('vessel.lis')
 from digitalmodel.marine_analysis import UnifiedRAOReader
 
 # ✅ Correct
-from digitalmodel.modules.marine_analysis import UnifiedRAOReader
+from digitalmodel.marine_analysis import UnifiedRAOReader
 ```
 
 ### Issue: No velocity/acceleration RAOs found

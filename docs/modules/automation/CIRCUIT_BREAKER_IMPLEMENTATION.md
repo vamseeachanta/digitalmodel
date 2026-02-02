@@ -32,7 +32,7 @@ CircuitBreakerConfig(
 
 **Usage:**
 ```python
-from digitalmodel.modules.automation.circuit_breaker import CircuitBreaker
+from digitalmodel.automation.circuit_breaker import CircuitBreaker
 
 breaker = CircuitBreaker(agent_type="coder")
 
@@ -58,7 +58,7 @@ Manages checkpoint creation and restoration for automatic rollback on failures.
 
 **Usage:**
 ```python
-from digitalmodel.modules.automation.rollback_manager import RollbackManager
+from digitalmodel.automation.rollback_manager import RollbackManager
 
 rollback = RollbackManager(workflow_id="feature-123")
 
@@ -198,8 +198,8 @@ uv run python -m pytest tests/modules/automation/test_rollback_manager.py -v
 ### Full Workflow with Circuit Breaker & Rollback
 
 ```python
-from digitalmodel.modules.automation.circuit_breaker import CircuitBreaker
-from digitalmodel.modules.automation.rollback_manager import RollbackManager
+from digitalmodel.automation.circuit_breaker import CircuitBreaker
+from digitalmodel.automation.rollback_manager import RollbackManager
 
 # Setup
 breaker = CircuitBreaker(agent_type="coder")
@@ -245,7 +245,7 @@ print(f"Circuit state: {state}")
 ### Multi-Agent Coordination
 
 ```python
-from digitalmodel.modules.automation.circuit_breaker import CircuitBreakerManager
+from digitalmodel.automation.circuit_breaker import CircuitBreakerManager
 
 # Manager handles multiple agent types
 manager = CircuitBreakerManager()

@@ -18,8 +18,8 @@ from datetime import datetime
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
 # Import existing modules
-from digitalmodel.modules.fatigue_analysis.rainflow_counter import RainflowCounter
-from digitalmodel.modules.fatigue_analysis.fatigue_damage_calculator import (
+from digitalmodel.fatigue_analysis.rainflow_counter import RainflowCounter
+from digitalmodel.fatigue_analysis.fatigue_damage_calculator import (
     FatigueDamageCalculator, SNCurveParameters
 )
 

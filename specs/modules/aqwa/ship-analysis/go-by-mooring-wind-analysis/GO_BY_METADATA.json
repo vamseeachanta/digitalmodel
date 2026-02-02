@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "tool": "digitalmodel.modules.automation.go_by_folder",
+  "tool": "digitalmodel.automation.go_by_folder",
   "original_path": ".temp\\template_work\\example-2",
   "creation_date": "2025-09-19T10:07:04.274628",
   "folder_hash": "125e4c326cc54729",

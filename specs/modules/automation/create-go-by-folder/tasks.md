@@ -8,12 +8,12 @@ This tool will be implemented as a module within the existing `digitalmodel` rep
 ### 1.1 Module Structure Setup [1 hour] ✅ COMPLETED
 - [x] Create module directory at `src/digitalmodel/modules/automation/go_by_folder/`
 - [x] Set up `__init__.py` with module exports
-- [x] Create `__main__.py` for direct module execution (`python -m digitalmodel.modules.automation.go_by_folder`)
+- [x] Create `__main__.py` for direct module execution (`python -m digitalmodel.automation.go_by_folder`)
 - [x] Add module to existing pyproject.toml dependencies (no new dependencies needed initially)
 
 ### 1.2 CLI Integration [1 hour] ✅ COMPLETED
 - [x] Create `cli.py` using existing argparse patterns from digitalmodel
-- [x] Add entry point to pyproject.toml: `create-go-by = "digitalmodel.modules.automation.go_by_folder.cli:main"`
+- [x] Add entry point to pyproject.toml: `create-go-by = "digitalmodel.automation.go_by_folder.cli:main"`
 - [x] Integrate with existing configuration patterns (YAML support from repository)
 - [x] Add command aliases and shortcuts
 
@@ -331,7 +331,7 @@ docs/modules/automation/go_by_folder/
 ### Deliverables:
 1. Fully integrated module in digitalmodel repository
 2. Command-line tool: `create-go-by`
-3. Python module: `python -m digitalmodel.modules.automation.go_by_folder`
+3. Python module: `python -m digitalmodel.automation.go_by_folder`
 4. Complete test coverage
 5. Documentation integrated with repository docs
 6. Example configurations and demonstrations

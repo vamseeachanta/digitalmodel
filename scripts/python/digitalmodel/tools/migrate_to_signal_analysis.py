@@ -26,14 +26,14 @@ class SignalAnalysisMigrator:
         """Build mapping from old to new implementations"""
         return {
             # Old imports to new imports
-            'from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents': 
-                'from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents',
+            'from digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents': 
+                'from digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents',
             
-            'from digitalmodel.modules.signal_analysis.fatigue import': 
-                'from digitalmodel.modules.signal_analysis.fatigue import',
+            'from digitalmodel.signal_analysis.fatigue import': 
+                'from digitalmodel.signal_analysis.fatigue import',
             
-            'from digitalmodel.modules.signal_analysis import': 
-                'from digitalmodel.modules.signal_analysis import',
+            'from digitalmodel.signal_analysis import': 
+                'from digitalmodel.signal_analysis import',
             
             # Old class names to new
             'TimeSeriesComponentsAdapter(': 'TimeSeriesComponentsAdapter(',
@@ -156,21 +156,21 @@ class SignalAnalysisMigrator:
         report.append("\n## Example Migrations\n")
         report.append("### Old Code:")
         report.append("```python")
-        report.append("from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents")
+        report.append("from digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents")
         report.append("tsc = TimeSeriesComponentsAdapter(cfg)")
         report.append("cycles = tsc.count_cycles(signal)")
         report.append("```")
         
         report.append("\n### New Code:")
         report.append("```python")
-        report.append("from digitalmodel.modules.signal_analysis import RainflowCounter")
+        report.append("from digitalmodel.signal_analysis import RainflowCounter")
         report.append("counter = RainflowCounter()")
         report.append("cycles = counter.count_cycles(signal)")
         report.append("```")
         
         report.append("\n### Or using adapter for compatibility:")
         report.append("```python")
-        report.append("from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter")
+        report.append("from digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter")
         report.append("adapter = TimeSeriesComponentsAdapter(cfg)")
         report.append("cycles = adapter.count_cycles(signal)")
         report.append("```")
@@ -213,7 +213,7 @@ class SignalAnalysisMigrator:
     def add_deprecation_warnings(self, file_path: Path):
         """Add deprecation warnings to old modules"""
         warning_text = '''"""
-DEPRECATED: This module is being replaced by digitalmodel.modules.signal_analysis
+DEPRECATED: This module is being replaced by digitalmodel.signal_analysis
 
 Please migrate to the new signal analysis module:
 - RainflowCounter for rainflow counting
@@ -225,7 +225,7 @@ See migration guide: docs/migration/signal_analysis_migration.md
 
 import warnings
 warnings.warn(
-    "This module is deprecated. Use digitalmodel.modules.signal_analysis instead",
+    "This module is deprecated. Use digitalmodel.signal_analysis instead",
     DeprecationWarning,
     stacklevel=2
 )

@@ -190,7 +190,7 @@ Multi-format RAO (Response Amplitude Operator) data processing with validation, 
 #### Usage Example
 
 ```python
-from digitalmodel.modules.marine_analysis.rao_processor import RAODataProcessor
+from digitalmodel.marine_analysis.rao_processor import RAODataProcessor
 
 # Initialize processor
 processor = RAODataProcessor()
@@ -279,7 +279,7 @@ Foundation for mooring system analysis with extensible architecture for various 
 #### Usage Example
 
 ```python
-from digitalmodel.modules.mooring.mooring import Mooring
+from digitalmodel.mooring.mooring import Mooring
 
 # Initialize mooring analysis
 mooring = Mooring()
@@ -579,7 +579,7 @@ print(f"Fatigue life at {target_stress} MPa: {fatigue_life:.2e} cycles")
 ### 7.2 RAO Data Processing Pipeline
 
 ```python
-from digitalmodel.modules.marine_analysis.rao_processor import RAODataProcessor
+from digitalmodel.marine_analysis.rao_processor import RAODataProcessor
 import numpy as np
 
 # Initialize processor
@@ -627,7 +627,7 @@ print(f"✅ Exported standardized RAO data: {len(df)} rows")
 ### 7.3 Mooring Analysis Setup
 
 ```python
-from digitalmodel.modules.mooring.mooring import Mooring
+from digitalmodel.mooring.mooring import Mooring
 
 # Define configuration
 mooring_config = {

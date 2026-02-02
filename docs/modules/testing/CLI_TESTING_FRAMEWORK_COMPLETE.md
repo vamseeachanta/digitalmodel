@@ -79,7 +79,7 @@ import json
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from digitalmodel.modules.<module>.cli import cli
+from digitalmodel.<module>.cli import cli
 from tests.cli.conftest import (
     assert_cli_success,
     assert_cli_failure,
@@ -90,7 +90,7 @@ from tests.cli.conftest import (
 class Test<CommandName>Command:
     """Tests for the '<command-name>' command"""
 
-    @patch('digitalmodel.modules.<module>.cli.<AnalyzerClass>')
+    @patch('digitalmodel.<module>.cli.<AnalyzerClass>')
     def test_basic_functionality(self, mock_analyzer, cli_runner):
         """Test basic command execution"""
         # Setup mocks
@@ -119,7 +119,7 @@ class Test<CommandName>Command:
 
 ```python
 # Mock the analyzer/calculator class
-@patch('digitalmodel.modules.module_name.cli.AnalyzerClass')
+@patch('digitalmodel.module_name.cli.AnalyzerClass')
 def test_command(self, mock_analyzer, cli_runner):
     # Create mock instance
     mock_instance = MagicMock()

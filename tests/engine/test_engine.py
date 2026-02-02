@@ -43,7 +43,7 @@ def mock_imports():
         'digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular',
         'digitalmodel.signal_analysis.fatigue',
         'digitalmodel.common.ship_design',
-        'digitalmodel.modules.mooring.mooring',
+        'digitalmodel.mooring.mooring',
         'digitalmodel.orcaflex.orcaflex',
         'digitalmodel.orcaflex.orcaflex_file_management',
         'digitalmodel.orcaflex.orcaflex_installation',

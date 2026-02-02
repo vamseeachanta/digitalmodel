@@ -17,7 +17,7 @@
 #### 1.1 Module Structure Setup ✅
 - Created complete module directory structure at `src/digitalmodel/modules/automation/go_by_folder/`
 - Set up proper Python package with `__init__.py` and `__main__.py`
-- Module can be executed via: `python -m digitalmodel.modules.automation.go_by_folder`
+- Module can be executed via: `python -m digitalmodel.automation.go_by_folder`
 - **Time**: 5 minutes
 
 #### 1.2 CLI Integration ✅
@@ -90,7 +90,7 @@
 
 ### Test Command
 ```bash
-python -m digitalmodel.modules.automation.go_by_folder \
+python -m digitalmodel.automation.go_by_folder \
     -s "D:\github\digitalmodel\specs\modules\automation\create-go-by-folder" \
     -t "D:\github\digitalmodel\tests\test_goby_output" \
     --overwrite --log-level INFO
@@ -680,7 +680,7 @@ D:\github\digitalmodel\src\digitalmodel\modules\automation\go_by_folder\
 ### How to Use:
 ```bash
 # Via Python module
-python -m digitalmodel.modules.automation.go_by_folder -s ./source -t ./target
+python -m digitalmodel.automation.go_by_folder -s ./source -t ./target
 
 # Via CLI command (after uv pip install -e .)
 create-go-by -s ./source -t ./target

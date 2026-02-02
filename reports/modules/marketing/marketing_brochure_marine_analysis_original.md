@@ -185,7 +185,7 @@ Added Mass Matrix at ω = 0.65 rad/s (tonnes, tonne⋅m)
 ### Quick Start Example
 
 ```python
-from digitalmodel.modules.marine_analysis import UnifiedRAOReader, read_rao_file
+from digitalmodel.marine_analysis import UnifiedRAOReader, read_rao_file
 
 # Automatic format detection and parsing
 rao_data = read_rao_file('vessel_motion.LIS')  # AQWA format
@@ -196,7 +196,7 @@ print(f"Frequencies: {rao_data.frequencies}")
 print(f"Headings: {rao_data.headings}")
 
 # Plot RAO
-from digitalmodel.modules.marine_analysis import RAOPlotter
+from digitalmodel.marine_analysis import RAOPlotter
 plotter = RAOPlotter(rao_data)
 plotter.plot_all_dofs(
     save_path='rao_summary.html',

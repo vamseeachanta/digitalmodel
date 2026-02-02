@@ -179,8 +179,8 @@ class TestModuleInteractions:
         }
 
         # Mock reservoir and flow modules
-        with patch('digitalmodel.modules.reservoir.reservoir_analysis') as mock_reservoir, \
-             patch('digitalmodel.modules.flow.flow_analysis') as mock_flow:
+        with patch('digitalmodel.reservoir.reservoir_analysis') as mock_reservoir, \
+             patch('digitalmodel.flow.flow_analysis') as mock_flow:
             
             # Configure reservoir to provide pressure decline
             reservoir_results = {

@@ -94,7 +94,7 @@ structural-analysis list-materials
 ### Python API
 
 ```python
-from digitalmodel.modules.structural_analysis import (
+from digitalmodel.structural_analysis import (
     StressState,
     PlateBucklingAnalyzer,
     ColumnBucklingAnalyzer,
@@ -223,7 +223,7 @@ result = analyzer.check_column_buckling(
 
 ### Pressure Vessel Analysis
 ```python
-from digitalmodel.modules.structural_analysis import StressCalculator, STEEL_S420
+from digitalmodel.structural_analysis import StressCalculator, STEEL_S420
 
 calc = StressCalculator(STEEL_S420)
 

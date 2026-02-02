@@ -9,7 +9,7 @@ Usage:
     python scripts/demo_skill_resolver.py
 """
 
-from digitalmodel.modules.skills.skill_resolver import SkillResolver
+from digitalmodel.skills.skill_resolver import SkillResolver
 
 
 def print_section(title: str):

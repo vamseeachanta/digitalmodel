@@ -311,7 +311,7 @@ Reference: /docs/reports/rao_qa/vessel_heave_rao_qa_report.html
 ### Quick Start Example
 
 ```python
-from digitalmodel.modules.marine_analysis import UnifiedRAOReader, read_rao_file
+from digitalmodel.marine_analysis import UnifiedRAOReader, read_rao_file
 
 # Automatic format detection and parsing
 rao_data = read_rao_file('vessel_motion.LIS')  # AQWA format
@@ -323,7 +323,7 @@ print(f"Headings: {rao_data.headings}")
 print(f"Peak heave RAO: {heave_rao.magnitude.max():.2f} m/m")
 
 # Plot RAO with interactive visualization
-from digitalmodel.modules.marine_analysis import RAOPlotter
+from digitalmodel.marine_analysis import RAOPlotter
 plotter = RAOPlotter(rao_data)
 plotter.plot_all_dofs(
     save_path='rao_summary.html',
@@ -336,7 +336,7 @@ rao_data.to_orcaflex_yaml('vessel_rao.yml')
 rao_data.to_csv('vessel_rao.csv')
 
 # Validation report
-from digitalmodel.modules.marine_analysis import RAODataValidators
+from digitalmodel.marine_analysis import RAODataValidators
 validator = RAODataValidators(rao_data)
 report = validator.run_all_checks()
 print(f"Validation status: {report.summary}")

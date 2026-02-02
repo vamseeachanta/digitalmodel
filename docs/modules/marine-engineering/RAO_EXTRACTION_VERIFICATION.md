@@ -51,7 +51,7 @@ PERIOD   FREQ   DIRECTION          X                 Y                 Z        
 
 ### Parser Configuration:
 ```python
-from digitalmodel.modules.marine_analysis import read_rao_file
+from digitalmodel.marine_analysis import read_rao_file
 
 rao_data = read_rao_file('001_SHIP_RAOS_REV3.LIS')
 disp = rao_data.displacement

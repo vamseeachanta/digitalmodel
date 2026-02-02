@@ -364,7 +364,7 @@ Review HTML coverage report to ensure 90% CLI code coverage.
 ### Adding Tests for New CLIs
 
 1. Create test file: `tests/cli/test_<module>_cli.py`
-2. Import CLI: `from digitalmodel.modules.<module>.cli import cli`
+2. Import CLI: `from digitalmodel.<module>.cli import cli`
 3. Create test classes for each command
 4. Use existing fixtures from `conftest.py`
 5. Follow established testing patterns

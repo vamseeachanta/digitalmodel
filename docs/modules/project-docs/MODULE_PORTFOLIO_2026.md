@@ -345,7 +345,7 @@ All critical modules have automated GitHub Actions workflows:
 
 ### Mooring + OrcaFlex Workflow
 ```python
-from digitalmodel.modules.mooring_analysis import MooringDesigner
+from digitalmodel.mooring_analysis import MooringDesigner
 from digitalmodel.orcaflex import UniversalOrcaFlexRunner
 
 # Design mooring system
@@ -360,8 +360,8 @@ results = runner.run(models=['mooring_model.yml'])
 ### OrcaFlex + Fatigue Workflow
 ```python
 from digitalmodel.orcaflex import run_models
-from digitalmodel.modules.fatigue_analysis import FatigueDamageCalculator
-from digitalmodel.modules.signal_analysis import TimeSeriesProcessor
+from digitalmodel.fatigue_analysis import FatigueDamageCalculator
+from digitalmodel.signal_analysis import TimeSeriesProcessor
 
 # Run simulation
 run_models(models=['riser_analysis.yml'])
@@ -380,8 +380,8 @@ damage = fatigue_calc.calculate_damage(cycles, sn_curve='DNV-D')
 
 ### Structural + VIV Workflow
 ```python
-from digitalmodel.modules.structural_analysis import StructuralAnalyzer
-from digitalmodel.modules.viv_analysis import VIVAssessor
+from digitalmodel.structural_analysis import StructuralAnalyzer
+from digitalmodel.viv_analysis import VIVAssessor
 
 # Structural capacity check
 analyzer = StructuralAnalyzer()

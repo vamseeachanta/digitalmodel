@@ -138,7 +138,7 @@ Both critical bugs discovered during verification have been fixed:
 
 **Option 1: Using the module directly**
 ```python
-from digitalmodel.modules.marine_analysis.visualization import RAOPlotter
+from digitalmodel.marine_analysis.visualization import RAOPlotter
 
 plotter = RAOPlotter('path/to/file.lis')
 plotter.generate_all_plots()
@@ -147,7 +147,7 @@ plotter.generate_all_plots()
 **Option 2: Command line**
 ```bash
 cd D:/workspace-hub/digitalmodel
-python -m digitalmodel.modules.marine_analysis.visualization.rao_plotter
+python -m digitalmodel.marine_analysis.visualization.rao_plotter
 ```
 
 ### Modifying Plot Script

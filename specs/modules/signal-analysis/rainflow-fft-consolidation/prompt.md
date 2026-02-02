@@ -75,7 +75,7 @@ The user requested consolidation of rainflow counting and FFT/spectral analysis 
 ### Current Implementation Usage
 
 ```python
-from digitalmodel.modules.time_series import TimeSeriesComponents
+from digitalmodel.time_series import TimeSeriesComponents
 
 # Initialize with configuration
 cfg = {

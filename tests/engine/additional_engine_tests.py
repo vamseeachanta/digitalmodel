@@ -27,7 +27,7 @@ mock_modules = {
     'digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular': MagicMock(),
     'digitalmodel.signal_analysis.fatigue': MagicMock(),
     'digitalmodel.common.ship_design': MagicMock(),
-    'digitalmodel.modules.mooring.mooring': MagicMock(),
+    'digitalmodel.mooring.mooring': MagicMock(),
     'digitalmodel.orcaflex.orcaflex': MagicMock(),
     'digitalmodel.orcaflex.orcaflex_file_management': MagicMock(),
     'digitalmodel.orcaflex.orcaflex_installation': MagicMock(),

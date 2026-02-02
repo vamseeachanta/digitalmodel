@@ -25,7 +25,7 @@
 ### Issue #1: Extraction Module Import Failure (BLOCKER)
 - **File:** `src/digitalmodel/modules/marine_analysis/extraction/run_extraction.py:18`
 - **Error:** `ModuleNotFoundError: No module named 'extract_hydro_coefficients'`
-- **Impact:** Blocks ALL `digitalmodel.modules.marine_analysis` imports
+- **Impact:** Blocks ALL `digitalmodel.marine_analysis` imports
 - **Affected Tests:** 2 files directly, 25+ files indirectly
 - **Priority:** 🔴 CRITICAL
 - **ETA to Fix:** 15 minutes
@@ -127,9 +127,9 @@
 
 ## 📋 Import Pattern Analysis
 
-### Pattern 1: `digitalmodel.modules.marine_analysis.*` (2 files)
+### Pattern 1: `digitalmodel.marine_analysis.*` (2 files)
 ```python
-from digitalmodel.modules.marine_analysis import UnifiedRAOReader
+from digitalmodel.marine_analysis import UnifiedRAOReader
 ```
 - **Status:** ❌ BLOCKED (extraction import error)
 - **Files:** 2
@@ -255,7 +255,7 @@ ERROR: collection failed
 ### Chain 1: RAO Tests → marine_analysis
 ```
 test_unified_rao_reader.py
-  └─> from digitalmodel.modules.marine_analysis import UnifiedRAOReader
+  └─> from digitalmodel.marine_analysis import UnifiedRAOReader
       └─> src/digitalmodel/modules/marine_analysis/__init__.py
           └─> from . import extraction  ✅
               └─> src/.../extraction/__init__.py
@@ -381,8 +381,8 @@ integration/test_hydro_rao_integration.py
 ### Check Import Health
 ```bash
 # Test 1: Core imports
-python -c "from digitalmodel.modules.marine_analysis import UnifiedRAOReader; print('✅ UnifiedRAOReader')"
-python -c "from digitalmodel.modules.marine_analysis import RAOPlotter; print('✅ RAOPlotter')"
+python -c "from digitalmodel.marine_analysis import UnifiedRAOReader; print('✅ UnifiedRAOReader')"
+python -c "from digitalmodel.marine_analysis import RAOPlotter; print('✅ RAOPlotter')"
 
 # Test 2: Collection
 pytest tests/marine_engineering/ --collect-only 2>&1 | grep "collected"

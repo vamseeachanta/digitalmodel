@@ -129,7 +129,7 @@ print(results.shape_x, results.shape_y)  # Line geometry
 
 **API Pattern:**
 ```python
-from digitalmodel.modules.catenary.catenary_equation import CatenaryCalculator
+from digitalmodel.catenary.catenary_equation import CatenaryCalculator
 
 calc = CatenaryCalculator()
 
@@ -143,7 +143,7 @@ data = {"d": 100, "F": 50000, "w": 1962, "q": None, "X": None}
 result = calc.calculate(data)
 
 # Lazy-wave via catenary_riser
-from digitalmodel.modules.catenary.catenary_riser import catenary_riser
+from digitalmodel.catenary.catenary_riser import catenary_riser
 cfg = {...}  # Complex config dict
 result_cfg = catenary_riser(cfg)
 ```
@@ -563,7 +563,7 @@ Add deprecation warnings to `src/digitalmodel/modules/catenary/`:
 import warnings
 
 warnings.warn(
-    "digitalmodel.modules.catenary is deprecated. "
+    "digitalmodel.catenary is deprecated. "
     "Use marine_engineering.catenary instead. "
     "See migration guide: docs/catenary_migration.md",
     DeprecationWarning,
@@ -580,7 +580,7 @@ warnings.warn(
 
 **Old (Legacy):**
 ```python
-from digitalmodel.modules.catenary.catenary_equation import CatenaryCalculator
+from digitalmodel.catenary.catenary_equation import CatenaryCalculator
 
 calc = CatenaryCalculator()
 result = calc.calculate({"d": 100, "q": 45, "F": None, "X": None})
@@ -642,7 +642,7 @@ No direct imports found! (Good news - minimal breaking changes)
 def test_simplified_matches_legacy():
     """Verify simplified methods match legacy CatenaryCalculator."""
     from marine_engineering.catenary import calculate_from_angle
-    from digitalmodel.modules.catenary.catenary_equation import CatenaryCalculator
+    from digitalmodel.catenary.catenary_equation import CatenaryCalculator
 
     # Test angle-based calculation
     legacy_calc = CatenaryCalculator()
@@ -805,7 +805,7 @@ mv tests/marine_engineering/test_catenary_solver.py \
 
 If consolidation fails:
 1. **Keep Phase 1 in `marine_engineering.catenary.solver`**
-2. **Keep legacy in `digitalmodel.modules.catenary`**
+2. **Keep legacy in `digitalmodel.catenary`**
 3. **Document use cases for each**
 4. **Accept dual API temporarily**
 
@@ -920,11 +920,11 @@ from src.marine_engineering.mooring_analysis.catenary_solver import (
 )
 
 # Legacy
-from digitalmodel.modules.catenary.catenary_equation import CatenaryCalculator
-from digitalmodel.modules.catenary.catenaryMethods import (
+from digitalmodel.catenary.catenary_equation import CatenaryCalculator
+from digitalmodel.catenary.catenaryMethods import (
     lazyWaveCatenaryEquation, simple_catenary_plot, ...
 )
-from digitalmodel.modules.catenary.catenary_riser import catenary_riser
+from digitalmodel.catenary.catenary_riser import catenary_riser
 ```
 
 **No active imports found** in grep search - indicates low coupling risk!

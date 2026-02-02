@@ -19,7 +19,7 @@ This system provides:
 Core module for skill management:
 
 ```python
-from digitalmodel.modules.skills.skill_resolver import SkillResolver
+from digitalmodel.skills.skill_resolver import SkillResolver
 
 # Initialize resolver
 resolver = SkillResolver()
@@ -247,7 +247,7 @@ recommendations = resolver.recommend_skills(
    ```
 4. Regenerate catalog:
    ```bash
-   python -c "from digitalmodel.modules.skills.skill_resolver import SkillResolver; SkillResolver().export_catalog()"
+   python -c "from digitalmodel.skills.skill_resolver import SkillResolver; SkillResolver().export_catalog()"
    ```
 
 ### Updating Skill Version
@@ -282,7 +282,7 @@ pytest tests/test_skill_resolver.py -v
 pytest tests/test_skill_resolver.py::TestSkillRecommendation -v
 
 # Run with coverage
-pytest tests/test_skill_resolver.py --cov=digitalmodel.modules.skills
+pytest tests/test_skill_resolver.py --cov=digitalmodel.skills
 ```
 
 ## Demo Script

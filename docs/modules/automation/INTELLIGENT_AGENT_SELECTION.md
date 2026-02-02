@@ -106,7 +106,7 @@ CREATE TABLE agent_tasks (
 ### Direct Python Usage
 
 ```python
-from digitalmodel.modules.automation import IntelligentAgentSelector
+from digitalmodel.automation import IntelligentAgentSelector
 
 # Initialize selector
 selector = IntelligentAgentSelector(
@@ -131,7 +131,7 @@ print(f"Reasoning: {result['reasoning']}")
 ### Recording Performance
 
 ```python
-from digitalmodel.modules.automation import AgentPerformanceTracker
+from digitalmodel.automation import AgentPerformanceTracker
 
 tracker = AgentPerformanceTracker()
 

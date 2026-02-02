@@ -203,7 +203,7 @@ Indexes:
 ### Python API
 
 ```python
-from digitalmodel.modules.automation import (
+from digitalmodel.automation import (
     AgentPerformanceTracker,
     IntelligentAgentSelector
 )
@@ -472,7 +472,7 @@ The Intelligent Agent Selection System is **production-ready** and fully impleme
 
 The system is ready for immediate use via:
 - Command line: `./modules/automation/agent_orchestrator.sh`
-- Python API: `from digitalmodel.modules.automation import IntelligentAgentSelector`
+- Python API: `from digitalmodel.automation import IntelligentAgentSelector`
 - Demo: `python examples/agent_selection_demo.py`
 
 ---

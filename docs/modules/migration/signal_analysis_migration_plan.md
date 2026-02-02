@@ -47,7 +47,7 @@ Add warnings to all old modules to alert users:
 ```python
 import warnings
 warnings.warn(
-    "This module is deprecated. Use digitalmodel.modules.signal_analysis instead",
+    "This module is deprecated. Use digitalmodel.signal_analysis instead",
     DeprecationWarning,
     stacklevel=2
 )
@@ -90,12 +90,12 @@ Update specialized analysis modules:
 ### Pattern 1: Direct Migration
 ```python
 # Old
-from digitalmodel.modules.time_series.time_series_components import TimeSeriesComponents
+from digitalmodel.time_series.time_series_components import TimeSeriesComponents
 tsc = TimeSeriesComponents(cfg)
 cycles = tsc.get_rainflow_count_from_time_series(signal)
 
 # New
-from digitalmodel.modules.signal_analysis import RainflowCounter
+from digitalmodel.signal_analysis import RainflowCounter
 counter = RainflowCounter()
 cycles = counter.count_cycles(signal)
 ```
@@ -103,7 +103,7 @@ cycles = counter.count_cycles(signal)
 ### Pattern 2: Using Adapter
 ```python
 # Temporary compatibility
-from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter
+from digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter
 adapter = TimeSeriesComponentsAdapter(cfg)
 cycles = adapter.get_rainflow_count_from_time_series(signal)  # Works with deprecation warning
 ```

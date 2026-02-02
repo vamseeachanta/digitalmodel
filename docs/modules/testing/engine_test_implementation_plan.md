@@ -257,7 +257,7 @@ class TestModuleRouting:
         """Test Catenary module routing with dynamic import"""
         config = {"basename": "catenary_analysis"}
 
-        with patch('digitalmodel.modules.catenary.catenary.Catenary') as mock_catenary:
+        with patch('digitalmodel.catenary.catenary.Catenary') as mock_catenary:
             mock_instance = Mock()
             mock_catenary.return_value = mock_instance
             mock_instance.router.return_value = {"catenary_processed": True}
@@ -273,7 +273,7 @@ class TestModuleRouting:
         """Test vertical_riser function call (not class instantiation)"""
         config = {"basename": "vertical_riser"}
 
-        with patch('digitalmodel.modules.vertical_riser.vertical_riser.vertical_riser') as mock_func:
+        with patch('digitalmodel.vertical_riser.vertical_riser.vertical_riser') as mock_func:
             mock_func.return_value = {"riser_processed": True}
 
             with patch.multiple('digitalmodel.engine',
@@ -372,17 +372,17 @@ class TestModuleRouting:
         ("modal_analysis", "digitalmodel.orcaflex.orcaflex_modal_analysis.OrcModalAnalysis", "OrcModalAnalysis"),
         ("umbilical_analysis", "digitalmodel.orcaflex.umbilical_analysis_components.UmbilicalAnalysis", "UmbilicalAnalysis"),
         ("orcaflex_file_management", "digitalmodel.orcaflex.orcaflex_file_management.OrcaflexFileManagement", "OrcaflexFileManagement"),
-        ("rao_analysis", "digitalmodel.modules.rao_analysis.rao_analysis.RAOAnalysis", "RAOAnalysis"),
+        ("rao_analysis", "digitalmodel.rao_analysis.rao_analysis.RAOAnalysis", "RAOAnalysis"),
         ("ship_design", "digitalmodel.common.ship_design.ShipDesign", "ShipDesign"),
-        ("fatigue_analysis", "digitalmodel.modules.signal_analysis.fatigue.FatigueDamageCalculator", "FatigueAnalysis"),
+        ("fatigue_analysis", "digitalmodel.signal_analysis.fatigue.FatigueDamageCalculator", "FatigueAnalysis"),
         ("cathodic_protection", "digitalmodel.common.cathodic_protection.CathodicProtection", "CathodicProtection"),
-        ("transformation", "digitalmodel.modules.transformation.transformation.Transformation", "Transformation"),
-        ("pipeline", "digitalmodel.modules.pipeline.pipeline.Pipeline", "Pipeline"),
-        ("pipe_capacity", "digitalmodel.modules.pipe_capacity.pipe_capacity.PipeCapacity", "PipeCapacity"),
-        ("viv_analysis", "digitalmodel.modules.viv_analysis.viv_analysis.VIVAnalysis", "VIVAnalysis"),
-        ("time_series", "digitalmodel.modules.time_series.time_series_analysis.TimeSeriesAnalysis", "TimeSeriesAnalysis"),
+        ("transformation", "digitalmodel.transformation.transformation.Transformation", "Transformation"),
+        ("pipeline", "digitalmodel.pipeline.pipeline.Pipeline", "Pipeline"),
+        ("pipe_capacity", "digitalmodel.pipe_capacity.pipe_capacity.PipeCapacity", "PipeCapacity"),
+        ("viv_analysis", "digitalmodel.viv_analysis.viv_analysis.VIVAnalysis", "VIVAnalysis"),
+        ("time_series", "digitalmodel.time_series.time_series_analysis.TimeSeriesAnalysis", "TimeSeriesAnalysis"),
         ("plate_buckling", "digitalmodel.common.plate_buckling.PlateBuckling", "PlateBuckling"),
-        ("mooring", "digitalmodel.modules.mooring.mooring.Mooring", "Mooring"),
+        ("mooring", "digitalmodel.mooring.mooring.Mooring", "Mooring"),
     ])
     def test_module_routing_comprehensive(self, basename, module_path, class_name, standard_mocks):
         """Comprehensive test for all module routing paths"""
@@ -616,7 +616,7 @@ class TestEngineIntegration:
         yaml_file = config_dir / "integration_test.yml"
         yaml_file.write_text(yaml_content)
 
-        with patch('digitalmodel.modules.time_series.time_series_analysis.TimeSeriesAnalysis') as mock_tsa:
+        with patch('digitalmodel.time_series.time_series_analysis.TimeSeriesAnalysis') as mock_tsa:
             mock_instance = Mock()
             mock_tsa.return_value = mock_instance
             mock_instance.router.return_value = {"time_series_processed": True}
@@ -665,12 +665,12 @@ class TestEngineProperties:
         # Mock the appropriate module for this basename
         module_mocks = {
             'orcaflex': 'digitalmodel.orcaflex.orcaflex.OrcaFlex',
-            'catenary': 'digitalmodel.modules.catenary.catenary.Catenary',
+            'catenary': 'digitalmodel.catenary.catenary.Catenary',
             'aqwa': 'digitalmodel.aqwa.Aqwa',
             # ... add other mappings as needed
         }
 
-        mock_path = module_mocks.get(basename, 'digitalmodel.modules.generic.Generic')
+        mock_path = module_mocks.get(basename, 'digitalmodel.generic.Generic')
 
         with patch(mock_path) as mock_module:
             mock_instance = Mock()

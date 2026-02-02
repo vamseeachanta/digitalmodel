@@ -207,7 +207,7 @@ def main():
     print("\nNext steps:")
     print("  1. Review changes: git diff .claude/skills")
     print("  2. Update versions: python scripts/update_skill_versions.py")
-    print("  3. Generate catalog: python -c 'from digitalmodel.modules.skills.skill_resolver import SkillResolver; SkillResolver().export_catalog()'")
+    print("  3. Generate catalog: python -c 'from digitalmodel.skills.skill_resolver import SkillResolver; SkillResolver().export_catalog()'")
 
 
 if __name__ == "__main__":

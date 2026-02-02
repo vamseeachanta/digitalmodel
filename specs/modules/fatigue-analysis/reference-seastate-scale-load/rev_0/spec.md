@@ -612,31 +612,31 @@ material_properties:
 ### Primary Commands
 ```bash
 # Complete fatigue analysis workflow with metadata and time traces
-uv run python -m digitalmodel.modules.fatigue_analysis \
+uv run python -m digitalmodel.fatigue_analysis \
     --metadata reference_seastate_timetrace_metadata.csv \
     --timetraces-dir data/timetraces \
     --config config.yml
 
 # Individual processing steps
 # Step 1: Validate metadata and time trace files
-uv run python -m digitalmodel.modules.fatigue_analysis.validate \
+uv run python -m digitalmodel.fatigue_analysis.validate \
     --metadata reference_seastate_timetrace_metadata.csv \
     --timetraces-dir data/timetraces
 
 # Step 2: Scale time traces for fatigue conditions
-uv run python -m digitalmodel.modules.fatigue_analysis.scaling \
+uv run python -m digitalmodel.fatigue_analysis.scaling \
     --metadata reference_seastate_timetrace_metadata.csv \
     --timetraces-dir data/timetraces \
     --fatigue-conditions fatigue_seastates.csv \
     --output-dir data/scaled_traces
 
 # Step 3: Apply rainflow counting to scaled traces
-uv run python -m digitalmodel.modules.fatigue_analysis.rainflow \
+uv run python -m digitalmodel.fatigue_analysis.rainflow \
     --scaled-dir data/scaled_traces \
     --output-dir data/rainflow_results
 
 # Batch processing
-uv run python -m digitalmodel.modules.fatigue_analysis --batch --parallel 4
+uv run python -m digitalmodel.fatigue_analysis --batch --parallel 4
 ```
 
 ### CLI Parameters

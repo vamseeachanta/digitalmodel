@@ -96,7 +96,7 @@ python integrated_processor_with_naming.py
 
 ### Programmatic Usage
 ```python
-from digitalmodel.modules.fatigue_analysis.strut_foundation_processor import (
+from digitalmodel.fatigue_analysis.strut_foundation_processor import (
     ProductionDataHandler, LoadScaler, SeaState
 )
 

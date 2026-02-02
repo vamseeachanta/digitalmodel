@@ -10,7 +10,7 @@
 
 The marine engineering test suite has **25 test files containing 150 test cases**, but **NONE can run** due to 3 critical import issues:
 
-1. ❌ **Extraction module import error** - Blocks `digitalmodel.modules.marine_analysis` imports
+1. ❌ **Extraction module import error** - Blocks `digitalmodel.marine_analysis` imports
 2. ❌ **RAOPlotter wrong path** - Import from incorrect location
 3. ❌ **PYTHONPATH not configured** - Tests cannot find `marine_engineering` modules
 
@@ -131,7 +131,7 @@ except ImportError:
     HydrodynamicCoefficientExtractor = None
 ```
 
-**Impact:** Prevents ALL imports from `digitalmodel.modules.marine_analysis`
+**Impact:** Prevents ALL imports from `digitalmodel.marine_analysis`
 
 ---
 
@@ -224,9 +224,9 @@ pytest tests/marine_engineering/ --collect-only
 
 ### Current State (INCONSISTENT)
 
-**Pattern 1:** `digitalmodel.modules.marine_analysis.*` (2 files)
+**Pattern 1:** `digitalmodel.marine_analysis.*` (2 files)
 ```python
-from digitalmodel.modules.marine_analysis import UnifiedRAOReader
+from digitalmodel.marine_analysis import UnifiedRAOReader
 ```
 ✅ Recommended - Most explicit
 
@@ -246,7 +246,7 @@ from marine_engineering.catenary import catenaryEquation
 
 **Use Pattern 1 for all tests:**
 ```python
-from digitalmodel.modules.marine_analysis import (
+from digitalmodel.marine_analysis import (
     UnifiedRAOReader,
     RAOPlotter,
     # ... other exports
@@ -295,8 +295,8 @@ from digitalmodel.modules.marine_analysis import (
 
 ```bash
 # Test 1: Import verification
-python -c "from digitalmodel.modules.marine_analysis import UnifiedRAOReader; print('✅ Success')"
-python -c "from digitalmodel.modules.marine_analysis import RAOPlotter; print('✅ Success')"
+python -c "from digitalmodel.marine_analysis import UnifiedRAOReader; print('✅ Success')"
+python -c "from digitalmodel.marine_analysis import RAOPlotter; print('✅ Success')"
 
 # Test 2: Pytest collection
 pytest tests/marine_engineering/ --collect-only 2>&1 | grep "collected"
@@ -369,7 +369,7 @@ pytest tests/marine_engineering/ --collect-only -v 2>&1 | head -20
 
 ### Problem: Some tests still fail to import
 
-**Cause:** Tests may depend on modules not in `digitalmodel.modules.marine_analysis`
+**Cause:** Tests may depend on modules not in `digitalmodel.marine_analysis`
 
 **Solution:**
 ```bash

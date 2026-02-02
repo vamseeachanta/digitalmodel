@@ -106,7 +106,7 @@ compatibility:
 ### Anode Mass Calculation
 
 ```python
-from digitalmodel.modules.cp import AnodeDesign
+from digitalmodel.cp import AnodeDesign
 
 # Initialize anode designer
 anode = AnodeDesign()
@@ -140,7 +140,7 @@ print(f"Anode spacing: {result['spacing']:.1f} m")
 ### Pipeline Attenuation
 
 ```python
-from digitalmodel.modules.cp import PipelineCP
+from digitalmodel.cp import PipelineCP
 
 # Initialize pipeline CP designer
 pipeline = PipelineCP()
@@ -174,7 +174,7 @@ print(f"Protection criteria met: {result['criteria_met']}")
 ### Coating Breakdown Factor
 
 ```python
-from digitalmodel.modules.cp import CoatingAnalysis
+from digitalmodel.cp import CoatingAnalysis
 
 coating = CoatingAnalysis()
 
@@ -198,7 +198,7 @@ print(f"Bare area at design life: {cbf['bare_area_percentage']:.1f}%")
 ### Transformer Rectifier Sizing
 
 ```python
-from digitalmodel.modules.cp import ICCPDesign
+from digitalmodel.cp import ICCPDesign
 
 iccp = ICCPDesign()
 
@@ -251,7 +251,7 @@ print(f"Groundbed resistance: {groundbed['resistance']:.3f} ohm")
 ### Remote Monitoring System
 
 ```python
-from digitalmodel.modules.cp import CPMonitoring
+from digitalmodel.cp import CPMonitoring
 
 monitoring = CPMonitoring()
 
@@ -277,7 +277,7 @@ print(f"Communication: {system['communication_type']}")
 ### Survey Analysis
 
 ```python
-from digitalmodel.modules.cp import SurveyAnalysis
+from digitalmodel.cp import SurveyAnalysis
 
 survey = SurveyAnalysis()
 
@@ -309,7 +309,7 @@ for defect in dcvg['defects']:
 ### AC Interference
 
 ```python
-from digitalmodel.modules.cp import InterferenceAnalysis
+from digitalmodel.cp import InterferenceAnalysis
 
 interference = InterferenceAnalysis()
 

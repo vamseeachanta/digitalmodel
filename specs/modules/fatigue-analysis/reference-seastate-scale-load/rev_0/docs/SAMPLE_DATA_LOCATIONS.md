@@ -142,15 +142,15 @@ input/                         ├── Rainflow counting            └── 
 ### Run Analysis
 ```bash
 # With sample data
-python -m digitalmodel.modules.fatigue_analysis --sample --timesteps 1000
+python -m digitalmodel.fatigue_analysis --sample --timesteps 1000
 
 # With parallel processing
-python -m digitalmodel.modules.fatigue_analysis --sample --parallel 4
+python -m digitalmodel.fatigue_analysis --sample --parallel 4
 ```
 
 ### Generate Visualizations
 ```python
-from digitalmodel.modules.fatigue_analysis.visualizer import generate_all_visualizations
+from digitalmodel.fatigue_analysis.visualizer import generate_all_visualizations
 generate_all_visualizations('output', 'output/visualizations')
 ```
 

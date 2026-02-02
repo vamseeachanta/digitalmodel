@@ -63,7 +63,7 @@ acceleration_pattern = r'ACC\s+R\.A\.O\.S-VARIATION...'
 
 **Simple Interface**:
 ```python
-from digitalmodel.modules.marine_analysis import read_rao_file
+from digitalmodel.marine_analysis import read_rao_file
 
 # One-liner to read any format
 rao_data = read_rao_file('vessel.lis')
@@ -191,7 +191,7 @@ acceleration = rao_data.acceleration  # (m/s²)/m, (deg/s²)/m
 
 ```python
 # Step 1: Import
-from digitalmodel.modules.marine_analysis import read_rao_file
+from digitalmodel.marine_analysis import read_rao_file
 
 # Step 2: Read
 rao_data = read_rao_file('vessel.lis')
@@ -302,14 +302,14 @@ if RAOType.DISPLACEMENT in rao_data.get_available_types():
 
 **Old Pattern**:
 ```python
-from digitalmodel.modules.marine_analysis import RAODataProcessor
+from digitalmodel.marine_analysis import RAODataProcessor
 processor = RAODataProcessor()
 rao_data = processor.import_aqwa_lis_file('vessel.lis')
 ```
 
 **New Pattern**:
 ```python
-from digitalmodel.modules.marine_analysis import read_rao_file
+from digitalmodel.marine_analysis import read_rao_file
 rao_data = read_rao_file('vessel.lis')
 ```
 
@@ -318,12 +318,12 @@ rao_data = read_rao_file('vessel.lis')
 **Backward Compatibility Maintained**:
 ```python
 # v1.x code still works
-from digitalmodel.modules.marine_analysis import RAODataProcessor
+from digitalmodel.marine_analysis import RAODataProcessor
 processor = RAODataProcessor()
 # ... continues working
 
 # But v2.0 recommended
-from digitalmodel.modules.marine_analysis import UnifiedRAOReader
+from digitalmodel.marine_analysis import UnifiedRAOReader
 reader = UnifiedRAOReader()
 ```
 

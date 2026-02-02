@@ -212,7 +212,7 @@ Difference: 0.000000 (exact match)
 
 Your existing code continues to work:
 ```python
-from digitalmodel.modules.catenary.catenaryMethods import catenaryEquation
+from digitalmodel.catenary.catenaryMethods import catenaryEquation
 
 # This still works, but shows deprecation warning
 result = catenaryEquation({"F": 10000, "w": 500, "d": 100, ...})

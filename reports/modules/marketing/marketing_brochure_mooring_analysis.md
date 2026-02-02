@@ -49,7 +49,7 @@ The Digital Model Mooring Analysis Module provides end-to-end mooring system des
 **Multiple Solution Methods:**
 
 ```python
-from digitalmodel.modules.mooring import CatenarySolver
+from digitalmodel.mooring import CatenarySolver
 
 # Analytical catenary equation (fast, exact for simple cases)
 solver = CatenarySolver(method='analytical')
@@ -121,7 +121,7 @@ Standards: API, DNV, OCIMF, ABS certified components
 **Configuration Presets:**
 
 ```python
-from digitalmodel.modules.mooring import MooringSystemDesigner
+from digitalmodel.mooring import MooringSystemDesigner
 
 # CALM buoy configuration (8 lines, catenary)
 designer = MooringSystemDesigner(system_type='calm_buoy')
@@ -154,7 +154,7 @@ print(f"Anchor type: {system['anchor_type']}")
 **Automated YAML Creation:**
 
 ```python
-from digitalmodel.modules.mooring import OrcaFlexMooringModel
+from digitalmodel.mooring import OrcaFlexMooringModel
 
 # Generate complete OrcaFlex model
 model = OrcaFlexMooringModel(system_config='calm_buoy_config.yml')
@@ -197,7 +197,7 @@ Lines:
 **Automated Tension Iteration:**
 
 ```python
-from digitalmodel.modules.mooring import PretensionOptimizer
+from digitalmodel.mooring import PretensionOptimizer
 
 # Initialize optimizer
 optimizer = PretensionOptimizer(

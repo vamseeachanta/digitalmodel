@@ -58,7 +58,7 @@ viv-analysis screening \
 ### Python API
 
 ```python
-from digitalmodel.modules.viv_analysis import (
+from digitalmodel.viv_analysis import (
     TubularMember,
     MaterialProperties,
     BoundaryCondition,

@@ -92,7 +92,7 @@ def execute_direct_coverage():
             'digitalmodel.common.code_dnvrph103_hydrodynamics_circular',
             'digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular',
             'digitalmodel.signal_analysis.fatigue',
-            'digitalmodel.common.ship_design', 'digitalmodel.modules.mooring.mooring',
+            'digitalmodel.common.ship_design', 'digitalmodel.mooring.mooring',
             'digitalmodel.orcaflex.orcaflex',
             'digitalmodel.orcaflex.orcaflex_file_management',
             'digitalmodel.orcaflex.orcaflex_installation',

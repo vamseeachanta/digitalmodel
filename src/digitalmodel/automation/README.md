@@ -11,7 +11,7 @@ TTL-based retention, garbage collection, and CRDT conflict resolution for agent 
 **Quick Start:**
 
 ```python
-from digitalmodel.modules.automation.memory_lifecycle import MemoryLifecycleManager
+from digitalmodel.automation.memory_lifecycle import MemoryLifecycleManager
 
 # Initialize
 manager = MemoryLifecycleManager()
@@ -120,7 +120,7 @@ uv run pytest tests/test_memory_lifecycle.py -v
 uv run pytest tests/test_memory_lifecycle.py::TestMemoryLifecycleManager -v
 
 # Run with coverage
-uv run pytest tests/test_memory_lifecycle.py --cov=digitalmodel.modules.automation
+uv run pytest tests/test_memory_lifecycle.py --cov=digitalmodel.automation
 
 # 29 tests, all passing ✅
 ```
@@ -158,8 +158,8 @@ python scripts/memory_cleanup_hook.py \
 ## Related Modules
 
 - `digitalmodel.orcaflex` - OrcaFlex simulation automation
-- `digitalmodel.modules.signal_analysis` - Signal processing
-- `digitalmodel.modules.cathodic_protection` - CP system design
+- `digitalmodel.signal_analysis` - Signal processing
+- `digitalmodel.cathodic_protection` - CP system design
 
 ## Contributing
 

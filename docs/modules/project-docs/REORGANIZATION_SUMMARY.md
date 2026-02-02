@@ -101,19 +101,19 @@ Created unified CLI entry point at `src/digitalmodel/modules/marine_analysis/__m
 **Available Commands:**
 ```bash
 # Profiling
-python -m digitalmodel.modules.marine_analysis profile --module <name>
+python -m digitalmodel.marine_analysis profile --module <name>
 
 # Extraction
-python -m digitalmodel.modules.marine_analysis extract --type <ocimf|hydro|mooring>
+python -m digitalmodel.marine_analysis extract --type <ocimf|hydro|mooring>
 
 # Validation
-python -m digitalmodel.modules.marine_analysis validate --phase <1|2|3>
+python -m digitalmodel.marine_analysis validate --phase <1|2|3>
 
 # Visualization
-python -m digitalmodel.modules.marine_analysis visualize --type <integration|ocimf|performance>
+python -m digitalmodel.marine_analysis visualize --type <integration|ocimf|performance>
 
 # Analysis
-python -m digitalmodel.modules.marine_analysis analyze --input <file>
+python -m digitalmodel.marine_analysis analyze --input <file>
 ```
 
 ### ✅ 6. Documentation Created

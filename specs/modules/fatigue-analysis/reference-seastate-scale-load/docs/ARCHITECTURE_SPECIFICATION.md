@@ -691,7 +691,7 @@ RUN pip install -r requirements.txt
 COPY src/ ./src/
 COPY config/ ./config/
 
-ENTRYPOINT ["python", "-m", "digitalmodel.modules.fatigue_analysis"]
+ENTRYPOINT ["python", "-m", "digitalmodel.fatigue_analysis"]
 ```
 
 #### 13.1.3 Cloud Deployment

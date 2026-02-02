@@ -10,12 +10,12 @@
 
 The test infrastructure contains **25 test files** with **150 collected test cases**, but **CRITICAL IMPORT ISSUES** prevent the tests from running. The main problems are:
 
-1. **Module Import Failures** - The `digitalmodel.modules.marine_analysis` module cannot be imported due to broken internal imports
+1. **Module Import Failures** - The `digitalmodel.marine_analysis` module cannot be imported due to broken internal imports
 2. **Multiple Import Patterns** - Tests use 3 different import patterns inconsistently
 3. **Missing Module Structure** - Tests expect `marine_engineering.*` modules that exist in `src/marine_engineering/` but are not properly configured
 
 ### Import Success Rate: **0%** ❌
-- All tests using `digitalmodel.modules.marine_analysis` imports: **BLOCKED**
+- All tests using `digitalmodel.marine_analysis` imports: **BLOCKED**
 - All tests using `marine_engineering.*` imports: **PATH NOT CONFIGURED**
 - All tests using `src.marine_engineering.*` imports: **PATH NOT CONFIGURED**
 
@@ -91,7 +91,7 @@ tests/marine_engineering/legacy/
 
 ## 2. Import Issues Analysis
 
-### 2.1 Critical Blocker: `digitalmodel.modules.marine_analysis`
+### 2.1 Critical Blocker: `digitalmodel.marine_analysis`
 
 **Error:**
 ```python
@@ -104,7 +104,7 @@ ModuleNotFoundError: No module named 'extract_hydro_coefficients'
 from extract_hydro_coefficients import HydrodynamicCoefficientExtractor  # ❌ WRONG!
 ```
 
-**Impact:** Prevents ALL imports from `digitalmodel.modules.marine_analysis`
+**Impact:** Prevents ALL imports from `digitalmodel.marine_analysis`
 
 **Affected Files (2):**
 - `test_unified_rao_reader.py` - Cannot import UnifiedRAOReader, RAOReaderError
@@ -114,9 +114,9 @@ from extract_hydro_coefficients import HydrodynamicCoefficientExtractor  # ❌ W
 
 Tests use **3 DIFFERENT** import patterns:
 
-#### Pattern 1: `digitalmodel.modules.marine_analysis` (2 files)
+#### Pattern 1: `digitalmodel.marine_analysis` (2 files)
 ```python
-from digitalmodel.modules.marine_analysis import (
+from digitalmodel.marine_analysis import (
     UnifiedRAOReader,
     RAOReaderError,
     RAOType
@@ -166,8 +166,8 @@ from marine_engineering.wave_spectra.spectra import PiersonMoskowitz
 
 | Expected Import | Actual Location | Issue |
 |----------------|-----------------|-------|
-| `digitalmodel.modules.marine_analysis.RAOPlotter` | `src/digitalmodel/modules/marine_analysis/visualization/rao_plotter.py` | ✅ EXISTS but blocked by extraction error |
-| `digitalmodel.modules.marine_analysis.UnifiedRAOReader` | `src/digitalmodel/modules/marine_analysis/unified_rao_reader.py` | ✅ EXISTS but blocked |
+| `digitalmodel.marine_analysis.RAOPlotter` | `src/digitalmodel/modules/marine_analysis/visualization/rao_plotter.py` | ✅ EXISTS but blocked by extraction error |
+| `digitalmodel.marine_analysis.UnifiedRAOReader` | `src/digitalmodel/modules/marine_analysis/unified_rao_reader.py` | ✅ EXISTS but blocked |
 | `marine_engineering.catenary` | `src/marine_engineering/catenary/` | ✅ EXISTS but not in PYTHONPATH |
 | `marine_engineering.environmental_loading` | `src/marine_engineering/environmental_loading/` | ✅ EXISTS but not in PYTHONPATH |
 | `marine_engineering.wave_spectra` | `src/marine_engineering/wave_spectra/` | ✅ EXISTS but not in PYTHONPATH |
@@ -209,7 +209,7 @@ src/digitalmodel/modules/marine_analysis/
 
 ```
 test_unified_rao_reader.py
-  └── digitalmodel.modules.marine_analysis
+  └── digitalmodel.marine_analysis
       ├── UnifiedRAOReader ✅ (unified_rao_reader.py)
       ├── RAOReaderError ✅ (unified_rao_reader.py)
       ├── read_rao_file ✅ (unified_rao_reader.py)
@@ -217,7 +217,7 @@ test_unified_rao_reader.py
       └── SourceFormat ✅ (models/rao_data.py)
 
 test_rao_verification_all_routes.py
-  └── digitalmodel.modules.marine_analysis
+  └── digitalmodel.marine_analysis
       ├── UnifiedRAOReader ✅
       ├── read_rao_file ✅
       ├── RAOType ✅
@@ -241,10 +241,10 @@ integration/test_hydro_rao_integration.py
 
 ### 4.2 Import Chain Analysis
 
-**Chain 1: digitalmodel.modules.marine_analysis (BLOCKED)**
+**Chain 1: digitalmodel.marine_analysis (BLOCKED)**
 ```
 test_*.py
-  → from digitalmodel.modules.marine_analysis import X
+  → from digitalmodel.marine_analysis import X
     → src/digitalmodel/modules/__init__.py
       → src/digitalmodel/modules/marine_analysis/__init__.py
         → src/.../extraction/__init__.py
@@ -278,7 +278,7 @@ test_*.py
 1. **Extraction Module Import Error**
    - **File:** `src/digitalmodel/modules/marine_analysis/extraction/run_extraction.py:18`
    - **Issue:** `from extract_hydro_coefficients import ...` (missing module)
-   - **Impact:** Blocks ALL `digitalmodel.modules.marine_analysis` imports
+   - **Impact:** Blocks ALL `digitalmodel.marine_analysis` imports
    - **Affected:** 2 test files directly, entire module ecosystem
 
 2. **PYTHONPATH Not Configured**
@@ -324,7 +324,7 @@ test_*.py
 
 | Import Pattern | Test Files | Status | Blocker |
 |---------------|-----------|--------|---------|
-| `digitalmodel.modules.marine_analysis` | 2 | ❌ BLOCKED | Extraction import error |
+| `digitalmodel.marine_analysis` | 2 | ❌ BLOCKED | Extraction import error |
 | `src.marine_engineering.*` | 3 | ❌ BLOCKED | PYTHONPATH not set |
 | `marine_engineering.*` | 15+ | ❌ BLOCKED | PYTHONPATH not set |
 | **Total** | **25** | **❌ 0% Working** | **Multiple** |
@@ -372,14 +372,14 @@ test_*.py
    - OR: Install package in editable mode: `pip install -e .`
 
 4. **Standardize imports**
-   - Choose ONE pattern (recommended: `from digitalmodel.modules.marine_analysis`)
+   - Choose ONE pattern (recommended: `from digitalmodel.marine_analysis`)
    - Update all test files
    - Update documentation
 
 ### Medium Priority (For consistency)
 
 5. **Update test imports**
-   - Change all `marine_engineering.*` → `digitalmodel.modules.marine_analysis.*`
+   - Change all `marine_engineering.*` → `digitalmodel.marine_analysis.*`
    - Change all `src.marine_engineering.*` → proper package imports
    - Add import warnings/deprecation notices
 
@@ -481,8 +481,8 @@ After fixes, verify:
 - [ ] `pytest tests/marine_engineering/ --collect-only` succeeds
 - [ ] No import errors in collection phase
 - [ ] All 150 tests are collected
-- [ ] `python -c "from digitalmodel.modules.marine_analysis import UnifiedRAOReader"` works
-- [ ] `python -c "from digitalmodel.modules.marine_analysis import RAOPlotter"` works
+- [ ] `python -c "from digitalmodel.marine_analysis import UnifiedRAOReader"` works
+- [ ] `python -c "from digitalmodel.marine_analysis import RAOPlotter"` works
 - [ ] Tests can import `marine_engineering.*` modules
 - [ ] All import patterns work consistently
 
@@ -523,7 +523,7 @@ After fixes, verify:
 ```
 Traceback (most recent call last):
   File "<string>", line 1
-    from digitalmodel.modules.marine_analysis import UnifiedRAOReader
+    from digitalmodel.marine_analysis import UnifiedRAOReader
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "src\digitalmodel\modules\__init__.py", line 7
     from . import marine_analysis

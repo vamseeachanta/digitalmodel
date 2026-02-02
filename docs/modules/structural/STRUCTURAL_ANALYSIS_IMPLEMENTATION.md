@@ -380,7 +380,7 @@ sf = STEEL_S420.yield_strength / vm
 ### Complements Fatigue Analysis
 ```python
 # 1. Structural check
-from digitalmodel.modules.structural_analysis import StressState, STEEL_S355
+from digitalmodel.structural_analysis import StressState, STEEL_S355
 
 stress = StressState(sigma_x=150.0, sigma_y=50.0, tau_xy=30.0)
 vm = stress.von_mises()
@@ -388,7 +388,7 @@ if vm > STEEL_S355.yield_strength:
     print("FAIL: Yield exceeded before fatigue!")
 
 # 2. If passes, do fatigue analysis
-from digitalmodel.modules.fatigue_analysis import FatigueDamageCalculator
+from digitalmodel.fatigue_analysis import FatigueDamageCalculator
 
 damage_calc = FatigueDamageCalculator(...)
 damage = damage_calc.calculate_damage(cycles, sn_curve)
@@ -397,13 +397,13 @@ damage = damage_calc.calculate_damage(cycles, sn_curve)
 ### Works with Signal Analysis
 ```python
 # Extract stress time series
-from digitalmodel.modules.signal_analysis import TimeSeriesProcessor
+from digitalmodel.signal_analysis import TimeSeriesProcessor
 
 processor = TimeSeriesProcessor()
 stress_range = processor.calculate_statistics(stress_signal)
 
 # Check max stress
-from digitalmodel.modules.structural_analysis import STEEL_S355
+from digitalmodel.structural_analysis import STEEL_S355
 
 if stress_range['max'] > STEEL_S355.yield_strength:
     print("Peak stress exceeds yield!")

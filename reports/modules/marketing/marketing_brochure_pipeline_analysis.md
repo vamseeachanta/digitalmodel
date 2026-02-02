@@ -190,7 +190,7 @@ Recommendation:
 ### Quick Start Example
 
 ```python
-from digitalmodel.modules.pipeline import PipelineSizer, PipeGeometry
+from digitalmodel.pipeline import PipelineSizer, PipeGeometry
 
 # Hydraulic sizing
 sizer = PipelineSizer(
@@ -214,7 +214,7 @@ print(f"Velocity: {result['velocity_ms']:.2f} m/s")
 print(f"Pressure Drop: {result['pressure_drop_bar']:.1f} bar")
 
 # On-bottom stability
-from digitalmodel.modules.pipeline import StabilityAnalyzer
+from digitalmodel.pipeline import StabilityAnalyzer
 
 analyzer = StabilityAnalyzer(
     pipe_od=0.508,  # m

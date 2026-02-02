@@ -2,7 +2,7 @@
 
 ## Overview
 
-Successfully ported the legacy lazy-wave multi-segment catenary solver from `digitalmodel.modules.catenary.catenaryMethods` to the unified `marine_engineering.catenary` module with improved type safety, comprehensive testing, and modern Python patterns.
+Successfully ported the legacy lazy-wave multi-segment catenary solver from `digitalmodel.catenary.catenaryMethods` to the unified `marine_engineering.catenary` module with improved type safety, comprehensive testing, and modern Python patterns.
 
 ## Implementation Details
 
