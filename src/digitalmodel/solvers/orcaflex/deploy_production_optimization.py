@@ -19,17 +19,17 @@ from typing import Dict, List, Any
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 # Import the optimized modules
-from digitalmodel.orcaflex.orcaflex_optimized_parallel_v2 import (
+from digitalmodel.solvers.orcaflex.orcaflex_optimized_parallel_v2 import (
     OrcaFlexOptimizedParallelAnalysis,
     run_optimized_parallel_analysis
 )
-from digitalmodel.orcaflex.performance_monitor import (
+from digitalmodel.solvers.orcaflex.performance_monitor import (
     PerformanceMonitor,
     ResourceManager
 )
 # Optional import for baseline testing
 try:
-    from digitalmodel.orcaflex.baseline_performance_test import BaselinePerformanceTest
+    from digitalmodel.solvers.orcaflex.baseline_performance_test import BaselinePerformanceTest
 except ImportError:
     BaselinePerformanceTest = None
 
@@ -189,7 +189,7 @@ class ProductionDeployment:
         
         try:
             # Test ResourceManager
-            from digitalmodel.orcaflex.performance_monitor import ResourceManager
+            from digitalmodel.solvers.orcaflex.performance_monitor import ResourceManager
             rm = ResourceManager()
             test_sizes = [100*1024*1024, 500*1024*1024, 1024*1024*1024]  # 100MB, 500MB, 1GB
             threads = rm.calculate_optimal_threads(test_sizes)
@@ -197,7 +197,7 @@ class ProductionDeployment:
             print(f"[OK] ResourceManager: Recommends {threads} threads for mixed files")
             
             # Test PerformanceMonitor
-            from digitalmodel.orcaflex.performance_monitor import PerformanceMonitor
+            from digitalmodel.solvers.orcaflex.performance_monitor import PerformanceMonitor
             pm = PerformanceMonitor()
             pm.start_monitoring()
             time.sleep(0.1)
@@ -206,14 +206,14 @@ class ProductionDeployment:
             print(f"[OK] PerformanceMonitor: Collected {len(pm.metrics)} metrics")
             
             # Test MemoryOptimizer
-            from digitalmodel.orcaflex.performance_monitor import MemoryOptimizer
+            from digitalmodel.solvers.orcaflex.performance_monitor import MemoryOptimizer
             mo = MemoryOptimizer()
             initial_mem = mo.get_memory_stats()
             validations["memory_optimizer"] = initial_mem["available_gb"] > 0
             print(f"[OK] MemoryOptimizer: {initial_mem['available_gb']:.1f} GB available")
             
             # Test BatchOptimizer
-            from digitalmodel.orcaflex.performance_monitor import BatchOptimizer
+            from digitalmodel.solvers.orcaflex.performance_monitor import BatchOptimizer
             bo = BatchOptimizer()
             test_files = [{"path": "test.sim", "size": s} for s in test_sizes]
             groups = bo.group_files_by_size(test_files)

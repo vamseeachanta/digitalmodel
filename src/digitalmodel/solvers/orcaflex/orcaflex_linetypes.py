@@ -4,7 +4,7 @@ import os
 from assetutilities.common.data import SaveData
 
 # Reader imports
-from digitalmodel.orcaflex.orcaflex_model_utilities import (
+from digitalmodel.solvers.orcaflex.orcaflex_model_utilities import (
     OrcaflexModelUtilities,
 )
 

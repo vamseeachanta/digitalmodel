@@ -29,19 +29,19 @@ def create_parser() -> argparse.ArgumentParser:
         epilog="""
 Examples:
   # Validate a single file
-  python -m digitalmodel.orcaflex.modular_input_validation.cli file.yml
+  python -m digitalmodel.solvers.orcaflex.modular_input_validation.cli file.yml
 
   # Validate all YAML files in a directory
-  python -m digitalmodel.orcaflex.modular_input_validation.cli path/to/files/
+  python -m digitalmodel.solvers.orcaflex.modular_input_validation.cli path/to/files/
 
   # Run only Level 1 and Level 2 validation
-  python -m digitalmodel.orcaflex.modular_input_validation.cli file.yml --skip-level 3
+  python -m digitalmodel.solvers.orcaflex.modular_input_validation.cli file.yml --skip-level 3
 
   # Customize tolerance and output formats
-  python -m digitalmodel.orcaflex.modular_input_validation.cli file.yml --tolerance 15 --formats csv markdown html
+  python -m digitalmodel.solvers.orcaflex.modular_input_validation.cli file.yml --tolerance 15 --formats csv markdown html
 
   # Validate with custom data directory
-  python -m digitalmodel.orcaflex.modular_input_validation.cli file.yml --data-dir /path/to/data
+  python -m digitalmodel.solvers.orcaflex.modular_input_validation.cli file.yml --data-dir /path/to/data
         """
     )
 

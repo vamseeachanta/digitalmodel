@@ -13,7 +13,7 @@ Main Classes:
     - StatusReporter: Real-time status reporting
 
 Usage:
-    from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
+    from digitalmodel.solvers.orcaflex.universal import UniversalOrcaFlexRunner
     
     runner = UniversalOrcaFlexRunner()
     results = runner.run(pattern="*.yml", input_directory="./models")

@@ -71,8 +71,8 @@ def verify_deployment():
     # Check 3: Verify Python modules are available
     print("\n3. Checking Python optimization modules...")
     modules_to_check = [
-        "digitalmodel.orcaflex.performance_monitor",
-        "digitalmodel.orcaflex.orcaflex_optimized_parallel_v2"
+        "digitalmodel.solvers.orcaflex.performance_monitor",
+        "digitalmodel.solvers.orcaflex.orcaflex_optimized_parallel_v2"
     ]
     
     for module_name in modules_to_check:

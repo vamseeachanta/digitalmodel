@@ -179,7 +179,7 @@ class MetadataGenerator(BaseMetadataGenerator):
         """
         metadata = {
             'version': '1.0.0',
-            'tool': 'digitalmodel.automation.go_by_folder',
+            'tool': 'digitalmodel.workflows.automation.go_by_folder',
             'original_path': str(self.source_path),
             'creation_date': self.creation_time.isoformat(),
             'folder_hash': self.calculate_folder_hash(self.source_path),

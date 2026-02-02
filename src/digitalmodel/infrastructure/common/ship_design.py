@@ -1,4 +1,4 @@
-from digitalmodel.common.ship_fatigue_analysis import ShipFatigueAnalysis
+from digitalmodel.infrastructure.common.ship_fatigue_analysis import ShipFatigueAnalysis
 
 sfa = ShipFatigueAnalysis()
 

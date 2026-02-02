@@ -8,7 +8,7 @@ from assetutilities.common.data import SaveData
 
 from assetutilities.common.utilities import is_file_valid_func
 
-from digitalmodel.orcaflex.orcaflex_linetypes import OrcaflexLineTypes
+from digitalmodel.solvers.orcaflex.orcaflex_linetypes import OrcaflexLineTypes
 
 save_data = SaveData()
 olt = OrcaflexLineTypes()

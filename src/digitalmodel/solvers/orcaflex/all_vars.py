@@ -6,8 +6,8 @@ except Exception:
 from loguru import logger
 import os
 import pandas as pd
-from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities
-from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects
+from digitalmodel.solvers.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.solvers.orcaflex.orcaflex_objects import OrcaFlexObjects
 
 ou = OrcaflexUtilities()  # noqa
 of_objects = OrcaFlexObjects()  # noqa

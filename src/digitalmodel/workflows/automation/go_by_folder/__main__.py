@@ -3,7 +3,7 @@
 Direct module execution for Create Go-By Folder Tool
 
 Usage:
-    python -m digitalmodel.automation.go_by_folder [args]
+    python -m digitalmodel.workflows.automation.go_by_folder [args]
     
 This allows the module to be run directly without installation.
 """

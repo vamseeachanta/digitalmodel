@@ -6,14 +6,14 @@ models from hybrid templates (base + variations).
 
 Example:
     # List available templates
-    python -m digitalmodel.orcaflex.template_generator list-templates
+    python -m digitalmodel.solvers.orcaflex.template_generator list-templates
 
     # Generate a model from template + variation
-    python -m digitalmodel.orcaflex.template_generator generate \\
+    python -m digitalmodel.solvers.orcaflex.template_generator generate \\
         --template calm_buoy_hybrid --variation deep_water_200m --output model.yml
 
     # Validate a generated model
-    python -m digitalmodel.orcaflex.template_generator validate model.yml
+    python -m digitalmodel.solvers.orcaflex.template_generator validate model.yml
 """
 
 import argparse
@@ -781,21 +781,21 @@ def create_parser() -> argparse.ArgumentParser:
         epilog="""
 Examples:
   # List all available templates
-  python -m digitalmodel.orcaflex.template_generator list-templates
+  python -m digitalmodel.solvers.orcaflex.template_generator list-templates
 
   # Generate a model from template + variation
-  python -m digitalmodel.orcaflex.template_generator generate \\
+  python -m digitalmodel.solvers.orcaflex.template_generator generate \\
       --template calm_buoy_hybrid --variation deep_water --output model.yml
 
   # Generate from explicit files
-  python -m digitalmodel.orcaflex.template_generator generate \\
+  python -m digitalmodel.solvers.orcaflex.template_generator generate \\
       --base base/model.yml --variation variations/deep.yml --output output.yml
 
   # Validate a model file
-  python -m digitalmodel.orcaflex.template_generator validate model.yml
+  python -m digitalmodel.solvers.orcaflex.template_generator validate model.yml
 
   # Validate with OrcaFlex static analysis
-  python -m digitalmodel.orcaflex.template_generator validate model.yml --orcaflex
+  python -m digitalmodel.solvers.orcaflex.template_generator validate model.yml --orcaflex
 """
     )
 

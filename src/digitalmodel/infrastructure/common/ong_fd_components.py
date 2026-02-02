@@ -2,15 +2,15 @@ import os
 import pandas as pd
 import logging
 import json
-from digitalmodel.common.data import DateTimeUtility
+from digitalmodel.infrastructure.common.data import DateTimeUtility
 
 try:
-    from digitalmodel.common.bsee_data_manager import BSEEData
+    from digitalmodel.infrastructure.common.bsee_data_manager import BSEEData
 except ImportError:
     BSEEData = None  # BSEE module optional - use worldenergydata for BSEE functionality
-from digitalmodel.common.database import get_db_connection
-from digitalmodel.common.database import Database
-from digitalmodel.common.data import AttributeDict, transform_df_datetime_to_str
+from digitalmodel.infrastructure.common.database import get_db_connection
+from digitalmodel.infrastructure.common.database import Database
+from digitalmodel.infrastructure.common.data import AttributeDict, transform_df_datetime_to_str
 
 dtu = DateTimeUtility()
 
@@ -157,7 +157,7 @@ class ONGFDComponents():
         self.output_data_api12_df['xyz'] = None
 
     def add_gis_info_to_well_data(self):
-        from digitalmodel.common.data import Transform
+        from digitalmodel.infrastructure.common.data import Transform
         transform = Transform()
         gis_cfg = {'Longitude': 'Bottom Longitude', 'Latitude': 'Bottom Latitude', 'label': 'BOT'}
         self.output_data_api12_df = transform.gis_deg_to_distance(self.output_data_api12_df, gis_cfg)
@@ -502,7 +502,7 @@ class ONGFDComponents():
         return sidetrack_no, bypass_no, tree_elevation_aml
 
     def evaluate_well_distances(self):
-        from digitalmodel.common.math_solvers import Geometry
+        from digitalmodel.infrastructure.common.math_solvers import Geometry
         geom = Geometry()
         self.output_data_api12_df['HORZ_DEPARTURE'] = 0
         if len(self.output_data_api12_df) > 0:
@@ -681,7 +681,7 @@ class ONGFDComponents():
             ]
 
     def prepare_completion_data(self, completion_data):
-        from digitalmodel.common.data import Transform
+        from digitalmodel.infrastructure.common.data import Transform
         transform = Transform()
         self.output_completions = completion_data.merge(completion_data,
                                                         how='outer',
@@ -738,7 +738,7 @@ class ONGFDComponents():
         self.output_data_well_df.drop(drop_index_array, inplace=True)
         self.output_data_well_df['BSEE Well Name'] = self.output_data_well_df['Well Name']
         if len(self.output_data_well_df['Well Name'].unique()) < len(self.output_data_well_df):
-            from digitalmodel.common.data import Transform
+            from digitalmodel.infrastructure.common.data import Transform
             trans = Transform()
             old_list = list(self.output_data_well_df['Well Name'])
 
@@ -888,7 +888,7 @@ class ONGFDComponents():
         self.output_field_summary_df.loc[len(self.output_field_summary_df)] = df_row_array
 
     def prepare_visualizations(self):
-        from digitalmodel.common.visualization_components import VisualizationComponents
+        from digitalmodel.infrastructure.common.visualization_components import VisualizationComponents
         vc = VisualizationComponents(self.cfg)
         vc.prepare_visualizations(self)
 
@@ -911,7 +911,7 @@ class ONGFDComponents():
                     df_array.append(df)
                     label_array.append(label)
 
-            from digitalmodel.common.data import SaveData
+            from digitalmodel.infrastructure.common.data import SaveData
             save_data = SaveData()
             file_name_without_extension = self.cfg['Analysis']['result_folder'] + self.cfg['Analysis']['file_name']
             cfg_temp = {'SheetNames': label_array, 'FileName': file_name_without_extension + '.xlsx'}

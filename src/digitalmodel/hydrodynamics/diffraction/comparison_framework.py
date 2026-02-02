@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import json
 
-from digitalmodel.diffraction.output_schemas import (
+from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults,
     DOF
 )

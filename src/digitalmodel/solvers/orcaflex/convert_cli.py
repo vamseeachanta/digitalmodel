@@ -10,13 +10,13 @@ Can be used standalone or integrated with the universal runner.
 
 Usage:
     # Convert single file
-    python -m digitalmodel.orcaflex.convert_cli model.dat
+    python -m digitalmodel.solvers.orcaflex.convert_cli model.dat
 
     # Batch conversion
-    python -m digitalmodel.orcaflex.convert_cli --batch models/ models_yml/
+    python -m digitalmodel.solvers.orcaflex.convert_cli --batch models/ models_yml/
 
     # Specify output format
-    python -m digitalmodel.orcaflex.convert_cli model.yml --format dat
+    python -m digitalmodel.solvers.orcaflex.convert_cli model.yml --format dat
 """
 
 import argparse
@@ -24,7 +24,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.solvers.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 
 
 def convert_single(input_file: Path,

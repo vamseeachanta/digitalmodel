@@ -222,7 +222,7 @@ class OrcaFlexLogger:
         if name not in cls._loggers:
             # Ensure it's under the OrcaFlex namespace
             if not name.startswith('digitalmodel.orcaflex'):
-                name = f'digitalmodel.orcaflex.{name}'
+                name = f'digitalmodel.solvers.orcaflex.{name}'
             
             cls._loggers[name] = logging.getLogger(name)
         

@@ -145,7 +145,7 @@ class ComprehensiveBenchmark:
         # Determine actual thread count for dynamic optimization
         actual_thread_count = thread_count
         if thread_count is None:
-            from digitalmodel.orcaflex.performance_monitor import ResourceManager
+            from digitalmodel.solvers.orcaflex.performance_monitor import ResourceManager
             rm = ResourceManager()
             actual_thread_count = rm.calculate_optimal_threads(files)
             logger.info(f"Running {optimization_type} benchmark with dynamically selected {actual_thread_count} threads on {len(files)} files")
@@ -165,7 +165,7 @@ class ComprehensiveBenchmark:
         
         if ORCAFLEX_AVAILABLE:
             # Use actual OrcaFlex processing
-            from digitalmodel.orcaflex.orcaflex_optimized_parallel_v2 import (
+            from digitalmodel.solvers.orcaflex.orcaflex_optimized_parallel_v2 import (
                 OrcaFlexOptimizedParallelAnalysis
             )
             

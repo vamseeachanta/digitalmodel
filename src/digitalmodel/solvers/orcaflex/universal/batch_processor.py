@@ -13,7 +13,7 @@ from typing import List, Dict, Optional, Callable, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 import psutil
-from digitalmodel.orcaflex.file_size_optimizer import FileSizeOptimizer
+from digitalmodel.solvers.orcaflex.file_size_optimizer import FileSizeOptimizer
 
 logger = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ import math
 import numpy as np
 from scipy import interpolate
 from assetutilities.common.data import SaveData
-from digitalmodel.orcaflex.orcaflex_model_utilities import (
+from digitalmodel.solvers.orcaflex.orcaflex_model_utilities import (
     OrcaflexModelUtilities,
 )
 

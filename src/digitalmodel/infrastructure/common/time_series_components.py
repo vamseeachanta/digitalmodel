@@ -38,7 +38,7 @@ class TimeSeriesComponents():
             print("Error Performing cfg analysis in environment {0}, error {1}".format(self.env, e))
 
     def write_db_analysis_results(self, db_analysis_result):
-        from digitalmodel.common.data import SaveData
+        from digitalmodel.infrastructure.common.data import SaveData
         save_data = SaveData()
 
         if db_analysis_result.__contains__('db_table_df'):
@@ -77,7 +77,7 @@ class TimeSeriesComponents():
         self.environments = list(self.cfg.default['db'].keys())
 
     def set_up_db_connection(self, db_properties):
-        from digitalmodel.common.database import Database
+        from digitalmodel.infrastructure.common.database import Database
         self.dbe = Database(db_properties)
         try:
             self.dbe.enable_connection_and_cursor()
@@ -157,7 +157,7 @@ class TimeSeriesComponents():
                     peak_indices = self.identify_signal_peaks(frequency, power, cfg_peaks)
 
                 average_fft_df['peak_flag'] = False
-                from digitalmodel.common.data import PandasChainedAssignent
+                from digitalmodel.infrastructure.common.data import PandasChainedAssignent
                 with PandasChainedAssignent():
                     for peak_index in peak_indices:
                         average_fft_df['peak_flag'].iloc[peak_index] = True
@@ -219,7 +219,7 @@ class TimeSeriesComponents():
             index_selected = None
 
         columns = ['fft', 'power', 'fft_freq']
-        from digitalmodel.common.data import PandasChainedAssignent
+        from digitalmodel.infrastructure.common.data import PandasChainedAssignent
         with PandasChainedAssignent():
             fft_df = pd.DataFrame(columns=columns)
         if index_selected is None:
@@ -250,7 +250,7 @@ class TimeSeriesComponents():
         RAO_raw['Re'] = 0
         RAO_raw['Im'] = 0
         for row_index in range(0, len(RAO_raw)):
-            from digitalmodel.common.data import PandasChainedAssignent
+            from digitalmodel.infrastructure.common.data import PandasChainedAssignent
             with PandasChainedAssignent():
                 RAO_raw['Re'].iloc[row_index] = RAO_raw.loc[row_index, 'complex'].real
                 RAO_raw['Im'].iloc[row_index] = RAO_raw.loc[row_index, 'complex'].imag
@@ -269,7 +269,7 @@ class TimeSeriesComponents():
             max_power = excitation_fft_df['power'].max()
             min_power = max_power * cfg_rao['filter']['amplitude']['min_ratio']
 
-            from digitalmodel.common.data import PandasChainedAssignent
+            from digitalmodel.infrastructure.common.data import PandasChainedAssignent
             with PandasChainedAssignent():
                 RAO_filtered.loc[excitation_fft_df['power'] < min_power, 'complex'] = complex(0,0)
                 RAO_filtered.loc[excitation_fft_df['power'] < min_power, 'amplitude'] = 0
@@ -359,7 +359,7 @@ class TimeSeriesComponents():
         return statistics_df
 
     def prepare_visualizations(self):
-        from digitalmodel.common.visualization_components import VisualizationComponents
+        from digitalmodel.infrastructure.common.visualization_components import VisualizationComponents
         vc = VisualizationComponents(self.cfg)
         vc.prepare_visualizations(self)
 

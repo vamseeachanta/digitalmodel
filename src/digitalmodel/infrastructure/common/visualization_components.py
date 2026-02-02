@@ -41,7 +41,7 @@ class VisualizationComponents:
         self.environments = list(self.cfg.default["db"].keys())
 
     def set_up_db_connection(self, db_properties):
-        from digitalmodel.common.database import Database
+        from digitalmodel.infrastructure.common.database import Database
 
         self.dbe = Database(db_properties)
         try:
@@ -57,7 +57,7 @@ class VisualizationComponents:
             self.cfg.default["input_data"].__contains__("save")
             and self.cfg.default["input_data"]["save"]["flag"]
         ):
-            from digitalmodel.common.data import SaveData
+            from digitalmodel.infrastructure.common.data import SaveData
 
             save_data = SaveData()
             cfg_input = self.cfg.default["input_data"].copy()
@@ -94,7 +94,7 @@ class VisualizationComponents:
             self.prepare_multiple(app_object)
 
     def prepare_single(self):
-        from digitalmodel.common.visualizations import Visualization
+        from digitalmodel.infrastructure.common.visualizations import Visualization
 
         viz_data = Visualization()
 
@@ -151,7 +151,7 @@ class VisualizationComponents:
         return df
 
     def get_filtered_df(self, data_set_cfg, df):
-        from digitalmodel.common.data import ReadData
+        from digitalmodel.infrastructure.common.data import ReadData
 
         read_data = ReadData()
         df = df.copy()
@@ -170,7 +170,7 @@ class VisualizationComponents:
         return df
 
     def prepare_multiple(self, app_object):
-        from digitalmodel.common.visualizations import Visualization
+        from digitalmodel.infrastructure.common.visualizations import Visualization
 
         self.viz_data = Visualization()
 

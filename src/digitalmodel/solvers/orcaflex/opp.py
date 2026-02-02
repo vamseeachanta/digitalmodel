@@ -5,7 +5,7 @@ import traceback
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from typing import Dict, List, Tuple
-from digitalmodel.orcaflex.output_control import OutputController
+from digitalmodel.solvers.orcaflex.output_control import OutputController
 
 # Optional import - PathResolver may not be available in all environments
 try:
@@ -19,15 +19,15 @@ from assetutilities.common.data import PandasChainedAssignent
 # Third party imports
 from assetutilities.common.update_deep import update_deep_dictionary
 # Reader imports
-from digitalmodel.orcaflex.opp_linkedstatistics import OPPLinkedStatistics
-from digitalmodel.orcaflex.opp_range_graph import OPPRangeGraph
-from digitalmodel.orcaflex.opp_summary import OPPSummary
-from digitalmodel.orcaflex.opp_time_series import OPPTimeSeries
-from digitalmodel.orcaflex.opp_visualization import OPPVisualization
-from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects
-from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities
-from digitalmodel.common.parallel_processing import should_use_parallel
-from digitalmodel.orcaflex.file_size_optimizer import FileSizeOptimizer
+from digitalmodel.solvers.orcaflex.opp_linkedstatistics import OPPLinkedStatistics
+from digitalmodel.solvers.orcaflex.opp_range_graph import OPPRangeGraph
+from digitalmodel.solvers.orcaflex.opp_summary import OPPSummary
+from digitalmodel.solvers.orcaflex.opp_time_series import OPPTimeSeries
+from digitalmodel.solvers.orcaflex.opp_visualization import OPPVisualization
+from digitalmodel.solvers.orcaflex.orcaflex_objects import OrcaFlexObjects
+from digitalmodel.solvers.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.infrastructure.common.parallel_processing import should_use_parallel
+from digitalmodel.solvers.orcaflex.file_size_optimizer import FileSizeOptimizer
 
 ou = OrcaflexUtilities()  # noqa
 of_objects = OrcaFlexObjects()

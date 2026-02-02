@@ -7,13 +7,13 @@ class FEComponents():
     # https://dsp.stackexchange.com/questions/724/low-pass-filter-and-fft-for-beginners-with-python
 
     def __init__(self, cfg):
-        from digitalmodel.common.data import AttributeDict
+        from digitalmodel.infrastructure.common.data import AttributeDict
         self.cfg = cfg
         self.vars = AttributeDict({})
 
     def get_raw_data(self):
         if self.cfg.default['data_source'] == 'db':
-            from digitalmodel.common.database import Database
+            from digitalmodel.infrastructure.common.database import Database
             db_properties = self.cfg.db
             self.dbe = Database(db_properties)
             if self.cfg.default.__contains__('input_data'):
@@ -30,7 +30,7 @@ class FEComponents():
         self.transform_dataframes()
 
     def transform_dataframes(self):
-        from digitalmodel.common.data import Transform
+        from digitalmodel.infrastructure.common.data import Transform
         trans = Transform()
         cfg_trans = self.cfg.transform['dataframe']['sets']
         for set_index in range(0, len(cfg_trans)):
@@ -54,7 +54,7 @@ class FEComponents():
         self.add_parameters_to_vars()
 
     def add_dataframes_to_vars(self):
-        from digitalmodel.common.data import Transform
+        from digitalmodel.infrastructure.common.data import Transform
         trans = Transform()
         cfg_trans = self.cfg.transform['dataframe']['sets']
         for set_index in range(0, len(cfg_trans)):
@@ -101,7 +101,7 @@ class FEComponents():
 
     def filter_df(self, df, cfg_chart):
         if cfg_chart['df'].__contains__('filter'):
-            from digitalmodel.common.data import ReadData
+            from digitalmodel.infrastructure.common.data import ReadData
             read_data = ReadData()
             cfg_filter = cfg_chart['df']
             df = read_data.df_filter_by_column_values(cfg_filter, df)
@@ -109,7 +109,7 @@ class FEComponents():
         return df
 
     def prepare_htmls(self):
-        from digitalmodel.common.documentation_components import JinjaLib
+        from digitalmodel.infrastructure.common.documentation_components import JinjaLib
         jl = JinjaLib()
         rpt_sets = self.cfg.report['sets']
         file_prefix = self.cfg.report.get('file_suffix', self.cfg['Analysis']['file_name'])
@@ -143,7 +143,7 @@ class FEComponents():
                 self.prepare_pdf(output_text, file_name_without_extension)
 
     def prepare_pdf(self, html_string, file_name_without_extension):
-        from digitalmodel.common.documentation_components import PDFReports
+        from digitalmodel.infrastructure.common.documentation_components import PDFReports
         pdf_rep = PDFReports(self.cfg.report['wkhtmltopdf_path'])
         pdf_rep.create_pdf_from_html_string(html_string, file_name_without_extension + '.pdf')
 

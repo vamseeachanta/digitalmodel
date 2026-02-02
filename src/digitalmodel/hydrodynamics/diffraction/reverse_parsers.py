@@ -21,7 +21,7 @@ from typing import Any, Optional
 
 import yaml
 
-from digitalmodel.diffraction.input_schemas import (
+from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     AnalysisType,
     DiffractionSpec,
     EnvironmentSpec,
@@ -419,7 +419,7 @@ class OrcaWaveInputParser:
                 metadata=MetadataSpec(),
             )
         elif len(bodies) > 1:
-            from digitalmodel.diffraction.input_schemas import BodySpec
+            from digitalmodel.hydrodynamics.diffraction.input_schemas import BodySpec
 
             body_specs = [self._parse_body_spec(b) for b in bodies]
             return DiffractionSpec(
@@ -601,7 +601,7 @@ class OrcaWaveInputParser:
 
     def _parse_body_spec(self, body_data: dict[str, Any]) -> Any:
         """Parse a body into a BodySpec (for multi-body)."""
-        from digitalmodel.diffraction.input_schemas import BodySpec
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import BodySpec
 
         vessel = self._parse_single_body(body_data)
         position = body_data.get("BodyMeshPosition", [0.0, 0.0, 0.0])

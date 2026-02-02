@@ -517,7 +517,7 @@ def main():
         epilog="""
 Examples:
     # Run with configuration file
-    python -m digitalmodel.fatigue_analysis.load_scaling config.yml
+    python -m digitalmodel.structural.fatigue_analysis.load_scaling config.yml
     
     # Run with verbose output
     python load_scaling.py config.yml --verbose

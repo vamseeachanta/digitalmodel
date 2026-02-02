@@ -11,8 +11,8 @@ Subcommands:
     auto            Auto-detect source and convert to target format
 
 Usage:
-    python -m digitalmodel.orcaflex.format_converter single2modular input.yml -o output_dir/
-    python -m digitalmodel.orcaflex.format_converter detect path/
+    python -m digitalmodel.solvers.orcaflex.format_converter single2modular input.yml -o output_dir/
+    python -m digitalmodel.solvers.orcaflex.format_converter detect path/
 """
 
 from __future__ import annotations

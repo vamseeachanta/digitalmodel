@@ -1,4 +1,4 @@
-from digitalmodel.common.viv_fatigue_analysis_components import (
+from digitalmodel.infrastructure.common.viv_fatigue_analysis_components import (
     VIVFatigueAnalysisComponents,
 )
 

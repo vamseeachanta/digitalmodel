@@ -3,7 +3,7 @@
 import sys
 sys.path.insert(0, 'D:/workspace-hub/digitalmodel/src')
 
-from digitalmodel.marine_engineering.wave_spectra import (
+from digitalmodel.marine_ops.marine_engineering.wave_spectra import (
     WaveSpectrumParameters,
     JONSWAPSpectrum,
     PiersonMoskowitzSpectrum

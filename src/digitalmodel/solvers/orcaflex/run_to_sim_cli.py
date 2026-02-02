@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from digitalmodel.orcaflex.run_to_sim import run_models, ORCAFLEX_AVAILABLE
+from digitalmodel.solvers.orcaflex.run_to_sim import run_models, ORCAFLEX_AVAILABLE
 
 
 def setup_logging(verbose: bool = False):

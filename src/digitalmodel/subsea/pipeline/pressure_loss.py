@@ -14,7 +14,7 @@ from assetutilities.common.visualization.visualization_templates_matplotlib impo
 )
 
 # Reader imports
-from digitalmodel.pipeline.buckling_common import CommonBucklingCaculations
+from digitalmodel.subsea.pipeline.buckling_common import CommonBucklingCaculations
 
 viz_templates = VisualizationTemplates()
 cbc = CommonBucklingCaculations()

@@ -10,7 +10,7 @@ Solver format conventions:
 
 Example usage::
 
-    from digitalmodel.diffraction.mesh_pipeline import MeshPipeline
+    from digitalmodel.hydrodynamics.diffraction.mesh_pipeline import MeshPipeline
 
     pipeline = MeshPipeline()
     mesh = pipeline.load(Path("vessel.gdf"))
@@ -24,17 +24,17 @@ from pathlib import Path
 
 from loguru import logger
 
-from digitalmodel.bemrosetta.mesh import (
+from digitalmodel.hydrodynamics.bemrosetta.mesh import (
     DATHandler,
     GDFHandler,
     STLHandler,
 )
-from digitalmodel.bemrosetta.models import (
+from digitalmodel.hydrodynamics.bemrosetta.models import (
     MeshFormat,
     MeshQualityReport,
     PanelMesh,
 )
-from digitalmodel.diffraction.input_schemas import MeshFormatType
+from digitalmodel.hydrodynamics.diffraction.input_schemas import MeshFormatType
 
 # ---------------------------------------------------------------------------
 # Constants

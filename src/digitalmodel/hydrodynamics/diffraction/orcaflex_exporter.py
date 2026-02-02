@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Dict, Optional
 from datetime import datetime
 
-from digitalmodel.diffraction.output_schemas import (
+from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults, RAOSet, AddedMassSet, DampingSet,
     DOF, RAOComponent, HydrodynamicMatrix
 )

@@ -3,7 +3,7 @@ class ETL_components:
         self.cfg = cfg
 
     def from_xlsx_to_yaml_file(self):
-        from digitalmodel.common.data import ReadData, SaveData
+        from digitalmodel.infrastructure.common.data import ReadData, SaveData
 
         read_data = ReadData()
         save_data = SaveData()
@@ -79,7 +79,7 @@ class ETL_components:
                 self.write_repeat_pattern_file()
 
     def write_repeat_pattern_file(self):
-        from digitalmodel.common.data import SaveData
+        from digitalmodel.infrastructure.common.data import SaveData
 
         save_data = SaveData()
 
@@ -210,7 +210,7 @@ class ETL_components:
         return line_text
 
     def get_all_line_field_data(self, field_data_array):
-        from digitalmodel.common.data import ReadData
+        from digitalmodel.infrastructure.common.data import ReadData
 
         read_data = ReadData()
         all_line_field_lists = []
@@ -299,7 +299,7 @@ class ETL_components:
         return content_array
 
     def get_content_array_from_file(self, cfg_temp):
-        from digitalmodel.common.data import ReadData
+        from digitalmodel.infrastructure.common.data import ReadData
 
         read_data = ReadData()
         content_array_from_file = read_data.from_ascii_file_get_lines_as_string_arrays(
@@ -332,7 +332,7 @@ class ETL_components:
                         "settings"
                     ]["file_name"]["suffix"]["name"]
                     if type(file_name_suffix) is list:
-                        from digitalmodel.common.ETL_components import ETL_components
+                        from digitalmodel.infrastructure.common.ETL_components import ETL_components
 
                         etl_components = ETL_components(cfg=None)
                         file_name_suffix = (
@@ -380,7 +380,7 @@ class ETL_components:
                     )
 
     def write_replace_file(self, result_file_array, file_name, file_name_extension):
-        from digitalmodel.common.data import SaveData
+        from digitalmodel.infrastructure.common.data import SaveData
 
         save_data = SaveData()
         save_data.save_ascii_file_from_array(
@@ -611,7 +611,7 @@ class ETL_components:
     def get_model_state_information(self):
         import ast
 
-        from digitalmodel.common.data import ReadData
+        from digitalmodel.infrastructure.common.data import ReadData
 
         read_data = ReadData()
 
@@ -635,7 +635,7 @@ class ETL_components:
         return result
 
     def generic_get_all_line_field_data(self, field_data_array):
-        from digitalmodel.common.data import ReadData
+        from digitalmodel.infrastructure.common.data import ReadData
 
         read_data = ReadData()
         all_line_field_lists = []
@@ -712,7 +712,7 @@ class ETL_components:
         assert len(sum_df) == len(df_array)
 
     def extract_data(self):
-        from digitalmodel.common.data import ReadData
+        from digitalmodel.infrastructure.common.data import ReadData
 
         read_data = ReadData()
         extract_data = self.cfg.default["extract"]
@@ -806,7 +806,7 @@ class ETL_components:
             self.transformed_df_array.append(transformed_df)
 
     def save(self):
-        from digitalmodel.common.data import SaveData
+        from digitalmodel.infrastructure.common.data import SaveData
 
         save_data = SaveData()
         cfg_temp = {

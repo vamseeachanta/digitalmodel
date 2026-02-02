@@ -15,13 +15,13 @@ from typing import Dict, List, Any, Optional
 import logging
 
 # Import the optimized modules
-from digitalmodel.orcaflex.performance_monitor import (
+from digitalmodel.solvers.orcaflex.performance_monitor import (
     PerformanceMonitor,
     ResourceManager,
     create_performance_dashboard
 )
-from digitalmodel.orcaflex.orcaflex_parallel_analysis import OrcaFlexParallelAnalysis
-from digitalmodel.orcaflex.orcaflex_optimized_parallel_v2 import OrcaFlexOptimizedParallelAnalysis
+from digitalmodel.solvers.orcaflex.orcaflex_parallel_analysis import OrcaFlexParallelAnalysis
+from digitalmodel.solvers.orcaflex.orcaflex_optimized_parallel_v2 import OrcaFlexOptimizedParallelAnalysis
 
 # Configure logging
 logging.basicConfig(

@@ -6,21 +6,21 @@ across multiple mooring configurations, generating reports and visualizations.
 
 Example:
     # Basic usage with default settings
-    python -m digitalmodel.orcaflex.analysis --directory ./output/.csv
+    python -m digitalmodel.solvers.orcaflex.analysis --directory ./output/.csv
     
     # Generate report at specific location
-    python -m digitalmodel.orcaflex.analysis \
+    python -m digitalmodel.solvers.orcaflex.analysis \
         --directory ./output/.csv \
         --report ./output/report/analysis.md
     
     # With custom visualizations output
-    python -m digitalmodel.orcaflex.analysis \
+    python -m digitalmodel.solvers.orcaflex.analysis \
         --directory ./output/.csv \
         --visualizations ./output/visual \
         --report ./output/report/analysis.md
     
     # Using configuration file
-    python -m digitalmodel.orcaflex.analysis \
+    python -m digitalmodel.solvers.orcaflex.analysis \
         --config analysis_config.yml
 """
 

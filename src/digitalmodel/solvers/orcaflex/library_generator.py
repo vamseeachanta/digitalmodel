@@ -6,7 +6,7 @@ Library components use object-level properties only (no section headers)
 for use with OrcaFlex's IncludeFile directive.
 
 Usage:
-    from digitalmodel.orcaflex.library_generator import LibraryGenerator
+    from digitalmodel.solvers.orcaflex.library_generator import LibraryGenerator
 
     generator = LibraryGenerator(library_path="docs/modules/orcaflex/library")
     generator.generate_from_csv("equipment/buoys.csv", "buoy_types")
@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
-from digitalmodel.orcaflex.yaml_utils import OrcaFlexDumper
+from digitalmodel.solvers.orcaflex.yaml_utils import OrcaFlexDumper
 
 # Backward-compat alias
 OrcaFlexLibraryDumper = OrcaFlexDumper

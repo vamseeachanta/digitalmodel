@@ -1,9 +1,9 @@
 # Reader imports
-from digitalmodel.orcaflex.orcaflex_iterative_runs import OrcaflexIterativeRuns
-from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities
-from digitalmodel.orcaflex.opp import OrcaFlexPostProcess
-from digitalmodel.orcaflex.mooring import Mooring
-from digitalmodel.orcaflex.orcaflex_custom_analysis import OrcaFlexCustomAnalysis
+from digitalmodel.solvers.orcaflex.orcaflex_iterative_runs import OrcaflexIterativeRuns
+from digitalmodel.solvers.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.solvers.orcaflex.opp import OrcaFlexPostProcess
+from digitalmodel.solvers.orcaflex.mooring import Mooring
+from digitalmodel.solvers.orcaflex.orcaflex_custom_analysis import OrcaFlexCustomAnalysis
 
 
 mooring = Mooring()

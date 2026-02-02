@@ -1,8 +1,8 @@
-from digitalmodel.pipe_capacity.custom.MaterialProperties import (
+from digitalmodel.structural.pipe_capacity.custom.MaterialProperties import (
     MaterialProperties,
 )
-from digitalmodel.pipe_capacity.custom.PipeCapacity import PipeCapacity
-from digitalmodel.pipe_capacity.custom.PipeSizing import PipeSizing
+from digitalmodel.structural.pipe_capacity.custom.PipeCapacity import PipeCapacity
+from digitalmodel.structural.pipe_capacity.custom.PipeSizing import PipeSizing
 
 
 # Reader imports

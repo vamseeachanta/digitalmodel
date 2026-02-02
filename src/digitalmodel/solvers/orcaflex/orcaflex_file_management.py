@@ -1,4 +1,4 @@
-from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.solvers.orcaflex.orcaflex_utilities import OrcaflexUtilities
 
 ou = OrcaflexUtilities()
 

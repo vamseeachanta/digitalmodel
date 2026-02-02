@@ -1,6 +1,6 @@
 from loguru import logger
 
-from digitalmodel.orcaflex.preprocess.load_vessel import LoadVessel
+from digitalmodel.solvers.orcaflex.preprocess.load_vessel import LoadVessel
 
 opreproc_vessel = LoadVessel()
 

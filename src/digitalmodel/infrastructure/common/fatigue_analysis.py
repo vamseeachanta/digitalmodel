@@ -3,7 +3,7 @@ import pandas as pd
 from assetutilities.common.yml_utilities import WorkingWithYAML
 
 # Reader imports
-from digitalmodel.time_series.time_series_analysis import TimeSeriesAnalysis
+from digitalmodel.signal_processing.time_series.time_series_analysis import TimeSeriesAnalysis
 
 wwy = WorkingWithYAML()
 tsa = TimeSeriesAnalysis()

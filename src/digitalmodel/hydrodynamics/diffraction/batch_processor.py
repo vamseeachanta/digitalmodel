@@ -23,9 +23,9 @@ from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import traceback
 
-from digitalmodel.diffraction.output_schemas import DiffractionResults
-from digitalmodel.diffraction.orcaflex_exporter import OrcaFlexExporter
-from digitalmodel.diffraction.output_validator import validate_results
+from digitalmodel.hydrodynamics.diffraction.output_schemas import DiffractionResults
+from digitalmodel.hydrodynamics.diffraction.orcaflex_exporter import OrcaFlexExporter
+from digitalmodel.hydrodynamics.diffraction.output_validator import validate_results
 
 
 @dataclass
@@ -182,7 +182,7 @@ class BatchProcessor:
 
     def _process_aqwa(self, config: BatchConfiguration) -> DiffractionResults:
         """Process AQWA configuration"""
-        from digitalmodel.diffraction.aqwa_converter import AQWAConverter
+        from digitalmodel.hydrodynamics.diffraction.aqwa_converter import AQWAConverter
 
         converter = AQWAConverter(
             analysis_folder=config.source_path,
@@ -202,7 +202,7 @@ class BatchProcessor:
         if not ORCAWAVE_AVAILABLE:
             raise ImportError("OrcFxAPI required for OrcaWave processing")
 
-        from digitalmodel.diffraction.orcawave_converter import OrcaWaveConverter
+        from digitalmodel.hydrodynamics.diffraction.orcawave_converter import OrcaWaveConverter
 
         converter = OrcaWaveConverter(
             model_file=config.source_path,

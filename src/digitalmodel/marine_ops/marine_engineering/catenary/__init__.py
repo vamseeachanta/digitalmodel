@@ -5,17 +5,17 @@ Combines advanced BVP solver (Phase 1) with specialized features
 from legacy catenary modules (lazy-wave, plotting, simplified methods).
 
 Modern API (recommended):
-    from digitalmodel.marine_engineering.catenary import CatenarySolver, CatenaryInput
+    from digitalmodel.marine_ops.marine_engineering.catenary import CatenarySolver, CatenaryInput
     solver = CatenarySolver()
     result = solver.solve(params)
 
 Lazy-Wave API:
-    from digitalmodel.marine_engineering.catenary import LazyWaveSolver, LazyWaveConfiguration
+    from digitalmodel.marine_ops.marine_engineering.catenary import LazyWaveSolver, LazyWaveConfiguration
     solver = LazyWaveSolver()
     result = solver.solve(config)
 
 Legacy API (deprecated, for backward compatibility):
-    from digitalmodel.marine_engineering.catenary import catenaryEquation
+    from digitalmodel.marine_ops.marine_engineering.catenary import catenaryEquation
     result = catenaryEquation({"F": 10000, "w": 500, "d": 100, ...})
 """
 
@@ -23,7 +23,7 @@ try:
     from .solver import CatenarySolver, CatenaryInput, CatenaryResults
 except ImportError:
     # Fallback to mooring_analysis module
-    from digitalmodel.marine_engineering.mooring_analysis.catenary_solver import (
+    from digitalmodel.marine_ops.marine_engineering.mooring_analysis.catenary_solver import (
         CatenarySolver,
         CatenaryInput,
         CatenaryResults

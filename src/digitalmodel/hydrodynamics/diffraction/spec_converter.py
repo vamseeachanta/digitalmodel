@@ -6,7 +6,7 @@ input files for AQWA and/or OrcaWave.
 
 Example::
 
-    from digitalmodel.diffraction.spec_converter import SpecConverter
+    from digitalmodel.hydrodynamics.diffraction.spec_converter import SpecConverter
 
     converter = SpecConverter(Path("analysis.yml"))
     # Single solver
@@ -21,9 +21,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from digitalmodel.diffraction.aqwa_backend import AQWABackend
-from digitalmodel.diffraction.input_schemas import DiffractionSpec
-from digitalmodel.diffraction.orcawave_backend import OrcaWaveBackend
+from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
+from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
+from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
 
 
 class SpecConverter:

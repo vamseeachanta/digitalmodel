@@ -190,7 +190,7 @@ class SingleFileParallelStrategy:
         logger.info("\nTest 1: Traditional Parallel File Processing (15 threads total)")
         start = time.time()
         
-        from digitalmodel.orcaflex.orcaflex_parallel_analysis import OrcaFlexParallelAnalysis
+        from digitalmodel.solvers.orcaflex.orcaflex_parallel_analysis import OrcaFlexParallelAnalysis
         traditional = OrcaFlexParallelAnalysis(num_threads=15)
         trad_results = traditional.process_files_parallel(file_paths)
         

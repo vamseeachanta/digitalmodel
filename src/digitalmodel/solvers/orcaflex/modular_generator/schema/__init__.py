@@ -5,7 +5,7 @@ This package defines comprehensive Pydantic models for validating project-specif
 YAML input files that describe OrcaFlex models.
 
 All models are re-exported here for backward compatibility:
-    from digitalmodel.orcaflex.modular_generator.schema import ProjectInputSpec
+    from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
 """
 
 from ._enums import RampType, StructureType, WaveType

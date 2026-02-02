@@ -11,7 +11,7 @@ from assetutilities.engine import engine as au_engine
 from scipy import interpolate
 
 # Reader imports
-from digitalmodel.pipeline.buckling_common import CommonBucklingCaculations
+from digitalmodel.subsea.pipeline.buckling_common import CommonBucklingCaculations
 
 viz_templates = VisualizationTemplates()
 cbc = CommonBucklingCaculations()

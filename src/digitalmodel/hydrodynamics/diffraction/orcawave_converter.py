@@ -23,13 +23,13 @@ except ImportError:
     ORCAFLEX_AVAILABLE = False
     print("Warning: OrcFxAPI not available. OrcaWave converter will not function.")
 
-from digitalmodel.diffraction.output_schemas import (
+from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults, RAOSet, AddedMassSet, DampingSet,
     RAOComponent, HydrodynamicMatrix,
     FrequencyData, HeadingData, DOF
 )
 
-from digitalmodel.diffraction.orcawave_data_extraction import (
+from digitalmodel.hydrodynamics.diffraction.orcawave_data_extraction import (
     OrcaWaveDataExtractor,
     extract_all_rao_data,
     extract_all_added_mass,
@@ -364,7 +364,7 @@ def convert_orcawave_results(
     Returns:
         Path to output directory
     """
-    from digitalmodel.diffraction.orcaflex_exporter import OrcaFlexExporter
+    from digitalmodel.hydrodynamics.diffraction.orcaflex_exporter import OrcaFlexExporter
 
     # Convert to unified schema
     converter = OrcaWaveConverter(Path(model_file), vessel_name)

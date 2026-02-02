@@ -2,8 +2,8 @@ import datetime
 import os
 import sys
 
-from digitalmodel.common.update_deep import update_deep_dictionary
-from digitalmodel.common.ymlInput import ymlInput
+from digitalmodel.infrastructure.common.update_deep import update_deep_dictionary
+from digitalmodel.infrastructure.common.ymlInput import ymlInput
 
 application_start_time = datetime.datetime.now()
 

@@ -1,9 +1,9 @@
 # Reader imports
-from digitalmodel.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
-from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities
-from digitalmodel.orcaflex.orcaflex_analysis import OrcaflexAnalysis
-from digitalmodel.orcaflex.opp import OrcaFlexPostProcess
-from digitalmodel.orcaflex.all_vars import AllVars
+from digitalmodel.solvers.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
+from digitalmodel.solvers.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.solvers.orcaflex.orcaflex_analysis import OrcaflexAnalysis
+from digitalmodel.solvers.orcaflex.opp import OrcaFlexPostProcess
+from digitalmodel.solvers.orcaflex.all_vars import AllVars
 
 ou = OrcaflexUtilities()
 orcaflex_preprocess = OrcaflexPreProcess()

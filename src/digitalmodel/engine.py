@@ -31,7 +31,7 @@ from digitalmodel.marine_ops.ct_hydraulics.ct_hydraulics import CTHydraulics
 from digitalmodel.hydrodynamics.rao_analysis.rao_analysis import RAOAnalysis
 from digitalmodel.signal_processing.time_series.time_series_analysis import TimeSeriesAnalysis
 from digitalmodel.infrastructure.transformation.transformation import Transformation
-# from digitalmodel.vertical_riser.vertical_riser import vertical_riser
+# from digitalmodel.subsea.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.infrastructure.common.plate_buckling import PlateBuckling
 from loguru import logger
@@ -176,7 +176,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.subsea.mooring_analysis.cli import cli as mooring_cli
         raise NotImplementedError(
             "Mooring via engine requires mooring_analysis CLI or direct API. "
-            "Use: python -m digitalmodel.mooring_analysis.cli"
+            "Use: python -m digitalmodel.subsea.mooring_analysis.cli"
         )
     elif basename == "artificial_lift":
         from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow

@@ -7,7 +7,7 @@ class DataModelsComponents():
         self.cfg = cfg
 
     def drop_dependent_tables(self):
-        from digitalmodel.common.database import Database
+        from digitalmodel.infrastructure.common.database import Database
 
         db_properties = self.cfg.db
         self.dbe = Database(db_properties)
@@ -18,7 +18,7 @@ class DataModelsComponents():
             self.dbe.executeQueryWithParameters(drop_query)
 
     def create_db_tables(self):
-        from digitalmodel.common.database import Database
+        from digitalmodel.infrastructure.common.database import Database
 
         db_properties = self.cfg.db
         self.dbe = Database(db_properties)
@@ -38,7 +38,7 @@ class DataModelsComponents():
             for set_index in range(0, len(self.cfg.input_data['sets'])):
                 db_properties = {'server_type': 'accdb', 'database': self.cfg.input_data['sets'][0]['io']}
 
-                from digitalmodel.common.database import Database
+                from digitalmodel.infrastructure.common.database import Database
                 self.dbe = Database(db_properties)
                 self.dbe.set_up_db_connection(db_properties)
         elif self.cfg.input_data['source'] == 'xlsx':
@@ -88,7 +88,7 @@ class DataModelsComponents():
                 logging.error("Could not process a file: {}".format(file_name), exc_info=True)
 
     def process_db_source(self, input_data=None):
-        from digitalmodel.common.database import Database
+        from digitalmodel.infrastructure.common.database import Database
         if input_data is None:
             input_data = self.cfg.input_data
 
@@ -161,7 +161,7 @@ class DataModelsComponents():
 
         import pandas as pd
 
-        from digitalmodel.common.data import GetData
+        from digitalmodel.infrastructure.common.data import GetData
         get_data = GetData()
         for set_index in range(0, len(self.cfg.input_data['sets'])):
             cfg_url = self.cfg.input_data['sets'][set_index].copy()
@@ -183,7 +183,7 @@ class DataModelsComponents():
             if cfg['output']['target'] == 'db':
                 db_properties = self.cfg.db
                 if_exists = cfg['output']['if_exists']
-                from digitalmodel.common.database import Database
+                from digitalmodel.infrastructure.common.database import Database
                 self.dbe = Database(db_properties)
                 self.dbe.set_up_db_connection(db_properties)
                 keys = list(data.keys())
@@ -199,7 +199,7 @@ class DataModelsComponents():
         # TBA
 
     def read_from_xlsx(self, cfg_xlsx):
-        from digitalmodel.common.data import ReadData
+        from digitalmodel.infrastructure.common.data import ReadData
         readdata = ReadData()
         result = readdata.from_xlsx(cfg_xlsx)
         return result

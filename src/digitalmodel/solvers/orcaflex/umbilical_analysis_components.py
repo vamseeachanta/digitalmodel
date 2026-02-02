@@ -2,11 +2,11 @@
 from assetutilities.common.data import SaveData
 
 
-from digitalmodel.orcaflex.orcaflex_linetypes import OrcaflexLineTypes
-from digitalmodel.orcaflex.umbilical_installation_IV_to_host import (
+from digitalmodel.solvers.orcaflex.orcaflex_linetypes import OrcaflexLineTypes
+from digitalmodel.solvers.orcaflex.umbilical_installation_IV_to_host import (
     InstallationVtoHost,
 )
-from digitalmodel.orcaflex.umbilical_installation_lower_2nd_end import (
+from digitalmodel.solvers.orcaflex.umbilical_installation_lower_2nd_end import (
     Lower2ndEnd,
 )
 

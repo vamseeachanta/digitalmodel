@@ -8,7 +8,7 @@ class LogFileAnalysisComponents():
         # self.get_model_state_information()
 
     def get_file_list(self):
-        from digitalmodel.common.data import ReadData
+        from digitalmodel.infrastructure.common.data import ReadData
         read_data = ReadData()
         self.file_list = []
 
@@ -20,7 +20,7 @@ class LogFileAnalysisComponents():
     def get_last_2_lines(self):
         import pandas as pd
 
-        from digitalmodel.common.data import ReadData
+        from digitalmodel.infrastructure.common.data import ReadData
         read_data = ReadData()
         # For test purposes
         # self.file_list = ['Q:\\projects\\Mole\\log_files\\30-015-45336_1_20190904_13h36m.log',

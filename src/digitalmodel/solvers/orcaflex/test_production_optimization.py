@@ -14,7 +14,7 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 # Import optimized modules
-from digitalmodel.orcaflex.performance_monitor import (
+from digitalmodel.solvers.orcaflex.performance_monitor import (
     ResourceManager, 
     MemoryOptimizer,
     BatchOptimizer

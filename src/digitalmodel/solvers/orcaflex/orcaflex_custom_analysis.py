@@ -381,7 +381,7 @@ class OrcaFlexCustomAnalysis:
             file_list: List of file paths to process
             num_threads: Number of parallel threads (default: 30)
         """
-        from digitalmodel.orcaflex.orcaflex_parallel_analysis import OrcaFlexParallelAnalysis
+        from digitalmodel.solvers.orcaflex.orcaflex_parallel_analysis import OrcaFlexParallelAnalysis
         
         logging.info(f"Starting parallel processing of {len(file_list)} files with {num_threads} threads")
         

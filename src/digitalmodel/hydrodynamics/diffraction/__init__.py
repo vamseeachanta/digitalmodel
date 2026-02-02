@@ -16,7 +16,7 @@ This module provides:
 - Test utilities for converter validation
 """
 
-from digitalmodel.diffraction.output_schemas import (
+from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     # Main results containers
     DiffractionResults,
     RAOSet,
@@ -39,16 +39,16 @@ from digitalmodel.diffraction.output_schemas import (
     validate_diffraction_results
 )
 
-from digitalmodel.diffraction.orcaflex_exporter import OrcaFlexExporter
+from digitalmodel.hydrodynamics.diffraction.orcaflex_exporter import OrcaFlexExporter
 
-from digitalmodel.diffraction.aqwa_converter import (
+from digitalmodel.hydrodynamics.diffraction.aqwa_converter import (
     AQWAConverter,
     convert_aqwa_results
 )
 
 # OrcaWave converter (requires OrcFxAPI)
 try:
-    from digitalmodel.diffraction.orcawave_converter import (
+    from digitalmodel.hydrodynamics.diffraction.orcawave_converter import (
         OrcaWaveConverter,
         convert_orcawave_results
     )
@@ -59,35 +59,35 @@ except ImportError:
     OrcaWaveConverter = None
     convert_orcawave_results = None
 
-from digitalmodel.diffraction.output_validator import (
+from digitalmodel.hydrodynamics.diffraction.output_validator import (
     OutputValidator,
     validate_results
 )
 
 # Phase 3: Automation + QA tools
-from digitalmodel.diffraction.comparison_framework import (
+from digitalmodel.hydrodynamics.diffraction.comparison_framework import (
     DiffractionComparator,
     compare_diffraction_results
 )
 
-from digitalmodel.diffraction.batch_processor import (
+from digitalmodel.hydrodynamics.diffraction.batch_processor import (
     BatchProcessor,
     BatchConfiguration,
     process_batch_from_config_file
 )
 
-from digitalmodel.diffraction.geometry_quality import (
+from digitalmodel.hydrodynamics.diffraction.geometry_quality import (
     GeometryQualityChecker,
     GeometryQualityReport
 )
 
 # Test utilities (optional - for testing without OrcFxAPI)
 try:
-    from digitalmodel.diffraction.orcawave_test_utilities import (
+    from digitalmodel.hydrodynamics.diffraction.orcawave_test_utilities import (
         MockDataGenerator,
         create_test_vessel
     )
-    from digitalmodel.diffraction.orcawave_data_extraction import (
+    from digitalmodel.hydrodynamics.diffraction.orcawave_data_extraction import (
         OrcaWaveDataExtractor,
         extract_all_rao_data,
         extract_all_added_mass,

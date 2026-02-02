@@ -425,7 +425,7 @@ def generate_cp_report(
         Path to generated HTML report
 
     Example:
-        >>> from digitalmodel.common.cathodic_protection import CathodicProtection
+        >>> from digitalmodel.infrastructure.common.cathodic_protection import CathodicProtection
         >>> cp = CathodicProtection()
         >>> results = cp.DNV_RP_F103_2010(config)
         >>> report_path = generate_cp_report(results)

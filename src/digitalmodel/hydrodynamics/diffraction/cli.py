@@ -30,8 +30,8 @@ from digitalmodel.diffraction import (
 if ORCAWAVE_AVAILABLE:
     from digitalmodel.diffraction import OrcaWaveConverter
 
-from digitalmodel.diffraction.comparison_framework import compare_diffraction_results
-from digitalmodel.diffraction.batch_processor import process_batch_from_config_file
+from digitalmodel.hydrodynamics.diffraction.comparison_framework import compare_diffraction_results
+from digitalmodel.hydrodynamics.diffraction.batch_processor import process_batch_from_config_file
 
 
 @click.group()
@@ -434,7 +434,7 @@ def convert_spec(spec_path, solver, fmt, output):
         diffraction convert-spec analysis.yml --solver aqwa --format single
         diffraction convert-spec analysis.yml --solver all -o ./output
     """
-    from digitalmodel.diffraction.spec_converter import SpecConverter
+    from digitalmodel.hydrodynamics.diffraction.spec_converter import SpecConverter
 
     click.echo("=" * 80)
     click.echo("Spec Converter")
@@ -475,7 +475,7 @@ def validate_spec(spec_path):
     Example:
         diffraction validate-spec analysis.yml
     """
-    from digitalmodel.diffraction.spec_converter import SpecConverter
+    from digitalmodel.hydrodynamics.diffraction.spec_converter import SpecConverter
 
     click.echo("=" * 80)
     click.echo("Spec Validator")

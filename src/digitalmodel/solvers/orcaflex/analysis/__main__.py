@@ -1,5 +1,5 @@
 """
-Enable module execution via python -m digitalmodel.orcaflex.analysis
+Enable module execution via python -m digitalmodel.solvers.orcaflex.analysis
 """
 
 from .cli import main

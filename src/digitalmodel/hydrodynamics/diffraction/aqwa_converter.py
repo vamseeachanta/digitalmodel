@@ -12,12 +12,12 @@ from typing import Dict, List, Tuple, Optional
 from datetime import datetime
 from loguru import logger
 
-from digitalmodel.diffraction.output_schemas import (
+from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults, RAOSet, AddedMassSet, DampingSet,
     RAOComponent, HydrodynamicMatrix,
     FrequencyData, HeadingData, DOF
 )
-from digitalmodel.diffraction.aqwa_lis_parser import parse_aqwa_lis_file
+from digitalmodel.hydrodynamics.diffraction.aqwa_lis_parser import parse_aqwa_lis_file
 
 
 class AQWAConverter:
@@ -403,7 +403,7 @@ def convert_aqwa_results(
     Returns:
         Path to output directory
     """
-    from digitalmodel.diffraction.orcaflex_exporter import OrcaFlexExporter
+    from digitalmodel.hydrodynamics.diffraction.orcaflex_exporter import OrcaFlexExporter
 
     # Convert to unified schema
     converter = AQWAConverter(Path(analysis_folder), vessel_name)

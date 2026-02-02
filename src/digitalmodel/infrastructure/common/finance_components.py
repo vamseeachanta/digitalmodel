@@ -4,7 +4,7 @@ import logging
 class FinanceComponents():
 
     def __init__(self, cfg):
-        from digitalmodel.common.data import AttributeDict
+        from digitalmodel.infrastructure.common.data import AttributeDict
         self.cfg = cfg
         self.status = AttributeDict({'tiingo': None, 'morningstar': None})
 
@@ -46,7 +46,7 @@ class FinanceComponents():
             self.stock_data_array.append(df)
 
     def prepare_time_line_plot(self):
-        from digitalmodel.common.visualizations import Visualization
+        from digitalmodel.infrastructure.common.visualizations import Visualization
         viz = Visualization()
 
         for stock_index in range(0, len(self.stock_data_array)):
@@ -172,7 +172,7 @@ class FinanceComponents():
             self.df_returns_arrays.append(df_for_returns)
 
     def prepare_returns_plot(self):
-        from digitalmodel.common.visualizations import Visualization
+        from digitalmodel.infrastructure.common.visualizations import Visualization
         viz = Visualization()
 
         for stock_index in range(0, len(self.stock_data_array)):

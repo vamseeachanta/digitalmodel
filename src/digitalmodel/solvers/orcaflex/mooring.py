@@ -15,11 +15,11 @@ from assetutilities.common.file_management import FileManagement
 from assetutilities.common.utilities import is_file_valid_func
 from loguru import logger
 
-from digitalmodel.orcaflex.all_vars import AllVars
-from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects
-from digitalmodel.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
-from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities
-from digitalmodel.orcaflex.visualization import MooringVisualization
+from digitalmodel.solvers.orcaflex.all_vars import AllVars
+from digitalmodel.solvers.orcaflex.orcaflex_objects import OrcaFlexObjects
+from digitalmodel.solvers.orcaflex.orcaflex_preprocess import OrcaflexPreProcess
+from digitalmodel.solvers.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.solvers.orcaflex.visualization import MooringVisualization
 
 orcaflex_preprocess = OrcaflexPreProcess()
 orcaflex_objects = OrcaFlexObjects()

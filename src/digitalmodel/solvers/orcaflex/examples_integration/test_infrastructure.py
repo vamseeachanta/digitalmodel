@@ -70,7 +70,7 @@ def check_downloader():
     logger.info("\nChecking downloader module...")
     
     try:
-        from digitalmodel.orcaflex.examples_integration.downloader import OrcaflexExampleDownloader
+        from digitalmodel.solvers.orcaflex.examples_integration.downloader import OrcaflexExampleDownloader
         
         # Try to create an instance
         downloader = OrcaflexExampleDownloader()

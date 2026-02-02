@@ -1,11 +1,11 @@
 # Reader imports
 
 # Reader imports
-from digitalmodel.common.pipe_properties import PipeProperties
-from digitalmodel.pipeline.lateral_buckling import LateralBuckling
-from digitalmodel.pipeline.thermal_buckling import ThermalBuckling
-from digitalmodel.pipeline.upheaval_buckling import UpheavalBuckling
-from digitalmodel.pipeline.pressure_loss import Pressureloss
+from digitalmodel.infrastructure.common.pipe_properties import PipeProperties
+from digitalmodel.subsea.pipeline.lateral_buckling import LateralBuckling
+from digitalmodel.subsea.pipeline.thermal_buckling import ThermalBuckling
+from digitalmodel.subsea.pipeline.upheaval_buckling import UpheavalBuckling
+from digitalmodel.subsea.pipeline.pressure_loss import Pressureloss
 
 lb = LateralBuckling()
 tb = ThermalBuckling()

@@ -25,7 +25,7 @@ from assetutilities.modules.data_exploration.data_exploration import DataExplora
 from colorama import Fore, Style
 
 # Reader imports
-from digitalmodel.orcaflex.orcaflex_model_utilities import (
+from digitalmodel.solvers.orcaflex.orcaflex_model_utilities import (
     OrcaflexModelUtilities,
 )
 

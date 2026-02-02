@@ -5,8 +5,8 @@ from typing import Any, Dict
 
 # Third party imports
 import pandas as pd
-from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects
-from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.solvers.orcaflex.orcaflex_objects import OrcaFlexObjects
+from digitalmodel.solvers.orcaflex.orcaflex_utilities import OrcaflexUtilities
 
 of_objects = OrcaFlexObjects()
 ou = OrcaflexUtilities()

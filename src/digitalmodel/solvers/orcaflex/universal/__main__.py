@@ -2,17 +2,17 @@
 """
 Module entry point for Universal OrcaFlex Runner.
 
-Allows running as: python -m digitalmodel.orcaflex.universal
+Allows running as: python -m digitalmodel.solvers.orcaflex.universal
 
 Examples:
     # Basic usage
-    python -m digitalmodel.orcaflex.universal --all
+    python -m digitalmodel.solvers.orcaflex.universal --all
     
     # With options
-    python -m digitalmodel.orcaflex.universal --pattern "*.yml" --mock
+    python -m digitalmodel.solvers.orcaflex.universal --pattern "*.yml" --mock
     
     # With keyword arguments
-    python -m digitalmodel.orcaflex.universal \
+    python -m digitalmodel.solvers.orcaflex.universal \
         pattern="fsts_*.yml" \
         input_directory="./models" \
         output_directory="./sim"
@@ -55,7 +55,7 @@ def parse_kwargs(args_list):
 def main():
     """Main entry point for module execution."""
     parser = argparse.ArgumentParser(
-        prog='python -m digitalmodel.orcaflex.universal',
+        prog='python -m digitalmodel.solvers.orcaflex.universal',
         description='Universal OrcaFlex Simulation Runner - Module Interface',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -74,16 +74,16 @@ Keyword Arguments:
     
 Examples:
     # Pattern matching with static analysis (default)
-    python -m digitalmodel.orcaflex.universal pattern="fsts_*.yml"
+    python -m digitalmodel.solvers.orcaflex.universal pattern="fsts_*.yml"
     
     # Dynamic analysis only
-    python -m digitalmodel.orcaflex.universal --dynamic pattern="*.yml" simulation_time=200
+    python -m digitalmodel.solvers.orcaflex.universal --dynamic pattern="*.yml" simulation_time=200
     
     # Both static and dynamic
-    python -m digitalmodel.orcaflex.universal --both pattern="*.dat"
+    python -m digitalmodel.solvers.orcaflex.universal --both pattern="*.dat"
     
     # Multiple arguments
-    python -m digitalmodel.orcaflex.universal \\
+    python -m digitalmodel.solvers.orcaflex.universal \\
         pattern="*.dat" \\
         input_directory="/path/to/models" \\
         output_directory="/path/to/sim" \\
@@ -93,7 +93,7 @@ Examples:
         max_workers=10
     
     # Configuration file
-    python -m digitalmodel.orcaflex.universal config_file="batch.yml"
+    python -m digitalmodel.solvers.orcaflex.universal config_file="batch.yml"
         """
     )
     

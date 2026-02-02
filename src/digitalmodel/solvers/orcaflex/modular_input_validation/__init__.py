@@ -9,7 +9,7 @@ This module provides comprehensive validation for OrcaFlex modular YAML input fi
 - Level 3: Physical consistency and parameter range validation
 
 Usage:
-    from digitalmodel.orcaflex.modular_input_validation import ModularInputValidator
+    from digitalmodel.solvers.orcaflex.modular_input_validation import ModularInputValidator
 
     validator = ModularInputValidator()
     results = validator.validate_all('/path/to/base/file.yml')

@@ -22,7 +22,7 @@ import shutil
 # Add module to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from digitalmodel.fatigue_analysis.load_scaling import LoadScaler
+from digitalmodel.structural.fatigue_analysis.load_scaling import LoadScaler
 
 
 class TestLoadScaling(unittest.TestCase):

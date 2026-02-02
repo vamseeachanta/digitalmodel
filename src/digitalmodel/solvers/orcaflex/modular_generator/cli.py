@@ -6,12 +6,12 @@ YAML specification files and validating specifications without generating output
 
 Usage:
     # Generate model
-    uv run python -m digitalmodel.orcaflex.modular_generator generate \
+    uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \
         --input spec.yml \
         --output generated/
 
     # Validate spec
-    uv run python -m digitalmodel.orcaflex.modular_generator validate \
+    uv run python -m digitalmodel.solvers.orcaflex.modular_generator validate \
         --input spec.yml
 """
 
@@ -302,11 +302,11 @@ def create_parser() -> argparse.ArgumentParser:
         epilog="""
 Examples:
   # Generate a model from a spec file
-  uv run python -m digitalmodel.orcaflex.modular_generator generate \\
+  uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \\
       --input spec.yml --output generated/
 
   # Validate a spec file without generating
-  uv run python -m digitalmodel.orcaflex.modular_generator validate \\
+  uv run python -m digitalmodel.solvers.orcaflex.modular_generator validate \\
       --input spec.yml
 
 For more information, see the documentation at:

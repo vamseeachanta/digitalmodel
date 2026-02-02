@@ -8,7 +8,7 @@ AQWA and OrcaWave backends. Each sub-model is independently validatable
 and composable into the top-level DiffractionSpec.
 
 Example usage:
-    from digitalmodel.diffraction.input_schemas import DiffractionSpec
+    from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 
     spec = DiffractionSpec.from_yaml("analysis.yml")
     freqs = spec.frequencies.to_frequencies_rad_s()

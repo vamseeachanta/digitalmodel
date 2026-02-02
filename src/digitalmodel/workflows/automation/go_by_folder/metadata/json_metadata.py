@@ -59,7 +59,7 @@ class JSONMetadataGenerator(BaseMetadataGenerator):
         return {
             'version': '1.0.0',
             'tool': {
-                'name': 'digitalmodel.automation.go_by_folder',
+                'name': 'digitalmodel.workflows.automation.go_by_folder',
                 'version': '1.0.0',
                 'repository': 'digitalmodel'
             },

@@ -20,7 +20,7 @@ from typing import Optional
 
 import numpy as np
 
-from digitalmodel.diffraction.input_schemas import (
+from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     DiffractionSpec,
     VesselInertia,
 )

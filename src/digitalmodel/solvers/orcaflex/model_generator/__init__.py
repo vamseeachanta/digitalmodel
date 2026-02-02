@@ -466,7 +466,7 @@ def generate_model(template: str,
     Convenience function to generate a model in one line.
 
     Example:
-        >>> from digitalmodel.orcaflex.model_generator import generate_model
+        >>> from digitalmodel.solvers.orcaflex.model_generator import generate_model
         >>> model = generate_model("risers/scr_catenary", "my_config.yml", "my_model.yml")
     """
     generator = OrcaFlexModelGenerator()

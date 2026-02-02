@@ -17,7 +17,7 @@ import yaml
 from digitalmodel.hydrodynamics.aqwa.aqwa_analysis_damping import AqwaDamping
 from digitalmodel.hydrodynamics.aqwa.aqwa_analysis_raos import AqwaRAOs
 from digitalmodel.hydrodynamics.aqwa.aqwa_dat_files import AqwaDATFiles, DATInspectionResult
-from digitalmodel.marine_analysis.aqwa_enhanced_parser import AQWAEnhancedParser
+from digitalmodel.marine_ops.marine_analysis.aqwa_enhanced_parser import AQWAEnhancedParser
 
 
 LOGGER = logging.getLogger(__name__)

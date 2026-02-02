@@ -18,12 +18,12 @@ class CompareTools():
             df = pd.read_csv(self.cfg['files'][file_index]['io'])
             self.df_array.append(df)
 
-        # from digitalmodel.common.visualizations import Visualization
+        # from digitalmodel.infrastructure.common.visualizations import Visualization
         # visualization = Visualization()
         # visualization.from_df_array(self.df_array, self.cfg)
 
     def get_df_from_yaml(self, file_data):
-        from digitalmodel.common.data import DefineData, ReadData
+        from digitalmodel.infrastructure.common.data import DefineData, ReadData
         read_data = ReadData()
         define_data = DefineData()
 
@@ -50,7 +50,7 @@ class CompareTools():
         return df
 
     def get_df_from_ascii(self, file_data):
-        from digitalmodel.common.data import ReadData
+        from digitalmodel.infrastructure.common.data import ReadData
         read_data = ReadData()
 
         file_data.update({
@@ -159,12 +159,12 @@ class CompareTools():
             df_array.append(file_data_df)
 
     def prepare_visualizations(self):
-        from digitalmodel.common.visualization_components import VisualizationComponents
+        from digitalmodel.infrastructure.common.visualization_components import VisualizationComponents
         vc = VisualizationComponents(self.cfg)
         vc.prepare_visualizations(self)
 
     def legacy_plot(self):
-        from digitalmodel.common.visualizations import Visualization
+        from digitalmodel.infrastructure.common.visualizations import Visualization
         for plot_index in range(0, len(self.cfg['plot'])):
             plt_settings = self.cfg['plot'][plot_index]
             plt_settings.update({

@@ -7,8 +7,8 @@ Provides fast closed-form solutions for common catenary problems:
 - Catenary forces calculation
 
 This module ports and modernizes the legacy implementations from:
-- digitalmodel.catenary.catenaryMethods.catenaryEquation
-- digitalmodel.catenary.catenary_equation.CatenaryCalculator
+- digitalmodel.subsea.catenary.catenaryMethods.catenaryEquation
+- digitalmodel.subsea.catenary.catenary_equation.CatenaryCalculator
 
 Mathematical formulas are preserved exactly to ensure numerical accuracy.
 """

@@ -17,9 +17,9 @@ import pandas as pd
 import numpy as np
 
 # Digital Model imports
-from digitalmodel.common.ETL_components import ETL_components
-from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects
-from digitalmodel.orcaflex.time_trace_processor import (
+from digitalmodel.infrastructure.common.ETL_components import ETL_components
+from digitalmodel.solvers.orcaflex.orcaflex_objects import OrcaFlexObjects
+from digitalmodel.solvers.orcaflex.time_trace_processor import (
     OrcaFlexTimeTraceProcessor,
     TimeTraceConfig,
     create_default_config

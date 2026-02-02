@@ -3,23 +3,23 @@ import pandas as pd
 import warnings
 
 import matplotlib.pyplot as plt
-from digitalmodel.catenary.pipeProperties import pipeProperties
+from digitalmodel.subsea.catenary.pipeProperties import pipeProperties
 
 
 def catenaryEquation(data):
     """
     DEPRECATED: This legacy dict-based catenary API is deprecated.
 
-    Please use the modern API from digitalmodel.marine_engineering.catenary instead:
-        from digitalmodel.marine_engineering.catenary import CatenarySolver, CatenaryInput
+    Please use the modern API from digitalmodel.marine_ops.marine_engineering.catenary instead:
+        from digitalmodel.marine_ops.marine_engineering.catenary import CatenarySolver, CatenaryInput
 
     For backward compatibility, use the adapter:
-        from digitalmodel.marine_engineering.catenary import catenaryEquation
+        from digitalmodel.marine_ops.marine_engineering.catenary import catenaryEquation
 
     This function will be removed in a future version.
     """
     warnings.warn(
-        "digitalmodel.catenary.catenaryMethods.catenaryEquation is deprecated. "
+        "digitalmodel.subsea.catenary.catenaryMethods.catenaryEquation is deprecated. "
         "Use marine_engineering.catenary.CatenarySolver for new code, or "
         "marine_engineering.catenary.catenaryEquation for backward compatibility.",
         DeprecationWarning,
@@ -67,12 +67,12 @@ def catenaryForces(data):
     """
     DEPRECATED: This legacy dict-based catenary forces API is deprecated.
 
-    Please use the modern API from digitalmodel.marine_engineering.catenary instead.
+    Please use the modern API from digitalmodel.marine_ops.marine_engineering.catenary instead.
     For backward compatibility, use:
-        from digitalmodel.marine_engineering.catenary import catenaryForces
+        from digitalmodel.marine_ops.marine_engineering.catenary import catenaryForces
     """
     warnings.warn(
-        "digitalmodel.catenary.catenaryMethods.catenaryForces is deprecated. "
+        "digitalmodel.subsea.catenary.catenaryMethods.catenaryForces is deprecated. "
         "Use marine_engineering.catenary.catenaryForces for backward compatibility.",
         DeprecationWarning,
         stacklevel=2

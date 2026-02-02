@@ -20,7 +20,7 @@ class ProjectInputSpec(BaseModel):
 
     Example:
         ```python
-        from digitalmodel.orcaflex.modular_generator.schema import ProjectInputSpec
+        from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
         import yaml
 
         with open('spec.yml') as f:

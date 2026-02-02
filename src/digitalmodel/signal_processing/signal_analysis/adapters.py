@@ -423,7 +423,7 @@ def create_migration_guide():
     
     Old code:
     ```python
-    from digitalmodel.time_series.time_series_components import TimeSeriesComponents
+    from digitalmodel.signal_processing.time_series.time_series_components import TimeSeriesComponents
     
     tsc = TimeSeriesComponents(cfg)
     cycles_df, cycles_dict = tsc.get_rainflow_count_from_time_series(signal)
@@ -447,7 +447,7 @@ def create_migration_guide():
     
     For gradual migration:
     ```python
-    from digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter
+    from digitalmodel.signal_processing.signal_analysis.adapters import TimeSeriesComponentsAdapter
     
     # Drop-in replacement
     tsc = TimeSeriesComponentsAdapter(cfg)

@@ -8,10 +8,10 @@ import pandas as pd
 from assetutilities.common.data import SaveData, TransformData
 
 # Reader imports
-from digitalmodel.orcaflex.opp_range_graph import OPPRangeGraph
-from digitalmodel.orcaflex.opp_time_series import OPPTimeSeries
-from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects
-from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.solvers.orcaflex.opp_range_graph import OPPRangeGraph
+from digitalmodel.solvers.orcaflex.opp_time_series import OPPTimeSeries
+from digitalmodel.solvers.orcaflex.orcaflex_objects import OrcaFlexObjects
+from digitalmodel.solvers.orcaflex.orcaflex_utilities import OrcaflexUtilities
 
 save_data = SaveData()
 ou = OrcaflexUtilities()

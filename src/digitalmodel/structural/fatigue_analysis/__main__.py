@@ -32,7 +32,7 @@ import json
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
-from digitalmodel.fatigue_analysis.reference_seastate_processor import (
+from digitalmodel.structural.fatigue_analysis.reference_seastate_processor import (
     ReferenceSeaStateProcessor,
     FatigueCondition,
     Configuration

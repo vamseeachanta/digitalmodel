@@ -26,7 +26,7 @@ from typing import Any
 
 import yaml
 
-from digitalmodel.diffraction.input_schemas import (
+from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     BodySpec,
     DiffractionSpec,
     FrequencyInputType,
@@ -464,8 +464,8 @@ class OrcaWaveBackend:
 
     Example::
 
-        from digitalmodel.diffraction.input_schemas import DiffractionSpec
-        from digitalmodel.diffraction.orcawave_backend import OrcaWaveBackend
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
+        from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
 
         spec = DiffractionSpec.from_yaml("analysis.yml")
         backend = OrcaWaveBackend()

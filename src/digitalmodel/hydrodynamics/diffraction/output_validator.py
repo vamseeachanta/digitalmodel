@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple, Optional
 from pathlib import Path
 import json
 
-from digitalmodel.diffraction.output_schemas import (
+from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults, RAOSet, AddedMassSet, DampingSet,
     validate_rao_completeness, validate_matrix_set,
     validate_diffraction_results
