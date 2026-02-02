@@ -69,6 +69,8 @@ _MOVED_MODULES: set[str] = {
     "blender_automation",
     "diffraction_cli",
     "standards_lookup",
+    # Phase 6 cleanup
+    "reporting",
 }
 
 

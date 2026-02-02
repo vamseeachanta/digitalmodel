@@ -28,10 +28,16 @@ _MOVED_MODULES = {
     "gmsh_meshing", "hydrodynamics", "marine_analysis", "marine_engineering",
     "mcp_server", "mooring_analysis", "orcaflex", "orcaflex_browser",
     "orcaflex_post_process", "orcawave", "pipe_capacity", "pipe_cross_section",
-    "pipeline", "project_management", "pyintegrity", "rao_analysis", "rigging",
+    "pipeline", "project_management", "pyintegrity", "rao_analysis",
+    "reporting", "rigging",
     "services", "signal_analysis", "skills", "structural_analysis",
     "time_series", "transformation", "vertical_riser", "visualization",
     "viv_analysis", "workflow_automation",
+}
+
+# Modules that were renamed during the restructure (old_name -> new_name)
+_RENAMED_MODULES = {
+    "data_procurement": "data_scraping",
 }
 
 _PREFIX = "digitalmodel.modules."
@@ -79,6 +85,15 @@ class _ModulesRedirectFinder(importlib.abc.MetaPathFinder):
                     fullname, loader,
                     is_package="." not in remainder,
                 )
+            if top_module in _RENAMED_MODULES:
+                new_top = _RENAMED_MODULES[top_module]
+                sub = remainder[len(top_module):]  # e.g. ".submod" or ""
+                new_name = f"digitalmodel.{new_top}{sub}"
+                loader = _RedirectLoader(new_name, fullname)
+                return importlib.machinery.ModuleSpec(
+                    fullname, loader,
+                    is_package="." not in remainder,
+                )
         return None
 
 
@@ -99,6 +114,19 @@ def __getattr__(name):
                 stacklevel=2,
             )
         mod = importlib.import_module(f"digitalmodel.{name}")
+        sys.modules[f"digitalmodel.modules.{name}"] = mod
+        return mod
+    if name in _RENAMED_MODULES:
+        new_name = _RENAMED_MODULES[name]
+        if name not in _warned:
+            _warned.add(name)
+            warnings.warn(
+                f"digitalmodel.modules.{name} is deprecated. "
+                f"Use digitalmodel.{new_name} instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        mod = importlib.import_module(f"digitalmodel.{new_name}")
         sys.modules[f"digitalmodel.modules.{name}"] = mod
         return mod
     raise AttributeError(f"module 'digitalmodel.modules' has no attribute {name!r}")
