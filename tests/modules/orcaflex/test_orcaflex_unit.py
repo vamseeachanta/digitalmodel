@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 
-from digitalmodel.modules.orcaflex import (
+from digitalmodel.orcaflex import (
     __version__,
     get_version,
     check_availability,
@@ -92,7 +92,7 @@ class TestImportStructure:
 
     def test_all_exports_defined(self):
         """Test that __all__ contains expected exports"""
-        from digitalmodel.modules.orcaflex import __all__
+        from digitalmodel.orcaflex import __all__
 
         expected_exports = [
             '__version__',
@@ -125,12 +125,12 @@ class TestUniversalRunner:
 
     def test_universal_runner_import(self):
         """Test UniversalOrcaFlexRunner can be imported"""
-        from digitalmodel.modules.orcaflex import UniversalOrcaFlexRunner
+        from digitalmodel.orcaflex import UniversalOrcaFlexRunner
         assert UniversalOrcaFlexRunner is not None
 
     def test_status_reporter_import(self):
         """Test StatusReporter can be imported"""
-        from digitalmodel.modules.orcaflex import StatusReporter
+        from digitalmodel.orcaflex import StatusReporter
         assert StatusReporter is not None
 
 
@@ -140,7 +140,7 @@ class TestPostProcessing:
 
     def test_post_processor_import(self):
         """Test OrcaFlexPostProcessor can be imported"""
-        from digitalmodel.modules.orcaflex import OrcaFlexPostProcessor
+        from digitalmodel.orcaflex import OrcaFlexPostProcessor
         assert OrcaFlexPostProcessor is not None
 
 
@@ -149,7 +149,7 @@ class TestRunToSim:
 
     def test_run_models_import(self):
         """Test run_models function can be imported"""
-        from digitalmodel.modules.orcaflex import run_models
+        from digitalmodel.orcaflex import run_models
         # May be None if import failed, but should exist in namespace
         assert 'run_models' in dir()
 
@@ -159,14 +159,14 @@ class TestModuleDocumentation:
 
     def test_module_docstring(self):
         """Test module has docstring"""
-        import digitalmodel.modules.orcaflex as orcaflex
+        import digitalmodel.orcaflex as orcaflex
         assert orcaflex.__doc__ is not None
         assert len(orcaflex.__doc__) > 50
         assert 'OrcaFlex' in orcaflex.__doc__
 
     def test_key_features_documented(self):
         """Test key features are mentioned in docstring"""
-        import digitalmodel.modules.orcaflex as orcaflex
+        import digitalmodel.orcaflex as orcaflex
         docstring = orcaflex.__doc__.lower()
 
         assert 'model' in docstring or 'runner' in docstring
@@ -179,7 +179,7 @@ class TestModuleIntegration:
     def test_graceful_import_failure(self):
         """Test that module handles import failures gracefully"""
         # Module should import even if some components fail
-        import digitalmodel.modules.orcaflex as orcaflex
+        import digitalmodel.orcaflex as orcaflex
         assert orcaflex is not None
         assert hasattr(orcaflex, '__version__')
 

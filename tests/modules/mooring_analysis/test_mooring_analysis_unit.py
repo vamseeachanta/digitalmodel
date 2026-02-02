@@ -13,7 +13,7 @@ import pytest
 import numpy as np
 from pathlib import Path
 
-from digitalmodel.modules.mooring_analysis import (
+from digitalmodel.mooring_analysis import (
     # Models
     MooringLineProperties,
     AnchorProperties,

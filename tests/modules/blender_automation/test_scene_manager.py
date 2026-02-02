@@ -7,8 +7,8 @@ import pytest
 from pathlib import Path
 import tempfile
 
-from digitalmodel.modules.blender_automation.core.scene_manager import SceneManager
-from digitalmodel.modules.blender_automation.core.blender_wrapper import BlenderWrapper
+from digitalmodel.blender_automation.core.scene_manager import SceneManager
+from digitalmodel.blender_automation.core.blender_wrapper import BlenderWrapper
 
 
 class TestSceneManager:

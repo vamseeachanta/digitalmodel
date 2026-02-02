@@ -6,7 +6,7 @@ CALM buoy YAML input files at all three levels.
 """
 
 from pathlib import Path
-from digitalmodel.modules.orcaflex.modular_input_validation import (
+from digitalmodel.orcaflex.modular_input_validation import (
     ModularInputValidator,
     ValidationConfig
 )
@@ -152,7 +152,7 @@ def example_cli_equivalent():
     print("=" * 80)
 
     # This is equivalent to:
-    # python -m digitalmodel.modules.orcaflex.modular_input_validation.cli \
+    # python -m digitalmodel.orcaflex.modular_input_validation.cli \
     #   path/to/files/ --tolerance 12 --formats console csv --skip-level 2
 
     config = ValidationConfig(

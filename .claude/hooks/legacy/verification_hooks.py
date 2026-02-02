@@ -357,7 +357,7 @@ class OrcaFlexVerification(VerificationHooks):
         self.log('info', "OrcaFlex license availability")
         
         try:
-            from digitalmodel.modules.orcaflex.orcaflex_utilities import is_orcaflex_available
+            from digitalmodel.orcaflex.orcaflex_utilities import is_orcaflex_available
             if is_orcaflex_available():
                 self.log('success', "OrcaFlex license available")
                 self.checks_passed += 1

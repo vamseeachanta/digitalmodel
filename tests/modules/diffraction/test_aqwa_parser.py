@@ -9,7 +9,7 @@ import pytest
 import numpy as np
 from pathlib import Path
 
-from digitalmodel.modules.diffraction.aqwa_lis_parser import (
+from digitalmodel.diffraction.aqwa_lis_parser import (
     AQWALISParser,
     parse_aqwa_lis_file
 )

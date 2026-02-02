@@ -1,0 +1,2313 @@
+{
+  "total_imports": 316,
+  "total_files": 137,
+  "by_module": {
+    "orcaflex": {
+      "count": 85,
+      "files": [
+        "src/digitalmodel/__init__.py:16",
+        "src/digitalmodel/common/code_dnvrph103_hydrodynamics_circular.py:8",
+        "src/digitalmodel/common/code_dnvrph103_hydrodynamics_rectangular.py:6",
+        "src/digitalmodel/engine.py:19",
+        "src/digitalmodel/engine.py:20",
+        "src/digitalmodel/engine.py:23",
+        "src/digitalmodel/engine.py:24",
+        "src/digitalmodel/engine.py:25",
+        "src/digitalmodel/engine.py:38",
+        "src/digitalmodel/modules/orcaflex/all_vars.py:9",
+        "src/digitalmodel/modules/orcaflex/all_vars.py:10",
+        "src/digitalmodel/modules/orcaflex/baseline_performance_test.py:18",
+        "src/digitalmodel/modules/orcaflex/baseline_performance_test.py:23",
+        "src/digitalmodel/modules/orcaflex/baseline_performance_test.py:24",
+        "src/digitalmodel/modules/orcaflex/comprehensive_benchmark.py:148",
+        "src/digitalmodel/modules/orcaflex/comprehensive_benchmark.py:168",
+        "src/digitalmodel/modules/orcaflex/convert_cli.py:27",
+        "src/digitalmodel/modules/orcaflex/deploy_production_optimization.py:22",
+        "src/digitalmodel/modules/orcaflex/deploy_production_optimization.py:26",
+        "src/digitalmodel/modules/orcaflex/deploy_production_optimization.py:32",
+        "src/digitalmodel/modules/orcaflex/deploy_production_optimization.py:192",
+        "src/digitalmodel/modules/orcaflex/deploy_production_optimization.py:200",
+        "src/digitalmodel/modules/orcaflex/deploy_production_optimization.py:209",
+        "src/digitalmodel/modules/orcaflex/deploy_production_optimization.py:216",
+        "src/digitalmodel/modules/orcaflex/examples_integration/test_infrastructure.py:73",
+        "src/digitalmodel/modules/orcaflex/library_generator.py:9",
+        "src/digitalmodel/modules/orcaflex/library_generator.py:21",
+        "src/digitalmodel/modules/orcaflex/modular_generator/schema/__init__.py:8",
+        "src/digitalmodel/modules/orcaflex/modular_generator/schema/root.py:23",
+        "src/digitalmodel/modules/orcaflex/modular_input_validation/__init__.py:12",
+        "src/digitalmodel/modules/orcaflex/mooring.py:18",
+        "src/digitalmodel/modules/orcaflex/mooring.py:19",
+        "src/digitalmodel/modules/orcaflex/mooring.py:20",
+        "src/digitalmodel/modules/orcaflex/mooring.py:21",
+        "src/digitalmodel/modules/orcaflex/mooring.py:22",
+        "src/digitalmodel/modules/orcaflex/opp.py:8",
+        "src/digitalmodel/modules/orcaflex/opp.py:22",
+        "src/digitalmodel/modules/orcaflex/opp.py:23",
+        "src/digitalmodel/modules/orcaflex/opp.py:24",
+        "src/digitalmodel/modules/orcaflex/opp.py:25",
+        "src/digitalmodel/modules/orcaflex/opp.py:26",
+        "src/digitalmodel/modules/orcaflex/opp.py:27",
+        "src/digitalmodel/modules/orcaflex/opp.py:28",
+        "src/digitalmodel/modules/orcaflex/opp.py:30",
+        "src/digitalmodel/modules/orcaflex/opp_linkedstatistics.py:8",
+        "src/digitalmodel/modules/orcaflex/opp_linkedstatistics.py:9",
+        "src/digitalmodel/modules/orcaflex/opp_summary.py:14",
+        "src/digitalmodel/modules/orcaflex/opp_summary.py:15",
+        "src/digitalmodel/modules/orcaflex/opp_summary.py:16",
+        "src/digitalmodel/modules/orcaflex/opp_summary.py:17",
+        "src/digitalmodel/modules/orcaflex/opp_summary_superseded.py:11",
+        "src/digitalmodel/modules/orcaflex/opp_summary_superseded.py:12",
+        "src/digitalmodel/modules/orcaflex/opp_summary_superseded.py:13",
+        "src/digitalmodel/modules/orcaflex/opp_summary_superseded.py:14",
+        "src/digitalmodel/modules/orcaflex/opp_time_series.py:12",
+        "src/digitalmodel/modules/orcaflex/opp_time_series_v2.py:21",
+        "src/digitalmodel/modules/orcaflex/opp_time_series_v2.py:22",
+        "src/digitalmodel/modules/orcaflex/orcaflex.py:2",
+        "src/digitalmodel/modules/orcaflex/orcaflex.py:3",
+        "src/digitalmodel/modules/orcaflex/orcaflex.py:4",
+        "src/digitalmodel/modules/orcaflex/orcaflex.py:5",
+        "src/digitalmodel/modules/orcaflex/orcaflex.py:6",
+        "src/digitalmodel/modules/orcaflex/orcaflex_analysis.py:2",
+        "src/digitalmodel/modules/orcaflex/orcaflex_analysis.py:3",
+        "src/digitalmodel/modules/orcaflex/orcaflex_analysis.py:4",
+        "src/digitalmodel/modules/orcaflex/orcaflex_analysis.py:5",
+        "src/digitalmodel/modules/orcaflex/orcaflex_analysis.py:6",
+        "src/digitalmodel/modules/orcaflex/orcaflex_custom_analysis.py:384",
+        "src/digitalmodel/modules/orcaflex/orcaflex_file_management.py:1",
+        "src/digitalmodel/modules/orcaflex/orcaflex_linetypes.py:7",
+        "src/digitalmodel/modules/orcaflex/orcaflex_modal_analysis.py:17",
+        "src/digitalmodel/modules/orcaflex/orcaflex_preprocess.py:3",
+        "src/digitalmodel/modules/orcaflex/orcaflex_utilities.py:28",
+        "src/digitalmodel/modules/orcaflex/run_to_sim_cli.py:13",
+        "src/digitalmodel/modules/orcaflex/single_file_parallel_test.py:193",
+        "src/digitalmodel/modules/orcaflex/test_production_optimization.py:17",
+        "src/digitalmodel/modules/orcaflex/umbilical_analysis_components.py:5",
+        "src/digitalmodel/modules/orcaflex/umbilical_analysis_components.py:6",
+        "src/digitalmodel/modules/orcaflex/umbilical_analysis_components.py:9",
+        "src/digitalmodel/modules/orcaflex/umbilical_installation_IV_to_host.py:11",
+        "src/digitalmodel/modules/orcaflex/umbilical_installation_lower_2nd_end.py:11",
+        "src/digitalmodel/modules/orcaflex/universal/__init__.py:16",
+        "src/digitalmodel/modules/orcaflex/universal/batch_processor.py:16",
+        "src/digitalmodel/modules/orcaflex/universal_cli.py:21",
+        "src/digitalmodel/modules/vertical_riser/vertical_riser_components.py:10"
+      ]
+    },
+    "diffraction": {
+      "count": 49,
+      "files": [
+        "src/digitalmodel/modules/bemrosetta/converters/base.py:9",
+        "src/digitalmodel/modules/bemrosetta/converters/to_orcaflex.py:16",
+        "src/digitalmodel/modules/bemrosetta/validators/causality_checker.py:13",
+        "src/digitalmodel/modules/bemrosetta/validators/coefficient_validator.py:12",
+        "src/digitalmodel/modules/diffraction/__init__.py:19",
+        "src/digitalmodel/modules/diffraction/__init__.py:42",
+        "src/digitalmodel/modules/diffraction/__init__.py:44",
+        "src/digitalmodel/modules/diffraction/__init__.py:51",
+        "src/digitalmodel/modules/diffraction/__init__.py:62",
+        "src/digitalmodel/modules/diffraction/__init__.py:68",
+        "src/digitalmodel/modules/diffraction/__init__.py:73",
+        "src/digitalmodel/modules/diffraction/__init__.py:79",
+        "src/digitalmodel/modules/diffraction/__init__.py:86",
+        "src/digitalmodel/modules/diffraction/__init__.py:90",
+        "src/digitalmodel/modules/diffraction/aqwa_backend.py:23",
+        "src/digitalmodel/modules/diffraction/aqwa_converter.py:15",
+        "src/digitalmodel/modules/diffraction/aqwa_converter.py:20",
+        "src/digitalmodel/modules/diffraction/aqwa_converter.py:406",
+        "src/digitalmodel/modules/diffraction/batch_processor.py:26",
+        "src/digitalmodel/modules/diffraction/batch_processor.py:27",
+        "src/digitalmodel/modules/diffraction/batch_processor.py:28",
+        "src/digitalmodel/modules/diffraction/batch_processor.py:185",
+        "src/digitalmodel/modules/diffraction/batch_processor.py:200",
+        "src/digitalmodel/modules/diffraction/batch_processor.py:205",
+        "src/digitalmodel/modules/diffraction/cli.py:23",
+        "src/digitalmodel/modules/diffraction/cli.py:31",
+        "src/digitalmodel/modules/diffraction/cli.py:33",
+        "src/digitalmodel/modules/diffraction/cli.py:34",
+        "src/digitalmodel/modules/diffraction/cli.py:437",
+        "src/digitalmodel/modules/diffraction/cli.py:478",
+        "src/digitalmodel/modules/diffraction/comparison_framework.py:26",
+        "src/digitalmodel/modules/diffraction/input_schemas.py:11",
+        "src/digitalmodel/modules/diffraction/mesh_pipeline.py:13",
+        "src/digitalmodel/modules/diffraction/mesh_pipeline.py:37",
+        "src/digitalmodel/modules/diffraction/orcaflex_exporter.py:18",
+        "src/digitalmodel/modules/diffraction/orcawave_backend.py:29",
+        "src/digitalmodel/modules/diffraction/orcawave_backend.py:467",
+        "src/digitalmodel/modules/diffraction/orcawave_backend.py:468",
+        "src/digitalmodel/modules/diffraction/orcawave_converter.py:26",
+        "src/digitalmodel/modules/diffraction/orcawave_converter.py:32",
+        "src/digitalmodel/modules/diffraction/orcawave_converter.py:367",
+        "src/digitalmodel/modules/diffraction/output_validator.py:14",
+        "src/digitalmodel/modules/diffraction/reverse_parsers.py:24",
+        "src/digitalmodel/modules/diffraction/reverse_parsers.py:422",
+        "src/digitalmodel/modules/diffraction/reverse_parsers.py:604",
+        "src/digitalmodel/modules/diffraction/spec_converter.py:9",
+        "src/digitalmodel/modules/diffraction/spec_converter.py:24",
+        "src/digitalmodel/modules/diffraction/spec_converter.py:25",
+        "src/digitalmodel/modules/diffraction/spec_converter.py:26"
+      ]
+    },
+    "gis": {
+      "count": 42,
+      "files": [
+        "src/digitalmodel/modules/gis/__init__.py:32",
+        "src/digitalmodel/modules/gis/__init__.py:37",
+        "src/digitalmodel/modules/gis/__init__.py:38",
+        "src/digitalmodel/modules/gis/__init__.py:39",
+        "src/digitalmodel/modules/gis/__init__.py:40",
+        "src/digitalmodel/modules/gis/__init__.py:41",
+        "src/digitalmodel/modules/gis/__init__.py:42",
+        "src/digitalmodel/modules/gis/__init__.py:43",
+        "src/digitalmodel/modules/gis/__init__.py:44",
+        "src/digitalmodel/modules/gis/__init__.py:45",
+        "src/digitalmodel/modules/gis/__init__.py:46",
+        "src/digitalmodel/modules/gis/integrations/__init__.py:3",
+        "src/digitalmodel/modules/gis/integrations/__init__.py:4",
+        "src/digitalmodel/modules/gis/integrations/__init__.py:7",
+        "src/digitalmodel/modules/gis/integrations/__init__.py:8",
+        "src/digitalmodel/modules/gis/integrations/folium_maps.py:19",
+        "src/digitalmodel/modules/gis/integrations/plotly_maps.py:69",
+        "src/digitalmodel/modules/gis/io/__init__.py:3",
+        "src/digitalmodel/modules/gis/io/__init__.py:4",
+        "src/digitalmodel/modules/gis/layers/__init__.py:3",
+        "src/digitalmodel/modules/gis/layers/__init__.py:4",
+        "src/digitalmodel/modules/gis/layers/__init__.py:5",
+        "src/digitalmodel/modules/gis/layers/feature_layer.py:15",
+        "src/digitalmodel/modules/gis/layers/feature_layer.py:16",
+        "src/digitalmodel/modules/gis/layers/feature_layer.py:17",
+        "src/digitalmodel/modules/gis/layers/feature_layer.py:18",
+        "src/digitalmodel/modules/gis/layers/feature_layer.py:19",
+        "src/digitalmodel/modules/gis/layers/raster_layer.py:15",
+        "src/digitalmodel/modules/gis/layers/raster_layer.py:16",
+        "src/digitalmodel/modules/gis/layers/temporal_layer.py:17",
+        "src/digitalmodel/modules/gis/layers/temporal_layer.py:18",
+        "src/digitalmodel/modules/gis/layers/temporal_layer.py:19",
+        "src/digitalmodel/modules/gis/layers/well_layer.py:15",
+        "src/digitalmodel/modules/gis/layers/well_layer.py:16",
+        "src/digitalmodel/modules/gis/layers/well_layer.py:17",
+        "src/digitalmodel/modules/gis/layers/well_layer.py:18",
+        "src/digitalmodel/modules/gis/layers/well_layer.py:19",
+        "src/digitalmodel/modules/gis/layers/well_layer.py:256",
+        "src/digitalmodel/modules/gis/scripts/__init__.py:3",
+        "src/digitalmodel/modules/gis/scripts/__init__.py:4",
+        "src/digitalmodel/modules/gis/scripts/blender/__init__.py:3",
+        "src/digitalmodel/modules/gis/scripts/qgis/__init__.py:3"
+      ]
+    },
+    "aqwa": {
+      "count": 24,
+      "files": [
+        "src/digitalmodel/__init__.py:14",
+        "src/digitalmodel/aqwa.py:3",
+        "src/digitalmodel/modules/aqwa/aqwa_analysis.py:3",
+        "src/digitalmodel/modules/aqwa/aqwa_analysis.py:4",
+        "src/digitalmodel/modules/aqwa/aqwa_analysis.py:5",
+        "src/digitalmodel/modules/aqwa/aqwa_analysis_damping.py:14",
+        "src/digitalmodel/modules/aqwa/aqwa_analysis_raos.py:21",
+        "src/digitalmodel/modules/aqwa/aqwa_cli.py:13",
+        "src/digitalmodel/modules/aqwa/aqwa_dat_files.py:18",
+        "src/digitalmodel/modules/aqwa/aqwa_lis_files.py:12",
+        "src/digitalmodel/modules/aqwa/aqwa_post_process.py:4",
+        "src/digitalmodel/modules/aqwa/aqwa_post_process.py:5",
+        "src/digitalmodel/modules/aqwa/aqwa_pre_process.py:5",
+        "src/digitalmodel/modules/aqwa/aqwa_reader.py:17",
+        "src/digitalmodel/modules/aqwa/aqwa_router.py:7",
+        "src/digitalmodel/modules/aqwa/aqwa_router.py:8",
+        "src/digitalmodel/modules/aqwa/aqwa_router.py:9",
+        "src/digitalmodel/modules/aqwa/aqwa_router.py:50",
+        "src/digitalmodel/modules/aqwa/aqwa_router.py:83",
+        "src/digitalmodel/modules/aqwa/aqwa_validation/__init__.py:12",
+        "src/digitalmodel/modules/aqwa/viscous_damping_determination.py:17",
+        "src/digitalmodel/modules/aqwa/viscous_damping_determination.py:18",
+        "src/digitalmodel/modules/aqwa/viscous_damping_determination.py:19",
+        "src/digitalmodel/modules/diffraction_cli.py:173"
+      ]
+    },
+    "marine_analysis": {
+      "count": 20,
+      "files": [
+        "src/digitalmodel/modules/aqwa/viscous_damping_determination.py:20",
+        "src/digitalmodel/modules/marine_analysis/analysis/hydro_usage_example.py:22",
+        "src/digitalmodel/modules/marine_analysis/catenary/__init__.py:8",
+        "src/digitalmodel/modules/marine_analysis/catenary/__init__.py:13",
+        "src/digitalmodel/modules/marine_analysis/catenary/__init__.py:18",
+        "src/digitalmodel/modules/marine_analysis/catenary/__init__.py:26",
+        "src/digitalmodel/modules/marine_analysis/catenary/adapter.py:12",
+        "src/digitalmodel/modules/marine_analysis/catenary/adapter.py:36",
+        "src/digitalmodel/modules/marine_analysis/profiling/profile_modules.py:55",
+        "src/digitalmodel/modules/marine_analysis/profiling/profile_modules.py:58",
+        "src/digitalmodel/modules/marine_analysis/profiling/profile_modules.py:62",
+        "src/digitalmodel/modules/marine_analysis/profiling/profile_modules.py:63",
+        "src/digitalmodel/modules/marine_analysis/unified_rao_reader.py:84",
+        "src/digitalmodel/modules/marine_analysis/validation/validate_phase2.py:56",
+        "src/digitalmodel/modules/marine_analysis/visualization/integration_charts.py:54",
+        "src/digitalmodel/modules/marine_analysis/visualization/integration_charts.py:55",
+        "src/digitalmodel/modules/marine_analysis/visualization/integration_charts.py:58",
+        "src/digitalmodel/modules/marine_analysis/visualization/integration_charts.py:61",
+        "src/digitalmodel/modules/marine_analysis/visualization/integration_charts.py:62",
+        "src/digitalmodel/modules/marine_analysis/visualization/rao_plotter.py:10"
+      ]
+    },
+    "marine_engineering": {
+      "count": 11,
+      "files": [
+        "src/digitalmodel/modules/catenary/catenaryMethods.py:14",
+        "src/digitalmodel/modules/catenary/catenaryMethods.py:17",
+        "src/digitalmodel/modules/catenary/catenaryMethods.py:72",
+        "src/digitalmodel/modules/marine_engineering/catenary/__init__.py:8",
+        "src/digitalmodel/modules/marine_engineering/catenary/__init__.py:13",
+        "src/digitalmodel/modules/marine_engineering/catenary/__init__.py:18",
+        "src/digitalmodel/modules/marine_engineering/catenary/__init__.py:26",
+        "src/digitalmodel/modules/marine_engineering/catenary/adapter.py:12",
+        "src/digitalmodel/modules/marine_engineering/catenary/adapter.py:36",
+        "src/digitalmodel/modules/marine_engineering/tests/test_validation.py:6",
+        "src/digitalmodel/modules/marine_engineering/tests/test_wave_spectra.py:20"
+      ]
+    },
+    "pipeline": {
+      "count": 9,
+      "files": [
+        "src/digitalmodel/__init__.py:19",
+        "src/digitalmodel/engine.py:29",
+        "src/digitalmodel/modules/pipeline/lateral_buckling.py:14",
+        "src/digitalmodel/modules/pipeline/pipeline.py:5",
+        "src/digitalmodel/modules/pipeline/pipeline.py:6",
+        "src/digitalmodel/modules/pipeline/pipeline.py:7",
+        "src/digitalmodel/modules/pipeline/pipeline.py:8",
+        "src/digitalmodel/modules/pipeline/pressure_loss.py:17",
+        "src/digitalmodel/modules/pipeline/upheaval_buckling.py:13"
+      ]
+    },
+    "digitalmarketing": {
+      "count": 9,
+      "files": [
+        "src/digitalmodel/__init__.py:30",
+        "src/digitalmodel/engine.py:182",
+        "src/digitalmodel/modules/digitalmarketing/__init__.py:3",
+        "src/digitalmodel/modules/digitalmarketing/analytics/__init__.py:3",
+        "src/digitalmodel/modules/digitalmarketing/digitalmarketing.py:28",
+        "src/digitalmodel/modules/digitalmarketing/seo/__init__.py:3",
+        "src/digitalmodel/modules/digitalmarketing/tools/__init__.py:3",
+        "src/digitalmodel/modules/digitalmarketing/tools/__init__.py:6",
+        "src/digitalmodel/modules/digitalmarketing/tools/__init__.py:7"
+      ]
+    },
+    "signal_analysis": {
+      "count": 8,
+      "files": [
+        "src/digitalmodel/common/ship_fatigue_analysis.py:10",
+        "src/digitalmodel/engine.py:16",
+        "src/digitalmodel/modules/orcaflex/opp_time_series.py:11",
+        "src/digitalmodel/modules/orcaflex/opp_time_series_v2.py:253",
+        "src/digitalmodel/modules/orcaflex/opp_time_series_v2.py:296",
+        "src/digitalmodel/modules/signal_analysis/adapters.py:435",
+        "src/digitalmodel/modules/signal_analysis/adapters.py:450",
+        "src/digitalmodel/modules/time_series/time_series_analysis.py:9"
+      ]
+    },
+    "catenary": {
+      "count": 8,
+      "files": [
+        "src/digitalmodel/engine.py:94",
+        "src/digitalmodel/modules/catenary/catenary.py:3",
+        "src/digitalmodel/modules/catenary/catenary.py:4",
+        "src/digitalmodel/modules/catenary/catenaryMethods.py:6",
+        "src/digitalmodel/modules/catenary/catenary_riser.py:19",
+        "src/digitalmodel/modules/catenary/catenary_riser.py:28",
+        "src/digitalmodel/modules/catenary/catenary_riser.py:29",
+        "src/digitalmodel/modules/marine_analysis/validation/validate_catenary.py:16"
+      ]
+    },
+    "pipe_capacity": {
+      "count": 7,
+      "files": [
+        "src/digitalmodel/__init__.py:18",
+        "src/digitalmodel/engine.py:28",
+        "src/digitalmodel/modules/pipe_capacity/PipeCapacity.py:553",
+        "src/digitalmodel/modules/pipe_capacity/common/pipe_components.py:1",
+        "src/digitalmodel/modules/pipe_capacity/common/pipe_components.py:4",
+        "src/digitalmodel/modules/pipe_capacity/common/pipe_components.py:5",
+        "src/digitalmodel/modules/pipe_capacity/pipe_capacity.py:2"
+      ]
+    },
+    "fatigue_analysis": {
+      "count": 7,
+      "files": [
+        "src/digitalmodel/modules/fatigue_analysis/__init__.py:21",
+        "src/digitalmodel/modules/fatigue_analysis/__main__.py:35",
+        "src/digitalmodel/modules/fatigue_analysis/cli_load_scaling.py:41",
+        "src/digitalmodel/modules/fatigue_analysis/fatigue_validation/__init__.py:12",
+        "src/digitalmodel/modules/fatigue_analysis/integrated_processor.py:21",
+        "src/digitalmodel/modules/fatigue_analysis/integrated_processor.py:22",
+        "src/digitalmodel/modules/fatigue_analysis/test_load_scaling.py:25"
+      ]
+    },
+    "structural": {
+      "count": 5,
+      "files": [
+        "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_G.py:12",
+        "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_H.py:12",
+        "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_J.py:12",
+        "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_K.py:12",
+        "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_i.py:12"
+      ]
+    },
+    "time_series": {
+      "count": 4,
+      "files": [
+        "src/digitalmodel/__init__.py:21",
+        "src/digitalmodel/common/fatigue_analysis.py:6",
+        "src/digitalmodel/engine.py:32",
+        "src/digitalmodel/modules/signal_analysis/adapters.py:426"
+      ]
+    },
+    "viv_analysis": {
+      "count": 4,
+      "files": [
+        "src/digitalmodel/__init__.py:24",
+        "src/digitalmodel/engine.py:35",
+        "src/digitalmodel/modules/viv_analysis/viv_analysis.py:6",
+        "src/digitalmodel/modules/viv_analysis/viv_analysis.py:9"
+      ]
+    },
+    "ct_hydraulics": {
+      "count": 3,
+      "files": [
+        "src/digitalmodel/__init__.py:17",
+        "src/digitalmodel/engine.py:30",
+        "src/digitalmodel/modules/ct_hydraulics/__init__.py:3"
+      ]
+    },
+    "bemrosetta": {
+      "count": 3,
+      "files": [
+        "src/digitalmodel/modules/bemrosetta/__init__.py:17",
+        "src/digitalmodel/modules/diffraction/mesh_pipeline.py:27",
+        "src/digitalmodel/modules/diffraction/mesh_pipeline.py:32"
+      ]
+    },
+    "blender_automation": {
+      "count": 3,
+      "files": [
+        "src/digitalmodel/modules/blender_automation/examples/basic_usage.py:7",
+        "src/digitalmodel/modules/blender_automation/examples/marine_engineering_integration.py:7",
+        "src/digitalmodel/modules/blender_automation/examples/marine_engineering_integration.py:239"
+      ]
+    },
+    "mooring": {
+      "count": 2,
+      "files": [
+        "src/digitalmodel/__init__.py:15",
+        "src/digitalmodel/engine.py:18"
+      ]
+    },
+    "rao_analysis": {
+      "count": 2,
+      "files": [
+        "src/digitalmodel/__init__.py:20",
+        "src/digitalmodel/engine.py:31"
+      ]
+    },
+    "transformation": {
+      "count": 2,
+      "files": [
+        "src/digitalmodel/__init__.py:22",
+        "src/digitalmodel/engine.py:33"
+      ]
+    },
+    "vertical_riser": {
+      "count": 2,
+      "files": [
+        "src/digitalmodel/__init__.py:23",
+        "src/digitalmodel/modules/vertical_riser/vertical_riser.py:9"
+      ]
+    },
+    "automation": {
+      "count": 2,
+      "files": [
+        "src/digitalmodel/cli/workflow_cli.py:17",
+        "src/digitalmodel/modules/automation/go_by_folder/metadata/markdown_docs.py:343"
+      ]
+    },
+    "rigging": {
+      "count": 2,
+      "files": [
+        "src/digitalmodel/engine.py:119",
+        "src/digitalmodel/modules/rigging/__init__.py:3"
+      ]
+    },
+    "artificial_lift": {
+      "count": 1,
+      "files": [
+        "src/digitalmodel/engine.py:178"
+      ]
+    },
+    "orcawave": {
+      "count": 1,
+      "files": [
+        "src/digitalmodel/modules/diffraction_cli.py:238"
+      ]
+    },
+    "pipe_cross_section": {
+      "count": 1,
+      "files": [
+        "src/digitalmodel/modules/pipe_cross_section/calculator.py:17"
+      ]
+    }
+  },
+  "by_file": {
+    "src/digitalmodel/__init__.py": [
+      {
+        "line": 14,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_router import Aqwa"
+      },
+      {
+        "line": 15,
+        "module": "mooring",
+        "full_import": "from digitalmodel.modules.mooring.mooring import Mooring"
+      },
+      {
+        "line": 16,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex import OrcaFlex"
+      },
+      {
+        "line": 17,
+        "module": "ct_hydraulics",
+        "full_import": "from digitalmodel.modules.ct_hydraulics.ct_hydraulics import CTHydraulics"
+      },
+      {
+        "line": 18,
+        "module": "pipe_capacity",
+        "full_import": "from digitalmodel.modules.pipe_capacity.pipe_capacity import PipeCapacity"
+      },
+      {
+        "line": 19,
+        "module": "pipeline",
+        "full_import": "from digitalmodel.modules.pipeline.pipeline import Pipeline"
+      },
+      {
+        "line": 20,
+        "module": "rao_analysis",
+        "full_import": "from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis"
+      },
+      {
+        "line": 21,
+        "module": "time_series",
+        "full_import": "from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis"
+      },
+      {
+        "line": 22,
+        "module": "transformation",
+        "full_import": "from digitalmodel.modules.transformation.transformation import Transformation"
+      },
+      {
+        "line": 23,
+        "module": "vertical_riser",
+        "full_import": "from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser"
+      },
+      {
+        "line": 24,
+        "module": "viv_analysis",
+        "full_import": "from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis"
+      },
+      {
+        "line": 30,
+        "module": "digitalmarketing",
+        "full_import": "from digitalmodel.modules.digitalmarketing.digitalmarketing import DigitalMarketing"
+      }
+    ],
+    "src/digitalmodel/aqwa.py": [
+      {
+        "line": 3,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_router import ("
+      }
+    ],
+    "src/digitalmodel/cli/workflow_cli.py": [
+      {
+        "line": 17,
+        "module": "automation",
+        "full_import": "from digitalmodel.modules.automation.workflow_executor import WorkflowExecutor"
+      }
+    ],
+    "src/digitalmodel/common/code_dnvrph103_hydrodynamics_circular.py": [
+      {
+        "line": 8,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_model_utilities import ("
+      }
+    ],
+    "src/digitalmodel/common/code_dnvrph103_hydrodynamics_rectangular.py": [
+      {
+        "line": 6,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_model_utilities import ("
+      }
+    ],
+    "src/digitalmodel/common/fatigue_analysis.py": [
+      {
+        "line": 6,
+        "module": "time_series",
+        "full_import": "from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis"
+      }
+    ],
+    "src/digitalmodel/common/ship_fatigue_analysis.py": [
+      {
+        "line": 10,
+        "module": "signal_analysis",
+        "full_import": "from digitalmodel.modules.signal_analysis.fatigue import FatigueDamageCalculator"
+      }
+    ],
+    "src/digitalmodel/engine.py": [
+      {
+        "line": 16,
+        "module": "signal_analysis",
+        "full_import": "from digitalmodel.modules.signal_analysis.fatigue import FatigueDamageCalculator as FatigueAnalysis"
+      },
+      {
+        "line": 18,
+        "module": "mooring",
+        "full_import": "from digitalmodel.modules.mooring.mooring import Mooring"
+      },
+      {
+        "line": 19,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex import OrcaFlex"
+      },
+      {
+        "line": 20,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_file_management import ("
+      },
+      {
+        "line": 23,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_installation import OrcInstallation"
+      },
+      {
+        "line": 24,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis"
+      },
+      {
+        "line": 25,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.umbilical_analysis_components import ("
+      },
+      {
+        "line": 28,
+        "module": "pipe_capacity",
+        "full_import": "from digitalmodel.modules.pipe_capacity.pipe_capacity import PipeCapacity"
+      },
+      {
+        "line": 29,
+        "module": "pipeline",
+        "full_import": "from digitalmodel.modules.pipeline.pipeline import Pipeline"
+      },
+      {
+        "line": 30,
+        "module": "ct_hydraulics",
+        "full_import": "from digitalmodel.modules.ct_hydraulics.ct_hydraulics import CTHydraulics"
+      },
+      {
+        "line": 31,
+        "module": "rao_analysis",
+        "full_import": "from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis"
+      },
+      {
+        "line": 32,
+        "module": "time_series",
+        "full_import": "from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis"
+      },
+      {
+        "line": 33,
+        "module": "transformation",
+        "full_import": "from digitalmodel.modules.transformation.transformation import Transformation"
+      },
+      {
+        "line": 35,
+        "module": "viv_analysis",
+        "full_import": "from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis"
+      },
+      {
+        "line": 38,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.output_control import OutputController, get_output_level_from_argv"
+      },
+      {
+        "line": 94,
+        "module": "catenary",
+        "full_import": "from digitalmodel.modules.catenary.catenary import Catenary"
+      },
+      {
+        "line": 119,
+        "module": "rigging",
+        "full_import": "from digitalmodel.modules.rigging.rigging import Rigging"
+      },
+      {
+        "line": 178,
+        "module": "artificial_lift",
+        "full_import": "from digitalmodel.modules.artificial_lift.dynacard.solver import DynacardWorkflow"
+      },
+      {
+        "line": 182,
+        "module": "digitalmarketing",
+        "full_import": "from digitalmodel.modules.digitalmarketing.digitalmarketing import DigitalMarketing"
+      }
+    ],
+    "src/digitalmodel/modules/aqwa/aqwa_analysis.py": [
+      {
+        "line": 3,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_analysis_damping import AqwaDamping"
+      },
+      {
+        "line": 4,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_analysis_ef_server import AqwaEFServer"
+      },
+      {
+        "line": 5,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_analysis_raos import AqwaRAOs"
+      }
+    ],
+    "src/digitalmodel/modules/aqwa/aqwa_analysis_damping.py": [
+      {
+        "line": 14,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_analysis_raos import AqwaRAOs"
+      }
+    ],
+    "src/digitalmodel/modules/aqwa/aqwa_analysis_raos.py": [
+      {
+        "line": 21,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_utilities import AqwaUtilities  # type: ignore"
+      }
+    ],
+    "src/digitalmodel/modules/aqwa/aqwa_cli.py": [
+      {
+        "line": 13,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis"
+      }
+    ],
+    "src/digitalmodel/modules/aqwa/aqwa_dat_files.py": [
+      {
+        "line": 18,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_utilities import AqwaUtilities"
+      }
+    ],
+    "src/digitalmodel/modules/aqwa/aqwa_lis_files.py": [
+      {
+        "line": 12,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_utilities import AqwaUtilities"
+      }
+    ],
+    "src/digitalmodel/modules/aqwa/aqwa_post_process.py": [
+      {
+        "line": 4,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_lis_files import AqwaLISFiles"
+      },
+      {
+        "line": 5,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_reader import AqwaReader"
+      }
+    ],
+    "src/digitalmodel/modules/aqwa/aqwa_pre_process.py": [
+      {
+        "line": 5,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_dat_files import AqwaDATFiles"
+      }
+    ],
+    "src/digitalmodel/modules/aqwa/aqwa_reader.py": [
+      {
+        "line": 17,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_utilities import AqwaUtilities"
+      }
+    ],
+    "src/digitalmodel/modules/aqwa/aqwa_router.py": [
+      {
+        "line": 7,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_post_process import AqwaPostProcess"
+      },
+      {
+        "line": 8,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_pre_process import AqwaPreProcess"
+      },
+      {
+        "line": 9,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.mes_files import MesFiles"
+      },
+      {
+        "line": 50,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.viscous_damping_determination import ("
+      },
+      {
+        "line": 83,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis  # type: ignore"
+      }
+    ],
+    "src/digitalmodel/modules/aqwa/aqwa_validation/__init__.py": [
+      {
+        "line": 12,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_validation import AQWAValidator"
+      }
+    ],
+    "src/digitalmodel/modules/aqwa/viscous_damping_determination.py": [
+      {
+        "line": 17,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_analysis_damping import AqwaDamping"
+      },
+      {
+        "line": 18,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_analysis_raos import AqwaRAOs"
+      },
+      {
+        "line": 19,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_dat_files import AqwaDATFiles, DATInspectionResult"
+      },
+      {
+        "line": 20,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.aqwa_enhanced_parser import AQWAEnhancedParser"
+      }
+    ],
+    "src/digitalmodel/modules/automation/go_by_folder/metadata/markdown_docs.py": [
+      {
+        "line": 343,
+        "module": "automation",
+        "full_import": "from digitalmodel.modules.automation.go_by_folder import FileScanner"
+      }
+    ],
+    "src/digitalmodel/modules/bemrosetta/__init__.py": [
+      {
+        "line": 17,
+        "module": "bemrosetta",
+        "full_import": "from digitalmodel.bemrosetta import ("
+      }
+    ],
+    "src/digitalmodel/modules/bemrosetta/converters/base.py": [
+      {
+        "line": 9,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction import DiffractionResults"
+      }
+    ],
+    "src/digitalmodel/modules/bemrosetta/converters/to_orcaflex.py": [
+      {
+        "line": 16,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction import DiffractionResults, OrcaFlexExporter"
+      }
+    ],
+    "src/digitalmodel/modules/bemrosetta/validators/causality_checker.py": [
+      {
+        "line": 13,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction import ("
+      }
+    ],
+    "src/digitalmodel/modules/bemrosetta/validators/coefficient_validator.py": [
+      {
+        "line": 12,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction import ("
+      }
+    ],
+    "src/digitalmodel/modules/blender_automation/examples/basic_usage.py": [
+      {
+        "line": 7,
+        "module": "blender_automation",
+        "full_import": "from digitalmodel.modules.blender_automation import ("
+      }
+    ],
+    "src/digitalmodel/modules/blender_automation/examples/marine_engineering_integration.py": [
+      {
+        "line": 7,
+        "module": "blender_automation",
+        "full_import": "from digitalmodel.modules.blender_automation import ("
+      },
+      {
+        "line": 239,
+        "module": "blender_automation",
+        "full_import": "from digitalmodel.modules.blender_automation.utils import find_cad_files"
+      }
+    ],
+    "src/digitalmodel/modules/catenary/catenary.py": [
+      {
+        "line": 3,
+        "module": "catenary",
+        "full_import": "from digitalmodel.modules.catenary.catenary_equation import CatenaryCalculator"
+      },
+      {
+        "line": 4,
+        "module": "catenary",
+        "full_import": "from digitalmodel.modules.catenary.catenary_riser import catenary_riser"
+      }
+    ],
+    "src/digitalmodel/modules/catenary/catenaryMethods.py": [
+      {
+        "line": 6,
+        "module": "catenary",
+        "full_import": "from digitalmodel.modules.catenary.pipeProperties import pipeProperties"
+      },
+      {
+        "line": 14,
+        "module": "marine_engineering",
+        "full_import": "from digitalmodel.modules.marine_engineering.catenary import CatenarySolver, CatenaryInput"
+      },
+      {
+        "line": 17,
+        "module": "marine_engineering",
+        "full_import": "from digitalmodel.modules.marine_engineering.catenary import catenaryEquation"
+      },
+      {
+        "line": 72,
+        "module": "marine_engineering",
+        "full_import": "from digitalmodel.modules.marine_engineering.catenary import catenaryForces"
+      }
+    ],
+    "src/digitalmodel/modules/catenary/catenary_riser.py": [
+      {
+        "line": 19,
+        "module": "catenary",
+        "full_import": "from digitalmodel.modules.catenary.catenaryMethods import ("
+      },
+      {
+        "line": 28,
+        "module": "catenary",
+        "full_import": "from digitalmodel.modules.catenary.orcaflexModel import build_model"
+      },
+      {
+        "line": 29,
+        "module": "catenary",
+        "full_import": "from digitalmodel.modules.catenary.pipeProperties import pipeProperties"
+      }
+    ],
+    "src/digitalmodel/modules/ct_hydraulics/__init__.py": [
+      {
+        "line": 3,
+        "module": "ct_hydraulics",
+        "full_import": "from digitalmodel.modules.ct_hydraulics.ct_hydraulics import CTHydraulics"
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/__init__.py": [
+      {
+        "line": 19,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.output_schemas import ("
+      },
+      {
+        "line": 42,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.orcaflex_exporter import OrcaFlexExporter"
+      },
+      {
+        "line": 44,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.aqwa_converter import ("
+      },
+      {
+        "line": 51,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.orcawave_converter import ("
+      },
+      {
+        "line": 62,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.output_validator import ("
+      },
+      {
+        "line": 68,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.comparison_framework import ("
+      },
+      {
+        "line": 73,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.batch_processor import ("
+      },
+      {
+        "line": 79,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.geometry_quality import ("
+      },
+      {
+        "line": 86,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.orcawave_test_utilities import ("
+      },
+      {
+        "line": 90,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.orcawave_data_extraction import ("
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/aqwa_backend.py": [
+      {
+        "line": 23,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.input_schemas import ("
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/aqwa_converter.py": [
+      {
+        "line": 15,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.output_schemas import ("
+      },
+      {
+        "line": 20,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.aqwa_lis_parser import parse_aqwa_lis_file"
+      },
+      {
+        "line": 406,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.orcaflex_exporter import OrcaFlexExporter"
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/batch_processor.py": [
+      {
+        "line": 26,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.output_schemas import DiffractionResults"
+      },
+      {
+        "line": 27,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.orcaflex_exporter import OrcaFlexExporter"
+      },
+      {
+        "line": 28,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.output_validator import validate_results"
+      },
+      {
+        "line": 185,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.aqwa_converter import AQWAConverter"
+      },
+      {
+        "line": 200,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction import ORCAWAVE_AVAILABLE"
+      },
+      {
+        "line": 205,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.orcawave_converter import OrcaWaveConverter"
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/cli.py": [
+      {
+        "line": 23,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction import ("
+      },
+      {
+        "line": 31,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction import OrcaWaveConverter"
+      },
+      {
+        "line": 33,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.comparison_framework import compare_diffraction_results"
+      },
+      {
+        "line": 34,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.batch_processor import process_batch_from_config_file"
+      },
+      {
+        "line": 437,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.spec_converter import SpecConverter"
+      },
+      {
+        "line": 478,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.spec_converter import SpecConverter"
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/comparison_framework.py": [
+      {
+        "line": 26,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.output_schemas import ("
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/input_schemas.py": [
+      {
+        "line": 11,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.input_schemas import DiffractionSpec"
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/mesh_pipeline.py": [
+      {
+        "line": 13,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.mesh_pipeline import MeshPipeline"
+      },
+      {
+        "line": 27,
+        "module": "bemrosetta",
+        "full_import": "from digitalmodel.bemrosetta.mesh import ("
+      },
+      {
+        "line": 32,
+        "module": "bemrosetta",
+        "full_import": "from digitalmodel.bemrosetta.models import ("
+      },
+      {
+        "line": 37,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.input_schemas import MeshFormatType"
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/orcaflex_exporter.py": [
+      {
+        "line": 18,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.output_schemas import ("
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/orcawave_backend.py": [
+      {
+        "line": 29,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.input_schemas import ("
+      },
+      {
+        "line": 467,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.input_schemas import DiffractionSpec"
+      },
+      {
+        "line": 468,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.orcawave_backend import OrcaWaveBackend"
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/orcawave_converter.py": [
+      {
+        "line": 26,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.output_schemas import ("
+      },
+      {
+        "line": 32,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.orcawave_data_extraction import ("
+      },
+      {
+        "line": 367,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.orcaflex_exporter import OrcaFlexExporter"
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/output_validator.py": [
+      {
+        "line": 14,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.output_schemas import ("
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/reverse_parsers.py": [
+      {
+        "line": 24,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.input_schemas import ("
+      },
+      {
+        "line": 422,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.input_schemas import BodySpec"
+      },
+      {
+        "line": 604,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.input_schemas import BodySpec"
+      }
+    ],
+    "src/digitalmodel/modules/diffraction/spec_converter.py": [
+      {
+        "line": 9,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.spec_converter import SpecConverter"
+      },
+      {
+        "line": 24,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.aqwa_backend import AQWABackend"
+      },
+      {
+        "line": 25,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.input_schemas import DiffractionSpec"
+      },
+      {
+        "line": 26,
+        "module": "diffraction",
+        "full_import": "from digitalmodel.diffraction.orcawave_backend import OrcaWaveBackend"
+      }
+    ],
+    "src/digitalmodel/modules/diffraction_cli.py": [
+      {
+        "line": 173,
+        "module": "aqwa",
+        "full_import": "from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis"
+      },
+      {
+        "line": 238,
+        "module": "orcawave",
+        "full_import": "from digitalmodel.orcawave.diffraction.orchestrator import OrcaWaveOrchestrator"
+      }
+    ],
+    "src/digitalmodel/modules/digitalmarketing/__init__.py": [
+      {
+        "line": 3,
+        "module": "digitalmarketing",
+        "full_import": "from digitalmodel.modules.digitalmarketing.digitalmarketing import DigitalMarketing"
+      }
+    ],
+    "src/digitalmodel/modules/digitalmarketing/analytics/__init__.py": [
+      {
+        "line": 3,
+        "module": "digitalmarketing",
+        "full_import": "from digitalmodel.modules.digitalmarketing.analytics.google_analytics import ("
+      }
+    ],
+    "src/digitalmodel/modules/digitalmarketing/digitalmarketing.py": [
+      {
+        "line": 28,
+        "module": "digitalmarketing",
+        "full_import": "from digitalmodel.modules.digitalmarketing.seo.seo_analysis import SEOAnalysis"
+      }
+    ],
+    "src/digitalmodel/modules/digitalmarketing/seo/__init__.py": [
+      {
+        "line": 3,
+        "module": "digitalmarketing",
+        "full_import": "from digitalmodel.modules.digitalmarketing.seo.seo_analysis import SEOAnalysis"
+      }
+    ],
+    "src/digitalmodel/modules/digitalmarketing/tools/__init__.py": [
+      {
+        "line": 3,
+        "module": "digitalmarketing",
+        "full_import": "from digitalmodel.modules.digitalmarketing.tools.index_page_count import ("
+      },
+      {
+        "line": 6,
+        "module": "digitalmarketing",
+        "full_import": "from digitalmodel.modules.digitalmarketing.tools.robots_parser import RobotsParser"
+      },
+      {
+        "line": 7,
+        "module": "digitalmarketing",
+        "full_import": "from digitalmodel.modules.digitalmarketing.tools.search_rank import SearchRankFinder"
+      }
+    ],
+    "src/digitalmodel/modules/fatigue_analysis/__init__.py": [
+      {
+        "line": 21,
+        "module": "fatigue_analysis",
+        "full_import": "from digitalmodel.modules.fatigue_analysis import ReferenceSeaStateProcessor"
+      }
+    ],
+    "src/digitalmodel/modules/fatigue_analysis/__main__.py": [
+      {
+        "line": 35,
+        "module": "fatigue_analysis",
+        "full_import": "from digitalmodel.modules.fatigue_analysis.reference_seastate_processor import ("
+      }
+    ],
+    "src/digitalmodel/modules/fatigue_analysis/cli_load_scaling.py": [
+      {
+        "line": 41,
+        "module": "fatigue_analysis",
+        "full_import": "from digitalmodel.modules.fatigue_analysis.load_scaling import LoadScalingProcessor"
+      }
+    ],
+    "src/digitalmodel/modules/fatigue_analysis/fatigue_validation/__init__.py": [
+      {
+        "line": 12,
+        "module": "fatigue_analysis",
+        "full_import": "from digitalmodel.modules.fatigue_analysis.fatigue_validation import FatigueValidator"
+      }
+    ],
+    "src/digitalmodel/modules/fatigue_analysis/integrated_processor.py": [
+      {
+        "line": 21,
+        "module": "fatigue_analysis",
+        "full_import": "from digitalmodel.modules.fatigue_analysis.rainflow_counter import RainflowCounter"
+      },
+      {
+        "line": 22,
+        "module": "fatigue_analysis",
+        "full_import": "from digitalmodel.modules.fatigue_analysis.fatigue_damage_calculator import ("
+      }
+    ],
+    "src/digitalmodel/modules/fatigue_analysis/test_load_scaling.py": [
+      {
+        "line": 25,
+        "module": "fatigue_analysis",
+        "full_import": "from digitalmodel.modules.fatigue_analysis.load_scaling import LoadScaler"
+      }
+    ],
+    "src/digitalmodel/modules/gis/__init__.py": [
+      {
+        "line": 32,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.core.coordinate_transformer import ("
+      },
+      {
+        "line": 37,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.core.crs import CRSDefinition, CRSType, detect_utm_zone"
+      },
+      {
+        "line": 38,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.core.geometry import GeoBoundingBox, GeoPoint"
+      },
+      {
+        "line": 39,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.core.spatial_query import SpatialQuery"
+      },
+      {
+        "line": 40,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.io.geojson_handler import GeoJSONHandler"
+      },
+      {
+        "line": 41,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.io.kml_handler import KMLHandler"
+      },
+      {
+        "line": 42,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.io.shapefile_handler import ShapefileHandler"
+      },
+      {
+        "line": 43,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.layers.feature_layer import FeatureLayer"
+      },
+      {
+        "line": 44,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.layers.well_layer import WellLayer"
+      },
+      {
+        "line": 45,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.integrations.google_earth_export import GoogleEarthExporter"
+      },
+      {
+        "line": 46,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.integrations.plotly_maps import PlotlyMapBuilder"
+      }
+    ],
+    "src/digitalmodel/modules/gis/integrations/__init__.py": [
+      {
+        "line": 3,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.integrations.folium_maps import FoliumMapBuilder"
+      },
+      {
+        "line": 4,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.integrations.google_earth_export import ("
+      },
+      {
+        "line": 7,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.integrations.plotly_maps import PlotlyMapBuilder"
+      },
+      {
+        "line": 8,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.integrations.temporal_export import TemporalExporter"
+      }
+    ],
+    "src/digitalmodel/modules/gis/integrations/folium_maps.py": [
+      {
+        "line": 19,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.layers.feature_layer import FeatureLayer"
+      }
+    ],
+    "src/digitalmodel/modules/gis/integrations/plotly_maps.py": [
+      {
+        "line": 69,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.layers.feature_layer import FeatureLayer  # noqa: F811"
+      }
+    ],
+    "src/digitalmodel/modules/gis/io/__init__.py": [
+      {
+        "line": 3,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.io.geotiff_handler import GeoTIFFHandler"
+      },
+      {
+        "line": 4,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.io.shapefile_handler import ShapefileHandler"
+      }
+    ],
+    "src/digitalmodel/modules/gis/layers/__init__.py": [
+      {
+        "line": 3,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.layers.raster_layer import RasterLayer"
+      },
+      {
+        "line": 4,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.layers.temporal_layer import TemporalLayer"
+      },
+      {
+        "line": 5,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.layers.well_layer import WellLayer"
+      }
+    ],
+    "src/digitalmodel/modules/gis/layers/feature_layer.py": [
+      {
+        "line": 15,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.core.coordinate_transformer import CoordinateTransformer"
+      },
+      {
+        "line": 16,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.core.crs import CRSDefinition, CRSType"
+      },
+      {
+        "line": 17,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.core.geometry import GeoBoundingBox, GeoPoint"
+      },
+      {
+        "line": 18,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.io.geojson_handler import GeoJSONHandler"
+      },
+      {
+        "line": 19,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.io.kml_handler import KMLHandler"
+      }
+    ],
+    "src/digitalmodel/modules/gis/layers/raster_layer.py": [
+      {
+        "line": 15,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.core.crs import CRSDefinition"
+      },
+      {
+        "line": 16,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.io.geotiff_handler import GeoTIFFHandler"
+      }
+    ],
+    "src/digitalmodel/modules/gis/layers/temporal_layer.py": [
+      {
+        "line": 17,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.core.crs import CRSDefinition"
+      },
+      {
+        "line": 18,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.io.geojson_handler import GeoJSONHandler"
+      },
+      {
+        "line": 19,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.layers.feature_layer import FeatureLayer"
+      }
+    ],
+    "src/digitalmodel/modules/gis/layers/well_layer.py": [
+      {
+        "line": 15,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.core.crs import CRSDefinition"
+      },
+      {
+        "line": 16,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.core.geometry import GeoPoint"
+      },
+      {
+        "line": 17,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.io.geojson_handler import GeoJSONHandler"
+      },
+      {
+        "line": 18,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.io.kml_handler import KMLHandler"
+      },
+      {
+        "line": 19,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.layers.feature_layer import FeatureLayer"
+      },
+      {
+        "line": 256,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.core.spatial_query import SpatialQuery"
+      }
+    ],
+    "src/digitalmodel/modules/gis/scripts/__init__.py": [
+      {
+        "line": 3,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.scripts.blender.blender_gis import BlenderScriptGenerator"
+      },
+      {
+        "line": 4,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.scripts.qgis.qgis_processing import QGISScriptGenerator"
+      }
+    ],
+    "src/digitalmodel/modules/gis/scripts/blender/__init__.py": [
+      {
+        "line": 3,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.scripts.blender.blender_gis import BlenderScriptGenerator"
+      }
+    ],
+    "src/digitalmodel/modules/gis/scripts/qgis/__init__.py": [
+      {
+        "line": 3,
+        "module": "gis",
+        "full_import": "from digitalmodel.gis.scripts.qgis.qgis_processing import QGISScriptGenerator"
+      }
+    ],
+    "src/digitalmodel/modules/marine_analysis/analysis/hydro_usage_example.py": [
+      {
+        "line": 22,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.extraction.extract_hydro import HydrodynamicCoefficientExtractor"
+      }
+    ],
+    "src/digitalmodel/modules/marine_analysis/catenary/__init__.py": [
+      {
+        "line": 8,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.catenary import CatenarySolver, CatenaryInput"
+      },
+      {
+        "line": 13,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.catenary import LazyWaveSolver, LazyWaveConfiguration"
+      },
+      {
+        "line": 18,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.catenary import catenaryEquation"
+      },
+      {
+        "line": 26,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.mooring_analysis.catenary_solver import ("
+      }
+    ],
+    "src/digitalmodel/modules/marine_analysis/catenary/adapter.py": [
+      {
+        "line": 12,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.catenary.adapter import catenaryEquation"
+      },
+      {
+        "line": 36,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.mooring_analysis.catenary_solver import ("
+      }
+    ],
+    "src/digitalmodel/modules/marine_analysis/profiling/profile_modules.py": [
+      {
+        "line": 55,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.wave_spectra.spectra import ("
+      },
+      {
+        "line": 58,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.environmental_loading.ocimf import ("
+      },
+      {
+        "line": 62,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.catenary.solver import CatenarySolver, CatenaryInput"
+      },
+      {
+        "line": 63,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.hydrodynamic_coefficients.coefficients import ("
+      }
+    ],
+    "src/digitalmodel/modules/marine_analysis/unified_rao_reader.py": [
+      {
+        "line": 84,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis import UnifiedRAOReader"
+      }
+    ],
+    "src/digitalmodel/modules/marine_analysis/validation/validate_catenary.py": [
+      {
+        "line": 16,
+        "module": "catenary",
+        "full_import": "from digitalmodel.modules.catenary.catenaryMethods import ("
+      }
+    ],
+    "src/digitalmodel/modules/marine_analysis/validation/validate_phase2.py": [
+      {
+        "line": 56,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.environmental_loading.ocimf import ("
+      }
+    ],
+    "src/digitalmodel/modules/marine_analysis/visualization/integration_charts.py": [
+      {
+        "line": 54,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.wave_spectra import WaveSpectrum, JONSWAP"
+      },
+      {
+        "line": 55,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.environmental_loading.ocimf import ("
+      },
+      {
+        "line": 58,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.hydrodynamic_coefficients import ("
+      },
+      {
+        "line": 61,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.mooring_analysis import MooringSystem"
+      },
+      {
+        "line": 62,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.catenary import CatenarySolver"
+      }
+    ],
+    "src/digitalmodel/modules/marine_analysis/visualization/rao_plotter.py": [
+      {
+        "line": 10,
+        "module": "marine_analysis",
+        "full_import": "from digitalmodel.modules.marine_analysis.visualization import RAOPlotter"
+      }
+    ],
+    "src/digitalmodel/modules/marine_engineering/catenary/__init__.py": [
+      {
+        "line": 8,
+        "module": "marine_engineering",
+        "full_import": "from digitalmodel.modules.marine_engineering.catenary import CatenarySolver, CatenaryInput"
+      },
+      {
+        "line": 13,
+        "module": "marine_engineering",
+        "full_import": "from digitalmodel.modules.marine_engineering.catenary import LazyWaveSolver, LazyWaveConfiguration"
+      },
+      {
+        "line": 18,
+        "module": "marine_engineering",
+        "full_import": "from digitalmodel.modules.marine_engineering.catenary import catenaryEquation"
+      },
+      {
+        "line": 26,
+        "module": "marine_engineering",
+        "full_import": "from digitalmodel.modules.marine_engineering.mooring_analysis.catenary_solver import ("
+      }
+    ],
+    "src/digitalmodel/modules/marine_engineering/catenary/adapter.py": [
+      {
+        "line": 12,
+        "module": "marine_engineering",
+        "full_import": "from digitalmodel.modules.marine_engineering.catenary.adapter import catenaryEquation"
+      },
+      {
+        "line": 36,
+        "module": "marine_engineering",
+        "full_import": "from digitalmodel.modules.marine_engineering.mooring_analysis.catenary_solver import ("
+      }
+    ],
+    "src/digitalmodel/modules/marine_engineering/tests/test_validation.py": [
+      {
+        "line": 6,
+        "module": "marine_engineering",
+        "full_import": "from digitalmodel.modules.marine_engineering.wave_spectra import ("
+      }
+    ],
+    "src/digitalmodel/modules/marine_engineering/tests/test_wave_spectra.py": [
+      {
+        "line": 20,
+        "module": "marine_engineering",
+        "full_import": "from digitalmodel.modules.marine_engineering.wave_spectra.spectra import ("
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/all_vars.py": [
+      {
+        "line": 9,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities"
+      },
+      {
+        "line": 10,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/baseline_performance_test.py": [
+      {
+        "line": 18,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.performance_monitor import ("
+      },
+      {
+        "line": 23,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_parallel_analysis import OrcaFlexParallelAnalysis"
+      },
+      {
+        "line": 24,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_optimized_parallel_v2 import OrcaFlexOptimizedParallelAnalysis"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/comprehensive_benchmark.py": [
+      {
+        "line": 148,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.performance_monitor import ResourceManager"
+      },
+      {
+        "line": 168,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_optimized_parallel_v2 import ("
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/convert_cli.py": [
+      {
+        "line": 27,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/deploy_production_optimization.py": [
+      {
+        "line": 22,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_optimized_parallel_v2 import ("
+      },
+      {
+        "line": 26,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.performance_monitor import ("
+      },
+      {
+        "line": 32,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.baseline_performance_test import BaselinePerformanceTest"
+      },
+      {
+        "line": 192,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.performance_monitor import ResourceManager"
+      },
+      {
+        "line": 200,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.performance_monitor import PerformanceMonitor"
+      },
+      {
+        "line": 209,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.performance_monitor import MemoryOptimizer"
+      },
+      {
+        "line": 216,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.performance_monitor import BatchOptimizer"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/examples_integration/test_infrastructure.py": [
+      {
+        "line": 73,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.examples_integration.downloader import OrcaflexExampleDownloader"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/library_generator.py": [
+      {
+        "line": 9,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.library_generator import LibraryGenerator"
+      },
+      {
+        "line": 21,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.yaml_utils import OrcaFlexDumper"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/modular_generator/schema/__init__.py": [
+      {
+        "line": 8,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.modular_generator.schema import ProjectInputSpec"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/modular_generator/schema/root.py": [
+      {
+        "line": 23,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.modular_generator.schema import ProjectInputSpec"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/modular_input_validation/__init__.py": [
+      {
+        "line": 12,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.modular_input_validation import ModularInputValidator"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/mooring.py": [
+      {
+        "line": 18,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.all_vars import AllVars"
+      },
+      {
+        "line": 19,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects"
+      },
+      {
+        "line": 20,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_preprocess import OrcaflexPreProcess"
+      },
+      {
+        "line": 21,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities"
+      },
+      {
+        "line": 22,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.visualization import MooringVisualization"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/opp.py": [
+      {
+        "line": 8,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.output_control import OutputController"
+      },
+      {
+        "line": 22,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.opp_linkedstatistics import OPPLinkedStatistics"
+      },
+      {
+        "line": 23,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.opp_range_graph import OPPRangeGraph"
+      },
+      {
+        "line": 24,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.opp_summary import OPPSummary"
+      },
+      {
+        "line": 25,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.opp_time_series import OPPTimeSeries"
+      },
+      {
+        "line": 26,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.opp_visualization import OPPVisualization"
+      },
+      {
+        "line": 27,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects"
+      },
+      {
+        "line": 28,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities"
+      },
+      {
+        "line": 30,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.file_size_optimizer import FileSizeOptimizer"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/opp_linkedstatistics.py": [
+      {
+        "line": 8,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects"
+      },
+      {
+        "line": 9,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/opp_summary.py": [
+      {
+        "line": 14,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.opp_range_graph import OPPRangeGraph"
+      },
+      {
+        "line": 15,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.opp_time_series import OPPTimeSeries"
+      },
+      {
+        "line": 16,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects"
+      },
+      {
+        "line": 17,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/opp_summary_superseded.py": [
+      {
+        "line": 11,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.opp_range_graph import OPPRangeGraph"
+      },
+      {
+        "line": 12,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.opp_time_series import OPPTimeSeries"
+      },
+      {
+        "line": 13,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects"
+      },
+      {
+        "line": 14,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/opp_time_series.py": [
+      {
+        "line": 11,
+        "module": "signal_analysis",
+        "full_import": "from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents"
+      },
+      {
+        "line": 12,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/opp_time_series_v2.py": [
+      {
+        "line": 21,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_objects import OrcaFlexObjects"
+      },
+      {
+        "line": 22,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.time_trace_processor import ("
+      },
+      {
+        "line": 253,
+        "module": "signal_analysis",
+        "full_import": "from digitalmodel.modules.signal_analysis import RainflowCounter"
+      },
+      {
+        "line": 296,
+        "module": "signal_analysis",
+        "full_import": "from digitalmodel.modules.signal_analysis import SpectralAnalyzer"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/orcaflex.py": [
+      {
+        "line": 2,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_preprocess import OrcaflexPreProcess"
+      },
+      {
+        "line": 3,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities"
+      },
+      {
+        "line": 4,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_analysis import OrcaflexAnalysis"
+      },
+      {
+        "line": 5,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.opp import OrcaFlexPostProcess"
+      },
+      {
+        "line": 6,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.all_vars import AllVars"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/orcaflex_analysis.py": [
+      {
+        "line": 2,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_iterative_runs import OrcaflexIterativeRuns"
+      },
+      {
+        "line": 3,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities"
+      },
+      {
+        "line": 4,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.opp import OrcaFlexPostProcess"
+      },
+      {
+        "line": 5,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.mooring import Mooring"
+      },
+      {
+        "line": 6,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_custom_analysis import OrcaFlexCustomAnalysis"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/orcaflex_custom_analysis.py": [
+      {
+        "line": 384,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_parallel_analysis import OrcaFlexParallelAnalysis"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/orcaflex_file_management.py": [
+      {
+        "line": 1,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/orcaflex_linetypes.py": [
+      {
+        "line": 7,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_model_utilities import ("
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/orcaflex_modal_analysis.py": [
+      {
+        "line": 17,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/orcaflex_preprocess.py": [
+      {
+        "line": 3,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.preprocess.load_vessel import LoadVessel"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/orcaflex_utilities.py": [
+      {
+        "line": 28,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_model_utilities import ("
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/run_to_sim_cli.py": [
+      {
+        "line": 13,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.run_to_sim import run_models, ORCAFLEX_AVAILABLE"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/single_file_parallel_test.py": [
+      {
+        "line": 193,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_parallel_analysis import OrcaFlexParallelAnalysis"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/test_production_optimization.py": [
+      {
+        "line": 17,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.performance_monitor import ("
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/umbilical_analysis_components.py": [
+      {
+        "line": 5,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_linetypes import OrcaflexLineTypes"
+      },
+      {
+        "line": 6,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.umbilical_installation_IV_to_host import ("
+      },
+      {
+        "line": 9,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.umbilical_installation_lower_2nd_end import ("
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/umbilical_installation_IV_to_host.py": [
+      {
+        "line": 11,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_linetypes import OrcaflexLineTypes"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/umbilical_installation_lower_2nd_end.py": [
+      {
+        "line": 11,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_linetypes import OrcaflexLineTypes"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/universal/__init__.py": [
+      {
+        "line": 16,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/universal/batch_processor.py": [
+      {
+        "line": 16,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.file_size_optimizer import FileSizeOptimizer"
+      }
+    ],
+    "src/digitalmodel/modules/orcaflex/universal_cli.py": [
+      {
+        "line": 21,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.universal import ("
+      }
+    ],
+    "src/digitalmodel/modules/pipe_capacity/PipeCapacity.py": [
+      {
+        "line": 553,
+        "module": "pipe_capacity",
+        "full_import": "from digitalmodel.modules.pipe_capacity.PipeSizing import PipeSizing"
+      }
+    ],
+    "src/digitalmodel/modules/pipe_capacity/common/pipe_components.py": [
+      {
+        "line": 1,
+        "module": "pipe_capacity",
+        "full_import": "from digitalmodel.modules.pipe_capacity.custom.MaterialProperties import ("
+      },
+      {
+        "line": 4,
+        "module": "pipe_capacity",
+        "full_import": "from digitalmodel.modules.pipe_capacity.custom.PipeCapacity import PipeCapacity"
+      },
+      {
+        "line": 5,
+        "module": "pipe_capacity",
+        "full_import": "from digitalmodel.modules.pipe_capacity.custom.PipeSizing import PipeSizing"
+      }
+    ],
+    "src/digitalmodel/modules/pipe_capacity/pipe_capacity.py": [
+      {
+        "line": 2,
+        "module": "pipe_capacity",
+        "full_import": "from digitalmodel.modules.pipe_capacity.common.pipe_components import PipeComponents"
+      }
+    ],
+    "src/digitalmodel/modules/pipe_cross_section/calculator.py": [
+      {
+        "line": 17,
+        "module": "pipe_cross_section",
+        "full_import": "from digitalmodel.modules.pipe_cross_section import PipeCrossSection"
+      }
+    ],
+    "src/digitalmodel/modules/pipeline/lateral_buckling.py": [
+      {
+        "line": 14,
+        "module": "pipeline",
+        "full_import": "from digitalmodel.modules.pipeline.buckling_common import CommonBucklingCaculations"
+      }
+    ],
+    "src/digitalmodel/modules/pipeline/pipeline.py": [
+      {
+        "line": 5,
+        "module": "pipeline",
+        "full_import": "from digitalmodel.modules.pipeline.lateral_buckling import LateralBuckling"
+      },
+      {
+        "line": 6,
+        "module": "pipeline",
+        "full_import": "from digitalmodel.modules.pipeline.thermal_buckling import ThermalBuckling"
+      },
+      {
+        "line": 7,
+        "module": "pipeline",
+        "full_import": "from digitalmodel.modules.pipeline.upheaval_buckling import UpheavalBuckling"
+      },
+      {
+        "line": 8,
+        "module": "pipeline",
+        "full_import": "from digitalmodel.modules.pipeline.pressure_loss import Pressureloss"
+      }
+    ],
+    "src/digitalmodel/modules/pipeline/pressure_loss.py": [
+      {
+        "line": 17,
+        "module": "pipeline",
+        "full_import": "from digitalmodel.modules.pipeline.buckling_common import CommonBucklingCaculations"
+      }
+    ],
+    "src/digitalmodel/modules/pipeline/upheaval_buckling.py": [
+      {
+        "line": 13,
+        "module": "pipeline",
+        "full_import": "from digitalmodel.modules.pipeline.buckling_common import CommonBucklingCaculations"
+      }
+    ],
+    "src/digitalmodel/modules/rigging/__init__.py": [
+      {
+        "line": 3,
+        "module": "rigging",
+        "full_import": "from digitalmodel.modules.rigging.rigging import Rigging"
+      }
+    ],
+    "src/digitalmodel/modules/signal_analysis/adapters.py": [
+      {
+        "line": 426,
+        "module": "time_series",
+        "full_import": "from digitalmodel.modules.time_series.time_series_components import TimeSeriesComponents"
+      },
+      {
+        "line": 435,
+        "module": "signal_analysis",
+        "full_import": "from digitalmodel.modules.signal_analysis import RainflowCounter, SpectralAnalyzer"
+      },
+      {
+        "line": 450,
+        "module": "signal_analysis",
+        "full_import": "from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter"
+      }
+    ],
+    "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_G.py": [
+      {
+        "line": 12,
+        "module": "structural",
+        "full_import": "from digitalmodel.modules.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
+      }
+    ],
+    "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_H.py": [
+      {
+        "line": 12,
+        "module": "structural",
+        "full_import": "from digitalmodel.modules.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
+      }
+    ],
+    "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_J.py": [
+      {
+        "line": 12,
+        "module": "structural",
+        "full_import": "from digitalmodel.modules.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
+      }
+    ],
+    "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_K.py": [
+      {
+        "line": 12,
+        "module": "structural",
+        "full_import": "from digitalmodel.modules.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
+      }
+    ],
+    "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_i.py": [
+      {
+        "line": 12,
+        "module": "structural",
+        "full_import": "from digitalmodel.modules.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
+      }
+    ],
+    "src/digitalmodel/modules/time_series/time_series_analysis.py": [
+      {
+        "line": 9,
+        "module": "signal_analysis",
+        "full_import": "from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter"
+      }
+    ],
+    "src/digitalmodel/modules/vertical_riser/vertical_riser.py": [
+      {
+        "line": 9,
+        "module": "vertical_riser",
+        "full_import": "from digitalmodel.modules.vertical_riser.vertical_riser_components import VerticalRiser"
+      }
+    ],
+    "src/digitalmodel/modules/vertical_riser/vertical_riser_components.py": [
+      {
+        "line": 10,
+        "module": "orcaflex",
+        "full_import": "from digitalmodel.orcaflex.orcaflex_model_components import ("
+      }
+    ],
+    "src/digitalmodel/modules/viv_analysis/viv_analysis.py": [
+      {
+        "line": 6,
+        "module": "viv_analysis",
+        "full_import": "from digitalmodel.modules.viv_analysis.viv_analysis_legacy import ("
+      },
+      {
+        "line": 9,
+        "module": "viv_analysis",
+        "full_import": "from digitalmodel.modules.viv_analysis.viv_tubular_members import VIVTubularMembers"
+      }
+    ]
+  }
+}

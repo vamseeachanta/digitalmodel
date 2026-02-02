@@ -95,13 +95,13 @@ analysis:
 #### Command Structure
 ```bash
 # Standard analysis
-python -m digitalmodel.modules.orcaflex.mooring_analysis --config analysis.yml --input-directory models/ --output-directory results/
+python -m digitalmodel.orcaflex.mooring_analysis --config analysis.yml --input-directory models/ --output-directory results/
 
 # Batch processing with pattern matching
-python -m digitalmodel.modules.orcaflex.mooring_analysis --pattern "*_statics_*.yml" --parallel 16 --recursive
+python -m digitalmodel.orcaflex.mooring_analysis --pattern "*_statics_*.yml" --parallel 16 --recursive
 
 # Comparative analysis
-python -m digitalmodel.modules.orcaflex.mooring_analysis --comparative --configs pb.yml,sb.yml --report-only
+python -m digitalmodel.orcaflex.mooring_analysis --comparative --configs pb.yml,sb.yml --report-only
 
 # Integration with existing CLI patterns
 orcaflex-mooring-analysis --all --config batch_mooring.yml
@@ -129,14 +129,14 @@ Following MANDATORY CLI consistency standards:
 #### Existing Module Integration
 ```python
 # Integration with existing mooring.py
-from digitalmodel.modules.orcaflex.mooring import Mooring
-from digitalmodel.modules.orcaflex.mooring_analysis.engine import MooringAnalysisEngine
+from digitalmodel.orcaflex.mooring import Mooring
+from digitalmodel.orcaflex.mooring_analysis.engine import MooringAnalysisEngine
 
 # Extend existing comparative analysis
-from digitalmodel.modules.orcaflex.analysis.comparative import MooringComparativeAnalysis
+from digitalmodel.orcaflex.analysis.comparative import MooringComparativeAnalysis
 
 # Leverage existing file management
-from digitalmodel.modules.orcaflex.orcaflex_file_management import OrcaFlexFileManagement
+from digitalmodel.orcaflex.orcaflex_file_management import OrcaFlexFileManagement
 ```
 
 #### UV Environment Usage
@@ -146,7 +146,7 @@ All development and execution MUST use the repository's UV environment:
 uv add numpy pandas matplotlib seaborn plotly
 
 # Development
-uv run python -m digitalmodel.modules.orcaflex.mooring_analysis
+uv run python -m digitalmodel.orcaflex.mooring_analysis
 
 # Testing  
 uv run pytest tests/modules/orcaflex/mooring_analysis/

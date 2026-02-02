@@ -14,7 +14,7 @@ from pathlib import Path
 import tempfile
 import os
 
-from digitalmodel.modules.marine_analysis import (
+from digitalmodel.marine_analysis import (
     UnifiedRAOReader,
     RAOReaderError,
     read_rao_file,

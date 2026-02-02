@@ -2,7 +2,14 @@
 Debug script to test catenary solver and diagnose numerical issues.
 """
 
+import pytest
 import sys
+
+pytest.importorskip(
+    "src.marine_engineering.mooring_analysis.catenary_solver",
+    reason="module src.marine_engineering.mooring_analysis.catenary_solver not available"
+)
+
 sys.path.insert(0, 'D:/workspace-hub/digitalmodel')
 
 import numpy as np

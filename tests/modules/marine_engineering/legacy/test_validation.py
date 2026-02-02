@@ -1,7 +1,7 @@
 """Quick validation test for wave spectra implementation."""
 import pytest
 import numpy as np
-from digitalmodel.modules.marine_analysis.wave_spectra import (
+from digitalmodel.marine_analysis.wave_spectra import (
     WaveSpectrumParameters,
     JONSWAPSpectrum,
     PiersonMoskowitzSpectrum

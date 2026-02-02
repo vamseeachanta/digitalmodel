@@ -2,7 +2,7 @@
 """Live test of the enhanced OrcaFlex converter with example files."""
 
 from pathlib import Path
-from digitalmodel.modules.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 
 print("="*70)
 print("ORCAFLEX CONVERTER - LIVE TEST WITH EXAMPLE FILES")

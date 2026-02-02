@@ -48,7 +48,7 @@ The Digital Model AQWA Integration Module provides comprehensive automation and 
 #### Automated Model Generation
 
 ```python
-from digitalmodel.modules.aqwa import AQWAModelGenerator
+from digitalmodel.aqwa import AQWAModelGenerator
 
 # Initialize from template
 generator = AQWAModelGenerator(template='fpso_turret.dat')
@@ -84,7 +84,7 @@ generator.export_to_aqwa('fpso_analysis.dat')
 **Multi-Format RAO Reader:**
 
 ```python
-from digitalmodel.modules.aqwa import RAOExtractor
+from digitalmodel.aqwa import RAOExtractor
 
 # Parse AQWA LIS file
 extractor = RAOExtractor(source='aqwa')
@@ -121,7 +121,7 @@ extractor.export_to_orcaflex(
 **Parallel Analysis Execution:**
 
 ```python
-from digitalmodel.modules.aqwa import BatchProcessor
+from digitalmodel.aqwa import BatchProcessor
 
 # Define analysis matrix
 cases = [
@@ -159,7 +159,7 @@ processor.export_comparison_report('batch_comparison.html')
 **Automated Validation Suite:**
 
 ```python
-from digitalmodel.modules.aqwa import QualityAssurance
+from digitalmodel.aqwa import QualityAssurance
 
 # Initialize QA tools
 qa = QualityAssurance()
@@ -198,7 +198,7 @@ for check in validation.failed_checks:
 **Professional HTML Reports:**
 
 ```python
-from digitalmodel.modules.aqwa import RAOVisualizer
+from digitalmodel.aqwa import RAOVisualizer
 
 # Initialize visualizer
 viz = RAOVisualizer(rao_data)

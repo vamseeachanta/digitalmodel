@@ -193,7 +193,7 @@ lines:
 ### Basic Usage
 
 ```python
-from digitalmodel.modules.orcaflex.mooring_tension_iteration import (
+from digitalmodel.orcaflex.mooring_tension_iteration import (
     MooringTensionIterator,
     IterationConfig,
     LineConfig,
@@ -240,7 +240,7 @@ for line_name, lengths in result.final_lengths.items():
 ### With Vessel Fixing
 
 ```python
-from digitalmodel.modules.orcaflex.mooring_tension_iteration import (
+from digitalmodel.orcaflex.mooring_tension_iteration import (
     MooringTensionIterator,
     IterationConfig,
     VesselConfig
@@ -442,8 +442,8 @@ if not result.converged:
 # 3. Run tension iteration to achieve pretensions
 # 4. Verify with dynamic analysis
 
-from digitalmodel.modules.orcaflex.mooring_tension_iteration import MooringTensionIterator
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.mooring_tension_iteration import MooringTensionIterator
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 # Step 1: Iterate to target tensions
 iterator = MooringTensionIterator(config)

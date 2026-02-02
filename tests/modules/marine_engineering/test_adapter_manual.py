@@ -12,7 +12,7 @@ from pathlib import Path
 src_path = Path(__file__).parent.parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
-from digitalmodel.modules.marine_analysis.catenary.adapter import catenaryEquation, catenaryForces
+from digitalmodel.marine_analysis.catenary.adapter import catenaryEquation, catenaryForces
 import math
 
 
@@ -195,7 +195,7 @@ def test_legacy_comparison():
 
     # Import legacy code
     try:
-        from digitalmodel.modules.catenary.catenaryMethods import (
+        from digitalmodel.catenary.catenaryMethods import (
             catenaryEquation as legacy_catenaryEquation,
             catenaryForces as legacy_catenaryForces
         )

@@ -140,7 +140,7 @@ Found an error or have a suggestion?
 
 ---
 
-**Module**: digitalmodel.modules.diffraction
+**Module**: digitalmodel.diffraction
 **Version**: 3.0.0
 **Status**: Production Ready
 

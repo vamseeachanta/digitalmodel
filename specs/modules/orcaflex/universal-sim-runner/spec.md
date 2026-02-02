@@ -98,7 +98,7 @@ class BatchProcessor:
 
 #### Primary Interface
 ```python
-from digitalmodel.modules.orcaflex import UniversalSimRunner
+from digitalmodel.orcaflex import UniversalSimRunner
 
 # Single file processing
 runner = UniversalSimRunner()
@@ -254,7 +254,7 @@ def run_universal(pattern, input_dir, output_dir):
 # setup.py entry point
 entry_points={
     'console_scripts': [
-        'orcaflex-sim=digitalmodel.modules.orcaflex.universal_cli:main',
+        'orcaflex-sim=digitalmodel.orcaflex.universal_cli:main',
     ],
 }
 ```

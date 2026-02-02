@@ -18,14 +18,14 @@ class TestImportError:
     """Verify ImportError is raised when rasterio is not available."""
 
     def test_read_raises_import_error_without_rasterio(self, tmp_path: Path) -> None:
-        from digitalmodel.modules.gis.io import geotiff_handler
+        from digitalmodel.gis.io import geotiff_handler
 
         with patch.object(geotiff_handler, "HAS_RASTERIO", False):
             with pytest.raises(ImportError, match="rasterio is required"):
                 geotiff_handler.GeoTIFFHandler.read(tmp_path / "fake.tif")
 
     def test_write_raises_import_error_without_rasterio(self, tmp_path: Path) -> None:
-        from digitalmodel.modules.gis.io import geotiff_handler
+        from digitalmodel.gis.io import geotiff_handler
 
         data = np.zeros((3, 3), dtype=np.float32)
         with patch.object(geotiff_handler, "HAS_RASTERIO", False):
@@ -35,7 +35,7 @@ class TestImportError:
     def test_get_metadata_raises_import_error_without_rasterio(
         self, tmp_path: Path
     ) -> None:
-        from digitalmodel.modules.gis.io import geotiff_handler
+        from digitalmodel.gis.io import geotiff_handler
 
         with patch.object(geotiff_handler, "HAS_RASTERIO", False):
             with pytest.raises(ImportError, match="rasterio is required"):
@@ -68,7 +68,7 @@ class TestReadWrite:
     def test_write_creates_file(
         self, sample_bathymetry: np.ndarray, tmp_path: Path, sample_bounds: tuple
     ) -> None:
-        from digitalmodel.modules.gis.io.geotiff_handler import GeoTIFFHandler
+        from digitalmodel.gis.io.geotiff_handler import GeoTIFFHandler
 
         filepath = tmp_path / "bathy.tif"
         result = GeoTIFFHandler.write(
@@ -80,7 +80,7 @@ class TestReadWrite:
     def test_read_returns_correct_keys(
         self, sample_bathymetry: np.ndarray, tmp_path: Path, sample_bounds: tuple
     ) -> None:
-        from digitalmodel.modules.gis.io.geotiff_handler import GeoTIFFHandler
+        from digitalmodel.gis.io.geotiff_handler import GeoTIFFHandler
 
         filepath = tmp_path / "bathy.tif"
         GeoTIFFHandler.write(sample_bathymetry, filepath, bounds=sample_bounds)
@@ -95,7 +95,7 @@ class TestReadWrite:
     def test_round_trip_preserves_data(
         self, sample_bathymetry: np.ndarray, tmp_path: Path, sample_bounds: tuple
     ) -> None:
-        from digitalmodel.modules.gis.io.geotiff_handler import GeoTIFFHandler
+        from digitalmodel.gis.io.geotiff_handler import GeoTIFFHandler
 
         filepath = tmp_path / "bathy.tif"
         GeoTIFFHandler.write(sample_bathymetry, filepath, bounds=sample_bounds)
@@ -106,7 +106,7 @@ class TestReadWrite:
     def test_round_trip_preserves_bounds(
         self, sample_bathymetry: np.ndarray, tmp_path: Path, sample_bounds: tuple
     ) -> None:
-        from digitalmodel.modules.gis.io.geotiff_handler import GeoTIFFHandler
+        from digitalmodel.gis.io.geotiff_handler import GeoTIFFHandler
 
         filepath = tmp_path / "bathy.tif"
         GeoTIFFHandler.write(sample_bathymetry, filepath, bounds=sample_bounds)
@@ -117,7 +117,7 @@ class TestReadWrite:
     def test_write_with_nodata(
         self, tmp_path: Path, sample_bounds: tuple
     ) -> None:
-        from digitalmodel.modules.gis.io.geotiff_handler import GeoTIFFHandler
+        from digitalmodel.gis.io.geotiff_handler import GeoTIFFHandler
 
         data = np.array([[1.0, -9999.0], [3.0, 4.0]], dtype=np.float64)
         filepath = tmp_path / "nodata.tif"
@@ -140,7 +140,7 @@ class TestToXyz:
         pytest.importorskip("rasterio")
 
     def test_to_xyz_returns_points(self, tmp_path: Path) -> None:
-        from digitalmodel.modules.gis.io.geotiff_handler import GeoTIFFHandler
+        from digitalmodel.gis.io.geotiff_handler import GeoTIFFHandler
 
         data = np.array([[10.0, 20.0], [30.0, 40.0]], dtype=np.float64)
         bounds = (0.0, 0.0, 2.0, 2.0)
@@ -152,7 +152,7 @@ class TestToXyz:
         assert all(len(p) == 3 for p in points)
 
     def test_to_xyz_skips_nodata(self, tmp_path: Path) -> None:
-        from digitalmodel.modules.gis.io.geotiff_handler import GeoTIFFHandler
+        from digitalmodel.gis.io.geotiff_handler import GeoTIFFHandler
 
         data = np.array([[10.0, -9999.0], [30.0, 40.0]], dtype=np.float64)
         bounds = (0.0, 0.0, 2.0, 2.0)
@@ -176,7 +176,7 @@ class TestGetMetadata:
         pytest.importorskip("rasterio")
 
     def test_metadata_keys(self, tmp_path: Path) -> None:
-        from digitalmodel.modules.gis.io.geotiff_handler import GeoTIFFHandler
+        from digitalmodel.gis.io.geotiff_handler import GeoTIFFHandler
 
         data = np.ones((4, 5), dtype=np.float32)
         bounds = (0.0, 0.0, 5.0, 4.0)

@@ -10,11 +10,11 @@ class TestBuilderRegistry:
 
     def test_all_builders_registered(self):
         """Verify all 13 builders are registered (10 original + 3 S-lay)."""
-        from digitalmodel.modules.orcaflex.modular_generator.builders.registry import (
+        from digitalmodel.orcaflex.modular_generator.builders.registry import (
             BuilderRegistry,
         )
         # Force import of all builder modules to trigger registration
-        import digitalmodel.modules.orcaflex.modular_generator.builders  # noqa: F401
+        import digitalmodel.orcaflex.modular_generator.builders  # noqa: F401
 
         ordered = BuilderRegistry.get_ordered_builders()
         assert len(ordered) == 13
@@ -28,10 +28,10 @@ class TestBuilderRegistry:
 
     def test_execution_order(self):
         """Verify builders execute in correct dependency order."""
-        from digitalmodel.modules.orcaflex.modular_generator.builders.registry import (
+        from digitalmodel.orcaflex.modular_generator.builders.registry import (
             BuilderRegistry,
         )
-        import digitalmodel.modules.orcaflex.modular_generator.builders  # noqa: F401
+        import digitalmodel.orcaflex.modular_generator.builders  # noqa: F401
 
         ordered = BuilderRegistry.get_ordered_builders()
         file_names = [name for name, _ in ordered]
@@ -54,10 +54,10 @@ class TestBuilderRegistry:
 
     def test_get_include_order(self):
         """Verify include order matches expected list."""
-        from digitalmodel.modules.orcaflex.modular_generator.builders.registry import (
+        from digitalmodel.orcaflex.modular_generator.builders.registry import (
             BuilderRegistry,
         )
-        import digitalmodel.modules.orcaflex.modular_generator.builders  # noqa: F401
+        import digitalmodel.orcaflex.modular_generator.builders  # noqa: F401
 
         include_order = BuilderRegistry.get_include_order()
         assert include_order == [
@@ -78,17 +78,17 @@ class TestBuilderRegistry:
 
     def test_get_specific_builder(self):
         """Verify we can look up a specific builder."""
-        from digitalmodel.modules.orcaflex.modular_generator.builders.registry import (
+        from digitalmodel.orcaflex.modular_generator.builders.registry import (
             BuilderRegistry,
         )
-        import digitalmodel.modules.orcaflex.modular_generator.builders  # noqa: F401
+        import digitalmodel.orcaflex.modular_generator.builders  # noqa: F401
 
         builder_class = BuilderRegistry.get_builder("03_environment.yml")
         assert builder_class is not None
         assert builder_class.__name__ == "EnvironmentBuilder"
 
     def test_get_nonexistent_builder_returns_none(self):
-        from digitalmodel.modules.orcaflex.modular_generator.builders.registry import (
+        from digitalmodel.orcaflex.modular_generator.builders.registry import (
             BuilderRegistry,
         )
 

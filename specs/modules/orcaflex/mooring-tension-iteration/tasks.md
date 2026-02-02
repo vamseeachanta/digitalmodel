@@ -137,7 +137,7 @@ cd specs/modules/orcaflex/mooring-tension-iteration/go-by
 python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml
 
 # Step 2: Run OrcaFlex analysis  
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     pattern="fsts*125km3*pb_*.yml" \
     input_directory="." \
     output_directory="." \
@@ -726,7 +726,7 @@ From the go-by folder:
 
 2. **OrcaFlex Analysis**
    ```bash
-   python -m digitalmodel.modules.orcaflex.universal \
+   python -m digitalmodel.orcaflex.universal \
        pattern="fsts*125km3*pb_*.yml" \
        input_directory="." \
        output_directory="." \
@@ -793,7 +793,7 @@ Step 1: Running tension calculation...
 Executing: python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml
 
 Step 2: Running OrcaFlex analysis...
-Executing: python -m digitalmodel.modules.orcaflex.universal ...
+Executing: python -m digitalmodel.orcaflex.universal ...
 
 Step 3: Post-processing results...
 Executing: python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30

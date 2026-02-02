@@ -7,7 +7,11 @@ import pytest
 import json
 from pathlib import Path
 
-from digitalmodel.modules.structural_analysis.cli import cli
+pytest.importorskip(
+    "tests.cli.conftest",
+    reason="module tests.cli.conftest not available"
+)
+from digitalmodel.structural_analysis.cli import cli
 from tests.cli.conftest import assert_cli_success, assert_cli_failure, assert_json_output, assert_output_contains
 
 

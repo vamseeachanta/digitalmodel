@@ -19,22 +19,22 @@ from pathlib import Path
 import json
 import tempfile
 
-from digitalmodel.modules.marine_analysis.wave_spectra.spectra import (
+from digitalmodel.marine_analysis.wave_spectra.spectra import (
     JONSWAPSpectrum,
     WaveSpectrumParameters
 )
-from digitalmodel.modules.marine_analysis.hydrodynamic_coefficients.coefficients import (
+from digitalmodel.marine_analysis.hydrodynamic_coefficients.coefficients import (
     CoefficientDatabase,
     DOF_NAMES
 )
-from digitalmodel.modules.marine_analysis.environmental_loading.ocimf import (
+from digitalmodel.marine_analysis.environmental_loading.ocimf import (
     OCIMFDatabase,
     EnvironmentalConditions,
     VesselGeometry,
     EnvironmentalForces,
     create_sample_database
 )
-from digitalmodel.modules.marine_analysis.catenary.adapter import catenaryEquation, catenaryForces
+from digitalmodel.marine_analysis.catenary.adapter import catenaryEquation, catenaryForces
 import pandas as pd
 
 

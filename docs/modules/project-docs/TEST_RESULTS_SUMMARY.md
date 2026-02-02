@@ -275,7 +275,7 @@ Total reports: 4 (2 MD, 2 JSON)
 
 **Quick Start**:
 ```python
-from digitalmodel.modules.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 
 converter = OrcaFlexConverterEnhanced(
     input_dir=Path("models/"),

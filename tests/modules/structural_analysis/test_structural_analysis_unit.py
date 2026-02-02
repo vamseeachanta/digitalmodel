@@ -12,7 +12,7 @@ Tests core functionality including:
 import pytest
 import numpy as np
 
-from digitalmodel.modules.structural_analysis import (
+from digitalmodel.structural_analysis import (
     StressState, MaterialProperties, PlateGeometry,
     StressCalculator, PlateBucklingAnalyzer, ColumnBucklingAnalyzer,
     MemberCapacityChecker, STEEL_S355

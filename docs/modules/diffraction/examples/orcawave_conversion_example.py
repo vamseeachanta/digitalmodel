@@ -24,17 +24,17 @@ from pathlib import Path
 repo_root = Path(__file__).parents[4]
 sys.path.insert(0, str(repo_root / "src"))
 
-from digitalmodel.modules.diffraction.orcawave_test_utilities import (
+from digitalmodel.diffraction.orcawave_test_utilities import (
     MockDataGenerator,
     create_test_vessel
 )
-from digitalmodel.modules.diffraction.orcawave_data_extraction import (
+from digitalmodel.diffraction.orcawave_data_extraction import (
     OrcaWaveDataExtractor,
     extract_all_rao_data,
     extract_all_added_mass,
     extract_all_damping
 )
-from digitalmodel.modules.diffraction.output_schemas import (
+from digitalmodel.diffraction.output_schemas import (
     DiffractionResults,
     RAOSet,
     AddedMassSet,
@@ -45,8 +45,8 @@ from digitalmodel.modules.diffraction.output_schemas import (
     HeadingData,
     DOF
 )
-from digitalmodel.modules.diffraction.orcaflex_exporter import OrcaFlexExporter
-from digitalmodel.modules.diffraction.output_validator import validate_results
+from digitalmodel.diffraction.orcaflex_exporter import OrcaFlexExporter
+from digitalmodel.diffraction.output_validator import validate_results
 
 import numpy as np
 from datetime import datetime

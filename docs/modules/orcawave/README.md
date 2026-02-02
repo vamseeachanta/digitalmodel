@@ -135,7 +135,7 @@ python src/digitalmodel/modules/orcawave/diffraction/orchestrator.py --vessel se
 ### Example 4: Using Python API
 
 ```python
-from digitalmodel.modules.orcawave.diffraction.orchestrator import OrcaWaveOrchestrator
+from digitalmodel.orcawave.diffraction.orchestrator import OrcaWaveOrchestrator
 
 # Create orchestrator
 orchestrator = OrcaWaveOrchestrator(vessel_name="sea_cypress")
@@ -266,7 +266,7 @@ uv add h5py
 ### Batch Processing Multiple Vessels
 
 ```python
-from digitalmodel.modules.orcawave.diffraction.orchestrator import OrcaWaveOrchestrator
+from digitalmodel.orcawave.diffraction.orchestrator import OrcaWaveOrchestrator
 
 vessels = ['fpso_a', 'fpso_b', 'shuttle_tanker']
 

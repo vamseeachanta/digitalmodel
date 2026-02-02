@@ -227,7 +227,7 @@ def test_orcaflex_workflow_interactions(mock_dependencies):
     mock_orcaflex = Mock()
 
     # Act
-    with patch('digitalmodel.modules.orcaflex.orcaflex.OrcaFlex',
+    with patch('digitalmodel.orcaflex.orcaflex.OrcaFlex',
                return_value=mock_orcaflex):
         result = engine(cfg=cfg, config_flag=False)
 

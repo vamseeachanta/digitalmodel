@@ -22,7 +22,7 @@ if sys.platform == 'win32':
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent))
 
-from digitalmodel.modules.orcaflex.modular_input_validation import (
+from digitalmodel.orcaflex.modular_input_validation import (
     ModularInputValidator,
     ValidationConfig
 )

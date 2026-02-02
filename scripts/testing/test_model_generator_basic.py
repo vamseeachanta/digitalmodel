@@ -5,7 +5,7 @@ ABOUTME: Basic test script for OrcaFlex Model Generator - validates core functio
 """
 
 from pathlib import Path
-from digitalmodel.modules.orcaflex.model_generator import OrcaFlexModelGenerator, generate_model
+from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator, generate_model
 
 print("="*80)
 print("ORCAFLEX MODEL GENERATOR - BASIC TEST")

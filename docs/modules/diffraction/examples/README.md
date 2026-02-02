@@ -73,7 +73,7 @@ To adapt this example for your own AQWA analysis:
 
 1. **Replace mock data generation** with AQWA file parsing:
 ```python
-from digitalmodel.modules.diffraction import AQWAConverter
+from digitalmodel.diffraction import AQWAConverter
 
 # Instead of create_mock_aqwa_data()
 converter = AQWAConverter(

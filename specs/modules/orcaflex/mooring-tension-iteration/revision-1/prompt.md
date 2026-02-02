@@ -8,7 +8,7 @@
 **Methodology Details Provided**:
 1. **Step 1 - Establish Initial Tension**:
    - Input: `fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof.dat`
-   - Command: `/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel.modules.orcaflex.universal pattern="fsts*125km3*pb_*.yml" input_directory="." output_directory="." validate=false`
+   - Command: `/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel.orcaflex.universal pattern="fsts*125km3*pb_*.yml" input_directory="." output_directory="." validate=false`
 
 2. **Step 2 - Post-Process Results**:
    - Input: `dm_ofx_post_fsts_lngc.yml`

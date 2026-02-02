@@ -10,7 +10,7 @@ This is the API specification for the spec detailed in @specs/modules/mooring/co
 ### Main Entry Point
 
 ```python
-from digitalmodel.modules.orcaflex.mooring_analysis.comprehensive_analysis import ComprehensiveMooringAnalyzer
+from digitalmodel.orcaflex.mooring_analysis.comprehensive_analysis import ComprehensiveMooringAnalyzer
 
 analyzer = ComprehensiveMooringAnalyzer(config)
 results = analyzer.analyze_directory(input_dir)
@@ -21,7 +21,7 @@ results = analyzer.analyze_directory(input_dir)
 ### Primary Command
 
 ```bash
-python -m digitalmodel.modules.orcaflex.mooring_analysis.comprehensive_analysis \
+python -m digitalmodel.orcaflex.mooring_analysis.comprehensive_analysis \
     --input-directory /path/to/csv \
     --output-directory /path/to/output \
     --config config.yml
@@ -227,7 +227,7 @@ except ProcessingError as e:
 ### Basic Analysis
 
 ```python
-from digitalmodel.modules.orcaflex.mooring_analysis.comprehensive_analysis import (
+from digitalmodel.orcaflex.mooring_analysis.comprehensive_analysis import (
     ComprehensiveMooringAnalyzer,
     AnalysisConfig
 )
@@ -265,7 +265,7 @@ results = analyzer.analyze_files(specific_files)
 
 ```bash
 # Process all CSV files in directory tree
-python -m digitalmodel.modules.orcaflex.mooring_analysis.comprehensive_analysis \
+python -m digitalmodel.orcaflex.mooring_analysis.comprehensive_analysis \
     --input-directory /project/orcaflex/output \
     --recursive \
     --parallel \
@@ -274,7 +274,7 @@ python -m digitalmodel.modules.orcaflex.mooring_analysis.comprehensive_analysis 
     --output-directory /project/reports
 
 # Dry run to preview what will be processed
-python -m digitalmodel.modules.orcaflex.mooring_analysis.comprehensive_analysis \
+python -m digitalmodel.orcaflex.mooring_analysis.comprehensive_analysis \
     --input-directory /project/orcaflex/output \
     --dry-run \
     --verbose

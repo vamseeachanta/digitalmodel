@@ -15,7 +15,7 @@ if __name__ == '__main__':
     from matplotlib.gridspec import GridSpec
 
     # Import after path setup
-    from digitalmodel.modules.marine_analysis.unified_rao_reader import read_rao_file
+    from digitalmodel.marine_analysis.unified_rao_reader import read_rao_file
 
     # Input file
     lis_file = Path(__file__).parent.parent / 'specs' / 'modules' / 'aqwa' / 'ship-analysis' / 'go-by-ship-raos' / '001_SHIP_RAOS_REV3.LIS'

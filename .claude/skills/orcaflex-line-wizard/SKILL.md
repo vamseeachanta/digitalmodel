@@ -464,7 +464,7 @@ model["Line1"].LineSetupTargetValue = 800.0
 model.InvokeLineSetupWizard()
 
 # Step 2: Fine-tune with iteration skill
-from digitalmodel.modules.orcaflex.mooring_tension_iteration import MooringTensionIterator
+from digitalmodel.orcaflex.mooring_tension_iteration import MooringTensionIterator
 iterator = MooringTensionIterator(config)
 iterator.load_model("adjusted_model.dat")
 result = iterator.iterate_to_targets()
@@ -474,7 +474,7 @@ result = iterator.iterate_to_targets()
 
 ```python
 # Generate model from template
-from digitalmodel.modules.orcaflex.model_generator import generate_model
+from digitalmodel.orcaflex.model_generator import generate_model
 
 model = generate_model(
     template="mooring/spread_mooring",

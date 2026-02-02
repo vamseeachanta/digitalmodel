@@ -42,7 +42,7 @@ uv pip install -e .
 ### Step 1: List Available Components (30 seconds)
 
 ```python
-from digitalmodel.modules.orcaflex.model_generator import OrcaFlexModelGenerator
+from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
 
 generator = OrcaFlexModelGenerator()
 
@@ -109,7 +109,7 @@ else:
 ### Step 5: Run Analysis (2 minutes)
 
 ```python
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 runner = UniversalOrcaFlexRunner()
 runner.run_single("my_scr_model.yml")
@@ -220,9 +220,9 @@ print("Generated 10 parametric models!")
 Complete workflow from generation to results:
 
 ```python
-from digitalmodel.modules.orcaflex.model_generator import generate_model
-from digitalmodel.modules.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.model_generator import generate_model
+from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 # 1. Generate model from template
 print("1. Generating model...")
@@ -250,7 +250,7 @@ sim_file = runner.run_single(dat_file)
 
 # 4. Post-process results
 print("4. Post-processing results...")
-from digitalmodel.modules.orcaflex.opp import OPP
+from digitalmodel.orcaflex.opp import OPP
 opp = OPP()
 results = opp.process_single_file(sim_file)
 

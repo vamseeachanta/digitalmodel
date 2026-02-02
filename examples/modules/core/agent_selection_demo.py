@@ -10,7 +10,7 @@ import sys
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from digitalmodel.modules.automation import (
+from digitalmodel.automation import (
     AgentPerformanceTracker,
     IntelligentAgentSelector,
 )
@@ -304,7 +304,7 @@ def main():
         print("To use in production:")
         print("  1. Configure weights in config/agent-selection-weights.yaml")
         print("  2. Ensure agent registry is up to date")
-        print("  3. Use CLI: python -m src.digitalmodel.modules.automation.intelligent_agent_selector")
+        print("  3. Use CLI: python -m src.digitalmodel.automation.intelligent_agent_selector")
         print("  4. Or use bash wrapper: ./scripts/automation/agent_orchestrator.sh")
         print()
 

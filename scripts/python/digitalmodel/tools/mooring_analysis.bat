@@ -9,4 +9,4 @@ if errorlevel 1 (
 )
 
 :: Run the analysis module
-python -m digitalmodel.modules.orcaflex.analysis %*
+python -m digitalmodel.orcaflex.analysis %*

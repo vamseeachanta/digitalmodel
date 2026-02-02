@@ -128,7 +128,7 @@ Open `results/design_study_dashboard.html` in any web browser to view the intera
 Run the complete study:
 
 ```python
-from digitalmodel.modules.orcaflex.examples.gom_scr_design_study.design_study import run_design_study
+from digitalmodel.orcaflex.examples.gom_scr_design_study.design_study import run_design_study
 
 results = run_design_study()
 print(f"Generated {results['total_models']} models")
@@ -140,7 +140,7 @@ print(f"Success rate: {results['success_rate']}%")
 Generate specific models:
 
 ```python
-from digitalmodel.modules.orcaflex.model_generator import generate_model
+from digitalmodel.orcaflex.model_generator import generate_model
 
 # Generate single model
 model = generate_model(
@@ -279,7 +279,7 @@ df.to_csv('results/custom_analysis.csv')
 ### Convert to .dat Format
 
 ```python
-from digitalmodel.modules.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 
 converter = OrcaFlexConverterEnhanced(
     input_dir=Path("models/"),
@@ -295,7 +295,7 @@ print(f"Converted {results['statistics']['successful']} models")
 ### Run OrcaFlex Simulations
 
 ```python
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 runner = UniversalOrcaFlexRunner()
 
@@ -308,7 +308,7 @@ for model_file in Path('models_dat/').glob('*.dat'):
 ### Post-Process Results
 
 ```python
-from digitalmodel.modules.orcaflex.opp import OPP
+from digitalmodel.orcaflex.opp import OPP
 
 opp = OPP()
 

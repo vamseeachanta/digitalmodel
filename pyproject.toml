@@ -196,22 +196,22 @@ docs = [
 [project.scripts]
 digital_model = "digitalmodel.__main__:main"
 test-automation = "test_automation.__main__:main"
-run-to-sim = "digitalmodel.modules.orcaflex.run_to_sim_cli:main"
-orcaflex-universal = "digitalmodel.modules.orcaflex.universal_cli:main"
-orcaflex-sim = "digitalmodel.modules.orcaflex.universal_cli:main"
-orcaflex-convert = "digitalmodel.modules.orcaflex.format_converter.cli:main"
-create-go-by = "digitalmodel.modules.automation.go_by_folder.cli:main"
-aqwa = "digitalmodel.modules.aqwa.aqwa_cli:main"
-diffraction = "digitalmodel.modules.diffraction.cli:cli"
-structural-analysis = "digitalmodel.modules.structural_analysis.cli:main"
-mooring-analysis = "digitalmodel.modules.mooring_analysis.cli:main"
-viv-analysis = "digitalmodel.modules.viv_analysis.cli:main"
-catenary-riser = "digitalmodel.modules.catenary_riser.cli:main"
-signal-analysis = "digitalmodel.modules.signal_analysis.cli:main"
-hydrodynamics = "digitalmodel.modules.hydrodynamics.cli:main"
-gmsh-meshing = "digitalmodel.modules.gmsh_meshing.cli:main"
-workflow-automation = "digitalmodel.modules.workflow_automation.cli:main"
-bemrosetta = "digitalmodel.modules.bemrosetta.cli:main"
+run-to-sim = "digitalmodel.orcaflex.run_to_sim_cli:main"
+orcaflex-universal = "digitalmodel.orcaflex.universal_cli:main"
+orcaflex-sim = "digitalmodel.orcaflex.universal_cli:main"
+orcaflex-convert = "digitalmodel.orcaflex.format_converter.cli:main"
+create-go-by = "digitalmodel.automation.go_by_folder.cli:main"
+aqwa = "digitalmodel.aqwa.aqwa_cli:main"
+diffraction = "digitalmodel.diffraction.cli:cli"
+structural-analysis = "digitalmodel.structural_analysis.cli:main"
+mooring-analysis = "digitalmodel.mooring_analysis.cli:main"
+viv-analysis = "digitalmodel.viv_analysis.cli:main"
+catenary-riser = "digitalmodel.catenary_riser.cli:main"
+signal-analysis = "digitalmodel.signal_analysis.cli:main"
+hydrodynamics = "digitalmodel.hydrodynamics.cli:main"
+gmsh-meshing = "digitalmodel.gmsh_meshing.cli:main"
+workflow-automation = "digitalmodel.workflow_automation.cli:main"
+bemrosetta = "digitalmodel.bemrosetta.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -352,9 +352,7 @@ no-cache = false
 pre = false
 
 [tool.uv.workspace]
-members = [
-    "src/modules/mcp-server/orcawave-mcp",
-]
+members = []
 
 # MANDATORY: Parallel Processing Configuration
 [tool.parallel]

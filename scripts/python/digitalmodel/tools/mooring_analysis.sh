@@ -8,4 +8,4 @@ if ! command -v python &> /dev/null; then
 fi
 
 # Run the analysis module
-python -m digitalmodel.modules.orcaflex.analysis "$@"
+python -m digitalmodel.orcaflex.analysis "$@"

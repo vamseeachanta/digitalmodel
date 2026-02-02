@@ -14,8 +14,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from src.digitalmodel.modules.diffraction.input_schemas import MeshFormatType
-from src.digitalmodel.modules.diffraction.mesh_pipeline import MeshPipeline
+from src.digitalmodel.diffraction.input_schemas import MeshFormatType
+from src.digitalmodel.diffraction.mesh_pipeline import MeshPipeline
 
 
 # ---------------------------------------------------------------------------

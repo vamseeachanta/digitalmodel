@@ -188,21 +188,21 @@ orcaflex:
 
 ```bash
 # Process all YAML files in current directory
-python -m digitalmodel.modules.orcaflex.universal pattern="*.yml"
+python -m digitalmodel.orcaflex.universal pattern="*.yml"
 
 # Specify input/output directories
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     pattern="mooring_*.yml" \
     input_directory="configs/" \
     output_directory="results/"
 
 # Mock mode (dry run without OrcaFlex license)
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     pattern="*.yml" \
     mock_mode=true
 
 # Parallel processing with limited workers
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     pattern="*.yml" \
     parallel=true \
     max_workers=8
@@ -211,7 +211,7 @@ python -m digitalmodel.modules.orcaflex.universal \
 ### Python API
 
 ```python
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 # Initialize runner
 runner = UniversalOrcaFlexRunner(
@@ -240,7 +240,7 @@ for file_name, status in results.items():
 ### Batch Processing
 
 ```python
-from digitalmodel.modules.orcaflex.run_to_sim import OrcaFlexModelRunner
+from digitalmodel.orcaflex.run_to_sim import OrcaFlexModelRunner
 
 # Initialize runner
 runner = OrcaFlexModelRunner()
@@ -346,7 +346,7 @@ orcaflex:
 ### License Check
 
 ```python
-from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities
 
 utils = OrcaflexUtilities()
 if utils.is_orcaflex_available():

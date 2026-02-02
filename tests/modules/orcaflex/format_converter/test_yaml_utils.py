@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from digitalmodel.modules.orcaflex.yaml_utils import (
+from digitalmodel.orcaflex.yaml_utils import (
     OrcaFlexDumper,
     orcaflex_dump,
     orcaflex_load,

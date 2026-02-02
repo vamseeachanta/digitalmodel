@@ -13,7 +13,7 @@ import tempfile
 import numpy as np
 
 # Module-level imports
-from digitalmodel.modules.bemrosetta import (
+from digitalmodel.bemrosetta import (
     # Feature detection
     is_bemrosetta_available,
     get_module_info,
@@ -43,21 +43,21 @@ from digitalmodel.modules.bemrosetta import (
 )
 
 # Submodule imports
-from digitalmodel.modules.bemrosetta.parsers import AQWAParser, QTFParser, AQWAParseResult
-from digitalmodel.modules.bemrosetta.converters import OrcaFlexConverter, convert_to_orcaflex
-from digitalmodel.modules.bemrosetta.mesh import (
+from digitalmodel.bemrosetta.parsers import AQWAParser, QTFParser, AQWAParseResult
+from digitalmodel.bemrosetta.converters import OrcaFlexConverter, convert_to_orcaflex
+from digitalmodel.bemrosetta.mesh import (
     GDFHandler,
     DATHandler,
     STLHandler,
     convert_mesh,
 )
-from digitalmodel.modules.bemrosetta.validators import (
+from digitalmodel.bemrosetta.validators import (
     CoefficientValidator,
     CausalityChecker,
     validate_coefficients,
     check_causality,
 )
-from digitalmodel.modules.bemrosetta.core.interfaces import ValidationReport
+from digitalmodel.bemrosetta.core.interfaces import ValidationReport
 
 
 class TestModuleIntegration:
@@ -352,7 +352,7 @@ class TestConverterWorkflow:
 
     def test_converter_validate_input_missing_data(self, tmp_path):
         """Test converter validation with missing data."""
-        from digitalmodel.modules.diffraction import DiffractionResults
+        from digitalmodel.diffraction import DiffractionResults
         from unittest.mock import MagicMock
 
         # Create a mock DiffractionResults with None values for optional data
@@ -565,7 +565,7 @@ class TestEndToEnd:
 
     def test_module_can_be_imported(self):
         """Test the module can be imported without errors."""
-        import digitalmodel.modules.bemrosetta as bemrosetta
+        import digitalmodel.bemrosetta as bemrosetta
 
         assert hasattr(bemrosetta, "__version__")
         assert hasattr(bemrosetta, "is_bemrosetta_available")
@@ -574,12 +574,12 @@ class TestEndToEnd:
 
     def test_submodules_accessible(self):
         """Test submodules are accessible."""
-        from digitalmodel.modules.bemrosetta import parsers
-        from digitalmodel.modules.bemrosetta import converters
-        from digitalmodel.modules.bemrosetta import mesh
-        from digitalmodel.modules.bemrosetta import validators
-        from digitalmodel.modules.bemrosetta import core
-        from digitalmodel.modules.bemrosetta import models
+        from digitalmodel.bemrosetta import parsers
+        from digitalmodel.bemrosetta import converters
+        from digitalmodel.bemrosetta import mesh
+        from digitalmodel.bemrosetta import validators
+        from digitalmodel.bemrosetta import core
+        from digitalmodel.bemrosetta import models
 
         assert parsers is not None
         assert converters is not None

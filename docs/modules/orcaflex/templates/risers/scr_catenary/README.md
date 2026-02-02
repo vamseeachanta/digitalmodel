@@ -51,7 +51,7 @@ analysis:
 ### 2. Generate Model
 
 ```python
-from digitalmodel.modules.orcaflex.model_generator import OrcaFlexModelGenerator
+from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
 
 generator = OrcaFlexModelGenerator()
 
@@ -65,7 +65,7 @@ model = generator.generate_from_template(
 ### 3. Run Analysis
 
 ```python
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 runner = UniversalOrcaFlexRunner()
 runner.run_single("my_scr_model.yml")
@@ -215,7 +215,7 @@ analysis:
 
 ```python
 # Generate multiple models with varying water depths
-from digitalmodel.modules.orcaflex.model_generator import OrcaFlexModelGenerator
+from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
 
 generator = OrcaFlexModelGenerator()
 
@@ -268,8 +268,8 @@ All generated models are validated for:
 ### With OrcaFlex Converter
 
 ```python
-from digitalmodel.modules.orcaflex.model_generator import OrcaFlexModelGenerator
-from digitalmodel.modules.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
+from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 
 # Generate model
 generator = OrcaFlexModelGenerator()
@@ -287,8 +287,8 @@ converter.convert_file("model.yml", "model.dat")
 ### With Universal Runner
 
 ```python
-from digitalmodel.modules.orcaflex.model_generator import generate_model
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.model_generator import generate_model
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 # Generate and run
 model_file = generate_model("risers/scr_catenary", "config.yml", "model.yml")
@@ -300,9 +300,9 @@ results = runner.run_single(model_file)
 ### With Post-Processor
 
 ```python
-from digitalmodel.modules.orcaflex.model_generator import generate_model
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
-from digitalmodel.modules.orcaflex.opp import OPP
+from digitalmodel.orcaflex.model_generator import generate_model
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.opp import OPP
 
 # Full workflow
 model = generate_model("risers/scr_catenary", "config.yml", "model.yml")

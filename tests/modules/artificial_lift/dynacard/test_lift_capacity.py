@@ -6,15 +6,15 @@ import pytest
 import numpy as np
 from pathlib import Path
 
-from digitalmodel.modules.artificial_lift.dynacard.data_loader import (
+from digitalmodel.artificial_lift.dynacard.data_loader import (
     load_from_json_file,
 )
-from digitalmodel.modules.artificial_lift.dynacard.lift_capacity import (
+from digitalmodel.artificial_lift.dynacard.lift_capacity import (
     LiftCapacityCalculator,
     calculate_lift_capacity,
     BPD_CONVERSION,
 )
-from digitalmodel.modules.artificial_lift.dynacard.models import (
+from digitalmodel.artificial_lift.dynacard.models import (
     DynacardAnalysisContext,
     CardData,
     RodSection,
@@ -23,7 +23,7 @@ from digitalmodel.modules.artificial_lift.dynacard.models import (
     InputParameters,
     PumpFillageAnalysis,
 )
-from digitalmodel.modules.artificial_lift.dynacard.exceptions import ValidationError
+from digitalmodel.artificial_lift.dynacard.exceptions import ValidationError
 
 
 # Test data directory
@@ -240,7 +240,7 @@ class TestConvenienceFunction:
         context = self._create_test_context()
         result = calculate_lift_capacity(context, downhole_stroke=100.0)
 
-        from digitalmodel.modules.artificial_lift.dynacard.models import LiftCapacityAnalysis
+        from digitalmodel.artificial_lift.dynacard.models import LiftCapacityAnalysis
         assert isinstance(result, LiftCapacityAnalysis)
 
     def test_with_fillage_analysis(self):
@@ -293,7 +293,7 @@ class TestLiftCapacityAnalysisModel:
 
     def test_analysis_defaults(self):
         """Test LiftCapacityAnalysis default values."""
-        from digitalmodel.modules.artificial_lift.dynacard.models import LiftCapacityAnalysis
+        from digitalmodel.artificial_lift.dynacard.models import LiftCapacityAnalysis
         analysis = LiftCapacityAnalysis()
         assert analysis.lift_capacity == 0.0
         assert analysis.plunger_diameter == 0.0
@@ -303,7 +303,7 @@ class TestLiftCapacityAnalysisModel:
 
     def test_analysis_with_values(self):
         """Test LiftCapacityAnalysis with actual values."""
-        from digitalmodel.modules.artificial_lift.dynacard.models import LiftCapacityAnalysis
+        from digitalmodel.artificial_lift.dynacard.models import LiftCapacityAnalysis
         analysis = LiftCapacityAnalysis(
             lift_capacity=250.5,
             plunger_diameter=1.75,
@@ -317,7 +317,7 @@ class TestLiftCapacityAnalysisModel:
 
     def test_analysis_serialization(self):
         """Test that LiftCapacityAnalysis can be serialized."""
-        from digitalmodel.modules.artificial_lift.dynacard.models import LiftCapacityAnalysis
+        from digitalmodel.artificial_lift.dynacard.models import LiftCapacityAnalysis
         analysis = LiftCapacityAnalysis(
             lift_capacity=250.5,
             plunger_diameter=1.75,

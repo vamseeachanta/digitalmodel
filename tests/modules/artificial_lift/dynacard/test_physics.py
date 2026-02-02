@@ -3,7 +3,7 @@
 
 import pytest
 import numpy as np
-from digitalmodel.modules.artificial_lift.dynacard import (
+from digitalmodel.artificial_lift.dynacard import (
     DynacardPhysicsSolver,
     DynacardAnalysisContext,
     CardData,
@@ -11,7 +11,7 @@ from digitalmodel.modules.artificial_lift.dynacard import (
     PumpProperties,
     SurfaceUnit,
 )
-from digitalmodel.modules.artificial_lift.dynacard.constants import (
+from digitalmodel.artificial_lift.dynacard.constants import (
     DEFAULT_PUMP_FILLAGE,
     BUCKLING_DETECTION_LOAD_THRESHOLD_LBS,
 )

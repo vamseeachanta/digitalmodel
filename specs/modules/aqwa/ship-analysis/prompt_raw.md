@@ -136,7 +136,7 @@ Use the anthropic model to  review the input file and psudeocode just generated 
    Instead of "locating agents", use direct module imports:
 
    python
-     from digitalmodel.modules.aqwa.aqwa_analysis_damping import AqwaDamping
+     from digitalmodel.aqwa.aqwa_analysis_damping import AqwaDamping
      from digitalmodel.modules.marine_analysis.aqwa_enhanced_parser import AQWAEnhancedParser
 
    **3. Add Validation Steps**

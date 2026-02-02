@@ -161,7 +161,7 @@ modules/
 2. **Post-move checks**
    ```bash
    # Verify Python imports
-   uv run python -c "from digitalmodel.modules.orcaflex.utils.validate_bom import BOMValidator"
+   uv run python -c "from digitalmodel.orcaflex.utils.validate_bom import BOMValidator"
    uv run python -c "from digitalmodel.modules.reporting.report_generator import PlotlyReportGenerator"
 
    # Verify scripts execute

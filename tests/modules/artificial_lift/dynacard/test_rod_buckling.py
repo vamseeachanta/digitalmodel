@@ -6,16 +6,16 @@ import pytest
 import numpy as np
 from pathlib import Path
 
-from digitalmodel.modules.artificial_lift.dynacard.data_loader import (
+from digitalmodel.artificial_lift.dynacard.data_loader import (
     load_from_json_file,
 )
-from digitalmodel.modules.artificial_lift.dynacard.rod_buckling import (
+from digitalmodel.artificial_lift.dynacard.rod_buckling import (
     RodBucklingCalculator,
     calculate_rod_buckling,
     estimate_neutral_point,
     calculate_critical_buckling_load,
 )
-from digitalmodel.modules.artificial_lift.dynacard.models import (
+from digitalmodel.artificial_lift.dynacard.models import (
     DynacardAnalysisContext,
     CardData,
     RodSection,
@@ -23,7 +23,7 @@ from digitalmodel.modules.artificial_lift.dynacard.models import (
     SurfaceUnit,
     RodBucklingAnalysis,
 )
-from digitalmodel.modules.artificial_lift.dynacard.exceptions import ValidationError
+from digitalmodel.artificial_lift.dynacard.exceptions import ValidationError
 
 
 # Test data directory

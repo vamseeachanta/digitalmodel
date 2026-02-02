@@ -20,7 +20,7 @@ This validates both files and generates all 4 report types.
 ### Validate Both Files
 
 ```bash
-python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
+python -m src.digitalmodel.orcaflex.modular_input_validation.cli \
   specs/modules/orcaflex/modular-input-file/output/calm_buoy_base.yml \
   specs/modules/orcaflex/modular-input-file/output/discretised_calm_buoy_base.yml
 ```
@@ -28,7 +28,7 @@ python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
 ### Validate Entire Directory
 
 ```bash
-python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
+python -m src.digitalmodel.orcaflex.modular_input_validation.cli \
   specs/modules/orcaflex/modular-input-file/output/
 ```
 
@@ -37,7 +37,7 @@ python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
 If you don't have OrcaFlex installed:
 
 ```bash
-python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
+python -m src.digitalmodel.orcaflex.modular_input_validation.cli \
   specs/modules/orcaflex/modular-input-file/output/calm_buoy_base.yml \
   specs/modules/orcaflex/modular-input-file/output/discretised_calm_buoy_base.yml \
   --skip-level 2
@@ -46,7 +46,7 @@ python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
 ### Custom Tolerance
 
 ```bash
-python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
+python -m src.digitalmodel.orcaflex.modular_input_validation.cli \
   specs/modules/orcaflex/modular-input-file/output/calm_buoy_base.yml \
   --tolerance 15  # Use ±15% instead of default ±10%
 ```
@@ -54,7 +54,7 @@ python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
 ### Select Report Formats
 
 ```bash
-python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
+python -m src.digitalmodel.orcaflex.modular_input_validation.cli \
   specs/modules/orcaflex/modular-input-file/output/calm_buoy_base.yml \
   --formats console csv markdown  # Skip HTML report
 ```
@@ -63,12 +63,12 @@ python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
 
 ```bash
 # Only Level 1 (YAML syntax)
-python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
+python -m src.digitalmodel.orcaflex.modular_input_validation.cli \
   specs/modules/orcaflex/modular-input-file/output/calm_buoy_base.yml \
   --level-1-only
 
 # Only Level 3 (Physical consistency)
-python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
+python -m src.digitalmodel.orcaflex.modular_input_validation.cli \
   specs/modules/orcaflex/modular-input-file/output/calm_buoy_base.yml \
   --level-3-only
 ```
@@ -81,7 +81,7 @@ python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.orcaflex.modular_input_validation import ModularInputValidator
+from digitalmodel.orcaflex.modular_input_validation import ModularInputValidator
 
 # Create validator
 validator = ModularInputValidator()
@@ -99,7 +99,7 @@ print(f"Issues: {len(result.issues)}")
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.orcaflex.modular_input_validation import ModularInputValidator
+from digitalmodel.orcaflex.modular_input_validation import ModularInputValidator
 
 files = [
     Path("specs/modules/orcaflex/modular-input-file/output/calm_buoy_base.yml"),
@@ -115,7 +115,7 @@ validator.generate_reports(results)
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.orcaflex.modular_input_validation import (
+from digitalmodel.orcaflex.modular_input_validation import (
     ModularInputValidator,
     ValidationConfig
 )
@@ -195,7 +195,7 @@ config = ValidationConfig(enable_orcaflex=False)
 **Solution**: Ensure you're running from the repository root:
 ```bash
 cd D:/workspace-hub/digitalmodel
-python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli ...
+python -m src.digitalmodel.orcaflex.modular_input_validation.cli ...
 ```
 
 ### Issue: "Missing include file"
@@ -211,7 +211,7 @@ python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli ...
 cd D:/workspace-hub/digitalmodel
 
 # Run validation on both files
-python -m src.digitalmodel.modules.orcaflex.modular_input_validation.cli \
+python -m src.digitalmodel.orcaflex.modular_input_validation.cli \
   specs/modules/orcaflex/modular-input-file/output/calm_buoy_base.yml \
   specs/modules/orcaflex/modular-input-file/output/discretised_calm_buoy_base.yml \
   --tolerance 10 \

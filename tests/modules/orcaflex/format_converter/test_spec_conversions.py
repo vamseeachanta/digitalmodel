@@ -5,16 +5,16 @@ from pathlib import Path
 import pytest
 import yaml
 
-from digitalmodel.modules.orcaflex.format_converter.spec_to_modular import (
+from digitalmodel.orcaflex.format_converter.spec_to_modular import (
     SpecToModularConverter,
 )
-from digitalmodel.modules.orcaflex.format_converter.spec_to_single import (
+from digitalmodel.orcaflex.format_converter.spec_to_single import (
     SpecToSingleConverter,
 )
-from digitalmodel.modules.orcaflex.format_converter.modular_to_spec import (
+from digitalmodel.orcaflex.format_converter.modular_to_spec import (
     ModularToSpecConverter,
 )
-from digitalmodel.modules.orcaflex.format_converter.single_to_spec import (
+from digitalmodel.orcaflex.format_converter.single_to_spec import (
     SingleToSpecConverter,
 )
 

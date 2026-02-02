@@ -6,7 +6,7 @@ Tests against known patterns with expected results per ASTM E1049
 
 import numpy as np
 import pytest
-from digitalmodel.modules.fatigue_analysis.rainflow_counter import (
+from digitalmodel.fatigue_analysis.rainflow_counter import (
     RainflowCounter, RainflowCycle, rainflow_count
 )
 

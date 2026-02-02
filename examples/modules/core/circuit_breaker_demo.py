@@ -4,13 +4,13 @@ Shows real-world usage patterns and integration examples.
 """
 
 from pathlib import Path
-from digitalmodel.modules.automation.circuit_breaker import (
+from digitalmodel.automation.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
     CircuitOpenError,
     CircuitBreakerManager,
 )
-from digitalmodel.modules.automation.rollback_manager import RollbackManager
+from digitalmodel.automation.rollback_manager import RollbackManager
 
 
 def demo_basic_circuit_breaker():

@@ -7,7 +7,7 @@ to the legacy sagHogEquation and lazyWaveCatenaryEquation implementations.
 
 import pytest
 import math
-from digitalmodel.modules.marine_engineering.catenary.lazy_wave import (
+from digitalmodel.marine_engineering.catenary.lazy_wave import (
     LazyWaveSolver,
     LazyWaveConfiguration,
     LazyWaveResults,

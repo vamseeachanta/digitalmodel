@@ -4,15 +4,15 @@
 import pytest
 from pathlib import Path
 
-from digitalmodel.modules.artificial_lift.dynacard.data_loader import (
+from digitalmodel.artificial_lift.dynacard.data_loader import (
     load_from_json_file,
 )
-from digitalmodel.modules.artificial_lift.dynacard.pump_efficiency import (
+from digitalmodel.artificial_lift.dynacard.pump_efficiency import (
     PumpEfficiencyCalculator,
     calculate_pump_efficiency,
     calculate_efficiency_from_rates,
 )
-from digitalmodel.modules.artificial_lift.dynacard.models import (
+from digitalmodel.artificial_lift.dynacard.models import (
     DynacardAnalysisContext,
     CardData,
     RodSection,

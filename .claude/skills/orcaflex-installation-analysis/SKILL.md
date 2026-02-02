@@ -160,7 +160,7 @@ delta_elevations:
 ### Generate Installation Depth Models
 
 ```python
-from digitalmodel.modules.orcaflex.orcaflex_installation import OrcInstallation
+from digitalmodel.orcaflex.orcaflex_installation import OrcInstallation
 
 # Initialize
 installer = OrcInstallation()
@@ -195,7 +195,7 @@ installer.create_model_for_water_depth(cfg)
 ### Simple Depth Model Generation
 
 ```python
-from digitalmodel.modules.orcaflex.orcaflex_installation import OrcInstallation
+from digitalmodel.orcaflex.orcaflex_installation import OrcInstallation
 
 installer = OrcInstallation()
 
@@ -217,7 +217,7 @@ installer.create_installation_depth_model(cfg)
 ### With Structure Orientation
 
 ```python
-from digitalmodel.modules.orcaflex.orcaflex_installation import OrcInstallation
+from digitalmodel.orcaflex.orcaflex_installation import OrcInstallation
 
 installer = OrcInstallation()
 
@@ -316,7 +316,7 @@ new_wire_length = reference_length + abs(delta_elevation)
 After generating installation models, run batch simulations:
 
 ```python
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 # Initialize runner
 runner = UniversalOrcaFlexRunner(
@@ -390,7 +390,7 @@ delta_elevations:
 ## Post-Processing Installation Results
 
 ```python
-from digitalmodel.modules.orcaflex.opp import OrcaFlexPostProcess
+from digitalmodel.orcaflex.opp import OrcaFlexPostProcess
 
 opp = OrcaFlexPostProcess()
 

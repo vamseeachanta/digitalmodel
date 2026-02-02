@@ -19,7 +19,7 @@ if str(module_path) not in sys.path:
 
 # Ensure CLI module is available; skip tests gracefully if not
 cli_module = pytest.importorskip(
-    "digitalmodel.modules.marine_analysis.python_code_passing_ship.cli",
+    "digitalmodel.marine_analysis.python_code_passing_ship.cli",
     reason="CLI module not properly configured yet"
 )
 
@@ -192,7 +192,7 @@ class TestCLIArgumentParser:
 class TestCLIProcessing:
     """Test CLI processing functions."""
     
-    @patch('digitalmodel.modules.marine_analysis.python_code_passing_ship.cli.PassingShipCalculator')
+    @patch('digitalmodel.marine_analysis.python_code_passing_ship.cli.PassingShipCalculator')
     def test_process_single(self, mock_calculator):
         """Test single calculation processing."""
         # Setup mock
@@ -211,7 +211,7 @@ class TestCLIProcessing:
         assert 'surge_force' in result
         mock_calculator.from_config.assert_called_once_with('test.yaml')
     
-    @patch('digitalmodel.modules.marine_analysis.python_code_passing_ship.cli.PassingShipCalculator')
+    @patch('digitalmodel.marine_analysis.python_code_passing_ship.cli.PassingShipCalculator')
     @patch('os.listdir')
     def test_process_batch(self, mock_listdir, mock_calculator):
         """Test batch processing."""
@@ -294,7 +294,7 @@ class TestCLIMain:
         assert 'Passing Ship Forces Calculator' in captured.out
     
     @patch('sys.argv', ['cli.py', '--config', 'test.yaml'])
-    @patch('digitalmodel.modules.marine_analysis.python_code_passing_ship.cli.process_single')
+    @patch('digitalmodel.marine_analysis.python_code_passing_ship.cli.process_single')
     def test_main_single_calculation(self, mock_process):
         """Test main function with single calculation."""
         mock_process.return_value = {'surge_force': 1000.0}
@@ -305,7 +305,7 @@ class TestCLIMain:
         assert result == 0
     
     @patch('sys.argv', ['cli.py', '--batch', '--input-directory', 'configs'])
-    @patch('digitalmodel.modules.marine_analysis.python_code_passing_ship.cli.process_batch')
+    @patch('digitalmodel.marine_analysis.python_code_passing_ship.cli.process_batch')
     def test_main_batch_processing(self, mock_process):
         """Test main function with batch processing."""
         mock_process.return_value = {
@@ -328,7 +328,7 @@ class TestCLIMain:
         assert result == 0
     
     @patch('sys.argv', ['cli.py', '--config', 'nonexistent.yaml'])
-    @patch('digitalmodel.modules.marine_analysis.python_code_passing_ship.cli.process_single')
+    @patch('digitalmodel.marine_analysis.python_code_passing_ship.cli.process_single')
     def test_main_error_handling(self, mock_process):
         """Test error handling in main."""
         mock_process.side_effect = FileNotFoundError("Config file not found")
@@ -351,7 +351,7 @@ class TestCLIIntegration:
             [
                 python_exec,
                 "-m",
-                "digitalmodel.modules.marine_analysis.python_code_passing_ship",
+                "digitalmodel.marine_analysis.python_code_passing_ship",
                 "--help"
             ],
             capture_output=True,
@@ -390,7 +390,7 @@ environment:
             [
                 python_exec,
                 "-m",
-                "digitalmodel.modules.marine_analysis.python_code_passing_ship",
+                "digitalmodel.marine_analysis.python_code_passing_ship",
                 "--config", str(config_file),
                 "--export-json", str(tmp_path / "results.json")
             ],

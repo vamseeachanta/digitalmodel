@@ -52,15 +52,15 @@ except ImportError:
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from digitalmodel.modules.marine_engineering.wave_spectra.spectra import (
+from digitalmodel.marine_engineering.wave_spectra.spectra import (
     JONSWAPSpectrum, PiersonMoskowitzSpectrum, WaveSpectrumParameters
 )
-from digitalmodel.modules.marine_engineering.environmental_loading.ocimf import (
+from digitalmodel.marine_engineering.environmental_loading.ocimf import (
     OCIMFDatabase, EnvironmentalForces, EnvironmentalConditions,
     VesselGeometry, create_sample_database
 )
-from digitalmodel.modules.marine_engineering.catenary.solver import CatenarySolver, CatenaryInput
-from digitalmodel.modules.marine_engineering.hydrodynamic_coefficients.coefficients import (
+from digitalmodel.marine_engineering.catenary.solver import CatenarySolver, CatenaryInput
+from digitalmodel.marine_engineering.hydrodynamic_coefficients.coefficients import (
     CoefficientDatabase, FrequencyDependentMatrix
 )
 

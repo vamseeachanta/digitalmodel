@@ -58,7 +58,7 @@ cat output/FPSO_A_validation.json
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.diffraction import (
+from digitalmodel.diffraction import (
     AQWAConverter,
     OrcaFlexExporter,
     validate_results

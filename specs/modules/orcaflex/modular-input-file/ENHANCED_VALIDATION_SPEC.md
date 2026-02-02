@@ -283,13 +283,13 @@ timestamp,file_name,validation_level,status,yaml_valid,orcaflex_available,orcafl
 
 ### Basic Validation
 ```bash
-python -m digitalmodel.modules.orcaflex.modular_input_validation \
+python -m digitalmodel.orcaflex.modular_input_validation \
     specs/modules/orcaflex/modular-input-file/output/calm_buoy_base.yml
 ```
 
 ### With All Reports
 ```bash
-python -m digitalmodel.modules.orcaflex.modular_input_validation \
+python -m digitalmodel.orcaflex.modular_input_validation \
     --report-all \
     --reports-dir reports/validation/calm_buoy/ \
     --results-dir results/validation/calm_buoy/ \
@@ -298,7 +298,7 @@ python -m digitalmodel.modules.orcaflex.modular_input_validation \
 
 ### Programmatic Usage
 ```python
-from digitalmodel.modules.orcaflex.modular_input_validation import (
+from digitalmodel.orcaflex.modular_input_validation import (
     ModularInputValidator,
     ValidationConfig
 )

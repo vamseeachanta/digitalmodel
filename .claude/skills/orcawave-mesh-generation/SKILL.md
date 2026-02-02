@@ -81,7 +81,7 @@ compatibility:
 ### Basic Mesh Generation
 
 ```python
-from digitalmodel.modules.orcawave.mesh import OrcaWaveMeshGenerator
+from digitalmodel.orcawave.mesh import OrcaWaveMeshGenerator
 
 # Initialize generator
 generator = OrcaWaveMeshGenerator()
@@ -110,7 +110,7 @@ generator.export_gdf(mesh, "output/hull_panels.gdf")
 ### Mesh Convergence Study
 
 ```python
-from digitalmodel.modules.orcawave.mesh_study import MeshConvergenceStudy
+from digitalmodel.orcawave.mesh_study import MeshConvergenceStudy
 
 # Initialize study
 study = MeshConvergenceStudy()
@@ -146,7 +146,7 @@ study.generate_report(
 ### STL to GDF Conversion
 
 ```python
-from digitalmodel.modules.orcawave.converters import STLtoGDFConverter
+from digitalmodel.orcawave.converters import STLtoGDFConverter
 
 # Initialize converter
 converter = STLtoGDFConverter()
@@ -171,7 +171,7 @@ validation = converter.validate_gdf("geometry/hull.gdf")
 ### Waterline Refinement
 
 ```python
-from digitalmodel.modules.orcawave.mesh import WaterlineRefiner
+from digitalmodel.orcawave.mesh import WaterlineRefiner
 
 # Initialize refiner
 refiner = WaterlineRefiner()
@@ -277,7 +277,7 @@ convergence_study:
 ### Validation Checks
 
 ```python
-from digitalmodel.modules.diffraction.geometry_quality import GeometryQualityChecker
+from digitalmodel.diffraction.geometry_quality import GeometryQualityChecker
 
 # Initialize checker
 checker = GeometryQualityChecker()
@@ -306,25 +306,25 @@ for check, result in results.items():
 
 ```bash
 # Generate mesh from STL
-python -m digitalmodel.modules.orcawave.mesh generate \
+python -m digitalmodel.orcawave.mesh generate \
     --input geometry/hull.stl \
     --output geometry/hull.gdf \
     --panels 3000 \
     --symmetry port-starboard
 
 # Validate existing mesh
-python -m digitalmodel.modules.orcawave.mesh validate \
+python -m digitalmodel.orcawave.mesh validate \
     --input geometry/hull.gdf \
     --report validation_report.html
 
 # Run convergence study
-python -m digitalmodel.modules.orcawave.mesh convergence \
+python -m digitalmodel.orcawave.mesh convergence \
     --geometry geometry/hull.stl \
     --levels 500,1000,2000,4000 \
     --output results/convergence/
 
 # Convert STL to GDF
-python -m digitalmodel.modules.orcawave.converters stl-to-gdf \
+python -m digitalmodel.orcawave.converters stl-to-gdf \
     --input geometry/hull.stl \
     --output geometry/hull.gdf \
     --scale 0.001  # mm to m
@@ -336,7 +336,7 @@ For advanced meshing requirements, combine with the gmsh-meshing skill:
 
 ```python
 from digitalmodel.modules.gmsh.mesh_generator import GmshMeshGenerator
-from digitalmodel.modules.orcawave.converters import GmshToGDFConverter
+from digitalmodel.orcawave.converters import GmshToGDFConverter
 
 # Generate high-quality mesh with gmsh
 gmsh_gen = GmshMeshGenerator()

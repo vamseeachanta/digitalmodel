@@ -41,21 +41,21 @@ def mock_imports():
         'ansys.dpf',
         'digitalmodel.common.code_dnvrph103_hydrodynamics_circular',
         'digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular',
-        'digitalmodel.modules.signal_analysis.fatigue',
+        'digitalmodel.signal_analysis.fatigue',
         'digitalmodel.common.ship_design',
         'digitalmodel.modules.mooring.mooring',
-        'digitalmodel.modules.orcaflex.orcaflex',
-        'digitalmodel.modules.orcaflex.orcaflex_file_management',
-        'digitalmodel.modules.orcaflex.orcaflex_installation',
-        'digitalmodel.modules.orcaflex.orcaflex_modal_analysis',
-        'digitalmodel.modules.orcaflex.umbilical_analysis_components',
-        'digitalmodel.modules.pipe_capacity.pipe_capacity',
-        'digitalmodel.modules.pipeline.pipeline',
-        'digitalmodel.modules.rao_analysis.rao_analysis',
-        'digitalmodel.modules.time_series.time_series_analysis',
-        'digitalmodel.modules.transformation.transformation',
-        'digitalmodel.modules.vertical_riser.vertical_riser',
-        'digitalmodel.modules.viv_analysis.viv_analysis',
+        'digitalmodel.orcaflex.orcaflex',
+        'digitalmodel.orcaflex.orcaflex_file_management',
+        'digitalmodel.orcaflex.orcaflex_installation',
+        'digitalmodel.orcaflex.orcaflex_modal_analysis',
+        'digitalmodel.orcaflex.umbilical_analysis_components',
+        'digitalmodel.pipe_capacity.pipe_capacity',
+        'digitalmodel.pipeline.pipeline',
+        'digitalmodel.rao_analysis.rao_analysis',
+        'digitalmodel.time_series.time_series_analysis',
+        'digitalmodel.transformation.transformation',
+        'digitalmodel.vertical_riser.vertical_riser',
+        'digitalmodel.viv_analysis.viv_analysis',
         'digitalmodel.common.plate_buckling',
         'digitalmodel.aqwa',
         'digitalmodel.common.cathodic_protection',
@@ -197,7 +197,7 @@ class TestEngineConfiguration:
 
         # Test quiet mode
         with patch('digitalmodel.engine.get_output_level_from_argv') as mock_output:
-            from digitalmodel.modules.orcaflex.output_control import OutputController
+            from digitalmodel.orcaflex.output_control import OutputController
             mock_output.return_value = OutputController.QUIET
 
             with patch('digitalmodel.engine.Mooring') as mock_mooring:
@@ -238,8 +238,8 @@ class TestModuleRouting:
         """Test routing to catenary module."""
         cfg = {"basename": "catenary_analysis"}
 
-        # Catenary is dynamically imported inside the function from digitalmodel.modules.catenary.catenary
-        with patch('digitalmodel.modules.catenary.catenary.Catenary') as mock_catenary:
+        # Catenary is dynamically imported inside the function from digitalmodel.catenary.catenary
+        with patch('digitalmodel.catenary.catenary.Catenary') as mock_catenary:
             mock_instance = MagicMock()
             mock_instance.router.return_value = cfg
             mock_catenary.return_value = mock_instance
@@ -517,7 +517,7 @@ class TestDynamicImports:
         sys.modules['digitalmodel.custom.rigging_components'] = mock_components
 
         # Now we can safely patch the rigging module path
-        with patch('digitalmodel.modules.rigging.rigging.Rigging') as mock_rigging:
+        with patch('digitalmodel.rigging.rigging.Rigging') as mock_rigging:
             mock_instance = MagicMock()
             mock_instance.get_rigging_groups.return_value = cfg
             mock_rigging.return_value = mock_instance
@@ -534,8 +534,8 @@ class TestDynamicImports:
         """Test catenary module with dynamic import."""
         cfg = {"basename": "catenary_special"}
 
-        # Catenary is dynamically imported inside the function from digitalmodel.modules.catenary.catenary
-        with patch('digitalmodel.modules.catenary.catenary.Catenary') as mock_catenary:
+        # Catenary is dynamically imported inside the function from digitalmodel.catenary.catenary
+        with patch('digitalmodel.catenary.catenary.Catenary') as mock_catenary:
             mock_instance = MagicMock()
             mock_instance.router.return_value = cfg
             mock_catenary.return_value = mock_instance

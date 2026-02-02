@@ -10,10 +10,10 @@ from pathlib import Path
 # Add the source directory to the path
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
-from digitalmodel.modules.fatigue_analysis.strut_foundation_processor import (
+from digitalmodel.fatigue_analysis.strut_foundation_processor import (
     ProductionDataHandler, LoadScaler, FatigueCondition, SeaState
 )
-from digitalmodel.modules.fatigue_analysis.integrated_processor_with_naming import (
+from digitalmodel.fatigue_analysis.integrated_processor_with_naming import (
     IntegratedFatigueProcessorWithNaming
 )
 

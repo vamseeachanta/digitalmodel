@@ -37,7 +37,7 @@ python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml
 
 ### Step 2: OrcaFlex Analysis ✅
 ```bash
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     pattern="fsts*125km3*pb_*.yml" \
     input_directory="." \
     output_directory="." \

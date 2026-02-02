@@ -5,7 +5,7 @@ from scipy import interpolate
 
 from assetutilities.common.data import SaveData
 
-from digitalmodel.modules.orcaflex.orcaflex_model_utilities import (
+from digitalmodel.orcaflex.orcaflex_model_utilities import (
     OrcaflexModelUtilities,
 )
 

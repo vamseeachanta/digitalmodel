@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from digitalmodel.modules.orcaflex.format_converter.modular_to_single import (
+from digitalmodel.orcaflex.format_converter.modular_to_single import (
     ModularToSingleConverter,
 )
 

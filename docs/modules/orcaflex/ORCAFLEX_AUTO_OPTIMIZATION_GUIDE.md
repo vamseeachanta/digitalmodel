@@ -37,7 +37,7 @@ python -m digitalmodel dm_fsts_lngc.yml "{...}"
 
 ### 2. Direct OPP Module Usage
 ```python
-from digitalmodel.modules.orcaflex.opp import OrcaFlexPostProcess
+from digitalmodel.orcaflex.opp import OrcaFlexPostProcess
 
 opp = OrcaFlexPostProcess()
 opp.post_process_router(cfg)  # Auto-optimized
@@ -58,7 +58,7 @@ engine(cfg)  # Auto-optimized through OPP
 
 ### 4. Universal OrcaFlex Runner
 ```python
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 runner = UniversalOrcaFlexRunner(max_workers=30)  # Initial setting
 runner.run_models(...)  # Auto-optimized based on file sizes

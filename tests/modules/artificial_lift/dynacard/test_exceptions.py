@@ -2,7 +2,7 @@
 # ABOUTME: Tests custom exception classes and factory functions.
 
 import pytest
-from digitalmodel.modules.artificial_lift.dynacard import (
+from digitalmodel.artificial_lift.dynacard import (
     DynacardException,
     ValidationError,
     PhysicsError,

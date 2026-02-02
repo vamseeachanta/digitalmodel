@@ -272,7 +272,7 @@ plt.savefig('operability_polar.png')
 For faster batch processing, use the universal batch processor:
 
 ```python
-from digitalmodel.modules.orcaflex.universal.batch_processor import BatchProcessor
+from digitalmodel.orcaflex.universal.batch_processor import BatchProcessor
 
 processor = BatchProcessor(max_workers=4)  # Adjust based on CPU cores
 results = processor.process_batch(

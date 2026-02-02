@@ -20,7 +20,7 @@ repo_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(repo_root / 'src'))
 
 # Import all reading routes
-from digitalmodel.modules.marine_analysis import (
+from digitalmodel.marine_analysis import (
     # NEW v2.0 Unified Reader
     UnifiedRAOReader,
     read_rao_file,

@@ -246,7 +246,7 @@ Fatigue Assessment:
 ### Quick Start Example
 
 ```python
-from digitalmodel.modules.orcaflex import ModelGenerator, PostProcessor
+from digitalmodel.orcaflex import ModelGenerator, PostProcessor
 
 # 1. Generate OrcaFlex model from YAML
 generator = ModelGenerator('turret_fpso.yml')
@@ -254,7 +254,7 @@ model = generator.create_model()
 model.SaveData('turret_fpso.sim')
 
 # 2. Run batch analysis
-from digitalmodel.modules.orcaflex import BatchAnalyzer
+from digitalmodel.orcaflex import BatchAnalyzer
 
 analyzer = BatchAnalyzer('load_cases.yml')
 results = analyzer.run_all(parallel=True, cores=8)

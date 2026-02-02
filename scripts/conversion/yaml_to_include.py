@@ -3,8 +3,8 @@
 OrcaFlex YAML to Include-Based Format Converter (backward-compat wrapper).
 
 This module delegates to the canonical implementations:
-- OrcaFlexDumper from digitalmodel.modules.orcaflex.yaml_utils
-- SingleToModularConverter from digitalmodel.modules.orcaflex.format_converter
+- OrcaFlexDumper from digitalmodel.orcaflex.yaml_utils
+- SingleToModularConverter from digitalmodel.orcaflex.format_converter
 - SECTION_MAPPING / INPUT_PARAMETERS from format_converter.section_mapping
 
 Legacy callers can continue using OrcaFlexYAMLConverter and batch_convert.
@@ -14,12 +14,12 @@ import argparse
 from pathlib import Path
 from typing import List
 
-from digitalmodel.modules.orcaflex.yaml_utils import OrcaFlexDumper
-from digitalmodel.modules.orcaflex.format_converter.section_mapping import (
+from digitalmodel.orcaflex.yaml_utils import OrcaFlexDumper
+from digitalmodel.orcaflex.format_converter.section_mapping import (
     INPUT_PARAMETERS,
     SECTION_MAPPING,
 )
-from digitalmodel.modules.orcaflex.format_converter.single_to_modular import (
+from digitalmodel.orcaflex.format_converter.single_to_modular import (
     SingleToModularConverter,
 )
 

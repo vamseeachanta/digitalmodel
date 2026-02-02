@@ -8,7 +8,7 @@ from pathlib import Path
 import yaml
 import time
 from datetime import datetime
-from digitalmodel.modules.orcaflex.model_generator import OrcaFlexModelGenerator
+from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
 
 def run_design_study():
     """Execute complete design study workflow."""

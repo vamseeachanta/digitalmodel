@@ -6,15 +6,15 @@ import pytest
 import numpy as np
 from pathlib import Path
 
-from digitalmodel.modules.artificial_lift.dynacard.data_loader import (
+from digitalmodel.artificial_lift.dynacard.data_loader import (
     load_from_json_file,
 )
-from digitalmodel.modules.artificial_lift.dynacard.geometry import (
+from digitalmodel.artificial_lift.dynacard.geometry import (
     CardGeometryCalculator,
     calculate_card_geometry,
     calculate_card_perimeter,
 )
-from digitalmodel.modules.artificial_lift.dynacard.models import (
+from digitalmodel.artificial_lift.dynacard.models import (
     DynacardAnalysisContext,
     CardData,
     RodSection,
@@ -22,7 +22,7 @@ from digitalmodel.modules.artificial_lift.dynacard.models import (
     SurfaceUnit,
     CardGeometryAnalysis,
 )
-from digitalmodel.modules.artificial_lift.dynacard.exceptions import ValidationError
+from digitalmodel.artificial_lift.dynacard.exceptions import ValidationError
 
 
 # Test data directory

@@ -17,7 +17,7 @@ class TestCoefficientValidator:
     @pytest.fixture
     def valid_diffraction_results(self):
         """Create valid diffraction results for testing."""
-        from digitalmodel.modules.diffraction import (
+        from digitalmodel.diffraction import (
             DiffractionResults,
             RAOSet,
             RAOComponent,
@@ -138,14 +138,14 @@ class TestCoefficientValidator:
 
     def test_coefficient_validator_can_instantiate(self):
         """Test that CoefficientValidator can be instantiated."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         validator = CoefficientValidator()
         assert validator is not None
 
     def test_coefficient_validator_with_default_options(self):
         """Test CoefficientValidator uses sensible defaults."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         validator = CoefficientValidator()
         assert validator.check_symmetry is True
@@ -155,7 +155,7 @@ class TestCoefficientValidator:
 
     def test_coefficient_validator_with_custom_options(self):
         """Test CoefficientValidator accepts custom options."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         validator = CoefficientValidator(
             check_symmetry=False,
@@ -170,16 +170,16 @@ class TestCoefficientValidator:
 
     def test_coefficient_validator_implements_interface(self):
         """Test CoefficientValidator implements ValidatorInterface."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
-        from digitalmodel.modules.bemrosetta.core.interfaces import ValidatorInterface
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.core.interfaces import ValidatorInterface
 
         validator = CoefficientValidator()
         assert isinstance(validator, ValidatorInterface)
 
     def test_validate_returns_validation_report(self, valid_diffraction_results):
         """Test validate() returns ValidationReport."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
-        from digitalmodel.modules.bemrosetta.core.interfaces import ValidationReport
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.core.interfaces import ValidationReport
 
         validator = CoefficientValidator()
         report = validator.validate(valid_diffraction_results)
@@ -188,7 +188,7 @@ class TestCoefficientValidator:
 
     def test_validate_valid_data_passes(self, valid_diffraction_results):
         """Test that valid coefficients pass validation."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         validator = CoefficientValidator()
         report = validator.validate(valid_diffraction_results)
@@ -198,7 +198,7 @@ class TestCoefficientValidator:
 
     def test_is_valid_returns_bool(self, valid_diffraction_results):
         """Test is_valid() returns boolean."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         validator = CoefficientValidator()
         result = validator.is_valid(valid_diffraction_results)
@@ -208,7 +208,7 @@ class TestCoefficientValidator:
 
     def test_validate_detects_asymmetric_added_mass(self, valid_diffraction_results):
         """Test that asymmetric added mass matrix is flagged."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         # Make added mass asymmetric
         valid_diffraction_results.added_mass.matrices[0].matrix[0, 1] += 1000
@@ -222,7 +222,7 @@ class TestCoefficientValidator:
 
     def test_validate_detects_negative_added_mass_diagonal(self, valid_diffraction_results):
         """Test that negative added mass diagonal is flagged as error."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         # Make diagonal negative
         valid_diffraction_results.added_mass.matrices[0].matrix[0, 0] = -100
@@ -236,7 +236,7 @@ class TestCoefficientValidator:
 
     def test_validate_detects_nan_in_added_mass(self, valid_diffraction_results):
         """Test that NaN in added mass is flagged as error."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         # Insert NaN
         valid_diffraction_results.added_mass.matrices[0].matrix[0, 0] = np.nan
@@ -249,7 +249,7 @@ class TestCoefficientValidator:
 
     def test_validate_detects_inf_in_damping(self, valid_diffraction_results):
         """Test that Inf in damping is flagged as error."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         # Insert Inf
         valid_diffraction_results.damping.matrices[0].matrix[0, 0] = np.inf
@@ -262,7 +262,7 @@ class TestCoefficientValidator:
 
     def test_validate_detects_nan_in_rao(self, valid_diffraction_results):
         """Test that NaN in RAO magnitude is flagged as error."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         # Insert NaN in RAO
         valid_diffraction_results.raos.surge.magnitude[0, 0] = np.nan
@@ -275,7 +275,7 @@ class TestCoefficientValidator:
 
     def test_validate_detects_negative_rao_magnitude(self, valid_diffraction_results):
         """Test that negative RAO magnitude is flagged as warning."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         # Set negative magnitude
         valid_diffraction_results.raos.surge.magnitude[0, 0] = -1.0
@@ -287,7 +287,7 @@ class TestCoefficientValidator:
 
     def test_validate_handles_missing_added_mass(self, valid_diffraction_results):
         """Test validation handles missing added mass gracefully."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         valid_diffraction_results.added_mass = None
 
@@ -299,7 +299,7 @@ class TestCoefficientValidator:
 
     def test_validate_handles_missing_damping(self, valid_diffraction_results):
         """Test validation handles missing damping gracefully."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         valid_diffraction_results.damping = None
 
@@ -316,7 +316,7 @@ class TestCoefficientValidatorConvenienceFunction:
     @pytest.fixture
     def valid_diffraction_results(self):
         """Reuse fixture from TestCoefficientValidator."""
-        from digitalmodel.modules.diffraction import (
+        from digitalmodel.diffraction import (
             DiffractionResults,
             RAOSet,
             RAOComponent,
@@ -429,21 +429,21 @@ class TestCoefficientValidatorConvenienceFunction:
 
     def test_validate_coefficients_function_exists(self):
         """Test validate_coefficients function is importable."""
-        from digitalmodel.modules.bemrosetta.validators import validate_coefficients
+        from digitalmodel.bemrosetta.validators import validate_coefficients
 
         assert callable(validate_coefficients)
 
     def test_validate_coefficients_returns_report(self, valid_diffraction_results):
         """Test validate_coefficients returns ValidationReport."""
-        from digitalmodel.modules.bemrosetta.validators import validate_coefficients
-        from digitalmodel.modules.bemrosetta.core.interfaces import ValidationReport
+        from digitalmodel.bemrosetta.validators import validate_coefficients
+        from digitalmodel.bemrosetta.core.interfaces import ValidationReport
 
         report = validate_coefficients(valid_diffraction_results)
         assert isinstance(report, ValidationReport)
 
     def test_validate_coefficients_strict_mode(self, valid_diffraction_results):
         """Test validate_coefficients strict mode enables positive definite check."""
-        from digitalmodel.modules.bemrosetta.validators import validate_coefficients
+        from digitalmodel.bemrosetta.validators import validate_coefficients
 
         # Make diagonal slightly negative (would pass in non-strict)
         valid_diffraction_results.added_mass.matrices[0].matrix[0, 0] = -50
@@ -459,7 +459,7 @@ class TestCausalityChecker:
     @pytest.fixture
     def causal_diffraction_results(self):
         """Create diffraction results that satisfy causality."""
-        from digitalmodel.modules.diffraction import (
+        from digitalmodel.diffraction import (
             DiffractionResults,
             RAOSet,
             RAOComponent,
@@ -581,14 +581,14 @@ class TestCausalityChecker:
 
     def test_causality_checker_can_instantiate(self):
         """Test that CausalityChecker can be instantiated."""
-        from digitalmodel.modules.bemrosetta.validators import CausalityChecker
+        from digitalmodel.bemrosetta.validators import CausalityChecker
 
         checker = CausalityChecker()
         assert checker is not None
 
     def test_causality_checker_with_default_options(self):
         """Test CausalityChecker uses sensible defaults."""
-        from digitalmodel.modules.bemrosetta.validators import CausalityChecker
+        from digitalmodel.bemrosetta.validators import CausalityChecker
 
         checker = CausalityChecker()
         assert checker.tolerance == pytest.approx(0.1)
@@ -596,7 +596,7 @@ class TestCausalityChecker:
 
     def test_causality_checker_with_custom_options(self):
         """Test CausalityChecker accepts custom options."""
-        from digitalmodel.modules.bemrosetta.validators import CausalityChecker
+        from digitalmodel.bemrosetta.validators import CausalityChecker
 
         checker = CausalityChecker(tolerance=0.2, n_integration_points=500)
         assert checker.tolerance == pytest.approx(0.2)
@@ -604,16 +604,16 @@ class TestCausalityChecker:
 
     def test_causality_checker_implements_interface(self):
         """Test CausalityChecker implements ValidatorInterface."""
-        from digitalmodel.modules.bemrosetta.validators import CausalityChecker
-        from digitalmodel.modules.bemrosetta.core.interfaces import ValidatorInterface
+        from digitalmodel.bemrosetta.validators import CausalityChecker
+        from digitalmodel.bemrosetta.core.interfaces import ValidatorInterface
 
         checker = CausalityChecker()
         assert isinstance(checker, ValidatorInterface)
 
     def test_validate_returns_validation_report(self, causal_diffraction_results):
         """Test validate() returns ValidationReport."""
-        from digitalmodel.modules.bemrosetta.validators import CausalityChecker
-        from digitalmodel.modules.bemrosetta.core.interfaces import ValidationReport
+        from digitalmodel.bemrosetta.validators import CausalityChecker
+        from digitalmodel.bemrosetta.core.interfaces import ValidationReport
 
         checker = CausalityChecker()
         report = checker.validate(causal_diffraction_results)
@@ -622,7 +622,7 @@ class TestCausalityChecker:
 
     def test_is_valid_returns_bool(self, causal_diffraction_results):
         """Test is_valid() returns boolean."""
-        from digitalmodel.modules.bemrosetta.validators import CausalityChecker
+        from digitalmodel.bemrosetta.validators import CausalityChecker
 
         checker = CausalityChecker()
         result = checker.is_valid(causal_diffraction_results)
@@ -631,7 +631,7 @@ class TestCausalityChecker:
 
     def test_validate_handles_missing_added_mass(self, causal_diffraction_results):
         """Test validation handles missing added mass gracefully."""
-        from digitalmodel.modules.bemrosetta.validators import CausalityChecker
+        from digitalmodel.bemrosetta.validators import CausalityChecker
 
         causal_diffraction_results.added_mass = None
 
@@ -643,7 +643,7 @@ class TestCausalityChecker:
 
     def test_validate_handles_missing_damping(self, causal_diffraction_results):
         """Test validation handles missing damping gracefully."""
-        from digitalmodel.modules.bemrosetta.validators import CausalityChecker
+        from digitalmodel.bemrosetta.validators import CausalityChecker
 
         causal_diffraction_results.damping = None
 
@@ -655,7 +655,7 @@ class TestCausalityChecker:
 
     def test_validate_provides_kk_error_metrics(self, causal_diffraction_results):
         """Test validation provides Kramers-Kronig error metrics."""
-        from digitalmodel.modules.bemrosetta.validators import CausalityChecker
+        from digitalmodel.bemrosetta.validators import CausalityChecker
 
         checker = CausalityChecker()
         report = checker.validate(causal_diffraction_results)
@@ -665,7 +665,7 @@ class TestCausalityChecker:
 
     def test_validate_detects_non_causal_data(self, causal_diffraction_results):
         """Test detection of non-causal (physically inconsistent) data."""
-        from digitalmodel.modules.bemrosetta.validators import CausalityChecker
+        from digitalmodel.bemrosetta.validators import CausalityChecker
 
         # Make data non-causal by introducing inconsistency
         # Reverse the trend of added mass (should decrease with freq, make it increase)
@@ -695,7 +695,7 @@ class TestCausalityCheckerConvenienceFunction:
     @pytest.fixture
     def causal_diffraction_results(self):
         """Create minimal diffraction results for testing."""
-        from digitalmodel.modules.diffraction import (
+        from digitalmodel.diffraction import (
             DiffractionResults,
             RAOSet,
             RAOComponent,
@@ -801,14 +801,14 @@ class TestCausalityCheckerConvenienceFunction:
 
     def test_check_causality_function_exists(self):
         """Test check_causality function is importable."""
-        from digitalmodel.modules.bemrosetta.validators import check_causality
+        from digitalmodel.bemrosetta.validators import check_causality
 
         assert callable(check_causality)
 
     def test_check_causality_returns_report(self, causal_diffraction_results):
         """Test check_causality returns ValidationReport."""
-        from digitalmodel.modules.bemrosetta.validators import check_causality
-        from digitalmodel.modules.bemrosetta.core.interfaces import ValidationReport
+        from digitalmodel.bemrosetta.validators import check_causality
+        from digitalmodel.bemrosetta.core.interfaces import ValidationReport
 
         report = check_causality(causal_diffraction_results)
         assert isinstance(report, ValidationReport)
@@ -819,24 +819,24 @@ class TestValidatorsModuleExports:
 
     def test_coefficient_validator_exported(self):
         """Test CoefficientValidator is exported from validators module."""
-        from digitalmodel.modules.bemrosetta.validators import CoefficientValidator
+        from digitalmodel.bemrosetta.validators import CoefficientValidator
 
         assert CoefficientValidator is not None
 
     def test_causality_checker_exported(self):
         """Test CausalityChecker is exported from validators module."""
-        from digitalmodel.modules.bemrosetta.validators import CausalityChecker
+        from digitalmodel.bemrosetta.validators import CausalityChecker
 
         assert CausalityChecker is not None
 
     def test_validate_coefficients_exported(self):
         """Test validate_coefficients is exported from validators module."""
-        from digitalmodel.modules.bemrosetta.validators import validate_coefficients
+        from digitalmodel.bemrosetta.validators import validate_coefficients
 
         assert validate_coefficients is not None
 
     def test_check_causality_exported(self):
         """Test check_causality is exported from validators module."""
-        from digitalmodel.modules.bemrosetta.validators import check_causality
+        from digitalmodel.bemrosetta.validators import check_causality
 
         assert check_causality is not None

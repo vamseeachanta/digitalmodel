@@ -340,7 +340,7 @@ You can also use the converters programmatically:
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.diffraction import (
+from digitalmodel.diffraction import (
     AQWAConverter,
     OrcaWaveConverter,
     OrcaFlexExporter,

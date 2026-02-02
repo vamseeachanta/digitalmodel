@@ -74,7 +74,7 @@ Gap resonance occurs when waves resonate in the gap between closely spaced vesse
 ### Basic Multi-Body Setup
 
 ```python
-from digitalmodel.modules.orcawave.multibody import MultiBodyAnalysis
+from digitalmodel.orcawave.multibody import MultiBodyAnalysis
 
 # Initialize multi-body analysis
 mb = MultiBodyAnalysis()
@@ -118,7 +118,7 @@ relative_motion = results.get_relative_motion("FPSO", "Shuttle_Tanker")
 ### Gap Resonance Analysis
 
 ```python
-from digitalmodel.modules.orcawave.multibody import GapResonanceAnalyzer
+from digitalmodel.orcawave.multibody import GapResonanceAnalyzer
 
 # Initialize gap resonance analyzer
 gap = GapResonanceAnalyzer()
@@ -158,7 +158,7 @@ gap.plot_response(
 ### Side-by-Side Operations
 
 ```python
-from digitalmodel.modules.orcawave.multibody import SideBySideAnalysis
+from digitalmodel.orcawave.multibody import SideBySideAnalysis
 
 # Initialize STS analysis
 sts = SideBySideAnalysis()
@@ -214,7 +214,7 @@ print(f"Operability: {operability['overall']:.1%}")
 ### Hydrodynamic Coupling Matrices
 
 ```python
-from digitalmodel.modules.orcawave.multibody import CouplingMatrixExtractor
+from digitalmodel.orcawave.multibody import CouplingMatrixExtractor
 
 # Extract coupling matrices
 extractor = CouplingMatrixExtractor()
@@ -242,7 +242,7 @@ print(f"Coupling effect on FPSO added mass: {coupling_effect:.1%}")
 ### Shielding Effects
 
 ```python
-from digitalmodel.modules.orcawave.multibody import ShieldingAnalyzer
+from digitalmodel.orcawave.multibody import ShieldingAnalyzer
 
 # Analyze wave shielding
 shielding = ShieldingAnalyzer()
@@ -374,30 +374,30 @@ sts_operability:
 
 ```bash
 # Run multi-body analysis
-python -m digitalmodel.modules.orcawave.multibody run \
+python -m digitalmodel.orcawave.multibody run \
     --config configs/multibody_analysis.yml \
     --output results/multibody/
 
 # Analyze gap resonance
-python -m digitalmodel.modules.orcawave.multibody gap-resonance \
+python -m digitalmodel.orcawave.multibody gap-resonance \
     --results results/multibody/coupled.owr \
     --gap-width 8.0 \
     --output plots/gap_resonance.html
 
 # Compute shielding factors
-python -m digitalmodel.modules.orcawave.multibody shielding \
+python -m digitalmodel.orcawave.multibody shielding \
     --results results/multibody/coupled.owr \
     --shielding-body FPSO \
     --target-body Shuttle_Tanker \
     --output reports/shielding.csv
 
 # STS operability analysis
-python -m digitalmodel.modules.orcawave.multibody operability \
+python -m digitalmodel.orcawave.multibody operability \
     --config configs/sts_operability.yml \
     --output reports/sts_operability.html
 
 # Extract coupling matrices
-python -m digitalmodel.modules.orcawave.multibody coupling \
+python -m digitalmodel.orcawave.multibody coupling \
     --results results/multibody/coupled.owr \
     --frequency 0.1 \
     --output coupling_matrices.csv
@@ -408,7 +408,7 @@ python -m digitalmodel.modules.orcawave.multibody coupling \
 ### Export for Time-Domain
 
 ```python
-from digitalmodel.modules.orcawave.multibody import MultiBodyOrcaFlexExporter
+from digitalmodel.orcawave.multibody import MultiBodyOrcaFlexExporter
 
 # Export multi-body results for OrcaFlex
 exporter = MultiBodyOrcaFlexExporter()

@@ -11,7 +11,7 @@ import os
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from digitalmodel.modules.marine_analysis.reporting.ocimf_interactive_report import OCIMFInteractiveReport
+from digitalmodel.marine_analysis.reporting.ocimf_interactive_report import OCIMFInteractiveReport
 
 def main():
     """Generate OCIMF report."""

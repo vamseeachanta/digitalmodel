@@ -13,29 +13,29 @@ from digitalmodel.common.code_dnvrph103_hydrodynamics_circular import (
 from digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular import (
     DNVRPH103_hydrodynamics_rectangular,
 )
-from digitalmodel.modules.signal_analysis.fatigue import FatigueDamageCalculator as FatigueAnalysis
+from digitalmodel.signal_analysis.fatigue import FatigueDamageCalculator as FatigueAnalysis
 from digitalmodel.common.ship_design import ShipDesign
-from digitalmodel.modules.mooring.mooring import Mooring
-from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
-from digitalmodel.modules.orcaflex.orcaflex_file_management import (
+from digitalmodel.mooring_analysis import MooringDesigner
+from digitalmodel.orcaflex.orcaflex import OrcaFlex
+from digitalmodel.orcaflex.orcaflex_file_management import (
     OrcaflexFileManagement,
 )
-from digitalmodel.modules.orcaflex.orcaflex_installation import OrcInstallation
-from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
-from digitalmodel.modules.orcaflex.umbilical_analysis_components import (
+from digitalmodel.orcaflex.orcaflex_installation import OrcInstallation
+from digitalmodel.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
+from digitalmodel.orcaflex.umbilical_analysis_components import (
     UmbilicalAnalysis,
 )
-from digitalmodel.modules.pipe_capacity.pipe_capacity import PipeCapacity
-from digitalmodel.modules.pipeline.pipeline import Pipeline
-from digitalmodel.modules.ct_hydraulics.ct_hydraulics import CTHydraulics
-from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis
-from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis
-from digitalmodel.modules.transformation.transformation import Transformation
-# from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser
-from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
+from digitalmodel.pipe_capacity.pipe_capacity import PipeCapacity
+from digitalmodel.pipeline.pipeline import Pipeline
+from digitalmodel.ct_hydraulics.ct_hydraulics import CTHydraulics
+from digitalmodel.rao_analysis.rao_analysis import RAOAnalysis
+from digitalmodel.time_series.time_series_analysis import TimeSeriesAnalysis
+from digitalmodel.transformation.transformation import Transformation
+# from digitalmodel.vertical_riser.vertical_riser import vertical_riser
+from digitalmodel.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.common.plate_buckling import PlateBuckling
 from loguru import logger
-from digitalmodel.modules.orcaflex.output_control import OutputController, get_output_level_from_argv
+from digitalmodel.orcaflex.output_control import OutputController, get_output_level_from_argv
 
 library_name = "digitalmodel"
 wwyaml = WorkingWithYAML()
@@ -91,7 +91,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     logger.info(f"{basename}, application ... START")
 
     if "catenary" in basename:
-        from digitalmodel.modules.catenary.catenary import Catenary
+        from digitalmodel.catenary.catenary import Catenary
 
         catenary = Catenary()
         cfg_base = catenary.router(cfg_base)
@@ -116,7 +116,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         ofm = OrcaflexFileManagement()
         cfg_base = ofm.file_management(cfg_base)
     elif basename == "rigging":
-        from digitalmodel.modules.rigging.rigging import Rigging
+        from digitalmodel.rigging.rigging import Rigging
 
         rigging = Rigging()
         cfg_base = rigging.get_rigging_groups(cfg_base)
@@ -172,14 +172,18 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         cfg_base = pb.router(cfg_base)
 
     elif basename == "mooring":
-        mooring = Mooring()
-        cfg_base = mooring.router(cfg_base)
+        logger.info("Mooring analysis routed to mooring_analysis module")
+        from digitalmodel.mooring_analysis.cli import cli as mooring_cli
+        raise NotImplementedError(
+            "Mooring via engine requires mooring_analysis CLI or direct API. "
+            "Use: python -m digitalmodel.mooring_analysis.cli"
+        )
     elif basename == "artificial_lift":
-        from digitalmodel.modules.artificial_lift.dynacard.solver import DynacardWorkflow
+        from digitalmodel.artificial_lift.dynacard.solver import DynacardWorkflow
         al = DynacardWorkflow()
         cfg_base = al.router(cfg_base)
     elif basename == "digitalmarketing":
-        from digitalmodel.modules.digitalmarketing.digitalmarketing import DigitalMarketing
+        from digitalmodel.digitalmarketing.digitalmarketing import DigitalMarketing
         dm = DigitalMarketing()
         cfg_base = dm.router(cfg_base)
     else:

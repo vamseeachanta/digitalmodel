@@ -165,7 +165,7 @@ Files:
 ### Basic Modal Analysis
 
 ```python
-from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
+from digitalmodel.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
 
 # Initialize analyzer
 modal = OrcModalAnalysis()
@@ -248,7 +248,7 @@ for modeIndex in range(modes.modeCount):
 ### Extract Dominant DOFs
 
 ```python
-from digitalmodel.modules.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
+from digitalmodel.orcaflex.orcaflex_modal_analysis import OrcModalAnalysis
 import pandas as pd
 
 modal = OrcModalAnalysis()

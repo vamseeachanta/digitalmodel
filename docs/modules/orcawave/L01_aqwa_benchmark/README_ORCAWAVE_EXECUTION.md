@@ -141,7 +141,7 @@ python execute_orcawave_parallel.py \
 
 **Usage:**
 ```python
-from digitalmodel.modules.diffraction.batch_processor import BatchProcessor, BatchConfiguration
+from digitalmodel.diffraction.batch_processor import BatchProcessor, BatchConfiguration
 
 configs = [
     BatchConfiguration(

@@ -41,7 +41,7 @@ parallel_processing:
 
 ### Example Code
 ```python
-from digitalmodel.modules.orcaflex.opp import OrcaFlexPostProcess
+from digitalmodel.orcaflex.opp import OrcaFlexPostProcess
 
 # Create configuration
 cfg = {

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from digitalmodel.modules.gis.scripts.blender.blender_gis import BlenderScriptGenerator
+from digitalmodel.gis.scripts.blender.blender_gis import BlenderScriptGenerator
 
 
 # ---------------------------------------------------------------------------

@@ -99,7 +99,7 @@ def expected_values():
 @pytest.fixture
 def pipe_instance(pipe_config):
     """Create PipeCrossSection instance for testing."""
-    from digitalmodel.modules.pipe_cross_section import PipeCrossSection
+    from digitalmodel.pipe_cross_section import PipeCrossSection
     return PipeCrossSection(**pipe_config)
 
 

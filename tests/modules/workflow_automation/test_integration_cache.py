@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 import tempfile
 
-from digitalmodel.modules.workflow_automation import (
+from digitalmodel.workflow_automation import (
     WorkflowOrchestrator,
     WorkflowDefinition,
     WorkflowTask,

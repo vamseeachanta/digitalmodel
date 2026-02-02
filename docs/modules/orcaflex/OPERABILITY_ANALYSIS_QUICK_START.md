@@ -193,7 +193,7 @@ In 5 minutes, you've:
 
 ```python
 # Future feature - automated OrcaFlex execution
-from digitalmodel.modules.orcaflex.batch_runner import OrcaFlexBatchRunner
+from digitalmodel.orcaflex.batch_runner import OrcaFlexBatchRunner
 
 runner = OrcaFlexBatchRunner(
     project_dir="projects/QUICKSTART_OPERABILITY",

@@ -22,7 +22,7 @@ class TestPipeLayer:
 
     def test_layer_creation(self):
         """Test creating a pipe layer with basic properties."""
-        from digitalmodel.modules.pipe_cross_section import PipeLayer
+        from digitalmodel.pipe_cross_section import PipeLayer
 
         layer = PipeLayer(
             name="Steel Pipe",
@@ -37,7 +37,7 @@ class TestPipeLayer:
 
     def test_layer_thickness(self):
         """Test wall thickness calculation."""
-        from digitalmodel.modules.pipe_cross_section import PipeLayer
+        from digitalmodel.pipe_cross_section import PipeLayer
 
         layer = PipeLayer(
             name="Steel",
@@ -50,7 +50,7 @@ class TestPipeLayer:
 
     def test_layer_cross_sectional_area(self):
         """Test cross-sectional area calculation for steel pipe."""
-        from digitalmodel.modules.pipe_cross_section import PipeLayer
+        from digitalmodel.pipe_cross_section import PipeLayer
 
         layer = PipeLayer(
             name="Steel",
@@ -64,7 +64,7 @@ class TestPipeLayer:
 
     def test_layer_weight_per_meter(self, expected_values):
         """Test weight per meter calculation for steel pipe."""
-        from digitalmodel.modules.pipe_cross_section import PipeLayer
+        from digitalmodel.pipe_cross_section import PipeLayer
 
         layer = PipeLayer(
             name="Steel",
@@ -80,7 +80,7 @@ class TestPipeCrossSection:
 
     def test_pipe_creation(self, pipe_config):
         """Test creating a pipe cross-section with all layers."""
-        from digitalmodel.modules.pipe_cross_section import PipeCrossSection
+        from digitalmodel.pipe_cross_section import PipeCrossSection
 
         pipe = PipeCrossSection(**pipe_config)
         assert len(pipe.layers) == 3
@@ -154,7 +154,7 @@ class TestPipeCreationMethods:
 
     def test_from_inches(self):
         """Test creating pipe from imperial units."""
-        from digitalmodel.modules.pipe_cross_section import PipeCrossSection
+        from digitalmodel.pipe_cross_section import PipeCrossSection
 
         pipe = PipeCrossSection.from_inches(
             steel_od_inch=24,
@@ -167,14 +167,14 @@ class TestPipeCreationMethods:
 
     def test_from_dict(self, pipe_config):
         """Test creating pipe from dictionary configuration."""
-        from digitalmodel.modules.pipe_cross_section import PipeCrossSection
+        from digitalmodel.pipe_cross_section import PipeCrossSection
 
         pipe = PipeCrossSection.from_dict({"pipe_cross_section": pipe_config})
         assert len(pipe.layers) == 3
 
     def test_from_config(self, pipe_config):
         """Test creating pipe from config object."""
-        from digitalmodel.modules.pipe_cross_section import (
+        from digitalmodel.pipe_cross_section import (
             PipeCrossSection,
             PipeCrossSectionConfig,
         )
@@ -189,14 +189,14 @@ class TestUnitConversions:
 
     def test_inch_to_mm(self):
         """Test inch to mm conversion."""
-        from digitalmodel.modules.pipe_cross_section import inch_to_mm
+        from digitalmodel.pipe_cross_section import inch_to_mm
 
         assert abs(inch_to_mm(24) - 609.6) < 0.1
         assert abs(inch_to_mm(0.5625) - 14.2875) < 0.01
 
     def test_mm_to_inch(self):
         """Test mm to inch conversion."""
-        from digitalmodel.modules.pipe_cross_section import mm_to_inch
+        from digitalmodel.pipe_cross_section import mm_to_inch
 
         assert abs(mm_to_inch(609.6) - 24) < 0.01
         assert abs(mm_to_inch(776.6) - 30.57) < 0.01
@@ -240,7 +240,7 @@ class TestEdgeCases:
 
     def test_bare_steel_pipe(self, pipe_config_no_coatings):
         """Test pipe with no coatings."""
-        from digitalmodel.modules.pipe_cross_section import PipeCrossSection
+        from digitalmodel.pipe_cross_section import PipeCrossSection
 
         pipe = PipeCrossSection(**pipe_config_no_coatings)
         assert len(pipe.layers) == 1
@@ -249,7 +249,7 @@ class TestEdgeCases:
 
     def test_lpp_only_pipe(self, pipe_config_lpp_only):
         """Test pipe with 3LPP but no concrete."""
-        from digitalmodel.modules.pipe_cross_section import PipeCrossSection
+        from digitalmodel.pipe_cross_section import PipeCrossSection
 
         pipe = PipeCrossSection(**pipe_config_lpp_only)
         assert len(pipe.layers) == 2

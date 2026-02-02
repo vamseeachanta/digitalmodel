@@ -81,7 +81,7 @@ max_iterations: 10
 **Automated Process Commands**:
 ```bash
 # Step 1: Initial analysis
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     pattern="fsts*125km3*pb_*.yml" \
     input_directory="." \
     output_directory="." \

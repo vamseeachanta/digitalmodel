@@ -8,10 +8,10 @@ from plotly.subplots import make_subplots
 # Add src to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 
-from digitalmodel.modules.artificial_lift.dynacard.models import (
+from digitalmodel.artificial_lift.dynacard.models import (
     DynacardAnalysisContext, CardData, RodSection, PumpProperties, SurfaceUnit, AnalysisResults
 )
-from digitalmodel.modules.artificial_lift.dynacard.solver import DynacardWorkflow
+from digitalmodel.artificial_lift.dynacard.solver import DynacardWorkflow
 
 def load_legacy_json(file_path):
     """Parses legacy JSON format into modern DynacardAnalysisContext."""

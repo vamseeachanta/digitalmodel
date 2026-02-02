@@ -11,7 +11,7 @@ from pathlib import Path
 # Add src to path for module imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from digitalmodel.modules.orcaflex.analysis import run_comparative_analysis
+from digitalmodel.orcaflex.analysis import run_comparative_analysis
 
 if __name__ == '__main__':
     sys.exit(run_comparative_analysis())

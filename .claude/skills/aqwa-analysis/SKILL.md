@@ -194,7 +194,7 @@ aqwa_analysis:
 ### RAO Extraction
 
 ```python
-from digitalmodel.modules.aqwa.aqwa_raos import AqwaRAOs
+from digitalmodel.aqwa.aqwa_raos import AqwaRAOs
 
 # Initialize RAO extractor
 raos = AqwaRAOs()
@@ -226,8 +226,8 @@ raos.export_orcaflex("vessel_raos.yml")
 ### Hydrodynamic Coefficient Extraction
 
 ```python
-from digitalmodel.modules.aqwa.aqwa_reader import AqwaReader
-from digitalmodel.modules.aqwa.aqwa_analysis import AqwaAnalysis
+from digitalmodel.aqwa.aqwa_reader import AqwaReader
+from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis
 
 # Initialize reader
 reader = AqwaReader()
@@ -255,7 +255,7 @@ for freq in frequencies:
 ### AQWA Analysis Router
 
 ```python
-from digitalmodel.modules.aqwa.aqwa_analysis import AqwaAnalysis
+from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis
 
 # Initialize analysis
 aqwa = AqwaAnalysis()
@@ -282,7 +282,7 @@ drift = results["drift_forces"]
 ### Pre-Processing
 
 ```python
-from digitalmodel.modules.aqwa.aqwa_preprocess import AqwaPreProcess
+from digitalmodel.aqwa.aqwa_preprocess import AqwaPreProcess
 
 # Initialize pre-processor
 preprocess = AqwaPreProcess()
@@ -300,7 +300,7 @@ preprocess.generate_input(
 ### Post-Processing
 
 ```python
-from digitalmodel.modules.aqwa.aqwa_postprocess import AqwaPostProcess
+from digitalmodel.aqwa.aqwa_postprocess import AqwaPostProcess
 
 # Initialize post-processor
 postprocess = AqwaPostProcess()
@@ -329,7 +329,7 @@ if validation["warnings"]:
 ### Result Validation
 
 ```python
-from digitalmodel.modules.aqwa.aqwa_validator import AqwaValidator
+from digitalmodel.aqwa.aqwa_validator import AqwaValidator
 
 # Initialize validator
 validator = AqwaValidator()
@@ -484,7 +484,7 @@ frequency_rad_s,direction_deg,surge_amp,surge_phase,sway_amp,sway_phase,heave_am
 
 ```python
 # Check mesh quality before running
-from digitalmodel.modules.aqwa.mesh_check import AqwaMeshCheck
+from digitalmodel.aqwa.mesh_check import AqwaMeshCheck
 
 mesh = AqwaMeshCheck()
 mesh.load("geometry/hull.mes")
@@ -617,8 +617,8 @@ python run_proper_comparison.py
 
 ```python
 # Use the diffraction comparison framework module
-from digitalmodel.modules.diffraction.comparison_framework import DiffractionComparator
-from digitalmodel.modules.diffraction.aqwa_converter import AQWAConverter
+from digitalmodel.diffraction.comparison_framework import DiffractionComparator
+from digitalmodel.diffraction.aqwa_converter import AQWAConverter
 
 # Extract AQWA data
 converter = AQWAConverter(

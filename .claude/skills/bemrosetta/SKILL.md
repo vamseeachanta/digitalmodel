@@ -124,7 +124,7 @@ bemrosetta status
 ### Basic Workflow
 
 ```python
-from digitalmodel.modules.bemrosetta import (
+from digitalmodel.bemrosetta import (
     AQWAParser,
     OrcaFlexConverter,
     validate_coefficients,
@@ -152,7 +152,7 @@ converter.convert(results)
 ### QTF Handling
 
 ```python
-from digitalmodel.modules.bemrosetta import QTFParser, OrcaFlexConverter
+from digitalmodel.bemrosetta import QTFParser, OrcaFlexConverter
 
 # Parse QTF file
 qtf_parser = QTFParser()
@@ -170,7 +170,7 @@ converter.convert(results)
 ### Mesh Conversion
 
 ```python
-from digitalmodel.modules.bemrosetta import (
+from digitalmodel.bemrosetta import (
     GDFHandler, DATHandler, STLHandler, convert_mesh
 )
 
@@ -190,7 +190,7 @@ convert_mesh("hull.gdf", "hull.stl")
 ### Causality Validation
 
 ```python
-from digitalmodel.modules.bemrosetta import (
+from digitalmodel.bemrosetta import (
     CoefficientValidator,
     CausalityChecker,
 )
@@ -265,8 +265,8 @@ for key, error in kk_report.info.items():
 
 ### With diffraction module
 ```python
-from digitalmodel.modules.diffraction import OrcaFlexExporter
-from digitalmodel.modules.bemrosetta import AQWAParser
+from digitalmodel.diffraction import OrcaFlexExporter
+from digitalmodel.bemrosetta import AQWAParser
 
 # BEMRosetta uses diffraction module schemas
 parser = AQWAParser()
@@ -289,7 +289,7 @@ db.store(results.added_mass, results.damping)
 ## Error Handling
 
 ```python
-from digitalmodel.modules.bemrosetta import (
+from digitalmodel.bemrosetta import (
     BEMRosettaError,
     ParserError,
     ConverterError,

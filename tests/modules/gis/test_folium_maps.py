@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
-from digitalmodel.modules.gis.integrations.folium_maps import (
+from digitalmodel.gis.integrations.folium_maps import (
     FoliumMapBuilder,
     HAS_FOLIUM,
 )
@@ -26,7 +26,7 @@ class TestImportErrorWhenMissing:
 
     def test_raises_import_error_without_folium(self) -> None:
         with patch(
-            "digitalmodel.modules.gis.integrations.folium_maps.HAS_FOLIUM", False
+            "digitalmodel.gis.integrations.folium_maps.HAS_FOLIUM", False
         ):
             with pytest.raises(ImportError, match="folium is required"):
                 FoliumMapBuilder()
@@ -46,8 +46,8 @@ def builder() -> FoliumMapBuilder:
 @pytest.fixture
 def sample_layer():
     """A minimal FeatureLayer for testing markers and heatmaps."""
-    from digitalmodel.modules.gis.core.crs import CRSDefinition
-    from digitalmodel.modules.gis.layers.feature_layer import FeatureLayer
+    from digitalmodel.gis.core.crs import CRSDefinition
+    from digitalmodel.gis.layers.feature_layer import FeatureLayer
 
     df = pd.DataFrame(
         {

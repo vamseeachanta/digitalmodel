@@ -42,7 +42,7 @@ class MooringTensionOrchestrator:
             self.run_command("python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml")
             
             # Step 2: Run OrcaFlex analysis
-            self.run_command("python -m digitalmodel.modules.orcaflex.universal "
+            self.run_command("python -m digitalmodel.orcaflex.universal "
                            "pattern='fsts*125km3*pb_*.yml' input_directory='.' "
                            "output_directory='.' validate=false")
             
@@ -74,7 +74,7 @@ Based on files in `go-by/` folder:
 
 2. **Run OrcaFlex Models**
    ```bash
-   /d/github/digitalmodel/.venv/Scripts/python -m digitalmodel.modules.orcaflex.universal \
+   /d/github/digitalmodel/.venv/Scripts/python -m digitalmodel.orcaflex.universal \
        pattern="fsts*125km3*pb_*.yml" \
        input_directory="." \
        output_directory="." \
@@ -270,7 +270,7 @@ class MooringTensionOrchestrator:
             
             # Step 2: Run OrcaFlex analysis
             print("\nStep 2: Running OrcaFlex analysis...")
-            self.run_command(f'{self.python_exec} -m digitalmodel.modules.orcaflex.universal '
+            self.run_command(f'{self.python_exec} -m digitalmodel.orcaflex.universal '
                            f'pattern="fsts*125km3*pb_*.yml" input_directory="." '
                            f'output_directory="." validate=false')
             

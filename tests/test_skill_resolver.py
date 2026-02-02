@@ -5,7 +5,7 @@ import json
 import pytest
 from pathlib import Path
 
-from digitalmodel.modules.skills.skill_resolver import (
+from digitalmodel.skills.skill_resolver import (
     SkillResolver,
     SkillMetadata,
     SkillRecommendation

@@ -15,7 +15,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from src.digitalmodel.modules.orcaflex.core.model_interface import check_orcaflex_available
+from src.digitalmodel.orcaflex.core.model_interface import check_orcaflex_available
 
 
 def print_banner(title):

@@ -11,7 +11,7 @@ The runner supports three analysis modes:
 ### 1. Static Analysis (Default)
 ```bash
 # Runs only static equilibrium calculation
-python -m digitalmodel.modules.orcaflex.universal pattern="*.yml"
+python -m digitalmodel.orcaflex.universal pattern="*.yml"
 ```
 - Finds static equilibrium position
 - Fast execution (typically 1-5 seconds per model)
@@ -20,7 +20,7 @@ python -m digitalmodel.modules.orcaflex.universal pattern="*.yml"
 ### 2. Dynamic Analysis
 ```bash
 # Runs full time-domain simulation
-python -m digitalmodel.modules.orcaflex.universal --dynamic pattern="*.yml" simulation_time=200
+python -m digitalmodel.orcaflex.universal --dynamic pattern="*.yml" simulation_time=200
 ```
 - Performs complete time-history simulation
 - Includes all stages (build-up, simulation)
@@ -30,7 +30,7 @@ python -m digitalmodel.modules.orcaflex.universal --dynamic pattern="*.yml" simu
 ### 3. Both Static and Dynamic
 ```bash
 # Runs static first, then dynamic
-python -m digitalmodel.modules.orcaflex.universal --both pattern="*.yml" simulation_time=150
+python -m digitalmodel.orcaflex.universal --both pattern="*.yml" simulation_time=150
 ```
 - Performs static analysis first
 - Then runs dynamic simulation from static position
@@ -41,19 +41,19 @@ python -m digitalmodel.modules.orcaflex.universal --both pattern="*.yml" simulat
 ### Basic Dynamic Analysis
 ```bash
 # Run dynamic analysis on all .yml files
-python -m digitalmodel.modules.orcaflex.universal --dynamic pattern="*.yml"
+python -m digitalmodel.orcaflex.universal --dynamic pattern="*.yml"
 
 # Specify custom simulation duration (seconds)
-python -m digitalmodel.modules.orcaflex.universal --dynamic simulation_time=300 pattern="*.yml"
+python -m digitalmodel.orcaflex.universal --dynamic simulation_time=300 pattern="*.yml"
 
 # Process specific models with dynamic analysis
-python -m digitalmodel.modules.orcaflex.universal --dynamic models="model1.yml,model2.yml"
+python -m digitalmodel.orcaflex.universal --dynamic models="model1.yml,model2.yml"
 ```
 
 ### Advanced Examples
 ```bash
 # FSTS mooring analysis with 200-second simulation
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     --dynamic \
     pattern="fsts*pb*.yml" \
     simulation_time=200 \
@@ -61,7 +61,7 @@ python -m digitalmodel.modules.orcaflex.universal \
     output_directory=".\dynamic_results"
 
 # Batch processing with both analyses
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     --both \
     pattern="fsts_l015_*_vessel_statics_6dof.yml" \
     simulation_time=150 \
@@ -72,7 +72,7 @@ python -m digitalmodel.modules.orcaflex.universal \
 
 ### Basic Dynamic Analysis
 ```python
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 # Initialize runner for dynamic analysis
 runner = UniversalOrcaFlexRunner(
@@ -146,7 +146,7 @@ options:
 
 Run with:
 ```bash
-python -m digitalmodel.modules.orcaflex.universal --config dynamic_config.yml
+python -m digitalmodel.orcaflex.universal --config dynamic_config.yml
 ```
 
 ## Performance Considerations
@@ -177,10 +177,10 @@ python -m digitalmodel.modules.orcaflex.universal --config dynamic_config.yml
 2. **Batch by analysis type**
    ```bash
    # First run all static
-   python -m digitalmodel.modules.orcaflex.universal --static pattern="*.yml"
+   python -m digitalmodel.orcaflex.universal --static pattern="*.yml"
    
    # Then run dynamic on critical models
-   python -m digitalmodel.modules.orcaflex.universal --dynamic pattern="critical*.yml"
+   python -m digitalmodel.orcaflex.universal --dynamic pattern="critical*.yml"
    ```
 
 3. **Monitor system resources**
@@ -264,14 +264,14 @@ print(f"Sim file size: {sim_size:.1f} MB")
 ### Process LWL and HWL Conditions
 ```bash
 # Low water line conditions with dynamic analysis
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     --dynamic \
     pattern="*lwl*.yml" \
     simulation_time=200 \
     input_directory="D:\1522\ctr7\orcaflex\rev_a08\base_files\fsts_lngc_pretension"
 
 # High water line conditions
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     --dynamic \
     pattern="*hwl*.yml" \
     simulation_time=200 \
@@ -281,13 +281,13 @@ python -m digitalmodel.modules.orcaflex.universal \
 ### Batch Processing Different Distances
 ```bash
 # Process all 125km3 models
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     --both \
     pattern="*125km3*.yml" \
     simulation_time=150
 
 # Process all 180km3 models  
-python -m digitalmodel.modules.orcaflex.universal \
+python -m digitalmodel.orcaflex.universal \
     --both \
     pattern="*180km3*.yml" \
     simulation_time=150
@@ -299,7 +299,7 @@ The dynamic analysis capability integrates seamlessly with existing batch proces
 
 ```python
 # Your existing batch configuration
-from digitalmodel.modules.orcaflex.mooring_tension_iteration import batch_runner
+from digitalmodel.orcaflex.mooring_tension_iteration import batch_runner
 
 # Simply add analysis_type and simulation_time
 config = {

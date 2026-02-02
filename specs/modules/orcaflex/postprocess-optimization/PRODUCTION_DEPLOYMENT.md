@@ -72,7 +72,7 @@ Affected files already updated:
 
 For mixed file sizes, use the ResourceManager:
 ```python
-from digitalmodel.modules.orcaflex.performance_monitor import ResourceManager
+from digitalmodel.orcaflex.performance_monitor import ResourceManager
 
 # Automatically calculate optimal threads
 resource_mgr = ResourceManager()
@@ -136,7 +136,7 @@ Thread recommendations by file size:
 
 ### Performance Monitoring
 ```python
-from digitalmodel.modules.orcaflex.performance_monitor import PerformanceMonitor
+from digitalmodel.orcaflex.performance_monitor import PerformanceMonitor
 
 monitor = PerformanceMonitor()
 monitor.start_monitoring()
@@ -162,17 +162,17 @@ monitor.save_report("performance_metrics.json")
 
 ### Test Optimization (Safe)
 ```bash
-python -m digitalmodel.modules.orcaflex.test_production_optimization
+python -m digitalmodel.orcaflex.test_production_optimization
 ```
 
 ### Run Optimized Analysis
 ```bash
-python -m digitalmodel.modules.orcaflex.orcaflex_optimized_parallel_v2
+python -m digitalmodel.orcaflex.orcaflex_optimized_parallel_v2
 ```
 
 ### Monitor Performance
 ```bash
-python -m digitalmodel.modules.orcaflex.performance_monitor
+python -m digitalmodel.orcaflex.performance_monitor
 ```
 
 ## Critical Reminders

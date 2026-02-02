@@ -198,7 +198,7 @@
 ### Example 1: Complete AQWA to OrcaFlex Conversion
 
 ```python
-from digitalmodel.modules.diffraction import convert_aqwa_results
+from digitalmodel.diffraction import convert_aqwa_results
 
 output_dir = convert_aqwa_results(
     analysis_folder="C:/AQWA/Projects/FPSO",
@@ -219,7 +219,7 @@ output_dir = convert_aqwa_results(
 ### Example 2: With Validation
 
 ```python
-from digitalmodel.modules.diffraction import (
+from digitalmodel.diffraction import (
     AQWAConverter,
     OrcaFlexExporter,
     validate_results
@@ -247,7 +247,7 @@ if validation_report['overall_status'] == 'PASS':
 ### Example 3: Custom Processing
 
 ```python
-from digitalmodel.modules.diffraction import DiffractionResults
+from digitalmodel.diffraction import DiffractionResults
 
 # Load results
 results = ...  # From converter
@@ -442,7 +442,7 @@ python src/digitalmodel/modules/diffraction_cli.py aqwa \
 
 # Then convert outputs
 python -c "
-from digitalmodel.modules.diffraction import convert_aqwa_results
+from digitalmodel.diffraction import convert_aqwa_results
 convert_aqwa_results('C:/AQWA/Project', 'vessel', 1200, 'output')
 "
 ```
@@ -451,7 +451,7 @@ convert_aqwa_results('C:/AQWA/Project', 'vessel', 1200, 'output')
 
 ```python
 import OrcFxAPI
-from digitalmodel.modules.diffraction import convert_aqwa_results
+from digitalmodel.diffraction import convert_aqwa_results
 
 # Convert AQWA results
 convert_aqwa_results(

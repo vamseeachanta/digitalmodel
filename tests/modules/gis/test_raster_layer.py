@@ -7,8 +7,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from digitalmodel.modules.gis.core.crs import CRSDefinition, CRSType
-from digitalmodel.modules.gis.layers.raster_layer import RasterLayer
+from digitalmodel.gis.core.crs import CRSDefinition, CRSType
+from digitalmodel.gis.layers.raster_layer import RasterLayer
 
 
 # ------------------------------------------------------------------

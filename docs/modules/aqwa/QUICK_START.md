@@ -22,7 +22,7 @@ All workflows support both AQWA Workbench (.wbpj) and DAT file (.dat) execution 
 ```bash
 # Run RAO extraction from existing AQWA results
 python -c "
-from digitalmodel.modules.aqwa.aqwa_analysis import AqwaAnalysis
+from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis
 
 cfg = {
     'Analysis': {
@@ -44,7 +44,7 @@ print(f'Status: {results[\"results\"][\"status\"]}')
 
 ```bash
 python -c "
-from digitalmodel.modules.aqwa.aqwa_analysis import AqwaAnalysis
+from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis
 
 cfg = {
     'Analysis': {
@@ -64,7 +64,7 @@ results = analyzer.analysis_router(cfg)
 
 ```bash
 python -c "
-from digitalmodel.modules.aqwa.aqwa_analysis import AqwaAnalysis
+from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis
 
 cfg = {
     'Analysis': {
@@ -130,7 +130,7 @@ Extracts Response Amplitude Operators from AQWA analysis results.
 
 **Usage:**
 ```python
-from digitalmodel.modules.aqwa.aqwa_analysis_raos import AqwaRAOs
+from digitalmodel.aqwa.aqwa_analysis_raos import AqwaRAOs
 
 cfg = {
     'Analysis': {
@@ -157,7 +157,7 @@ Computes hydrodynamic damping matrices.
 
 **Usage:**
 ```python
-from digitalmodel.modules.aqwa.aqwa_analysis_damping import AqwaDamping
+from digitalmodel.aqwa.aqwa_analysis_damping import AqwaDamping
 
 cfg = {
     'Analysis': {
@@ -179,7 +179,7 @@ Launches AQWA External Force Server for coupled analysis.
 
 **Usage:**
 ```python
-from digitalmodel.modules.aqwa.aqwa_analysis_ef_server import AqwaEFServer
+from digitalmodel.aqwa.aqwa_analysis_ef_server import AqwaEFServer
 
 cfg = {
     'Analysis': {
@@ -258,7 +258,7 @@ echo %ANSYS_ROOT%
 ### Workflow 1: Extract RAOs from Completed AQWA Analysis
 
 ```python
-from digitalmodel.modules.aqwa.aqwa_analysis import AqwaAnalysis
+from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis
 from pathlib import Path
 
 # Setup paths
@@ -294,7 +294,7 @@ else:
 ### Workflow 2: Compute Damping Coefficients
 
 ```python
-from digitalmodel.modules.aqwa.aqwa_analysis import AqwaAnalysis
+from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis
 
 cfg = {
     'Analysis': {
@@ -317,7 +317,7 @@ results = analyzer.analysis_router(cfg)
 ### Workflow 3: Launch External Force Server for OrcaFlex Coupling
 
 ```python
-from digitalmodel.modules.aqwa.aqwa_analysis import AqwaAnalysis
+from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis
 
 cfg = {
     'Analysis': {
@@ -346,7 +346,7 @@ analyzer.analysis_router(cfg)
 ### Export RAOs to OrcaFlex Format
 
 ```python
-from digitalmodel.modules.aqwa.aqwa_analysis_raos import AqwaRAOs
+from digitalmodel.aqwa.aqwa_analysis_raos import AqwaRAOs
 from pathlib import Path
 
 # Extract RAOs
@@ -410,7 +410,7 @@ cd D:/workspace-hub/digitalmodel
 uv sync
 
 # Run with explicit Python path
-uv run python -c "from digitalmodel.modules.aqwa.aqwa_analysis import AqwaAnalysis"
+uv run python -c "from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis"
 ```
 
 ### Issue: "AQWA not found"
@@ -442,7 +442,7 @@ Valid methods are:
 ### Batch Processing Multiple Vessels
 
 ```python
-from digitalmodel.modules.aqwa.aqwa_analysis import AqwaAnalysis
+from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis
 from pathlib import Path
 
 vessels = [
@@ -471,7 +471,7 @@ for vessel in vessels:
 ### Custom RAO Processing
 
 ```python
-from digitalmodel.modules.aqwa.aqwa_analysis_raos import AqwaRAOs
+from digitalmodel.aqwa.aqwa_analysis_raos import AqwaRAOs
 import pandas as pd
 
 # Extract RAOs

@@ -47,7 +47,7 @@ This specification defines a comprehensive system for determining optimal starti
 
 ### Basic Usage
 ```python
-from digitalmodel.modules.orcaflex.mooring_starting_position import MooringTensionStartingPosition
+from digitalmodel.orcaflex.mooring_starting_position import MooringTensionStartingPosition
 
 # Load configuration
 config = StartingPositionConfig.from_yaml("config.yml")

@@ -151,7 +151,7 @@ def main():
 
     # Generate HTML comparison report
     print("\nGenerating interactive HTML report...")
-    generator = CPHTMLReportGenerator(output_dir="src/reports/cp")
+    generator = CPHTMLReportGenerator(output_dir="reports/cp")
 
     report_path = generator.generate_comparison_report(
         results_2010=results_standard,

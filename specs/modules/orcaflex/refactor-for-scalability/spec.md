@@ -82,7 +82,7 @@ Mixed import patterns throughout:
 
 ```python
 # Some files use absolute imports:
-from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities
 
 # Others use relative imports:  
 from .orcaflex_interface import OrcaFlexModelInterface

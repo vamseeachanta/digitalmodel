@@ -25,9 +25,9 @@ from typing import Dict, List, Tuple
 repo_root = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(repo_root / "src"))
 
-from digitalmodel.modules.diffraction.aqwa_lis_parser import AQWALISParser
-from digitalmodel.modules.diffraction.aqwa_converter import AQWAConverter
-from digitalmodel.modules.diffraction.output_schemas import DiffractionResults, DOF
+from digitalmodel.diffraction.aqwa_lis_parser import AQWALISParser
+from digitalmodel.diffraction.aqwa_converter import AQWAConverter
+from digitalmodel.diffraction.output_schemas import DiffractionResults, DOF
 from loguru import logger
 
 

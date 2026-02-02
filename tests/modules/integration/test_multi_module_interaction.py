@@ -371,7 +371,7 @@ class TestModuleInteractions:
         }
 
         # Mock signal processing and fatigue modules
-        with patch('digitalmodel.modules.signal_analysis.signal_processing') as mock_signal, \
+        with patch('digitalmodel.signal_analysis.signal_processing') as mock_signal, \
              patch('digitalmodel.common.fatigue_analysis') as mock_fatigue:
             
             # Configure signal processing to extract cycles

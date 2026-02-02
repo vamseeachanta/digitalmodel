@@ -31,7 +31,7 @@ def test_core_imports():
     # Test 1.1: UnifiedRAOReader
     print("\n[1.1] Testing UnifiedRAOReader import...")
     try:
-        from digitalmodel.modules.marine_analysis import UnifiedRAOReader
+        from digitalmodel.marine_analysis import UnifiedRAOReader
         print(f"     ✅ SUCCESS: {UnifiedRAOReader}")
     except Exception as e:
         print(f"     ❌ FAILED: {e}")
@@ -40,7 +40,7 @@ def test_core_imports():
     # Test 1.2: RAOReaderError
     print("\n[1.2] Testing RAOReaderError import...")
     try:
-        from digitalmodel.modules.marine_analysis import RAOReaderError
+        from digitalmodel.marine_analysis import RAOReaderError
         print(f"     ✅ SUCCESS: {RAOReaderError}")
     except Exception as e:
         print(f"     ❌ FAILED: {e}")
@@ -49,7 +49,7 @@ def test_core_imports():
     # Test 1.3: read_rao_file
     print("\n[1.3] Testing read_rao_file import...")
     try:
-        from digitalmodel.modules.marine_analysis import read_rao_file
+        from digitalmodel.marine_analysis import read_rao_file
         print(f"     ✅ SUCCESS: {read_rao_file}")
     except Exception as e:
         print(f"     ❌ FAILED: {e}")
@@ -58,7 +58,7 @@ def test_core_imports():
     # Test 1.4: RAOPlotter
     print("\n[1.4] Testing RAOPlotter import...")
     try:
-        from digitalmodel.modules.marine_analysis import RAOPlotter
+        from digitalmodel.marine_analysis import RAOPlotter
         if RAOPlotter is None:
             print(f"     ⚠️  WARNING: RAOPlotter is None (optional dependency)")
         else:
@@ -78,7 +78,7 @@ def test_models_imports():
     # Test 2.1: RAOData models
     print("\n[2.1] Testing RAOData models...")
     try:
-        from digitalmodel.modules.marine_analysis import (
+        from digitalmodel.marine_analysis import (
             RAOData,
             RAOType,
             UnifiedRAOData,
@@ -92,7 +92,7 @@ def test_models_imports():
     # Test 2.2: Parser imports
     print("\n[2.2] Testing parser imports...")
     try:
-        from digitalmodel.modules.marine_analysis import (
+        from digitalmodel.marine_analysis import (
             AQWALISParser,
             OrcaFlexYMLParser
         )
@@ -112,7 +112,7 @@ def test_legacy_imports():
     # Test 3.1: Legacy processors
     print("\n[3.1] Testing legacy RAO processors...")
     try:
-        from digitalmodel.modules.marine_analysis import (
+        from digitalmodel.marine_analysis import (
             RAODataProcessor,
             RAODataValidators,
             RAOInterpolator
@@ -125,7 +125,7 @@ def test_legacy_imports():
     # Test 3.2: Legacy readers
     print("\n[3.2] Testing legacy readers...")
     try:
-        from digitalmodel.modules.marine_analysis import (
+        from digitalmodel.marine_analysis import (
             AQWAReader,
             OrcaFlexReader
         )
@@ -145,7 +145,7 @@ def test_marine_engineering_imports():
     # Test 4.1: Catenary module
     print("\n[4.1] Testing catenary module...")
     try:
-        from digitalmodel.modules.marine_engineering.catenary import (
+        from digitalmodel.marine_engineering.catenary import (
             CatenarySolver,
             SimplifiedCatenarySolver
         )

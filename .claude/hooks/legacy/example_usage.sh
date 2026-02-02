@@ -73,7 +73,7 @@ run_mooring_tension_iteration() {
     echo -e "${BLUE}STEP 2: ORCAFLEX ANALYSIS${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════${NC}"
     
-    python -m digitalmodel.modules.orcaflex.universal \
+    python -m digitalmodel.orcaflex.universal \
         pattern="fsts*125km3*pb_*.yml" \
         input_directory="." \
         output_directory="." \

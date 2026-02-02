@@ -6,16 +6,16 @@ import pytest
 import numpy as np
 from pathlib import Path
 
-from digitalmodel.modules.artificial_lift.dynacard.data_loader import (
+from digitalmodel.artificial_lift.dynacard.data_loader import (
     load_from_json_file,
 )
-from digitalmodel.modules.artificial_lift.dynacard.power_consumption import (
+from digitalmodel.artificial_lift.dynacard.power_consumption import (
     PowerConsumptionCalculator,
     calculate_power_consumption,
     calculate_card_area,
     F_CL_TABLE,
 )
-from digitalmodel.modules.artificial_lift.dynacard.models import (
+from digitalmodel.artificial_lift.dynacard.models import (
     DynacardAnalysisContext,
     CardData,
     RodSection,
@@ -25,7 +25,7 @@ from digitalmodel.modules.artificial_lift.dynacard.models import (
     CalculationParameters,
     PowerConsumptionAnalysis,
 )
-from digitalmodel.modules.artificial_lift.dynacard.exceptions import ValidationError
+from digitalmodel.artificial_lift.dynacard.exceptions import ValidationError
 
 
 # Test data directory

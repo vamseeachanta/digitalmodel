@@ -21,7 +21,7 @@ This guide helps you migrate OrcaFlex post-processing code to use the new integr
 
 #### Old Code
 ```python
-from digitalmodel.modules.orcaflex.opp_time_series import OPPTimeSeries
+from digitalmodel.orcaflex.opp_time_series import OPPTimeSeries
 from digitalmodel.modules.time_series.time_series_components import TimeSeriesComponents
 
 opp = OPPTimeSeries()
@@ -36,7 +36,7 @@ cycles = tsc.get_rainflow_count_from_time_series(time_series)
 
 #### New Code (Direct)
 ```python
-from digitalmodel.modules.orcaflex.time_trace_processor import OrcaFlexTimeTraceProcessor, TimeTraceConfig
+from digitalmodel.orcaflex.time_trace_processor import OrcaFlexTimeTraceProcessor, TimeTraceConfig
 
 config = TimeTraceConfig(
     source_type='orcaflex',
@@ -56,7 +56,7 @@ damage = results['fatigue']['Line1.Tension']['damage_design_life']
 
 #### New Code (Using V2 Module)
 ```python
-from digitalmodel.modules.orcaflex.opp_time_series_v2 import OPPTimeSeriesV2
+from digitalmodel.orcaflex.opp_time_series_v2 import OPPTimeSeriesV2
 
 opp_v2 = OPPTimeSeriesV2()
 results = opp_v2.router(cfg)
@@ -82,7 +82,7 @@ for sim_file in simulation_files:
 
 #### New Code (Parallel Processing)
 ```python
-from digitalmodel.modules.orcaflex.time_trace_processor import OrcaFlexTimeTraceProcessor
+from digitalmodel.orcaflex.time_trace_processor import OrcaFlexTimeTraceProcessor
 from concurrent.futures import ProcessPoolExecutor
 
 def process_simulation(sim_file):
@@ -210,20 +210,20 @@ signal_analysis:
 ### Step 1: Update Imports
 ```python
 # Add new import
-from digitalmodel.modules.orcaflex.time_trace_processor import (
+from digitalmodel.orcaflex.time_trace_processor import (
     OrcaFlexTimeTraceProcessor,
     TimeTraceConfig,
     create_default_config
 )
 
 # Or use V2 module
-from digitalmodel.modules.orcaflex.opp_time_series_v2 import OPPTimeSeriesV2
+from digitalmodel.orcaflex.opp_time_series_v2 import OPPTimeSeriesV2
 ```
 
 ### Step 2: Update Configuration
 Use the `migrate_configuration` helper:
 ```python
-from digitalmodel.modules.orcaflex.opp_time_series_v2 import migrate_configuration
+from digitalmodel.orcaflex.opp_time_series_v2 import migrate_configuration
 
 new_cfg = migrate_configuration(old_cfg)
 ```

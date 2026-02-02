@@ -15,7 +15,7 @@ The converter is included in the `digitalmodel` package. No additional installat
 #### Convert Single File (.dat → .yml)
 
 ```python
-from digitalmodel.modules.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 
 # Create converter
 converter = OrcaFlexConverterEnhanced(output_format='yml')
@@ -58,25 +58,25 @@ print(f"Converted {results['statistics']['successful']} files")
 
 ```bash
 # Convert .dat to .yml
-python -m digitalmodel.modules.orcaflex.convert_cli model.dat
+python -m digitalmodel.orcaflex.convert_cli model.dat
 
 # Convert .yml to .dat
-python -m digitalmodel.modules.orcaflex.convert_cli model.yml --format dat
+python -m digitalmodel.orcaflex.convert_cli model.yml --format dat
 ```
 
 ### Batch Conversion
 
 ```bash
 # Convert all .dat files in directory
-python -m digitalmodel.modules.orcaflex.convert_cli --batch models/ models_yml/
+python -m digitalmodel.orcaflex.convert_cli --batch models/ models_yml/
 
 # Convert with pattern
-python -m digitalmodel.modules.orcaflex.convert_cli \
+python -m digitalmodel.orcaflex.convert_cli \
     --batch models/ output/ \
     --pattern "*.dat"
 
 # Parallel processing (4 workers)
-python -m digitalmodel.modules.orcaflex.convert_cli \
+python -m digitalmodel.orcaflex.convert_cli \
     --batch models/ output/ \
     --parallel --workers 4
 ```
@@ -85,7 +85,7 @@ python -m digitalmodel.modules.orcaflex.convert_cli \
 
 ```bash
 # Test without OrcaFlex license
-python -m digitalmodel.modules.orcaflex.convert_cli \
+python -m digitalmodel.orcaflex.convert_cli \
     --batch models/ output/ \
     --mock
 ```
@@ -99,7 +99,7 @@ python -m digitalmodel.modules.orcaflex.convert_cli \
 Convert binary .dat files to YAML for Git:
 
 ```bash
-python -m digitalmodel.modules.orcaflex.convert_cli \
+python -m digitalmodel.orcaflex.convert_cli \
     --batch models/ models_version_control/ \
     --pattern "*.dat"
 
@@ -111,7 +111,7 @@ git commit -m "Add OrcaFlex models in YAML format"
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 
 # Step 1: Convert to YAML for editing
 to_yml = OrcaFlexConverterEnhanced(
@@ -133,7 +133,7 @@ to_dat = OrcaFlexConverterEnhanced(
 to_dat.convert_batch()
 
 # Step 4: Run OrcaFlex simulations
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 runner = UniversalOrcaFlexRunner(
     input_directory="models/executable/",
@@ -198,14 +198,14 @@ pytest tests/modules/orcaflex/test_orcaflex_converter_enhanced.py -v
 pytest tests/modules/orcaflex/test_orcaflex_converter_enhanced.py::TestOrcaFlexConverterEnhanced::test_single_dat_to_yml -v
 
 # Run with coverage
-pytest tests/modules/orcaflex/test_orcaflex_converter_enhanced.py --cov=digitalmodel.modules.orcaflex
+pytest tests/modules/orcaflex/test_orcaflex_converter_enhanced.py --cov=digitalmodel.orcaflex
 ```
 
 ### Round-Trip Validation
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 
 original = Path("model.dat")
 
@@ -289,7 +289,7 @@ python docs/modules/orcaflex/examples/conversion_examples.py
 pip install <OrcaFlex_install_dir>/OrcFxAPI/Python
 
 # Or use mock mode
-python -m digitalmodel.modules.orcaflex.convert_cli --batch models/ output/ --mock
+python -m digitalmodel.orcaflex.convert_cli --batch models/ output/ --mock
 ```
 
 ### Conversion Failed

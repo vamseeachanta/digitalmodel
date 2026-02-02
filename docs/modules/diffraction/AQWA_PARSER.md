@@ -2,7 +2,7 @@
 
 **Version**: 1.0.0
 **Status**: Production
-**Module**: `digitalmodel.modules.diffraction.aqwa_lis_parser`
+**Module**: `digitalmodel.diffraction.aqwa_lis_parser`
 
 ## Overview
 
@@ -22,7 +22,7 @@ The AQWA .LIS parser extracts hydrodynamic coefficients from ANSYS AQWA diffract
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.diffraction.aqwa_lis_parser import parse_aqwa_lis_file
+from digitalmodel.diffraction.aqwa_lis_parser import parse_aqwa_lis_file
 
 # Parse entire .LIS file
 lis_file = Path("analysis/vessel.LIS")
@@ -40,7 +40,7 @@ raos = data['raos']                # Dict: (freq, heading) -> DOF data
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.diffraction import AQWAConverter, OrcaFlexExporter
+from digitalmodel.diffraction import AQWAConverter, OrcaFlexExporter
 
 # Convert AQWA results to unified schema
 converter = AQWAConverter(

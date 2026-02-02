@@ -27,7 +27,7 @@ def test_basic_functionality():
     
     print("\n1. Testing Rainflow Counting...")
     try:
-        from digitalmodel.modules.signal_analysis import RainflowCounter
+        from digitalmodel.signal_analysis import RainflowCounter
         counter = RainflowCounter()
         cycles = counter.count_cycles(signal)
         stats = counter.get_statistics(cycles)
@@ -40,7 +40,7 @@ def test_basic_functionality():
     
     print("\n2. Testing Spectral Analysis...")
     try:
-        from digitalmodel.modules.signal_analysis import SpectralAnalyzer
+        from digitalmodel.signal_analysis import SpectralAnalyzer
         analyzer = SpectralAnalyzer(sampling_rate=100)
         spectrum = analyzer.compute_spectrum(signal)
         peaks = analyzer.find_peaks(spectrum, n_peaks=3)
@@ -53,7 +53,7 @@ def test_basic_functionality():
     
     print("\n3. Testing Time Series Processing...")
     try:
-        from digitalmodel.modules.signal_analysis import TimeSeriesProcessor
+        from digitalmodel.signal_analysis import TimeSeriesProcessor
         processor = TimeSeriesProcessor()
         
         # Add outlier
@@ -73,7 +73,7 @@ def test_basic_functionality():
     
     print("\n4. Testing Fatigue Analysis...")
     try:
-        from digitalmodel.modules.signal_analysis.fatigue import (
+        from digitalmodel.signal_analysis.fatigue import (
             FatigueDamageCalculator, SNCurve
         )
         
@@ -90,7 +90,7 @@ def test_basic_functionality():
     
     print("\n5. Testing Backward Compatibility...")
     try:
-        from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter
+        from digitalmodel.signal_analysis.adapters import TimeSeriesComponentsAdapter
         
         cfg = {'default': {'analysis': {'fft': {}}}}
         adapter = TimeSeriesComponentsAdapter(cfg)
@@ -120,7 +120,7 @@ def test_orcaflex_integration():
     print("="*60)
     
     try:
-        from digitalmodel.modules.orcaflex.time_trace_processor import (
+        from digitalmodel.orcaflex.time_trace_processor import (
             OrcaFlexTimeTraceProcessor, TimeTraceConfig, create_default_config
         )
         

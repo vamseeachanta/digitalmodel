@@ -85,7 +85,7 @@ Use this skill when you need to:
 ### 1. List Available Components
 
 ```python
-from digitalmodel.modules.orcaflex.model_generator import OrcaFlexModelGenerator
+from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
 
 generator = OrcaFlexModelGenerator()
 
@@ -261,7 +261,7 @@ else:
 ### Example 1: Basic SCR Model
 
 ```python
-from digitalmodel.modules.orcaflex.model_generator import generate_model
+from digitalmodel.orcaflex.model_generator import generate_model
 
 # Simple one-liner
 model = generate_model(
@@ -280,7 +280,7 @@ model = generate_model(
 ### Example 2: Parametric Study
 
 ```python
-from digitalmodel.modules.orcaflex.model_generator import OrcaFlexModelGenerator
+from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
 
 generator = OrcaFlexModelGenerator()
 
@@ -334,7 +334,7 @@ model = generate_model("risers/scr_catenary", config, "custom_scr.yml")
 ### Example 4: Add Custom Component
 
 ```python
-from digitalmodel.modules.orcaflex.model_generator import OrcaFlexModelGenerator
+from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
 
 generator = OrcaFlexModelGenerator()
 
@@ -369,9 +369,9 @@ config = {
 ### Example 5: Full Workflow with Converter and Runner
 
 ```python
-from digitalmodel.modules.orcaflex.model_generator import generate_model
-from digitalmodel.modules.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.model_generator import generate_model
+from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 # 1. Generate model from template
 model_yml = generate_model(
@@ -389,7 +389,7 @@ runner = UniversalOrcaFlexRunner()
 sim_file = runner.run_single(dat_file)
 
 # 4. Post-process results
-from digitalmodel.modules.orcaflex.opp import OPP
+from digitalmodel.orcaflex.opp import OPP
 opp = OPP()
 results = opp.process_single_file(sim_file)
 
@@ -400,7 +400,7 @@ print(f"Analysis complete! Results: {results}")
 
 ```python
 import pandas as pd
-from digitalmodel.modules.orcaflex.model_generator import OrcaFlexModelGenerator
+from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
 
 generator = OrcaFlexModelGenerator()
 

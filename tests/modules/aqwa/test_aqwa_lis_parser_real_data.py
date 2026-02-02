@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from digitalmodel.modules.aqwa.aqwa_lis_files import AqwaLISFiles
+from digitalmodel.aqwa.aqwa_lis_files import AqwaLISFiles
 
 
 # Test data path
