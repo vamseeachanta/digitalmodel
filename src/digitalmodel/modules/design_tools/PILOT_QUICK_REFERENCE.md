@@ -4,7 +4,7 @@
 
 ```bash
 # 1. Launch AI CAD Agent
-cd /mnt/github/github/digitalmodel/src/modules/design-tools
+cd /mnt/github/github/digitalmodel/src/modules/design_tools
 python3 ai_cad_agent.py
 
 # 2. Track your progress

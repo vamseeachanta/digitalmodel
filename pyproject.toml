@@ -352,9 +352,7 @@ no-cache = false
 pre = false
 
 [tool.uv.workspace]
-members = [
-    "src/modules/mcp-server/orcawave-mcp",
-]
+members = []
 
 # MANDATORY: Parallel Processing Configuration
 [tool.parallel]

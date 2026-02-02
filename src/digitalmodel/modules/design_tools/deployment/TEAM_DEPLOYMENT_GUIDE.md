@@ -66,15 +66,15 @@ python -m pip install numpy pandas matplotlib scikit-learn
 Write-Host "📦 Cloning AI CAD repository..." -ForegroundColor Yellow
 # Clone the repository
 git clone https://github.com/vamseeachanta/digitalmodel.git
-Set-Location digitalmodel/src/modules/design-tools
+Set-Location digitalmodel/src/modules/design_tools
 
 Write-Host "✅ Creating desktop shortcuts..." -ForegroundColor Green
 # Create shortcuts
 $WshShell = New-Object -comObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("$env:USERPROFILE\Desktop\AI CAD Agent.lnk")
 $Shortcut.TargetPath = "python.exe"
-$Shortcut.Arguments = "$InstallPath\digitalmodel\src\modules\design-tools\ai_cad_agent.py"
-$Shortcut.WorkingDirectory = "$InstallPath\digitalmodel\src\modules\design-tools"
+$Shortcut.Arguments = "$InstallPath\digitalmodel\src\modules\design_tools\ai_cad_agent.py"
+$Shortcut.WorkingDirectory = "$InstallPath\digitalmodel\src\modules\design_tools"
 $Shortcut.Save()
 
 Write-Host "✅ Deployment Complete!" -ForegroundColor Green
@@ -112,7 +112,7 @@ pip3 install --user numpy pandas matplotlib scikit-learn
 echo "📦 Cloning AI CAD repository..."
 cd ~/
 git clone https://github.com/vamseeachanta/digitalmodel.git
-cd digitalmodel/src/modules/design-tools
+cd digitalmodel/src/modules/design_tools
 
 # Create desktop launcher
 echo "✅ Creating desktop launcher..."
@@ -122,7 +122,7 @@ Version=1.0
 Type=Application
 Name=AI CAD Agent
 Comment=Natural Language CAD Design System
-Exec=python3 $HOME/digitalmodel/src/modules/design-tools/ai_cad_agent.py
+Exec=python3 $HOME/digitalmodel/src/modules/design_tools/ai_cad_agent.py
 Icon=applications-engineering
 Terminal=true
 Categories=Development;Engineering;
@@ -166,13 +166,13 @@ pip3 install numpy pandas matplotlib scikit-learn
 echo "📦 Cloning AI CAD repository..."
 cd ~/Documents
 git clone https://github.com/vamseeachanta/digitalmodel.git
-cd digitalmodel/src/modules/design-tools
+cd digitalmodel/src/modules/design_tools
 
 # Create application alias
 echo "✅ Creating application launcher..."
 cat > ~/Desktop/AI-CAD-Agent.command << EOF
 #!/bin/bash
-cd ~/Documents/digitalmodel/src/modules/design-tools
+cd ~/Documents/digitalmodel/src/modules/design_tools
 python3 ai_cad_agent.py
 EOF
 

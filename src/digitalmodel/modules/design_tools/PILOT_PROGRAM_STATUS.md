@@ -46,7 +46,7 @@ Welcome as the **first pilot user** of the AI-powered FreeCAD + Blender engineer
 
 ```bash
 # 1. Test the system
-cd /mnt/github/github/digitalmodel/src/modules/design-tools
+cd /mnt/github/github/digitalmodel/src/modules/design_tools
 python3 workflow_test.py
 
 # 2. Try the AI CAD Agent

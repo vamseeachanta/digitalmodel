@@ -10,7 +10,7 @@ You are the first user testing the FreeCAD + Blender engineering workflow. This 
 
 ### 1. Test Your Installation
 ```bash
-cd /mnt/github/github/digitalmodel/src/modules/design-tools
+cd /mnt/github/github/digitalmodel/src/modules/design_tools
 python3 workflow_test.py
 ```
 

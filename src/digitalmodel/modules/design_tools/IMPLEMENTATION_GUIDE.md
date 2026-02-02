@@ -35,7 +35,7 @@ The FreeCAD + Blender engineering workflow has been successfully implemented and
 ### Quick Installation Verification
 Run this command to verify your installation:
 ```bash
-cd /mnt/github/github/digitalmodel/src/modules/design-tools
+cd /mnt/github/github/digitalmodel/src/modules/design_tools
 python3 workflow_test.py
 ```
 
@@ -165,7 +165,7 @@ lighting = AIVisualizationAssistant.analyze_lighting_needs(objects, "offshore")
 The implementation creates this organized structure:
 
 ```
-src/modules/design-tools/
+src/modules/design_tools/
 ├── freecad_integration.py          # FreeCAD automation & AI
 ├── blender_integration.py          # Blender visualization & rendering  
 ├── integrated_workflow.py          # Complete workflow manager

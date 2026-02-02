@@ -7,7 +7,7 @@ A complete proof-of-concept HTML dashboard for browsing OrcaFlex mooring line te
 ## Features Implemented
 
 ### ✅ Core Data Processing (NOW.1-NOW.3)
-- **Project Structure**: Complete module in `src/modules/orcaflex-browser/`
+- **Project Structure**: Complete module in `src/modules/orcaflex_browser/`
 - **CSV File Reader**: Simulated data generator with realistic mooring line tensions
 - **Filename Parser**: Regex-based parsing for FST configurations, tide levels, and headings
   - FST patterns: `FST1_F`, `FST1_E`, `FST2_F`, `FST2_E`
@@ -39,7 +39,7 @@ A complete proof-of-concept HTML dashboard for browsing OrcaFlex mooring line te
 
 1. **Open the Dashboard**:
    ```
-   Open: src/modules/orcaflex-browser/orcaflex-data-browser.html
+   Open: src/modules/orcaflex_browser/orcaflex-data-browser.html
    ```
 
 2. **Select Parameters**:
@@ -107,7 +107,7 @@ All dependencies are loaded via CDN:
 ## File Structure
 
 ```
-src/modules/orcaflex-browser/
+src/modules/orcaflex_browser/
 ├── orcaflex-data-browser.html    # Complete POC dashboard
 └── README.md                     # This documentation
 ```
