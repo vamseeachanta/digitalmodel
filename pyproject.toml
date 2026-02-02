@@ -275,6 +275,7 @@ omit = [
     "*/env/*",
     "setup.py",
     "*/migrations/*",
+    "*/gis/outputlatlongs_wells.py",
 ]
 branch = true
 parallel = true

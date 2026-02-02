@@ -1,4 +1,5 @@
 import datetime
+import warnings
 
 
 class ReadFromExcel():
@@ -677,6 +678,12 @@ class Transform():
         pass
 
     def gis_deg_to_distance(self, df, cfg):
+        warnings.warn(
+            "gis_deg_to_distance is deprecated. Use "
+            "digitalmodel.modules.gis.CoordinateTransformer instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         cfg_sample = {'Longitude': 'BOT_LONG', 'Latitude': 'BOT_LAT', 'label': 'BOT'}
         import utm
         longitude_column = cfg['Longitude']
@@ -704,10 +711,21 @@ class Transform():
         return df
 
     def gis_distance_to_deg(self):
-        # TODO
+        warnings.warn(
+            "gis_distance_to_deg is deprecated. Use "
+            "digitalmodel.modules.gis.CoordinateTransformer instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         pass
 
     def get_gis_converted_df_superseded(self, data_set_cfg, df):
+        warnings.warn(
+            "get_gis_converted_df_superseded is deprecated. Use "
+            "digitalmodel.modules.gis.FeatureLayer.reproject() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if data_set_cfg.__contains__('gis'):
             import pyproj
             p = pyproj.Proj(proj='utm', zone=data_set_cfg['gis']['zone'], ellps='WGS84')

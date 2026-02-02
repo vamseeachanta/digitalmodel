@@ -3,7 +3,7 @@
 source = src/digitalmodel
 
 # Files to omit from coverage
-omit = 
+omit =
     */tests/*
     */test_*
     */__pycache__/*
@@ -17,6 +17,7 @@ omit =
     */conftest.py
     */config.py
     */settings.py
+    */gis/outputlatlongs_wells.py
 
 # Enable branch coverage
 branch = True
