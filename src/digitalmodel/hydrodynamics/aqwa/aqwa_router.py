@@ -4,9 +4,9 @@ import sys
 from assetutilities.common.update_deep import update_deep_dictionary
 
 # Reader imports
-from digitalmodel.aqwa.aqwa_post_process import AqwaPostProcess
-from digitalmodel.aqwa.aqwa_pre_process import AqwaPreProcess
-from digitalmodel.aqwa.mes_files import MesFiles
+from digitalmodel.hydrodynamics.aqwa.aqwa_post_process import AqwaPostProcess
+from digitalmodel.hydrodynamics.aqwa.aqwa_pre_process import AqwaPreProcess
+from digitalmodel.hydrodynamics.aqwa.mes_files import MesFiles
 
 # Placeholder to support test patching; real class imported lazily in router
 ViscousDampingDetermination = None  # type: ignore
@@ -47,7 +47,7 @@ class Aqwa:
                     )
 
                 if orchestrator_cls is None:
-                    from digitalmodel.aqwa.viscous_damping_determination import (
+                    from digitalmodel.hydrodynamics.aqwa.viscous_damping_determination import (
                         ViscousDampingDetermination as _ViscousDampingDetermination,
                     )
 
@@ -80,7 +80,7 @@ class Aqwa:
                 try:
                     from digitalmodel.custom.aqwa.aqwa_analysis import AqwaAnalysis  # type: ignore
                 except ModuleNotFoundError:
-                    from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis  # type: ignore
+                    from digitalmodel.hydrodynamics.aqwa.aqwa_analysis import AqwaAnalysis  # type: ignore
 
                 a_analysis = AqwaAnalysis()
                 a_analysis.analysis_router(cfg)

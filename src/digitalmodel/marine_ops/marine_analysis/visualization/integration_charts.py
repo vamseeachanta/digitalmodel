@@ -58,7 +58,7 @@ try:
     from digitalmodel.marine_analysis.hydrodynamic_coefficients import (
         CoefficientDatabase, HydrodynamicPlotter
     )
-    from digitalmodel.marine_analysis.mooring_analysis import MooringSystem
+    from digitalmodel.subsea.mooring_analysis import MooringSystem
     from digitalmodel.marine_analysis.catenary import CatenarySolver
     MODULES_AVAILABLE = True
 except ImportError as e:

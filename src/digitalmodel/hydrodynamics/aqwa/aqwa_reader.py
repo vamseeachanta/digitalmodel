@@ -14,7 +14,7 @@ from assetutilities.common.file_management import FileManagement
 from assetutilities.common.update_deep import update_deep_dictionary
 
 # Reader imports
-from digitalmodel.aqwa.aqwa_utilities import AqwaUtilities
+from digitalmodel.hydrodynamics.aqwa.aqwa_utilities import AqwaUtilities
 
 fm = FileManagement()
 rd = ReadData()

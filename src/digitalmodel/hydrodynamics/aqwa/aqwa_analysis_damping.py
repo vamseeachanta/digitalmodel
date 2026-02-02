@@ -11,7 +11,7 @@ import numpy as np
 try:  # pragma: no cover - compatibility shim for environments without custom package
     from digitalmodel.custom.aqwa.aqwa_analysis_raos import AqwaRAOs  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover
-    from digitalmodel.aqwa.aqwa_analysis_raos import AqwaRAOs
+    from digitalmodel.hydrodynamics.aqwa.aqwa_analysis_raos import AqwaRAOs
 
 aq_raos = AqwaRAOs()
 

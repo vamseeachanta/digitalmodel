@@ -14,9 +14,9 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import yaml
 
-from digitalmodel.aqwa.aqwa_analysis_damping import AqwaDamping
-from digitalmodel.aqwa.aqwa_analysis_raos import AqwaRAOs
-from digitalmodel.aqwa.aqwa_dat_files import AqwaDATFiles, DATInspectionResult
+from digitalmodel.hydrodynamics.aqwa.aqwa_analysis_damping import AqwaDamping
+from digitalmodel.hydrodynamics.aqwa.aqwa_analysis_raos import AqwaRAOs
+from digitalmodel.hydrodynamics.aqwa.aqwa_dat_files import AqwaDATFiles, DATInspectionResult
 from digitalmodel.marine_analysis.aqwa_enhanced_parser import AQWAEnhancedParser
 
 

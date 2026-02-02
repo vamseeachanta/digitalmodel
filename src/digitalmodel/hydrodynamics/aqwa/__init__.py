@@ -1,6 +1,6 @@
 """Backward compatibility wrapper for aqwa module."""
 
-from digitalmodel.aqwa.aqwa_router import (
+from digitalmodel.hydrodynamics.aqwa.aqwa_router import (
     Aqwa,
     a_post,
     a_pre,

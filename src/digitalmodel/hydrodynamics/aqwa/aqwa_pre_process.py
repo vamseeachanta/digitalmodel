@@ -2,7 +2,7 @@
 from assetutilities.common.file_management import FileManagement
 
 # Reader imports
-from digitalmodel.aqwa.aqwa_dat_files import AqwaDATFiles
+from digitalmodel.hydrodynamics.aqwa.aqwa_dat_files import AqwaDATFiles
 
 fm = FileManagement()
 adf = AqwaDATFiles()

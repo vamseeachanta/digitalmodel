@@ -10,7 +10,7 @@ import argparse
 import sys
 import yaml
 from pathlib import Path
-from digitalmodel.aqwa.aqwa_analysis import AqwaAnalysis
+from digitalmodel.hydrodynamics.aqwa.aqwa_analysis import AqwaAnalysis
 
 
 def create_parser():

@@ -15,7 +15,7 @@ from assetutilities.common.utilities import is_file_valid_func
 from assetutilities.common.yml_utilities import WorkingWithYAML
 
 # Reader imports
-from digitalmodel.aqwa.aqwa_utilities import AqwaUtilities
+from digitalmodel.hydrodynamics.aqwa.aqwa_utilities import AqwaUtilities
 
 try:
     import numpy as np

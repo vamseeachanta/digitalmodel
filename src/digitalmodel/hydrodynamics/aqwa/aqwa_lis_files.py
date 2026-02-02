@@ -9,7 +9,7 @@ from assetutilities.common.data import ReadData, SaveData
 from assetutilities.common.file_management import FileManagement
 
 # Reader imports
-from digitalmodel.aqwa.aqwa_utilities import AqwaUtilities
+from digitalmodel.hydrodynamics.aqwa.aqwa_utilities import AqwaUtilities
 
 fm = FileManagement()
 au = AqwaUtilities()

@@ -9,7 +9,7 @@ This module provides comprehensive validation for AQWA hydrodynamic analysis inp
 - Level 3: Hydrodynamic coefficient ranges and RAO reasonableness checks
 
 Usage:
-    from digitalmodel.aqwa.aqwa_validation import AQWAValidator
+    from digitalmodel.hydrodynamics.aqwa.aqwa_validation import AQWAValidator
 
     validator = AQWAValidator()
     results = validator.validate_all('/path/to/aqwa_config.yml')

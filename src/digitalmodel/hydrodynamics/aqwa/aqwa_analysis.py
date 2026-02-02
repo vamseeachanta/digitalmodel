@@ -1,8 +1,8 @@
 import logging
 
-from digitalmodel.aqwa.aqwa_analysis_damping import AqwaDamping
-from digitalmodel.aqwa.aqwa_analysis_ef_server import AqwaEFServer
-from digitalmodel.aqwa.aqwa_analysis_raos import AqwaRAOs
+from digitalmodel.hydrodynamics.aqwa.aqwa_analysis_damping import AqwaDamping
+from digitalmodel.hydrodynamics.aqwa.aqwa_analysis_ef_server import AqwaEFServer
+from digitalmodel.hydrodynamics.aqwa.aqwa_analysis_raos import AqwaRAOs
 
 
 class AqwaAnalysis:
