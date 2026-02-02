@@ -102,8 +102,8 @@ def execute_direct_coverage():
             'digitalmodel.modules.pipeline.pipeline',
             'digitalmodel.modules.rao_analysis.rao_analysis',
             'digitalmodel.modules.time_series.time_series_analysis',
-            'digitalmodel.modules.transformation.transformation',
-            'digitalmodel.modules.vertical_riser.vertical_riser',
+            'digitalmodel.transformation.transformation',
+            'digitalmodel.vertical_riser.vertical_riser',
             'digitalmodel.modules.viv_analysis.viv_analysis',
             'digitalmodel.common.plate_buckling', 'loguru',
             'digitalmodel.modules.orcaflex.output_control'

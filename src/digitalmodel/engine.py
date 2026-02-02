@@ -27,11 +27,11 @@ from digitalmodel.modules.orcaflex.umbilical_analysis_components import (
 )
 from digitalmodel.modules.pipe_capacity.pipe_capacity import PipeCapacity
 from digitalmodel.modules.pipeline.pipeline import Pipeline
-from digitalmodel.modules.ct_hydraulics.ct_hydraulics import CTHydraulics
+from digitalmodel.ct_hydraulics.ct_hydraulics import CTHydraulics
 from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis
 from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis
-from digitalmodel.modules.transformation.transformation import Transformation
-# from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser
+from digitalmodel.transformation.transformation import Transformation
+# from digitalmodel.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.common.plate_buckling import PlateBuckling
 from loguru import logger
@@ -116,7 +116,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         ofm = OrcaflexFileManagement()
         cfg_base = ofm.file_management(cfg_base)
     elif basename == "rigging":
-        from digitalmodel.modules.rigging.rigging import Rigging
+        from digitalmodel.rigging.rigging import Rigging
 
         rigging = Rigging()
         cfg_base = rigging.get_rigging_groups(cfg_base)
@@ -183,7 +183,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         al = DynacardWorkflow()
         cfg_base = al.router(cfg_base)
     elif basename == "digitalmarketing":
-        from digitalmodel.modules.digitalmarketing.digitalmarketing import DigitalMarketing
+        from digitalmodel.digitalmarketing.digitalmarketing import DigitalMarketing
         dm = DigitalMarketing()
         cfg_base = dm.router(cfg_base)
     else:

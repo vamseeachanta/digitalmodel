@@ -25,7 +25,7 @@ class DigitalMarketing:
         calculation_name = cfg.get("calculation", {}).get("name", "")
 
         if calculation_name == "seo_analysis":
-            from digitalmodel.modules.digitalmarketing.seo.seo_analysis import SEOAnalysis
+            from digitalmodel.digitalmarketing.seo.seo_analysis import SEOAnalysis
             seo_analysis = SEOAnalysis()
             cfg = seo_analysis.run(cfg)
         else:

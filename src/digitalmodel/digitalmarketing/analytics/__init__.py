@@ -1,6 +1,6 @@
 """Analytics submodule for Google Analytics integration."""
 
-from digitalmodel.modules.digitalmarketing.analytics.google_analytics import (
+from digitalmodel.digitalmarketing.analytics.google_analytics import (
     GoogleAnalytics,
 )
 

@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import pandas as pd
 
-from digitalmodel.modules.digitalmarketing.seo.seo_analysis import SEOAnalysis
+from digitalmodel.digitalmarketing.seo.seo_analysis import SEOAnalysis
 
 
 class TestSEOAnalysis:
@@ -79,7 +79,7 @@ class TestSEOAnalysis:
         assert result["false_count"] == 1
         assert result["seo_audit_rank"] == 80.0
 
-    @patch('digitalmodel.modules.digitalmarketing.seo.seo_analysis.seolib')
+    @patch('digitalmodel.digitalmarketing.seo.seo_analysis.seolib')
     def test_get_seolib_ranks(self, mock_seolib_module):
         """Test seolib ranks retrieval."""
         mock_seolib_module.get_alexa.return_value = 50000

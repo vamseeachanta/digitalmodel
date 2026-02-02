@@ -16,7 +16,21 @@ import sys
 import warnings
 
 # Modules that have been moved from digitalmodel.modules.X to digitalmodel.X
-_MOVED_MODULES: set[str] = set()
+_MOVED_MODULES: set[str] = {
+    "transformation",
+    "vertical_riser",
+    "rigging",
+    "ct_hydraulics",
+    "pipe_cross_section",
+    "fea_model",
+    "pyintegrity",
+    "finance",
+    "project_management",
+    "digitalmarketing",
+    "services",
+    "skills",
+    "visualization",
+}
 
 
 def register_moved_module(name: str) -> None:

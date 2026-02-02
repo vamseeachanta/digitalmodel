@@ -53,8 +53,8 @@ def mock_imports():
         'digitalmodel.modules.pipeline.pipeline',
         'digitalmodel.modules.rao_analysis.rao_analysis',
         'digitalmodel.modules.time_series.time_series_analysis',
-        'digitalmodel.modules.transformation.transformation',
-        'digitalmodel.modules.vertical_riser.vertical_riser',
+        'digitalmodel.transformation.transformation',
+        'digitalmodel.vertical_riser.vertical_riser',
         'digitalmodel.modules.viv_analysis.viv_analysis',
         'digitalmodel.common.plate_buckling',
         'digitalmodel.aqwa',
@@ -517,7 +517,7 @@ class TestDynamicImports:
         sys.modules['digitalmodel.custom.rigging_components'] = mock_components
 
         # Now we can safely patch the rigging module path
-        with patch('digitalmodel.modules.rigging.rigging.Rigging') as mock_rigging:
+        with patch('digitalmodel.rigging.rigging.Rigging') as mock_rigging:
             mock_instance = MagicMock()
             mock_instance.get_rigging_groups.return_value = cfg
             mock_rigging.return_value = mock_instance
