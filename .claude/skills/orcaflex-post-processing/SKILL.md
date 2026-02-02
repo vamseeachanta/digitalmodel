@@ -165,7 +165,7 @@ orcaflex:
 ### Basic Post-Processing
 
 ```python
-from digitalmodel.modules.orcaflex.opp import OrcaFlexPostProcess
+from digitalmodel.orcaflex.opp import OrcaFlexPostProcess
 
 # Initialize post-processor
 opp = OrcaFlexPostProcess()
@@ -191,7 +191,7 @@ results = opp.post_process_router(cfg)
 ### Batch Processing with Parallel Execution
 
 ```python
-from digitalmodel.modules.orcaflex.opp import OrcaFlexPostProcess
+from digitalmodel.orcaflex.opp import OrcaFlexPostProcess
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
@@ -216,7 +216,7 @@ with ProcessPoolExecutor(max_workers=4) as executor:
 ### Extract Specific Results
 
 ```python
-from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities
 
 utils = OrcaflexUtilities()
 

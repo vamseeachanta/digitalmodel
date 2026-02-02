@@ -109,7 +109,7 @@ specs/modules/orcaflex/mooring-tension-iteration/go-by/fsts_l015_hwl_125km3_l100
 
 **Command**:
 ```bash
-/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel.modules.orcaflex.universal \
+/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel.orcaflex.universal \
     pattern="fsts*125km3*pb_*.yml" \
     input_directory="." \
     output_directory="." \

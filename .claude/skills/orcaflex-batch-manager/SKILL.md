@@ -207,7 +207,7 @@ batch:
 ### Basic Batch Processing
 
 ```python
-from digitalmodel.modules.orcaflex.universal.batch_processor import BatchProcessor
+from digitalmodel.orcaflex.universal.batch_processor import BatchProcessor
 from pathlib import Path
 
 def run_batch(input_dir: str, output_dir: str, max_workers: int = 20):
@@ -249,7 +249,7 @@ results = run_batch(
 ### Adaptive Parallel Processing
 
 ```python
-from digitalmodel.modules.orcaflex.universal.batch_processor import BatchProcessor
+from digitalmodel.orcaflex.universal.batch_processor import BatchProcessor
 from pathlib import Path
 import psutil
 
@@ -340,7 +340,7 @@ results = processor.process_batch()
 ### Chunk-Based Processing
 
 ```python
-from digitalmodel.modules.orcaflex.universal.batch_processor import BatchProcessor
+from digitalmodel.orcaflex.universal.batch_processor import BatchProcessor
 from pathlib import Path
 import time
 
@@ -418,7 +418,7 @@ results = process_in_chunks(
 ### Progress Tracking and Checkpoints
 
 ```python
-from digitalmodel.modules.orcaflex.universal.batch_processor import BatchProcessor
+from digitalmodel.orcaflex.universal.batch_processor import BatchProcessor
 from pathlib import Path
 import json
 import time

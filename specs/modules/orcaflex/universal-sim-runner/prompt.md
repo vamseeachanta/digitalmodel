@@ -69,7 +69,7 @@ class UniversalOrcaFlexRunner:
 
 1. **Library API**: Make importable from anywhere
    ```python
-   from digitalmodel.modules.orcaflex import UniversalSimRunner
+   from digitalmodel.orcaflex import UniversalSimRunner
    runner = UniversalSimRunner()
    results = runner.run(pattern="*.yml", input_directory=".")
    ```

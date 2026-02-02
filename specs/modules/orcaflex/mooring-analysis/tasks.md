@@ -107,7 +107,7 @@ Implementation of comprehensive OrcaFlex mooring analysis module with pretension
 #### Task 3.1: CLI Interface Development
 **Estimated Time: 4 hours**
 - [ ] Implement `cli.py` following repository CLI parameter standards
-- [ ] Create `__main__.py` for module execution (`python -m digitalmodel.modules.orcaflex.mooring_analysis`)
+- [ ] Create `__main__.py` for module execution (`python -m digitalmodel.orcaflex.mooring_analysis`)
 - [ ] Add CLI commands: `--config`, `--input-directory`, `--output-directory`, `--pattern`, `--parallel`
 - [ ] Implement batch processing with pattern matching
 - [ ] Add `--comparative` mode for multi-configuration analysis

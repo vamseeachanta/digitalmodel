@@ -345,7 +345,7 @@ OrcaFlex requires specific dependency order:
 
 ```bash
 # Generate
-uv run python -m digitalmodel.modules.orcaflex.modular_generator generate \
+uv run python -m digitalmodel.orcaflex.modular_generator generate \
     --input docs/modules/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml \
     --output docs/modules/orcaflex/pipeline/installation/floating/30in_pipeline/generated/
 

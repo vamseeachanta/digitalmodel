@@ -75,7 +75,7 @@ compatibility:
 ### Basic QTF Computation
 
 ```python
-from digitalmodel.modules.orcawave.qtf import OrcaWaveQTF
+from digitalmodel.orcawave.qtf import OrcaWaveQTF
 
 # Initialize QTF analysis
 qtf = OrcaWaveQTF()
@@ -106,7 +106,7 @@ diff_qtf = results.get_difference_qtf()
 ### Full QTF Matrix Generation
 
 ```python
-from digitalmodel.modules.orcawave.qtf import FullQTFComputation
+from digitalmodel.orcawave.qtf import FullQTFComputation
 
 # Initialize full QTF computation
 full_qtf = FullQTFComputation()
@@ -136,7 +136,7 @@ full_qtf.export_to_orcaflex(
 ### Newman Approximation
 
 ```python
-from digitalmodel.modules.orcawave.qtf import NewmanApproximation
+from digitalmodel.orcawave.qtf import NewmanApproximation
 
 # Initialize Newman approximation
 newman = NewmanApproximation()
@@ -162,7 +162,7 @@ print(f"Newman approximation error: {comparison['max_error']:.1%}")
 ### Mean Drift Analysis
 
 ```python
-from digitalmodel.modules.orcawave.qtf import MeanDriftAnalyzer
+from digitalmodel.orcawave.qtf import MeanDriftAnalyzer
 
 # Initialize analyzer
 drift = MeanDriftAnalyzer()
@@ -190,7 +190,7 @@ drift.export_for_mooring(
 ### Slow Drift Response
 
 ```python
-from digitalmodel.modules.orcawave.qtf import SlowDriftResponse
+from digitalmodel.orcawave.qtf import SlowDriftResponse
 
 # Initialize slow drift analysis
 slow_drift = SlowDriftResponse()
@@ -340,7 +340,7 @@ indirect_potential = model.indirectPotentialLoad
 ### Heading Pair Management
 
 ```python
-from digitalmodel.modules.orcawave.qtf import QTFHeadingManager
+from digitalmodel.orcawave.qtf import QTFHeadingManager
 
 # Manage QTF heading pairs
 manager = QTFHeadingManager()
@@ -363,30 +363,30 @@ crossing_pairs = manager.filter_pairs(
 
 ```bash
 # Compute full QTF
-python -m digitalmodel.modules.orcawave.qtf compute \
+python -m digitalmodel.orcawave.qtf compute \
     --model models/fpso.owr \
     --method full \
     --output results/qtf/
 
 # Mean drift extraction
-python -m digitalmodel.modules.orcawave.qtf mean-drift \
+python -m digitalmodel.orcawave.qtf mean-drift \
     --model models/fpso.owr \
     --method momentum \
     --output results/mean_drift.csv
 
 # Newman approximation
-python -m digitalmodel.modules.orcawave.qtf newman \
+python -m digitalmodel.orcawave.qtf newman \
     --raos results/fpso_raos.csv \
     --output results/newman_qtf.yml
 
 # Slow drift analysis
-python -m digitalmodel.modules.orcawave.qtf slow-drift \
+python -m digitalmodel.orcawave.qtf slow-drift \
     --qtf results/qtf/fpso_full.yml \
     --hs 4.0 --tp 10.0 \
     --output results/slow_drift/
 
 # Export to OrcaFlex
-python -m digitalmodel.modules.orcawave.qtf export \
+python -m digitalmodel.orcawave.qtf export \
     --qtf results/qtf/fpso_full.yml \
     --format orcaflex \
     --output orcaflex_models/fpso_qtf.yml
@@ -417,7 +417,7 @@ python -m digitalmodel.modules.orcawave.qtf export \
 ### Integration with Mooring Analysis
 
 ```python
-from digitalmodel.modules.orcawave.qtf import QTFMooringIntegration
+from digitalmodel.orcawave.qtf import QTFMooringIntegration
 
 # Prepare QTF for mooring analysis
 integration = QTFMooringIntegration()

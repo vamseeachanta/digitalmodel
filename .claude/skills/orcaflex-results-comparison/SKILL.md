@@ -165,7 +165,7 @@ comparison:
 ### Basic Comparison
 
 ```python
-from digitalmodel.modules.orcaflex.analysis.comparative import MooringComparativeAnalysis
+from digitalmodel.orcaflex.analysis.comparative import MooringComparativeAnalysis
 from pathlib import Path
 
 # Initialize analyzer
@@ -195,7 +195,7 @@ for config, results in pretension_comparison.items():
 ### Stiffness Comparison
 
 ```python
-from digitalmodel.modules.orcaflex.analysis.comparative import MooringComparativeAnalysis
+from digitalmodel.orcaflex.analysis.comparative import MooringComparativeAnalysis
 
 analyzer = MooringComparativeAnalysis(results_directory=Path("results/"))
 
@@ -228,7 +228,7 @@ print(f"Best surge stiffness: {best_surge[0]} ({best_surge[1]['K_xx']:.1f} kN/m)
 ### Line Force Distribution
 
 ```python
-from digitalmodel.modules.orcaflex.analysis.comparative import MooringComparativeAnalysis
+from digitalmodel.orcaflex.analysis.comparative import MooringComparativeAnalysis
 
 analyzer = MooringComparativeAnalysis(results_directory=Path("results/"))
 

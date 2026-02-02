@@ -74,12 +74,12 @@ Only values >= 10% of peak magnitude are considered for validation. This focuses
 ### Basic Comparison
 
 ```python
-from digitalmodel.modules.diffraction.comparison_framework import (
+from digitalmodel.diffraction.comparison_framework import (
     DiffractionComparator,
     PeakRAOComparator
 )
-from digitalmodel.modules.diffraction.aqwa_converter import AQWAConverter
-from digitalmodel.modules.diffraction.orcawave_converter import OrcaWaveConverter
+from digitalmodel.diffraction.aqwa_converter import AQWAConverter
+from digitalmodel.diffraction.orcawave_converter import OrcaWaveConverter
 
 # Load AQWA results
 aqwa_converter = AQWAConverter()
@@ -112,7 +112,7 @@ print(f"Max deviation: {results['max_deviation']:.1%}")
 ### Peak-Focused Validation
 
 ```python
-from digitalmodel.modules.diffraction.comparison_framework import PeakRAOComparator
+from digitalmodel.diffraction.comparison_framework import PeakRAOComparator
 
 # Peak-focused comparison (recommended for validation)
 peak_comparator = PeakRAOComparator(
@@ -143,7 +143,7 @@ peak_comparator.generate_peak_report_html(
 ### Matrix Comparison
 
 ```python
-from digitalmodel.modules.diffraction.comparison_framework import MatrixComparator
+from digitalmodel.diffraction.comparison_framework import MatrixComparator
 
 # Compare added mass matrices
 matrix_comp = MatrixComparator()
@@ -172,7 +172,7 @@ damp_comparison = matrix_comp.compare_damping(
 ### Statistical Analysis
 
 ```python
-from digitalmodel.modules.diffraction.comparison_framework import StatisticalAnalyzer
+from digitalmodel.diffraction.comparison_framework import StatisticalAnalyzer
 
 # Initialize analyzer
 analyzer = StatisticalAnalyzer()
@@ -278,27 +278,27 @@ validation:
 
 ```bash
 # Run full benchmark comparison
-python -m digitalmodel.modules.diffraction.benchmark compare \
+python -m digitalmodel.diffraction.benchmark compare \
     --aqwa aqwa_results/vessel.LIS \
     --orcawave orcawave_results/vessel.owr \
     --output reports/comparison.html
 
 # Peak-focused validation
-python -m digitalmodel.modules.diffraction.benchmark validate \
+python -m digitalmodel.diffraction.benchmark validate \
     --aqwa aqwa_results/vessel.LIS \
     --orcawave orcawave_results/vessel.owr \
     --tolerance 0.05 \
     --peak-threshold 0.10
 
 # Generate comparison plots
-python -m digitalmodel.modules.diffraction.benchmark plot \
+python -m digitalmodel.diffraction.benchmark plot \
     --aqwa aqwa_results/vessel.LIS \
     --orcawave orcawave_results/vessel.owr \
     --output plots/ \
     --format html
 
 # Export comparison data
-python -m digitalmodel.modules.diffraction.benchmark export \
+python -m digitalmodel.diffraction.benchmark export \
     --aqwa aqwa_results/vessel.LIS \
     --orcawave orcawave_results/vessel.owr \
     --format csv \
@@ -310,7 +310,7 @@ python -m digitalmodel.modules.diffraction.benchmark export \
 ### HTML Report Structure
 
 ```python
-from digitalmodel.modules.diffraction.comparison_framework import BenchmarkReporter
+from digitalmodel.diffraction.comparison_framework import BenchmarkReporter
 
 # Initialize reporter
 reporter = BenchmarkReporter()
@@ -344,7 +344,7 @@ reporter.generate_html_report(
 ### Standard Test Suite
 
 ```python
-from digitalmodel.modules.diffraction.benchmark import BenchmarkSuite
+from digitalmodel.diffraction.benchmark import BenchmarkSuite
 
 # Initialize test suite
 suite = BenchmarkSuite()
@@ -399,7 +399,7 @@ suite.generate_report(results, "reports/test_suite_results.html")
 ### Diagnostic Workflow
 
 ```python
-from digitalmodel.modules.diffraction.comparison_framework import DiagnosticAnalyzer
+from digitalmodel.diffraction.comparison_framework import DiagnosticAnalyzer
 
 # Initialize diagnostic analyzer
 diagnostic = DiagnosticAnalyzer()
@@ -442,7 +442,7 @@ jobs:
 
       - name: Run benchmark validation
         run: |
-          python -m digitalmodel.modules.diffraction.benchmark validate \
+          python -m digitalmodel.diffraction.benchmark validate \
             --aqwa aqwa_results/vessel.LIS \
             --orcawave orcawave_results/vessel.owr \
             --tolerance 0.05 \

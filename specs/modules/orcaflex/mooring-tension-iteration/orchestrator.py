@@ -242,7 +242,7 @@ class MooringTensionOrchestrator:
             
             # Step 2: Run OrcaFlex analysis
             self.run_command(
-                f'uv run python -m digitalmodel.modules.orcaflex.universal '
+                f'uv run python -m digitalmodel.orcaflex.universal '
                 f'pattern="fsts*125km3*pb_*.yml" input_directory="{rel_working_dir}" '
                 f'output_directory="{rel_working_dir}" validate=false',
                 "Step 2: Running OrcaFlex analysis..."
@@ -368,7 +368,7 @@ def main():
             print(f"Max iterations: {args.max_iterations}")
             print("\nCommands that would be executed per iteration:")
             print("1. python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml")
-            print("2. python -m digitalmodel.modules.orcaflex.universal pattern=\"fsts*125km3*pb_*.yml\"")
+            print("2. python -m digitalmodel.orcaflex.universal pattern=\"fsts*125km3*pb_*.yml\"")
             print("3. python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30")
         else:
             orchestrator = MooringTensionOrchestrator(

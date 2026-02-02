@@ -350,7 +350,7 @@ class ForceExtractor:
 def run_analysis_batch(self, config_pattern):
     """Integrate with universal runner for batch processing."""
     
-    from digitalmodel.modules.orcaflex.universal import UniversalRunner
+    from digitalmodel.orcaflex.universal import UniversalRunner
     
     runner = UniversalRunner()
     results = runner.run_batch(

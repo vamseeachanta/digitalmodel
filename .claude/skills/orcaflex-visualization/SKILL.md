@@ -220,7 +220,7 @@ visualization:
 ### Model View Generation
 
 ```python
-from digitalmodel.modules.orcaflex.opp_visualization import OPPVisualization
+from digitalmodel.orcaflex.opp_visualization import OPPVisualization
 from pathlib import Path
 
 def generate_model_views(
@@ -752,7 +752,7 @@ print(f"Report generated: {report_path}")
 ### Parallel View Generation
 
 ```python
-from digitalmodel.modules.orcaflex.opp_visualization import OPPVisualization
+from digitalmodel.orcaflex.opp_visualization import OPPVisualization
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 

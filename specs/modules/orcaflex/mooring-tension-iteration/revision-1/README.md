@@ -138,7 +138,7 @@ The specification now includes the current production methodology using DigitalM
 4. **Convergence Check**: Iterate until tensions converge within 5% tolerance
 
 ### Key Commands
-- **OrcaFlex Analysis**: `python -m digitalmodel.modules.orcaflex.universal`
+- **OrcaFlex Analysis**: `python -m digitalmodel.orcaflex.universal`
 - **Post-Processing**: `python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30`
 - **Tension Iteration**: `python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml`
 

@@ -231,7 +231,7 @@ uv run pytest tests/modules/orcaflex/modular_generator/ -v
 
 # Validate spec files load
 uv run python -c "
-from digitalmodel.modules.orcaflex.modular_generator.schema import ProjectInputSpec
+from digitalmodel.orcaflex.modular_generator.schema import ProjectInputSpec
 import yaml
 for name in ['SB-SA', 'RS8-ID']:
     path = f'docs/modules/orcaflex/pipeline/installation/s-lay/{name}/spec.yml'
@@ -242,12 +242,12 @@ for name in ['SB-SA', 'RS8-ID']:
 "
 
 # Generate modular model from spec
-uv run python -m digitalmodel.modules.orcaflex.modular_generator generate \
+uv run python -m digitalmodel.orcaflex.modular_generator generate \
     --input docs/modules/orcaflex/pipeline/installation/s-lay/SB-SA/spec.yml \
     --output /tmp/slay_test/
 
 # Verify existing floating spec still works
-uv run python -m digitalmodel.modules.orcaflex.modular_generator generate \
+uv run python -m digitalmodel.orcaflex.modular_generator generate \
     --input docs/modules/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml \
     --output /tmp/floating_test/
 ```

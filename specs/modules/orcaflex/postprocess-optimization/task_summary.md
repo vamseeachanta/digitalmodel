@@ -113,7 +113,7 @@ Based on the implementation and test results:
 
 ### To Use the Optimized Version:
 ```python
-from digitalmodel.modules.orcaflex.orcaflex_optimized_parallel_v2 import (
+from digitalmodel.orcaflex.orcaflex_optimized_parallel_v2 import (
     OrcaFlexOptimizedParallelAnalysis,
     run_optimized_parallel_analysis
 )
@@ -136,7 +136,7 @@ results = run_optimized_parallel_analysis(
 
 ### To Monitor Performance:
 ```python
-from digitalmodel.modules.orcaflex.performance_monitor import (
+from digitalmodel.orcaflex.performance_monitor import (
     PerformanceMonitor,
     create_performance_dashboard
 )
@@ -190,16 +190,16 @@ create_performance_dashboard("performance.json")
 ### Run Optimized Analysis
 ```bash
 # Using uv environment
-uv run python -m digitalmodel.modules.orcaflex.orcaflex_optimized_parallel_v2
+uv run python -m digitalmodel.orcaflex.orcaflex_optimized_parallel_v2
 
 # Process directory with auto-optimization
-uv run python -c "from digitalmodel.modules.orcaflex.orcaflex_optimized_parallel_v2 import OrcaFlexOptimizedParallelAnalysis; analyzer = OrcaFlexOptimizedParallelAnalysis(); print(analyzer.process_directory('./data', '*.dat'))"
+uv run python -c "from digitalmodel.orcaflex.orcaflex_optimized_parallel_v2 import OrcaFlexOptimizedParallelAnalysis; analyzer = OrcaFlexOptimizedParallelAnalysis(); print(analyzer.process_directory('./data', '*.dat'))"
 ```
 
 ### Monitor Performance
 ```bash
 # Test performance monitor
-uv run python -m digitalmodel.modules.orcaflex.performance_monitor
+uv run python -m digitalmodel.orcaflex.performance_monitor
 ```
 
 ## Additional Tasks Completed (2024-12-24 14:40)

@@ -220,7 +220,7 @@ post_execution_check() {
 verify_orcaflex_license() {
     echo -e "${BLUE}[CHECK]${NC} OrcaFlex license availability"
     
-    local check_cmd="source .venv/Scripts/activate && python -c 'from digitalmodel.modules.orcaflex.orcaflex_utilities import is_orcaflex_available; print(is_orcaflex_available())'"
+    local check_cmd="source .venv/Scripts/activate && python -c 'from digitalmodel.orcaflex.orcaflex_utilities import is_orcaflex_available; print(is_orcaflex_available())'"
     
     if eval "$check_cmd" 2>/dev/null | grep -q "True"; then
         echo -e "${GREEN}[✓ AVAILABLE]${NC} OrcaFlex license"

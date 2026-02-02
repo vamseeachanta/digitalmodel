@@ -4,7 +4,7 @@ Demonstrates common operations: import, export, scene creation, rendering.
 """
 
 from pathlib import Path
-from digitalmodel.modules.blender_automation import (
+from digitalmodel.blender_automation import (
     BlenderWrapper,
     BlenderContext,
     SceneManager,

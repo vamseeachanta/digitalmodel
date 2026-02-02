@@ -24,7 +24,7 @@ Simple orchestration system that runs existing mooring tension iteration batch c
 
 1. **Runs these commands in a loop** (from go-by folder):
    - `python -m digitalmodel dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml`
-   - `python -m digitalmodel.modules.orcaflex.universal pattern="fsts*125km3*pb_*.yml"`
+   - `python -m digitalmodel.orcaflex.universal pattern="fsts*125km3*pb_*.yml"`
    - `python -m digitalmodel dm_ofx_post_fsts_lngc.yml --workers 30`
 
 2. **Checks convergence** after each iteration:
@@ -64,7 +64,7 @@ class MooringTensionOrchestrator:
         for iteration in range(1, 11):
             # Step 1: Run batch commands
             run_command("python -m digitalmodel dm_ofx_anal_mooring...")
-            run_command("python -m digitalmodel.modules.orcaflex.universal...")
+            run_command("python -m digitalmodel.orcaflex.universal...")
             run_command("python -m digitalmodel dm_ofx_post_fsts_lngc.yml")
             
             # Step 2: Check convergence

@@ -70,8 +70,8 @@ OrcaWave Analysis              OrcaFlex Model
 ### Basic Conversion
 
 ```python
-from digitalmodel.modules.diffraction.orcawave_converter import OrcaWaveConverter
-from digitalmodel.modules.diffraction.orcaflex_exporter import OrcaFlexExporter
+from digitalmodel.diffraction.orcawave_converter import OrcaWaveConverter
+from digitalmodel.diffraction.orcaflex_exporter import OrcaFlexExporter
 
 # Load OrcaWave results
 import OrcFxAPI
@@ -98,7 +98,7 @@ exporter.export_vessel_type(
 ### With Viscous Damping
 
 ```python
-from digitalmodel.modules.orcawave.orcaflex_export import OrcaWaveToOrcaFlex
+from digitalmodel.orcawave.orcaflex_export import OrcaWaveToOrcaFlex
 
 # Initialize converter with damping options
 converter = OrcaWaveToOrcaFlex()
@@ -127,7 +127,7 @@ converter.export(
 ### Full Hydrodynamic Database
 
 ```python
-from digitalmodel.modules.orcawave.orcaflex_export import HydrodynamicDatabaseCreator
+from digitalmodel.orcawave.orcaflex_export import HydrodynamicDatabaseCreator
 
 # Create complete hydrodynamic database
 db_creator = HydrodynamicDatabaseCreator()
@@ -165,8 +165,8 @@ db_creator.export_vessel_type(
 ### RAO Import with Validation
 
 ```python
-from digitalmodel.modules.orcawave.rao_import import RAOImporter
-from digitalmodel.modules.diffraction.output_validator import OutputValidator
+from digitalmodel.orcawave.rao_import import RAOImporter
+from digitalmodel.diffraction.output_validator import OutputValidator
 
 # Import RAOs with validation
 importer = RAOImporter()
@@ -200,7 +200,7 @@ else:
 ### Coordinate Transformation
 
 ```python
-from digitalmodel.modules.orcawave.coordinate_transform import CoordinateTransformer
+from digitalmodel.orcawave.coordinate_transform import CoordinateTransformer
 
 # Handle coordinate system differences
 transformer = CoordinateTransformer()
@@ -322,7 +322,7 @@ batch_conversion:
 ### Multi-Format Export
 
 ```python
-from digitalmodel.modules.diffraction.orcawave_converter import OrcaWaveConverter
+from digitalmodel.diffraction.orcawave_converter import OrcaWaveConverter
 
 # Convert and export to multiple formats
 converter = OrcaWaveConverter(vessel)
@@ -341,30 +341,30 @@ converter.export_all_formats(
 
 ```bash
 # Basic conversion
-python -m digitalmodel.modules.orcawave.convert \
+python -m digitalmodel.orcawave.convert \
     --input models/fpso.owr \
     --output orcaflex_models/fpso_vessel_type.yml
 
 # With viscous damping
-python -m digitalmodel.modules.orcawave.convert \
+python -m digitalmodel.orcawave.convert \
     --input models/fpso.owr \
     --output orcaflex_models/fpso_vessel_type.yml \
     --roll-damping 0.05 \
     --pitch-damping 0.03
 
 # Include QTF
-python -m digitalmodel.modules.orcawave.convert \
+python -m digitalmodel.orcawave.convert \
     --input models/fpso.owr \
     --output orcaflex_models/fpso_vessel_type.yml \
     --include-qtf \
     --include-mean-drift
 
 # Batch conversion
-python -m digitalmodel.modules.orcawave.convert batch \
+python -m digitalmodel.orcawave.convert batch \
     --config configs/batch_conversion.yml
 
 # Validate before export
-python -m digitalmodel.modules.orcawave.convert \
+python -m digitalmodel.orcawave.convert \
     --input models/fpso.owr \
     --output orcaflex_models/fpso_vessel_type.yml \
     --validate \
@@ -376,7 +376,7 @@ python -m digitalmodel.modules.orcawave.convert \
 ### Pre-Export Validation
 
 ```python
-from digitalmodel.modules.diffraction.output_validator import OrcaFlexExportValidator
+from digitalmodel.diffraction.output_validator import OrcaFlexExportValidator
 
 # Validate export data
 validator = OrcaFlexExportValidator()

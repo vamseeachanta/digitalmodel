@@ -227,7 +227,7 @@ pytest tests/modules/orcaflex/mooring_analysis/
 pytest tests/modules/orcaflex/mooring_analysis/unit/
 
 # Run with coverage
-pytest --cov=digitalmodel.modules.orcaflex.mooring_analysis --cov-report=html
+pytest --cov=digitalmodel.orcaflex.mooring_analysis --cov-report=html
 
 # Run performance tests
 pytest tests/modules/orcaflex/mooring_analysis/performance/ --benchmark-only
@@ -259,7 +259,7 @@ jobs:
       - name: Run tests
         run: |
           pytest tests/modules/orcaflex/mooring_analysis/ \
-            --cov=digitalmodel.modules.orcaflex.mooring_analysis \
+            --cov=digitalmodel.orcaflex.mooring_analysis \
             --cov-report=xml
 ```
 

@@ -68,7 +68,7 @@ This skill provides guidance on hydrodynamic diffraction/radiation analysis usin
 All modules use the unified schema from `diffraction.output_schemas`:
 
 ```python
-from digitalmodel.modules.diffraction import (
+from digitalmodel.diffraction import (
     DiffractionResults,  # Complete analysis container
     RAOSet, RAOComponent, # RAO data structures
     AddedMassSet, DampingSet,  # Coefficient matrices
@@ -103,7 +103,7 @@ DiffractionResults
 ### Workflow 1: AQWA Analysis Only
 
 ```python
-from digitalmodel.modules.aqwa import AQWAAnalysis
+from digitalmodel.aqwa import AQWAAnalysis
 
 # Direct AQWA analysis
 analysis = AQWAAnalysis(folder="aqwa_results/")
@@ -113,7 +113,7 @@ analysis.run()
 ### Workflow 2: AQWA → OrcaFlex Conversion
 
 ```python
-from digitalmodel.modules.bemrosetta import (
+from digitalmodel.bemrosetta import (
     AQWAParser, OrcaFlexConverter, validate_coefficients
 )
 
@@ -132,7 +132,7 @@ if report.is_valid:
 ### Workflow 3: OrcaWave Analysis
 
 ```python
-from digitalmodel.modules.orcawave import OrcaWaveAnalysis
+from digitalmodel.orcawave import OrcaWaveAnalysis
 
 # Run OrcaWave (requires OrcFxAPI)
 analysis = OrcaWaveAnalysis()
@@ -144,7 +144,7 @@ results = analysis.get_results()
 ### Workflow 4: AQWA vs OrcaWave Comparison
 
 ```python
-from digitalmodel.modules.diffraction import (
+from digitalmodel.diffraction import (
     DiffractionComparator,
     AQWAConverter,
     OrcaWaveConverter,
@@ -163,7 +163,7 @@ print(f"RAO match: {report.rao_match_percentage:.1f}%")
 ### Workflow 5: Complete Pipeline with QTF
 
 ```python
-from digitalmodel.modules.bemrosetta import (
+from digitalmodel.bemrosetta import (
     AQWAParser, QTFParser, OrcaFlexConverter,
     CoefficientValidator, CausalityChecker,
 )
@@ -209,7 +209,7 @@ bemrosetta status
 ### Diffraction Module
 ```bash
 # Batch processing
-python -m digitalmodel.modules.diffraction.batch_processor config.yml
+python -m digitalmodel.diffraction.batch_processor config.yml
 ```
 
 ## Output Formats

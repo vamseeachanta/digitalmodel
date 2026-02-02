@@ -370,9 +370,9 @@ with OptimizedProcessPoolExecutor(max_workers=30) as executor:
 ## Appendices
 
 ### A. Affected Modules
-- digitalmodel.modules.orcaflex
+- digitalmodel.orcaflex
 - digitalmodel.modules.parallel_processing
-- digitalmodel.modules.aqwa
+- digitalmodel.aqwa
 - digitalmodel.common.analysis
 
 ### B. Related Issues

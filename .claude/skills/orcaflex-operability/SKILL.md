@@ -179,7 +179,7 @@ operability:
 ### Basic Operability Analysis
 
 ```python
-from digitalmodel.modules.orcaflex.operability_analysis import OperabilityAnalyzer
+from digitalmodel.orcaflex.operability_analysis import OperabilityAnalyzer
 
 # Initialize analyzer
 analyzer = OperabilityAnalyzer(
@@ -203,7 +203,7 @@ analyzer.save_envelope_plot(envelope, "operability_envelope.html")
 ### Weather Downtime Calculation
 
 ```python
-from digitalmodel.modules.orcaflex.operability_analysis import OperabilityAnalyzer
+from digitalmodel.orcaflex.operability_analysis import OperabilityAnalyzer
 import pandas as pd
 
 analyzer = OperabilityAnalyzer(
@@ -229,7 +229,7 @@ print(f"Downtime days: {downtime_results['downtime_days']:.1f} days/yr")
 ### Critical Headings Analysis
 
 ```python
-from digitalmodel.modules.orcaflex.operability_analysis import OperabilityAnalyzer
+from digitalmodel.orcaflex.operability_analysis import OperabilityAnalyzer
 
 analyzer = OperabilityAnalyzer(
     simulation_directory="results/.sim/",
@@ -260,7 +260,7 @@ for i, heading in enumerate(critical["headings"]):
 ### Comprehensive Report Generation
 
 ```python
-from digitalmodel.modules.orcaflex.operability_analysis import OperabilityAnalyzer
+from digitalmodel.orcaflex.operability_analysis import OperabilityAnalyzer
 
 analyzer = OperabilityAnalyzer(
     simulation_directory="results/.sim/",
@@ -375,14 +375,14 @@ except ValueError as e:
 
 ```python
 # 1. Run simulations for multiple headings
-from digitalmodel.modules.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
 
 runner = UniversalOrcaFlexRunner()
 for heading in range(0, 360, 15):
     runner.run_single(f"mooring_heading_{heading}.yml")
 
 # 2. Run operability analysis
-from digitalmodel.modules.orcaflex.operability_analysis import OperabilityAnalyzer
+from digitalmodel.orcaflex.operability_analysis import OperabilityAnalyzer
 
 analyzer = OperabilityAnalyzer(simulation_directory="results/.sim/")
 analyzer.generate_comprehensive_report(...)
@@ -392,8 +392,8 @@ analyzer.generate_comprehensive_report(...)
 
 ```python
 # Use OPP for detailed extraction, then operability for envelope
-from digitalmodel.modules.orcaflex.opp import OrcaFlexPostProcess
-from digitalmodel.modules.orcaflex.operability_analysis import OperabilityAnalyzer
+from digitalmodel.orcaflex.opp import OrcaFlexPostProcess
+from digitalmodel.orcaflex.operability_analysis import OperabilityAnalyzer
 
 # Extract detailed statistics
 opp = OrcaFlexPostProcess()

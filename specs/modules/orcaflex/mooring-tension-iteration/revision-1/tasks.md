@@ -21,7 +21,7 @@
 **Dependencies**: None
 
 **Subtasks**:
-- [ ] Create wrapper for `digitalmodel.modules.orcaflex.universal` module
+- [ ] Create wrapper for `digitalmodel.orcaflex.universal` module
 - [ ] Implement pattern-based file selection for "fsts*125km3*pb_*.yml"
 - [ ] Configure input/output directory management
 - [ ] Add validation=false flag handling

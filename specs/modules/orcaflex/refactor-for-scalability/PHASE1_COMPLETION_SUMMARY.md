@@ -158,13 +158,13 @@ Phase 1 of the OrcaFlex module refactoring has been successfully completed, esta
 ### Migration Tools
 ```bash
 # Migrate single configuration
-python -m src.digitalmodel.modules.orcaflex.core.migrate_config old_config.yaml
+python -m src.digitalmodel.orcaflex.core.migrate_config old_config.yaml
 
 # Migrate entire directory
-python -m src.digitalmodel.modules.orcaflex.core.migrate_config -d configs/ --recursive
+python -m src.digitalmodel.orcaflex.core.migrate_config -d configs/ --recursive
 
 # Validate without migration
-python -m src.digitalmodel.modules.orcaflex.core.migrate_config --validate-only config.yaml
+python -m src.digitalmodel.orcaflex.core.migrate_config --validate-only config.yaml
 ```
 
 ---

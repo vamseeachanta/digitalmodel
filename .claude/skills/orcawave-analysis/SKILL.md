@@ -115,7 +115,7 @@ This skill integrates agent capabilities from `/agents/orcawave/`:
 ### Basic Analysis
 
 ```python
-from digitalmodel.modules.orcawave.orcawave_analysis import OrcaWaveAnalysis
+from digitalmodel.orcawave.orcawave_analysis import OrcaWaveAnalysis
 
 # Initialize analysis
 orcawave = OrcaWaveAnalysis()
@@ -144,7 +144,7 @@ raos = results.get_raos()
 ### Batch Processing
 
 ```python
-from digitalmodel.modules.orcawave.batch import OrcaWaveBatch
+from digitalmodel.orcawave.batch import OrcaWaveBatch
 
 # Initialize batch processor
 batch = OrcaWaveBatch(parallel=True, max_workers=4)
@@ -170,7 +170,7 @@ batch.generate_report(results, "results/batch_summary.html")
 ### OrcaFlex Integration
 
 ```python
-from digitalmodel.modules.orcawave.orcaflex_export import OrcaFlexExporter
+from digitalmodel.orcawave.orcaflex_export import OrcaFlexExporter
 
 # Initialize exporter
 exporter = OrcaFlexExporter()
@@ -193,7 +193,7 @@ exporter.create_hydrodynamic_database(
 ### Mesh Convergence Study
 
 ```python
-from digitalmodel.modules.orcawave.mesh_study import MeshConvergenceStudy
+from digitalmodel.orcawave.mesh_study import MeshConvergenceStudy
 
 # Initialize study
 study = MeshConvergenceStudy()
@@ -341,9 +341,9 @@ mcp__claude-flow__memory_usage {
 Compare OrcaWave results with AQWA for validation at peak/significant values.
 
 ```python
-from digitalmodel.modules.diffraction.comparison_framework import PeakRAOComparator
-from digitalmodel.modules.diffraction.aqwa_converter import AQWAConverter
-from digitalmodel.modules.diffraction.orcawave_converter import OrcaWaveConverter
+from digitalmodel.diffraction.comparison_framework import PeakRAOComparator
+from digitalmodel.diffraction.aqwa_converter import AQWAConverter
+from digitalmodel.diffraction.orcawave_converter import OrcaWaveConverter
 
 # Extract both datasets
 aqwa_results = AQWAConverter(...).convert_to_unified_schema(...)
@@ -395,7 +395,7 @@ comparator.generate_peak_report_html(
 ### License Issues
 ```python
 # Check license before batch
-from digitalmodel.modules.orcawave.license import check_orcawave_license
+from digitalmodel.orcawave.license import check_orcawave_license
 
 if not check_orcawave_license():
     print("Waiting for license...")
@@ -405,7 +405,7 @@ if not check_orcawave_license():
 ### Mesh Issues
 ```python
 # Validate mesh before analysis
-from digitalmodel.modules.orcawave.mesh import validate_panel_mesh
+from digitalmodel.orcawave.mesh import validate_panel_mesh
 
 validation = validate_panel_mesh("geometry/hull_panels.dat")
 if validation["issues"]:

@@ -14,7 +14,7 @@ bash dm_pretension_iteration.sh
 
 # Step 2: Batch run all yml files and save sim files
 # universal module with new paths
-/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel.modules.orcaflex.universal \
+/d/github/digitalmodel/.venv/Scripts/python -m digitalmodel.orcaflex.universal \
     pattern="fsts*.yml" \
     input_directory="../run_files/yml" \
     output_directory="../run_files/sim" \

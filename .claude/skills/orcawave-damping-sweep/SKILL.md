@@ -76,7 +76,7 @@ Total Damping = Radiation Damping + Viscous Damping + Appendage Damping
 ### Basic Damping Sweep
 
 ```python
-from digitalmodel.modules.orcawave.damping import DampingSweep
+from digitalmodel.orcawave.damping import DampingSweep
 
 # Initialize sweep
 sweep = DampingSweep()
@@ -109,7 +109,7 @@ sweep.plot_sweep_results(
 ### Multi-Parameter Sweep
 
 ```python
-from digitalmodel.modules.orcawave.damping import MultiParameterDampingSweep
+from digitalmodel.orcawave.damping import MultiParameterDampingSweep
 
 # Initialize multi-parameter sweep
 sweep = MultiParameterDampingSweep()
@@ -148,7 +148,7 @@ print(f"Optimal pitch damping: {optimal['pitch_damping']:.2%}")
 ### Critical Damping Calculation
 
 ```python
-from digitalmodel.modules.orcawave.damping import CriticalDampingCalculator
+from digitalmodel.orcawave.damping import CriticalDampingCalculator
 
 # Initialize calculator
 calc = CriticalDampingCalculator()
@@ -178,7 +178,7 @@ for dof, pct in percent_critical.items():
 ### Model Test Comparison
 
 ```python
-from digitalmodel.modules.orcawave.damping import ModelTestComparison
+from digitalmodel.orcawave.damping import ModelTestComparison
 
 # Initialize comparison
 comparison = ModelTestComparison()
@@ -216,7 +216,7 @@ comparison.plot_comparison(
 ### Bilge Keel Estimation
 
 ```python
-from digitalmodel.modules.orcawave.damping import BilgeKeelDamping
+from digitalmodel.orcawave.damping import BilgeKeelDamping
 
 # Initialize bilge keel damping estimator
 bk = BilgeKeelDamping()
@@ -255,7 +255,7 @@ amplitude_study = bk.amplitude_sensitivity(
 ### Damping-Period Relationship
 
 ```python
-from digitalmodel.modules.orcawave.damping import DampingPeriodAnalyzer
+from digitalmodel.orcawave.damping import DampingPeriodAnalyzer
 
 # Analyze damping vs period relationship
 analyzer = DampingPeriodAnalyzer()
@@ -355,36 +355,36 @@ model_test_comparison:
 
 ```bash
 # Run damping sweep
-python -m digitalmodel.modules.orcawave.damping sweep \
+python -m digitalmodel.orcawave.damping sweep \
     --model models/fpso.owr \
     --parameter roll_damping \
     --values 0.02,0.04,0.06,0.08,0.10 \
     --output results/roll_sweep/
 
 # Multi-parameter sweep
-python -m digitalmodel.modules.orcawave.damping multi-sweep \
+python -m digitalmodel.orcawave.damping multi-sweep \
     --config configs/damping_sweep.yml \
     --output results/multi_sweep/
 
 # Calculate critical damping
-python -m digitalmodel.modules.orcawave.damping critical \
+python -m digitalmodel.orcawave.damping critical \
     --model models/fpso.owr \
     --output critical_damping.csv
 
 # Compare with model tests
-python -m digitalmodel.modules.orcawave.damping compare \
+python -m digitalmodel.orcawave.damping compare \
     --orcawave results/fpso.owr \
     --model-test data/roll_decay.csv \
     --output reports/comparison.html
 
 # Estimate bilge keel damping
-python -m digitalmodel.modules.orcawave.damping bilge-keel \
+python -m digitalmodel.orcawave.damping bilge-keel \
     --beam 50.0 --draft 22.0 \
     --bk-length 100.0 --bk-height 1.5 \
     --roll-amplitude 5.0 --roll-period 12.0
 
 # Extract radiation damping spectrum
-python -m digitalmodel.modules.orcawave.damping spectrum \
+python -m digitalmodel.orcawave.damping spectrum \
     --model models/fpso.owr \
     --dofs roll,pitch,heave \
     --output plots/damping_spectrum.html

@@ -91,23 +91,23 @@ compatibility:
 
 ```bash
 # Convert .dat to .yml
-python -m digitalmodel.modules.orcaflex.orcaflex_yml_converter model.dat
+python -m digitalmodel.orcaflex.orcaflex_yml_converter model.dat
 
 # Convert .yml to .dat
-python -m digitalmodel.modules.orcaflex.orcaflex_yml_converter model.yml
+python -m digitalmodel.orcaflex.orcaflex_yml_converter model.yml
 ```
 
 ### Batch Conversion
 
 ```bash
 # Convert all .dat files in directory
-python -m digitalmodel.modules.orcaflex.examples_integration.batch_converter \
+python -m digitalmodel.orcaflex.examples_integration.batch_converter \
     --input-dir models/ \
     --output-dir models_yml/ \
     --pattern "*.dat"
 
 # Convert with validation
-python -m digitalmodel.modules.orcaflex.examples_integration.batch_converter \
+python -m digitalmodel.orcaflex.examples_integration.batch_converter \
     --input-dir models/ \
     --output-dir models_yml/ \
     --validate \
@@ -119,7 +119,7 @@ python -m digitalmodel.modules.orcaflex.examples_integration.batch_converter \
 ### Basic Conversion
 
 ```python
-from digitalmodel.modules.orcaflex.orcaflex_yml_converter import convert_to_yml
+from digitalmodel.orcaflex.orcaflex_yml_converter import convert_to_yml
 from pathlib import Path
 
 # Convert single file
@@ -134,7 +134,7 @@ if success:
 ### Batch Conversion with Progress Tracking
 
 ```python
-from digitalmodel.modules.orcaflex.examples_integration.batch_converter import OrcaFlexBatchConverter
+from digitalmodel.orcaflex.examples_integration.batch_converter import OrcaFlexBatchConverter
 from pathlib import Path
 
 # Initialize converter
@@ -183,7 +183,7 @@ convert_yml_to_dat("model.yml", "model.dat")
 ### Simulation File Conversion
 
 ```python
-from digitalmodel.modules.orcaflex.examples_integration.orcfxapi_converter import OrcFxAPIConverter
+from digitalmodel.orcaflex.examples_integration.orcfxapi_converter import OrcFxAPIConverter
 from pathlib import Path
 
 # Initialize converter for .sim files
@@ -205,7 +205,7 @@ print(f".yml files created: {stats['yml_files_created']}")
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.orcaflex.examples_integration.batch_converter import OrcaFlexBatchConverter
+from digitalmodel.orcaflex.examples_integration.batch_converter import OrcaFlexBatchConverter
 
 converter = OrcaFlexBatchConverter(
     input_dir=Path("docs/modules/orcaflex/examples/raw"),
@@ -229,7 +229,7 @@ from pathlib import Path
 
 def convert_file_wrapper(file_path):
     """Wrapper for parallel conversion."""
-    from digitalmodel.modules.orcaflex.orcaflex_yml_converter import convert_to_yml
+    from digitalmodel.orcaflex.orcaflex_yml_converter import convert_to_yml
     return convert_to_yml(str(file_path))
 
 # Get all .dat files
@@ -429,7 +429,7 @@ orcaflex-universal convert --input models_yml/ --output models/ --format dat
 Convert binary .dat files to YAML for Git tracking:
 
 ```bash
-python -m digitalmodel.modules.orcaflex.examples_integration.batch_converter \
+python -m digitalmodel.orcaflex.examples_integration.batch_converter \
     --input-dir models/ \
     --output-dir models_version_control/ \
     --pattern "*.dat"
@@ -470,7 +470,7 @@ model.SaveData("case_100yr.dat")
 Convert 180+ example files for analysis:
 
 ```python
-from digitalmodel.modules.orcaflex.examples_integration.batch_converter import OrcaFlexBatchConverter
+from digitalmodel.orcaflex.examples_integration.batch_converter import OrcaFlexBatchConverter
 from pathlib import Path
 
 # Convert all examples
@@ -493,14 +493,14 @@ Convert .dat to .yml for inspection:
 
 ```bash
 # Convert problematic model to YAML
-python -m digitalmodel.modules.orcaflex.orcaflex_yml_converter problem_model.dat
+python -m digitalmodel.orcaflex.orcaflex_yml_converter problem_model.dat
 
 # Inspect YAML in text editor
 code problem_model.yml
 
 # Make corrections in YAML
 # Convert back to .dat
-python -m digitalmodel.modules.orcaflex.orcaflex_yml_converter problem_model.yml
+python -m digitalmodel.orcaflex.orcaflex_yml_converter problem_model.yml
 ```
 
 ## Error Handling
@@ -528,7 +528,7 @@ converter = OrcaFlexBatchConverter(max_retries=3)
 **3. License Issues**
 ```python
 # Check license before conversion
-from digitalmodel.modules.orcaflex.orcaflex_utilities import OrcaflexUtilities
+from digitalmodel.orcaflex.orcaflex_utilities import OrcaflexUtilities
 
 utils = OrcaflexUtilities()
 if not utils.is_orcaflex_available():

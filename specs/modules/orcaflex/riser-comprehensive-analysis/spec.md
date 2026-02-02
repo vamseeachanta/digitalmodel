@@ -465,23 +465,23 @@ RECOMMENDATIONS:
 
 ```bash
 # Basic execution
-python -m digitalmodel.modules.orcaflex.riser --config riser_config.yml
+python -m digitalmodel.orcaflex.riser --config riser_config.yml
 
 # Pattern-based batch processing
-python -m digitalmodel.modules.orcaflex.riser \
+python -m digitalmodel.orcaflex.riser \
   --pattern "*.yml" \
   --input-directory ./configs \
   --output-directory ./results \
   --parallel 8
 
 # Specific analysis types
-python -m digitalmodel.modules.orcaflex.riser \
+python -m digitalmodel.orcaflex.riser \
   --config riser.yml \
   --analysis-type fatigue \
   --report-format excel
 
 # With visualization
-python -m digitalmodel.modules.orcaflex.riser \
+python -m digitalmodel.orcaflex.riser \
   --config riser.yml \
   --visualize \
   --animation \

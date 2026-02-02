@@ -241,7 +241,7 @@ class BatchedProgress:
 ### Internal Dependencies
 - `assetutilities.common.ApplicationManager`
 - `digitalmodel.common.parallel_processing`
-- `digitalmodel.modules.orcaflex.*`
+- `digitalmodel.orcaflex.*`
 
 ## Risk Mitigation
 
