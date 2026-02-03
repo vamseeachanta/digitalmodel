@@ -29,7 +29,7 @@ import numpy as np
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from digitalmodel.data_procurement import MetoceanClient, VesselClient, MooringClient
+from digitalmodel.data_systems.data_procurement import MetoceanClient, VesselClient, MooringClient
 
 
 def example_fpso_mooring_design():
@@ -131,7 +131,7 @@ def example_fpso_mooring_design():
     print(f"  Vessel type: {vessel_type}, Draft: {draft} m")
 
     # Get vessel particulars
-    from digitalmodel.data_procurement.vessel.api_clients import GenericRAOClient
+    from digitalmodel.data_systems.data_procurement.vessel.api_clients import GenericRAOClient
     rao_client = GenericRAOClient()
     vessel_particulars = rao_client.get_vessel_particulars(vessel_type)
 

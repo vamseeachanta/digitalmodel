@@ -18,7 +18,7 @@ from pathlib import Path
 src_path = Path(__file__).parent.parent.parent / 'src'
 sys.path.insert(0, str(src_path))
 
-from digitalmodel.fatigue.sn_curve_plotter import SNCurvePlotter
+from digitalmodel.structural.fatigue.sn_curve_plotter import SNCurvePlotter
 
 
 def list_curves(args):

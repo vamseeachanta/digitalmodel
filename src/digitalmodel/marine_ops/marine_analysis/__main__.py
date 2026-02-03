@@ -3,7 +3,7 @@
 This module provides command-line interface for running marine analysis tools.
 
 Usage:
-    python -m digitalmodel.marine_analysis <command> [options]
+    python -m digitalmodel.marine_ops.marine_analysis <command> [options]
 
 Commands:
     profile         Run performance profiling
@@ -13,10 +13,10 @@ Commands:
     analyze         Run general analysis
 
 Examples:
-    python -m digitalmodel.marine_analysis profile --module wave_spectra
-    python -m digitalmodel.marine_analysis extract --type ocimf
-    python -m digitalmodel.marine_analysis validate --phase 2
-    python -m digitalmodel.marine_analysis visualize --type integration
+    python -m digitalmodel.marine_ops.marine_analysis profile --module wave_spectra
+    python -m digitalmodel.marine_ops.marine_analysis extract --type ocimf
+    python -m digitalmodel.marine_ops.marine_analysis validate --phase 2
+    python -m digitalmodel.marine_ops.marine_analysis visualize --type integration
 """
 
 import sys

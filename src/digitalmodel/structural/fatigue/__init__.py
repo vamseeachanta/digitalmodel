@@ -24,7 +24,7 @@ frequency_domain : Spectral fatigue analysis methods
 
 Quick Start:
 -----------
->>> from digitalmodel.fatigue import get_dnv_curve, rainflow_count, LinearDamageAccumulation
+>>> from digitalmodel.structural.fatigue import get_dnv_curve, rainflow_count, LinearDamageAccumulation
 >>>
 >>> # Get standard S-N curve
 >>> sn_curve = get_dnv_curve('D')

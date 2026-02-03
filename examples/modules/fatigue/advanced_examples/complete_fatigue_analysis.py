@@ -27,7 +27,7 @@ import sys
 # Add the digitalmodel package to the path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'src'))
 
-from digitalmodel.fatigue import (
+from digitalmodel.structural.fatigue import (
     # S-N curves
     get_dnv_curve, get_api_curve, get_bs_curve,
     StandardSNCurves, plot_sn_curve,

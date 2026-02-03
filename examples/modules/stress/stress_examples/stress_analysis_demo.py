@@ -7,7 +7,7 @@ functionality with modern Python best practices.
 """
 
 import numpy as np
-from digitalmodel.stress import (
+from digitalmodel.structural.stress import (
     # Von Mises stress analysis
     PipeStressAnalyzer, PipeGeometry, MaterialProperties, LoadingCondition,
     VonMisesStressCalculator, StressState,
@@ -114,7 +114,7 @@ def demonstrate_stress_strain_analysis():
     )
 
     # Calculate specific points (reproducing legacy calculations)
-    from digitalmodel.stress.stress_strain import RambergOsgoodModel
+    from digitalmodel.structural.stress.stress_strain import RambergOsgoodModel
     ro_model = RambergOsgoodModel()
 
     print(f"\nStress-Strain Points (reproducing legacy calculations):")

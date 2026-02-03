@@ -12,7 +12,7 @@ Comprehensive access to riser component data:
 - Riser joints (flex joints, ball joints, telescopic)
 
 Example:
-    from digitalmodel.data_procurement import RiserClient
+    from digitalmodel.data_systems.data_procurement import RiserClient
 
     client = RiserClient()
 

@@ -197,7 +197,7 @@ class BatchProcessor:
 
     def _process_orcawave(self, config: BatchConfiguration) -> DiffractionResults:
         """Process OrcaWave configuration"""
-        from digitalmodel.diffraction import ORCAWAVE_AVAILABLE
+        from digitalmodel.hydrodynamics.diffraction import ORCAWAVE_AVAILABLE
 
         if not ORCAWAVE_AVAILABLE:
             raise ImportError("OrcFxAPI required for OrcaWave processing")

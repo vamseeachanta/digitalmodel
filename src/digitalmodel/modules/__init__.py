@@ -9,7 +9,7 @@ Usage:
     from digitalmodel.modules.orcaflex.orcaflex import OrcaFlex
 
     # New path (preferred):
-    from digitalmodel.orcaflex.orcaflex import OrcaFlex
+    from digitalmodel.solvers.orcaflex.orcaflex import OrcaFlex
 """
 
 import importlib

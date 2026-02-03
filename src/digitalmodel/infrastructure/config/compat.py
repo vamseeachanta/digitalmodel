@@ -12,7 +12,7 @@ This allows existing code using config_loader.py to work without changes
 while benefiting from the new registry features.
 
 Usage (legacy code works unchanged):
-    from digitalmodel.config import load_config
+    from digitalmodel.infrastructure.config import load_config
     
     config = load_config("path/to/config.yml")
     value = config["default"]["log_level"]

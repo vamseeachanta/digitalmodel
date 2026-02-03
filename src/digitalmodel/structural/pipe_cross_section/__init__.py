@@ -22,7 +22,7 @@ Standards Compliance:
     - ISO 21809: Petroleum and Natural Gas Industries - External Coatings
 
 Usage:
-    >>> from digitalmodel.pipe_cross_section import PipeCrossSection
+    >>> from digitalmodel.structural.pipe_cross_section import PipeCrossSection
 
     >>> # Create from metric units
     >>> pipe = PipeCrossSection(
@@ -45,7 +45,7 @@ Usage:
     Submerged weight: 256.9 kg/m
 
     >>> # Generate HTML report
-    >>> from digitalmodel.pipe_cross_section import generate_html_report
+    >>> from digitalmodel.structural.pipe_cross_section import generate_html_report
     >>> generate_html_report(pipe, "output/report.html")
 
 CLI Usage:

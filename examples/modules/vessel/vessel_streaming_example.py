@@ -27,7 +27,7 @@ import numpy as np
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from digitalmodel.data_procurement.vessel import VesselClient
+from digitalmodel.data_systems.data_procurement.vessel import VesselClient
 
 
 def example_vessel_database_query():
@@ -137,7 +137,7 @@ def example_hydrostatic_calculation():
     client = VesselClient.from_config(str(config_path))
 
     # Get generic VLCC particulars
-    from digitalmodel.data_procurement.vessel.api_clients import GenericRAOClient
+    from digitalmodel.data_systems.data_procurement.vessel.api_clients import GenericRAOClient
 
     rao_client = GenericRAOClient()
     vessel_particulars = rao_client.get_vessel_particulars("VLCC")
@@ -196,7 +196,7 @@ def example_orcaflex_vessel_yaml():
     client = VesselClient.from_config(str(config_path))
 
     # Get vessel particulars
-    from digitalmodel.data_procurement.vessel.api_clients import GenericRAOClient
+    from digitalmodel.data_systems.data_procurement.vessel.api_clients import GenericRAOClient
 
     rao_client = GenericRAOClient()
     vessel_particulars = rao_client.get_vessel_particulars("VLCC")
@@ -258,7 +258,7 @@ def example_complete_workflow():
         print(f"  Using generic {vessel_type} (API query failed: {e})")
 
         # Use generic vessel
-        from digitalmodel.data_procurement.vessel.api_clients import GenericRAOClient
+        from digitalmodel.data_systems.data_procurement.vessel.api_clients import GenericRAOClient
         rao_client = GenericRAOClient()
         vessel_particulars = rao_client.get_vessel_particulars(vessel_type)
 

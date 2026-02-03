@@ -13,7 +13,7 @@ from pathlib import Path
 # Add src to path for examples
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from digitalmodel.config import ConfigRegistry, load_config
+from digitalmodel.infrastructure.config import ConfigRegistry, load_config
 
 
 def main():

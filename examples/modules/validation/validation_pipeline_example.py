@@ -4,7 +4,7 @@
 import numpy as np
 from pathlib import Path
 
-from digitalmodel.validation.pipeline import (
+from digitalmodel.infrastructure.validation.pipeline import (
     RangeValidator,
     MatrixValidator,
     PhysicalPlausibilityValidator,

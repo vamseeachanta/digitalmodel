@@ -9,7 +9,7 @@ modeling, and analysis. It includes:
 - Stratigraphic correlation and visualization
 
 Examples:
-    >>> from digitalmodel.reservoir import ReservoirProperties, ReservoirModel
+    >>> from digitalmodel.marine_ops.reservoir import ReservoirProperties, ReservoirModel
     >>> props = ReservoirProperties(porosity=0.2, permeability=100)
     >>> model = ReservoirModel(properties=props)
 """

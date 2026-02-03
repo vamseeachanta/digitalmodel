@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional
 import yaml
 from loguru import logger
 
-from digitalmodel.diffraction import DiffractionResults, OrcaFlexExporter
+from digitalmodel.hydrodynamics.diffraction import DiffractionResults, OrcaFlexExporter
 from .base import BaseConverter
 from ..core.exceptions import ConverterError
 from ..models import ConversionResult, QTFData

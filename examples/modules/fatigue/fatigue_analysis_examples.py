@@ -26,7 +26,7 @@ from pathlib import Path
 import logging
 
 # Import the fatigue analysis module
-from digitalmodel.fatigue import (
+from digitalmodel.structural.fatigue import (
     # Main analysis engine
     FatigueAnalysisEngine,
     FatigueAnalysisConfig,

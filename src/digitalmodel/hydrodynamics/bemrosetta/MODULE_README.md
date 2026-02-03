@@ -24,7 +24,7 @@ uv pip install -e .
 ### Python API
 
 ```python
-from digitalmodel.bemrosetta import (
+from digitalmodel.hydrodynamics.bemrosetta import (
     AQWAParser,
     OrcaFlexConverter,
     validate_coefficients,
@@ -108,7 +108,7 @@ bemrosetta status
 Metadata from BEM solver output including solver name, version, water depth, vessel name.
 
 ```python
-from digitalmodel.bemrosetta import BEMSolverMetadata
+from digitalmodel.hydrodynamics.bemrosetta import BEMSolverMetadata
 
 # Metadata attributes:
 # - solver_type: BEMSolverType (AQWA, WAMIT, NEMOH, etc.)
@@ -123,7 +123,7 @@ from digitalmodel.bemrosetta import BEMSolverMetadata
 Quadratic Transfer Function data for second-order wave forces with sum/difference frequency types.
 
 ```python
-from digitalmodel.bemrosetta import QTFData, QTFType
+from digitalmodel.hydrodynamics.bemrosetta import QTFData, QTFType
 
 # QTFData attributes:
 # - qtf_type: QTFType.SUM_FREQUENCY or QTFType.DIFFERENCE_FREQUENCY
@@ -139,7 +139,7 @@ from digitalmodel.bemrosetta import QTFData, QTFType
 Panel mesh geometry with vertices, panels, normals, areas, and symmetry information.
 
 ```python
-from digitalmodel.bemrosetta import PanelMesh, MeshFormat
+from digitalmodel.hydrodynamics.bemrosetta import PanelMesh, MeshFormat
 
 # PanelMesh attributes:
 # - vertices: np.ndarray (N x 3)
@@ -156,7 +156,7 @@ from digitalmodel.bemrosetta import PanelMesh, MeshFormat
 Mesh quality metrics including panel statistics, aspect ratios, and quality score.
 
 ```python
-from digitalmodel.bemrosetta import MeshQualityReport
+from digitalmodel.hydrodynamics.bemrosetta import MeshQualityReport
 
 # MeshQualityReport attributes:
 # - n_vertices: int
@@ -176,7 +176,7 @@ from digitalmodel.bemrosetta import MeshQualityReport
 ### Feature Detection
 
 ```python
-from digitalmodel.bemrosetta import is_bemrosetta_available, get_module_info
+from digitalmodel.hydrodynamics.bemrosetta import is_bemrosetta_available, get_module_info
 
 # Check if BEMRosetta executable is available
 if is_bemrosetta_available():
@@ -199,7 +199,7 @@ print(info)
 ### Parsing AQWA Files
 
 ```python
-from digitalmodel.bemrosetta import AQWAParser
+from digitalmodel.hydrodynamics.bemrosetta import AQWAParser
 
 parser = AQWAParser()
 
@@ -222,7 +222,7 @@ if parser.can_parse("analysis.LIS"):
 ### Parsing QTF Files
 
 ```python
-from digitalmodel.bemrosetta import QTFParser, QTFType
+from digitalmodel.hydrodynamics.bemrosetta import QTFParser, QTFType
 
 parser = QTFParser()
 qtf_data = parser.parse("analysis.QTF")
@@ -242,7 +242,7 @@ for comp in qtf_data.components:
 ### Mesh Conversion
 
 ```python
-from digitalmodel.bemrosetta import GDFHandler, STLHandler, convert_mesh
+from digitalmodel.hydrodynamics.bemrosetta import GDFHandler, STLHandler, convert_mesh
 
 # Read GDF mesh
 handler = GDFHandler()
@@ -265,7 +265,7 @@ stl_handler.write(mesh, "hull.stl")
 ### Validation
 
 ```python
-from digitalmodel.bemrosetta import (
+from digitalmodel.hydrodynamics.bemrosetta import (
     CoefficientValidator,
     CausalityChecker,
     validate_coefficients,
@@ -295,7 +295,7 @@ print(f"Causality satisfied: {kk_report.is_valid}")
 ### OrcaFlex Conversion
 
 ```python
-from digitalmodel.bemrosetta import OrcaFlexConverter, convert_to_orcaflex
+from digitalmodel.hydrodynamics.bemrosetta import OrcaFlexConverter, convert_to_orcaflex
 from pathlib import Path
 
 # Using converter class
@@ -320,8 +320,8 @@ This module integrates with:
 - `hydrodynamics` module - Compatible with `HydrodynamicMatrix`, `VesselProperties`
 
 ```python
-from digitalmodel.diffraction import DiffractionResults
-from digitalmodel.bemrosetta import CoefficientValidator
+from digitalmodel.hydrodynamics.diffraction import DiffractionResults
+from digitalmodel.hydrodynamics.bemrosetta import CoefficientValidator
 
 # Validate diffraction results
 validator = CoefficientValidator()
@@ -347,7 +347,7 @@ export BEMROSETTA_PATH=/path/to/BEMRosetta_cl.exe
 ## Error Handling
 
 ```python
-from digitalmodel.bemrosetta import (
+from digitalmodel.hydrodynamics.bemrosetta import (
     BEMRosettaError,
     ParserError,
     ConverterError,

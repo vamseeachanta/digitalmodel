@@ -20,7 +20,7 @@ Features demonstrated:
 import time
 from typing import Dict, List
 
-from digitalmodel.core.cache import CacheClient, CacheConfig, cache_result
+from digitalmodel.infrastructure.core.cache import CacheClient, CacheConfig, cache_result
 
 
 # Example 1: Decorator-based caching

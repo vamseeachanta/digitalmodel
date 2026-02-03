@@ -14,7 +14,7 @@ Provides PipeCrossSection class for calculating:
 Compatible with DNV-ST-F101, API 5L, and ISO 21809 standards.
 
 Usage:
-    from digitalmodel.pipe_cross_section import PipeCrossSection
+    from digitalmodel.structural.pipe_cross_section import PipeCrossSection
 
     pipe = PipeCrossSection(
         steel_od_mm=609.6,

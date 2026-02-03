@@ -8,7 +8,7 @@ reproducing and extending the legacy stress-strain calculation functionality.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from digitalmodel.stress import (
+from digitalmodel.structural.stress import (
     StressStrainAnalyzer,
     MaterialModel,
     StressStrainCurve,
@@ -84,7 +84,7 @@ def main():
     print("Stress (kPa) | Strain (%)")
     print("-" * 25)
 
-    from digitalmodel.stress.stress_strain import RambergOsgoodModel
+    from digitalmodel.structural.stress.stress_strain import RambergOsgoodModel
     ro_model = RambergOsgoodModel()
 
     for stress in test_stresses:

@@ -9,7 +9,7 @@ import sys
 sys.path.insert(0, 'src')
 
 import numpy as np
-from digitalmodel.stress import (
+from digitalmodel.structural.stress import (
     PipeStressAnalyzer, PipeGeometry, MaterialProperties, LoadingCondition,
     VonMisesStressCalculator, StressState
 )

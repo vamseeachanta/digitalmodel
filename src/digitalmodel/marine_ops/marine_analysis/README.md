@@ -376,10 +376,10 @@ Contributions are welcome! Please:
 
 ## Related Modules
 
-- `digitalmodel.fatigue`: Fatigue analysis tools
+- `digitalmodel.structural.fatigue`: Fatigue analysis tools
 - `digitalmodel.subsea.catenary`: Catenary mooring analysis
-- `digitalmodel.aqwa`: AQWA interface utilities
-- `digitalmodel.orcaflex`: OrcaFlex interface utilities
+- `digitalmodel.hydrodynamics.aqwa`: AQWA interface utilities
+- `digitalmodel.solvers.orcaflex`: OrcaFlex interface utilities
 
 ---
 

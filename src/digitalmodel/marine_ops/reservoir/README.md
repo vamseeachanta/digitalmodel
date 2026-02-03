@@ -29,7 +29,7 @@ reservoir/
 ### Basic Reservoir Properties
 
 ```python
-from digitalmodel.reservoir import create_sandstone_reservoir
+from digitalmodel.marine_ops.reservoir import create_sandstone_reservoir
 
 # Create a sandstone reservoir
 reservoir = create_sandstone_reservoir(
@@ -52,7 +52,7 @@ print(f"Pore Volume: {pore_volume:,.0f} acre-ft")
 ### Well Log Analysis
 
 ```python
-from digitalmodel.reservoir import LogAnalysis, LogCurve
+from digitalmodel.marine_ops.reservoir import LogAnalysis, LogCurve
 
 # Create log analysis
 log_analysis = LogAnalysis('WELL-001')
@@ -76,7 +76,7 @@ print(f"Average porosity: {net_pay['average_porosity']:.1%}")
 ### Material Balance Analysis
 
 ```python
-from digitalmodel.reservoir import ReservoirModel, ProductionData
+from digitalmodel.marine_ops.reservoir import ReservoirModel, ProductionData
 from datetime import datetime, timedelta
 
 # Create reservoir model
@@ -111,7 +111,7 @@ print(f"Cumulative production: {mb_results['cumulative_oil']:,.0f} STB")
 ### Stratigraphic Correlation
 
 ```python
-from digitalmodel.reservoir import StratigraphicAnalysis, WellData
+from digitalmodel.marine_ops.reservoir import StratigraphicAnalysis, WellData
 
 # Create stratigraphic analysis
 strat_analysis = StratigraphicAnalysis()
@@ -160,7 +160,7 @@ The test framework includes:
 If you have existing reservoir analysis code, use the migration utilities:
 
 ```python
-from digitalmodel.reservoir.legacy_migration import migrate_legacy_stratigraphic_plot
+from digitalmodel.marine_ops.reservoir.legacy_migration import migrate_legacy_stratigraphic_plot
 
 # Migrate legacy stratigraphic plots
 fig = migrate_legacy_stratigraphic_plot(wells_list, df_logs, statdata)

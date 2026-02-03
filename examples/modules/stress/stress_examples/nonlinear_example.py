@@ -7,7 +7,7 @@ to solve plasticity problems with various yield criteria and hardening models.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from digitalmodel.stress.nonlinear import (
+from digitalmodel.structural.stress.nonlinear import (
     NonlinearStressAnalyzer,
     VonMisesYield,
     TrescaYield,

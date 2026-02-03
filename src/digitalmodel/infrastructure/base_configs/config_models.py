@@ -9,7 +9,7 @@ from sqlalchemy import Column, String, DateTime, Text, Integer
 from sqlalchemy.dialects.postgresql import JSON
 
 # Assumes BaseModel with mixins is available from Phase 1
-# Import structure: from digitalmodel.base_configs.models import BaseModel, AuditMixin, MetadataMixin, StatusMixin
+# Import structure: from digitalmodel.infrastructure.base_configs.models import BaseModel, AuditMixin, MetadataMixin, StatusMixin
 try:
     from digitalmodel.base_configs.models import (
         BaseModel,

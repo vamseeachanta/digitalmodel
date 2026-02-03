@@ -432,7 +432,7 @@ def create_migration_guide():
     
     New code:
     ```python
-    from digitalmodel.signal_analysis import RainflowCounter, SpectralAnalyzer
+    from digitalmodel.signal_processing.signal_analysis import RainflowCounter, SpectralAnalyzer
     
     # Rainflow counting
     counter = RainflowCounter()

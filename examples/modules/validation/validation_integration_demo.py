@@ -18,7 +18,7 @@ if sys.platform == 'win32':
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from digitalmodel.validators.data_validator import DataValidator
+from digitalmodel.infrastructure.validators.data_validator import DataValidator
 
 # Setup logging
 logging.basicConfig(
@@ -117,7 +117,7 @@ def demo_integration_with_procurement():
         import importlib.util
         spec = importlib.util.find_spec("data_scraping.validators.data_validator")
         if spec is not None:
-            from digitalmodel.data_scraping.validators.data_validator import DataValidator as ProcurementValidator
+            from digitalmodel.data_systems.data_scraping.validators.data_validator import DataValidator as ProcurementValidator
         else:
             raise ImportError("data_scraping not in path")
 
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     print("  ✅ config/validation/validation_config.yaml")
     print("  ✅ examples/validation_examples.py")
     print("  ✅ examples/validation_integration_demo.py (this file)")
-    print("\nNote: Import using 'from digitalmodel.validators import DataValidator'")
+    print("\nNote: Import using 'from digitalmodel.infrastructure.validators import DataValidator'")
 
     try:
         # Run demos

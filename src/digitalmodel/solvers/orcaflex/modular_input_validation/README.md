@@ -51,7 +51,7 @@ pip install plotly jinja2
 ### Python API
 
 ```python
-from digitalmodel.orcaflex.modular_input_validation import ModularInputValidator
+from digitalmodel.solvers.orcaflex.modular_input_validation import ModularInputValidator
 
 # Create validator
 validator = ModularInputValidator()
@@ -70,13 +70,13 @@ validator.generate_reports(results)
 
 ```bash
 # Validate a single file
-python -m digitalmodel.orcaflex.modular_input_validation.cli file.yml
+python -m digitalmodel.solvers.orcaflex.modular_input_validation.cli file.yml
 
 # Validate directory
-python -m digitalmodel.orcaflex.modular_input_validation.cli path/to/files/
+python -m digitalmodel.solvers.orcaflex.modular_input_validation.cli path/to/files/
 
 # Custom options
-python -m digitalmodel.orcaflex.modular_input_validation.cli file.yml \
+python -m digitalmodel.solvers.orcaflex.modular_input_validation.cli file.yml \
   --tolerance 15 \
   --formats console csv markdown \
   --skip-level 2
@@ -85,7 +85,7 @@ python -m digitalmodel.orcaflex.modular_input_validation.cli file.yml \
 ## Configuration
 
 ```python
-from digitalmodel.orcaflex.modular_input_validation import ValidationConfig
+from digitalmodel.solvers.orcaflex.modular_input_validation import ValidationConfig
 
 config = ValidationConfig(
     tolerance_percent=10.0,           # ±10% tolerance for physical validation
@@ -179,7 +179,7 @@ See `docs/modules/orcaflex/modular_input_validation_example.py` for comprehensiv
 # Example GitHub Actions workflow
 - name: Validate OrcaFlex YAML Files
   run: |
-    python -m digitalmodel.orcaflex.modular_input_validation.cli \
+    python -m digitalmodel.solvers.orcaflex.modular_input_validation.cli \
       specs/modules/orcaflex/modular-input-file/output/ \
       --no-orcaflex \
       --formats console csv markdown

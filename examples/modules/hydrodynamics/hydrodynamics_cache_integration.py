@@ -23,7 +23,7 @@ Performance impact:
 import time
 from typing import Dict, List, Optional
 
-from digitalmodel.core.cache import CacheClient, CacheConfig, cache_result
+from digitalmodel.infrastructure.core.cache import CacheClient, CacheConfig, cache_result
 
 
 # =============================================================================

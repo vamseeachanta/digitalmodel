@@ -555,7 +555,7 @@ def create_migration_report(
         "",
         "EXAMPLE USAGE:",
         "-" * 14,
-        "from digitalmodel.reservoir.legacy_migration import migrate_legacy_stratigraphic_plot",
+        "from digitalmodel.marine_ops.reservoir.legacy_migration import migrate_legacy_stratigraphic_plot",
         "fig = migrate_legacy_stratigraphic_plot(wells_list, df_logs, statdata)",
         "plt.show()"
     ])
@@ -575,5 +575,5 @@ if __name__ == "__main__":
     print("This module provides tools to migrate from legacy stratigraphic.py")
     print("to the modernized reservoir analysis framework.")
     print("\nExample usage:")
-    print("  from digitalmodel.reservoir.legacy_migration import migrate_legacy_stratigraphic_plot")
+    print("  from digitalmodel.marine_ops.reservoir.legacy_migration import migrate_legacy_stratigraphic_plot")
     print("  fig = migrate_legacy_stratigraphic_plot(wells_list, df_logs, statdata)")

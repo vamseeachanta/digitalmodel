@@ -14,7 +14,7 @@ Features:
 Optional: BEMRosetta_cl.exe integration for extended features.
 
 Example:
-    from digitalmodel.bemrosetta import (
+    from digitalmodel.hydrodynamics.bemrosetta import (
         AQWAParser,
         OrcaFlexConverter,
         is_bemrosetta_available,

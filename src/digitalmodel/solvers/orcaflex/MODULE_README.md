@@ -241,7 +241,7 @@ run-to-sim --all --verbose
 ### Universal Runner
 
 ```python
-from digitalmodel.orcaflex import UniversalOrcaFlexRunner, StatusReporter
+from digitalmodel.solvers.orcaflex import UniversalOrcaFlexRunner, StatusReporter
 
 # Initialize runner
 runner = UniversalOrcaFlexRunner(
@@ -271,7 +271,7 @@ print(f"Failed: {results.failed}")
 ### Run-to-Sim
 
 ```python
-from digitalmodel.orcaflex import run_models
+from digitalmodel.solvers.orcaflex import run_models
 
 # Run models
 results = run_models(
@@ -290,7 +290,7 @@ print(f"Failed: {results['failed']}")
 ### Check Availability
 
 ```python
-from digitalmodel.orcaflex import check_availability
+from digitalmodel.solvers.orcaflex import check_availability
 
 # Check which components are available
 availability = check_availability()
@@ -342,7 +342,7 @@ All OrcaFlex analyses follow a standardized structure:
 
 ```python
 from digitalmodel.subsea.mooring_analysis import MooringDesigner
-from digitalmodel.orcaflex import UniversalOrcaFlexRunner
+from digitalmodel.solvers.orcaflex import UniversalOrcaFlexRunner
 
 # 1. Design mooring system
 designer = MooringDesigner(system)
@@ -360,7 +360,7 @@ sim_results = runner.run(models=['mooring_model.yml'])
 
 ```python
 from digitalmodel.structural.fatigue_analysis import FatigueDamageCalculator
-from digitalmodel.orcaflex import run_models
+from digitalmodel.solvers.orcaflex import run_models
 from digitalmodel.signal_processing.signal_analysis import TimeSeriesProcessor
 
 # 1. Run OrcaFlex simulation
@@ -425,7 +425,7 @@ orcaflex-universal --mock --test
 **2. License Issues**
 ```bash
 # Check OrcaFlex availability
-python -c "from digitalmodel.orcaflex import ORCAFLEX_AVAILABLE; print(ORCAFLEX_AVAILABLE)"
+python -c "from digitalmodel.solvers.orcaflex import ORCAFLEX_AVAILABLE; print(ORCAFLEX_AVAILABLE)"
 ```
 
 **3. File Not Found**

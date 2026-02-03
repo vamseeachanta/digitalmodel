@@ -28,7 +28,7 @@ import numpy as np
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from digitalmodel.data_procurement.mooring import MooringClient
+from digitalmodel.data_systems.data_procurement.mooring import MooringClient
 
 
 def example_chain_database():

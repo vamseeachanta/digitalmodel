@@ -12,7 +12,7 @@ import numpy as np
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / 'src'))
 
-from digitalmodel.marine_engineering.environmental_loading import (
+from digitalmodel.marine_ops.marine_engineering.environmental_loading import (
     OCIMFDatabase,
     EnvironmentalForces,
     EnvironmentalConditions,

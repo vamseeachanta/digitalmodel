@@ -195,7 +195,6 @@ docs = [
 
 [project.scripts]
 digital_model = "digitalmodel.__main__:main"
-test-automation = "test_automation.__main__:main"
 run-to-sim = "digitalmodel.solvers.orcaflex.run_to_sim_cli:main"
 orcaflex-universal = "digitalmodel.solvers.orcaflex.universal_cli:main"
 orcaflex-sim = "digitalmodel.solvers.orcaflex.universal_cli:main"

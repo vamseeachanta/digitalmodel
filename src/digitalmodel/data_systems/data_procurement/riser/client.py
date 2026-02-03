@@ -14,7 +14,7 @@ Features:
 - Configuration-driven
 
 Example:
-    from digitalmodel.data_procurement import RiserClient
+    from digitalmodel.data_systems.data_procurement import RiserClient
 
     client = RiserClient()
 

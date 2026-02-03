@@ -76,7 +76,7 @@ parallel_processing:
 
 ### Basic Usage (Automatic Parallel)
 ```python
-from digitalmodel.engine import engine
+from digitalmodel.infrastructure.engine import engine
 
 # Automatically uses parallel processing if multiple files detected
 engine("viz.yml")

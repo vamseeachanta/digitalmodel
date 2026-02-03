@@ -27,7 +27,7 @@ from datetime import datetime, timedelta
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from digitalmodel.data_procurement.metocean import MetoceanClient
+from digitalmodel.data_systems.data_procurement.metocean import MetoceanClient
 
 
 def example_streaming_historical_data():

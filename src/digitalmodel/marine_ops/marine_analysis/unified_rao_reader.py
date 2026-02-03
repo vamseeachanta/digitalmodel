@@ -81,7 +81,7 @@ class UnifiedRAOReader:
 
     AI Agent Usage:
         ```python
-        from digitalmodel.marine_analysis import UnifiedRAOReader
+        from digitalmodel.marine_ops.marine_analysis import UnifiedRAOReader
 
         reader = UnifiedRAOReader()
 
@@ -351,7 +351,7 @@ def read_rao_file(file_path: str,
         UnifiedRAOData with RAO information
 
     Example:
-        >>> from digitalmodel.marine_analysis import read_rao_file
+        >>> from digitalmodel.marine_ops.marine_analysis import read_rao_file
         >>> rao_data = read_rao_file('vessel.lis')
         >>> print(rao_data.get_available_types())
     """

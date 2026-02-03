@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any
 
 # Import reservoir modules
-from digitalmodel.reservoir import (
+from digitalmodel.marine_ops.reservoir import (
     ReservoirProperties,
     RockProperties, 
     FluidProperties,
@@ -315,7 +315,7 @@ def example_production_forecasting():
         production_data.append(prod_data)
     
     # Create forecast model
-    from digitalmodel.reservoir.modeling import ProductionForecast
+    from digitalmodel.marine_ops.reservoir.modeling import ProductionForecast
     forecast = ProductionForecast()
     forecast.add_production_data(production_data)
     

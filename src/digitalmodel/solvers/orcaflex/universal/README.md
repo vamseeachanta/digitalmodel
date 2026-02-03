@@ -12,31 +12,31 @@ The Universal OrcaFlex Runner is included with the digitalmodel package. No addi
 
 ```bash
 # Process OrcaFlex .yml files to generate .sim files
-python -m digitalmodel.orcaflex.universal pattern="*.yml" input_directory="." output_directory="."
+python -m digitalmodel.solvers.orcaflex.universal pattern="*.yml" input_directory="." output_directory="."
 
 # If no pattern is specified, defaults to "*.yml" (all YAML files)
-python -m digitalmodel.orcaflex.universal input_directory="." output_directory="."
+python -m digitalmodel.solvers.orcaflex.universal input_directory="." output_directory="."
 
 # Specific example - FSTS 180km3 port/bow models
-python -m digitalmodel.orcaflex.universal pattern="fsts*180km3*pb*.yml" input_directory="." output_directory="."
+python -m digitalmodel.solvers.orcaflex.universal pattern="fsts*180km3*pb*.yml" input_directory="." output_directory="."
 
 # Process .dat files instead of .yml
-python -m digitalmodel.orcaflex.universal pattern="*.dat" input_directory="." output_directory="."
+python -m digitalmodel.solvers.orcaflex.universal pattern="*.dat" input_directory="." output_directory="."
 
 # Increase parallel workers to 40 (default is 30)
-python -m digitalmodel.orcaflex.universal pattern="*.yml" max_workers=40
+python -m digitalmodel.solvers.orcaflex.universal pattern="*.yml" max_workers=40
 
 # Mock mode (no license required)
-python -m digitalmodel.orcaflex.universal --mock pattern="*.yml"
+python -m digitalmodel.solvers.orcaflex.universal --mock pattern="*.yml"
 
 # Dynamic analysis only (runs full time-domain simulation)
-python -m digitalmodel.orcaflex.universal --dynamic pattern="*.yml" simulation_time=200
+python -m digitalmodel.solvers.orcaflex.universal --dynamic pattern="*.yml" simulation_time=200
 
 # Both static and dynamic analysis
-python -m digitalmodel.orcaflex.universal --both pattern="*.yml" simulation_time=150
+python -m digitalmodel.solvers.orcaflex.universal --both pattern="*.yml" simulation_time=150
 
 # Dynamic analysis with custom simulation time
-python -m digitalmodel.orcaflex.universal analysis_type="dynamic" simulation_time=300.0 pattern="*.yml"
+python -m digitalmodel.solvers.orcaflex.universal analysis_type="dynamic" simulation_time=300.0 pattern="*.yml"
 
 # Note: Dynamic analysis runs the full OrcaFlex simulation using model.RunSimulation()
 # This includes all stages defined in the model (build-up, simulation, etc.)
@@ -96,7 +96,7 @@ The command will:
 ### Python Library API
 
 ```python
-from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.solvers.orcaflex.universal import UniversalOrcaFlexRunner
 
 # Initialize runner
 runner = UniversalOrcaFlexRunner(
@@ -363,7 +363,7 @@ JSON report includes:
 ```python
 import subprocess
 result = subprocess.run([
-    "python", "-m", "digitalmodel.orcaflex.universal_cli",
+    "python", "-m", "digitalmodel.solvers.orcaflex.universal_cli",
     "--pattern", "*.yml",
     "--all"
 ])

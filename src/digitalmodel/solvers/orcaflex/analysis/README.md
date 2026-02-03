@@ -31,18 +31,18 @@ The module can be run directly from the command line:
 
 ```bash
 # Basic usage with input directory
-python -m digitalmodel.orcaflex.analysis --input-directory ./output/.csv
+python -m digitalmodel.solvers.orcaflex.analysis --input-directory ./output/.csv
 
 # With output directory specified
-python -m digitalmodel.orcaflex.analysis \
+python -m digitalmodel.solvers.orcaflex.analysis \
     --input-directory ./output/.csv \
     --output-directory ./results
 
 # Using configuration file
-python -m digitalmodel.orcaflex.analysis --config analysis_config.yml
+python -m digitalmodel.solvers.orcaflex.analysis --config analysis_config.yml
 
 # With specific report and visualization paths
-python -m digitalmodel.orcaflex.analysis \
+python -m digitalmodel.solvers.orcaflex.analysis \
     --input-directory ./output/.csv \
     --report ./report/analysis.md \
     --visualizations ./plots
@@ -51,7 +51,7 @@ python -m digitalmodel.orcaflex.analysis \
 ### Python API
 
 ```python
-from digitalmodel.orcaflex.analysis import MooringComparativeAnalysis
+from digitalmodel.solvers.orcaflex.analysis import MooringComparativeAnalysis
 
 # Initialize analyzer
 analyzer = MooringComparativeAnalysis('./output/.csv')
@@ -130,10 +130,10 @@ This analysis module is designed to work seamlessly with the OrcaFlex mooring mo
 
 ```bash
 # Run OrcaFlex mooring analysis
-python -m digitalmodel.orcaflex.mooring --config mooring_config.yml
+python -m digitalmodel.solvers.orcaflex.mooring --config mooring_config.yml
 
 # Run comparative analysis on results
-python -m digitalmodel.orcaflex.analysis \
+python -m digitalmodel.solvers.orcaflex.analysis \
     --config mooring_analysis.yml
 ```
 
@@ -148,7 +148,7 @@ For detailed technical specification and implementation plan, see:
 ### Example 1: Basic Analysis
 
 ```bash
-python -m digitalmodel.orcaflex.analysis \
+python -m digitalmodel.solvers.orcaflex.analysis \
     --input-directory tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output/.csv \
     --output-directory tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output
 ```
@@ -167,13 +167,13 @@ output:
 ```
 
 ```bash
-python -m digitalmodel.orcaflex.analysis --config analysis_config.yml
+python -m digitalmodel.solvers.orcaflex.analysis --config analysis_config.yml
 ```
 
 ### Example 3: Python Script
 
 ```python
-from digitalmodel.orcaflex.analysis import run_comparative_analysis
+from digitalmodel.solvers.orcaflex.analysis import run_comparative_analysis
 
 # Run analysis with configuration
 run_comparative_analysis(['--config', 'analysis_config.yml'])

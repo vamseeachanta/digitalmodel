@@ -45,7 +45,7 @@ The module is part of the digitalmodel package. Optional dependencies:
 ### Von Mises Stress Analysis
 
 ```python
-from digitalmodel.stress import PipeStressAnalyzer, PipeGeometry, MaterialProperties, LoadingCondition
+from digitalmodel.structural.stress import PipeStressAnalyzer, PipeGeometry, MaterialProperties, LoadingCondition
 
 # Define pipe geometry
 geometry = PipeGeometry(
@@ -80,7 +80,7 @@ print(f"Safety factor: {results['safety_factor']:.2f}")
 ### Stress-Strain Analysis
 
 ```python
-from digitalmodel.stress import StressStrainAnalyzer, MaterialModel
+from digitalmodel.structural.stress import StressStrainAnalyzer, MaterialModel
 import numpy as np
 
 # Create analyzer
@@ -105,7 +105,7 @@ print(f"Elastic modulus: {properties['elastic_modulus']/1e9:.1f} GPa")
 ### Nonlinear Analysis
 
 ```python
-from digitalmodel.stress import NonlinearStressAnalyzer, VonMisesYield, LinearHardening
+from digitalmodel.structural.stress import NonlinearStressAnalyzer, VonMisesYield, LinearHardening
 import numpy as np
 
 # Material properties

@@ -101,7 +101,7 @@ export MARINETRAFFIC_API_KEY="your_key_here"
 Design a moored FPSO with metocean data, vessel RAOs, and mooring system:
 
 ```python
-from digitalmodel.data_procurement import MetoceanClient, VesselClient, MooringClient
+from digitalmodel.data_systems.data_procurement import MetoceanClient, VesselClient, MooringClient
 from datetime import datetime
 import numpy as np
 
@@ -189,7 +189,7 @@ cache:
 **Usage:**
 
 ```python
-from digitalmodel.data_procurement import MetoceanClient
+from digitalmodel.data_systems.data_procurement import MetoceanClient
 from datetime import datetime
 
 client = MetoceanClient.from_config('metocean_config.yml')
@@ -249,7 +249,7 @@ cache:
 **Usage:**
 
 ```python
-from digitalmodel.data_procurement import VesselClient
+from digitalmodel.data_systems.data_procurement import VesselClient
 
 client = VesselClient.from_config('vessel_config.yml')
 
@@ -300,7 +300,7 @@ Design mooring systems with automatic component selection.
 **Usage:**
 
 ```python
-from digitalmodel.data_procurement import MooringClient
+from digitalmodel.data_systems.data_procurement import MooringClient
 
 client = MooringClient()
 
@@ -432,7 +432,7 @@ print(f"\nGenerated OrcaFlex YAML: {len(mooring_yaml.split('\\n'))} lines")
 ### Example 1: Metocean Statistics
 
 ```python
-from digitalmodel.data_procurement import MetoceanClient
+from digitalmodel.data_systems.data_procurement import MetoceanClient
 from datetime import datetime
 import numpy as np
 
@@ -466,7 +466,7 @@ print(f"  P99 Hs: {hs_p99:.2f} m (approx 10-year)")
 ### Example 2: Vessel Motion RAO Analysis
 
 ```python
-from digitalmodel.data_procurement import VesselClient
+from digitalmodel.data_systems.data_procurement import VesselClient
 import numpy as np
 
 client = VesselClient.from_config('vessel_config.yml')
@@ -506,7 +506,7 @@ print(f"  Heading: {max_heading:.0f} deg")
 ### Example 3: Mooring Component Comparison
 
 ```python
-from digitalmodel.data_procurement import MooringClient
+from digitalmodel.data_systems.data_procurement import MooringClient
 
 client = MooringClient()
 

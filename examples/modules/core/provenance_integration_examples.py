@@ -6,7 +6,7 @@ Shows how to integrate provenance tracking with OrcaFlex, YAML, and Excel loader
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from digitalmodel.core.provenance import (
+from digitalmodel.infrastructure.core.provenance import (
     DataProvenance,
     ProvenanceTracker,
     track_provenance,

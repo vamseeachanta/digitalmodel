@@ -6,7 +6,7 @@ from typing import Any, List, Optional
 
 from loguru import logger
 
-from digitalmodel.diffraction import DiffractionResults
+from digitalmodel.hydrodynamics.diffraction import DiffractionResults
 from ..core.interfaces import ConverterInterface
 
 

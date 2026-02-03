@@ -6,20 +6,20 @@ This module provides command-line interface for fatigue analysis of strut founda
 using reference seastate scaling methodology with rainflow counting and S-N curves.
 
 Usage:
-    python -m digitalmodel.fatigue_analysis [options]
+    python -m digitalmodel.structural.fatigue_analysis [options]
     
 Examples:
     # Run with default production data
-    python -m digitalmodel.fatigue_analysis
+    python -m digitalmodel.structural.fatigue_analysis
     
     # Run with specific input directory
-    python -m digitalmodel.fatigue_analysis --input-directory ./data
+    python -m digitalmodel.structural.fatigue_analysis --input-directory ./data
     
     # Run with sample data for testing
-    python -m digitalmodel.fatigue_analysis --sample --timesteps 1000
+    python -m digitalmodel.structural.fatigue_analysis --sample --timesteps 1000
     
     # Run specific configurations
-    python -m digitalmodel.fatigue_analysis --configs fsts_l015,fsts_l095
+    python -m digitalmodel.structural.fatigue_analysis --configs fsts_l015,fsts_l095
 """
 
 import argparse

@@ -75,7 +75,7 @@ pip install -e .  # From repository root
 ### Basic Usage
 
 ```python
-from digitalmodel.orcaflex.model_generator import generate_model
+from digitalmodel.solvers.orcaflex.model_generator import generate_model
 
 # Generate model in one line
 model = generate_model(
@@ -292,7 +292,7 @@ def generate_model(template: str,
     Convenience function for one-line model generation.
 
     Example:
-        >>> from digitalmodel.orcaflex.model_generator import generate_model
+        >>> from digitalmodel.solvers.orcaflex.model_generator import generate_model
         >>> model = generate_model("risers/scr_catenary", "config.yml", "model.yml")
     """
 ```
@@ -304,7 +304,7 @@ def generate_model(template: str,
 ### Example 1: Basic Generation
 
 ```python
-from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
+from digitalmodel.solvers.orcaflex.model_generator import OrcaFlexModelGenerator
 
 generator = OrcaFlexModelGenerator()
 
@@ -369,9 +369,9 @@ model = generator.generate_from_template("risers/scr_catenary", config)
 ### Example 4: Full Workflow Integration
 
 ```python
-from digitalmodel.orcaflex.model_generator import generate_model
-from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
-from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.solvers.orcaflex.model_generator import generate_model
+from digitalmodel.solvers.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.solvers.orcaflex.universal import UniversalOrcaFlexRunner
 
 # 1. Generate model
 model_yml = generate_model(
@@ -389,7 +389,7 @@ runner = UniversalOrcaFlexRunner()
 sim_file = runner.run_single(dat_file)
 
 # 4. Post-process
-from digitalmodel.orcaflex.opp import OPP
+from digitalmodel.solvers.orcaflex.opp import OPP
 results = OPP().process_single_file(sim_file)
 ```
 
@@ -434,8 +434,8 @@ All generated models are validated for:
 ### With OrcaFlex Converter
 
 ```python
-from digitalmodel.orcaflex.model_generator import generate_model
-from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
+from digitalmodel.solvers.orcaflex.model_generator import generate_model
+from digitalmodel.solvers.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 
 model = generate_model("risers/scr_catenary", "config.yml", "model.yml")
 
@@ -446,8 +446,8 @@ converter.convert_file("model.yml", "model.dat")
 ### With Universal Runner
 
 ```python
-from digitalmodel.orcaflex.model_generator import generate_model
-from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
+from digitalmodel.solvers.orcaflex.model_generator import generate_model
+from digitalmodel.solvers.orcaflex.universal import UniversalOrcaFlexRunner
 
 model = generate_model("risers/scr_catenary", "config.yml", "model.yml")
 

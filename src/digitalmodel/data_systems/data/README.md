@@ -8,19 +8,19 @@ Excel to Parquet migration system with data integrity validation and rollback su
 
 ```bash
 # Convert all Excel files
-python -m digitalmodel.data convert --source data/ --verify
+python -m digitalmodel.data_systems.data convert --source data/ --verify
 
 # Scan for Excel files
-python -m digitalmodel.data scan --source data/
+python -m digitalmodel.data_systems.data scan --source data/
 
 # Rollback migration
-python -m digitalmodel.data rollback --manifest migration_manifest.json
+python -m digitalmodel.data_systems.data rollback --manifest migration_manifest.json
 ```
 
 ### Python API
 
 ```python
-from digitalmodel.data import convert_excel_to_parquet, load_data
+from digitalmodel.data_systems.data import convert_excel_to_parquet, load_data
 
 # Batch convert
 report = convert_excel_to_parquet("data/", verify=True)

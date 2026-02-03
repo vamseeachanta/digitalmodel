@@ -40,7 +40,7 @@ num_threads = 15  # Balanced for typical workloads
 The system now automatically adjusts thread count based on file size:
 
 ```python
-from digitalmodel.orcaflex.performance_monitor import ResourceManager
+from digitalmodel.solvers.orcaflex.performance_monitor import ResourceManager
 
 # Automatic optimization
 resource_mgr = ResourceManager()
@@ -59,7 +59,7 @@ optimal_threads = resource_mgr.calculate_optimal_threads(file_paths)
 
 ### 1. Using Optimized Defaults
 ```python
-from digitalmodel.orcaflex.orcaflex_optimized_parallel_v2 import OrcaFlexOptimizedParallelAnalysis
+from digitalmodel.solvers.orcaflex.orcaflex_optimized_parallel_v2 import OrcaFlexOptimizedParallelAnalysis
 
 # Automatically uses optimized thread count
 analyzer = OrcaFlexOptimizedParallelAnalysis()  # Defaults to 15 threads

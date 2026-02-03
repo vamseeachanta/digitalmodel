@@ -10,7 +10,7 @@ import numpy as np
 from scipy import integrate
 from loguru import logger
 
-from digitalmodel.diffraction import (
+from digitalmodel.hydrodynamics.diffraction import (
     DiffractionResults,
     AddedMassSet,
     DampingSet,

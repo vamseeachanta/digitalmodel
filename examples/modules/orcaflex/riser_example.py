@@ -12,7 +12,7 @@ This example shows:
 4. Finding pipes by pressure rating
 """
 
-from digitalmodel.data_procurement.riser import RiserClient
+from digitalmodel.data_systems.data_procurement.riser import RiserClient
 
 
 def main():

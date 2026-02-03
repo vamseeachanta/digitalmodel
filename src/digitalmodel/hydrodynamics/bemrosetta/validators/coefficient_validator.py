@@ -9,7 +9,7 @@ from typing import Tuple, List
 import numpy as np
 from loguru import logger
 
-from digitalmodel.diffraction import (
+from digitalmodel.hydrodynamics.diffraction import (
     DiffractionResults,
     AddedMassSet,
     DampingSet,

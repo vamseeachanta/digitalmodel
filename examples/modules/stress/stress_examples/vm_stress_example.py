@@ -8,7 +8,7 @@ extending the functionality of the legacy VMStressCalculations code.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from digitalmodel.stress import (
+from digitalmodel.structural.stress import (
     PipeStressAnalyzer,
     PipeGeometry,
     MaterialProperties,
