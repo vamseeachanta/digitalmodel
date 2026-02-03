@@ -193,7 +193,7 @@ src/digitalmodel/modules/fatigue_analysis/
   - Current assumption: 100-second sample scaled to full year
 
 ### ✅ CLI Interface (2025-01-20 15:05)
-- **Module Execution**: `python -m digitalmodel.modules.fatigue_analysis`
+- **Module Execution**: `python -m digitalmodel.structural.fatigue_analysis`
 - **Key Features**:
   - Configuration selection (--configs)
   - Strut specification (--struts)
@@ -204,13 +204,13 @@ src/digitalmodel/modules/fatigue_analysis/
 - **Examples**:
   ```bash
   # Run with sample data
-  python -m digitalmodel.modules.fatigue_analysis --sample --timesteps 1000
+  python -m digitalmodel.structural.fatigue_analysis --sample --timesteps 1000
   
   # Process specific configurations
-  python -m digitalmodel.modules.fatigue_analysis --configs fsts_l015,fsts_l095
+  python -m digitalmodel.structural.fatigue_analysis --configs fsts_l015,fsts_l095
   
   # Preview without processing
-  python -m digitalmodel.modules.fatigue_analysis --dry-run
+  python -m digitalmodel.structural.fatigue_analysis --dry-run
   ```
 
 ### ✅ Visualization Module (2025-01-20 15:35)

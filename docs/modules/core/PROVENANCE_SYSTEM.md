@@ -539,7 +539,7 @@ def run_orcaflex_analysis(model_path):
 ### Fatigue Analysis Module
 
 ```python
-from digitalmodel.modules.fatigue_analysis import calculate_damage
+from digitalmodel.structural.fatigue_analysis import calculate_damage
 from digitalmodel.core.provenance import track_provenance
 
 @track_provenance(tracker, source="stress_history.csv", output_key="fatigue_damage")

@@ -163,22 +163,22 @@ tests/modules/automation/test_quality_gates.py::TestGateIntegration::test_linear
 
 ```bash
 # Run quality gates (soft warnings)
-python -m digitalmodel.modules.automation.quality_gates_cli check
+python -m digitalmodel.workflows.automation.quality_gates_cli check
 
 # Run with strict mode
-python -m digitalmodel.modules.automation.quality_gates_cli check --strict
+python -m digitalmodel.workflows.automation.quality_gates_cli check --strict
 
 # JSON output
-python -m digitalmodel.modules.automation.quality_gates_cli check --json
+python -m digitalmodel.workflows.automation.quality_gates_cli check --json
 
 # Custom config
-python -m digitalmodel.modules.automation.quality_gates_cli check --config custom.yaml
+python -m digitalmodel.workflows.automation.quality_gates_cli check --config custom.yaml
 ```
 
 ### Python API
 
 ```python
-from digitalmodel.modules.automation.quality_gates import QualityGateValidator
+from digitalmodel.workflows.automation.quality_gates import QualityGateValidator
 
 validator = QualityGateValidator(strict_mode=False)
 report = validator.execute_all_gates()

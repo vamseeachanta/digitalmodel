@@ -322,7 +322,7 @@ class GoByIntegration:
 ### Using mooring.py Module
 
 ```python
-from digitalmodel.modules.mooring import mooring
+from digitalmodel.subsea.mooring_analysis import mooring
 
 class ForceExtractor:
     """Integrates with existing mooring module."""

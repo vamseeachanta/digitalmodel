@@ -31,7 +31,7 @@ The quality gates system is included in the `digitalmodel` package:
 uv pip install -e .
 
 # Verify installation
-python -m digitalmodel.modules.automation.quality_gates_cli --help
+python -m digitalmodel.workflows.automation.quality_gates_cli --help
 ```
 
 ## Configuration
@@ -106,26 +106,26 @@ gates:
 
 ```bash
 # Run all quality gates (soft warnings)
-python -m digitalmodel.modules.automation.quality_gates_cli check
+python -m digitalmodel.workflows.automation.quality_gates_cli check
 
 # Run with strict mode (warnings become failures)
-python -m digitalmodel.modules.automation.quality_gates_cli check --strict
+python -m digitalmodel.workflows.automation.quality_gates_cli check --strict
 
 # Output results as JSON
-python -m digitalmodel.modules.automation.quality_gates_cli check --json
+python -m digitalmodel.workflows.automation.quality_gates_cli check --json
 
 # Generate detailed report
-python -m digitalmodel.modules.automation.quality_gates_cli report
+python -m digitalmodel.workflows.automation.quality_gates_cli report
 
 # Custom config file
-python -m digitalmodel.modules.automation.quality_gates_cli check --config custom-gates.yaml
+python -m digitalmodel.workflows.automation.quality_gates_cli check --config custom-gates.yaml
 ```
 
 ### Python API
 
 ```python
 from pathlib import Path
-from digitalmodel.modules.automation.quality_gates import QualityGateValidator
+from digitalmodel.workflows.automation.quality_gates import QualityGateValidator
 
 # Initialize validator
 validator = QualityGateValidator(
@@ -156,7 +156,7 @@ repos:
     hooks:
       - id: quality-gates
         name: Quality Gates Validation
-        entry: python -m digitalmodel.modules.automation.quality_gates_cli check --strict
+        entry: python -m digitalmodel.workflows.automation.quality_gates_cli check --strict
         language: system
         pass_filenames: false
         always_run: true
@@ -195,7 +195,7 @@ jobs:
 
       - name: Run Quality Gates
         run: |
-          python -m digitalmodel.modules.automation.quality_gates_cli check --json
+          python -m digitalmodel.workflows.automation.quality_gates_cli check --json
 
       - name: Upload results
         uses: actions/upload-artifact@v4
@@ -415,7 +415,7 @@ In strict mode, **warnings become failures**:
 
 ```bash
 # Enable strict mode
-python -m digitalmodel.modules.automation.quality_gates_cli check --strict
+python -m digitalmodel.workflows.automation.quality_gates_cli check --strict
 ```
 
 **Use Cases**:
@@ -467,7 +467,7 @@ settings:
 Use custom config:
 
 ```bash
-python -m digitalmodel.modules.automation.quality_gates_cli check --config custom-gates.yaml
+python -m digitalmodel.workflows.automation.quality_gates_cli check --config custom-gates.yaml
 ```
 
 ### Disable Specific Gates

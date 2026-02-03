@@ -177,8 +177,8 @@ aqwa_import:
 ### Basic Vessel Creation
 
 ```python
-from digitalmodel.modules.fea_model.Vessel_components import Vessel
-from digitalmodel.modules.fea_model.VesselType_components import VesselType
+from digitalmodel.solvers.fea_model.Vessel_components import Vessel
+from digitalmodel.solvers.fea_model.VesselType_components import VesselType
 
 def create_vessel(config: dict) -> dict:
     """
@@ -236,7 +236,7 @@ vessel_props = create_vessel(config)
 ### AQWA Vessel Import
 
 ```python
-from digitalmodel.modules.fea_model.preprocess.load_vessel import LoadVessel
+from digitalmodel.solvers.fea_model.preprocess.load_vessel import LoadVessel
 import OrcFxAPI
 
 def import_vessel_from_aqwa(

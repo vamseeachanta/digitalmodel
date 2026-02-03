@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "tool": "digitalmodel.modules.automation.go_by_folder",
+  "tool": "digitalmodel.workflows.automation.go_by_folder",
   "original_path": "specs\\modules\\aqwa_to_orcaflex",
   "creation_date": "2025-09-19T13:34:36.926667",
   "folder_hash": "a013c21caffbaa6f",

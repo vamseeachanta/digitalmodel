@@ -161,8 +161,8 @@ viv_analysis:
 ### Natural Frequency Calculation
 
 ```python
-from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
-from digitalmodel.modules.viv_analysis.viv_tubular_members import VIVTubularMembers
+from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis
+from digitalmodel.subsea.viv_analysis.viv_tubular_members import VIVTubularMembers
 
 # Initialize analysis
 viv = VIVAnalysis()
@@ -225,7 +225,7 @@ print(f"Lock-in condition: {is_lock_in}")
 ### Tubular Member Analysis
 
 ```python
-from digitalmodel.modules.viv_analysis.viv_tubular_members import VIVTubularMembers
+from digitalmodel.subsea.viv_analysis.viv_tubular_members import VIVTubularMembers
 
 # Initialize tubular member analysis
 tubular = VIVTubularMembers()
@@ -260,7 +260,7 @@ print(f"Safety factor: {results['safety_factor']:.2f}")
 ### VIV Fatigue Assessment
 
 ```python
-from digitalmodel.modules.viv_analysis.viv_fatigue import VIVFatigue
+from digitalmodel.subsea.viv_analysis.viv_fatigue import VIVFatigue
 
 # Initialize VIV fatigue analysis
 viv_fatigue = VIVFatigue()

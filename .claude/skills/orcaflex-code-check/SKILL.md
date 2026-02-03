@@ -169,7 +169,7 @@ code_check:
 ### Mooring Safety Factor Check
 
 ```python
-from digitalmodel.modules.structural_analysis.capacity import CapacityChecker
+from digitalmodel.structural.structural_analysis.capacity import CapacityChecker
 
 def check_mooring_safety_factors(
     max_tensions: dict,
@@ -262,7 +262,7 @@ for line, data in results.items():
 ### Riser Stress Check
 
 ```python
-from digitalmodel.modules.structural_analysis.capacity import CapacityChecker
+from digitalmodel.structural.structural_analysis.capacity import CapacityChecker
 import math
 
 def check_riser_stress(
@@ -356,7 +356,7 @@ print(f"Status: {'PASS' if result['passes'] else 'FAIL'}")
 ### Standards Lookup
 
 ```python
-from digitalmodel.modules.standards_lookup import StandardsLookup
+from digitalmodel.infrastructure.standards_lookup import StandardsLookup
 
 # Initialize lookup
 lookup = StandardsLookup()

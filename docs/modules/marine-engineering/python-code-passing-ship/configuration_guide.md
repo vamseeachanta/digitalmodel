@@ -595,7 +595,7 @@ _metadata:
 Use the configuration validator before running calculations:
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import validate_config
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import validate_config
 
 # Validate configuration
 is_valid, errors = validate_config('config.yaml')
@@ -607,7 +607,7 @@ if not is_valid:
 ## Loading Configuration in Code
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import load_config
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import load_config
 
 # Load from file
 config = load_config('config.yaml')

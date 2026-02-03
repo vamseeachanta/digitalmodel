@@ -90,7 +90,7 @@ parallel_processing:
 
 ### 7. Signal Analysis Module
 ```python
-from digitalmodel.modules.signal_analysis.orcaflex import TimeSeriesAnalyzer
+from digitalmodel.signal_processing.signal_analysis.orcaflex import TimeSeriesAnalyzer
 
 analyzer = TimeSeriesAnalyzer()
 # Auto-optimized when processing .sim files

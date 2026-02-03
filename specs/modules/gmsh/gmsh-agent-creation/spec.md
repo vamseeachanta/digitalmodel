@@ -164,7 +164,7 @@ class GMSHAgent:
 ### API Design
 ```python
 # CLI Interface
-python -m digitalmodel.modules.gmsh.agent \
+python -m digitalmodel.solvers.gmsh_meshing.agent \
     --input-directory ./geometries \
     --output-directory ./meshes \
     --config mesh_config.yml \
@@ -172,7 +172,7 @@ python -m digitalmodel.modules.gmsh.agent \
     --quality-report
 
 # Python API
-from digitalmodel.modules.gmsh import GMSHAgent
+from digitalmodel.solvers.gmsh_meshing import GMSHAgent
 
 agent = GMSHAgent(config="gmsh_config.yml")
 mesh = agent.generate_mesh(

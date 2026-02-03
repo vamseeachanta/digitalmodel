@@ -24,7 +24,7 @@ Generate time-varying forces for direct import into OrcaFlex.
 #### Step 1: Calculate Forces
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import PassingShipCalculator
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import PassingShipCalculator
 import numpy as np
 
 # Configure calculation
@@ -97,7 +97,7 @@ Direct integration using OrcFxAPI for automated workflows.
 
 ```python
 import OrcFxAPI
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import PassingShipCalculator
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import PassingShipCalculator
 
 class OrcaFlexPassingShipIntegration:
     def __init__(self, orcaflex_model_path):
@@ -246,7 +246,7 @@ def create_aqwa_passing_loads():
     import sys
     sys.path.append(r'path\to\python_module')
     
-    from digitalmodel.modules.marine_analysis.python_code_passing_ship import (
+    from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import (
         PassingShipCalculator
     )
     
@@ -369,8 +369,8 @@ class ForceExporter:
 ### Integration with Mooring Analysis Module
 
 ```python
-from digitalmodel.modules.mooring_analysis import MooringAnalyzer
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import (
+from digitalmodel.subsea.mooring_analysis import MooringAnalyzer
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import (
     PassingShipCalculator
 )
 

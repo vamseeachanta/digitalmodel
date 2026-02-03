@@ -255,7 +255,7 @@ class _GroupRedirectFinder(importlib.abc.MetaPathFinder):
             "solvers", "hydrodynamics", "structural", "subsea",
             "marine_ops", "signal_processing", "infrastructure",
             "data_systems", "workflows", "visualization", "specialized",
-            "modules", "legacy", "_compat",
+            "modules", "_compat",
         }:
             return None
 

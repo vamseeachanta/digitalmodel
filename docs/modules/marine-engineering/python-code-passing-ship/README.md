@@ -33,18 +33,18 @@ pip install numpy scipy matplotlib pydantic pyyaml tqdm
 
 ```bash
 # Single calculation with default config
-python -m digitalmodel.modules.marine_analysis.python_code_passing_ship \
+python -m digitalmodel.marine_ops.marine_analysis.python_code_passing_ship \
     --config config.yaml
 
 # Batch processing with parallel execution
-python -m digitalmodel.modules.marine_analysis.python_code_passing_ship \
+python -m digitalmodel.marine_ops.marine_analysis.python_code_passing_ship \
     --input-directory configs/ \
     --pattern "*.yaml" \
     --output-directory results/ \
     --parallel 4
 
 # Generate visualization
-python -m digitalmodel.modules.marine_analysis.python_code_passing_ship \
+python -m digitalmodel.marine_ops.marine_analysis.python_code_passing_ship \
     --config config.yaml \
     --visualize \
     --output-directory plots/
@@ -53,7 +53,7 @@ python -m digitalmodel.modules.marine_analysis.python_code_passing_ship \
 #### Python API
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import PassingShipCalculator
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import PassingShipCalculator
 
 # Initialize calculator with configuration
 calculator = PassingShipCalculator('config.yaml')
@@ -237,7 +237,7 @@ stagger_distance,surge_force,sway_force,yaw_moment
 
 ```python
 # Export forces for OrcaFlex constraint
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import (
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import (
     PassingShipCalculator,
     export_to_orcaflex
 )
@@ -258,7 +258,7 @@ export_to_orcaflex(
 
 ```python
 # Generate force RAOs for AQWA
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import (
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import (
     generate_aqwa_forces
 )
 

@@ -152,7 +152,7 @@ These are the tasks to be completed for the spec detailed in @specs/modules/mari
     - **Deliverable**: `cli.py`
     - **Standards**: Repository CLI conventions
     - **Completed**: 2025-01-05
-  - [x] 5.3 Add module entry point for `python -m digitalmodel.modules.marine_analysis.python_code_passing_ship` `[XS]`
+  - [x] 5.3 Add module entry point for `python -m digitalmodel.marine_ops.marine_analysis.python_code_passing_ship` `[XS]`
     - **Agent**: Ship Design Agent
     - **Deliverable**: `__main__.py`
     - **Completed**: 2025-01-05

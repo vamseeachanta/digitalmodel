@@ -330,7 +330,7 @@ plotter.create_comparison_plot(
 
 ### 2.1 RAODataProcessor
 
-**Module:** `digitalmodel.modules.marine_analysis.rao_processor`
+**Module:** `digitalmodel.marine_ops.marine_analysis.rao_processor`
 
 #### Class: RAODataProcessor
 
@@ -402,7 +402,7 @@ print(f"Headings: {rao_data.headings}")
 
 ### 2.2 RAOData
 
-**Module:** `digitalmodel.modules.marine_analysis.rao_processor`
+**Module:** `digitalmodel.marine_ops.marine_analysis.rao_processor`
 
 #### Dataclass: RAOData
 
@@ -467,7 +467,7 @@ print(f"  Phase: {heave_phase:.1f}°")
 
 ### 2.3 RAODataValidators
 
-**Module:** `digitalmodel.modules.marine_analysis.rao_validators`
+**Module:** `digitalmodel.marine_ops.marine_analysis.rao_validators`
 
 #### Class: RAODataValidators
 
@@ -523,7 +523,7 @@ if report.has_symmetry_issues:
 
 ### 2.4 RAOInterpolator
 
-**Module:** `digitalmodel.modules.marine_analysis.rao_interpolator`
+**Module:** `digitalmodel.marine_ops.marine_analysis.rao_interpolator`
 
 #### Class: RAOInterpolator
 
@@ -584,7 +584,7 @@ print(f"New grid: {len(standardized.frequencies)} x {len(standardized.headings)}
 
 ### 3.1 Mooring
 
-**Module:** `digitalmodel.modules.mooring.mooring`
+**Module:** `digitalmodel.subsea.mooring_analysis.mooring`
 
 #### Class: Mooring
 
@@ -765,7 +765,7 @@ ensure_directory_exists('outputs/plots/figure.png')
 
 ### 5.1 RAOImportError
 
-**Module:** `digitalmodel.modules.marine_analysis.rao_processor`
+**Module:** `digitalmodel.marine_ops.marine_analysis.rao_processor`
 
 ```python
 class RAOImportError(Exception):
@@ -899,7 +899,7 @@ plotter.plot_curves(
 ### 8.2 Complete RAO Workflow
 
 ```python
-from digitalmodel.modules.marine_analysis.rao_processor import RAODataProcessor
+from digitalmodel.marine_ops.marine_analysis.rao_processor import RAODataProcessor
 import numpy as np
 
 # 1. Initialize

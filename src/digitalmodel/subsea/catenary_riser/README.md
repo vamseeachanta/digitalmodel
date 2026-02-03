@@ -67,7 +67,7 @@ catenary-riser lazy-wave \
 ### Python API
 
 ```python
-from digitalmodel.modules.catenary_riser import (
+from digitalmodel.subsea.catenary_riser import (
     RiserConfiguration,
     BuoyancyModule,
     LazyWaveConfiguration,

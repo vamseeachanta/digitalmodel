@@ -1,6 +1,6 @@
 # VIV Analysis Module - Implementation Summary
 
-**Module**: `digitalmodel.modules.viv_analysis`
+**Module**: `digitalmodel.subsea.viv_analysis`
 **Version**: 1.0.0
 **Status**: ✅ **Production Ready**
 **Implementation Date**: 2026-01-04
@@ -280,7 +280,7 @@ viv-analysis natural-freq \
 ### Example 2: VIV Screening with Current Profile
 
 ```python
-from digitalmodel.modules.viv_analysis import *
+from digitalmodel.subsea.viv_analysis import *
 
 # Create riser
 riser = TubularMember(
@@ -487,7 +487,7 @@ if screen_result.is_susceptible:
 ### Fatigue Analysis Module
 ```python
 # VIV-induced stress ranges can feed into general fatigue analysis
-from digitalmodel.modules.fatigue_analysis import FatigueAnalyzer
+from digitalmodel.structural.fatigue_analysis import FatigueAnalyzer
 
 viv_stress_range = fatigue_calc.calculate_stress_range(0.3, member)
 
@@ -502,7 +502,7 @@ total_damage = fatigue.cumulative_damage([
 ### Structural Analysis Module
 ```python
 # Check if VIV stresses exceed structural capacity
-from digitalmodel.modules.structural_analysis import StressAnalyzer
+from digitalmodel.structural.structural_analysis import StressAnalyzer
 
 viv_stress = fatigue_calc.calculate_stress_range(0.5, member)
 yield_stress = member.material.yield_strength

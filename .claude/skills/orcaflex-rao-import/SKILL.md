@@ -159,7 +159,7 @@ rao_import:
 ### Basic RAO Import
 
 ```python
-from digitalmodel.modules.marine_analysis.rao_processor import RAOProcessor
+from digitalmodel.marine_ops.marine_analysis.rao_processor import RAOProcessor
 
 # Initialize processor
 processor = RAOProcessor()
@@ -183,7 +183,7 @@ print(f"Heave RAO at 90 deg: Amplitudes = {heave_rao['amplitude']}")
 ### AQWA File Reading
 
 ```python
-from digitalmodel.modules.marine_analysis.aqwa_reader import AQWAReader
+from digitalmodel.marine_ops.marine_analysis.aqwa_reader import AQWAReader
 
 # Initialize reader
 reader = AQWAReader()
@@ -210,7 +210,7 @@ raos = reader.extract_motion_raos(aqwa_data)
 ### OrcaFlex RAO Reading
 
 ```python
-from digitalmodel.modules.marine_analysis.orcaflex_reader import OrcaFlexRAOReader
+from digitalmodel.marine_ops.marine_analysis.orcaflex_reader import OrcaFlexRAOReader
 
 # Initialize reader
 reader = OrcaFlexRAOReader()
@@ -225,7 +225,7 @@ rao_data = reader.read_vessel_type("data/vessel_types/fpso_type.yml")
 ### RAO Validation
 
 ```python
-from digitalmodel.modules.marine_analysis.rao_validators import RAOValidator
+from digitalmodel.marine_ops.marine_analysis.rao_validators import RAOValidator
 
 # Initialize validator
 validator = RAOValidator()
@@ -261,7 +261,7 @@ report = validator.generate_validation_report(validation_result)
 ### RAO Interpolation
 
 ```python
-from digitalmodel.modules.marine_analysis.rao_interpolator import RAOInterpolator
+from digitalmodel.marine_ops.marine_analysis.rao_interpolator import RAOInterpolator
 
 # Initialize interpolator
 interpolator = RAOInterpolator()
@@ -286,7 +286,7 @@ print(f"Interpolation R²: {quality['r_squared']:.4f}")
 ### Export to OrcaFlex Format
 
 ```python
-from digitalmodel.modules.marine_analysis.rao_processor import RAOProcessor
+from digitalmodel.marine_ops.marine_analysis.rao_processor import RAOProcessor
 
 processor = RAOProcessor()
 
@@ -305,9 +305,9 @@ processor.export_to_orcaflex(
 ### Complete Workflow
 
 ```python
-from digitalmodel.modules.marine_analysis.rao_processor import RAOProcessor
-from digitalmodel.modules.marine_analysis.rao_validators import RAOValidator
-from digitalmodel.modules.marine_analysis.rao_interpolator import RAOInterpolator
+from digitalmodel.marine_ops.marine_analysis.rao_processor import RAOProcessor
+from digitalmodel.marine_ops.marine_analysis.rao_validators import RAOValidator
+from digitalmodel.marine_ops.marine_analysis.rao_interpolator import RAOInterpolator
 
 # 1. Import RAOs
 processor = RAOProcessor()
@@ -450,7 +450,7 @@ print(df.head())
 ## Error Handling
 
 ```python
-from digitalmodel.modules.marine_analysis.rao_processor import RAOImportError
+from digitalmodel.marine_ops.marine_analysis.rao_processor import RAOImportError
 
 try:
     rao_data = processor.import_from_aqwa("data/vessel.lis")

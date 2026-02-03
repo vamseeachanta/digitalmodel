@@ -464,13 +464,13 @@ The Go-By Learning System captures insights from each execution to improve futur
 ### Usage
 ```bash
 # View learning report
-python -m digitalmodel.modules.automation.go_by_folder --show-learning-report
+python -m digitalmodel.workflows.automation.go_by_folder --show-learning-report
 
 # Learning happens automatically during each run
-python -m digitalmodel.modules.automation.go_by_folder -s source -t target
+python -m digitalmodel.workflows.automation.go_by_folder -s source -t target
 
 # Preserve exact folder structure (default behavior)
-python -m digitalmodel.modules.automation.go_by_folder -s source -t target --preserve-structure
+python -m digitalmodel.workflows.automation.go_by_folder -s source -t target --preserve-structure
 ```
 
 ### Benefits

@@ -103,7 +103,7 @@ mooring-analysis list-materials
 ### Python API
 
 ```python
-from digitalmodel.modules.mooring_analysis import (
+from digitalmodel.subsea.mooring_analysis import (
     MooringSystem,
     MooringLine,
     MooringLineProperties,
@@ -305,7 +305,7 @@ print(f"Total Environmental Force: {loads.total_force:.0f} kN")
 ### OrcaFlex Model Export
 
 ```python
-from digitalmodel.modules.mooring_analysis import OrcaFlexModelGenerator
+from digitalmodel.subsea.mooring_analysis import OrcaFlexModelGenerator
 
 generator = OrcaFlexModelGenerator(system)
 

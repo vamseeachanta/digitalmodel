@@ -137,7 +137,7 @@ Use the anthropic model to  review the input file and psudeocode just generated 
 
    python
      from digitalmodel.aqwa.aqwa_analysis_damping import AqwaDamping
-     from digitalmodel.modules.marine_analysis.aqwa_enhanced_parser import AQWAEnhancedParser
+     from digitalmodel.marine_ops.marine_analysis.aqwa_enhanced_parser import AQWAEnhancedParser
 
    **3. Add Validation Steps**
 

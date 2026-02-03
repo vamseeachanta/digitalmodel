@@ -224,7 +224,7 @@ else:
 ### Before (using old database.py)
 
 ```python
-from digitalmodel.modules.pyintegrity.common.database import Database, get_db_connection
+from digitalmodel.data_systems.pyintegrity.common.database import Database, get_db_connection
 
 db_properties = {...}
 dbe, status = get_db_connection(db_properties)

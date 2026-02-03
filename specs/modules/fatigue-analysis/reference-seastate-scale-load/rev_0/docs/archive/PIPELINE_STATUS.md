@@ -99,7 +99,7 @@
 
 ### Basic Pipeline
 ```python
-from digitalmodel.modules.fatigue_analysis import (
+from digitalmodel.structural.fatigue_analysis import (
     RainflowCounter, FatigueDamageCalculator
 )
 
@@ -129,7 +129,7 @@ print(f"Fatigue life: {results['fatigue_life_years']:.1f} years")
 
 ### Multiple Configurations
 ```python
-from digitalmodel.modules.fatigue_analysis import calculate_combined_damage
+from digitalmodel.structural.fatigue_analysis import calculate_combined_damage
 
 configurations = {
     'FSTs_Light': {'annual_damage': 1e-7},

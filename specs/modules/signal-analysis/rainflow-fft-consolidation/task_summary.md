@@ -115,12 +115,12 @@
 ### For Existing Code
 ```python
 # Old approach (scattered implementations)
-from digitalmodel.modules.time_series.time_series_components import TimeSeriesComponents
+from digitalmodel.signal_processing.time_series.time_series_components import TimeSeriesComponents
 tsc = TimeSeriesComponents(cfg)
 cycles_df, cycles_dict = tsc.get_rainflow_count_from_time_series(signal)
 
 # New approach (consolidated module)
-from digitalmodel.modules.signal_analysis import RainflowCounter
+from digitalmodel.signal_processing.signal_analysis import RainflowCounter
 counter = RainflowCounter()
 cycles_df = counter.count_cycles(signal)
 ```

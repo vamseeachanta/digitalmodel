@@ -335,7 +335,7 @@ python -m digitalmodel.orcawave.converters stl-to-gdf \
 For advanced meshing requirements, combine with the gmsh-meshing skill:
 
 ```python
-from digitalmodel.modules.gmsh.mesh_generator import GmshMeshGenerator
+from digitalmodel.solvers.gmsh_meshing.mesh_generator import GmshMeshGenerator
 from digitalmodel.orcawave.converters import GmshToGDFConverter
 
 # Generate high-quality mesh with gmsh

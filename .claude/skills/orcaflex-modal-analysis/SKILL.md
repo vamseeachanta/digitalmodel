@@ -319,7 +319,7 @@ Modal frequencies are critical for VIV assessment:
 
 ```python
 # VIV lock-in check
-from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
+from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis
 
 viv = VIVAnalysis()
 
@@ -399,7 +399,7 @@ except OrcFxAPI.OrcaFlexError as e:
 modal_results = modal.run_modal_analysis(cfg)
 
 # 2. Use frequencies in VIV assessment
-from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis
+from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis
 viv = VIVAnalysis()
 viv_results = viv.screen_for_viv(natural_frequencies, current_profile)
 ```

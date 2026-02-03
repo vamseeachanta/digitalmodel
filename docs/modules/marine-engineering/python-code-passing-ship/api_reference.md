@@ -2,7 +2,7 @@
 
 ## Module Overview
 
-The `digitalmodel.modules.marine_analysis.python_code_passing_ship` module provides a comprehensive API for calculating hydrodynamic interaction forces between passing vessels.
+The `digitalmodel.marine_ops.marine_analysis.python_code_passing_ship` module provides a comprehensive API for calculating hydrodynamic interaction forces between passing vessels.
 
 ## Core Classes
 
@@ -11,7 +11,7 @@ The `digitalmodel.modules.marine_analysis.python_code_passing_ship` module provi
 The main calculation engine for passing ship forces.
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import PassingShipCalculator
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import PassingShipCalculator
 ```
 
 #### Constructor
@@ -150,7 +150,7 @@ calculator.export(results, 'output.csv', format='csv')
 Vessel parameters configuration using Pydantic models.
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship.configuration import VesselConfig
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.configuration import VesselConfig
 ```
 
 ```python
@@ -173,7 +173,7 @@ class VesselConfig(BaseModel):
 Environmental conditions configuration.
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship.configuration import EnvironmentConfig
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.configuration import EnvironmentConfig
 ```
 
 ```python
@@ -197,7 +197,7 @@ class EnvironmentConfig(BaseModel):
 Calculation settings and parameters.
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship.configuration import CalculationConfig
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.configuration import CalculationConfig
 ```
 
 ```python
@@ -223,7 +223,7 @@ class CalculationConfig(BaseModel):
 ### Sectional Area Functions
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship.formulations import (
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.formulations import (
     sectional_area_s1,
     sectional_area_s2
 )
@@ -266,7 +266,7 @@ def sectional_area_s2(xi: float, L2: float, B2: float, T2: float) -> float
 ### Kernel Functions
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship.formulations import (
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.formulations import (
     kernel_function_f,
     kernel_function_g
 )
@@ -309,7 +309,7 @@ def kernel_function_g(x: float, s: float, y0: float, params: Dict) -> float
 ### Force Calculations
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship.formulations import (
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.formulations import (
     calculate_surge_force,
     calculate_sway_force,
     calculate_yaw_moment
@@ -366,7 +366,7 @@ def calculate_yaw_moment(s: float, params: Dict) -> float
 ## Visualization Functions
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship.visualization import (
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.visualization import (
     plot_forces,
     plot_parametric_study,
     create_comparison_plot
@@ -434,7 +434,7 @@ def create_comparison_plot(scenarios: Dict[str, Dict],
 ## Export Functions
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship.exporters import (
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.exporters import (
     export_to_json,
     export_to_csv,
     export_to_orcaflex,
@@ -514,15 +514,15 @@ The module provides a comprehensive command-line interface following repository 
 
 ```bash
 # Show help
-python -m digitalmodel.modules.marine_analysis.python_code_passing_ship --help
+python -m digitalmodel.marine_ops.marine_analysis.python_code_passing_ship --help
 
 # Single calculation
-python -m digitalmodel.modules.marine_analysis.python_code_passing_ship \
+python -m digitalmodel.marine_ops.marine_analysis.python_code_passing_ship \
     --config config.yaml \
     --output-directory results/
 
 # Batch processing
-python -m digitalmodel.modules.marine_analysis.python_code_passing_ship \
+python -m digitalmodel.marine_ops.marine_analysis.python_code_passing_ship \
     --input-directory configs/ \
     --pattern "*.yaml" \
     --output-directory results/ \
@@ -548,14 +548,14 @@ python -m digitalmodel.modules.marine_analysis.python_code_passing_ship \
 
 ```bash
 # Generate visualization with specific format
-python -m digitalmodel.modules.marine_analysis.python_code_passing_ship \
+python -m digitalmodel.marine_ops.marine_analysis.python_code_passing_ship \
     --config tanker.yaml \
     --visualize \
     --format png \
     --output-directory plots/
 
 # Batch process with CSV output
-python -m digitalmodel.modules.marine_analysis.python_code_passing_ship \
+python -m digitalmodel.marine_ops.marine_analysis.python_code_passing_ship \
     --input-directory scenarios/ \
     --pattern "scenario_*.yaml" \
     --format csv \
@@ -563,7 +563,7 @@ python -m digitalmodel.modules.marine_analysis.python_code_passing_ship \
     --parallel 8
 
 # Dry run to preview operations
-python -m digitalmodel.modules.marine_analysis.python_code_passing_ship \
+python -m digitalmodel.marine_ops.marine_analysis.python_code_passing_ship \
     --input-directory configs/ \
     --dry-run \
     --verbose
@@ -576,7 +576,7 @@ python -m digitalmodel.modules.marine_analysis.python_code_passing_ship \
 The module implements comprehensive error handling with custom exceptions:
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship.exceptions import (
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.exceptions import (
     ConfigurationError,
     CalculationError,
     ConvergenceError,
@@ -689,8 +689,8 @@ def process_batch_chunked(configs, chunk_size=100):
 ### Integration with Ship Design Module
 
 ```python
-from digitalmodel.modules.ship_design import ShipDesigner
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import PassingShipCalculator
+from digitalmodel.infrastructure.ship_design import ShipDesigner
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import PassingShipCalculator
 
 # Use ship design parameters
 designer = ShipDesigner()
@@ -712,8 +712,8 @@ forces = calculator.calculate()
 ### Integration with Mooring Analysis
 
 ```python
-from digitalmodel.modules.mooring_analysis import MooringAnalyzer
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import PassingShipCalculator
+from digitalmodel.subsea.mooring_analysis import MooringAnalyzer
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import PassingShipCalculator
 
 # Calculate passing ship forces
 calc = PassingShipCalculator('config.yaml')
@@ -734,7 +734,7 @@ mooring.analyze()
 ## Version Information
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship import __version__
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship import __version__
 
 print(f"Module version: {__version__}")
 # Output: Module version: 1.0.0
@@ -743,7 +743,7 @@ print(f"Module version: {__version__}")
 ## Module Constants
 
 ```python
-from digitalmodel.modules.marine_analysis.python_code_passing_ship.constants import (
+from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.constants import (
     DEFAULT_WATER_DENSITY,
     DEFAULT_BLOCK_COEFFICIENT,
     MAX_HARMONIC_TERMS,

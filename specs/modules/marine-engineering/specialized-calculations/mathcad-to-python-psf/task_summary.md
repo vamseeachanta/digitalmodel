@@ -135,7 +135,7 @@
 - **Efficiency**: 125% - Completed in 30 minutes vs 4 hours estimated
 - **Key Achievements**:
   - Full CLI interface with standard parameter naming (--input-directory, --output-directory, etc.)
-  - Module entry point working: `python -m digitalmodel.modules.marine_analysis.python_code_passing_ship`
+  - Module entry point working: `python -m digitalmodel.marine_ops.marine_analysis.python_code_passing_ship`
   - Batch processing with parallel execution support (ThreadPoolExecutor)
   - Multiple export formats: JSON, CSV, Excel, OrcaFlex, AQWA, Markdown summary
   - Comprehensive test coverage for CLI argument parsing

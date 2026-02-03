@@ -636,7 +636,7 @@ digitalmodel/
 
 **Example Usage:**
 ```python
-from digitalmodel.modules.marine_analysis import RAOProcessor
+from digitalmodel.marine_ops.marine_analysis import RAOProcessor
 
 # Load RAO data
 rao = RAOProcessor.from_excel('marine_analysis_data.xlsm', sheet='RAO Check')
@@ -671,7 +671,7 @@ damped_motion = rao.apply_damping(motion, damping_ratio=0.05)
 
 **Example Usage:**
 ```python
-from digitalmodel.modules.marine_analysis import MotionAnalyzer
+from digitalmodel.marine_ops.marine_analysis import MotionAnalyzer
 
 analyzer = MotionAnalyzer(rao_data, wave_spectrum)
 
@@ -706,7 +706,7 @@ print(f"Significant pitch: {stats['pitch']['significant']:.2f} deg")
 
 **Example Usage:**
 ```python
-from digitalmodel.modules.marine_analysis import HydroCoefficients
+from digitalmodel.marine_ops.marine_analysis import HydroCoefficients
 
 hydro = HydroCoefficients.from_aqwa('hydrodynamic.lis')
 
@@ -736,7 +736,7 @@ damping = hydro.get_damping(freq)
 
 **Example Usage:**
 ```python
-from digitalmodel.modules.marine_analysis import WaveSpectrum
+from digitalmodel.marine_ops.marine_analysis import WaveSpectrum
 
 # JONSWAP spectrum
 spectrum = WaveSpectrum.jonswap(
@@ -770,7 +770,7 @@ Hs_calculated = 4 * np.sqrt(m0)
 
 **Example Usage:**
 ```python
-from digitalmodel.modules.marine_analysis import MooringLine, ChainProperties
+from digitalmodel.marine_ops.marine_analysis import MooringLine, ChainProperties
 
 # Define chain
 chain = ChainProperties(diameter=76, grade='R3', link_type='Stud Link')
@@ -807,7 +807,7 @@ print(f"Vertical force: {V/1000:.1f} kN")
 
 **Example Usage:**
 ```python
-from digitalmodel.modules.marine_analysis import MorisonElement
+from digitalmodel.marine_ops.marine_analysis import MorisonElement
 
 element = MorisonElement(
     diameter=0.5,  # m
@@ -842,7 +842,7 @@ force = element.calculate_force(velocity, acceleration)
 
 **Example Usage:**
 ```python
-from digitalmodel.modules.marine_analysis import OCIMFDatabase
+from digitalmodel.marine_ops.marine_analysis import OCIMFDatabase
 
 ocimf = OCIMFDatabase.from_excel('marine_analysis_data.xlsm')
 
@@ -1007,7 +1007,7 @@ def extract_ocimf_coefficients(filepath):
 ```python
 import pytest
 import numpy as np
-from digitalmodel.modules.marine_analysis import RAOProcessor
+from digitalmodel.marine_ops.marine_analysis import RAOProcessor
 
 class TestRAOProcessor:
     def test_load_excel(self):

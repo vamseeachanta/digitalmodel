@@ -51,7 +51,7 @@ signal_analysis/
 
 ### Basic Rainflow Counting
 ```python
-from digitalmodel.modules.signal_analysis import RainflowCounter
+from digitalmodel.signal_processing.signal_analysis import RainflowCounter
 
 # Initialize counter
 counter = RainflowCounter(method='astm')
@@ -67,7 +67,7 @@ print(f"Max range: {stats['max_range']:.1f} MPa")
 
 ### Spectral Analysis
 ```python
-from digitalmodel.modules.signal_analysis import SpectralAnalyzer
+from digitalmodel.signal_processing.signal_analysis import SpectralAnalyzer
 
 # Initialize analyzer
 analyzer = SpectralAnalyzer(sampling_rate=1000, method='welch')
@@ -81,7 +81,7 @@ peaks = analyzer.find_peaks(spectrum, n_peaks=5)
 
 ### Fatigue Damage Calculation
 ```python
-from digitalmodel.modules.signal_analysis.fatigue import (
+from digitalmodel.signal_processing.signal_analysis.fatigue import (
     FatigueDamageCalculator, SNCurve
 )
 
@@ -101,7 +101,7 @@ print(f"Total damage: {damage['total_damage']:.2e}")
 
 ### Signal Filtering
 ```python
-from digitalmodel.modules.signal_analysis.filters import FrequencyFilter
+from digitalmodel.signal_processing.signal_analysis.filters import FrequencyFilter
 
 # Initialize filter
 freq_filter = FrequencyFilter(filter_type='butterworth', order=4)
@@ -161,7 +161,7 @@ S-N curve implementations for fatigue analysis.
 For existing code using TimeSeriesComponents:
 
 ```python
-from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter
+from digitalmodel.signal_processing.signal_analysis.adapters import TimeSeriesComponentsAdapter
 
 # Use existing configuration
 adapter = TimeSeriesComponentsAdapter(legacy_config)

@@ -279,7 +279,7 @@ exporter.export_all()
 
 ### With hydrodynamics module
 ```python
-from digitalmodel.modules.hydrodynamics import CoefficientDatabase
+from digitalmodel.hydrodynamics import CoefficientDatabase
 
 # Store parsed coefficients in database
 db = CoefficientDatabase()

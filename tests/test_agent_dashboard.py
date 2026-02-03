@@ -9,7 +9,7 @@ from pathlib import Path
 import tempfile
 import shutil
 
-from digitalmodel.visualization.visualization.agent_dashboard import (
+from digitalmodel.visualization.agent_dashboard import (
     AgentDashboard,
     generate_dashboard,
     view_dashboard

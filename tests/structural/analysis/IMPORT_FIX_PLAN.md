@@ -71,7 +71,7 @@ HydrodynamicCoefficientExtractor = None  # TODO: Fix extraction module
 
 **Test After Fix:**
 ```bash
-python -c "from digitalmodel.modules.marine_analysis import UnifiedRAOReader; print('SUCCESS')"
+python -c "from digitalmodel.marine_ops.marine_analysis import UnifiedRAOReader; print('SUCCESS')"
 ```
 
 ---
@@ -109,7 +109,7 @@ except ImportError:
 
 **Test After Fix:**
 ```bash
-python -c "from digitalmodel.modules.marine_analysis import RAOPlotter; print(RAOPlotter)"
+python -c "from digitalmodel.marine_ops.marine_analysis import RAOPlotter; print(RAOPlotter)"
 ```
 
 ---
@@ -179,7 +179,7 @@ pytest --collect-only 2>&1 | grep "collected"
 
 **Current Patterns Found:**
 
-1. ✅ **Pattern A (RECOMMENDED):** `from digitalmodel.modules.marine_analysis import X`
+1. ✅ **Pattern A (RECOMMENDED):** `from digitalmodel.marine_ops.marine_analysis import X`
 2. ❌ **Pattern B:** `from src.marine_engineering import X`
 3. ❌ **Pattern C:** `from marine_engineering import X`
 
@@ -197,13 +197,13 @@ Create mapping for mass update:
 
 | Old Import | New Import | Files Affected |
 |------------|------------|----------------|
-| `from marine_engineering.catenary import` | `from digitalmodel.modules.marine_analysis import` | 5 files |
-| `from src.marine_engineering.catenary import` | `from digitalmodel.modules.marine_analysis import` | 3 files |
-| `from marine_engineering.environmental_loading import` | `from digitalmodel.modules.marine_analysis import` | 6 files |
+| `from marine_engineering.catenary import` | `from digitalmodel.marine_ops.marine_analysis import` | 5 files |
+| `from src.marine_engineering.catenary import` | `from digitalmodel.marine_ops.marine_analysis import` | 3 files |
+| `from marine_engineering.environmental_loading import` | `from digitalmodel.marine_ops.marine_analysis import` | 6 files |
 | `from marine_engineering.wave_spectra import` | *(needs new mapping)* | 5 files |
 | `from marine_engineering.hydrodynamic_coefficients import` | *(needs new mapping)* | 3 files |
 
-**Issue:** Some modules (wave_spectra, hydrodynamic_coefficients) don't exist in `digitalmodel.modules.marine_analysis`
+**Issue:** Some modules (wave_spectra, hydrodynamic_coefficients) don't exist in `digitalmodel.marine_ops.marine_analysis`
 
 **Solution:**
 1. Check if they exist in `src/marine_engineering/`
@@ -222,14 +222,14 @@ from src.marine_engineering.catenary import (
 from src.marine_engineering.catenary.simplified import SimplifiedCatenarySolver
 
 # AFTER:
-from digitalmodel.modules.marine_analysis.catenary import (
+from digitalmodel.marine_ops.marine_analysis.catenary import (
     CatenarySolver, CatenaryInput, CatenaryResults,
     catenaryEquation, catenaryForces,
     SimplifiedCatenarySolver
 )
 ```
 
-**Note:** Verify `catenary` module is exported in `digitalmodel.modules.marine_analysis.__init__.py`
+**Note:** Verify `catenary` module is exported in `digitalmodel.marine_ops.marine_analysis.__init__.py`
 
 #### File: catenary/test_performance.py
 ```python
@@ -238,7 +238,7 @@ from src.marine_engineering.catenary import (...)
 from src.marine_engineering.catenary.simplified import SimplifiedCatenarySolver
 
 # AFTER:
-from digitalmodel.modules.marine_analysis.catenary import (...)
+from digitalmodel.marine_ops.marine_analysis.catenary import (...)
 ```
 
 #### File: catenary/test_simplified.py
@@ -247,7 +247,7 @@ from digitalmodel.modules.marine_analysis.catenary import (...)
 from src.marine_engineering.catenary.simplified import (...)
 
 # AFTER:
-from digitalmodel.modules.marine_analysis.catenary import (...)
+from digitalmodel.marine_ops.marine_analysis.catenary import (...)
 ```
 
 #### File: catenary/test_run_quick.py
@@ -257,7 +257,7 @@ from marine_engineering.catenary import (...)
 from marine_engineering.catenary.simplified import SimplifiedCatenarySolver
 
 # AFTER:
-from digitalmodel.modules.marine_analysis.catenary import (...)
+from digitalmodel.marine_ops.marine_analysis.catenary import (...)
 ```
 
 **Files to Modify:**
@@ -278,7 +278,7 @@ from marine_engineering.environmental_loading import (
 
 # AFTER:
 # Option 1: If OCIMF is in marine_analysis
-from digitalmodel.modules.marine_analysis.environmental_loading import (...)
+from digitalmodel.marine_ops.marine_analysis.environmental_loading import (...)
 
 # Option 2: If OCIMF is separate module in src/marine_engineering
 from marine_engineering.environmental_loading import (...)
@@ -299,7 +299,7 @@ from marine_engineering.hydrodynamic_coefficients.coefficients import (...)
 # Need to verify where these modules live
 from marine_engineering.hydrodynamic_coefficients.coefficients import (...)
 # OR
-from digitalmodel.modules.marine_engineering.hydrodynamic_coefficients import (...)
+from digitalmodel.marine_ops.marine_engineering.hydrodynamic_coefficients import (...)
 ```
 
 **Files to Modify:**
@@ -328,7 +328,7 @@ Check that all imported items are exported in `__init__.py` files:
 
 #### Check List:
 
-1. **digitalmodel.modules.marine_analysis.__init__.py**
+1. **digitalmodel.marine_ops.marine_analysis.__init__.py**
    - [ ] Exports UnifiedRAOReader ✅
    - [ ] Exports RAOPlotter ❌ (needs fix)
    - [ ] Exports catenary module?
@@ -412,7 +412,7 @@ def test_core_imports():
     print("Testing core imports...")
 
     try:
-        from digitalmodel.modules.marine_analysis import (
+        from digitalmodel.marine_ops.marine_analysis import (
             UnifiedRAOReader,
             RAOReaderError,
             RAOPlotter
@@ -505,11 +505,11 @@ pytest tests/marine_engineering/catenary/test_simplified.py::TestSimplifiedCaten
 - [ ] Fix `run_extraction.py:18` import error
   - [ ] Identify correct module path
   - [ ] Update import statement
-  - [ ] Test: `python -c "from digitalmodel.modules.marine_analysis import UnifiedRAOReader"`
+  - [ ] Test: `python -c "from digitalmodel.marine_ops.marine_analysis import UnifiedRAOReader"`
 
 - [ ] Fix RAOPlotter import path
   - [ ] Update `__init__.py:45` to use `from .visualization.rao_plotter import RAOPlotter`
-  - [ ] Test: `python -c "from digitalmodel.modules.marine_analysis import RAOPlotter; print(RAOPlotter)"`
+  - [ ] Test: `python -c "from digitalmodel.marine_ops.marine_analysis import RAOPlotter; print(RAOPlotter)"`
 
 - [ ] Configure PYTHONPATH
   - [ ] Create `tests/conftest.py`
@@ -559,7 +559,7 @@ pytest tests/marine_engineering/catenary/test_simplified.py::TestSimplifiedCaten
   - [ ] src/marine_engineering/hydrodynamic_coefficients/__init__.py
 
 - [ ] Update __all__ exports
-  - [ ] digitalmodel.modules.marine_analysis.__init__.py
+  - [ ] digitalmodel.marine_ops.marine_analysis.__init__.py
   - [ ] Each submodule __init__.py
 
 ### Phase 4: Validation ☐
@@ -615,7 +615,7 @@ If fixes cause issues:
 ## Success Criteria
 
 ### Must Have (Phase 1)
-- [ ] No import errors when importing `digitalmodel.modules.marine_analysis`
+- [ ] No import errors when importing `digitalmodel.marine_ops.marine_analysis`
 - [ ] `pytest --collect-only` succeeds
 - [ ] 150 tests collected
 

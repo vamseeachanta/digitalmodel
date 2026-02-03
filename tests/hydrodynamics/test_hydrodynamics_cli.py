@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 from click.testing import CliRunner
 
-from digitalmodel.hydrodynamics.hydrodynamics.cli import cli
+from digitalmodel.hydrodynamics.cli import cli
 
 
 # ============================================================================

@@ -301,7 +301,7 @@ Modules Completed:      +6 CLI modules
 
 **Basic Analyzer Mocking:**
 ```python
-@patch('digitalmodel.modules.module_name.cli.AnalyzerClass')
+@patch('digitalmodel.<group>.module_name.cli.AnalyzerClass')
 def test_command(self, mock_analyzer, cli_runner):
     mock_instance = MagicMock()
     mock_analyzer.return_value = mock_instance
@@ -318,8 +318,8 @@ mock_instance.method.return_value = mock_result
 
 **Material/Fluid Mocking:**
 ```python
-@patch('digitalmodel.modules.module_name.cli.get_material')
-@patch('digitalmodel.modules.module_name.cli.get_fluid')
+@patch('digitalmodel.<group>.module_name.cli.get_material')
+@patch('digitalmodel.<group>.module_name.cli.get_fluid')
 def test_with_materials(self, mock_get_fluid, mock_get_material, ...):
     mock_material = MagicMock()
     mock_get_material.return_value = mock_material

@@ -2,7 +2,7 @@
 
 **Date**: 2026-01-04
 **Status**: ✅ Complete - Production Ready
-**Module**: `digitalmodel.modules.mooring_analysis`
+**Module**: `digitalmodel.subsea.mooring_analysis`
 
 ---
 
@@ -253,8 +253,8 @@ Overall Status:        PASS
 ### With `structural_analysis`
 ```python
 # Check anchor/fairlead structure capacity
-from digitalmodel.modules.mooring_analysis import MooringDesigner
-from digitalmodel.modules.structural_analysis import MemberCapacityChecker
+from digitalmodel.subsea.mooring_analysis import MooringDesigner
+from digitalmodel.structural.structural_analysis import MemberCapacityChecker
 
 # Get mooring loads
 designer = MooringDesigner(system)

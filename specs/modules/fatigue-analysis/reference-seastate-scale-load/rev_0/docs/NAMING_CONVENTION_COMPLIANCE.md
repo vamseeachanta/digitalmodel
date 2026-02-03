@@ -70,7 +70,7 @@ The following files with old naming convention have been removed:
 ### Usage Example
 
 ```python
-from digitalmodel.modules.fatigue_analysis.integrated_processor_with_naming import main
+from digitalmodel.structural.fatigue_analysis.integrated_processor_with_naming import main
 
 # Run analysis with proper naming
 results, summary = main('sample_data')

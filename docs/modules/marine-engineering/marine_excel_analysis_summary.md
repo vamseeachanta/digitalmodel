@@ -127,7 +127,7 @@ olevba marine_analysis_data.xlsm
 
 #### 1. RAO Processing Module
 ```python
-from digitalmodel.modules.marine_analysis import RAOProcessor
+from digitalmodel.marine_ops.marine_analysis import RAOProcessor
 
 rao = RAOProcessor.from_excel('marine_analysis_data.xlsm')
 motion = rao.get_motion_response(frequency=0.5, heading=45, dof='pitch')
@@ -145,7 +145,7 @@ motion = rao.get_motion_response(frequency=0.5, heading=45, dof='pitch')
 
 #### 2. 6DOF Motion Analysis
 ```python
-from digitalmodel.modules.marine_analysis import MotionAnalyzer, WaveSpectrum
+from digitalmodel.marine_ops.marine_analysis import MotionAnalyzer, WaveSpectrum
 
 spectrum = WaveSpectrum.jonswap(Hs=3.5, Tp=10.0)
 analyzer = MotionAnalyzer(rao, spectrum)
@@ -164,7 +164,7 @@ time, motions = analyzer.simulate_motion(duration=3600)
 
 #### 3. Wave Spectra Module
 ```python
-from digitalmodel.modules.marine_analysis import WaveSpectrum
+from digitalmodel.marine_ops.marine_analysis import WaveSpectrum
 
 # JONSWAP spectrum
 spectrum = WaveSpectrum.jonswap(freq_range=(0.1, 2.0), Hs=3.5, Tp=10.0, gamma=3.3)
@@ -186,7 +186,7 @@ Hs = 4 * np.sqrt(m0)
 
 #### 4. Mooring Analysis Module
 ```python
-from digitalmodel.modules.marine_analysis import MooringLine, ChainProperties
+from digitalmodel.marine_ops.marine_analysis import MooringLine, ChainProperties
 
 chain = ChainProperties(diameter=76, grade='R3', link_type='Stud Link')
 line = MooringLine()

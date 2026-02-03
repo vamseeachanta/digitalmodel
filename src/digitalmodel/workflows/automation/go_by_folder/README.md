@@ -27,7 +27,7 @@ The module is part of the digitalmodel repository and uses the existing uv envir
 cd D:/github/digitalmodel
 
 # Module is already installed as part of digitalmodel
-uv run python -m digitalmodel.modules.automation.go_by_folder --help
+uv run python -m digitalmodel.workflows.automation.go_by_folder --help
 ```
 
 ## Usage
@@ -36,7 +36,7 @@ uv run python -m digitalmodel.modules.automation.go_by_folder --help
 
 ```bash
 # Create go-by folder
-python -m digitalmodel.modules.automation.go_by_folder \
+python -m digitalmodel.workflows.automation.go_by_folder \
     -s ./source_folder \
     -t ./goby_output
 ```
@@ -45,7 +45,7 @@ python -m digitalmodel.modules.automation.go_by_folder \
 
 ```bash
 # With analysis mode and parallel processing
-python -m digitalmodel.modules.automation.go_by_folder \
+python -m digitalmodel.workflows.automation.go_by_folder \
     -s ./simulations \
     -t ./template \
     --analysis-mode \
@@ -117,7 +117,7 @@ target_folder/
 ### 1. Template Creation
 Create templates from existing projects:
 ```bash
-python -m digitalmodel.modules.automation.go_by_folder \
+python -m digitalmodel.workflows.automation.go_by_folder \
     -s ./completed_project \
     -t ./project_template \
     --analysis-mode
@@ -126,7 +126,7 @@ python -m digitalmodel.modules.automation.go_by_folder \
 ### 2. Parameter Sweep Analysis
 Analyze simulation folders with parameter sweeps:
 ```bash
-python -m digitalmodel.modules.automation.go_by_folder \
+python -m digitalmodel.workflows.automation.go_by_folder \
     -s ./simulation_results \
     -t ./sweep_analysis \
     --analysis-mode \
@@ -136,7 +136,7 @@ python -m digitalmodel.modules.automation.go_by_folder \
 ### 3. Documentation Generation
 Generate documentation for large codebases:
 ```bash
-python -m digitalmodel.modules.automation.go_by_folder \
+python -m digitalmodel.workflows.automation.go_by_folder \
     -s ./large_codebase \
     -t ./codebase_docs \
     --capture-workflow
@@ -145,7 +145,7 @@ python -m digitalmodel.modules.automation.go_by_folder \
 ### 4. CI/CD Integration
 Use in CI/CD pipelines for artifact reduction:
 ```bash
-python -m digitalmodel.modules.automation.go_by_folder \
+python -m digitalmodel.workflows.automation.go_by_folder \
     -s ./build_artifacts \
     -t ./ci_artifacts \
     --max-file-size 1KB \
@@ -235,7 +235,7 @@ When `--analysis-mode` is enabled:
 
 Enable detailed logging:
 ```bash
-python -m digitalmodel.modules.automation.go_by_folder \
+python -m digitalmodel.workflows.automation.go_by_folder \
     -s ./source -t ./target \
     --log-level DEBUG
 ```
@@ -243,7 +243,7 @@ python -m digitalmodel.modules.automation.go_by_folder \
 ## API Usage
 
 ```python
-from digitalmodel.modules.automation.go_by_folder import CreateGoBy
+from digitalmodel.workflows.automation.go_by_folder import CreateGoBy
 
 # Create orchestrator
 config = {

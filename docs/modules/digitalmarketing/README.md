@@ -23,7 +23,7 @@ pip install seolib seoanalyzer seoaudit google-api-python-client oauth2client
 ### Basic SEO Analysis
 
 ```python
-from digitalmodel.modules.digitalmarketing import DigitalMarketing
+from digitalmodel.specialized.digitalmarketing import DigitalMarketing
 
 cfg = {
     "basename": "digitalmarketing",
@@ -51,7 +51,7 @@ print(result["results"]["seo_analysis"])
 ### Using Individual Tools
 
 ```python
-from digitalmodel.modules.digitalmarketing.tools import (
+from digitalmodel.specialized.digitalmarketing.tools import (
     IndexPageCounter,
     RobotsParser,
     SearchRankFinder

@@ -28,25 +28,25 @@ uv add numpy pandas matplotlib seaborn
 
 ```bash
 # Run with sample data
-python -m digitalmodel.modules.fatigue_analysis --sample
+python -m digitalmodel.structural.fatigue_analysis --sample
 
 # Run with production data
-python -m digitalmodel.modules.fatigue_analysis --input-directory /path/to/data
+python -m digitalmodel.structural.fatigue_analysis --input-directory /path/to/data
 
 # Process specific configurations
-python -m digitalmodel.modules.fatigue_analysis --configs fsts_l015,fsts_l095
+python -m digitalmodel.structural.fatigue_analysis --configs fsts_l015,fsts_l095
 
 # Use different S-N curve
-python -m digitalmodel.modules.fatigue_analysis --sn-curve DNV_D_AIR --scf 1.2
+python -m digitalmodel.structural.fatigue_analysis --sn-curve DNV_D_AIR --scf 1.2
 
 # Preview without processing
-python -m digitalmodel.modules.fatigue_analysis --dry-run
+python -m digitalmodel.structural.fatigue_analysis --dry-run
 ```
 
 ### Python API
 
 ```python
-from digitalmodel.modules.fatigue_analysis import ReferenceSeaStateProcessor
+from digitalmodel.structural.fatigue_analysis import ReferenceSeaStateProcessor
 
 # Initialize processor
 processor = ReferenceSeaStateProcessor(
@@ -70,7 +70,7 @@ processor.run_analysis(
 ### Visualization
 
 ```python
-from digitalmodel.modules.fatigue_analysis import FatigueVisualizer
+from digitalmodel.structural.fatigue_analysis import FatigueVisualizer
 
 # Create visualizer
 visualizer = FatigueVisualizer("output/visualizations")
@@ -87,7 +87,7 @@ sn_params = {
 visualizer.plot_sn_curve(sn_params)
 
 # Generate all standard visualizations
-from digitalmodel.modules.fatigue_analysis import generate_all_visualizations
+from digitalmodel.structural.fatigue_analysis import generate_all_visualizations
 generate_all_visualizations("output", "output/visualizations")
 ```
 
@@ -98,7 +98,7 @@ generate_all_visualizations("output", "output/visualizations")
 Implements ASTM E1049 rainflow counting algorithm for identifying stress/load cycles.
 
 ```python
-from digitalmodel.modules.fatigue_analysis import RainflowCounter
+from digitalmodel.structural.fatigue_analysis import RainflowCounter
 
 counter = RainflowCounter(gate_value=5.0)  # Filter small cycles
 ranges, counts = counter.count_cycles(time_series_data)
@@ -109,7 +109,7 @@ ranges, counts = counter.count_cycles(time_series_data)
 Calculates fatigue damage using S-N curves and Miner's linear damage accumulation rule.
 
 ```python
-from digitalmodel.modules.fatigue_analysis import FatigueDamageCalculator, SNCurveParameters
+from digitalmodel.structural.fatigue_analysis import FatigueDamageCalculator, SNCurveParameters
 
 # Define S-N curve
 sn_curve = SNCurveParameters(
@@ -262,7 +262,7 @@ pytest tests/modules/fatigue_analysis/ -v
 pytest tests/modules/fatigue_analysis/test_rainflow_counter.py -v
 
 # With coverage
-pytest tests/modules/fatigue_analysis/ --cov=digitalmodel.modules.fatigue_analysis
+pytest tests/modules/fatigue_analysis/ --cov=digitalmodel.structural.fatigue_analysis
 ```
 
 ## Known Issues

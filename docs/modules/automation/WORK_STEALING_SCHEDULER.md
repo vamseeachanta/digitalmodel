@@ -76,7 +76,7 @@ load_balancing:
 ### Basic Example
 
 ```python
-from digitalmodel.modules.automation import (
+from digitalmodel.workflows.automation import (
     WorkStealingScheduler,
     Agent,
     Task

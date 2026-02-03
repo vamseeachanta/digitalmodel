@@ -4,7 +4,7 @@
 
 ```python
 # Import and initialize
-from digitalmodel.modules.skills.skill_resolver import SkillResolver
+from digitalmodel.workflows.skills.skill_resolver import SkillResolver
 resolver = SkillResolver()
 
 # Get skill info
@@ -37,7 +37,7 @@ python scripts/demo_skill_resolver.py
 pytest tests/test_skill_resolver.py -v
 
 # Regenerate catalog
-python -c "from digitalmodel.modules.skills.skill_resolver import SkillResolver; SkillResolver().export_catalog()"
+python -c "from digitalmodel.workflows.skills.skill_resolver import SkillResolver; SkillResolver().export_catalog()"
 ```
 
 ## Version Format
@@ -204,7 +204,7 @@ docs/
 python scripts/update_skill_versions.py --help
 
 # Module docs
-python -c "from digitalmodel.modules.skills.skill_resolver import SkillResolver; help(SkillResolver)"
+python -c "from digitalmodel.workflows.skills.skill_resolver import SkillResolver; help(SkillResolver)"
 
 # Run demo
 python scripts/demo_skill_resolver.py

@@ -177,7 +177,7 @@ signal_analysis:
 ### Rainflow Cycle Counting
 
 ```python
-from digitalmodel.modules.signal_analysis.rainflow import RainflowCounter
+from digitalmodel.signal_processing.signal_analysis.rainflow import RainflowCounter
 
 # Initialize counter
 counter = RainflowCounter()
@@ -195,7 +195,7 @@ cycles = counter.count_cycles(stress)
 cycle_matrix = counter.get_cycle_matrix(cycles)
 
 # Calculate damage using S-N curve
-from digitalmodel.modules.fatigue_analysis import SNCurve
+from digitalmodel.structural.fatigue_analysis import SNCurve
 sn_curve = SNCurve.from_code("DNV-RP-C203", "D")
 damage = counter.calculate_damage(cycles, sn_curve)
 
@@ -206,7 +206,7 @@ print(f"Fatigue damage: {damage:.6f}")
 ### Spectral Analysis
 
 ```python
-from digitalmodel.modules.signal_analysis.spectral import SpectralAnalyzer
+from digitalmodel.signal_processing.signal_analysis.spectral import SpectralAnalyzer
 import numpy as np
 
 # Initialize analyzer
@@ -248,7 +248,7 @@ print(f"Zero-crossing period: {Tz:.2f} s")
 ### Time Series Processing
 
 ```python
-from digitalmodel.modules.signal_analysis.time_series import TimeSeriesProcessor
+from digitalmodel.signal_processing.signal_analysis.time_series import TimeSeriesProcessor
 
 # Initialize processor
 processor = TimeSeriesProcessor()
@@ -290,7 +290,7 @@ processed_df.to_csv("processed_signal.csv", index=False)
 ### OrcaFlex Signal Extraction
 
 ```python
-from digitalmodel.modules.signal_analysis.orcaflex_signals import OrcaFlexSignalExtractor
+from digitalmodel.signal_processing.signal_analysis.orcaflex_signals import OrcaFlexSignalExtractor
 from pathlib import Path
 
 # Initialize extractor
@@ -326,7 +326,7 @@ for sim_name, sim_data in results.items():
 ### Generic Time Series Reader
 
 ```python
-from digitalmodel.modules.signal_analysis.readers import GenericTimeSeriesReader
+from digitalmodel.signal_processing.signal_analysis.readers import GenericTimeSeriesReader
 
 # Auto-detect file format and load
 reader = GenericTimeSeriesReader()

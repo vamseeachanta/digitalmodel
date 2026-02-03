@@ -464,7 +464,7 @@
       {
         "line": 15,
         "module": "mooring",
-        "full_import": "from digitalmodel.modules.mooring.mooring import Mooring"
+        "full_import": "from digitalmodel.subsea.mooring_analysis.mooring import Mooring"
       },
       {
         "line": 16,
@@ -474,47 +474,47 @@
       {
         "line": 17,
         "module": "ct_hydraulics",
-        "full_import": "from digitalmodel.modules.ct_hydraulics.ct_hydraulics import CTHydraulics"
+        "full_import": "from digitalmodel.marine_ops.ct_hydraulics.ct_hydraulics import CTHydraulics"
       },
       {
         "line": 18,
         "module": "pipe_capacity",
-        "full_import": "from digitalmodel.modules.pipe_capacity.pipe_capacity import PipeCapacity"
+        "full_import": "from digitalmodel.structural.pipe_capacity.pipe_capacity import PipeCapacity"
       },
       {
         "line": 19,
         "module": "pipeline",
-        "full_import": "from digitalmodel.modules.pipeline.pipeline import Pipeline"
+        "full_import": "from digitalmodel.subsea.pipeline.pipeline import Pipeline"
       },
       {
         "line": 20,
         "module": "rao_analysis",
-        "full_import": "from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis"
+        "full_import": "from digitalmodel.hydrodynamics.rao_analysis.rao_analysis import RAOAnalysis"
       },
       {
         "line": 21,
         "module": "time_series",
-        "full_import": "from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis"
+        "full_import": "from digitalmodel.signal_processing.time_series.time_series_analysis import TimeSeriesAnalysis"
       },
       {
         "line": 22,
         "module": "transformation",
-        "full_import": "from digitalmodel.modules.transformation.transformation import Transformation"
+        "full_import": "from digitalmodel.infrastructure.transformation.transformation import Transformation"
       },
       {
         "line": 23,
         "module": "vertical_riser",
-        "full_import": "from digitalmodel.modules.vertical_riser.vertical_riser import vertical_riser"
+        "full_import": "from digitalmodel.subsea.vertical_riser.vertical_riser import vertical_riser"
       },
       {
         "line": 24,
         "module": "viv_analysis",
-        "full_import": "from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis"
+        "full_import": "from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis"
       },
       {
         "line": 30,
         "module": "digitalmarketing",
-        "full_import": "from digitalmodel.modules.digitalmarketing.digitalmarketing import DigitalMarketing"
+        "full_import": "from digitalmodel.specialized.digitalmarketing.digitalmarketing import DigitalMarketing"
       }
     ],
     "src/digitalmodel/aqwa.py": [
@@ -528,7 +528,7 @@
       {
         "line": 17,
         "module": "automation",
-        "full_import": "from digitalmodel.modules.automation.workflow_executor import WorkflowExecutor"
+        "full_import": "from digitalmodel.workflows.automation.workflow_executor import WorkflowExecutor"
       }
     ],
     "src/digitalmodel/common/code_dnvrph103_hydrodynamics_circular.py": [
@@ -549,26 +549,26 @@
       {
         "line": 6,
         "module": "time_series",
-        "full_import": "from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis"
+        "full_import": "from digitalmodel.signal_processing.time_series.time_series_analysis import TimeSeriesAnalysis"
       }
     ],
     "src/digitalmodel/common/ship_fatigue_analysis.py": [
       {
         "line": 10,
         "module": "signal_analysis",
-        "full_import": "from digitalmodel.modules.signal_analysis.fatigue import FatigueDamageCalculator"
+        "full_import": "from digitalmodel.signal_processing.signal_analysis.fatigue import FatigueDamageCalculator"
       }
     ],
     "src/digitalmodel/engine.py": [
       {
         "line": 16,
         "module": "signal_analysis",
-        "full_import": "from digitalmodel.modules.signal_analysis.fatigue import FatigueDamageCalculator as FatigueAnalysis"
+        "full_import": "from digitalmodel.signal_processing.signal_analysis.fatigue import FatigueDamageCalculator as FatigueAnalysis"
       },
       {
         "line": 18,
         "module": "mooring",
-        "full_import": "from digitalmodel.modules.mooring.mooring import Mooring"
+        "full_import": "from digitalmodel.subsea.mooring_analysis.mooring import Mooring"
       },
       {
         "line": 19,
@@ -598,37 +598,37 @@
       {
         "line": 28,
         "module": "pipe_capacity",
-        "full_import": "from digitalmodel.modules.pipe_capacity.pipe_capacity import PipeCapacity"
+        "full_import": "from digitalmodel.structural.pipe_capacity.pipe_capacity import PipeCapacity"
       },
       {
         "line": 29,
         "module": "pipeline",
-        "full_import": "from digitalmodel.modules.pipeline.pipeline import Pipeline"
+        "full_import": "from digitalmodel.subsea.pipeline.pipeline import Pipeline"
       },
       {
         "line": 30,
         "module": "ct_hydraulics",
-        "full_import": "from digitalmodel.modules.ct_hydraulics.ct_hydraulics import CTHydraulics"
+        "full_import": "from digitalmodel.marine_ops.ct_hydraulics.ct_hydraulics import CTHydraulics"
       },
       {
         "line": 31,
         "module": "rao_analysis",
-        "full_import": "from digitalmodel.modules.rao_analysis.rao_analysis import RAOAnalysis"
+        "full_import": "from digitalmodel.hydrodynamics.rao_analysis.rao_analysis import RAOAnalysis"
       },
       {
         "line": 32,
         "module": "time_series",
-        "full_import": "from digitalmodel.modules.time_series.time_series_analysis import TimeSeriesAnalysis"
+        "full_import": "from digitalmodel.signal_processing.time_series.time_series_analysis import TimeSeriesAnalysis"
       },
       {
         "line": 33,
         "module": "transformation",
-        "full_import": "from digitalmodel.modules.transformation.transformation import Transformation"
+        "full_import": "from digitalmodel.infrastructure.transformation.transformation import Transformation"
       },
       {
         "line": 35,
         "module": "viv_analysis",
-        "full_import": "from digitalmodel.modules.viv_analysis.viv_analysis import VIVAnalysis"
+        "full_import": "from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis"
       },
       {
         "line": 38,
@@ -638,22 +638,22 @@
       {
         "line": 94,
         "module": "catenary",
-        "full_import": "from digitalmodel.modules.catenary.catenary import Catenary"
+        "full_import": "from digitalmodel.subsea.catenary.catenary import Catenary"
       },
       {
         "line": 119,
         "module": "rigging",
-        "full_import": "from digitalmodel.modules.rigging.rigging import Rigging"
+        "full_import": "from digitalmodel.specialized.rigging.rigging import Rigging"
       },
       {
         "line": 178,
         "module": "artificial_lift",
-        "full_import": "from digitalmodel.modules.artificial_lift.dynacard.solver import DynacardWorkflow"
+        "full_import": "from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow"
       },
       {
         "line": 182,
         "module": "digitalmarketing",
-        "full_import": "from digitalmodel.modules.digitalmarketing.digitalmarketing import DigitalMarketing"
+        "full_import": "from digitalmodel.specialized.digitalmarketing.digitalmarketing import DigitalMarketing"
       }
     ],
     "src/digitalmodel/modules/aqwa/aqwa_analysis.py": [
@@ -787,14 +787,14 @@
       {
         "line": 20,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.aqwa_enhanced_parser import AQWAEnhancedParser"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.aqwa_enhanced_parser import AQWAEnhancedParser"
       }
     ],
     "src/digitalmodel/modules/automation/go_by_folder/metadata/markdown_docs.py": [
       {
         "line": 343,
         "module": "automation",
-        "full_import": "from digitalmodel.modules.automation.go_by_folder import FileScanner"
+        "full_import": "from digitalmodel.workflows.automation.go_by_folder import FileScanner"
       }
     ],
     "src/digitalmodel/modules/bemrosetta/__init__.py": [
@@ -836,77 +836,77 @@
       {
         "line": 7,
         "module": "blender_automation",
-        "full_import": "from digitalmodel.modules.blender_automation import ("
+        "full_import": "from digitalmodel.solvers.blender_automation import ("
       }
     ],
     "src/digitalmodel/modules/blender_automation/examples/marine_engineering_integration.py": [
       {
         "line": 7,
         "module": "blender_automation",
-        "full_import": "from digitalmodel.modules.blender_automation import ("
+        "full_import": "from digitalmodel.solvers.blender_automation import ("
       },
       {
         "line": 239,
         "module": "blender_automation",
-        "full_import": "from digitalmodel.modules.blender_automation.utils import find_cad_files"
+        "full_import": "from digitalmodel.solvers.blender_automation.utils import find_cad_files"
       }
     ],
     "src/digitalmodel/modules/catenary/catenary.py": [
       {
         "line": 3,
         "module": "catenary",
-        "full_import": "from digitalmodel.modules.catenary.catenary_equation import CatenaryCalculator"
+        "full_import": "from digitalmodel.subsea.catenary.catenary_equation import CatenaryCalculator"
       },
       {
         "line": 4,
         "module": "catenary",
-        "full_import": "from digitalmodel.modules.catenary.catenary_riser import catenary_riser"
+        "full_import": "from digitalmodel.subsea.catenary.catenary_riser import catenary_riser"
       }
     ],
     "src/digitalmodel/modules/catenary/catenaryMethods.py": [
       {
         "line": 6,
         "module": "catenary",
-        "full_import": "from digitalmodel.modules.catenary.pipeProperties import pipeProperties"
+        "full_import": "from digitalmodel.subsea.catenary.pipeProperties import pipeProperties"
       },
       {
         "line": 14,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.modules.marine_engineering.catenary import CatenarySolver, CatenaryInput"
+        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary import CatenarySolver, CatenaryInput"
       },
       {
         "line": 17,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.modules.marine_engineering.catenary import catenaryEquation"
+        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary import catenaryEquation"
       },
       {
         "line": 72,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.modules.marine_engineering.catenary import catenaryForces"
+        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary import catenaryForces"
       }
     ],
     "src/digitalmodel/modules/catenary/catenary_riser.py": [
       {
         "line": 19,
         "module": "catenary",
-        "full_import": "from digitalmodel.modules.catenary.catenaryMethods import ("
+        "full_import": "from digitalmodel.subsea.catenary.catenaryMethods import ("
       },
       {
         "line": 28,
         "module": "catenary",
-        "full_import": "from digitalmodel.modules.catenary.orcaflexModel import build_model"
+        "full_import": "from digitalmodel.subsea.catenary.orcaflexModel import build_model"
       },
       {
         "line": 29,
         "module": "catenary",
-        "full_import": "from digitalmodel.modules.catenary.pipeProperties import pipeProperties"
+        "full_import": "from digitalmodel.subsea.catenary.pipeProperties import pipeProperties"
       }
     ],
     "src/digitalmodel/modules/ct_hydraulics/__init__.py": [
       {
         "line": 3,
         "module": "ct_hydraulics",
-        "full_import": "from digitalmodel.modules.ct_hydraulics.ct_hydraulics import CTHydraulics"
+        "full_import": "from digitalmodel.marine_ops.ct_hydraulics.ct_hydraulics import CTHydraulics"
       }
     ],
     "src/digitalmodel/modules/diffraction/__init__.py": [
@@ -1188,92 +1188,92 @@
       {
         "line": 3,
         "module": "digitalmarketing",
-        "full_import": "from digitalmodel.modules.digitalmarketing.digitalmarketing import DigitalMarketing"
+        "full_import": "from digitalmodel.specialized.digitalmarketing.digitalmarketing import DigitalMarketing"
       }
     ],
     "src/digitalmodel/modules/digitalmarketing/analytics/__init__.py": [
       {
         "line": 3,
         "module": "digitalmarketing",
-        "full_import": "from digitalmodel.modules.digitalmarketing.analytics.google_analytics import ("
+        "full_import": "from digitalmodel.specialized.digitalmarketing.analytics.google_analytics import ("
       }
     ],
     "src/digitalmodel/modules/digitalmarketing/digitalmarketing.py": [
       {
         "line": 28,
         "module": "digitalmarketing",
-        "full_import": "from digitalmodel.modules.digitalmarketing.seo.seo_analysis import SEOAnalysis"
+        "full_import": "from digitalmodel.specialized.digitalmarketing.seo.seo_analysis import SEOAnalysis"
       }
     ],
     "src/digitalmodel/modules/digitalmarketing/seo/__init__.py": [
       {
         "line": 3,
         "module": "digitalmarketing",
-        "full_import": "from digitalmodel.modules.digitalmarketing.seo.seo_analysis import SEOAnalysis"
+        "full_import": "from digitalmodel.specialized.digitalmarketing.seo.seo_analysis import SEOAnalysis"
       }
     ],
     "src/digitalmodel/modules/digitalmarketing/tools/__init__.py": [
       {
         "line": 3,
         "module": "digitalmarketing",
-        "full_import": "from digitalmodel.modules.digitalmarketing.tools.index_page_count import ("
+        "full_import": "from digitalmodel.specialized.digitalmarketing.tools.index_page_count import ("
       },
       {
         "line": 6,
         "module": "digitalmarketing",
-        "full_import": "from digitalmodel.modules.digitalmarketing.tools.robots_parser import RobotsParser"
+        "full_import": "from digitalmodel.specialized.digitalmarketing.tools.robots_parser import RobotsParser"
       },
       {
         "line": 7,
         "module": "digitalmarketing",
-        "full_import": "from digitalmodel.modules.digitalmarketing.tools.search_rank import SearchRankFinder"
+        "full_import": "from digitalmodel.specialized.digitalmarketing.tools.search_rank import SearchRankFinder"
       }
     ],
     "src/digitalmodel/modules/fatigue_analysis/__init__.py": [
       {
         "line": 21,
         "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.modules.fatigue_analysis import ReferenceSeaStateProcessor"
+        "full_import": "from digitalmodel.structural.fatigue_analysis import ReferenceSeaStateProcessor"
       }
     ],
     "src/digitalmodel/modules/fatigue_analysis/__main__.py": [
       {
         "line": 35,
         "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.modules.fatigue_analysis.reference_seastate_processor import ("
+        "full_import": "from digitalmodel.structural.fatigue_analysis.reference_seastate_processor import ("
       }
     ],
     "src/digitalmodel/modules/fatigue_analysis/cli_load_scaling.py": [
       {
         "line": 41,
         "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.modules.fatigue_analysis.load_scaling import LoadScalingProcessor"
+        "full_import": "from digitalmodel.structural.fatigue_analysis.load_scaling import LoadScalingProcessor"
       }
     ],
     "src/digitalmodel/modules/fatigue_analysis/fatigue_validation/__init__.py": [
       {
         "line": 12,
         "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.modules.fatigue_analysis.fatigue_validation import FatigueValidator"
+        "full_import": "from digitalmodel.structural.fatigue_analysis.fatigue_validation import FatigueValidator"
       }
     ],
     "src/digitalmodel/modules/fatigue_analysis/integrated_processor.py": [
       {
         "line": 21,
         "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.modules.fatigue_analysis.rainflow_counter import RainflowCounter"
+        "full_import": "from digitalmodel.structural.fatigue_analysis.rainflow_counter import RainflowCounter"
       },
       {
         "line": 22,
         "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.modules.fatigue_analysis.fatigue_damage_calculator import ("
+        "full_import": "from digitalmodel.structural.fatigue_analysis.fatigue_damage_calculator import ("
       }
     ],
     "src/digitalmodel/modules/fatigue_analysis/test_load_scaling.py": [
       {
         "line": 25,
         "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.modules.fatigue_analysis.load_scaling import LoadScaler"
+        "full_import": "from digitalmodel.structural.fatigue_analysis.load_scaling import LoadScaler"
       }
     ],
     "src/digitalmodel/modules/gis/__init__.py": [
@@ -1516,166 +1516,166 @@
       {
         "line": 22,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.extraction.extract_hydro import HydrodynamicCoefficientExtractor"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.extraction.extract_hydro import HydrodynamicCoefficientExtractor"
       }
     ],
     "src/digitalmodel/modules/marine_analysis/catenary/__init__.py": [
       {
         "line": 8,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.catenary import CatenarySolver, CatenaryInput"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.catenary import CatenarySolver, CatenaryInput"
       },
       {
         "line": 13,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.catenary import LazyWaveSolver, LazyWaveConfiguration"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.catenary import LazyWaveSolver, LazyWaveConfiguration"
       },
       {
         "line": 18,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.catenary import catenaryEquation"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.catenary import catenaryEquation"
       },
       {
         "line": 26,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.mooring_analysis.catenary_solver import ("
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.mooring_analysis.catenary_solver import ("
       }
     ],
     "src/digitalmodel/modules/marine_analysis/catenary/adapter.py": [
       {
         "line": 12,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.catenary.adapter import catenaryEquation"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.catenary.adapter import catenaryEquation"
       },
       {
         "line": 36,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.mooring_analysis.catenary_solver import ("
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.mooring_analysis.catenary_solver import ("
       }
     ],
     "src/digitalmodel/modules/marine_analysis/profiling/profile_modules.py": [
       {
         "line": 55,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.wave_spectra.spectra import ("
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.wave_spectra.spectra import ("
       },
       {
         "line": 58,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.environmental_loading.ocimf import ("
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.environmental_loading.ocimf import ("
       },
       {
         "line": 62,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.catenary.solver import CatenarySolver, CatenaryInput"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.catenary.solver import CatenarySolver, CatenaryInput"
       },
       {
         "line": 63,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.hydrodynamic_coefficients.coefficients import ("
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients.coefficients import ("
       }
     ],
     "src/digitalmodel/modules/marine_analysis/unified_rao_reader.py": [
       {
         "line": 84,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis import UnifiedRAOReader"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis import UnifiedRAOReader"
       }
     ],
     "src/digitalmodel/modules/marine_analysis/validation/validate_catenary.py": [
       {
         "line": 16,
         "module": "catenary",
-        "full_import": "from digitalmodel.modules.catenary.catenaryMethods import ("
+        "full_import": "from digitalmodel.subsea.catenary.catenaryMethods import ("
       }
     ],
     "src/digitalmodel/modules/marine_analysis/validation/validate_phase2.py": [
       {
         "line": 56,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.environmental_loading.ocimf import ("
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.environmental_loading.ocimf import ("
       }
     ],
     "src/digitalmodel/modules/marine_analysis/visualization/integration_charts.py": [
       {
         "line": 54,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.wave_spectra import WaveSpectrum, JONSWAP"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.wave_spectra import WaveSpectrum, JONSWAP"
       },
       {
         "line": 55,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.environmental_loading.ocimf import ("
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.environmental_loading.ocimf import ("
       },
       {
         "line": 58,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.hydrodynamic_coefficients import ("
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients import ("
       },
       {
         "line": 61,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.mooring_analysis import MooringSystem"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.mooring_analysis import MooringSystem"
       },
       {
         "line": 62,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.catenary import CatenarySolver"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.catenary import CatenarySolver"
       }
     ],
     "src/digitalmodel/modules/marine_analysis/visualization/rao_plotter.py": [
       {
         "line": 10,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.modules.marine_analysis.visualization import RAOPlotter"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.visualization import RAOPlotter"
       }
     ],
     "src/digitalmodel/modules/marine_engineering/catenary/__init__.py": [
       {
         "line": 8,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.modules.marine_engineering.catenary import CatenarySolver, CatenaryInput"
+        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary import CatenarySolver, CatenaryInput"
       },
       {
         "line": 13,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.modules.marine_engineering.catenary import LazyWaveSolver, LazyWaveConfiguration"
+        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary import LazyWaveSolver, LazyWaveConfiguration"
       },
       {
         "line": 18,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.modules.marine_engineering.catenary import catenaryEquation"
+        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary import catenaryEquation"
       },
       {
         "line": 26,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.modules.marine_engineering.mooring_analysis.catenary_solver import ("
+        "full_import": "from digitalmodel.marine_ops.marine_engineering.mooring_analysis.catenary_solver import ("
       }
     ],
     "src/digitalmodel/modules/marine_engineering/catenary/adapter.py": [
       {
         "line": 12,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.modules.marine_engineering.catenary.adapter import catenaryEquation"
+        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary.adapter import catenaryEquation"
       },
       {
         "line": 36,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.modules.marine_engineering.mooring_analysis.catenary_solver import ("
+        "full_import": "from digitalmodel.marine_ops.marine_engineering.mooring_analysis.catenary_solver import ("
       }
     ],
     "src/digitalmodel/modules/marine_engineering/tests/test_validation.py": [
       {
         "line": 6,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.modules.marine_engineering.wave_spectra import ("
+        "full_import": "from digitalmodel.marine_ops.marine_engineering.wave_spectra import ("
       }
     ],
     "src/digitalmodel/modules/marine_engineering/tests/test_wave_spectra.py": [
       {
         "line": 20,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.modules.marine_engineering.wave_spectra.spectra import ("
+        "full_import": "from digitalmodel.marine_ops.marine_engineering.wave_spectra.spectra import ("
       }
     ],
     "src/digitalmodel/modules/orcaflex/all_vars.py": [
@@ -1937,7 +1937,7 @@
       {
         "line": 11,
         "module": "signal_analysis",
-        "full_import": "from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents"
+        "full_import": "from digitalmodel.signal_processing.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents"
       },
       {
         "line": 12,
@@ -1959,12 +1959,12 @@
       {
         "line": 253,
         "module": "signal_analysis",
-        "full_import": "from digitalmodel.modules.signal_analysis import RainflowCounter"
+        "full_import": "from digitalmodel.signal_processing.signal_analysis import RainflowCounter"
       },
       {
         "line": 296,
         "module": "signal_analysis",
-        "full_import": "from digitalmodel.modules.signal_analysis import SpectralAnalyzer"
+        "full_import": "from digitalmodel.signal_processing.signal_analysis import SpectralAnalyzer"
       }
     ],
     "src/digitalmodel/modules/orcaflex/orcaflex.py": [
@@ -2140,154 +2140,154 @@
       {
         "line": 553,
         "module": "pipe_capacity",
-        "full_import": "from digitalmodel.modules.pipe_capacity.PipeSizing import PipeSizing"
+        "full_import": "from digitalmodel.structural.pipe_capacity.PipeSizing import PipeSizing"
       }
     ],
     "src/digitalmodel/modules/pipe_capacity/common/pipe_components.py": [
       {
         "line": 1,
         "module": "pipe_capacity",
-        "full_import": "from digitalmodel.modules.pipe_capacity.custom.MaterialProperties import ("
+        "full_import": "from digitalmodel.structural.pipe_capacity.custom.MaterialProperties import ("
       },
       {
         "line": 4,
         "module": "pipe_capacity",
-        "full_import": "from digitalmodel.modules.pipe_capacity.custom.PipeCapacity import PipeCapacity"
+        "full_import": "from digitalmodel.structural.pipe_capacity.custom.PipeCapacity import PipeCapacity"
       },
       {
         "line": 5,
         "module": "pipe_capacity",
-        "full_import": "from digitalmodel.modules.pipe_capacity.custom.PipeSizing import PipeSizing"
+        "full_import": "from digitalmodel.structural.pipe_capacity.custom.PipeSizing import PipeSizing"
       }
     ],
     "src/digitalmodel/modules/pipe_capacity/pipe_capacity.py": [
       {
         "line": 2,
         "module": "pipe_capacity",
-        "full_import": "from digitalmodel.modules.pipe_capacity.common.pipe_components import PipeComponents"
+        "full_import": "from digitalmodel.structural.pipe_capacity.common.pipe_components import PipeComponents"
       }
     ],
     "src/digitalmodel/modules/pipe_cross_section/calculator.py": [
       {
         "line": 17,
         "module": "pipe_cross_section",
-        "full_import": "from digitalmodel.modules.pipe_cross_section import PipeCrossSection"
+        "full_import": "from digitalmodel.structural.pipe_cross_section import PipeCrossSection"
       }
     ],
     "src/digitalmodel/modules/pipeline/lateral_buckling.py": [
       {
         "line": 14,
         "module": "pipeline",
-        "full_import": "from digitalmodel.modules.pipeline.buckling_common import CommonBucklingCaculations"
+        "full_import": "from digitalmodel.subsea.pipeline.buckling_common import CommonBucklingCaculations"
       }
     ],
     "src/digitalmodel/modules/pipeline/pipeline.py": [
       {
         "line": 5,
         "module": "pipeline",
-        "full_import": "from digitalmodel.modules.pipeline.lateral_buckling import LateralBuckling"
+        "full_import": "from digitalmodel.subsea.pipeline.lateral_buckling import LateralBuckling"
       },
       {
         "line": 6,
         "module": "pipeline",
-        "full_import": "from digitalmodel.modules.pipeline.thermal_buckling import ThermalBuckling"
+        "full_import": "from digitalmodel.subsea.pipeline.thermal_buckling import ThermalBuckling"
       },
       {
         "line": 7,
         "module": "pipeline",
-        "full_import": "from digitalmodel.modules.pipeline.upheaval_buckling import UpheavalBuckling"
+        "full_import": "from digitalmodel.subsea.pipeline.upheaval_buckling import UpheavalBuckling"
       },
       {
         "line": 8,
         "module": "pipeline",
-        "full_import": "from digitalmodel.modules.pipeline.pressure_loss import Pressureloss"
+        "full_import": "from digitalmodel.subsea.pipeline.pressure_loss import Pressureloss"
       }
     ],
     "src/digitalmodel/modules/pipeline/pressure_loss.py": [
       {
         "line": 17,
         "module": "pipeline",
-        "full_import": "from digitalmodel.modules.pipeline.buckling_common import CommonBucklingCaculations"
+        "full_import": "from digitalmodel.subsea.pipeline.buckling_common import CommonBucklingCaculations"
       }
     ],
     "src/digitalmodel/modules/pipeline/upheaval_buckling.py": [
       {
         "line": 13,
         "module": "pipeline",
-        "full_import": "from digitalmodel.modules.pipeline.buckling_common import CommonBucklingCaculations"
+        "full_import": "from digitalmodel.subsea.pipeline.buckling_common import CommonBucklingCaculations"
       }
     ],
     "src/digitalmodel/modules/rigging/__init__.py": [
       {
         "line": 3,
         "module": "rigging",
-        "full_import": "from digitalmodel.modules.rigging.rigging import Rigging"
+        "full_import": "from digitalmodel.specialized.rigging.rigging import Rigging"
       }
     ],
     "src/digitalmodel/modules/signal_analysis/adapters.py": [
       {
         "line": 426,
         "module": "time_series",
-        "full_import": "from digitalmodel.modules.time_series.time_series_components import TimeSeriesComponents"
+        "full_import": "from digitalmodel.signal_processing.time_series.time_series_components import TimeSeriesComponents"
       },
       {
         "line": 435,
         "module": "signal_analysis",
-        "full_import": "from digitalmodel.modules.signal_analysis import RainflowCounter, SpectralAnalyzer"
+        "full_import": "from digitalmodel.signal_processing.signal_analysis import RainflowCounter, SpectralAnalyzer"
       },
       {
         "line": 450,
         "module": "signal_analysis",
-        "full_import": "from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter"
+        "full_import": "from digitalmodel.signal_processing.signal_analysis.adapters import TimeSeriesComponentsAdapter"
       }
     ],
     "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_G.py": [
       {
         "line": 12,
         "module": "structural",
-        "full_import": "from digitalmodel.modules.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
+        "full_import": "from digitalmodel.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
       }
     ],
     "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_H.py": [
       {
         "line": 12,
         "module": "structural",
-        "full_import": "from digitalmodel.modules.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
+        "full_import": "from digitalmodel.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
       }
     ],
     "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_J.py": [
       {
         "line": 12,
         "module": "structural",
-        "full_import": "from digitalmodel.modules.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
+        "full_import": "from digitalmodel.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
       }
     ],
     "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_K.py": [
       {
         "line": 12,
         "module": "structural",
-        "full_import": "from digitalmodel.modules.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
+        "full_import": "from digitalmodel.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
       }
     ],
     "src/digitalmodel/modules/structural/plate_buckling/calculations/plateBucklingCal_i.py": [
       {
         "line": 12,
         "module": "structural",
-        "full_import": "from digitalmodel.modules.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
+        "full_import": "from digitalmodel.structural.plate_buckling.StiffnerBuckling_Cal.DataProvision.parameters_Col_All import *"
       }
     ],
     "src/digitalmodel/modules/time_series/time_series_analysis.py": [
       {
         "line": 9,
         "module": "signal_analysis",
-        "full_import": "from digitalmodel.modules.signal_analysis.adapters import TimeSeriesComponentsAdapter"
+        "full_import": "from digitalmodel.signal_processing.signal_analysis.adapters import TimeSeriesComponentsAdapter"
       }
     ],
     "src/digitalmodel/modules/vertical_riser/vertical_riser.py": [
       {
         "line": 9,
         "module": "vertical_riser",
-        "full_import": "from digitalmodel.modules.vertical_riser.vertical_riser_components import VerticalRiser"
+        "full_import": "from digitalmodel.subsea.vertical_riser.vertical_riser_components import VerticalRiser"
       }
     ],
     "src/digitalmodel/modules/vertical_riser/vertical_riser_components.py": [
@@ -2301,12 +2301,12 @@
       {
         "line": 6,
         "module": "viv_analysis",
-        "full_import": "from digitalmodel.modules.viv_analysis.viv_analysis_legacy import ("
+        "full_import": "from digitalmodel.subsea.viv_analysis.viv_analysis_legacy import ("
       },
       {
         "line": 9,
         "module": "viv_analysis",
-        "full_import": "from digitalmodel.modules.viv_analysis.viv_tubular_members import VIVTubularMembers"
+        "full_import": "from digitalmodel.subsea.viv_analysis.viv_tubular_members import VIVTubularMembers"
       }
     ]
   }

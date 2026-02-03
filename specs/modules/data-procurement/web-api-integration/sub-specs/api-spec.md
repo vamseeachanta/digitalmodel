@@ -15,7 +15,7 @@ These are the internal APIs that other DigitalModel modules will use to access e
 
 ### Get Ocean Data
 
-**Module:** `digitalmodel.modules.data_procurement.api_gateway`
+**Module:** `digitalmodel.data_systems.data_procurement.api_gateway`
 **Method:** `get_ocean_data(location, parameters, time_range, source=None)`
 
 **Purpose:** Retrieve ocean data (waves, currents, tides) from configured APIs
@@ -53,7 +53,7 @@ These are the internal APIs that other DigitalModel modules will use to access e
 
 ### Get Weather Data
 
-**Module:** `digitalmodel.modules.data_procurement.api_gateway`
+**Module:** `digitalmodel.data_systems.data_procurement.api_gateway`
 **Method:** `get_weather_data(location, parameters, time_range, source=None)`
 
 **Purpose:** Retrieve weather data (wind, temperature, pressure) from configured APIs
@@ -68,7 +68,7 @@ These are the internal APIs that other DigitalModel modules will use to access e
 
 ### Batch Data Request
 
-**Module:** `digitalmodel.modules.data_procurement.api_gateway`
+**Module:** `digitalmodel.data_systems.data_procurement.api_gateway`
 **Method:** `batch_request(requests)`
 
 **Purpose:** Process multiple data requests concurrently for improved performance
@@ -104,7 +104,7 @@ These are the internal APIs that other DigitalModel modules will use to access e
 
 ```bash
 # Get ocean data for a location
-python -m digitalmodel.modules.data_procurement.cli ocean \
+python -m digitalmodel.data_systems.data_procurement.cli ocean \
     --lat 29.0 --lon -94.0 \
     --parameters wave_height wave_period \
     --start "2025-01-09T00:00:00" \
@@ -112,14 +112,14 @@ python -m digitalmodel.modules.data_procurement.cli ocean \
     --output ocean_data.csv
 
 # Get weather data
-python -m digitalmodel.modules.data_procurement.cli weather \
+python -m digitalmodel.data_systems.data_procurement.cli weather \
     --lat 29.0 --lon -94.0 \
     --parameters wind_speed wind_direction temperature \
     --hours 48 \
     --output weather_data.csv
 
 # Batch request from YAML config
-python -m digitalmodel.modules.data_procurement.cli batch \
+python -m digitalmodel.data_systems.data_procurement.cli batch \
     --config batch_requests.yml \
     --output-dir ./results/
 ```
@@ -185,7 +185,7 @@ logging:
 ### OrcaFlex Module Integration
 
 ```python
-from digitalmodel.modules.data_procurement import api_gateway
+from digitalmodel.data_systems.data_procurement import api_gateway
 
 class OrcaFlexAnalysis:
     def __init__(self, config):
@@ -211,7 +211,7 @@ class OrcaFlexAnalysis:
 ### AQWA Module Integration
 
 ```python
-from digitalmodel.modules.data_procurement import api_gateway
+from digitalmodel.data_systems.data_procurement import api_gateway
 
 def prepare_aqwa_environment(config_file):
     """Prepare environmental conditions for AQWA analysis."""

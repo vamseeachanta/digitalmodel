@@ -371,7 +371,7 @@ with OptimizedProcessPoolExecutor(max_workers=30) as executor:
 
 ### A. Affected Modules
 - digitalmodel.orcaflex
-- digitalmodel.modules.parallel_processing
+- digitalmodel.infrastructure.parallel_processing
 - digitalmodel.aqwa
 - digitalmodel.common.analysis
 

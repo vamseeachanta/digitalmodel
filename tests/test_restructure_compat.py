@@ -109,7 +109,7 @@ class TestCLIEntryPoints:
         "viv-analysis": "digitalmodel.subsea.viv_analysis.cli",
         "catenary-riser": "digitalmodel.subsea.catenary_riser.cli",
         "signal-analysis": "digitalmodel.signal_processing.signal_analysis.cli",
-        "hydrodynamics": "digitalmodel.hydrodynamics.hydrodynamics.cli",
+        "hydrodynamics": "digitalmodel.hydrodynamics.cli",
         "gmsh-meshing": "digitalmodel.solvers.gmsh_meshing.cli",
         "workflow-automation": "digitalmodel.workflows.workflow_automation.cli",
         "bemrosetta": "digitalmodel.hydrodynamics.bemrosetta.cli",

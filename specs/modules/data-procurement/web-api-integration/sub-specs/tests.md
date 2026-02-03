@@ -216,7 +216,7 @@ uv run pytest tests/modules/data_procurement/
 uv run pytest tests/modules/data_procurement/unit/
 
 # Run with coverage
-uv run pytest --cov=digitalmodel.modules.data_procurement tests/
+uv run pytest --cov=digitalmodel.data_systems.data_procurement tests/
 
 # Run specific test file
 uv run pytest tests/modules/data_procurement/test_api_gateway.py

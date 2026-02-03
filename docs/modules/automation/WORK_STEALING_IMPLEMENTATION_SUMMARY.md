@@ -196,7 +196,7 @@ from .work_stealing_scheduler import (
 
 ### Quick Start
 ```python
-from digitalmodel.modules.automation import (
+from digitalmodel.workflows.automation import (
     WorkStealingScheduler, Agent, Task
 )
 
@@ -252,7 +252,7 @@ PYTHONPATH=src python -m pytest tests/modules/automation/test_work_stealing.py -
 ### Import Validation ✅
 ```python
 # All imports successful
-from digitalmodel.modules.automation import (
+from digitalmodel.workflows.automation import (
     WorkStealingScheduler, Agent, Task, WorkStealingMetrics
 )
 ```

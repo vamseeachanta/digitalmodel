@@ -48,39 +48,39 @@ pip install memory_profiler psutil openpyxl xlrd
 
 ```bash
 # Profile performance
-python -m digitalmodel.modules.marine_analysis profile --module wave_spectra
+python -m digitalmodel.marine_ops.marine_analysis profile --module wave_spectra
 
 # Extract OCIMF data
-python -m digitalmodel.modules.marine_analysis extract --type ocimf --input database.xlsx
+python -m digitalmodel.marine_ops.marine_analysis extract --type ocimf --input database.xlsx
 
 # Run Phase 2 validation
-python -m digitalmodel.modules.marine_analysis validate --phase 2
+python -m digitalmodel.marine_ops.marine_analysis validate --phase 2
 
 # Generate integration charts
-python -m digitalmodel.modules.marine_analysis visualize --type integration --input data/
+python -m digitalmodel.marine_ops.marine_analysis visualize --type integration --input data/
 
 # Analyze Excel data
-python -m digitalmodel.modules.marine_analysis analyze --input vessel_data.xlsx
+python -m digitalmodel.marine_ops.marine_analysis analyze --input vessel_data.xlsx
 ```
 
 ### Using as a Python Module
 
 ```python
-from digitalmodel.modules.marine_analysis import profiling, extraction, validation
+from digitalmodel.marine_ops.marine_analysis import profiling, extraction, validation
 
 # Profile a module
-from digitalmodel.modules.marine_analysis.profiling import profile_modules
+from digitalmodel.marine_ops.marine_analysis.profiling import profile_modules
 profiler = profile_modules.ProfilerTool()
 results = profiler.profile('wave_spectra')
 print(results.summary())
 
 # Extract OCIMF data
-from digitalmodel.modules.marine_analysis.extraction import extract_ocimf
+from digitalmodel.marine_ops.marine_analysis.extraction import extract_ocimf
 extractor = extract_ocimf.OCIMFExtractor()
 data = extractor.extract_vessel('tanker_vlcc')
 
 # Run validation
-from digitalmodel.modules.marine_analysis.validation import validate_phase2
+from digitalmodel.marine_ops.marine_analysis.validation import validate_phase2
 validator = validate_phase2.Phase2Validator()
 report = validator.validate_all()
 print(report.generate_report())
@@ -100,7 +100,7 @@ Performance profiling and optimization analysis for marine engineering computati
 
 **Example:**
 ```python
-from digitalmodel.modules.marine_analysis.profiling import profile_modules
+from digitalmodel.marine_ops.marine_analysis.profiling import profile_modules
 
 profiler = profile_modules.ProfilerTool()
 results = profiler.profile('wave_spectra')
@@ -119,7 +119,7 @@ Data extraction from various marine engineering sources.
 
 **Example:**
 ```python
-from digitalmodel.modules.marine_analysis.extraction import extract_hydro
+from digitalmodel.marine_ops.marine_analysis.extraction import extract_hydro
 
 extractor = extract_hydro.HydroExtractor()
 coefficients = extractor.extract_from_aqwa('output.lis')
@@ -136,7 +136,7 @@ Validation and verification tools for marine engineering computations.
 
 **Example:**
 ```python
-from digitalmodel.modules.marine_analysis.validation import validate_phase2
+from digitalmodel.marine_ops.marine_analysis.validation import validate_phase2
 
 validator = validate_phase2.Phase2Validator()
 results = validator.validate_all()
@@ -154,7 +154,7 @@ Specialized visualization tools for marine engineering data.
 
 **Example:**
 ```python
-from digitalmodel.modules.marine_analysis.visualization import ocimf_charts
+from digitalmodel.marine_ops.marine_analysis.visualization import ocimf_charts
 
 plotter = ocimf_charts.OCIMFPlotter(vessel_data)
 plotter.plot_wind_coefficients()
@@ -172,7 +172,7 @@ General analysis utilities for marine engineering datasets.
 
 **Example:**
 ```python
-from digitalmodel.modules.marine_analysis.analysis import excel_analyzer
+from digitalmodel.marine_ops.marine_analysis.analysis import excel_analyzer
 
 analyzer = excel_analyzer.MarineExcelAnalyzer('vessel_data.xlsx')
 summary = analyzer.analyze_stability()
@@ -186,15 +186,15 @@ summary.save('tests/outputs/analysis/')
 Run performance profiling on marine engineering modules.
 
 ```bash
-python -m digitalmodel.modules.marine_analysis profile [OPTIONS]
+python -m digitalmodel.marine_ops.marine_analysis profile [OPTIONS]
 
 Options:
   --module TEXT   Module to profile (default: all)
   --output PATH   Output directory (default: tests/outputs/profiling)
 
 Examples:
-  python -m digitalmodel.modules.marine_analysis profile --module wave_spectra
-  python -m digitalmodel.modules.marine_analysis profile --module all --output results/
+  python -m digitalmodel.marine_ops.marine_analysis profile --module wave_spectra
+  python -m digitalmodel.marine_ops.marine_analysis profile --module all --output results/
 ```
 
 ### Extract Command
@@ -202,7 +202,7 @@ Examples:
 Extract data from various marine engineering sources.
 
 ```bash
-python -m digitalmodel.modules.marine_analysis extract [OPTIONS]
+python -m digitalmodel.marine_ops.marine_analysis extract [OPTIONS]
 
 Options:
   --type TEXT     Type of extraction [ocimf|hydro|mooring] (required)
@@ -210,8 +210,8 @@ Options:
   --output PATH   Output directory (default: tests/outputs/extraction)
 
 Examples:
-  python -m digitalmodel.modules.marine_analysis extract --type ocimf --input database.xlsx
-  python -m digitalmodel.modules.marine_analysis extract --type hydro --input aqwa_output.lis
+  python -m digitalmodel.marine_ops.marine_analysis extract --type ocimf --input database.xlsx
+  python -m digitalmodel.marine_ops.marine_analysis extract --type hydro --input aqwa_output.lis
 ```
 
 ### Validate Command
@@ -219,15 +219,15 @@ Examples:
 Run validation tests on marine engineering computations.
 
 ```bash
-python -m digitalmodel.modules.marine_analysis validate [OPTIONS]
+python -m digitalmodel.marine_ops.marine_analysis validate [OPTIONS]
 
 Options:
   --phase INT     Phase to validate [1|2|3] (default: 2)
   --output PATH   Output directory (default: tests/outputs/validation)
 
 Examples:
-  python -m digitalmodel.modules.marine_analysis validate --phase 2
-  python -m digitalmodel.modules.marine_analysis validate --phase 2 --output results/
+  python -m digitalmodel.marine_ops.marine_analysis validate --phase 2
+  python -m digitalmodel.marine_ops.marine_analysis validate --phase 2 --output results/
 ```
 
 ### Visualize Command
@@ -235,7 +235,7 @@ Examples:
 Generate visualizations for marine engineering data.
 
 ```bash
-python -m digitalmodel.modules.marine_analysis visualize [OPTIONS]
+python -m digitalmodel.marine_ops.marine_analysis visualize [OPTIONS]
 
 Options:
   --type TEXT     Type of visualization [integration|ocimf|performance] (required)
@@ -243,8 +243,8 @@ Options:
   --output PATH   Output directory (default: tests/outputs/visualization)
 
 Examples:
-  python -m digitalmodel.modules.marine_analysis visualize --type integration --input data/
-  python -m digitalmodel.modules.marine_analysis visualize --type ocimf --input ocimf_data.csv
+  python -m digitalmodel.marine_ops.marine_analysis visualize --type integration --input data/
+  python -m digitalmodel.marine_ops.marine_analysis visualize --type ocimf --input ocimf_data.csv
 ```
 
 ### Analyze Command
@@ -252,14 +252,14 @@ Examples:
 Run general analysis on marine engineering datasets.
 
 ```bash
-python -m digitalmodel.modules.marine_analysis analyze [OPTIONS]
+python -m digitalmodel.marine_ops.marine_analysis analyze [OPTIONS]
 
 Options:
   --input PATH    Input file to analyze (required)
   --output PATH   Output directory (default: tests/outputs/analysis)
 
 Examples:
-  python -m digitalmodel.modules.marine_analysis analyze --input vessel_data.xlsx
+  python -m digitalmodel.marine_ops.marine_analysis analyze --input vessel_data.xlsx
 ```
 
 ## Configuration
@@ -298,7 +298,7 @@ pytest tests/test_module_reorganization.py -v
 pytest tests/test_module_reorganization.py::TestModuleStructure -v
 
 # Run with coverage
-pytest tests/test_module_reorganization.py --cov=digitalmodel.modules.marine_analysis
+pytest tests/test_module_reorganization.py --cov=digitalmodel.marine_ops.marine_analysis
 ```
 
 ## Migration from Old Structure
@@ -321,10 +321,10 @@ from profile_marine_modules import ProfilerTool
 **New (Current):**
 ```python
 # New CLI
-python -m digitalmodel.modules.marine_analysis profile --module wave_spectra
+python -m digitalmodel.marine_ops.marine_analysis profile --module wave_spectra
 
 # New imports
-from digitalmodel.modules.marine_analysis.profiling import profile_modules
+from digitalmodel.marine_ops.marine_analysis.profiling import profile_modules
 profiler = profile_modules.ProfilerTool()
 ```
 
@@ -377,7 +377,7 @@ Contributions are welcome! Please:
 ## Related Modules
 
 - `digitalmodel.fatigue`: Fatigue analysis tools
-- `digitalmodel.modules.catenary`: Catenary mooring analysis
+- `digitalmodel.subsea.catenary`: Catenary mooring analysis
 - `digitalmodel.aqwa`: AQWA interface utilities
 - `digitalmodel.orcaflex`: OrcaFlex interface utilities
 

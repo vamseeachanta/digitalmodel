@@ -121,32 +121,32 @@ tests/
 
 ## CLI Usage Examples
 # Profile performance
-python -m digitalmodel.modules.marine_analysis profile --module wave_spectra
+python -m digitalmodel.marine_ops.marine_analysis profile --module wave_spectra
 
 # Extract OCIMF data
-python -m digitalmodel.modules.marine_analysis extract --type ocimf --input db.xlsx
+python -m digitalmodel.marine_ops.marine_analysis extract --type ocimf --input db.xlsx
 
 # Run validation
-python -m digitalmodel.modules.marine_analysis validate --phase 2
+python -m digitalmodel.marine_ops.marine_analysis validate --phase 2
 
 # Generate visualizations
-python -m digitalmodel.modules.marine_analysis visualize --type integration --input data/
+python -m digitalmodel.marine_ops.marine_analysis visualize --type integration --input data/
 
 # Analyze Excel file
-python -m digitalmodel.modules.marine_analysis analyze --input vessel_data.xlsx
+python -m digitalmodel.marine_ops.marine_analysis analyze --input vessel_data.xlsx
 
 ## Import Examples
 # Import profiling module
-from digitalmodel.modules.marine_analysis.profiling import profile_modules
+from digitalmodel.marine_ops.marine_analysis.profiling import profile_modules
 
 # Import extraction module
-from digitalmodel.modules.marine_analysis.extraction import extract_ocimf
+from digitalmodel.marine_ops.marine_analysis.extraction import extract_ocimf
 
 # Import validation module
-from digitalmodel.modules.marine_analysis.validation import validate_phase2
+from digitalmodel.marine_ops.marine_analysis.validation import validate_phase2
 
 # Import all submodules
-from digitalmodel.modules.marine_analysis import (
+from digitalmodel.marine_ops.marine_analysis import (
     profiling, extraction, validation, viz_tools, analysis
 )
 

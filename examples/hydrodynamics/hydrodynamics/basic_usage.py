@@ -1,2 +1,2 @@
-"""Basic usage example for digitalmodel.hydrodynamics.hydrodynamics."""
+"""Basic usage example for digitalmodel.hydrodynamics."""
 # TODO: Add working example
