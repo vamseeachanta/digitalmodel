@@ -500,5 +500,101 @@ def validate_spec(spec_path):
         sys.exit(1)
 
 
+# ---------------------------------------------------------------------------
+# WRK-029: OrcaWave runner command
+# ---------------------------------------------------------------------------
+
+
+@cli.command("run-orcawave")
+@click.argument("spec_path", type=click.Path(exists=True))
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    default="output",
+    help="Output directory (default: output)",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Generate files only; do not invoke the solver.",
+)
+@click.option(
+    "--timeout",
+    "-t",
+    type=int,
+    default=7200,
+    help="Solver timeout in seconds (default: 7200)",
+)
+@click.option(
+    "--executable",
+    type=click.Path(),
+    default=None,
+    help="Explicit path to OrcaWave executable.",
+)
+@click.option(
+    "--modular/--no-modular",
+    default=True,
+    help="Generate modular section files alongside (default: --modular)",
+)
+def run_orcawave_cmd(spec_path, output, dry_run, timeout, executable, modular):
+    """Run an OrcaWave diffraction analysis from a DiffractionSpec YAML.
+
+    SPEC_PATH: Path to a spec.yml file conforming to DiffractionSpec schema.
+
+    Example:\n
+        diffraction run-orcawave analysis.yml --dry-run\n
+        diffraction run-orcawave analysis.yml -o ./results --timeout 3600
+    """
+    from digitalmodel.hydrodynamics.diffraction.orcawave_runner import (
+        OrcaWaveRunner,
+        RunConfig,
+    )
+
+    click.echo("=" * 80)
+    click.echo("OrcaWave Runner")
+    click.echo("=" * 80)
+    click.echo(f"Spec file  : {spec_path}")
+    click.echo(f"Output     : {output}")
+    click.echo(f"Dry run    : {dry_run}")
+    click.echo(f"Timeout    : {timeout}s")
+    click.echo(f"Executable : {executable or 'auto-detect'}")
+    click.echo(f"Modular    : {modular}")
+    click.echo()
+
+    try:
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import (
+            DiffractionSpec,
+        )
+
+        spec = DiffractionSpec.from_yaml(Path(spec_path))
+        config = RunConfig(
+            executable_path=Path(executable) if executable else None,
+            output_dir=Path(output),
+            dry_run=dry_run,
+            timeout_seconds=timeout,
+            generate_modular=modular,
+        )
+        runner = OrcaWaveRunner(config)
+        result = runner.run(spec, spec_path=Path(spec_path))
+
+        click.echo(click.style(f"[{result.status.value.upper()}]", fg="green" if result.status.value in ("completed", "dry_run") else "red"))
+        click.echo(f"  Input file : {result.input_file}")
+        click.echo(f"  Output dir : {result.output_dir}")
+        if result.modular_files:
+            click.echo(f"  Modular    : {len(result.modular_files)} section files")
+        if result.mesh_files:
+            click.echo(f"  Mesh files : {len(result.mesh_files)} copied")
+        if result.duration_seconds is not None:
+            click.echo(f"  Duration   : {result.duration_seconds:.2f}s")
+        if result.error_message:
+            click.echo(click.style(f"  Error      : {result.error_message}", fg="red"))
+
+    except Exception as e:
+        click.echo(click.style(f"\n[ERROR] {e}", fg="red", bold=True))
+        sys.exit(1)
+
+
 if __name__ == '__main__':
     cli()

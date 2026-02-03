@@ -81,6 +81,15 @@ from digitalmodel.hydrodynamics.diffraction.geometry_quality import (
     GeometryQualityReport
 )
 
+# WRK-029: OrcaWave runner
+from digitalmodel.hydrodynamics.diffraction.orcawave_runner import (
+    OrcaWaveRunner,
+    RunConfig,
+    RunResult,
+    RunStatus,
+    run_orcawave,
+)
+
 # Test utilities (optional - for testing without OrcFxAPI)
 try:
     from digitalmodel.hydrodynamics.diffraction.orcawave_test_utilities import (
@@ -152,6 +161,13 @@ __all__ = [
     'extract_all_added_mass',
     'extract_all_damping',
     'TEST_UTILITIES_AVAILABLE',
+
+    # WRK-029: OrcaWave runner
+    'OrcaWaveRunner',
+    'RunConfig',
+    'RunResult',
+    'RunStatus',
+    'run_orcawave',
 ]
 
 __version__ = "3.0.0"
