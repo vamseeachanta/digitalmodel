@@ -6,8 +6,6 @@ Handles two redirect layers:
 
 Usage:
     import digitalmodel._compat  # activates aliases
-    # or
-    digitalmodel._compat.install_aliases()
 """
 
 import importlib
@@ -86,9 +84,10 @@ _FLAT_TO_GROUP: dict[str, str] = {
     "gmsh_meshing": "solvers",
     "blender_automation": "solvers",
     # hydrodynamics/
+    # NOTE: "hydrodynamics" itself is excluded — it is a group name and is
+    # caught by the skip set in _GroupRedirectFinder.find_spec before lookup.
     "aqwa": "hydrodynamics",
     "diffraction": "hydrodynamics",
-    "hydrodynamics": "hydrodynamics",
     "rao_analysis": "hydrodynamics",
     "bemrosetta": "hydrodynamics",
     # structural/
@@ -142,7 +141,8 @@ _FLAT_TO_GROUP: dict[str, str] = {
     "mcp_server": "workflows",
     "skills": "workflows",
     # visualization/
-    "visualization": "visualization",
+    # NOTE: "visualization" itself is excluded — it is a group name and is
+    # caught by the skip set in _GroupRedirectFinder.find_spec before lookup.
     "reporting": "visualization",
     "design_tools": "visualization",
     # specialized/
@@ -167,38 +167,6 @@ def register_moved_module(name: str) -> None:
     _MOVED_MODULES.add(name)
 
 
-def install_aliases() -> None:
-    """Install sys.modules aliases for all moved modules.
-
-    After calling this, `import digitalmodel.modules.X` will resolve
-    to `digitalmodel.X` with a deprecation warning on first access.
-    """
-    # Patch digitalmodel.modules.__getattr__ for lazy aliasing
-    modules_pkg = sys.modules.get("digitalmodel.modules")
-    if modules_pkg is not None:
-        original_getattr = getattr(modules_pkg, "__getattr__", None)
-
-        def _patched_getattr(name: str):
-            if name in _MOVED_MODULES:
-                warnings.warn(
-                    f"digitalmodel.modules.{name} is deprecated. "
-                    f"Use digitalmodel.{name} instead.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                mod = importlib.import_module(f"digitalmodel.{name}")
-                # Cache in sys.modules so subsequent imports don't warn again
-                sys.modules[f"digitalmodel.modules.{name}"] = mod
-                return mod
-            if original_getattr is not None:
-                return original_getattr(name)
-            raise AttributeError(
-                f"module 'digitalmodel.modules' has no attribute {name!r}"
-            )
-
-        modules_pkg.__getattr__ = _patched_getattr
-
-
 def is_moved(name: str) -> bool:
     """Check if a module name has been registered as moved."""
     return name in _MOVED_MODULES
@@ -212,6 +180,24 @@ def get_moved_modules() -> frozenset[str]:
 # ── Layer 2 compat: digitalmodel.X -> digitalmodel.<group>.X ─────────
 
 _group_warned: set[str] = set()
+_finding: set[str] = set()  # Re-entrancy guard for _GroupRedirectFinder.find_spec
+
+
+def warn_flat_import(module_name: str, group: str) -> None:
+    """Emit deprecation warning for flat namespace import.
+
+    Called from digitalmodel.__init__.__getattr__ so that
+    ``from digitalmodel import orcaflex`` also warns consistently
+    with the finder-based ``import digitalmodel.orcaflex`` path.
+    """
+    if module_name not in _group_warned:
+        _group_warned.add(module_name)
+        warnings.warn(
+            f"digitalmodel.{module_name} is deprecated. "
+            f"Use digitalmodel.{group}.{module_name} instead.",
+            DeprecationWarning,
+            stacklevel=4,  # __getattr__ -> warn_flat_import -> user code
+        )
 
 
 class _GroupRedirectLoader(importlib.abc.Loader):
@@ -250,6 +236,11 @@ class _GroupRedirectFinder(importlib.abc.MetaPathFinder):
     _PREFIX = "digitalmodel."
 
     def find_spec(self, fullname, path, target=None):
+        # Re-entrancy guard: if we are already resolving this name,
+        # return None to let the normal import machinery handle it.
+        if fullname in _finding:
+            return None
+
         if not fullname.startswith(self._PREFIX):
             return None
 
@@ -276,10 +267,13 @@ class _GroupRedirectFinder(importlib.abc.MetaPathFinder):
         new_fullname = f"digitalmodel.{group}.{remainder}"
 
         # Only redirect if the grouped path actually exists
+        _finding.add(fullname)
         try:
             spec = importlib.util.find_spec(new_fullname)
         except (ModuleNotFoundError, ValueError):
             spec = None
+        finally:
+            _finding.discard(fullname)
 
         if spec is None:
             return None

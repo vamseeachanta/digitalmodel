@@ -15,6 +15,7 @@ Usage:
 import importlib
 import importlib.abc
 import importlib.machinery
+import importlib.util
 import sys
 import warnings
 
@@ -81,20 +82,38 @@ class _ModulesRedirectFinder(importlib.abc.MetaPathFinder):
             if top_module in _MOVED_MODULES:
                 new_name = f"digitalmodel.{remainder}"
                 loader = _RedirectLoader(new_name, fullname)
+                is_pkg = self._check_is_package(new_name, remainder)
                 return importlib.machinery.ModuleSpec(
                     fullname, loader,
-                    is_package="." not in remainder,
+                    is_package=is_pkg,
                 )
             if top_module in _RENAMED_MODULES:
                 new_top = _RENAMED_MODULES[top_module]
                 sub = remainder[len(top_module):]  # e.g. ".submod" or ""
                 new_name = f"digitalmodel.{new_top}{sub}"
                 loader = _RedirectLoader(new_name, fullname)
+                is_pkg = self._check_is_package(new_name, remainder)
                 return importlib.machinery.ModuleSpec(
                     fullname, loader,
-                    is_package="." not in remainder,
+                    is_package=is_pkg,
                 )
         return None
+
+    @staticmethod
+    def _check_is_package(canonical_name: str, remainder: str) -> bool:
+        """Determine is_package by querying the real spec for the target module.
+
+        Falls back to the '.' heuristic if the real spec cannot be resolved
+        (e.g., the module hasn't been moved yet).
+        """
+        try:
+            real_spec = importlib.util.find_spec(canonical_name)
+        except (ModuleNotFoundError, ValueError):
+            real_spec = None
+        if real_spec is not None:
+            return real_spec.submodule_search_locations is not None
+        # Fallback: top-level names (no dot) are typically packages
+        return "." not in remainder
 
 
 # Install the finder once at import time

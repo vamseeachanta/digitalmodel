@@ -9,7 +9,7 @@ __version__ = "0.0.9"
 from . import modules
 
 # Install Layer 2 group redirect finder (flat -> grouped paths)
-from ._compat import _FLAT_TO_GROUP, install_group_redirect
+from ._compat import _FLAT_TO_GROUP, install_group_redirect, warn_flat_import
 
 install_group_redirect()
 
@@ -47,8 +47,11 @@ def __getattr__(name):
 
         group = _FLAT_TO_GROUP[name]
         try:
-            return importlib.import_module(f"digitalmodel.{group}.{name}")
+            mod = importlib.import_module(f"digitalmodel.{group}.{name}")
         except ImportError:
             # Module not yet moved to group — fall through to normal resolution
             pass
+        else:
+            warn_flat_import(name, group)
+            return mod
     raise AttributeError(f"module 'digitalmodel' has no attribute {name!r}")

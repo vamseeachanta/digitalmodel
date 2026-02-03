@@ -33,7 +33,7 @@ EXPECTED_GROUPS = {
     "specialized",
 }
 
-EXPECTED_MODULE_COUNT = 66  # 66 modules mapped to groups
+EXPECTED_MODULE_COUNT = 64  # 64 modules mapped to groups (group-named modules excluded)
 
 
 class TestFlatToGroupMapping:
@@ -58,7 +58,6 @@ class TestFlatToGroupMapping:
         assert get_group_for_module("common") == "infrastructure"
         assert get_group_for_module("data_scraping") == "data_systems"
         assert get_group_for_module("automation") == "workflows"
-        assert get_group_for_module("visualization") == "visualization"
         assert get_group_for_module("gis") == "specialized"
         assert get_group_for_module("marine_analysis") == "marine_ops"
 
