@@ -17,7 +17,7 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 repo_root = Path("D:/workspace-hub/digitalmodel")
 sys.path.insert(0, str(repo_root / "src"))
 
-from digitalmodel.orcaflex.modular_input_validation.level_1_yaml import Level1YAMLValidator
+from digitalmodel.solvers.orcaflex.modular_input_validation.level_1_yaml import Level1YAMLValidator
 
 def test_level1_validation():
     """Test Level 1 YAML validation on CALM Buoy base file"""

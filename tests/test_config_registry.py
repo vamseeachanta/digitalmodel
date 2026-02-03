@@ -28,8 +28,8 @@ import json
 
 # Import will fail initially (TDD - tests first!)
 try:
-    from digitalmodel.config.registry import ConfigRegistry, ConfigValidationError
-    from digitalmodel.config.compat import load_config  # Backward compatibility shim
+    from digitalmodel.infrastructure.config.registry import ConfigRegistry, ConfigValidationError
+    from digitalmodel.infrastructure.config.compat import load_config  # Backward compatibility shim
 except ImportError:
     pytest.skip("ConfigRegistry not implemented yet", allow_module_level=True)
 

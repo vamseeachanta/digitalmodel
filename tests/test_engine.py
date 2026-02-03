@@ -39,26 +39,26 @@ def mock_imports():
         'orcfxapi',
         'ansys.mapdl',
         'ansys.dpf',
-        'digitalmodel.common.code_dnvrph103_hydrodynamics_circular',
-        'digitalmodel.common.code_dnvrph103_hydrodynamics_rectangular',
-        'digitalmodel.signal_analysis.fatigue',
-        'digitalmodel.common.ship_design',
+        'digitalmodel.infrastructure.common.code_dnvrph103_hydrodynamics_circular',
+        'digitalmodel.infrastructure.common.code_dnvrph103_hydrodynamics_rectangular',
+        'digitalmodel.signal_processing.signal_analysis.fatigue',
+        'digitalmodel.infrastructure.common.ship_design',
         'digitalmodel.modules.mooring.mooring',
-        'digitalmodel.orcaflex.orcaflex',
-        'digitalmodel.orcaflex.orcaflex_file_management',
-        'digitalmodel.orcaflex.orcaflex_installation',
-        'digitalmodel.orcaflex.orcaflex_modal_analysis',
-        'digitalmodel.orcaflex.umbilical_analysis_components',
-        'digitalmodel.pipe_capacity.pipe_capacity',
-        'digitalmodel.pipeline.pipeline',
-        'digitalmodel.rao_analysis.rao_analysis',
-        'digitalmodel.time_series.time_series_analysis',
-        'digitalmodel.transformation.transformation',
-        'digitalmodel.vertical_riser.vertical_riser',
-        'digitalmodel.viv_analysis.viv_analysis',
-        'digitalmodel.common.plate_buckling',
+        'digitalmodel.solvers.orcaflex.orcaflex',
+        'digitalmodel.solvers.orcaflex.orcaflex_file_management',
+        'digitalmodel.solvers.orcaflex.orcaflex_installation',
+        'digitalmodel.solvers.orcaflex.orcaflex_modal_analysis',
+        'digitalmodel.solvers.orcaflex.umbilical_analysis_components',
+        'digitalmodel.structural.pipe_capacity.pipe_capacity',
+        'digitalmodel.subsea.pipeline.pipeline',
+        'digitalmodel.hydrodynamics.rao_analysis.rao_analysis',
+        'digitalmodel.signal_processing.time_series.time_series_analysis',
+        'digitalmodel.infrastructure.transformation.transformation',
+        'digitalmodel.subsea.vertical_riser.vertical_riser',
+        'digitalmodel.subsea.viv_analysis.viv_analysis',
+        'digitalmodel.infrastructure.common.plate_buckling',
         'digitalmodel.aqwa',
-        'digitalmodel.common.cathodic_protection',
+        'digitalmodel.infrastructure.common.cathodic_protection',
         'assetutilities.common.ApplicationManager',
         'assetutilities.common.data',
         'assetutilities.common.file_management',
@@ -197,7 +197,7 @@ class TestEngineConfiguration:
 
         # Test quiet mode
         with patch('digitalmodel.engine.get_output_level_from_argv') as mock_output:
-            from digitalmodel.orcaflex.output_control import OutputController
+            from digitalmodel.solvers.orcaflex.output_control import OutputController
             mock_output.return_value = OutputController.QUIET
 
             with patch('digitalmodel.engine.Mooring') as mock_mooring:
@@ -238,8 +238,8 @@ class TestModuleRouting:
         """Test routing to catenary module."""
         cfg = {"basename": "catenary_analysis"}
 
-        # Catenary is dynamically imported inside the function from digitalmodel.catenary.catenary
-        with patch('digitalmodel.catenary.catenary.Catenary') as mock_catenary:
+        # Catenary is dynamically imported inside the function from digitalmodel.subsea.catenary.catenary
+        with patch('digitalmodel.subsea.catenary.catenary.Catenary') as mock_catenary:
             mock_instance = MagicMock()
             mock_instance.router.return_value = cfg
             mock_catenary.return_value = mock_instance
@@ -517,7 +517,7 @@ class TestDynamicImports:
         sys.modules['digitalmodel.custom.rigging_components'] = mock_components
 
         # Now we can safely patch the rigging module path
-        with patch('digitalmodel.rigging.rigging.Rigging') as mock_rigging:
+        with patch('digitalmodel.specialized.rigging.rigging.Rigging') as mock_rigging:
             mock_instance = MagicMock()
             mock_instance.get_rigging_groups.return_value = cfg
             mock_rigging.return_value = mock_instance
@@ -534,8 +534,8 @@ class TestDynamicImports:
         """Test catenary module with dynamic import."""
         cfg = {"basename": "catenary_special"}
 
-        # Catenary is dynamically imported inside the function from digitalmodel.catenary.catenary
-        with patch('digitalmodel.catenary.catenary.Catenary') as mock_catenary:
+        # Catenary is dynamically imported inside the function from digitalmodel.subsea.catenary.catenary
+        with patch('digitalmodel.subsea.catenary.catenary.Catenary') as mock_catenary:
             mock_instance = MagicMock()
             mock_instance.router.return_value = cfg
             mock_catenary.return_value = mock_instance

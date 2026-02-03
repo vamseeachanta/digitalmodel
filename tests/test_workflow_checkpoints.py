@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from digitalmodel.automation.workflow_checkpoints import (
+from digitalmodel.workflows.automation.workflow_checkpoints import (
     AgentState,
     CheckpointMetadata,
     GitState,

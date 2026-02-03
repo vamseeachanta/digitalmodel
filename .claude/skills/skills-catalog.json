@@ -1,7 +1,28 @@
 {
   "version": "1.0.0",
-  "generated": "D:\\workspace-hub\\digitalmodel",
+  "generated": "/mnt/github/workspace-hub/digitalmodel",
   "skills": {
+    "orcaflex-extreme-analysis": {
+      "version": "1.0.0",
+      "description": "Extract extreme response values with linked statistics from OrcaFlex simulations. Use for design load identification, max/min extraction with associated values, and extreme event characterization.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {
+        "orcaflex-modeling": ">=2.0.0,<3.0.0",
+        "orcaflex-post-processing": ">=1.0.0,<2.0.0"
+      },
+      "keywords": [
+        "extreme analysis",
+        "max tension",
+        "linked statistics",
+        "extreme values",
+        "design loads",
+        "maximum response",
+        "associated values",
+        "peak extraction"
+      ]
+    },
     "aqwa-analysis": {
       "version": "3.0.0",
       "description": "Integrate with AQWA hydrodynamic software for RAO computation, damping analysis, and coefficient extraction. Use for AQWA file processing, RAO calculation, hydrodynamic coefficient extraction, and pre/post processing workflows.",
@@ -25,6 +46,26 @@
         ".LIS files",
         ".DAT files",
         ".MES files"
+      ]
+    },
+    "bemrosetta": {
+      "version": "1.0.0",
+      "description": "BEMRosetta hydrodynamic coefficient converter - AQWA to OrcaFlex workflow with QTF and mesh support",
+      "category": "offshore-engineering",
+      "python_min_version": null,
+      "orcaflex_version": null,
+      "dependencies": {},
+      "keywords": [
+        "bemrosetta",
+        "hydrodynamic conversion",
+        "AQWA to OrcaFlex",
+        "coefficient converter",
+        "QTF conversion",
+        "mesh format conversion",
+        "GDF to STL",
+        "panel mesh",
+        "Kramers-Kronig",
+        "causality check"
       ]
     },
     "cad-engineering": {
@@ -82,6 +123,25 @@
         "DNV-RP-B401",
         "coating breakdown",
         "stray current"
+      ]
+    },
+    "diffraction-analysis": {
+      "version": "1.0.0",
+      "description": "Master skill for hydrodynamic diffraction analysis - AQWA, OrcaWave, and BEMRosetta integration",
+      "category": "offshore-engineering",
+      "python_min_version": null,
+      "orcaflex_version": null,
+      "dependencies": {},
+      "keywords": [
+        "diffraction analysis",
+        "hydrodynamic analysis",
+        "RAO analysis",
+        "added mass",
+        "radiation damping",
+        "wave forces",
+        "BEM solver",
+        "panel method",
+        "frequency domain"
       ]
     },
     "fatigue-analysis": {
@@ -222,27 +282,6 @@
         "seabed properties"
       ]
     },
-    "orcaflex-extreme-analysis": {
-      "version": "1.0.0",
-      "description": "Extract extreme response values with linked statistics from OrcaFlex simulations. Use for design load identification, max/min extraction with associated values, and extreme event characterization.",
-      "category": "offshore-engineering",
-      "python_min_version": "3.10",
-      "orcaflex_version": ">=11.0",
-      "dependencies": {
-        "orcaflex-modeling": ">=2.0.0,<3.0.0",
-        "orcaflex-post-processing": ">=1.0.0,<2.0.0"
-      },
-      "keywords": [
-        "extreme analysis",
-        "max tension",
-        "linked statistics",
-        "extreme values",
-        "design loads",
-        "maximum response",
-        "associated values",
-        "peak extraction"
-      ]
-    },
     "orcaflex-file-conversion": {
       "version": "1.0.0",
       "description": "Convert OrcaFlex files between formats (.dat, .yml, .sim) for digital analysis and automation. Supports bidirectional conversion, batch processing, and format standardization.",
@@ -359,6 +398,22 @@
         ".yml model files",
         ".dat model files",
         ".sim simulation files"
+      ]
+    },
+    "orcaflex-monolithic-to-modular": {
+      "version": "1.0.0",
+      "description": "Convert monolithic OrcaFlex YAML files to modular include format for maintainability, reusability, and parametric analysis.",
+      "category": "offshore-engineering",
+      "python_min_version": "3.10",
+      "orcaflex_version": ">=11.0",
+      "dependencies": {},
+      "keywords": [
+        "convert monolithic to modular",
+        "split OrcaFlex YAML",
+        "modularize OrcaFlex model",
+        "create OrcaFlex includes",
+        "reverse engineer OrcaFlex YAML",
+        "prepare modular model"
       ]
     },
     "orcaflex-mooring-iteration": {

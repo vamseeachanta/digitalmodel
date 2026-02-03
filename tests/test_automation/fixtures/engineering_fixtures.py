@@ -311,7 +311,7 @@ def get_engineering_fixture(fixture_name: str) -> Dict[str, Any]:
 
 # Engineering-specific mock patterns that can be applied to new tests
 MOCK_PATTERNS = {
-    'orcaflex_license_check': "patch('digitalmodel.orcaflex.orcaflex_utilities.OrcaflexUtilities.is_orcaflex_available')",
+    'orcaflex_license_check': "patch('digitalmodel.solvers.orcaflex.orcaflex_utilities.OrcaflexUtilities.is_orcaflex_available')",
     'engine_mock': "patch('digitalmodel.engine.engine')",
     'basic_test_structure': '''
 def run_{module_name}(input_file, expected_result={}):

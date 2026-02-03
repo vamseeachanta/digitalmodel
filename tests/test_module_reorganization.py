@@ -44,7 +44,7 @@ class TestProfilingModule:
     def test_profile_modules_import(self):
         """Test profile_modules can be imported."""
         try:
-            from digitalmodel.marine_analysis.profiling import profile_modules
+            from digitalmodel.marine_ops.marine_analysis.profiling import profile_modules
             assert profile_modules is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -52,7 +52,7 @@ class TestProfilingModule:
     def test_performance_charts_import(self):
         """Test performance_charts can be imported."""
         try:
-            from digitalmodel.marine_analysis.profiling import performance_charts
+            from digitalmodel.marine_ops.marine_analysis.profiling import performance_charts
             assert performance_charts is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -60,7 +60,7 @@ class TestProfilingModule:
     def test_optimization_report_import(self):
         """Test optimization_report can be imported."""
         try:
-            from digitalmodel.marine_analysis.profiling import optimization_report
+            from digitalmodel.marine_ops.marine_analysis.profiling import optimization_report
             assert optimization_report is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -72,7 +72,7 @@ class TestExtractionModule:
     def test_extract_ocimf_import(self):
         """Test extract_ocimf can be imported."""
         try:
-            from digitalmodel.marine_analysis.extraction import extract_ocimf
+            from digitalmodel.marine_ops.marine_analysis.extraction import extract_ocimf
             assert extract_ocimf is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -80,7 +80,7 @@ class TestExtractionModule:
     def test_extract_hydro_import(self):
         """Test extract_hydro can be imported."""
         try:
-            from digitalmodel.marine_analysis.extraction import extract_hydro
+            from digitalmodel.marine_ops.marine_analysis.extraction import extract_hydro
             assert extract_hydro is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -88,7 +88,7 @@ class TestExtractionModule:
     def test_extract_mooring_import(self):
         """Test extract_mooring can be imported."""
         try:
-            from digitalmodel.marine_analysis.extraction import extract_mooring
+            from digitalmodel.marine_ops.marine_analysis.extraction import extract_mooring
             assert extract_mooring is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -100,7 +100,7 @@ class TestValidationModule:
     def test_validate_phase2_import(self):
         """Test validate_phase2 can be imported."""
         try:
-            from digitalmodel.marine_analysis.validation import validate_phase2
+            from digitalmodel.marine_ops.marine_analysis.validation import validate_phase2
             assert validate_phase2 is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -108,7 +108,7 @@ class TestValidationModule:
     def test_validate_catenary_import(self):
         """Test validate_catenary can be imported."""
         try:
-            from digitalmodel.marine_analysis.validation import validate_catenary
+            from digitalmodel.marine_ops.marine_analysis.validation import validate_catenary
             assert validate_catenary is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -120,7 +120,7 @@ class TestVisualizationModule:
     def test_integration_charts_import(self):
         """Test integration_charts can be imported."""
         try:
-            from digitalmodel.marine_analysis.visualization import integration_charts
+            from digitalmodel.marine_ops.marine_analysis.visualization import integration_charts
             assert integration_charts is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -128,7 +128,7 @@ class TestVisualizationModule:
     def test_ocimf_charts_import(self):
         """Test ocimf_charts can be imported."""
         try:
-            from digitalmodel.marine_analysis.visualization import ocimf_charts
+            from digitalmodel.marine_ops.marine_analysis.visualization import ocimf_charts
             assert ocimf_charts is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -140,7 +140,7 @@ class TestAnalysisModule:
     def test_excel_analyzer_import(self):
         """Test excel_analyzer can be imported."""
         try:
-            from digitalmodel.marine_analysis.analysis import excel_analyzer
+            from digitalmodel.marine_ops.marine_analysis.analysis import excel_analyzer
             assert excel_analyzer is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")
@@ -148,7 +148,7 @@ class TestAnalysisModule:
     def test_hydro_usage_example_import(self):
         """Test hydro_usage_example can be imported."""
         try:
-            from digitalmodel.marine_analysis.analysis import hydro_usage_example
+            from digitalmodel.marine_ops.marine_analysis.analysis import hydro_usage_example
             assert hydro_usage_example is not None
         except ImportError as e:
             pytest.skip(f"Module import failed (dependencies may be missing): {e}")

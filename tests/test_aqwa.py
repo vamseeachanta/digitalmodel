@@ -56,9 +56,9 @@ class TestAqwaRouter:
             }
         }
 
-    @patch('digitalmodel.aqwa.a_pre')
-    @patch('digitalmodel.aqwa.a_post')
-    @patch('digitalmodel.aqwa.mes_files')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_pre')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_post')
+    @patch('digitalmodel.hydrodynamics.aqwa.mes_files')
     def test_router_no_processing(self, mock_mes, mock_post, mock_pre, aqwa_instance, base_cfg):
         """Test router when no processing flags are enabled."""
         # Mock get_cfg_with_master_data to return cfg unchanged
@@ -73,9 +73,9 @@ class TestAqwaRouter:
         # Assert configuration is returned
         assert result == base_cfg
 
-    @patch('digitalmodel.aqwa.a_pre')
-    @patch('digitalmodel.aqwa.a_post')
-    @patch('digitalmodel.aqwa.mes_files')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_pre')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_post')
+    @patch('digitalmodel.hydrodynamics.aqwa.mes_files')
     def test_router_preprocess_only(self, mock_mes, mock_post, mock_pre, aqwa_instance, base_cfg):
         """Test router when only preprocess flag is enabled."""
         cfg = copy.deepcopy(base_cfg)
@@ -93,9 +93,9 @@ class TestAqwaRouter:
 
         assert result == cfg
 
-    @patch('digitalmodel.aqwa.a_pre')
-    @patch('digitalmodel.aqwa.a_post')
-    @patch('digitalmodel.aqwa.mes_files')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_pre')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_post')
+    @patch('digitalmodel.hydrodynamics.aqwa.mes_files')
     def test_router_analysis_only(self, mock_mes, mock_post, mock_pre, aqwa_instance, base_cfg):
         """Test router when only analysis flag is enabled."""
         cfg = copy.deepcopy(base_cfg)
@@ -124,10 +124,10 @@ class TestAqwaRouter:
 
         assert result == cfg
 
-    @patch('digitalmodel.aqwa.a_pre')
-    @patch('digitalmodel.aqwa.a_post')
-    @patch('digitalmodel.aqwa.mes_files')
-    @patch('digitalmodel.aqwa.aqwa_router.ViscousDampingDetermination')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_pre')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_post')
+    @patch('digitalmodel.hydrodynamics.aqwa.mes_files')
+    @patch('digitalmodel.hydrodynamics.aqwa.aqwa_router.ViscousDampingDetermination')
     def test_router_analysis_viscous_damping_enabled(
         self,
         mock_viscous,
@@ -161,10 +161,10 @@ class TestAqwaRouter:
         mock_post.post_process_router.assert_not_called()
         mock_mes.router.assert_not_called()
 
-    @patch('digitalmodel.aqwa.a_pre')
-    @patch('digitalmodel.aqwa.a_post')
-    @patch('digitalmodel.aqwa.mes_files')
-    @patch('digitalmodel.aqwa.aqwa_router.ViscousDampingDetermination')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_pre')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_post')
+    @patch('digitalmodel.hydrodynamics.aqwa.mes_files')
+    @patch('digitalmodel.hydrodynamics.aqwa.aqwa_router.ViscousDampingDetermination')
     def test_router_analysis_viscous_damping_disabled_fallback(
         self,
         mock_viscous,
@@ -198,9 +198,9 @@ class TestAqwaRouter:
         mock_mes.router.assert_not_called()
         assert result == cfg
 
-    @patch('digitalmodel.aqwa.a_pre')
-    @patch('digitalmodel.aqwa.a_post')
-    @patch('digitalmodel.aqwa.mes_files')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_pre')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_post')
+    @patch('digitalmodel.hydrodynamics.aqwa.mes_files')
     def test_router_mes_flag_true(self, mock_mes, mock_post, mock_pre, aqwa_instance, base_cfg):
         """Test router when mes flag is enabled."""
         cfg = copy.deepcopy(base_cfg)
@@ -218,9 +218,9 @@ class TestAqwaRouter:
 
         assert result == cfg
 
-    @patch('digitalmodel.aqwa.a_pre')
-    @patch('digitalmodel.aqwa.a_post')
-    @patch('digitalmodel.aqwa.mes_files')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_pre')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_post')
+    @patch('digitalmodel.hydrodynamics.aqwa.mes_files')
     def test_router_mes_flag_false(self, mock_mes, mock_post, mock_pre, aqwa_instance, base_cfg):
         """Test router when mes flag is disabled."""
         cfg = copy.deepcopy(base_cfg)
@@ -234,9 +234,9 @@ class TestAqwaRouter:
 
         assert result == cfg
 
-    @patch('digitalmodel.aqwa.a_pre')
-    @patch('digitalmodel.aqwa.a_post')
-    @patch('digitalmodel.aqwa.mes_files')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_pre')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_post')
+    @patch('digitalmodel.hydrodynamics.aqwa.mes_files')
     def test_router_no_mes_key(self, mock_mes, mock_post, mock_pre, aqwa_instance, base_cfg):
         """Test router when mes key is not present."""
         cfg = copy.deepcopy(base_cfg)
@@ -250,9 +250,9 @@ class TestAqwaRouter:
 
         assert result == cfg
 
-    @patch('digitalmodel.aqwa.a_pre')
-    @patch('digitalmodel.aqwa.a_post')
-    @patch('digitalmodel.aqwa.mes_files')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_pre')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_post')
+    @patch('digitalmodel.hydrodynamics.aqwa.mes_files')
     def test_router_results_only(self, mock_mes, mock_post, mock_pre, aqwa_instance, base_cfg):
         """Test router when only results flag is enabled."""
         cfg = copy.deepcopy(base_cfg)
@@ -277,9 +277,9 @@ class TestAqwaRouter:
         assert result == modified_cfg
         assert result["processed"] is True
 
-    @patch('digitalmodel.aqwa.a_pre')
-    @patch('digitalmodel.aqwa.a_post')
-    @patch('digitalmodel.aqwa.mes_files')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_pre')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_post')
+    @patch('digitalmodel.hydrodynamics.aqwa.mes_files')
     def test_router_all_flags_enabled(self, mock_mes, mock_post, mock_pre, aqwa_instance, base_cfg):
         """Test router when all processing flags are enabled."""
         cfg = copy.deepcopy(base_cfg)
@@ -328,9 +328,9 @@ class TestAqwaRouter:
         (False, True, True, False, ["analysis", "post"]),
         (True, True, True, True, ["pre", "analysis", "mes", "post"]),
     ])
-    @patch('digitalmodel.aqwa.a_pre')
-    @patch('digitalmodel.aqwa.a_post')
-    @patch('digitalmodel.aqwa.mes_files')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_pre')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_post')
+    @patch('digitalmodel.hydrodynamics.aqwa.mes_files')
     def test_router_parametrized_configurations(self, mock_mes, mock_post, mock_pre,
                                               aqwa_instance, base_cfg,
                                               preprocess, analysis, results, mes_flag, expected_calls):
@@ -417,7 +417,7 @@ class TestGetCfgWithMasterData:
             }
         }
 
-        with patch('digitalmodel.aqwa.update_deep_dictionary') as mock_update:
+        with patch('digitalmodel.hydrodynamics.aqwa.update_deep_dictionary') as mock_update:
             # Mock update_deep_dictionary to return a merged result
             mock_update.side_effect = lambda master, group: {**master, **group}
 
@@ -445,7 +445,7 @@ class TestGetCfgWithMasterData:
             ]
         }
 
-        with patch('digitalmodel.aqwa.update_deep_dictionary') as mock_update:
+        with patch('digitalmodel.hydrodynamics.aqwa.update_deep_dictionary') as mock_update:
             # Mock update_deep_dictionary to return merged results
             mock_update.side_effect = lambda dict1, dict2: {**dict1, **dict2}
 
@@ -477,7 +477,7 @@ class TestGetCfgWithMasterData:
             ]
         }
 
-        with patch('digitalmodel.aqwa.update_deep_dictionary') as mock_update:
+        with patch('digitalmodel.hydrodynamics.aqwa.update_deep_dictionary') as mock_update:
             mock_update.side_effect = lambda dict1, dict2: {**dict1, **dict2}
 
             result = aqwa_instance.get_cfg_with_master_data(cfg)
@@ -517,7 +517,7 @@ class TestGetCfgWithMasterData:
             ]
         }
 
-        with patch('digitalmodel.aqwa.update_deep_dictionary') as mock_update:
+        with patch('digitalmodel.hydrodynamics.aqwa.update_deep_dictionary') as mock_update:
             mock_update.side_effect = lambda dict1, dict2: {**dict1, **dict2}
 
             result = aqwa_instance.get_cfg_with_master_data(cfg)
@@ -527,7 +527,7 @@ class TestGetCfgWithMasterData:
         # Update should be called twice per group (6 total calls)
         assert mock_update.call_count == 6
 
-    @patch('digitalmodel.aqwa.update_deep_dictionary')
+    @patch('digitalmodel.hydrodynamics.aqwa.update_deep_dictionary')
     def test_get_cfg_with_master_data_update_deep_dictionary_called_correctly(self, mock_update, aqwa_instance):
         """Test that update_deep_dictionary is called with correct arguments."""
         cfg = {
@@ -578,7 +578,7 @@ class TestAqwaEdgeCases:
         with pytest.raises(TypeError):
             aqwa_instance.router(cfg)
 
-    @patch('digitalmodel.aqwa.a_post')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_post')
     def test_router_partial_type_keys(self, mock_post, aqwa_instance):
         """Test router with partial type keys."""
         cfg = {
@@ -689,10 +689,10 @@ class TestAqwaIntegration:
             ]
         }
 
-    @patch('digitalmodel.aqwa.a_pre')
-    @patch('digitalmodel.aqwa.a_post')
-    @patch('digitalmodel.aqwa.mes_files')
-    @patch('digitalmodel.aqwa.update_deep_dictionary')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_pre')
+    @patch('digitalmodel.hydrodynamics.aqwa.a_post')
+    @patch('digitalmodel.hydrodynamics.aqwa.mes_files')
+    @patch('digitalmodel.hydrodynamics.aqwa.update_deep_dictionary')
     def test_complete_workflow_integration(self, mock_update, mock_mes, mock_post,
                                          mock_pre, aqwa_instance, complete_cfg):
         """Test complete workflow with all components enabled."""
@@ -739,8 +739,8 @@ class TestAqwaIntegration:
             "initial_state": "preserved"
         }
 
-        with patch('digitalmodel.aqwa.a_pre') as mock_pre, \
-             patch('digitalmodel.aqwa.a_post') as mock_post:
+        with patch('digitalmodel.hydrodynamics.aqwa.a_pre') as mock_pre, \
+             patch('digitalmodel.hydrodynamics.aqwa.a_post') as mock_post:
 
             # Mock post processor to verify state is passed through
             def verify_state(passed_cfg):
@@ -783,7 +783,7 @@ class TestAqwaPerformance:
             }
         }
 
-        with patch('digitalmodel.aqwa.update_deep_dictionary') as mock_update:
+        with patch('digitalmodel.hydrodynamics.aqwa.update_deep_dictionary') as mock_update:
             mock_update.side_effect = lambda dict1, dict2: {**dict1, **dict2}
 
             # This should complete without timeout or memory issues
