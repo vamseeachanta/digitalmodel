@@ -3,13 +3,13 @@ name: Workflow Automation Tests
 on:
   push:
     paths:
-      - 'src/digitalmodel/modules/workflow_automation/**'
-      - 'tests/modules/workflow_automation/**'
+      - 'src/digitalmodel/workflows/workflow_automation/**'
+      - 'tests/workflows/workflow_automation/**'
       - '.github/workflows/workflow-automation-tests.yml'
   pull_request:
     paths:
-      - 'src/digitalmodel/modules/workflow_automation/**'
-      - 'tests/modules/workflow_automation/**'
+      - 'src/digitalmodel/workflows/workflow_automation/**'
+      - 'tests/workflows/workflow_automation/**'
 
 jobs:
   test:
@@ -43,7 +43,7 @@ jobs:
 
     - name: Run workflow automation tests
       run: |
-        pytest tests/modules/workflow_automation/ -v --cov=digitalmodel.modules.workflow_automation --cov-report=xml --cov-report=term
+        pytest tests/workflows/workflow_automation/ -v --cov=digitalmodel.workflows.workflow_automation --cov-report=xml --cov-report=term
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
@@ -59,4 +59,4 @@ jobs:
 
     - name: Verify package installation
       run: |
-        python -c "from digitalmodel.modules.workflow_automation import WorkflowOrchestrator, CompleteRiserAnalysisWorkflow; print('✓ Workflow automation module installed')"
+        python -c "from digitalmodel.workflows.workflow_automation import WorkflowOrchestrator, CompleteRiserAnalysisWorkflow; print('✓ Workflow automation module installed')"
