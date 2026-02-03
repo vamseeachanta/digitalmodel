@@ -90,6 +90,31 @@ from digitalmodel.hydrodynamics.diffraction.orcawave_runner import (
     run_orcawave,
 )
 
+# WRK-025: AQWA runner
+from digitalmodel.hydrodynamics.diffraction.aqwa_runner import (
+    AQWARunner,
+    AQWARunConfig,
+    AQWARunResult,
+    AQWARunStatus,
+    run_aqwa,
+)
+
+# WRK-027 + WRK-028: AQWA batch runner + postprocessing
+from digitalmodel.hydrodynamics.diffraction.aqwa_result_extractor import (
+    AQWAResultExtractor,
+    AQWAExtractionResult,
+)
+from digitalmodel.hydrodynamics.diffraction.aqwa_batch_runner import (
+    AQWABatchRunner,
+    AQWABatchConfig,
+    AQWABatchJobConfig,
+    AQWABatchJobResult,
+    AQWABatchReport,
+    AQWAExecutionMode,
+    run_aqwa_batch,
+    run_aqwa_batch_from_specs,
+)
+
 # WRK-030: Batch runner + postprocessing
 from digitalmodel.hydrodynamics.diffraction.result_extractor import (
     ResultExtractor,
@@ -186,6 +211,25 @@ __all__ = [
     'RunResult',
     'RunStatus',
     'run_orcawave',
+
+    # WRK-025: AQWA runner
+    'AQWARunner',
+    'AQWARunConfig',
+    'AQWARunResult',
+    'AQWARunStatus',
+    'run_aqwa',
+
+    # WRK-027 + WRK-028: AQWA batch runner + postprocessing
+    'AQWAResultExtractor',
+    'AQWAExtractionResult',
+    'AQWABatchRunner',
+    'AQWABatchConfig',
+    'AQWABatchJobConfig',
+    'AQWABatchJobResult',
+    'AQWABatchReport',
+    'AQWAExecutionMode',
+    'run_aqwa_batch',
+    'run_aqwa_batch_from_specs',
 
     # WRK-030: Batch runner + postprocessing
     'ResultExtractor',

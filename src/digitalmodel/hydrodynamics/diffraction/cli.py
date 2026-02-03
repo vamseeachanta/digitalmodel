@@ -597,6 +597,199 @@ def run_orcawave_cmd(spec_path, output, dry_run, timeout, executable, modular):
 
 
 # ---------------------------------------------------------------------------
+# WRK-025: AQWA runner command
+# ---------------------------------------------------------------------------
+
+
+@cli.command("run-aqwa")
+@click.argument("spec_path", type=click.Path(exists=True))
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    default="output",
+    help="Output directory (default: output)",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Generate files only; do not invoke the solver.",
+)
+@click.option(
+    "--timeout",
+    "-t",
+    type=int,
+    default=7200,
+    help="Solver timeout in seconds (default: 7200)",
+)
+@click.option(
+    "--executable",
+    type=click.Path(),
+    default=None,
+    help="Explicit path to AQWA executable.",
+)
+@click.option(
+    "--nowind/--no-nowind",
+    default=True,
+    help="Pass /nowind flag for headless mode (default: --nowind)",
+)
+def run_aqwa_cmd(spec_path, output, dry_run, timeout, executable, nowind):
+    """Run an AQWA diffraction analysis from a DiffractionSpec YAML.
+
+    SPEC_PATH: Path to a spec.yml file conforming to DiffractionSpec schema.
+
+    Example:\n
+        diffraction run-aqwa analysis.yml --dry-run\n
+        diffraction run-aqwa analysis.yml -o ./results --timeout 3600
+    """
+    from digitalmodel.hydrodynamics.diffraction.aqwa_runner import (
+        AQWARunner,
+        AQWARunConfig,
+    )
+
+    click.echo("=" * 80)
+    click.echo("AQWA Runner")
+    click.echo("=" * 80)
+    click.echo(f"Spec file  : {spec_path}")
+    click.echo(f"Output     : {output}")
+    click.echo(f"Dry run    : {dry_run}")
+    click.echo(f"Timeout    : {timeout}s")
+    click.echo(f"Executable : {executable or 'auto-detect'}")
+    click.echo(f"Nowind     : {nowind}")
+    click.echo()
+
+    try:
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import (
+            DiffractionSpec,
+        )
+
+        spec = DiffractionSpec.from_yaml(Path(spec_path))
+        config = AQWARunConfig(
+            executable_path=Path(executable) if executable else None,
+            output_dir=Path(output),
+            dry_run=dry_run,
+            timeout_seconds=timeout,
+            nowind=nowind,
+        )
+        runner = AQWARunner(config)
+        result = runner.run(spec, spec_path=Path(spec_path))
+
+        status_color = "green" if result.status.value in ("completed", "dry_run") else "red"
+        click.echo(click.style(f"[{result.status.value.upper()}]", fg=status_color))
+        click.echo(f"  Input file : {result.input_file}")
+        click.echo(f"  Output dir : {result.output_dir}")
+        if result.mesh_files:
+            click.echo(f"  Mesh files : {len(result.mesh_files)} copied")
+        if result.lis_file:
+            click.echo(f"  LIS file   : {result.lis_file}")
+        if result.duration_seconds is not None:
+            click.echo(f"  Duration   : {result.duration_seconds:.2f}s")
+        if result.error_message:
+            click.echo(click.style(f"  Error      : {result.error_message}", fg="red"))
+
+    except Exception as e:
+        click.echo(click.style(f"\n[ERROR] {e}", fg="red", bold=True))
+        sys.exit(1)
+
+
+# ---------------------------------------------------------------------------
+# WRK-027: AQWA batch runner command
+# ---------------------------------------------------------------------------
+
+
+@cli.command("batch-aqwa")
+@click.argument("config_path", type=click.Path(exists=True))
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    default=None,
+    help="Override base output directory.",
+)
+@click.option(
+    "--mode",
+    type=click.Choice(["sequential", "parallel"], case_sensitive=False),
+    default=None,
+    help="Execution mode (default: from config or sequential).",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Run all jobs in dry-run mode.",
+)
+@click.option(
+    "--max-workers",
+    "-w",
+    type=int,
+    default=None,
+    help="Max parallel workers (default: from config or 4).",
+)
+def batch_aqwa_cmd(config_path, output, mode, dry_run, max_workers):
+    """Run AQWA batch analysis from a YAML configuration file.
+
+    CONFIG_PATH: Path to a batch configuration YAML file.
+
+    Example:\n
+        diffraction batch-aqwa batch.yml --dry-run\n
+        diffraction batch-aqwa batch.yml --mode parallel --max-workers 8
+    """
+    from digitalmodel.hydrodynamics.diffraction.aqwa_batch_runner import (
+        AQWABatchConfig,
+        AQWABatchRunner,
+        AQWAExecutionMode,
+    )
+
+    click.echo("=" * 80)
+    click.echo("AQWA Batch Runner")
+    click.echo("=" * 80)
+    click.echo(f"Config     : {config_path}")
+    click.echo(f"Output     : {output or 'from config'}")
+    click.echo(f"Mode       : {mode or 'from config'}")
+    click.echo(f"Dry run    : {dry_run}")
+    click.echo(f"Workers    : {max_workers or 'from config'}")
+    click.echo()
+
+    try:
+        cfg = AQWABatchConfig.from_yaml(Path(config_path))
+
+        if output:
+            cfg.base_output_dir = Path(output)
+        if mode:
+            cfg.execution_mode = AQWAExecutionMode(mode)
+        if max_workers:
+            cfg.max_workers = max_workers
+        if dry_run:
+            for job in cfg.jobs:
+                job.dry_run = True
+            cfg.run_config.dry_run = True
+
+        runner = AQWABatchRunner(cfg)
+        report = runner.run()
+
+        click.echo("\n" + "=" * 80)
+        click.echo("Batch Results")
+        click.echo("=" * 80)
+        click.echo(f"Total jobs  : {report.total_jobs}")
+        click.echo(click.style(f"Successful  : {report.successful}", fg="green"))
+        if report.failed > 0:
+            click.echo(click.style(f"Failed      : {report.failed}", fg="red"))
+        if report.skipped > 0:
+            click.echo(f"Skipped     : {report.skipped}")
+        click.echo(f"Duration    : {report.total_duration:.2f}s")
+
+        # Export report
+        report_path = cfg.base_output_dir / "batch_report.json"
+        runner.export_report(report, report_path)
+        click.echo(f"Report      : {report_path}")
+
+    except Exception as e:
+        click.echo(click.style(f"\n[ERROR] {e}", fg="red", bold=True))
+        sys.exit(1)
+
+
+# ---------------------------------------------------------------------------
 # WRK-030: Batch runner + RAO plotter commands
 # ---------------------------------------------------------------------------
 
