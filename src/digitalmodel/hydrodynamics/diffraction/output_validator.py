@@ -12,10 +12,16 @@ from pathlib import Path
 import json
 
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+    DOF,
     DiffractionResults, RAOSet, AddedMassSet, DampingSet,
     validate_rao_completeness, validate_matrix_set,
     validate_diffraction_results
 )
+
+_TRANSLATION_DOFS = {DOF.SURGE, DOF.SWAY, DOF.HEAVE}
+_TRANSLATION_AMP_LIMIT = 3.0   # m/m
+_ROTATION_AMP_LIMIT = 15.0     # deg/m
+_SHARP_PEAK_RATIO = 10.0       # ratio to average of neighbours
 
 
 class OutputValidator:
@@ -59,6 +65,9 @@ class OutputValidator:
         # Symmetry checks
         symmetry_issues = self._validate_symmetry()
 
+        # Resonance checks (WRK-030)
+        resonance_issues = self._validate_resonance()
+
         # Compile comprehensive report
         self.validation_report = {
             'vessel_name': self.results.vessel_name,
@@ -70,9 +79,11 @@ class OutputValidator:
             'frequency_coverage': freq_issues,
             'heading_coverage': heading_issues,
             'symmetry_checks': symmetry_issues,
+            'resonance_checks': resonance_issues,
             'overall_status': self._determine_overall_status(
                 schema_issues, physical_issues, range_issues,
-                freq_issues, heading_issues, symmetry_issues
+                freq_issues, heading_issues, symmetry_issues,
+                resonance_issues,
             )
         }
 
@@ -263,6 +274,44 @@ class OutputValidator:
             issues['discretization'].append(
                 f"Only {heads.count} headings - recommend at least 8 for good directional resolution"
             )
+
+        return issues
+
+    def _validate_resonance(self) -> Dict[str, List[str]]:
+        """Check for resonance indicators: sharp peaks and excessive amplification."""
+        issues: Dict[str, List[str]] = {
+            "sharp_peaks": [],
+            "excessive_amplification": [],
+        }
+
+        for dof in DOF:
+            comp = self.results.raos.get_component(dof)
+            mag = comp.magnitude  # shape: (nfreq, nheading)
+            freqs = comp.frequencies.values
+            is_translation = dof in _TRANSLATION_DOFS
+            amp_limit = _TRANSLATION_AMP_LIMIT if is_translation else _ROTATION_AMP_LIMIT
+
+            for hi in range(mag.shape[1]):
+                heading = float(comp.headings.values[hi])
+
+                # Excessive amplification
+                max_val = float(np.max(mag[:, hi]))
+                if max_val > amp_limit:
+                    unit = "m/m" if is_translation else "deg/m"
+                    issues["excessive_amplification"].append(
+                        f"{dof.name}: {max_val:.2f} {unit} at heading {heading:.0f}° "
+                        f"exceeds {amp_limit} {unit}"
+                    )
+
+                # Sharp peaks (interior frequencies only)
+                for fi in range(1, mag.shape[0] - 1):
+                    val = mag[fi, hi]
+                    neighbour_avg = (mag[fi - 1, hi] + mag[fi + 1, hi]) / 2.0
+                    if neighbour_avg > 0 and val / neighbour_avg > _SHARP_PEAK_RATIO:
+                        issues["sharp_peaks"].append(
+                            f"{dof.name}: sharp peak at freq {freqs[fi]:.4f} rad/s, "
+                            f"heading {heading:.0f}° (ratio {val / neighbour_avg:.1f}x)"
+                        )
 
         return issues
 

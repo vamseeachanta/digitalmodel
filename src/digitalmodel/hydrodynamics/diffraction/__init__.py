@@ -90,6 +90,24 @@ from digitalmodel.hydrodynamics.diffraction.orcawave_runner import (
     run_orcawave,
 )
 
+# WRK-030: Batch runner + postprocessing
+from digitalmodel.hydrodynamics.diffraction.result_extractor import (
+    ResultExtractor,
+    ExtractionResult,
+)
+from digitalmodel.hydrodynamics.diffraction.orcawave_batch_runner import (
+    OrcaWaveBatchRunner,
+    OrcaWaveBatchConfig,
+    BatchJobConfig,
+    BatchJobResult,
+    OrcaWaveBatchReport,
+    ExecutionMode,
+    run_orcawave_batch,
+    run_orcawave_batch_from_specs,
+)
+from digitalmodel.hydrodynamics.diffraction.rao_plotter import RAOPlotter
+from digitalmodel.hydrodynamics.diffraction.polars_exporter import PolarsExporter
+
 # Test utilities (optional - for testing without OrcFxAPI)
 try:
     from digitalmodel.hydrodynamics.diffraction.orcawave_test_utilities import (
@@ -168,6 +186,20 @@ __all__ = [
     'RunResult',
     'RunStatus',
     'run_orcawave',
+
+    # WRK-030: Batch runner + postprocessing
+    'ResultExtractor',
+    'ExtractionResult',
+    'OrcaWaveBatchRunner',
+    'OrcaWaveBatchConfig',
+    'BatchJobConfig',
+    'BatchJobResult',
+    'OrcaWaveBatchReport',
+    'ExecutionMode',
+    'run_orcawave_batch',
+    'run_orcawave_batch_from_specs',
+    'RAOPlotter',
+    'PolarsExporter',
 ]
 
 __version__ = "3.0.0"

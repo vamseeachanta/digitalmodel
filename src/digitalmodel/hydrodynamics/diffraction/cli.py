@@ -20,7 +20,7 @@ from pathlib import Path
 import json
 import sys
 
-from digitalmodel.diffraction import (
+from digitalmodel.hydrodynamics.diffraction import (
     AQWAConverter,
     OrcaFlexExporter,
     validate_results,
@@ -28,7 +28,7 @@ from digitalmodel.diffraction import (
 )
 
 if ORCAWAVE_AVAILABLE:
-    from digitalmodel.diffraction import OrcaWaveConverter
+    from digitalmodel.hydrodynamics.diffraction import OrcaWaveConverter
 
 from digitalmodel.hydrodynamics.diffraction.comparison_framework import compare_diffraction_results
 from digitalmodel.hydrodynamics.diffraction.batch_processor import process_batch_from_config_file
@@ -590,6 +590,196 @@ def run_orcawave_cmd(spec_path, output, dry_run, timeout, executable, modular):
             click.echo(f"  Duration   : {result.duration_seconds:.2f}s")
         if result.error_message:
             click.echo(click.style(f"  Error      : {result.error_message}", fg="red"))
+
+    except Exception as e:
+        click.echo(click.style(f"\n[ERROR] {e}", fg="red", bold=True))
+        sys.exit(1)
+
+
+# ---------------------------------------------------------------------------
+# WRK-030: Batch runner + RAO plotter commands
+# ---------------------------------------------------------------------------
+
+
+@cli.command("batch-orcawave")
+@click.argument("config_path", type=click.Path(exists=True))
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    default=None,
+    help="Override base output directory.",
+)
+@click.option(
+    "--mode",
+    type=click.Choice(["sequential", "parallel"], case_sensitive=False),
+    default=None,
+    help="Execution mode (default: from config or sequential).",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Run all jobs in dry-run mode.",
+)
+@click.option(
+    "--max-workers",
+    "-w",
+    type=int,
+    default=None,
+    help="Max parallel workers (default: from config or 4).",
+)
+def batch_orcawave_cmd(config_path, output, mode, dry_run, max_workers):
+    """Run OrcaWave batch analysis from a YAML configuration file.
+
+    CONFIG_PATH: Path to a batch configuration YAML file.
+
+    Example:\n
+        diffraction batch-orcawave batch.yml --dry-run\n
+        diffraction batch-orcawave batch.yml --mode parallel --max-workers 8
+    """
+    from digitalmodel.hydrodynamics.diffraction.orcawave_batch_runner import (
+        OrcaWaveBatchConfig,
+        OrcaWaveBatchRunner,
+        ExecutionMode,
+    )
+
+    click.echo("=" * 80)
+    click.echo("OrcaWave Batch Runner")
+    click.echo("=" * 80)
+    click.echo(f"Config     : {config_path}")
+    click.echo(f"Output     : {output or 'from config'}")
+    click.echo(f"Mode       : {mode or 'from config'}")
+    click.echo(f"Dry run    : {dry_run}")
+    click.echo(f"Workers    : {max_workers or 'from config'}")
+    click.echo()
+
+    try:
+        cfg = OrcaWaveBatchConfig.from_yaml(Path(config_path))
+
+        if output:
+            cfg.base_output_dir = Path(output)
+        if mode:
+            cfg.execution_mode = ExecutionMode(mode)
+        if max_workers:
+            cfg.max_workers = max_workers
+        if dry_run:
+            for job in cfg.jobs:
+                job.dry_run = True
+            cfg.run_config.dry_run = True
+
+        runner = OrcaWaveBatchRunner(cfg)
+        report = runner.run()
+
+        click.echo("\n" + "=" * 80)
+        click.echo("Batch Results")
+        click.echo("=" * 80)
+        click.echo(f"Total jobs  : {report.total_jobs}")
+        click.echo(click.style(f"Successful  : {report.successful}", fg="green"))
+        if report.failed > 0:
+            click.echo(click.style(f"Failed      : {report.failed}", fg="red"))
+        if report.skipped > 0:
+            click.echo(f"Skipped     : {report.skipped}")
+        click.echo(f"Duration    : {report.total_duration:.2f}s")
+
+        # Export report
+        report_path = cfg.base_output_dir / "batch_report.json"
+        runner.export_report(report, report_path)
+        click.echo(f"Report      : {report_path}")
+
+    except Exception as e:
+        click.echo(click.style(f"\n[ERROR] {e}", fg="red", bold=True))
+        sys.exit(1)
+
+
+@cli.command("plot-raos")
+@click.argument("model_file", type=click.Path(exists=True))
+@click.option(
+    "--water-depth",
+    "-d",
+    type=float,
+    required=True,
+    help="Water depth in metres.",
+)
+@click.option(
+    "--vessel-name",
+    "-v",
+    type=str,
+    default=None,
+    help="Vessel name (auto-detect if not specified).",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    default="plots",
+    help="Output directory for HTML plots (default: plots).",
+)
+@click.option(
+    "--x-axis",
+    type=click.Choice(["period", "frequency"], case_sensitive=False),
+    default="period",
+    help="X-axis type (default: period).",
+)
+@click.option(
+    "--headings",
+    type=str,
+    default=None,
+    help="Comma-separated heading angles to plot, e.g. '0,45,90'.",
+)
+def plot_raos_cmd(model_file, water_depth, vessel_name, output, x_axis, headings):
+    """Generate interactive RAO plots from an OrcaFlex model file.
+
+    MODEL_FILE: Path to an OrcaFlex model file (.sim or .dat).
+
+    Example:\n
+        diffraction plot-raos model.sim -d 100\n
+        diffraction plot-raos model.sim -d 100 --x-axis frequency --headings 0,45,90
+    """
+    if not ORCAWAVE_AVAILABLE:
+        click.echo(click.style(
+            "[ERROR] OrcFxAPI not available. Install OrcaFlex with Python API.",
+            fg="red", bold=True,
+        ))
+        sys.exit(1)
+
+    click.echo("=" * 80)
+    click.echo("RAO Plotter")
+    click.echo("=" * 80)
+    click.echo(f"Model file  : {model_file}")
+    click.echo(f"Water depth : {water_depth} m")
+    click.echo(f"Vessel      : {vessel_name or 'auto-detect'}")
+    click.echo(f"Output      : {output}")
+    click.echo(f"X-axis      : {x_axis}")
+    click.echo(f"Headings    : {headings or 'all'}")
+    click.echo()
+
+    try:
+        from digitalmodel.hydrodynamics.diffraction.rao_plotter import RAOPlotter
+
+        converter = OrcaWaveConverter(
+            model_file=Path(model_file),
+            vessel_name=vessel_name,
+        )
+        results = converter.convert_to_unified_schema(water_depth=water_depth)
+        click.echo(click.style(
+            f"[OK] Loaded results for {results.vessel_name}", fg="green",
+        ))
+
+        heading_list = None
+        if headings:
+            heading_list = [float(h.strip()) for h in headings.split(",")]
+
+        plotter = RAOPlotter(results, Path(output), x_axis=x_axis)
+        paths = plotter.plot_all() if heading_list is None else [
+            plotter.plot_amplitude(headings=heading_list),
+            plotter.plot_phase(headings=heading_list),
+            plotter.plot_combined(headings=heading_list),
+        ]
+
+        click.echo(click.style(f"\n[OK] Generated {len(paths)} plots:", fg="green"))
+        for p in paths:
+            click.echo(f"  - {p}")
 
     except Exception as e:
         click.echo(click.style(f"\n[ERROR] {e}", fg="red", bold=True))
