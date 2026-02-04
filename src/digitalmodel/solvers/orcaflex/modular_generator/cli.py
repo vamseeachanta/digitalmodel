@@ -258,6 +258,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
             f'# Generated from: {input_path.name}',
             f'# Model: {spec.metadata.name}',
             '',
+            '---',
         ]
         for file_name in BuilderRegistry.get_include_order():
             master_lines.append(f'- includefile: includes/{file_name}')

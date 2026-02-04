@@ -208,23 +208,11 @@ def modular_model(modular_output_dir):
     The modular model (1 section, 0.5m mesh) is much lighter than the
     monolithic (6 sections, 0.1-0.5m mesh) and should converge within
     the slow_statics timeout.
-
-    Note: The generator omits the YAML ``---`` document separator that
-    OrcFxAPI requires before ``includefile`` directives. We patch the
-    file in-place before loading.
     """
     if not ORCAFLEX_AVAILABLE:
         pytest.skip("OrcFxAPI not available")
 
     master_path = modular_output_dir / "master.yml"
-
-    # Ensure YAML document separator exists before includefile directives.
-    text = master_path.read_text()
-    if "\n---\n" not in text:
-        text = text.replace(
-            "\n- includefile:", "\n---\n- includefile:", 1
-        )
-        master_path.write_text(text)
 
     model = OrcFxAPI.Model()
     try:

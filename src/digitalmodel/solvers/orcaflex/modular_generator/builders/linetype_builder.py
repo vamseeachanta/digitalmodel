@@ -108,15 +108,13 @@ class LineTypeBuilder(BaseBuilder):
         line_types_list = []
         line_type_names = []
 
+        # Use coating names registered by VarDataBuilder (order=20)
+        registered_coating_names = self.context.coating_names
+
         for segment_type in unique_types:
-            # Parse segment type to extract coating name
-            # Expected format: "X65+coating+CWC120" or similar
-            parts = segment_type.split("+")
-            if len(parts) >= 2:
-                # Reconstruct coating name from parts after material
-                coating_name = "+".join(parts[1:])
-            else:
-                coating_name = "coating"
+            coating_name = self._resolve_coating_name(
+                segment_type, registered_coating_names
+            )
 
             line_type = self._build_line_type_entry(
                 name=segment_type,
@@ -217,6 +215,39 @@ class LineTypeBuilder(BaseBuilder):
             "DNVSTF101FyCRA": 0,
             "DNVSTF101FuCRA": 0,
         }
+
+    def _resolve_coating_name(
+        self,
+        segment_type: str,
+        registered_coating_names: list[str],
+    ) -> str:
+        """Resolve the VarData coating reference for a segment type.
+
+        Matches the weight coating suffix from the segment type name
+        against coating names registered by VarDataBuilder. This avoids
+        hard-coupling between the user-chosen segment type label and the
+        internal coating naming convention.
+
+        Args:
+            segment_type: Segment type identifier (e.g., "X65+3LPP+CWC80").
+            registered_coating_names: Coating names from VarDataBuilder context.
+
+        Returns:
+            Matching coating name from VarData, or fallback from segment type.
+        """
+        parts = segment_type.split("+")
+
+        if registered_coating_names and len(parts) >= 2:
+            # Match by weight coating suffix (last part, e.g., "CWC80")
+            weight_suffix = parts[-1]
+            for name in registered_coating_names:
+                if name.endswith(weight_suffix):
+                    return name
+
+        # Fallback: reconstruct from segment type parts (backward compat)
+        if len(parts) >= 2:
+            return "+".join(parts[1:])
+        return "coating"
 
     def _build_winch_wire_line_type(self) -> dict[str, Any]:
         """Build a winch wire LineType for installation models.
