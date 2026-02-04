@@ -352,6 +352,9 @@ extra-index-url = []
 no-cache = false
 pre = false
 
+[tool.uv.sources]
+assetutilities = { path = "../assetutilities", editable = true }
+
 [tool.uv.workspace]
 members = []
 

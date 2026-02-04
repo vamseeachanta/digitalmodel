@@ -16,6 +16,8 @@ import math
 import logging
 from enum import Enum
 
+from assetutilities.units import unit_checked
+
 logger = logging.getLogger(__name__)
 
 
@@ -98,6 +100,7 @@ class ElasticBucklingCalculator:
         """Initialize the elastic buckling calculator."""
         self.coefficients = BucklingCoefficients()
 
+    @unit_checked(youngs_modulus="Pa", thickness="m", breadth="m")
     def calculate_base_factor(self, youngs_modulus: float, poisson_ratio: float,
                             thickness: float, breadth: float) -> float:
         """
@@ -124,6 +127,7 @@ class ElasticBucklingCalculator:
 
         return base_factor * thickness_ratio_squared
 
+    @unit_checked(youngs_modulus="Pa", thickness="m", breadth="m", length="m", _return="Pa")
     def calculate_longitudinal_buckling_stress(self,
                                              youngs_modulus: float,
                                              poisson_ratio: float,
@@ -159,6 +163,7 @@ class ElasticBucklingCalculator:
         logger.debug(f"Longitudinal buckling stress: {sigma_cr_xx:.2e}")
         return sigma_cr_xx
 
+    @unit_checked(youngs_modulus="Pa", thickness="m", breadth="m", length="m", _return="Pa")
     def calculate_transverse_buckling_stress(self,
                                            youngs_modulus: float,
                                            poisson_ratio: float,
@@ -189,6 +194,7 @@ class ElasticBucklingCalculator:
         logger.debug(f"Transverse buckling stress: {sigma_cr_yy:.2e}")
         return sigma_cr_yy
 
+    @unit_checked(youngs_modulus="Pa", thickness="m", breadth="m", length="m", _return="Pa")
     def calculate_shear_buckling_stress(self,
                                       youngs_modulus: float,
                                       poisson_ratio: float,
