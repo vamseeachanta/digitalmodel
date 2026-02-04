@@ -23,6 +23,8 @@ from .wall_thickness_parametric import (
     SweepConfig,
     generate_report,
 )
+from .wall_thickness_interactive_report import InteractiveReportBuilder
+from .wall_thickness_lookup import LookupConfig, MTLookupGenerator
 from .wall_thickness_phases import (
     PhaseAnalysisRunner,
     PipeDefinition,
@@ -33,6 +35,9 @@ from .wall_thickness_phases import (
 CODE_MAP = {
     "DNV": DesignCode.DNV_ST_F101,
     "API": DesignCode.API_RP_1111,
+    "PD8010": DesignCode.PD_8010_2,
+    "ASME": DesignCode.ASME_B31_8,
+    "ISO": DesignCode.ISO_13623,
 }
 
 SAFETY_CLASS_MAP = {
@@ -45,7 +50,7 @@ SAFETY_CLASS_MAP = {
 @click.group()
 @click.version_option(version="1.0.0", prog_name="wall-thickness")
 def cli():
-    """Pipeline Wall Thickness Design Checks -- DNV-ST-F101 and API RP 1111"""
+    """Pipeline Wall Thickness Design Checks -- Multi-code analysis"""
     pass
 
 
@@ -59,7 +64,7 @@ def cli():
 @click.option("--tension", type=float, default=0.0, help="Axial tension (N)")
 @click.option(
     "--code",
-    type=click.Choice(["DNV", "API"], case_sensitive=False),
+    type=click.Choice(["DNV", "API", "PD8010", "ASME", "ISO"], case_sensitive=False),
     default="DNV",
     help="Design code",
 )
@@ -176,7 +181,7 @@ def check(od, wt, grade, pi, pe, moment, tension, code, safety_class, corrosion,
 @click.option("--pe", type=float, default=0.0, help="External pressure (Pa)")
 @click.option(
     "--code",
-    type=click.Choice(["DNV", "API"], case_sensitive=False),
+    type=click.Choice(["DNV", "API", "PD8010", "ASME", "ISO"], case_sensitive=False),
     default="DNV",
     help="Design code",
 )
@@ -333,6 +338,156 @@ def list_grades():
         click.echo(f"  {name:<10s} {smys_mpa:>12.0f} {smts_mpa:>12.0f}")
     click.echo("=" * 50)
     click.echo("")
+
+
+@cli.command("lookup")
+@click.option("--od", type=float, required=True, help="Outer diameter (m)")
+@click.option("--wt", type=float, required=True, help="Wall thickness (m)")
+@click.option("--grade", type=str, default="X65", help="API 5L grade")
+@click.option("--pi", type=float, default=20e6, help="Internal pressure (Pa)")
+@click.option("--pe", type=float, default=5e6, help="External pressure (Pa)")
+@click.option(
+    "--safety-class",
+    type=click.Choice(["low", "medium", "high"], case_sensitive=False),
+    default="medium",
+    help="Safety class",
+)
+@click.option(
+    "--codes",
+    type=str,
+    multiple=True,
+    default=["DNV", "API", "PD8010", "ASME", "ISO"],
+    help="Design codes, repeatable",
+)
+@click.option("--steps", type=int, default=50, help="Grid steps per axis")
+@click.option("--output", "-o", type=click.Path(), required=True, help="Output CSV file path")
+def lookup(od, wt, grade, pi, pe, safety_class, codes, steps, output):
+    """Generate 50x50 moment-tension allowable lookup table as CSV."""
+    grade_upper = grade.upper()
+    if grade_upper not in API_5L_GRADES:
+        click.echo(f"Error: Unknown grade '{grade}'. Use 'list-grades' to see available grades.")
+        raise SystemExit(1)
+
+    grade_data = API_5L_GRADES[grade_upper]
+    sc = SAFETY_CLASS_MAP[safety_class.lower()]
+
+    design_codes = []
+    for c in codes:
+        c_upper = c.upper()
+        if c_upper not in CODE_MAP:
+            click.echo(f"Error: Unknown code '{c}'. Choose from: {', '.join(CODE_MAP.keys())}")
+            raise SystemExit(1)
+        design_codes.append(CODE_MAP[c_upper])
+
+    geometry = PipeGeometry(outer_diameter=od, wall_thickness=wt)
+    material = PipeMaterial(grade=grade_upper, smys=grade_data["smys"], smts=grade_data["smts"])
+
+    config = LookupConfig(
+        geometry=geometry,
+        material=material,
+        internal_pressure=pi,
+        external_pressure=pe,
+        safety_class=sc,
+        codes=design_codes,
+        n_moment_steps=steps,
+        n_tension_steps=steps,
+    )
+
+    click.echo("")
+    click.echo("=" * 70)
+    click.echo("M-T Allowable Lookup Table Generation")
+    click.echo("=" * 70)
+    click.echo(f"  Pipe:     OD={od*1000:.1f} mm, WT={wt*1000:.1f} mm, {grade_upper}")
+    click.echo(f"  Pi:       {pi/1e6:.2f} MPa")
+    click.echo(f"  Pe:       {pe/1e6:.2f} MPa")
+    click.echo(f"  Grid:     {steps}x{steps}")
+    click.echo(f"  Codes:    {', '.join(c.upper() for c in codes)}")
+    click.echo("-" * 70)
+
+    gen = MTLookupGenerator(config)
+    gen.to_csv(output)
+    click.echo(f"\n  CSV written to: {output}\n")
+
+
+@cli.command("report")
+@click.option("--od", type=float, required=True, help="Outer diameter (m)")
+@click.option("--wt", type=float, required=True, help="Wall thickness (m)")
+@click.option("--grade", type=str, default="X65", help="API 5L grade")
+@click.option("--pi", type=float, default=20e6, help="Internal pressure (Pa)")
+@click.option("--pe", type=float, default=5e6, help="External pressure (Pa)")
+@click.option("--depth", type=float, default=500, help="Water depth (m) for phase analysis")
+@click.option(
+    "--codes",
+    type=str,
+    multiple=True,
+    default=["DNV", "API", "PD8010", "ASME", "ISO"],
+    help="Design codes, repeatable",
+)
+@click.option(
+    "--safety-class",
+    type=click.Choice(["low", "medium", "high"], case_sensitive=False),
+    default="medium",
+    help="Safety class",
+)
+@click.option("--output", "-o", type=click.Path(), required=True, help="Output HTML file path")
+def report(od, wt, grade, pi, pe, depth, codes, safety_class, output):
+    """Generate interactive multi-code HTML report with code toggling."""
+    grade_upper = grade.upper()
+    if grade_upper not in API_5L_GRADES:
+        click.echo(f"Error: Unknown grade '{grade}'. Use 'list-grades' to see available grades.")
+        raise SystemExit(1)
+
+    grade_data = API_5L_GRADES[grade_upper]
+    sc = SAFETY_CLASS_MAP[safety_class.lower()]
+
+    design_codes = []
+    for c in codes:
+        c_upper = c.upper()
+        if c_upper not in CODE_MAP:
+            click.echo(f"Error: Unknown code '{c}'. Choose from: {', '.join(CODE_MAP.keys())}")
+            raise SystemExit(1)
+        design_codes.append(CODE_MAP[c_upper])
+
+    geometry = PipeGeometry(
+        outer_diameter=od, wall_thickness=wt, corrosion_allowance=0.001,
+    )
+    material = PipeMaterial(
+        grade=grade_upper, smys=grade_data["smys"], smts=grade_data["smts"],
+    )
+
+    click.echo("")
+    click.echo("=" * 70)
+    click.echo("Interactive Multi-Code Report Generation")
+    click.echo("=" * 70)
+    click.echo(f"  Pipe:     OD={od*1000:.1f} mm, WT={wt*1000:.1f} mm, {grade_upper}")
+    click.echo(f"  Codes:    {', '.join(c.upper() for c in codes)}")
+    click.echo("-" * 70)
+
+    builder = InteractiveReportBuilder()
+
+    # Add utilisation vs WT chart
+    builder.add_utilisation_vs_wt_chart(
+        geometry=geometry,
+        material=material,
+        internal_pressure=pi,
+        external_pressure=pe,
+        codes=design_codes,
+        safety_class=sc,
+    )
+
+    # Add phase comparison chart
+    pipe_def = PipeDefinition(
+        outer_diameter=od, wall_thickness=wt,
+        grade=grade_upper, smys=grade_data["smys"], smts=grade_data["smts"],
+        corrosion_allowance=0.001,
+    )
+    phase_list = create_standard_phases(depth, pi)
+    runner = PhaseAnalysisRunner(pipe_def, phase_list, codes=design_codes, safety_class=sc)
+    comparison = runner.run()
+    builder.add_phase_comparison_chart(comparison)
+
+    builder.build(output)
+    click.echo(f"\n  Report written to: {output}\n")
 
 
 def main():
