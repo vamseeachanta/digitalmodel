@@ -145,7 +145,7 @@ def test_marine_engineering_imports():
     # Test 4.1: Catenary module
     print("\n[4.1] Testing catenary module...")
     try:
-        from digitalmodel.marine_ops.marine_engineering.catenary import (
+        from digitalmodel.marine_ops.marine_analysis.catenary import (
             CatenarySolver,
             SimplifiedCatenarySolver
         )

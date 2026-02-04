@@ -15,9 +15,9 @@ import pandas as pd
 
 from common.DataFrame_To_xlsx import DataFrameArray_To_xlsx_openpyxl
 from common.set_logging import setLogging
-from custom.OrcaFlex_Post.postProcess import postProcess
-from custom.OrcaFlex_Post.postProcessPlotting import postProcessPlotting
-from dataManager.OrcaFlex_Post.ymlInput import ymlInput
+from custom.post_results.postProcess import postProcess
+from custom.post_results.postProcessPlotting import postProcessPlotting
+from dataManager.post_results.ymlInput import ymlInput
 
 try:
     user_paths = os.environ["PYTHONPATH"]
@@ -25,11 +25,11 @@ except KeyError:
     user_paths = []
 
 # Data preparation
-defaultYml = "dataManager\\OrcaFlex_Post\\OrcaFlex.yml"
+defaultYml = "dataManager\\post_results\\OrcaFlex.yml"
 # Get updateYML file
 try:
     if sys.argv[1] != None:
-        updateYml = "dataManager\\OrcaFlex_Post\\" + sys.argv[1]
+        updateYml = "dataManager\\post_results\\" + sys.argv[1]
         logger.critical(
             "Updating default values with contents in file {0}".format(updateYml)
         )
@@ -109,7 +109,7 @@ for SummaryIndex in range(0, len(cfg["Summary"])):
 
 #  Send LML Data to Excel Sheet
 customdata = {
-    "FileName": "results\\OrcaFlex_Post\\data\\" + cfg["FileName"] + ".xlsx",
+    "FileName": "results\\post_results\\data\\" + cfg["FileName"] + ".xlsx",
     "SheetNames": SummaryFileNameArray,
     "thin_border": True,
 }

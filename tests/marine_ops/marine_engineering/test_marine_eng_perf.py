@@ -18,7 +18,7 @@ import numpy as np
 from pathlib import Path
 import tempfile
 
-from digitalmodel.marine_ops.marine_analysis.wave_spectra.spectra import (
+from digitalmodel.hydrodynamics.wave_spectra import (
     JONSWAPSpectrum, PiersonMoskowitzSpectrum, WaveSpectrumParameters
 )
 from digitalmodel.marine_ops.marine_analysis.environmental_loading.ocimf import (

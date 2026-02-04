@@ -18,7 +18,7 @@ import json
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / 'src'))
 
-from digitalmodel.modules.fatigue_analysis.load_scaling import LoadScalingProcessor
+from digitalmodel.structural.fatigue_apps.load_scaling import LoadScalingProcessor
 
 
 class LoadScalingVerifier:

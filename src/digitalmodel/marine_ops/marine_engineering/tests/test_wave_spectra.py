@@ -17,7 +17,7 @@ import numpy as np
 from typing import Tuple, Optional
 
 # Import production code - DO NOT duplicate implementation in tests!
-from digitalmodel.marine_ops.marine_engineering.wave_spectra.spectra import (
+from digitalmodel.hydrodynamics.wave_spectra import (
     WaveSpectrumParameters,
     WaveSpectrum,
     JONSWAPSpectrum,

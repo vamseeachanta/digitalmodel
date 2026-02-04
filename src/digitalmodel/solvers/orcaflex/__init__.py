@@ -94,6 +94,11 @@ except ImportError:
     TemplateGenerator = None
     ModelValidator = None
 
+# Consolidated submodules (previously separate solver directories)
+# - post_process: was solvers/orcaflex_post_process/
+# - browser: was solvers/orcaflex_browser/
+# - post_results: was solvers/orcaflex/OrcaFlex_Post/
+
 # CLI Commands available
 CLI_COMMANDS = {
     'orcaflex-universal': 'Universal OrcaFlex simulation runner',
@@ -118,6 +123,9 @@ def check_availability():
         'orcaflex_api': ORCAFLEX_AVAILABLE,
         'core': CORE_AVAILABLE,
         'template_generator': TEMPLATE_GENERATOR_AVAILABLE,
+        'browser': True,       # consolidated from solvers/orcaflex_browser
+        'post_process': True,  # consolidated from solvers/orcaflex_post_process
+        'post_results': True,  # renamed from OrcaFlex_Post
     }
 
 def list_cli_commands():

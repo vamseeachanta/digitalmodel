@@ -1,7 +1,8 @@
 """OrcaFlex Modular Model Generator from Project Spec."""
 
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 import yaml
 
@@ -31,12 +32,37 @@ from .builders import (  # noqa: F401
 INCLUDE_ORDER = BuilderRegistry.get_include_order()
 
 
+@dataclass
+class GenerationResult:
+    """Result of a generate_with_overrides() call."""
+
+    master_file: Path
+    include_files: list[Path]
+    variables_resolved: dict[str, Any] = field(default_factory=dict)
+    warnings: list[str] = field(default_factory=list)
+
+
 class ModularModelGenerator:
     """Generates complete OrcaFlex modular model structure from spec file."""
 
     def __init__(self, spec_file: Path):
         self.spec_file = Path(spec_file)
         self.spec = self._load_and_validate_spec()
+
+    @classmethod
+    def from_spec(cls, spec: ProjectInputSpec) -> "ModularModelGenerator":
+        """Create generator from an in-memory ProjectInputSpec.
+
+        Args:
+            spec: Validated ProjectInputSpec object.
+
+        Returns:
+            ModularModelGenerator ready to generate output.
+        """
+        instance = cls.__new__(cls)
+        instance.spec_file = None
+        instance.spec = spec
+        return instance
 
     def _load_and_validate_spec(self) -> ProjectInputSpec:
         with open(self.spec_file) as f:
@@ -97,10 +123,11 @@ class ModularModelGenerator:
 
     def _write_master(self, path: Path, generated_files: list[str] | None = None) -> None:
         include_order = generated_files or BuilderRegistry.get_include_order()
+        source_name = self.spec_file.name if self.spec_file else "in-memory spec"
         lines = [
             '%YAML 1.1',
             '# Type: Model',
-            f'# Generated from: {self.spec_file.name}',
+            f'# Generated from: {source_name}',
             '',
         ]
         for file_name in include_order:
@@ -108,3 +135,99 @@ class ModularModelGenerator:
 
         with open(path, 'w') as f:
             f.write('\n'.join(lines))
+
+    def generate_with_overrides(
+        self,
+        output_dir: Path,
+        sections: list | None = None,
+        variables: dict[str, Any] | None = None,
+        template_base_dir: Path | None = None,
+    ) -> GenerationResult:
+        """Generate model with optional section overrides.
+
+        Args:
+            output_dir: Root output directory.
+            sections: Optional list of InstallationSection overrides.
+            variables: Optional variables dict for template resolution.
+            template_base_dir: Base directory for resolving template paths.
+
+        Returns:
+            GenerationResult with paths and metadata.
+        """
+        from .sections import VariableResolver
+
+        output_dir = Path(output_dir)
+        includes_dir = output_dir / 'includes'
+        inputs_dir = output_dir / 'inputs'
+
+        includes_dir.mkdir(parents=True, exist_ok=True)
+        inputs_dir.mkdir(parents=True, exist_ok=True)
+
+        # Index sections by builder_file for fast lookup
+        section_map: dict[str, Any] = {}
+        if sections:
+            for sec in sections:
+                section_map[sec.builder_file] = sec
+
+        context = BuilderContext()
+        generated_files: list[str] = []
+        include_paths: list[Path] = []
+        resolved_vars: dict[str, Any] = {}
+        warnings: list[str] = []
+
+        for file_name, builder_class in BuilderRegistry.get_ordered_builders():
+            section = section_map.get(file_name)
+
+            # If section exists and is disabled, skip entirely
+            if section and not section.enabled:
+                continue
+
+            file_path = includes_dir / file_name
+
+            # If section has a custom template, resolve and write it
+            if section and section.template:
+                base_dir = template_base_dir or Path(".")
+                template_path = base_dir / section.template
+                template_content = template_path.read_text()
+
+                # Merge section variables with top-level variables
+                merged_vars = dict(variables or {})
+                merged_vars.update(section.variables)
+
+                resolved_content = VariableResolver.resolve(
+                    template_content, merged_vars
+                )
+                file_path.write_text(resolved_content)
+                resolved_vars.update(merged_vars)
+            else:
+                # Standard builder path
+                builder = builder_class(self.spec, context)
+
+                if not builder.should_generate():
+                    continue
+
+                data = builder.build()
+                context.update_from_dict(builder.get_generated_entities())
+
+                with open(file_path, 'w') as f:
+                    yaml.dump(
+                        data, f,
+                        default_flow_style=False,
+                        allow_unicode=True,
+                        sort_keys=False,
+                    )
+
+            generated_files.append(file_name)
+            include_paths.append(file_path)
+
+        # Write parameters and master
+        self._write_parameters(inputs_dir / 'parameters.yml')
+        master_path = output_dir / 'master.yml'
+        self._write_master(master_path, generated_files)
+
+        return GenerationResult(
+            master_file=master_path,
+            include_files=include_paths,
+            variables_resolved=resolved_vars,
+            warnings=warnings,
+        )

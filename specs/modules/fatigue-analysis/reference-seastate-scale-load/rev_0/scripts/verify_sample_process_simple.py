@@ -158,7 +158,7 @@ def main():
     
     # Import and use rainflow counter
     try:
-        from digitalmodel.modules.fatigue_analysis.rainflow_counter import RainflowCounter
+        from digitalmodel.structural.fatigue_apps.rainflow_counter import RainflowCounter
         
         counter = RainflowCounter(gate_value=5.0)
         ranges, counts = counter.count_cycles(tension)
@@ -256,7 +256,7 @@ def main():
     print("  Sample: 100 timesteps")
     
     try:
-        from digitalmodel.modules.fatigue_analysis.integrated_processor import (
+        from digitalmodel.structural.fatigue_apps.integrated_processor import (
             IntegratedFatigueProcessor,
             ProductionDataHandler,
             FatigueCondition

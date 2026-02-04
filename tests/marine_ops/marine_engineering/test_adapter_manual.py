@@ -195,7 +195,7 @@ def test_legacy_comparison():
 
     # Import legacy code
     try:
-        from digitalmodel.subsea.catenary.catenaryMethods import (
+        from digitalmodel.subsea.catenary_riser.legacy.catenaryMethods import (
             catenaryEquation as legacy_catenaryEquation,
             catenaryForces as legacy_catenaryForces
         )

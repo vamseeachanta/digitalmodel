@@ -18,8 +18,8 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from digitalmodel.structural.fatigue_analysis.rainflow_counter import RainflowCounter
-from digitalmodel.structural.fatigue_analysis.fatigue_damage_calculator import FatigueDamageCalculator
+from digitalmodel.structural.fatigue_apps.rainflow_counter import RainflowCounter
+from digitalmodel.structural.fatigue_apps.fatigue_damage_calculator import FatigueDamageCalculator
 
 
 def process_effective_tension_file(filepath: Path, output_dir: Path):

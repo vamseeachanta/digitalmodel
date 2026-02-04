@@ -8,7 +8,7 @@ All models are re-exported here for backward compatibility:
     from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
 """
 
-from ._enums import RampType, StructureType, WaveType
+from ._enums import RampType, RollerType, StructureType, WaveType
 from .environment import (
     Current,
     CurrentProfile,
@@ -24,7 +24,9 @@ from .equipment import (
     BuoyancyModules,
     Equipment,
     Ramp,
+    RollerArrangement,
     Rollers,
+    RollerStation,
     Stinger,
     StingerRoller,
     StingerSection,
@@ -47,6 +49,7 @@ __all__ = [
     "StructureType",
     "WaveType",
     "RampType",
+    "RollerType",
     # Metadata
     "Metadata",
     # Environment
@@ -68,6 +71,8 @@ __all__ = [
     "TugProperties",
     "Tugs",
     "Rollers",
+    "RollerStation",
+    "RollerArrangement",
     "BuoyancyModuleProperties",
     "BuoyancyModules",
     "Ramp",

@@ -80,7 +80,7 @@ from . import analysis
 from . import catenary
 from . import environmental_loading
 from . import hydrodynamic_coefficients
-from . import wave_spectra
+# wave_spectra removed - canonical location: digitalmodel.hydrodynamics.wave_spectra
 
 __all__ = [
     # Core RAO functionality
@@ -100,7 +100,7 @@ __all__ = [
     # Submodules
     'profiling', 'extraction', 'validation', 'viz_tools', 'analysis',
     # Marine engineering modules
-    'catenary', 'environmental_loading', 'hydrodynamic_coefficients', 'wave_spectra'
+    'catenary', 'environmental_loading', 'hydrodynamic_coefficients',
 ]
 
 __version__ = '2.3.0'

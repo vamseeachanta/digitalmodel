@@ -1,5 +1,6 @@
 import copy
 import os
+import warnings
 from collections import OrderedDict
 
 from assetutilities.common.saveData import saveDataYaml
@@ -8,8 +9,22 @@ from assetutilities.common.utilities import add_cwd_to_filename
 
 
 class OrcInstallation:
+    """Legacy OrcaFlex installation model generator.
+
+    .. deprecated::
+        Use ``CampaignSpec`` from
+        ``digitalmodel.solvers.orcaflex.modular_generator.schema.campaign``
+        instead. This class will be removed in a future release.
+    """
+
     def __init__(self):
-        pass
+        warnings.warn(
+            "OrcInstallation is deprecated. Use CampaignSpec from "
+            "digitalmodel.solvers.orcaflex.modular_generator.schema.campaign "
+            "instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     def create_model_for_water_depth(self, cfg):
         self.cfg = cfg

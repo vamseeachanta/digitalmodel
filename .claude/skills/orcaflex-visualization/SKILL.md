@@ -868,4 +868,4 @@ except FileNotFoundError:
 - Plotly Python Documentation
 - OrcaFlex: Post-Processing Views
 - Source: `src/digitalmodel/modules/orcaflex/opp_visualization.py`
-- Source: `src/digitalmodel/modules/orcaflex/OrcaFlex_Post/postProcessPlotting.py`
+- Source: `src/digitalmodel/solvers/orcaflex/post_results/postProcessPlotting.py`

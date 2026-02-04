@@ -17,7 +17,7 @@ import tempfile
 import psutil
 import os
 
-from digitalmodel.marine_ops.marine_analysis.wave_spectra.spectra import (
+from digitalmodel.hydrodynamics.wave_spectra import (
     JONSWAPSpectrum,
     WaveSpectrumParameters
 )

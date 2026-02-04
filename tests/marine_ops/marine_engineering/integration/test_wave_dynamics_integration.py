@@ -17,7 +17,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-from digitalmodel.marine_ops.marine_analysis.wave_spectra.spectra import (
+from digitalmodel.hydrodynamics.wave_spectra import (
     JONSWAPSpectrum,
     PiersonMoskowitzSpectrum,
     WaveSpectrumParameters

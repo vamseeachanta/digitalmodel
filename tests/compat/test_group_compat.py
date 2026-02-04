@@ -52,7 +52,7 @@ class TestFlatToGroupMapping:
     def test_get_group_for_known_module(self):
         assert get_group_for_module("orcaflex") == "solvers"
         assert get_group_for_module("aqwa") == "hydrodynamics"
-        assert get_group_for_module("fatigue_analysis") == "structural"
+        assert get_group_for_module("fatigue_apps") == "structural"
         assert get_group_for_module("mooring_analysis") == "subsea"
         assert get_group_for_module("signal_analysis") == "signal_processing"
         assert get_group_for_module("common") == "infrastructure"
@@ -90,7 +90,7 @@ SAMPLE_FLAT_MODULES = [
     "diffraction",
     "mooring_analysis",
     "signal_analysis",
-    "fatigue_analysis",
+    "fatigue_apps",
     "pipe_capacity",
     "pipeline",
     "viv_analysis",
@@ -152,7 +152,7 @@ class TestLayer1Compat:
 SAMPLE_GROUPED_IMPORTS = [
     ("solvers", "orcaflex"),
     ("hydrodynamics", "aqwa"),
-    ("structural", "fatigue_analysis"),
+    ("structural", "fatigue_apps"),
     ("subsea", "mooring_analysis"),
     ("marine_ops", "marine_analysis"),
     ("signal_processing", "signal_analysis"),

@@ -195,7 +195,7 @@ cycles = counter.count_cycles(stress)
 cycle_matrix = counter.get_cycle_matrix(cycles)
 
 # Calculate damage using S-N curve
-from digitalmodel.structural.fatigue_analysis import SNCurve
+from digitalmodel.structural.fatigue_apps import SNCurve
 sn_curve = SNCurve.from_code("DNV-RP-C203", "D")
 damage = counter.calculate_damage(cycles, sn_curve)
 

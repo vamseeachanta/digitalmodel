@@ -1,2 +1,2 @@
-"""Basic usage example for digitalmodel.structural.analysis."""
+"""Basic usage example for digitalmodel.structural.structural_analysis."""
 # TODO: Add working example

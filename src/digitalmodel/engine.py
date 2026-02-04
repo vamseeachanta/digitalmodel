@@ -91,7 +91,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     logger.info(f"{basename}, application ... START")
 
     if "catenary" in basename:
-        from digitalmodel.subsea.catenary.catenary import Catenary
+        from digitalmodel.subsea.catenary_riser.legacy.catenary import Catenary
 
         catenary = Catenary()
         cfg_base = catenary.router(cfg_base)

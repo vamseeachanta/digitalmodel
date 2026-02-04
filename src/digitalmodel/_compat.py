@@ -42,7 +42,6 @@ _MOVED_MODULES: set[str] = {
     "signal_analysis",
     "fatigue_analysis",
     "mooring_analysis",
-    "catenary",
     "catenary_riser",
     # Phase 4 Batch 4
     "orcaflex",
@@ -56,7 +55,7 @@ _MOVED_MODULES: set[str] = {
     "workflow_automation",
     "marine_analysis",
     "marine_engineering",
-    "orcaflex_post_process",
+    "orcaflex_post_process",  # now at solvers.orcaflex.post_process
     "artificial_lift",
     "ai_workflows",
     "api_analysis",
@@ -64,11 +63,10 @@ _MOVED_MODULES: set[str] = {
     # Phase 4 Batch 6
     "design_tools",
     "mcp_server",
-    "orcaflex_browser",
+    "orcaflex_browser",  # now at solvers.orcaflex.browser
     "data_scraping",
     "blender_automation",
-    "diffraction_cli",
-    "standards_lookup",
+    "fatigue_apps",
     # Phase 6 cleanup
     "reporting",
 }
@@ -78,8 +76,8 @@ _FLAT_TO_GROUP: dict[str, str] = {
     # solvers/
     "orcaflex": "solvers",
     "orcawave": "solvers",
-    "orcaflex_browser": "solvers",
-    "orcaflex_post_process": "solvers",
+    # orcaflex_browser -> solvers.orcaflex.browser (see _FLAT_TO_FULL_PATH)
+    # orcaflex_post_process -> solvers.orcaflex.post_process (see _FLAT_TO_FULL_PATH)
     "fea_model": "solvers",
     "gmsh_meshing": "solvers",
     "blender_automation": "solvers",
@@ -92,15 +90,13 @@ _FLAT_TO_GROUP: dict[str, str] = {
     "bemrosetta": "hydrodynamics",
     # structural/
     "fatigue": "structural",
-    "fatigue_analysis": "structural",
+    "fatigue_apps": "structural",
     "stress": "structural",
     "structural_analysis": "structural",
     "pipe_capacity": "structural",
     "pipe_cross_section": "structural",
-    "analysis": "structural",
     # subsea/
     "mooring_analysis": "subsea",
-    "catenary": "subsea",
     "catenary_riser": "subsea",
     "vertical_riser": "subsea",
     "viv_analysis": "subsea",
@@ -154,6 +150,17 @@ _FLAT_TO_GROUP: dict[str, str] = {
     "custom": "specialized",
     "api_analysis": "specialized",
     "cli": "specialized",
+}
+
+
+# Explicit full-path redirects for modules that were renamed + relocated
+# (cannot be handled by the simple group prefix redirect)
+_FLAT_TO_FULL_PATH: dict[str, str] = {
+    "orcaflex_browser": "digitalmodel.solvers.orcaflex.browser",
+    "orcaflex_post_process": "digitalmodel.solvers.orcaflex.post_process",
+    "fatigue_analysis": "digitalmodel.structural.fatigue_apps",
+    "diffraction_cli": "digitalmodel.hydrodynamics.diffraction.diffraction_cli",
+    "standards_lookup": "digitalmodel.infrastructure.common.standards_lookup",
 }
 
 
@@ -258,6 +265,31 @@ class _GroupRedirectFinder(importlib.abc.MetaPathFinder):
             "modules", "_compat",
         }:
             return None
+
+        # Check explicit full-path redirects first (renamed + relocated modules)
+        if top_module in _FLAT_TO_FULL_PATH:
+            base_target = _FLAT_TO_FULL_PATH[top_module]
+            # Support sub-imports: digitalmodel.orcaflex_browser.X -> target.X
+            sub_parts = ".".join(parts[2:])
+            new_fullname = f"{base_target}.{sub_parts}" if sub_parts else base_target
+
+            _finding.add(fullname)
+            try:
+                spec = importlib.util.find_spec(new_fullname)
+            except (ModuleNotFoundError, ValueError):
+                spec = None
+            finally:
+                _finding.discard(fullname)
+
+            if spec is None:
+                return None
+
+            loader = _GroupRedirectLoader(new_fullname, fullname)
+            return importlib.machinery.ModuleSpec(
+                fullname,
+                loader,
+                is_package=spec.submodule_search_locations is not None,
+            )
 
         if top_module not in _FLAT_TO_GROUP:
             return None

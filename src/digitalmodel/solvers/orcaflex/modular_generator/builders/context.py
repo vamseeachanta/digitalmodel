@@ -41,6 +41,7 @@ class BuilderContext:
     all_buoy_names: list[str] = field(default_factory=list)
     end_buoy_name: str = "6D buoy1"
     bm_buoy_name: str = "BM"
+    roller_buoy_names: list[str] = field(default_factory=list)
 
     # From LinesBuilder
     line_names: list[str] = field(default_factory=list)

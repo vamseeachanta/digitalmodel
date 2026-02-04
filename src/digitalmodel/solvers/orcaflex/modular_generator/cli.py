@@ -16,6 +16,7 @@ Usage:
 """
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 from typing import NoReturn
@@ -288,6 +289,85 @@ def cmd_generate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_campaign(args: argparse.Namespace) -> int:
+    """Execute the campaign command."""
+    from .schema.campaign import CampaignGenerator
+
+    campaign_file = Path(args.campaign_file)
+
+    if not campaign_file.exists():
+        print_error(f"Campaign file not found: {campaign_file}")
+        return 1
+
+    # Configure logging
+    log_level = logging.WARNING
+    if hasattr(args, "verbose") and args.verbose:
+        log_level = logging.DEBUG
+    elif hasattr(args, "quiet") and args.quiet:
+        log_level = logging.ERROR
+    logging.basicConfig(level=log_level, format="%(levelname)s: %(message)s")
+
+    try:
+        gen = CampaignGenerator(campaign_file)
+    except Exception as e:
+        print_error(f"Failed to load campaign: {e}")
+        return 1
+
+    if args.preview:
+        combos = gen.preview()
+        print(f"Campaign: {gen.spec.base.metadata.name}")
+        matrix = gen.spec.campaign
+        parts = [f"{len(matrix.water_depths)} depths"]
+        if matrix.route_lengths:
+            parts.append(f"{len(matrix.route_lengths)} lengths")
+        if matrix.tensions:
+            parts.append(f"{len(matrix.tensions)} tensions")
+        if matrix.environments:
+            parts.append(f"{len(matrix.environments)} environments")
+        if matrix.soils:
+            parts.append(f"{len(matrix.soils)} soils")
+        print(f"Matrix: {' x '.join(parts)} = {len(combos)} runs")
+        print()
+
+        # Print header
+        if combos:
+            keys = list(combos[0].keys())
+            header = "  #  " + "  ".join(f"{k:>14}" for k in keys)
+            print(header)
+            for i, combo in enumerate(combos, 1):
+                values = "  ".join(f"{combo[k]:>14}" for k in keys)
+                print(f"{i:>3}  {values}")
+        return 0
+
+    if not args.output:
+        print_error("--output is required for generation (or use --preview)")
+        return 1
+
+    output_dir = Path(args.output)
+
+    # Validate first
+    warnings = gen.validate()
+    for w in warnings:
+        print(f"WARNING: {w}", file=sys.stderr)
+
+    result = gen.generate(
+        output_dir=output_dir,
+        force=getattr(args, "force", False),
+        resume=getattr(args, "resume", False),
+    )
+
+    print("Campaign generation complete:")
+    print(f"  Generated: {result.run_count}")
+    print(f"  Skipped:   {result.skipped_count}")
+    if result.errors:
+        print(f"  Errors:    {len(result.errors)}")
+        for err in result.errors:
+            print(f"    - {err}", file=sys.stderr)
+        return 1
+
+    return 0
+
+
 def create_parser() -> argparse.ArgumentParser:
     """
     Create and configure the argument parser.
@@ -351,6 +431,50 @@ For more information, see the documentation at:
         help='Path to the input YAML specification file to validate'
     )
     validate_parser.set_defaults(func=cmd_validate)
+
+    # Campaign command
+    campaign_parser = subparsers.add_parser(
+        "campaign",
+        help="Generate parametric campaign of OrcaFlex models",
+        description="Generate multiple OrcaFlex models from a campaign specification.",
+    )
+    campaign_parser.add_argument(
+        "campaign_file",
+        help="Path to the campaign YAML file",
+    )
+    campaign_parser.add_argument(
+        "--output",
+        "-o",
+        help="Root output directory for generated runs",
+    )
+    campaign_parser.add_argument(
+        "--preview",
+        action="store_true",
+        help="Show parameter matrix without generating files",
+    )
+    campaign_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite existing run directories",
+    )
+    campaign_parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Skip runs with existing master.yml",
+    )
+    campaign_parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Verbose logging output",
+    )
+    campaign_parser.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        help="Only show errors",
+    )
+    campaign_parser.set_defaults(func=cmd_campaign)
 
     return parser
 

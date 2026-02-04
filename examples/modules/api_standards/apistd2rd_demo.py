@@ -14,7 +14,7 @@ from pathlib import Path
 import tempfile
 import yaml
 
-from digitalmodel.structural.analysis.apistd2rd import APISTD2RDAnalyzer
+from digitalmodel.structural.structural_analysis.models import APISTD2RDAnalyzer
 from digitalmodel.infrastructure.calculations.pipe_properties import calculate_geometric_properties
 from digitalmodel.infrastructure.calculations.stress_calculations import APISTD2RDCalculations
 from digitalmodel.data_systems.data_manager.configuration import ConfigurationManager

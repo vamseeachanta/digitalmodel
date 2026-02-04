@@ -14,11 +14,11 @@ import pytest
 import time
 import numpy as np
 import warnings
-from digitalmodel.marine_ops.marine_engineering.catenary import (
+from digitalmodel.marine_ops.marine_analysis.catenary import (
     CatenarySolver, CatenaryInput,
     catenaryEquation, catenaryForces
 )
-from digitalmodel.marine_ops.marine_engineering.catenary.simplified import SimplifiedCatenarySolver
+from digitalmodel.marine_ops.marine_analysis.catenary.simplified import SimplifiedCatenarySolver
 
 
 class TestPhase1SolverPerformance:

@@ -11,10 +11,10 @@ from pathlib import Path
 # Add the source directory to the path
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
-from digitalmodel.structural.fatigue_analysis.strut_foundation_processor import (
+from digitalmodel.structural.fatigue_apps.strut_foundation_processor import (
     ProductionDataHandler, LoadScaler, FatigueCondition, SeaState
 )
-from digitalmodel.structural.fatigue_analysis.file_namer import FatigueFileNamer, create_output_structure
+from digitalmodel.structural.fatigue_apps.file_namer import FatigueFileNamer, create_output_structure
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')

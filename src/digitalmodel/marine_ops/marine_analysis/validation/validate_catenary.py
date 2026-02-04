@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import numpy as np
 try:
-    from digitalmodel.subsea.catenary.catenaryMethods import (
+    from digitalmodel.marine_ops.marine_analysis.catenary import (
         CatenaryInput,
         CatenarySolver
     )

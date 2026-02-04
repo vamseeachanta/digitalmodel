@@ -57,7 +57,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / 'src'))
 
 # Import marine engineering modules
-from digitalmodel.marine_ops.marine_engineering.wave_spectra import JONSWAPSpectrum
+from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 from digitalmodel.marine_ops.marine_engineering.environmental_loading import (
     OCIMFDatabase,
     EnvironmentalForces,

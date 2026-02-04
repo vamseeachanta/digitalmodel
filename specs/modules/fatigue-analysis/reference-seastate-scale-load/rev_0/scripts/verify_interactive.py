@@ -14,7 +14,7 @@ import re
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent))
 
-from src.digitalmodel.modules.fatigue_analysis.strut_foundation_processor import (
+from src.digitalmodel.structural.fatigue_apps.strut_foundation_processor import (
     LoadScaler,
     ProductionDataHandler
 )
@@ -242,7 +242,7 @@ class InteractiveVerification:
             print(f"  Wave: {wave_factor:.2f} (Hs ratio)")
             
             # Create a test fatigue condition
-            from src.digitalmodel.modules.fatigue_analysis.strut_foundation_processor import FatigueCondition
+            from src.digitalmodel.structural.fatigue_apps.strut_foundation_processor import FatigueCondition
             test_condition = FatigueCondition(
                 id=1,
                 wind_speed=wind_speed,
@@ -294,7 +294,7 @@ class InteractiveVerification:
             print(f"\n[INFO] Processing {test_fc}")
             
             # Create test condition
-            from src.digitalmodel.modules.fatigue_analysis.strut_foundation_processor import FatigueCondition
+            from src.digitalmodel.structural.fatigue_apps.strut_foundation_processor import FatigueCondition
             test_condition = FatigueCondition(
                 id=1,
                 wind_speed=15,

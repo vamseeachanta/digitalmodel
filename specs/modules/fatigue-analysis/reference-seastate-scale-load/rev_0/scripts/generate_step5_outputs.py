@@ -13,7 +13,7 @@ import json
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent))
 
-from src.digitalmodel.modules.fatigue_analysis.strut_foundation_processor import (
+from src.digitalmodel.structural.fatigue_apps.strut_foundation_processor import (
     LoadScaler,
     ProductionDataHandler,
     FatigueCondition

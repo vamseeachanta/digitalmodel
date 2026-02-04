@@ -11,7 +11,7 @@ from pathlib import Path
 src_path = Path(__file__).parent.parent.parent.parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
-from digitalmodel.modules.fatigue_analysis.strut_foundation_processor import (
+from digitalmodel.structural.fatigue_apps.strut_foundation_processor import (
     ProductionDataHandler, LoadScaler
 )
 

@@ -52,7 +52,7 @@ except ImportError:
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from digitalmodel.marine_engineering.wave_spectra.spectra import (
+from digitalmodel.hydrodynamics.wave_spectra import (
     JONSWAPSpectrum, PiersonMoskowitzSpectrum, WaveSpectrumParameters
 )
 from digitalmodel.marine_engineering.environmental_loading.ocimf import (

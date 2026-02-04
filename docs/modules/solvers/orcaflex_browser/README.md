@@ -1,6 +1,6 @@
-# orcaflex_browser
+# orcaflex_browser (moved)
 
-> Part of `digitalmodel.solvers`
+> Now at `digitalmodel.solvers.orcaflex.browser`
 
 ## Overview
 
@@ -9,7 +9,7 @@ TODO: Module description
 ## Usage
 
 ```python
-from digitalmodel.solvers.orcaflex_browser import ...
+from digitalmodel.solvers.orcaflex.browser import ...
 ```
 
 ## API Reference

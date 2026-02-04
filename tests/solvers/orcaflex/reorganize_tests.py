@@ -64,11 +64,11 @@ class TestReorganizer:
             
             # Post-processing tests
             "post_processing": [
-                "orcaflex_post_process/basic/opp_summary_full_test.py",
-                "orcaflex_post_process/raos/raos_test.py",
-                "orcaflex_post_process/visualization/plot_yml_raos_test.py",
-                "orcaflex_post_process/wlng/fsts_simultaneous_test.py",
-                "orcaflex_post_process/wlng/fsts_time_traces_test.py",
+                "post_process/basic/opp_summary_full_test.py",
+                "post_process/raos/raos_test.py",
+                "post_process/visualization/plot_yml_raos_test.py",
+                "post_process/wlng/fsts_simultaneous_test.py",
+                "post_process/wlng/fsts_time_traces_test.py",
             ],
             
             # Browser interface tests

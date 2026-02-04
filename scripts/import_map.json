@@ -219,7 +219,7 @@
         "src/digitalmodel/modules/aqwa/viscous_damping_determination.py:17",
         "src/digitalmodel/modules/aqwa/viscous_damping_determination.py:18",
         "src/digitalmodel/modules/aqwa/viscous_damping_determination.py:19",
-        "src/digitalmodel/modules/diffraction_cli.py:173"
+        "src/digitalmodel/hydrodynamics/diffraction/diffraction_cli.py:173"
       ]
     },
     "marine_analysis": {
@@ -329,16 +329,16 @@
         "src/digitalmodel/modules/pipe_capacity/pipe_capacity.py:2"
       ]
     },
-    "fatigue_analysis": {
+    "fatigue_apps": {
       "count": 7,
       "files": [
-        "src/digitalmodel/modules/fatigue_analysis/__init__.py:21",
-        "src/digitalmodel/modules/fatigue_analysis/__main__.py:35",
-        "src/digitalmodel/modules/fatigue_analysis/cli_load_scaling.py:41",
-        "src/digitalmodel/modules/fatigue_analysis/fatigue_validation/__init__.py:12",
-        "src/digitalmodel/modules/fatigue_analysis/integrated_processor.py:21",
-        "src/digitalmodel/modules/fatigue_analysis/integrated_processor.py:22",
-        "src/digitalmodel/modules/fatigue_analysis/test_load_scaling.py:25"
+        "src/digitalmodel/structural/fatigue_apps/__init__.py:21",
+        "src/digitalmodel/structural/fatigue_apps/__main__.py:35",
+        "src/digitalmodel/structural/fatigue_apps/cli_load_scaling.py:41",
+        "src/digitalmodel/structural/fatigue_apps/fatigue_validation/__init__.py:12",
+        "src/digitalmodel/structural/fatigue_apps/integrated_processor.py:21",
+        "src/digitalmodel/structural/fatigue_apps/integrated_processor.py:22",
+        "src/digitalmodel/structural/fatigue_apps/test_load_scaling.py:25"
       ]
     },
     "structural": {
@@ -444,7 +444,7 @@
     "orcawave": {
       "count": 1,
       "files": [
-        "src/digitalmodel/modules/diffraction_cli.py:238"
+        "src/digitalmodel/hydrodynamics/diffraction/diffraction_cli.py:238"
       ]
     },
     "pipe_cross_section": {
@@ -638,7 +638,7 @@
       {
         "line": 94,
         "module": "catenary",
-        "full_import": "from digitalmodel.subsea.catenary.catenary import Catenary"
+        "full_import": "from digitalmodel.subsea.catenary_riser.legacy.catenary import Catenary"
       },
       {
         "line": 119,
@@ -855,51 +855,51 @@
       {
         "line": 3,
         "module": "catenary",
-        "full_import": "from digitalmodel.subsea.catenary.catenary_equation import CatenaryCalculator"
+        "full_import": "from digitalmodel.subsea.catenary_riser.legacy.catenary_equation import CatenaryCalculator"
       },
       {
         "line": 4,
         "module": "catenary",
-        "full_import": "from digitalmodel.subsea.catenary.catenary_riser import catenary_riser"
+        "full_import": "from digitalmodel.subsea.catenary_riser.legacy.catenary_riser import catenary_riser"
       }
     ],
     "src/digitalmodel/modules/catenary/catenaryMethods.py": [
       {
         "line": 6,
         "module": "catenary",
-        "full_import": "from digitalmodel.subsea.catenary.pipeProperties import pipeProperties"
+        "full_import": "from digitalmodel.subsea.catenary_riser.legacy.pipeProperties import pipeProperties"
       },
       {
         "line": 14,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary import CatenarySolver, CatenaryInput"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.catenary import CatenarySolver, CatenaryInput"
       },
       {
         "line": 17,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary import catenaryEquation"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.catenary import catenaryEquation"
       },
       {
         "line": 72,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary import catenaryForces"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.catenary import catenaryForces"
       }
     ],
     "src/digitalmodel/modules/catenary/catenary_riser.py": [
       {
         "line": 19,
         "module": "catenary",
-        "full_import": "from digitalmodel.subsea.catenary.catenaryMethods import ("
+        "full_import": "from digitalmodel.subsea.catenary_riser.legacy.catenaryMethods import ("
       },
       {
         "line": 28,
         "module": "catenary",
-        "full_import": "from digitalmodel.subsea.catenary.orcaflexModel import build_model"
+        "full_import": "from digitalmodel.subsea.catenary_riser.legacy.orcaflexModel import build_model"
       },
       {
         "line": 29,
         "module": "catenary",
-        "full_import": "from digitalmodel.subsea.catenary.pipeProperties import pipeProperties"
+        "full_import": "from digitalmodel.subsea.catenary_riser.legacy.pipeProperties import pipeProperties"
       }
     ],
     "src/digitalmodel/modules/ct_hydraulics/__init__.py": [
@@ -1172,7 +1172,7 @@
         "full_import": "from digitalmodel.diffraction.orcawave_backend import OrcaWaveBackend"
       }
     ],
-    "src/digitalmodel/modules/diffraction_cli.py": [
+    "src/digitalmodel/hydrodynamics/diffraction/diffraction_cli.py": [
       {
         "line": 173,
         "module": "aqwa",
@@ -1229,51 +1229,51 @@
         "full_import": "from digitalmodel.specialized.digitalmarketing.tools.search_rank import SearchRankFinder"
       }
     ],
-    "src/digitalmodel/modules/fatigue_analysis/__init__.py": [
+    "src/digitalmodel/structural/fatigue_apps/__init__.py": [
       {
         "line": 21,
-        "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.structural.fatigue_analysis import ReferenceSeaStateProcessor"
+        "module": "fatigue_apps",
+        "full_import": "from digitalmodel.structural.fatigue_apps import ReferenceSeaStateProcessor"
       }
     ],
-    "src/digitalmodel/modules/fatigue_analysis/__main__.py": [
+    "src/digitalmodel/structural/fatigue_apps/__main__.py": [
       {
         "line": 35,
-        "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.structural.fatigue_analysis.reference_seastate_processor import ("
+        "module": "fatigue_apps",
+        "full_import": "from digitalmodel.structural.fatigue_apps.reference_seastate_processor import ("
       }
     ],
-    "src/digitalmodel/modules/fatigue_analysis/cli_load_scaling.py": [
+    "src/digitalmodel/structural/fatigue_apps/cli_load_scaling.py": [
       {
         "line": 41,
-        "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.structural.fatigue_analysis.load_scaling import LoadScalingProcessor"
+        "module": "fatigue_apps",
+        "full_import": "from digitalmodel.structural.fatigue_apps.load_scaling import LoadScalingProcessor"
       }
     ],
-    "src/digitalmodel/modules/fatigue_analysis/fatigue_validation/__init__.py": [
+    "src/digitalmodel/structural/fatigue_apps/fatigue_validation/__init__.py": [
       {
         "line": 12,
-        "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.structural.fatigue_analysis.fatigue_validation import FatigueValidator"
+        "module": "fatigue_apps",
+        "full_import": "from digitalmodel.structural.fatigue_apps.fatigue_validation import FatigueValidator"
       }
     ],
-    "src/digitalmodel/modules/fatigue_analysis/integrated_processor.py": [
+    "src/digitalmodel/structural/fatigue_apps/integrated_processor.py": [
       {
         "line": 21,
-        "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.structural.fatigue_analysis.rainflow_counter import RainflowCounter"
+        "module": "fatigue_apps",
+        "full_import": "from digitalmodel.structural.fatigue_apps.rainflow_counter import RainflowCounter"
       },
       {
         "line": 22,
-        "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.structural.fatigue_analysis.fatigue_damage_calculator import ("
+        "module": "fatigue_apps",
+        "full_import": "from digitalmodel.structural.fatigue_apps.fatigue_damage_calculator import ("
       }
     ],
-    "src/digitalmodel/modules/fatigue_analysis/test_load_scaling.py": [
+    "src/digitalmodel/structural/fatigue_apps/test_load_scaling.py": [
       {
         "line": 25,
-        "module": "fatigue_analysis",
-        "full_import": "from digitalmodel.structural.fatigue_analysis.load_scaling import LoadScaler"
+        "module": "fatigue_apps",
+        "full_import": "from digitalmodel.structural.fatigue_apps.load_scaling import LoadScaler"
       }
     ],
     "src/digitalmodel/modules/gis/__init__.py": [
@@ -1557,7 +1557,7 @@
       {
         "line": 55,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.marine_ops.marine_analysis.wave_spectra.spectra import ("
+        "full_import": "from digitalmodel.hydrodynamics.wave_spectra import ("
       },
       {
         "line": 58,
@@ -1586,7 +1586,7 @@
       {
         "line": 16,
         "module": "catenary",
-        "full_import": "from digitalmodel.subsea.catenary.catenaryMethods import ("
+        "full_import": "from digitalmodel.subsea.catenary_riser.legacy.catenaryMethods import ("
       }
     ],
     "src/digitalmodel/modules/marine_analysis/validation/validate_phase2.py": [
@@ -1600,7 +1600,7 @@
       {
         "line": 54,
         "module": "marine_analysis",
-        "full_import": "from digitalmodel.marine_ops.marine_analysis.wave_spectra import WaveSpectrum, JONSWAP"
+        "full_import": "from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra"
       },
       {
         "line": 55,
@@ -1634,17 +1634,17 @@
       {
         "line": 8,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary import CatenarySolver, CatenaryInput"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.catenary import CatenarySolver, CatenaryInput"
       },
       {
         "line": 13,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary import LazyWaveSolver, LazyWaveConfiguration"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.catenary import LazyWaveSolver, LazyWaveConfiguration"
       },
       {
         "line": 18,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary import catenaryEquation"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.catenary import catenaryEquation"
       },
       {
         "line": 26,
@@ -1656,7 +1656,7 @@
       {
         "line": 12,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.marine_ops.marine_engineering.catenary.adapter import catenaryEquation"
+        "full_import": "from digitalmodel.marine_ops.marine_analysis.catenary.adapter import catenaryEquation"
       },
       {
         "line": 36,
@@ -1668,14 +1668,14 @@
       {
         "line": 6,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.marine_ops.marine_engineering.wave_spectra import ("
+        "full_import": "from digitalmodel.hydrodynamics.wave_spectra import ("
       }
     ],
     "src/digitalmodel/modules/marine_engineering/tests/test_wave_spectra.py": [
       {
         "line": 20,
         "module": "marine_engineering",
-        "full_import": "from digitalmodel.marine_ops.marine_engineering.wave_spectra.spectra import ("
+        "full_import": "from digitalmodel.hydrodynamics.wave_spectra import ("
       }
     ],
     "src/digitalmodel/modules/orcaflex/all_vars.py": [

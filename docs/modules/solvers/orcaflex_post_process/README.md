@@ -1,6 +1,6 @@
-# orcaflex_post_process
+# orcaflex_post_process (moved)
 
-> Part of `digitalmodel.solvers`
+> Now at `digitalmodel.solvers.orcaflex.post_process`
 
 ## Overview
 
@@ -9,7 +9,7 @@ TODO: Module description
 ## Usage
 
 ```python
-from digitalmodel.solvers.orcaflex_post_process import ...
+from digitalmodel.solvers.orcaflex.post_process import ...
 ```
 
 ## API Reference

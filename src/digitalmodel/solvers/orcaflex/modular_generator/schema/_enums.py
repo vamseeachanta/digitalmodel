@@ -33,3 +33,11 @@ class RampType(str, Enum):
     CURVED_PLATE = "curved_plate"
     CYLINDER = "cylinder"
     POLYGON = "polygon"
+
+
+class RollerType(str, Enum):
+    """Roller types for pipeline support during installation."""
+
+    V_ROLLER = "v_roller"
+    FLAT = "flat"
+    CRADLE = "cradle"

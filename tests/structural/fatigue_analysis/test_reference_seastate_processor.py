@@ -14,7 +14,7 @@ import tempfile
 import json
 from unittest.mock import Mock, patch, MagicMock
 
-from digitalmodel.fatigue_analysis import (
+from digitalmodel.structural.fatigue_apps import (
     ReferenceSeaStateProcessor,
     Configuration,
     FatigueCondition,

@@ -19,7 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 # Import all required modules
-from digitalmodel.marine_ops.marine_analysis.wave_spectra.spectra import (
+from digitalmodel.hydrodynamics.wave_spectra import (
     JONSWAPSpectrum,
     WaveSpectrumParameters
 )

@@ -51,7 +51,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 # Import Phase 1 & 2 modules
 try:
-    from digitalmodel.marine_engineering.wave_spectra import WaveSpectrum, JONSWAP
+    from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
     from digitalmodel.marine_engineering.environmental_loading.ocimf import (
         OCIMFDatabase, EnvironmentalForces, EnvironmentalConditions, VesselGeometry
     )

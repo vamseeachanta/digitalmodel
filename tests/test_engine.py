@@ -239,7 +239,7 @@ class TestModuleRouting:
         cfg = {"basename": "catenary_analysis"}
 
         # Catenary is dynamically imported inside the function from digitalmodel.subsea.catenary.catenary
-        with patch('digitalmodel.subsea.catenary.catenary.Catenary') as mock_catenary:
+        with patch('digitalmodel.subsea.catenary_riser.legacy.catenary.Catenary') as mock_catenary:
             mock_instance = MagicMock()
             mock_instance.router.return_value = cfg
             mock_catenary.return_value = mock_instance
@@ -535,7 +535,7 @@ class TestDynamicImports:
         cfg = {"basename": "catenary_special"}
 
         # Catenary is dynamically imported inside the function from digitalmodel.subsea.catenary.catenary
-        with patch('digitalmodel.subsea.catenary.catenary.Catenary') as mock_catenary:
+        with patch('digitalmodel.subsea.catenary_riser.legacy.catenary.Catenary') as mock_catenary:
             mock_instance = MagicMock()
             mock_instance.router.return_value = cfg
             mock_catenary.return_value = mock_instance

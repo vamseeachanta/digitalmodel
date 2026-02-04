@@ -25,7 +25,7 @@ _MOVED_MODULES = {
     "ai_workflows", "api_analysis", "aqwa", "artificial_lift", "automation",
     "bemrosetta", "blender_automation", "catenary", "catenary_riser",
     "ct_hydraulics", "data_scraping", "design_tools", "diffraction",
-    "digitalmarketing", "fatigue_analysis", "fea_model", "finance", "gis",
+    "digitalmarketing", "fatigue_analysis", "fatigue_apps", "fea_model", "finance", "gis",
     "gmsh_meshing", "hydrodynamics", "marine_analysis", "marine_engineering",
     "mcp_server", "mooring_analysis", "orcaflex", "orcaflex_browser",
     "orcaflex_post_process", "orcawave", "pipe_capacity", "pipe_cross_section",

@@ -356,7 +356,7 @@ print(f"Status: {'PASS' if result['passes'] else 'FAIL'}")
 ### Standards Lookup
 
 ```python
-from digitalmodel.infrastructure.standards_lookup import StandardsLookup
+from digitalmodel.infrastructure.common.standards_lookup import StandardsLookup
 
 # Initialize lookup
 lookup = StandardsLookup()
@@ -517,5 +517,5 @@ except KeyError as e:
 - DNV-OS-E301: Position Mooring
 - DNV-OS-F201: Dynamic Risers
 - ISO 19901-7: Stationkeeping Systems for Floating Offshore Structures
-- Source: `src/digitalmodel/modules/standards_lookup.py`
+- Source: `src/digitalmodel/infrastructure/common/standards_lookup.py`
 - Source: `src/digitalmodel/modules/structural_analysis/capacity.py`

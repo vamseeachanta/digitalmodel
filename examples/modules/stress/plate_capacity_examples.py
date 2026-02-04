@@ -16,11 +16,11 @@ import json
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from digitalmodel.structural.analysis.plate_capacity import (
+from digitalmodel.structural.structural_analysis.capacity import (
     PlateProperties, AppliedLoads, BucklingConstants, BucklingResults,
     PlateBucklingAnalyzer, BoundaryCondition, run_example_analysis
 )
-from digitalmodel.structural.analysis.multi_plate_analyzer import (
+from digitalmodel.structural.structural_analysis.capacity import (
     MultiPlateAnalyzer, PlateConfiguration, create_legacy_multi_plate_analyzer
 )
 from digitalmodel.infrastructure.calculations.plate_buckling import (

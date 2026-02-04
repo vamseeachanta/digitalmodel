@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ._enums import RollerType
+
 
 class TugProperties(BaseModel):
     """
@@ -74,6 +76,88 @@ class Rollers(BaseModel):
         if len(v) != 3:
             raise ValueError(f"Position must have exactly 3 components, got {len(v)}")
         return v
+
+
+class RollerStation(BaseModel):
+    """Single roller station along the installation route."""
+
+    position: list[float] = Field(
+        ..., min_length=3, max_length=3, description="[x, y, z] position (m)"
+    )
+    support_count: int = Field(
+        default=4, ge=1, le=20, description="Supports per station"
+    )
+    support_type: str = Field(
+        default="Support type2", description="Support type name"
+    )
+    v_angle: float | None = Field(
+        default=None, ge=30, le=180,
+        description="V-angle (deg), required for v_roller only"
+    )
+    diameter: float = Field(
+        default=0.5, gt=0.05, le=5.0, description="Roller drum diameter (m)"
+    )
+    friction_coefficient: float = Field(
+        default=0.1, ge=0, le=1, description="Roller friction coefficient"
+    )
+    height_offset: float = Field(
+        default=0.0, description="Vertical offset from reference (m)"
+    )
+
+    @field_validator("position")
+    @classmethod
+    def validate_position(cls, v: list[float]) -> list[float]:
+        if len(v) != 3:
+            raise ValueError(f"Position must have exactly 3 components, got {len(v)}")
+        return v
+
+
+class RollerArrangement(BaseModel):
+    """Parametric roller arrangement for pipeline support.
+
+    Note: uniform() factory spaces stations along the X-axis only.
+    This is valid for straight-line installation routes. For curved
+    routes, define station positions explicitly.
+    """
+
+    type: RollerType = RollerType.V_ROLLER
+    stations: list[RollerStation] = Field(
+        ..., min_length=1, description="Ordered roller stations"
+    )
+    spacing_pattern: str | None = Field(
+        default=None, description="'uniform:<spacing_m>' or None for custom"
+    )
+
+    @model_validator(mode="after")
+    def validate_v_angle_for_type(self) -> "RollerArrangement":
+        """Enforce v_angle is set for V_ROLLER type, default to 120 if missing."""
+        if self.type == RollerType.V_ROLLER:
+            for station in self.stations:
+                if station.v_angle is None:
+                    station.v_angle = 120.0
+        return self
+
+    @classmethod
+    def uniform(
+        cls,
+        type: RollerType,
+        count: int,
+        first_position: list[float],
+        spacing: float,
+        **station_kwargs,
+    ) -> "RollerArrangement":
+        """Create evenly-spaced stations along the X-axis (straight routes only)."""
+        stations = []
+        for i in range(count):
+            pos = [
+                first_position[0] + i * spacing,
+                first_position[1],
+                first_position[2],
+            ]
+            stations.append(RollerStation(position=pos, **station_kwargs))
+        return cls(
+            type=type, stations=stations, spacing_pattern=f"uniform:{spacing}"
+        )
 
 
 class BuoyancyModuleProperties(BaseModel):
@@ -282,15 +366,13 @@ class Tensioner(BaseModel):
 
 
 class Equipment(BaseModel):
-    """
-    Complete equipment specification for installation operations.
-
-    Contains all equipment definitions including tugs, rollers,
-    buoyancy modules, and seabed ramps/shapes.
-    """
+    """Complete equipment specification for installation operations."""
 
     tugs: Tugs | None = Field(default=None, description="Tug configuration")
     rollers: Rollers | None = Field(default=None, description="Roller configuration")
+    roller_arrangement: RollerArrangement | None = Field(
+        default=None, description="Parametric roller arrangement (preferred over rollers)"
+    )
     buoyancy_modules: BuoyancyModules | None = Field(
         default=None, description="Buoyancy module configuration"
     )
@@ -300,3 +382,23 @@ class Equipment(BaseModel):
     vessel: Vessel | None = Field(default=None, description="Installation vessel")
     stinger: Stinger | None = Field(default=None, description="Stinger configuration")
     tensioner: Tensioner | None = Field(default=None, description="Tensioner configuration")
+
+    @model_validator(mode="after")
+    def resolve_roller_compat(self) -> "Equipment":
+        """Auto-convert legacy rollers to RollerArrangement if roller_arrangement not set."""
+        if self.roller_arrangement is None and self.rollers is not None:
+            self.roller_arrangement = RollerArrangement(
+                type=RollerType.V_ROLLER,
+                stations=[
+                    RollerStation(
+                        position=self.rollers.position,
+                        support_count=self.rollers.supports,
+                        support_type=self.rollers.support_type,
+                    )
+                ],
+            )
+        return self
+
+    def get_effective_rollers(self) -> RollerArrangement | None:
+        """Get the effective roller arrangement (from either field)."""
+        return self.roller_arrangement

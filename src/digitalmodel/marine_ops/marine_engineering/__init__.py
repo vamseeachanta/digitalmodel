@@ -6,15 +6,16 @@ environmental loading calculations, hydrodynamic coefficients, mooring analysis,
 and wave spectra modeling.
 
 Submodules:
-    catenary: Unified catenary analysis with BVP solver and lazy-wave support
     environmental_loading: OCIMF wind and current coefficient calculations
     hydrodynamic_coefficients: Added mass, damping matrices, and AQWA parsing
     mooring_analysis: Quasi-static mooring system analysis
-    wave_spectra: JONSWAP and Pierson-Moskowitz spectrum models
+
+Note: Catenary analysis has been consolidated into
+    digitalmodel.marine_ops.marine_analysis.catenary
 """
 
-# Catenary analysis
-from .catenary import (
+# Catenary analysis (re-exported from marine_analysis.catenary)
+from digitalmodel.marine_ops.marine_analysis.catenary import (
     CatenarySolver,
     CatenaryInput,
     CatenaryResults,
@@ -42,13 +43,7 @@ from .hydrodynamic_coefficients import (
     DOF_INDEX,
 )
 
-# Wave spectra
-from .wave_spectra import (
-    WaveSpectrum,
-    JONSWAPSpectrum,
-    PiersonMoskowitzSpectrum,
-    WaveSpectrumParameters,
-)
+# Wave spectra - canonical location: digitalmodel.hydrodynamics.wave_spectra
 
 __version__ = "1.0.0"
 __author__ = "DigitalModel Team"
@@ -74,9 +69,5 @@ __all__ = [
     "HydrodynamicPlotter",
     "DOF_NAMES",
     "DOF_INDEX",
-    # Wave spectra
-    "WaveSpectrum",
-    "JONSWAPSpectrum",
-    "PiersonMoskowitzSpectrum",
-    "WaveSpectrumParameters",
+    # Wave spectra - moved to digitalmodel.hydrodynamics.wave_spectra
 ]
