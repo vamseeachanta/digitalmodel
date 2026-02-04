@@ -19,10 +19,7 @@ from pathlib import Path
 import json
 import tempfile
 
-from digitalmodel.hydrodynamics.wave_spectra import (
-    JONSWAPSpectrum,
-    WaveSpectrumParameters
-)
+from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients.coefficients import (
     CoefficientDatabase,
     DOF_NAMES
@@ -156,14 +153,8 @@ class TestEndToEndWorkflow:
                                                 environmental_database, output_dir):
         """Test complete mooring analysis from environment to tensions."""
         # Step 1: Define environmental conditions
-        wave_params = WaveSpectrumParameters(
-            Hs=5.0,  # 5m significant wave height
-            Tp=10.0,  # 10s peak period
-            gamma=3.3,
-            freq_range=(0.01, 1.0),
-            n_frequencies=100
-        )
-        wave_spectrum = JONSWAPSpectrum(wave_params)
+        ws = WaveSpectra()
+        wave_omega, wave_S = ws.jonswap(hs=5.0, tp=10.0, gamma=3.3, n_points=100)
 
         env_conditions = EnvironmentalConditions(
             wind_speed=20.0,
@@ -173,7 +164,7 @@ class TestEndToEndWorkflow:
         )
 
         # Step 2: Calculate wave statistics
-        wave_stats = wave_spectrum.get_spectral_statistics()
+        wave_stats = ws.spectrum_statistics(wave_omega, wave_S)
 
         # Step 3: Calculate environmental forces
         env_forces = EnvironmentalForces(environmental_database)
@@ -207,9 +198,9 @@ class TestEndToEndWorkflow:
                 'draft': vessel.geometry.draft
             },
             'environment': {
-                'Hs': wave_stats['Hs'],
-                'Tp': wave_params.Tp,
-                'Tz': wave_stats['Tz'],
+                'Hs': wave_stats['Hs_m'],
+                'Tp': wave_stats['Tp_s'],
+                'Tz': wave_stats['Tz_s'],
                 'wind_speed': env_conditions.wind_speed,
                 'current_speed': env_conditions.current_speed
             },
@@ -236,7 +227,7 @@ class TestEndToEndWorkflow:
 
         # Create visualization
         self._create_workflow_summary_chart(
-            wave_spectrum, force_results, line_tensions,
+            ws, wave_omega, wave_S, force_results, line_tensions,
             mooring_system, output_dir
         )
 
@@ -316,17 +307,14 @@ class TestEndToEndWorkflow:
 
         max_tensions = []
         condition_labels = []
+        ws = WaveSpectra()
 
         for Hs in Hs_range:
             for wind in wind_range:
                 for heading in heading_range:
                     # Wave spectrum
                     Tp = 3.0 * np.sqrt(Hs)  # Empirical relationship
-                    wave_params = WaveSpectrumParameters(
-                        Hs=Hs, Tp=Tp, gamma=3.3,
-                        freq_range=(0.01, 1.0), n_frequencies=50
-                    )
-                    wave_spectrum = JONSWAPSpectrum(wave_params)
+                    _omega, _S = ws.jonswap(hs=Hs, tp=Tp, gamma=3.3, n_points=50)
 
                     # Environmental forces
                     env_conditions = EnvironmentalConditions(
@@ -474,7 +462,7 @@ class TestEndToEndWorkflow:
         plt.savefig(output_dir / "mooring_layout.png", dpi=300, bbox_inches='tight')
         plt.close()
 
-    def _create_workflow_summary_chart(self, wave_spectrum, force_results,
+    def _create_workflow_summary_chart(self, ws, wave_omega, wave_S, force_results,
                                       line_tensions, mooring_system, output_dir):
         """Create comprehensive workflow summary chart."""
         fig = plt.figure(figsize=(16, 12))
@@ -482,22 +470,21 @@ class TestEndToEndWorkflow:
 
         # 1. Wave spectrum
         ax1 = fig.add_subplot(gs[0, :2])
-        S = wave_spectrum.compute_spectrum()
-        frequencies = wave_spectrum.frequencies
-        ax1.plot(frequencies, S, linewidth=2)
-        ax1.fill_between(frequencies, 0, S, alpha=0.3)
+        frequencies = wave_omega / (2 * np.pi)
+        ax1.plot(frequencies, wave_S, linewidth=2)
+        ax1.fill_between(frequencies, 0, wave_S, alpha=0.3)
         ax1.set_xlabel('Frequency [Hz]')
-        ax1.set_ylabel('S(f) [m²·s]')
+        ax1.set_ylabel('S(f) [m^2*s]')
         ax1.set_title('Wave Spectrum')
         ax1.grid(True, alpha=0.3)
 
         # 2. Wave statistics
         ax2 = fig.add_subplot(gs[0, 2])
-        stats = wave_spectrum.get_spectral_statistics()
-        stats_text = f"Hs: {stats['Hs']:.2f} m\n"
-        stats_text += f"Tp: {wave_spectrum.params.Tp:.2f} s\n"
-        stats_text += f"Tz: {stats['Tz']:.2f} s\n"
-        stats_text += f"BW: {stats['bandwidth']:.3f}"
+        stats = ws.spectrum_statistics(wave_omega, wave_S)
+        stats_text = f"Hs: {stats['Hs_m']:.2f} m\n"
+        stats_text += f"Tp: {stats['Tp_s']:.2f} s\n"
+        stats_text += f"Tz: {stats['Tz_s']:.2f} s\n"
+        stats_text += f"BW: {stats['spectral_width']:.3f}"
         ax2.text(0.5, 0.5, stats_text, ha='center', va='center',
                 fontsize=14, family='monospace',
                 bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))

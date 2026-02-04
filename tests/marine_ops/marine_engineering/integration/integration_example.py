@@ -19,10 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 # Import all required modules
-from digitalmodel.hydrodynamics.wave_spectra import (
-    JONSWAPSpectrum,
-    WaveSpectrumParameters
-)
+from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 from digitalmodel.marine_ops.marine_analysis.environmental_loading.ocimf import (
     OCIMFDatabase,
     EnvironmentalConditions,
@@ -50,23 +47,17 @@ def main():
     print("-" * 80)
 
     # Wave conditions (severe North Sea storm)
-    wave_params = WaveSpectrumParameters(
-        Hs=8.0,      # 8m significant wave height
-        Tp=12.0,     # 12s peak period
-        gamma=3.3,   # Standard JONSWAP gamma
-        freq_range=(0.01, 1.0),
-        n_frequencies=200
-    )
-    wave_spectrum = JONSWAPSpectrum(wave_params)
+    ws = WaveSpectra()
+    wave_omega, wave_S = ws.jonswap(hs=8.0, tp=12.0, gamma=3.3, n_points=200)
 
     # Calculate wave statistics
-    wave_stats = wave_spectrum.get_spectral_statistics()
+    wave_stats = ws.spectrum_statistics(wave_omega, wave_S)
     print(f"  Wave Conditions:")
-    print(f"    Hs = {wave_stats['Hs']:.2f} m")
-    print(f"    Tp = {wave_params.Tp:.2f} s")
-    print(f"    Tz = {wave_stats['Tz']:.2f} s")
-    print(f"    Tm = {wave_stats['Tm']:.2f} s")
-    print(f"    Bandwidth = {wave_stats['bandwidth']:.3f}")
+    print(f"    Hs = {wave_stats['Hs_m']:.2f} m")
+    print(f"    Tp = {wave_stats['Tp_s']:.2f} s")
+    print(f"    Tz = {wave_stats['Tz_s']:.2f} s")
+    print(f"    m0 = {wave_stats['m0']:.6f}")
+    print(f"    Bandwidth = {wave_stats['spectral_width']:.3f}")
     print()
 
     # Wind and current conditions
@@ -221,22 +212,21 @@ def main():
 
         # 1. Wave spectrum
         ax1 = fig.add_subplot(gs[0, :2])
-        S = wave_spectrum.compute_spectrum()
-        frequencies = wave_spectrum.frequencies
-        ax1.plot(frequencies, S, linewidth=2, color='navy')
-        ax1.fill_between(frequencies, 0, S, alpha=0.3)
+        frequencies = wave_omega / (2 * np.pi)
+        ax1.plot(frequencies, wave_S, linewidth=2, color='navy')
+        ax1.fill_between(frequencies, 0, wave_S, alpha=0.3)
         ax1.set_xlabel('Frequency [Hz]', fontsize=10)
-        ax1.set_ylabel('S(f) [m²·s]', fontsize=10)
+        ax1.set_ylabel('S(f) [m^2*s]', fontsize=10)
         ax1.set_title('Wave Spectrum (JONSWAP)', fontsize=12, fontweight='bold')
         ax1.grid(True, alpha=0.3)
 
         # 2. Wave statistics
         ax2 = fig.add_subplot(gs[0, 2])
-        stats_text = f"Hs: {wave_stats['Hs']:.2f} m\n"
-        stats_text += f"Tp: {wave_params.Tp:.2f} s\n"
-        stats_text += f"Tz: {wave_stats['Tz']:.2f} s\n"
-        stats_text += f"Tm: {wave_stats['Tm']:.2f} s\n"
-        stats_text += f"BW: {wave_stats['bandwidth']:.3f}"
+        stats_text = f"Hs: {wave_stats['Hs_m']:.2f} m\n"
+        stats_text += f"Tp: {wave_stats['Tp_s']:.2f} s\n"
+        stats_text += f"Tz: {wave_stats['Tz_s']:.2f} s\n"
+        stats_text += f"m0: {wave_stats['m0']:.6f}\n"
+        stats_text += f"BW: {wave_stats['spectral_width']:.3f}"
         ax2.text(0.5, 0.5, stats_text, ha='center', va='center',
                 fontsize=11, family='monospace',
                 bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.7))
@@ -347,11 +337,11 @@ def main():
         results = {
             'environment': {
                 'wave': {
-                    'Hs_m': wave_stats['Hs'],
-                    'Tp_s': wave_params.Tp,
-                    'Tz_s': wave_stats['Tz'],
-                    'Tm_s': wave_stats['Tm'],
-                    'bandwidth': wave_stats['bandwidth']
+                    'Hs_m': wave_stats['Hs_m'],
+                    'Tp_s': wave_stats['Tp_s'],
+                    'Tz_s': wave_stats['Tz_s'],
+                    'm0': wave_stats['m0'],
+                    'bandwidth': wave_stats['spectral_width']
                 },
                 'wind': {
                     'speed_ms': env_conditions.wind_speed,

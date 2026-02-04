@@ -18,9 +18,7 @@ import numpy as np
 from pathlib import Path
 import tempfile
 
-from digitalmodel.hydrodynamics.wave_spectra import (
-    JONSWAPSpectrum, PiersonMoskowitzSpectrum, WaveSpectrumParameters
-)
+from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 from digitalmodel.marine_ops.marine_analysis.environmental_loading.ocimf import (
     OCIMFDatabase, EnvironmentalForces, EnvironmentalConditions,
     VesselGeometry, create_sample_database
@@ -76,16 +74,10 @@ class TestWaveSpectrumPerformance:
 
     def test_jonswap_spectrum_generation(self, benchmark):
         """Benchmark JONSWAP spectrum generation (<10ms target)."""
-        params = WaveSpectrumParameters(
-            Hs=3.5,
-            Tp=10.0,
-            gamma=3.3,
-            n_frequencies=100
-        )
+        ws = WaveSpectra()
 
         def run_spectrum():
-            spectrum = JONSWAPSpectrum(params)
-            S = spectrum.compute_spectrum()
+            omega, S = ws.jonswap(hs=3.5, tp=10.0, gamma=3.3, n_points=100)
             return S
 
         result = benchmark(run_spectrum)
@@ -97,11 +89,11 @@ class TestWaveSpectrumPerformance:
 
     def test_spectral_statistics(self, benchmark):
         """Benchmark spectral statistics calculation."""
-        params = WaveSpectrumParameters(Hs=3.5, Tp=10.0, gamma=3.3, n_frequencies=100)
-        spectrum = JONSWAPSpectrum(params)
+        ws = WaveSpectra()
+        omega, S = ws.jonswap(hs=3.5, tp=10.0, gamma=3.3, n_points=100)
 
         def run_stats():
-            return spectrum.get_spectral_statistics()
+            return ws.spectrum_statistics(omega, S)
 
         result = benchmark(run_stats)
 
@@ -112,11 +104,10 @@ class TestWaveSpectrumPerformance:
 
     def test_pierson_moskowitz_spectrum(self, benchmark):
         """Benchmark Pierson-Moskowitz spectrum generation."""
-        params = WaveSpectrumParameters(Hs=3.5, Tp=10.0, n_frequencies=100)
+        ws = WaveSpectra()
 
         def run_spectrum():
-            spectrum = PiersonMoskowitzSpectrum(params)
-            S = spectrum.compute_spectrum()
+            omega, S = ws.pierson_moskowitz(hs=3.5, tp=10.0, n_points=100)
             return S
 
         result = benchmark(run_spectrum)
@@ -345,21 +336,20 @@ class TestEndToEndPerformance:
 
     def test_wave_spectrum_workflow(self, benchmark):
         """Benchmark complete wave spectrum workflow."""
+        ws = WaveSpectra()
+
         def run_wave_workflow():
             # Generate spectrum
-            params = WaveSpectrumParameters(Hs=3.5, Tp=10.0, gamma=3.3, n_frequencies=100)
-            spectrum = JONSWAPSpectrum(params)
-            S = spectrum.compute_spectrum()
+            omega, S = ws.jonswap(hs=3.5, tp=10.0, gamma=3.3, n_points=100)
 
             # Calculate statistics
-            stats = spectrum.get_spectral_statistics()
+            stats = ws.spectrum_statistics(omega, S)
 
             # Multiple spectra (sea states)
             spectra = []
             for Hs in [2.0, 3.0, 4.0, 5.0]:
-                params_i = WaveSpectrumParameters(Hs=Hs, Tp=10.0, gamma=3.3, n_frequencies=100)
-                spec_i = JONSWAPSpectrum(params_i)
-                spectra.append(spec_i.compute_spectrum())
+                omega_i, S_i = ws.jonswap(hs=Hs, tp=10.0, gamma=3.3, n_points=100)
+                spectra.append(S_i)
 
             return S, stats, spectra
 

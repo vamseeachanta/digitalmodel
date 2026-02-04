@@ -1,9 +1,37 @@
 """
 See https://github.com/vamseeachanta/digitalmodel/ for more information.
+
+Domain groups::
+
+    digitalmodel.data_systems        - Data acquisition & validation
+    digitalmodel.hydrodynamics       - Wave & vessel dynamics (AQWA, OrcaWave, BEMRosetta)
+    digitalmodel.infrastructure      - Core framework & shared utilities
+    digitalmodel.marine_ops          - Marine operations & offshore engineering
+    digitalmodel.signal_processing   - Signal analysis & time series
+    digitalmodel.solvers             - Solver integrations (OrcaFlex, GMSH, Blender)
+    digitalmodel.specialized         - Domain-specific apps (GIS, finance, marketing)
+    digitalmodel.structural          - Structural analysis & fatigue
+    digitalmodel.subsea              - Subsea systems (mooring, risers, VIV)
+    digitalmodel.visualization       - Dashboards & reporting
+    digitalmodel.workflows           - Automation & agent orchestration
 """
 
 # Version of package
 __version__ = "0.0.9"
+
+__all__ = [
+    "data_systems",
+    "hydrodynamics",
+    "infrastructure",
+    "marine_ops",
+    "signal_processing",
+    "solvers",
+    "specialized",
+    "structural",
+    "subsea",
+    "visualization",
+    "workflows",
+]
 
 # Import modules subpackage for test patching support
 from . import modules

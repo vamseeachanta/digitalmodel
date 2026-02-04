@@ -52,9 +52,7 @@ except ImportError:
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from digitalmodel.hydrodynamics.wave_spectra import (
-    JONSWAPSpectrum, PiersonMoskowitzSpectrum, WaveSpectrumParameters
-)
+from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 from digitalmodel.marine_ops.marine_analysis.environmental_loading.ocimf import (
     OCIMFDatabase, EnvironmentalForces, EnvironmentalConditions,
     VesselGeometry, create_sample_database
@@ -123,30 +121,24 @@ class PerformanceProfiler:
         print("\n=== Profiling Wave Spectrum Generation ===")
 
         # Setup
-        params = WaveSpectrumParameters(
-            Hs=3.5,
-            Tp=10.0,
-            gamma=3.3,
-            n_frequencies=100
-        )
+        ws = WaveSpectra()
+        hs, tp, gamma, n_points = 3.5, 10.0, 3.3, 100
 
         # Profile execution time
         iterations = 1000
         start_time = time.perf_counter()
 
         for _ in range(iterations):
-            spectrum = JONSWAPSpectrum(params)
-            S = spectrum.compute_spectrum()
-            stats = spectrum.get_spectral_statistics()
+            freq, S = ws.jonswap(hs=hs, tp=tp, gamma=gamma, n_points=n_points)
+            stats = ws.spectrum_statistics(freq, S)
 
         end_time = time.perf_counter()
         avg_time_ms = (end_time - start_time) / iterations * 1000
 
         # Memory profiling
         def run_spectrum():
-            spectrum = JONSWAPSpectrum(params)
-            S = spectrum.compute_spectrum()
-            stats = spectrum.get_spectral_statistics()
+            freq, S = ws.jonswap(hs=hs, tp=tp, gamma=gamma, n_points=n_points)
+            stats = ws.spectrum_statistics(freq, S)
             return S
 
         mem_usage = memory_usage(run_spectrum, max_usage=True)
@@ -156,8 +148,7 @@ class PerformanceProfiler:
         profiler = cProfile.Profile()
         profiler.enable()
         for _ in range(100):
-            spectrum = JONSWAPSpectrum(params)
-            S = spectrum.compute_spectrum()
+            freq, S = ws.jonswap(hs=hs, tp=tp, gamma=gamma, n_points=n_points)
         profiler.disable()
 
         # Save cProfile results

@@ -3,48 +3,44 @@
 import sys
 sys.path.insert(0, 'D:/workspace-hub/digitalmodel/src')
 
-from digitalmodel.hydrodynamics.wave_spectra import (
-    WaveSpectrumParameters,
-    JONSWAPSpectrum,
-    PiersonMoskowitzSpectrum
-)
+from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 import numpy as np
 
+ws = WaveSpectra()
+
 print('=== JONSWAP Spectrum Test ===')
-params = WaveSpectrumParameters(Hs=3.0, Tp=10.0, gamma=3.3)
-spectrum = JONSWAPSpectrum(params)
+freq, S = ws.jonswap(hs=3.0, tp=10.0, gamma=3.3)
 print('OK: Spectrum created successfully')
 
-S = spectrum.compute_spectrum()
 print(f'OK: Spectrum computed: {len(S)} points, max={np.max(S):.4f} m^2s/rad')
 
-Hs = spectrum.significant_wave_height()
+Hs = ws.significant_height_from_spectrum(freq, S)
 error_pct = abs(Hs-3.0)/3.0*100
 print(f'OK: Hs recovery: {Hs:.3f} m (input: 3.0 m, error: {error_pct:.2f}%)')
 
-Tz = spectrum.zero_crossing_period()
+Tz = ws.zero_crossing_period_from_spectrum(freq, S)
 print(f'OK: Tz: {Tz:.3f} s (expected ~7.1s for Tp=10s)')
 
-bw = spectrum.spectral_bandwidth()
+stats = ws.spectrum_statistics(freq, S)
+bw = stats['spectral_width']
 print(f'OK: Bandwidth: {bw:.3f}')
 
 print('')
 print('=== Pierson-Moskowitz Spectrum Test ===')
-pm = PiersonMoskowitzSpectrum(params)
-S_pm = pm.compute_spectrum()
+freq_pm, S_pm = ws.pierson_moskowitz(hs=3.0, tp=10.0)
 print(f'OK: P-M Spectrum computed: {len(S_pm)} points')
 
-Hs_pm = pm.significant_wave_height()
+Hs_pm = ws.significant_height_from_spectrum(freq_pm, S_pm)
 error_pm = abs(Hs_pm-3.0)/3.0*100
 print(f'OK: P-M Hs recovery: {Hs_pm:.3f} m (error: {error_pm:.2f}%)')
 
 print('')
 print('=== Spectral Statistics Test ===')
-stats = spectrum.get_spectral_statistics()
-print(f'OK: Hs = {stats["Hs"]:.3f} m')
-print(f'OK: Tz = {stats["Tz"]:.3f} s')
-print(f'OK: Tm = {stats["Tm"]:.3f} s')
-print(f'OK: Bandwidth = {stats["bandwidth"]:.3f}')
+stats = ws.spectrum_statistics(freq, S)
+print(f'OK: Hs = {stats["Hs_m"]:.3f} m')
+print(f'OK: Tz = {stats["Tz_s"]:.3f} s')
+print(f'OK: Tp = {stats["Tp_s"]:.3f} s')
+print(f'OK: Bandwidth = {stats["spectral_width"]:.3f}')
 
 print('')
 print('=== Validation Summary ===')

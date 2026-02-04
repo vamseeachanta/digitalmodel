@@ -17,10 +17,7 @@ import tempfile
 import psutil
 import os
 
-from digitalmodel.hydrodynamics.wave_spectra import (
-    JONSWAPSpectrum,
-    WaveSpectrumParameters
-)
+from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients.coefficients import (
     CoefficientDatabase
 )
@@ -49,18 +46,13 @@ class TestPerformanceBenchmarks:
         frequency_counts = [50, 100, 200, 500, 1000, 2000]
         computation_times = []
         memory_usage = []
+        ws = WaveSpectra()
 
         for n_freq in frequency_counts:
-            params = WaveSpectrumParameters(
-                Hs=5.0, Tp=10.0, gamma=3.3,
-                freq_range=(0.01, 1.0), n_frequencies=n_freq
-            )
-
             # Measure time
             start_time = time.perf_counter()
-            spectrum = JONSWAPSpectrum(params)
-            S = spectrum.compute_spectrum()
-            stats = spectrum.get_spectral_statistics()
+            omega, S = ws.jonswap(hs=5.0, tp=10.0, gamma=3.3, n_points=n_freq)
+            stats = ws.spectrum_statistics(omega, S)
             end_time = time.perf_counter()
 
             computation_times.append((end_time - start_time) * 1000)  # ms
@@ -167,17 +159,14 @@ class TestPerformanceBenchmarks:
         # Benchmark complete workflow
         workflow_times = []
         num_runs = 100
+        ws = WaveSpectra()
 
         for i in range(num_runs):
             start_time = time.perf_counter()
 
             # Step 1: Wave spectrum
-            wave_params = WaveSpectrumParameters(
-                Hs=5.0, Tp=10.0, gamma=3.3,
-                freq_range=(0.01, 1.0), n_frequencies=100
-            )
-            wave_spectrum = JONSWAPSpectrum(wave_params)
-            wave_stats = wave_spectrum.get_spectral_statistics()
+            wave_omega, wave_S = ws.jonswap(hs=5.0, tp=10.0, gamma=3.3, n_points=100)
+            wave_stats = ws.spectrum_statistics(wave_omega, wave_S)
 
             # Step 2: Environmental forces
             env_conditions = EnvironmentalConditions(
@@ -289,6 +278,7 @@ class TestPerformanceBenchmarks:
         line_counts = [4, 8, 12, 16, 20, 24, 32]
         times_by_line_count = []
 
+        ws_scale = WaveSpectra()
         for num_lines in line_counts:
             run_times = []
 
@@ -296,11 +286,7 @@ class TestPerformanceBenchmarks:
                 start_time = time.perf_counter()
 
                 # Wave spectrum
-                wave_params = WaveSpectrumParameters(
-                    Hs=5.0, Tp=10.0, gamma=3.3,
-                    freq_range=(0.01, 1.0), n_frequencies=100
-                )
-                wave_spectrum = JONSWAPSpectrum(wave_params)
+                _omega, _S = ws_scale.jonswap(hs=5.0, tp=10.0, gamma=3.3, n_points=100)
 
                 # Environmental forces
                 env_conditions = EnvironmentalConditions(
@@ -372,14 +358,11 @@ class TestPerformanceBenchmarks:
         start_time = time.perf_counter()
 
         # Execute workflow multiple times
+        ws_mem = WaveSpectra()
         for i in range(100):
             # Wave spectrum
-            wave_params = WaveSpectrumParameters(
-                Hs=5.0, Tp=10.0, gamma=3.3,
-                freq_range=(0.01, 1.0), n_frequencies=100
-            )
-            wave_spectrum = JONSWAPSpectrum(wave_params)
-            wave_stats = wave_spectrum.get_spectral_statistics()
+            wave_omega, wave_S = ws_mem.jonswap(hs=5.0, tp=10.0, gamma=3.3, n_points=100)
+            wave_stats = ws_mem.spectrum_statistics(wave_omega, wave_S)
 
             # Sample memory every 10 iterations
             if i % 10 == 0:
