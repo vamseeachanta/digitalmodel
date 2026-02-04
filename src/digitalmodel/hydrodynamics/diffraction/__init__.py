@@ -133,6 +133,35 @@ from digitalmodel.hydrodynamics.diffraction.orcawave_batch_runner import (
 from digitalmodel.hydrodynamics.diffraction.rao_plotter import RAOPlotter
 from digitalmodel.hydrodynamics.diffraction.polars_exporter import PolarsExporter
 
+# WRK-031: Multi-solver benchmark
+from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
+    MultiSolverComparator,
+    BenchmarkReport,
+    PairwiseResult,
+    PairwiseRAOComparison,
+    ConsensusMetrics,
+)
+
+try:
+    from digitalmodel.hydrodynamics.diffraction.benchmark_plotter import BenchmarkPlotter
+except ImportError:
+    BenchmarkPlotter = None
+
+try:
+    from digitalmodel.hydrodynamics.diffraction.benchmark_runner import (
+        BenchmarkRunner,
+        BenchmarkConfig,
+        BenchmarkRunResult,
+        SolverType,
+        run_benchmark,
+    )
+except ImportError:
+    BenchmarkRunner = None
+    BenchmarkConfig = None
+    BenchmarkRunResult = None
+    SolverType = None
+    run_benchmark = None
+
 # Test utilities (optional - for testing without OrcFxAPI)
 try:
     from digitalmodel.hydrodynamics.diffraction.orcawave_test_utilities import (
@@ -244,6 +273,19 @@ __all__ = [
     'run_orcawave_batch_from_specs',
     'RAOPlotter',
     'PolarsExporter',
+
+    # WRK-031: Multi-solver benchmark
+    'MultiSolverComparator',
+    'BenchmarkReport',
+    'PairwiseResult',
+    'PairwiseRAOComparison',
+    'ConsensusMetrics',
+    'BenchmarkPlotter',
+    'BenchmarkRunner',
+    'BenchmarkConfig',
+    'BenchmarkRunResult',
+    'SolverType',
+    'run_benchmark',
 ]
 
 __version__ = "3.0.0"

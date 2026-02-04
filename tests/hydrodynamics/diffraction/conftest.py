@@ -165,6 +165,84 @@ def mock_diffraction_results() -> DiffractionResults:
     )
 
 
+def _make_solver_results(
+    solver_name: str,
+    seed_offset: int = 0,
+    magnitude_scale: float = 1.0,
+    heave_bias: float = 0.0,
+) -> DiffractionResults:
+    """Synthetic DiffractionResults with controllable differences.
+
+    Args:
+        solver_name: Name of the analysis tool (e.g. "AQWA").
+        seed_offset: Offset added to RNG seeds for repeatable variation.
+        magnitude_scale: Multiplicative scale on RAO magnitudes.
+        heave_bias: Additive bias on heave magnitude (for outlier testing).
+    """
+    freq_data = _make_freq_data()
+    heading_data = _make_heading_data()
+
+    components = {}
+    for dof in DOF:
+        rng = np.random.default_rng(seed=dof.value + seed_offset)
+        if dof in (DOF.SURGE, DOF.SWAY, DOF.HEAVE):
+            mag = rng.uniform(0.0, 1.5, size=(N_FREQ, N_HEAD)) * magnitude_scale
+        else:
+            mag = rng.uniform(0.0, 5.0, size=(N_FREQ, N_HEAD)) * magnitude_scale
+        if dof == DOF.HEAVE:
+            mag = mag + heave_bias
+        phase = rng.uniform(-180.0, 180.0, size=(N_FREQ, N_HEAD))
+        components[dof.name.lower()] = RAOComponent(
+            dof=dof,
+            magnitude=mag,
+            phase=phase,
+            frequencies=_make_freq_data(),
+            headings=_make_heading_data(),
+            unit="",
+        )
+
+    now = datetime.now().isoformat()
+    rao_set = RAOSet(
+        vessel_name="TestVessel",
+        analysis_tool=solver_name,
+        water_depth=100.0,
+        created_date=now,
+        source_file=f"{solver_name.lower()}_model.sim",
+        **components,
+    )
+    return DiffractionResults(
+        vessel_name="TestVessel",
+        analysis_tool=solver_name,
+        water_depth=100.0,
+        raos=rao_set,
+        added_mass=_make_matrix_set("added_mass"),
+        damping=_make_matrix_set("damping"),
+        created_date=now,
+        source_files=[f"{solver_name.lower()}_model.sim"],
+    )
+
+
+@pytest.fixture
+def three_solver_results() -> dict[str, DiffractionResults]:
+    """AQWA (baseline), OrcaWave (close match), BEMRosetta (slight heave bias)."""
+    return {
+        "AQWA": _make_solver_results("AQWA", seed_offset=0),
+        "OrcaWave": _make_solver_results("OrcaWave", seed_offset=0, magnitude_scale=1.02),
+        "BEMRosetta": _make_solver_results(
+            "BEMRosetta", seed_offset=0, magnitude_scale=1.01, heave_bias=0.15,
+        ),
+    }
+
+
+@pytest.fixture
+def two_identical_results() -> dict[str, DiffractionResults]:
+    """Two identical solver results for testing FULL consensus."""
+    return {
+        "SolverA": _make_solver_results("SolverA", seed_offset=0),
+        "SolverB": _make_solver_results("SolverB", seed_offset=0),
+    }
+
+
 @pytest.fixture
 def batch_config_path(tmp_path: Path, ship_raos_spec_path: Path) -> Path:
     """Temporary batch configuration YAML file."""

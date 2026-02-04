@@ -979,5 +979,10 @@ def plot_raos_cmd(model_file, water_depth, vessel_name, output, x_axis, headings
         sys.exit(1)
 
 
+# WRK-031: Multi-solver benchmark command
+from digitalmodel.hydrodynamics.diffraction.benchmark_runner import benchmark_solvers_cmd
+cli.add_command(benchmark_solvers_cmd)
+
+
 if __name__ == '__main__':
     cli()
