@@ -4,23 +4,19 @@
 """Tests for wall_thickness_phases module — operational phases, multi-code comparison."""
 
 import math
-import sys
-import os
 
 import numpy as np
 import pandas as pd
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../src"))
-
-from digitalmodel.analysis.wall_thickness import (
+from digitalmodel.structural.analysis.wall_thickness import (
     DesignCode,
     FabricationType,
     PipeGeometry,
     PipeMaterial,
     SafetyClass,
 )
-from digitalmodel.analysis.wall_thickness_phases import (
+from digitalmodel.structural.analysis.wall_thickness_phases import (
     PipeDefinition,
     PipelinePhase,
     PhaseResult,

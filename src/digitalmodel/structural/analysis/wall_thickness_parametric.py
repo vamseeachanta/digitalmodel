@@ -19,7 +19,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from digitalmodel.analysis.wall_thickness import (
+from digitalmodel.structural.analysis.wall_thickness import (
     DesignCode,
     DesignFactors,
     DesignLoads,

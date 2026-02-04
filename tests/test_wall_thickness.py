@@ -4,14 +4,10 @@
 """Tests for wall_thickness module — DNV-ST-F101 and API RP 1111 design checks."""
 
 import math
-import sys
-import os
 
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../src"))
-
-from digitalmodel.analysis.wall_thickness import (
+from digitalmodel.structural.analysis.wall_thickness import (
     DesignCode,
     DesignFactors,
     DesignLoads,
@@ -548,3 +544,202 @@ class TestCrossCodeComparison:
 
         assert dnv.perform_analysis().is_safe is False
         assert api.perform_analysis().is_safe is False
+
+
+# ===================================================================
+# Phase 7 — Hand-calculation validation (acceptance criterion #8)
+# ===================================================================
+
+class TestDNVHandCalcValidation:
+    """Validate DNV-ST-F101 burst against manually computed reference values.
+
+    Reference pipe: 10.75" OD (0.27305 m), 0.844" WT (0.02144 m), X65,
+    corrosion allowance 1 mm, seamless, fabrication tolerance 12.5%.
+
+    DNV pressure containment (Eq 5.8):
+        t1 = (WT - corr) * (1 - fab_tol)
+           = (0.02144 - 0.001) * (1 - 0.125) = 0.02044 * 0.875 = 0.017885 m
+        f_cb = min(0.96 * SMYS, 0.96 * SMTS / 1.15)
+             = min(0.96 * 448e6, 0.96 * 531e6 / 1.15)
+             = min(430.08e6, 443.165e6) = 430.08e6 Pa
+        p_b = (2*t1 / (D - t1)) * (2/sqrt(3)) * f_cb
+            = (2*0.017885 / (0.27305 - 0.017885)) * 1.154701 * 430.08e6
+            = (0.03577 / 0.255165) * 1.154701 * 430.08e6
+            ≈ 69.63 MPa
+    """
+
+    def test_dnv_burst_pressure_matches_hand_calc(self):
+        geom = PipeGeometry(
+            outer_diameter=0.27305, wall_thickness=0.02144,
+            corrosion_allowance=0.001, fabrication_tolerance=0.125,
+        )
+        mat = PipeMaterial(grade="X65", smys=448e6, smts=531e6)
+        loads = DesignLoads(internal_pressure=20e6, external_pressure=5e6)
+        factors = DesignFactors(safety_class=SafetyClass.MEDIUM)
+
+        analyzer = WallThicknessAnalyzer(geom, mat, loads, factors, DesignCode.DNV_ST_F101)
+        _, details = analyzer.check_pressure_containment()
+
+        # Verify intermediate values
+        expected_t1 = (0.02144 - 0.001) * (1 - 0.125)
+        assert abs(details["t1"] - expected_t1) / expected_t1 < 1e-6
+
+        expected_f_cb = min(0.96 * 448e6, 0.96 * 531e6 / 1.15)
+        assert abs(details["f_cb"] - expected_f_cb) / expected_f_cb < 1e-6
+
+        # Verify burst pressure within 0.1%
+        expected_p_b = (
+            (2 * expected_t1 / (0.27305 - expected_t1))
+            * (2 / math.sqrt(3))
+            * expected_f_cb
+        )
+        assert abs(details["p_b"] - expected_p_b) / expected_p_b < 0.001
+
+    def test_dnv_burst_utilisation_matches_hand_calc(self):
+        geom = PipeGeometry(
+            outer_diameter=0.27305, wall_thickness=0.02144,
+            corrosion_allowance=0.001, fabrication_tolerance=0.125,
+        )
+        mat = PipeMaterial(grade="X65", smys=448e6, smts=531e6)
+        loads = DesignLoads(internal_pressure=20e6, external_pressure=5e6)
+        factors = DesignFactors(safety_class=SafetyClass.MEDIUM)
+
+        analyzer = WallThicknessAnalyzer(geom, mat, loads, factors, DesignCode.DNV_ST_F101)
+        util, details = analyzer.check_pressure_containment()
+
+        # Hand-calc utilisation: p_net / (p_b / (gamma_sc * gamma_m * gamma_inc))
+        p_net = 20e6 - 5e6
+        gamma_sc, gamma_m, gamma_inc = 1.138, 1.15, 1.0
+        p_b_design = details["p_b"] / (gamma_sc * gamma_m * gamma_inc)
+        expected_util = p_net / p_b_design
+        assert abs(util - expected_util) / expected_util < 0.001
+
+    def test_dnv_propagation_matches_hand_calc(self):
+        """Verify DNV propagation buckling (Eq 5.17) against hand calc.
+
+        p_pr = 35 * f_y * alpha_fab * (t2/D)^2.5
+        t2 = WT - corrosion = 0.02144 - 0.001 = 0.02044 m
+        p_pr = 35 * 448e6 * 1.0 * (0.02044/0.27305)^2.5
+        """
+        geom = PipeGeometry(
+            outer_diameter=0.27305, wall_thickness=0.02144,
+            corrosion_allowance=0.001,
+        )
+        mat = PipeMaterial(grade="X65", smys=448e6, smts=531e6)
+        loads = DesignLoads(external_pressure=5e6)
+        factors = DesignFactors(safety_class=SafetyClass.MEDIUM)
+
+        analyzer = WallThicknessAnalyzer(geom, mat, loads, factors, DesignCode.DNV_ST_F101)
+        _, details = analyzer.check_propagation_buckling()
+
+        t2 = 0.02144 - 0.001
+        expected_p_pr = 35 * 448e6 * 1.0 * (t2 / 0.27305) ** 2.5
+        assert abs(details["p_pr"] - expected_p_pr) / expected_p_pr < 0.001
+
+
+class TestAPIHandCalcValidation:
+    """Validate API RP 1111 burst against manually computed reference values.
+
+    Same reference pipe: 10.75" OD, 0.844" WT, X65.
+    D/t = 0.27305 / 0.02144 ≈ 12.735 (≤ 15, thick-wall formula).
+
+    API burst (Sec 4.3.1.1, thick-wall):
+        p_b = 0.45 * (SMYS + SMTS) * ln(D / (D - 2*t))
+            = 0.45 * (448e6 + 531e6) * ln(0.27305 / (0.27305 - 2*0.02144))
+            = 0.45 * 979e6 * ln(0.27305 / 0.23017)
+            = 440.55e6 * ln(1.18621)
+            ≈ 75.28 MPa
+    """
+
+    def test_api_burst_pressure_matches_hand_calc(self):
+        geom = PipeGeometry(
+            outer_diameter=0.27305, wall_thickness=0.02144,
+            corrosion_allowance=0.001,
+        )
+        mat = PipeMaterial(grade="X65", smys=448e6, smts=531e6)
+        loads = DesignLoads(internal_pressure=20e6, external_pressure=5e6)
+        factors = DesignFactors(safety_class=SafetyClass.MEDIUM)
+
+        analyzer = WallThicknessAnalyzer(geom, mat, loads, factors, DesignCode.API_RP_1111)
+        _, details = analyzer.check_api_burst()
+
+        # Verify D/t triggers thick-wall formula
+        assert details["d_over_t"] <= 15.0
+
+        # Hand-calc burst pressure
+        D = 0.27305
+        t = 0.02144
+        expected_p_b = 0.45 * (448e6 + 531e6) * math.log(D / (D - 2 * t))
+        assert abs(details["p_b"] - expected_p_b) / expected_p_b < 0.001
+
+    def test_api_burst_utilisation_matches_hand_calc(self):
+        geom = PipeGeometry(
+            outer_diameter=0.27305, wall_thickness=0.02144,
+            corrosion_allowance=0.001,
+        )
+        mat = PipeMaterial(grade="X65", smys=448e6, smts=531e6)
+        loads = DesignLoads(internal_pressure=20e6, external_pressure=5e6)
+        factors = DesignFactors(safety_class=SafetyClass.MEDIUM)
+
+        analyzer = WallThicknessAnalyzer(geom, mat, loads, factors, DesignCode.API_RP_1111)
+        util, details = analyzer.check_api_burst()
+
+        # Utilisation = p_net / (f_d * p_b)
+        p_net = 20e6 - 5e6
+        f_d = 0.72
+        expected_util = p_net / (f_d * details["p_b"])
+        assert abs(util - expected_util) / expected_util < 0.001
+
+    def test_api_collapse_matches_hand_calc(self):
+        """Verify API collapse (transition formula) against hand calc.
+
+        p_el = 2*E*(t/D)^3 / (1-nu^2)
+        p_y = 2*SMYS*t/D
+        p_c = p_el*p_y / sqrt(p_el^2 + p_y^2)
+        """
+        geom = PipeGeometry(
+            outer_diameter=0.27305, wall_thickness=0.02144,
+            corrosion_allowance=0.001,
+        )
+        mat = PipeMaterial(grade="X65", smys=448e6, smts=531e6)
+        loads = DesignLoads(external_pressure=5e6)
+        factors = DesignFactors(safety_class=SafetyClass.MEDIUM)
+
+        analyzer = WallThicknessAnalyzer(geom, mat, loads, factors, DesignCode.API_RP_1111)
+        _, details = analyzer.check_api_collapse()
+
+        D = 0.27305
+        t = 0.02144
+        E = 207e9
+        nu = 0.3
+
+        expected_p_el = 2 * E * (t / D) ** 3 / (1 - nu ** 2)
+        expected_p_y = 2 * 448e6 * t / D
+        expected_p_c = expected_p_el * expected_p_y / math.sqrt(
+            expected_p_el ** 2 + expected_p_y ** 2
+        )
+
+        assert abs(details["p_el"] - expected_p_el) / expected_p_el < 0.001
+        assert abs(details["p_y"] - expected_p_y) / expected_p_y < 0.001
+        assert abs(details["p_c"] - expected_p_c) / expected_p_c < 0.001
+
+    def test_api_propagation_matches_hand_calc(self):
+        """Verify API propagation (Sec 4.3.3) against hand calc.
+
+        p_pr = 24 * SMYS * (t/D)^2.4
+        """
+        geom = PipeGeometry(
+            outer_diameter=0.27305, wall_thickness=0.02144,
+            corrosion_allowance=0.001,
+        )
+        mat = PipeMaterial(grade="X65", smys=448e6, smts=531e6)
+        loads = DesignLoads(external_pressure=5e6)
+        factors = DesignFactors(safety_class=SafetyClass.MEDIUM)
+
+        analyzer = WallThicknessAnalyzer(geom, mat, loads, factors, DesignCode.API_RP_1111)
+        _, details = analyzer.check_api_propagation()
+
+        D = 0.27305
+        t = 0.02144
+        expected_p_pr = 24 * 448e6 * (t / D) ** 2.4
+        assert abs(details["p_pr"] - expected_p_pr) / expected_p_pr < 0.001

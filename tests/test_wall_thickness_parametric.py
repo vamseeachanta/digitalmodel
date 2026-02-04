@@ -3,21 +3,17 @@
 
 """Tests for wall_thickness_parametric module."""
 
-import sys
-import os
 import tempfile
 
 import pytest
 import pandas as pd
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../src"))
-
-from digitalmodel.analysis.wall_thickness import (
+from digitalmodel.structural.analysis.wall_thickness import (
     DesignCode,
     FabricationType,
     SafetyClass,
 )
-from digitalmodel.analysis.wall_thickness_parametric import (
+from digitalmodel.structural.analysis.wall_thickness_parametric import (
     API_5L_GRADES,
     ParametricSweep,
     SweepConfig,

@@ -23,7 +23,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from digitalmodel.analysis.wall_thickness import (
+from digitalmodel.structural.analysis.wall_thickness import (
     DesignCode,
     DesignFactors,
     DesignLoads,
@@ -34,7 +34,7 @@ from digitalmodel.analysis.wall_thickness import (
     WallThicknessAnalyzer,
     WallThicknessResult,
 )
-from digitalmodel.analysis.wall_thickness_parametric import (
+from digitalmodel.structural.analysis.wall_thickness_parametric import (
     _von_mises_utilisation_grid,
 )
 

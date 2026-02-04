@@ -203,6 +203,7 @@ create-go-by = "digitalmodel.workflows.automation.go_by_folder.cli:main"
 aqwa = "digitalmodel.hydrodynamics.aqwa.aqwa_cli:main"
 diffraction = "digitalmodel.hydrodynamics.diffraction.cli:cli"
 structural-analysis = "digitalmodel.structural.structural_analysis.cli:main"
+wall-thickness = "digitalmodel.structural.analysis.cli:main"
 mooring-analysis = "digitalmodel.subsea.mooring_analysis.cli:main"
 viv-analysis = "digitalmodel.subsea.viv_analysis.cli:main"
 catenary-riser = "digitalmodel.subsea.catenary_riser.cli:main"
@@ -211,6 +212,7 @@ hydrodynamics = "digitalmodel.hydrodynamics.cli:main"
 gmsh-meshing = "digitalmodel.solvers.gmsh_meshing.cli:main"
 workflow-automation = "digitalmodel.workflows.workflow_automation.cli:main"
 bemrosetta = "digitalmodel.hydrodynamics.bemrosetta.cli:main"
+dynacard = "digitalmodel.marine_ops.artificial_lift.dynacard.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
