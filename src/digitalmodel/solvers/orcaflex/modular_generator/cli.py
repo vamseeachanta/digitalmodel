@@ -25,7 +25,7 @@ import yaml
 from pydantic import ValidationError
 
 from .schema import ProjectInputSpec
-from . import ModularModelGenerator
+from . import ModularModelGenerator, _NoAliasDumper
 from .builders.registry import BuilderRegistry
 
 
@@ -227,7 +227,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
 
             file_path = includes_dir / file_name
             with open(file_path, 'w') as f:
-                yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+                yaml.dump(data, f, Dumper=_NoAliasDumper, default_flow_style=False, allow_unicode=True, sort_keys=False)
 
             print_success(f"Generated: includes/{file_name}")
 

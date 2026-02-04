@@ -174,7 +174,6 @@ class LinesBuilder(BaseBuilder):
                 90,  # Declination
                 0,  # Gamma
                 None,  # ReleaseStage
-                None,  # zRelativeTo
             ]
 
             # End B: Anchored at seabed
@@ -187,7 +186,6 @@ class LinesBuilder(BaseBuilder):
                 90 + seabed_slope,  # Declination
                 0,  # Gamma
                 None,  # ReleaseStage
-                None,  # zRelativeTo
             ]
         else:
             # Floating installation (existing logic)
@@ -200,7 +198,6 @@ class LinesBuilder(BaseBuilder):
                 90 + seabed_slope,  # Declination
                 0,  # Gamma
                 None,  # ReleaseStage
-                None,  # zRelativeTo
             ]
 
             end_b = [
@@ -212,7 +209,6 @@ class LinesBuilder(BaseBuilder):
                 90,  # Declination (horizontal)
                 0,  # Gamma
                 None,  # ReleaseStage
-                None,  # zRelativeTo
             ]
 
         # Connection stiffness (End A, End B)

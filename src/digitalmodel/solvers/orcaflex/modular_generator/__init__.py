@@ -28,6 +28,18 @@ from .builders import (  # noqa: F401
     GroupsBuilder,
 )
 
+class _NoAliasDumper(yaml.Dumper):
+    """YAML Dumper that never emits anchors/aliases.
+
+    OrcFxAPI's YAML parser does not support YAML anchors (``&id001``)
+    or aliases (``*id001``).  When multiple buoys share identical vertex
+    data, default PyYAML output uses aliases which OrcFxAPI rejects.
+    """
+
+    def ignore_aliases(self, data):
+        return True
+
+
 # Backward-compatible constant: ordered list of include file names
 INCLUDE_ORDER = BuilderRegistry.get_include_order()
 
@@ -96,7 +108,7 @@ class ModularModelGenerator:
             # Write include file
             file_path = includes_dir / file_name
             with open(file_path, 'w') as f:
-                yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+                yaml.dump(data, f, Dumper=_NoAliasDumper, default_flow_style=False, allow_unicode=True, sort_keys=False)
             generated_files.append(file_name)
 
         # Generate parameters.yml
@@ -129,6 +141,7 @@ class ModularModelGenerator:
             '# Type: Model',
             f'# Generated from: {source_name}',
             '',
+            '---',
         ]
         for file_name in include_order:
             lines.append(f'- includefile: includes/{file_name}')
@@ -212,6 +225,7 @@ class ModularModelGenerator:
                 with open(file_path, 'w') as f:
                     yaml.dump(
                         data, f,
+                        Dumper=_NoAliasDumper,
                         default_flow_style=False,
                         allow_unicode=True,
                         sort_keys=False,
