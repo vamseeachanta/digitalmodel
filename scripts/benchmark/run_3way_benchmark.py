@@ -100,10 +100,13 @@ def run_orcawave(
         from digitalmodel.hydrodynamics.diffraction.orcawave_runner import (
             OrcaWaveRunner,
             RunConfig,
+            RunStatus,
         )
 
         # Load spec
+        print(f"  Loading spec from: {spec_path}")
         spec = DiffractionSpec.from_yaml(spec_path)
+        print(f"  Spec loaded successfully")
 
         # Configure runner
         orcawave_output = output_dir / "orcawave"
@@ -113,36 +116,65 @@ def run_orcawave(
             timeout_seconds=3600,
         )
 
-        # Run
+        # Run (pass spec_path so mesh files can be resolved and copied)
+        print(f"  Creating OrcaWave runner...")
         runner = OrcaWaveRunner(config)
-        run_result = runner.run(spec)
+        print(f"  Running OrcaWave analysis...")
+        run_result = runner.run(spec, spec_path=spec_path)
 
         result.output_dir = orcawave_output
         result.log_file = orcawave_output / "orcawave.log"
 
+        # Debug: print actual status received
+        print(f"  OrcaWave run_result.status = {run_result.status} (type: {type(run_result.status).__name__})")
+
         if dry_run:
             result.status = "dry_run"
             print("  [DRY RUN] OrcaWave files generated, solver not executed")
-        elif run_result.status.value == "completed":
+        elif run_result.status == RunStatus.COMPLETED:
             result.status = "completed"
             # Load results if available
             results_file = orcawave_output / "results" / "diffraction_results.json"
             if results_file.exists():
                 result.results = _load_results(results_file, "OrcaWave")
             print(f"  [OK] OrcaWave completed")
+        elif run_result.status == RunStatus.DRY_RUN:
+            # OrcaWave runner fell back to dry-run (executable not found)
+            result.status = "dry_run"
+            if run_result.error_message:
+                print(f"  [DRY RUN] {run_result.error_message}")
+            else:
+                print(f"  [DRY RUN] OrcaWave executable not found, files generated only")
+            # Check mesh file status
+            if run_result.mesh_files:
+                print(f"  Mesh files copied: {[f.name for f in run_result.mesh_files]}")
+            else:
+                print(f"  WARNING: No mesh files were copied")
         else:
             result.status = "failed"
-            result.error_message = run_result.error_message
-            print(f"  [FAILED] {run_result.error_message}")
+            # Build a meaningful error message
+            error_parts = []
+            if run_result.error_message:
+                error_parts.append(run_result.error_message)
+            if run_result.stderr:
+                error_parts.append(f"stderr: {run_result.stderr[:200]}")
+            if run_result.return_code is not None and run_result.return_code != 0:
+                error_parts.append(f"exit code: {run_result.return_code}")
+            if not error_parts:
+                error_parts.append(f"Unknown error (status: {run_result.status.value})")
+            result.error_message = "; ".join(error_parts)
+            print(f"  [FAILED] {result.error_message}")
 
     except ImportError as e:
         result.status = "skipped"
         result.error_message = f"OrcFxAPI not available: {e}"
         print(f"  [SKIPPED] {result.error_message}")
     except Exception as e:
+        import traceback
         result.status = "failed"
-        result.error_message = str(e)
-        print(f"  [FAILED] {e}")
+        result.error_message = f"{type(e).__name__}: {e}"
+        print(f"  [FAILED] {result.error_message}")
+        print(f"  Traceback:\n{traceback.format_exc()}")
 
     result.duration_seconds = time.time() - start_time
     print(f"  Duration: {result.duration_seconds:.1f}s")
@@ -183,9 +215,9 @@ def run_aqwa(
             timeout_seconds=3600,
         )
 
-        # Run
+        # Run (pass spec_path so mesh files can be resolved and copied)
         runner = AQWARunner(config)
-        run_result = runner.run(spec)
+        run_result = runner.run(spec, spec_path=spec_path)
 
         result.output_dir = aqwa_output
         result.log_file = aqwa_output / "aqwa.log"
@@ -252,33 +284,17 @@ def run_bemrosetta(
         if not mesh_path.exists():
             raise FileNotFoundError(f"Mesh file not found: {mesh_path}")
 
-        # Build BEMRosetta command
-        # -bem -i <mesh> -saveCase folder <output> format Nemohv3
+        # Build BEMRosetta command using -mesh mode to convert GDF to NEMOH
+        # Use absolute path for output file
+        nemoh_mesh_out = (bemrosetta_output / "mesh_nemoh.dat").resolve()
+        cg = spec["vessel"]["inertia"]["centre_of_gravity"]
         cmd = [
             str(bemrosetta_exe),
-            "-bem",
+            "-mesh",
             "-i", str(mesh_path),
-            "-params", "depth", str(spec["environment"]["water_depth"]),
-            "-params", "rho", str(spec["environment"]["water_density"]),
-            "-params", "g", str(spec["environment"]["gravity"]),
+            "-cg", str(cg[0]), str(cg[1]), str(cg[2]),
+            "-c", str(nemoh_mesh_out),
         ]
-
-        # Add frequencies
-        freqs = spec["frequencies"]["values"]
-        freq_str = " ".join(str(f) for f in freqs)
-        cmd.extend(["-params", "w", freq_str])
-
-        # Add headings
-        headings = spec["wave_headings"]["values"]
-        head_str = " ".join(str(h) for h in headings)
-        cmd.extend(["-params", "headings", head_str])
-
-        # Save case for NEMOH
-        cmd.extend([
-            "-saveCase",
-            "folder", str(bemrosetta_output / "nemoh_case"),
-            "format", "Nemohv3",
-        ])
 
         result.log_file = bemrosetta_output / "bemrosetta.log"
 

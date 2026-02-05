@@ -8,13 +8,14 @@ The backend maps the solver-agnostic DiffractionSpec fields to AQWA-specific
 deck/card format, using fixed-column FORTRAN-style formatting consistent with
 the conventions in aqwa_dat_files.py.
 
-Mesh data (Deck 1 node coordinates, Deck 2 element connectivity) are emitted
-as placeholder comments. Actual mesh integration is deferred to WRK-060.
+Mesh data (Deck 1 node coordinates, Deck 2 element connectivity) is parsed
+from GDF mesh files and emitted in AQWA's fixed-column format.
 """
 
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -24,6 +25,28 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     DiffractionSpec,
     VesselInertia,
 )
+
+
+# ---------------------------------------------------------------------------
+# Mesh data container
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ParsedMesh:
+    """Container for parsed mesh data from GDF files."""
+
+    vertices: np.ndarray  # (N, 3) array of node coordinates
+    panels: np.ndarray  # (M, 4) array of panel vertex indices
+    name: str = ""
+
+    @property
+    def n_vertices(self) -> int:
+        return len(self.vertices)
+
+    @property
+    def n_panels(self) -> int:
+        return len(self.panels)
 
 
 # ---------------------------------------------------------------------------
@@ -78,21 +101,34 @@ class AQWABackend:
 
     Public API
     ----------
-    generate_single(spec, output_dir) -> Path
+    generate_single(spec, output_dir, spec_dir=None) -> Path
         Write all decks into a single .dat file.
-    generate_modular(spec, output_dir) -> Path
+    generate_modular(spec, output_dir, spec_dir=None) -> Path
         Write each deck into a separate file inside *output_dir*.
 
     The ``build_deck*`` methods are also public so individual card
     blocks can be inspected or tested in isolation.
+
+    Parameters
+    ----------
+    spec_dir : Path, optional
+        Directory containing the spec YAML file. Used to resolve relative
+        mesh file paths. If not provided, mesh paths must be absolute.
     """
+
+    def __init__(self) -> None:
+        self._spec_dir: Optional[Path] = None
+        self._mesh_cache: dict[str, ParsedMesh] = {}
 
     # -----------------------------------------------------------------
     # Public entry points
     # -----------------------------------------------------------------
 
     def generate_single(
-        self, spec: DiffractionSpec, output_dir: Path
+        self,
+        spec: DiffractionSpec,
+        output_dir: Path,
+        spec_dir: Optional[Path] = None,
     ) -> Path:
         """Generate a single .dat file containing all decks.
 
@@ -102,6 +138,9 @@ class AQWABackend:
             Canonical analysis specification.
         output_dir : Path
             Directory where the .dat file will be written.
+        spec_dir : Path, optional
+            Directory containing the spec YAML file, for resolving
+            relative mesh paths.
 
         Returns
         -------
@@ -111,15 +150,25 @@ class AQWABackend:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
+        self._spec_dir = Path(spec_dir) if spec_dir else None
+        self._mesh_cache.clear()
+
         all_cards = self._assemble_all_decks(spec)
         file_name = self._make_filename(spec)
         output_path = output_dir / file_name
 
-        output_path.write_text("\n".join(all_cards) + "\n")
+        # AQWA on Windows expects CRLF line endings
+        # Use newline='' to prevent Python from adding extra line conversion
+        content = "\r\n".join(all_cards) + "\r\n"
+        with open(output_path, "w", newline='') as f:
+            f.write(content)
         return output_path
 
     def generate_modular(
-        self, spec: DiffractionSpec, output_dir: Path
+        self,
+        spec: DiffractionSpec,
+        output_dir: Path,
+        spec_dir: Optional[Path] = None,
     ) -> Path:
         """Generate modular deck files, one per deck.
 
@@ -129,6 +178,9 @@ class AQWABackend:
             Canonical analysis specification.
         output_dir : Path
             Directory where deck files will be written.
+        spec_dir : Path, optional
+            Directory containing the spec YAML file, for resolving
+            relative mesh paths.
 
         Returns
         -------
@@ -137,6 +189,9 @@ class AQWABackend:
         """
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
+
+        self._spec_dir = Path(spec_dir) if spec_dir else None
+        self._mesh_cache.clear()
 
         deck_builders = self._ordered_deck_builders(spec)
         for idx, (deck_num, cards) in enumerate(deck_builders):
@@ -179,6 +234,122 @@ class AQWABackend:
         )
         return f"{safe_name}.dat"
 
+    def _resolve_mesh_path(self, mesh_file: str) -> Path:
+        """Resolve a mesh file path, relative to spec_dir if needed."""
+        mesh_path = Path(mesh_file)
+        if mesh_path.is_absolute():
+            return mesh_path
+        if self._spec_dir is not None:
+            return (self._spec_dir / mesh_file).resolve()
+        return mesh_path
+
+    def _load_mesh(self, mesh_file: str) -> Optional[ParsedMesh]:
+        """Load and parse a GDF mesh file.
+
+        Returns None if the mesh file cannot be loaded.
+        Results are cached by mesh_file path.
+        """
+        if mesh_file in self._mesh_cache:
+            return self._mesh_cache[mesh_file]
+
+        mesh_path = self._resolve_mesh_path(mesh_file)
+        if not mesh_path.exists():
+            return None
+
+        try:
+            mesh = self._parse_gdf(mesh_path)
+            self._mesh_cache[mesh_file] = mesh
+            return mesh
+        except Exception:
+            return None
+
+    def _parse_gdf(self, file_path: Path) -> ParsedMesh:
+        """Parse a WAMIT GDF mesh file.
+
+        GDF format:
+        - Line 1: Header comment (title)
+        - Line 2: ULEN GRAV (unit length and gravity)
+        - Line 3: ISX ISY (symmetry flags)
+        - Line 4: NPAN (number of panels)
+        - Lines 5+: 4 vertices per panel (X Y Z for each vertex)
+        """
+        with open(file_path, "r") as f:
+            lines = f.readlines()
+
+        line_idx = 0
+
+        # Skip header comments starting with '#'
+        while line_idx < len(lines) and lines[line_idx].strip().startswith("#"):
+            line_idx += 1
+
+        # Line 1 may be a title (not starting with #), skip it
+        # Then read ULEN GRAV line
+        if line_idx < len(lines):
+            line_idx += 1  # Skip title or ULEN/GRAV
+
+        # Read ULEN, GRAV (might be line 1 if no title)
+        if line_idx < len(lines):
+            parts = lines[line_idx].split()
+            # Check if this looks like numbers (ULEN GRAV) or text (title)
+            try:
+                float(parts[0])
+                # This is ULEN/GRAV line, continue
+            except (ValueError, IndexError):
+                pass
+            line_idx += 1
+
+        # Read symmetry flags (ISX ISY)
+        if line_idx < len(lines):
+            line_idx += 1
+
+        # Read number of panels (NPAN)
+        npan = 0
+        if line_idx < len(lines):
+            try:
+                npan = int(lines[line_idx].split()[0])
+            except (ValueError, IndexError):
+                pass
+            line_idx += 1
+
+        # Read panel vertices (4 vertices per panel)
+        vertices: list[tuple[float, float, float]] = []
+        panels: list[list[int]] = []
+        vertex_map: dict[tuple[float, float, float], int] = {}
+
+        for _ in range(npan):
+            panel_vertices: list[int] = []
+            for _ in range(4):
+                if line_idx >= len(lines):
+                    break
+                line = lines[line_idx].strip()
+                if not line:
+                    line_idx += 1
+                    continue
+                parts = line.split()
+                if len(parts) >= 3:
+                    try:
+                        vertex = (
+                            float(parts[0]),
+                            float(parts[1]),
+                            float(parts[2]),
+                        )
+                        if vertex not in vertex_map:
+                            vertex_map[vertex] = len(vertices)
+                            vertices.append(vertex)
+                        panel_vertices.append(vertex_map[vertex])
+                    except ValueError:
+                        pass
+                line_idx += 1
+
+            if len(panel_vertices) == 4:
+                panels.append(panel_vertices)
+
+        return ParsedMesh(
+            vertices=np.array(vertices, dtype=np.float64),
+            panels=np.array(panels, dtype=np.int32),
+            name=file_path.stem,
+        )
+
     # -----------------------------------------------------------------
     # Deck 0 — JOB control
     # -----------------------------------------------------------------
@@ -216,14 +387,14 @@ class AQWABackend:
         return " ".join(opts)
 
     # -----------------------------------------------------------------
-    # Deck 1 — Node coordinates (placeholder for WRK-060)
+    # Deck 1 — Node coordinates
     # -----------------------------------------------------------------
 
     def build_deck1(self, spec: DiffractionSpec) -> list[str]:
         """Build Deck 1: node coordinate cards.
 
-        Mesh data is not yet integrated (WRK-060). This emits the deck
-        header, STRC markers for each body, and a placeholder comment.
+        Parses mesh files referenced in the spec and emits node
+        coordinates in AQWA's fixed-column format.
         """
         cards: list[str] = []
         cards.extend(_deck_banner(1))
@@ -231,39 +402,90 @@ class AQWABackend:
         cards.append(f"{_WS:>6s}NOD5")
 
         bodies = spec.get_bodies()
-        for idx, body in enumerate(bodies, start=1):
-            cards.append(
-                f"{_WS:>6s}STRC{_WS:>4s}{idx:>5d}"
-            )
-            cards.append(
-                f"* Mesh nodes for {body.vessel.name} "
-                f"(mesh file: {body.vessel.geometry.mesh_file}) "
-                f"— placeholder, see WRK-060"
-            )
+        for struct_idx, body in enumerate(bodies, start=1):
+            mesh_file = body.vessel.geometry.mesh_file
+            mesh = self._load_mesh(mesh_file)
+
+            cards.append(f"{_WS:>6s}STRC{_WS:>4s}{struct_idx:>5d}")
+
+            if mesh is not None:
+                # Emit node coordinates in AQWA format
+                # Based on working files: "     1   10          149.10987-18.016252        0."
+                # Format: 6-char struct, 5-char node, 10 spaces, then coordinates
+                for node_idx, vertex in enumerate(mesh.vertices, start=1):
+                    x_val = vertex[0]
+                    y_val = vertex[1]
+                    z_val = vertex[2]
+                    # Format coordinates: 10 spaces, then space-separated values
+                    cards.append(
+                        f"{struct_idx:>6d}{node_idx:>5d}          "
+                        f"{x_val:10.5g}{y_val:10.5g}{z_val:10.5g}"
+                    )
+
+                # Add CoG node (element 98000) for mass reference
+                cog = body.vessel.inertia.centre_of_gravity
+                cards.append(
+                    f"{struct_idx:>6d}{98000:>5d}          "
+                    f"{cog[0]:10.5g}{cog[1]:10.5g}{cog[2]:10.5g}"
+                )
+            else:
+                # Fallback: emit warning comment if mesh cannot be loaded
+                cards.append(
+                    f"* WARNING: Mesh file '{mesh_file}' could not be loaded"
+                )
 
         cards.append(f"{_WS:>10s}FINI")
         return cards
 
     # -----------------------------------------------------------------
-    # Deck 2 — Element connectivity (placeholder for WRK-060)
+    # Deck 2 — Element connectivity
     # -----------------------------------------------------------------
 
     def build_deck2(self, spec: DiffractionSpec) -> list[str]:
         """Build Deck 2: element connectivity cards.
 
-        Mesh data is not yet integrated (WRK-060). This emits only the
-        deck header and a placeholder comment.
+        Parses mesh files referenced in the spec and emits panel
+        (element) connectivity in AQWA QPPL format (Workbench-compatible).
         """
         cards: list[str] = []
         cards.extend(_deck_banner(2))
-        cards.append(f"{_WS:>10s}ELM1{_WS:>6s}FST")
+        cards.append("          ELM1")
 
         bodies = spec.get_bodies()
-        for idx, body in enumerate(bodies, start=1):
+        for struct_idx, body in enumerate(bodies, start=1):
+            mesh_file = body.vessel.geometry.mesh_file
+            mesh = self._load_mesh(mesh_file)
+            vessel_name = body.vessel.name or "body"
+
+            # SEAG card with bounding box
             cards.append(
-                f"* Elements for structure {idx}: {body.vessel.name} "
-                f"— placeholder, see WRK-060"
+                f"      SEAG          ( 81, 51,      -50.,       50.,"
+                f"      -50.,       50.)"
             )
+            # ZLWL (waterline) card
+            cards.append("      ZLWL          (        0.)")
+            # Group ID comment
+            group_id = 15
+            cards.append(f"* Group ID    {group_id} is body named {vessel_name}")
+
+            if mesh is not None:
+                # Emit element connectivity in QPPL format
+                # Format: "     1QPPL        15(1)(    1)(    2)(    3)(    4)"
+                for elem_idx, panel in enumerate(mesh.panels, start=1):
+                    # Panel contains 0-based indices, convert to 1-based
+                    n1 = panel[0] + 1
+                    n2 = panel[1] + 1
+                    n3 = panel[2] + 1
+                    n4 = panel[3] + 1
+                    cards.append(
+                        f"     {struct_idx}QPPL        {group_id}({struct_idx})"
+                        f"({n1:>5d})({n2:>5d})({n3:>5d})({n4:>5d})"
+                        f"  Aqwa Elem No: {elem_idx:>4d}"
+                    )
+            else:
+                cards.append(
+                    f"* WARNING: Mesh file '{mesh_file}' could not be loaded"
+                )
 
         cards.append(" END")
         return cards

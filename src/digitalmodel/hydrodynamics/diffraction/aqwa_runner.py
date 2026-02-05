@@ -151,10 +151,12 @@ class AQWARunResult:
 _STANDARD_PATHS: list[str] = []
 if platform.system() == "Windows":
     _STANDARD_PATHS = [
-        r"C:\Program Files\ANSYS Inc\v241\aqwa\bin\winx64\aqwa.exe",
-        r"C:\Program Files\ANSYS Inc\v232\aqwa\bin\winx64\aqwa.exe",
-        r"C:\Program Files\ANSYS Inc\v231\aqwa\bin\winx64\aqwa.exe",
-        r"C:\Program Files\ANSYS Inc\v222\aqwa\bin\winx64\aqwa.exe",
+        r"C:\Program Files\ANSYS Inc\v252\aqwa\bin\winx64\Aqwa.exe",
+        r"C:\Program Files\ANSYS Inc\v251\aqwa\bin\winx64\Aqwa.exe",
+        r"C:\Program Files\ANSYS Inc\v241\aqwa\bin\winx64\Aqwa.exe",
+        r"C:\Program Files\ANSYS Inc\v232\aqwa\bin\winx64\Aqwa.exe",
+        r"C:\Program Files\ANSYS Inc\v231\aqwa\bin\winx64\Aqwa.exe",
+        r"C:\Program Files\ANSYS Inc\v222\aqwa\bin\winx64\Aqwa.exe",
     ]
 
 
@@ -246,7 +248,7 @@ class AQWARunner:
         )
 
         # Generate single .dat input file via AQWABackend
-        input_file = self._generate_input_file(spec, output_dir)
+        input_file = self._generate_input_file(spec, output_dir, spec_dir=spec_dir)
         self._result.input_file = input_file
 
         # Copy mesh files
@@ -301,15 +303,25 @@ class AQWARunner:
         self._result.return_code = return_code
         self._result.duration_seconds = elapsed
 
-        if return_code == 0:
+        # Capture output files first (needed for error detection)
+        self._result.lis_file = self._capture_lis_file(self._result.output_dir)
+        self._result.log_file = self._capture_log(self._result.output_dir)
+
+        # AQWA writes errors to stdout/LIS and may return 0 even on failure.
+        # Check for error patterns in stdout, stderr, and LIS file.
+        lis_content = ""
+        if self._result.lis_file and self._result.lis_file.exists():
+            lis_content = self._result.lis_file.read_text(errors="replace")
+
+        aqwa_error = self._detect_aqwa_error(
+            stdout, stderr, return_code, lis_content
+        )
+
+        if aqwa_error is None:
             self._result.status = AQWARunStatus.COMPLETED
         else:
             self._result.status = AQWARunStatus.FAILED
-            self._result.error_message = stderr or f"Exit code {return_code}"
-
-        # Capture output files
-        self._result.lis_file = self._capture_lis_file(self._result.output_dir)
-        self._result.log_file = self._capture_log(self._result.output_dir)
+            self._result.error_message = aqwa_error
 
         return self._result
 
@@ -347,14 +359,23 @@ class AQWARunner:
         return None
 
     def _generate_input_file(
-        self, spec: DiffractionSpec, output_dir: Path
+        self,
+        spec: DiffractionSpec,
+        output_dir: Path,
+        spec_dir: Optional[Path] = None,
     ) -> Path:
         """Generate AQWA .dat input file using AQWABackend.generate_single().
+
+        Args:
+            spec: Canonical diffraction specification.
+            output_dir: Directory for generated .dat file.
+            spec_dir: Directory containing the spec YAML file, for resolving
+                      relative mesh paths.
 
         Returns:
             Path to the generated .dat file.
         """
-        return self._backend.generate_single(spec, output_dir)
+        return self._backend.generate_single(spec, output_dir, spec_dir=spec_dir)
 
     def _copy_mesh_files(
         self,
@@ -420,11 +441,14 @@ class AQWARunner:
     ) -> tuple[int, str, str]:
         """Run the AQWA solver as a subprocess.
 
-        Command format:
-            [aqwa.exe, /nowind, input_file.dat, *extra_args]
+        Command format (running from output_dir as cwd):
+            [aqwa.exe, /nowind, input_filename.dat, *extra_args]
 
         When ``nowind`` is False:
-            [aqwa.exe, input_file.dat, *extra_args]
+            [aqwa.exe, input_filename.dat, *extra_args]
+
+        Note: Only the filename is passed (not the full path) because
+        AQWA is run with cwd set to output_dir where the .dat file resides.
 
         Returns:
             Tuple of (return_code, stdout, stderr).
@@ -432,7 +456,8 @@ class AQWARunner:
         cmd = [str(executable)]
         if nowind:
             cmd.append("/nowind")
-        cmd.append(str(input_file))
+        # Pass only the filename since we run from output_dir
+        cmd.append(input_file.name)
         cmd.extend(extra_args)
 
         try:
@@ -453,6 +478,63 @@ class AQWARunner:
 
         except OSError as e:
             return -1, "", f"OS error: {e}"
+
+    @staticmethod
+    def _detect_aqwa_error(
+        stdout: str, stderr: str, return_code: int, lis_content: str = ""
+    ) -> str | None:
+        """Detect AQWA solver errors from output streams and LIS file.
+
+        AQWA writes errors to stdout or the .LIS file and often returns
+        exit code 0 even when it fails. This method checks for known
+        error patterns in all outputs.
+
+        Returns:
+            Error message if an error is detected, None otherwise.
+        """
+        # Non-zero return code is always an error
+        if return_code != 0:
+            return stderr or f"Exit code {return_code}"
+
+        # Error patterns to check in stdout and LIS file
+        error_patterns = [
+            "**** ERROR ****",
+            "NON-EXISTENT FILE",
+            "FATAL ERROR",
+            "ERROR IN",
+            "MESH FILE NOT FOUND",
+            "LICENSE ERROR",
+            "CANNOT OPEN",
+            "INPUT DATA ERROR",
+            "TERMINATED WITH ERRORS",
+        ]
+
+        # Check stdout for AQWA error patterns
+        stdout_upper = stdout.upper()
+        for pattern in error_patterns:
+            if pattern in stdout_upper:
+                # Extract the error line for better reporting
+                for line in stdout.strip().split("\n"):
+                    if pattern in line.upper():
+                        return line.strip()
+                return f"AQWA error detected: {pattern}"
+
+        # Check LIS file for error patterns
+        if lis_content:
+            lis_upper = lis_content.upper()
+            for pattern in error_patterns:
+                if pattern in lis_upper:
+                    # Extract the error line from LIS
+                    for line in lis_content.strip().split("\n"):
+                        if pattern in line.upper():
+                            return f"AQWA LIS: {line.strip()}"
+                    return f"AQWA LIS error: {pattern}"
+
+        # Check if stderr has content (unusual but check anyway)
+        if stderr and stderr.strip():
+            return stderr.strip()
+
+        return None
 
     def _capture_lis_file(self, output_dir: Path) -> Path | None:
         """Find and return the path to the AQWA .LIS output file, if present.
