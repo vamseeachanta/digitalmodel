@@ -1,0 +1,12 @@
+VariableData:
+  Coatingsorlinings:
+  - Name: coating+CWC80
+    LayerThickness, LayerMaterialDensity:
+    - - 0.0035
+      - 1.1
+    - - 0.08
+      - 3.0
+  - Name: coating
+    LayerThickness, LayerMaterialDensity:
+    - - 0.0035
+      - 1.1
