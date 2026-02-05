@@ -50,10 +50,15 @@ class LinesBuilder(BaseBuilder):
         )
         lines_list.append(main_line)
 
-        # Optionally add winch wire if tugs are present
+        # Add winch wire for floating installations with tugs
         if self.spec.equipment.tugs:
-            # Winch wire could be added here if needed
-            pass
+            total_length = sum(s.length for s in pipeline.segments)
+            winch_wire = self._build_winch_wire_line(
+                end_buoy_name=end_buoy_name,
+                pipeline_length=total_length,
+            )
+            lines_list.append(winch_wire)
+            self._register_entity("additional_line_names", ["Winch wire"])
 
         # Register line names for cross-builder reference
         line_names = [pipeline.name]
@@ -265,38 +270,57 @@ class LinesBuilder(BaseBuilder):
 
     def _build_winch_wire_line(
         self,
-        tug_index: int,
-        tug_position: list[float],
-        pipeline_name: str,
+        end_buoy_name: str,
+        pipeline_length: float,
     ) -> dict[str, Any]:
-        """Build a winch wire line connecting tug to pipeline.
+        """Build a winch wire line from end buoy to fixed vessel point.
 
-        This is optional and may be used for more detailed installation models.
+        For floating installations, the winch wire provides End B restraint
+        by connecting the 6D buoy at the vessel end to a fixed point
+        beyond the pipeline end. Without this, statics will not converge.
 
         Args:
-            tug_index: Index of the tug (1-based)
-            tug_position: [x, y, z] position of the tug
-            pipeline_name: Name of the main pipeline line
+            end_buoy_name: Name of the 6D buoy (e.g., "6D buoy1").
+            pipeline_length: Total pipeline length (m) for positioning fixed end.
 
         Returns:
             Dictionary representing an OrcaFlex Line definition for winch wire.
         """
+        fixed_x = pipeline_length + 60  # Fixed point beyond pipeline end
+
         return {
-            "Name": f"Winch wire {tug_index}",
+            "Name": "Winch wire",
             "IncludeTorsion": "No",
             "TopEnd": "End A",
             "LengthAndEndOrientations": "Explicit",
             "Representation": "Finite element",
             "PyModel": "(none)",
+            "PreBendSpecifiedBy": "Bend angle",
             "DragFormulation": "Standard",
+            "StaticsVIV": "None",
+            "DynamicsVIV": "None",
             "WaveCalculationMethod": "Specified by environment",
+            # Connection: 9-column header, 8-value rows (ConnectionzRelativeTo implicit null)
             "Connection, ConnectionX, ConnectionY, ConnectionZ, "
             "ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, "
-            "ConnectionReleaseStage": [
-                [f"Tug{tug_index}", 0, 0, 0, 0, 90, 0, None],  # End A: Tug
-                [pipeline_name, 0, 0, tug_position[0], 0, 90, 0, None],  # End B: Pipeline
+            "ConnectionReleaseStage, ConnectionzRelativeTo": [
+                [end_buoy_name, 0, 0, 0, 0, 0, 0, None],
+                ["Fixed", fixed_x, 0, 2, 0, 0, 180, None],
+            ],
+            "ConnectionxBendingStiffness, ConnectionyBendingStiffness": [
+                [0, 0],
+                [0, None],
+            ],
+            "ConnectionInitialArclength, ConnectionPayoutRate, "
+            "ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, "
+            "ConnectionUseSmoothGrowth": [
+                [None, 0, 0.001],
+                [None, 0, 0.001],
             ],
             "LineType, Length, TargetSegmentLength": [
-                ["Winch wire_LT", 25, 1],  # Single segment
+                ["Winch wire_LT", 165, 5],
             ],
+            "StaticsStep1": "User specified",
+            "ContentsMethod": "Uniform",
+            "ContentsDensity": 0,
         }

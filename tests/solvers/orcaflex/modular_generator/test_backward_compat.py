@@ -126,8 +126,9 @@ class TestGeneratorBackwardCompat:
         data = golden_output["07_lines.yml"]
         assert "Lines" in data
         lines = data["Lines"]
-        assert len(lines) == 1
+        assert len(lines) == 2  # pipeline + winch wire
         assert lines[0]["Name"] == "30'' Line"
+        assert lines[1]["Name"] == "Winch wire"
 
     def test_groups_section_structure(self, golden_output):
         data = golden_output["10_groups.yml"]
@@ -135,8 +136,9 @@ class TestGeneratorBackwardCompat:
         groups = data["Groups"]
         assert "Structure" in groups
         structure = groups["Structure"]
-        # Pipeline + rollers + 5 tugs + BM + 6D buoy1 + mid-pipe + 2 shapes = 11
+        # Pipeline + winch wire + rollers + 5 tugs + BM + 6D buoy1 + mid-pipe + 2 shapes = 12
         assert "30'' Line" in structure
+        assert "Winch wire" in structure
         assert "Rollers" in structure
         assert "Tug1" in structure
         assert "6D buoy1" in structure

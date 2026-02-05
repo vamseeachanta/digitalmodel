@@ -100,6 +100,16 @@ class StaticEndResults:
     object_count: int
 
 
+@dataclass
+class StaticRangeResults:
+    """Along-length static results from a converged OrcaFlex model."""
+
+    line_name: str
+    arc_lengths: list[float]  # m, positions along pipeline
+    effective_tension: list[float]  # kN, at each arc length
+    bend_moment: list[float]  # kN·m, at each arc length
+
+
 def extract_static_end_results(
     model: "OrcFxAPI.Model", line_name: str
 ) -> StaticEndResults:
@@ -130,6 +140,34 @@ def extract_static_end_results(
         end_b_bending=end_b_bending,
         length=length,
         object_count=object_count,
+    )
+
+
+def extract_static_range_results(
+    model: "OrcFxAPI.Model", line_name: str
+) -> StaticRangeResults:
+    """Extract along-length static results from a converged OrcaFlex model.
+
+    Uses RangeGraph to get effective tension and bending moment at all
+    node positions along the pipeline arc length.
+
+    Args:
+        model: OrcaFlex model with statics already calculated.
+        line_name: Name of the line object to query.
+
+    Returns:
+        StaticRangeResults with tension/bending at all arc-length positions.
+    """
+    line = model[line_name]
+
+    tension_rg = line.RangeGraph("Effective Tension")
+    bending_rg = line.RangeGraph("Bend Moment")
+
+    return StaticRangeResults(
+        line_name=line_name,
+        arc_lengths=list(tension_rg.X),
+        effective_tension=list(tension_rg.Mean),
+        bend_moment=list(bending_rg.Mean),
     )
 
 
@@ -181,6 +219,18 @@ def _skip_if_no_sim(sim_path: Path, label: str) -> None:
             "Generate offline with: model.CalculateStatics(); "
             "model.SaveSimulation(path)"
         )
+
+
+def _zero_environment(model: "OrcFxAPI.Model") -> None:
+    """Zero all environmental loads for no-load statics comparison.
+
+    Sets wave height, current speed, and wind speed to zero so that
+    the static equilibrium reflects only self-weight and buoyancy.
+    """
+    env = model.environment
+    env.WaveHeight = 0.0
+    env.RefCurrentSpeed = 0.0
+    env.WindSpeed = 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -251,6 +301,60 @@ def modular_results(modular_model):
 def monolithic_results(monolithic_model):
     """Extract static end results from the monolithic model."""
     return extract_static_end_results(monolithic_model, LINE_NAME_24IN)
+
+
+@pytest.fixture(scope="session")
+def modular_noload_model(modular_output_dir):
+    """Load modular master.yml, zero environment, and run statics."""
+    if not ORCAFLEX_AVAILABLE:
+        pytest.skip("OrcFxAPI not available")
+
+    master_path = modular_output_dir / "master.yml"
+    model = OrcFxAPI.Model()
+    try:
+        model.LoadData(str(master_path))
+    except Exception as exc:
+        pytest.skip(f"Modular master.yml not loadable: {exc}")
+
+    _zero_environment(model)
+    model.CalculateStatics()
+    return model
+
+
+@pytest.fixture(scope="session")
+def monolithic_noload_model():
+    """Load monolithic YAML, zero environment, and run statics.
+
+    Loads from YAML (not .sim) and recomputes statics with zero loads.
+    If a no-load .sim exists, loads that instead for speed.
+    """
+    if not ORCAFLEX_AVAILABLE:
+        pytest.skip("OrcFxAPI not available")
+
+    noload_sim = PIPELINE_24IN / "monolithic/basefile/statics_noload.sim"
+    if noload_sim.exists():
+        return OrcFxAPI.Model(str(noload_sim))
+
+    # Fall back to recomputing from YAML
+    if not MONOLITHIC_24IN_YML.exists():
+        pytest.skip(f"Monolithic YAML not found: {MONOLITHIC_24IN_YML}")
+
+    model = OrcFxAPI.Model(str(MONOLITHIC_24IN_YML))
+    _zero_environment(model)
+    model.CalculateStatics()
+    return model
+
+
+@pytest.fixture(scope="session")
+def modular_range_results(modular_noload_model):
+    """Extract along-length static results from the modular no-load model."""
+    return extract_static_range_results(modular_noload_model, LINE_NAME_24IN)
+
+
+@pytest.fixture(scope="session")
+def monolithic_range_results(monolithic_noload_model):
+    """Extract along-length static results from the monolithic no-load model."""
+    return extract_static_range_results(monolithic_noload_model, LINE_NAME_24IN)
 
 
 # ===================================================================
@@ -549,4 +653,141 @@ class TestCrossValidation30in:
             f"30in End B tension mismatch: "
             f"modular={mod_r.end_b_tension:.4f} vs "
             f"monolithic={mono_r.end_b_tension:.4f}"
+        )
+
+
+# ===================================================================
+# Phase E: Along-Length Static Comparison (No-Load)
+# ===================================================================
+
+
+RANGE_TENSION_REL_TOL = 0.10  # 10% — mesh differences cause local variation
+RANGE_TENSION_ABS_TOL = 20.0  # kN
+RANGE_BENDING_REL_TOL = 0.20  # 20% — bending is mesh-sensitive
+RANGE_BENDING_ABS_TOL = 10.0  # kN·m
+
+
+@slow_statics
+class TestAlongLengthNoLoadComparison:
+    """Compare tension and bending moment along pipeline under no-load statics.
+
+    Both models are loaded with zero environmental loads (no wave, current,
+    wind) so the static profile reflects only self-weight and buoyancy.
+    Results are interpolated to common arc-length positions for comparison.
+
+    Requires OrcFxAPI. The monolithic model may need >30 min for statics
+    unless a pre-computed statics_noload.sim file exists.
+    """
+
+    @requires_orcaflex
+    def test_noload_modular_statics_converge(self, modular_noload_model):
+        """Modular model converges statics under no-load conditions."""
+        assert modular_noload_model.state == OrcFxAPI.ModelState.InStaticState
+
+    @requires_orcaflex
+    def test_noload_monolithic_statics_converge(self, monolithic_noload_model):
+        """Monolithic model converges statics under no-load conditions."""
+        assert monolithic_noload_model.state == OrcFxAPI.ModelState.InStaticState
+
+    @requires_orcaflex
+    def test_noload_range_results_are_finite(self, modular_range_results):
+        """Modular along-length results are all finite."""
+        assert len(modular_range_results.arc_lengths) > 0
+        assert all(
+            math.isfinite(v) for v in modular_range_results.effective_tension
+        )
+        assert all(
+            math.isfinite(v) for v in modular_range_results.bend_moment
+        )
+        print(
+            f"  Modular range: {len(modular_range_results.arc_lengths)} nodes, "
+            f"arc length {modular_range_results.arc_lengths[0]:.1f} to "
+            f"{modular_range_results.arc_lengths[-1]:.1f} m"
+        )
+
+    @requires_orcaflex
+    def test_noload_tension_profile_comparison(
+        self, modular_range_results, monolithic_range_results
+    ):
+        """Along-length effective tension within tolerance at sampled positions.
+
+        Compares at 10 evenly-spaced arc-length positions to account for
+        different mesh densities between modular and monolithic models.
+        """
+        import numpy as np
+
+        mod_x = np.array(modular_range_results.arc_lengths)
+        mod_t = np.array(modular_range_results.effective_tension)
+        mono_x = np.array(monolithic_range_results.arc_lengths)
+        mono_t = np.array(monolithic_range_results.effective_tension)
+
+        # Sample at 10 positions spanning the common arc-length range
+        x_min = max(mod_x[0], mono_x[0])
+        x_max = min(mod_x[-1], mono_x[-1])
+        sample_x = np.linspace(x_min, x_max, 10)
+
+        mod_interp = np.interp(sample_x, mod_x, mod_t)
+        mono_interp = np.interp(sample_x, mono_x, mono_t)
+
+        print("\n  Along-length Effective Tension (kN) — No Load:")
+        print(f"  {'Arc (m)':>10}  {'Modular':>10}  {'Monolithic':>10}  {'Diff%':>8}")
+        failures = []
+        for i, (x, mt, mnt) in enumerate(
+            zip(sample_x, mod_interp, mono_interp)
+        ):
+            pct = 100.0 * (mt - mnt) / mnt if mnt != 0 else 0.0
+            ok = _within_tolerance(
+                mt, mnt, RANGE_TENSION_REL_TOL, RANGE_TENSION_ABS_TOL
+            )
+            marker = "" if ok else " <<< FAIL"
+            print(f"  {x:10.1f}  {mt:10.2f}  {mnt:10.2f}  {pct:+7.2f}%{marker}")
+            if not ok:
+                failures.append(
+                    f"arc={x:.1f}m: modular={mt:.2f} vs mono={mnt:.2f} ({pct:+.2f}%)"
+                )
+
+        assert not failures, (
+            f"Tension profile mismatch at {len(failures)} positions:\n"
+            + "\n".join(f"  {f}" for f in failures)
+        )
+
+    @requires_orcaflex
+    def test_noload_bending_moment_profile_comparison(
+        self, modular_range_results, monolithic_range_results
+    ):
+        """Along-length bending moment within tolerance at sampled positions."""
+        import numpy as np
+
+        mod_x = np.array(modular_range_results.arc_lengths)
+        mod_bm = np.array(modular_range_results.bend_moment)
+        mono_x = np.array(monolithic_range_results.arc_lengths)
+        mono_bm = np.array(monolithic_range_results.bend_moment)
+
+        x_min = max(mod_x[0], mono_x[0])
+        x_max = min(mod_x[-1], mono_x[-1])
+        sample_x = np.linspace(x_min, x_max, 10)
+
+        mod_interp = np.interp(sample_x, mod_x, mod_bm)
+        mono_interp = np.interp(sample_x, mono_x, mono_bm)
+
+        print("\n  Along-length Bending Moment (kN.m) — No Load:")
+        print(f"  {'Arc (m)':>10}  {'Modular':>10}  {'Monolithic':>10}  {'Diff%':>8}")
+        failures = []
+        for i, (x, mb, mnb) in enumerate(
+            zip(sample_x, mod_interp, mono_interp)
+        ):
+            pct = 100.0 * (mb - mnb) / mnb if mnb != 0 else 0.0
+            ok = _within_tolerance(
+                mb, mnb, RANGE_BENDING_REL_TOL, RANGE_BENDING_ABS_TOL
+            )
+            marker = "" if ok else " <<< FAIL"
+            print(f"  {x:10.1f}  {mb:10.2f}  {mnb:10.2f}  {pct:+7.2f}%{marker}")
+            if not ok:
+                failures.append(
+                    f"arc={x:.1f}m: modular={mb:.2f} vs mono={mnb:.2f} ({pct:+.2f}%)"
+                )
+
+        assert not failures, (
+            f"Bending moment profile mismatch at {len(failures)} positions:\n"
+            + "\n".join(f"  {f}" for f in failures)
         )
