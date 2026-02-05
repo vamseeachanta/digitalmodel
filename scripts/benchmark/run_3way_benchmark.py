@@ -27,6 +27,8 @@ from typing import Dict, List, Optional
 
 import yaml
 
+import numpy as np
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
@@ -133,10 +135,24 @@ def run_orcawave(
             print("  [DRY RUN] OrcaWave files generated, solver not executed")
         elif run_result.status == RunStatus.COMPLETED:
             result.status = "completed"
-            # Load results if available
-            results_file = orcawave_output / "results" / "diffraction_results.json"
-            if results_file.exists():
-                result.results = _load_results(results_file, "OrcaWave")
+            # Extract results from .owr file
+            owr_files = sorted(orcawave_output.glob("*.owr"))
+            if owr_files:
+                print(f"  Extracting results from: {owr_files[0].name}")
+                # Get vessel name and water depth from spec
+                vessel_name = spec.get_bodies()[0].vessel.name
+                water_depth = spec.environment.water_depth if spec.environment else 100.0
+                result.results = _extract_from_owr(
+                    owr_files[0], vessel_name, water_depth,
+                )
+                if result.results:
+                    n_freq = result.results.raos.surge.frequencies.count
+                    n_head = result.results.raos.surge.headings.count
+                    print(f"  [OK] Extracted {n_freq} frequencies x {n_head} headings")
+                else:
+                    print(f"  [WARNING] Could not extract results from .owr")
+            else:
+                print(f"  [WARNING] No .owr file found in {orcawave_output}")
             print(f"  [OK] OrcaWave completed")
         elif run_result.status == RunStatus.DRY_RUN:
             # OrcaWave runner fell back to dry-run (executable not found)
@@ -349,6 +365,146 @@ def _load_results(results_file: Path, solver_name: str) -> Optional[DiffractionR
         # TODO: Implement proper deserialization
         return None
     except Exception:
+        return None
+
+
+def _extract_from_owr(
+    owr_path: Path,
+    vessel_name: str,
+    water_depth: float,
+) -> Optional[DiffractionResults]:
+    """Extract DiffractionResults from an OrcaWave .owr results file."""
+    try:
+        import OrcFxAPI
+        from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+            AddedMassSet,
+            DampingSet,
+            DOF,
+            FrequencyData,
+            HeadingData,
+            HydrodynamicMatrix,
+            RAOComponent,
+            RAOSet,
+        )
+    except ImportError:
+        print("  [WARNING] OrcFxAPI or output schemas not available for extraction")
+        return None
+
+    try:
+        diffraction = OrcFxAPI.Diffraction()
+        diffraction.LoadResults(str(owr_path.resolve()))
+
+        frequencies = np.array(diffraction.frequencies)
+        headings = np.array(diffraction.headings)
+
+        freq_data = FrequencyData(
+            values=frequencies,
+            periods=2.0 * np.pi / frequencies,
+            count=len(frequencies),
+            min_freq=0.0,
+            max_freq=0.0,
+        )
+        head_data = HeadingData(
+            values=headings,
+            count=len(headings),
+            min_heading=0.0,
+            max_heading=0.0,
+        )
+
+        # Extract displacement RAOs - shape: (nfreq, nheading, 6)
+        # DOF order: surge, sway, heave, roll, pitch, yaw
+        raw_raos = np.array(diffraction.displacementRAOs)
+
+        dof_list = [DOF.SURGE, DOF.SWAY, DOF.HEAVE, DOF.ROLL, DOF.PITCH, DOF.YAW]
+        components = {}
+        for i, dof in enumerate(dof_list):
+            rao_complex = raw_raos[:, :, i]
+            components[dof.name.lower()] = RAOComponent(
+                dof=dof,
+                magnitude=np.abs(rao_complex),
+                phase=np.degrees(np.angle(rao_complex)),
+                frequencies=freq_data,
+                headings=head_data,
+                unit="",
+            )
+
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        rao_set = RAOSet(
+            vessel_name=vessel_name,
+            analysis_tool="OrcaWave",
+            water_depth=water_depth,
+            surge=components["surge"],
+            sway=components["sway"],
+            heave=components["heave"],
+            roll=components["roll"],
+            pitch=components["pitch"],
+            yaw=components["yaw"],
+            created_date=now_str,
+            source_file=str(owr_path),
+        )
+
+        # Extract added mass - shape: (nfreq, 6, 6)
+        am_raw = np.array(diffraction.addedMass)
+        am_matrices = []
+        for j, freq in enumerate(frequencies):
+            am_matrices.append(
+                HydrodynamicMatrix(
+                    matrix=am_raw[j],
+                    frequency=float(freq),
+                    matrix_type="added_mass",
+                    units={"coupling": "kg"},
+                )
+            )
+
+        am_set = AddedMassSet(
+            vessel_name=vessel_name,
+            analysis_tool="OrcaWave",
+            water_depth=water_depth,
+            matrices=am_matrices,
+            frequencies=freq_data,
+            created_date=now_str,
+            source_file=str(owr_path),
+        )
+
+        # Extract damping - shape: (nfreq, 6, 6)
+        damp_raw = np.array(diffraction.damping)
+        damp_matrices = []
+        for j, freq in enumerate(frequencies):
+            damp_matrices.append(
+                HydrodynamicMatrix(
+                    matrix=damp_raw[j],
+                    frequency=float(freq),
+                    matrix_type="damping",
+                    units={"coupling": "N.s/m"},
+                )
+            )
+
+        damp_set = DampingSet(
+            vessel_name=vessel_name,
+            analysis_tool="OrcaWave",
+            water_depth=water_depth,
+            matrices=damp_matrices,
+            frequencies=freq_data,
+            created_date=now_str,
+            source_file=str(owr_path),
+        )
+
+        return DiffractionResults(
+            vessel_name=vessel_name,
+            analysis_tool="OrcaWave",
+            water_depth=water_depth,
+            raos=rao_set,
+            added_mass=am_set,
+            damping=damp_set,
+            created_date=now_str,
+            source_files=[str(owr_path)],
+        )
+
+    except Exception as e:
+        print(f"  [WARNING] Failed to extract from .owr: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 

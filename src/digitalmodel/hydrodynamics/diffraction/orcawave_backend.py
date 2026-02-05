@@ -342,9 +342,8 @@ def _build_general_section(spec: DiffractionSpec) -> dict[str, Any]:
         solver.qtf_calculation
     )
     section["QuadraticLoadMomentumConservation"] = "No"
-    section["PreferredQuadraticLoadCalculationMethod"] = (
-        "Control surface" if solver.qtf_calculation else "Pressure integration"
-    )
+    if solver.qtf_calculation:
+        section["PreferredQuadraticLoadCalculationMethod"] = "Control surface"
     section["HasResonanceDampingLid"] = "No"
     section["LengthTolerance"] = 100e-9
     section["WaterlineZTolerance"] = 1e-6
@@ -397,11 +396,13 @@ def _build_frequencies_section(spec: DiffractionSpec) -> dict[str, Any]:
 
 def _build_headings_section(spec: DiffractionSpec) -> dict[str, Any]:
     """Build the wave headings section."""
-    return {
+    section: dict[str, Any] = {
         "WaveHeading": _headings_from_spec(spec),
-        "QTFMinCrossingAngle": 0,
-        "QTFMaxCrossingAngle": 180,
     }
+    if spec.solver_options and spec.solver_options.qtf_calculation:
+        section["QTFMinCrossingAngle"] = 0
+        section["QTFMaxCrossingAngle"] = 180
+    return section
 
 
 def _build_solver_section(spec: DiffractionSpec) -> dict[str, Any]:

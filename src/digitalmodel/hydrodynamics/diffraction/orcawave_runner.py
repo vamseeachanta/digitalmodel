@@ -110,6 +110,18 @@ class RunConfig(BaseModel):
         default_factory=list,
         description="Additional command-line arguments passed to the solver.",
     )
+    use_api: bool = Field(
+        default=True,
+        description=(
+            "Use OrcFxAPI Python binding instead of subprocess. "
+            "Falls back to subprocess if OrcFxAPI is not available."
+        ),
+    )
+    thread_count: int = Field(
+        default=4,
+        gt=0,
+        description="Number of threads for OrcFxAPI diffraction calculation.",
+    )
 
     model_config = {"arbitrary_types_allowed": True}
 
@@ -206,8 +218,10 @@ class OrcaWaveRunner:
     ) -> RunResult:
         """Execute the full pipeline: prepare + execute.
 
-        If the executable cannot be detected and ``dry_run`` is False,
-        the runner falls back to dry-run mode automatically.
+        Execution priority:
+        1. OrcFxAPI Python binding (if ``use_api`` is True and available)
+        2. Subprocess with detected executable
+        3. Dry-run mode (fallback)
 
         Args:
             spec: Canonical diffraction specification.
@@ -217,8 +231,11 @@ class OrcaWaveRunner:
         self.prepare(spec, spec_path=spec_path)
 
         if not self._config.dry_run:
-            exe = self._detect_executable()
-            if exe is None:
+            # Check API or executable availability before executing
+            has_api = self._config.use_api and self._check_api_available()
+            has_exe = self._detect_executable() is not None
+
+            if not has_api and not has_exe:
                 self._result.status = RunStatus.DRY_RUN
                 self._result.duration_seconds = 0.0
                 return self._result
@@ -274,6 +291,11 @@ class OrcaWaveRunner:
         """Invoke the OrcaWave solver or perform dry-run.
 
         Must be called after prepare().
+
+        Execution priority:
+        1. If ``use_api`` is True and OrcFxAPI is available, use Python API
+        2. Otherwise try subprocess with detected executable
+        3. Fall back to DRY_RUN if neither is available
         """
         if self._result is None:
             msg = "prepare() must be called before execute()"
@@ -286,6 +308,11 @@ class OrcaWaveRunner:
             self._result.duration_seconds = time.monotonic() - start
             return self._result
 
+        # Try OrcFxAPI Python binding first
+        if self._config.use_api and self._check_api_available():
+            return self._execute_via_api(start)
+
+        # Fall back to subprocess
         exe = self._detect_executable()
         if exe is None:
             self._result.status = RunStatus.DRY_RUN
@@ -315,6 +342,67 @@ class OrcaWaveRunner:
 
         # Capture log
         self._result.log_file = self._capture_log(self._result.output_dir)
+
+        return self._result
+
+    @staticmethod
+    def _check_api_available() -> bool:
+        """Check if OrcFxAPI Python binding is importable."""
+        try:
+            import OrcFxAPI  # noqa: F401
+
+            return True
+        except ImportError:
+            return False
+
+    def _execute_via_api(self, start: float) -> RunResult:
+        """Execute diffraction analysis using OrcFxAPI Python binding.
+
+        Loads the generated .yml input file into OrcFxAPI.Diffraction,
+        runs Calculate(), and saves results.
+        """
+        import OrcFxAPI
+
+        self._result.status = RunStatus.RUNNING
+        input_file = self._result.input_file
+        output_dir = self._result.output_dir
+
+        try:
+            # Load the generated .yml into OrcaWave Diffraction
+            diffraction = OrcFxAPI.Diffraction(
+                str(input_file.resolve()),
+                threadCount=self._config.thread_count,
+            )
+
+            # Run the diffraction calculation
+            diffraction.Calculate()
+
+            elapsed = time.monotonic() - start
+
+            # Save results
+            results_file = output_dir / f"{input_file.stem}.owr"
+            diffraction.SaveResults(str(results_file.resolve()))
+
+            # Save data file for reproducibility
+            data_file = output_dir / f"{input_file.stem}_data.dat"
+            diffraction.SaveData(str(data_file.resolve()))
+
+            self._result.status = RunStatus.COMPLETED
+            self._result.return_code = 0
+            self._result.duration_seconds = elapsed
+            self._result.stdout = (
+                f"OrcFxAPI: Calculated {len(diffraction.frequencies)} "
+                f"frequencies x {len(diffraction.headings)} headings"
+            )
+            self._result.log_file = results_file
+
+        except Exception as e:
+            elapsed = time.monotonic() - start
+            self._result.status = RunStatus.FAILED
+            self._result.return_code = -1
+            self._result.duration_seconds = elapsed
+            self._result.error_message = str(e)
+            self._result.stderr = str(e)
 
         return self._result
 

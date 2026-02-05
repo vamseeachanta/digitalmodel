@@ -262,6 +262,7 @@ class TestOrcaWaveRunnerExecute:
             output_dir=tmp_path,
             executable_path=Path("orcawave.exe"),
             dry_run=False,
+            use_api=False,
         )
         runner = OrcaWaveRunner(config)
         runner.prepare(spec)
@@ -284,6 +285,7 @@ class TestOrcaWaveRunnerExecute:
             output_dir=tmp_path,
             executable_path=Path("orcawave.exe"),
             dry_run=False,
+            use_api=False,
             timeout_seconds=10,
         )
         runner = OrcaWaveRunner(config)
@@ -304,6 +306,7 @@ class TestOrcaWaveRunnerExecute:
             output_dir=tmp_path,
             executable_path=Path("orcawave.exe"),
             dry_run=False,
+            use_api=False,
         )
         runner = OrcaWaveRunner(config)
         runner.prepare(spec)
@@ -326,6 +329,7 @@ class TestOrcaWaveRunnerExecute:
             output_dir=tmp_path,
             executable_path=Path("nonexistent_orcawave.exe"),
             dry_run=False,
+            use_api=False,
         )
         runner = OrcaWaveRunner(config)
         runner.prepare(spec)
@@ -389,7 +393,7 @@ class TestOrcaWaveRunnerRun:
         self, ship_raos_spec_path, tmp_path
     ):
         spec = _load_spec(ship_raos_spec_path)
-        config = RunConfig(output_dir=tmp_path, dry_run=False)
+        config = RunConfig(output_dir=tmp_path, dry_run=False, use_api=False)
         runner = OrcaWaveRunner(config)
 
         with patch.object(runner, "_detect_executable", return_value=None):
@@ -402,6 +406,7 @@ class TestOrcaWaveRunnerRun:
             output_dir=tmp_path,
             executable_path=Path("orcawave.exe"),
             dry_run=False,
+            use_api=False,
         )
         runner = OrcaWaveRunner(config)
 
