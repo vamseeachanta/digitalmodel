@@ -301,10 +301,11 @@ class LinesBuilder(BaseBuilder):
             "DynamicsVIV": "None",
             "WaveCalculationMethod": "Specified by environment",
             # Connection: 9-column header, 8-value rows (ConnectionzRelativeTo implicit null)
+            # End A Gamma=-5.75° aligns wire with 6D buoy orientation for statics convergence
             "Connection, ConnectionX, ConnectionY, ConnectionZ, "
             "ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, "
             "ConnectionReleaseStage, ConnectionzRelativeTo": [
-                [end_buoy_name, 0, 0, 0, 0, 0, 0, None],
+                [end_buoy_name, 0, 0, 0, 0, 0, -5.753732922130843, None],
                 ["Fixed", fixed_x, 0, 2, 0, 0, 180, None],
             ],
             "ConnectionxBendingStiffness, ConnectionyBendingStiffness": [
