@@ -1,0 +1,182 @@
+{
+  "vessel_name": "Ship_001_RAOs",
+  "solver_names": [
+    "AQWA",
+    "OrcaWave"
+  ],
+  "comparison_date": "2026-02-05 05:36:21",
+  "overall_consensus": "NO_CONSENSUS",
+  "pairwise_results": {
+    "AQWA-vs-OrcaWave": {
+      "solver_a": "AQWA",
+      "solver_b": "OrcaWave",
+      "overall_agreement": "POOR",
+      "rao_comparisons": {
+        "surge": {
+          "magnitude_correlation": 0.9580745742622501,
+          "magnitude_rms_error": 0.38321644668056465,
+          "phase_correlation": 0.4334166380372524,
+          "max_magnitude_diff": 0.5972664193251312,
+          "max_phase_diff": 270.1410624589686
+        },
+        "sway": {
+          "magnitude_correlation": 0.9809576041950492,
+          "magnitude_rms_error": 0.503591132653536,
+          "phase_correlation": 0.035248717449693705,
+          "max_magnitude_diff": 0.7683351965325238,
+          "max_phase_diff": 302.58999111936953
+        },
+        "heave": {
+          "magnitude_correlation": -0.8551433929687695,
+          "magnitude_rms_error": 0.6981141171500579,
+          "phase_correlation": -0.9252366686531193,
+          "max_magnitude_diff": 1.025675001928355,
+          "max_phase_diff": 67.50072203589158
+        },
+        "roll": {
+          "magnitude_correlation": 0.48931303145584787,
+          "magnitude_rms_error": 1.7910917247674902,
+          "phase_correlation": 0.38836620611473166,
+          "max_magnitude_diff": 4.850568716695411,
+          "max_phase_diff": 248.69295548971405
+        },
+        "pitch": {
+          "magnitude_correlation": 0.9678938738608268,
+          "magnitude_rms_error": 26.153448148151465,
+          "phase_correlation": -0.05992171047790708,
+          "max_magnitude_diff": 39.57542725684711,
+          "max_phase_diff": 355.74184544042333
+        },
+        "yaw": {
+          "magnitude_correlation": 0.9673162966438563,
+          "magnitude_rms_error": 8.503596687939314,
+          "phase_correlation": 0.39161887615042834,
+          "max_magnitude_diff": 16.097411260016774,
+          "max_phase_diff": 179.81666507686407
+        }
+      },
+      "added_mass_correlations": {
+        "1,1": 1.0,
+        "1,2": 1.0,
+        "1,3": 1.0,
+        "1,4": 1.0,
+        "1,5": 1.0,
+        "1,6": 1.0,
+        "2,1": 1.0,
+        "2,2": 1.0,
+        "2,3": 1.0,
+        "2,4": 1.0,
+        "2,5": 1.0,
+        "2,6": 1.0,
+        "3,1": 1.0,
+        "3,2": 1.0,
+        "3,3": 1.0,
+        "3,4": 1.0,
+        "3,5": 1.0,
+        "3,6": 1.0,
+        "4,1": 1.0,
+        "4,2": 1.0,
+        "4,3": 1.0,
+        "4,4": 1.0,
+        "4,5": 1.0,
+        "4,6": 1.0,
+        "5,1": 1.0,
+        "5,2": 1.0,
+        "5,3": 1.0,
+        "5,4": 1.0,
+        "5,5": 1.0,
+        "5,6": 1.0,
+        "6,1": 1.0,
+        "6,2": 1.0,
+        "6,3": 1.0,
+        "6,4": 1.0,
+        "6,5": 1.0,
+        "6,6": 1.0
+      },
+      "damping_correlations": {
+        "1,1": 1.0,
+        "1,2": 1.0,
+        "1,3": 1.0,
+        "1,4": 1.0,
+        "1,5": 1.0,
+        "1,6": 1.0,
+        "2,1": 1.0,
+        "2,2": 1.0,
+        "2,3": 1.0,
+        "2,4": 1.0,
+        "2,5": 1.0,
+        "2,6": 1.0,
+        "3,1": 1.0,
+        "3,2": 1.0,
+        "3,3": 1.0,
+        "3,4": 1.0,
+        "3,5": 1.0,
+        "3,6": 1.0,
+        "4,1": 1.0,
+        "4,2": 1.0,
+        "4,3": 1.0,
+        "4,4": 1.0,
+        "4,5": 1.0,
+        "4,6": 1.0,
+        "5,1": 1.0,
+        "5,2": 1.0,
+        "5,3": 1.0,
+        "5,4": 1.0,
+        "5,5": 1.0,
+        "5,6": 1.0,
+        "6,1": 1.0,
+        "6,2": 1.0,
+        "6,3": 1.0,
+        "6,4": 1.0,
+        "6,5": 1.0,
+        "6,6": 1.0
+      }
+    }
+  },
+  "consensus_by_dof": {
+    "SURGE": {
+      "consensus_level": "NO_CONSENSUS",
+      "mean_pairwise_correlation": 0.9580745742622501,
+      "outlier_solver": null,
+      "agreement_pairs": []
+    },
+    "SWAY": {
+      "consensus_level": "NO_CONSENSUS",
+      "mean_pairwise_correlation": 0.9809576041950492,
+      "outlier_solver": null,
+      "agreement_pairs": []
+    },
+    "HEAVE": {
+      "consensus_level": "NO_CONSENSUS",
+      "mean_pairwise_correlation": -0.8551433929687695,
+      "outlier_solver": null,
+      "agreement_pairs": []
+    },
+    "ROLL": {
+      "consensus_level": "NO_CONSENSUS",
+      "mean_pairwise_correlation": 0.48931303145584787,
+      "outlier_solver": null,
+      "agreement_pairs": []
+    },
+    "PITCH": {
+      "consensus_level": "NO_CONSENSUS",
+      "mean_pairwise_correlation": 0.9678938738608268,
+      "outlier_solver": null,
+      "agreement_pairs": []
+    },
+    "YAW": {
+      "consensus_level": "NO_CONSENSUS",
+      "mean_pairwise_correlation": 0.9673162966438563,
+      "outlier_solver": null,
+      "agreement_pairs": []
+    }
+  },
+  "notes": [
+    "SURGE: consensus=NO_CONSENSUS",
+    "SWAY: consensus=NO_CONSENSUS",
+    "HEAVE: consensus=NO_CONSENSUS",
+    "ROLL: consensus=NO_CONSENSUS",
+    "PITCH: consensus=NO_CONSENSUS",
+    "YAW: consensus=NO_CONSENSUS"
+  ]
+}
