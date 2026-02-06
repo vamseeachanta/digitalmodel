@@ -400,7 +400,9 @@ class AQWABackend:
         # NUM_CORES (required by AQWA v252+)
         cards.append("NUM_CORES         4")
 
-        # OPTIONS
+        # OPTIONS GOON — continue past non-fatal mesh errors
+        cards.append("OPTIONS GOON ")
+        # Feature options
         options = self._build_options(spec)
         cards.append(f"OPTIONS {options}")
 
@@ -491,20 +493,35 @@ class AQWABackend:
             mesh = self._load_mesh(mesh_file)
             vessel_name = body.vessel.name or "body"
 
-            # SEAG card with bounding box
+            # Compute bounding box from mesh vertices
+            if mesh is not None and len(mesh.vertices) > 0:
+                xmin = float(mesh.vertices[:, 0].min()) - 1.0
+                xmax = float(mesh.vertices[:, 0].max()) + 1.0
+                ymin = float(mesh.vertices[:, 1].min()) - 1.0
+                ymax = float(mesh.vertices[:, 1].max()) + 1.0
+            else:
+                xmin, xmax, ymin, ymax = -100.0, 100.0, -100.0, 100.0
+
+            # SEAG card — resolution only (non-Workbench mode accepts 2 params)
             cards.append(
-                f"      SEAG          ( 81, 51,      -50.,       50.,"
-                f"      -50.,       50.)"
+                f"      SEAG          ( 81, 51)"
             )
             # ZLWL (waterline) card
-            cards.append("      ZLWL          (        0.)")
+            wl_z = body.vessel.geometry.waterline_z or 0.0
+            cards.append(f"      ZLWL          ({wl_z:>9.1f})")
+            # ILID AUTO — internal lid for irregular frequency removal
+            lid_group = 21
+            cards.append(
+                f"     {struct_idx}ILID AUTO   {lid_group}"
+            )
             # Group ID comment
             group_id = 15
             cards.append(f"* Group ID    {group_id} is body named {vessel_name}")
 
             if mesh is not None:
-                # Emit element connectivity in QPPL format
-                # Format: "     1QPPL        15(1)(    1)(    2)(    3)(    4)"
+                # Emit element connectivity in QPPL DIFF format
+                # DIFF keyword marks elements as diffracting (required for panel method)
+                # Format: "     1QPPL DIFF   15(1)(    1)(    2)(    3)(    4)"
                 for elem_idx, panel in enumerate(mesh.panels, start=1):
                     # Panel contains 0-based indices, convert to 1-based
                     n1 = panel[0] + 1
@@ -512,7 +529,7 @@ class AQWABackend:
                     n3 = panel[2] + 1
                     n4 = panel[3] + 1
                     cards.append(
-                        f"     {struct_idx}QPPL        {group_id}({struct_idx})"
+                        f"     {struct_idx}QPPL DIFF   {group_id}({struct_idx})"
                         f"({n1:>5d})({n2:>5d})({n3:>5d})({n4:>5d})"
                         f"  Aqwa Elem No: {elem_idx:>4d}"
                     )

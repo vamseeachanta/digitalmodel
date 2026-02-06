@@ -12,7 +12,7 @@ vessel:
   name: "UnitBox_Benchmark"
   type: "box"
   geometry:
-    mesh_file: "../../../tests/hydrodynamics/bemrosetta/fixtures/sample_box.gdf"
+    mesh_file: "unit_box_clean.gdf"
     mesh_format: gdf
     symmetry: none  # No symmetry for this simple case
     reference_point: [0.5, 0.5, 0.0]  # Center of waterplane

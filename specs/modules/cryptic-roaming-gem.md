@@ -1,5 +1,8 @@
 # Plan: OrcaFlex Analysis Validation — Modular vs Monolithic
 
+> **Status**: COMPLETED — Tests implemented in `test_modular_vs_monolithic.py`
+> **Superseded by**: `specs/modules/orcaflex-qa-fast-models.md` (QA strategy with fast models)
+
 ## Objective
 
 Validate that the modular generator output produces numerically equivalent OrcaFlex results compared to the monolithic baseline. Run static analysis on both the generated modular model and the monolithic base, extract engineering results (effective tension, bending moment at line ends), and compare within tolerances.

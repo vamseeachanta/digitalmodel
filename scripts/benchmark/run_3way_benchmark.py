@@ -422,8 +422,19 @@ def _extract_from_owr(
         diffraction = OrcFxAPI.Diffraction()
         diffraction.LoadResults(str(owr_path.resolve()))
 
-        frequencies = np.array(diffraction.frequencies)
+        # OrcFxAPI returns frequencies in Hz; convert to rad/s
+        frequencies = 2.0 * np.pi * np.array(diffraction.frequencies)
         headings = np.array(diffraction.headings)
+
+        # Extract displacement RAOs - OrcFxAPI returns (nheading, nfreq, 6)
+        # Transpose to (nfreq, nheading, 6) for consistency with other solvers
+        raw_raos = np.array(diffraction.displacementRAOs)
+        raw_raos = np.transpose(raw_raos, (1, 0, 2))  # (nfreq, nheading, 6)
+
+        # Sort by ascending frequency (OrcFxAPI returns descending)
+        sort_idx = np.argsort(frequencies)
+        frequencies = frequencies[sort_idx]
+        raw_raos = raw_raos[sort_idx, :, :]
 
         freq_data = FrequencyData(
             values=frequencies,
@@ -439,22 +450,23 @@ def _extract_from_owr(
             max_heading=0.0,
         )
 
-        # Extract displacement RAOs - OrcFxAPI returns (nheading, nfreq, 6)
-        # Transpose to (nfreq, nheading, 6) for consistency with other solvers
-        raw_raos = np.array(diffraction.displacementRAOs)
-        raw_raos = np.transpose(raw_raos, (1, 0, 2))  # (nfreq, nheading, 6)
-
         dof_list = [DOF.SURGE, DOF.SWAY, DOF.HEAVE, DOF.ROLL, DOF.PITCH, DOF.YAW]
+        rotational_dofs = {DOF.ROLL, DOF.PITCH, DOF.YAW}
         components = {}
         for i, dof in enumerate(dof_list):
             rao_complex = raw_raos[:, :, i]
+            magnitude = np.abs(rao_complex)
+            # OrcaWave returns rotational RAOs in rad/m; convert to deg/m
+            # to match AQWA convention
+            if dof in rotational_dofs:
+                magnitude = np.degrees(magnitude)
             components[dof.name.lower()] = RAOComponent(
                 dof=dof,
-                magnitude=np.abs(rao_complex),
+                magnitude=magnitude,
                 phase=np.degrees(np.angle(rao_complex)),
                 frequencies=freq_data,
                 headings=head_data,
-                unit="",
+                unit="deg/m" if dof in rotational_dofs else "m/m",
             )
 
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -473,8 +485,8 @@ def _extract_from_owr(
             source_file=str(owr_path),
         )
 
-        # Extract added mass - shape: (nfreq, 6, 6)
-        am_raw = np.array(diffraction.addedMass)
+        # Extract added mass - shape: (nfreq, 6, 6), sorted by ascending freq
+        am_raw = np.array(diffraction.addedMass)[sort_idx]
         am_matrices = []
         for j, freq in enumerate(frequencies):
             am_matrices.append(
@@ -496,8 +508,8 @@ def _extract_from_owr(
             source_file=str(owr_path),
         )
 
-        # Extract damping - shape: (nfreq, 6, 6)
-        damp_raw = np.array(diffraction.damping)
+        # Extract damping - shape: (nfreq, 6, 6), sorted by ascending freq
+        damp_raw = np.array(diffraction.damping)[sort_idx]
         damp_matrices = []
         for j, freq in enumerate(frequencies):
             damp_matrices.append(
@@ -881,10 +893,13 @@ def _parse_aqwa_matrix_section(
     units = {"coupling": "kg"} if matrix_type == "added_mass" else {"coupling": "N.s/m"}
 
     # Find all lines that mention the keyword in an appropriate context
+    # Normalize whitespace to handle "ADDED  MASS" (double-space) in LIS
+    kw_tokens = keyword.upper().split()
     section_indices = []
     for i, line in enumerate(lines):
-        upper = line.upper()
-        if keyword.upper() in upper and "MATRIX" not in upper:
+        upper = " ".join(line.upper().split())  # normalize whitespace
+        kw_normalized = " ".join(kw_tokens)
+        if kw_normalized in upper and "MATRIX" not in upper:
             # Likely a section header; look for frequency info nearby
             section_indices.append(i)
 
@@ -892,12 +907,15 @@ def _parse_aqwa_matrix_section(
         return [], []
 
     for sec_start in section_indices:
-        # Search nearby lines for a frequency value
+        # Search nearby lines for a frequency value (backward then forward)
+        # Backward range is large because damping sections appear ~25 lines
+        # after the WAVE FREQUENCY header in AQWA LIS
         freq_val = None
-        for offset in range(0, 5):
-            if sec_start + offset >= len(lines):
-                break
-            search_line = lines[sec_start + offset].upper()
+        for offset in range(-30, 5):
+            line_idx = sec_start + offset
+            if line_idx < 0 or line_idx >= len(lines):
+                continue
+            search_line = lines[line_idx].upper()
             # Look for frequency patterns like "FREQ = 0.200" or
             # "FREQUENCY  0.200 RAD/S" or "PERIOD = 31.42"
             for token_i, token in enumerate(search_line.split()):
@@ -932,16 +950,14 @@ def _parse_aqwa_matrix_section(
         if freq_val is None:
             continue
 
-        # Now find the 6x6 matrix: scan forward for 6 consecutive lines
-        # each having at least 6 numeric values.
+        # Now find the 6x6 matrix: scan forward for lines with 6+ numbers.
+        # AQWA LIS puts blank lines between matrix rows, so skip blanks.
         matrix_rows: List[np.ndarray] = []
         scan_start = sec_start + 1
         for j in range(scan_start, min(scan_start + 30, len(lines))):
             row_line = lines[j].strip()
             if not row_line:
-                if matrix_rows:
-                    break
-                continue
+                continue  # skip blank lines between matrix rows
 
             parts = row_line.split()
             # Try to parse at least 6 floats from this line
@@ -957,7 +973,7 @@ def _parse_aqwa_matrix_section(
                 if len(matrix_rows) == 6:
                     break
             elif matrix_rows:
-                # Non-numeric line after partial matrix; reset
+                # Non-numeric line after partial matrix (e.g. next section)
                 break
 
         if len(matrix_rows) == 6:
