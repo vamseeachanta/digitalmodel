@@ -56,7 +56,9 @@ class BuoysBuilder(BaseBuilder):
     """
 
     def should_generate(self) -> bool:
-        """Generate if floating model or if roller arrangement is present."""
+        """Generate if pipeline model (floating or with roller arrangement)."""
+        if not self.spec.is_pipeline():
+            return False
         if not self.spec.is_s_lay():
             return True
         # S-lay with route rollers still needs buoy generation

@@ -9,6 +9,7 @@ from .environment import Environment
 from .pipeline import Pipeline
 from .equipment import Equipment
 from .simulation import Simulation
+from .riser import Riser
 
 
 class ProjectInputSpec(BaseModel):
@@ -17,8 +18,9 @@ class ProjectInputSpec(BaseModel):
 
     This is the main entry point for validating YAML input files.
     It contains all components needed to generate a complete OrcaFlex model.
+    Supports both pipeline installation models and riser production models.
 
-    Example:
+    Example (Pipeline):
         ```python
         from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
         import yaml
@@ -31,17 +33,26 @@ class ProjectInputSpec(BaseModel):
         print(f"Pipeline length: {sum(s.length for s in spec.pipeline.segments)}m")
         ```
 
+    Example (Riser):
+        ```python
+        spec = ProjectInputSpec(**data)
+        print(f"Model: {spec.metadata.name}")
+        print(f"Riser lines: {len(spec.riser.lines)}")
+        ```
+
     Attributes:
         metadata: Model identification and categorization.
         environment: Environmental conditions (water, metocean).
-        pipeline: Pipeline definition (dimensions, coatings, segments).
+        pipeline: Pipeline definition (optional, for pipeline models).
+        riser: Riser definition (optional, for riser models).
         equipment: Installation equipment (tugs, rollers, buoyancy modules).
         simulation: Simulation control parameters.
     """
 
     metadata: Metadata = Field(..., description="Model metadata")
     environment: Environment = Field(..., description="Environmental conditions")
-    pipeline: Pipeline = Field(..., description="Pipeline definition")
+    pipeline: Pipeline | None = Field(default=None, description="Pipeline definition")
+    riser: Riser | None = Field(default=None, description="Riser definition")
     equipment: Equipment = Field(
         default_factory=Equipment, description="Equipment configuration"
     )
@@ -55,31 +66,47 @@ class ProjectInputSpec(BaseModel):
         Cross-validate model components for physical consistency.
 
         Checks:
+        - Either pipeline or riser must be defined (not both, not neither)
         - Water depth consistency with seabed features
         - Tug positions relative to pipeline length
         - Buoyancy module spacing vs segment length
         """
-        # Check if tug spacing and count fit within pipeline length
-        if self.equipment.tugs:
-            total_pipeline_length = sum(s.length for s in self.pipeline.segments)
-            tugs = self.equipment.tugs
-            max_tug_x = tugs.first_position[0] + (tugs.count - 1) * tugs.spacing
+        # Ensure exactly one of pipeline or riser is defined
+        if self.pipeline is None and self.riser is None:
+            raise ValueError(
+                "Either 'pipeline' or 'riser' must be defined in spec"
+            )
+        if self.pipeline is not None and self.riser is not None:
+            raise ValueError(
+                "Cannot define both 'pipeline' and 'riser' in same spec. "
+                "Create separate spec files for each model type."
+            )
 
-            # Only warn if tugs extend significantly beyond pipeline
-            if max_tug_x > total_pipeline_length * 1.5:
-                # This could be intentional for staged installation
-                pass  # Could add warning logging here
+        # Pipeline-specific validation
+        if self.pipeline is not None:
+            # Check if tug spacing and count fit within pipeline length
+            if self.equipment.tugs:
+                total_pipeline_length = sum(s.length for s in self.pipeline.segments)
+                tugs = self.equipment.tugs
+                max_tug_x = tugs.first_position[0] + (tugs.count - 1) * tugs.spacing
 
-        # Check S-lay equipment consistency
-        if self.equipment.stinger and not self.equipment.vessel:
-            raise ValueError("Stinger requires a vessel to be defined")
-        if self.equipment.tensioner and not self.equipment.vessel:
-            raise ValueError("Tensioner requires a vessel to be defined")
+                # Only warn if tugs extend significantly beyond pipeline
+                if max_tug_x > total_pipeline_length * 1.5:
+                    # This could be intentional for staged installation
+                    pass  # Could add warning logging here
+
+            # Check S-lay equipment consistency
+            if self.equipment.stinger and not self.equipment.vessel:
+                raise ValueError("Stinger requires a vessel to be defined")
+            if self.equipment.tensioner and not self.equipment.vessel:
+                raise ValueError("Tensioner requires a vessel to be defined")
 
         return self
 
     def get_total_pipeline_length(self) -> float:
         """Calculate total pipeline length from all segments."""
+        if self.pipeline is None:
+            return 0.0
         return sum(s.length for s in self.pipeline.segments)
 
     def get_tug_positions(self) -> list[list[float]]:
@@ -117,8 +144,28 @@ class ProjectInputSpec(BaseModel):
 
     def is_s_lay(self) -> bool:
         """Check if this is an S-lay installation model."""
-        return self.equipment.vessel is not None
+        return self.pipeline is not None and self.equipment.vessel is not None
 
     def is_floating(self) -> bool:
         """Check if this is a floating installation model."""
-        return self.equipment.tugs is not None
+        return self.pipeline is not None and self.equipment.tugs is not None
+
+    def is_riser(self) -> bool:
+        """Check if this is a riser model."""
+        return self.riser is not None
+
+    def is_pipeline(self) -> bool:
+        """Check if this is a pipeline model."""
+        return self.pipeline is not None
+
+    def get_riser_line_names(self) -> list[str]:
+        """Get names of all riser lines."""
+        if self.riser is None:
+            return []
+        return [line.name for line in self.riser.lines]
+
+    def get_riser_line_type_names(self) -> list[str]:
+        """Get names of all riser line types."""
+        if self.riser is None:
+            return []
+        return [lt.name for lt in self.riser.line_types]

@@ -39,6 +39,20 @@ from .equipment import (
 )
 from .metadata import Metadata
 from .pipeline import Coating, Coatings, Dimensions, Pipeline, Segment
+from .riser import (
+    BuoyancyZone,
+    ClumpAttachments,
+    ClumpType,
+    ConnectionType,
+    EndConnection,
+    Riser,
+    RiserConfiguration,
+    RiserContents,
+    RiserLine,
+    RiserLineType,
+    RiserSection,
+    RiserVessel,
+)
 from .root import ProjectInputSpec
 from .simulation import Simulation
 
@@ -67,6 +81,19 @@ __all__ = [
     "Coatings",
     "Segment",
     "Pipeline",
+    # Riser
+    "RiserConfiguration",
+    "ConnectionType",
+    "RiserLineType",
+    "RiserSection",
+    "EndConnection",
+    "RiserContents",
+    "BuoyancyZone",
+    "ClumpType",
+    "ClumpAttachments",
+    "RiserVessel",
+    "RiserLine",
+    "Riser",
     # Equipment
     "TugProperties",
     "Tugs",

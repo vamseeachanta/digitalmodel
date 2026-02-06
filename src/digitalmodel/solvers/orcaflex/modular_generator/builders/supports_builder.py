@@ -20,6 +20,10 @@ class SupportsBuilder(BaseBuilder):
     Reference: 13_supports.yml in modular include format.
     """
 
+    def should_generate(self) -> bool:
+        """Only generate for pipeline models."""
+        return self.spec.is_pipeline()
+
     def build(self) -> dict[str, Any]:
         """Build the SupportTypes section.
 

@@ -61,6 +61,15 @@ class BuilderContext:
     # From GroupsBuilder
     group_names: list[str] = field(default_factory=list)
 
+    # From RiserLineTypeBuilder
+    riser_line_type_names: list[str] = field(default_factory=list)
+
+    # From RiserLinesBuilder
+    riser_line_names: list[str] = field(default_factory=list)
+
+    # From RiserVesselBuilder
+    riser_vessel_name: str = ""
+
     def to_dict(self) -> dict:
         """Convert to dict for backward compatibility with old builder code.
 

@@ -34,6 +34,10 @@ class ShapesBuilder(BaseBuilder):
     Reference: 09_shapes.yml in modular include format.
     """
 
+    def should_generate(self) -> bool:
+        """Only generate for pipeline models with ramp configuration."""
+        return self.spec.is_pipeline() and self.spec.equipment.ramp is not None
+
     def build(self) -> dict[str, Any]:
         """Build the Shapes section from equipment ramp configuration.
 

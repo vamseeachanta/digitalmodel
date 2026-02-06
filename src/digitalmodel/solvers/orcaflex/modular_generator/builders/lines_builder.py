@@ -28,6 +28,10 @@ class LinesBuilder(BaseBuilder):
     Reference: 07_lines.yml in modular include format.
     """
 
+    def should_generate(self) -> bool:
+        """Only generate for pipeline models."""
+        return self.spec.is_pipeline()
+
     def build(self) -> dict[str, Any]:
         """Build the Lines section from pipeline and equipment configuration.
 

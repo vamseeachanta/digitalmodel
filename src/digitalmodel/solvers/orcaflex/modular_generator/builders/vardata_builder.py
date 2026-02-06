@@ -21,6 +21,10 @@ class VarDataBuilder(BaseBuilder):
     Reference: 02_var_data.yml in modular include format.
     """
 
+    def should_generate(self) -> bool:
+        """Only generate for pipeline models (risers don't have coatings)."""
+        return self.spec.is_pipeline()
+
     def build(self) -> dict[str, Any]:
         """Build the VariableData section from pipeline coatings.
 
