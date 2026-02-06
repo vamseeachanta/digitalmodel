@@ -1,29 +1,28 @@
 # OrcaFlex Modular Model Generator - Riser Specification
-# A01 Steep Wave Riser - Steep wave riser with bend stiffeners
+# A01 Steep Wave Riser - Steep wave riser (simplified single-line)
 #
 # Model Type: Riser (steep wave configuration)
 # Source: OrcaFlex Examples - A01 Steep wave riser.dat
 # Tier: 2 (Fast validation, <10s statics)
 #
-# The steep wave configuration uses buoyancy modules in the mid-section
-# with bend stiffeners (BSRs) at both ends to protect against excessive
-# bending at the vessel and seabed connections.
+# The steep wave configuration uses a buoyant section in the middle of
+# the riser to create an S-shape with the touchdown point steep (near-
+# vertical approach to seabed anchor).
 #
-# Features:
-#   - Bend stiffener at vessel connection (Topside BSR)
-#   - Bend stiffener at seabed anchor (Seabed BSR)
-#   - Distributed buoyancy section creating S-shape
-#   - Variable diameter BSR profile (tapered)
+# This uses the "10" Steep Wave1" standalone line variant from the
+# monolithic model — a single continuous line from vessel to anchor
+# without separate BSR line objects. The monolithic model also has a
+# multi-line "Detailed" variant with BSR + stiffener lines, but this
+# simplified variant captures the essential physics.
 #
-# Bend Stiffeners (not yet supported by Pydantic schema):
-#   topside_bsr:
-#     description: "Bend stiffener at vessel connection"
-#     length: 3.0
-#     profile: [[0, 0.57], [3, 0.40]]  # [arc_length, OD]
-#   seabed_bsr:
-#     description: "Bend stiffener at seabed anchor"
-#     length: 3.0
-#     profile: [[0, 0.40], [3, 0.57]]  # [arc_length, OD]
+# Parameters extracted from: A01 Steep wave riser.yml (monolithic)
+# Reference line: "10" Steep Wave1" (standalone, Hidden=Yes)
+#
+# Key differences from monolithic Detailed variant:
+#   - Single line vs 4 lines (riser + 2 BSRs + stiffeners)
+#   - No separate BSR objects (bend protection zones modeled as fine mesh)
+#   - No line contact/containment constraints
+#   - 12 objects vs 31 objects
 #
 # Usage:
 #   uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \
@@ -67,7 +66,7 @@ riser:
     name: "FPSO"
     type_name: "Vessel Type1"
     length: 103                         # Vessel length (m)
-    position: [-35, 0, 0]              # Initial position [x, y, z] (m)
+    position: [-10, 10, 0]             # Monolithic position [x, y, z] (m)
     orientation: [0, 0, 270]            # Heading 270 deg
     primary_motion: "None"
     superimposed_motion: "RAOs + harmonics"
@@ -106,23 +105,21 @@ riser:
       stress_id: 0.254                  # Stress calculation ID (m)
 
   lines:
-    - name: "10in Steep Wave with BSR"
+    - name: "10in Steep Wave"
       configuration: steep_wave
-      # Bend stiffeners: topside_bsr at end_a, seabed_bsr at end_b
-      # (schema support pending - see header comments for BSR definitions)
       end_a:
         type: vessel
         name: "FPSO"
-        position: [36, 1.732, -7.5]     # Connection position on vessel [x, y, z] (m)
+        position: [10, 11.9132, -7.0076]  # Monolithic connection [x, y, z] (m)
         declination: 170                # Declination angle (deg)
-        azimuth: 60                     # Azimuth angle (deg)
-        bending_stiffness: 0            # End connection bending stiffness (kN.m/rad)
+        azimuth: 90                     # Monolithic azimuth (deg)
+        bending_stiffness: 0
       end_b:
         type: anchor
-        position: [76, 35, 0.178]       # Anchor position [x, y, z] (m)
-        declination: 90                 # Declination angle (deg)
-        azimuth: 0                      # Azimuth angle (deg)
-        bending_stiffness: 0            # End connection bending stiffness (kN.m/rad)
+        position: [67, 0, 4.5]         # Monolithic anchor position [x, y, z] (m)
+        declination: 180                # Line approaches from above (critical for S-shape)
+        azimuth: 0
+        bending_stiffness: 0
       sections:
         - line_type: "10in_flexible"
           length: 5.5                   # BSR zone - fine mesh
@@ -146,6 +143,7 @@ riser:
         density: 1.0                    # Contents density (te/m3)
         pressure: 0                     # Internal pressure (kPa)
       statics_method: "Catenary"
+      statics_step2: "Full statics"
       lay_azimuth: 180
 
 simulation:

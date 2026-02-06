@@ -1,0 +1,438 @@
+[
+  {
+    "model_name": "a01_catenary_riser",
+    "timestamp": "2026-02-05T23:25:03",
+    "monolithic": {
+      "source_type": "monolithic",
+      "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_catenary_riser\\monolithic\\A01 Catenary riser.dat",
+      "statics_converged": true,
+      "statics_time_seconds": 0.247,
+      "object_count": 12,
+      "lines": {
+        "Catenary Hose": {
+          "line_name": "Catenary Hose",
+          "total_length_m": 130.0,
+          "num_sections": 3,
+          "end_a_tension_kN": 132.37869525651703,
+          "end_b_tension_kN": 11.875170402569715,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 132.37869525651703,
+          "min_tension_kN": 11.775708628084125,
+          "max_bending_kNm": 9.501998999632983
+        }
+      }
+    },
+    "modular": {
+      "source_type": "modular",
+      "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_catenary_riser\\modular\\master.yml",
+      "statics_converged": true,
+      "statics_time_seconds": 0.181,
+      "object_count": 11,
+      "lines": {
+        "Catenary Hose": {
+          "line_name": "Catenary Hose",
+          "total_length_m": 130.0,
+          "num_sections": 3,
+          "end_a_tension_kN": 132.37872292090555,
+          "end_b_tension_kN": 11.877313259070549,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 132.37872292090555,
+          "min_tension_kN": 11.77572825620139,
+          "max_bending_kNm": 9.502064603689556
+        }
+      }
+    },
+    "comparisons": [
+      {
+        "line_name_mono": "Catenary Hose",
+        "line_name_mod": "Catenary Hose",
+        "end_a_tension_mono_kN": 132.379,
+        "end_a_tension_mod_kN": 132.379,
+        "end_a_tension_diff_pct": 0.0,
+        "end_b_tension_mono_kN": 11.875,
+        "end_b_tension_mod_kN": 11.877,
+        "end_b_tension_diff_pct": 0.02,
+        "max_tension_mono_kN": 132.379,
+        "max_tension_mod_kN": 132.379,
+        "max_tension_diff_pct": 0.0,
+        "end_a_bending_mono_kNm": 0.0,
+        "end_a_bending_mod_kNm": 0.0,
+        "end_b_bending_mono_kNm": 0.0,
+        "end_b_bending_mod_kNm": 0.0,
+        "max_bending_mono_kNm": 9.502,
+        "max_bending_mod_kNm": 9.502,
+        "length_mono_m": 130.0,
+        "length_mod_m": 130.0,
+        "length_diff_pct": 0.0,
+        "tension_pass": true,
+        "bending_pass": true
+      }
+    ],
+    "overall_pass": true
+  },
+  {
+    "model_name": "a01_lazy_wave_riser",
+    "timestamp": "2026-02-05T23:25:04",
+    "monolithic": {
+      "source_type": "monolithic",
+      "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_lazy_wave_riser\\monolithic\\A01 Lazy wave riser.dat",
+      "statics_converged": true,
+      "statics_time_seconds": 0.62,
+      "object_count": 16,
+      "lines": {
+        "10\" Lazy Wave Distributed": {
+          "line_name": "10\" Lazy Wave Distributed",
+          "total_length_m": 190.0,
+          "num_sections": 5,
+          "end_a_tension_kN": 90.6551275004462,
+          "end_b_tension_kN": 18.195378030056734,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 90.6551275004462,
+          "min_tension_kN": 13.551898570174892,
+          "max_bending_kNm": 10.77631905062216
+        },
+        "10\" Lazy Wave Discrete": {
+          "line_name": "10\" Lazy Wave Discrete",
+          "total_length_m": 190.0,
+          "num_sections": 5,
+          "end_a_tension_kN": 90.65520255905341,
+          "end_b_tension_kN": 18.720662762824144,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 90.65520255905341,
+          "min_tension_kN": 13.386382383424511,
+          "max_bending_kNm": 10.880380142887782
+        }
+      }
+    },
+    "modular": {
+      "source_type": "modular",
+      "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_lazy_wave_riser\\modular\\master.yml",
+      "statics_converged": true,
+      "statics_time_seconds": 0.592,
+      "object_count": 14,
+      "lines": {
+        "10in Lazy Wave Distributed": {
+          "line_name": "10in Lazy Wave Distributed",
+          "total_length_m": 190.0,
+          "num_sections": 5,
+          "end_a_tension_kN": 90.4814445993444,
+          "end_b_tension_kN": 17.275222307469086,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 90.4814445993444,
+          "min_tension_kN": 13.82416362421246,
+          "max_bending_kNm": 10.622800695658809
+        },
+        "10in Lazy Wave Discrete": {
+          "line_name": "10in Lazy Wave Discrete",
+          "total_length_m": 190.0,
+          "num_sections": 5,
+          "end_a_tension_kN": 90.65157544897292,
+          "end_b_tension_kN": 18.74680724106181,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 90.65157544897292,
+          "min_tension_kN": 13.375348946424204,
+          "max_bending_kNm": 10.892443067767935
+        }
+      }
+    },
+    "comparisons": [
+      {
+        "line_name_mono": "10\" Lazy Wave Distributed",
+        "line_name_mod": "10in Lazy Wave Distributed",
+        "end_a_tension_mono_kN": 90.655,
+        "end_a_tension_mod_kN": 90.481,
+        "end_a_tension_diff_pct": 0.19,
+        "end_b_tension_mono_kN": 18.195,
+        "end_b_tension_mod_kN": 17.275,
+        "end_b_tension_diff_pct": 5.06,
+        "max_tension_mono_kN": 90.655,
+        "max_tension_mod_kN": 90.481,
+        "max_tension_diff_pct": 0.19,
+        "end_a_bending_mono_kNm": 0.0,
+        "end_a_bending_mod_kNm": 0.0,
+        "end_b_bending_mono_kNm": 0.0,
+        "end_b_bending_mod_kNm": 0.0,
+        "max_bending_mono_kNm": 10.776,
+        "max_bending_mod_kNm": 10.623,
+        "length_mono_m": 190.0,
+        "length_mod_m": 190.0,
+        "length_diff_pct": 0.0,
+        "tension_pass": true,
+        "bending_pass": true
+      },
+      {
+        "line_name_mono": "10\" Lazy Wave Discrete",
+        "line_name_mod": "10in Lazy Wave Discrete",
+        "end_a_tension_mono_kN": 90.655,
+        "end_a_tension_mod_kN": 90.652,
+        "end_a_tension_diff_pct": 0.0,
+        "end_b_tension_mono_kN": 18.721,
+        "end_b_tension_mod_kN": 18.747,
+        "end_b_tension_diff_pct": 0.14,
+        "max_tension_mono_kN": 90.655,
+        "max_tension_mod_kN": 90.652,
+        "max_tension_diff_pct": 0.0,
+        "end_a_bending_mono_kNm": 0.0,
+        "end_a_bending_mod_kNm": 0.0,
+        "end_b_bending_mono_kNm": 0.0,
+        "end_b_bending_mod_kNm": 0.0,
+        "max_bending_mono_kNm": 10.88,
+        "max_bending_mod_kNm": 10.892,
+        "length_mono_m": 190.0,
+        "length_mod_m": 190.0,
+        "length_diff_pct": 0.0,
+        "tension_pass": true,
+        "bending_pass": true
+      }
+    ],
+    "overall_pass": true
+  },
+  {
+    "model_name": "a01_pliant_wave_riser",
+    "timestamp": "2026-02-05T23:25:06",
+    "monolithic": {
+      "source_type": "monolithic",
+      "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_pliant_wave_riser\\monolithic\\A01 Pliant wave riser.dat",
+      "statics_converged": true,
+      "statics_time_seconds": 0.872,
+      "object_count": 26,
+      "lines": {
+        "10\" Pliant Simple": {
+          "line_name": "10\" Pliant Simple",
+          "total_length_m": 232.5,
+          "num_sections": 6,
+          "end_a_tension_kN": 116.64107480302732,
+          "end_b_tension_kN": 28.69238015562136,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 116.64107480302732,
+          "min_tension_kN": 28.659518135162514,
+          "max_bending_kNm": 36.26666752019407
+        },
+        "10\" Pliant Detailed Up": {
+          "line_name": "10\" Pliant Detailed Up",
+          "total_length_m": 175.5,
+          "num_sections": 4,
+          "end_a_tension_kN": 116.68309524295522,
+          "end_b_tension_kN": 98.14376586742321,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 42.243278445601106,
+          "max_tension_kN": 116.68309524295522,
+          "min_tension_kN": 30.214080282483142,
+          "max_bending_kNm": 42.243278445601106
+        },
+        "10\" Pliant Detailed Dn": {
+          "line_name": "10\" Pliant Detailed Dn",
+          "total_length_m": 56.0,
+          "num_sections": 2,
+          "end_a_tension_kN": 41.15722315155905,
+          "end_b_tension_kN": 27.812317554518938,
+          "end_a_bending_kNm": 37.226225793345485,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 41.15722315155905,
+          "min_tension_kN": 27.77918018801033,
+          "max_bending_kNm": 37.226225793345485
+        },
+        "Tether Pliant Detailed": {
+          "line_name": "Tether Pliant Detailed",
+          "total_length_m": 9.7,
+          "num_sections": 1,
+          "end_a_tension_kN": 59.6993995672213,
+          "end_b_tension_kN": 62.559198384916755,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 62.559198384916755,
+          "min_tension_kN": 59.6993995672213,
+          "max_bending_kNm": 0.0
+        }
+      }
+    },
+    "modular": {
+      "source_type": "modular",
+      "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_pliant_wave_riser\\modular\\master.yml",
+      "statics_converged": true,
+      "statics_time_seconds": 0.285,
+      "object_count": 14,
+      "lines": {
+        "10in Pliant Simple": {
+          "line_name": "10in Pliant Simple",
+          "total_length_m": 232.5,
+          "num_sections": 6,
+          "end_a_tension_kN": 109.0342144132499,
+          "end_b_tension_kN": 25.985420922579472,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 109.0342144132499,
+          "min_tension_kN": 25.985420922579472,
+          "max_bending_kNm": 14.697028747518855
+        }
+      }
+    },
+    "comparisons": [
+      {
+        "line_name_mono": "10\" Pliant Simple",
+        "line_name_mod": "10in Pliant Simple",
+        "end_a_tension_mono_kN": 116.641,
+        "end_a_tension_mod_kN": 109.034,
+        "end_a_tension_diff_pct": 6.52,
+        "end_b_tension_mono_kN": 28.692,
+        "end_b_tension_mod_kN": 25.985,
+        "end_b_tension_diff_pct": 9.43,
+        "max_tension_mono_kN": 116.641,
+        "max_tension_mod_kN": 109.034,
+        "max_tension_diff_pct": 6.52,
+        "end_a_bending_mono_kNm": 0.0,
+        "end_a_bending_mod_kNm": 0.0,
+        "end_b_bending_mono_kNm": 0.0,
+        "end_b_bending_mod_kNm": 0.0,
+        "max_bending_mono_kNm": 36.267,
+        "max_bending_mod_kNm": 14.697,
+        "length_mono_m": 232.5,
+        "length_mod_m": 232.5,
+        "length_diff_pct": 0.0,
+        "tension_pass": true,
+        "bending_pass": true
+      }
+    ],
+    "overall_pass": true
+  },
+  {
+    "model_name": "a01_steep_wave_riser",
+    "timestamp": "2026-02-05T23:25:08",
+    "monolithic": {
+      "source_type": "monolithic",
+      "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_steep_wave_riser\\monolithic\\A01 Steep wave riser.dat",
+      "statics_converged": true,
+      "statics_time_seconds": 0.769,
+      "object_count": 31,
+      "lines": {
+        "10\" Steep Wave1": {
+          "line_name": "10\" Steep Wave1",
+          "total_length_m": 151.0,
+          "num_sections": 6,
+          "end_a_tension_kN": 87.30346144882958,
+          "end_b_tension_kN": 36.569102878819606,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 87.30346144882958,
+          "min_tension_kN": 8.995584311912097,
+          "max_bending_kNm": 14.220530884606884
+        },
+        "TopEnd BSR": {
+          "line_name": "TopEnd BSR",
+          "total_length_m": 3.5,
+          "num_sections": 2,
+          "end_a_tension_kN": 2.154299798423043,
+          "end_b_tension_kN": -0.0,
+          "end_a_bending_kNm": 15.695690177529759,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 2.154299798423043,
+          "min_tension_kN": -0.25900216879823823,
+          "max_bending_kNm": 15.695690177529759
+        },
+        "Seabed End BSR": {
+          "line_name": "Seabed End BSR",
+          "total_length_m": 3.5,
+          "num_sections": 2,
+          "end_a_tension_kN": -3.374359411505936,
+          "end_b_tension_kN": -0.0,
+          "end_a_bending_kNm": 28.435014228503828,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 0.0007442046690400161,
+          "min_tension_kN": -3.374359411505936,
+          "max_bending_kNm": 28.435014228503828
+        },
+        "10\" Steep Wave": {
+          "line_name": "10\" Steep Wave",
+          "total_length_m": 150.0,
+          "num_sections": 6,
+          "end_a_tension_kN": 86.55355384901866,
+          "end_b_tension_kN": 36.73875220323902,
+          "end_a_bending_kNm": 3.0953250805434513,
+          "end_b_bending_kNm": 5.880918516264434,
+          "max_tension_kN": 86.55355384901866,
+          "min_tension_kN": 8.99523360039609,
+          "max_bending_kNm": 14.220880431865323
+        },
+        "Stiffener1": {
+          "line_name": "Stiffener1",
+          "total_length_m": 3.0,
+          "num_sections": 1,
+          "end_a_tension_kN": -0.16699429282767936,
+          "end_b_tension_kN": 0.0002968965402220837,
+          "end_a_bending_kNm": 9.51157379817151,
+          "end_b_bending_kNm": 0.24306188017357025,
+          "max_tension_kN": 0.0002968965402220837,
+          "min_tension_kN": -0.16699429282767936,
+          "max_bending_kNm": 9.51157379817151
+        },
+        "Stiffener2": {
+          "line_name": "Stiffener2",
+          "total_length_m": 3.0,
+          "num_sections": 1,
+          "end_a_tension_kN": 0.0025408733169947906,
+          "end_b_tension_kN": -0.3870298042627146,
+          "end_a_bending_kNm": 0.8491428297240321,
+          "end_b_bending_kNm": 18.071378292409126,
+          "max_tension_kN": 0.0025408733169947906,
+          "min_tension_kN": -0.3870298042627146,
+          "max_bending_kNm": 18.071378292409126
+        }
+      }
+    },
+    "modular": {
+      "source_type": "modular",
+      "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_steep_wave_riser\\modular\\master.yml",
+      "statics_converged": true,
+      "statics_time_seconds": 0.376,
+      "object_count": 12,
+      "lines": {
+        "10in Steep Wave": {
+          "line_name": "10in Steep Wave",
+          "total_length_m": 151.0,
+          "num_sections": 6,
+          "end_a_tension_kN": 87.5681011569278,
+          "end_b_tension_kN": 36.89971716948049,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 87.5681011569278,
+          "min_tension_kN": 7.8420004093088025,
+          "max_bending_kNm": 15.70511172438314
+        }
+      }
+    },
+    "comparisons": [
+      {
+        "line_name_mono": "10\" Steep Wave1",
+        "line_name_mod": "10in Steep Wave",
+        "end_a_tension_mono_kN": 87.303,
+        "end_a_tension_mod_kN": 87.568,
+        "end_a_tension_diff_pct": 0.3,
+        "end_b_tension_mono_kN": 36.569,
+        "end_b_tension_mod_kN": 36.9,
+        "end_b_tension_diff_pct": 0.9,
+        "max_tension_mono_kN": 87.303,
+        "max_tension_mod_kN": 87.568,
+        "max_tension_diff_pct": 0.3,
+        "end_a_bending_mono_kNm": 0.0,
+        "end_a_bending_mod_kNm": 0.0,
+        "end_b_bending_mono_kNm": 0.0,
+        "end_b_bending_mod_kNm": 0.0,
+        "max_bending_mono_kNm": 14.221,
+        "max_bending_mod_kNm": 15.705,
+        "length_mono_m": 151.0,
+        "length_mod_m": 151.0,
+        "length_diff_pct": 0.0,
+        "tension_pass": true,
+        "bending_pass": true
+      }
+    ],
+    "overall_pass": true
+  }
+]

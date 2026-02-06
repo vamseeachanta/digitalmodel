@@ -1,0 +1,121 @@
+{
+  "model_name": "a01_lazy_wave_riser",
+  "timestamp": "2026-02-05T23:25:04",
+  "monolithic": {
+    "source_type": "monolithic",
+    "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_lazy_wave_riser\\monolithic\\A01 Lazy wave riser.dat",
+    "statics_converged": true,
+    "statics_time_seconds": 0.62,
+    "object_count": 16,
+    "lines": {
+      "10\" Lazy Wave Distributed": {
+        "line_name": "10\" Lazy Wave Distributed",
+        "total_length_m": 190.0,
+        "num_sections": 5,
+        "end_a_tension_kN": 90.6551275004462,
+        "end_b_tension_kN": 18.195378030056734,
+        "end_a_bending_kNm": 0.0,
+        "end_b_bending_kNm": 0.0,
+        "max_tension_kN": 90.6551275004462,
+        "min_tension_kN": 13.551898570174892,
+        "max_bending_kNm": 10.77631905062216
+      },
+      "10\" Lazy Wave Discrete": {
+        "line_name": "10\" Lazy Wave Discrete",
+        "total_length_m": 190.0,
+        "num_sections": 5,
+        "end_a_tension_kN": 90.65520255905341,
+        "end_b_tension_kN": 18.720662762824144,
+        "end_a_bending_kNm": 0.0,
+        "end_b_bending_kNm": 0.0,
+        "max_tension_kN": 90.65520255905341,
+        "min_tension_kN": 13.386382383424511,
+        "max_bending_kNm": 10.880380142887782
+      }
+    }
+  },
+  "modular": {
+    "source_type": "modular",
+    "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_lazy_wave_riser\\modular\\master.yml",
+    "statics_converged": true,
+    "statics_time_seconds": 0.592,
+    "object_count": 14,
+    "lines": {
+      "10in Lazy Wave Distributed": {
+        "line_name": "10in Lazy Wave Distributed",
+        "total_length_m": 190.0,
+        "num_sections": 5,
+        "end_a_tension_kN": 90.4814445993444,
+        "end_b_tension_kN": 17.275222307469086,
+        "end_a_bending_kNm": 0.0,
+        "end_b_bending_kNm": 0.0,
+        "max_tension_kN": 90.4814445993444,
+        "min_tension_kN": 13.82416362421246,
+        "max_bending_kNm": 10.622800695658809
+      },
+      "10in Lazy Wave Discrete": {
+        "line_name": "10in Lazy Wave Discrete",
+        "total_length_m": 190.0,
+        "num_sections": 5,
+        "end_a_tension_kN": 90.65157544897292,
+        "end_b_tension_kN": 18.74680724106181,
+        "end_a_bending_kNm": 0.0,
+        "end_b_bending_kNm": 0.0,
+        "max_tension_kN": 90.65157544897292,
+        "min_tension_kN": 13.375348946424204,
+        "max_bending_kNm": 10.892443067767935
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "line_name_mono": "10\" Lazy Wave Distributed",
+      "line_name_mod": "10in Lazy Wave Distributed",
+      "end_a_tension_mono_kN": 90.655,
+      "end_a_tension_mod_kN": 90.481,
+      "end_a_tension_diff_pct": 0.19,
+      "end_b_tension_mono_kN": 18.195,
+      "end_b_tension_mod_kN": 17.275,
+      "end_b_tension_diff_pct": 5.06,
+      "max_tension_mono_kN": 90.655,
+      "max_tension_mod_kN": 90.481,
+      "max_tension_diff_pct": 0.19,
+      "end_a_bending_mono_kNm": 0.0,
+      "end_a_bending_mod_kNm": 0.0,
+      "end_b_bending_mono_kNm": 0.0,
+      "end_b_bending_mod_kNm": 0.0,
+      "max_bending_mono_kNm": 10.776,
+      "max_bending_mod_kNm": 10.623,
+      "length_mono_m": 190.0,
+      "length_mod_m": 190.0,
+      "length_diff_pct": 0.0,
+      "tension_pass": true,
+      "bending_pass": true
+    },
+    {
+      "line_name_mono": "10\" Lazy Wave Discrete",
+      "line_name_mod": "10in Lazy Wave Discrete",
+      "end_a_tension_mono_kN": 90.655,
+      "end_a_tension_mod_kN": 90.652,
+      "end_a_tension_diff_pct": 0.0,
+      "end_b_tension_mono_kN": 18.721,
+      "end_b_tension_mod_kN": 18.747,
+      "end_b_tension_diff_pct": 0.14,
+      "max_tension_mono_kN": 90.655,
+      "max_tension_mod_kN": 90.652,
+      "max_tension_diff_pct": 0.0,
+      "end_a_bending_mono_kNm": 0.0,
+      "end_a_bending_mod_kNm": 0.0,
+      "end_b_bending_mono_kNm": 0.0,
+      "end_b_bending_mod_kNm": 0.0,
+      "max_bending_mono_kNm": 10.88,
+      "max_bending_mod_kNm": 10.892,
+      "length_mono_m": 190.0,
+      "length_mod_m": 190.0,
+      "length_diff_pct": 0.0,
+      "tension_pass": true,
+      "bending_pass": true
+    }
+  ],
+  "overall_pass": true
+}

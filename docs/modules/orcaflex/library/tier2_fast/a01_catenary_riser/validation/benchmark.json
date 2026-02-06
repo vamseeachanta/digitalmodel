@@ -1,0 +1,73 @@
+{
+  "model_name": "a01_catenary_riser",
+  "timestamp": "2026-02-05T23:25:03",
+  "monolithic": {
+    "source_type": "monolithic",
+    "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_catenary_riser\\monolithic\\A01 Catenary riser.dat",
+    "statics_converged": true,
+    "statics_time_seconds": 0.247,
+    "object_count": 12,
+    "lines": {
+      "Catenary Hose": {
+        "line_name": "Catenary Hose",
+        "total_length_m": 130.0,
+        "num_sections": 3,
+        "end_a_tension_kN": 132.37869525651703,
+        "end_b_tension_kN": 11.875170402569715,
+        "end_a_bending_kNm": 0.0,
+        "end_b_bending_kNm": 0.0,
+        "max_tension_kN": 132.37869525651703,
+        "min_tension_kN": 11.775708628084125,
+        "max_bending_kNm": 9.501998999632983
+      }
+    }
+  },
+  "modular": {
+    "source_type": "modular",
+    "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_catenary_riser\\modular\\master.yml",
+    "statics_converged": true,
+    "statics_time_seconds": 0.181,
+    "object_count": 11,
+    "lines": {
+      "Catenary Hose": {
+        "line_name": "Catenary Hose",
+        "total_length_m": 130.0,
+        "num_sections": 3,
+        "end_a_tension_kN": 132.37872292090555,
+        "end_b_tension_kN": 11.877313259070549,
+        "end_a_bending_kNm": 0.0,
+        "end_b_bending_kNm": 0.0,
+        "max_tension_kN": 132.37872292090555,
+        "min_tension_kN": 11.77572825620139,
+        "max_bending_kNm": 9.502064603689556
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "line_name_mono": "Catenary Hose",
+      "line_name_mod": "Catenary Hose",
+      "end_a_tension_mono_kN": 132.379,
+      "end_a_tension_mod_kN": 132.379,
+      "end_a_tension_diff_pct": 0.0,
+      "end_b_tension_mono_kN": 11.875,
+      "end_b_tension_mod_kN": 11.877,
+      "end_b_tension_diff_pct": 0.02,
+      "max_tension_mono_kN": 132.379,
+      "max_tension_mod_kN": 132.379,
+      "max_tension_diff_pct": 0.0,
+      "end_a_bending_mono_kNm": 0.0,
+      "end_a_bending_mod_kNm": 0.0,
+      "end_b_bending_mono_kNm": 0.0,
+      "end_b_bending_mod_kNm": 0.0,
+      "max_bending_mono_kNm": 9.502,
+      "max_bending_mod_kNm": 9.502,
+      "length_mono_m": 130.0,
+      "length_mod_m": 130.0,
+      "length_diff_pct": 0.0,
+      "tension_pass": true,
+      "bending_pass": true
+    }
+  ],
+  "overall_pass": true
+}
