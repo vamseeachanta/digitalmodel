@@ -288,7 +288,8 @@ class TestHeadingMapping:
             line for line in content.splitlines() if "DIRN" in line
         ]
         # Ship spec has 5 explicit headings: 0, 45, 90, 135, 180
-        assert len(dirn_lines) == 5
+        # AQWA requires -180..+180 range, so expanded to 9: -180,-135,-90,-45,0,45,90,135,180
+        assert len(dirn_lines) == 9
 
     def test_heading_range_to_dirn(self, tmp_path: Path):
         """Heading range generates correct DIRN card count."""
@@ -303,7 +304,8 @@ class TestHeadingMapping:
             line for line in content.splitlines() if "DIRN" in line
         ]
         # Semi-sub has range start=0, end=180, increment=22.5 -> 9 headings
-        assert len(dirn_lines) == 9
+        # AQWA expands to -180..+180 range: 17 headings total
+        assert len(dirn_lines) == 17
 
     def test_heading_values_in_degrees(self, tmp_path: Path):
         """DIRN cards contain heading values in degrees."""

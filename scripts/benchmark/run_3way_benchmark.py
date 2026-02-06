@@ -37,7 +37,17 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_runner import (
     BenchmarkRunner,
     BenchmarkRunResult,
 )
-from digitalmodel.hydrodynamics.diffraction.output_schemas import DiffractionResults
+from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+    AddedMassSet,
+    DampingSet,
+    DiffractionResults,
+    DOF,
+    FrequencyData,
+    HeadingData,
+    HydrodynamicMatrix,
+    RAOComponent,
+    RAOSet,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -243,10 +253,28 @@ def run_aqwa(
             print("  [DRY RUN] AQWA files generated, solver not executed")
         elif run_result.status.value == "completed":
             result.status = "completed"
-            # Load results if available
-            results_file = aqwa_output / "results" / "diffraction_results.json"
-            if results_file.exists():
-                result.results = _load_results(results_file, "AQWA")
+            # Extract results from .LIS file
+            lis_files = sorted(aqwa_output.glob("*.LIS")) + sorted(aqwa_output.glob("*.lis"))
+            if lis_files:
+                print(f"  Extracting results from: {lis_files[0].name}")
+                vessel_name = spec.get_bodies()[0].vessel.name
+                wd = spec.environment.water_depth if spec.environment else 100.0
+                result.results = _extract_from_aqwa_lis(
+                    lis_files[0], vessel_name, wd,
+                )
+                if result.results:
+                    n_freq = result.results.raos.surge.frequencies.count
+                    n_head = result.results.raos.surge.headings.count
+                    print(f"  [OK] Extracted {n_freq} frequencies x {n_head} headings")
+                else:
+                    print("  [WARNING] Could not extract results from .LIS")
+            else:
+                # Fall back to JSON results if available
+                results_file = aqwa_output / "results" / "diffraction_results.json"
+                if results_file.exists():
+                    result.results = _load_results(results_file, "AQWA")
+                else:
+                    print(f"  [WARNING] No .LIS file found in {aqwa_output}")
             print(f"  [OK] AQWA completed")
         else:
             result.status = "failed"
@@ -411,9 +439,10 @@ def _extract_from_owr(
             max_heading=0.0,
         )
 
-        # Extract displacement RAOs - shape: (nfreq, nheading, 6)
-        # DOF order: surge, sway, heave, roll, pitch, yaw
+        # Extract displacement RAOs - OrcFxAPI returns (nheading, nfreq, 6)
+        # Transpose to (nfreq, nheading, 6) for consistency with other solvers
         raw_raos = np.array(diffraction.displacementRAOs)
+        raw_raos = np.transpose(raw_raos, (1, 0, 2))  # (nfreq, nheading, 6)
 
         dof_list = [DOF.SURGE, DOF.SWAY, DOF.HEAVE, DOF.ROLL, DOF.PITCH, DOF.YAW]
         components = {}
@@ -508,6 +537,532 @@ def _extract_from_owr(
         return None
 
 
+def _extract_from_aqwa_lis(
+    lis_path: Path,
+    vessel_name: str,
+    water_depth: float,
+) -> Optional[DiffractionResults]:
+    """Extract DiffractionResults from an AQWA .LIS output file.
+
+    Parses the text-based LIS file for:
+    - Displacement RAOs (first R.A.O.S-VARIATION block only)
+    - Added mass matrices (6x6 per frequency)
+    - Damping matrices (6x6 per frequency)
+
+    Args:
+        lis_path: Path to the AQWA .LIS file.
+        vessel_name: Name of the vessel for metadata.
+        water_depth: Water depth in metres.
+
+    Returns:
+        DiffractionResults or None on failure.
+    """
+    if not lis_path.exists():
+        print(f"  [WARNING] LIS file not found: {lis_path}")
+        return None
+
+    try:
+        text = lis_path.read_text(errors="replace")
+        lines = text.splitlines()
+    except Exception as e:
+        print(f"  [WARNING] Could not read LIS file: {e}")
+        return None
+
+    try:
+        # ---------------------------------------------------------------
+        # 1. Parse displacement RAOs (first occurrence only)
+        # ---------------------------------------------------------------
+        rao_data = _parse_aqwa_raos(lines)
+        if not rao_data:
+            print("  [WARNING] No RAO data found in LIS file")
+            return None
+
+        headings_list, freq_list, amp_array, phase_array = rao_data
+
+        frequencies = np.array(sorted(set(freq_list)))
+        headings_unique = np.array(sorted(set(headings_list)))
+        n_freq = len(frequencies)
+        n_head = len(headings_unique)
+
+        # Build lookup: (freq, heading) -> row index in raw data
+        # Raw data is stored per (heading_block, freq_row)
+        # Reshape into [nfreq, nheading, 6]
+        mag = np.zeros((n_freq, n_head, 6))
+        pha = np.zeros((n_freq, n_head, 6))
+
+        freq_idx_map = {float(f): i for i, f in enumerate(frequencies)}
+        head_idx_map = {float(h): i for i, h in enumerate(headings_unique)}
+
+        for row_i in range(len(freq_list)):
+            fi = freq_idx_map.get(float(freq_list[row_i]))
+            hi = head_idx_map.get(float(headings_list[row_i]))
+            if fi is not None and hi is not None:
+                mag[fi, hi, :] = amp_array[row_i]
+                pha[fi, hi, :] = phase_array[row_i]
+
+        freq_data = FrequencyData(
+            values=frequencies,
+            periods=2.0 * np.pi / frequencies,
+            count=n_freq,
+            min_freq=0.0,
+            max_freq=0.0,
+        )
+        head_data = HeadingData(
+            values=headings_unique,
+            count=n_head,
+            min_heading=0.0,
+            max_heading=0.0,
+        )
+
+        dof_list = [DOF.SURGE, DOF.SWAY, DOF.HEAVE, DOF.ROLL, DOF.PITCH, DOF.YAW]
+        components = {}
+        for i, dof in enumerate(dof_list):
+            components[dof.name.lower()] = RAOComponent(
+                dof=dof,
+                magnitude=mag[:, :, i],
+                phase=pha[:, :, i],
+                frequencies=freq_data,
+                headings=head_data,
+                unit="",
+            )
+
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        rao_set = RAOSet(
+            vessel_name=vessel_name,
+            analysis_tool="AQWA",
+            water_depth=water_depth,
+            surge=components["surge"],
+            sway=components["sway"],
+            heave=components["heave"],
+            roll=components["roll"],
+            pitch=components["pitch"],
+            yaw=components["yaw"],
+            created_date=now_str,
+            source_file=str(lis_path),
+        )
+
+        # ---------------------------------------------------------------
+        # 2. Parse added mass matrices
+        # ---------------------------------------------------------------
+        am_matrices, am_freqs = _parse_aqwa_matrix_section(
+            lines, "ADDED MASS", "added_mass",
+        )
+        if am_matrices and am_freqs:
+            am_freq_arr = np.array(am_freqs)
+            am_freq_data = FrequencyData(
+                values=am_freq_arr,
+                periods=2.0 * np.pi / am_freq_arr,
+                count=len(am_freq_arr),
+                min_freq=0.0,
+                max_freq=0.0,
+            )
+        else:
+            # Fall back to RAO frequencies with zero matrices
+            am_freq_data = freq_data
+            am_matrices = [
+                HydrodynamicMatrix(
+                    matrix=np.zeros((6, 6)),
+                    frequency=float(f),
+                    matrix_type="added_mass",
+                    units={"coupling": "kg"},
+                )
+                for f in frequencies
+            ]
+            print("  [INFO] Added mass not found in LIS; using zeros")
+
+        am_set = AddedMassSet(
+            vessel_name=vessel_name,
+            analysis_tool="AQWA",
+            water_depth=water_depth,
+            matrices=am_matrices,
+            frequencies=am_freq_data,
+            created_date=now_str,
+            source_file=str(lis_path),
+        )
+
+        # ---------------------------------------------------------------
+        # 3. Parse damping matrices
+        # ---------------------------------------------------------------
+        damp_matrices, damp_freqs = _parse_aqwa_matrix_section(
+            lines, "DAMPING", "damping",
+        )
+        if damp_matrices and damp_freqs:
+            damp_freq_arr = np.array(damp_freqs)
+            damp_freq_data = FrequencyData(
+                values=damp_freq_arr,
+                periods=2.0 * np.pi / damp_freq_arr,
+                count=len(damp_freq_arr),
+                min_freq=0.0,
+                max_freq=0.0,
+            )
+        else:
+            damp_freq_data = freq_data
+            damp_matrices = [
+                HydrodynamicMatrix(
+                    matrix=np.zeros((6, 6)),
+                    frequency=float(f),
+                    matrix_type="damping",
+                    units={"coupling": "N.s/m"},
+                )
+                for f in frequencies
+            ]
+            print("  [INFO] Damping not found in LIS; using zeros")
+
+        damp_set = DampingSet(
+            vessel_name=vessel_name,
+            analysis_tool="AQWA",
+            water_depth=water_depth,
+            matrices=damp_matrices,
+            frequencies=damp_freq_data,
+            created_date=now_str,
+            source_file=str(lis_path),
+        )
+
+        return DiffractionResults(
+            vessel_name=vessel_name,
+            analysis_tool="AQWA",
+            water_depth=water_depth,
+            raos=rao_set,
+            added_mass=am_set,
+            damping=damp_set,
+            created_date=now_str,
+            source_files=[str(lis_path)],
+        )
+
+    except Exception as e:
+        print(f"  [WARNING] Failed to extract from AQWA LIS: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+def _parse_aqwa_raos(
+    lines: List[str],
+) -> Optional[tuple]:
+    """Parse displacement RAOs from AQWA LIS lines.
+
+    Only the *first* 'R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY' block
+    is parsed (displacement RAOs). Subsequent blocks (velocity /
+    acceleration) are skipped.
+
+    Returns:
+        Tuple of (headings, frequencies, amplitudes, phases) where
+        headings and frequencies are flat lists aligned with
+        amplitudes/phases rows, or None if nothing found.
+    """
+    disp_marker = "R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY"
+    vel_marker = "VEL R.A.O"
+    acc_marker = "ACC R.A.O"
+
+    # Collect ALL displacement RAO blocks (one per heading pair).
+    # Stop when we hit velocity or acceleration RAO sections.
+    block_start = None
+    block_end = None
+    for i, line in enumerate(lines):
+        if disp_marker in line and block_start is None:
+            block_start = i
+        elif block_start is not None and (vel_marker in line or acc_marker in line):
+            block_end = i
+            break
+
+    if block_start is None:
+        return None
+    if block_end is None:
+        block_end = len(lines)
+
+    data_lines = lines[block_start:block_end]
+
+    headings_out: List[float] = []
+    freqs_out: List[float] = []
+    amps_out: List[np.ndarray] = []
+    phases_out: List[np.ndarray] = []
+
+    current_heading: Optional[float] = None
+    in_data = False
+
+    for line in data_lines:
+        stripped = line.strip()
+        if not stripped:
+            # Blank lines are common in the LIS format (e.g. between
+            # heading blocks and between headers and data). Don't reset
+            # in_data — just skip and continue.
+            continue
+
+        # Skip header / separator lines
+        if stripped.startswith("R.A.O") or stripped.startswith("---"):
+            continue
+        if "PERIOD" in stripped and "FREQ" in stripped and "DIRECTION" in stripped:
+            continue
+        if stripped.startswith("(SECS)"):
+            in_data = True
+            continue
+        if stripped.startswith("------"):
+            continue
+        # Skip page break lines (start with "1" in column 1 as form-feed)
+        if line and line[0] == "1" and len(stripped) < 3:
+            continue
+        # Skip repeated section headers that appear after page breaks
+        if "HYDRODYNAMIC" in stripped or "WITH RESPECT" in stripped:
+            continue
+
+        if not in_data:
+            continue
+
+        # Try to parse a data line
+        parts = stripped.split()
+        if len(parts) < 12:
+            continue
+
+        try:
+            period = float(parts[0])
+            freq = float(parts[1])
+        except (ValueError, IndexError):
+            continue
+
+        # Determine if this line carries a direction value
+        # Lines with direction have 15 numeric fields:
+        #   period, freq, direction, then 6*(amp, phase) = 12 -> total 15
+        # Lines without direction have 14 numeric fields:
+        #   period, freq, then 6*(amp, phase) = 12 -> total 14
+        try:
+            if len(parts) >= 15:
+                # Has direction
+                direction = float(parts[2])
+                current_heading = direction
+                vals = [float(v) for v in parts[3:15]]
+            elif len(parts) >= 14:
+                # No direction column; reuse previous heading
+                vals = [float(v) for v in parts[2:14]]
+            else:
+                continue
+        except (ValueError, IndexError):
+            continue
+
+        if current_heading is None:
+            continue
+
+        amp_row = np.array([vals[j] for j in range(0, 12, 2)])
+        pha_row = np.array([vals[j] for j in range(1, 12, 2)])
+
+        headings_out.append(current_heading)
+        freqs_out.append(freq)
+        amps_out.append(amp_row)
+        phases_out.append(pha_row)
+
+    if not amps_out:
+        return None
+
+    return (
+        headings_out,
+        freqs_out,
+        np.array(amps_out),
+        np.array(phases_out),
+    )
+
+
+def _parse_aqwa_matrix_section(
+    lines: List[str],
+    keyword: str,
+    matrix_type: str,
+) -> tuple:
+    """Parse 6x6 matrix blocks (added mass or damping) from AQWA LIS.
+
+    Searches for sections containing *keyword* (e.g. 'ADDED MASS' or
+    'DAMPING') followed by 6x6 numeric blocks, one per frequency.
+
+    Returns:
+        Tuple of (list[HydrodynamicMatrix], list[float]) or ([], [])
+        if not found.
+    """
+    matrices: List[HydrodynamicMatrix] = []
+    freq_values: List[float] = []
+
+    units = {"coupling": "kg"} if matrix_type == "added_mass" else {"coupling": "N.s/m"}
+
+    # Find all lines that mention the keyword in an appropriate context
+    section_indices = []
+    for i, line in enumerate(lines):
+        upper = line.upper()
+        if keyword.upper() in upper and "MATRIX" not in upper:
+            # Likely a section header; look for frequency info nearby
+            section_indices.append(i)
+
+    if not section_indices:
+        return [], []
+
+    for sec_start in section_indices:
+        # Search nearby lines for a frequency value
+        freq_val = None
+        for offset in range(0, 5):
+            if sec_start + offset >= len(lines):
+                break
+            search_line = lines[sec_start + offset].upper()
+            # Look for frequency patterns like "FREQ = 0.200" or
+            # "FREQUENCY  0.200 RAD/S" or "PERIOD = 31.42"
+            for token_i, token in enumerate(search_line.split()):
+                if token in ("FREQ", "FREQUENCY", "FREQ."):
+                    # Next numeric token is the frequency
+                    remaining = search_line.split()[token_i + 1:]
+                    for t in remaining:
+                        t_clean = t.strip("=,()")
+                        try:
+                            freq_val = float(t_clean)
+                            break
+                        except ValueError:
+                            continue
+                    if freq_val is not None:
+                        break
+                elif token == "PERIOD":
+                    remaining = search_line.split()[token_i + 1:]
+                    for t in remaining:
+                        t_clean = t.strip("=,()")
+                        try:
+                            period_val = float(t_clean)
+                            if period_val > 0:
+                                freq_val = 2.0 * np.pi / period_val
+                            break
+                        except ValueError:
+                            continue
+                    if freq_val is not None:
+                        break
+            if freq_val is not None:
+                break
+
+        if freq_val is None:
+            continue
+
+        # Now find the 6x6 matrix: scan forward for 6 consecutive lines
+        # each having at least 6 numeric values.
+        matrix_rows: List[np.ndarray] = []
+        scan_start = sec_start + 1
+        for j in range(scan_start, min(scan_start + 30, len(lines))):
+            row_line = lines[j].strip()
+            if not row_line:
+                if matrix_rows:
+                    break
+                continue
+
+            parts = row_line.split()
+            # Try to parse at least 6 floats from this line
+            nums = []
+            for p in parts:
+                try:
+                    nums.append(float(p))
+                except ValueError:
+                    continue
+
+            if len(nums) >= 6:
+                matrix_rows.append(np.array(nums[:6]))
+                if len(matrix_rows) == 6:
+                    break
+            elif matrix_rows:
+                # Non-numeric line after partial matrix; reset
+                break
+
+        if len(matrix_rows) == 6:
+            mat = np.array(matrix_rows)
+            matrices.append(
+                HydrodynamicMatrix(
+                    matrix=mat,
+                    frequency=freq_val,
+                    matrix_type=matrix_type,
+                    units=units,
+                )
+            )
+            freq_values.append(freq_val)
+
+    return matrices, freq_values
+
+
+def _harmonize_headings(
+    solver_results: Dict[str, DiffractionResults],
+) -> Dict[str, DiffractionResults]:
+    """Filter all solver results to a common heading set.
+
+    AQWA may have expanded headings (-180..+180) while OrcaWave uses
+    the spec headings (0..180). Find the intersection and slice.
+    """
+    # Collect heading sets
+    heading_sets = []
+    for name, dr in solver_results.items():
+        h = set(float(v) for v in dr.raos.surge.headings.values)
+        heading_sets.append(h)
+
+    common = heading_sets[0]
+    for hs in heading_sets[1:]:
+        common = common & hs
+
+    if not common:
+        print("  [WARNING] No common headings across solvers")
+        return solver_results
+
+    common_sorted = sorted(common)
+    print(f"  [INFO] Common headings ({len(common_sorted)}): {common_sorted}")
+
+    filtered: Dict[str, DiffractionResults] = {}
+    for name, dr in solver_results.items():
+        all_headings = [float(v) for v in dr.raos.surge.headings.values]
+        if set(all_headings) == set(common_sorted):
+            filtered[name] = dr
+            continue
+
+        # Build index mask for common headings
+        indices = [i for i, h in enumerate(all_headings) if h in common]
+        if not indices:
+            continue
+
+        new_head_arr = np.array(common_sorted)
+        new_head_data = HeadingData(
+            values=new_head_arr,
+            count=len(common_sorted),
+            min_heading=0.0,
+            max_heading=0.0,
+        )
+
+        # Re-slice each DOF component
+        dof_names = ["surge", "sway", "heave", "roll", "pitch", "yaw"]
+        new_components = {}
+        for dof_name in dof_names:
+            comp = getattr(dr.raos, dof_name)
+            new_components[dof_name] = RAOComponent(
+                dof=comp.dof,
+                magnitude=comp.magnitude[:, indices],
+                phase=comp.phase[:, indices],
+                frequencies=comp.frequencies,
+                headings=new_head_data,
+                unit=comp.unit,
+            )
+
+        new_rao_set = RAOSet(
+            vessel_name=dr.raos.vessel_name,
+            analysis_tool=dr.raos.analysis_tool,
+            water_depth=dr.raos.water_depth,
+            surge=new_components["surge"],
+            sway=new_components["sway"],
+            heave=new_components["heave"],
+            roll=new_components["roll"],
+            pitch=new_components["pitch"],
+            yaw=new_components["yaw"],
+            created_date=dr.raos.created_date,
+            source_file=dr.raos.source_file,
+        )
+
+        filtered[name] = DiffractionResults(
+            vessel_name=dr.vessel_name,
+            analysis_tool=dr.analysis_tool,
+            water_depth=dr.water_depth,
+            raos=new_rao_set,
+            added_mass=dr.added_mass,
+            damping=dr.damping,
+            created_date=dr.created_date,
+            source_files=dr.source_files,
+        )
+        print(f"  [INFO] Filtered {name}: {len(all_headings)} -> {len(common_sorted)} headings")
+
+    return filtered
+
+
 # ---------------------------------------------------------------------------
 # Orchestrator
 # ---------------------------------------------------------------------------
@@ -561,6 +1116,10 @@ def run_benchmark(
     for name, sr in result.solver_results.items():
         if sr.status == "completed" and sr.results is not None:
             successful_results[name] = sr.results
+
+    # Harmonize heading sets: filter to common headings across solvers
+    if len(successful_results) >= 2:
+        successful_results = _harmonize_headings(successful_results)
 
     # Run benchmark comparison if we have 2+ results
     if len(successful_results) >= 2:
