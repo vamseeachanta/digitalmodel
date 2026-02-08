@@ -2,17 +2,19 @@
 
 > Engineering domain knowledge including ship design, offshore structures, and marine analysis
 >
-> Total Files: 541 | Documents: 100 | Subcategories: 61
+> Consolidated from docs/eng/ + docs/modules/ (Feb 2026)
 
 ## Overview
 
-Engineering domain knowledge covering the core disciplines of offshore and marine engineering. Content ranges from fundamental principles to advanced analysis techniques.
+Engineering domain knowledge covering the core disciplines of offshore and marine engineering. Content ranges from fundamental principles to advanced analysis techniques. Includes reference materials consolidated from the former `docs/eng/` directory.
 
 **Key Areas:**
 - **Ship Design**: Stability, hydrodynamics, and structural analysis
 - **Offshore Structures**: Platform design, mooring systems, and installation
 - **Marine Analysis**: Environmental loading, response analysis, and optimization
 - **Cathodic Protection**: Corrosion prevention and monitoring systems
+- **Drilling**: Well construction, casing design, HPHT
+- **References**: Standards, field development, general O&G references
 
 ## Available Content
 
@@ -323,33 +325,37 @@ Engineering domain knowledge covering the core disciplines of offshore and marin
 - **Location**: `domains\wind/`
 - **Quick Access**: Browse [all wind content](wind/)
 
+#### [Artificial Lift](artificial_lift/)
+- ESP, SRP, artificial lift references
+
+#### [Guides](guides/)
+- O&G engineering guides
+
+#### [Offshore Installation](offshore_installation/)
+- Installation engineering and decommissioning
+
+#### [References](references/)
+- General engineering references, field development, geotech, geothermal, hydrogen, manufacturing
+
+#### [Risers](risers/)
+- Riser system design and analysis
+
+#### [Standards](standards/)
+- Industry standards (API, DNV, BS, BSEE) and incident case studies
+
+#### [Data Systems](data_systems/)
+- Data engineering, analytics, and data-driven methods
+
+#### [Visualization](visualization/)
+- 3D visualization, charting, D3.js references
+
 ## Navigation
 
 ### Quick Links
-- [📁 Browse all domains content](./)
-- [🏠 Return to documentation home](../README.md)
-- [🔍 Search across categories](../README.md#navigation-guide)
-
-### For AI Assistants
-
-This category contains 100 documented topics in 61 subcategories. All files include structured metadata for content discovery.
-
-**Content Discovery Pattern:**
-```
-domains/
-├── ai/
-│   ├── topic-1.md (with YAML frontmatter)
-│   └── topic-2.md (with cross-references)
-└── _index.md (this file)
-```
-
-**Metadata Schema:**
-- `category`: "domains"
-- `subcategory`: specific area within domains
-- `tags`: searchable keywords
-- `complexity`: difficulty level
-- `related`: cross-references to other topics
+- [Browse all domains content](./)
+- [Return to documentation home](../README.md)
+- [Module index](_index.md)
 
 ---
 
-*Last updated: 2025-07-26 | Part of AI-Friendly Documentation System*
+*Last updated: 2026-02-08 | Consolidated from docs/eng/ + docs/modules/*

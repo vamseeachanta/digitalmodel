@@ -1,0 +1,470 @@
+2026-02-08 00:06:54 | Starting docs/eng/ -> docs/modules/ consolidation
+2026-02-08 00:06:54 | Source: D:\workspace-hub\digitalmodel\docs\eng
+2026-02-08 00:06:54 | Target: D:\workspace-hub\digitalmodel\docs\modules
+2026-02-08 00:06:54 | ================================================================================
+2026-02-08 00:06:54 | 
+--- cathodic_protection/ -> cathodic_protection/ ---
+2026-02-08 00:06:54 |   MOVE: cathodic_protection\DNV cathode design.pdf -> modules/cathodic_protection/DNV cathode design.pdf
+2026-02-08 00:06:54 | 
+--- metocean/ -> metocean/ ---
+2026-02-08 00:06:54 |   MOVE: metocean\data_sources.md -> modules/metocean/data_sources.md
+2026-02-08 00:06:54 |   MOVE: metocean\Fugro_Metocean.pdf -> modules/metocean/Fugro_Metocean.pdf
+2026-02-08 00:06:54 |   COLLISION: hurricanes.md -> renamed to eng_hurricanes.md
+2026-02-08 00:06:54 |   MOVE: metocean\hurricanes.md -> modules/metocean/hurricanes.md
+2026-02-08 00:06:54 |   MOVE: metocean\waves.pdf -> modules/metocean/waves.pdf
+2026-02-08 00:06:54 | 
+--- pipelines/ -> pipelines/ ---
+2026-02-08 00:06:54 |   MOVE: pipelines\2007-2-Yablonskikh_buckle_assessment.pdf -> modules/pipelines/2007-2-Yablonskikh_buckle_assessment.pdf
+2026-02-08 00:06:54 |   MOVE: pipelines\349567530-Appendix-2-Onshore-Pipeline-Design-Basis.pdf -> modules/pipelines/349567530-Appendix-2-Onshore-Pipeline-Design-Basis.pdf
+2026-02-08 00:06:54 |   MOVE: pipelines\co2_pipeline_design_review.pdf -> modules/pipelines/co2_pipeline_design_review.pdf
+2026-02-08 00:06:54 |   MOVE: pipelines\gas.md -> modules/pipelines/gas.md
+2026-02-08 00:06:54 |   MOVE: pipelines\high_level_introduction.pdf -> modules/pipelines/high_level_introduction.pdf
+2026-02-08 00:06:54 |   MOVE: pipelines\installation.md -> modules/pipelines/installation.md
+2026-02-08 00:06:54 |   MOVE: pipelines\precommission.pdf -> modules/pipelines/precommission.pdf
+2026-02-08 00:06:54 | 
+--- reservoir/ -> reservoir/ ---
+2026-02-08 00:06:54 |   MOVE: reservoir\african-altantic-margin_eddy_ong.pdf -> modules/reservoir/african-altantic-margin_eddy_ong.pdf
+2026-02-08 00:06:54 |   MOVE: reservoir\bourdet.md -> modules/reservoir/bourdet.md
+2026-02-08 00:06:54 |   MOVE: reservoir\bourdet_derivative.jpg -> modules/reservoir/bourdet_derivative.jpg
+2026-02-08 00:06:54 |   MOVE: reservoir\computer_generation_of_type_curves.pdf -> modules/reservoir/computer_generation_of_type_curves.pdf
+2026-02-08 00:06:54 |   MOVE: reservoir\fluid_properties.pdf -> modules/reservoir/fluid_properties.pdf
+2026-02-08 00:06:54 |   MOVE: reservoir\petroleum_economics.jpg -> modules/reservoir/petroleum_economics.jpg
+2026-02-08 00:06:54 |   MOVE: reservoir\petroleum_economics.md -> modules/reservoir/petroleum_economics.md
+2026-02-08 00:06:54 |   MOVE: reservoir\polymer_flooding_orinoco_belt.pdf -> modules/reservoir/polymer_flooding_orinoco_belt.pdf
+2026-02-08 00:06:54 |   MOVE: reservoir\reservoir.md -> modules/reservoir/reservoir.md
+2026-02-08 00:06:54 |   MOVE: reservoir\reservoir_engineering_fact_sheet.pdf -> modules/reservoir/reservoir_engineering_fact_sheet.pdf
+2026-02-08 00:06:54 |   MOVE: reservoir\well_testing_typical_responses.pdf -> modules/reservoir/well_testing_typical_responses.pdf
+2026-02-08 00:06:54 | 
+--- signal_processing/ -> signal_processing/ ---
+2026-02-08 00:06:54 |   MOVE: signal_processing\signal_processing.md -> modules/signal_processing/signal_processing.md
+2026-02-08 00:06:54 | 
+--- structural/ -> structural/ ---
+2026-02-08 00:06:54 |   MOVE: structural\beam_checks\1676937697698.jfif -> modules/structural/beam_checks\1676937697698.jfif
+2026-02-08 00:06:54 |   MOVE: structural\beam_checks\1676937697855.jfif -> modules/structural/beam_checks\1676937697855.jfif
+2026-02-08 00:06:54 |   MOVE: structural\beam_checks\span_stiffiness.jpg -> modules/structural/beam_checks\span_stiffiness.jpg
+2026-02-08 00:06:54 |   MOVE: structural\beams.md -> modules/structural/beams.md
+2026-02-08 00:06:54 |   MOVE: structural\design_and_analysis_of_steel_structural_piperacks.pdf -> modules/structural/design_and_analysis_of_steel_structural_piperacks.pdf
+2026-02-08 00:06:54 |   MOVE: structural\platebuckling\212 Buckling of Plates.pdf -> modules/structural/platebuckling\212 Buckling of Plates.pdf
+2026-02-08 00:06:54 |   MOVE: structural\platebuckling\614-CAL-2215-01 (SEWOL ANSYS Buckling Template) DRAFT2.xlsm -> modules/structural/platebuckling\614-CAL-2215-01 (SEWOL ANSYS Buckling Template) DRAFT2.xlsm
+2026-02-08 00:06:54 |   MOVE: structural\platebuckling\DNV-RP-C201.pdf -> modules/structural/platebuckling\DNV-RP-C201.pdf
+2026-02-08 00:06:54 |   MOVE: structural\platebuckling\DNVcn30-1 2004.pdf -> modules/structural/platebuckling\DNVcn30-1 2004.pdf
+2026-02-08 00:06:54 |   MOVE: structural\platebuckling\MIT2_080JF13_Lecture11 (Plate Buckling).pdf -> modules/structural/platebuckling\MIT2_080JF13_Lecture11 (Plate Buckling).pdf
+2026-02-08 00:06:54 | 
+--- subsea/ -> subsea/ ---
+2026-02-08 00:06:54 |   MOVE: subsea\subsea_control_distribution_system.jpg -> modules/subsea/subsea_control_distribution_system.jpg
+2026-02-08 00:06:54 |   MOVE: subsea\subsea_simops.md -> modules/subsea/subsea_simops.md
+2026-02-08 00:06:54 | 
+--- viv/ -> viv/ ---
+2026-02-08 00:06:54 |   MOVE: viv\location_in_array_and_viv.pdf -> modules/viv/location_in_array_and_viv.pdf
+2026-02-08 00:06:54 | 
+--- wind/ -> wind/ ---
+2026-02-08 00:06:54 |   MOVE: wind\API vs. IEC for Wind Turbine Design.pdf -> modules/wind/API vs. IEC for Wind Turbine Design.pdf
+2026-02-08 00:06:54 |   MOVE: wind\blade_resonance.pdf -> modules/wind/blade_resonance.pdf
+2026-02-08 00:06:54 |   MOVE: wind\boem_fatigue_in_wind_turbines.pdf -> modules/wind/boem_fatigue_in_wind_turbines.pdf
+2026-02-08 00:06:54 |   MOVE: wind\BVGA-16444-Floating-Guide-r1.pdf -> modules/wind/BVGA-16444-Floating-Guide-r1.pdf
+2026-02-08 00:06:54 |   MOVE: wind\cfd_solvers_for_wind_turbines.pdf -> modules/wind/cfd_solvers_for_wind_turbines.pdf
+2026-02-08 00:06:54 |   MOVE: wind\COP-Guidelines.pdf -> modules/wind/COP-Guidelines.pdf
+2026-02-08 00:06:54 |   MOVE: wind\FLW_S2P5_SBOS-Briefing_v4_2023-11-06.pdf -> modules/wind/FLW_S2P5_SBOS-Briefing_v4_2023-11-06.pdf
+2026-02-08 00:06:54 |   MOVE: wind\FOWT_current_and_future_prospects.pdf -> modules/wind/FOWT_current_and_future_prospects.pdf
+2026-02-08 00:06:54 |   MOVE: wind\Kvittem_2023_J._Phys.__Conf._Ser._2626_012049.pdf -> modules/wind/Kvittem_2023_J._Phys.__Conf._Ser._2626_012049.pdf
+2026-02-08 00:06:54 |   MOVE: wind\OnshoreIndustri.zip -> modules/wind/OnshoreIndustri.zip
+2026-02-08 00:06:54 |   MOVE: wind\orsted_situation_analysis.pdf -> modules/wind/orsted_situation_analysis.pdf
+2026-02-08 00:06:54 |   MOVE: wind\Piling_Vessels.jpg -> modules/wind/Piling_Vessels.jpg
+2026-02-08 00:06:54 |   MOVE: wind\recharge_alana_duerr.pdf -> modules/wind/recharge_alana_duerr.pdf
+2026-02-08 00:06:54 |   MOVE: wind\screening_new designs.pdf -> modules/wind/screening_new designs.pdf
+2026-02-08 00:06:54 |   MOVE: wind\SSRN-id3957822.pdf -> modules/wind/SSRN-id3957822.pdf
+2026-02-08 00:06:54 |   MOVE: wind\uswtdbApiMapVizExamples.ipynb -> modules/wind/uswtdbApiMapVizExamples.ipynb
+2026-02-08 00:06:54 |   MOVE: wind\wes-2022-32_challenges_of_design_100_pages.pdf -> modules/wind/wes-2022-32_challenges_of_design_100_pages.pdf
+2026-02-08 00:06:54 |   MOVE: wind\wind_summary.md -> modules/wind/wind_summary.md
+2026-02-08 00:06:54 |   MOVE: wind\wind_turbine_design_considerations.jfif -> modules/wind/wind_turbine_design_considerations.jfif
+2026-02-08 00:06:54 |   MOVE: wind\wind_turbine_field_wake_solution.jfif -> modules/wind/wind_turbine_field_wake_solution.jfif
+2026-02-08 00:06:54 |   MOVE: wind\wind_turbine_foudations.jpg -> modules/wind/wind_turbine_foudations.jpg
+2026-02-08 00:06:54 | 
+--- abaqus/ -> ansys/ ---
+2026-02-08 00:06:54 |   MOVE: abaqus\about.md -> modules/ansys/about.md
+2026-02-08 00:06:54 | 
+--- accidents/ -> standards/accidents/ ---
+2026-02-08 00:06:54 |   MOVE: accidents\blowouts.md -> modules/standards/accidents/blowouts.md
+2026-02-08 00:06:54 |   MOVE: accidents\macondo_resources.pdf -> modules/standards/accidents/macondo_resources.pdf
+2026-02-08 00:06:54 | 
+--- animation/ -> visualization/ ---
+2026-02-08 00:06:54 |   MOVE: animation\blender.md -> modules/visualization/blender.md
+2026-02-08 00:06:54 |   MOVE: animation\freecad.md -> modules/visualization/freecad.md
+2026-02-08 00:06:54 |   MOVE: animation\precision_with_blender.md -> modules/visualization/precision_with_blender.md
+2026-02-08 00:06:54 | 
+--- casing_design/ -> drilling/casing_design/ ---
+2026-02-08 00:06:54 |   MOVE: casing_design\casing_design.md -> modules/drilling/casing_design/casing_design.md
+2026-02-08 00:06:54 |   MOVE: casing_design\casing_wear_and_heat_checks.pdf -> modules/drilling/casing_design/casing_wear_and_heat_checks.pdf
+2026-02-08 00:06:54 |   MOVE: casing_design\stringnosis.jpg -> modules/drilling/casing_design/stringnosis.jpg
+2026-02-08 00:06:54 | 
+--- co2_storage/ -> production/ ---
+2026-02-08 00:06:54 |   MOVE: co2_storage\1656336010069.pdf -> modules/production/1656336010069.pdf
+2026-02-08 00:06:54 | 
+--- connectors/ -> subsea/connectors/ ---
+2026-02-08 00:06:54 |   MOVE: connectors\elastomer_seal_initial_step.PNG -> modules/subsea/connectors/elastomer_seal_initial_step.PNG
+2026-02-08 00:06:54 |   MOVE: connectors\elastomer_seal_pressureized.PNG -> modules/subsea/connectors/elastomer_seal_pressureized.PNG
+2026-02-08 00:06:54 |   MOVE: connectors\elastomer_seal_start.PNG -> modules/subsea/connectors/elastomer_seal_start.PNG
+2026-02-08 00:06:54 |   MOVE: connectors\seals.md -> modules/subsea/connectors/seals.md
+2026-02-08 00:06:54 | 
+--- data_driven/ -> data_systems/ ---
+2026-02-08 00:06:54 |   MOVE: data_driven\Crystal-Ornelas_et_al-2022-Scientific_Data.pdf -> modules/data_systems/Crystal-Ornelas_et_al-2022-Scientific_Data.pdf
+2026-02-08 00:06:54 |   MOVE: data_driven\data_driven_engineering.png -> modules/data_systems/data_driven_engineering.png
+2026-02-08 00:06:54 |   MOVE: data_driven\data_driven_engineering.svg -> modules/data_systems/data_driven_engineering.svg
+2026-02-08 00:06:54 |   MOVE: data_driven\data_driven_manufacturing.puml -> modules/data_systems/data_driven_manufacturing.puml
+2026-02-08 00:06:54 | 
+--- decomm/ -> offshore_installation/ ---
+2026-02-08 00:06:54 |   MOVE: decomm\aging_shale_wells_laura_freeman.pdf -> modules/offshore_installation/aging_shale_wells_laura_freeman.pdf
+2026-02-08 00:06:54 | 
+--- energy/ -> references/ ---
+2026-02-08 00:06:54 |   MOVE: energy\preparing_for_energy_transition_india.pdf -> modules/references/preparing_for_energy_transition_india.pdf
+2026-02-08 00:06:54 | 
+--- environment/ -> metocean/ ---
+2026-02-08 00:06:54 |   MOVE: environment\air_temperature_analysis.md -> modules/metocean/air_temperature_analysis.md
+2026-02-08 00:06:54 |   MOVE: environment\sample_722190_ip.pdf -> modules/metocean/sample_722190_ip.pdf
+2026-02-08 00:06:54 |   MOVE: environment\stnlist_ip.pdf -> modules/metocean/stnlist_ip.pdf
+2026-02-08 00:06:54 | 
+--- fea/ -> fem/ ---
+2026-02-08 00:06:54 |   MOVE: fea\fea_relation_to_real_world.pdf -> modules/fem/fea_relation_to_real_world.pdf
+2026-02-08 00:06:54 |   MOVE: fea\nastran\nastran.md -> modules/fem/nastran\nastran.md
+2026-02-08 00:06:54 |   MOVE: fea\nl_fea.pdf -> modules/fem/nl_fea.pdf
+2026-02-08 00:06:54 | 
+--- ffs/ -> structural/ffs/ ---
+2026-02-08 00:06:54 |   MOVE: ffs\knighthawk_fit_for_service.pdf -> modules/structural/ffs/knighthawk_fit_for_service.pdf
+2026-02-08 00:06:54 |   MOVE: ffs\knighthawk_metallurgical_failures.pdf -> modules/structural/ffs/knighthawk_metallurgical_failures.pdf
+2026-02-08 00:06:54 |   MOVE: ffs\knighthawk_nitrate_stress_corrosion_cracking.pdf -> modules/structural/ffs/knighthawk_nitrate_stress_corrosion_cracking.pdf
+2026-02-08 00:06:54 |   MOVE: ffs\knighthawk_peak_loadings.pdf -> modules/structural/ffs/knighthawk_peak_loadings.pdf
+2026-02-08 00:06:54 |   MOVE: ffs\knighthawk_through_wall_corrosion.pdf -> modules/structural/ffs/knighthawk_through_wall_corrosion.pdf
+2026-02-08 00:06:54 |   MOVE: ffs\ship_structural_integrity.pdf -> modules/structural/ffs/ship_structural_integrity.pdf
+2026-02-08 00:06:54 | 
+--- field_development/ -> references/field_development/ ---
+2026-02-08 00:06:54 |   MOVE: field_development\development-value-drivers.jpg -> modules/references/field_development/development-value-drivers.jpg
+2026-02-08 00:06:54 |   MOVE: field_development\fdp.pdf -> modules/references/field_development/fdp.pdf
+2026-02-08 00:06:54 |   MOVE: field_development\feed.png -> modules/references/field_development/feed.png
+2026-02-08 00:06:54 |   MOVE: field_development\feed.puml -> modules/references/field_development/feed.puml
+2026-02-08 00:06:54 |   MOVE: field_development\feed.svg -> modules/references/field_development/feed.svg
+2026-02-08 00:06:54 |   MOVE: field_development\IND_2020-21revised.pdf -> modules/references/field_development/IND_2020-21revised.pdf
+2026-02-08 00:06:54 |   MOVE: field_development\IND_NIO_BOOKLET_21.05.16.pdf -> modules/references/field_development/IND_NIO_BOOKLET_21.05.16.pdf
+2026-02-08 00:06:54 |   MOVE: field_development\minimum_facilities.md -> modules/references/field_development/minimum_facilities.md
+2026-02-08 00:06:54 |   MOVE: field_development\ongc_mirage_guide.pdf -> modules/references/field_development/ongc_mirage_guide.pdf
+2026-02-08 00:06:54 |   MOVE: field_development\revive_old_wells.md -> modules/references/field_development/revive_old_wells.md
+2026-02-08 00:06:54 |   MOVE: field_development\subsea_field_development.pdf -> modules/references/field_development/subsea_field_development.pdf
+2026-02-08 00:06:54 | 
+--- fluid_machanics/ -> hydrodynamics/ ---
+2026-02-08 00:06:54 |   MOVE: fluid_machanics\fluid_flow_in_porous_media.pdf -> modules/hydrodynamics/fluid_flow_in_porous_media.pdf
+2026-02-08 00:06:54 |   MOVE: fluid_machanics\references.md -> modules/hydrodynamics/references.md
+2026-02-08 00:06:54 |   MOVE: fluid_machanics\tesla_semi_aerodynamics.pdf -> modules/hydrodynamics/tesla_semi_aerodynamics.pdf
+2026-02-08 00:06:54 |   MOVE: fluid_machanics\water_hammer_analysis.pdf -> modules/hydrodynamics/water_hammer_analysis.pdf
+2026-02-08 00:06:54 | 
+--- geotech/ -> references/geotech/ ---
+2026-02-08 00:06:54 |   MOVE: geotech\Jeanjean, P. 2002 - Innovative Design Method for Deepwater .pdf -> modules/references/geotech/Jeanjean, P. 2002 - Innovative Design Method for Deepwater .pdf
+2026-02-08 00:06:54 |   MOVE: geotech\LaterallyLoadedPilesInClay.pdf -> modules/references/geotech/LaterallyLoadedPilesInClay.pdf
+2026-02-08 00:06:54 |   MOVE: geotech\SPE-102378-PA-P[1].pdf -> modules/references/geotech/SPE-102378-PA-P[1].pdf
+2026-02-08 00:06:54 | 
+--- geothermal/ -> references/geothermal/ ---
+2026-02-08 00:06:54 |   MOVE: geothermal\FutureGeothermalTexasExecutiveSummary.pdf -> modules/references/geothermal/FutureGeothermalTexasExecutiveSummary.pdf
+2026-02-08 00:06:54 |   MOVE: geothermal\FutureGeothermalTexasFullReport.pdf -> modules/references/geothermal/FutureGeothermalTexasFullReport.pdf
+2026-02-08 00:06:54 |   MOVE: geothermal\UK-POST-PB-0046-Geothermal_energy_potential.pdf -> modules/references/geothermal/UK-POST-PB-0046-Geothermal_energy_potential.pdf
+2026-02-08 00:06:54 | 
+--- hpht/ -> drilling/hpht/ ---
+2026-02-08 00:06:54 |   MOVE: hpht\HPHT_dr_jim_kaculi_-_drill_quip_-_designing_safe_and_reliable.pdf -> modules/drilling/hpht/HPHT_dr_jim_kaculi_-_drill_quip_-_designing_safe_and_reliable.pdf
+2026-02-08 00:06:54 |   MOVE: hpht\Sept05-hpht.pdf -> modules/drilling/hpht/Sept05-hpht.pdf
+2026-02-08 00:06:54 | 
+--- hydrogen/ -> references/hydrogen/ ---
+2026-02-08 00:06:54 |   MOVE: hydrogen\H2_from_water.pdf -> modules/references/hydrogen/H2_from_water.pdf
+2026-02-08 00:06:54 | 
+--- interfaces/ -> structural/ ---
+2026-02-08 00:06:54 |   MOVE: interfaces\lug.jpg -> modules/structural/lug.jpg
+2026-02-08 00:06:54 |   MOVE: interfaces\lug.md -> modules/structural/lug.md
+2026-02-08 00:06:54 | 
+--- intervention/ -> interventions/ ---
+2026-02-08 00:06:54 |   MOVE: intervention\intevention_ct.jpeg -> modules/interventions/intevention_ct.jpeg
+2026-02-08 00:06:54 | 
+--- manufacturing/ -> references/manufacturing/ ---
+2026-02-08 00:06:54 |   MOVE: manufacturing\Carolina+Precision+Case+Study.pdf -> modules/references/manufacturing/Carolina+Precision+Case+Study.pdf
+2026-02-08 00:06:54 | 
+--- materials/ -> structural/materials/ ---
+2026-02-08 00:06:54 |   MOVE: materials\elastic_properties_of_materials.jpg -> modules/structural/materials/elastic_properties_of_materials.jpg
+2026-02-08 00:06:54 |   MOVE: materials\vm_vs_principle_stress.md -> modules/structural/materials/vm_vs_principle_stress.md
+2026-02-08 00:06:54 | 
+--- moorings/ -> mooring/ ---
+2026-02-08 00:06:54 |   MOVE: moorings\mooring_analysis_in_orcaflex.pdf -> modules/mooring/mooring_analysis_in_orcaflex.pdf
+2026-02-08 00:06:54 |   MOVE: moorings\moorings.md -> modules/mooring/moorings.md
+2026-02-08 00:06:54 |   MOVE: moorings\turrent_and_mooring_design.pdf -> modules/mooring/turrent_and_mooring_design.pdf
+2026-02-08 00:06:54 | 
+--- navigation/ -> marine_ops/ ---
+2026-02-08 00:06:54 |   MOVE: navigation\Bowditch_Vol_1_LoRes_2019.pdf -> modules/marine_ops/Bowditch_Vol_1_LoRes_2019.pdf
+2026-02-08 00:06:54 | 
+--- offshore_installation/ -> offshore_installation/ ---
+2026-02-08 00:06:54 |   MOVE: offshore_installation\cranes.md -> modules/offshore_installation/cranes.md
+2026-02-08 00:06:54 |   MOVE: offshore_installation\ECP-DOE-FOA-RPT-60001-Rev-2-Gulf-of-Mexico-Energy-Infrastructure-Re-use-and-Blue-Development-Topic-18a.pdf -> modules/offshore_installation/ECP-DOE-FOA-RPT-60001-Rev-2-Gulf-of-Mexico-Energy-Infrastructure-Re-use-and-Blue-Development-Topic-18a.pdf
+2026-02-08 00:06:54 |   MOVE: offshore_installation\heave_velocity vs. Product.jpg -> modules/offshore_installation/heave_velocity vs. Product.jpg
+2026-02-08 00:06:54 |   MOVE: offshore_installation\lifting_factor_for_structural_analysis.jpg -> modules/offshore_installation/lifting_factor_for_structural_analysis.jpg
+2026-02-08 00:06:54 |   MOVE: offshore_installation\offshore.md -> modules/offshore_installation/offshore.md
+2026-02-08 00:06:54 |   MOVE: offshore_installation\offshore_cranes.jpg -> modules/offshore_installation/offshore_cranes.jpg
+2026-02-08 00:06:54 |   MOVE: offshore_installation\offshore_installation.md -> modules/offshore_installation/offshore_installation.md
+2026-02-08 00:06:54 |   MOVE: offshore_installation\optimization_of_PHC.pdf -> modules/offshore_installation/optimization_of_PHC.pdf
+2026-02-08 00:06:54 |   MOVE: offshore_installation\overheadcraneterminology_konecranes_dec2017_0.pdf -> modules/offshore_installation/overheadcraneterminology_konecranes_dec2017_0.pdf
+2026-02-08 00:06:54 |   MOVE: offshore_installation\spreader_bar.jpg -> modules/offshore_installation/spreader_bar.jpg
+2026-02-08 00:06:54 |   MOVE: offshore_installation\spreader_bar.md -> modules/offshore_installation/spreader_bar.md
+2026-02-08 00:06:54 |   MOVE: offshore_installation\structure_lowering_to_depth.jpg -> modules/offshore_installation/structure_lowering_to_depth.jpg
+2026-02-08 00:06:54 |   MOVE: offshore_installation\structures.md -> modules/offshore_installation/structures.md
+2026-02-08 00:06:54 |   MOVE: offshore_installation\tcp_jumper.jpg -> modules/offshore_installation/tcp_jumper.jpg
+2026-02-08 00:06:54 |   MOVE: offshore_installation\topsides_installation_moses.pdf -> modules/offshore_installation/topsides_installation_moses.pdf
+2026-02-08 00:06:54 |   MOVE: offshore_installation\wave_type_sensitivity.pdf -> modules/offshore_installation/wave_type_sensitivity.pdf
+2026-02-08 00:06:54 |   MOVE: offshore_installation\weather_shielding_for_offshore_operations.pdf -> modules/offshore_installation/weather_shielding_for_offshore_operations.pdf
+2026-02-08 00:06:54 |   MOVE: offshore_installation\wind.md -> modules/offshore_installation/wind.md
+2026-02-08 00:06:54 | 
+--- process/ -> references/process/ ---
+2026-02-08 00:06:54 |   MOVE: process\equipment_skirt_thermal_profile.pdf -> modules/references/process/equipment_skirt_thermal_profile.pdf
+2026-02-08 00:06:54 | 
+--- rigid_jumper/ -> risers/ ---
+2026-02-08 00:06:54 |   MOVE: rigid_jumper\RP-F105.pdf -> modules/risers/RP-F105.pdf
+2026-02-08 00:06:54 | 
+--- simulation/ -> references/ ---
+2026-02-08 00:06:54 |   MOVE: simulation\CW_sym_anti-symmetry_BC.pdf -> modules/references/CW_sym_anti-symmetry_BC.pdf
+2026-02-08 00:06:54 | 
+--- trees/ -> subsea/ ---
+2026-02-08 00:06:54 |   MOVE: trees\debris_cap.md -> modules/subsea/debris_cap.md
+2026-02-08 00:06:54 |   MOVE: trees\subsea_tree_cap_details.jpg -> modules/subsea/subsea_tree_cap_details.jpg
+2026-02-08 00:06:54 | 
+--- umbilicals/ -> umbilical/ ---
+2026-02-08 00:06:54 |   MOVE: umbilicals\installation_1.jpg -> modules/umbilical/installation_1.jpg
+2026-02-08 00:06:54 |   MOVE: umbilicals\installation_2.jpg -> modules/umbilical/installation_2.jpg
+2026-02-08 00:06:54 |   MOVE: umbilicals\installation_3.jpg -> modules/umbilical/installation_3.jpg
+2026-02-08 00:06:54 |   MOVE: umbilicals\umbilical.md -> modules/umbilical/umbilical.md
+2026-02-08 00:06:54 | 
+--- ref/ (pattern-based distribution) ---
+2026-02-08 00:06:54 |   MOVE: ref/api.5l.2004.pdf -> modules/references/api.5l.2004.pdf
+2026-02-08 00:06:54 |   MOVE: ref/API579_LevelI_Flaw_Assessment_BobFrancini.pdf -> modules/standards/API579_LevelI_Flaw_Assessment_BobFrancini.pdf
+2026-02-08 00:06:54 |   MOVE: ref/API5L-45th-Edition-Specification-for-Line-Pipe-for-website.docx -> modules/standards/API5L-45th-Edition-Specification-for-Line-Pipe-for-website.docx
+2026-02-08 00:06:54 |   MOVE: ref/BS7910_FAD_vol5no4_4.pdf -> modules/structural/references/BS7910_FAD_vol5no4_4.pdf
+2026-02-08 00:06:54 |   MOVE: ref/Data Engineering Cookbook.pdf -> modules/data_systems/references/Data Engineering Cookbook.pdf
+2026-02-08 00:06:54 |   MOVE: ref/Design Of experiments 10.1.1.489.2792.pdf -> modules/references/Design Of experiments 10.1.1.489.2792.pdf
+2026-02-08 00:06:54 |   MOVE: ref/Direct Air Capture CO2.pdf -> modules/references/Direct Air Capture CO2.pdf
+2026-02-08 00:06:54 |   MOVE: ref/doe_intro.pdf -> modules/references/misc/doe_intro.pdf
+2026-02-08 00:06:54 |   MOVE: ref/ECA_Analysis_PaperIJCOE-v1n0p15-en.pdf -> modules/fatigue/references/ECA_Analysis_PaperIJCOE-v1n0p15-en.pdf
+2026-02-08 00:06:54 |   MOVE: ref/ECA_FAD_Comparisons_82806541.pdf -> modules/structural/references/ECA_FAD_Comparisons_82806541.pdf
+2026-02-08 00:06:54 |   MOVE: ref/ECA_FEMvs BS7910_IJMT-v10n0p37-en.pdf -> modules/standards/ECA_FEMvs BS7910_IJMT-v10n0p37-en.pdf
+2026-02-08 00:06:54 |   MOVE: ref/ECA_Siapem_Analysis_10.1.1.655.4726.pdf -> modules/fatigue/references/ECA_Siapem_Analysis_10.1.1.655.4726.pdf
+2026-02-08 00:06:54 |   MOVE: ref/eli-gur-pytest.pdf -> modules/references/misc/eli-gur-pytest.pdf
+2026-02-08 00:06:54 |   MOVE: ref/Fatigue_Evaluation_of_GoM_Structures_675aa.pdf -> modules/fatigue/references/Fatigue_Evaluation_of_GoM_Structures_675aa.pdf
+2026-02-08 00:06:54 |   MOVE: ref/FlawCheck_Details_Specifications.pdf -> modules/fatigue/references/FlawCheck_Details_Specifications.pdf
+2026-02-08 00:06:54 |   MOVE: ref/Forbes_DoE.pdf -> modules/references/Forbes_DoE.pdf
+2026-02-08 00:06:54 |   MOVE: ref/ISA Workflow.pdf -> modules/data_systems/references/ISA Workflow.pdf
+2026-02-08 00:06:54 |   MOVE: ref/ISA112_SCADA-System-Architecture-Model_rev2018-06-22.pptx -> modules/data_systems/references/ISA112_SCADA-System-Architecture-Model_rev2018-06-22.pptx
+2026-02-08 00:06:54 |   MOVE: ref/ISCWSA rev2.pptx -> modules/drilling/references/ISCWSA rev2.pptx
+2026-02-08 00:06:54 |   MOVE: ref/nordlock_ebook_2019_us_why_do_Bolts_loosen.pdf -> modules/structural/references/nordlock_ebook_2019_us_why_do_Bolts_loosen.pdf
+2026-02-08 00:06:54 |   MOVE: ref/Offshore Well Completion and Stimulation.pdf -> modules/drilling/references/Offshore Well Completion and Stimulation.pdf
+2026-02-08 00:06:54 |   MOVE: ref/PipeWeldingHandbook.pdf -> modules/welding/references/PipeWeldingHandbook.pdf
+2026-02-08 00:06:54 |   MOVE: ref/productioncasingdesignconsiderations.pdf -> modules/drilling/references/productioncasingdesignconsiderations.pdf
+2026-02-08 00:06:54 |   MOVE: ref/ProductionCasingFormulaes.pdf -> modules/drilling/references/ProductionCasingFormulaes.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF--ENG-drones_in_oil_gas_f.pdf -> modules/references/REF--ENG-drones_in_oil_gas_f.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-CLD-Early_Intervention_Games.pdf -> modules/subsea/references/REF-CLD-Early_Intervention_Games.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-CLD-Postural Control, Gross Motor Development, and Mealtime.pdf -> modules/references/misc/REF-CLD-Postural Control, Gross Motor Development, and Mealtime.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-CLD-pub_montessori-the-science-behind-the-genius.pdf -> modules/references/misc/REF-CLD-pub_montessori-the-science-behind-the-genius.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ECO-poor_economics.pdf -> modules/references/misc/REF-ECO-poor_economics.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ECP-O&G-EV-Economics-Mean-Days-Numbered-for-OIL-as-FUEL-Forbes-Sep'19.pdf -> modules/references/REF-ECP-O&G-EV-Economics-Mean-Days-Numbered-for-OIL-as-FUEL-Forbes-Sep'19.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ECP-O&G-Well_path_paper.pdf -> modules/drilling/references/REF-ECP-O&G-Well_path_paper.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG Vibration_Fundamentals.pdf -> modules/signal_processing/references/REF-ENG Vibration_Fundamentals.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-ABS-fowti-guide-mar18.pdf -> modules/wind/references/REF-ENG-ABS-fowti-guide-mar18.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-ADCP-Teledyne_BBPRIME.pdf -> modules/references/REF-ENG-ADCP-Teledyne_BBPRIME.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-Buckling_ce479wooddesignnotescompressionandbending.pdf -> modules/structural/references/REF-ENG-Buckling_ce479wooddesignnotescompressionandbending.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-Corrosion_and_Mechanisms.jpg -> modules/cathodic_protection/references/REF-ENG-Corrosion_and_Mechanisms.jpg
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-DECOM-vol-1-a-study-for-the-bureau-of-safety-and-environmental-enforcement-bsee-final-9-10-2020.pdf -> modules/drilling/references/REF-ENG-DECOM-vol-1-a-study-for-the-bureau-of-safety-and-environmental-enforcement-bsee-final-9-10-2020.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-DECOM-vol-2-a-study-for-the-bsee-final-9-8-20.pdf -> modules/standards/REF-ENG-DECOM-vol-2-a-study-for-the-bsee-final-9-8-20.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-Digital_Signal_Radar_Signal_Processing.pdf -> modules/signal_processing/references/REF-ENG-Digital_Signal_Radar_Signal_Processing.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-Downward_Wind_Propeller.pdf -> modules/wind/references/REF-ENG-Downward_Wind_Propeller.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-ECA_DNV_Pipeline_Fracture_Mechanics.pdf -> modules/drilling/references/REF-ENG-ECA_DNV_Pipeline_Fracture_Mechanics.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-Fatigue_Methodologies.pdf -> modules/fatigue/references/REF-ENG-Fatigue_Methodologies.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-FWOT_Challenges_and_Solutions.pdf -> modules/references/REF-ENG-FWOT_Challenges_and_Solutions.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-Global_Offshore_Wind_Report.pdf -> modules/wind/references/REF-ENG-Global_Offshore_Wind_Report.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-IRENA_Future_of_wind_2019.pdf -> modules/wind/references/REF-ENG-IRENA_Future_of_wind_2019.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G 24_cementing.pdf -> modules/drilling/references/REF-ENG-O&G 24_cementing.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-2021-Q1-ReservoirSolutionsVol24No1.pdf -> modules/reservoir/references/REF-ENG-O&G-2021-Q1-ReservoirSolutionsVol24No1.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-ABS Subsea-mining-guide-oct20.pdf -> modules/subsea/references/REF-ENG-O&G-ABS Subsea-mining-guide-oct20.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Carbon Capture.pdf -> modules/references/REF-ENG-O&G-Carbon Capture.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Drilling Material Mass Balance.pdf -> modules/drilling/references/REF-ENG-O&G-Drilling Material Mass Balance.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Drilling RSS, U-Shaped Models.pdf -> modules/drilling/references/REF-ENG-O&G-Drilling RSS, U-Shaped Models.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Field Drilling Data Cleaning and Preparation for Data Analytics A.pdf -> modules/drilling/references/REF-ENG-O&G-Field Drilling Data Cleaning and Preparation for Data Analytics A.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-FLNG Mooring Systems and Transfer Methods.pdf -> modules/mooring/references/REF-ENG-O&G-FLNG Mooring Systems and Transfer Methods.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Geoscience_References.pdf -> modules/drilling/references/REF-ENG-O&G-Geoscience_References.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Interest Definitions.pdf -> modules/references/REF-ENG-O&G-Interest Definitions.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Introduction to Wellbore Positioning eBook.pdf -> modules/drilling/references/REF-ENG-O&G-Introduction to Wellbore Positioning eBook.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Marine Dispersants in Oil Spill Response.pdf -> modules/artificial_lift/references/REF-ENG-O&G-Marine Dispersants in Oil Spill Response.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Modern_Data_Analytics.pdf -> modules/data_systems/references/REF-ENG-O&G-Modern_Data_Analytics.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-MWD_Real_Time_Density.pdf -> modules/drilling/references/REF-ENG-O&G-MWD_Real_Time_Density.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Natural_Gas_Reservoir_Engineering.pdf -> modules/reservoir/references/REF-ENG-O&G-Natural_Gas_Reservoir_Engineering.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-BOEM-Deepwater-Operation-Presentation.pdf -> modules/standards/REF-ENG-O&G-OFF-BOEM-Deepwater-Operation-Presentation.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-DNV_Macondo_Draft_Report.pdf -> modules/standards/REF-ENG-O&G-OFF-DNV_Macondo_Draft_Report.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-DNV_Macondo_Final_Report.pdf -> modules/standards/REF-ENG-O&G-OFF-DNV_Macondo_Final_Report.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-Dynamic_Positioning_Model_Tests.pdf -> modules/marine_ops/references/REF-ENG-O&G-OFF-Dynamic_Positioning_Model_Tests.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-Macondo-KeyStone_Casing_Report.pdf -> modules/drilling/references/REF-ENG-O&G-OFF-Macondo-KeyStone_Casing_Report.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-Macondo-Location_Map.pdf -> modules/standards/REF-ENG-O&G-OFF-Macondo-Location_Map.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-Macondo_Accident_Overview.pdf -> modules/standards/REF-ENG-O&G-OFF-Macondo_Accident_Overview.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-Macondo_BOP_Pipe_Shear.pdf -> modules/standards/REF-ENG-O&G-OFF-Macondo_BOP_Pipe_Shear.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-Macondo_OilField_Testing_Consultant_Report.pdf -> modules/standards/REF-ENG-O&G-OFF-Macondo_OilField_Testing_Consultant_Report.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-OFF754-4-Lufeng-FSOU_Relocation.pdf -> modules/references/REF-ENG-O&G-OFF-OFF754-4-Lufeng-FSOU_Relocation.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-VIV_Of_Risers_thesis.pdf -> modules/viv/references/REF-ENG-O&G-OFF-VIV_Of_Risers_thesis.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-ON-Artificial-Lift-Selection-Process-NEW.pdf -> modules/artificial_lift/references/REF-ENG-O&G-ON-Artificial-Lift-Selection-Process-NEW.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-ON-Multi_Well_Pad_Drilling.pdf -> modules/drilling/references/REF-ENG-O&G-ON-Multi_Well_Pad_Drilling.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-ON-U-Zontal_To_Maximize_Production.pdf -> modules/references/REF-ENG-O&G-ON-U-Zontal_To_Maximize_Production.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-ONRR, MPRH Producing Interval Codes.pdf -> modules/references/REF-ENG-O&G-ONRR, MPRH Producing Interval Codes.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-ORRI_Introduction.pdf -> modules/references/REF-ENG-O&G-ORRI_Introduction.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Petrophysics_Model_for_Source_Rocks_Dicman.pdf -> modules/reservoir/references/REF-ENG-O&G-Petrophysics_Model_for_Source_Rocks_Dicman.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Phase_andHilbert_Transform.pdf -> modules/signal_processing/references/REF-ENG-O&G-Phase_andHilbert_Transform.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Process_Engg_Troubleshooting_Subsea_Production_Systems.pdf -> modules/subsea/references/REF-ENG-O&G-Process_Engg_Troubleshooting_Subsea_Production_Systems.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Reservoir_Engineering_For_Geologists.pdf -> modules/reservoir/references/REF-ENG-O&G-Reservoir_Engineering_For_Geologists.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Reservoir_MARS_Property_Prediction.pdf -> modules/reservoir/references/REF-ENG-O&G-Reservoir_MARS_Property_Prediction.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Schmidt_Plot_for_Structural_analysis.pdf -> modules/structural/references/REF-ENG-O&G-Schmidt_Plot_for_Structural_analysis.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-TDH Calculation.pdf -> modules/references/REF-ENG-O&G-TDH Calculation.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Understanding_Well_Construction.pdf -> modules/drilling/references/REF-ENG-O&G-Understanding_Well_Construction.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Welding.pdf -> modules/welding/references/REF-ENG-O&G-Welding.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Well Bore Placement and Collision_Risk.pdf -> modules/drilling/references/REF-ENG-O&G-Well Bore Placement and Collision_Risk.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Well Path Tortuosity.pdf -> modules/drilling/references/REF-ENG-O&G-Well Path Tortuosity.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Wellbore_Trajectories.pdf -> modules/drilling/references/REF-ENG-O&G-Wellbore_Trajectories.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G_directional drilling compass.pdf -> modules/drilling/references/REF-ENG-O&G_directional drilling compass.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-OFF-15MW Wind Turbine Design.pdf -> modules/wind/references/REF-ENG-OFF-15MW Wind Turbine Design.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-Offshore Wind Turbine Design.pdf -> modules/wind/references/REF-ENG-Offshore Wind Turbine Design.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-offshore_wind_bourbon_subsea.pdf -> modules/wind/references/REF-ENG-offshore_wind_bourbon_subsea.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-ON-AADE-de-Wardt-2020-Drilling Automation Roadmap.pdf -> modules/drilling/references/REF-ENG-ON-AADE-de-Wardt-2020-Drilling Automation Roadmap.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-ON-DSA-1-0f-14-Overview-Exec-Summary-190531.pdf -> modules/references/REF-ENG-ON-DSA-1-0f-14-Overview-Exec-Summary-190531.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-ON-Economic_Analysis_Visualizations_Samples.pdf -> modules/visualization/references/REF-ENG-ON-Economic_Analysis_Visualizations_Samples.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-OOC Subsea Intervention Report.pdf -> modules/standards/REF-ENG-OOC Subsea Intervention Report.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-Siesmic and Geodedic Models.pdf -> modules/signal_processing/references/REF-ENG-Siesmic and Geodedic Models.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-SPE-Reservoir Intial Dynamic Chreacterization.pdf -> modules/reservoir/references/REF-ENG-SPE-Reservoir Intial Dynamic Chreacterization.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-SRP-Predator Technical Bulletin July 2019.docx -> modules/artificial_lift/references/REF-ENG-SRP-Predator Technical Bulletin July 2019.docx
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-SRP-Rotaflex 700 228-260-236.pu -> modules/artificial_lift/references/REF-ENG-SRP-Rotaflex 700 228-260-236.pu
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-SRP-Rotaflex 800 250-300-288.pu -> modules/artificial_lift/references/REF-ENG-SRP-Rotaflex 800 250-300-288.pu
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-SRP-Rotaflex Slides for OXY.pdf -> modules/artificial_lift/references/REF-ENG-SRP-Rotaflex Slides for OXY.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-TOKU_SRP_Pressure_Monitoring.pdf -> modules/artificial_lift/references/REF-ENG-TOKU_SRP_Pressure_Monitoring.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-Vessels_Sloshing.pdf -> modules/marine_ops/references/REF-ENG-Vessels_Sloshing.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-VIV.pdf -> modules/viv/references/REF-ENG-VIV.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-Well Oil Tools.jpg -> modules/drilling/references/REF-ENG-Well Oil Tools.jpg
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-Wellbore Ranging Technologies Intercept Applications and Best Practices.pdf -> modules/drilling/references/REF-ENG-Wellbore Ranging Technologies Intercept Applications and Best Practices.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-WEO_2018_Special_Report_Offshore_Energy_Outlook.pdf -> modules/structural/references/REF-ENG-WEO_2018_Special_Report_Offshore_Energy_Outlook.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-Wind_Power_Production_North_Sea.pdf -> modules/wind/references/REF-ENG-Wind_Power_Production_North_Sea.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-WInd_Turbines_Foundations.pdf -> modules/wind/references/REF-ENG-WInd_Turbines_Foundations.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-ZapLok Pipe Joining Technique.pptx -> modules/welding/references/REF-ENG-ZapLok Pipe Joining Technique.pptx
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG_GS_Carbonomics.pdf -> modules/references/REF-ENG_GS_Carbonomics.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG_Wind_FWJIP_Phase_1_Summary_Report.pdf -> modules/wind/references/REF-ENG_Wind_FWJIP_Phase_1_Summary_Report.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENGWind_FWJIP_Phase_2_Summary_Report.pdf -> modules/wind/references/REF-ENGWind_FWJIP_Phase_2_Summary_Report.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-FFS-crackwise_print_flyer_v6_5.pdf -> modules/structural/references/REF-FFS-crackwise_print_flyer_v6_5.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-FFS-E18110-01 APC Gunnison Piping FFS Assessment (Draft1) - VS PE Comments.docx -> modules/structural/references/REF-FFS-E18110-01 APC Gunnison Piping FFS Assessment (Draft1) - VS PE Comments.docx
+2026-02-08 00:06:54 |   MOVE: ref/REF-FFS-E18XXX-01 Local Metal Loss Assessment (Draft1).docx -> modules/structural/references/REF-FFS-E18XXX-01 Local Metal Loss Assessment (Draft1).docx
+2026-02-08 00:06:54 |   MOVE: ref/REF-FIN-Spectral-Alalysis-of-Stock-Return-Volatility-Correlation-and-Beta.pdf -> modules/signal_processing/references/REF-FIN-Spectral-Alalysis-of-Stock-Return-Volatility-Correlation-and-Beta.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-FIN-Startup_Funding.jpg -> modules/references/misc/REF-FIN-Startup_Funding.jpg
+2026-02-08 00:06:54 |   MOVE: ref/REF-GIT-For_Professionals.pdf -> modules/references/misc/REF-GIT-For_Professionals.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-HA-Family Project On Understanding COVID19.pdf -> modules/references/misc/REF-HA-Family Project On Understanding COVID19.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-IT-AWS_Security_Best_Practices.pdf -> modules/references/misc/REF-IT-AWS_Security_Best_Practices.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-IT-D3JS_Visualizations.pdf -> modules/visualization/references/REF-IT-D3JS_Visualizations.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-IT-Data_Algorithm_Notes_for_Professionals.pdf -> modules/data_systems/references/REF-IT-Data_Algorithm_Notes_for_Professionals.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-IT-Eloquent_Javascript.pdf -> modules/references/misc/REF-IT-Eloquent_Javascript.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-IT-HTML_Cheat_Sheet.pdf -> modules/references/misc/REF-IT-HTML_Cheat_Sheet.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-MAN-BCG_Managing_WorkForcePostCovid-19.pdf -> modules/references/misc/REF-MAN-BCG_Managing_WorkForcePostCovid-19.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-MAN-HBR-How_do_you_Measure_Life.pdf -> modules/references/misc/REF-MAN-HBR-How_do_you_Measure_Life.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-MATH-Vector Linear Algebra_vmls-slides.pdf -> modules/references/misc/REF-MATH-Vector Linear Algebra_vmls-slides.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-MATH-Vector Linear Algebra_vmls.pdf -> modules/references/misc/REF-MATH-Vector Linear Algebra_vmls.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ML-Machine_Learning_Mathematics.pdf -> modules/references/misc/REF-ML-Machine_Learning_Mathematics.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-MNG-Surviving_Tactics.pdf -> modules/viv/references/REF-MNG-Surviving_Tactics.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-O&G-ENG Drilling Overburden, Pore and Fracture Pressures.pdf -> modules/drilling/references/REF-O&G-ENG Drilling Overburden, Pore and Fracture Pressures.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-O&G-ENG Geoscience CheatSheet_5_Pages.pdf -> modules/drilling/references/REF-O&G-ENG Geoscience CheatSheet_5_Pages.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-O&G-ENG Offshore Lifting Analysis.pdf -> modules/structural/references/REF-O&G-ENG Offshore Lifting Analysis.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-O&G-ENG Siesmic MultiAttribute Rotation.pdf -> modules/signal_processing/references/REF-O&G-ENG Siesmic MultiAttribute Rotation.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-O&G-ENG-ESPs.pdf -> modules/artificial_lift/references/REF-O&G-ENG-ESPs.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-O&G-ENG-Liner Driling Options for Deepwater.pdf -> modules/drilling/references/REF-O&G-ENG-Liner Driling Options for Deepwater.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-O&G-ENG-Mud Over Air Casing.pdf -> modules/drilling/references/REF-O&G-ENG-Mud Over Air Casing.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-O&G-ENG-NetPay_Net_Reservoir_Conventional.pdf -> modules/reservoir/references/REF-O&G-ENG-NetPay_Net_Reservoir_Conventional.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-OFF-Euronav Tanker Market Study 2017.pdf -> modules/marine_ops/references/REF-OFF-Euronav Tanker Market Study 2017.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-OFF-SD-1.4.5-Tankers Overview.pdf -> modules/marine_ops/references/REF-OFF-SD-1.4.5-Tankers Overview.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-SDEV-Goal_Settings.pdf -> modules/references/misc/REF-SDEV-Goal_Settings.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-SDEV-Harvard Resumes and Coverletters.pdf -> modules/references/misc/REF-SDEV-Harvard Resumes and Coverletters.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-SDEV-JK 07 Tradition and Creativity - Collected Works 7 - Jiddu  (1952-53).pdf -> modules/references/misc/REF-SDEV-JK 07 Tradition and Creativity - Collected Works 7 - Jiddu  (1952-53).pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-SDEV-Key Performance Indicators.jpg -> modules/references/misc/REF-SDEV-Key Performance Indicators.jpg
+2026-02-08 00:06:54 |   MOVE: ref/REF-SDEV-Leadership Graphics Mark Fritz.pdf -> modules/references/misc/REF-SDEV-Leadership Graphics Mark Fritz.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-SDEV-Nudging-Yourself-to-Make-Better-Decisions-2020.pdf -> modules/references/misc/REF-SDEV-Nudging-Yourself-to-Make-Better-Decisions-2020.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-SDEV-PGC - Decision by Bob Proctor.pdf -> modules/references/misc/REF-SDEV-PGC - Decision by Bob Proctor.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-SDEV-Preparing_For_Presentation.pdf -> modules/references/misc/REF-SDEV-Preparing_For_Presentation.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-SDEV-Student's Guide to Research.pdf -> modules/references/misc/REF-SDEV-Student's Guide to Research.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-SDEV-Tips for Great Presentations.pdf -> modules/references/misc/REF-SDEV-Tips for Great Presentations.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-SDEV-Transform Into Leader.pdf -> modules/references/misc/REF-SDEV-Transform Into Leader.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-SDEV-Treating_People_With_Respect.docx -> modules/artificial_lift/references/REF-SDEV-Treating_People_With_Respect.docx
+2026-02-08 00:06:54 |   MOVE: ref/REF-VIZ-10_Easy_Visualizations.pdf -> modules/visualization/references/REF-VIZ-10_Easy_Visualizations.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-VIZ-2011-D3-InfoVis.pdf -> modules/visualization/references/REF-VIZ-2011-D3-InfoVis.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-VIZ-OReilly.Interactive.Data.Visualization.for.the.Web.2nd.Edition.2017.8.pdf -> modules/data_systems/references/REF-VIZ-OReilly.Interactive.Data.Visualization.for.the.Web.2nd.Edition.2017.8.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-VIZ-Picking_Right_Visualization.pdf -> modules/visualization/references/REF-VIZ-Picking_Right_Visualization.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-VIZ-Right_Data_Visualization.pdf -> modules/data_systems/references/REF-VIZ-Right_Data_Visualization.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-VIZ-Visual_Abstracts.pdf -> modules/visualization/references/REF-VIZ-Visual_Abstracts.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-VIZ-Visualization_In_Practice.pdf -> modules/visualization/references/REF-VIZ-Visualization_In_Practice.pdf
+2026-02-08 00:06:54 |   MOVE: ref/SEG-1985-0085.pdf -> modules/references/SEG-1985-0085.pdf
+2026-02-08 00:06:54 |   MOVE: ref/SPE-1016-0066-JPT.pdf -> modules/reservoir/references/SPE-1016-0066-JPT.pdf
+2026-02-08 00:06:54 |   MOVE: ref/SPE-180934-WP.pdf -> modules/reservoir/references/SPE-180934-WP.pdf
+2026-02-08 00:06:54 |   MOVE: ref/SPE-24282-MS.pdf -> modules/reservoir/references/SPE-24282-MS.pdf
+2026-02-08 00:06:54 |   MOVE: ref/SPE-24442-MS.pdf -> modules/reservoir/references/SPE-24442-MS.pdf
+2026-02-08 00:06:54 |   MOVE: ref/SQL-Ref-Cookbook.pdf -> modules/data_systems/references/SQL-Ref-Cookbook.pdf
+2026-02-08 00:06:54 |   MOVE: ref/WPC-29128.pdf -> modules/reservoir/references/WPC-29128.pdf
+2026-02-08 00:06:54 | 
+--- Root-level eng/ files (pattern-based distribution) ---
+2026-02-08 00:06:54 |   MOVE: 3_29_21_BSEE_Deepwater_Asgard_Alert.pdf -> modules/standards/3_29_21_BSEE_Deepwater_Asgard_Alert.pdf
+2026-02-08 00:06:54 |   MOVE: 3_29_21_Deepwater_Asgard_lawsuit.pdf -> modules/standards/3_29_21_Deepwater_Asgard_lawsuit.pdf
+2026-02-08 00:06:54 |   MOVE: ag_drones.md -> modules/references/ag_drones.md
+2026-02-08 00:06:54 |   MOVE: bsee_data.md -> modules/standards/bsee_data.md
+2026-02-08 00:06:54 |   MOVE: Catenary Curve.pdf -> modules/risers/Catenary Curve.pdf
+2026-02-08 00:06:54 |   MOVE: civil_engineering_design.pdf -> modules/structural/civil_engineering_design.pdf
+2026-02-08 00:06:54 |   MOVE: data_driven_manufacturing.md -> modules/references/manufacturing/data_driven_manufacturing.md
+2026-02-08 00:06:54 |   MOVE: decline_curve_analysis.jpg -> modules/production/decline_curve_analysis.jpg
+2026-02-08 00:06:54 |   MOVE: dhsgfinalreport-march2011-tag.pdf -> modules/standards/dhsgfinalreport-march2011-tag.pdf
+2026-02-08 00:06:54 |   MOVE: ditigal_twin.md -> modules/digitaltwin/ditigal_twin.md
+2026-02-08 00:06:54 |   MOVE: drilling.md -> modules/drilling/drilling.md
+2026-02-08 00:06:54 |   MOVE: drilling_rigs.md -> modules/drilling/drilling_rigs.md
+2026-02-08 00:06:54 |   MOVE: DualGradient Drilling Riser.pdf -> modules/drilling/DualGradient Drilling Riser.pdf
+2026-02-08 00:06:54 |   MOVE: emmisions.md -> modules/references/emmisions.md
+2026-02-08 00:06:54 |   MOVE: engineering_analysis.md -> modules/references/engineering_analysis.md
+2026-02-08 00:06:54 |   MOVE: engineering_data.md -> modules/references/engineering_data.md
+2026-02-08 00:06:54 |   MOVE: engineering_drawings software_comparison.md -> modules/references/engineering_drawings software_comparison.md
+2026-02-08 00:06:54 |   MOVE: engineering_drawings.md -> modules/references/engineering_drawings.md
+2026-02-08 00:06:54 |   MOVE: engineering_driven_analytics_keywords.PNG -> modules/references/engineering_driven_analytics_keywords.PNG
+2026-02-08 00:06:54 |   MOVE: engineering_general.md -> modules/references/engineering_general.md
+2026-02-08 00:06:54 |   MOVE: Ensuring-a-Good-Bond-AA-V10-I3.pdf -> modules/references/Ensuring-a-Good-Bond-AA-V10-I3.pdf
+2026-02-08 00:06:54 |   MOVE: fatigue.md -> modules/fatigue/fatigue.md
+2026-02-08 00:06:54 |   MOVE: fea.md -> modules/structural/fea.md
+2026-02-08 00:06:54 |   MOVE: Final_thesis_report_Probabilistic_Estimating_of_Engineering_Costs_Public.pdf -> modules/references/Final_thesis_report_Probabilistic_Estimating_of_Engineering_Costs_Public.pdf
+2026-02-08 00:06:54 |   MOVE: flare_system_design_and_calculation.pdf -> modules/references/flare_system_design_and_calculation.pdf
+2026-02-08 00:06:54 |   MOVE: fuels.md -> modules/references/fuels.md
+2026-02-08 00:06:54 |   MOVE: geotechnical.md -> modules/references/geotechnical.md
+2026-02-08 00:06:54 |   MOVE: hydrogen_cylinders.pdf -> modules/references/hydrogen_cylinders.pdf
+2026-02-08 00:06:54 |   MOVE: hyperbolicfunctions.pdf -> modules/structural/hyperbolicfunctions.pdf
+2026-02-08 00:06:54 |   MOVE: imca_fmea_guidance.pdf -> modules/risk/imca_fmea_guidance.pdf
+2026-02-08 00:06:54 |   MOVE: installation_vessels.md -> modules/offshore_installation/installation_vessels.md
+2026-02-08 00:06:54 |   MOVE: intervention.md -> modules/interventions/intervention.md
+2026-02-08 00:06:54 |   MOVE: jones_act.md -> modules/marine_ops/jones_act.md
+2026-02-08 00:06:54 |   MOVE: JSCE_Standard_Structural Engineering.pdf -> modules/structural/JSCE_Standard_Structural Engineering.pdf
+2026-02-08 00:06:54 |   MOVE: manufacturing.md -> modules/references/manufacturing/manufacturing.md
+2026-02-08 00:06:54 |   MOVE: material_demand_needs_solars_wind_geo.pdf -> modules/wind/material_demand_needs_solars_wind_geo.pdf
+2026-02-08 00:06:54 |   COLLISION: metocean.md -> renamed to eng_metocean.md
+2026-02-08 00:06:54 |   MOVE: metocean.md -> modules/metocean/metocean.md
+2026-02-08 00:06:54 |   MOVE: ml_for_forwarder_crane_forest.pdf -> modules/references/ml_for_forwarder_crane_forest.pdf
+2026-02-08 00:06:54 |   MOVE: offshore_drilling.md -> modules/drilling/offshore_drilling.md
+2026-02-08 00:06:54 |   MOVE: Offshore_Tow_Head.jpg -> modules/offshore_installation/Offshore_Tow_Head.jpg
+2026-02-08 00:06:54 |   MOVE: paraview.md -> modules/references/paraview.md
+2026-02-08 00:06:54 |   MOVE: PipeLayVessels.pdf -> modules/offshore_installation/PipeLayVessels.pdf
+2026-02-08 00:06:54 |   MOVE: process_engineering.md -> modules/references/process/process_engineering.md
+2026-02-08 00:06:54 |   MOVE: production.md -> modules/production/production.md
+2026-02-08 00:06:54 |   MOVE: REF-ENG-O&G-Reservoir_Engineering_capillary_pressure_saturation_history.pdf -> modules/reservoir/REF-ENG-O&G-Reservoir_Engineering_capillary_pressure_saturation_history.pdf
+2026-02-08 00:06:54 |   MOVE: REF-ENG-O&G-Reservoir_Engineering_Inter-Bedding.pdf -> modules/reservoir/REF-ENG-O&G-Reservoir_Engineering_Inter-Bedding.pdf
+2026-02-08 00:06:54 |   MOVE: risers.md -> modules/risers/risers.md
+2026-02-08 00:06:54 |   MOVE: sonatest_ndt.pdf -> modules/nde/sonatest_ndt.pdf
+2026-02-08 00:06:54 |   MOVE: spe.md -> modules/production/spe.md
+2026-02-08 00:06:54 |   MOVE: The Oil and Gas Engineering Guide_1-53.pdf -> modules/guides/The Oil and Gas Engineering Guide_1-53.pdf
+2026-02-08 00:06:54 |   MOVE: The Oil and Gas Engineering Guide_54-end.pdf -> modules/guides/The Oil and Gas Engineering Guide_54-end.pdf
+2026-02-08 00:06:54 |   MOVE: wait_on_weather.md -> modules/metocean/wait_on_weather.md
+2026-02-08 00:06:54 |   MOVE: well_schematic_high_level.jpg -> modules/drilling/well_schematic_high_level.jpg
+2026-02-08 00:06:54 |   MOVE: wind.md -> modules/wind/wind.md
+2026-02-08 00:06:54 |   MOVE: wind_turbines.md -> modules/wind/wind_turbines.md
+2026-02-08 00:06:54 | 
+================================================================================
+2026-02-08 00:06:54 | SUMMARY
+2026-02-08 00:06:54 |   Files moved: 374
+2026-02-08 00:06:54 |   Collisions (renamed): 2
+2026-02-08 00:06:54 |   Errors: 0
+2026-02-08 00:06:54 |   docs/eng/ is now empty (safe to delete)
+2026-02-08 00:06:54 | Log saved to: D:\workspace-hub\digitalmodel\scripts\consolidate_docs_log.txt

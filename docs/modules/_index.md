@@ -1,95 +1,110 @@
 # Analysis Modules
 
-> Analysis modules and computational tools for specific engineering calculations
+> Analysis modules, engineering references, and computational tools
 >
-> Total Files: 1064 | Documents: 99 | Subcategories: 9
+> Consolidated from docs/eng/ and docs/modules/ (Feb 2026)
 
 ## Overview
 
-Analysis modules and computational tools for specific engineering calculations. These modules provide reusable components for complex analysis workflows.
+Analysis modules and computational tools for specific engineering calculations, plus engineering reference materials consolidated from the former `docs/eng/` directory. These modules provide reusable components for complex analysis workflows.
 
 **Key Areas:**
-- **Analysis**: Core calculation engines and algorithms
+- **Analysis**: Core calculation engines and algorithms (aqwa, orcaflex, orcawave, fem)
+- **Engineering Domains**: Drilling, structural, fatigue, risers, mooring, subsea, wind
+- **References**: Standards, field development, materials, and general O&G references
 - **Visualization**: Plotting, reporting, and data presentation
 - **Data Processing**: Import/export, transformation, and validation
-- **Integration**: Workflow orchestration and tool connectivity
 
 ## Available Content
 
-### Subcategories
+### Solver Modules
 
 #### [Aqwa](aqwa/)
-- **Files**: 31 documents
-- **Location**: `modules\aqwa/`
-- **Quick Access**: Browse [all aqwa content](aqwa/)
-
-#### [Catenary](catenary/)
-- **Files**: 1 documents
-- **Location**: `modules\catenary/`
-- **Quick Access**: Browse [all catenary content](catenary/)
-
-#### [Mooring](mooring/)
-- **Files**: 1 documents
-- **Location**: `modules\mooring/`
-- **Quick Access**: Browse [all mooring content](mooring/)
+- Hydrodynamic diffraction/radiation analysis
 
 #### [Orcaflex](orcaflex/)
-- **Files**: 53 documents
-- **Location**: `modules\orcaflex/`
-- **Quick Access**: Browse [all orcaflex content](orcaflex/)
+- Marine dynamics simulation (pipelines, risers, moorings)
 
 #### [Orcawave](orcawave/)
-- **Files**: 11 documents
-- **Location**: `modules\orcawave/`
-- **Quick Access**: Browse [all orcawave content](orcawave/)
+- Wave diffraction/radiation analysis
 
-#### [Rao Analysis](rao-analysis/)
-- **Files**: 0 documents
-- **Location**: `modules\rao-analysis/`
-- **Quick Access**: Browse [all rao-analysis content](rao-analysis/)
+#### [FEM](fem/)
+- Finite element analysis references (includes former `fea/` content)
 
-#### [Rao_Analysis](rao_analysis/)
-- **Files**: 1 documents
-- **Location**: `modules\rao_analysis/`
-- **Quick Access**: Browse [all rao_analysis content](rao_analysis/)
+### Engineering Domains
 
-#### [Ship Design](ship-design/)
-- **Files**: 0 documents
-- **Location**: `modules\ship-design/`
-- **Quick Access**: Browse [all ship-design content](ship-design/)
+#### [Cathodic Protection](cathodic_protection/)
+- Corrosion prevention and CP system design
 
-#### [Ship_Design](ship_design/)
-- **Files**: 0 documents
-- **Location**: `modules\ship_design/`
-- **Quick Access**: Browse [all ship_design content](ship_design/)
+#### [Drilling](drilling/)
+- Well construction, casing design, HPHT, directional drilling
+
+#### [Fatigue](fatigue/)
+- Fatigue analysis, ECA, S-N curves
+
+#### [Hydrodynamics](hydrodynamics/)
+- Fluid mechanics and hydrodynamic analysis
+
+#### [Metocean](metocean/)
+- Environmental data, waves, weather
+
+#### [Mooring](mooring/)
+- Mooring system design and analysis
+
+#### [Offshore Installation](offshore_installation/)
+- Installation engineering, decommissioning, pipelay
+
+#### [Pipelines](pipelines/)
+- Pipeline engineering and design
+
+#### [Reservoir](reservoir/)
+- Reservoir engineering and petrophysics
+
+#### [Risers](risers/)
+- Riser systems including rigid jumpers
+
+#### [Signal Processing](signal_processing/)
+- DSP, vibration analysis, seismic
+
+#### [Structural](structural/)
+- Structural analysis, FFS, materials, interfaces
+
+#### [Subsea](subsea/)
+- Subsea systems, connectors, trees
+
+#### [Umbilical](umbilical/)
+- Umbilical design and analysis
+
+#### [VIV](viv/)
+- Vortex-induced vibration analysis
+
+#### [Wind](wind/)
+- Offshore wind, FOWT, turbine design
+
+### Reference Collections
+
+#### [References](references/)
+- General references, field development, geotech, geothermal, hydrogen, manufacturing, process
+
+#### [Standards](standards/)
+- API, DNV, BS, BSEE standards and incident case studies
+
+#### [Guides](guides/)
+- O&G engineering guides
+
+#### [Data Systems](data_systems/)
+- Data engineering and analytics references
+
+#### [Visualization](visualization/)
+- 3D visualization, charting, D3.js references
 
 ## Navigation
 
 ### Quick Links
-- [📁 Browse all modules content](./)
-- [🏠 Return to documentation home](../README.md)
-- [🔍 Search across categories](../README.md#navigation-guide)
-
-### For AI Assistants
-
-This category contains 99 documented topics in 9 subcategories. All files include structured metadata for content discovery.
-
-**Content Discovery Pattern:**
-```
-modules/
-├── aqwa/
-│   ├── topic-1.md (with YAML frontmatter)
-│   └── topic-2.md (with cross-references)
-└── _index.md (this file)
-```
-
-**Metadata Schema:**
-- `category`: "modules"
-- `subcategory`: specific area within modules
-- `tags`: searchable keywords
-- `complexity`: difficulty level
-- `related`: cross-references to other topics
+- [Browse all modules content](./)
+- [Return to documentation home](../README.md)
+- [Engineering domains index](domains_index.md)
 
 ---
 
-*Last updated: 2025-07-26 | Part of AI-Friendly Documentation System*
+*Last updated: 2026-02-08 | Consolidated from docs/eng/ + docs/modules/*
