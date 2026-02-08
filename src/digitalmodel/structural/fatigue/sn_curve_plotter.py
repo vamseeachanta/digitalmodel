@@ -33,10 +33,19 @@ class SNCurvePlotter:
 
         Args:
             data_path: Path to fatigue_curves_structured.csv. If None, uses default path.
+
+        Raises:
+            FileNotFoundError: If the CSV data file is not found at the expected location.
         """
         if data_path is None:
-            # Default to repository location
-            data_path = Path(__file__).parent.parent.parent.parent / "data" / "fatigue" / "fatigue_curves_structured.csv"
+            data_path = Path(__file__).parents[4] / "data" / "fatigue" / "fatigue_curves_structured.csv"
+
+        data_path = Path(data_path)
+        if not data_path.exists():
+            raise FileNotFoundError(
+                f"SN curve CSV not found at: {data_path}\n"
+                f"Place fatigue_curves_structured.csv in the digitalmodel/data/fatigue/ directory."
+            )
 
         self.df = pd.read_csv(data_path)
         self._validate_data()
