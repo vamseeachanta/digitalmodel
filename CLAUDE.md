@@ -27,12 +27,20 @@ This repo owns **Tier 2 — Engineering Reference Data**: industry standard look
 
 External data dependencies: `config/data_sources.yaml`
 
+## OrcaFlex Conventions
+
+- YAML files must include `---` document separators between sections
+- Use `LatestWave` period for postprocessing, NOT `WholeSimulation`, unless told otherwise
+- `Model()` constructor does not handle include-file YAML — resolve includes before loading
+- Frequency values: always confirm Hz vs rad/s units before running solvers
+- Large models: expect statics convergence issues, plan for pre-computed .sim architecture
+
 ## Key Directories
 
 - `src/` - Source code
 - `data/` - Engineering reference data (Tier 2)
 - `tests/` - Test files
-- `docs/` - Documentation
+- `docs/modules/` - All documentation (consolidated, no more docs/eng/)
 - `specs/` - Plans
 
 ## Commands
