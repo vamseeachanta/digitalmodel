@@ -540,6 +540,8 @@ def _extract_from_owr(
             damping=damp_set,
             created_date=now_str,
             source_files=[str(owr_path)],
+            phase_convention="orcina_lag",
+            unit_system="orcaflex",
         )
 
     except Exception as e:
@@ -629,10 +631,12 @@ def _extract_from_aqwa_lis(
         dof_list = [DOF.SURGE, DOF.SWAY, DOF.HEAVE, DOF.ROLL, DOF.PITCH, DOF.YAW]
         components = {}
         for i, dof in enumerate(dof_list):
+            # Normalize from ISO 6954 (phase lead) to Orcina (phase lag):
+            # phi_Orcina = -phi_ISO
             components[dof.name.lower()] = RAOComponent(
                 dof=dof,
                 magnitude=mag[:, :, i],
-                phase=pha[:, :, i],
+                phase=-pha[:, :, i],
                 frequencies=freq_data,
                 headings=head_data,
                 unit="",
@@ -660,6 +664,12 @@ def _extract_from_aqwa_lis(
         am_matrices, am_freqs = _parse_aqwa_matrix_section(
             lines, "ADDED MASS", "added_mass",
         )
+        # Negate Sway-Roll coupling (M24/M42) to match OrcaWave convention.
+        # Empirically determined from barge benchmark — see plan for details.
+        # TODO: Validate against AQWA Theory Manual Section 4.3.
+        for am_mat in am_matrices:
+            am_mat.matrix[1, 3] = -am_mat.matrix[1, 3]  # M24
+            am_mat.matrix[3, 1] = -am_mat.matrix[3, 1]  # M42
         if am_matrices and am_freqs:
             am_freq_arr = np.array(am_freqs)
             am_freq_data = FrequencyData(
@@ -699,6 +709,10 @@ def _extract_from_aqwa_lis(
         damp_matrices, damp_freqs = _parse_aqwa_matrix_section(
             lines, "DAMPING", "damping",
         )
+        # Negate Sway-Roll coupling — same convention fix as added mass.
+        for damp_mat in damp_matrices:
+            damp_mat.matrix[1, 3] = -damp_mat.matrix[1, 3]  # M24
+            damp_mat.matrix[3, 1] = -damp_mat.matrix[3, 1]  # M42
         if damp_matrices and damp_freqs:
             damp_freq_arr = np.array(damp_freqs)
             damp_freq_data = FrequencyData(
@@ -740,6 +754,8 @@ def _extract_from_aqwa_lis(
             damping=damp_set,
             created_date=now_str,
             source_files=[str(lis_path)],
+            phase_convention="orcina_lag",
+            unit_system="SI",
         )
 
     except Exception as e:
@@ -1073,6 +1089,8 @@ def _harmonize_headings(
             damping=dr.damping,
             created_date=dr.created_date,
             source_files=dr.source_files,
+            phase_convention=dr.phase_convention,
+            unit_system=dr.unit_system,
         )
         print(f"  [INFO] Filtered {name}: {len(all_headings)} -> {len(common_sorted)} headings")
 

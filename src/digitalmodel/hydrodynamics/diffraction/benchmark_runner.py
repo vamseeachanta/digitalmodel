@@ -154,6 +154,7 @@ class BenchmarkRunner:
             result.report_html_path = self._generate_html_report(
                 report,
                 result.plot_paths,
+                solver_results=solver_results,
             )
 
             result.success = True
@@ -298,6 +299,7 @@ class BenchmarkRunner:
         self,
         report: BenchmarkReport,
         plot_paths: list[Path],
+        solver_results: Optional[Dict[str, DiffractionResults]] = None,
     ) -> Path:
         """Generate a simple HTML summary report."""
         output_dir = Path(self.config.output_dir)
@@ -336,6 +338,16 @@ class BenchmarkRunner:
             f"        <li>{note}</li>" for note in report.notes
         )
 
+        # Build input comparison table if solver_results are available
+        input_comparison_html = ""
+        if solver_results:
+            plotter = BenchmarkPlotter(
+                solver_results,
+                output_dir=output_dir,
+                x_axis=self.config.x_axis,
+            )
+            input_comparison_html = plotter.build_input_comparison_html()
+
         html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -354,6 +366,8 @@ class BenchmarkRunner:
     <p><strong>Vessel:</strong> {report.vessel_name}</p>
     <p><strong>Date:</strong> {now}</p>
     <p><strong>Overall consensus:</strong> {report.overall_consensus}</p>
+
+    {input_comparison_html}
 
     <h2>Solvers</h2>
     <table>

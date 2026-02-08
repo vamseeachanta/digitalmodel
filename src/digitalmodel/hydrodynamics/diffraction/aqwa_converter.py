@@ -105,7 +105,9 @@ class AQWAConverter:
             created_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             analysis_date=self._get_analysis_date(),
             source_files=[str(self.lis_file)],
-            notes="Converted from AQWA analysis results"
+            notes="Converted from AQWA analysis results",
+            phase_convention="orcina_lag",
+            unit_system="SI",
         )
 
         return results
@@ -267,10 +269,14 @@ class AQWAConverter:
         for dof in DOF:
             dof_name = dof.name.lower()
             if dof_name in rao_data:
+                # Normalize from ISO 6954 (phase lead: A*cos(wt+phi))
+                # to Orcina convention (phase lag: A*cos(wt-phi))
+                # Fix: phi_Orcina = -phi_ISO
+                normalized_phase = -rao_data[dof_name]['phase']
                 component = RAOComponent(
                     dof=dof,
                     magnitude=rao_data[dof_name]['magnitude'],
-                    phase=rao_data[dof_name]['phase'],
+                    phase=normalized_phase,
                     frequencies=frequencies,
                     headings=headings,
                     unit=""  # Will be set by __post_init__
@@ -306,8 +312,17 @@ class AQWAConverter:
 
         matrices = []
         for freq, matrix_data in zip(am_data['frequencies'], am_data['matrices']):
+            # Negate Sway-Roll coupling (M24/M42) to match OrcaWave convention.
+            # Empirically determined from barge benchmark data: AQWA produces
+            # negative M24 values where OrcaWave produces positive.
+            # Only M24/M42 is corrected — other roll-coupling terms (M14, M34,
+            # M46) are near-zero for the barge geometry and cannot be verified.
+            # TODO: Validate against AQWA Theory Manual Section 4.3.
+            corrected = matrix_data.copy()
+            corrected[1, 3] = -corrected[1, 3]  # M24 (Sway-Roll)
+            corrected[3, 1] = -corrected[3, 1]  # M42 (Roll-Sway)
             matrix = HydrodynamicMatrix(
-                matrix=matrix_data,
+                matrix=corrected,
                 frequency=freq,
                 matrix_type="added_mass",
                 units=self._get_added_mass_units()
@@ -339,8 +354,13 @@ class AQWAConverter:
 
         matrices = []
         for freq, matrix_data in zip(damp_data['frequencies'], damp_data['matrices']):
+            # Negate Sway-Roll coupling (M24/M42) — same convention fix as
+            # added mass. See _build_added_mass_set docstring for rationale.
+            corrected = matrix_data.copy()
+            corrected[1, 3] = -corrected[1, 3]  # M24 (Sway-Roll)
+            corrected[3, 1] = -corrected[3, 1]  # M42 (Roll-Sway)
             matrix = HydrodynamicMatrix(
-                matrix=matrix_data,
+                matrix=corrected,
                 frequency=freq,
                 matrix_type="damping",
                 units=self._get_damping_units()
