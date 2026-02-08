@@ -369,4 +369,103 @@ uv run python scripts/update_orcaflex_examples.py
 
 ---
 
+## Riser Modeling Lessons Learned (2026-02-05)
+
+> Insights from implementing 4 A01 riser models (catenary, lazy wave, pliant wave, steep wave) in the modular generator and benchmarking against monolithic baselines.
+
+### ClumpTypes vs 6DBuoys — Critical Distinction
+
+| Property | ClumpTypes | 6DBuoys |
+|----------|-----------|---------|
+| DOFs | Share parent line DOFs | 6 independent DOFs each |
+| Solver impact | Zero additional DOFs | +6 DOFs per buoy |
+| Suitable for | Buoyancy modules (many) | Large floating bodies (few) |
+| Statics risk | None | Singular Jacobian if many |
+
+**Rule**: For distributed buoyancy (e.g. 20-50 modules on a lazy wave riser), ALWAYS use `ClumpTypes`, never `6DBuoys`. Using 51 6DBuoys adds 306 unconstrained DOFs, causing singular Jacobian and statics failure.
+
+### StaticsStep2 — Required for Wave Risers
+
+Wave configurations (lazy wave, pliant wave, steep wave) need:
+```yaml
+StaticsStep1: Catenary
+StaticsStep2: Full statics
+```
+Without `StaticsStep2`, the catenary solver finds a taut-line solution instead of the S-wave shape. This produces orders-of-magnitude wrong tensions (e.g. 41,007 kN vs 87 kN).
+
+### End B Declination — Critical for S-Wave Shape
+
+For steep/lazy/pliant wave risers, the anchor end must approach from above:
+```yaml
+end_b:
+  declination: 180  # Line approaches seabed from above (correct)
+  # declination: 90  # Horizontal approach (WRONG - produces bad S-shape)
+```
+Declination=180 means the line direction at End B is vertically downward, creating the steep touchdown the S-wave requires.
+
+### OrcaFlex Multi-Column YAML Format
+
+OrcaFlex uses a distinctive multi-column format for tabular properties:
+```yaml
+# Connection specification (7 columns)
+"Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo":
+  - [FPSO, 10, 11.9, -7.0, 90, 170, 0, ~, ~]
+  - [Anchored, 67, 0, 4.5, 0, 180, 0, ~, ~]
+
+# Segment specification (3 columns)
+"LineType, Length, TargetSegmentLength":
+  - [10in_flexible, 5.5, 0.25]
+  - [10in_flexible, 45, 4]
+
+# Clump attachment format (5 columns)
+"AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo":
+  - [Module, 0, 0, 81.25, End A]
+```
+
+### YAML Alias Prohibition
+
+OrcFxAPI YAML parser rejects YAML aliases (`&id001` / `*id001`). When generating YAML, MUST use a custom dumper:
+```python
+class _NoAliasDumper(yaml.SafeDumper):
+    def ignore_aliases(self, data):
+        return True
+```
+
+### Case-Insensitive Name Collisions
+
+OrcaFlex treats object names as case-insensitive. Line type "tether" and line "Tether" will collide. Convention: use `_LT` suffix for line types (e.g. "Tether_LT").
+
+### Benchmark Validation Tolerances
+
+Validated tolerances for monolithic vs modular comparison:
+
+| Quantity | Relative | Absolute | Notes |
+|----------|----------|----------|-------|
+| End tension | 5% | 10 kN | Global equilibrium, less mesh-sensitive |
+| End bending | 15% | 5 kN.m | Highly mesh-sensitive near BCs |
+| Line length | 0.01% | 0.1 m | Pure geometry check |
+
+Pass criterion: relative OR absolute (whichever is more permissive).
+
+### Object Count Differences Are Expected
+
+Monolithic models typically have more objects than modular:
+- Extra line variants (Detailed + Simple + Tether)
+- Variable data sources for drag coefficients
+- 6D buoy definitions alongside clump types
+- Additional vessel types
+
+Differences of 2-20 objects are normal and do not affect engineering accuracy if the primary line is correctly modeled.
+
+### Riser Configuration Quick Reference
+
+| Config | Key Feature | Typical Sections | Buoyancy |
+|--------|-------------|------------------|----------|
+| Catenary | Simple arc to seabed | 2-3 uniform | None |
+| Lazy Wave | S-shape with buoyant section | 5-6 varied | Distributed or discrete |
+| Pliant Wave | S-shape + subsea arch buoy | 5-6 varied | Concentrated at arch |
+| Steep Wave | S-shape, steep touchdown | 5-6 varied | Mid-section floats |
+
+---
+
 *This reference is auto-generated from Orcina documentation. For the latest information, always use WebFetch to query the live URLs.*
