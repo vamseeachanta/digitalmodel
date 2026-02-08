@@ -70,6 +70,9 @@ class BuilderContext:
     # From RiserVesselBuilder
     riser_vessel_name: str = ""
 
+    # From RiserLinksBuilder
+    riser_link_names: list[str] = field(default_factory=list)
+
     def to_dict(self) -> dict:
         """Convert to dict for backward compatibility with old builder code.
 

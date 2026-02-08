@@ -114,6 +114,22 @@ riser:
       drag_coefficient: [0, 0]          # No drag
       added_mass_coefficient: [0, 0]    # No added mass
 
+  links:
+    - name: "Tether Pliant Simple"
+      link_type: tether
+      connections:
+        - object_name: "Anchored"
+          x: -116
+          y: 0
+          z: 1
+        - object_name: "10in Pliant Simple"
+          x: 0
+          y: 0
+          z: 176
+          z_relative_to: "End A"
+      unstretched_length: 9.9
+      stiffness: 367000
+
   lines:
     - name: "10in Pliant Simple"
       configuration: pliant_wave
