@@ -496,6 +496,30 @@ if quality["intersecting_panels"] > 0:
     print(f"Error: {quality['intersecting_panels']} intersecting panels")
 ```
 
+### Standalone DAT File Format (Non-Workbench)
+
+Critical conventions for generating AQWA standalone `.DAT` input files (non-Workbench mode):
+
+```
+Element type:     QPPL DIFF    (NOT just QPPL — without DIFF, elements are "NON-DIFFRACTING")
+ILID card:        1ILID AUTO 21  (after ZLWL — required for irregular frequency removal)
+SEAG card:        SEAG (nx, ny)  (2 params only in non-Workbench mode, NOT 6-param bounding box)
+OPTIONS GOON:     Continue past non-fatal errors (separate line, before feature OPTIONS)
+Line length:      Max 80 columns per line (AQWA enforces strict column limits)
+```
+
+**Mesh Quality Rules (FATAL — cannot override):**
+- Panels must be roughly square (aspect ratio near 1:1)
+- "Facet Radius" distance check at 90° corners of box geometries
+- For a 100m x 20m x 8m barge: minimum nx=40, ny=8, nz=4 (704 panels)
+- `OPTIONS GOON` does NOT bypass FATAL mesh quality errors
+
+**LIS Parsing Conventions:**
+- `ADDED  MASS` header has **double space** — use whitespace normalization for matching
+- WAVE FREQUENCY line appears ~23 lines before DAMPING section — search backward 30 lines
+- Matrix rows in added mass/damping sections are separated by blank lines
+- First RAO section = displacement RAOs; subsequent sections = velocity/acceleration (skip these)
+
 ### Result Validation
 
 ```python
@@ -681,6 +705,7 @@ aqwa_results = converter.convert_to_unified_schema(water_depth=30.0)
 
 ## Version History
 
+- **3.2.0** (2026-02-05): Added standalone DAT file format conventions, mesh quality rules, LIS parsing gotchas from 3-way benchmark work
 - **3.1.0** (2026-01-05): Added peak-focused benchmark comparison framework, 5% tolerance validation for significant values, automated AQWA vs OrcaWave comparison scripts
 - **3.0.0** (2025-01-02): Merged agent capabilities from agents/aqwa/, added MCP integration, phased processing workflow, AQWA module descriptions
 - **2.0.0** (2024-11-15): Added validation and preprocessing modules
