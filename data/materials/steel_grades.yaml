@@ -1,6 +1,17 @@
-# DEPRECATED: Canonical location is now data/materials/steel_grades.yaml
-# This file is kept for backward compatibility with pipe_properties.py
-# See workspace-hub/docs/DATA_RESIDENCE_POLICY.md (ADR-004)
+# Steel Grade Properties — Engineering Reference Data (Tier 2)
+# Sources: API 5L, ASTM A106, casing grades
+# Policy: workspace-hub/docs/DATA_RESIDENCE_POLICY.md
+# Note: Canonical location. Legacy copy at src/digitalmodel/data_systems/data/steel_material.yml
+metadata:
+  version: "1.0"
+  tier: 2
+  units:
+    E: "psi"
+    G: "psi"
+    SMYS: "psi"
+    SMUS: "psi"
+    Rho: "lb/in3"
+    ThermalExpansionCoefficient: "1/F"
 
 common:
   E: 30000000.0

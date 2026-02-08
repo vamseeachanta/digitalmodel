@@ -19,9 +19,18 @@ Digital twin modeling for offshore engineering analysis.
 2. HTML reports for all modules
 3. SPARC workflow for features
 
+## Data Governance
+
+Data governance: see workspace-hub `docs/DATA_RESIDENCE_POLICY.md`
+
+This repo owns **Tier 2 — Engineering Reference Data**: industry standard lookup tables, material properties, and design code parameters. If the data comes from an engineering standard/code, it belongs here under `data/`.
+
+External data dependencies: `config/data_sources.yaml`
+
 ## Key Directories
 
 - `src/` - Source code
+- `data/` - Engineering reference data (Tier 2)
 - `tests/` - Test files
 - `docs/` - Documentation
 - `specs/` - Plans

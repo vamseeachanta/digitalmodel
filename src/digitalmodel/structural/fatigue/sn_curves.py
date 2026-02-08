@@ -19,6 +19,7 @@ Author: Digital Model Team
 Version: 2.0.0
 """
 
+import os
 import numpy as np
 import pandas as pd
 from typing import Dict, Optional, Union, Tuple, List, Literal
@@ -27,6 +28,12 @@ from abc import ABC, abstractmethod
 import logging
 from pathlib import Path
 import json
+
+try:
+    import yaml
+    _YAML_AVAILABLE = True
+except ImportError:
+    _YAML_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -341,6 +348,53 @@ class StandardSNCurves:
         'E1': {'A': 1.81e10, 'm': 3.0, 'fatigue_limit': 18.0},
     }
 
+    _loaded_from_yaml: bool = False
+
+    @classmethod
+    def _find_sn_data_file(cls) -> Optional[Path]:
+        """Locate SN curves YAML file."""
+        env_dir = os.environ.get('DIGITALMODEL_DATA_DIR')
+        if env_dir:
+            candidate = Path(env_dir) / "fatigue" / "sn_curves.yaml"
+            if candidate.exists():
+                return candidate
+        repo_root = Path(__file__).parents[4]
+        candidate = repo_root / "data" / "fatigue" / "sn_curves.yaml"
+        if candidate.exists():
+            return candidate
+        return None
+
+    @classmethod
+    def _ensure_loaded(cls):
+        """Lazy-load curve data from YAML on first access."""
+        if cls._loaded_from_yaml:
+            return
+        if not _YAML_AVAILABLE:
+            logger.debug("PyYAML not available, using hardcoded SN curve dicts")
+            return
+        yaml_path = cls._find_sn_data_file()
+        if yaml_path is None:
+            logger.debug("SN curves YAML not found, using hardcoded dicts")
+            return
+        try:
+            with open(yaml_path) as f:
+                data = yaml.safe_load(f)
+            standards = data.get('standards', {})
+            if 'DNV' in standards and 'curves' in standards['DNV']:
+                cls.DNV_CURVES = standards['DNV']['curves']
+            if 'API' in standards and 'curves' in standards['API']:
+                cls.API_CURVES = standards['API']['curves']
+            if 'BS' in standards and 'curves' in standards['BS']:
+                cls.BS_CURVES = standards['BS']['curves']
+            if 'AWS' in standards and 'curves' in standards['AWS']:
+                cls.AWS_CURVES = standards['AWS']['curves']
+            if 'DNV' in standards and 'multislope' in standards['DNV']:
+                cls.DNV_MULTISLOPE_CURVES = standards['DNV']['multislope']
+            cls._loaded_from_yaml = True
+            logger.debug("SN curves loaded from %s", yaml_path)
+        except Exception as e:
+            logger.warning("Failed to load SN curves YAML: %s, using hardcoded dicts", e)
+
     @classmethod
     def get_curve(cls,
                   standard: Literal['DNV', 'API', 'BS', 'AWS'],
@@ -363,6 +417,7 @@ class StandardSNCurves:
         PowerLawSNCurve
             Standard S-N curve
         """
+        cls._ensure_loaded()
         curves_dict = {
             'DNV': cls.DNV_CURVES,
             'API': cls.API_CURVES,
@@ -413,6 +468,7 @@ class StandardSNCurves:
         # Import here to avoid circular imports
         from .analysis import MultislopeSNCurve
 
+        cls._ensure_loaded()
         if standard.upper() != 'DNV':
             raise ValueError("Multi-slope curves currently only available for DNV standard")
 
@@ -435,6 +491,7 @@ class StandardSNCurves:
     @classmethod
     def list_curves(cls, standard: Optional[str] = None) -> Dict[str, List[str]]:
         """List available curves by standard"""
+        cls._ensure_loaded()
         all_curves = {
             'DNV': list(cls.DNV_CURVES.keys()),
             'API': list(cls.API_CURVES.keys()),
