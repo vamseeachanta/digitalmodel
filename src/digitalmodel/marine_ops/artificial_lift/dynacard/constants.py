@@ -241,3 +241,14 @@ Default number of spatial nodes for finite difference solver.
 More nodes = higher accuracy but slower computation.
 Typical range: 50-200.
 """
+
+
+# =============================================================================
+# FEATURE EXTRACTION PARAMETERS
+# =============================================================================
+
+BEZERRA_N_BINS = 8
+"""Number of position bins per half-cycle for Bezerra vertical projections."""
+
+N_FAILURE_MODES = 18
+"""Total number of diagnostic failure modes in the ML classifier."""

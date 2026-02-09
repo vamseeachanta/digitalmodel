@@ -1,0 +1,53 @@
+name: generic_barge
+hull_type: barge
+length_bp: 90.0
+beam: 27.0
+draft: 6.0
+depth: 7.5
+source: "generic flat-bottom transport barge"
+stations:
+  # AP -- raked stern: flat bottom but half-breadth narrows toward upper drafts
+  - x_position: 0.0
+    waterline_offsets:
+      - [0.0, 13.5]
+      - [2.0, 13.5]
+      - [4.0, 12.0]
+      - [6.0, 11.0]
+      - [7.5, 10.0]
+  # Quarter-aft -- full rectangular section
+  - x_position: 22.5
+    waterline_offsets:
+      - [0.0, 13.5]
+      - [2.0, 13.5]
+      - [4.0, 13.5]
+      - [6.0, 13.5]
+      - [7.5, 13.5]
+  # Midship -- full rectangular section
+  - x_position: 45.0
+    waterline_offsets:
+      - [0.0, 13.5]
+      - [2.0, 13.5]
+      - [4.0, 13.5]
+      - [6.0, 13.5]
+      - [7.5, 13.5]
+  # Quarter-forward -- full rectangular section
+  - x_position: 67.5
+    waterline_offsets:
+      - [0.0, 13.5]
+      - [2.0, 13.5]
+      - [4.0, 13.5]
+      - [6.0, 13.5]
+      - [7.5, 13.5]
+  # FP -- raked bow: flat bottom but half-breadth narrows toward upper drafts
+  - x_position: 90.0
+    waterline_offsets:
+      - [0.0, 13.5]
+      - [2.0, 13.5]
+      - [4.0, 12.0]
+      - [6.0, 11.0]
+      - [7.5, 10.0]
+block_coefficient: 0.95
+keel_profile:
+  - [0.0, 0.0]
+  - [45.0, 0.0]
+  - [90.0, 0.0]

@@ -341,6 +341,15 @@ class IdealCardAnalysis(BaseModel):
     warning_message: str = ""
 
 
+class DiagnosticResult(BaseModel):
+    """Result from ML-based dynacard diagnostic classification."""
+    classification: str = "NORMAL"
+    confidence: float = 0.0
+    differential: List[Dict[str, Any]] = []
+    feature_importances: Optional[Dict[str, float]] = None
+    model_version: str = "1.0"
+
+
 class AnalysisResults(BaseModel):
     """Output results from the dynacard analysis."""
     ctx: Optional[DynacardAnalysisContext] = None
