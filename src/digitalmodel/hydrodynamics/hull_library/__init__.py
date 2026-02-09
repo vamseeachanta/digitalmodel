@@ -7,7 +7,8 @@ hull->size->diffraction->RAOs->accelerations in a queryable catalog.
 __version__ = "0.1.0"
 
 from .profile_schema import HullType, HullStation, HullProfile
-from .mesh_generator import MeshGeneratorConfig, HullMeshGenerator, coarsen_mesh
+from .mesh_generator import MeshGeneratorConfig, HullMeshGenerator
+from .coarsen_mesh import coarsen_mesh
 from .schematic_generator import SchematicGenerator
 from .catalog import (
     SeaStateDefinition,

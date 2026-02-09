@@ -324,17 +324,17 @@ class HullCatalog:
         #   direct_translation * w^2
         #   + cross-product terms from rotational DOFs * lever arm * w^2
         #
-        # Longitudinal (x): surge + pitch*dz + yaw*dy
-        # Lateral (y):      sway + roll*dz + yaw*dx
-        # Vertical (z):     heave + pitch*dx + roll*dy
+        # Longitudinal (x): surge + pitch*dz - yaw*dy
+        # Lateral (y):      sway - roll*dz + yaw*dx
+        # Vertical (z):     heave - pitch*dx + roll*dy
         #
         # All multiplied by w^2 to convert displacement to acceleration.
 
         omega_sq = omega**2
 
-        acc_rao_x = (surge_rao + pitch_rao * dz + yaw_rao * dy) * omega_sq
-        acc_rao_y = (sway_rao + roll_rao * dz + yaw_rao * dx) * omega_sq
-        acc_rao_z = (heave_rao + pitch_rao * dx + roll_rao * dy) * omega_sq
+        acc_rao_x = (surge_rao + pitch_rao * dz - yaw_rao * dy) * omega_sq
+        acc_rao_y = (sway_rao - roll_rao * dz + yaw_rao * dx) * omega_sq
+        acc_rao_z = (heave_rao - pitch_rao * dx + roll_rao * dy) * omega_sq
 
         # 5. Acceleration response spectra and significant values
         results: dict[str, float] = {}

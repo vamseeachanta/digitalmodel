@@ -552,7 +552,7 @@ class TestCoarsenMesh:
         return gen.generate(box, config)
 
     def test_coarsen_reduces_panel_count(self):
-        from digitalmodel.hydrodynamics.hull_library.mesh_generator import (
+        from digitalmodel.hydrodynamics.hull_library.coarsen_mesh import (
             coarsen_mesh,
         )
 
@@ -563,7 +563,7 @@ class TestCoarsenMesh:
 
     def test_coarsen_preserves_bounding_box(self):
         """Coarsened mesh should have similar bounding box."""
-        from digitalmodel.hydrodynamics.hull_library.mesh_generator import (
+        from digitalmodel.hydrodynamics.hull_library.coarsen_mesh import (
             coarsen_mesh,
         )
 
@@ -576,7 +576,7 @@ class TestCoarsenMesh:
         np.testing.assert_allclose(coarse_bb_max, fine_bb_max, atol=5.0)
 
     def test_coarsen_no_degenerate_panels(self):
-        from digitalmodel.hydrodynamics.hull_library.mesh_generator import (
+        from digitalmodel.hydrodynamics.hull_library.coarsen_mesh import (
             coarsen_mesh,
         )
 
@@ -585,7 +585,7 @@ class TestCoarsenMesh:
         assert np.all(coarse_mesh.panel_areas > 1e-10)
 
     def test_coarsen_preserves_quad_format(self):
-        from digitalmodel.hydrodynamics.hull_library.mesh_generator import (
+        from digitalmodel.hydrodynamics.hull_library.coarsen_mesh import (
             coarsen_mesh,
         )
 
@@ -603,6 +603,8 @@ class TestCoarsenMesh:
         from digitalmodel.hydrodynamics.hull_library.mesh_generator import (
             HullMeshGenerator,
             MeshGeneratorConfig,
+        )
+        from digitalmodel.hydrodynamics.hull_library.coarsen_mesh import (
             coarsen_mesh,
         )
 

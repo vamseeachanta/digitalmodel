@@ -162,6 +162,8 @@ class TestMeshPipelineIntegration:
         from digitalmodel.hydrodynamics.hull_library.mesh_generator import (
             HullMeshGenerator,
             MeshGeneratorConfig,
+        )
+        from digitalmodel.hydrodynamics.hull_library.coarsen_mesh import (
             coarsen_mesh,
         )
         from digitalmodel.hydrodynamics.diffraction.mesh_pipeline import MeshPipeline
