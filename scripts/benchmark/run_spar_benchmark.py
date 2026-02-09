@@ -43,7 +43,8 @@ from digitalmodel.hydrodynamics.diffraction.aqwa_runner import (
 )
 
 # --- Configuration ---
-ORCAWAVE_YML = Path("docs/modules/orcawave/spar_benchmark/spar_benchmark.yml")
+BENCHMARK_DIR = Path("docs/modules/orcawave/L04_spar_benchmark")
+ORCAWAVE_YML = BENCHMARK_DIR / "source_data" / "orcawave" / "spar_benchmark.yml"
 AQWA_DAT = Path("docs/modules/aqwa/examples/spar-example/simple.dat")
 AQWA_DIR = AQWA_DAT.parent  # AQWA runs from the .dat directory
 MESH_SRC = AQWA_DAT  # Same file (AQWA .dat contains geometry)
@@ -51,8 +52,8 @@ LIS_FILE = AQWA_DIR / "SIMPLE.LIS"
 VESSEL_NAME = "Spar_Benchmark"
 WATER_DEPTH = 200.0
 
-REVISION = "r1_spar_benchmark"
-OUTPUT_DIR = Path("benchmark_output/spar_benchmark") / REVISION
+# Output directory — canonical location in docs/modules/
+OUTPUT_DIR = BENCHMARK_DIR / "benchmark_results"
 
 
 def _build_solver_metadata() -> dict:
@@ -306,7 +307,7 @@ def main() -> int:
         },
         "previous_revision": None,
     }
-    meta_path = OUTPUT_DIR / "revision.json"
+    meta_path = BENCHMARK_DIR / "revision.json"
     with open(meta_path, "w") as f:
         json.dump(revision_meta, f, indent=2)
 

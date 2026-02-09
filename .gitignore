@@ -328,7 +328,7 @@ benchmarks/results/
 # Wind binary time series
 **/*.bts
 
-# Benchmark temp files
-benchmark_output/_temp_*
+# Benchmark scratch directory (canonical results live in docs/modules/)
+benchmark_output/
 # OrcaFlex simulation files (large binary)
 docs/modules/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/runs/*.sim

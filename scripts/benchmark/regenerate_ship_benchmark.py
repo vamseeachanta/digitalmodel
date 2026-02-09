@@ -31,15 +31,15 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_runner import (
 )
 
 # --- Configuration ---
+BENCHMARK_DIR = Path("docs/modules/orcawave/L03_ship_benchmark")
 SOURCE_DIR = Path("docs/modules/orcawave/L01_aqwa_benchmark")
 OWR_FILE = SOURCE_DIR / "orcawave_001_ship_raos_rev2_matched_500m.owr"
-LIS_FILE = SOURCE_DIR / "001_SHIP_RAOS_REV2.LIS"
+LIS_FILE = BENCHMARK_DIR / "source_data" / "aqwa" / "001_SHIP_RAOS_REV2.LIS"
 VESSEL_NAME = "Ship_001_RAOs"
 WATER_DEPTH = 500.0
 
-# Revision-tracked output directory
-REVISION = "r1_ship_benchmark"
-OUTPUT_DIR = Path("benchmark_output/ship_benchmark") / REVISION
+# Output directory — canonical location in docs/modules/
+OUTPUT_DIR = BENCHMARK_DIR / "benchmark_results"
 
 
 def _build_solver_metadata() -> dict:
@@ -191,7 +191,7 @@ def main() -> int:
         },
         "previous_revision": None,
     }
-    meta_path = OUTPUT_DIR / "revision.json"
+    meta_path = BENCHMARK_DIR / "revision.json"
     with open(meta_path, "w") as f:
         json.dump(revision_meta, f, indent=2)
 
