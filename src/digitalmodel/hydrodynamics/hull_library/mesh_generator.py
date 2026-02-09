@@ -35,7 +35,6 @@ class MeshGeneratorConfig(BaseModel):
     target_panels: int = Field(default=1000, gt=0)
     waterline_refinement: float = Field(default=2.0, gt=0)
     symmetry: bool = True
-    mesh_below_waterline_only: bool = True
     adaptive_density: bool = Field(
         default=False,
         description="Use curvature-adaptive panel distribution. "
@@ -124,6 +123,39 @@ class HullMeshGenerator:
     # Private helpers
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _interpolate_station_offsets(
+        station,
+        z_values: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
+        """Interpolate a station's half-breadth at the given keel-up z values.
+
+        Station waterline offsets use the keel-up convention (z=0 at keel).
+        The *z_values* passed here must also be in keel-up coordinates.
+
+        Args:
+            station: A ``HullStation`` with waterline offsets.
+            z_values: 1-D array of z positions in keel-up convention.
+
+        Returns:
+            Array of half-breadth values, same length as *z_values*.
+        """
+        offsets = sorted(station.waterline_offsets, key=lambda p: p[0])
+        z_keel = np.array([p[0] for p in offsets])
+        y_half = np.array([p[1] for p in offsets])
+
+        if len(z_keel) == 1:
+            return np.full(len(z_values), y_half[0], dtype=np.float64)
+
+        interp_fn = interp1d(
+            z_keel,
+            y_half,
+            kind="linear",
+            bounds_error=False,
+            fill_value=(y_half[0], y_half[-1]),
+        )
+        return interp_fn(z_values).astype(np.float64)
+
     def _compute_grid_resolution(
         self,
         profile: HullProfile,
@@ -183,22 +215,12 @@ class HullMeshGenerator:
         station_x = np.array([s.x_position for s in sorted_stations])
 
         # Evaluate each station's half-breadth at design draft (z_keel = draft)
+        z_at_draft = np.array([draft])
         station_y_at_draft = np.zeros(len(sorted_stations), dtype=np.float64)
         for si, station in enumerate(sorted_stations):
-            offsets = sorted(station.waterline_offsets, key=lambda p: p[0])
-            z_keel = np.array([p[0] for p in offsets])
-            y_half = np.array([p[1] for p in offsets])
-            if len(z_keel) == 1:
-                station_y_at_draft[si] = y_half[0]
-            else:
-                interp_z = interp1d(
-                    z_keel,
-                    y_half,
-                    kind="linear",
-                    bounds_error=False,
-                    fill_value=(y_half[0], y_half[-1]),
-                )
-                station_y_at_draft[si] = float(interp_z(draft))
+            station_y_at_draft[si] = float(
+                self._interpolate_station_offsets(station, z_at_draft)[0]
+            )
 
         # Interpolate half-breadth along x at design draft
         if len(station_x) == 1:
@@ -259,28 +281,18 @@ class HullMeshGenerator:
         n_z = len(z_values)
         y_grid = np.zeros((n_x, n_z), dtype=np.float64)
 
-        # For each station, build y(z) interpolator in marine convention
+        # Convert marine z values to keel-up convention for the shared helper
+        # marine: z=0 at waterline, z=-draft at keel
+        # keel-up: z=0 at keel, z=draft at waterline
+        # Conversion: z_keel_up = z_marine + draft
+        z_keel_up = z_values + draft
+
+        # For each station, interpolate half-breadth at the target z values
         station_y_at_z = np.zeros((len(sorted_stations), n_z), dtype=np.float64)
         for si, station in enumerate(sorted_stations):
-            offsets = sorted(station.waterline_offsets, key=lambda p: p[0])
-            # offsets are (z_keel_up, half_breadth)
-            # Convert z from keel-up to marine convention: z_marine = z_keel - draft
-            z_keel = np.array([p[0] for p in offsets])
-            y_half = np.array([p[1] for p in offsets])
-            z_marine = z_keel - draft
-
-            if len(z_keel) == 1:
-                # Single point: constant half-breadth
-                station_y_at_z[si, :] = y_half[0]
-            else:
-                interp_z = interp1d(
-                    z_marine,
-                    y_half,
-                    kind="linear",
-                    bounds_error=False,
-                    fill_value=(y_half[0], y_half[-1]),
-                )
-                station_y_at_z[si, :] = interp_z(z_values)
+            station_y_at_z[si, :] = self._interpolate_station_offsets(
+                station, z_keel_up
+            )
 
         # Interpolate along x for each z level
         for j in range(n_z):
@@ -292,7 +304,7 @@ class HullMeshGenerator:
                     station_y_at_z[:, j],
                     kind="linear",
                     bounds_error=False,
-                    fill_value=(station_y_at_z[0, j], station_y_at_z[-1, j]),
+                    fill_value=0.0,
                 )
                 y_grid[:, j] = interp_x(x_values)
 

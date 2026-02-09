@@ -9,12 +9,16 @@ rigid-body kinematics and spectral analysis.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Optional
 
 import numpy as np
+import yaml
 from pydantic import BaseModel, ConfigDict, Field
 from scipy.interpolate import interp1d
+
+logger = logging.getLogger(__name__)
 
 from digitalmodel.hydrodynamics.hull_library.mesh_generator import (
     HullMeshGenerator,
@@ -360,8 +364,10 @@ class HullCatalog:
             try:
                 profile = HullProfile.load_yaml(yaml_path)
                 self.register_hull(profile)
-            except Exception:
-                # Skip files that cannot be parsed
+            except (yaml.YAMLError, ValueError, KeyError) as exc:
+                logger.warning(
+                    "Skipping hull profile %s: %s", yaml_path.name, exc
+                )
                 continue
 
     def _generate_spectrum(

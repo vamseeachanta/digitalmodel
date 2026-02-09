@@ -68,38 +68,9 @@ class TestHullStation:
 class TestHullProfile:
     """Tests for HullProfile model."""
 
-    def _make_box_profile(self):
-        from digitalmodel.hydrodynamics.hull_library.profile_schema import (
-            HullProfile,
-            HullStation,
-            HullType,
-        )
-
-        stations = [
-            HullStation(
-                x_position=0.0,
-                waterline_offsets=[(0.0, 5.0), (4.0, 5.0)],
-            ),
-            HullStation(
-                x_position=50.0,
-                waterline_offsets=[(0.0, 5.0), (4.0, 5.0)],
-            ),
-        ]
-        return HullProfile(
-            name="test_box",
-            hull_type=HullType.BARGE,
-            stations=stations,
-            length_bp=50.0,
-            beam=10.0,
-            draft=4.0,
-            depth=6.0,
-            source="test",
-        )
-
-    def test_valid_profile(self):
-        profile = self._make_box_profile()
-        assert profile.name == "test_box"
-        assert profile.length_bp == 50.0
+    def test_valid_profile(self, box_profile):
+        assert box_profile.name == "unit_box"
+        assert box_profile.length_bp == 100.0
 
     def test_profile_requires_positive_length(self):
         from digitalmodel.hydrodynamics.hull_library.profile_schema import (
@@ -173,12 +144,11 @@ class TestHullProfile:
                 source="test",
             )
 
-    def test_optional_fields_default_none(self):
-        profile = self._make_box_profile()
-        assert profile.deck_profile is None
-        assert profile.keel_profile is None
-        assert profile.block_coefficient is None
-        assert profile.displacement is None
+    def test_optional_fields_default_none(self, box_profile):
+        assert box_profile.deck_profile is None
+        assert box_profile.keel_profile is None
+        assert box_profile.block_coefficient is None
+        assert box_profile.displacement is None
 
     def test_block_coefficient_range(self):
         from digitalmodel.hydrodynamics.hull_library.profile_schema import (
@@ -213,69 +183,38 @@ class TestHullProfile:
 class TestHullProfileYAML:
     """Tests for YAML serialization/deserialization."""
 
-    def _make_box_profile(self):
-        from digitalmodel.hydrodynamics.hull_library.profile_schema import (
-            HullProfile,
-            HullStation,
-            HullType,
-        )
-
-        stations = [
-            HullStation(
-                x_position=0.0,
-                waterline_offsets=[(0.0, 5.0), (4.0, 5.0)],
-            ),
-            HullStation(
-                x_position=50.0,
-                waterline_offsets=[(0.0, 5.0), (4.0, 5.0)],
-            ),
-        ]
-        return HullProfile(
-            name="test_box",
-            hull_type=HullType.BARGE,
-            stations=stations,
-            length_bp=50.0,
-            beam=10.0,
-            draft=4.0,
-            depth=6.0,
-            source="test",
-        )
-
-    def test_to_yaml_dict(self):
+    def test_to_yaml_dict(self, box_profile):
         """Profile can be serialized to a YAML-friendly dict."""
-        profile = self._make_box_profile()
-        d = profile.to_yaml_dict()
-        assert d["name"] == "test_box"
+        d = box_profile.to_yaml_dict()
+        assert d["name"] == "unit_box"
         assert d["hull_type"] == "barge"
-        assert len(d["stations"]) == 2
+        assert len(d["stations"]) == 3
 
-    def test_round_trip_yaml(self):
+    def test_round_trip_yaml(self, box_profile):
         """Profile survives YAML round-trip."""
         from digitalmodel.hydrodynamics.hull_library.profile_schema import (
             HullProfile,
         )
 
-        profile = self._make_box_profile()
-        yaml_str = yaml.dump(profile.to_yaml_dict(), default_flow_style=False)
+        yaml_str = yaml.dump(box_profile.to_yaml_dict(), default_flow_style=False)
         data = yaml.safe_load(yaml_str)
         loaded = HullProfile.from_yaml_dict(data)
-        assert loaded.name == profile.name
-        assert loaded.length_bp == profile.length_bp
-        assert len(loaded.stations) == len(profile.stations)
+        assert loaded.name == box_profile.name
+        assert loaded.length_bp == box_profile.length_bp
+        assert len(loaded.stations) == len(box_profile.stations)
 
-    def test_save_and_load_file(self):
+    def test_save_and_load_file(self, box_profile):
         """Profile saves to file and loads back."""
         from digitalmodel.hydrodynamics.hull_library.profile_schema import (
             HullProfile,
         )
 
-        profile = self._make_box_profile()
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "test.yaml"
-            profile.save_yaml(path)
+            box_profile.save_yaml(path)
             loaded = HullProfile.load_yaml(path)
-            assert loaded.name == profile.name
-            assert loaded.beam == profile.beam
+            assert loaded.name == box_profile.name
+            assert loaded.beam == box_profile.beam
 
     def test_load_nonexistent_file_raises(self):
         from digitalmodel.hydrodynamics.hull_library.profile_schema import (

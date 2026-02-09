@@ -46,8 +46,12 @@ class HullStation(BaseModel):
 
     Each station is defined by its x-position along the hull (measured from
     the aft perpendicular) and a list of waterline offsets. Each offset is a
-    (z, y) pair where z is the vertical draft coordinate and y is the
-    half-breadth at that draft.
+    (z, y) pair where:
+
+    - **z** is the vertical position measured from the keel upward
+      (keel-up convention: z=0 at keel, z=draft at the design waterline,
+      z=depth at the deck). Both z and y values must be non-negative.
+    - **y** is the half-breadth (distance from centreline) at that z.
     """
 
     x_position: float = Field(
@@ -56,18 +60,33 @@ class HullStation(BaseModel):
     )
     waterline_offsets: list[tuple[float, float]] = Field(
         ...,
-        description="List of (z, y) pairs: z = draft, y = half-breadth",
+        description=(
+            "List of (z, y) pairs: z = vertical position from keel "
+            "(keel-up, z=0 at keel), y = half-breadth"
+        ),
     )
 
     @field_validator("waterline_offsets")
     @classmethod
-    def validate_offsets_not_empty(
+    def validate_offsets(
         cls, v: list[tuple[float, float]]
     ) -> list[tuple[float, float]]:
+        """Validate waterline offsets are non-empty with non-negative values."""
         if len(v) == 0:
             raise ValueError(
                 "waterline_offsets must contain at least one (z, y) pair"
             )
+        for i, (z, y) in enumerate(v):
+            if z < 0:
+                raise ValueError(
+                    f"waterline_offsets[{i}]: z value must be non-negative "
+                    f"(keel-up convention, z=0 at keel), got z={z}"
+                )
+            if y < 0:
+                raise ValueError(
+                    f"waterline_offsets[{i}]: half-breadth y must be "
+                    f"non-negative, got y={y}"
+                )
         return v
 
 
@@ -148,6 +167,49 @@ class HullProfile(BaseModel):
                 f"block_coefficient must be in range (0, 1], got {v}"
             )
         return v
+
+    @model_validator(mode="after")
+    def validate_stations_within_dimensions(self) -> "HullProfile":
+        """Cross-validate station geometry against principal dimensions.
+
+        Checks (with tolerances to accommodate real hull data):
+        - Station x_positions are within [0, length_bp] (1% tolerance)
+        - Station half-breadths do not exceed beam/2 (5% tolerance)
+        - Station z values do not exceed depth (5% tolerance)
+        """
+        length_tol = 0.01 * self.length_bp
+        half_beam = self.beam / 2.0
+        beam_tol = 0.05 * half_beam
+        depth_tol = 0.05 * self.depth
+
+        for station in self.stations:
+            if station.x_position < -length_tol:
+                raise ValueError(
+                    f"Station x_position {station.x_position} is below "
+                    f"0 - 1% tolerance ({-length_tol:.3f})"
+                )
+            if station.x_position > self.length_bp + length_tol:
+                raise ValueError(
+                    f"Station x_position {station.x_position} exceeds "
+                    f"length_bp {self.length_bp} + 1% tolerance "
+                    f"({self.length_bp + length_tol:.3f})"
+                )
+            for z, y in station.waterline_offsets:
+                if y > half_beam + beam_tol:
+                    raise ValueError(
+                        f"Station at x={station.x_position}: "
+                        f"half-breadth {y} exceeds beam/2 "
+                        f"({half_beam}) + 5% tolerance "
+                        f"({half_beam + beam_tol:.3f})"
+                    )
+                if z > self.depth + depth_tol:
+                    raise ValueError(
+                        f"Station at x={station.x_position}: "
+                        f"z value {z} exceeds depth "
+                        f"({self.depth}) + 5% tolerance "
+                        f"({self.depth + depth_tol:.3f})"
+                    )
+        return self
 
     # ----- YAML serialization -----
 
