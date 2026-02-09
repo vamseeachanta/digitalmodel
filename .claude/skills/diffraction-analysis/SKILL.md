@@ -253,6 +253,34 @@ Freq1_rad/s,Freq2_rad/s,Heading_deg,Surge_Re,Surge_Im,...
 - Phase in reasonable range (-360° to 360°)
 - Physical trends (heave RAO → 1.0 at low frequency)
 
+## Standard Report Format
+
+All diffraction analysis reports MUST follow the **r4 benchmark report format** established in the barge benchmark (AQWA vs OrcaWave). This is the canonical template for all diffraction work going forward.
+
+### Required Report Structure (Single-Page HTML)
+1. **Header** — Vessel name, date, overall consensus badge
+2. **Input Comparison** — Solver-column table (geometry, mass, environment, damping)
+3. **Consensus Summary** — Per-DOF badges (FULL/SPLIT/NO_CONSENSUS)
+4. **Per-DOF Analysis** — 2-column grid: text/conclusions left (45%), Plotly plot right (55%)
+5. **Full Overlay Plots** — Combined amplitude/phase across all DOFs
+6. **Notes** — Auto-generated observations
+
+### Required Plot Conventions
+- **Vertical legends** on right side (`x=1.02, y=1.0, orientation="v"`)
+- **Heading-first trace ordering** (group solvers under each heading in legend)
+- **Significance filtering** — auto-omit headings where response < 1% of DOF peak
+- **Monospace fonts** for all numeric values (Cascadia Code / Consolas)
+
+### Required Table Conventions
+- Solver names as column headers, headings as rows
+- Alternating row colors, hover highlight, dark header theme
+- Section separator rows for grouping
+
+### Reference Implementation
+- Plotter: `src/digitalmodel/hydrodynamics/diffraction/benchmark_plotter.py`
+- Runner: `src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py`
+- Example output: `benchmark_output/barge_benchmark/r4_per_dof_report/`
+
 ## Best Practices
 
 1. **Always validate coefficients** before using in OrcaFlex
@@ -260,6 +288,7 @@ Freq1_rad/s,Freq2_rad/s,Heading_deg,Surge_Re,Surge_Im,...
 3. **Compare results** when both AQWA and OrcaWave are available
 4. **Use unified schema** for interoperability
 5. **Document water depth** and frequency range assumptions
+6. **Follow the r4 report format** for all diffraction analysis reports
 
 ## Related Skills
 
