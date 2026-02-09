@@ -122,6 +122,11 @@
             "type": "command",
             "statusMessage": "Session stopped - logs saved",
             "command": "bash -c 'LOG_DIR=\"${WORKSPACE_HUB:-/d/workspace-hub}/.claude/skills/session-logs\"; echo \"{\\\"event\\\":\\\"session_stop\\\",\\\"timestamp\\\":\\\"$(date -Iseconds)\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\"}\" >> \"$LOG_DIR/session_$(date +%Y%m%d).jsonl\" 2>/dev/null || true'"
+          },
+          {
+            "type": "command",
+            "statusMessage": "Reviewing session for skills & memory enhancement",
+            "command": "bash -c 'SCRIPT_DIR=\"$(cd \"$(dirname \"${BASH_SOURCE[0]:-$0}\")\" 2>/dev/null && pwd)\"; WS=\"${WORKSPACE_HUB:-}\"; [ -z \"$WS\" ] && WS=\"$(cd \"$(pwd)\" && while [ ! -d .claude/hooks ] && [ \"$(pwd)\" != / ]; do cd ..; done; pwd)\"; SCRIPT=\"$WS/.claude/hooks/session-review.sh\"; [ -f \"$SCRIPT\" ] && bash \"$SCRIPT\" 2>/dev/null || true'"
           }
         ]
       }
