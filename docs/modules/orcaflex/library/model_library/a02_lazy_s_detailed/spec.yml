@@ -21,6 +21,9 @@ environment:
   current:
     speed: 1
     direction: 270
+    profile:
+    - [0, 1.0]
+    - [100, 0.2]
   wind:
     speed: 0
     direction: 0

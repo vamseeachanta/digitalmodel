@@ -4,6 +4,11 @@ This builder handles generic (non-pipeline, non-riser) OrcaFlex models.
 It iterates all fields in the GenericModel spec and emits the corresponding
 OrcaFlex YAML sections, using typed fields for known properties and the
 properties dict for pass-through values.
+
+OrcaFlex loads YAML sections sequentially and validates references as it
+goes. The builder must therefore emit sections in dependency order so that
+definitions (LineTypes, ClumpTypes, StiffenerTypes, SupportTypes, etc.)
+precede objects that reference them (Lines, Shapes, etc.).
 """
 
 from __future__ import annotations
@@ -15,6 +20,7 @@ from ..schema.generic import (
     SINGLETON_SECTIONS,
     TYPED_FIELD_MAP,
     GenericObject,
+    GenericVariableData,
 )
 from .base import BaseBuilder
 from .registry import BuilderRegistry
@@ -31,6 +37,62 @@ _FIELD_TO_CONTEXT_KEY: dict[str, str] = {
     "shapes": "shape_names",
     "winches": "winch_names",
 }
+
+# OrcaFlex YAML section dependency order.  Sections appearing earlier in this
+# list are emitted first so that definitions are available before references.
+# Derived from monolithic model.SaveData() output order.
+_SECTION_ORDER: list[str] = [
+    "General",
+    "VariableData",
+    "ExpansionTables",
+    "LineTypes",
+    "VesselTypes",
+    "ClumpTypes",
+    "WingTypes",
+    "FlexJointTypes",
+    "DragChainTypes",
+    "StiffenerTypes",
+    "SupportTypes",
+    "MorisonElementTypes",
+    "Vessels",
+    "Lines",
+    "Shapes",
+    "6DBuoys",
+    "3DBuoys",
+    "Constraints",
+    "Links",
+    "Winches",
+    "FlexJoints",
+    "DragChains",
+    "Turbines",
+    "AttachedBuoys",
+    "PyModels",
+    "WakeModels",
+    "MultibodyGroups",
+    "BrowserGroups",
+    "SolidFrictionCoefficients",
+    "LineContactData",
+    "CodeChecks",
+    "Shear7Data",
+    "VIVAData",
+    "RayleighDampingCoefficients",
+]
+
+# OrcaFlex properties that must appear before other properties within an
+# object dict.  These "mode" properties change the available property set,
+# so they must be set first.  Order matters within this list too.
+_PRIORITY_KEYS: list[str] = [
+    "Name",
+    "Category",        # LineTypes: General vs Homogeneous pipe
+    "ShapeType",       # Shapes: Drawing, Elastic solid, etc.
+    "Shape",           # Shapes: Block, Cylinder, etc. (controls Size semantics)
+    "BuoyType",        # 6DBuoys: Spar buoy, Lumped buoy, etc.
+    "Connection",      # Various: affects available sub-properties
+    "LinkType",        # Links: Tether, Spring/damper, etc.
+    "Geometry",        # SupportTypes: U shaped, etc.
+    "WaveType",        # Environment wave trains
+    "DegreesOfFreedomInStatics",  # 6DBuoys: must precede stiffness props
+]
 
 
 @BuilderRegistry.register("20_generic_objects.yml", order=200)
@@ -66,6 +128,10 @@ class GenericModelBuilder(BaseBuilder):
 
         # Process list-based object sections
         for field_name, section_key in FIELD_TO_SECTION.items():
+            # VariableData needs special nested-by-category handling
+            if field_name == "variable_data_sources":
+                continue
+
             objects: list[GenericObject] = getattr(generic, field_name, [])
             if not objects:
                 continue
@@ -79,6 +145,13 @@ class GenericModelBuilder(BaseBuilder):
                 names = [obj.name for obj in objects]
                 self._register_entity(context_key, names)
 
+        # VariableData: group by data_type into nested sub-categories
+        # OrcaFlex expects: VariableData: { Dragcoefficient: [...], ... }
+        if generic.variable_data_sources:
+            var_data = self._build_variable_data(generic.variable_data_sources)
+            if var_data:
+                result["VariableData"] = var_data
+
         # Process singleton sections
         for section_key, field_name in SINGLETON_SECTIONS.items():
             singleton = getattr(generic, field_name, None)
@@ -91,7 +164,48 @@ class GenericModelBuilder(BaseBuilder):
         if generic.general_properties:
             result["General"] = dict(generic.general_properties)
 
-        return result
+        return self._order_sections(result)
+
+    @staticmethod
+    def _order_sections(result: dict[str, Any]) -> dict[str, Any]:
+        """Re-order result dict to match OrcaFlex section dependency order.
+
+        Sections listed in ``_SECTION_ORDER`` are emitted first (in that
+        order).  Any unlisted sections are appended at the end.
+        """
+        ordered: dict[str, Any] = {}
+        for key in _SECTION_ORDER:
+            if key in result:
+                ordered[key] = result[key]
+        # Append any sections not in the canonical order
+        for key, val in result.items():
+            if key not in ordered:
+                ordered[key] = val
+        return ordered
+
+    @staticmethod
+    def _build_variable_data(
+        sources: list[GenericVariableData],
+    ) -> dict[str, list[dict[str, Any]]]:
+        """Build VariableData section grouped by data_type sub-category.
+
+        OrcaFlex expects VariableData as a nested dict where keys are
+        category names (e.g. "Dragcoefficient", "Linetypediameter") and
+        values are lists of named entries.
+
+        Args:
+            sources: Flat list of GenericVariableData with data_type fields.
+
+        Returns:
+            Nested dict: {"Dragcoefficient": [{Name: ..., ...}], ...}
+        """
+        categories: dict[str, list[dict[str, Any]]] = {}
+        for src in sources:
+            category = src.data_type or "Unknown"
+            entry: dict[str, Any] = dict(src.properties)
+            entry["Name"] = src.name
+            categories.setdefault(category, []).append(entry)
+        return categories
 
     @staticmethod
     def _merge_object(obj: GenericObject) -> dict[str, Any]:
@@ -102,6 +216,7 @@ class GenericModelBuilder(BaseBuilder):
         2. Overlay typed fields using TYPED_FIELD_MAP for key translation.
         3. Only include typed fields whose value is not None.
         4. Typed fields take priority over properties on key conflict.
+        5. Re-order so priority keys (Name, Category) appear first.
 
         Args:
             obj: A GenericObject (or subclass) instance.
@@ -116,4 +231,10 @@ class GenericModelBuilder(BaseBuilder):
             if value is not None:
                 merged[ofx_key] = value
 
-        return merged
+        # Ensure priority keys come first (e.g. Category before MaterialDensity)
+        ordered: dict[str, Any] = {}
+        for key in _PRIORITY_KEYS:
+            if key in merged:
+                ordered[key] = merged.pop(key)
+        ordered.update(merged)
+        return ordered

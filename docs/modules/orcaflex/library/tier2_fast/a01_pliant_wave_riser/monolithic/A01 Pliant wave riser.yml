@@ -1,8 +1,8 @@
 ﻿%YAML 1.1
 # Type: Model
-# Program: OrcaFlex 11.5e
-# File: D:\github\digitalmodel\docs\modules\orcaflex\examples\raw\A01\A01 Pliant wave riser.yml
-# Created: 1:29 PM on 8/20/2025
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\examples\raw\A01\A01 Pliant wave riser.yml
+# Created: 2:37 PM on 2/9/2026
 # User: ansystech
 # Machine: ACMA-ANSYS05
 ---
@@ -40,6 +40,7 @@ General:
   # Default view parameters
   DefaultViewMode: Shaded
   DefaultShadedFillMode: Solid
+  DefaultShadedProjectionMode: Perspective
   DefaultViewSize: 245.10596026490066
   DefaultViewCentre: [-5.525391934428904, 6.4496168626526895, -49.412615613729]
   DefaultViewAzimuth: 270
@@ -113,7 +114,8 @@ Environment:
   # Seabed
   SeabedType: Flat
   SeabedOrigin: [0, 0]
-  WaterDepth: 100
+  SeabedOriginDepth: 100
+  NominalDepth: ~
   SeabedSlopeDirection: 0
   SeabedSlope: 0
   SeabedModel: Elastic

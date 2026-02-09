@@ -542,6 +542,139 @@ def _layout(xt, yt, title, h=320):
         f"title:{{text:'{title}',font:{{size:13,color:'#2c3e50'}}}}}}")
 
 # ---------------------------------------------------------------------------
+# 3-way aggregate summary
+# ---------------------------------------------------------------------------
+def _build_3way_summary(results: list[ModelBenchmark]) -> str:
+    """Build an aggregate 3-way comparison summary section."""
+    rows: list[str] = []
+    pass_b, warn_b, fail_b = 0, 0, 0
+    pass_c, warn_c, fail_c = 0, 0, 0
+    pass_bc, warn_bc, fail_bc = 0, 0, 0
+
+    for r in results:
+        has_spec = bool(r.spec_lines)
+        has_mod = bool(r.modular_lines)
+        if not has_spec and not has_mod:
+            continue
+
+        # Compute worst-case diff per path
+        worst_spec = 0.0
+        worst_mod = 0.0
+        worst_bc = 0.0
+        for ln_name, mono_lr in r.lines.items():
+            for mattr in ("end_a_tension_kN", "end_b_tension_kN",
+                          "max_tension_kN", "max_bending_kNm"):
+                mono_val = getattr(mono_lr, mattr)
+                if has_spec:
+                    spec_lr = r.spec_lines.get(ln_name)
+                    if spec_lr:
+                        worst_spec = max(worst_spec,
+                                         pct_diff(mono_val, getattr(spec_lr, mattr)))
+                if has_mod:
+                    mod_lr = r.modular_lines.get(ln_name)
+                    if mod_lr:
+                        worst_mod = max(worst_mod,
+                                        pct_diff(mono_val, getattr(mod_lr, mattr)))
+                if has_spec and has_mod:
+                    spec_lr = r.spec_lines.get(ln_name)
+                    mod_lr = r.modular_lines.get(ln_name)
+                    if spec_lr and mod_lr:
+                        worst_bc = max(worst_bc,
+                                       pct_diff(getattr(spec_lr, mattr),
+                                                getattr(mod_lr, mattr)))
+
+        # Classify each path
+        def _classify(val):
+            if val < 1: return "pass"
+            return "warn" if val < 5 else "fail"
+
+        cls_spec = _classify(worst_spec) if has_spec else None
+        cls_mod = _classify(worst_mod) if has_mod else None
+        cls_bc = _classify(worst_bc) if has_spec and has_mod else None
+
+        if cls_spec == "pass": pass_b += 1
+        elif cls_spec == "warn": warn_b += 1
+        elif cls_spec == "fail": fail_b += 1
+
+        if cls_mod == "pass": pass_c += 1
+        elif cls_mod == "warn": warn_c += 1
+        elif cls_mod == "fail": fail_c += 1
+
+        if cls_bc == "pass": pass_bc += 1
+        elif cls_bc == "warn": warn_bc += 1
+        elif cls_bc == "fail": fail_bc += 1
+
+        # Table row
+        def _fmt_cell(val, cls):
+            if cls is None:
+                return "<td>N/A</td>"
+            return (f'<td class="num diff-{_dcls(val)}">{val:.2f}%</td>')
+
+        def _status_badge(cls):
+            if cls is None:
+                return "<td>N/A</td>"
+            badge_map = {"pass": "pass", "warn": "warn", "fail": "fail"}
+            label_map = {"pass": "OK", "warn": "WARN", "fail": "FAIL"}
+            return (f'<td><span class="badge badge-{badge_map[cls]}">'
+                    f'{label_map[cls]}</span></td>')
+
+        overall = cls_spec or "pass"
+        if cls_mod and _dcls(worst_mod) != "ok":
+            overall = cls_mod
+        if cls_spec == "fail" or cls_mod == "fail":
+            overall = "fail"
+        elif cls_spec == "warn" or cls_mod == "warn":
+            overall = "warn" if overall != "fail" else overall
+
+        rows.append(
+            f"<tr><td>{r.name}</td>"
+            f"{_fmt_cell(worst_spec, cls_spec)}"
+            f"{_fmt_cell(worst_mod, cls_mod)}"
+            f"{_fmt_cell(worst_bc, cls_bc)}"
+            f"{_status_badge(overall)}</tr>"
+        )
+
+    if not rows:
+        return ""
+
+    # Summary cards
+    cards_html = '<div class="summary-grid">'
+    for label, p, w, f_, color in [
+        ("Spec-Driven", pass_b, warn_b, fail_b, "#3498db"),
+        ("Modular-Direct", pass_c, warn_c, fail_c, "#27ae60"),
+        ("B vs C", pass_bc, warn_bc, fail_bc, "#8e44ad"),
+    ]:
+        total = p + w + f_
+        if total == 0:
+            continue
+        cards_html += (
+            f'<div class="summary-card">'
+            f'<div class="label">{label}</div>'
+            f'<div class="value" style="color:{color}">'
+            f'<span class="diff-ok">{p}</span> / '
+            f'<span class="diff-warn">{w}</span> / '
+            f'<span class="diff-high">{f_}</span>'
+            f'</div>'
+            f'<div class="label">pass / warn / fail</div></div>'
+        )
+    cards_html += '</div>'
+
+    table_html = (
+        '<table><thead><tr>'
+        '<th>Model</th><th>Spec-Driven Worst %</th>'
+        '<th>Modular-Direct Worst %</th><th>B vs C %</th>'
+        '<th>Status</th></tr></thead><tbody>'
+        + "\n".join(rows)
+        + '</tbody></table>'
+    )
+
+    return (
+        '<div class="section"><h2>3-Way Comparison Summary</h2>'
+        + cards_html + table_html + '</div>'
+    )
+
+
+# ---------------------------------------------------------------------------
 # HTML report
 # ---------------------------------------------------------------------------
 def generate_report(results: list[ModelBenchmark]) -> None:
@@ -560,6 +693,8 @@ def generate_report(results: list[ModelBenchmark]) -> None:
     cards = [("Total Models",nt,"#2c3e50"),("Converged",np_,"#27ae60"),
             ("Failed",nf,"#e74c3c" if nf else "#27ae60"),("Mesh Sensitivity",nm,"#3498db")]
     if has_3way:
+        n_library = sum(1 for r in results if _find_library_spec(r.name) is not None)
+        cards.append(("Library Models", f"{n_library}/{nt}", "#8e44ad"))
         cards.append(("Spec-Driven OK", n_spec, "#3498db"))
         cards.append(("Modular-Direct OK", n_mod, "#27ae60"))
     for lb, val, col in cards:
@@ -604,6 +739,12 @@ def generate_report(results: list[ModelBenchmark]) -> None:
             f'<td class="num">{r.statics_time_s:.2f}</td><td class="num">{mt}</td>'
             f"{tw_cols}<td>{ms}</td><td>{sb}</td></tr>")
     bp.append("</tbody></table></div>")
+
+    # 3-way aggregate summary
+    if has_3way:
+        summary_3w = _build_3way_summary(results)
+        if summary_3w:
+            bp.append(summary_3w)
 
     # TOC
     conv = [r for r in results if r.statics_converged]
@@ -676,12 +817,15 @@ def generate_report(results: list[ModelBenchmark]) -> None:
             for ln_name in list(r.spec_lines.keys()) + list(r.modular_lines.keys()):
                 if ln_name not in all_3w_lines:
                     all_3w_lines.append(ln_name)
+            has_both = bool(r.spec_lines) and bool(r.modular_lines)
             bp.append("<table><thead><tr><th>Line</th><th>Metric</th>"
                 "<th>Monolithic</th>")
             if r.spec_lines:
                 bp.append("<th>Spec-Driven</th><th>Diff %</th>")
             if r.modular_lines:
                 bp.append("<th>Modular-Direct</th><th>Diff %</th>")
+            if has_both:
+                bp.append("<th>B vs C %</th>")
             bp.append("<th>Status</th></tr></thead><tbody>")
             metrics = [
                 ("End A Tension", "end_a_tension_kN"),
@@ -718,6 +862,14 @@ def generate_report(results: list[ModelBenchmark]) -> None:
                             row += f'<td class="num diff-{_dcls(dp_)}">{dp_:.2f}%</td>'
                         else:
                             row += "<td>--</td><td>--</td>"
+                    if has_both:
+                        if spec_lr and mod_lr:
+                            sv = getattr(spec_lr, mattr)
+                            mv = getattr(mod_lr, mattr)
+                            bc_ = round(pct_diff(sv, mv), 2)
+                            row += f'<td class="num diff-{_dcls(bc_)}">{bc_:.2f}%</td>'
+                        else:
+                            row += "<td>--</td>"
                     sc = _dcls(worst_pct)
                     badge = "pass" if sc == "ok" else ("warn" if sc == "warn" else "fail")
                     row += f'<td><span class="badge badge-{badge}">{"OK" if sc == "ok" else sc.upper()}</span></td>'
@@ -749,6 +901,26 @@ def generate_report(results: list[ModelBenchmark]) -> None:
                 title_esc = f"3-Way Tension -- {ln_name}".replace("'", "\\'")
                 sp.append(f"Plotly.newPlot('{twid}',[{','.join(trs)}],"
                     f"{_layout('Arc Length (m)','Effective Tension (kN)',title_esc,350)},"
+                    f"{{responsive:true}});")
+
+                # Bending moment overlay
+                bmid = f"bm_{ms}_{li}"
+                bp.append(f'<div class="chart-container" id="{bmid}"></div>')
+                bm_trs = []
+                bm_trs.append(_trace(mono_rd.arc_length, mono_rd.bending,
+                    f"Monolithic: {ln_name}", THREE_WAY_COLORS["monolithic"], 2,
+                    THREE_WAY_DASH["monolithic"]))
+                if spec_rd:
+                    bm_trs.append(_trace(spec_rd.arc_length, spec_rd.bending,
+                        f"Spec-Driven: {ln_name}", THREE_WAY_COLORS["spec_driven"], 2,
+                        THREE_WAY_DASH["spec_driven"]))
+                if mod_rd:
+                    bm_trs.append(_trace(mod_rd.arc_length, mod_rd.bending,
+                        f"Modular-Direct: {ln_name}", THREE_WAY_COLORS["modular"], 2,
+                        THREE_WAY_DASH["modular"]))
+                bm_title = f"3-Way Bend Moment -- {ln_name}".replace("'", "\\'")
+                sp.append(f"Plotly.newPlot('{bmid}',[{','.join(bm_trs)}],"
+                    f"{_layout('Arc Length (m)','Bend Moment (kN.m)',bm_title,350)},"
                     f"{{responsive:true}});")
 
         # 3-way error info (when paths failed)
@@ -864,6 +1036,8 @@ def main() -> None:
     parser.add_argument("--skip-mesh", action="store_true", help="Skip mesh sensitivity")
     parser.add_argument("--three-way", action="store_true",
         help="Enable 3-way comparison (monolithic vs spec-driven vs modular-direct)")
+    parser.add_argument("--library-only", action="store_true",
+        help="Only process models with a matching library spec.yml (implies --three-way)")
     args = parser.parse_args()
 
     if args.three_way and not _HAS_MODULAR:
@@ -878,6 +1052,10 @@ def main() -> None:
     t0 = time.time()
     dats = discover_models()
     if not dats: _flush("No .dat files found"); return
+    if args.library_only:
+        args.three_way = True
+        dats = [d for d in dats if _find_library_spec(d.stem) is not None]
+        _flush(f"Library-only mode: {len(dats)} models with matching spec.yml")
     if args.max_models > 0: dats = dats[:args.max_models]
     _flush(f"Found {len(dats)} models (max {MAX_FILE_SIZE // 1_000_000} MB)")
     _flush(f"Mesh sensitivity: {'OFF' if args.skip_mesh else f'ON (statics < {MESH_TIME_LIMIT:.0f}s)'}")

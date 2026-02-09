@@ -104,6 +104,7 @@ class GenericBuoy6D(GenericObject):
         buoy_type: Buoy type reference.
         connection: Connection string.
         initial_position: Initial position [x, y, z] (m).
+        mass: Buoy mass (te).
     """
 
     buoy_type: str | None = Field(default=None, description="Buoy type reference")
@@ -111,6 +112,7 @@ class GenericBuoy6D(GenericObject):
     initial_position: list[float] | None = Field(
         default=None, description="Initial position [x, y, z] (m)"
     )
+    mass: float | None = Field(default=None, description="Mass (te)")
 
 
 class GenericBuoy3D(GenericObject):
@@ -302,7 +304,7 @@ SECTION_REGISTRY: dict[str, tuple[type, bool]] = {
     "MorisonElementTypes": (GenericMorisonElementType, True),
     "Turbines": (GenericTurbine, True),
     "AttachedBuoys": (GenericAttachedBuoy, True),
-    "VariableDataSources": (GenericVariableData, True),
+    "VariableData": (GenericVariableData, True),
     "ExpansionTables": (GenericObject, True),
     "PyModels": (GenericObject, True),
     "WakeModels": (GenericObject, True),
@@ -342,7 +344,7 @@ FIELD_TO_SECTION: dict[str, str] = {
     "morison_element_types": "MorisonElementTypes",
     "turbines": "Turbines",
     "attached_buoys": "AttachedBuoys",
-    "variable_data_sources": "VariableDataSources",
+    "variable_data_sources": "VariableData",
     "expansion_tables": "ExpansionTables",
     "py_models": "PyModels",
     "wake_models": "WakeModels",

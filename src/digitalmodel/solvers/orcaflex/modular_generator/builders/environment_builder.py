@@ -130,10 +130,23 @@ class EnvironmentBuilder(BaseBuilder):
         Converts [[depth, factor], ...] to [[depth, factor, rotation], ...]
         where rotation is always 0 (no rotation from reference direction).
 
+        OrcFxAPI requires NumberOfCurrentLevels >= 2. When only one level is
+        provided, a second level is added at the seabed depth with the same
+        factor.
+
         Args:
             profile: Current profile as [[depth, factor], ...]
 
         Returns:
             Profile in OrcaFlex format [[depth, factor, rotation], ...]
         """
-        return [[p[0], p[1], 0] for p in profile]
+        result = [[p[0], p[1], 0] for p in profile]
+        if len(result) < 2:
+            seabed_depth = self.spec.environment.water.depth
+            last_factor = result[0][1] if result else 1.0
+            if result and result[0][0] >= seabed_depth:
+                # Single point at or below seabed — add surface point
+                result.insert(0, [0, last_factor, 0])
+            else:
+                result.append([seabed_depth, last_factor, 0])
+        return result

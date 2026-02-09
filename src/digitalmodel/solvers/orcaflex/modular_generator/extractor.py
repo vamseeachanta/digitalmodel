@@ -42,7 +42,7 @@ _SIMULATION_KEYS = {"StageDuration", "ImplicitConstantTimeStep"}
 # schema uses "VariableDataSources" as a flat list section. Map both forms
 # so the extractor can handle either key.
 _VARIABLE_DATA_YAML_KEY = "VariableData"
-_VARIABLE_DATA_SCHEMA_KEY = "VariableDataSources"
+_VARIABLE_DATA_SCHEMA_KEY = "VariableData"
 
 
 def _sanitize_name(raw: str) -> str:
