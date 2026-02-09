@@ -465,6 +465,83 @@ jobs:
 6. **Version Control**: Track software versions for reproducibility
 7. **Regular Validation**: Re-run benchmarks after software updates
 
+## Phase Convention Normalization (Critical)
+
+### Convention Differences
+- **AQWA**: ISO 6954 (phase lead) — `A * cos(wt + phi)`
+- **OrcaWave**: Orcina (phase lag) — `A * cos(wt - phi)`
+- **Conversion**: `phi_Orcina = -phi_ISO` (negate AQWA phases)
+
+### Implementation
+Normalize at extraction time, not at comparison time. Use Orcina (phase lag) as the canonical convention:
+```python
+# In AQWA extraction, after building each RAOComponent:
+component.phase = -component.phase  # ISO 6954 → Orcina lag
+results.phase_convention = "orcina_lag"
+```
+
+Track convention metadata on `DiffractionResults`:
+```python
+phase_convention: str = "unknown"  # "orcina_lag" or "iso_lead"
+unit_system: str = "SI"            # "SI" (kg,m,s) or "orcaflex" (te,m,s)
+```
+
+### M24/M42 Sway-Roll Coupling Sign Fix
+AQWA sway-roll coupling terms (M24/M42) have opposite sign to OrcaWave. Empirically determined from barge geometry; needs AQWA Theory Manual Section 4.3 confirmation.
+
+```python
+# Negate Sway-Roll coupling in AQWA extraction
+# Added mass AND damping matrices
+matrix[1, 3] = -matrix[1, 3]  # M24
+matrix[3, 1] = -matrix[3, 1]  # M42
+```
+
+**Scope**: Only M24/M42 — other roll-coupling terms (M14, M34, M46) are near-zero for typical barge geometries and cannot be verified.
+
+### Unit System
+- AQWA: SI (kg, m, s)
+- OrcaWave: OrcaFlex (te, m, s) — factor ~1000x
+- Pearson correlation is scale-invariant, so units don't affect correlation-based comparison
+- Track in metadata for absolute value comparisons
+
+## Report Design Patterns (r4)
+
+### Single-Page HTML Report Structure
+Sections flow top-to-bottom:
+1. **Header** — Vessel name, date, overall consensus badge
+2. **Input Comparison** — Solver-column table with geometry, mass, environment, damping
+3. **Consensus Summary** — Per-DOF badges (FULL/SPLIT/NO_CONSENSUS)
+4. **Per-DOF Analysis** — 2-column grid (text left 45%, plot right 55%)
+5. **Full Overlay Plots** — Combined amplitude/phase plots
+6. **Notes** — Auto-generated observations
+
+### Significance Filtering
+Auto-omit headings with negligible response (< 1% of DOF peak amplitude). Standard omissions for a barge:
+- Surge: omit 90deg (beam seas — no surge excitation)
+- Sway: omit 0deg, 180deg (head/following — no sway excitation)
+- Roll: omit 0deg, 180deg (head/following — no roll excitation)
+- Pitch: omit 90deg (beam seas — no pitch excitation)
+- Yaw: omit 0deg, 90deg, 180deg (symmetric body — minimal yaw)
+
+### Solver-Column Comparison Tables
+Group by heading (rows), solver names as column headers:
+```
+| Heading | AQWA Amplitude | OrcaWave Amplitude | AQWA Phase | OrcaWave Phase |
+|---------|----------------|---------------------|------------|----------------|
+| 0deg    | 1.234          | 1.231               | -89.5      | -90.1          |
+```
+
+### Revision Tracking
+Store outputs in `benchmark_output/barge_benchmark/<revision>/` with `revision.json`:
+```json
+{
+  "revision": "r4_per_dof_report",
+  "timestamp": "2026-02-08T20:09:49",
+  "previous_revision": "r3_input_comparison",
+  "source_files": { "orcawave": "...", "aqwa": "..." }
+}
+```
+
 ## Related Skills
 
 - [orcawave-analysis](../orcawave-analysis/SKILL.md) - OrcaWave analysis execution
