@@ -25,6 +25,7 @@ from .models import (
     RodBucklingAnalysis,
     IdealCardAnalysis,
     TorqueBalanceAnalysis,
+    DiagnosticResult,
     AnalysisResults,
 )
 
@@ -39,6 +40,8 @@ from .calculations import (
     run_p1_calculations,
 )
 from .diagnostics import PumpDiagnostics
+from .feature_extraction import FeatureExtractor
+from .card_generators import ALL_GENERATORS as CARD_GENERATORS
 from .solver import DynacardWorkflow, perform_well_troubleshooting
 from .gear_box_loading import (
     GearBoxLoadingCalculator,
@@ -155,8 +158,11 @@ __all__ = [
     "calculate_cpip",
     "calculate_theoretical_production",
     "run_p1_calculations",
+    "DiagnosticResult",
     # Diagnostics
     "PumpDiagnostics",
+    "FeatureExtractor",
+    "CARD_GENERATORS",
     # Workflow
     "DynacardWorkflow",
     "perform_well_troubleshooting",
