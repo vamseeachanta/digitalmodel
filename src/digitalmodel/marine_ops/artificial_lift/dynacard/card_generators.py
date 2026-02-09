@@ -1,7 +1,10 @@
 # ABOUTME: Synthetic dynacard generators for all 18 pump failure modes.
 # ABOUTME: Used to train the ML-based diagnostic classifier.
 
-from typing import Tuple, List, Callable
+from __future__ import annotations
+
+from typing import Callable
+
 import numpy as np
 
 from .models import CardData
@@ -15,7 +18,7 @@ def _base_card(
     high_load: float = 15000.0,
     low_load: float = 5000.0,
     noise_pct: float = 0.02,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Generate base rectangular pump card arrays with noise."""
     n = _NUM_POINTS
     half = n // 2
@@ -390,7 +393,7 @@ ALL_GENERATORS: dict[str, Callable] = {
 
 def generate_training_dataset(
     samples_per_mode: int = 200,
-) -> Tuple[List[CardData], List[str]]:
+) -> tuple[list[CardData], list[str]]:
     """Generate a full training dataset with all 18 failure modes.
 
     Args:

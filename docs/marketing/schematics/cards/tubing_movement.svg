@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="200" viewBox="0 0 280 200">
+<rect width="280" height="200" fill="#ffffff"/>
+<text x="140.0" y="18.0" font-family="sans-serif" font-size="13" font-weight="bold" fill="#2e7d32" text-anchor="middle">Tubing Movement</text>
+<text x="140.0" y="30.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#2e7d32" text-anchor="middle">[Tier 1 — Core Conditions]</text>
+<rect x="45.0" y="35.0" width="220.0" height="120.0" stroke="#666666" stroke-width="1.0" fill="none"/>
+<line x1="45.0" y1="35.0" x2="45.0" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="45.0" y="169.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">-9</text>
+<line x1="118.3" y1="35.0" x2="118.3" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="118.3" y="169.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">55</text>
+<line x1="191.7" y1="35.0" x2="191.7" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="191.7" y="169.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">118</text>
+<line x1="265.0" y1="35.0" x2="265.0" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="265.0" y="169.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">182</text>
+<line x1="45.0" y1="155.0" x2="265.0" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="41.0" y="158.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">4119</text>
+<line x1="45.0" y1="115.0" x2="265.0" y2="115.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="41.0" y="118.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">8742</text>
+<line x1="45.0" y1="75.0" x2="265.0" y2="75.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="41.0" y="78.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">13365</text>
+<line x1="45.0" y1="35.0" x2="265.0" y2="35.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="41.0" y="38.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">17988</text>
+<text x="155.0" y="181.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="middle">Position (in)</text>
+<text x="15.0" y="95.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="middle" transform="rotate(-90,15.0,95.0)">Load (lbs)</text>
+<polygon points="55.0,142.1 55.2,126.1 55.8,99.7 56.8,71.0 58.3,47.8 60.1,46.9 62.3,49.4 64.9,44.3 67.9,44.6 71.2,46.7 74.9,43.5 78.9,45.5 83.2,49.4 87.8,45.7 92.7,49.6 97.8,44.2 103.2,47.0 108.7,47.4 114.5,48.8 120.5,43.2 126.5,47.2 132.7,48.0 139.0,47.8 145.4,45.2 151.8,45.7 158.2,45.5 164.6,45.5 171.0,40.5 177.3,47.9 183.5,48.2 189.5,49.1 195.5,44.9 201.3,43.4 206.8,47.1 212.2,49.2 217.3,49.1 222.2,44.8 226.8,44.5 231.1,45.1 235.1,48.6 238.8,46.0 242.1,46.3 245.1,46.0 247.7,44.1 249.9,46.0 251.7,44.7 253.2,46.4 254.2,45.8 254.8,44.8 255.0,50.9 255.0,47.6 254.8,72.5 254.2,97.5 253.2,120.9 251.7,140.2 249.9,147.2 247.7,141.8 245.1,149.5 242.1,145.6 238.8,144.1 235.1,142.9 231.1,142.5 226.8,142.2 222.2,145.6 217.3,145.9 212.2,142.0 206.8,145.1 201.3,148.3 195.5,147.9 189.5,147.2 183.5,143.1 177.3,144.1 171.0,142.5 164.6,145.8 158.2,144.0 151.8,142.7 145.4,145.4 139.0,143.1 132.7,146.4 126.5,145.5 120.5,145.6 114.5,148.0 108.7,143.0 103.2,145.8 97.8,144.4 92.7,143.0 87.8,143.1 83.2,142.5 78.9,144.7 74.9,145.7 71.2,144.6 67.9,149.4 64.9,148.7 62.3,148.3 60.1,147.3 58.3,143.2 56.8,147.0 55.8,145.5 55.2,140.6 55.0,145.4" stroke="#1a3a5c" stroke-width="2.0" fill="none"/>
+</svg>

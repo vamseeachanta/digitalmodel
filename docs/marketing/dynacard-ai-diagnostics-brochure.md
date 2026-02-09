@@ -18,6 +18,12 @@ Production teams need a diagnostic system that is accurate, comprehensive, and d
 
 ---
 
+## The System
+
+![Rod Pump System — Surface Card to Downhole Diagnosis](schematics/rod_pump_system.svg)
+
+---
+
 ## The Solution
 
 **DynaCard AI Diagnostics** is a fully integrated sucker rod pump analysis module that combines physics-based downhole modeling with machine-learning diagnostics. It transforms raw surface dynamometer card data into engineering calculations, pump health assessments, and prioritized maintenance recommendations -- all in a single, offline-capable package.
@@ -128,6 +134,47 @@ DynaCard AI Diagnostics detects **18 distinct failure modes** organized into thr
 | **Bent Barrel** | Mechanical deformation of the pump barrel |
 | **Sand Abrasion** | Abrasive wear from produced sand in the pump assembly |
 | **Excessive Vibration** | Resonance or mechanical imbalance in the rod-pump system |
+
+---
+
+## Diagnostic Card Gallery
+
+Each failure mode produces a distinctive dynamometer card shape. The ML classifier recognizes these geometric signatures automatically. All 18 failure modes across three diagnostic tiers:
+
+![DynaCard AI — 18 Failure Mode Diagnostic Gallery](schematics/diagnostic_gallery.svg)
+
+---
+
+## Sample Diagnostic Output
+
+![ML Diagnostic: Fluid Pound — Annotated Card with Classification Results](schematics/diagnostic_fluid_pound.svg)
+
+A single API call returns the complete diagnostic result:
+
+```json
+{
+  "classification": "FLUID_POUND",
+  "confidence": 0.923,
+  "differential": [
+    {"mode": "FLUID_POUND",       "probability": 0.923},
+    {"mode": "GAS_INTERFERENCE",  "probability": 0.041},
+    {"mode": "DELAYED_TV_CLOSURE","probability": 0.018}
+  ],
+  "model_version": "1.0",
+  "engineering": {
+    "pump_fillage": 0.64,
+    "fluid_load_lbs": 8420,
+    "theoretical_production_bpd": 38.2,
+    "buckling_detected": false,
+    "torque_balance": {
+      "peak_torque_in_lbs": 412000,
+      "optimal_counterbalance_in_lbs": 9850
+    }
+  }
+}
+```
+
+**Reading this result**: The classifier is 92.3% confident this is **Fluid Pound** -- incomplete pump fillage (64%) causing mechanical shock. Gas Interference is a distant alternative at 4.1%. The engineering section provides the quantitative context: production rate, fillage, torque, and buckling status -- all from a single analysis call.
 
 ---
 
