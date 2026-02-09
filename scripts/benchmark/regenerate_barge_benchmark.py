@@ -15,6 +15,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import yaml
+
 REPO_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT))
@@ -33,12 +35,88 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_runner import (
 SOURCE_DIR = Path("benchmark_output/barge_final")
 OWR_FILE = SOURCE_DIR / "orcawave" / "Barge_Benchmark.owr"
 LIS_FILE = SOURCE_DIR / "aqwa" / "WRK-031_3WAY_BENCHMARK.LIS"
+SPEC_FILE = Path("specs/modules/benchmark/barge_benchmark_spec.yml")
 VESSEL_NAME = "Barge_Benchmark"
 WATER_DEPTH = 200.0
 
 # Revision-tracked output directory
-REVISION = "r2_phase_convention_fix"
+REVISION = "r4_per_dof_report"
 OUTPUT_DIR = Path("benchmark_output/barge_benchmark") / REVISION
+
+
+def _build_solver_metadata(spec: dict) -> dict:
+    """Build per-solver metadata dicts from the benchmark spec.
+
+    Both solvers share the same geometry/mass/environment inputs.
+    Solver-specific fields (mesh format, unit system) differ.
+    """
+    vessel = spec.get("vessel", {})
+    geom = vessel.get("geometry", {})
+    dims = geom.get("dimensions", {})
+    inertia = vessel.get("inertia", {})
+    env = spec.get("environment", {})
+    solver_opts = spec.get("solver_options", {})
+
+    length = dims.get("length", "")
+    beam = dims.get("beam", "")
+    draft = dims.get("draft", "")
+
+    mass_kg = inertia.get("mass", 0)
+    cog = inertia.get("centre_of_gravity", [])
+    rog = inertia.get("radii_of_gyration", [])
+
+    # Common metadata shared by both solvers (same physical inputs)
+    common = {
+        "length": f"{length}",
+        "beam": f"{beam}",
+        "draft": f"{draft}",
+        "body_dimensions": f"{length} x {beam} x {draft}",
+        "mass": f"{mass_kg:,.0f} kg",
+        "centre_of_gravity": f"({', '.join(str(v) for v in cog)})",
+        "radii_of_gyration": f"({', '.join(str(v) for v in rog)})",
+        "water_density": f"{env.get('water_density', '')}",
+        "gravity": f"{env.get('gravity', '')}",
+        "mesh_file": geom.get("mesh_file", ""),
+        "remove_irregular_frequencies": str(
+            solver_opts.get("remove_irregular_frequencies", "")
+        ),
+        "qtf_calculation": str(solver_opts.get("qtf_calculation", "")),
+        "precision": str(solver_opts.get("precision", "")),
+    }
+
+    # AQWA-specific
+    aqwa_meta = {
+        **common,
+        "mass": f"{mass_kg:,.0f} kg (SI)",
+        "mesh_format": "GDF (WAMIT)",
+        "calculation_method": "AQWA Diffraction/Radiation",
+        "raw_phase_convention": "ISO 6954 (phase lead)",
+        "panel_count": "912",
+        "mesh_symmetry": geom.get("symmetry", "none"),
+        "radiation_damping": "Computed (BEM)",
+        "viscous_damping": "None applied",
+        "damping_lid": "None",
+    }
+
+    # OrcaWave-specific
+    mass_te = mass_kg / 1000.0
+    orcawave_meta = {
+        **common,
+        "mass": f"{mass_te:,.1f} te (OrcaFlex units)",
+        "mesh_format": "WAMIT GDF",
+        "calculation_method": "Potential + source formulations",
+        "raw_phase_convention": "Orcina (phase lag)",
+        "panel_count": "912",
+        "mesh_symmetry": "None",
+        "radiation_damping": "Computed (BEM)",
+        "viscous_damping": "None applied",
+        "damping_lid": "None",
+    }
+
+    return {
+        "AQWA": aqwa_meta,
+        "OrcaWave": orcawave_meta,
+    }
 
 
 def main() -> int:
@@ -50,10 +128,16 @@ def main() -> int:
     print(f"{'#'*60}")
 
     # Validate source files exist
-    for f in (OWR_FILE, LIS_FILE):
+    for f in (OWR_FILE, LIS_FILE, SPEC_FILE):
         if not f.exists():
             print(f"[ERROR] Source file not found: {f}")
             return 1
+
+    # --- Load spec for metadata ---
+    with open(SPEC_FILE) as f:
+        spec = yaml.safe_load(f)
+    solver_metadata = _build_solver_metadata(spec)
+    print(f"  Spec loaded: {SPEC_FILE}")
 
     # --- Extract with corrected pipeline ---
     print("\n[1/4] Extracting OrcaWave results...")
@@ -94,7 +178,7 @@ def main() -> int:
         x_axis="period",
     )
     runner = BenchmarkRunner(config)
-    result = runner.run_from_results(solver_results)
+    result = runner.run_from_results(solver_results, solver_metadata=solver_metadata)
 
     if not result.success:
         print(f"[ERROR] Benchmark failed: {result.error_message}")
@@ -105,21 +189,26 @@ def main() -> int:
         "revision": REVISION,
         "timestamp": datetime.now().isoformat(),
         "description": (
-            "Phase convention normalization (ISO 6954 lead -> Orcina lag) "
-            "and M24/M42 sway-roll coupling sign fix applied at extraction time."
+            "r4: Single-page report with per-DOF two-column layout "
+            "(text/conclusions left, plot right). Individual legends per "
+            "plot. Solver-column comparison tables. Alternating row colors. "
+            "All fixes from r2/r3 carried forward."
         ),
         "changes": [
-            "RAO phases negated: phi_Orcina = -phi_ISO (all 6 DOFs)",
-            "Added mass M24/M42 negated to match OrcaWave sign convention",
-            "Damping M24/M42 negated to match OrcaWave sign convention",
-            "phase_convention and unit_system metadata set on DiffractionResults",
-            "Input comparison table added to HTML report",
+            "Per-DOF sections: text left, inline Plotly plot right",
+            "Individual legend per DOF plot",
+            "Solver-column comparison tables (headings as rows)",
+            "Alternating row colors, hover highlight, dark header",
+            "Consensus badges with color coding",
+            "Auto-generated observations per DOF",
+            "Carried forward: r2 phase/M24 fix, r3 input comparison",
         ],
         "source_files": {
             "orcawave": str(OWR_FILE),
             "aqwa": str(LIS_FILE),
+            "spec": str(SPEC_FILE),
         },
-        "previous_revision": "r1 (barge_final, 2026-02-05, pre-normalization)",
+        "previous_revision": "r3_input_comparison",
     }
     meta_path = OUTPUT_DIR / "revision.json"
     with open(meta_path, "w") as f:
