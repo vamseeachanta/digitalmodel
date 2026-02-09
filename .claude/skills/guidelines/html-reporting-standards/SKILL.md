@@ -205,6 +205,85 @@ reports/*.html
 !reports/index.html
 ```
 
+## Engineering Report CSS Patterns
+
+### Table Formatting
+```css
+/* Alternating row colors */
+tbody tr:nth-child(even) { background: #f8f9fa; }
+tbody tr:nth-child(odd) { background: #fff; }
+tbody tr:hover { background: #ebf5fb; }
+
+/* Dark header theme */
+th {
+    background: #34495e;
+    color: #fff;
+    padding: 0.5em 0.75em;
+    text-align: left;
+    font-weight: 600;
+}
+
+/* Section separator rows within tables */
+.section-row td {
+    background: #2c3e50 !important;
+    color: #fff;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+/* Monospace for numeric values */
+.solver-table td {
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', monospace;
+    font-size: 0.85em;
+    padding: 0.25em 0.4em;
+}
+```
+
+### Two-Column Layout (Text + Plot)
+For per-DOF or per-metric sections with explanatory text alongside interactive plots:
+```css
+.dof-grid {
+    display: grid;
+    grid-template-columns: 45% 55%;
+    gap: 1em;
+    align-items: start;
+}
+```
+
+### Callout Boxes
+```css
+/* Skipped/filtered items note */
+.skipped-note {
+    background: #fef9e7;
+    border-left: 3px solid #f0c674;
+    padding: 0.5em 1em;
+    font-size: 0.9em;
+    margin: 0.5em 0;
+}
+
+/* Card sections */
+.section-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 1.5em;
+    margin-bottom: 1.5em;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+```
+
+### Multi-Plot Single-Page HTML
+Load Plotly CDN once in `<head>`, use `include_plotlyjs=False` per inline plot:
+```html
+<head>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+```
+```python
+# Each plot div (avoids loading plotly.js N times):
+plot_html = fig.to_html(full_html=False, include_plotlyjs=False)
+```
+
 ## Validation Checklist
 
 - [ ] All plots are interactive (no static images)
@@ -213,10 +292,13 @@ reports/*.html
 - [ ] Report is responsive (tested mobile/desktop)
 - [ ] Hover tooltips show data values
 - [ ] Zoom/pan functionality works
-- [ ] Legend is interactive
+- [ ] Legend is interactive (vertical right-side preferred)
 - [ ] Export options available
 - [ ] Report loads in <3 seconds
 - [ ] Works offline (embedded data or CDN fallback)
+- [ ] Monospace font for numeric table values
+- [ ] Alternating row colors and hover highlight on tables
+- [ ] Insignificant data filtered from plots (threshold-based)
 
 ## Full Reference
 

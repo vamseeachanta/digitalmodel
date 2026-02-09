@@ -25,6 +25,7 @@ from .riser_clumptype_builder import RiserClumpTypeBuilder
 from .riser_linetype_builder import RiserLineTypeBuilder
 from .riser_vessel_builder import RiserVesselBuilder
 from .riser_lines_builder import RiserLinesBuilder
+from .riser_links_builder import RiserLinksBuilder
 
 __all__ = [
     'BaseBuilder',
@@ -37,5 +38,5 @@ __all__ = [
     'VesselTypeBuilder', 'VesselBuilder', 'WinchBuilder',
     # Riser builders
     'RiserClumpTypeBuilder', 'RiserLineTypeBuilder',
-    'RiserVesselBuilder', 'RiserLinesBuilder',
+    'RiserVesselBuilder', 'RiserLinesBuilder', 'RiserLinksBuilder',
 ]

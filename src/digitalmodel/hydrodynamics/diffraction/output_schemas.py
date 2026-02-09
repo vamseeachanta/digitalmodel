@@ -297,6 +297,8 @@ class DiffractionResults:
     analysis_date: Optional[str] = None
     source_files: Optional[List[str]] = None
     notes: Optional[str] = None
+    phase_convention: str = "unknown"  # "orcina_lag" or "iso_lead"
+    unit_system: str = "SI"            # "SI" (kg,m,s) or "orcaflex" (te,m,s)
 
     def to_dict(self) -> Dict:
         """Convert complete results to dictionary"""
@@ -308,6 +310,8 @@ class DiffractionResults:
             'analysis_date': self.analysis_date,
             'source_files': self.source_files,
             'notes': self.notes,
+            'phase_convention': self.phase_convention,
+            'unit_system': self.unit_system,
             'raos': self.raos.to_dict(),
             'added_mass': self.added_mass.to_dict(),
             'damping': self.damping.to_dict()

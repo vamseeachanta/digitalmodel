@@ -17,10 +17,13 @@ from digitalmodel.solvers.orcaflex.modular_generator.schema import (
     RiserVessel,
     RiserLineType,
     RiserLine,
+    RiserLink,
     RiserSection,
     EndConnection,
     ConnectionType,
     RiserConfiguration,
+    LinkConnection,
+    LinkType,
 )
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 
@@ -28,6 +31,7 @@ from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerato
 # Test data paths
 RISER_LIBRARY = Path("docs/modules/orcaflex/library/tier2_fast")
 A01_CATENARY_SPEC = RISER_LIBRARY / "a01_catenary_riser" / "spec.yml"
+A01_PLIANT_SPEC = RISER_LIBRARY / "a01_pliant_wave_riser" / "spec.yml"
 
 
 class TestRiserSchemaValidation:
@@ -276,6 +280,143 @@ class TestRiserModularGeneration:
         assert line["LayAzimuth"] == 180
 
 
+class TestRiserLinkSchema:
+    """Tests for RiserLink Pydantic schema validation."""
+
+    def test_minimal_riser_link(self):
+        """Test minimal valid RiserLink creation."""
+        link = RiserLink(
+            name="Test Tether",
+            link_type=LinkType.TETHER,
+            connections=[
+                LinkConnection(object_name="Anchored", x=0, y=0, z=1),
+                LinkConnection(object_name="TestLine", x=0, y=0, z=100, z_relative_to="End A"),
+            ],
+            unstretched_length=10.0,
+            stiffness=100000,
+        )
+        assert link.name == "Test Tether"
+        assert link.link_type == LinkType.TETHER
+        assert len(link.connections) == 2
+        assert link.connections[1].z_relative_to == "End A"
+
+    def test_link_requires_two_connections(self):
+        """Test that exactly 2 connections are required."""
+        with pytest.raises(ValueError):
+            RiserLink(
+                name="Bad Link",
+                connections=[
+                    LinkConnection(object_name="Anchored", x=0, y=0, z=0),
+                ],
+                unstretched_length=10.0,
+                stiffness=100000,
+            )
+
+    def test_link_stiffness_must_be_positive(self):
+        """Test that stiffness must be > 0."""
+        with pytest.raises(ValueError):
+            RiserLink(
+                name="Bad Link",
+                connections=[
+                    LinkConnection(object_name="Anchored", x=0, y=0, z=0),
+                    LinkConnection(object_name="Line1", x=0, y=0, z=50),
+                ],
+                unstretched_length=10.0,
+                stiffness=-1,
+            )
+
+    def test_link_spring_damper_type(self):
+        """Test spring/damper link type."""
+        link = RiserLink(
+            name="Spring Link",
+            link_type=LinkType.SPRING_DAMPER,
+            connections=[
+                LinkConnection(object_name="Anchored", x=0, y=0, z=0),
+                LinkConnection(object_name="Line1", x=0, y=0, z=50),
+            ],
+            unstretched_length=5.0,
+            stiffness=50000,
+        )
+        assert link.link_type == LinkType.SPRING_DAMPER
+
+
+class TestRiserLinkBuilderGeneration:
+    """Tests for riser link builder YAML generation."""
+
+    @pytest.fixture
+    def pliant_spec(self):
+        """Load and validate A01 pliant wave riser spec."""
+        if not A01_PLIANT_SPEC.exists():
+            pytest.skip("A01 pliant wave riser spec not found")
+
+        with open(A01_PLIANT_SPEC) as f:
+            data = yaml.safe_load(f)
+        return ProjectInputSpec(**data)
+
+    def test_pliant_spec_has_links(self, pliant_spec):
+        """Test that pliant wave spec has link definitions."""
+        assert pliant_spec.riser is not None
+        assert len(pliant_spec.riser.links) == 1
+        assert pliant_spec.riser.links[0].name == "Tether Pliant Simple"
+        assert pliant_spec.riser.links[0].stiffness == 367000
+
+    def test_pliant_generates_link_file(self, pliant_spec, tmp_path):
+        """Test that pliant wave model generates 08_riser_links.yml."""
+        generator = ModularModelGenerator.from_spec(pliant_spec)
+        generator.generate(tmp_path)
+
+        link_file = tmp_path / "includes" / "08_riser_links.yml"
+        assert link_file.exists()
+
+        with open(link_file) as f:
+            data = yaml.safe_load(f)
+
+        assert "Links" in data
+        links = data["Links"]
+        assert len(links) == 1
+        assert links[0]["Name"] == "Tether Pliant Simple"
+        assert links[0]["LinkType"] == "Tether"
+        assert links[0]["UnstretchedLength"] == 9.9
+        assert links[0]["Stiffness"] == 367000
+
+    def test_pliant_link_connections_format(self, pliant_spec, tmp_path):
+        """Test that link connections match OrcaFlex multi-column format."""
+        generator = ModularModelGenerator.from_spec(pliant_spec)
+        generator.generate(tmp_path)
+
+        link_file = tmp_path / "includes" / "08_riser_links.yml"
+        with open(link_file) as f:
+            data = yaml.safe_load(f)
+
+        link = data["Links"][0]
+        conn_key = "Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo"
+        assert conn_key in link
+
+        connections = link[conn_key]
+        assert len(connections) == 2
+        # First connection: Anchored at seabed
+        assert connections[0][0] == "Anchored"
+        assert connections[0][1] == -116
+        # Second connection: on the riser line
+        assert connections[1][0] == "10in Pliant Simple"
+        assert connections[1][4] == "End A"
+
+    def test_catenary_has_no_link_file(self, tmp_path):
+        """Test that catenary (no links) does not generate link file."""
+        if not A01_CATENARY_SPEC.exists():
+            pytest.skip("A01 catenary riser spec not found")
+
+        with open(A01_CATENARY_SPEC) as f:
+            data = yaml.safe_load(f)
+        spec = ProjectInputSpec(**data)
+
+        generator = ModularModelGenerator.from_spec(spec)
+        generator.generate(tmp_path)
+
+        link_file = tmp_path / "includes" / "08_riser_links.yml"
+        assert not link_file.exists()
+
+
 # OrcFxAPI integration test (skipped if not available)
 try:
     import OrcFxAPI
@@ -316,3 +457,47 @@ class TestRiserOrcaFlexLoad:
         line = model["Catenary Hose"]
         assert line.Name == "Catenary Hose"
         assert line.typeName == "Line"
+
+
+@pytest.mark.skipif(not ORCAFLEX_AVAILABLE, reason="OrcFxAPI not available")
+class TestPliantWaveOrcaFlexConvergence:
+    """Tests for pliant wave riser with tether link in OrcFxAPI."""
+
+    @pytest.fixture
+    def pliant_spec(self):
+        """Load and validate A01 pliant wave riser spec."""
+        if not A01_PLIANT_SPEC.exists():
+            pytest.skip("A01 pliant wave riser spec not found")
+
+        with open(A01_PLIANT_SPEC) as f:
+            data = yaml.safe_load(f)
+        return ProjectInputSpec(**data)
+
+    def test_pliant_with_tether_loads_in_orcaflex(self, pliant_spec, tmp_path):
+        """Test that pliant wave riser with tether loads in OrcFxAPI."""
+        generator = ModularModelGenerator.from_spec(pliant_spec)
+        generator.generate(tmp_path)
+
+        master = tmp_path / "master.yml"
+        model = OrcFxAPI.Model()
+        model.LoadData(str(master))
+
+        # Verify tether link exists
+        tether = model["Tether Pliant Simple"]
+        assert tether.Name == "Tether Pliant Simple"
+        assert tether.typeName == "Link"
+
+    def test_pliant_with_tether_statics_converge(self, pliant_spec, tmp_path):
+        """Test that pliant wave riser statics converge with tether."""
+        generator = ModularModelGenerator.from_spec(pliant_spec)
+        generator.generate(tmp_path)
+
+        master = tmp_path / "master.yml"
+        model = OrcFxAPI.Model()
+        model.LoadData(str(master))
+
+        model.CalculateStatics()
+
+        line = model["10in Pliant Simple"]
+        end_a_tension = line.StaticResult("Effective Tension", OrcFxAPI.oeEndA)
+        assert end_a_tension > 0, "End A tension should be positive after statics"

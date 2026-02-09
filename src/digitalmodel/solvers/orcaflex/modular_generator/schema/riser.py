@@ -238,6 +238,61 @@ class ClumpAttachments(BaseModel):
         return self
 
 
+class LinkType(str, Enum):
+    """OrcaFlex Link types."""
+
+    TETHER = "tether"
+    SPRING_DAMPER = "spring_damper"
+
+
+class LinkConnection(BaseModel):
+    """Connection point for an OrcaFlex Link.
+
+    Each Link has exactly 2 connections. A connection references either
+    an OrcaFlex object (vessel, line, 6D buoy) or "Anchored" for a
+    fixed seabed point.
+
+    Attributes:
+        object_name: Name of connected object, or "Anchored" for seabed.
+        x: X coordinate at connection (m).
+        y: Y coordinate at connection (m).
+        z: Z coordinate at connection (m or arc length).
+        z_relative_to: Reference for z (e.g. "End A"). Required for lines.
+    """
+
+    object_name: str = Field(..., min_length=1, description="Connected object or 'Anchored'")
+    x: float = Field(..., description="X position (m)")
+    y: float = Field(..., description="Y position (m)")
+    z: float = Field(..., description="Z position (m or arc length)")
+    z_relative_to: str | None = Field(default=None, description="Z reference (e.g. 'End A')")
+
+
+class RiserLink(BaseModel):
+    """OrcaFlex Link definition (tether or spring/damper).
+
+    Links connect two points in the model with a specified stiffness
+    and unstretched length. Tethers resist tension only; spring/dampers
+    can resist both tension and compression.
+
+    Attributes:
+        name: Unique link name for OrcaFlex.
+        link_type: Type of link (tether or spring_damper).
+        connections: Exactly 2 connection points.
+        unstretched_length: Unstretched length (m).
+        stiffness: Axial stiffness (kN).
+        release_stage: Optional release stage number.
+    """
+
+    name: str = Field(..., min_length=1, description="Link name")
+    link_type: LinkType = Field(default=LinkType.TETHER, description="Link type")
+    connections: list[LinkConnection] = Field(
+        ..., min_length=2, max_length=2, description="Exactly 2 connection points"
+    )
+    unstretched_length: float = Field(..., gt=0, description="Unstretched length (m)")
+    stiffness: float = Field(..., gt=0, description="Axial stiffness (kN)")
+    release_stage: int | None = Field(default=None, ge=1, description="Release stage")
+
+
 class RiserVessel(BaseModel):
     """
     Vessel definition for riser top connection.
@@ -326,6 +381,7 @@ class Riser(BaseModel):
     vessel: RiserVessel = Field(..., description="Vessel for top connection")
     line_types: list[RiserLineType] = Field(..., min_length=1, description="Line types")
     clump_types: list[ClumpType] = Field(default_factory=list, description="Clump types")
+    links: list[RiserLink] = Field(default_factory=list, description="Link/tether definitions")
     lines: list[RiserLine] = Field(..., min_length=1, description="Riser lines")
 
     @model_validator(mode="after")
@@ -370,5 +426,19 @@ class Riser(BaseModel):
                     raise ValueError(
                         f"Line '{line.name}' end_b references vessel '{line.end_b.name}' "
                         f"but defined vessel is '{vessel_name}'"
+                    )
+        return self
+
+    @model_validator(mode="after")
+    def validate_link_references(self) -> "Riser":
+        """Validate link connection object names reference existing entities."""
+        valid_names = {"Anchored", self.vessel.name}
+        valid_names.update(line.name for line in self.lines)
+        for link in self.links:
+            for conn in link.connections:
+                if conn.object_name not in valid_names:
+                    raise ValueError(
+                        f"Link '{link.name}' references unknown object "
+                        f"'{conn.object_name}'. Available: {valid_names}"
                     )
         return self
