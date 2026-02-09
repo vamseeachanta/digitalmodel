@@ -354,8 +354,10 @@ class BenchmarkRunner:
             f"<li>{note}</li>" for note in report.notes
         )
 
-        # Build input comparison and per-DOF sections
+        # Build input comparison, input files, mesh schematic, per-DOF
         input_comparison_html = ""
+        input_files_html = ""
+        mesh_schematic_html = ""
         dof_sections_html = ""
         if solver_results:
             plotter = BenchmarkPlotter(
@@ -365,6 +367,8 @@ class BenchmarkRunner:
                 solver_metadata=solver_metadata,
             )
             input_comparison_html = plotter.build_input_comparison_html()
+            input_files_html = plotter.build_input_files_html()
+            mesh_schematic_html = plotter.build_mesh_schematic_html()
             dof_sections_html = plotter.build_dof_report_sections(
                 report,
                 headings=self.config.headings,
@@ -425,6 +429,48 @@ class BenchmarkRunner:
     background: #2c3e50 !important; color: #fff;
     font-weight: 700; font-size: 0.8em; text-transform: uppercase;
     letter-spacing: 0.5px; padding: 0.5em 0.7em;
+  }}
+
+  /* Input file viewer */
+  .file-viewer {{ margin-bottom: 1.5em; }}
+  .file-viewer-header {{
+    display: flex; justify-content: space-between; align-items: center;
+    background: #34495e; color: #fff; padding: 0.5em 1em;
+    border-radius: 4px 4px 0 0; font-size: 0.85em;
+  }}
+  .file-viewer-header .file-path {{
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.9em; word-break: break-all;
+  }}
+  .file-viewer-header .solver-label {{
+    font-weight: 700; margin-right: 0.8em; white-space: nowrap;
+  }}
+  .file-viewer-header button {{
+    background: #3498db; color: #fff; border: none; padding: 4px 12px;
+    border-radius: 3px; cursor: pointer; font-size: 0.85em;
+    white-space: nowrap;
+  }}
+  .file-viewer-header button:hover {{ background: #2980b9; }}
+  .file-content {{
+    max-height: 400px; overflow-y: auto; overflow-x: auto;
+    border: 1px solid #ddd; border-top: none;
+    border-radius: 0 0 4px 4px; background: #fafafa; margin: 0;
+  }}
+  .file-content pre {{
+    margin: 0; padding: 0.8em 1em; font-size: 12px; line-height: 1.5;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    counter-reset: line;
+  }}
+  .file-content pre .line {{
+    display: block;
+  }}
+  .file-content pre .line::before {{
+    counter-increment: line;
+    content: counter(line);
+    display: inline-block; width: 3.5em; text-align: right;
+    margin-right: 1em; color: #999; font-size: 0.85em;
+    border-right: 1px solid #ddd; padding-right: 0.5em;
+    -webkit-user-select: none; user-select: none;
   }}
 
   /* DOF sections: 2-column grid */
@@ -511,6 +557,12 @@ class BenchmarkRunner:
   <div class="section">
     {input_comparison_html}
   </div>
+
+  <!-- Section 2.1: Input Files -->
+  {f'<div class="section">{input_files_html}</div>' if input_files_html else ''}
+
+  <!-- Section 2.5: Mesh Schematic -->
+  {f'<div class="section">{mesh_schematic_html}</div>' if mesh_schematic_html else ''}
 
   <!-- Section 3: Consensus Summary -->
   <div class="section">

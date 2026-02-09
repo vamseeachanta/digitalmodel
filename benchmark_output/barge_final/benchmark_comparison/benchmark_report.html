@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Benchmark Report - Barge_Benchmark</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        table { border-collapse: collapse; margin: 1em 0; }
+        th, td { border: 1px solid #ccc; padding: 0.5em 1em; text-align: left; }
+        th { background: #f0f0f0; }
+        h1, h2 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>Benchmark Report</h1>
+    <p><strong>Vessel:</strong> Barge_Benchmark</p>
+    <p><strong>Date:</strong> 2026-02-05 23:20:35</p>
+    <p><strong>Overall consensus:</strong> SPLIT</p>
+
+    <h2>Solvers</h2>
+    <table>
+        <tr><th>Solver</th></tr>
+        <tr><td>AQWA</td></tr>
+        <tr><td>OrcaWave</td></tr>
+    </table>
+
+    <h2>Consensus by DOF</h2>
+    <table>
+        <tr>
+            <th>DOF</th>
+            <th>Consensus</th>
+            <th>Mean Correlation</th>
+            <th>Outlier</th>
+        </tr>
+        <tr><td>SURGE</td><td>NO_CONSENSUS</td><td>0.9786</td><td>-</td></tr>
+        <tr><td>SWAY</td><td>NO_CONSENSUS</td><td>0.8669</td><td>-</td></tr>
+        <tr><td>HEAVE</td><td>FULL</td><td>0.9997</td><td>-</td></tr>
+        <tr><td>ROLL</td><td>NO_CONSENSUS</td><td>0.9972</td><td>-</td></tr>
+        <tr><td>PITCH</td><td>FULL</td><td>0.9980</td><td>-</td></tr>
+        <tr><td>YAW</td><td>FULL</td><td>1.0000</td><td>-</td></tr>
+
+    </table>
+
+    <h2>Plots</h2>
+    <ul>
+        <li><a href="benchmark_amplitude.html">benchmark_amplitude.html</a></li>
+        <li><a href="benchmark_phase.html">benchmark_phase.html</a></li>
+        <li><a href="benchmark_combined.html">benchmark_combined.html</a></li>
+        <li><a href="benchmark_heatmap.html">benchmark_heatmap.html</a></li>
+
+    </ul>
+
+    <h2>Notes</h2>
+    <ul>
+        <li>SURGE: consensus=NO_CONSENSUS</li>
+        <li>SWAY: consensus=NO_CONSENSUS</li>
+        <li>ROLL: consensus=NO_CONSENSUS</li>
+    </ul>
+</body>
+</html>

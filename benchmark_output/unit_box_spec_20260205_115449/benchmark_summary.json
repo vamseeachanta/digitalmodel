@@ -1,0 +1,31 @@
+{
+  "spec_path": "specs\\modules\\benchmark\\unit_box_spec.yml",
+  "timestamp": "2026-02-05T11:54:52.135531",
+  "solvers_requested": [
+    "orcawave",
+    "aqwa",
+    "bemrosetta"
+  ],
+  "total_duration_seconds": 2.3293395042419434,
+  "success": true,
+  "solver_results": {
+    "OrcaWave": {
+      "status": "dry_run",
+      "duration_seconds": 0.03499913215637207,
+      "output_dir": "benchmark_output\\unit_box_spec_20260205_115449\\orcawave",
+      "error_message": null
+    },
+    "AQWA": {
+      "status": "failed",
+      "duration_seconds": 1.8877172470092773,
+      "output_dir": "benchmark_output\\unit_box_spec_20260205_115449\\aqwa",
+      "error_message": "AQWA LIS: **** INPUT DATA ERROR  :LINE 23 END IN DECK HEADER COOR MISSING."
+    },
+    "BEMRosetta": {
+      "status": "failed",
+      "duration_seconds": 0.40565013885498047,
+      "output_dir": "benchmark_output\\unit_box_spec_20260205_115449\\bemrosetta",
+      "error_message": "\nError: Unknown BEM file extension in 'D:\\workspace-hub\\digitalmodel\\specs\\modules\\benchmark\\unit_box_clean.gdf'\n\nIn case of doubt try option -h or -help\n"
+    }
+  }
+}

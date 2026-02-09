@@ -13,8 +13,10 @@ from typing import Any, Dict, List, Literal, Optional
 
 import numpy as np
 import plotly.graph_objects as go
+from loguru import logger
 from plotly.subplots import make_subplots
 
+from digitalmodel.hydrodynamics.diffraction.mesh_pipeline import MeshPipeline
 from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
     BenchmarkReport,
 )
@@ -851,6 +853,312 @@ class BenchmarkPlotter:
 
         parts.append("</tbody></table>")
         return "\n".join(parts)
+
+    def build_input_files_html(self) -> str:
+        """Render scrollable input file previews for each solver.
+
+        Looks for ``input_file`` key in solver_metadata. For each file
+        found, renders a scrollable code block with the file contents
+        and a button to open it in a new browser window.
+
+        Returns:
+            HTML string with file viewer sections, or empty string if
+            no solver has ``input_file`` metadata.
+        """
+        max_lines = 2000
+        file_entries: List[tuple] = []  # (solver, path_str, content)
+
+        for solver in self._solver_names:
+            meta = self._solver_metadata.get(solver, {})
+            input_file = meta.get("input_file")
+            if not input_file:
+                continue
+
+            file_path = Path(input_file)
+            if not file_path.exists():
+                logger.warning(
+                    f"Input file for solver '{solver}' not found: "
+                    f"{input_file}"
+                )
+                continue
+
+            # Read file content with encoding fallback
+            content: Optional[str] = None
+            for encoding in ("utf-8", "latin-1"):
+                try:
+                    content = file_path.read_text(encoding=encoding)
+                    break
+                except (UnicodeDecodeError, OSError):
+                    continue
+
+            if content is None:
+                logger.warning(
+                    f"Could not read input file for solver '{solver}': "
+                    f"{input_file}"
+                )
+                continue
+
+            # Limit to max_lines
+            lines = content.splitlines()
+            truncated = len(lines) > max_lines
+            if truncated:
+                lines = lines[:max_lines]
+            content = "\n".join(lines)
+
+            file_entries.append(
+                (solver, str(file_path), content, truncated, len(lines))
+            )
+
+        if not file_entries:
+            return ""
+
+        parts: List[str] = ["<h2>Input Files</h2>"]
+
+        for idx, (solver, path_str, content, truncated, n_lines) in enumerate(
+            file_entries
+        ):
+            safe_solver = html_mod.escape(solver)
+            safe_path = html_mod.escape(path_str)
+            safe_content = html_mod.escape(content)
+            textarea_id = f"file_content_{idx}"
+
+            # Build line-numbered content
+            line_spans: List[str] = []
+            for line in content.splitlines():
+                line_spans.append(
+                    f'<span class="line">{html_mod.escape(line)}</span>'
+                )
+            numbered_content = "\n".join(line_spans)
+
+            truncation_note = ""
+            if truncated:
+                truncation_note = (
+                    f'<div style="padding:0.4em 1em;background:#fef9e7;'
+                    f'border:1px solid #ddd;border-top:none;font-size:0.8em;'
+                    f'color:#888;font-style:italic;">'
+                    f"Showing first {n_lines} lines (file truncated)"
+                    f"</div>"
+                )
+
+            parts.append(f"""\
+<div class="file-viewer">
+  <div class="file-viewer-header">
+    <div>
+      <span class="solver-label">{safe_solver}</span>
+      <span class="file-path">{safe_path}</span>
+    </div>
+    <button onclick="openFileWindow_{idx}()">Open in New Window</button>
+  </div>
+  <div class="file-content">
+    <pre>{numbered_content}</pre>
+  </div>
+  {truncation_note}
+  <textarea id="{textarea_id}" style="display:none;">{safe_content}</textarea>
+  <script>
+    function openFileWindow_{idx}() {{
+      var ta = document.getElementById('{textarea_id}');
+      var w = window.open('', '_blank');
+      w.document.write(
+        '<html><head><title>{safe_solver} - {safe_path}</title>' +
+        '<style>body{{font-family:"SF Mono","Cascadia Code","Consolas",' +
+        'monospace;white-space:pre;margin:1em;font-size:13px;' +
+        'line-height:1.5;tab-size:4;}}</style></head><body>' +
+        ta.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') +
+        '</body></html>'
+      );
+      w.document.close();
+    }}
+  </script>
+</div>""")
+
+        return "\n".join(parts)
+
+    # ------------------------------------------------------------------
+    # Mesh schematic
+    # ------------------------------------------------------------------
+
+    def build_mesh_schematic_html(self) -> str:
+        """Build 3D mesh schematic section for the benchmark report.
+
+        Loads mesh files from solver_metadata["mesh_path"] and creates
+        an interactive Plotly 3D visualization showing the panel mesh
+        with a waterline plane.
+
+        Returns:
+            HTML string with the mesh schematic section, or empty string
+            if no mesh paths are available.
+        """
+        # Collect mesh paths from solver metadata
+        mesh_entries: List[tuple] = []  # (solver_name, mesh_path_str)
+        for solver in self._solver_names:
+            meta = self._solver_metadata.get(solver, {})
+            mesh_path = meta.get("mesh_path")
+            if mesh_path:
+                mesh_entries.append((solver, str(mesh_path)))
+
+        if not mesh_entries:
+            return ""
+
+        # Load meshes
+        pipeline = MeshPipeline()
+        loaded: List[tuple] = []  # (solver_name, PanelMesh)
+        for solver, mesh_path_str in mesh_entries:
+            try:
+                mesh = pipeline.load(Path(mesh_path_str))
+                loaded.append((solver, mesh))
+            except Exception as exc:
+                logger.warning(
+                    f"Could not load mesh for solver '{solver}' "
+                    f"from '{mesh_path_str}': {exc}"
+                )
+
+        if not loaded:
+            return ""
+
+        # Build Plotly figure
+        fig = go.Figure()
+
+        for idx, (solver, mesh) in enumerate(loaded):
+            style = self._get_solver_style(idx)
+            color = style["color_base"]
+            verts = mesh.vertices
+            panels = mesh.panels
+
+            # --- Surface: split quads into two triangles ---
+            i_list: List[int] = []
+            j_list: List[int] = []
+            k_list: List[int] = []
+            for panel in panels:
+                valid = [v for v in panel if v >= 0]
+                if len(valid) >= 3:
+                    i_list.append(valid[0])
+                    j_list.append(valid[1])
+                    k_list.append(valid[2])
+                if len(valid) == 4:
+                    i_list.append(valid[0])
+                    j_list.append(valid[2])
+                    k_list.append(valid[3])
+
+            fig.add_trace(
+                go.Mesh3d(
+                    x=verts[:, 0],
+                    y=verts[:, 1],
+                    z=verts[:, 2],
+                    i=i_list,
+                    j=j_list,
+                    k=k_list,
+                    opacity=0.6,
+                    color=color,
+                    name=f"{solver} ({mesh.n_panels} panels)",
+                    showlegend=True,
+                )
+            )
+
+            # --- Wireframe edges ---
+            edge_x: List[Optional[float]] = []
+            edge_y: List[Optional[float]] = []
+            edge_z: List[Optional[float]] = []
+            for panel in panels:
+                valid = [v for v in panel if v >= 0]
+                if len(valid) < 3:
+                    continue
+                for vi in valid:
+                    edge_x.append(float(verts[vi, 0]))
+                    edge_y.append(float(verts[vi, 1]))
+                    edge_z.append(float(verts[vi, 2]))
+                # Close the polygon
+                edge_x.append(float(verts[valid[0], 0]))
+                edge_y.append(float(verts[valid[0], 1]))
+                edge_z.append(float(verts[valid[0], 2]))
+                # None separator
+                edge_x.append(None)
+                edge_y.append(None)
+                edge_z.append(None)
+
+            fig.add_trace(
+                go.Scatter3d(
+                    x=edge_x,
+                    y=edge_y,
+                    z=edge_z,
+                    mode="lines",
+                    line=dict(color=color, width=1),
+                    name=f"{solver} edges",
+                    showlegend=False,
+                    hoverinfo="skip",
+                )
+            )
+
+        # --- Waterline plane at z=0 ---
+        # Compute bounding box across all loaded meshes
+        all_verts = np.vstack([m.vertices for _, m in loaded])
+        x_min, y_min, _ = np.min(all_verts, axis=0)
+        x_max, y_max, _ = np.max(all_verts, axis=0)
+        # Extend waterline plane slightly beyond mesh bounds
+        pad_x = (x_max - x_min) * 0.15
+        pad_y = (y_max - y_min) * 0.15
+        wx = [x_min - pad_x, x_max + pad_x, x_max + pad_x, x_min - pad_x]
+        wy = [y_min - pad_y, y_min - pad_y, y_max + pad_y, y_max + pad_y]
+        wz = [0.0, 0.0, 0.0, 0.0]
+        fig.add_trace(
+            go.Mesh3d(
+                x=wx,
+                y=wy,
+                z=wz,
+                i=[0, 0],
+                j=[1, 2],
+                k=[2, 3],
+                opacity=0.15,
+                color="#3498db",
+                name="Waterline (z=0)",
+                showlegend=True,
+                hoverinfo="skip",
+            )
+        )
+
+        fig.update_layout(
+            title_text="Panel Mesh Geometry",
+            template="plotly_white",
+            scene=dict(
+                aspectmode="data",
+                xaxis_title="X (m)",
+                yaxis_title="Y (m)",
+                zaxis_title="Z (m)",
+            ),
+            margin=dict(l=0, r=0, t=40, b=0),
+            height=600,
+        )
+
+        plot_div = fig.to_html(
+            full_html=False,
+            include_plotlyjs=False,
+            div_id="mesh_schematic",
+        )
+
+        # --- Summary table ---
+        table_rows = ""
+        for solver, mesh in loaded:
+            table_rows += (
+                f"<tr>"
+                f"<td>{html_mod.escape(solver)}</td>"
+                f"<td>{mesh.n_panels}</td>"
+                f"<td>{mesh.n_vertices}</td>"
+                f"<td>{mesh.total_area:.2f}</td>"
+                f"</tr>\n"
+            )
+
+        summary_table = (
+            "<table style='max-width:500px;margin-top:0.8em;'>"
+            "<tr><th>Solver</th><th>Panels</th>"
+            "<th>Vertices</th><th>Total Area (m&sup2;)</th></tr>"
+            f"{table_rows}"
+            "</table>"
+        )
+
+        return (
+            f"<h2>Panel Mesh Geometry</h2>\n"
+            f"{plot_div}\n"
+            f"{summary_table}"
+        )
 
     # ------------------------------------------------------------------
     # Per-DOF plots with individual legends

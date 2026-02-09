@@ -137,6 +137,13 @@ def main() -> int:
     with open(SPEC_FILE) as f:
         spec = yaml.safe_load(f)
     solver_metadata = _build_solver_metadata(spec)
+    solver_metadata["AQWA"]["input_file"] = str(LIS_FILE)
+    solver_metadata["OrcaWave"]["input_file"] = str(SPEC_FILE)
+    # Mesh path for 3D schematic visualization (both solvers share same mesh)
+    mesh_file = SPEC_FILE.parent / spec["vessel"]["geometry"].get("mesh_file", "")
+    if mesh_file.exists():
+        for solver in solver_metadata:
+            solver_metadata[solver]["mesh_path"] = str(mesh_file)
     print(f"  Spec loaded: {SPEC_FILE}")
 
     # --- Extract with corrected pipeline ---

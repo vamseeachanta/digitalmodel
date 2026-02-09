@@ -1,0 +1,43 @@
+{
+  "spec_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_lazy_wave_riser\\spec.yml",
+  "model_name": "a01_lazy_wave_riser",
+  "timestamp": "2026-02-08T14:35:48",
+  "modular_dir": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_lazy_wave_riser\\analysis\\modular",
+  "object_count": 14,
+  "statics_converged": true,
+  "statics_time_seconds": 0.473,
+  "lines": [
+    {
+      "name": "10in Lazy Wave Distributed",
+      "total_length_m": 190.0,
+      "num_sections": 5,
+      "num_segments": 137,
+      "end_a_tension_kN": 90.481,
+      "end_b_tension_kN": 17.275,
+      "max_tension_kN": 90.481,
+      "min_tension_kN": 13.824,
+      "end_a_bending_kNm": 0.0,
+      "end_b_bending_kNm": 0.0,
+      "max_bending_kNm": 10.623,
+      "max_curvature_1_m": 0.085071
+    },
+    {
+      "name": "10in Lazy Wave Discrete",
+      "total_length_m": 190.0,
+      "num_sections": 5,
+      "num_segments": 167,
+      "end_a_tension_kN": 90.652,
+      "end_b_tension_kN": 18.747,
+      "max_tension_kN": 90.652,
+      "min_tension_kN": 13.375,
+      "end_a_bending_kNm": 0.0,
+      "end_b_bending_kNm": 0.0,
+      "max_bending_kNm": 10.892,
+      "max_curvature_1_m": 0.08723
+    }
+  ],
+  "links": [],
+  "dynamics_ran": false,
+  "dynamics_time_seconds": 0.0,
+  "dynamics_lines": {}
+}

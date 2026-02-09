@@ -27,6 +27,9 @@ from .riser_vessel_builder import RiserVesselBuilder
 from .riser_lines_builder import RiserLinesBuilder
 from .riser_links_builder import RiserLinksBuilder
 
+# Generic builders
+from .generic_builder import GenericModelBuilder
+
 __all__ = [
     'BaseBuilder',
     'BuilderContext',
@@ -39,4 +42,6 @@ __all__ = [
     # Riser builders
     'RiserClumpTypeBuilder', 'RiserLineTypeBuilder',
     'RiserVesselBuilder', 'RiserLinesBuilder', 'RiserLinksBuilder',
+    # Generic builders
+    'GenericModelBuilder',
 ]

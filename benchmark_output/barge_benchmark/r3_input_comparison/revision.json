@@ -1,0 +1,17 @@
+{
+  "revision": "r3_input_comparison",
+  "timestamp": "2026-02-08T16:46:25.199584",
+  "description": "r3: Extended input comparison table with geometry (L/B/T), mass properties (mass, CoG, radii of gyration), environment (water density, gravity), mesh details, and solver settings. Phase convention and M24 fixes carried forward from r2.",
+  "changes": [
+    "Input comparison table: added geometry, mass, environment sections",
+    "Metadata loaded from barge_benchmark_spec.yml",
+    "solver_metadata plumbed through BenchmarkRunner to BenchmarkPlotter",
+    "Carried forward: phase negation, M24/M42 coupling fix from r2"
+  ],
+  "source_files": {
+    "orcawave": "benchmark_output\\barge_final\\orcawave\\Barge_Benchmark.owr",
+    "aqwa": "benchmark_output\\barge_final\\aqwa\\WRK-031_3WAY_BENCHMARK.LIS",
+    "spec": "specs\\modules\\benchmark\\barge_benchmark_spec.yml"
+  },
+  "previous_revision": "r2_phase_convention_fix"
+}

@@ -1,0 +1,102 @@
+# OrcaFlex Modular Model Generator - QA Input Specification (Coarse)
+# Pipeline Floating Installation with 5 Tugs - FAST QA VARIANT
+#
+# This is a coarse mesh variant of spec.yml for quick QA validation.
+# Uses 10m segment length instead of 0.5m, reducing elements from ~9800 to ~490.
+# Target statics time: ~2-3 minutes (vs ~15 minutes for production spec).
+#
+# NOTE: 50m mesh was too coarse and caused statics non-convergence.
+# 10m mesh provides a good balance of speed and numerical stability.
+#
+# Use case: QA validation, convergence verification, quick sanity checks.
+# NOT for production analysis - results will differ due to mesh coarsening.
+#
+# Usage:
+#   uv run python -m digitalmodel.orcaflex.modular_generator generate \
+#       --input spec_qa.yml --output generated_qa/
+
+metadata:
+  name: "24in_pipeline_installation_qa"
+  description: "Pipeline floating installation - QA variant (50m mesh)"
+  structure: pipeline
+  operation: installation/floating
+  project: "SESA"
+
+environment:
+  water:
+    depth: 8                          # Water depth (m)
+    density: 1.03                     # Seawater density (te/m3)
+  seabed:
+    slope: 0.57                       # Seabed slope (deg)
+    stiffness:
+      normal: 1000                    # Normal stiffness (kN/m/m2)
+      shear: 100                      # Shear stiffness (kN/m/m2)
+  waves:
+    type: dean_stream                 # Wave theory type
+    height: 0                         # Significant wave height Hs (m)
+    period: 8                         # Peak wave period Tp (s)
+    direction: 180                    # Wave direction (deg from North)
+  current:
+    speed: 1                          # Reference current speed (m/s)
+    direction: 270                    # Current direction (deg from North)
+    profile:                          # [depth (m), speed multiplier on ref speed]
+      - [0, 0.46]                     # Surface: 46% of ref speed
+      - [6, 0.39]                     # 6m depth: 39% of ref speed
+      - [15, 0.33]                    # 15m depth: 33% of ref speed
+  wind:
+    speed: 8.87                       # Wind speed (m/s)
+    direction: 270                    # Wind direction (deg from North)
+
+pipeline:
+  name: "pipeline"                    # Pipeline name for OrcaFlex
+  material: X65                       # API 5L X65 grade steel
+  dimensions:
+    outer_diameter: 0.762             # Steel OD (m) - 30in NPS
+    wall_thickness: 0.0254            # Wall thickness (m)
+  coatings:
+    corrosion:                        # Anti-corrosion coating (3LPP)
+      thickness: 0.0035               # Coating thickness (m)
+      density: 1.1                    # Coating density (te/m3)
+    weight:                           # Concrete weight coating
+      - name: CWC80                   # 80mm concrete weight coating
+        thickness: 0.08               # Coating thickness (m)
+        density: 3.0                  # Concrete density (te/m3)
+  segments:
+    - type: X65+3LPP+CWC80           # Single segment
+      length: 4900                    # Total pipeline length (m)
+      segment_length: 10              # QA: Coarse mesh (10m vs 0.5m production)
+
+equipment:
+  tugs:
+    count: 5                          # Number of support tugs
+    spacing: 816.6                    # Distance between tugs (m)
+    first_position: [716.7, -20, 0]   # First tug position [x, y, z] (m)
+    properties:
+      mass: 30                        # Tug mass (te)
+      volume: 100                     # Displaced volume (m3)
+  rollers:
+    position: [5, 0, -2]              # Roller system position [x, y, z] (m)
+    supports: 4                       # Number of support points
+  buoyancy_modules:
+    spacing: 1.5                      # Module spacing along pipeline (m)
+    properties:
+      mass: 0.05                      # Module mass (te)
+      volume: 0.72                    # Displaced volume (m3)
+      height: 0.918                   # Module height (m)
+  ramps:
+    - name: "Ramp inclined"           # Inclined ramp for seabed approach
+      type: block
+      origin: [-126.35, -25, -5]      # Position [x, y, z] (m)
+      Size: [150, 50, 10]             # Dimensions [L, W, H] (m)
+      Rotation: [0, 2.27, 0]          # Rotation [rx, ry, rz] (deg)
+    - name: "Ramp-curve"              # Curved plate for smooth transition
+      type: curved_plate
+      origin: [4.1, -25, -500.55]     # Position [x, y, z] (m)
+      Rotation: [90, 90, 182.27]      # Orientation [rx, ry, rz] (deg)
+      revolution_angle: 10            # Included angle of revolution (deg)
+      profile_diameter: 1000          # Profile diameter (m)
+
+simulation:
+  time_step: 0.1                      # Outer time step (s)
+  stages: [8, 16]                     # Stage durations [build-up, main] (s)
+  north_direction: 70                 # Model North direction (deg)

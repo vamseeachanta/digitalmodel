@@ -1,0 +1,17 @@
+{
+  "spec_path": "specs\\modules\\benchmark\\unit_box_spec.yml",
+  "timestamp": "2026-02-05T15:09:32.582757",
+  "solvers_requested": [
+    "orcawave"
+  ],
+  "total_duration_seconds": 3.6369259357452393,
+  "success": false,
+  "solver_results": {
+    "OrcaWave": {
+      "status": "failed",
+      "duration_seconds": 3.6359286308288574,
+      "output_dir": "benchmark_output\\orcawave_api_test_2\\orcawave",
+      "error_message": "\nError code: 7\nProblem reading file\r\n\r\nError reading D:\\workspace-hub\\digitalmodel\\benchmark_output\\orcawave_api_test_2\\orcawave\\UnitBox_Benchmark.yml: Failed to set PreferredQuadraticLoadCalculationMethod=Pressure integration (Change not allowed).\r\n\r\nLast parsed name: 'PreferredQuadraticLoadCalculationMethod', value: Pressure integration near line 12; stderr: \nError code: 7\nProblem reading file\r\n\r\nError reading D:\\workspace-hub\\digitalmodel\\benchmark_output\\orcawave_api_test_2\\orcawave\\UnitBox_Benchmark.yml: Failed to set PreferredQuadraticLoadCalculationM; exit code: -1"
+    }
+  }
+}

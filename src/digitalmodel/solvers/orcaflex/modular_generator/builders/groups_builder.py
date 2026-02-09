@@ -24,6 +24,10 @@ class GroupsBuilder(BaseBuilder):
     Reference: 10_groups.yml in modular include format.
     """
 
+    def should_generate(self) -> bool:
+        """Only generate for pipeline and riser models, not generic."""
+        return self.spec.is_pipeline() or self.spec.is_riser()
+
     def build(self) -> dict[str, Any]:
         """Build the Groups section from context entity names.
 

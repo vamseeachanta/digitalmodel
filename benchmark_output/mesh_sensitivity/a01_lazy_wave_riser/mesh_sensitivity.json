@@ -1,0 +1,143 @@
+{
+  "model_name": "a01_lazy_wave_riser",
+  "timestamp": "2026-02-08T14:14:15",
+  "variants": {
+    "coarse": {
+      "model_name": "a01_lazy_wave_riser",
+      "mesh_level": "coarse",
+      "bare_segment_length": 5.0,
+      "buoyancy_segment_length": 5.0,
+      "statics_converged": true,
+      "statics_time_seconds": 0.241,
+      "total_segments": 76,
+      "lines": {
+        "10in Lazy Wave Distributed": {
+          "line_name": "10in Lazy Wave Distributed",
+          "num_segments": 38,
+          "total_length_m": 190.0,
+          "end_a_tension_kN": 90.438,
+          "end_b_tension_kN": 17.088,
+          "max_tension_kN": 90.438,
+          "max_bending_kNm": 10.164
+        },
+        "10in Lazy Wave Discrete": {
+          "line_name": "10in Lazy Wave Discrete",
+          "num_segments": 38,
+          "total_length_m": 190.0,
+          "end_a_tension_kN": 90.622,
+          "end_b_tension_kN": 18.559,
+          "max_tension_kN": 90.622,
+          "max_bending_kNm": 10.417
+        }
+      }
+    },
+    "medium": {
+      "model_name": "a01_lazy_wave_riser",
+      "mesh_level": "medium",
+      "bare_segment_length": 2.0,
+      "buoyancy_segment_length": 2.0,
+      "statics_converged": true,
+      "statics_time_seconds": 0.431,
+      "total_segments": 190,
+      "lines": {
+        "10in Lazy Wave Distributed": {
+          "line_name": "10in Lazy Wave Distributed",
+          "num_segments": 95,
+          "total_length_m": 190.0,
+          "end_a_tension_kN": 90.483,
+          "end_b_tension_kN": 17.329,
+          "max_tension_kN": 90.483,
+          "max_bending_kNm": 10.542
+        },
+        "10in Lazy Wave Discrete": {
+          "line_name": "10in Lazy Wave Discrete",
+          "num_segments": 95,
+          "total_length_m": 190.0,
+          "end_a_tension_kN": 90.707,
+          "end_b_tension_kN": 18.867,
+          "max_tension_kN": 90.707,
+          "max_bending_kNm": 10.762
+        }
+      }
+    },
+    "fine": {
+      "model_name": "a01_lazy_wave_riser",
+      "mesh_level": "fine",
+      "bare_segment_length": 1.0,
+      "buoyancy_segment_length": 0.5,
+      "statics_converged": true,
+      "statics_time_seconds": 0.938,
+      "total_segments": 430,
+      "lines": {
+        "10in Lazy Wave Distributed": {
+          "line_name": "10in Lazy Wave Distributed",
+          "num_segments": 240,
+          "total_length_m": 190.0,
+          "end_a_tension_kN": 90.479,
+          "end_b_tension_kN": 17.36,
+          "max_tension_kN": 90.479,
+          "max_bending_kNm": 10.625
+        },
+        "10in Lazy Wave Discrete": {
+          "line_name": "10in Lazy Wave Discrete",
+          "num_segments": 190,
+          "total_length_m": 190.0,
+          "end_a_tension_kN": 90.636,
+          "end_b_tension_kN": 18.809,
+          "max_tension_kN": 90.636,
+          "max_bending_kNm": 10.9
+        }
+      }
+    }
+  },
+  "convergence": [
+    {
+      "line_name": "10in Lazy Wave Discrete",
+      "metric": "end_a_tension_kN",
+      "coarse_value": 90.622,
+      "medium_value": 90.707,
+      "fine_value": 90.636,
+      "coarse_to_fine_pct": 0.02
+    },
+    {
+      "line_name": "10in Lazy Wave Discrete",
+      "metric": "max_tension_kN",
+      "coarse_value": 90.622,
+      "medium_value": 90.707,
+      "fine_value": 90.636,
+      "coarse_to_fine_pct": 0.02
+    },
+    {
+      "line_name": "10in Lazy Wave Discrete",
+      "metric": "max_bending_kNm",
+      "coarse_value": 10.417,
+      "medium_value": 10.762,
+      "fine_value": 10.9,
+      "coarse_to_fine_pct": 4.43
+    },
+    {
+      "line_name": "10in Lazy Wave Distributed",
+      "metric": "end_a_tension_kN",
+      "coarse_value": 90.438,
+      "medium_value": 90.483,
+      "fine_value": 90.479,
+      "coarse_to_fine_pct": 0.05
+    },
+    {
+      "line_name": "10in Lazy Wave Distributed",
+      "metric": "max_tension_kN",
+      "coarse_value": 90.438,
+      "medium_value": 90.483,
+      "fine_value": 90.479,
+      "coarse_to_fine_pct": 0.05
+    },
+    {
+      "line_name": "10in Lazy Wave Distributed",
+      "metric": "max_bending_kNm",
+      "coarse_value": 10.164,
+      "medium_value": 10.542,
+      "fine_value": 10.625,
+      "coarse_to_fine_pct": 4.34
+    }
+  ]
+}

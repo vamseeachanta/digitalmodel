@@ -1,0 +1,17 @@
+{
+  "revision": "r2_phase_convention_fix",
+  "timestamp": "2026-02-08T15:00:59.210286",
+  "description": "Phase convention normalization (ISO 6954 lead -> Orcina lag) and M24/M42 sway-roll coupling sign fix applied at extraction time.",
+  "changes": [
+    "RAO phases negated: phi_Orcina = -phi_ISO (all 6 DOFs)",
+    "Added mass M24/M42 negated to match OrcaWave sign convention",
+    "Damping M24/M42 negated to match OrcaWave sign convention",
+    "phase_convention and unit_system metadata set on DiffractionResults",
+    "Input comparison table added to HTML report"
+  ],
+  "source_files": {
+    "orcawave": "benchmark_output\\barge_final\\orcawave\\Barge_Benchmark.owr",
+    "aqwa": "benchmark_output\\barge_final\\aqwa\\WRK-031_3WAY_BENCHMARK.LIS"
+  },
+  "previous_revision": "r1 (barge_final, 2026-02-05, pre-normalization)"
+}

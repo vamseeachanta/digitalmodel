@@ -304,5 +304,31 @@ cache/
 # Benchmark generated outputs
 benchmarks/reports/
 benchmarks/results/
+
+# ==========================================
+# Large Binary Solver Output (regenerable)
+# ==========================================
+
+# AQWA binary output files (regenerable from .dat input)
+**/*.HYD
+**/*.PAG
+**/*.VAC
+**/*.PAC
+**/*.RES
+**/*.USS
+**/*.POT
+**/*.PLT
+**/*.PLD
+**/*.MQT
+**/*.EQP
+
+# OrcaWave binary results (regenerable from .yml)
+**/*.owr
+
+# Wind binary time series
+**/*.bts
+
+# Benchmark temp files
+benchmark_output/_temp_*
 # OrcaFlex simulation files (large binary)
 docs/modules/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/runs/*.sim

@@ -1,0 +1,31 @@
+{
+  "spec_path": "specs\\modules\\benchmark\\unit_box_spec.yml",
+  "timestamp": "2026-02-05T12:08:46.710948",
+  "solvers_requested": [
+    "orcawave",
+    "aqwa",
+    "bemrosetta"
+  ],
+  "total_duration_seconds": 2.2639594078063965,
+  "success": true,
+  "solver_results": {
+    "OrcaWave": {
+      "status": "dry_run",
+      "duration_seconds": 0.04700064659118652,
+      "output_dir": "benchmark_output\\unit_box_spec_20260205_120844\\orcawave",
+      "error_message": null
+    },
+    "AQWA": {
+      "status": "failed",
+      "duration_seconds": 1.8235936164855957,
+      "output_dir": "benchmark_output\\unit_box_spec_20260205_120844\\aqwa",
+      "error_message": "AQWA LIS: **** INPUT DATA ERROR  :LINE 23 END IN DECK HEADER COOR MISSING."
+    },
+    "BEMRosetta": {
+      "status": "failed",
+      "duration_seconds": 0.3923654556274414,
+      "output_dir": "benchmark_output\\unit_box_spec_20260205_120844\\bemrosetta",
+      "error_message": "\nError: Impossible to open 'benchmark_output\\unit_box_spec_20260205_120844\\bemrosetta\\mesh_nemoh.dat'\n\n\nIn case of doubt try option -h or -help\n"
+    }
+  }
+}

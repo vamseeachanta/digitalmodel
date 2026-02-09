@@ -1,0 +1,31 @@
+{
+  "spec_path": "specs\\modules\\benchmark\\unit_box_spec.yml",
+  "timestamp": "2026-02-05T11:59:23.682297",
+  "solvers_requested": [
+    "orcawave",
+    "aqwa",
+    "bemrosetta"
+  ],
+  "total_duration_seconds": 2.3452322483062744,
+  "success": true,
+  "solver_results": {
+    "OrcaWave": {
+      "status": "dry_run",
+      "duration_seconds": 0.04599952697753906,
+      "output_dir": "benchmark_output\\unit_box_spec_20260205_115921\\orcawave",
+      "error_message": null
+    },
+    "AQWA": {
+      "status": "failed",
+      "duration_seconds": 1.8721225261688232,
+      "output_dir": "benchmark_output\\unit_box_spec_20260205_115921\\aqwa",
+      "error_message": "AQWA LIS: **** INPUT DATA ERROR  :LINE 23 END IN DECK HEADER COOR MISSING."
+    },
+    "BEMRosetta": {
+      "status": "failed",
+      "duration_seconds": 0.42313218116760254,
+      "output_dir": "benchmark_output\\unit_box_spec_20260205_115921\\bemrosetta",
+      "error_message": "\nError: Unknown argument '-params'\n\nIn case of doubt try option -h or -help\n"
+    }
+  }
+}

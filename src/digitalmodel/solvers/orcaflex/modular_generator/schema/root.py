@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from .metadata import Metadata
 from .environment import Environment
+from .generic import GenericModel
 from .pipeline import Pipeline
 from .equipment import Equipment
 from .simulation import Simulation
@@ -18,7 +19,7 @@ class ProjectInputSpec(BaseModel):
 
     This is the main entry point for validating YAML input files.
     It contains all components needed to generate a complete OrcaFlex model.
-    Supports both pipeline installation models and riser production models.
+    Supports pipeline installation, riser production, and generic models.
 
     Example (Pipeline):
         ```python
@@ -40,11 +41,19 @@ class ProjectInputSpec(BaseModel):
         print(f"Riser lines: {len(spec.riser.lines)}")
         ```
 
+    Example (Generic):
+        ```python
+        spec = ProjectInputSpec(**data)
+        print(f"Model: {spec.metadata.name}")
+        print(f"Line types: {len(spec.generic.line_types)}")
+        ```
+
     Attributes:
         metadata: Model identification and categorization.
         environment: Environmental conditions (water, metocean).
         pipeline: Pipeline definition (optional, for pipeline models).
         riser: Riser definition (optional, for riser models).
+        generic: Generic OrcaFlex model (optional, for arbitrary models).
         equipment: Installation equipment (tugs, rollers, buoyancy modules).
         simulation: Simulation control parameters.
     """
@@ -53,6 +62,9 @@ class ProjectInputSpec(BaseModel):
     environment: Environment = Field(..., description="Environmental conditions")
     pipeline: Pipeline | None = Field(default=None, description="Pipeline definition")
     riser: Riser | None = Field(default=None, description="Riser definition")
+    generic: GenericModel | None = Field(
+        default=None, description="Generic OrcaFlex model definition"
+    )
     equipment: Equipment = Field(
         default_factory=Equipment, description="Equipment configuration"
     )
@@ -66,20 +78,33 @@ class ProjectInputSpec(BaseModel):
         Cross-validate model components for physical consistency.
 
         Checks:
-        - Either pipeline or riser must be defined (not both, not neither)
+        - Exactly one of pipeline, riser, or generic must be defined
         - Water depth consistency with seabed features
         - Tug positions relative to pipeline length
         - Buoyancy module spacing vs segment length
         """
-        # Ensure exactly one of pipeline or riser is defined
-        if self.pipeline is None and self.riser is None:
+        # Count how many model types are defined
+        model_types_defined = sum([
+            self.pipeline is not None,
+            self.riser is not None,
+            self.generic is not None,
+        ])
+
+        if model_types_defined == 0:
             raise ValueError(
-                "Either 'pipeline' or 'riser' must be defined in spec"
+                "Either 'pipeline', 'riser', or 'generic' must be defined in spec"
             )
-        if self.pipeline is not None and self.riser is not None:
+        if model_types_defined > 1:
+            defined = []
+            if self.pipeline is not None:
+                defined.append("pipeline")
+            if self.riser is not None:
+                defined.append("riser")
+            if self.generic is not None:
+                defined.append("generic")
             raise ValueError(
-                "Cannot define both 'pipeline' and 'riser' in same spec. "
-                "Create separate spec files for each model type."
+                f"Cannot define multiple model types ({', '.join(defined)}) "
+                "in same spec. Create separate spec files for each model type."
             )
 
         # Pipeline-specific validation
@@ -157,6 +182,10 @@ class ProjectInputSpec(BaseModel):
     def is_pipeline(self) -> bool:
         """Check if this is a pipeline model."""
         return self.pipeline is not None
+
+    def is_generic(self) -> bool:
+        """Check if this is a generic model."""
+        return self.generic is not None
 
     def get_riser_line_names(self) -> list[str]:
         """Get names of all riser lines."""

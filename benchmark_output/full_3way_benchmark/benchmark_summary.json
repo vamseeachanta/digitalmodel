@@ -1,0 +1,31 @@
+{
+  "spec_path": "specs\\modules\\benchmark\\unit_box_spec.yml",
+  "timestamp": "2026-02-05T19:57:33.377990",
+  "solvers_requested": [
+    "orcawave",
+    "aqwa",
+    "bemrosetta"
+  ],
+  "total_duration_seconds": 7.424576759338379,
+  "success": true,
+  "solver_results": {
+    "OrcaWave": {
+      "status": "completed",
+      "duration_seconds": 4.3218889236450195,
+      "output_dir": "benchmark_output\\full_3way_benchmark\\orcawave",
+      "error_message": null
+    },
+    "AQWA": {
+      "status": "failed",
+      "duration_seconds": 1.8124110698699951,
+      "output_dir": "benchmark_output\\full_3way_benchmark\\aqwa",
+      "error_message": "AQWA LIS: **** INPUT DATA ERROR  :LINE 23 END IN DECK HEADER COOR MISSING."
+    },
+    "BEMRosetta": {
+      "status": "completed",
+      "duration_seconds": 1.2892787456512451,
+      "output_dir": "benchmark_output\\full_3way_benchmark\\bemrosetta",
+      "error_message": null
+    }
+  }
+}

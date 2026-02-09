@@ -1097,6 +1097,206 @@ def _harmonize_headings(
     return filtered
 
 
+def _harmonize_frequencies(
+    solver_results: Dict[str, DiffractionResults],
+) -> Dict[str, DiffractionResults]:
+    """Interpolate all solver results onto a common frequency grid.
+
+    Strategy:
+    1. Try exact intersection first. If >= 3 common frequencies, use those.
+    2. Otherwise, use the solver with the fewest frequencies as the target
+       grid and interpolate others onto it. This typically picks AQWA
+       (3-10 freq) over OrcaWave (20+ freq).
+
+    Interpolation: cubic for magnitude, linear for phase. Negative
+    magnitudes after interpolation are clamped to zero.
+    """
+    from scipy import interpolate
+
+    # Collect frequency arrays
+    freq_arrays: Dict[str, np.ndarray] = {}
+    for name, dr in solver_results.items():
+        freq_arrays[name] = np.array(dr.raos.surge.frequencies.values, dtype=float)
+
+    # Try exact intersection
+    common = set(np.round(freq_arrays[list(freq_arrays)[0]], 6))
+    for arr in freq_arrays.values():
+        common = common & set(np.round(arr, 6))
+
+    if len(common) >= 3:
+        target_freqs = np.sort(np.array(list(common)))
+        print(f"  [INFO] {len(common)} exact frequency matches -> using intersection")
+    else:
+        # Use solver with fewest frequencies as target grid
+        ref_name = min(freq_arrays, key=lambda n: len(freq_arrays[n]))
+        target_freqs = freq_arrays[ref_name]
+        print(
+            f"  [INFO] Only {len(common)} exact matches -> "
+            f"interpolating to {ref_name} grid ({len(target_freqs)} freq)"
+        )
+
+    print(f"  [INFO] Target frequencies ({len(target_freqs)}): "
+          f"{target_freqs[0]:.4f} – {target_freqs[-1]:.4f} rad/s")
+
+    new_freq_data = FrequencyData(
+        values=target_freqs,
+        periods=2.0 * np.pi / target_freqs,
+        count=len(target_freqs),
+        min_freq=float(target_freqs.min()),
+        max_freq=float(target_freqs.max()),
+    )
+
+    harmonized: Dict[str, DiffractionResults] = {}
+
+    for name, dr in solver_results.items():
+        src_freqs = freq_arrays[name]
+
+        if np.array_equal(np.round(src_freqs, 6), np.round(target_freqs, 6)):
+            harmonized[name] = dr
+            continue
+
+        # --- Interpolate RAOs ---
+        dof_names = ["surge", "sway", "heave", "roll", "pitch", "yaw"]
+        new_components = {}
+        for dof_name in dof_names:
+            comp = getattr(dr.raos, dof_name)
+            n_headings = comp.magnitude.shape[1]
+            new_mag = np.zeros((len(target_freqs), n_headings))
+            new_phase = np.zeros((len(target_freqs), n_headings))
+
+            for hi in range(n_headings):
+                mag_col = comp.magnitude[:, hi]
+                phase_col = comp.phase[:, hi]
+
+                # Cubic for magnitude, linear for phase
+                if len(src_freqs) >= 4:
+                    f_mag = interpolate.interp1d(
+                        src_freqs, mag_col, kind="cubic",
+                        fill_value="extrapolate", bounds_error=False,
+                    )
+                else:
+                    f_mag = interpolate.interp1d(
+                        src_freqs, mag_col, kind="linear",
+                        fill_value="extrapolate", bounds_error=False,
+                    )
+                f_phase = interpolate.interp1d(
+                    src_freqs, phase_col, kind="linear",
+                    fill_value="extrapolate", bounds_error=False,
+                )
+
+                new_mag[:, hi] = np.maximum(f_mag(target_freqs), 0.0)
+                new_phase[:, hi] = f_phase(target_freqs)
+
+            new_components[dof_name] = RAOComponent(
+                dof=comp.dof,
+                magnitude=new_mag,
+                phase=new_phase,
+                frequencies=new_freq_data,
+                headings=comp.headings,
+                unit=comp.unit,
+            )
+
+        new_rao_set = RAOSet(
+            vessel_name=dr.raos.vessel_name,
+            analysis_tool=dr.raos.analysis_tool,
+            water_depth=dr.raos.water_depth,
+            surge=new_components["surge"],
+            sway=new_components["sway"],
+            heave=new_components["heave"],
+            roll=new_components["roll"],
+            pitch=new_components["pitch"],
+            yaw=new_components["yaw"],
+            created_date=dr.raos.created_date,
+            source_file=dr.raos.source_file,
+        )
+
+        # --- Interpolate added mass / damping 6x6 matrices ---
+        new_added_mass = _interpolate_matrix_set(
+            dr.added_mass, src_freqs, target_freqs, new_freq_data
+        ) if dr.added_mass else None
+
+        new_damping = _interpolate_matrix_set(
+            dr.damping, src_freqs, target_freqs, new_freq_data
+        ) if dr.damping else None
+
+        harmonized[name] = DiffractionResults(
+            vessel_name=dr.vessel_name,
+            analysis_tool=dr.analysis_tool,
+            water_depth=dr.water_depth,
+            raos=new_rao_set,
+            added_mass=new_added_mass,
+            damping=new_damping,
+            created_date=dr.created_date,
+            source_files=dr.source_files,
+            phase_convention=dr.phase_convention,
+            unit_system=dr.unit_system,
+        )
+        print(
+            f"  [INFO] Interpolated {name}: "
+            f"{len(src_freqs)} -> {len(target_freqs)} frequencies"
+        )
+
+    return harmonized
+
+
+def _interpolate_matrix_set(
+    matrix_set,
+    src_freqs: np.ndarray,
+    target_freqs: np.ndarray,
+    new_freq_data: FrequencyData,
+):
+    """Interpolate an AddedMassSet or DampingSet to target frequencies.
+
+    Each element (i, j) of the 6x6 matrix is interpolated independently.
+    """
+    from scipy import interpolate
+
+    if not matrix_set or not matrix_set.matrices:
+        return matrix_set
+
+    # Stack all matrices: shape (n_src_freq, 6, 6)
+    src_stack = np.array([m.matrix for m in matrix_set.matrices])
+    n_src = src_stack.shape[0]
+
+    if n_src != len(src_freqs):
+        # Frequency count mismatch — cannot interpolate
+        return matrix_set
+
+    new_matrices = []
+    for fi, tf in enumerate(target_freqs):
+        new_mat = np.zeros((6, 6))
+        for i in range(6):
+            for j in range(6):
+                col = src_stack[:, i, j]
+                kind = "cubic" if n_src >= 4 else "linear"
+                f_interp = interpolate.interp1d(
+                    src_freqs, col, kind=kind,
+                    fill_value="extrapolate", bounds_error=False,
+                )
+                new_mat[i, j] = float(f_interp(tf))
+        new_matrices.append(
+            HydrodynamicMatrix(
+                matrix=new_mat,
+                frequency=float(tf),
+                matrix_type=matrix_set.matrices[0].matrix_type,
+                units=matrix_set.matrices[0].units,
+            )
+        )
+
+    # Reconstruct the set (AddedMassSet or DampingSet have same fields)
+    cls = type(matrix_set)
+    return cls(
+        vessel_name=matrix_set.vessel_name,
+        analysis_tool=matrix_set.analysis_tool,
+        water_depth=matrix_set.water_depth,
+        matrices=new_matrices,
+        frequencies=new_freq_data,
+        created_date=matrix_set.created_date,
+        source_file=matrix_set.source_file,
+        notes=matrix_set.notes,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Orchestrator
 # ---------------------------------------------------------------------------

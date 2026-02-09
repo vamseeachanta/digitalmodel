@@ -406,6 +406,10 @@ class SolverOptions(BaseModel):
         default=SolverPrecision.DOUBLE,
         description="Numerical precision",
     )
+    output_ah1: bool = False
+    """Generate .AH1 ASCII hydrodynamic database file (OPTIONS AHD1).
+    Alternative to binary .HYD — produces readable text output with
+    added mass, damping, and force RAO data."""
     qtf_min_frequency: Optional[float] = Field(
         None,
         description="Minimum QTF frequency (rad/s)",

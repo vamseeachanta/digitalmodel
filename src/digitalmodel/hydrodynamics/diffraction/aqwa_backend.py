@@ -406,6 +406,8 @@ class AQWABackend:
         options = self._build_options(spec)
         cards.append(f"OPTIONS {options}")
 
+        cards.extend(self._build_ah1_option(spec))
+
         # RESTART
         cards.append("RESTART  1  5")
 
@@ -421,6 +423,12 @@ class AQWABackend:
         opts.append("REST")
         opts.append("END")
         return " ".join(opts)
+
+    def _build_ah1_option(self, spec: DiffractionSpec) -> list[str]:
+        """Return OPTIONS AHD1 card when output_ah1 is enabled."""
+        if spec.solver_options.output_ah1:
+            return ["OPTIONS AHD1"]
+        return []
 
     # -----------------------------------------------------------------
     # Deck 1 — Node coordinates
@@ -510,10 +518,13 @@ class AQWABackend:
             wl_z = body.vessel.geometry.waterline_z or 0.0
             cards.append(f"      ZLWL          ({wl_z:>9.1f})")
             # ILID AUTO — internal lid for irregular frequency removal
-            lid_group = 21
-            cards.append(
-                f"     {struct_idx}ILID AUTO   {lid_group}"
-            )
+            # Only emit when remove_irregular_frequencies is enabled,
+            # matching the LHFR option set in Deck 0.
+            if spec.solver_options.remove_irregular_frequencies:
+                lid_group = 21
+                cards.append(
+                    f"     {struct_idx}ILID AUTO   {lid_group}"
+                )
             # Group ID comment
             group_id = 15
             cards.append(f"* Group ID    {group_id} is body named {vessel_name}")

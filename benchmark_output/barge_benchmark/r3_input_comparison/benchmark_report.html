@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Benchmark Report - Barge_Benchmark</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        table { border-collapse: collapse; margin: 1em 0; }
+        th, td { border: 1px solid #ccc; padding: 0.5em 1em; text-align: left; }
+        th { background: #f0f0f0; }
+        h1, h2 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>Benchmark Report</h1>
+    <p><strong>Vessel:</strong> Barge_Benchmark</p>
+    <p><strong>Date:</strong> 2026-02-08 16:46:25</p>
+    <p><strong>Overall consensus:</strong> SPLIT</p>
+
+    <h2>Input Comparison</h2>
+<table style="border-collapse:collapse;margin:1em 0;width:100%;max-width:800px;">
+<tr><th style='border:1px solid #ccc;padding:0.5em 1em;background:#f0f0f0;text-align:left;'>Parameter</th>
+<th style='border:1px solid #ccc;padding:0.5em 1em;background:#f0f0f0;text-align:left;'>AQWA</th>
+<th style='border:1px solid #ccc;padding:0.5em 1em;background:#f0f0f0;text-align:left;'>OrcaWave</th>
+</tr>
+<tr><td colspan='3' style='border:none;padding:0.6em 0.4em 0.2em;font-weight:700;font-size:13px;color:#555;background:#e8e8e8;text-transform:uppercase;letter-spacing:0.5px;'>Geometry</td></tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Length (m)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>100.0</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>100.0</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Beam (m)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>20.0</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>20.0</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Draft (m)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>8.0</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>8.0</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Body dimensions (L x B x T)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>100.0 x 20.0 x 8.0</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>100.0 x 20.0 x 8.0</td>
+</tr>
+<tr><td colspan='3' style='border:none;padding:0.6em 0.4em 0.2em;font-weight:700;font-size:13px;color:#555;background:#e8e8e8;text-transform:uppercase;letter-spacing:0.5px;'>Mass Properties</td></tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Mass</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>16,400,000 kg (SI)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>16,400.0 te (OrcaFlex units)</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Centre of gravity (m)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>(0.0, 0.0, -5.0)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>(0.0, 0.0, -5.0)</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Radii of gyration (m)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>(10.0, 15.0, 15.0)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>(10.0, 15.0, 15.0)</td>
+</tr>
+<tr><td colspan='3' style='border:none;padding:0.6em 0.4em 0.2em;font-weight:700;font-size:13px;color:#555;background:#e8e8e8;text-transform:uppercase;letter-spacing:0.5px;'>Environment</td></tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Water depth (m)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>200.0</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>200.0</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Water density (kg/m3)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>1025.0</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>1025.0</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Gravity (m/s2)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>9.80665</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>9.80665</td>
+</tr>
+<tr><td colspan='3' style='border:none;padding:0.6em 0.4em 0.2em;font-weight:700;font-size:13px;color:#555;background:#e8e8e8;text-transform:uppercase;letter-spacing:0.5px;'>Mesh</td></tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Mesh file</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>barge_generated.gdf</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>barge_generated.gdf</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Mesh format</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>GDF (WAMIT)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>WAMIT GDF</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Panel count</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>912</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>912</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Symmetry</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>none</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>None</td>
+</tr>
+<tr><td colspan='3' style='border:none;padding:0.6em 0.4em 0.2em;font-weight:700;font-size:13px;color:#555;background:#e8e8e8;text-transform:uppercase;letter-spacing:0.5px;'>Analysis Settings</td></tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Frequency range (rad/s)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>0.300 – 1.200 (19)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>0.300 – 1.200 (19)</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Heading range (deg)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>0 – 180 (5)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>0 – 180 (5)</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Calculation method</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>AQWA Diffraction/Radiation</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>Potential + source formulations</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Remove irregular freq.</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>True</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>True</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>QTF calculation</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>False</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>False</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Precision</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>double</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>double</td>
+</tr>
+<tr><td colspan='3' style='border:none;padding:0.6em 0.4em 0.2em;font-weight:700;font-size:13px;color:#555;background:#e8e8e8;text-transform:uppercase;letter-spacing:0.5px;'>Conventions</td></tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Phase convention (raw)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>ISO 6954 (phase lead)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>Orcina (phase lag)</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Phase convention (normalized)</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>orcina_lag</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>orcina_lag</td>
+</tr>
+<tr>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;font-weight:600;background:#fafafa;'>Unit system</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>SI</td>
+<td style='border:1px solid #ccc;padding:0.4em 0.8em;'>orcaflex</td>
+</tr>
+</table>
+
+    <h2>Solvers</h2>
+    <table>
+        <tr><th>Solver</th></tr>
+        <tr><td>AQWA</td></tr>
+        <tr><td>OrcaWave</td></tr>
+    </table>
+
+    <h2>Consensus by DOF</h2>
+    <table>
+        <tr>
+            <th>DOF</th>
+            <th>Consensus</th>
+            <th>Mean Correlation</th>
+            <th>Outlier</th>
+        </tr>
+        <tr><td>SURGE</td><td>NO_CONSENSUS</td><td>0.9786</td><td>-</td></tr>
+        <tr><td>SWAY</td><td>NO_CONSENSUS</td><td>0.8669</td><td>-</td></tr>
+        <tr><td>HEAVE</td><td>FULL</td><td>0.9997</td><td>-</td></tr>
+        <tr><td>ROLL</td><td>NO_CONSENSUS</td><td>0.9972</td><td>-</td></tr>
+        <tr><td>PITCH</td><td>FULL</td><td>0.9980</td><td>-</td></tr>
+        <tr><td>YAW</td><td>FULL</td><td>1.0000</td><td>-</td></tr>
+
+    </table>
+
+    <h2>Plots</h2>
+    <ul>
+        <li><a href="benchmark_amplitude.html">benchmark_amplitude.html</a></li>
+        <li><a href="benchmark_phase.html">benchmark_phase.html</a></li>
+        <li><a href="benchmark_combined.html">benchmark_combined.html</a></li>
+        <li><a href="benchmark_heatmap.html">benchmark_heatmap.html</a></li>
+
+    </ul>
+
+    <h2>Notes</h2>
+    <ul>
+        <li>SURGE: consensus=NO_CONSENSUS</li>
+        <li>SWAY: consensus=NO_CONSENSUS</li>
+        <li>ROLL: consensus=NO_CONSENSUS</li>
+    </ul>
+</body>
+</html>
