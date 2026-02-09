@@ -278,8 +278,9 @@ def _predict_from_trees(
     trees = model["trees"]
     class_labels = model["class_labels"]
 
-    # Initialize raw scores (log-odds for multiclass)
-    raw_scores = np.zeros(n_classes)
+    # Initialize from prior log-odds (sklearn's init estimator)
+    init_value = model.get("init_value")
+    raw_scores = np.array(init_value) if init_value is not None else np.zeros(n_classes)
 
     # Accumulate tree predictions
     for stage in trees:
