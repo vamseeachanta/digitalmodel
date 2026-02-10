@@ -34,17 +34,15 @@ _SPECTRAL_WAVE_TYPES = {
 class EnvironmentBuilder(BaseBuilder):
     """Builds the Environment section of the OrcaFlex model.
 
-    Uses a two-layer strategy:
+    Uses hardcoded safe defaults as the base layer, then overlays
+    spec-derived values (water depth, density, wave params, current, wind).
 
-    1. **Base layer**: If ``raw_properties`` is available (from monolithic
-       extraction), use it as-is.  This preserves ALL original OrcaFlex
-       Environment properties including ones not modelled by the typed schema.
-    2. **Overlay layer**: Spec-derived values (water depth, density, wave
-       params, current, wind) are overlaid on top, so the spec remains the
-       single source of truth for key parameters.
-
-    When no ``raw_properties`` exist (e.g. hand-written spec.yml for riser or
-    pipeline models), falls back to the hardcoded default dict.
+    Note:
+        Raw pass-through of monolithic Environment properties was tested
+        but causes "Change not allowed" errors due to OrcaFlex mode-dependent
+        dormant properties.  The ``raw_properties`` field on the Environment
+        schema is preserved for diagnostic use (semantic validation tool)
+        but is NOT used by this builder.
     """
 
     # Default Environment dict used when no raw_properties are available.
@@ -86,42 +84,38 @@ class EnvironmentBuilder(BaseBuilder):
 
         Returns:
             Dictionary with 'Environment' key containing OrcaFlex settings.
+
+        Note:
+            The ``raw_properties`` on the Environment schema captures ALL
+            original OrcaFlex properties for diagnostic use (semantic
+            validation tool).  However, we do NOT pass raw properties into
+            the generated YAML because OrcaFlex YAML exports contain
+            mode-dependent dormant properties that cause "Change not allowed"
+            errors when re-loaded in a different property order.  The builder
+            uses hardcoded safe defaults instead.
         """
         env = self.spec.environment
 
-        # Layer 1: raw_properties (if available) or defaults
-        if env.raw_properties:
-            environment = dict(env.raw_properties)
-        else:
-            environment = dict(self._DEFAULTS)
+        environment = dict(self._DEFAULTS)
 
-        # Layer 2: overlay spec-derived values (always authoritative)
+        # Overlay spec-derived values (always authoritative)
         environment["Density"] = env.water.density
-        # Use the same depth key as the raw data (WaterDepth vs SeabedOriginDepth)
-        if "WaterDepth" in environment:
-            environment["WaterDepth"] = env.water.depth
-        else:
-            environment["SeabedOriginDepth"] = env.water.depth
+        environment["SeabedOriginDepth"] = env.water.depth
         environment["SeabedSlope"] = env.seabed.slope
         environment["SeabedNormalStiffness"] = env.seabed.stiffness.normal
         environment["SeabedShearStiffness"] = env.seabed.stiffness.shear
 
-        # Wave trains — use raw if available, overlay spec wave parameters
-        if env.raw_properties and "WaveTrains" in env.raw_properties:
-            environment["WaveTrains"] = self._overlay_wave_trains(
-                env.raw_properties["WaveTrains"], env.waves
-            )
-        else:
-            environment["WaveTrains"] = self._build_wave_trains(env.waves)
+        # Wave trains
+        environment["WaveTrains"] = self._build_wave_trains(env.waves)
 
-        # Current — overlay key parameters
+        # Current
         environment["RefCurrentSpeed"] = env.current.speed
         environment["RefCurrentDirection"] = env.current.direction
         environment["CurrentDepth, CurrentFactor, CurrentRotation"] = (
             self._build_current_profile(env.current.profile)
         )
 
-        # Wind — overlay key parameters
+        # Wind
         environment["WindSpeed"] = env.wind.speed
         environment["WindDirection"] = env.wind.direction
 
@@ -171,49 +165,6 @@ class EnvironmentBuilder(BaseBuilder):
             wave_train["WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel"] = None
 
         return [wave_train]
-
-    def _overlay_wave_trains(
-        self, raw_trains: list[dict[str, Any]], waves: Any
-    ) -> list[dict[str, Any]]:
-        """Overlay spec wave parameters onto raw wave trains.
-
-        Preserves the original wave train structure (names, extra properties)
-        while updating key parameters from the spec.  Only modifies the first
-        wave train; additional trains pass through unchanged.
-
-        Args:
-            raw_trains: Original wave train list from raw_properties.
-            waves: Wave specification from the input spec.
-
-        Returns:
-            Updated wave train list.
-        """
-        if not raw_trains:
-            return self._build_wave_trains(waves)
-
-        result = [dict(wt) for wt in raw_trains]
-        wt = result[0]
-
-        # Overlay spec wave type if it differs from the original
-        wave_type = WAVE_TYPE_MAP.get(waves.type, waves.type)
-        wt["WaveType"] = wave_type
-        wt["WaveDirection"] = waves.direction
-
-        # Update height/period with correct property names for the wave type
-        # First remove any existing height/period keys to avoid conflicts
-        for key in ("WaveHeight", "WaveHs", "WavePeriod", "WaveTz", "WaveTp"):
-            wt.pop(key, None)
-
-        if wave_type in _DETERMINISTIC_WAVE_TYPES:
-            wt["WaveHeight"] = waves.height
-            wt["WavePeriod"] = waves.period
-        elif wave_type in _SPECTRAL_WAVE_TYPES:
-            wt["WaveHs"] = waves.height
-            wt["WaveTz"] = waves.period
-            if wave_type in ("JONSWAP", "jonswap"):
-                wt["WaveGamma"] = waves.gamma
-
-        return result
 
     def _build_current_profile(
         self, profile: list[list[float]]

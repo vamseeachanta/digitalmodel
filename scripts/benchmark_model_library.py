@@ -187,8 +187,19 @@ def _sanitize_name(name: str) -> str:
     return re.sub(r"[^a-zA-Z0-9]+", "_", name).strip("_").lower()
 
 def _find_library_spec(model_name: str) -> Path | None:
-    """Search LIBRARY_ROOT for a spec.yml matching the sanitized model name."""
+    """Search LIBRARY_ROOT for a spec.yml matching the sanitized model name.
+
+    Prioritizes hand-crafted specs (tier2_fast/) over auto-generated ones
+    (model_library/) by searching tier2_fast first.
+    """
     sanitized = _sanitize_name(model_name)
+    # Search tier2_fast first (hand-crafted, higher quality)
+    tier2 = LIBRARY_ROOT / "tier2_fast"
+    if tier2.is_dir():
+        for spec_path in tier2.rglob("spec.yml"):
+            if spec_path.parent.name == sanitized:
+                return spec_path
+    # Fallback to any matching spec in the library tree
     for spec_path in LIBRARY_ROOT.rglob("spec.yml"):
         if spec_path.parent.name == sanitized:
             return spec_path

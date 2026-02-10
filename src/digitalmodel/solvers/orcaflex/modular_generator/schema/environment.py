@@ -92,7 +92,7 @@ class CurrentProfile(BaseModel):
     """
 
     depth: float = Field(..., ge=0, description="Depth below surface (m)")
-    factor: float = Field(..., ge=0, le=2, description="Speed factor (0-2)")
+    factor: float = Field(..., ge=0, description="Speed factor (fraction of surface speed)")
 
 
 class Current(BaseModel):
@@ -139,9 +139,9 @@ class Current(BaseModel):
             depth, factor = point
             if depth < 0:
                 raise ValueError(f"Profile depth at point {i} must be >= 0, got {depth}")
-            if factor < 0 or factor > 2:
+            if factor < 0:
                 raise ValueError(
-                    f"Profile factor at point {i} must be in [0, 2], got {factor}"
+                    f"Profile factor at point {i} must be >= 0, got {factor}"
                 )
 
         # Check depths are monotonically increasing
