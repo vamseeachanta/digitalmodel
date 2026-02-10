@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -185,6 +187,12 @@ class Environment(BaseModel):
 
     Contains all environmental parameters including water properties,
     seabed characteristics, and metocean conditions (waves, current, wind).
+
+    The ``raw_properties`` dict captures ALL raw OrcaFlex Environment
+    properties from a monolithic YAML during extraction.  The
+    EnvironmentBuilder uses this as a base layer, overlaying spec-derived
+    values on top.  This ensures round-trip fidelity for properties not
+    captured by the typed schema fields.
     """
 
     water: Water = Field(..., description="Water properties")
@@ -192,3 +200,7 @@ class Environment(BaseModel):
     waves: Waves = Field(default_factory=Waves, description="Wave specification")
     current: Current = Field(default_factory=Current, description="Current specification")
     wind: Wind = Field(default_factory=Wind, description="Wind specification")
+    raw_properties: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Pass-through raw OrcaFlex Environment properties for round-trip fidelity",
+    )

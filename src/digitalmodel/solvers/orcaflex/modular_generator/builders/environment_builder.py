@@ -34,15 +34,52 @@ _SPECTRAL_WAVE_TYPES = {
 class EnvironmentBuilder(BaseBuilder):
     """Builds the Environment section of the OrcaFlex model.
 
-    The Environment section contains:
-    - Water properties (density, surface level, viscosity)
-    - Seabed properties (type, stiffness, slope)
-    - Wave conditions (type, height, period, direction)
-    - Current conditions (speed, direction, profile)
-    - Wind conditions (speed, direction, air properties)
+    Uses a two-layer strategy:
 
-    Reference: 03_environment.yml in modular include format.
+    1. **Base layer**: If ``raw_properties`` is available (from monolithic
+       extraction), use it as-is.  This preserves ALL original OrcaFlex
+       Environment properties including ones not modelled by the typed schema.
+    2. **Overlay layer**: Spec-derived values (water depth, density, wave
+       params, current, wind) are overlaid on top, so the spec remains the
+       single source of truth for key parameters.
+
+    When no ``raw_properties`` exist (e.g. hand-written spec.yml for riser or
+    pipeline models), falls back to the hardcoded default dict.
     """
+
+    # Default Environment dict used when no raw_properties are available.
+    _DEFAULTS: dict[str, Any] = {
+        "WaterSurfaceZ": 0,
+        "KinematicViscosity": 1.35e-06,
+        "SeaTemperature": 10,
+        "ReynoldsNumberCalculation": "Flow direction",
+        "HorizontalWaterDensityFactor": None,
+        "VerticalDensityVariation": "Constant",
+        "SeabedType": "Flat",
+        "SeabedOrigin": [0, 0],
+        "NominalDepth": None,
+        "SeabedSlopeDirection": 180,
+        "SeabedModel": "Elastic",
+        "WaveKinematicsCutoffDepth": "Infinity",
+        "WaveCalculationMethod": "Instantaneous position (exact)",
+        "WaveCalculationTimeInterval": 0,
+        "WaveCalculationSpatialInterval": 0,
+        "MultipleCurrentDataCanBeDefined": "No",
+        "CurrentModel": "Variation scheme",
+        "CurrentRamped": "No",
+        "CurrentApplyVerticalStretching": "No",
+        "HorizontalCurrentFactor": None,
+        "VerticalCurrentVariationMethod": "Interpolated",
+        "IncludeVesselWindLoads": "Yes",
+        "IncludeLineWindLoads": "Yes",
+        "IncludeBuoyWindLoads": "Yes",
+        "IncludeBuoyWingWindLoads": "Yes",
+        "WindRamping": "From mean",
+        "WindType": "Constant",
+        "AirDensity": 0.00128,
+        "AirSpeedOfSound": 343,
+        "VerticalWindVariationFactor": None,
+    }
 
     def build(self) -> dict[str, Any]:
         """Build the Environment section from environmental settings.
@@ -52,56 +89,41 @@ class EnvironmentBuilder(BaseBuilder):
         """
         env = self.spec.environment
 
-        environment = {
-            # Water properties
-            "WaterSurfaceZ": 0,
-            "KinematicViscosity": 1.35e-06,
-            "SeaTemperature": 10,
-            "ReynoldsNumberCalculation": "Flow direction",
-            "HorizontalWaterDensityFactor": None,
-            "VerticalDensityVariation": "Constant",
-            "Density": env.water.density,
-            # Seabed properties
-            "SeabedType": "Flat",
-            "SeabedOrigin": [0, 0],
-            "SeabedOriginDepth": env.water.depth,
-            "NominalDepth": None,
-            "SeabedSlopeDirection": 180,
-            "SeabedSlope": env.seabed.slope,
-            "SeabedModel": "Elastic",
-            "SeabedNormalStiffness": env.seabed.stiffness.normal,
-            "SeabedShearStiffness": env.seabed.stiffness.shear,
-            # Wave conditions
-            "WaveTrains": self._build_wave_trains(env.waves),
-            "WaveKinematicsCutoffDepth": "Infinity",
-            "WaveCalculationMethod": "Instantaneous position (exact)",
-            "WaveCalculationTimeInterval": 0,
-            "WaveCalculationSpatialInterval": 0,
-            # Current conditions
-            "MultipleCurrentDataCanBeDefined": "No",
-            "CurrentModel": "Variation scheme",
-            "CurrentRamped": "No",
-            "CurrentApplyVerticalStretching": "No",
-            "HorizontalCurrentFactor": None,
-            "VerticalCurrentVariationMethod": "Interpolated",
-            "RefCurrentSpeed": env.current.speed,
-            "RefCurrentDirection": env.current.direction,
-            "CurrentDepth, CurrentFactor, CurrentRotation": self._build_current_profile(
-                env.current.profile
-            ),
-            # Wind conditions
-            "IncludeVesselWindLoads": "Yes",
-            "IncludeLineWindLoads": "Yes",
-            "IncludeBuoyWindLoads": "Yes",
-            "IncludeBuoyWingWindLoads": "Yes",
-            "WindRamping": "From mean",
-            "WindType": "Constant",
-            "AirDensity": 0.00128,
-            "AirSpeedOfSound": 343,
-            "WindSpeed": env.wind.speed,
-            "WindDirection": env.wind.direction,
-            "VerticalWindVariationFactor": None,
-        }
+        # Layer 1: raw_properties (if available) or defaults
+        if env.raw_properties:
+            environment = dict(env.raw_properties)
+        else:
+            environment = dict(self._DEFAULTS)
+
+        # Layer 2: overlay spec-derived values (always authoritative)
+        environment["Density"] = env.water.density
+        # Use the same depth key as the raw data (WaterDepth vs SeabedOriginDepth)
+        if "WaterDepth" in environment:
+            environment["WaterDepth"] = env.water.depth
+        else:
+            environment["SeabedOriginDepth"] = env.water.depth
+        environment["SeabedSlope"] = env.seabed.slope
+        environment["SeabedNormalStiffness"] = env.seabed.stiffness.normal
+        environment["SeabedShearStiffness"] = env.seabed.stiffness.shear
+
+        # Wave trains — use raw if available, overlay spec wave parameters
+        if env.raw_properties and "WaveTrains" in env.raw_properties:
+            environment["WaveTrains"] = self._overlay_wave_trains(
+                env.raw_properties["WaveTrains"], env.waves
+            )
+        else:
+            environment["WaveTrains"] = self._build_wave_trains(env.waves)
+
+        # Current — overlay key parameters
+        environment["RefCurrentSpeed"] = env.current.speed
+        environment["RefCurrentDirection"] = env.current.direction
+        environment["CurrentDepth, CurrentFactor, CurrentRotation"] = (
+            self._build_current_profile(env.current.profile)
+        )
+
+        # Wind — overlay key parameters
+        environment["WindSpeed"] = env.wind.speed
+        environment["WindDirection"] = env.wind.direction
 
         return {"Environment": environment}
 
@@ -149,6 +171,49 @@ class EnvironmentBuilder(BaseBuilder):
             wave_train["WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel"] = None
 
         return [wave_train]
+
+    def _overlay_wave_trains(
+        self, raw_trains: list[dict[str, Any]], waves: Any
+    ) -> list[dict[str, Any]]:
+        """Overlay spec wave parameters onto raw wave trains.
+
+        Preserves the original wave train structure (names, extra properties)
+        while updating key parameters from the spec.  Only modifies the first
+        wave train; additional trains pass through unchanged.
+
+        Args:
+            raw_trains: Original wave train list from raw_properties.
+            waves: Wave specification from the input spec.
+
+        Returns:
+            Updated wave train list.
+        """
+        if not raw_trains:
+            return self._build_wave_trains(waves)
+
+        result = [dict(wt) for wt in raw_trains]
+        wt = result[0]
+
+        # Overlay spec wave type if it differs from the original
+        wave_type = WAVE_TYPE_MAP.get(waves.type, waves.type)
+        wt["WaveType"] = wave_type
+        wt["WaveDirection"] = waves.direction
+
+        # Update height/period with correct property names for the wave type
+        # First remove any existing height/period keys to avoid conflicts
+        for key in ("WaveHeight", "WaveHs", "WavePeriod", "WaveTz", "WaveTp"):
+            wt.pop(key, None)
+
+        if wave_type in _DETERMINISTIC_WAVE_TYPES:
+            wt["WaveHeight"] = waves.height
+            wt["WavePeriod"] = waves.period
+        elif wave_type in _SPECTRAL_WAVE_TYPES:
+            wt["WaveHs"] = waves.height
+            wt["WaveTz"] = waves.period
+            if wave_type in ("JONSWAP", "jonswap"):
+                wt["WaveGamma"] = waves.gamma
+
+        return result
 
     def _build_current_profile(
         self, profile: list[list[float]]

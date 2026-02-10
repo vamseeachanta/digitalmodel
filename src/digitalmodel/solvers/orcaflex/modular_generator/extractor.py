@@ -143,8 +143,10 @@ class MonolithicExtractor:
     def _extract_environment(self) -> dict[str, Any]:
         """Map OrcaFlex Environment keys to the environment schema.
 
-        Handles missing keys gracefully by using ``.get()`` with sensible
-        defaults throughout.
+        Captures ALL raw Environment properties into ``raw_properties`` for
+        round-trip fidelity.  The typed schema fields (water, seabed, waves,
+        current, wind) are also populated from specific keys so the spec
+        remains human-readable.
 
         Returns:
             Dict compatible with the ``Environment`` Pydantic model.
@@ -167,6 +169,12 @@ class MonolithicExtractor:
         wind = self._extract_wind(env)
         if wind:
             result["wind"] = wind
+
+        # Capture ALL raw OrcaFlex Environment properties for pass-through.
+        # The EnvironmentBuilder uses this as a base layer, overlaying
+        # spec-derived values on top.
+        if env:
+            result["raw_properties"] = dict(env)
 
         return result
 
@@ -224,7 +232,11 @@ class MonolithicExtractor:
         return result if result else None
 
     def _extract_current(self, env: dict[str, Any]) -> dict[str, Any] | None:
-        """Extract current parameters from the Environment section."""
+        """Extract current parameters from the Environment section.
+
+        Also captures the depth-varying current profile from the
+        multi-column ``CurrentDepth, CurrentFactor, CurrentRotation`` key.
+        """
         speed = env.get("RefCurrentSpeed")
         direction = env.get("RefCurrentDirection")
 
@@ -236,6 +248,19 @@ class MonolithicExtractor:
             result["speed"] = speed
         if direction is not None:
             result["direction"] = direction
+
+        # Extract current profile from multi-column key
+        profile_key = "CurrentDepth, CurrentFactor, CurrentRotation"
+        raw_profile = env.get(profile_key)
+        if raw_profile and isinstance(raw_profile, list):
+            # Convert [[depth, factor, rotation], ...] -> [[depth, factor], ...]
+            profile = []
+            for row in raw_profile:
+                if isinstance(row, list) and len(row) >= 2:
+                    profile.append([float(row[0]), float(row[1])])
+            if profile:
+                result["profile"] = profile
+
         return result
 
     def _extract_wind(self, env: dict[str, Any]) -> dict[str, Any] | None:
