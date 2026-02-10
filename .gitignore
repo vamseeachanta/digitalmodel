@@ -233,15 +233,12 @@ reports/
 # Claude Flow runtime (consolidated)
 .claude/settings.local.json
 .mcp.json
-claude-flow.config.json
 .swarm/
 .hive-mind/
-.claude-flow/
 
 # Memory and coordination
 memory/
 coordination/
-memory/claude-flow-data.json
 memory/sessions/*
 !memory/sessions/README.md
 memory/agents/*
