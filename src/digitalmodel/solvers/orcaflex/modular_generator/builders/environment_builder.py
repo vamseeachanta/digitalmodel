@@ -17,6 +17,18 @@ WAVE_TYPE_MAP = {
     "user_defined": "User defined spectrum",
 }
 
+# Deterministic wave types use WaveHeight + WavePeriod
+_DETERMINISTIC_WAVE_TYPES = {
+    "Dean stream", "Airy", "Stokes' 5th", "Cnoidal",
+    "dean_stream", "airy", "stokes_5th", "cnoidal",
+}
+
+# Spectral wave types use WaveHs + WaveTz
+_SPECTRAL_WAVE_TYPES = {
+    "JONSWAP", "Pierson-Moskowitz", "Torsethaugen", "Ochi-Hubble",
+    "jonswap", "pierson_moskowitz",
+}
+
 
 @BuilderRegistry.register("03_environment.yml", order=30)
 class EnvironmentBuilder(BaseBuilder):
@@ -96,6 +108,11 @@ class EnvironmentBuilder(BaseBuilder):
     def _build_wave_trains(self, waves: Any) -> list[dict[str, Any]]:
         """Build wave train configuration from wave settings.
 
+        Uses the correct OrcaFlex property names based on wave type:
+        - Deterministic (Dean stream, Airy, etc.): WaveHeight + WavePeriod
+        - Spectral (JONSWAP, Pierson-Moskowitz, etc.): WaveHs + WaveTz
+        - Other (User defined, No waves, etc.): no height/period emitted
+
         Args:
             waves: Wave specification from the input spec.
 
@@ -105,18 +122,29 @@ class EnvironmentBuilder(BaseBuilder):
         # Map wave type to OrcaFlex enum value
         wave_type = WAVE_TYPE_MAP.get(waves.type, waves.type)
 
-        wave_train = {
+        wave_train: dict[str, Any] = {
             "Name": "Wave1",
             "WaveType": wave_type,
             "WaveDirection": waves.direction,
-            "WaveHeight": waves.height,
-            "WavePeriod": waves.period,
             "WaveOrigin": [0, 0],
             "WaveTimeOrigin": 0,
         }
 
+        # Emit height/period with correct property names for the wave type
+        if wave_type in _DETERMINISTIC_WAVE_TYPES:
+            wave_train["WaveHeight"] = waves.height
+            wave_train["WavePeriod"] = waves.period
+        elif wave_type in _SPECTRAL_WAVE_TYPES:
+            wave_train["WaveHs"] = waves.height
+            wave_train["WaveTz"] = waves.period
+            if wave_type in ("JONSWAP", "jonswap"):
+                wave_train["WaveGamma"] = waves.gamma
+        # For other wave types (User defined, User specified components,
+        # No waves, etc.), omit height/period — OrcaFlex uses type-specific
+        # parameters that pass through via generic properties.
+
         # Add wave-type specific parameters
-        if waves.type == "dean_stream":
+        if waves.type == "dean_stream" or wave_type == "Dean stream":
             wave_train["WaveStreamFunctionOrder"] = 5
             wave_train["WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel"] = None
 

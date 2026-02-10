@@ -12,34 +12,16 @@ class Water(BaseModel):
     Attributes:
         depth: Water depth in meters. Must be positive.
         density: Seawater density in te/m3. Typical range: 1.02-1.03.
+            Some OrcaFlex models use non-standard values (e.g. model-scale
+            density, air density for in-air models).
     """
 
     depth: float = Field(..., gt=0, description="Water depth (m)")
     density: float = Field(
         default=1.025,
         gt=0,
-        le=1.1,
-        description="Seawater density (te/m3), typical 1.025",
+        description="Fluid density (te/m3), typical seawater 1.025",
     )
-
-    @field_validator("depth")
-    @classmethod
-    def validate_depth(cls, v: float) -> float:
-        """Validate water depth is within reasonable offshore range."""
-        if v > 5000:
-            raise ValueError(f"Water depth {v}m exceeds maximum reasonable value of 5000m")
-        return v
-
-    @field_validator("density")
-    @classmethod
-    def validate_density(cls, v: float) -> float:
-        """Validate water density is within physical range."""
-        if v < 1.0 or v > 1.1:
-            raise ValueError(
-                f"Water density {v} te/m3 outside expected range [1.0, 1.1]. "
-                "Typical seawater density is 1.025 te/m3."
-            )
-        return v
 
 
 class SeabedStiffness(BaseModel):
@@ -51,16 +33,8 @@ class SeabedStiffness(BaseModel):
         shear: Shear (lateral) stiffness in kN/m/m2.
     """
 
-    normal: float = Field(..., gt=0, description="Normal stiffness (kN/m/m2)")
-    shear: float = Field(..., gt=0, description="Shear stiffness (kN/m/m2)")
-
-    @field_validator("normal", "shear")
-    @classmethod
-    def validate_stiffness(cls, v: float) -> float:
-        """Validate stiffness is positive and within reasonable range."""
-        if v > 1e8:
-            raise ValueError(f"Stiffness {v} exceeds maximum reasonable value")
-        return v
+    normal: float = Field(..., ge=0, description="Normal stiffness (kN/m/m2)")
+    shear: float = Field(..., ge=0, description="Shear stiffness (kN/m/m2)")
 
 
 class Seabed(BaseModel):
@@ -104,23 +78,6 @@ class Waves(BaseModel):
         default=3.3, gt=1, le=7, description="JONSWAP gamma (typically 1-7)"
     )
 
-    @field_validator("period")
-    @classmethod
-    def validate_period(cls, v: float) -> float:
-        """Validate wave period is physically reasonable."""
-        if v < 1 or v > 30:
-            raise ValueError(
-                f"Wave period {v}s outside typical range [1, 30]s for offshore conditions"
-            )
-        return v
-
-    @field_validator("height")
-    @classmethod
-    def validate_height(cls, v: float) -> float:
-        """Validate wave height is physically reasonable."""
-        if v > 40:
-            raise ValueError(f"Wave height {v}m exceeds maximum reasonable value of 40m")
-        return v
 
 
 class CurrentProfile(BaseModel):

@@ -45,6 +45,14 @@ _SECTION_ORDER: list[str] = [
     "General",
     "VariableData",
     "ExpansionTables",
+    # Singleton sections that define named references (must precede objects)
+    "RayleighDampingCoefficients",
+    "SolidFrictionCoefficients",
+    "LineContactData",
+    "CodeChecks",
+    "Shear7Data",
+    "VIVAData",
+    # Type definitions (must precede instances)
     "LineTypes",
     "VesselTypes",
     "ClumpTypes",
@@ -54,6 +62,9 @@ _SECTION_ORDER: list[str] = [
     "StiffenerTypes",
     "SupportTypes",
     "MorisonElementTypes",
+    # Object instances
+    "PyModels",
+    "WakeModels",
     "Vessels",
     "Lines",
     "Shapes",
@@ -66,16 +77,8 @@ _SECTION_ORDER: list[str] = [
     "DragChains",
     "Turbines",
     "AttachedBuoys",
-    "PyModels",
-    "WakeModels",
     "MultibodyGroups",
     "BrowserGroups",
-    "SolidFrictionCoefficients",
-    "LineContactData",
-    "CodeChecks",
-    "Shear7Data",
-    "VIVAData",
-    "RayleighDampingCoefficients",
 ]
 
 # OrcaFlex properties that must appear before other properties within an
