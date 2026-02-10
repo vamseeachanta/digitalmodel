@@ -1,0 +1,63 @@
+# Spar Benchmark Specification
+# Spar diffraction benchmark: AQWA vs OrcaWave comparison
+#
+# Hull: Cylinder D=25m, draft=110m, freeboard=15m, 200m water depth
+# Source: AQWA SIMPLE.LIS (spar-example)
+# Purpose: Axisymmetric body validation for added mass, damping, and RAOs
+
+version: "1.0"
+analysis_type: diffraction
+
+vessel:
+  name: "Spar_Benchmark"
+  type: "spar"
+  geometry:
+    mesh_file: "simple.dat"
+    mesh_format: aqwa_dat
+    symmetry: none
+    reference_point: [0.0, 0.0, 0.0]
+    waterline_z: 0.0
+    length_units: m
+    dimensions:
+      diameter: 25.0  # radius = 12.5m
+      draft: 110.0
+      freeboard: 15.0
+  inertia:
+    # Mass = 55,000 tonnes = 5.5e7 kg
+    mass: 55000000.0
+    centre_of_gravity: [0.0, 0.0, -61.63]
+    # Radii of gyration: sqrt(Ixx/mass), sqrt(Iyy/mass), sqrt(Izz/mass)
+    radii_of_gyration: [75.3, 75.3, 62.7]
+
+environment:
+  water_depth: 200.0
+  water_density: 1025.0
+  gravity: 9.80665
+
+frequencies:
+  input_type: frequency
+  # Match AQWA: 0.20944, 0.38426, 2.32478 rad/s — extended for better coverage
+  values: [0.15, 0.20, 0.20944, 0.25, 0.30, 0.35, 0.38426, 0.40, 0.45, 0.50,
+           0.55, 0.60, 0.70, 0.80, 0.90, 1.00, 1.20, 1.50, 2.00, 2.32478]
+
+wave_headings:
+  values: [0.0, 45.0, 90.0, 135.0, 180.0]
+  symmetry: false
+
+solver_options:
+  remove_irregular_frequencies: true
+  qtf_calculation: false
+  load_rao_method: both
+  precision: double
+
+outputs:
+  formats: [csv]
+  components: [raos, added_mass, damping]
+  output_dir: "benchmark_results/spar"
+
+metadata:
+  project: "spar_benchmark"
+  author: "digitalmodel"
+  description: "Spar benchmark for AQWA vs OrcaWave comparison. Cylinder D=25m, draft=110m."
+  created: "2026-02-08"
+  tags: [benchmark, spar, validation, axisymmetric]

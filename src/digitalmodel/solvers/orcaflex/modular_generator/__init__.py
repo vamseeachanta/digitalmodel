@@ -118,18 +118,22 @@ class ModularModelGenerator:
         self._write_master(output_dir / 'master.yml', generated_files)
 
     def _write_parameters(self, path: Path) -> None:
-        params = {
-            'water_depth': self.spec.environment.water.depth,
-            'water_density': self.spec.environment.water.density,
-            'current_speed': self.spec.environment.current.speed,
-            'current_direction': self.spec.environment.current.direction,
-            'wind_speed': self.spec.environment.wind.speed,
-            'hs': self.spec.environment.waves.height,
-            'tp': self.spec.environment.waves.period,
-            'wave_direction': self.spec.environment.waves.direction,
-            'stage_durations': self.spec.simulation.stages,
-            'time_step': self.spec.simulation.time_step,
+        env = self.spec.environment
+        params: dict[str, Any] = {
+            'water_depth': env.water.depth,
+            'water_density': env.water.density,
         }
+        if env.current is not None:
+            params['current_speed'] = env.current.speed
+            params['current_direction'] = env.current.direction
+        if env.wind is not None:
+            params['wind_speed'] = env.wind.speed
+        if env.waves is not None:
+            params['hs'] = env.waves.height
+            params['tp'] = env.waves.period
+            params['wave_direction'] = env.waves.direction
+        params['stage_durations'] = self.spec.simulation.stages
+        params['time_step'] = self.spec.simulation.time_step
         with open(path, 'w') as f:
             yaml.dump(params, f, default_flow_style=False)
 

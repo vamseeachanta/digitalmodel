@@ -607,3 +607,61 @@ class TestMetadataInOutput:
         # Project is "test_ship_raos"
         title_text = " ".join(title_lines)
         assert "test_ship_raos" in title_text
+
+
+# ---------------------------------------------------------------------------
+# AH1 option tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def default_spec() -> DiffractionSpec:
+    """Load the default ship RAO spec for AH1 option tests."""
+    return _load_ship_spec()
+
+
+class TestAH1Option:
+    """Tests for OPTIONS AHD1 card generation."""
+
+    def test_ah1_option_absent_by_default(self, default_spec, tmp_path):
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
+
+        backend = AQWABackend()
+        output = backend.generate_single(default_spec, Path(tmp_path))
+        content = output.read_text()
+        assert "OPTIONS AHD1" not in content
+
+    def test_ah1_option_present_when_enabled(self, default_spec, tmp_path):
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
+
+        default_spec.solver_options.output_ah1 = True
+        backend = AQWABackend()
+        output = backend.generate_single(default_spec, Path(tmp_path))
+        content = output.read_text()
+        assert "OPTIONS AHD1" in content
+
+    def test_ah1_option_positioned_before_restart(self, default_spec, tmp_path):
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
+
+        default_spec.solver_options.output_ah1 = True
+        backend = AQWABackend()
+        output = backend.generate_single(default_spec, Path(tmp_path))
+        lines = output.read_text().splitlines()
+        ah1_idx = next(i for i, l in enumerate(lines) if "OPTIONS AHD1" in l)
+        restart_idx = next(i for i, l in enumerate(lines) if "RESTART" in l)
+        assert ah1_idx < restart_idx
+
+    def test_ah1_option_via_deck0_builder(self, default_spec):
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
+
+        default_spec.solver_options.output_ah1 = True
+        backend = AQWABackend()
+        cards = backend.build_deck0(default_spec)
+        assert any("OPTIONS AHD1" in c for c in cards)
+
+    def test_ah1_option_absent_via_deck0_builder(self, default_spec):
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
+
+        backend = AQWABackend()
+        cards = backend.build_deck0(default_spec)
+        assert not any("OPTIONS AHD1" in c for c in cards)

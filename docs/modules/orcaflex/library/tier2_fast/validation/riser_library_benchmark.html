@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Riser Library Benchmark Report</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8;
+    --green: #4ade80; --red: #f87171; --amber: #fbbf24;
+    --border: #475569;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 2rem; }
+  .container { max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; color: var(--accent); margin-bottom: 0.2rem; }
+  h2 { font-size: 1.15rem; color: var(--accent); margin: 2rem 0 0.8rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+  .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+  .badge-pass { background: #065f46; color: var(--green); }
+  .badge-fail { background: #7f1d1d; color: var(--red); }
+  .badge-warn { background: #78350f; color: var(--amber); }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0 2rem; }
+  .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+  .summary-card .label { color: var(--muted); font-size: 0.8rem; }
+  .summary-card .value { font-size: 1.4rem; font-weight: 700; margin: 0.3rem 0; }
+  table { width: 100%; border-collapse: collapse; margin: 0.5rem 0 1.5rem; font-size: 0.82rem; }
+  th { background: var(--surface2); color: var(--accent); text-align: left; padding: 0.5rem 0.7rem; font-weight: 600; position: sticky; top: 0; }
+  td { padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--surface2); }
+  tr:hover td { background: rgba(56,189,248,0.05); }
+  .diff-ok { color: var(--green); font-weight: 600; }
+  .diff-warn { color: var(--amber); font-weight: 600; }
+  .diff-high { color: var(--red); font-weight: 600; }
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 2rem; }
+  .toc a { color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol { padding-left: 1.5rem; }
+  .toc li { margin: 0.2rem 0; }
+  .footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; text-align: center; }
+  @media print {
+    body { background: #fff; color: #1a1a1a; padding: 1rem; }
+    .summary-card, .toc { border-color: #ccc; background: #f5f5f5; }
+    th { background: #eee; color: #333; }
+    .diff-ok { color: #16a34a; } .diff-warn { color: #d97706; } .diff-high { color: #dc2626; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Riser Library Benchmark Report</h1>
+<p class="subtitle">Monolithic vs Spec-Driven + Mesh Sensitivity &mdash; 2026-02-08 23:37</p>
+
+<div class="summary-grid">
+  <div class="summary-card">
+    <div class="label">Models Tested</div>
+    <div class="value">4</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">Overall</div>
+    <div class="value"><span class="badge badge-pass">ALL PASS</span></div>
+  </div>
+  <div class="summary-card">
+    <div class="label">Mesh Levels</div>
+    <div class="value">5</div>
+    <div class="label">coarse / medium / fine / very fine / ultra fine</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">Max Tension Diff</div>
+    <div class="value">0.8%</div>
+  </div>
+</div>
+
+<div class="toc">
+  <strong>Contents</strong>
+  <ol>
+    <li><a href="#t1">Input Data Comparison</a></li>
+    <li><a href="#t2">Monolithic vs Spec-Driven</a></li>
+    <li><a href="#t3">Spec-Driven Results</a></li>
+    <li><a href="#t4">Mesh Sensitivity</a></li>
+    <li><a href="#t5">Performance</a></li>
+  </ol>
+</div>
+
+<h2 id="t1">1. Input Data Comparison</h2>
+<table>
+<tr><th>Model</th><th>Config</th><th>Spec Lines</th><th>Line Types</th><th>Links</th><th>Clumps</th><th>Length (m)</th><th>Depth (m)</th><th>Mono Objs</th><th>Mod Objs</th></tr>
+<tr><td>a01_catenary_riser</td><td>catenary</td><td>107</td><td>1</td><td>0</td><td>0</td><td>130.0</td><td>100</td><td>12</td><td>11</td></tr>
+<tr><td>a01_lazy_wave_riser</td><td>lazy_wave</td><td>192</td><td>2</td><td>0</td><td>1</td><td>380.0</td><td>100</td><td>16</td><td>14</td></tr>
+<tr><td>a01_pliant_wave_riser</td><td>pliant_wave</td><td>183</td><td>3</td><td>1</td><td>1</td><td>232.5</td><td>100</td><td>26</td><td>15</td></tr>
+<tr><td>a01_steep_wave_riser</td><td>steep_wave</td><td>152</td><td>2</td><td>0</td><td>0</td><td>151.0</td><td>100</td><td>31</td><td>12</td></tr>
+</table>
+
+<h2 id="t2">2. Monolithic vs Spec-Driven</h2>
+<table>
+<tr><th>Model</th><th>Line</th><th>Mono EA (kN)</th><th>Spec EA (kN)</th><th>EA Diff%</th><th>Mono EB (kN)</th><th>Spec EB (kN)</th><th>EB Diff%</th><th>Mono MaxB</th><th>Spec MaxB</th><th>Pass</th></tr>
+<tr><td>a01_catenary_riser</td><td>Catenary Hose</td><td>132.4</td><td>132.4</td><td class="diff-ok">0.00%</td><td>11.9</td><td>11.9</td><td class="diff-ok">0.02%</td><td>9.50</td><td>9.50</td><td><span class="badge badge-pass">PASS</span></td></tr>
+<tr><td>a01_lazy_wave_riser</td><td>10" Lazy Wave Distributed</td><td>90.7</td><td>90.5</td><td class="diff-ok">0.19%</td><td>18.2</td><td>17.3</td><td class="diff-high">5.06%</td><td>10.78</td><td>10.62</td><td><span class="badge badge-pass">PASS</span></td></tr>
+<tr><td>a01_lazy_wave_riser</td><td>10" Lazy Wave Discrete</td><td>90.7</td><td>90.7</td><td class="diff-ok">0.00%</td><td>18.7</td><td>18.7</td><td class="diff-ok">0.14%</td><td>10.88</td><td>10.89</td><td><span class="badge badge-pass">PASS</span></td></tr>
+<tr><td>a01_pliant_wave_riser</td><td>10" Pliant Simple</td><td>116.6</td><td>115.7</td><td class="diff-ok">0.85%</td><td>28.7</td><td>22.0</td><td class="diff-high">23.32%</td><td>36.27</td><td>36.30</td><td><span class="badge badge-pass">PASS</span></td></tr>
+<tr><td>a01_steep_wave_riser</td><td>10" Steep Wave1</td><td>87.3</td><td>87.6</td><td class="diff-ok">0.30%</td><td>36.6</td><td>36.9</td><td class="diff-ok">0.90%</td><td>14.22</td><td>15.71</td><td><span class="badge badge-pass">PASS</span></td></tr>
+</table>
+
+<h2 id="t3">3. Spec-Driven Results (Complete Extraction)</h2>
+<table>
+<tr><th>Model</th><th>Line/Link</th><th>Type</th><th>EA Tension (kN)</th><th>EB Tension (kN)</th><th>Max T (kN)</th><th>Min T (kN)</th><th>Max Bend (kN.m)</th><th>Segments</th></tr>
+<tr><td>a01_catenary_riser</td><td>Catenary Hose</td><td>Line</td><td>132.4</td><td>11.9</td><td>132.4</td><td>11.8</td><td>9.50</td><td>77</td></tr>
+<tr><td>a01_lazy_wave_riser</td><td>10in Lazy Wave Distributed</td><td>Line</td><td>90.5</td><td>17.3</td><td>90.5</td><td>13.8</td><td>10.62</td><td>137</td></tr>
+<tr><td>a01_lazy_wave_riser</td><td>10in Lazy Wave Discrete</td><td>Line</td><td>90.7</td><td>18.7</td><td>90.7</td><td>13.4</td><td>10.89</td><td>167</td></tr>
+<tr><td>a01_pliant_wave_riser</td><td>10in Pliant Simple</td><td>Line</td><td>115.7</td><td>22.0</td><td>115.7</td><td>22.0</td><td>36.30</td><td>126</td></tr>
+<tr><td>a01_pliant_wave_riser</td><td>Tether Pliant Simple</td><td>Tether</td><td>62.1</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>a01_steep_wave_riser</td><td>10in Steep Wave</td><td>Line</td><td>87.6</td><td>36.9</td><td>87.6</td><td>7.8</td><td>15.71</td><td>150</td></tr>
+</table>
+
+<h2 id="t4">4. Mesh Sensitivity</h2>
+<table>
+<tr><th>Model</th><th>Line</th><th>Metric</th><th>Coarse</th><th>Medium</th><th>Fine</th><th>Very Fine</th><th>Ultra Fine</th><th>Overall Diff%</th><th>Recommended Mesh</th></tr>
+<tr><td>a01_catenary_riser</td><td>Catenary Hose</td><td>end_a_tension (kN)</td><td>132.66</td><td>132.36</td><td>132.38</td><td>132.39</td><td>132.39</td><td class="diff-ok">0.21%</td><td><span class="badge-rec">Coarse</span></td></tr>
+<tr><td>a01_catenary_riser</td><td>Catenary Hose</td><td>max_tension (kN)</td><td>132.66</td><td>132.36</td><td>132.38</td><td>132.39</td><td>132.39</td><td class="diff-ok">0.21%</td><td><span class="badge-rec">Coarse</span></td></tr>
+<tr><td>a01_catenary_riser</td><td>Catenary Hose</td><td>max_bending (kN)m</td><td>8.69</td><td>9.35</td><td>9.46</td><td>9.51</td><td>9.52</td><td class="diff-high">8.68%</td><td><span class="badge-rec">Fine</span></td></tr>
+<tr><td>a01_lazy_wave_riser</td><td>10in Lazy Wave Discrete</td><td>end_a_tension (kN)</td><td>90.62</td><td>90.71</td><td>90.64</td><td>90.93</td><td>90.65</td><td class="diff-ok">0.03%</td><td><span class="badge-rec">Coarse</span></td></tr>
+<tr><td>a01_lazy_wave_riser</td><td>10in Lazy Wave Discrete</td><td>max_tension (kN)</td><td>90.62</td><td>90.71</td><td>90.64</td><td>90.93</td><td>90.65</td><td class="diff-ok">0.03%</td><td><span class="badge-rec">Coarse</span></td></tr>
+<tr><td>a01_lazy_wave_riser</td><td>10in Lazy Wave Discrete</td><td>max_bending (kN)m</td><td>10.42</td><td>10.76</td><td>10.90</td><td>10.87</td><td>10.92</td><td class="diff-warn">4.61%</td><td><span class="badge-rec">Fine</span></td></tr>
+<tr><td>a01_lazy_wave_riser</td><td>10in Lazy Wave Distributed</td><td>end_a_tension (kN)</td><td>90.44</td><td>90.48</td><td>90.48</td><td>90.48</td><td>90.48</td><td class="diff-ok">0.05%</td><td><span class="badge-rec">Coarse</span></td></tr>
+<tr><td>a01_lazy_wave_riser</td><td>10in Lazy Wave Distributed</td><td>max_tension (kN)</td><td>90.44</td><td>90.48</td><td>90.48</td><td>90.48</td><td>90.48</td><td class="diff-ok">0.05%</td><td><span class="badge-rec">Coarse</span></td></tr>
+<tr><td>a01_lazy_wave_riser</td><td>10in Lazy Wave Distributed</td><td>max_bending (kN)m</td><td>10.16</td><td>10.54</td><td>10.62</td><td>10.64</td><td>10.64</td><td class="diff-warn">4.51%</td><td><span class="badge-rec">Medium</span></td></tr>
+<tr><td>a01_pliant_wave_riser</td><td>10in Pliant Simple</td><td>end_a_tension (kN)</td><td>115.58</td><td>115.65</td><td>115.66</td><td>115.66</td><td>115.66</td><td class="diff-ok">0.07%</td><td><span class="badge-rec">Coarse</span></td></tr>
+<tr><td>a01_pliant_wave_riser</td><td>10in Pliant Simple</td><td>max_tension (kN)</td><td>115.58</td><td>115.65</td><td>115.66</td><td>115.66</td><td>115.66</td><td class="diff-ok">0.07%</td><td><span class="badge-rec">Coarse</span></td></tr>
+<tr><td>a01_pliant_wave_riser</td><td>10in Pliant Simple</td><td>max_bending (kN)m</td><td>25.18</td><td>31.11</td><td>34.79</td><td>36.46</td><td>37.59</td><td class="diff-high">33.02%</td><td><span class="badge-rec">Ultra Fine</span></td></tr>
+<tr><td>a01_steep_wave_riser</td><td>10in Steep Wave</td><td>end_a_tension (kN)</td><td>87.55</td><td>87.56</td><td>87.56</td><td>87.56</td><td>87.56</td><td class="diff-ok">0.02%</td><td><span class="badge-rec">Coarse</span></td></tr>
+<tr><td>a01_steep_wave_riser</td><td>10in Steep Wave</td><td>max_tension (kN)</td><td>87.55</td><td>87.56</td><td>87.56</td><td>87.56</td><td>87.56</td><td class="diff-ok">0.02%</td><td><span class="badge-rec">Coarse</span></td></tr>
+<tr><td>a01_steep_wave_riser</td><td>10in Steep Wave</td><td>max_bending (kN)m</td><td>14.24</td><td>15.51</td><td>15.71</td><td>15.75</td><td>15.76</td><td class="diff-high">9.60%</td><td><span class="badge-rec">Fine</span></td></tr>
+</table>
+
+<h2 id="t5">5. Performance (Statics Time in Seconds)</h2>
+<table>
+<tr><th>Model</th><th>Monolithic</th><th>Spec-Driven</th><th>Coarse</th><th>Medium</th><th>Fine</th><th>Very Fine</th><th>Ultra Fine</th><th>Overall</th></tr>
+<tr><td>a01_catenary_riser</td><td>0.22</td><td>0.17</td><td>0.10</td><td>0.12</td><td>0.21</td><td>0.46</td><td>0.96</td><td><span class="badge badge-pass">PASS</span></td></tr>
+<tr><td>a01_lazy_wave_riser</td><td>0.66</td><td>0.48</td><td>0.19</td><td>0.29</td><td>0.76</td><td>1.23</td><td>2.72</td><td><span class="badge badge-pass">PASS</span></td></tr>
+<tr><td>a01_pliant_wave_riser</td><td>0.66</td><td>0.58</td><td>0.26</td><td>0.35</td><td>1.40</td><td>2.95</td><td>4.80</td><td><span class="badge badge-pass">PASS</span></td></tr>
+<tr><td>a01_steep_wave_riser</td><td>0.78</td><td>0.37</td><td>0.12</td><td>0.18</td><td>0.38</td><td>0.65</td><td>1.07</td><td><span class="badge badge-pass">PASS</span></td></tr>
+</table>
+
+<div class="footer">
+  Generated 2026-02-08 23:37 &mdash; scripts/benchmark_riser_library.py &mdash; digitalmodel
+</div>
+
+</div>
+</body>
+</html>

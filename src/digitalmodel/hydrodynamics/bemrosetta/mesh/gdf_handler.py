@@ -71,7 +71,10 @@ class GDFHandler(BaseMeshHandler):
         """
         line_idx = 0
 
-        # Skip header comments
+        # Line 1 is always a title/header line in GDF format.
+        # Skip it plus any additional comment lines starting with #.
+        if line_idx < len(lines):
+            line_idx += 1  # skip title line
         while line_idx < len(lines) and lines[line_idx].strip().startswith('#'):
             line_idx += 1
 

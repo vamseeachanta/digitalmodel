@@ -32,16 +32,16 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_runner import (
 )
 
 # --- Configuration ---
-SOURCE_DIR = Path("benchmark_output/barge_final")
-OWR_FILE = SOURCE_DIR / "orcawave" / "Barge_Benchmark.owr"
+BENCHMARK_DIR = Path("docs/modules/orcawave/L02_barge_benchmark")
+SOURCE_DIR = BENCHMARK_DIR / "source_data"
+OWR_FILE = Path("benchmark_output/barge_final/orcawave/Barge_Benchmark.owr")
 LIS_FILE = SOURCE_DIR / "aqwa" / "WRK-031_3WAY_BENCHMARK.LIS"
 SPEC_FILE = Path("specs/modules/benchmark/barge_benchmark_spec.yml")
 VESSEL_NAME = "Barge_Benchmark"
 WATER_DEPTH = 200.0
 
-# Revision-tracked output directory
-REVISION = "r4_per_dof_report"
-OUTPUT_DIR = Path("benchmark_output/barge_benchmark") / REVISION
+# Output directory — canonical location in docs/modules/
+OUTPUT_DIR = BENCHMARK_DIR / "benchmark_results"
 
 
 def _build_solver_metadata(spec: dict) -> dict:
@@ -137,6 +137,13 @@ def main() -> int:
     with open(SPEC_FILE) as f:
         spec = yaml.safe_load(f)
     solver_metadata = _build_solver_metadata(spec)
+    solver_metadata["AQWA"]["input_file"] = str(LIS_FILE)
+    solver_metadata["OrcaWave"]["input_file"] = str(SPEC_FILE)
+    # Mesh path for 3D schematic visualization (both solvers share same mesh)
+    mesh_file = SPEC_FILE.parent / spec["vessel"]["geometry"].get("mesh_file", "")
+    if mesh_file.exists():
+        for solver in solver_metadata:
+            solver_metadata[solver]["mesh_path"] = str(mesh_file)
     print(f"  Spec loaded: {SPEC_FILE}")
 
     # --- Extract with corrected pipeline ---
@@ -210,7 +217,7 @@ def main() -> int:
         },
         "previous_revision": "r3_input_comparison",
     }
-    meta_path = OUTPUT_DIR / "revision.json"
+    meta_path = BENCHMARK_DIR / "revision.json"
     with open(meta_path, "w") as f:
         json.dump(revision_meta, f, indent=2)
 

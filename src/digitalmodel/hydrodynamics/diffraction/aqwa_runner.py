@@ -136,6 +136,7 @@ class AQWARunResult:
     mesh_files: list[Path] = field(default_factory=list)
     log_file: Path | None = None
     lis_file: Path | None = None
+    ah1_file: Path | None = None
     stdout: str = ""
     stderr: str = ""
     return_code: int | None = None
@@ -157,6 +158,7 @@ if platform.system() == "Windows":
         r"C:\Program Files\ANSYS Inc\v232\aqwa\bin\winx64\Aqwa.exe",
         r"C:\Program Files\ANSYS Inc\v231\aqwa\bin\winx64\Aqwa.exe",
         r"C:\Program Files\ANSYS Inc\v222\aqwa\bin\winx64\Aqwa.exe",
+        r"C:\Program Files\ANSYS Inc\v181\aqwa\bin\winx64\Aqwa.exe",
     ]
 
 
@@ -305,6 +307,7 @@ class AQWARunner:
 
         # Capture output files first (needed for error detection)
         self._result.lis_file = self._capture_lis_file(self._result.output_dir)
+        self._result.ah1_file = self._capture_ah1_file(self._result.output_dir)
         self._result.log_file = self._capture_log(self._result.output_dir)
 
         # AQWA writes errors to stdout/LIS and may return 0 even on failure.
@@ -547,6 +550,14 @@ class AQWARunner:
             files = sorted(output_dir.glob(pattern))
             if files:
                 return files[-1]
+        return None
+
+    def _capture_ah1_file(self, output_dir: Path) -> Path | None:
+        """Search for .AH1 output file in the output directory."""
+        for pattern in ("*.AH1", "*.ah1"):
+            matches = list(output_dir.glob(pattern))
+            if matches:
+                return matches[0]
         return None
 
     def _capture_log(self, output_dir: Path) -> Path | None:
