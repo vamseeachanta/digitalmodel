@@ -76,7 +76,6 @@ class EnvironmentBuilder(BaseBuilder):
         "WindType": "Constant",
         "AirDensity": 0.00128,
         "AirSpeedOfSound": 343,
-        "VerticalWindVariationFactor": None,
     }
 
     # Safe properties that can be overlaid from raw_properties without
@@ -123,6 +122,7 @@ class EnvironmentBuilder(BaseBuilder):
     # Only emitted when the detected wind type matches.
     _WIND_TYPE_PROPS: dict[str, set[str]] = {
         "API spectrum": {
+            "VerticalWindVariationFactor",
             "WindSpectrumElevation",
             "WindSpectrumFMin",
             "WindSpectrumFMax",
@@ -131,6 +131,7 @@ class EnvironmentBuilder(BaseBuilder):
             "NumberOfWindComponents",
         },
         "NPD spectrum": {
+            "VerticalWindVariationFactor",
             "WindSpectrumElevation",
             "WindSpectrumFMin",
             "WindSpectrumFMax",
@@ -139,6 +140,7 @@ class EnvironmentBuilder(BaseBuilder):
             "NumberOfWindComponents",
         },
         "ESDU spectrum": {
+            "VerticalWindVariationFactor",
             "WindSpectrumElevation",
             "WindSpectrumFMin",
             "WindSpectrumFMax",
@@ -146,7 +148,16 @@ class EnvironmentBuilder(BaseBuilder):
             "WindSeed",
             "NumberOfWindComponents",
         },
+        "Full field": {
+            "WindFullFieldFormat",
+            "WindFullFieldTurbSimFileName",
+            "WindTimeOrigin",
+            "WindOrigin",
+        },
     }
+
+    # Wind types where WindSpeed is dormant (not settable).
+    _WIND_SPEED_DORMANT: set[str] = {"Full field"}
 
     def build(self) -> dict[str, Any]:
         """Build the Environment section from environmental settings.
@@ -221,8 +232,9 @@ class EnvironmentBuilder(BaseBuilder):
                 self._build_current_profile(env.current.profile)
             )
 
-        # Wind
-        environment["WindSpeed"] = env.wind.speed
+        # Wind — WindSpeed is dormant for some wind types (e.g. Full field)
+        if wind_type not in self._WIND_SPEED_DORMANT:
+            environment["WindSpeed"] = env.wind.speed
         environment["WindDirection"] = env.wind.direction
 
         return {"Environment": environment}

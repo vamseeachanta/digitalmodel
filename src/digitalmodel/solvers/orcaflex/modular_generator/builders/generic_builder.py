@@ -45,6 +45,9 @@ _SECTION_ORDER: list[str] = [
     "General",
     "VariableData",
     "ExpansionTables",
+    # RayleighDampingCoefficients defines named damping sets referenced by
+    # Lines — must precede LineTypes/Lines but has no upstream references.
+    "RayleighDampingCoefficients",
     # Type definitions (must precede instances)
     "LineTypes",
     "VesselTypes",
@@ -73,7 +76,6 @@ _SECTION_ORDER: list[str] = [
     "MultibodyGroups",
     # Singleton sections that reference LineTypes, Shapes, etc. by name —
     # must appear AFTER type definitions and object instances.
-    "RayleighDampingCoefficients",
     "FrictionCoefficients",
     "LineContactData",
     "CodeChecks",
@@ -220,7 +222,10 @@ class GenericModelBuilder(BaseBuilder):
             if singleton is None:
                 continue
             if singleton.data:
-                result[section_key] = dict(singleton.data)
+                if isinstance(singleton.data, list):
+                    result[section_key] = list(singleton.data)
+                else:
+                    result[section_key] = dict(singleton.data)
 
         # Merge general_properties into "General", filtering out dormant
         # view/display properties that cause "Change not allowed" errors.

@@ -277,15 +277,17 @@ class GenericFrictionCoefficients(BaseModel):
 class GenericSingletonSection(BaseModel):
     """Pass-through for singleton OrcaFlex sections.
 
-    Used for: LineContactData, CodeChecks, Shear7Data, VIVAData.
+    Used for: LineContactData, CodeChecks, Shear7Data, VIVAData,
+    RayleighDampingCoefficients (list of named sets).
 
     Attributes:
-        data: Pass-through dict of all section properties.
+        data: Pass-through section properties. Usually a dict, but some
+            sections (RayleighDampingCoefficients) are lists of named dicts.
     """
 
-    data: dict[str, Any] = Field(
+    data: dict[str, Any] | list[dict[str, Any]] = Field(
         default_factory=dict,
-        description="Pass-through section properties",
+        description="Pass-through section properties (dict or list)",
     )
 
 

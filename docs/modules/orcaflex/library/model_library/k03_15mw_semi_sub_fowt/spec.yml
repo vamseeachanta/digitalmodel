@@ -1,30 +1,26 @@
 metadata:
-  name: k03_15mw_semi_sub_fowt
-  description: Extracted from K03 15MW semi-sub FOWT.yml
+  name: mono
+  description: Extracted from mono.yml
   structure: generic
   operation: generic
   project: model_library
-  version: '1.0'
 environment:
   water:
-    depth: 200.0
+    depth: 200
     density: 1.025
   seabed:
-    slope: 0.0
+    slope: 0
     stiffness:
-      normal: 100.0
-      shear: 100.0
-    friction_coefficient: 0.3
+      normal: 100
+      shear: 100
   waves:
     type: JONSWAP
-    height: 4.0
+    height: 4
     period: 8.52552
-    direction: 180.0
-    phase: 0
-    gamma: 3.3
+    direction: 180
   current:
-    speed: 0.0
-    direction: 180.0
+    speed: 0
+    direction: 180
     profile:
     - - 0.0
       - 1.0
@@ -32,8 +28,7 @@ environment:
       - 1.0
   wind:
     speed: 17.1
-    direction: 180.0
-    reference_height: 10
+    direction: 180
   raw_properties:
     WaterSurfaceZ: 0
     KinematicViscosity: 1.35e-06
@@ -109,47 +104,17 @@ environment:
     WindSpeed: 17.1
     WindDirection: 180
     VerticalWindVariationFactor: ~
+simulation:
+  stages:
+  - 12
+  - 150
+  time_step: 0.1
 generic:
-  general_properties:
-    UnitsSystem: SI
-    JacobianBufferingPolicy: 1
-    JacobianPerturbationFactor: 0
-    BuoysIncludedInStatics: Individually specified
-    LineStaticsStep1Policy: All lines included
-    LineStaticsStep2Policy: Solve coupled systems
-    WholeSystemStaticsEnabled: true
-    DynamicsSolutionMethod: Implicit time domain
-    ImplicitUseVariableTimeStep: false
-    LogPrecision: Double
-    TargetLogSampleInterval: 0.1
-    LogStartTime: ~
-    StartTime: ~
-    FirstStage: ~
-    RampStartTime: ~
-    RampFinishTime: ~
-    TimeHistoryImportFrom: ~
-    TimeHistoryImportTo: ~
-    RestartStateRecordingPeriodicCount: 0
-    RestartStateRecordingTest: ~
-    UserDefinedResults:
-    - Name: Generator power
-      UserDefinedResultScriptFileSource: Embedded
-      UserDefinedResultScript: "def genPwr(info):\r\n    power = info.modelObject.TimeHistory('Generator\
-        \ power', info.period, info.objectExtra)\r\n    return power * 0.95756\r\n\
-        \r\ndef UserDefinedResults(model):\r\n    return (\r\n        {\r\n      \
-        \      'ObjectType': OrcFxAPI.otTurbine,\r\n            'Name': 'Generator\
-        \ power (95.76%)',\r\n            'Units': '$P',\r\n            'TimeDomainFunction':\
-        \ genPwr\r\n        },\r\n    )"
-    DefaultViewMode: Wire frame
-    DefaultViewSize: 414.7199999999998
-    DefaultViewCentre:
-    - 0
-    - 0
-    - 96.07219573451391
-    DefaultViewAzimuth: 90
-    DefaultViewElevation: 0
   line_types:
   - name: Tower line type
+    category: Homogeneous pipe
+    outer_diameter: Tower OD
+    inner_diameter: Tower ID
     properties:
       MaterialDensity: 8.346
       E: 200e6
@@ -174,10 +139,15 @@ generic:
       - 5
       - Solid
       - White
-    category: Homogeneous pipe
-    outer_diameter: Tower OD
-    inner_diameter: Tower ID
   - name: Mooring line type
+    category: General
+    outer_diameter: 0.3333231802
+    inner_diameter: 0
+    mass_per_length: 0.685
+    bending_stiffness:
+    - 0.01
+    - ~
+    axial_stiffness: 3.27e6
     properties:
       CentreOfMass:
       - 0
@@ -226,16 +196,9 @@ generic:
       - 2
       - Solid
       - Lime
-    category: General
-    outer_diameter: 0.3333231802
-    inner_diameter: 0.0
-    mass_per_length: 0.685
-    bending_stiffness:
-    - 0.01
-    - ~
-    axial_stiffness: 3.27e6
   vessel_types:
   - name: VolturnUS-S type
+    length: 90
     properties:
       RAOResponseUnits: radians
       RAOWaveUnit: amplitude
@@ -283,9 +246,8 @@ generic:
           - 0
           RAOs:
           - RAODirection: 0
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -703,9 +665,8 @@ generic:
                 - 1.3991816740263083e-06
                 - 262.34015619558625
           - RAODirection: 22.5
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -1123,9 +1084,8 @@ generic:
                 - 2.3609589893634384e-05
                 - 90.41517485939355
           - RAODirection: 45
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -1543,9 +1503,8 @@ generic:
                 - 4.516221603028429e-05
                 - 90.20936379638079
           - RAODirection: 67.5
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -1963,9 +1922,8 @@ generic:
                 - 5.995558890241362e-05
                 - 90.16425586712705
           - RAODirection: 90
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -2383,9 +2341,8 @@ generic:
                 - 6.555861604170888e-05
                 - 90.16397304019341
           - RAODirection: 112.5
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -2803,9 +2760,8 @@ generic:
                 - 6.1017011913512625e-05
                 - 90.19063825506363
           - RAODirection: 135
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -3223,9 +3179,8 @@ generic:
                 - 4.712346340629075e-05
                 - 90.2541882459497
           - RAODirection: 157.5
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -3643,9 +3598,8 @@ generic:
                 - 2.6172032429499037e-05
                 - 90.4426808722834
           - RAODirection: 180
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -4073,9 +4027,8 @@ generic:
           - 0
           RAOs:
           - RAODirection: 0
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -4493,9 +4446,8 @@ generic:
                 - 3.091536762672551e-10
                 - 0.20621850048282597
           - RAODirection: 22.5
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -4913,9 +4865,8 @@ generic:
                 - 0.04534266689255413
                 - 269.95009333947604
           - RAODirection: 45
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -5333,9 +5284,8 @@ generic:
                 - 0.041940583134047825
                 - 269.92369267724405
           - RAODirection: 67.5
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -5753,9 +5703,8 @@ generic:
                 - 0.0001349976055646959
                 - 252.9846394690611
           - RAODirection: 90
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -6173,9 +6122,8 @@ generic:
                 - 0.02437060322855109
                 - 90.00004780273287
           - RAODirection: 112.5
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -6593,9 +6541,8 @@ generic:
                 - 0.00013498682603108912
                 - 287.00037710499066
           - RAODirection: 135
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -7013,9 +6960,8 @@ generic:
                 - 0.041940583120435825
                 - 270.076268407678
           - RAODirection: 157.5
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -7433,9 +7379,8 @@ generic:
                 - 0.045342666891008084
                 - 270.0498879251643
           - RAODirection: 180
-            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
-              RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase,
-              RAOYawAmp, RAOYawPhase
+            ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp,
+              RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
             : - - 0
                 - 0
                 - 0
@@ -9903,15 +9848,14 @@ generic:
           - ~
           - ~
           QTFCutoffPeriod: Infinity
-          ? RAOPeriodOrFrequency1, RAOPeriodOrFrequency2, RAODirection1, RAODirection2,
-            RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase,
-            RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
+          ? RAOPeriodOrFrequency1, RAOPeriodOrFrequency2, RAODirection1, RAODirection2, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp,
+            RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase
           : []
         SeaStateRAOs:
           SeaStateRAOInterpolationType: Position, direction and period
           SeaStateRAOGradientType: Calculated
-          ? SeaStateRAODirection, SeaStateRAOPeriodOrFrequency, SeaStateRAOX, SeaStateRAOY,
-            SeaStateRAOZ, SeaStateRAOPotentialAmp, SeaStateRAOPotentialPhase
+          ? SeaStateRAODirection, SeaStateRAOPeriodOrFrequency, SeaStateRAOX, SeaStateRAOY, SeaStateRAOZ, SeaStateRAOPotentialAmp,
+            SeaStateRAOPotentialPhase
           : []
         AMDMethod: Frequency dependent
         ReferenceOrigin:
@@ -12373,8 +12317,8 @@ generic:
         - 0
         - 0
         - 0
-        ? CurrentCoeffDirection, CurrentCoeffSurge, CurrentCoeffSway, CurrentCoeffHeave,
-          CurrentCoeffRoll, CurrentCoeffPitch, CurrentCoeffYaw
+        ? CurrentCoeffDirection, CurrentCoeffSurge, CurrentCoeffSway, CurrentCoeffHeave, CurrentCoeffRoll, CurrentCoeffPitch,
+          CurrentCoeffYaw
         : []
         CurrentYawRateDrag:
         - 0
@@ -37171,9 +37115,15 @@ generic:
         - 3581
         - 1869
         - 33
-    length: 90.0
   vessels:
   - name: VolturnUS-S
+    vessel_type: VolturnUS-S type
+    length: ~
+    connection: Free
+    initial_position:
+    - 0
+    - 0
+    - 0
     properties:
       Draught: Draught1
       Orientation:
@@ -37216,12 +37166,6 @@ generic:
       - 1
       - Solid
       - Yellow
-    vessel_type: VolturnUS-S type
-    connection: Free
-    initial_position:
-    - 0.0
-    - 0.0
-    - 0.0
   lines:
   - name: Tower
     properties:
@@ -37235,8 +37179,8 @@ generic:
       StaticsVIV: None
       DynamicsVIV: None
       WaveCalculationMethod: Specified by environment
-      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
-        ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage,
+        ConnectionzRelativeTo
       : - - Nacelle
           - 0
           - 0
@@ -37260,8 +37204,7 @@ generic:
       - - Infinity
         - ~
         - Infinity
-      ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
-        ConnectionApplyRamp, ConnectionUseSmoothGrowth
+      ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
       : - - ~
           - 0
           - 0.001
@@ -37290,7 +37233,6 @@ generic:
       - 1
       - Solid
       - White
-    line_type_refs: []
   - name: Mooring1
     properties:
       IncludeTorsion: false
@@ -37303,8 +37245,8 @@ generic:
       StaticsVIV: None
       DynamicsVIV: None
       WaveCalculationMethod: Specified by environment
-      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
-        ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage,
+        ConnectionzRelativeTo
       : - - VolturnUS-S
           - 58
           - 0
@@ -37326,8 +37268,7 @@ generic:
         - 0
       - - 0
         - 0
-      ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
-        ConnectionApplyRamp, ConnectionUseSmoothGrowth
+      ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
       : - - ~
           - 0
           - 0.001
@@ -37357,7 +37298,6 @@ generic:
       - 2
       - Solid
       - Lime
-    line_type_refs: []
   - name: Mooring2
     properties:
       IncludeTorsion: false
@@ -37370,8 +37310,8 @@ generic:
       StaticsVIV: None
       DynamicsVIV: None
       WaveCalculationMethod: Specified by environment
-      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
-        ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage,
+        ConnectionzRelativeTo
       : - - VolturnUS-S
           - -29
           - -50.229473419497445
@@ -37393,8 +37333,7 @@ generic:
         - 0
       - - 0
         - 0
-      ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
-        ConnectionApplyRamp, ConnectionUseSmoothGrowth
+      ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
       : - - ~
           - 0
           - 0.001
@@ -37424,7 +37363,6 @@ generic:
       - 2
       - Solid
       - Lime
-    line_type_refs: []
   - name: Mooring3
     properties:
       IncludeTorsion: false
@@ -37437,8 +37375,8 @@ generic:
       StaticsVIV: None
       DynamicsVIV: None
       WaveCalculationMethod: Specified by environment
-      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
-        ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage,
+        ConnectionzRelativeTo
       : - - VolturnUS-S
           - -29.00000000000001
           - 50.229473419497424
@@ -37460,8 +37398,7 @@ generic:
         - 0
       - - 0
         - 0
-      ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
-        ConnectionApplyRamp, ConnectionUseSmoothGrowth
+      ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
       : - - ~
           - 0
           - 0.001
@@ -37491,9 +37428,16 @@ generic:
       - 2
       - Solid
       - Lime
-    line_type_refs: []
   buoys_6d:
   - name: Nacelle
+    buoy_type: Lumped buoy
+    connection: Free
+    initial_position:
+    - -0.07544169604346296
+    - 9.238943158187445e-18
+    - 144.82191401618834
+    mass: 675.175
+    volume: 100
     properties:
       DegreesOfFreedomInStatics: All
       DampingRelativeTo: Earth
@@ -47114,15 +47058,15 @@ generic:
         - 1306
         - 1045
         - 1045
-    buoy_type: Lumped buoy
-    connection: Free
-    initial_position:
-    - -0.07544169604346296
-    - 9.238943158187445e-18
-    - 144.82191401618834
-    mass: 675.175
-    volume: 100.0
   - name: Hub drg
+    buoy_type: Lumped buoy
+    connection: 15MW RWT
+    initial_position:
+    - 3.406996906818449e-15
+    - 4.760898822525247e-31
+    - -0.29999999999999977
+    mass: 0
+    volume: 0
     properties:
       DampingRelativeTo: Earth
       DisturbanceVessel: (none)
@@ -63409,15 +63353,14 @@ generic:
         - 2220
         - 2192
         - 2192
-    buoy_type: Lumped buoy
-    connection: 15MW RWT
-    initial_position:
-    - 3.406996906818449e-15
-    - 4.760898822525247e-31
-    - -0.29999999999999977
-    mass: 0.0
-    volume: 0.0
   - name: Strut1
+    buoy_type: Spar buoy
+    connection: VolturnUS-S
+    initial_position:
+    - 5
+    - -1.2246467991473533e-15
+    - 14.545
+    mass: 0
     properties:
       DampingRelativeTo: Earth
       DisturbanceVessel: (none)
@@ -63599,14 +63542,14 @@ generic:
       - 1
       - Solid
       - Gray
+  - name: Strut2
     buoy_type: Spar buoy
     connection: VolturnUS-S
     initial_position:
-    - 5.0
-    - -1.2246467991473533e-15
+    - -2.5
+    - -4.330127018922194
     - 14.545
-    mass: 0.0
-  - name: Strut2
+    mass: 0
     properties:
       DampingRelativeTo: Earth
       DisturbanceVessel: (none)
@@ -63788,14 +63731,14 @@ generic:
       - 1
       - Solid
       - Gray
+  - name: Strut3
     buoy_type: Spar buoy
     connection: VolturnUS-S
     initial_position:
-    - -2.5
-    - -4.330127018922194
+    - -2.4999999999999982
+    - 4.330127018922194
     - 14.545
-    mass: 0.0
-  - name: Strut3
+    mass: 0
     properties:
       DampingRelativeTo: Earth
       DisturbanceVessel: (none)
@@ -63977,19 +63920,6 @@ generic:
       - 1
       - Solid
       - Gray
-    buoy_type: Spar buoy
-    connection: VolturnUS-S
-    initial_position:
-    - -2.4999999999999982
-    - 4.330127018922194
-    - 14.545
-    mass: 0.0
-  buoys_3d: []
-  shapes: []
-  constraints: []
-  links: []
-  winches: []
-  clump_types: []
   wing_types:
   - name: AF01
     properties:
@@ -105046,15 +104976,13 @@ generic:
       UAStrouhalNumber: 0.19
       UACutout: 45
       UAFilterCutoff: 0.5
-  flex_joint_types: []
-  flex_joints: []
-  drag_chain_types: []
-  drag_chains: []
-  stiffener_types: []
-  support_types: []
-  morison_element_types: []
   turbines:
   - name: 15MW RWT
+    connection: Nacelle
+    initial_position:
+    - -12.032
+    - 0
+    - 5.614100000000008
     properties:
       ImposedMotionConsistentWithSolver: false
       InitialAttitude:
@@ -105236,13 +105164,11 @@ generic:
       - BladeSectionLength: 1.2047752708246406
         BladeSectionNumberOfSegments: 1
         BladeSectionWingType: AF50
-      ? BladeProfileArclength, BladeProfileAerodynamicTwist, BladeProfileChord, BladeProfileThickness,
-        BladeProfileAerodynamicCentreX, BladeProfileAerodynamicCentreY, BladeProfileMassPerUnitLength,
-        BladeProfileRadiusOfGyrationZ, BladeProfileRadiusOfGyrationRatio, BladeProfileCOMOffsetX,
-        BladeProfileCOMOffsetY, BladeProfileInertiaTwist, BladeProfileEIx, BladeProfileEIy,
-        BladeProfileEA, BladeProfileGJ, BladeProfilePreBendCurvatureX, BladeProfilePreBendCurvatureY,
-        BladeProfileNeutralAxisOffsetX, BladeProfileNeutralAxisOffsetY, BladeProfileShearCentreOffsetX,
-        BladeProfileShearCentreOffsetY, BladeProfileStructuralTwist
+      ? BladeProfileArclength, BladeProfileAerodynamicTwist, BladeProfileChord, BladeProfileThickness, BladeProfileAerodynamicCentreX,
+        BladeProfileAerodynamicCentreY, BladeProfileMassPerUnitLength, BladeProfileRadiusOfGyrationZ, BladeProfileRadiusOfGyrationRatio,
+        BladeProfileCOMOffsetX, BladeProfileCOMOffsetY, BladeProfileInertiaTwist, BladeProfileEIx, BladeProfileEIy, BladeProfileEA,
+        BladeProfileGJ, BladeProfilePreBendCurvatureX, BladeProfilePreBendCurvatureY, BladeProfileNeutralAxisOffsetX, BladeProfileNeutralAxisOffsetY,
+        BladeProfileShearCentreOffsetX, BladeProfileShearCentreOffsetY, BladeProfileStructuralTwist
       : - - 0
           - 15.59455301971172
           - 5.2
@@ -106496,18 +106422,17 @@ generic:
       Tags:
         ControllerDLL: libdiscon.dll
         InputFile: DISCON-UMaineSemi.IN
-    connection: Nacelle
-  attached_buoys: []
   variable_data_sources:
   - name: Controller
+    data_type: Externalfunctions
     properties:
       Source: External file
       FileName: BladedControllerWrapper.dll
       FunctionName: BladedController
       InitialValue: 0
       TimeStep: Outer time step
-    data_type: Externalfunctions
   - name: Tower ID
+    data_type: Linetypediameter
     properties:
       IndependentValue, DependentValue:
       - - 0
@@ -106532,8 +106457,8 @@ generic:
         - 9.8259
       - - 129.386
         - 9.82
-    data_type: Linetypediameter
   - name: Tower OD
+    data_type: Linetypediameter
     properties:
       IndependentValue, DependentValue:
       - - 0
@@ -106558,12 +106483,22 @@ generic:
         - 10
       - - 129.386
         - 10
-    data_type: Linetypediameter
-  expansion_tables: []
-  py_models: []
-  wake_models: []
-  multibody_groups: []
-  browser_groups: []
+  rayleigh_damping:
+    data:
+    - Name: Blade damping
+      Mode: Coefficients (separated)
+      MassCoefficient: 0
+      AxialStiffnessCoefficient: 0.00084171
+      BendingStiffnessCoefficient: 0.0025889
+      TorsionalStiffnessCoefficient: 0.00084171
+      ApplyToGeometricStiffness: false
+    - Name: Tower damping
+      Mode: Coefficients (separated)
+      MassCoefficient: 0
+      AxialStiffnessCoefficient: 0.0001194
+      BendingStiffnessCoefficient: 0.011
+      TorsionalStiffnessCoefficient: 0.0001194
+      ApplyToGeometricStiffness: true
   groups:
     data:
       Structure:
@@ -106587,11 +106522,39 @@ generic:
       State:
         Collapsed:
         - Wing types
-equipment:
-  ramps: []
-simulation:
-  time_step: 0.1
-  stages:
-  - 12
-  - 150
-  north_direction: 0
+  general_properties:
+    UnitsSystem: SI
+    JacobianBufferingPolicy: 1
+    JacobianPerturbationFactor: 0
+    BuoysIncludedInStatics: Individually specified
+    LineStaticsStep1Policy: All lines included
+    LineStaticsStep2Policy: Solve coupled systems
+    WholeSystemStaticsEnabled: true
+    DynamicsSolutionMethod: Implicit time domain
+    ImplicitUseVariableTimeStep: false
+    LogPrecision: Double
+    TargetLogSampleInterval: 0.1
+    LogStartTime: ~
+    StartTime: ~
+    FirstStage: ~
+    RampStartTime: ~
+    RampFinishTime: ~
+    TimeHistoryImportFrom: ~
+    TimeHistoryImportTo: ~
+    RestartStateRecordingPeriodicCount: 0
+    RestartStateRecordingTest: ~
+    UserDefinedResults:
+    - Name: Generator power
+      UserDefinedResultScriptFileSource: Embedded
+      UserDefinedResultScript: "def genPwr(info):\r\n    power = info.modelObject.TimeHistory('Generator power', info.period,\
+        \ info.objectExtra)\r\n    return power * 0.95756\r\n\r\ndef UserDefinedResults(model):\r\n    return (\r\n      \
+        \  {\r\n            'ObjectType': OrcFxAPI.otTurbine,\r\n            'Name': 'Generator power (95.76%)',\r\n     \
+        \       'Units': '$P',\r\n            'TimeDomainFunction': genPwr\r\n        },\r\n    )"
+    DefaultViewMode: Wire frame
+    DefaultViewSize: 414.7199999999998
+    DefaultViewCentre:
+    - 0
+    - 0
+    - 96.07219573451391
+    DefaultViewAzimuth: 90
+    DefaultViewElevation: 0

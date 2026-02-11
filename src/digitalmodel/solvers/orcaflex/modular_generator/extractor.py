@@ -488,12 +488,12 @@ class MonolithicExtractor:
             or None if the section is absent or empty.
         """
         data = self._raw.get(section_key)
-        if not data or not isinstance(data, dict):
+        if not data or not isinstance(data, (dict, list)):
             # Try alias names (e.g. SolidFrictionCoefficients for
             # FrictionCoefficients, BrowserGroups for Groups)
             for alias in _SECTION_ALIASES.get(section_key, []):
                 data = self._raw.get(alias)
-                if data and isinstance(data, dict):
+                if data and isinstance(data, (dict, list)):
                     break
             else:
                 return None
