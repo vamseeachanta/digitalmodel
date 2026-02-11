@@ -44,6 +44,13 @@ _SIMULATION_KEYS = {"StageDuration", "ImplicitConstantTimeStep"}
 _VARIABLE_DATA_YAML_KEY = "VariableData"
 _VARIABLE_DATA_SCHEMA_KEY = "VariableData"
 
+# OrcaFlex section name aliases: YAML export names may differ from API names.
+# The key is the canonical SINGLETON_SECTIONS key; values are fallback names.
+_SECTION_ALIASES: dict[str, list[str]] = {
+    "FrictionCoefficients": ["SolidFrictionCoefficients"],
+    "Groups": ["BrowserGroups"],
+}
+
 
 def _sanitize_name(raw: str) -> str:
     """Convert a filename stem to a snake_case identifier.
@@ -60,6 +67,42 @@ def _sanitize_name(raw: str) -> str:
     cleaned = re.sub(r"[^a-zA-Z0-9]+", "_", raw)
     cleaned = re.sub(r"_+", "_", cleaned)
     return cleaned.strip("_").lower()
+
+
+def _topo_sort_groups(structure: dict[str, str]) -> dict[str, str]:
+    """Topologically sort Groups.Structure so parents precede children.
+
+    OrcFxAPI.SaveData() alphabetically sorts group entries, but OrcaFlex
+    requires parent groups to be defined before any child references them.
+
+    Args:
+        structure: Dict mapping group name -> parent name.
+
+    Returns:
+        New dict with the same entries, ordered parent-first.
+    """
+    if not structure:
+        return structure
+
+    # Build child -> parent mapping and collect all unique names
+    all_names = set(structure.keys())
+    ordered: list[str] = []
+    visited: set[str] = set()
+
+    def _visit(name: str) -> None:
+        if name in visited or name not in all_names:
+            return
+        visited.add(name)
+        # Visit parent first (if it's also a group entry)
+        parent = structure.get(name)
+        if parent and parent in all_names:
+            _visit(parent)
+        ordered.append(name)
+
+    for name in structure:
+        _visit(name)
+
+    return {name: structure[name] for name in ordered}
 
 
 class MonolithicExtractor:
@@ -109,7 +152,10 @@ class MonolithicExtractor:
             FileNotFoundError: If the YAML file does not exist.
             yaml.YAMLError: If the file cannot be parsed.
         """
-        text = self.yaml_path.read_text(encoding="utf-8-sig")
+        try:
+            text = self.yaml_path.read_text(encoding="utf-8-sig")
+        except UnicodeDecodeError:
+            text = self.yaml_path.read_text(encoding="latin-1")
         merged: dict[str, Any] = {}
         for doc in yaml.safe_load_all(text):
             if isinstance(doc, dict):
@@ -184,7 +230,9 @@ class MonolithicExtractor:
         OrcaFlex uses ``WaterDepth`` (or ``SeabedOriginDepth`` in some
         versions) for the depth value.
         """
-        depth = env.get("WaterDepth") or env.get("SeabedOriginDepth", 100.0)
+        depth = env.get("WaterDepth")
+        if depth is None:
+            depth = env.get("SeabedOriginDepth", 100.0)
         density = env.get("Density", 1.025)
         return {
             "depth": depth,
@@ -428,8 +476,9 @@ class MonolithicExtractor:
     def _extract_singleton(self, section_key: str) -> dict[str, Any] | None:
         """Extract a singleton OrcaFlex section.
 
-        Singleton sections (SolidFrictionCoefficients, LineContactData,
-        etc.) are single dicts rather than lists.
+        Singleton sections (FrictionCoefficients, LineContactData,
+        Groups, etc.) are single dicts rather than lists. Falls back to
+        alias names if the primary key is not found.
 
         Args:
             section_key: The OrcaFlex YAML section name.
@@ -440,7 +489,22 @@ class MonolithicExtractor:
         """
         data = self._raw.get(section_key)
         if not data or not isinstance(data, dict):
-            return None
+            # Try alias names (e.g. SolidFrictionCoefficients for
+            # FrictionCoefficients, BrowserGroups for Groups)
+            for alias in _SECTION_ALIASES.get(section_key, []):
+                data = self._raw.get(alias)
+                if data and isinstance(data, dict):
+                    break
+            else:
+                return None
+
+        # Groups.Structure: reorder so parents are defined before children.
+        # OrcFxAPI.SaveData() alphabetically sorts group entries, but OrcaFlex
+        # requires parent groups to exist before they are referenced.
+        if section_key == "Groups" and "Structure" in data:
+            data = dict(data)
+            data["Structure"] = _topo_sort_groups(data["Structure"])
+
         return {"data": data}
 
     def _extract_general_properties(self) -> dict[str, Any]:

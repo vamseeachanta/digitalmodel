@@ -1,6 +1,6 @@
 metadata:
-  name: tmpbdrizp7d
-  description: Extracted from tmpbdrizp7d.yml
+  name: a02_lazy_s_detailed
+  description: Extracted from A02 Lazy S detailed.yml
   structure: generic
   operation: generic
   project: model_library
@@ -22,11 +22,74 @@ environment:
     speed: 1
     direction: 270
     profile:
-    - [0, 1.0]
-    - [100, 0.2]
+    - - 0.0
+      - 1.0
+    - - 100.0
+      - 0.2
   wind:
     speed: 0
     direction: 0
+  raw_properties:
+    WaterSurfaceZ: 0
+    KinematicViscosity: 1.35e-06
+    SeaTemperature: 10
+    ReynoldsNumberCalculation: Flow direction
+    HorizontalWaterDensityFactor: null
+    VerticalDensityVariation: Constant
+    Density: 1.025
+    SeabedType: Flat
+    SeabedOrigin:
+    - 0
+    - 0
+    SeabedOriginDepth: 100
+    NominalDepth: null
+    SeabedSlopeDirection: 0
+    SeabedSlope: 0
+    SeabedModel: Elastic
+    SeabedNormalStiffness: 100
+    SeabedShearStiffness: 100
+    WaveTrains:
+    - Name: Wave 1
+      WaveType: Dean stream
+      WaveDirection: 225
+      WaveHeight: 7
+      WavePeriod: 12
+      WaveOrigin:
+      - 0
+      - 0
+      WaveTimeOrigin: 0
+      WaveStreamFunctionOrder: 5
+      WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel: null
+    WaveKinematicsCutoffDepth: Infinity
+    WaveCalculationMethod: Instantaneous position (exact)
+    WaveCalculationTimeInterval: 0
+    WaveCalculationSpatialInterval: 0
+    MultipleCurrentDataCanBeDefined: false
+    CurrentModel: Variation scheme
+    CurrentRamped: false
+    CurrentApplyVerticalStretching: false
+    HorizontalCurrentFactor: null
+    VerticalCurrentVariationMethod: Interpolated
+    RefCurrentSpeed: 1
+    RefCurrentDirection: 270
+    CurrentDepth, CurrentFactor, CurrentRotation:
+    - - 0
+      - 1
+      - 0
+    - - 100
+      - 0.2
+      - 0
+    IncludeVesselWindLoads: true
+    IncludeLineWindLoads: true
+    IncludeBuoyWindLoads: true
+    IncludeBuoyWingWindLoads: true
+    WindRamping: From mean
+    WindType: Constant
+    AirDensity: 0.00128
+    AirSpeedOfSound: 343
+    WindSpeed: 0
+    WindDirection: 0
+    VerticalWindVariationFactor: null
 simulation:
   stages:
   - 12
@@ -41,7 +104,7 @@ generic:
     mass_per_length: 0.1842262
     bending_stiffness:
     - 124.86942768
-    - ~
+    - null
     axial_stiffness: 711.2e3
     properties:
       CentreOfMass:
@@ -49,37 +112,37 @@ generic:
       - 0
       BulkModulus: Infinity
       CompressionIsLimited: false
-      AllowableTension: ~
+      AllowableTension: null
       MinRadius:
-      - ~
-      - ~
+      - null
+      - null
       PoissonRatio: 0.5
       ExpansionTable: None
       GJ: 80
       TensionTorqueCoupling: 0
-      OuterContactDiameter: ~
-      InnerContactDiameter: ~
+      OuterContactDiameter: null
+      InnerContactDiameter: null
       ClashStiffness: 10e3
       Ca:
       - 1
-      - ~
+      - null
       - 0
       Cm:
-      - ~
-      - ~
-      - ~
+      - null
+      - null
+      - null
       Cs: 0
       Ce: 0
       Cd:
       - Generic drag
-      - ~
+      - null
       - 0.008
       Cl: 0
-      NormalDragLiftDiameter: ~
-      AxialDragLiftDiameter: ~
-      StressOD: ~
-      StressID: ~
-      AllowableStress: ~
+      NormalDragLiftDiameter: null
+      AxialDragLiftDiameter: null
+      StressOD: null
+      StressID: null
+      AllowableStress: null
       TensileStressLoadingFactor: 1
       BendingStressLoadingFactor: 1
       ShearStressLoadingFactor: 1
@@ -98,7 +161,7 @@ generic:
     mass_per_length: 0.14738096
     bending_stiffness:
     - 51.146517577728
-    - ~
+    - null
     axial_stiffness: 568.96e3
     properties:
       CentreOfMass:
@@ -106,37 +169,37 @@ generic:
       - 0
       BulkModulus: Infinity
       CompressionIsLimited: false
-      AllowableTension: ~
+      AllowableTension: null
       MinRadius:
-      - ~
-      - ~
+      - null
+      - null
       PoissonRatio: 0.5
       ExpansionTable: None
       GJ: 80
       TensionTorqueCoupling: 0
-      OuterContactDiameter: ~
-      InnerContactDiameter: ~
+      OuterContactDiameter: null
+      InnerContactDiameter: null
       ClashStiffness: 10e3
       Ca:
       - 1
-      - ~
+      - null
       - 0
       Cm:
-      - ~
-      - ~
-      - ~
+      - null
+      - null
+      - null
       Cs: 0
       Ce: 0
       Cd:
       - Generic drag
-      - ~
+      - null
       - 0.008
       Cl: 0
-      NormalDragLiftDiameter: ~
-      AxialDragLiftDiameter: ~
-      StressOD: ~
-      StressID: ~
-      AllowableStress: ~
+      NormalDragLiftDiameter: null
+      AxialDragLiftDiameter: null
+      StressOD: null
+      StressID: null
+      AllowableStress: null
       TensileStressLoadingFactor: 1
       BendingStressLoadingFactor: 1
       ShearStressLoadingFactor: 1
@@ -155,7 +218,7 @@ generic:
     mass_per_length: 0.1161288
     bending_stiffness:
     - 49.161192
-    - ~
+    - null
     axial_stiffness: 365.76e3
     properties:
       CentreOfMass:
@@ -163,37 +226,37 @@ generic:
       - 0
       BulkModulus: Infinity
       CompressionIsLimited: false
-      AllowableTension: ~
+      AllowableTension: null
       MinRadius:
-      - ~
-      - ~
+      - null
+      - null
       PoissonRatio: 0.5
       ExpansionTable: None
       GJ: 80
       TensionTorqueCoupling: 0
-      OuterContactDiameter: ~
-      InnerContactDiameter: ~
+      OuterContactDiameter: null
+      InnerContactDiameter: null
       ClashStiffness: 10e3
       Ca:
       - 1
-      - ~
+      - null
       - 0
       Cm:
-      - ~
-      - ~
-      - ~
+      - null
+      - null
+      - null
       Cs: 0
       Ce: 0
       Cd:
       - Generic drag
-      - ~
+      - null
       - 0.008
       Cl: 0
-      NormalDragLiftDiameter: ~
-      AxialDragLiftDiameter: ~
-      StressOD: ~
-      StressID: ~
-      AllowableStress: ~
+      NormalDragLiftDiameter: null
+      AxialDragLiftDiameter: null
+      StressOD: null
+      StressID: null
+      AllowableStress: null
       TensileStressLoadingFactor: 1
       BendingStressLoadingFactor: 1
       ShearStressLoadingFactor: 1
@@ -212,7 +275,7 @@ generic:
     mass_per_length: 0.05475
     bending_stiffness:
     - 0
-    - ~
+    - null
     axial_stiffness: 252.5e3
     properties:
       CentreOfMass:
@@ -220,43 +283,43 @@ generic:
       - 0
       BulkModulus: Infinity
       CompressionIsLimited: true
-      AllowableTension: ~
+      AllowableTension: null
       MinRadius:
-      - ~
-      - ~
+      - null
+      - null
       PoissonRatio: 0.5
       ExpansionTable: None
       GJ: 0
       TensionTorqueCoupling: 0
       OuterContactDiameter: 0.18
-      InnerContactDiameter: ~
+      InnerContactDiameter: null
       ClashStiffness: 10e3
       Ca:
       - 1
-      - ~
+      - null
       - 0.07
       Cm:
-      - ~
-      - ~
-      - ~
+      - null
+      - null
+      - null
       Cs: 0
       Ce: 0
       Cd:
       - 1
-      - ~
+      - null
       - 0.4
       Cl: 0
       NormalDragLiftDiameter: 0.113
       AxialDragLiftDiameter: 0.00954929658551372
-      StressOD: ~
-      StressID: ~
-      AllowableStress: ~
+      StressOD: null
+      StressID: null
+      AllowableStress: null
       TensileStressLoadingFactor: 1
       BendingStressLoadingFactor: 1
       ShearStressLoadingFactor: 1
       TorsionalStressLoadingFactor: 1
       SeabedLateralFrictionCoefficient: 0.5
-      SeabedAxialFrictionCoefficient: ~
+      SeabedAxialFrictionCoefficient: null
       RayleighDampingCoefficients: (no damping)
   - name: Buoyancy tank
     category: General
@@ -265,7 +328,7 @@ generic:
     mass_per_length: 4.539601384
     bending_stiffness:
     - 120
-    - ~
+    - null
     axial_stiffness: 700e3
     properties:
       CentreOfMass:
@@ -273,25 +336,25 @@ generic:
       - 0
       BulkModulus: Infinity
       CompressionIsLimited: false
-      AllowableTension: ~
+      AllowableTension: null
       MinRadius:
-      - ~
-      - ~
+      - null
+      - null
       PoissonRatio: 0.5
       ExpansionTable: None
       GJ: 80
       TensionTorqueCoupling: 0
-      OuterContactDiameter: ~
-      InnerContactDiameter: ~
+      OuterContactDiameter: null
+      InnerContactDiameter: null
       ClashStiffness: 0
       Ca:
       - 0.7
-      - ~
+      - null
       - 0.3
       Cm:
-      - ~
-      - ~
-      - ~
+      - null
+      - null
+      - null
       Cs: 0
       Ce: 0
       Cd:
@@ -299,17 +362,17 @@ generic:
       - 0.35
       - 0.0255
       Cl: 0
-      NormalDragLiftDiameter: ~
-      AxialDragLiftDiameter: ~
-      StressOD: ~
-      StressID: ~
-      AllowableStress: ~
+      NormalDragLiftDiameter: null
+      AxialDragLiftDiameter: null
+      StressOD: null
+      StressID: null
+      AllowableStress: null
       TensileStressLoadingFactor: 1
       BendingStressLoadingFactor: 1
       ShearStressLoadingFactor: 1
       TorsionalStressLoadingFactor: 1
       SeabedLateralFrictionCoefficient: 0.5
-      SeabedAxialFrictionCoefficient: ~
+      SeabedAxialFrictionCoefficient: null
       RayleighDampingCoefficients: (no damping)
   vessel_types:
   - name: Vessel type1
@@ -356,9 +419,9 @@ generic:
           - 0
           - -1.974
           PhaseOrigin:
-          - ~
-          - ~
-          - ~
+          - null
+          - null
+          - null
           RAOs:
           - RAODirection: 0
             ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
@@ -3444,9 +3507,9 @@ generic:
           - 0
           - -1.974
           PhaseOrigin:
-          - ~
-          - ~
-          - ~
+          - null
+          - null
+          - null
           RAOs:
           - RAODirection: 0
             ? RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase,
@@ -7943,9 +8006,9 @@ generic:
           - 0
           - 0
           PhaseOrigin:
-          - ~
-          - ~
-          - ~
+          - null
+          - null
+          - null
           QTFCutoffPeriod: Infinity
           ? RAOPeriodOrFrequency1, RAOPeriodOrFrequency2, RAODirection1, RAODirection2,
             RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase,
@@ -7967,11 +8030,11 @@ generic:
         - 0
         - 0
         HydrostaticStiffnessMethod: Displacement
-        DisplacedVolume: ~
+        DisplacedVolume: null
         CentreOfBuoyancy:
-        - ~
-        - ~
-        - ~
+        - null
+        - null
+        - null
         HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
         - - 14.4444599512e3
           - 0
@@ -7982,8 +8045,8 @@ generic:
         - - 28.744475303e3
           - 0
           - 10.1141462156e6
-        AMDTimeStep: ~
-        AMDCutoffTime: ~
+        AMDTimeStep: null
+        AMDCutoffTime: null
         AMDCutoffTolerance: 2
         FrequencyDependentAddedMassAndDamping:
         - AMDPeriodOrFrequency: 4
@@ -9944,7 +10007,7 @@ generic:
   vessels:
   - name: FPSO
     vessel_type: Vessel type1
-    length: ~
+    length: null
     connection: Free
     initial_position:
     - -7
@@ -9995,7 +10058,7 @@ generic:
           - 45
           - 170
           - 0
-          - ~
+          - null
         - - Arch
           - -0.500000000000003
           - -3
@@ -10003,18 +10066,18 @@ generic:
           - 360
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - - 0
-        - ~
+        - null
       - - Infinity
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10029,8 +10092,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0.429
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10064,7 +10127,7 @@ generic:
           - 45
           - 170
           - 0
-          - ~
+          - null
         - - Arch
           - -0.500000000000005
           - -1
@@ -10072,18 +10135,18 @@ generic:
           - 360
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - - 0
-        - ~
+        - null
       - - Infinity
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10098,8 +10161,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10135,7 +10198,7 @@ generic:
           - 45
           - 170
           - 0
-          - ~
+          - null
         - - Arch
           - -0.500000000000005
           - 1
@@ -10143,18 +10206,18 @@ generic:
           - 360
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - - 0
-        - ~
+        - null
       - - Infinity
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10169,8 +10232,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0.3984
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10206,7 +10269,7 @@ generic:
           - 45
           - 170
           - 0
-          - ~
+          - null
         - - Arch
           - -0.500000000000004
           - 3
@@ -10214,18 +10277,18 @@ generic:
           - 360
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - - 0
-        - ~
+        - null
       - - Infinity
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10240,8 +10303,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0.429
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10275,7 +10338,7 @@ generic:
           - 360
           - 90
           - 0
-          - ~
+          - null
         - - Anchored
           - -203.5
           - 3
@@ -10283,18 +10346,18 @@ generic:
           - 180
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - - Infinity
-        - ~
+        - null
       - - 0
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10315,8 +10378,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0.429
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10352,7 +10415,7 @@ generic:
           - 360
           - 90
           - 0
-          - ~
+          - null
         - - Anchored
           - -203.5
           - 1
@@ -10360,18 +10423,18 @@ generic:
           - 180
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - - Infinity
-        - ~
+        - null
       - - 0
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10392,8 +10455,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10429,7 +10492,7 @@ generic:
           - 360
           - 90
           - 0
-          - ~
+          - null
         - - Anchored
           - -203.5
           - -1
@@ -10437,18 +10500,18 @@ generic:
           - 180
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - - Infinity
-        - ~
+        - null
       - - 0
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10469,8 +10532,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0.3984
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10506,7 +10569,7 @@ generic:
           - 360
           - 90
           - 0
-          - ~
+          - null
         - - Anchored
           - -203.5
           - -3
@@ -10514,18 +10577,18 @@ generic:
           - 180
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - - Infinity
-        - ~
+        - null
       - - 0
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10546,8 +10609,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0.429
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10585,7 +10648,7 @@ generic:
           - 357.753039931377
           - 180
           - -2.24696006862301
-          - ~
+          - null
         - - ArchTie_N
           - 0
           - 0
@@ -10593,19 +10656,19 @@ generic:
           - 180
           - 0.6669526024375038
           - -180
-          - ~
+          - null
           - End A
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - - 0
-        - ~
+        - null
       - - 0
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10617,8 +10680,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10653,7 +10716,7 @@ generic:
           - 357.753039931377
           - 180
           - -2.24696006862301
-          - ~
+          - null
         - - ArchTie_N
           - 0
           - 0
@@ -10661,19 +10724,19 @@ generic:
           - 180
           - 0.6669526024375038
           - -180
-          - ~
+          - null
           - End A
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - - 0
-        - ~
+        - null
       - - 0
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10685,8 +10748,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10721,7 +10784,7 @@ generic:
           - 357.753039931377
           - 180
           - -2.24696006862301
-          - ~
+          - null
         - - ArchTie_S
           - 0
           - 0
@@ -10729,19 +10792,19 @@ generic:
           - 180
           - 0.914192045494753
           - -180
-          - ~
+          - null
           - End A
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - - 0
-        - ~
+        - null
       - - 0
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10753,8 +10816,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10789,7 +10852,7 @@ generic:
           - 357.753039931377
           - 180
           - -2.24696006862301
-          - ~
+          - null
         - - ArchTie_S
           - 0
           - 0
@@ -10797,19 +10860,19 @@ generic:
           - 180
           - 0.914192045494753
           - -180
-          - ~
+          - null
           - End A
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - - 0
-        - ~
+        - null
       - - 0
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10821,8 +10884,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10857,7 +10920,7 @@ generic:
           - 0
           - 180
           - 0
-          - ~
+          - null
         - - Anchored
           - -103.5
           - -5
@@ -10865,17 +10928,17 @@ generic:
           - 60
           - 180
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - []
       - - 0
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10887,8 +10950,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10923,7 +10986,7 @@ generic:
           - 0
           - 180
           - 0
-          - ~
+          - null
         - - Anchored
           - -103.5
           - 5
@@ -10931,17 +10994,17 @@ generic:
           - 60
           - 180
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - []
       - - 0
-        - ~
+        - null
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       LineType, Length, TargetSegmentLength:
@@ -10953,8 +11016,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -10989,7 +11052,7 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
         - - Arch
           - -2.25
           - -3
@@ -10997,20 +11060,20 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
       - - Infinity
-        - ~
+        - null
         - Infinity
       - - Infinity
-        - ~
+        - null
         - Infinity
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       Sections:
@@ -11024,8 +11087,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -11056,7 +11119,7 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
         - - Arch
           - 2.25
           - -3
@@ -11064,20 +11127,20 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
       - - Infinity
-        - ~
+        - null
         - Infinity
       - - Infinity
-        - ~
+        - null
         - Infinity
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       Sections:
@@ -11091,8 +11154,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -11123,7 +11186,7 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
         - - Arch
           - 2.25
           - -1
@@ -11131,20 +11194,20 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
       - - Infinity
-        - ~
+        - null
         - Infinity
       - - Infinity
-        - ~
+        - null
         - Infinity
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       Sections:
@@ -11158,8 +11221,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -11190,7 +11253,7 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
         - - Arch
           - 2.25
           - 1
@@ -11198,20 +11261,20 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
       - - Infinity
-        - ~
+        - null
         - Infinity
       - - Infinity
-        - ~
+        - null
         - Infinity
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       Sections:
@@ -11225,8 +11288,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -11257,7 +11320,7 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
         - - Arch
           - 2.25
           - 3
@@ -11265,20 +11328,20 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
       - - Infinity
-        - ~
+        - null
         - Infinity
       - - Infinity
-        - ~
+        - null
         - Infinity
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       Sections:
@@ -11292,8 +11355,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -11324,7 +11387,7 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
         - - Arch
           - 2.25
           - 5
@@ -11332,20 +11395,20 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
       - - Infinity
-        - ~
+        - null
         - Infinity
       - - Infinity
-        - ~
+        - null
         - Infinity
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       Sections:
@@ -11359,8 +11422,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -11391,7 +11454,7 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
         - - Arch
           - -2.25
           - -1
@@ -11399,20 +11462,20 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
       - - Infinity
-        - ~
+        - null
         - Infinity
       - - Infinity
-        - ~
+        - null
         - Infinity
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       Sections:
@@ -11426,8 +11489,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -11458,7 +11521,7 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
         - - Arch
           - -2.25
           - 1
@@ -11466,20 +11529,20 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
       - - Infinity
-        - ~
+        - null
         - Infinity
       - - Infinity
-        - ~
+        - null
         - Infinity
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       Sections:
@@ -11493,8 +11556,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -11525,7 +11588,7 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
         - - Arch
           - -2.25
           - 3
@@ -11533,20 +11596,20 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
       - - Infinity
-        - ~
+        - null
         - Infinity
       - - Infinity
-        - ~
+        - null
         - Infinity
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       Sections:
@@ -11560,8 +11623,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -11592,7 +11655,7 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
         - - Arch
           - -2.25
           - 5
@@ -11600,20 +11663,20 @@ generic:
           - 90
           - 90
           - 0
-          - ~
+          - null
       ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
       - - Infinity
-        - ~
+        - null
         - Infinity
       - - Infinity
-        - ~
+        - null
         - Infinity
       ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
         ConnectionApplyRamp, ConnectionUseSmoothGrowth
-      : - - ~
+      : - - null
           - 0
           - 0.001
-        - - ~
+        - - null
           - 0
           - 0.001
       Sections:
@@ -11627,8 +11690,8 @@ generic:
       ContentsMethod: Uniform
       IncludeAxialContentsInertia: true
       ContentsDensity: 0
-      ContentsTemperature: ~
-      ContentsPressureRefZ: ~
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
       ContentsPressure: 0
       ContentsFlowRate: 0
       IncludedInStatics: true
@@ -11696,9 +11759,9 @@ generic:
       - 0
       - 0
       HydrodynamicMass:
-      - ~
-      - ~
-      - ~
+      - null
+      - null
+      - null
       HydrodynamicInertia:
       - 0
       - 0
@@ -11712,9 +11775,9 @@ generic:
       - 0
       - 0
       FluidAccelerationForceCoefficient:
-      - ~
-      - ~
-      - ~
+      - null
+      - null
+      - null
       LumpedBuoySlamArea: 0
       LumpedBuoySlamForceDataEntry: 0
       LumpedBuoySlamForceDataExit: 0
@@ -11745,7 +11808,7 @@ generic:
         - 0
         - 0
       SeabedFrictionCoefficient: 0
-      TotalContactArea: ~
+      TotalContactArea: null
       Hidden: true
       Pen:
       - 1
@@ -11785,40 +11848,40 @@ generic:
       EdgeFrom, EdgeTo, EdgeDiameter:
       - - 1
         - 2
-        - ~
+        - null
       - - 3
         - 4
-        - ~
+        - null
       - - 1
         - 3
-        - ~
+        - null
       - - 2
         - 4
-        - ~
+        - null
       - - 1
         - 5
-        - ~
+        - null
       - - 5
         - 6
-        - ~
+        - null
       - - 6
         - 2
-        - ~
+        - null
       - - 3
         - 7
-        - ~
+        - null
       - - 7
         - 8
-        - ~
+        - null
       - - 8
         - 4
-        - ~
+        - null
       - - 5
         - 7
-        - ~
+        - null
       - - 6
         - 8
-        - ~
+        - null
       ShadedDrawingCullingMode: Anticlockwise
   - name: Arch supports 1 down
     buoy_type: Lumped buoy
@@ -11899,7 +11962,7 @@ generic:
       LumpedBuoySlamForceDataEntry: 0
       LumpedBuoySlamForceDataExit: 0
       SupportGeometrySpecification: Explicit
-      SupportReleaseStage: ~
+      SupportReleaseStage: null
       SupportCoordinateSystems:
       - SupportCoordinateSystemName: Coordinate System1
         SupportCoordinateSystemPos:
@@ -12073,7 +12136,7 @@ generic:
       LumpedBuoySlamForceDataEntry: 0
       LumpedBuoySlamForceDataExit: 0
       SupportGeometrySpecification: Explicit
-      SupportReleaseStage: ~
+      SupportReleaseStage: null
       SupportCoordinateSystems:
       - SupportCoordinateSystemName: Coordinate System1
         SupportCoordinateSystemPos:
@@ -12247,7 +12310,7 @@ generic:
       LumpedBuoySlamForceDataEntry: 0
       LumpedBuoySlamForceDataExit: 0
       SupportGeometrySpecification: Explicit
-      SupportReleaseStage: ~
+      SupportReleaseStage: null
       SupportCoordinateSystems:
       - SupportCoordinateSystemName: Coordinate System1
         SupportCoordinateSystemPos:
@@ -12421,7 +12484,7 @@ generic:
       LumpedBuoySlamForceDataEntry: 0
       LumpedBuoySlamForceDataExit: 0
       SupportGeometrySpecification: Explicit
-      SupportReleaseStage: ~
+      SupportReleaseStage: null
       SupportCoordinateSystems:
       - SupportCoordinateSystemName: Coordinate System1
         SupportCoordinateSystemPos:
@@ -12595,7 +12658,7 @@ generic:
       LumpedBuoySlamForceDataEntry: 0
       LumpedBuoySlamForceDataExit: 0
       SupportGeometrySpecification: Explicit
-      SupportReleaseStage: ~
+      SupportReleaseStage: null
       SupportCoordinateSystems:
       - SupportCoordinateSystemName: Coordinate System1
         SupportCoordinateSystemPos:
@@ -12769,7 +12832,7 @@ generic:
       LumpedBuoySlamForceDataEntry: 0
       LumpedBuoySlamForceDataExit: 0
       SupportGeometrySpecification: Explicit
-      SupportReleaseStage: ~
+      SupportReleaseStage: null
       SupportCoordinateSystems:
       - SupportCoordinateSystemName: Coordinate System1
         SupportCoordinateSystemPos:
@@ -12943,7 +13006,7 @@ generic:
       LumpedBuoySlamForceDataEntry: 0
       LumpedBuoySlamForceDataExit: 0
       SupportGeometrySpecification: Explicit
-      SupportReleaseStage: ~
+      SupportReleaseStage: null
       SupportCoordinateSystems:
       - SupportCoordinateSystemName: Coordinate System1
         SupportCoordinateSystemPos:
@@ -13117,7 +13180,7 @@ generic:
       LumpedBuoySlamForceDataEntry: 0
       LumpedBuoySlamForceDataExit: 0
       SupportGeometrySpecification: Explicit
-      SupportReleaseStage: ~
+      SupportReleaseStage: null
       SupportCoordinateSystems:
       - SupportCoordinateSystemName: Coordinate System1
         SupportCoordinateSystemPos:
@@ -13511,6 +13574,80 @@ generic:
         - 0.7
       - - 25e6
         - 0.7
+  friction_coefficients:
+    data:
+      ? FrictionCoefficientSupportTypeName, SupportTypeFrictionCoefficientLineName,
+        SupportTypeLateralCoefficient, SupportTypeAxialCoefficient
+      : - - (all support types)
+          - (all lines)
+          - 0.2
+          - null
+  groups:
+    data:
+      Structure:
+        Vessel group: Model
+        FPSO: Vessel group
+        Turret: Vessel group
+        Arch structure: Model
+        Arch: Arch structure
+        Gutters: Arch structure
+        Arch supports 1 down: Gutters
+        Arch supports 2 down: Gutters
+        Arch supports 3 down: Gutters
+        Arch supports 4 down: Gutters
+        Arch supports 1 up: Gutters
+        Arch supports 2 up: Gutters
+        Arch supports 3 up: Gutters
+        Arch supports 4 up: Gutters
+        Tanks: Arch structure
+        East tank: Tanks
+        Buoyancy tank E 1: East tank
+        Buoyancy tank E 2: East tank
+        Buoyancy tank E 3: East tank
+        Buoyancy tank E 4: East tank
+        Buoyancy tank E 5: East tank
+        West tank: Tanks
+        Buoyancy tank W 1: West tank
+        Buoyancy tank W 2: West tank
+        Buoyancy tank W 3: West tank
+        Buoyancy tank W 4: West tank
+        Buoyancy tank W 5: West tank
+        Arch drawings: Model
+        Vertical images: Arch drawings
+        Trough shape E: Vertical images
+        Clamp shape: Vertical images
+        Trough shape W: Vertical images
+        Tank images: Arch drawings
+        Tank shape E: Tank images
+        Tank shape W: Tank images
+        Tethers and bridles: Model
+        Northern set: Tethers and bridles
+        Bridle_NE: Northern set
+        Bridle_NW: Northern set
+        ArchTie_N: Northern set
+        Southern set: Tethers and bridles
+        Bridle_SE: Southern set
+        Bridle_SW: Southern set
+        ArchTie_S: Southern set
+        Gravity base set: Tethers and bridles
+        North post: Gravity base set
+        South post: Gravity base set
+        Gravity base: Gravity base set
+        Risers and umbilicals: Model
+        10" N set: Risers and umbilicals
+        10" up N: 10" N set
+        10" down N: 10" N set
+        Umb set: Risers and umbilicals
+        Umb up: Umb set
+        Umb down: Umb set
+        8" set: Risers and umbilicals
+        8" up: 8" set
+        8" down: 8" set
+        10" S set: Risers and umbilicals
+        10" up S: 10" S set
+        10" down S: 10" S set
+      State:
+        Collapsed: []
   general_properties:
     UnitsSystem: SI
     JacobianBufferingPolicy: 1
@@ -13523,15 +13660,15 @@ generic:
     ImplicitUseVariableTimeStep: false
     LogPrecision: Single
     TargetLogSampleInterval: 0.1
-    LogStartTime: ~
-    StartTime: ~
-    FirstStage: ~
-    RampStartTime: ~
-    RampFinishTime: ~
-    TimeHistoryImportFrom: ~
-    TimeHistoryImportTo: ~
+    LogStartTime: null
+    StartTime: null
+    FirstStage: null
+    RampStartTime: null
+    RampFinishTime: null
+    TimeHistoryImportFrom: null
+    TimeHistoryImportTo: null
     RestartStateRecordingPeriodicCount: 0
-    RestartStateRecordingTest: ~
+    RestartStateRecordingTest: null
     NorthDirection: 90
     DefaultViewMode: Shaded
     DefaultShadedFillMode: Solid

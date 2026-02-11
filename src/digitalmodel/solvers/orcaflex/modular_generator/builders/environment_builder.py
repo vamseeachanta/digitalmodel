@@ -56,7 +56,7 @@ class EnvironmentBuilder(BaseBuilder):
         "SeabedType": "Flat",
         "SeabedOrigin": [0, 0],
         "NominalDepth": None,
-        "SeabedSlopeDirection": 180,
+        "SeabedSlopeDirection": 0,
         "SeabedModel": "Elastic",
         "WaveKinematicsCutoffDepth": "Infinity",
         "WaveCalculationMethod": "Instantaneous position (exact)",
@@ -79,41 +79,147 @@ class EnvironmentBuilder(BaseBuilder):
         "VerticalWindVariationFactor": None,
     }
 
+    # Safe properties that can be overlaid from raw_properties without
+    # triggering "Change not allowed" errors.  These are mode-independent
+    # scalar or list properties that exist regardless of wind/wave type.
+    _SAFE_RAW_OVERLAY_KEYS: set[str] = {
+        "WaterSurfaceZ",
+        "KinematicViscosity",
+        "SeaTemperature",
+        "ReynoldsNumberCalculation",
+        "HorizontalWaterDensityFactor",
+        "VerticalDensityVariation",
+        "SeabedType",
+        "SeabedOrigin",
+        "WaterDepth",
+        "SeabedSlopeDirection",
+        "SeabedSlope",
+        "SeabedModel",
+        "SeabedNormalStiffness",
+        "SeabedShearStiffness",
+        "KinematicStretchingMethod",
+        "UserSpecifiedRandomWaveSeeds",
+        "WaveFrequencySpectrumDiscretisationMethod",
+        "WaveKinematicsCutoffDepth",
+        "WaveCalculationMethod",
+        "WaveCalculationTimeInterval",
+        "WaveCalculationSpatialInterval",
+        "MultipleCurrentDataCanBeDefined",
+        "CurrentModel",
+        "CurrentRamped",
+        "CurrentApplyVerticalStretching",
+        "HorizontalCurrentFactor",
+        "VerticalCurrentVariationMethod",
+        "IncludeVesselWindLoads",
+        "IncludeLineWindLoads",
+        "IncludeBuoyWindLoads",
+        "IncludeBuoyWingWindLoads",
+        "WindRamping",
+        "AirDensity",
+        "AirSpeedOfSound",
+    }
+
+    # Wind-type-dependent properties keyed by WindType value.
+    # Only emitted when the detected wind type matches.
+    _WIND_TYPE_PROPS: dict[str, set[str]] = {
+        "API spectrum": {
+            "WindSpectrumElevation",
+            "WindSpectrumFMin",
+            "WindSpectrumFMax",
+            "WindTimeOrigin",
+            "WindSeed",
+            "NumberOfWindComponents",
+        },
+        "NPD spectrum": {
+            "WindSpectrumElevation",
+            "WindSpectrumFMin",
+            "WindSpectrumFMax",
+            "WindTimeOrigin",
+            "WindSeed",
+            "NumberOfWindComponents",
+        },
+        "ESDU spectrum": {
+            "WindSpectrumElevation",
+            "WindSpectrumFMin",
+            "WindSpectrumFMax",
+            "WindTimeOrigin",
+            "WindSeed",
+            "NumberOfWindComponents",
+        },
+    }
+
     def build(self) -> dict[str, Any]:
         """Build the Environment section from environmental settings.
 
         Returns:
             Dictionary with 'Environment' key containing OrcaFlex settings.
 
-        Note:
-            The ``raw_properties`` on the Environment schema captures ALL
-            original OrcaFlex properties for diagnostic use (semantic
-            validation tool).  However, we do NOT pass raw properties into
-            the generated YAML because OrcaFlex YAML exports contain
-            mode-dependent dormant properties that cause "Change not allowed"
-            errors when re-loaded in a different property order.  The builder
-            uses hardcoded safe defaults instead.
+        Strategy:
+            1. Start with hardcoded safe defaults.
+            2. Overlay mode-independent properties from raw_properties (if
+               available) using _SAFE_RAW_OVERLAY_KEYS whitelist.
+            3. Detect WindType from raw_properties and emit wind-type-
+               dependent properties from _WIND_TYPE_PROPS.
+            4. Apply spec-derived values (always authoritative) last.
         """
         env = self.spec.environment
+        raw = getattr(env, "raw_properties", {}) or {}
 
         environment = dict(self._DEFAULTS)
 
-        # Overlay spec-derived values (always authoritative)
+        # Step 2: Overlay safe mode-independent raw properties
+        for key in self._SAFE_RAW_OVERLAY_KEYS:
+            if key in raw:
+                environment[key] = raw[key]
+
+        # Step 3: Detect and apply wind type from raw_properties
+        wind_type = raw.get("WindType", "Constant")
+        environment["WindType"] = wind_type
+        wind_dep_keys = self._WIND_TYPE_PROPS.get(wind_type, set())
+        for key in wind_dep_keys:
+            if key in raw:
+                environment[key] = raw[key]
+
+        # Step 4: Overlay spec-derived values (always authoritative)
         environment["Density"] = env.water.density
-        environment["SeabedOriginDepth"] = env.water.depth
+        # Use WaterDepth if raw has it (extracted models), else SeabedOriginDepth
+        # (hand-crafted specs) for backward compatibility.
+        if "WaterDepth" in raw:
+            environment["WaterDepth"] = env.water.depth
+            # Remove NominalDepth default when WaterDepth is used
+            environment.pop("NominalDepth", None)
+        else:
+            environment["SeabedOriginDepth"] = env.water.depth
         environment["SeabedSlope"] = env.seabed.slope
         environment["SeabedNormalStiffness"] = env.seabed.stiffness.normal
         environment["SeabedShearStiffness"] = env.seabed.stiffness.shear
 
         # Wave trains
-        environment["WaveTrains"] = self._build_wave_trains(env.waves)
+        environment["WaveTrains"] = self._build_wave_trains(env.waves, raw)
 
-        # Current
-        environment["RefCurrentSpeed"] = env.current.speed
-        environment["RefCurrentDirection"] = env.current.direction
-        environment["CurrentDepth, CurrentFactor, CurrentRotation"] = (
-            self._build_current_profile(env.current.profile)
+        # Current — mode depends on VerticalCurrentVariationMethod
+        current_method = environment.get(
+            "VerticalCurrentVariationMethod", "Interpolated"
         )
+        if current_method == "Power law":
+            # Power law mode: emit surface/seabed speeds and exponent.
+            # These props are only valid in Power law mode (dormant in
+            # Interpolated mode), so overlay them conditionally here.
+            for key in ("CurrentExponent", "CurrentSpeedAtSurface",
+                        "CurrentSpeedAtSeabed"):
+                if key in raw:
+                    environment[key] = raw[key]
+            environment["RefCurrentDirection"] = env.current.direction
+            # Do NOT emit RefCurrentSpeed, CurrentDepth/Factor/Rotation
+            # — they are Interpolated-mode properties and will cause
+            # "Change not allowed" errors in Power law mode.
+        else:
+            # Interpolated mode (default): emit tabular profile
+            environment["RefCurrentSpeed"] = env.current.speed
+            environment["RefCurrentDirection"] = env.current.direction
+            environment["CurrentDepth, CurrentFactor, CurrentRotation"] = (
+                self._build_current_profile(env.current.profile)
+            )
 
         # Wind
         environment["WindSpeed"] = env.wind.speed
@@ -121,7 +227,9 @@ class EnvironmentBuilder(BaseBuilder):
 
         return {"Environment": environment}
 
-    def _build_wave_trains(self, waves: Any) -> list[dict[str, Any]]:
+    def _build_wave_trains(
+        self, waves: Any, raw: dict[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
         """Build wave train configuration from wave settings.
 
         Uses the correct OrcaFlex property names based on wave type:
@@ -129,22 +237,37 @@ class EnvironmentBuilder(BaseBuilder):
         - Spectral (JONSWAP, Pierson-Moskowitz, etc.): WaveHs + WaveTz
         - Other (User defined, No waves, etc.): no height/period emitted
 
+        When raw_properties contain WaveTrains, the raw wave train data is
+        used as the base layer to preserve all original properties (Name,
+        spectral discretisation params, etc.), with spec-derived values
+        overlaid on top.
+
         Args:
             waves: Wave specification from the input spec.
+            raw: Raw environment properties dict (optional).
 
         Returns:
             List containing wave train definitions.
         """
+        raw = raw or {}
+
         # Map wave type to OrcaFlex enum value
         wave_type = WAVE_TYPE_MAP.get(waves.type, waves.type)
 
-        wave_train: dict[str, Any] = {
-            "Name": "Wave1",
-            "WaveType": wave_type,
-            "WaveDirection": waves.direction,
-            "WaveOrigin": [0, 0],
-            "WaveTimeOrigin": 0,
-        }
+        # If raw WaveTrains exist, use first train as base layer
+        raw_trains = raw.get("WaveTrains", [])
+        if raw_trains and isinstance(raw_trains, list) and raw_trains:
+            wave_train = dict(raw_trains[0])
+        else:
+            wave_train = {
+                "Name": "Wave 1",
+                "WaveOrigin": [0, 0],
+                "WaveTimeOrigin": 0,
+            }
+
+        # Always overlay spec-derived values
+        wave_train["WaveType"] = wave_type
+        wave_train["WaveDirection"] = waves.direction
 
         # Emit height/period with correct property names for the wave type
         if wave_type in _DETERMINISTIC_WAVE_TYPES:
@@ -154,7 +277,10 @@ class EnvironmentBuilder(BaseBuilder):
             wave_train["WaveHs"] = waves.height
             wave_train["WaveTz"] = waves.period
             if wave_type in ("JONSWAP", "jonswap"):
-                wave_train["WaveGamma"] = waves.gamma
+                # WaveGamma is dormant when WaveJONSWAPParameters is "Automatic"
+                jonswap_params = wave_train.get("WaveJONSWAPParameters", "")
+                if jonswap_params != "Automatic":
+                    wave_train["WaveGamma"] = waves.gamma
         # For other wave types (User defined, User specified components,
         # No waves, etc.), omit height/period — OrcaFlex uses type-specific
         # parameters that pass through via generic properties.

@@ -109,6 +109,76 @@ class Significance:
 
 
 # ---------------------------------------------------------------------------
+# Cosmetic / allowed-diff exclusion list
+# ---------------------------------------------------------------------------
+# Properties in this set are view/display properties or dormant-mode defaults
+# that OrcaFlex fills automatically and which have no effect on analysis
+# results. Diffs for these are downgraded to COSMETIC significance.
+ALLOWED_DIFF_PROPS: set[str] = {
+    # View / display settings (General section)
+    "DefaultViewAngle1",
+    "DefaultViewAngle2",
+    "DefaultViewCentre",
+    "DefaultViewSize",
+    "DefaultViewOrientation",
+    "DefaultViewResetWhenConnectedObjectMoved",
+    "DefaultViewDistortionX",
+    "DefaultViewDistortionY",
+    "DefaultViewDistortionZ",
+    "DefaultViewAzimuth",
+    "DefaultViewElevation",
+    "DefaultViewMode",
+    "DefaultShadedFillMode",
+    "DefaultShadedProjectionMode",
+    # Drawing / node display on objects
+    "DrawNodes",
+    "DrawNodesSize",
+    "DrawNodesAsDiscs",
+    "DrawShaded",
+    "DrawShadedDiameter",
+    "DrawShadedSections",
+    "DrawShadedNodesAsSpheres",
+    "DrawNodeSymbol",
+    "DrawNodeSize",
+    "DrawShadedModel",
+    "ShadedDrawingCullingMode",
+    # Contact / drawing cosmetics on lines
+    "ContactPen",
+    "ContactVisualisation",
+    # Group state (open/closed in GUI)
+    "State",
+    "Structure",
+    # Model state bookkeeping
+    "ModelState",
+    # Dormant mode-dependent object properties (filtered by _SKIP_OBJECT_KEYS
+    # in generic_builder — setting these causes "Change not allowed" errors)
+    "ApplySeabedContactLoadsAtCentreline",
+    "SeabedDamping",
+    # Sea surface / seabed rendering
+    "SeaSurfaceTranslucency",
+    "SeabedTranslucency",
+    "SeaSurfaceGridDensity",
+    "SeabedGridDensity",
+    "SeaSurfacePen",
+    # View-related display settings
+    "DrawShadedSmoothShading",
+    "DrawShadedOnSeabed",
+    "DrawAxialColour",
+    "DrawShadedColour",
+    "DrawShadedFillColour",
+    "DrawShadedWallThickness",
+    "NodeColour",
+    "Colour",
+    "ShowDeflectedShape",
+    "WireframeMode",
+    "PenWidth",
+    "BackgroundColour",
+    # Temperature units — encoding of ° symbol causes false diffs
+    "TemperatureUnits",
+}
+
+
+# ---------------------------------------------------------------------------
 # Data structures
 # ---------------------------------------------------------------------------
 
@@ -167,6 +237,29 @@ class SectionResult:
                 return True
         return False
 
+    @property
+    def has_significant_diffs(self) -> bool:
+        """True if any non-cosmetic differences exist."""
+        _non_cosmetic = {
+            Significance.MINOR, Significance.SIGNIFICANT,
+            Significance.TYPE_MISMATCH, Significance.MISSING, Significance.EXTRA,
+        }
+
+        def _has_sig(diffs: list[PropertyDiff]) -> bool:
+            return any(d.significance in _non_cosmetic for d in diffs)
+
+        if _has_sig(self.diffs) or _has_sig(self.missing_in_mod) or _has_sig(self.extra_in_mod):
+            return True
+        if self.missing_objects or self.extra_objects:
+            return True
+        for obj in self.objects:
+            if _has_sig(obj.diffs) or _has_sig(obj.missing_in_mod) or _has_sig(obj.extra_in_mod):
+                return True
+        for cat in self.nested_categories.values():
+            if _has_sig(cat.diffs) or _has_sig(cat.missing_in_mod) or _has_sig(cat.extra_in_mod):
+                return True
+        return False
+
 
 @dataclass
 class ValidationResult:
@@ -183,6 +276,10 @@ class ValidationResult:
         return sum(1 for s in self.sections if s.has_diffs)
 
     @property
+    def sections_with_significant_diffs(self) -> int:
+        return sum(1 for s in self.sections if s.has_significant_diffs)
+
+    @property
     def total_sections(self) -> int:
         return len(self.sections)
 
@@ -193,7 +290,10 @@ class ValidationResult:
 
 def load_monolithic(path: Path) -> dict:
     """Load multi-document monolithic YAML, merging all documents."""
-    text = path.read_text(encoding="utf-8-sig")
+    try:
+        text = path.read_text(encoding="utf-8-sig")
+    except UnicodeDecodeError:
+        text = path.read_text(encoding="latin-1")
     merged: dict = {}
     for doc in yaml.safe_load_all(text):
         if isinstance(doc, dict):
@@ -202,17 +302,35 @@ def load_monolithic(path: Path) -> dict:
 
 
 def load_modular(modular_dir: Path) -> dict:
-    """Load and merge all include files from a modular output directory."""
+    """Load and merge all include files from a modular output directory.
+
+    Uses section-level deep merging: when the same top-level key (e.g.
+    ``General``) appears in multiple include files, dict values are merged
+    (later file wins per-property), list values are concatenated, and scalar
+    values are overwritten.
+    """
     merged: dict = {}
     includes = modular_dir / "includes"
     if not includes.exists():
         # Try modular_dir itself if it contains yml files directly
         includes = modular_dir
     for yml_path in sorted(includes.glob("*.yml")):
-        with open(yml_path, encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-            if isinstance(data, dict):
-                merged.update(data)
+        try:
+            text = yml_path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            text = yml_path.read_text(encoding="latin-1")
+        data = yaml.safe_load(text)
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if key in merged:
+                    existing = merged[key]
+                    if isinstance(existing, dict) and isinstance(value, dict):
+                        existing.update(value)
+                        continue
+                    if isinstance(existing, list) and isinstance(value, list):
+                        existing.extend(value)
+                        continue
+                merged[key] = value
     return merged
 
 
@@ -739,6 +857,63 @@ def compare_nested_section(
 # Main comparison engine
 # ---------------------------------------------------------------------------
 
+def _downgrade_allowed_diffs(result: SectionResult) -> SectionResult:
+    """Downgrade diffs for allowed (cosmetic) properties to COSMETIC significance.
+
+    This applies to both top-level diffs and object/category-level diffs.
+    Properties in ``ALLOWED_DIFF_PROPS`` are view/display settings that don't
+    affect analysis results.
+    """
+    for d in result.diffs:
+        if d.key in ALLOWED_DIFF_PROPS and d.significance not in (
+            Significance.MATCH,
+            Significance.COSMETIC,
+        ):
+            d.significance = Significance.COSMETIC
+
+    for d in result.missing_in_mod:
+        if d.key in ALLOWED_DIFF_PROPS:
+            d.significance = Significance.COSMETIC
+
+    for d in result.extra_in_mod:
+        if d.key in ALLOWED_DIFF_PROPS:
+            d.significance = Significance.COSMETIC
+
+    for obj in result.objects:
+        for d in obj.diffs:
+            if d.key in ALLOWED_DIFF_PROPS and d.significance not in (
+                Significance.MATCH,
+                Significance.COSMETIC,
+            ):
+                d.significance = Significance.COSMETIC
+        for d in obj.missing_in_mod:
+            if d.key in ALLOWED_DIFF_PROPS:
+                d.significance = Significance.COSMETIC
+        for d in obj.extra_in_mod:
+            if d.key in ALLOWED_DIFF_PROPS:
+                d.significance = Significance.COSMETIC
+
+    for cat in result.nested_categories.values():
+        for d in cat.diffs:
+            # Nested category keys are "itemName.propKey" — check the prop part
+            prop_key = d.key.rsplit(".", 1)[-1] if "." in d.key else d.key
+            if prop_key in ALLOWED_DIFF_PROPS and d.significance not in (
+                Significance.MATCH,
+                Significance.COSMETIC,
+            ):
+                d.significance = Significance.COSMETIC
+        for d in cat.missing_in_mod:
+            prop_key = d.key.rsplit(".", 1)[-1] if "." in d.key else d.key
+            if prop_key in ALLOWED_DIFF_PROPS:
+                d.significance = Significance.COSMETIC
+        for d in cat.extra_in_mod:
+            prop_key = d.key.rsplit(".", 1)[-1] if "." in d.key else d.key
+            if prop_key in ALLOWED_DIFF_PROPS:
+                d.significance = Significance.COSMETIC
+
+    return result
+
+
 def validate(
     mono_data: dict,
     mod_data: dict,
@@ -816,6 +991,8 @@ def validate(
                             )
                         )
 
+        # Downgrade allowed (cosmetic) property diffs
+        result = _downgrade_allowed_diffs(result)
         results.append(result)
 
     return results
@@ -1081,6 +1258,89 @@ def to_json(result: ValidationResult) -> dict:
     }
 
 
+def summarize(sections: list[SectionResult]) -> dict:
+    """Produce a compact per-section summary dict for benchmark embedding.
+
+    Returns a dict with top-level counts and a ``sections`` sub-dict keyed by
+    section name, each containing match/diff/missing/extra counts and the
+    worst significance level encountered.
+    """
+    total = len(sections)
+    with_diffs = 0
+    significant_count = 0
+    sec_out: dict[str, dict] = {}
+
+    for s in sections:
+        # Count all diffs across objects and nested categories
+        n_diffs = len(s.diffs)
+        n_missing = len(s.missing_in_mod)
+        n_extra = len(s.extra_in_mod)
+        worst = Significance.MATCH
+
+        # Collect significances from top-level diffs
+        all_sigs = [d.significance for d in s.diffs]
+        all_sigs += [d.significance for d in s.missing_in_mod]
+        all_sigs += [d.significance for d in s.extra_in_mod]
+
+        # Object-level (list sections)
+        for obj in s.objects:
+            n_diffs += len(obj.diffs)
+            n_missing += len(obj.missing_in_mod)
+            n_extra += len(obj.extra_in_mod)
+            all_sigs += [d.significance for d in obj.diffs]
+            all_sigs += [d.significance for d in obj.missing_in_mod]
+            all_sigs += [d.significance for d in obj.extra_in_mod]
+
+        # Nested categories (VariableData)
+        for cat in s.nested_categories.values():
+            n_diffs += len(cat.diffs)
+            n_missing += len(cat.missing_in_mod)
+            n_extra += len(cat.extra_in_mod)
+            all_sigs += [d.significance for d in cat.diffs]
+            all_sigs += [d.significance for d in cat.missing_in_mod]
+            all_sigs += [d.significance for d in cat.extra_in_mod]
+
+        # Missing/extra objects count as significant
+        n_missing += len(s.missing_objects)
+        n_extra += len(s.extra_objects)
+        if s.missing_objects or s.extra_objects:
+            all_sigs.append(Significance.SIGNIFICANT)
+
+        # Determine worst significance
+        sig_order = [
+            Significance.MATCH, Significance.COSMETIC, Significance.MINOR,
+            Significance.SIGNIFICANT, Significance.TYPE_MISMATCH,
+            Significance.MISSING, Significance.EXTRA,
+        ]
+        for sig in all_sigs:
+            if sig in sig_order:
+                idx = sig_order.index(sig)
+                if idx > sig_order.index(worst):
+                    worst = sig
+
+        has_diff = s.has_diffs
+        if has_diff:
+            with_diffs += 1
+        if worst in (Significance.SIGNIFICANT, Significance.TYPE_MISMATCH,
+                     Significance.MISSING, Significance.EXTRA):
+            significant_count += 1
+
+        sec_out[s.name] = {
+            "matches": s.matches,
+            "diffs": n_diffs,
+            "missing": n_missing,
+            "extra": n_extra,
+            "worst_significance": worst,
+        }
+
+    return {
+        "total_sections": total,
+        "sections_with_diffs": with_diffs,
+        "significant_diffs": significant_count,
+        "sections": sec_out,
+    }
+
+
 # ---------------------------------------------------------------------------
 # HTML report
 # ---------------------------------------------------------------------------
@@ -1278,7 +1538,7 @@ def generate_html(result: ValidationResult) -> str:
             missing_count += len(cat.missing_in_mod)
             extra_count += len(cat.extra_in_mod)
 
-        if not s.has_diffs:
+        if not s.has_significant_diffs:
             status_badge = '<span class="badge badge-pass">PASS</span>'
         elif diff_count == 0 and missing_count > 0:
             status_badge = '<span class="badge badge-warn">PARTIAL</span>'
@@ -1460,7 +1720,7 @@ def generate_batch_html(results: list[ValidationResult]) -> str:
                 matching_section = next((s for s in r.sections if s.name == sec_name), None)
                 if matching_section is None:
                     parts.append('<td>-</td>')
-                elif not matching_section.has_diffs:
+                elif not matching_section.has_significant_diffs:
                     parts.append('<td><span class="badge badge-pass">OK</span></td>')
                 else:
                     parts.append('<td><span class="badge badge-fail">DIFF</span></td>')
@@ -1488,7 +1748,7 @@ def generate_batch_html(results: list[ValidationResult]) -> str:
             for cat in s.nested_categories.values():
                 diff_count += len(cat.diffs)
 
-            if not s.has_diffs:
+            if not s.has_significant_diffs:
                 status_badge = '<span class="badge badge-pass">PASS</span>'
             else:
                 status_badge = '<span class="badge badge-fail">DIFF</span>'
@@ -1770,7 +2030,7 @@ def main() -> int:
             return 0
 
         # Summary
-        pass_count = sum(1 for r in results if r.sections_with_diffs == 0)
+        pass_count = sum(1 for r in results if r.sections_with_significant_diffs == 0)
         total = len(results)
         print(f"\nBatch complete: {pass_count}/{total} models fully match")
 
@@ -1841,7 +2101,7 @@ def main() -> int:
         use_color = not args.no_color and sys.stdout.isatty()
         print_console(result, use_color=use_color)
 
-    return 0 if result.sections_with_diffs == 0 else 1
+    return 0 if result.sections_with_significant_diffs == 0 else 1
 
 
 if __name__ == "__main__":

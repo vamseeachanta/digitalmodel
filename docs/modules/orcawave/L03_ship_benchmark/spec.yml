@@ -1,0 +1,84 @@
+# Canonical spec.yml for Ship Benchmark (L03)
+# Source: source_data/orcawave/orcawave_001_ship_raos_rev2.yml
+# Units: Pure SI (kg, m, s) — backend converts to OrcaFlex-SI (te)
+
+version: "1.0"
+analysis_type: full_qtf
+
+vessel:
+  name: Body1
+  type: ship
+  geometry:
+    mesh_file: source_data/aqwa/aqwa_001_ship_raos_rev2.dat
+    mesh_format: dat
+    symmetry: none
+    reference_point: [0.0, 0.0, 0.5]  # BodyMeshPosition z-offset
+    waterline_z: 0.0
+    length_units: m
+  inertia:
+    mass: 9017950.0  # 9017.95 te * 1000
+    centre_of_gravity: [2.53, 0.0, -1.974]
+    inertia_tensor:
+      Ixx: 254937446.5   # 254937.4465 te.m^2 * 1000
+      Iyy: 5979802645.0  # 5979802.645 te.m^2 * 1000
+      Izz: 5979802645.0  # 5979802.645 te.m^2 * 1000
+      Ixy: 0.0
+      Ixz: 0.0
+      Iyz: 0.0
+  external_damping:
+    - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    - [0.0, 0.0, 0.0, 36010.0, 0.0, 0.0]  # Roll damping (passed through without conversion)
+    - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+environment:
+  water_depth: 30.0
+  water_density: 1025.0
+
+frequencies:
+  input_type: period
+  values:
+    - 2.0
+    - 3.0
+    - 4.0
+    - 5.0
+    - 6.0
+    - 7.0
+    - 7.5
+    - 8.0
+    - 8.5
+    - 9.0
+    - 9.5
+    - 10.0
+    - 11.0
+    - 13.0
+    - 15.0
+    - 16.0
+    - 17.0
+    - 19.0
+    - 20.0
+    - 22.0
+
+wave_headings:
+  values: [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, 180.0]
+  symmetry: false
+
+solver_options:
+  remove_irregular_frequencies: true
+  qtf_calculation: true
+  load_rao_method: both
+  precision: double
+  qtf_min_frequency: 0.628318  # 2*pi/10.0 rad/s (QTFMaxPeriod=10s)
+  qtf_max_frequency: 3.141593  # 2*pi/2.0 rad/s (QTFMinPeriod=2s)
+
+outputs:
+  formats: [csv]
+  components: [raos, added_mass, damping, qtf]
+  directory: benchmark_results
+
+metadata:
+  project: OrcaWave Benchmark Library
+  description: Ship diffraction benchmark — 103m vessel, 30m water depth, with QTF and roll damping
+  tags: [benchmark, ship, validation, L03, qtf]

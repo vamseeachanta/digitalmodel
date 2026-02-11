@@ -45,13 +45,6 @@ _SECTION_ORDER: list[str] = [
     "General",
     "VariableData",
     "ExpansionTables",
-    # Singleton sections that define named references (must precede objects)
-    "RayleighDampingCoefficients",
-    "SolidFrictionCoefficients",
-    "LineContactData",
-    "CodeChecks",
-    "Shear7Data",
-    "VIVAData",
     # Type definitions (must precede instances)
     "LineTypes",
     "VesselTypes",
@@ -78,7 +71,16 @@ _SECTION_ORDER: list[str] = [
     "Turbines",
     "AttachedBuoys",
     "MultibodyGroups",
+    # Singleton sections that reference LineTypes, Shapes, etc. by name —
+    # must appear AFTER type definitions and object instances.
+    "RayleighDampingCoefficients",
+    "FrictionCoefficients",
+    "LineContactData",
+    "CodeChecks",
+    "Shear7Data",
+    "VIVAData",
     "BrowserGroups",
+    "Groups",
 ]
 
 # OrcaFlex properties that must appear before other properties within an
@@ -91,11 +93,68 @@ _PRIORITY_KEYS: list[str] = [
     "Shape",           # Shapes: Block, Cylinder, etc. (controls Size semantics)
     "BuoyType",        # 6DBuoys: Spar buoy, Lumped buoy, etc.
     "Connection",      # Various: affects available sub-properties
+    "InFrameConnection",   # Constraints: resets InFrameInitialPosition when set
+    "OutFrameConnection",  # Constraints: resets OutFrame position when set
+    "ConstraintType",      # Constraints: must precede DOFFree, stiffness props
     "LinkType",        # Links: Tether, Spring/damper, etc.
     "Geometry",        # SupportTypes: U shaped, etc.
     "WaveType",        # Environment wave trains
     "DegreesOfFreedomInStatics",  # 6DBuoys: must precede stiffness props
 ]
+
+# General-section keys to skip when emitting general_properties.
+# These are view/display/cosmetic properties that OrcaFlex exports via
+# SaveData() but which can be dormant (not settable) depending on the
+# current view mode.  Setting a dormant property triggers a
+# "Change not allowed" error at load time.
+_SKIP_GENERAL_KEYS: set[str] = {
+    # Default view settings
+    "DefaultViewAngle1",
+    "DefaultViewAngle2",
+    "DefaultViewCentre",
+    "DefaultViewSize",
+    "DefaultViewOrientation",
+    "DefaultViewResetWhenConnectedObjectMoved",
+    "DefaultViewDistortionX",
+    "DefaultViewDistortionY",
+    "DefaultViewDistortionZ",
+    "DefaultViewAzimuth",
+    "DefaultViewElevation",
+    "DefaultViewMode",
+    # Default shaded view settings (dormant unless view mode is Shaded)
+    "DefaultShadedFillMode",
+    "DefaultShadedProjectionMode",
+    # Drawing cosmetics
+    "BackgroundColour",
+    "WireframeMode",
+    # Sea surface / seabed rendering
+    "SeaSurfaceTranslucency",
+    "SeabedTranslucency",
+    "SeaSurfaceGridDensity",
+    "SeabedGridDensity",
+    "SeaSurfacePen",
+    # Model state bookkeeping
+    "ModelState",
+    # Temperature units — display-only, encoding of degree symbol (°)
+    # differs between UTF-8 and Latin-1 causing OrcFxAPI "not found" errors
+    "TemperatureUnits",
+}
+
+# Object-level properties to strip from ALL object types during
+# ``_merge_object()``.  These are mode-dependent dormant properties that
+# OrcaFlex exports via ``SaveData()`` but rejects on load when the
+# controlling mode property has a different value.  For example,
+# ``ApplySeabedContactLoadsAtCentreline`` is only settable for LineType
+# categories that support centreline seabed contact.
+#
+# Unlike ``_SKIP_GENERAL_KEYS`` (which filters only the General section),
+# this set applies to every object emitted by the generic builder.
+_SKIP_OBJECT_KEYS: set[str] = {
+    # LineType / Line seabed properties — only valid for certain categories
+    "ApplySeabedContactLoadsAtCentreline",
+    # Environment seabed damping — only valid when SeabedModel != "Elastic"
+    "SeabedDamping",
+}
 
 
 @BuilderRegistry.register("20_generic_objects.yml", order=200)
@@ -163,9 +222,16 @@ class GenericModelBuilder(BaseBuilder):
             if singleton.data:
                 result[section_key] = dict(singleton.data)
 
-        # Merge general_properties into "General" if non-empty
+        # Merge general_properties into "General", filtering out dormant
+        # view/display properties that cause "Change not allowed" errors.
         if generic.general_properties:
-            result["General"] = dict(generic.general_properties)
+            filtered = {
+                k: v
+                for k, v in generic.general_properties.items()
+                if k not in _SKIP_GENERAL_KEYS
+            }
+            if filtered:
+                result["General"] = filtered
 
         return self._order_sections(result)
 
@@ -217,7 +283,8 @@ class GenericModelBuilder(BaseBuilder):
         Strategy:
         1. Start from the properties dict (pass-through values).
         2. Overlay typed fields using TYPED_FIELD_MAP for key translation.
-        3. Only include typed fields whose value is not None.
+        3. Include typed fields that are non-None, or explicitly set to None
+           (via Pydantic ``model_fields_set``) to preserve monolithic parity.
         4. Typed fields take priority over properties on key conflict.
         5. Re-order so priority keys (Name, Category) appear first.
 
@@ -228,11 +295,19 @@ class GenericModelBuilder(BaseBuilder):
             Flat dictionary suitable for OrcaFlex YAML output.
         """
         merged: dict[str, Any] = dict(obj.properties)
+        explicitly_set = getattr(obj, "model_fields_set", set())
 
         for py_field, ofx_key in TYPED_FIELD_MAP.items():
             value = getattr(obj, py_field, None)
             if value is not None:
                 merged[ofx_key] = value
+            elif py_field in explicitly_set:
+                merged[ofx_key] = value
+
+        # Strip dormant mode-dependent properties that cause
+        # "Change not allowed" errors across all object types.
+        for skip_key in _SKIP_OBJECT_KEYS:
+            merged.pop(skip_key, None)
 
         # Ensure priority keys come first (e.g. Category before MaterialDensity)
         ordered: dict[str, Any] = {}

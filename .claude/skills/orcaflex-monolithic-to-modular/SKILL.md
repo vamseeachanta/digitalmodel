@@ -1,333 +1,226 @@
 ---
 name: orcaflex-monolithic-to-modular
-description: Convert monolithic OrcaFlex YAML files to modular include format for maintainability, reusability, and parametric analysis.
-version: 1.0.0
-updated: 2026-01-21
+description: Convert monolithic OrcaFlex models (.dat/.yml) to spec-driven modular format with semantic validation for round-trip fidelity.
+version: 2.0.0
+updated: 2026-02-10
 category: offshore-engineering
 triggers:
 - convert monolithic to modular
-- split OrcaFlex YAML
+- extract OrcaFlex spec
 - modularize OrcaFlex model
 - create OrcaFlex includes
 - reverse engineer OrcaFlex YAML
-- prepare modular model
+- monolithic to spec.yml
+- semantic validation OrcaFlex
 ---
-# OrcaFlex Monolithic to Modular Converter Skill
+# OrcaFlex Monolithic to Modular Converter
 
-Convert large monolithic OrcaFlex YAML files into organized modular structures with reusable includes and parameterized inputs.
-
-## Version Metadata
-
-```yaml
-version: 1.0.0
-python_min_version: '3.10'
-orcaflex_version: '>=11.0'
-compatibility:
-  tested_python:
-  - '3.10'
-  - '3.11'
-  - '3.12'
-  - '3.13'
-  os:
-  - Windows
-  - Linux
-  - macOS
-```
+Convert monolithic OrcaFlex models into spec-driven modular format using the `MonolithicExtractor` → `ProjectInputSpec` → `ModularModelGenerator` pipeline.
 
 ## When to Use
 
-- Converting large single-file YAML models to maintainable modular format
-- Extracting reusable components (line types, buoy types, environments)
-- Preparing models for parametric analysis
-- Creating template libraries from existing models
-- Standardizing model organization across projects
+- Converting `.dat` / `.yml` OrcaFlex models to portable `spec.yml` format
+- Creating reusable component libraries from existing models
+- Validating that modular output is semantically equivalent to monolithic source
+- Preparing models for parametric studies or automated benchmarking
+- Building a spec.yml foundation for any new OrcaFlex model
 
-## Directory Structure Convention
-
-### Target Structure
+## Architecture
 
 ```
-<example_folder>/
-├── monolithic.yml           # Original single-file (preserved)
-└── modular/
-    ├── master.yml           # Entry point with includes
-    ├── includes/            # Component definitions
-    │   ├── 01_general.yml
-    │   ├── 02_var_data.yml
-    │   ├── 03_environment.yml
-    │   ├── 05_line_types.yml
-    │   ├── 07_lines.yml
-    │   ├── 08_buoys.yml
-    │   ├── 09_shapes.yml
-    │   ├── 10_groups.yml
-    │   ├── 13_supports.yml
-    │   └── 14_morison.yml
-    └── inputs/
-        └── parameters.yml   # Extracted parameters
+┌──────────────┐    ┌────────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│ .dat / .yml  │───>│ MonolithicExtractor │───>│ ProjectInputSpec │───>│ ModularModel     │
+│ (monolithic) │    │   (extractor.py)    │    │   (spec.yml)     │    │ Generator        │
+└──────────────┘    └────────────────────┘    └──────────────────┘    └────────┬────────┘
+                                                                               │
+                                                                    ┌──────────▼──────────┐
+                                                                    │  modular/           │
+                                                                    │  ├── master.yml     │
+                                                                    │  ├── includes/      │
+                                                                    │  │   ├── 01_general │
+                                                                    │  │   ├── 03_env     │
+                                                                    │  │   └── 20_generic │
+                                                                    │  └── inputs/        │
+                                                                    │      └── params.yml │
+                                                                    └─────────────────────┘
 ```
 
-### Naming Conventions
+## Pipeline Steps
 
-| Convention | Example | Rationale |
-|------------|---------|-----------|
-| Folder name | `30in_pipeline/` | Descriptive, filesystem-safe |
-| Original file | `monolithic.yml` | Clear purpose identification |
-| Entry point | `master.yml` | Standard modular entry |
-| Include prefix | `01_`, `02_` | Dependency ordering |
-
-## Include File Ordering
-
-**Critical**: Include order matters due to OrcaFlex dependencies.
-
-```yaml
-# master.yml - Correct dependency order
-- includefile: includes/01_general.yml      # Global settings first
-- includefile: includes/02_var_data.yml     # Variable data
-- includefile: includes/03_environment.yml  # Environment before objects
-- includefile: includes/05_line_types.yml   # Types before instances
-- includefile: includes/13_supports.yml     # Supports before lines
-- includefile: includes/14_morison.yml      # Morison elements
-- includefile: includes/09_shapes.yml       # Shapes before buoys
-- includefile: includes/08_buoys.yml        # Buoys before lines connect
-- includefile: includes/07_lines.yml        # Lines reference types/buoys
-- includefile: includes/10_groups.yml       # Groups reference objects
-```
-
-### Dependency Rules
-
-1. **Types before instances** - LineTypes before Lines
-2. **Connections before dependents** - Buoys before Lines that connect to them
-3. **Global before specific** - General/Environment before objects
-4. **References resolved** - Define before reference
-
-## Component Mapping
-
-| Section | Include File | Contents |
-|---------|-------------|----------|
-| General | `01_general.yml` | Units, simulation settings |
-| Variable Data | `02_var_data.yml` | Tags, variables |
-| Environment | `03_environment.yml` | Water depth, waves, current, wind |
-| Line Types | `05_line_types.yml` | Cable/chain/riser properties |
-| Lines | `07_lines.yml` | Line instances, connections |
-| Buoys | `08_buoys.yml` | 3D/6D buoy definitions |
-| Shapes | `09_shapes.yml` | Drawing shapes |
-| Groups | `10_groups.yml` | Object groupings |
-| Supports | `13_supports.yml` | Support definitions |
-| Morison | `14_morison.yml` | Morison elements |
-
-## Parameter Extraction
-
-Extract key parameters to `inputs/parameters.yml` for parametric studies:
-
-```yaml
-# inputs/parameters.yml
-parameters:
-  environment:
-    water_depth: 8
-    current_speed: 1
-    current_direction: 270
-    wind_speed: 8.87
-    water_density: 1.03
-
-  waves:
-    hs: 0
-    tp: 8
-    wave_direction: 180
-
-  simulation:
-    stage_durations: [8, 16]
-    time_step: 0.1
-```
-
-## Conversion Process
-
-### Step 1: Analyze Monolithic File
+### Step 1: Convert .dat to .yml (if needed)
 
 ```python
-import yaml
-from pathlib import Path
+import OrcFxAPI
 
-def analyze_monolithic(yml_path: Path) -> dict:
-    """Identify sections in monolithic YAML."""
-    with open(yml_path) as f:
-        content = yaml.safe_load(f)
-
-    sections = {
-        'General': content.get('General', {}),
-        'Environment': content.get('Environment', {}),
-        'LineTypes': content.get('LineTypes', []),
-        'Lines': content.get('Lines', []),
-        'Buoys': content.get('Buoys', []),
-        # ... etc
-    }
-    return sections
+model = OrcFxAPI.Model("model.dat")
+model.SaveData("model.yml")  # OrcaFlex YAML export
 ```
 
-### Step 2: Create Modular Structure
+### Step 2: Extract spec from monolithic YAML
 
 ```python
-def create_modular_structure(base_dir: Path):
-    """Create standard directory structure."""
-    (base_dir / 'modular' / 'includes').mkdir(parents=True, exist_ok=True)
-    (base_dir / 'modular' / 'inputs').mkdir(parents=True, exist_ok=True)
+from digitalmodel.solvers.orcaflex.modular_generator.extractor import MonolithicExtractor
+
+ext = MonolithicExtractor(Path("model.yml"))
+spec_dict = ext.extract()
+# Returns: {"metadata": {...}, "environment": {...}, "simulation": {...}, "generic": {...}}
 ```
 
-### Step 3: Split Sections
+The extractor:
+- Reads multi-document YAML (handles `---` separators)
+- Maps OrcaFlex keys to spec schema (typed fields + properties bag)
+- Handles section name aliases (Groups/BrowserGroups, FrictionCoefficients/SolidFrictionCoefficients)
+- Extracts current profiles from multi-column keys
+- Captures `raw_properties` for diagnostic use
+
+### Step 3: Validate and create spec
 
 ```python
-def split_to_includes(sections: dict, includes_dir: Path):
-    """Write each section to separate include file."""
+from digitalmodel.solvers.orcaflex.modular_generator.schema.root import ProjectInputSpec
 
-    section_mapping = {
-        'General': '01_general.yml',
-        'Environment': '03_environment.yml',
-        'LineTypes': '05_line_types.yml',
-        'Lines': '07_lines.yml',
-        'Buoys': '08_buoys.yml',
-    }
-
-    for section, filename in section_mapping.items():
-        if section in sections and sections[section]:
-            output_path = includes_dir / filename
-            with open(output_path, 'w') as f:
-                yaml.dump({section: sections[section]}, f,
-                         default_flow_style=False)
+spec = ProjectInputSpec(**spec_dict)
+# Pydantic validates all fields, applies defaults
 ```
 
-### Step 4: Generate Master File
+### Step 4: Generate modular output
 
 ```python
-def generate_master(modular_dir: Path, original_meta: dict):
-    """Generate master.yml with includes."""
+from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 
-    includes = sorted((modular_dir / 'includes').glob('*.yml'))
-
-    master_content = [
-        '%YAML 1.1',
-        '# Type: Model',
-        f'# Converted from: {original_meta["source"]}',
-        f'# Created: {original_meta["timestamp"]}',
-        '---',
-    ]
-
-    # Add includes in dependency order
-    for inc in includes:
-        master_content.append(f'- includefile: includes/{inc.name}')
-
-    with open(modular_dir / 'master.yml', 'w') as f:
-        f.write('\n'.join(master_content))
+gen = ModularModelGenerator.from_spec(spec)
+gen.generate(Path("output/modular"))
 ```
 
-## Lessons Learned
+### Step 5: Semantic validation
 
-### From Production Usage (2026-01-21)
+```python
+from scripts.semantic_validate import load_monolithic, load_modular, validate, summarize
 
-1. **Use descriptive folder names**: `30in_pipeline` is clearer than `5_tug_env_6D_buoys`
+mono = load_monolithic(Path("model.yml"))
+mod = load_modular(Path("output/modular"))
+results = validate(mono, mod)
+summary = summarize(results)
 
-2. **Separate monolithic from modular**: Keep original as `monolithic.yml` alongside `modular/` directory
+print(f"Match: {summary['total_sections'] - summary['sections_with_diffs']}/{summary['total_sections']}")
+print(f"Significant diffs: {summary['significant_diffs']}")
+```
 
-3. **Extract parameters early**: Identify parameters for parametric studies before splitting
+## Extractor Details
 
-4. **Preserve metadata**: Keep original file header (Program version, creation date, user)
+### Section Mapping
 
-5. **Test after conversion**: Load `master.yml` in OrcaFlex to verify integrity
+The extractor uses three mapping dicts from `schema/generic.py`:
 
-6. **Document include order**: Include order is critical - document dependencies in master.yml
+| Mapping | Purpose | Example |
+|---------|---------|---------|
+| `FIELD_TO_SECTION` | spec field → OrcaFlex YAML key | `"line_types"` → `"LineTypes"` |
+| `SINGLETON_SECTIONS` | singleton section → field | `"FrictionCoefficients"` → `"friction_coefficients"` |
+| `TYPED_FIELD_MAP` | typed field → OrcaFlex prop | `"mass"` → `"Mass"` |
 
-### Common Pitfalls
+### Section Name Aliases
 
-| Pitfall | Solution |
-|---------|----------|
-| Lines fail to load | Check LineTypes included before Lines |
-| Buoy connections missing | Include Buoys before Lines that connect |
-| Groups reference missing objects | Groups must be last |
-| Parameters hardcoded | Extract to inputs/parameters.yml |
+OrcaFlex `SaveData()` exports may use different section names than the API:
 
-## Validation
+| YAML Export Name | API/Internal Name |
+|-----------------|-------------------|
+| `Groups` | `BrowserGroups` |
+| `FrictionCoefficients` | `SolidFrictionCoefficients` |
 
-### Quick Validation
+The extractor handles both via `_SECTION_ALIASES` fallback in `_extract_singleton()`.
+
+### Object Extraction Strategy
+
+For each object in a list section:
+1. Keys in `TYPED_FIELD_MAP` → extracted as typed Pydantic fields
+2. All other keys → placed in `properties` dict (pass-through bag)
+3. Both recombined by builder's `_merge_object()` during generation
+
+## Semantic Validation
+
+### Significance Levels
+
+| Level | Meaning | Action |
+|-------|---------|--------|
+| `match` | Values identical (within tolerance) | None |
+| `cosmetic` | < 0.01% numeric diff | Safe to ignore |
+| `minor` | 0.01-1% numeric diff | Review if important |
+| `significant` | > 1% numeric diff | Must investigate |
+| `missing` | Present in mono, absent in mod | Fix extractor/builder |
+| `extra` | Absent in mono, present in mod | Fix builder defaults |
+| `type_mismatch` | Different types (bool vs string) | Fix type handling |
+
+### Running Semantic Validation
 
 ```bash
-# Load modular model in OrcaFlex
-python -c "import OrcFxAPI; m = OrcFxAPI.Model('modular/master.yml'); print('OK')"
+# Single model
+uv run python scripts/semantic_validate.py model.yml modular_dir/
+
+# With HTML report
+uv run python scripts/semantic_validate.py model.yml modular_dir/ --html report.html
+
+# Batch mode
+uv run python scripts/semantic_validate.py model.yml modular_dir/ --batch output_dir/
 ```
 
-### Full Validation
+### Integrated in Benchmark
 
-```python
-def validate_modular(master_path: Path, monolithic_path: Path) -> bool:
-    """Compare modular vs monolithic models."""
-    import OrcFxAPI
-
-    model_mono = OrcFxAPI.Model(str(monolithic_path))
-    model_mod = OrcFxAPI.Model(str(master_path))
-
-    # Compare object counts
-    mono_objects = len(list(model_mono.objects))
-    mod_objects = len(list(model_mod.objects))
-
-    if mono_objects != mod_objects:
-        print(f"Object count mismatch: {mono_objects} vs {mod_objects}")
-        return False
-
-    print(f"Validation passed: {mod_objects} objects")
-    return True
+The benchmark pipeline (`scripts/benchmark_model_library.py`) runs semantic validation as a pre-statics gate:
+```
+.dat → YAML → extract → spec → generate modular → [SEMANTIC CHECK] → [statics] → compare
 ```
 
-## Example Usage
+## Output Structure
 
-### Convert Existing Model
-
-```bash
-# 1. Create example folder
-mkdir -p docs/modules/orcaflex/pipeline/installation/floating/30in_pipeline
-
-# 2. Copy original as monolithic.yml
-cp "original model.yml" 30in_pipeline/monolithic.yml
-
-# 3. Run conversion (manual or scripted)
-python -m digitalmodel.tools.orcaflex_modularize 30in_pipeline/monolithic.yml
-
-# 4. Verify
-ls -la 30in_pipeline/modular/
+```
+modular/
+├── master.yml              # Entry point with include directives
+├── includes/
+│   ├── 01_general.yml      # General section (simulation, solver settings)
+│   ├── 03_environment.yml  # Environment (water, waves, current, wind)
+│   └── 20_generic_objects.yml  # All object sections (types, instances, singletons)
+└── inputs/
+    └── parameters.yml      # Extracted key parameters
 ```
 
-### Parametric Study Setup
+## Common Issues and Fixes
 
-```python
-import yaml
-from pathlib import Path
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| Missing section in modular | Extractor doesn't map the YAML key | Add to `FIELD_TO_SECTION` or `SINGLETON_SECTIONS` |
+| Property value lost | GenericObject subclass lacks typed field | Add field to schema class (Pydantic silent drop) |
+| `None` vs missing diff | Builder skips None values | Use `model_fields_set` in `_merge_object()` |
+| Boolean mismatch | SaveData() exports `True`/`False`, builder uses `"Yes"`/`"No"` | Use Python booleans in builder defaults |
+| "Change not allowed" error | Dormant properties in re-loaded YAML | Use hardcoded safe defaults, not raw pass-through |
 
-# Load parameters
-params_path = Path('30in_pipeline/modular/inputs/parameters.yml')
-with open(params_path) as f:
-    params = yaml.safe_load(f)
+## Benchmark Results (2026-02-10)
 
-# Modify for study
-for hs in [2, 4, 6, 8]:
-    params['parameters']['waves']['hs'] = hs
-    case_dir = Path(f'cases/hs_{hs}')
-    case_dir.mkdir(parents=True, exist_ok=True)
+All 5 library models at **100% semantic match** (0 significant diffs):
 
-    # Save modified parameters
-    with open(case_dir / 'parameters.yml', 'w') as f:
-        yaml.dump(params, f)
-```
+| Model | Sections | Significant | Statics |
+|-------|----------|-------------|---------|
+| Catenary | 8/8 | 0 | CONVERGED |
+| Lazy Wave | 9/9 | 0 | CONVERGED |
+| Pliant Wave | 11/11 | 0 | CONVERGED |
+| Steep Wave | 11/11 | 0 | CONVERGED |
+| Lazy S | 12/12 | 0 | CONVERGED |
 
 ## Related Skills
 
-- [orcaflex-file-conversion](../orcaflex-file-conversion/SKILL.md) - Format conversion (.dat/.yml/.sim)
-- [orcaflex-model-generator](../orcaflex-model-generator/SKILL.md) - Template-based model generation
-- [orcaflex-modeling](../orcaflex-modeling/SKILL.md) - Run OrcaFlex simulations
+- [orcaflex-model-generator](../orcaflex-model-generator/SKILL.md) - Builder registry and generation architecture
+- [orcaflex-yaml-gotchas](../orcaflex-yaml-gotchas/SKILL.md) - Production OrcaFlex YAML traps
+- [orcaflex-environment-config](../orcaflex-environment-config/SKILL.md) - Environment configuration
 
 ## References
 
-- Example: `docs/modules/orcaflex/pipeline/installation/floating/30in_pipeline/`
-- Spec: `specs/modules/orcaflex/monolithic-to-modular-converter/`
-- OrcaFlex YAML Include Documentation
+- Extractor: `src/digitalmodel/solvers/orcaflex/modular_generator/extractor.py`
+- Schema: `src/digitalmodel/solvers/orcaflex/modular_generator/schema/generic.py`
+- Semantic validator: `scripts/semantic_validate.py`
+- Benchmark: `scripts/benchmark_model_library.py`
+- Spec library: `docs/modules/orcaflex/library/tier2_fast/`
 
 ---
 
 ## Version History
 
-- **1.0.0** (2026-01-21): Initial release with directory conventions, include ordering, and lessons learned from production usage
+- **2.0.0** (2026-02-10): Complete rewrite. Documents actual MonolithicExtractor pipeline, section name aliases, semantic validation, Pydantic integration, and benchmark results.
+- **1.0.0** (2026-01-21): Initial release with manual splitting approach.

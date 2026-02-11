@@ -1,127 +1,154 @@
-# Plan: Add Input File Browsing to Benchmark Reports
+# Plan: Semantic Equivalence for 5 Library Models
+
+## Metadata
+- **version**: 2
+- **module**: orcaflex/modular_generator
+- **session.id**: twinkling-roaming-graham
+- **session.agent**: claude-opus-4-6
+- **review**: codex=REQUEST_CHANGES, gemini=APPROVE → revised
 
 ## Context
 
-Benchmark HTML reports currently show results tables and Plotly charts but don't let users inspect the actual input files (spec.yml, modular YAML, etc.). Users need to browse these files inline to review model definitions, validate parameters, and cross-check against results.
+The 5 library models (4 risers + 1 generic) currently show:
+- **Path B (spec-driven)**: 4/5 pass at 0.00% tension diff, 1 fails (steep wave PenetratingLine ref)
+- **Path C (modular-direct)**: 5/5 pass at 0.00%
 
-## Approach: Collapsible `<details>` Blocks with Embedded Content
+Semantic validation of the **input YAML** shows 0/5 fully matching. Many diffs are stale artifacts (modular files pre-date user's environment builder edits). The goal is to get generated YAML semantically identical to monolithic, with analysis results (tension AND bending moment) within 1%.
 
-Use native HTML5 `<details>/<summary>` elements to embed file contents as collapsible code blocks in the per-model sections. This keeps the report self-contained (no server needed) and lazy-renders content (browser only processes open blocks).
+**YAML format equivalence**: `yaml.safe_load()` normalizes flow arrays vs block lists, inline vs multi-line dicts, quoting variations — all transparent.
 
-### What to Embed per Model
+## Acceptance Criteria (Codex P1 fix)
 
-| File | Priority | Typical Size | Notes |
-|------|----------|-------------|-------|
-| `spec.yml` | HIGH | 8-260 KB | Primary input definition |
-| `master.yml` | MEDIUM | ~1 KB | Shows include structure |
-| Include YAMLs | MEDIUM | 1-4 KB each | Builder outputs (e.g. 20_generic_objects.yml) |
-| `benchmark.json` | LOW | ~8 KB | Already shown as tables |
+### Semantic Diff Policy
 
-### Size Management
+**Significant diffs** = any property difference that is NOT in the "allowed" list below:
 
-- Files > 500 lines: truncate with "... truncated (N total lines)" notice
-- Large spec.yml files (~260KB from extractor): show first 200 lines
-- Small files (master.yml, parameters.yml): embed fully
-- Total overhead per model: ~50-100 KB HTML (acceptable for single-page report)
+| Classification | Rule | Action |
+|---------------|------|--------|
+| **Allowed (ignore)** | Cosmetic/view props: `DefaultView*`, `DrawNodes*`, `DrawShaded*`, `ContactPen`, `State` | Skip in comparison |
+| **Allowed (ignore)** | Dormant/mode-dependent props that OrcaFlex fills automatically | Skip in comparison |
+| **Cosmetic (<0.01%)** | Floating-point precision differences | Report but pass |
+| **Minor (0.01-1%)** | Small numeric differences | Report but pass |
+| **Significant (>1%)** | Property values differ materially | FAIL |
+| **Type mismatch** | True/False vs "Yes"/"No" | FAIL (must fix) |
+| **Missing** | Property in mono, not in modular | Evaluate per-property |
+| **Extra** | Property in modular, not in mono | Evaluate per-property |
 
-## Changes
+### Target Metrics (per model)
 
-### File: `scripts/benchmark_model_library.py`
+- **Tension**: <1% difference vs monolithic
+- **Bending moment**: <1% difference vs monolithic
+- **Semantic equivalence**: 0 significant diffs, 0 type mismatches
 
-#### 1. Add CSS for collapsible file viewer (in `_CSS` constant)
+### Benchmark Behavior on Semantic Failure (Codex P3 fix)
 
-```css
-.file-browser { margin: 1em 0; }
-.file-browser details { border: 1px solid #ddd; border-radius: 4px; margin: 0.3em 0; }
-.file-browser summary { padding: 0.5em 0.8em; background: #f0f0f0; cursor: pointer;
-  font-size: 0.85em; font-weight: 600; color: #2c3e50; }
-.file-browser summary:hover { background: #e0e0e0; }
-.file-browser pre { margin: 0; padding: 0.8em; background: #fafafa;
-  font-size: 0.78em; font-family: 'SF Mono','Cascadia Code','Consolas',monospace;
-  overflow-x: auto; max-height: 500px; overflow-y: auto; border-top: 1px solid #eee; }
-.file-browser .file-meta { color: #888; font-size: 0.75em; padding: 0.3em 0.8em;
-  border-top: 1px solid #eee; background: #f8f8f8; }
+Semantic validation is **report-only** (warn but proceed). Statics always runs regardless of semantic result. This is because:
+- Models with semantic diffs may still produce correct analysis results
+- The purpose is diagnostic, not gating
+
+## Approach: Regenerate → Measure → Fix → Verify
+
+### Step 1: Regenerate modular files for all 5 models
+
+Regenerate the `modular/` directory for each library model using current code (with user's True/False booleans, "Wave 1" name, SeabedSlopeDirection=0 edits). This eliminates stale-file artifacts.
+
+**Models:**
+- `docs/modules/orcaflex/library/tier2_fast/a01_catenary_riser/`
+- `docs/modules/orcaflex/library/tier2_fast/a01_lazy_wave_riser/`
+- `docs/modules/orcaflex/library/tier2_fast/a01_pliant_wave_riser/`
+- `docs/modules/orcaflex/library/tier2_fast/a01_steep_wave_riser/`
+- `docs/modules/orcaflex/library/model_library/a02_lazy_s_detailed/`
+
+**Rollback** (Codex P2 fix): `git stash` before regeneration; `git stash pop` to restore if regressions detected.
+
+### Step 2: Run semantic validation to measure actual diff count
+
+```bash
+uv run python scripts/semantic_validate.py --batch docs/modules/orcaflex/library/tier2_fast \
+    --batch-report benchmark_output/semantic_5models.html
 ```
 
-#### 2. New helper function: `_embed_file()`
+### Step 3: Fix remaining differences (prioritized)
 
-```python
-def _embed_file(label: str, file_path: Path, max_lines: int = 200) -> str:
-    """Generate a collapsible <details> block with file content."""
-    if not file_path.exists():
-        return ""
-    text = file_path.read_text(encoding="utf-8", errors="replace")
-    lines = text.splitlines()
-    total = len(lines)
-    truncated = total > max_lines
-    display = "\n".join(lines[:max_lines])
-    if truncated:
-        display += f"\n\n... truncated ({total} total lines)"
-    size_kb = file_path.stat().st_size / 1024
-    return (
-        f'<details><summary>{label} ({size_kb:.1f} KB)</summary>'
-        f'<pre>{html.escape(display)}</pre>'
-        f'<div class="file-meta">{file_path.name} &mdash; {total} lines</div>'
-        f'</details>'
-    )
+Replace the 3-agent parallel approach (Codex/Gemini feedback) with a **prioritized fix-and-verify loop**:
+
+**Priority 1 — HIGH impact (affect analysis results):**
+
+| Fix | File | Details |
+|-----|------|---------|
+| 6DBuoy Mass/Volume roundtrip | `schema/generic.py`, `generic_builder.py` | Verify `mass`/`volume` fields survive extraction → spec → generation |
+| CurrentProfile depth-varying | `extractor.py`, `environment_builder.py` | Ensure multi-level profiles survive roundtrip (Lazy S: `[[0,1,0],[100,0.2,0]]`) |
+| Steep wave PenetratingLine | `extractor.py` or `generic_builder.py` | Cross-reference validation: ensure LineContactData references match generated line names |
+
+**Priority 2 — MEDIUM impact (may affect convergence):**
+
+| Fix | File | Details |
+|-----|------|---------|
+| Line default props | riser builders | `AsLaidTension`, `PreBendSpecifiedBy`, `StaticsSeabedFrictionPolicy` — missing in riser output |
+| StageDuration mismatch | `general_builder.py` | Simulation duration extraction |
+
+**Priority 3 — LOW impact (cosmetic, don't affect analysis):**
+
+| Fix | File | Details |
+|-----|------|---------|
+| NorthDirection extra | `general_builder.py` | Only emit if explicitly set in spec |
+| DefaultView* missing | Ignore | Add to allowed-diff exclusion list in `semantic_validate.py` |
+| Groups State diff | Ignore | Add to allowed-diff exclusion list |
+
+**Unit tests for each fix** (Gemini suggestion):
+- Test 6DBuoy mass roundtrip: extract → build → verify mass field present
+- Test current profile roundtrip: extract multi-level profile → build → verify all levels present
+- Test cross-reference consistency: extract model with LineContactData → verify all referenced names exist
+
+### Step 4: Integrate semantic validation into benchmark pipeline
+
+Modify `scripts/benchmark_model_library.py`:
+
+1. **Import** `semantic_validate.load_monolithic`, `load_modular`, `validate`, `Significance`
+2. **In `run_spec_driven()`**: After `gen.generate(mod_dir)`, before `OrcFxAPI.Model(str(master))`:
+   ```python
+   mono_yaml = load_monolithic(yml_path)
+   mod_yaml = load_modular(mod_dir)
+   sem_results = validate(mono_yaml, mod_yaml)
+   sem_summary = summarize(sem_results)  # compact dict for JSON
+   ```
+3. **Return type**: Add `sem_summary` to return tuple
+4. **Add to `ModelBenchmark`**: `semantic_total_sections`, `semantic_sections_with_diffs`, `semantic_significant_count`, `semantic_sections`
+5. **Console output**: `Semantic check: N/M sections match (K significant diffs)`
+6. **HTML report**: Add "Semantic" column to executive summary + per-model collapsible section
+
+### Step 5: Verify
+
+```bash
+uv run python scripts/benchmark_model_library.py --library-only --three-way --skip-mesh
 ```
 
-#### 3. New helper function: `_build_file_browser()`
+**Must achieve for all 5 models:**
+- Tension: <1% diff vs monolithic
+- Bending moment: <1% diff vs monolithic (bending extracted from range_data)
+- Semantic: 0 significant diffs, 0 type mismatches
 
-```python
-def _build_file_browser(model_name: str, dat_path: Path) -> str:
-    """Build the file browser section for a model."""
-    sanitized = _sanitize_name(model_name)
-    lib_dir = LIBRARY_ROOT / sanitized
-    parts = ['<div class="file-browser"><h3>Input Files</h3>']
+## Files Modified
 
-    # spec.yml
-    spec = lib_dir / "spec.yml"
-    parts.append(_embed_file("spec.yml", spec, max_lines=200))
+| File | Change |
+|------|--------|
+| `scripts/benchmark_model_library.py` | Semantic validation pre-statics, ModelBenchmark fields, HTML report |
+| `scripts/semantic_validate.py` | `summarize()` helper, cosmetic-props exclusion list |
+| `src/.../extractor.py` | Current profile extraction fix |
+| `src/.../builders/general_builder.py` | Conditional NorthDirection, StageDuration |
+| `src/.../builders/generic_builder.py` | Cross-reference validation |
+| `src/.../schema/generic.py` | Verify 6DBuoy mass/volume roundtrip |
+| `docs/.../tier2_fast/*/modular/` | Regenerated modular files |
+| `docs/.../model_library/a02_lazy_s_detailed/modular/` | Regenerated |
+| `tests/.../test_semantic_roundtrip.py` | New: unit tests for roundtrip fidelity |
 
-    # master.yml
-    master = lib_dir / "modular" / "master.yml"
-    parts.append(_embed_file("master.yml", master, max_lines=50))
+## Cross-Review Results
 
-    # Include files
-    includes_dir = lib_dir / "modular" / "includes"
-    if includes_dir.exists():
-        for f in sorted(includes_dir.glob("*.yml")):
-            parts.append(_embed_file(f"includes/{f.name}", f, max_lines=300))
+| Reviewer | Verdict | Action Taken |
+|----------|---------|-------------|
+| Codex | REQUEST_CHANGES | P1: Added acceptance criteria table. P2: Replaced 3-agent with prioritized loop. P2: Added rollback strategy. P3: Defined failure behavior (warn, don't gate). |
+| Gemini | APPROVE | Simplified Step 3. Added unit test suggestion. |
 
-    parts.append('</div>')
-    content = "\n".join(parts)
-    # Only return if we found at least one file
-    return content if any('<details>' in p for p in parts) else ""
-```
+## Work Item
 
-#### 4. Insert file browser in per-model section
-
-In `generate_report()`, after the line results table and before the closing `</div>` of model-text, add:
-
-```python
-# File browser (after line results table)
-fb = _build_file_browser(r.name, Path(r.dat_path))
-if fb:
-    bp.append(fb)
-```
-
-#### 5. Add `import html` at top
-
-For `html.escape()` in the `_embed_file` function.
-
-#### 6. Add `LIBRARY_ROOT` constant
-
-```python
-LIBRARY_ROOT = Path("docs/modules/orcaflex/library/model_library")
-```
-
-Note: This path is already defined (added in the 3-way comparison changes). Verify it exists, don't duplicate.
-
-## Verification
-
-1. Run `uv run python scripts/generate_all_specs.py --max-models 3` to ensure spec/modular files exist
-2. Run `uv run python scripts/benchmark_model_library.py --html-only` to regenerate report from existing JSON
-3. Open `benchmark_output/model_library_report.html` in browser
-4. Verify each converged model section shows "Input Files" with collapsible spec.yml, master.yml, and include files
-5. Verify files open/close on click, content is syntax-preserved, large files are truncated
+Track as: **WRK-108 — Semantic equivalence for 5 library models (tension + bending <1%)**

@@ -107,7 +107,7 @@ class ModularModelGenerator:
 
             # Write include file
             file_path = includes_dir / file_name
-            with open(file_path, 'w') as f:
+            with open(file_path, 'w', encoding='utf-8') as f:
                 yaml.dump(data, f, Dumper=_NoAliasDumper, default_flow_style=False, allow_unicode=True, sort_keys=False)
             generated_files.append(file_name)
 
@@ -134,7 +134,7 @@ class ModularModelGenerator:
             params['wave_direction'] = env.waves.direction
         params['stage_durations'] = self.spec.simulation.stages
         params['time_step'] = self.spec.simulation.time_step
-        with open(path, 'w') as f:
+        with open(path, 'w', encoding='utf-8') as f:
             yaml.dump(params, f, default_flow_style=False)
 
     def _write_master(self, path: Path, generated_files: list[str] | None = None) -> None:
@@ -150,7 +150,7 @@ class ModularModelGenerator:
         for file_name in include_order:
             lines.append(f'- includefile: includes/{file_name}')
 
-        with open(path, 'w') as f:
+        with open(path, 'w', encoding='utf-8') as f:
             f.write('\n'.join(lines))
 
     def generate_with_overrides(
@@ -214,7 +214,7 @@ class ModularModelGenerator:
                 resolved_content = VariableResolver.resolve(
                     template_content, merged_vars
                 )
-                file_path.write_text(resolved_content)
+                file_path.write_text(resolved_content, encoding='utf-8')
                 resolved_vars.update(merged_vars)
             else:
                 # Standard builder path
@@ -226,7 +226,7 @@ class ModularModelGenerator:
                 data = builder.build()
                 context.update_from_dict(builder.get_generated_entities())
 
-                with open(file_path, 'w') as f:
+                with open(file_path, 'w', encoding='utf-8') as f:
                     yaml.dump(
                         data, f,
                         Dumper=_NoAliasDumper,

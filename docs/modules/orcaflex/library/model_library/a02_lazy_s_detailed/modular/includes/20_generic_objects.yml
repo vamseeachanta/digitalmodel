@@ -1,5 +1,65 @@
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: All
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: true
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: false
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  NorthDirection: 90
+VariableData:
+  Dragcoefficient:
+  - IndependentValue, DependentValue:
+    - - 10e3
+      - 1.2
+    - - 50e3
+      - 1.2
+    - - 240e3
+      - 1.2
+    - - 255e3
+      - 1.19
+    - - 300e3
+      - 1.16
+    - - 340e3
+      - 1.05
+    - - 380e3
+      - 0.8
+    - - 425e3
+      - 0.42
+    - - 510e3
+      - 0.4
+    - - 600e3
+      - 0.42
+    - - 675e3
+      - 0.48
+    - - 850e3
+      - 0.57
+    - - 1.3e6
+      - 0.68
+    - - 1.7e6
+      - 0.7
+    - - 8.5e6
+      - 0.7
+    - - 25e6
+      - 0.7
+    Name: Generic drag
 LineTypes:
-- CentreOfMass:
+- Name: 10"
+  Category: General
+  CentreOfMass:
   - 0
   - 0
   BulkModulus: Infinity
@@ -46,8 +106,6 @@ LineTypes:
   - 1
   - Solid
   - Red
-  Name: 10"
-  Category: General
   OD: 0.3556
   ID: 0.254
   MassPerUnitLength: 0.1842262
@@ -55,7 +113,9 @@ LineTypes:
   - 124.86942768
   - ~
   EA: 711.2e3
-- CentreOfMass:
+- Name: 8"
+  Category: General
+  CentreOfMass:
   - 0
   - 0
   BulkModulus: Infinity
@@ -102,8 +162,6 @@ LineTypes:
   - 1
   - Solid
   - Lime
-  Name: 8"
-  Category: General
   OD: 0.28448
   ID: 0.2032
   MassPerUnitLength: 0.14738096
@@ -111,7 +169,9 @@ LineTypes:
   - 51.146517577728
   - ~
   EA: 568.96e3
-- CentreOfMass:
+- Name: Umb
+  Category: General
+  CentreOfMass:
   - 0
   - 0
   BulkModulus: Infinity
@@ -158,8 +218,6 @@ LineTypes:
   - 1
   - Solid
   - Aqua
-  Name: Umb
-  Category: General
   OD: 0.254
   ID: 0.0
   MassPerUnitLength: 0.1161288
@@ -167,7 +225,9 @@ LineTypes:
   - 49.161192
   - ~
   EA: 365.76e3
-- CentreOfMass:
+- Name: 2" chain
+  Category: General
+  CentreOfMass:
   - 0
   - 0
   BulkModulus: Infinity
@@ -210,8 +270,6 @@ LineTypes:
   SeabedLateralFrictionCoefficient: 0.5
   SeabedAxialFrictionCoefficient: ~
   RayleighDampingCoefficients: (no damping)
-  Name: 2" chain
-  Category: General
   OD: 0.0945
   ID: 0.0
   MassPerUnitLength: 0.05475
@@ -219,7 +277,9 @@ LineTypes:
   - 0
   - ~
   EA: 252.5e3
-- CentreOfMass:
+- Name: Buoyancy tank
+  Category: General
+  CentreOfMass:
   - 0
   - 0
   BulkModulus: Infinity
@@ -262,8 +322,6 @@ LineTypes:
   SeabedLateralFrictionCoefficient: 0.5
   SeabedAxialFrictionCoefficient: ~
   RayleighDampingCoefficients: (no damping)
-  Name: Buoyancy tank
-  Category: General
   OD: 3.4
   ID: 0.0
   MassPerUnitLength: 4.539601384
@@ -272,7 +330,8 @@ LineTypes:
   - ~
   EA: 700e3
 VesselTypes:
-- RAOResponseUnits: degrees
+- Name: Vessel type1
+  RAOResponseUnits: degrees
   RAOWaveUnit: amplitude
   WavesReferredToBy: period (s)
   RAOPhaseConvention: lags
@@ -9898,10 +9957,68 @@ VesselTypes:
   - 0
   - 0
   - 0.5
-  Name: Vessel type1
   Length: 103.0
+SupportTypes:
+- Name: U support 0.6
+  Geometry: U shaped
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  Diameter: 0.1
+  USupportHorizontalLength: 0.6
+  USupportVerticalLength: 0.6
+  WireFrameDrawEnds: $000001
+- Name: U support 0.636
+  Geometry: U shaped
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  Diameter: 0.1
+  USupportHorizontalLength: 0.636
+  USupportVerticalLength: 0.6
+  WireFrameDrawEnds: $000001
+- Name: U support 0.744
+  Geometry: U shaped
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  Diameter: 0.1
+  USupportHorizontalLength: 0.744
+  USupportVerticalLength: 0.6
+  WireFrameDrawEnds: $000001
+- Name: U support 0.908
+  Geometry: U shaped
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  Diameter: 0.1
+  USupportHorizontalLength: 0.908
+  USupportVerticalLength: 0.6
+  WireFrameDrawEnds: $000001
+- Name: U support 1.112
+  Geometry: U shaped
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  Diameter: 0.1
+  USupportHorizontalLength: 1.112
+  USupportVerticalLength: 0.6
+  WireFrameDrawEnds: $000001
+- Name: U support 1.332
+  Geometry: U shaped
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  Diameter: 0.1
+  USupportHorizontalLength: 1.332
+  USupportVerticalLength: 0.6
+  WireFrameDrawEnds: $000001
+- Name: U support 1.54
+  Geometry: U shaped
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  Diameter: 0.1
+  USupportHorizontalLength: 1.54
+  USupportVerticalLength: 0.6
+  WireFrameDrawEnds: $000001
 Vessels:
-- Draught: Draught1
+- Name: FPSO
+  Connection: Free
+  Draught: Draught1
   Orientation:
   - 0
   - 0
@@ -9923,15 +10040,15 @@ Vessels:
   CalculationMode: Filtering
   CalculateHydrostaticStiffnessAnglesBy: Orientation
   ShadedDrawingCullingMode: Anticlockwise
-  Name: FPSO
   VesselType: Vessel type1
-  Connection: Free
   InitialPosition:
   - -7.0
   - -7.0
   - 0.0
+  Length: ~
 Lines:
-- IncludeTorsion: false
+- Name: 10" up N
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -9998,8 +10115,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: 10" up N
-- IncludeTorsion: false
+- Name: Umb up
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10068,8 +10185,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: Umb up
-- IncludeTorsion: false
+- Name: 8" up
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10138,8 +10255,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: 8" up
-- IncludeTorsion: false
+- Name: 10" up S
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10206,8 +10323,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: 10" up S
-- IncludeTorsion: false
+- Name: 10" down N
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10282,8 +10399,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: 10" down N
-- IncludeTorsion: false
+- Name: Umb down
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10358,8 +10475,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: Umb down
-- IncludeTorsion: false
+- Name: 8" down
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10434,8 +10551,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: 8" down
-- IncludeTorsion: false
+- Name: 10" down S
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10512,8 +10629,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: 10" down S
-- IncludeTorsion: false
+- Name: Bridle_NE
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10579,8 +10696,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: Bridle_NE
-- IncludeTorsion: false
+- Name: Bridle_NW
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10646,8 +10763,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: Bridle_NW
-- IncludeTorsion: false
+- Name: Bridle_SE
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10713,8 +10830,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: Bridle_SE
-- IncludeTorsion: false
+- Name: Bridle_SW
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10780,8 +10897,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: Bridle_SW
-- IncludeTorsion: false
+- Name: ArchTie_S
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10845,8 +10962,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: ArchTie_S
-- IncludeTorsion: false
+- Name: ArchTie_N
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10910,8 +11027,8 @@ Lines:
   - 5
   - Solid
   - White
-  Name: ArchTie_N
-- IncludeTorsion: true
+- Name: Buoyancy tank E 1
+  IncludeTorsion: true
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -10960,7 +11077,6 @@ Lines:
     NumberOfSegments: 1
     DisturbanceVessel: (none)
   DecoupleLateralAndAxialSeabedFriction: false
-  ApplySeabedContactLoadsAtCentreline: false
   CoveredSectionsWarnIfLineLeavesCover: true
   ContentsMethod: Uniform
   IncludeAxialContentsInertia: true
@@ -10976,8 +11092,8 @@ Lines:
   Hidden: true
   DrawNodesAsDiscs: false
   DrawShadedNodesAsSpheres: true
-  Name: Buoyancy tank E 1
-- IncludeTorsion: true
+- Name: Buoyancy tank W 1
+  IncludeTorsion: true
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -11026,7 +11142,6 @@ Lines:
     NumberOfSegments: 1
     DisturbanceVessel: (none)
   DecoupleLateralAndAxialSeabedFriction: false
-  ApplySeabedContactLoadsAtCentreline: false
   CoveredSectionsWarnIfLineLeavesCover: true
   ContentsMethod: Uniform
   IncludeAxialContentsInertia: true
@@ -11042,8 +11157,8 @@ Lines:
   Hidden: true
   DrawNodesAsDiscs: false
   DrawShadedNodesAsSpheres: true
-  Name: Buoyancy tank W 1
-- IncludeTorsion: true
+- Name: Buoyancy tank W 2
+  IncludeTorsion: true
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -11092,7 +11207,6 @@ Lines:
     NumberOfSegments: 1
     DisturbanceVessel: (none)
   DecoupleLateralAndAxialSeabedFriction: false
-  ApplySeabedContactLoadsAtCentreline: false
   CoveredSectionsWarnIfLineLeavesCover: true
   ContentsMethod: Uniform
   IncludeAxialContentsInertia: true
@@ -11108,8 +11222,8 @@ Lines:
   Hidden: true
   DrawNodesAsDiscs: false
   DrawShadedNodesAsSpheres: true
-  Name: Buoyancy tank W 2
-- IncludeTorsion: true
+- Name: Buoyancy tank W 3
+  IncludeTorsion: true
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -11158,7 +11272,6 @@ Lines:
     NumberOfSegments: 1
     DisturbanceVessel: (none)
   DecoupleLateralAndAxialSeabedFriction: false
-  ApplySeabedContactLoadsAtCentreline: false
   CoveredSectionsWarnIfLineLeavesCover: true
   ContentsMethod: Uniform
   IncludeAxialContentsInertia: true
@@ -11174,8 +11287,8 @@ Lines:
   Hidden: true
   DrawNodesAsDiscs: false
   DrawShadedNodesAsSpheres: true
-  Name: Buoyancy tank W 3
-- IncludeTorsion: true
+- Name: Buoyancy tank W 4
+  IncludeTorsion: true
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -11224,7 +11337,6 @@ Lines:
     NumberOfSegments: 1
     DisturbanceVessel: (none)
   DecoupleLateralAndAxialSeabedFriction: false
-  ApplySeabedContactLoadsAtCentreline: false
   CoveredSectionsWarnIfLineLeavesCover: true
   ContentsMethod: Uniform
   IncludeAxialContentsInertia: true
@@ -11240,8 +11352,8 @@ Lines:
   Hidden: true
   DrawNodesAsDiscs: false
   DrawShadedNodesAsSpheres: true
-  Name: Buoyancy tank W 4
-- IncludeTorsion: true
+- Name: Buoyancy tank W 5
+  IncludeTorsion: true
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -11290,7 +11402,6 @@ Lines:
     NumberOfSegments: 1
     DisturbanceVessel: (none)
   DecoupleLateralAndAxialSeabedFriction: false
-  ApplySeabedContactLoadsAtCentreline: false
   CoveredSectionsWarnIfLineLeavesCover: true
   ContentsMethod: Uniform
   IncludeAxialContentsInertia: true
@@ -11306,8 +11417,8 @@ Lines:
   Hidden: true
   DrawNodesAsDiscs: false
   DrawShadedNodesAsSpheres: true
-  Name: Buoyancy tank W 5
-- IncludeTorsion: true
+- Name: Buoyancy tank E 2
+  IncludeTorsion: true
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -11356,7 +11467,6 @@ Lines:
     NumberOfSegments: 1
     DisturbanceVessel: (none)
   DecoupleLateralAndAxialSeabedFriction: false
-  ApplySeabedContactLoadsAtCentreline: false
   CoveredSectionsWarnIfLineLeavesCover: true
   ContentsMethod: Uniform
   IncludeAxialContentsInertia: true
@@ -11372,8 +11482,8 @@ Lines:
   Hidden: true
   DrawNodesAsDiscs: false
   DrawShadedNodesAsSpheres: true
-  Name: Buoyancy tank E 2
-- IncludeTorsion: true
+- Name: Buoyancy tank E 3
+  IncludeTorsion: true
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -11422,7 +11532,6 @@ Lines:
     NumberOfSegments: 1
     DisturbanceVessel: (none)
   DecoupleLateralAndAxialSeabedFriction: false
-  ApplySeabedContactLoadsAtCentreline: false
   CoveredSectionsWarnIfLineLeavesCover: true
   ContentsMethod: Uniform
   IncludeAxialContentsInertia: true
@@ -11438,8 +11547,8 @@ Lines:
   Hidden: true
   DrawNodesAsDiscs: false
   DrawShadedNodesAsSpheres: true
-  Name: Buoyancy tank E 3
-- IncludeTorsion: true
+- Name: Buoyancy tank E 4
+  IncludeTorsion: true
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -11488,7 +11597,6 @@ Lines:
     NumberOfSegments: 1
     DisturbanceVessel: (none)
   DecoupleLateralAndAxialSeabedFriction: false
-  ApplySeabedContactLoadsAtCentreline: false
   CoveredSectionsWarnIfLineLeavesCover: true
   ContentsMethod: Uniform
   IncludeAxialContentsInertia: true
@@ -11504,8 +11612,8 @@ Lines:
   Hidden: true
   DrawNodesAsDiscs: false
   DrawShadedNodesAsSpheres: true
-  Name: Buoyancy tank E 4
-- IncludeTorsion: true
+- Name: Buoyancy tank E 5
+  IncludeTorsion: true
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -11554,7 +11662,6 @@ Lines:
     NumberOfSegments: 1
     DisturbanceVessel: (none)
   DecoupleLateralAndAxialSeabedFriction: false
-  ApplySeabedContactLoadsAtCentreline: false
   CoveredSectionsWarnIfLineLeavesCover: true
   ContentsMethod: Uniform
   IncludeAxialContentsInertia: true
@@ -11570,9 +11677,200 @@ Lines:
   Hidden: true
   DrawNodesAsDiscs: false
   DrawShadedNodesAsSpheres: true
-  Name: Buoyancy tank E 5
+Shapes:
+- Name: Turret
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: FPSO
+  Azimuth: 0
+  Declination: 0
+  OuterDiameter: 3
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - $404080
+  ShadedDrawingCullingMode: Anticlockwise
+  Origin:
+  - 0.0
+  - 0.0
+  - -7.5
+  Length: 14.5
+- Name: Gravity base
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Anchored
+  Size:
+  - 5
+  - 20
+  - 3
+  Orientation:
+  - 0
+  - 0
+  - 180
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  NumberOfLines: 2
+  ShadedDrawingCullingMode: Anticlockwise
+  Origin:
+  - -101.0
+  - 10.0
+  - 0.0
+- Name: North post
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Anchored
+  Azimuth: 0
+  Declination: 0
+  OuterDiameter: 1
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  NumberOfLines: 2
+  ShadedDrawingCullingMode: Anticlockwise
+  Origin:
+  - -103.5
+  - 5.0
+  - 2.99999999999999
+  Length: 2.0
+- Name: South post
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Anchored
+  Azimuth: 0
+  Declination: 0
+  OuterDiameter: 1
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  NumberOfLines: 2
+  ShadedDrawingCullingMode: Anticlockwise
+  Origin:
+  - -103.5
+  - -5.0
+  - 2.99999999999999
+  Length: 2.0
+- Name: Tank shape E
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Arch
+  Azimuth: 90
+  Declination: 90
+  OuterDiameter: 3.4
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+  Origin:
+  - 2.25
+  - -5.0
+  - -2.75
+  Length: 10.0
+- Name: Tank shape W
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Arch
+  Azimuth: 90
+  Declination: 90
+  OuterDiameter: 3.4
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+  Origin:
+  - -2.25
+  - -5.0
+  - -2.75
+  Length: 10.0
+- Name: Trough shape E
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Arch
+  Orientation:
+  - 90
+  - 90
+  - 49.999999999999986
+  IncludedAngleOfRevolution: 130
+  IsHollow: true
+  Thickness: 0.2
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 6.6
+  - - 10
+    - 6.6
+  OutsidePen:
+  - 1
+  - Solid
+  - $0080FF
+  NumberOfLines: 2
+  ShadedDrawingCullingMode: Anticlockwise
+  Origin:
+  - -0.9999999999999993
+  - -5.0
+  - -3.5
+- Name: Trough shape W
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Arch
+  Orientation:
+  - 90
+  - 90
+  - 180
+  IncludedAngleOfRevolution: 130
+  IsHollow: true
+  Thickness: 0.2
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 6.6
+  - - 10
+    - 6.6
+  OutsidePen:
+  - 1
+  - Solid
+  - $0080FF
+  NumberOfLines: 2
+  ShadedDrawingCullingMode: Anticlockwise
+  Origin:
+  - 1.0
+  - -5.0
+  - -3.5
+- Name: Clamp shape
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Arch
+  Size:
+  - 2
+  - 10
+  - 0.2
+  Orientation:
+  - 0
+  - 0
+  - 0
+  OutsidePen:
+  - 1
+  - Solid
+  - $0080FF
+  NumberOfLines: 2
+  ShadedDrawingCullingMode: Anticlockwise
+  Origin:
+  - -1.0
+  - -5.0
+  - -0.2
 6DBuoys:
-- DampingRelativeTo: Fluid
+- Name: Arch
+  BuoyType: Lumped buoy
+  Connection: Free
+  DampingRelativeTo: Fluid
   DisturbanceVessel: (none)
   WaveCalculationMethod: Specified by environment
   InitialAttitude:
@@ -11743,14 +12041,16 @@ Lines:
     - 8
     - ~
   ShadedDrawingCullingMode: Anticlockwise
-  Name: Arch
-  Connection: Free
   InitialPosition:
   - -102.01108183491064
   - 0.1849697211432373
   - -45.0
+  Mass: 11.51
+  Volume: 1.62
+- Name: Arch supports 1 down
   BuoyType: Lumped buoy
-- DampingRelativeTo: Earth
+  Connection: Arch
+  DampingRelativeTo: Earth
   DisturbanceVessel: (none)
   WaveCalculationMethod: Specified by environment
   InitialAttitude:
@@ -11914,14 +12214,16 @@ Lines:
   VertexX, VertexY, VertexZ: []
   EdgeFrom, EdgeTo, EdgeDiameter: []
   ShadedDrawingCullingMode: Anticlockwise
-  Name: Arch supports 1 down
-  Connection: Arch
   InitialPosition:
   - 0.0
   - -3.0
   - 0.0
+  Mass: 0.0
+  Volume: 0.0
+- Name: Arch supports 2 down
   BuoyType: Lumped buoy
-- DampingRelativeTo: Earth
+  Connection: Arch
+  DampingRelativeTo: Earth
   DisturbanceVessel: (none)
   WaveCalculationMethod: Specified by environment
   InitialAttitude:
@@ -12085,14 +12387,16 @@ Lines:
   VertexX, VertexY, VertexZ: []
   EdgeFrom, EdgeTo, EdgeDiameter: []
   ShadedDrawingCullingMode: Anticlockwise
-  Name: Arch supports 2 down
-  Connection: Arch
   InitialPosition:
   - 0.0
   - -1.000000000000007
   - 0.0
+  Mass: 0.0
+  Volume: 0.0
+- Name: Arch supports 3 down
   BuoyType: Lumped buoy
-- DampingRelativeTo: Earth
+  Connection: Arch
+  DampingRelativeTo: Earth
   DisturbanceVessel: (none)
   WaveCalculationMethod: Specified by environment
   InitialAttitude:
@@ -12256,14 +12560,16 @@ Lines:
   VertexX, VertexY, VertexZ: []
   EdgeFrom, EdgeTo, EdgeDiameter: []
   ShadedDrawingCullingMode: Anticlockwise
-  Name: Arch supports 3 down
-  Connection: Arch
   InitialPosition:
   - 0.0
   - 1.0
   - 0.0
+  Mass: 0.0
+  Volume: 0.0
+- Name: Arch supports 4 down
   BuoyType: Lumped buoy
-- DampingRelativeTo: Earth
+  Connection: Arch
+  DampingRelativeTo: Earth
   DisturbanceVessel: (none)
   WaveCalculationMethod: Specified by environment
   InitialAttitude:
@@ -12427,14 +12733,16 @@ Lines:
   VertexX, VertexY, VertexZ: []
   EdgeFrom, EdgeTo, EdgeDiameter: []
   ShadedDrawingCullingMode: Anticlockwise
-  Name: Arch supports 4 down
-  Connection: Arch
   InitialPosition:
   - 0.0
   - 3.0
   - 0.0
+  Mass: 0.0
+  Volume: 0.0
+- Name: Arch supports 1 up
   BuoyType: Lumped buoy
-- DampingRelativeTo: Earth
+  Connection: Arch
+  DampingRelativeTo: Earth
   DisturbanceVessel: (none)
   WaveCalculationMethod: Specified by environment
   InitialAttitude:
@@ -12598,14 +12906,16 @@ Lines:
   VertexX, VertexY, VertexZ: []
   EdgeFrom, EdgeTo, EdgeDiameter: []
   ShadedDrawingCullingMode: Anticlockwise
-  Name: Arch supports 1 up
-  Connection: Arch
   InitialPosition:
   - 0.0
   - -3.0
   - 0.0
+  Mass: 0.0
+  Volume: 0.0
+- Name: Arch supports 2 up
   BuoyType: Lumped buoy
-- DampingRelativeTo: Earth
+  Connection: Arch
+  DampingRelativeTo: Earth
   DisturbanceVessel: (none)
   WaveCalculationMethod: Specified by environment
   InitialAttitude:
@@ -12769,14 +13079,16 @@ Lines:
   VertexX, VertexY, VertexZ: []
   EdgeFrom, EdgeTo, EdgeDiameter: []
   ShadedDrawingCullingMode: Anticlockwise
-  Name: Arch supports 2 up
-  Connection: Arch
   InitialPosition:
   - 0.0
   - -1.000000000000007
   - 0.0
+  Mass: 0.0
+  Volume: 0.0
+- Name: Arch supports 3 up
   BuoyType: Lumped buoy
-- DampingRelativeTo: Earth
+  Connection: Arch
+  DampingRelativeTo: Earth
   DisturbanceVessel: (none)
   WaveCalculationMethod: Specified by environment
   InitialAttitude:
@@ -12940,14 +13252,16 @@ Lines:
   VertexX, VertexY, VertexZ: []
   EdgeFrom, EdgeTo, EdgeDiameter: []
   ShadedDrawingCullingMode: Anticlockwise
-  Name: Arch supports 3 up
-  Connection: Arch
   InitialPosition:
   - 0.0
   - 1.0
   - 0.0
+  Mass: 0.0
+  Volume: 0.0
+- Name: Arch supports 4 up
   BuoyType: Lumped buoy
-- DampingRelativeTo: Earth
+  Connection: Arch
+  DampingRelativeTo: Earth
   DisturbanceVessel: (none)
   WaveCalculationMethod: Specified by environment
   InitialAttitude:
@@ -13111,319 +13425,81 @@ Lines:
   VertexX, VertexY, VertexZ: []
   EdgeFrom, EdgeTo, EdgeDiameter: []
   ShadedDrawingCullingMode: Anticlockwise
-  Name: Arch supports 4 up
-  Connection: Arch
   InitialPosition:
   - 0.0
   - 3.0
   - 0.0
-  BuoyType: Lumped buoy
-Shapes:
-- Azimuth: 0
-  Declination: 0
-  OuterDiameter: 3
-  InnerDiameter: 0
-  OutsidePen:
-  - 1
-  - Solid
-  - $404080
-  ShadedDrawingCullingMode: Anticlockwise
-  Name: Turret
-  Connection: FPSO
-  ShapeType: Drawing
-  Shape: Cylinder
-  Origin:
-  - 0.0
-  - 0.0
-  - -7.5
-- Size:
-  - 5
-  - 20
-  - 3
-  Orientation:
-  - 0
-  - 0
-  - 180
-  OutsidePen:
-  - 1
-  - Solid
-  - Blue
-  NumberOfLines: 2
-  ShadedDrawingCullingMode: Anticlockwise
-  Name: Gravity base
-  Connection: Anchored
-  ShapeType: Drawing
-  Shape: Block
-  Origin:
-  - -101.0
-  - 10.0
-  - 0.0
-- Azimuth: 0
-  Declination: 0
-  OuterDiameter: 1
-  InnerDiameter: 0
-  OutsidePen:
-  - 1
-  - Solid
-  - Blue
-  NumberOfLines: 2
-  ShadedDrawingCullingMode: Anticlockwise
-  Name: North post
-  Connection: Anchored
-  ShapeType: Drawing
-  Shape: Cylinder
-  Origin:
-  - -103.5
-  - 5.0
-  - 2.99999999999999
-- Azimuth: 0
-  Declination: 0
-  OuterDiameter: 1
-  InnerDiameter: 0
-  OutsidePen:
-  - 1
-  - Solid
-  - Blue
-  NumberOfLines: 2
-  ShadedDrawingCullingMode: Anticlockwise
-  Name: South post
-  Connection: Anchored
-  ShapeType: Drawing
-  Shape: Cylinder
-  Origin:
-  - -103.5
-  - -5.0
-  - 2.99999999999999
-- Azimuth: 90
-  Declination: 90
-  OuterDiameter: 3.4
-  InnerDiameter: 0
-  OutsidePen:
-  - 1
-  - Solid
-  - Blue
-  ShadedDrawingCullingMode: Anticlockwise
-  Name: Tank shape E
-  Connection: Arch
-  ShapeType: Drawing
-  Shape: Cylinder
-  Origin:
-  - 2.25
-  - -5.0
-  - -2.75
-- Azimuth: 90
-  Declination: 90
-  OuterDiameter: 3.4
-  InnerDiameter: 0
-  OutsidePen:
-  - 1
-  - Solid
-  - Blue
-  ShadedDrawingCullingMode: Anticlockwise
-  Name: Tank shape W
-  Connection: Arch
-  ShapeType: Drawing
-  Shape: Cylinder
-  Origin:
-  - -2.25
-  - -5.0
-  - -2.75
-- Orientation:
-  - 90
-  - 90
-  - 49.999999999999986
-  IncludedAngleOfRevolution: 130
-  IsHollow: true
-  Thickness: 0.2
-  ProfileDistanceAlongAxis, ProfileDiameter:
-  - - 0
-    - 6.6
-  - - 10
-    - 6.6
-  OutsidePen:
-  - 1
-  - Solid
-  - $0080FF
-  NumberOfLines: 2
-  ShadedDrawingCullingMode: Anticlockwise
-  Name: Trough shape E
-  Connection: Arch
-  ShapeType: Drawing
-  Shape: Curved plate
-  Origin:
-  - -0.9999999999999993
-  - -5.0
-  - -3.5
-- Orientation:
-  - 90
-  - 90
-  - 180
-  IncludedAngleOfRevolution: 130
-  IsHollow: true
-  Thickness: 0.2
-  ProfileDistanceAlongAxis, ProfileDiameter:
-  - - 0
-    - 6.6
-  - - 10
-    - 6.6
-  OutsidePen:
-  - 1
-  - Solid
-  - $0080FF
-  NumberOfLines: 2
-  ShadedDrawingCullingMode: Anticlockwise
-  Name: Trough shape W
-  Connection: Arch
-  ShapeType: Drawing
-  Shape: Curved plate
-  Origin:
-  - 1.0
-  - -5.0
-  - -3.5
-- Size:
-  - 2
-  - 10
-  - 0.2
-  Orientation:
-  - 0
-  - 0
-  - 0
-  OutsidePen:
-  - 1
-  - Solid
-  - $0080FF
-  NumberOfLines: 2
-  ShadedDrawingCullingMode: Anticlockwise
-  Name: Clamp shape
-  Connection: Arch
-  ShapeType: Drawing
-  Shape: Block
-  Origin:
-  - -1.0
-  - -5.0
-  - -0.2
-SupportTypes:
-- Geometry: U shaped
-  NormalStiffness: 1000
-  ShearStiffness: 100
-  Diameter: 0.1
-  USupportHorizontalLength: 0.6
-  USupportVerticalLength: 0.6
-  WireFrameDrawEnds: $000001
-  Name: U support 0.6
-- Geometry: U shaped
-  NormalStiffness: 1000
-  ShearStiffness: 100
-  Diameter: 0.1
-  USupportHorizontalLength: 0.636
-  USupportVerticalLength: 0.6
-  WireFrameDrawEnds: $000001
-  Name: U support 0.636
-- Geometry: U shaped
-  NormalStiffness: 1000
-  ShearStiffness: 100
-  Diameter: 0.1
-  USupportHorizontalLength: 0.744
-  USupportVerticalLength: 0.6
-  WireFrameDrawEnds: $000001
-  Name: U support 0.744
-- Geometry: U shaped
-  NormalStiffness: 1000
-  ShearStiffness: 100
-  Diameter: 0.1
-  USupportHorizontalLength: 0.908
-  USupportVerticalLength: 0.6
-  WireFrameDrawEnds: $000001
-  Name: U support 0.908
-- Geometry: U shaped
-  NormalStiffness: 1000
-  ShearStiffness: 100
-  Diameter: 0.1
-  USupportHorizontalLength: 1.112
-  USupportVerticalLength: 0.6
-  WireFrameDrawEnds: $000001
-  Name: U support 1.112
-- Geometry: U shaped
-  NormalStiffness: 1000
-  ShearStiffness: 100
-  Diameter: 0.1
-  USupportHorizontalLength: 1.332
-  USupportVerticalLength: 0.6
-  WireFrameDrawEnds: $000001
-  Name: U support 1.332
-- Geometry: U shaped
-  NormalStiffness: 1000
-  ShearStiffness: 100
-  Diameter: 0.1
-  USupportHorizontalLength: 1.54
-  USupportVerticalLength: 0.6
-  WireFrameDrawEnds: $000001
-  Name: U support 1.54
-VariableDataSources:
-- IndependentValue, DependentValue:
-  - - 10e3
-    - 1.2
-  - - 50e3
-    - 1.2
-  - - 240e3
-    - 1.2
-  - - 255e3
-    - 1.19
-  - - 300e3
-    - 1.16
-  - - 340e3
-    - 1.05
-  - - 380e3
-    - 0.8
-  - - 425e3
-    - 0.42
-  - - 510e3
-    - 0.4
-  - - 600e3
-    - 0.42
-  - - 675e3
-    - 0.48
-  - - 850e3
-    - 0.57
-  - - 1.3e6
-    - 0.68
-  - - 1.7e6
-    - 0.7
-  - - 8.5e6
-    - 0.7
-  - - 25e6
-    - 0.7
-  Name: Generic drag
-  DataType: Dragcoefficient
-General:
-  UnitsSystem: SI
-  JacobianBufferingPolicy: 1
-  JacobianPerturbationFactor: 0
-  BuoysIncludedInStatics: All
-  LineStaticsStep1Policy: All lines included
-  LineStaticsStep2Policy: Solve coupled systems
-  WholeSystemStaticsEnabled: true
-  DynamicsSolutionMethod: Implicit time domain
-  ImplicitUseVariableTimeStep: false
-  LogPrecision: Single
-  TargetLogSampleInterval: 0.1
-  LogStartTime: ~
-  StartTime: ~
-  FirstStage: ~
-  RampStartTime: ~
-  RampFinishTime: ~
-  TimeHistoryImportFrom: ~
-  TimeHistoryImportTo: ~
-  RestartStateRecordingPeriodicCount: 0
-  RestartStateRecordingTest: ~
-  NorthDirection: 90
-  DefaultViewMode: Shaded
-  DefaultShadedFillMode: Solid
-  DefaultShadedProjectionMode: Perspective
-  DefaultViewSize: 32.400431448850156
-  DefaultViewCentre:
-  - -88.1710324331781
-  - 5.056284755534934
-  - -57.65829212053178
-  DefaultViewAzimuth: 214.30000000000084
-  DefaultViewElevation: 23.699999999999964
+  Mass: 0.0
+  Volume: 0.0
+FrictionCoefficients:
+  ? FrictionCoefficientSupportTypeName, SupportTypeFrictionCoefficientLineName, SupportTypeLateralCoefficient,
+    SupportTypeAxialCoefficient
+  : - - (all support types)
+      - (all lines)
+      - 0.2
+      - ~
+Groups:
+  Structure:
+    Vessel group: Model
+    FPSO: Vessel group
+    Turret: Vessel group
+    Arch structure: Model
+    Arch: Arch structure
+    Gutters: Arch structure
+    Arch supports 1 down: Gutters
+    Arch supports 2 down: Gutters
+    Arch supports 3 down: Gutters
+    Arch supports 4 down: Gutters
+    Arch supports 1 up: Gutters
+    Arch supports 2 up: Gutters
+    Arch supports 3 up: Gutters
+    Arch supports 4 up: Gutters
+    Tanks: Arch structure
+    East tank: Tanks
+    Buoyancy tank E 1: East tank
+    Buoyancy tank E 2: East tank
+    Buoyancy tank E 3: East tank
+    Buoyancy tank E 4: East tank
+    Buoyancy tank E 5: East tank
+    West tank: Tanks
+    Buoyancy tank W 1: West tank
+    Buoyancy tank W 2: West tank
+    Buoyancy tank W 3: West tank
+    Buoyancy tank W 4: West tank
+    Buoyancy tank W 5: West tank
+    Arch drawings: Model
+    Vertical images: Arch drawings
+    Trough shape E: Vertical images
+    Clamp shape: Vertical images
+    Trough shape W: Vertical images
+    Tank images: Arch drawings
+    Tank shape E: Tank images
+    Tank shape W: Tank images
+    Tethers and bridles: Model
+    Northern set: Tethers and bridles
+    Bridle_NE: Northern set
+    Bridle_NW: Northern set
+    ArchTie_N: Northern set
+    Southern set: Tethers and bridles
+    Bridle_SE: Southern set
+    Bridle_SW: Southern set
+    ArchTie_S: Southern set
+    Gravity base set: Tethers and bridles
+    North post: Gravity base set
+    South post: Gravity base set
+    Gravity base: Gravity base set
+    Risers and umbilicals: Model
+    10" N set: Risers and umbilicals
+    10" up N: 10" N set
+    10" down N: 10" N set
+    Umb set: Risers and umbilicals
+    Umb up: Umb set
+    Umb down: Umb set
+    8" set: Risers and umbilicals
+    8" up: 8" set
+    8" down: 8" set
+    10" S set: Risers and umbilicals
+    10" up S: 10" S set
+    10" down S: 10" S set
+  State:
+    Collapsed: []

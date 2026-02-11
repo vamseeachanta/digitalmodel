@@ -1,6 +1,3 @@
-# Environment Configuration
-# Generated from: C09 Fenders.yml
-# Date: 2026-01-18 22:18:07
 Environment:
   WaterSurfaceZ: 0
   KinematicViscosity: 1.35e-06
@@ -8,24 +5,46 @@ Environment:
   ReynoldsNumberCalculation: Flow direction
   HorizontalWaterDensityFactor: ~
   VerticalDensityVariation: Constant
-  Density: 1.025
   SeabedType: Flat
   SeabedOrigin:
   - 0
   - 0
-  WaterDepth: 50
   SeabedSlopeDirection: 0
-  SeabedSlope: 0
   SeabedModel: Elastic
-  SeabedNormalStiffness: 100
-  SeabedShearStiffness: 100
-  KinematicStretchingMethod: Vertical stretching
-  UserSpecifiedRandomWaveSeeds: No
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  MultipleCurrentDataCanBeDefined: false
+  CurrentModel: Variation scheme
+  CurrentRamped: false
+  CurrentApplyVerticalStretching: false
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Power law
+  IncludeVesselWindLoads: true
+  IncludeLineWindLoads: true
+  IncludeBuoyWindLoads: true
+  IncludeBuoyWingWindLoads: true
+  WindRamping: From mean
+  WindType: Constant
+  AirDensity: 0.00128
+  AirSpeedOfSound: 343
+  VerticalWindVariationFactor: ~
+  SeabedShearStiffness: 100.0
+  UserSpecifiedRandomWaveSeeds: false
+  WaterDepth: 50.0
+  CurrentExponent: 7
   WaveFrequencySpectrumDiscretisationMethod: Equal energy
+  CurrentSpeedAtSurface: 0.3
+  CurrentSpeedAtSeabed: 0
+  SeabedNormalStiffness: 100.0
+  SeabedSlope: 0.0
+  KinematicStretchingMethod: Vertical stretching
+  Density: 1.025
   WaveTrains:
   - Name: Wave1
     WaveType: JONSWAP
-    WaveDirection: 180
+    WaveDirection: 180.0
     WaveOrigin:
     - 0
     - 0
@@ -33,38 +52,11 @@ Environment:
     WaveNumberOfSpectralDirections: 1
     WaveJONSWAPParameters: Automatic
     WaveHs: 1.5
-    WaveTz: 10
+    WaveTz: 10.0
     WaveNumberOfComponents: 100
     WaveSpectrumMinRelFrequency: 0.5
     WaveSpectrumMaxRelFrequency: 10
     WaveSpectrumMaxComponentFrequencyRange: 0.05
-  WaveKinematicsCutoffDepth: Infinity
-  WaveCalculationMethod: Instantaneous position (exact)
-  WaveCalculationTimeInterval: 0
-  WaveCalculationSpatialInterval: 0
-  MultipleCurrentDataCanBeDefined: No
-  CurrentModel: Variation scheme
-  CurrentRamped: No
-  HorizontalCurrentFactor: ~
-  VerticalCurrentVariationMethod: Power law
-  CurrentSpeedAtSurface: 0.3
-  CurrentSpeedAtSeabed: 0
-  RefCurrentDirection: 180
-  CurrentExponent: 7
-  IncludeVesselWindLoads: Yes
-  IncludeLineWindLoads: Yes
-  IncludeBuoyWindLoads: Yes
-  IncludeBuoyWingWindLoads: Yes
-  WindRamping: From mean
-  WindType: Constant
-  AirDensity: 0.00128
-  AirSpeedOfSound: 343
-  WindSpeed: 0
-  WindDirection: 0
-  VerticalWindVariationFactor: ~
-  SeaSurfacePen:
-  - 1
-  - Solid
-  - $E6E897
-  SeaSurfaceGridDensity: 0.25
-  SeabedGridDensity: 0.1
+  RefCurrentDirection: 180.0
+  WindSpeed: 0.0
+  WindDirection: 0.0

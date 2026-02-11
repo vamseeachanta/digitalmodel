@@ -1,708 +1,295 @@
 ---
 name: orcaflex-model-generator
-description: Generate OrcaFlex models from templates using component assembly with
-  lookup tables for vessels, risers, materials, and environments.
+description: Generate OrcaFlex modular models from spec.yml using builder registry pattern with conditional generation and cross-builder context sharing.
+version: 2.0.0
+updated: 2026-02-10
+category: offshore-engineering
 triggers:
 - generate OrcaFlex model
 - create riser model
-- SCR analysis
-- model from template
+- modular model generation
+- spec.yml to OrcaFlex
+- builder registry
 - component assembly
 - parametric model generation
-updated: '2026-01-07'
 ---
-# OrcaFlex Model Generator Skill
+# OrcaFlex Modular Model Generator
 
-**ABOUTME**: Generate complete OrcaFlex models using component assembly approach - build models
-             from pre-validated components (vessels, lines, materials, environments) via lookup
-             tables instead of manually editing template files.
+Generate complete OrcaFlex models from `spec.yml` using the builder registry pattern. Each builder is a self-contained module that generates one YAML section, registered with execution order for dependency resolution.
 
----
+## Architecture
 
-## Version Metadata
-
-```yaml
-version: 1.0.0
-python_min_version: '3.10'
-dependencies:
-  orcaflex-file-conversion: '>=1.0.0,<2.0.0'
-orcaflex_version: '>=11.0'
-compatibility:
-  tested_python:
-  - '3.10'
-  - '3.11'
-  - '3.12'
-  - '3.13'
-  os:
-  - Windows
-  - Linux
-  - macOS
-```
-
-## Changelog
-
-### [1.0.0] - 2026-01-07
-
-**Added:**
-- Initial version metadata and dependency management
-- Semantic versioning support
-- Compatibility information for Python 3.10-3.13
-
-**Changed:**
-- Enhanced skill documentation structure
-
-
-## Overview
-
-This skill provides template-based OrcaFlex model generation using a component assembly approach. Instead of manually editing model files, you configure models by selecting pre-validated components from lookup tables.
-
-### Key Capabilities
-
-- ✅ **Component Assembly**: Build models from modular, reusable components
-- ✅ **Lookup Tables**: Pre-defined vessels, lines, materials, environments
-- ✅ **Simple Configuration**: YAML-based with minimal parameters
-- ✅ **Comprehensive Templates**: Risers, pipelines, umbilicals, moorings, installations
-- ✅ **Validated**: All components meet engineering standards (DNV, API, ISO)
-- ✅ **Integrated**: Works with converter, runner, post-processor
-
----
-
-## When to Use This Skill
-
-Use this skill when you need to:
-
-1. **Generate Standard Models**: Create OrcaFlex models for risers, pipelines, umbilicals
-2. **Parametric Studies**: Generate multiple models with varying parameters
-3. **Quick Feasibility**: Rapidly create models for initial assessments
-4. **Project Kickstart**: Start new projects with proven configurations
-5. **Training**: Learn OrcaFlex modeling with validated templates
-6. **Design Optimization**: Test multiple configurations efficiently
-
----
-
-## Quick Start
-
-### 1. List Available Components
+### Builder Registry Pattern
 
 ```python
-from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
+@BuilderRegistry.register("03_environment.yml", order=30)
+class EnvironmentBuilder(BaseBuilder):
+    def should_generate(self) -> bool:
+        return True  # Always needed
 
-generator = OrcaFlexModelGenerator()
-
-# List vessels
-vessels = generator.list_components("vessels")
-print(f"Available vessels: {vessels}")
-# Output: ['FPSO_P50', 'FPSO_P70', 'Drillship_DP3', ...]
-
-# List risers
-risers = generator.list_components("lines/risers")
-print(f"Available risers: {risers}")
-# Output: ['SCR_10inch_X65', 'SCR_12inch_X65', 'LWR_12inch', ...]
-
-# List environments
-envs = generator.list_components("environment")
-print(f"Available environments: {envs}")
-# Output: ['GoM_100yr', 'GoM_10yr', 'NorthSea_100yr', ...]
+    def build(self) -> dict[str, Any]:
+        return {"Environment": {...}}
 ```
 
-### 2. View Component Details
+Builders self-register via the `@register` decorator. The orchestrator iterates them in order without maintaining a hardcoded list.
+
+### Core Classes
+
+| Class | Location | Purpose |
+|-------|----------|---------|
+| `ModularModelGenerator` | `__init__.py` | Orchestrator: loads spec, runs builders, writes output |
+| `BuilderRegistry` | `builders/registry.py` | Auto-discovery registry with ordered execution |
+| `BaseBuilder` | `builders/base.py` | ABC with `build()`, `should_generate()`, entity sharing |
+| `BuilderContext` | `builders/context.py` | Typed dataclass for cross-builder data sharing |
+| `ProjectInputSpec` | `schema/root.py` | Pydantic root model (metadata + environment + simulation + generic/pipeline/riser) |
+
+### Builder Execution Flow
+
+```
+1. ModularModelGenerator.generate(output_dir)
+2.   for (filename, builder_class) in BuilderRegistry.get_ordered_builders():
+3.     builder = builder_class(spec, context)
+4.     if not builder.should_generate(): continue
+5.     data = builder.build()
+6.     context.update_from_dict(builder.get_generated_entities())
+7.     yaml.dump(data, includes_dir / filename)
+8.   write master.yml with include directives
+```
+
+### Cross-Builder Entity Sharing
+
+Builders register entities via `_register_entity(key, value)` for downstream builders:
 
 ```python
-# Get vessel specifications
-vessel_spec = generator.get_component("vessels", "FPSO_P50")
-print(f"FPSO P50 Length: {vessel_spec['LOA']}m")
-print(f"Displacement: {vessel_spec['Displacement']}t")
+# VesselBuilder registers vessel name
+self._register_entity("main_vessel_name", vessel.name)
 
-# Get riser specifications
-riser_spec = generator.get_component("lines/risers", "SCR_10inch_X65")
-print(f"OD: {riser_spec['OD']}m")
-print(f"Wall Thickness: {riser_spec['WallThickness']}m")
-print(f"Material: {riser_spec['Material']}")
+# LinesBuilder reads it from context
+vessel_name = self.context.main_vessel_name
 ```
 
-### 3. Create Configuration
+## Builder Types
+
+### Pipeline Builders (order 10-50)
+
+| Builder | File | Order | Purpose |
+|---------|------|-------|---------|
+| GeneralBuilder | `01_general.yml` | 10 | Simulation settings |
+| EnvironmentBuilder | `03_environment.yml` | 30 | Water, waves, current, wind |
+| VesselTypeBuilder | `04_vessel_types.yml` | 31 | Vessel type definitions |
+| LineTypeBuilder | `05_line_types.yml` | 32 | Line type properties |
+| ... | ... | ... | ... |
+
+### Riser Builders (order 40-93)
+
+| Builder | File | Order | Condition |
+|---------|------|-------|-----------|
+| RiserLineTypeBuilder | `06_riser_line_types.yml` | 40 | `spec.is_riser()` |
+| RiserVesselBuilder | `06_riser_vessels.yml` | 42 | `spec.is_riser()` |
+| RiserClumpTypeBuilder | `06_riser_clump_types.yml` | 50 | `spec.is_riser()` |
+| RiserLinesBuilder | `06_riser_lines.yml` | 92 | `spec.is_riser()` |
+| RiserLinksBuilder | `06_riser_links.yml` | 93 | `spec.is_riser()` |
+
+### Generic Builder (order 200)
+
+| Builder | File | Order | Condition |
+|---------|------|-------|-----------|
+| GenericModelBuilder | `20_generic_objects.yml` | 200 | `spec.is_generic()` |
+
+The generic builder handles ALL OrcaFlex object types via schema-driven generation:
+- List sections (LineTypes, Vessels, Lines, Shapes, 6DBuoys, etc.)
+- Singleton sections (FrictionCoefficients, LineContactData, Groups, etc.)
+- VariableData (nested by category)
+- General properties overlay
+
+## spec.yml: The Foundation Input
+
+`spec.yml` is the portable, human-readable input for any OrcaFlex model:
 
 ```yaml
-# my_scr_config.yml
-model:
-  type: "scr_catenary"
-  name: "GoM_SCR_Analysis_001"
-
-vessel:
-  lookup: "FPSO_P50"          # From component library
-  position: {x: 0, y: 0, z: 0}
-
-riser:
-  lookup: "SCR_10inch_X65"    # From component library
-  length: 1500
-  segments: 150
+metadata:
+  name: lazy_wave_riser
+  description: Lazy wave riser configuration
+  structure: generic      # or: pipeline, riser
+  operation: generic
 
 environment:
-  lookup: "GoM_100yr"         # From component library
-  water_depth: 1200
+  water:
+    depth: 450
+    density: 1.025
+  waves:
+    type: dean_stream
+    height: 5.0
+    period: 10.0
+    direction: 180
+  current:
+    speed: 0.5
+    direction: 180
+    profile: [[0, 1.0], [450, 0.3]]
+  wind:
+    speed: 10
+    direction: 180
 
-analysis:
-  type: "dynamic"
-  duration: 10800
+simulation:
   time_step: 0.1
+  stages: [8, 16]
+
+generic:                  # All OrcaFlex objects
+  general_properties:
+    UnitsSystem: SI
+  line_types:
+    - name: "Riser LT"
+      category: General
+      properties:
+        MassPerUnitLength: 50
+        EI: 10000
+        EA: 500000
+  vessels:
+    - name: "FPSO"
+      vessel_type: "Vessel Type1"
+      length: 103
+  lines:
+    - name: "Riser"
+      properties:
+        LineType: "Riser LT"
+        Length: [200, 300, 200]
 ```
 
-### 4. Generate Model
+### Spec Variants
+
+| `structure` | Schema Field | Builders Active |
+|-------------|-------------|-----------------|
+| `pipeline` | `spec.pipeline` | Pipeline builders (order 10-50) |
+| `riser` | `spec.riser` | Riser builders (order 40-93) |
+| `generic` | `spec.generic` | GenericModelBuilder (order 200) |
+
+## Usage
+
+### From spec.yml file
 
 ```python
-# Generate model
-model = generator.generate_from_template(
-    template="risers/scr_catenary",
-    config="my_scr_config.yml",
-    output="my_scr_model.yml"
-)
+from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 
-# Validate
-validation = generator.validate(model)
-if validation['is_valid']:
-    print("✅ Model is valid")
-else:
-    print("❌ Validation errors:", validation['errors'])
+gen = ModularModelGenerator(Path("spec.yml"))
+gen.generate(Path("output/"))
 ```
 
----
-
-## Available Templates
-
-### Risers (High Priority - Implemented)
-
-| Template | Description | Status |
-|----------|-------------|--------|
-| `risers/scr_catenary` | Steel Catenary Riser | ✅ Ready |
-| `risers/ttr_top_tensioned` | Top-Tensioned Riser | 📋 Planned |
-| `risers/lazy_wave` | Lazy Wave Riser | 📋 Planned |
-| `risers/pliant_wave` | Pliant Wave Riser | 📋 Planned |
-| `risers/hybrid_riser` | Hybrid Riser System | 📋 Planned |
-
-### Pipeline Installation (High Priority - Planned)
-
-| Template | Description | Status |
-|----------|-------------|--------|
-| `pipeline_installation/s_lay` | S-Lay Method | 📋 Planned |
-| `pipeline_installation/j_lay` | J-Lay Method | 📋 Planned |
-| `pipeline_installation/reel_lay` | Reel-Lay Method | 📋 Planned |
-| `pipeline_installation/tow_installation` | Pipeline Tow & Pull-in | 📋 Planned |
-
-### Umbilical Installation (High Priority - Planned)
-
-| Template | Description | Status |
-|----------|-------------|--------|
-| `umbilical_installation/static_installation` | Static Umbilical | 📋 Planned |
-| `umbilical_installation/dynamic_umbilical` | Dynamic Umbilical | 📋 Planned |
-| `umbilical_installation/bundle_installation` | Umbilical Bundle | 📋 Planned |
-
-### Additional Categories
-
-- **Mooring Systems**: CALM, SALM, spread, turret, single point
-- **Structure Installation**: Jacket, topside, subsea, manifold
-- **Towing Operations**: Platform, pipeline, barge
-- **Heavy Lift**: Dual crane, subsea, tandem
-- **ROV Operations**: Inspection, intervention, construction
-- **Specialized**: Riser pull-in, flexjoint, touchdown, VIV
-
----
-
-## Component Library
-
-### Vessels
-
-**Location**: `docs/modules/orcaflex/templates/components/vessels/`
-
-| Component ID | Type | LOA (m) | Displacement (t) | Description |
-|--------------|------|---------|------------------|-------------|
-| FPSO_P50 | FPSO | 300 | 200,000 | Standard FPSO deepwater |
-| FPSO_P70 | FPSO | 320 | 250,000 | Large FPSO ultra-deepwater |
-| FPSO_P30 | FPSO | 270 | 150,000 | Compact FPSO shallow water |
-| DS_DP3_7GEN | Drillship | 228 | 90,000 | 7th gen DP3 drillship |
-| PLV_SLAY_LARGE | Pipelay | 185 | 45,000 | Large S-lay vessel |
-
-### Risers
-
-**Location**: `docs/modules/orcaflex/templates/components/lines/risers.csv`
-
-| Component ID | OD (m) | Material | Max Tension (kN) | Description |
-|--------------|--------|----------|------------------|-------------|
-| SCR_10inch_X65 | 0.2731 | X65_STEEL | 2,500 | Standard 10-inch SCR |
-| SCR_12inch_X65 | 0.3239 | X65_STEEL | 3,500 | 12-inch SCR |
-| SCR_10inch_X70 | 0.2731 | X70_STEEL | 2,700 | High strength X70 |
-| LWR_12inch | 0.3239 | X65_STEEL | 3,500 | Lazy wave riser |
-
-### Materials
-
-**Location**: `docs/modules/orcaflex/templates/components/materials/`
-
-| Component ID | Grade | Yield (MPa) | UTS (MPa) | Density (kg/m³) |
-|--------------|-------|-------------|-----------|-----------------|
-| X65_STEEL | X65 | 448 | 531 | 7850 |
-| X70_STEEL | X70 | 483 | 565 | 7850 |
-| X80_STEEL | X80 | 552 | 621 | 7850 |
-| TITANIUM_GR5 | Ti-6Al-4V | 880 | 950 | 4430 |
-
-### Environment
-
-**Location**: `docs/modules/orcaflex/templates/components/environment/`
-
-| Component ID | Hs (m) | Tp (s) | Current (m/s) | Return Period |
-|--------------|--------|--------|---------------|---------------|
-| GoM_100yr | 14.5 | 15.0 | 1.5 | 100-year |
-| GoM_10yr | 10.2 | 12.5 | 1.2 | 10-year |
-| NorthSea_100yr | 16.8 | 16.5 | 1.8 | 100-year |
-| Brazil_100yr | 13.2 | 14.8 | 1.4 | 100-year |
-
----
-
-## Usage Examples
-
-### Example 1: Basic SCR Model
+### From in-memory spec
 
 ```python
-from digitalmodel.orcaflex.model_generator import generate_model
+spec = ProjectInputSpec(**spec_dict)
+gen = ModularModelGenerator.from_spec(spec)
+gen.generate(Path("output/"))
+```
 
-# Simple one-liner
-model = generate_model(
-    template="risers/scr_catenary",
-    config={
-        'model': {'name': 'Basic_SCR'},
-        'vessel': {'lookup': 'FPSO_P50'},
-        'riser': {'lookup': 'SCR_10inch_X65', 'length': 1200},
-        'environment': {'lookup': 'GoM_1yr', 'water_depth': 1000},
-        'analysis': {'type': 'static'}
-    },
-    output="basic_scr.yml"
+### From monolithic (extract + generate)
+
+```python
+from digitalmodel.solvers.orcaflex.modular_generator.extractor import MonolithicExtractor
+
+ext = MonolithicExtractor(Path("model.yml"))
+spec = ProjectInputSpec(**ext.extract())
+gen = ModularModelGenerator.from_spec(spec)
+gen.generate(Path("output/"))
+```
+
+### With section overrides
+
+```python
+result = gen.generate_with_overrides(
+    output_dir=Path("output/"),
+    sections=[override_section],
+    variables={"water_depth": 500},
 )
 ```
 
-### Example 2: Parametric Study
+## Generic Builder Internals
+
+### _merge_object()
+
+Combines typed Pydantic fields with pass-through properties:
 
 ```python
-from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
+@staticmethod
+def _merge_object(obj: GenericObject) -> dict[str, Any]:
+    merged = dict(obj.properties)           # 1. Start from properties bag
+    explicitly_set = obj.model_fields_set    # 2. Track what was explicitly set
 
-generator = OrcaFlexModelGenerator()
+    for py_field, ofx_key in TYPED_FIELD_MAP.items():
+        value = getattr(obj, py_field, None)
+        if value is not None:
+            merged[ofx_key] = value          # 3. Non-None typed fields override
+        elif py_field in explicitly_set:
+            merged[ofx_key] = value          # 4. Explicitly-set None preserved
 
-# Generate 10 models with varying water depth
-for depth in range(800, 1800, 100):
-    config = {
-        'model': {'name': f'SCR_Depth_{depth}m'},
-        'vessel': {'lookup': 'FPSO_P50'},
-        'riser': {'lookup': 'SCR_10inch_X65', 'length': depth + 300},
-        'environment': {'lookup': 'GoM_10yr', 'water_depth': depth},
-        'analysis': {'type': 'static'}
-    }
-
-    generator.generate_from_template(
-        template="risers/scr_catenary",
-        config=config,
-        output=f"models/scr_depth_{depth}.yml"
-    )
-
-print("Generated 10 parametric models")
+    # 5. Priority keys first (Name, Category, ShapeType, etc.)
+    ordered = {}
+    for key in _PRIORITY_KEYS:
+        if key in merged:
+            ordered[key] = merged.pop(key)
+    ordered.update(merged)
+    return ordered
 ```
 
-### Example 3: Custom Component Override
+### Section Ordering (_SECTION_ORDER)
+
+Critical: OrcaFlex validates references sequentially. Sections must appear in dependency order:
+
+```
+General → VariableData → ExpansionTables
+→ RayleighDampingCoefficients, FrictionCoefficients, LineContactData
+→ LineTypes, VesselTypes, ClumpTypes, StiffenerTypes, SupportTypes
+→ Vessels, Lines, Shapes, 6DBuoys, 3DBuoys, Constraints, Links, Winches
+→ MultibodyGroups, BrowserGroups, Groups
+```
+
+### Priority Keys (_PRIORITY_KEYS)
+
+Mode-setting properties must appear before dependent properties within each object:
 
 ```python
-config = {
-    'model': {'name': 'Custom_SCR'},
-    'vessel': {
-        'lookup': 'FPSO_P50',
-        # Override displacement for loaded condition
-        'Displacement': 220000
-    },
-    'riser': {
-        'lookup': 'SCR_10inch_X65',
-        'length': 1500,
-        # Override for thicker wall
-        'WallThickness': 0.016
-    },
-    'environment': {
-        'lookup': 'GoM_100yr',
-        'water_depth': 1400,
-        # Override for more severe current
-        'SurfaceCurrent': 1.8
-    },
-    'analysis': {'type': 'dynamic', 'duration': 10800}
-}
-
-model = generate_model("risers/scr_catenary", config, "custom_scr.yml")
+_PRIORITY_KEYS = [
+    "Name", "Category", "ShapeType", "Shape", "BuoyType",
+    "Connection", "LinkType", "Geometry", "WaveType",
+    "DegreesOfFreedomInStatics",
+]
 ```
 
-### Example 4: Add Custom Component
+## 3-Way Benchmark
 
-```python
-from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
+The benchmark validates three paths produce equivalent results:
 
-generator = OrcaFlexModelGenerator()
+| Path | Source | Pipeline |
+|------|--------|----------|
+| **A (monolithic)** | `.dat` file | Load directly in OrcFxAPI |
+| **B (spec-driven)** | `.dat` → `.yml` → extract → spec → generate → load | Full round-trip |
+| **C (library-direct)** | `spec.yml` → generate → load | From hand-written spec |
 
-# Add custom vessel to library
-generator.add_component(
-    category="vessels",
-    component_id="My_Custom_FPSO",
-    properties={
-        "VesselID": "My_Custom_FPSO",
-        "VesselName": "Project X FPSO",
-        "LOA": 315.0,
-        "Breadth": 63.0,
-        "Depth": 31.0,
-        "Draught": 19.0,
-        "Displacement": 225000.0,
-        "LCG": 0.0,
-        "VCG": 10.5,
-        "WindArea": 8500.0,
-        "CurrentArea": 6500.0,
-        "OilCapacity": 1900000.0,
-        "Description": "Custom FPSO for Project X"
-    }
-)
-
-# Use in model
-config = {
-    'vessel': {'lookup': 'My_Custom_FPSO'},
-    # ... rest of config
-}
+```bash
+uv run python scripts/benchmark_model_library.py --library-only --three-way --skip-mesh
 ```
 
-### Example 5: Full Workflow with Converter and Runner
-
-```python
-from digitalmodel.orcaflex.model_generator import generate_model
-from digitalmodel.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
-from digitalmodel.orcaflex.universal import UniversalOrcaFlexRunner
-
-# 1. Generate model from template
-model_yml = generate_model(
-    template="risers/scr_catenary",
-    config="my_config.yml",
-    output="my_scr_model.yml"
-)
-
-# 2. Convert to .dat format
-converter = OrcaFlexConverterEnhanced(output_format='dat')
-success, dat_file, error = converter.convert_file("my_scr_model.yml")
-
-# 3. Run OrcaFlex analysis
-runner = UniversalOrcaFlexRunner()
-sim_file = runner.run_single(dat_file)
-
-# 4. Post-process results
-from digitalmodel.orcaflex.opp import OPP
-opp = OPP()
-results = opp.process_single_file(sim_file)
-
-print(f"Analysis complete! Results: {results}")
-```
-
-### Example 6: Batch Generation from CSV
-
-```python
-import pandas as pd
-from digitalmodel.orcaflex.model_generator import OrcaFlexModelGenerator
-
-generator = OrcaFlexModelGenerator()
-
-# Read parametric study configurations from CSV
-study_params = pd.read_csv("parametric_study.csv")
-
-# Generate model for each row
-for idx, row in study_params.iterrows():
-    config = {
-        'model': {'name': row['ModelName']},
-        'vessel': {'lookup': row['VesselID']},
-        'riser': {
-            'lookup': row['RiserID'],
-            'length': row['RiserLength']
-        },
-        'environment': {
-            'lookup': row['EnvironmentID'],
-            'water_depth': row['WaterDepth']
-        },
-        'analysis': {'type': row['AnalysisType']}
-    }
-
-    generator.generate_from_template(
-        template="risers/scr_catenary",
-        config=config,
-        output=f"models/{row['ModelName']}.yml"
-    )
-
-print(f"Generated {len(study_params)} models from CSV")
-```
-
----
-
-## Integration Patterns
-
-### With OrcaFlex File Conversion Skill
-
-```python
-# Use /orcaflex-file-conversion skill to convert generated models
-
-# 1. Generate model
-model = generate_model("risers/scr_catenary", "config.yml", "model.yml")
-
-# 2. Convert to .dat using skill
-# Skill will handle conversion with proper validation
-```
-
-### With OrcaFlex Modeling Skill
-
-```python
-# Use /orcaflex-modeling skill to run generated models
-
-# 1. Generate model
-model = generate_model("risers/scr_catenary", "config.yml", "model.yml")
-
-# 2. Run using universal runner (via skill)
-# Skill provides full analysis capabilities
-```
-
-### With OrcaFlex Post-Processing Skill
-
-```python
-# Complete workflow: generate → run → post-process
-
-# 1. Generate
-model = generate_model("risers/scr_catenary", "config.yml", "model.yml")
-
-# 2. Run (via /orcaflex-modeling skill)
-# Produces .sim file
-
-# 3. Post-process (via /orcaflex-post-processing skill)
-# Extracts statistics, plots, reports
-```
-
----
-
-## Validation
-
-All generated models are validated for:
-
-### Structural Validation
-- ✅ Required components present
-- ✅ Valid property types
-- ✅ Consistent units
-- ✅ No missing critical parameters
-
-### Engineering Validation
-- ✅ Wall thickness meets minimums (DNV-OS-F201)
-- ✅ Tension within material limits
-- ✅ Bend radius within allowable limits
-- ✅ Environmental conditions reasonable
-
-### Standard Compliance
-- ✅ **DNV-OS-F201**: Dynamic Risers
-- ✅ **API RP 2RD**: Design of Risers for Floating Production Systems
-- ✅ **API RP 2SK**: Design and Analysis of Stationkeeping Systems
-- ✅ **DNV-RP-F105**: Free Spanning Pipelines
-- ✅ **ISO 13628**: Subsea Production Systems
-
----
-
-## API Reference
-
-### OrcaFlexModelGenerator Class
-
-```python
-class OrcaFlexModelGenerator:
-    """Generate OrcaFlex models from components and templates."""
-
-    def __init__(self,
-                 components_dir: Optional[Path] = None,
-                 templates_dir: Optional[Path] = None):
-        """Initialize generator with component and template directories."""
-
-    def list_components(self, category: str) -> List[str]:
-        """List available components in category."""
-
-    def get_component(self, category: str, component_id: str) -> Dict[str, Any]:
-        """Get component properties from lookup table."""
-
-    def generate_from_template(self,
-                               template: str,
-                               config: Union[str, Path, Dict[str, Any]],
-                               output: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
-        """Generate model from template and configuration."""
-
-    def validate(self, model: Dict[str, Any]) -> Dict[str, Any]:
-        """Validate generated model."""
-
-    def add_component(self,
-                      category: str,
-                      component_id: str,
-                      properties: Dict[str, Any]) -> None:
-        """Add custom component to library."""
-```
-
-### Convenience Function
-
-```python
-def generate_model(template: str,
-                   config: Union[str, Path, Dict[str, Any]],
-                   output: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
-    """
-    Convenience function for one-line model generation.
-
-    Example:
-        >>> model = generate_model("risers/scr_catenary", "config.yml", "model.yml")
-    """
-```
-
----
-
-## Configuration Schema
-
-### Complete Configuration Example
-
-```yaml
-model:
-  type: string                    # Template type (required)
-  name: string                    # Model name (required)
-  description: string             # Optional description
-
-vessel:
-  lookup: string                  # Component ID (required)
-  position:                       # Position override (optional)
-    x: float
-    y: float
-    z: float
-  heading: float                  # Heading override (optional)
-  # ... any vessel property can be overridden
-
-riser:
-  lookup: string                  # Component ID (required)
-  length: float                   # Total length (required)
-  segments: int                   # Number of segments (required)
-  top_tension: float              # Top tension (optional)
-  # ... any riser property can be overridden
-
-environment:
-  lookup: string                  # Component ID (required)
-  water_depth: float              # Water depth (required)
-  # ... any environment property can be overridden
-
-analysis:
-  type: "static" | "dynamic"      # Analysis type (required)
-  duration: float                 # Duration for dynamic (required if dynamic)
-  time_step: float                # Time step (required if dynamic)
-  target_log_sample_interval: float  # Logging interval (optional)
-```
-
----
-
-## Use Cases
-
-### 1. Rapid Feasibility Studies
-Generate standard models in minutes for initial project assessments.
-
-### 2. Parametric Design Studies
-Systematically vary parameters to optimize design:
-- Water depth variations
-- Riser diameter studies
-- Environmental severity analysis
-- Vessel type comparisons
-
-### 3. Extreme Condition Analysis
-Quickly test multiple 100-year scenarios across different basins (GoM, North Sea, West Africa, Brazil).
-
-### 4. Standard Compliance
-Ensure all models meet engineering standards with validated components.
-
-### 5. Training and Learning
-Help engineers learn OrcaFlex modeling with proven templates and configurations.
-
-### 6. Project Kickstart
-Start new projects with proven, validated configurations instead of from scratch.
-
-### 7. Documentation and Reporting
-Automated model generation ensures consistent documentation and traceability.
-
----
-
-## Troubleshooting
-
-### Component Not Found
-
-```python
-# Error: ComponentNotFoundError: Component 'FPSO_XYZ' not found
-
-# Solution: List available components
-generator = OrcaFlexModelGenerator()
-print(generator.list_components("vessels"))
-```
-
-### Validation Warnings
-
-Validation warnings indicate non-critical issues:
-- Missing recommended properties
-- Unusual parameter values
-- Non-standard configurations
-
-Models can still be generated with warnings, but review is recommended.
-
-### Custom Components
-
-Add your own components to expand the library:
-
-```python
-generator.add_component(
-    category="vessels",
-    component_id="ProjectX_FPSO",
-    properties={...}  # All required properties
-)
-```
-
----
+Results (2026-02-10): All 5 library models converge on all 3 paths with 0.00% tension difference.
 
 ## Related Skills
 
-- **`/orcaflex-file-conversion`**: Convert generated models between formats (.yml ⟷ .dat)
-- **`/orcaflex-modeling`**: Run OrcaFlex simulations with universal runner
-- **`/orcaflex-post-processing`**: Extract results and generate reports
+- [orcaflex-monolithic-to-modular](../orcaflex-monolithic-to-modular/SKILL.md) - Extraction pipeline
+- [orcaflex-yaml-gotchas](../orcaflex-yaml-gotchas/SKILL.md) - Production YAML traps
+- [orcaflex-environment-config](../orcaflex-environment-config/SKILL.md) - Environment builder details
+
+## References
+
+- Generator: `src/digitalmodel/solvers/orcaflex/modular_generator/__init__.py`
+- Registry: `src/digitalmodel/solvers/orcaflex/modular_generator/builders/registry.py`
+- Base: `src/digitalmodel/solvers/orcaflex/modular_generator/builders/base.py`
+- Generic builder: `src/digitalmodel/solvers/orcaflex/modular_generator/builders/generic_builder.py`
+- Schema: `src/digitalmodel/solvers/orcaflex/modular_generator/schema/`
+- Spec library: `docs/modules/orcaflex/library/tier2_fast/`
+- Benchmark: `scripts/benchmark_model_library.py`
 
 ---
 
-## Documentation
+## Version History
 
-- **Template Library**: `docs/modules/orcaflex/templates/README.md`
-- **Component Library**: `docs/modules/orcaflex/templates/components/`
-- **API Documentation**: `src/digitalmodel/modules/orcaflex/model_generator/`
-- **SCR Template Guide**: `docs/modules/orcaflex/templates/risers/scr_catenary/README.md`
-
----
-
-## Performance
-
-- **Model Generation**: < 0.1 seconds per model
-- **Validation**: < 0.05 seconds per model
-- **Component Lookup**: Cached, near-instant
-- **Batch Generation**: 100+ models per second
-
----
-
-## Statistics
-
-**Current Library**:
-- **Templates**: 1 implemented, 33 planned
-- **Vessels**: 9 vessels (FPSO, drillship, pipelay)
-- **Lines**: 14 line types (risers, pipelines, umbilicals)
-- **Materials**: 10 materials (steel grades, titanium)
-- **Environments**: 10 metocean conditions (GoM, North Sea, Brazil, West Africa)
-
-**Growth Plan**:
-- Q1 2026: Core templates (risers, pipelines, umbilicals)
-- Q2 2026: Mooring and installation templates
-- Q3 2026: Specialized operations
-- Q4 2026: Advanced features and optimization
-
----
-
-**Skill Version**: 1.0.0
-**Last Updated**: 2026-01-03
-**Status**: ✅ Production Ready
-
-**License**: Repository license applies
-**Support**: File issues at repository issue tracker
+- **2.0.0** (2026-02-10): Complete rewrite. Documents actual ModularModelGenerator, builder registry, generic builder internals, _merge_object() with model_fields_set, section ordering, 3-way benchmark.
+- **1.0.0** (2026-01-07): Initial release describing theoretical component lookup approach.

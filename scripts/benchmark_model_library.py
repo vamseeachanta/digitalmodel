@@ -36,6 +36,26 @@ try:
 except ImportError:
     _HAS_MODULAR = False
 
+try:
+    from semantic_validate import (
+        load_monolithic as sv_load_mono,
+        load_modular as sv_load_mod,
+        validate as sv_validate,
+        summarize as sv_summarize,
+    )
+    _HAS_SEMANTIC = True
+except ImportError:
+    try:
+        from scripts.semantic_validate import (
+            load_monolithic as sv_load_mono,
+            load_modular as sv_load_mod,
+            validate as sv_validate,
+            summarize as sv_summarize,
+        )
+        _HAS_SEMANTIC = True
+    except ImportError:
+        _HAS_SEMANTIC = False
+
 EXAMPLES_ROOT = Path("docs/modules/orcaflex/examples/raw")
 OUTPUT_ROOT = Path("benchmark_output")
 DOCS_OUTPUT = Path("docs/modules/orcaflex/examples")  # reports alongside models
@@ -122,6 +142,11 @@ class ModelBenchmark:
     modular_statics_converged: bool = False
     modular_statics_time_s: float = 0.0
     modular_error: str | None = None
+    # Semantic validation (pre-statics gate)
+    semantic_total_sections: int = 0
+    semantic_sections_with_diffs: int = 0
+    semantic_significant_count: int = 0
+    semantic_sections: dict = field(default_factory=dict)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -184,6 +209,8 @@ def _fail_bm(p: Path, msg: str) -> ModelBenchmark:
 
 def _sanitize_name(name: str) -> str:
     """Convert a model name to a sanitized directory name."""
+    # Split CamelCase (e.g. HeaveCompensatedWinch -> Heave_Compensated_Winch)
+    name = re.sub(r"([a-z])([A-Z])", r"\1_\2", name)
     return re.sub(r"[^a-zA-Z0-9]+", "_", name).strip("_").lower()
 
 def _find_library_spec(model_name: str) -> Path | None:
@@ -316,14 +343,14 @@ def load_and_run(dat_path: Path) -> ModelBenchmark:
 # ---------------------------------------------------------------------------
 # 3-way comparison
 # ---------------------------------------------------------------------------
-def run_spec_driven(dat_path: Path) -> tuple[dict, dict, bool, float, str | None]:
+def run_spec_driven(dat_path: Path) -> tuple[dict, dict, bool, float, str | None, dict | None]:
     """Run Path B: .dat -> YAML -> extract spec -> generate modular -> statics.
 
     Returns:
-        (lines, range_data, converged, elapsed, error)
+        (lines, range_data, converged, elapsed, error, sem_summary)
     """
     if not _HAS_MODULAR:
-        return {}, {}, False, 0.0, "Modular generator not available"
+        return {}, {}, False, 0.0, "Modular generator not available", None
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
         # Export .dat to YAML
@@ -338,12 +365,25 @@ def run_spec_driven(dat_path: Path) -> tuple[dict, dict, bool, float, str | None
         gen = ModularModelGenerator.from_spec(spec)
         mod_dir = tmp / "modular"
         gen.generate(mod_dir)
+        # Semantic validation (pre-statics gate)
+        sem_summary: dict | None = None
+        if _HAS_SEMANTIC:
+            try:
+                mono_yaml = sv_load_mono(yml_path)
+                mod_yaml = sv_load_mod(mod_dir)
+                sem_results = sv_validate(mono_yaml, mod_yaml)
+                sem_summary = sv_summarize(sem_results)
+            except Exception as e:
+                _flush(f"    Semantic validation error: {e}")
         # Load generated master.yml and run statics
         master = mod_dir / "master.yml"
-        model2 = OrcFxAPI.Model(str(master))
-        converged, elapsed, error = _calc_statics(model2)
-        lines, rd = _extract_all(model2) if converged else ({}, {})
-        return lines, rd, converged, elapsed, error
+        try:
+            model2 = OrcFxAPI.Model(str(master))
+            converged, elapsed, error = _calc_statics(model2)
+            lines, rd = _extract_all(model2) if converged else ({}, {})
+        except Exception as e:
+            return {}, {}, False, 0.0, str(e), sem_summary
+        return lines, rd, converged, elapsed, error, sem_summary
 
 def run_modular_direct(spec_path: Path) -> tuple[dict, dict, bool, float, str | None]:
     """Run Path C: library spec.yml -> generate modular -> statics.
@@ -637,8 +677,24 @@ def _build_3way_summary(results: list[ModelBenchmark]) -> str:
         elif cls_spec == "warn" or cls_mod == "warn":
             overall = "warn" if overall != "fail" else overall
 
+        # Semantic badge
+        if r.semantic_total_sections > 0:
+            if r.semantic_sections_with_diffs == 0:
+                sem_cell = '<td><span class="badge badge-pass">MATCH</span></td>'
+            elif r.semantic_significant_count > 0:
+                sem_cell = (f'<td><span class="badge badge-fail">'
+                            f'{r.semantic_sections_with_diffs}/{r.semantic_total_sections}'
+                            f'</span></td>')
+            else:
+                sem_cell = (f'<td><span class="badge badge-warn">'
+                            f'{r.semantic_sections_with_diffs}/{r.semantic_total_sections}'
+                            f'</span></td>')
+        else:
+            sem_cell = "<td>N/A</td>"
+
         rows.append(
             f"<tr><td>{r.name}</td>"
+            f"{sem_cell}"
             f"{_fmt_cell(worst_spec, cls_spec)}"
             f"{_fmt_cell(worst_mod, cls_mod)}"
             f"{_fmt_cell(worst_bc, cls_bc)}"
@@ -672,7 +728,7 @@ def _build_3way_summary(results: list[ModelBenchmark]) -> str:
 
     table_html = (
         '<table><thead><tr>'
-        '<th>Model</th><th>Spec-Driven Worst %</th>'
+        '<th>Model</th><th>Semantic</th><th>Spec-Driven Worst %</th>'
         '<th>Modular-Direct Worst %</th><th>B vs C %</th>'
         '<th>Status</th></tr></thead><tbody>'
         + "\n".join(rows)
@@ -717,7 +773,7 @@ def generate_report(results: list[ModelBenchmark]) -> None:
     exec_hdr = ("<th>#</th><th>Model</th><th>Category</th><th>Lines</th>"
         "<th>Objects</th><th>Statics</th><th>Time (s)</th><th>Max Tension (kN)</th>")
     if has_3way:
-        exec_hdr += "<th>Spec</th><th>Modular</th>"
+        exec_hdr += "<th>Semantic</th><th>Spec</th><th>Modular</th>"
     exec_hdr += "<th>Mesh Sens.</th><th>Status</th>"
     bp.append(f'<div class="section"><h2>Executive Summary</h2>'
         f"<table><thead><tr>{exec_hdr}</tr></thead><tbody>")
@@ -730,6 +786,20 @@ def generate_report(results: list[ModelBenchmark]) -> None:
         elif r.statics_converged: ms = "skipped"
         tw_cols = ""
         if has_3way:
+            # Semantic column
+            if r.semantic_total_sections > 0:
+                if r.semantic_sections_with_diffs == 0:
+                    tw_cols += '<td><span class="badge badge-pass">MATCH</span></td>'
+                elif r.semantic_significant_count > 0:
+                    tw_cols += (f'<td><span class="badge badge-fail">'
+                                f'{r.semantic_sections_with_diffs}/{r.semantic_total_sections}'
+                                f'</span></td>')
+                else:
+                    tw_cols += (f'<td><span class="badge badge-warn">'
+                                f'{r.semantic_sections_with_diffs}/{r.semantic_total_sections}'
+                                f'</span></td>')
+            else:
+                tw_cols += "<td>N/A</td>"
             # Spec column
             if r.spec_lines:
                 tw_cols += '<td><span class="badge badge-pass">PASS</span></td>'
@@ -818,6 +888,34 @@ def generate_report(results: list[ModelBenchmark]) -> None:
         else:
             bp.append("<div></div>")
         bp.append("</div>")  # model-grid
+
+        # Semantic validation section (pre-statics gate)
+        if r.semantic_total_sections > 0:
+            n_match = r.semantic_total_sections - r.semantic_sections_with_diffs
+            bp.append("<h3>Semantic Validation (Pre-Statics)</h3>")
+            bp.append(f'<p style="font-size:.85em">'
+                f'{n_match} of {r.semantic_total_sections} sections match, '
+                f'{r.semantic_significant_count} significant differences</p>')
+            bp.append('<details><summary>Per-section details</summary>')
+            bp.append('<table><thead><tr><th>Section</th><th>Matches</th>'
+                '<th>Diffs</th><th>Missing</th><th>Extra</th>'
+                '<th>Worst Significance</th></tr></thead><tbody>')
+            for sec_name, sec_info in sorted(r.semantic_sections.items()):
+                worst = sec_info.get("worst_significance", "match")
+                has_issue = worst not in ("match", "cosmetic")
+                cls = "status-fail" if worst in ("significant", "type_mismatch",
+                    "missing", "extra") else ("status-pass" if worst == "match" else "")
+                badge_cls = "pass" if worst == "match" else (
+                    "warn" if worst in ("cosmetic", "minor") else "fail")
+                bp.append(
+                    f'<tr class="{cls}"><td>{html.escape(sec_name)}</td>'
+                    f'<td class="num">{sec_info.get("matches", 0)}</td>'
+                    f'<td class="num">{sec_info.get("diffs", 0)}</td>'
+                    f'<td class="num">{sec_info.get("missing", 0)}</td>'
+                    f'<td class="num">{sec_info.get("extra", 0)}</td>'
+                    f'<td><span class="badge badge-{badge_cls}">{worst.upper()}'
+                    f'</span></td></tr>')
+            bp.append('</tbody></table></details>')
 
         # 3-way comparison section
         if r.spec_lines or r.modular_lines:
@@ -1016,7 +1114,7 @@ def generate_report(results: list[ModelBenchmark]) -> None:
         bp.append("</tbody></table></div>")
 
     # Assemble
-    html = (f'<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+    html_out = (f'<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         f'<meta name="viewport" content="width=device-width,initial-scale=1.0">\n'
         f'<title>OrcaFlex Model Library Benchmark</title>\n'
         f'<script src="{PLOTLY_CDN}"></script>\n<style>{_CSS}</style>\n</head>\n'
@@ -1031,10 +1129,10 @@ def generate_report(results: list[ModelBenchmark]) -> None:
         + f'\n<div class="footer">Generated {ts} &mdash; scripts/benchmark_model_library.py'
         f' &mdash; digitalmodel</div>\n</div>\n<script>\n'
         + "\n".join(sp) + '\n</script>\n</body>\n</html>')
-    HTML_PATH.write_text(html, encoding="utf-8")
+    HTML_PATH.write_text(html_out, encoding="utf-8")
     print(f"HTML: {HTML_PATH} ({HTML_PATH.stat().st_size:,} bytes)")
     DOCS_OUTPUT.mkdir(parents=True, exist_ok=True)
-    DOCS_HTML_PATH.write_text(html, encoding="utf-8")
+    DOCS_HTML_PATH.write_text(html_out, encoding="utf-8")
     print(f"Docs: {DOCS_HTML_PATH} ({DOCS_HTML_PATH.stat().st_size:,} bytes)")
 
 # ---------------------------------------------------------------------------
@@ -1089,12 +1187,22 @@ def main() -> None:
             # Path B: spec-driven
             _flush("  3-way Path B (spec-driven)...")
             try:
-                sl, srd, sc, st_s, se = run_spec_driven(dp)
+                sl, srd, sc, st_s, se, sem = run_spec_driven(dp)
                 bm.spec_lines = sl
                 bm.spec_range_data = srd
                 bm.spec_statics_converged = sc
                 bm.spec_statics_time_s = st_s
                 bm.spec_error = se
+                if sem:
+                    bm.semantic_total_sections = sem["total_sections"]
+                    bm.semantic_sections_with_diffs = sem["sections_with_diffs"]
+                    bm.semantic_significant_count = sem["significant_diffs"]
+                    bm.semantic_sections = sem["sections"]
+                    _flush(f"    Semantic check: "
+                           f"{sem['total_sections'] - sem['sections_with_diffs']}"
+                           f"/{sem['total_sections']} sections match "
+                           f"({sem['sections_with_diffs']} with diffs, "
+                           f"{sem['significant_diffs']} significant)")
                 _flush(f"    Spec-driven: {'CONVERGED' if sc else 'FAILED'} ({st_s:.2f}s)")
                 if se: _flush(f"    Error: {se}")
             except Exception as e:

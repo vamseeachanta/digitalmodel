@@ -1,6 +1,3 @@
-# Environment Configuration
-# Generated from: C05 Single point mooring.yml
-# Date: 2026-01-18 22:18:03
 Environment:
   WaterSurfaceZ: 0
   KinematicViscosity: 1.35e-06
@@ -8,70 +5,70 @@ Environment:
   ReynoldsNumberCalculation: Flow direction
   HorizontalWaterDensityFactor: ~
   VerticalDensityVariation: Constant
-  Density: 1.025
   SeabedType: Flat
   SeabedOrigin:
   - 0
   - 0
-  WaterDepth: 220
   SeabedSlopeDirection: 0
-  SeabedSlope: 0
   SeabedModel: Elastic
-  SeabedNormalStiffness: 100
-  SeabedShearStiffness: 100
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  MultipleCurrentDataCanBeDefined: false
+  CurrentModel: Variation scheme
+  CurrentRamped: false
+  CurrentApplyVerticalStretching: false
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  IncludeVesselWindLoads: true
+  IncludeLineWindLoads: true
+  IncludeBuoyWindLoads: true
+  IncludeBuoyWingWindLoads: true
+  WindRamping: From mean
+  WindType: API spectrum
+  AirDensity: 0.00128
+  AirSpeedOfSound: 343
+  VerticalWindVariationFactor: ~
   KinematicStretchingMethod: Vertical stretching
-  UserSpecifiedRandomWaveSeeds: No
+  SeabedNormalStiffness: 100.0
+  SeabedSlope: 0.0
+  SeabedShearStiffness: 100.0
+  UserSpecifiedRandomWaveSeeds: false
   WaveFrequencySpectrumDiscretisationMethod: Equal energy
+  WaterDepth: 220.0
+  NumberOfWindComponents: 1000
+  WindSeed: 436212347
+  WindSpectrumFMax: Infinity
+  WindTimeOrigin: 0
+  WindSpectrumElevation: ~
+  WindSpectrumFMin: 0
+  Density: 1.025
   WaveTrains:
   - Name: Wave1
     WaveType: JONSWAP
-    WaveDirection: 180
+    WaveDirection: 180.0
     WaveOrigin:
     - 0
     - 0
     WaveTimeOrigin: 0
     WaveNumberOfSpectralDirections: 1
     WaveJONSWAPParameters: Partially specified
-    WaveHs: 10
-    WaveTz: 13
+    WaveHs: 10.0
+    WaveTz: 13.0
     WaveGamma: 3.3
     WaveNumberOfComponents: 100
     WaveSpectrumMinRelFrequency: 0.5
     WaveSpectrumMaxRelFrequency: 10
     WaveSpectrumMaxComponentFrequencyRange: 0.05
-  WaveKinematicsCutoffDepth: Infinity
-  WaveCalculationMethod: Instantaneous position (exact)
-  WaveCalculationTimeInterval: 0
-  WaveCalculationSpatialInterval: 0
-  MultipleCurrentDataCanBeDefined: No
-  CurrentModel: Variation scheme
-  CurrentRamped: No
-  CurrentApplyVerticalStretching: No
-  HorizontalCurrentFactor: ~
-  VerticalCurrentVariationMethod: Interpolated
-  RefCurrentSpeed: 1
-  RefCurrentDirection: 150
+  RefCurrentSpeed: 1.0
+  RefCurrentDirection: 150.0
   CurrentDepth, CurrentFactor, CurrentRotation:
-  - - 0
-    - 1
+  - - 0.0
+    - 1.0
     - 0
-  - - 220
+  - - 220.0
     - 0.45
     - 0
-  IncludeVesselWindLoads: Yes
-  IncludeLineWindLoads: Yes
-  IncludeBuoyWindLoads: Yes
-  IncludeBuoyWingWindLoads: Yes
-  WindRamping: From mean
-  WindType: API spectrum
-  AirDensity: 0.00128
-  AirSpeedOfSound: 343
-  WindSpectrumElevation: ~
-  WindSpectrumFMin: 0
-  WindSpectrumFMax: Infinity
-  WindTimeOrigin: 0
-  WindSeed: 436212347
-  NumberOfWindComponents: 1000
-  WindSpeed: 35
-  WindDirection: 210
-  VerticalWindVariationFactor: ~
+  WindSpeed: 35.0
+  WindDirection: 210.0

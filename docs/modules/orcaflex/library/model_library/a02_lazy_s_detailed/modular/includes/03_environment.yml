@@ -5,20 +5,39 @@ Environment:
   ReynoldsNumberCalculation: Flow direction
   HorizontalWaterDensityFactor: ~
   VerticalDensityVariation: Constant
-  Density: 1.025
   SeabedType: Flat
   SeabedOrigin:
   - 0
   - 0
-  SeabedOriginDepth: 100.0
   NominalDepth: ~
-  SeabedSlopeDirection: 180
-  SeabedSlope: 0.0
+  SeabedSlopeDirection: 0
   SeabedModel: Elastic
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  MultipleCurrentDataCanBeDefined: false
+  CurrentModel: Variation scheme
+  CurrentRamped: false
+  CurrentApplyVerticalStretching: false
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  IncludeVesselWindLoads: true
+  IncludeLineWindLoads: true
+  IncludeBuoyWindLoads: true
+  IncludeBuoyWingWindLoads: true
+  WindRamping: From mean
+  WindType: Constant
+  AirDensity: 0.00128
+  AirSpeedOfSound: 343
+  VerticalWindVariationFactor: ~
   SeabedNormalStiffness: 100.0
   SeabedShearStiffness: 100.0
+  SeabedSlope: 0.0
+  Density: 1.025
+  SeabedOriginDepth: 100.0
   WaveTrains:
-  - Name: Wave1
+  - Name: Wave 1
     WaveType: Dean stream
     WaveDirection: 225.0
     WaveHeight: 7.0
@@ -27,30 +46,16 @@ Environment:
     - 0
     - 0
     WaveTimeOrigin: 0
-  WaveKinematicsCutoffDepth: Infinity
-  WaveCalculationMethod: Instantaneous position (exact)
-  WaveCalculationTimeInterval: 0
-  WaveCalculationSpatialInterval: 0
-  MultipleCurrentDataCanBeDefined: 'No'
-  CurrentModel: Variation scheme
-  CurrentRamped: 'No'
-  CurrentApplyVerticalStretching: 'No'
-  HorizontalCurrentFactor: ~
-  VerticalCurrentVariationMethod: Interpolated
+    WaveStreamFunctionOrder: 5
+    WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel: ~
   RefCurrentSpeed: 1.0
   RefCurrentDirection: 270.0
   CurrentDepth, CurrentFactor, CurrentRotation:
-  - - 0
+  - - 0.0
     - 1.0
     - 0
-  IncludeVesselWindLoads: 'Yes'
-  IncludeLineWindLoads: 'Yes'
-  IncludeBuoyWindLoads: 'Yes'
-  IncludeBuoyWingWindLoads: 'Yes'
-  WindRamping: From mean
-  WindType: Constant
-  AirDensity: 0.00128
-  AirSpeedOfSound: 343
+  - - 100.0
+    - 0.2
+    - 0
   WindSpeed: 0.0
   WindDirection: 0.0
-  VerticalWindVariationFactor: ~

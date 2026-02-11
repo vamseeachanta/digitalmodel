@@ -1,0 +1,685 @@
+metadata:
+  name: m01_pipeline_lateral_buckling
+  description: Extracted from M01 Pipeline lateral buckling.yml
+  structure: generic
+  operation: generic
+  project: model_library
+  version: '1.0'
+environment:
+  water:
+    depth: 100.0
+    density: 1.025
+  seabed:
+    slope: 0.0
+    stiffness:
+      normal: 100.0
+      shear: 100.0
+    friction_coefficient: 0.3
+  waves:
+    type: Dean stream
+    height: 0.0
+    period: 8.0
+    direction: 180.0
+    phase: 0
+    gamma: 3.3
+  current:
+    speed: 0
+    direction: 90.0
+    profile:
+    - - 0
+      - 1.0
+  wind:
+    speed: 0.0
+    direction: 0.0
+    reference_height: 10
+  raw_properties:
+    WaterSurfaceZ: 0
+    KinematicViscosity: 1.35e-06
+    SeaTemperature: 10
+    ReynoldsNumberCalculation: Flow direction
+    HorizontalWaterDensityFactor: ~
+    VerticalDensityVariation: Constant
+    Density: 1.025
+    SeabedType: Profile
+    SeabedOrigin:
+    - 0
+    - 0
+    NominalDepth: ~
+    SeabedSlopeDirection: 0
+    SeabedProfileInterpolation: Cubic spline
+    SeabedProfileDistanceFromSeabedOrigin, SeabedProfileZ:
+    - - -100
+      - -1000
+    - - -50
+      - -1000
+    - - 0
+      - -1000
+    - - 50
+      - -999.904
+    - - 100
+      - -999.624
+    - - 150
+      - -999.167
+    - - 200
+      - -998.538
+    - - 250
+      - -997.746
+    - - 300
+      - -996.797
+    - - 350
+      - -995.697
+    - - 400
+      - -994.455
+    - - 450
+      - -993.075
+    - - 500
+      - -991.566
+    - - 550
+      - -989.934
+    - - 600
+      - -988.186
+    - - 650
+      - -986.328
+    - - 700
+      - -984.368
+    - - 750
+      - -982.313
+    - - 800
+      - -980.169
+    - - 850
+      - -977.943
+    - - 900
+      - -975.641
+    - - 950
+      - -973.272
+    - - 1000
+      - -970.841
+    - - 1050
+      - -968.355
+    - - 1100
+      - -965.822
+    - - 1150
+      - -963.247
+    - - 1200
+      - -960.639
+    - - 1250
+      - -958.003
+    - - 1300
+      - -955.347
+    - - 1350
+      - -952.677
+    - - 1400
+      - -950
+    - - 1450
+      - -947.323
+    - - 1500
+      - -944.653
+    - - 1550
+      - -941.997
+    - - 1600
+      - -939.361
+    - - 1650
+      - -936.753
+    - - 1700
+      - -934.178
+    - - 1750
+      - -931.645
+    - - 1800
+      - -929.159
+    - - 1850
+      - -926.728
+    - - 1900
+      - -924.359
+    - - 1950
+      - -922.057
+    - - 2000
+      - -919.831
+    - - 2050
+      - -917.687
+    - - 2100
+      - -915.632
+    - - 2150
+      - -913.672
+    - - 2200
+      - -911.814
+    - - 2250
+      - -910.066
+    - - 2300
+      - -908.434
+    - - 2350
+      - -906.925
+    - - 2400
+      - -905.545
+    - - 2450
+      - -904.303
+    - - 2500
+      - -903.203
+    - - 2550
+      - -902.254
+    - - 2600
+      - -901.462
+    - - 2650
+      - -900.833
+    - - 2700
+      - -900.376
+    - - 2750
+      - -900.096
+    - - 2800
+      - -900
+    - - 2850
+      - -900
+    - - 2900
+      - -900
+    - - 2950
+      - -900
+    - - 3000
+      - -900
+    SeabedModel: Elastic
+    SeabedNormalStiffness: 100
+    SeabedShearStiffness: 100
+    WaveTrains:
+    - Name: Wave1
+      WaveType: Dean stream
+      WaveDirection: 180
+      WaveHeight: 0
+      WavePeriod: 8
+      WaveOrigin:
+      - 0
+      - 0
+      WaveTimeOrigin: 0
+      WaveStreamFunctionOrder: 5
+      WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel: ~
+    WaveKinematicsCutoffDepth: Infinity
+    WaveCalculationMethod: Instantaneous position (exact)
+    WaveCalculationTimeInterval: 0
+    WaveCalculationSpatialInterval: 0
+    MultipleCurrentDataCanBeDefined: false
+    CurrentModel: Variation scheme
+    CurrentRamped: false
+    HorizontalCurrentFactor: ~
+    VerticalCurrentVariationMethod: Power law
+    CurrentSpeedAtSurface: 0.5
+    CurrentSpeedAtSeabed: 0.1
+    RefCurrentDirection: 90
+    CurrentExponent: 7
+    IncludeVesselWindLoads: true
+    IncludeLineWindLoads: true
+    IncludeBuoyWindLoads: true
+    IncludeBuoyWingWindLoads: true
+    WindRamping: From mean
+    WindType: Constant
+    AirDensity: 0.00128
+    AirSpeedOfSound: 343
+    WindSpeed: 0
+    WindDirection: 0
+    VerticalWindVariationFactor: ~
+generic:
+  general_properties:
+    UnitsSystem: SI
+    JacobianBufferingPolicy: 1
+    JacobianPerturbationFactor: 0
+    BuoysIncludedInStatics: All
+    LineStaticsStep1Policy: All lines included
+    LineStaticsStep2Policy: Solve coupled systems
+    WholeSystemStaticsEnabled: true
+    StaticsMinDamping: 3
+    StaticsMaxDamping: 30
+    DynamicsSolutionMethod: Implicit time domain
+    ImplicitUseVariableTimeStep: false
+    LogPrecision: Single
+    TargetLogSampleInterval: 1
+    LogStartTime: ~
+    StartTime: 0
+    FirstStage: 1
+    RampStartTime: ~
+    RampFinishTime: 0
+    TimeHistoryImportFrom: ~
+    TimeHistoryImportTo: ~
+    RestartStateRecordingPeriodicCount: 0
+    RestartStateRecordingTest: ~
+  line_types:
+  - name: Pipeline type
+    properties:
+      MaterialDensity: 7.85
+      E: 212e6
+      PoissonRatio: 0.293
+      ExpansionTable: Expansion table steel
+      Cdn: 1.2
+      Cdz: 0.008
+      Cl: 0
+      Can: 1
+      Caz: 0
+      Cs: 0
+      Ce: 0
+      SeabedLateralFrictionCoefficient: 0.5
+      SeabedAxialFrictionCoefficient: 0.5
+      ClashStiffness: 0
+      AllowableStress: ~
+      RayleighDampingCoefficients: (no damping)
+      CoatingThickness: 0.03
+      CoatingMaterialDensity: 0.825
+      LiningThickness: 0
+      AdditionalEI: 0
+      Pen:
+      - 3
+      - Solid
+      - Yellow
+    category: Homogeneous pipe
+    outer_diameter: 0.2731
+    inner_diameter: 0.24292
+  vessel_types: []
+  vessels: []
+  lines:
+  - name: Pipeline
+    properties:
+      IncludeTorsion: true
+      TopEnd: End B
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      PyModel: (none)
+      PreBendSpecifiedBy: Bend angle
+      DragFormulation: Standard
+      StaticsVIV: None
+      DynamicsVIV: None
+      WaveCalculationMethod: Specified by environment
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+        ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Anchored
+          - 0
+          - 0
+          - 0.1488500000514383
+          - 0
+          - 90
+          - 0
+          - ~
+        - - Anchored
+          - 999.5426770946757
+          - 7.582163432087196e-05
+          - 0.14849481904195727
+          - 0
+          - 87
+          - 0
+          - ~
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+      - - Infinity
+        - ~
+        - Infinity
+      - - Infinity
+        - ~
+        - Infinity
+      ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
+        ConnectionApplyRamp, ConnectionUseSmoothGrowth
+      : - - ~
+          - 0
+          - 0.001
+        - - ~
+          - 0
+          - 0.001
+      LineType, Length, TargetSegmentLength:
+      - - Pipeline type
+        - 1000
+        - 2.5
+      DecoupleLateralAndAxialSeabedFriction: false
+      ApplySeabedContactLoadsAtCentreline: false
+      SeabedSections:
+      - SeabedSectionsArclengthFrom: ~
+        SeabedSectionsArclengthTo: 1500
+        SeabedSectionsNormalStiffness: 50
+        SeabedSectionsLateralShearStiffness: 50
+        SeabedSectionsAxialShearStiffness: 50
+        SeabedSectionsLateralFrictionCoefficient: 0
+        SeabedSectionsAxialFrictionCoefficient: N/A
+        SeabedSectionsLateralResistanceProfile: Tangential resistance profile
+        SeabedSectionsAxialResistanceProfile: ~
+      - SeabedSectionsArclengthFrom: 1500
+        SeabedSectionsArclengthTo: ~
+        SeabedSectionsNormalStiffness: N/A
+        SeabedSectionsLateralShearStiffness: N/A
+        SeabedSectionsAxialShearStiffness: N/A
+        SeabedSectionsLateralFrictionCoefficient: N/A
+        SeabedSectionsAxialFrictionCoefficient: N/A
+        SeabedSectionsLateralResistanceProfile: ~
+        SeabedSectionsAxialResistanceProfile: ~
+      CoveredSectionsWarnIfLineLeavesCover: true
+      ContentsMethod: Tabular
+      IncludeAxialContentsInertia: true
+      TabularLineContentsDataSource: External
+      TabularLineContentsDataFileName: contents.txt
+      TabularLineContentsNominalDensity: 0
+      TabularLineContentsTimeOrigin: 0
+      IncludedInStatics: true
+      StaticsStep1: Quick
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: As laid
+      LayAzimuth: 0
+      AsLaidTension: 0
+      FullStaticsDoIntermediateNonTorsionSolve: false
+      FullStaticsMinDamping: 5
+      FullStaticsMaxDamping: 50
+    line_type_refs: []
+  buoys_6d:
+  - name: Sleepers 1
+    properties:
+      DampingRelativeTo: Earth
+      DisturbanceVessel: (none)
+      WaveCalculationMethod: Specified by environment
+      InitialAttitude:
+      - 0
+      - -1.05
+      - 0
+      MomentsOfInertia:
+      - 0
+      - 0
+      - 0
+      CentreOfMass:
+      - 0
+      - 0
+      - 0
+      LumpedBuoyAddedMassMethod: Diagonal values
+      Height: 6
+      CentreOfVolume:
+      - 0
+      - 0
+      - 0
+      UnitDampingForce:
+      - 0
+      - 0
+      - 0
+      UnitDampingMoment:
+      - 0
+      - 0
+      - 0
+      DragArea:
+      - 0
+      - 0
+      - 0
+      DragAreaMoment:
+      - 0
+      - 0
+      - 0
+      DragForceCoefficient:
+      - 0
+      - 0
+      - 0
+      DragMomentCoefficient:
+      - 0
+      - 0
+      - 0
+      HydrodynamicMass:
+      - 0
+      - 0
+      - 0
+      HydrodynamicInertia:
+      - 0
+      - 0
+      - 0
+      AddedMassCoefficient:
+      - 0
+      - 0
+      - 0
+      AddedInertiaCoefficient:
+      - 0
+      - 0
+      - 0
+      FluidAccelerationForceCoefficient:
+      - 0
+      - 0
+      - 0
+      LumpedBuoySlamArea: 0
+      LumpedBuoySlamForceDataEntry: 0
+      LumpedBuoySlamForceDataExit: 0
+      SupportGeometrySpecification: Explicit
+      SupportReleaseStage: ~
+      SupportCoordinateSystems:
+      - SupportCoordinateSystemName: Coordinate system1
+        SupportCoordinateSystemPos:
+        - 0
+        - 0
+        - 0
+        SupportCoordinateSystemOrientation:
+        - 0
+        - 0
+        - 0
+      SupportedLine:
+      - Pipeline
+      Supports:
+      - SupportType: Sleeper type
+        SupportCoordinateSystem: Coordinate system1
+        SupportPosition:
+        - -10
+        - 0
+        - 1
+        SupportOrientation:
+        - 0
+        - 0
+        - 0
+      - SupportType: Sleeper type
+        SupportCoordinateSystem: Coordinate system1
+        SupportPosition:
+        - 10
+        - 0
+        - 1
+        SupportOrientation:
+        - 0
+        - 0
+        - 0
+      SeabedFrictionCoefficient: 0
+      TotalContactArea: 0
+      WireFrameOrigin:
+      - 0
+      - 0
+      - 0
+      WireFrameSymmetry: None
+      WireFrameType: Edges
+      VertexX, VertexY, VertexZ: []
+      EdgeFrom, EdgeTo, EdgeDiameter: []
+    buoy_type: Lumped buoy
+    connection: Anchored
+    initial_position:
+    - 250.0
+    - 0.0
+    - 0.0
+    mass: 0.0
+    volume: 0.0
+  - name: Sleepers 2
+    properties:
+      DampingRelativeTo: Earth
+      DisturbanceVessel: (none)
+      WaveCalculationMethod: Specified by environment
+      InitialAttitude:
+      - 0
+      - -2.4
+      - 0
+      MomentsOfInertia:
+      - 0
+      - 0
+      - 0
+      CentreOfMass:
+      - 0
+      - 0
+      - 0
+      LumpedBuoyAddedMassMethod: Diagonal values
+      Height: 6
+      CentreOfVolume:
+      - 0
+      - 0
+      - 0
+      UnitDampingForce:
+      - 0
+      - 0
+      - 0
+      UnitDampingMoment:
+      - 0
+      - 0
+      - 0
+      DragArea:
+      - 0
+      - 0
+      - 0
+      DragAreaMoment:
+      - 0
+      - 0
+      - 0
+      DragForceCoefficient:
+      - 0
+      - 0
+      - 0
+      DragMomentCoefficient:
+      - 0
+      - 0
+      - 0
+      HydrodynamicMass:
+      - 0
+      - 0
+      - 0
+      HydrodynamicInertia:
+      - 0
+      - 0
+      - 0
+      AddedMassCoefficient:
+      - 0
+      - 0
+      - 0
+      AddedInertiaCoefficient:
+      - 0
+      - 0
+      - 0
+      FluidAccelerationForceCoefficient:
+      - 0
+      - 0
+      - 0
+      LumpedBuoySlamArea: 0
+      LumpedBuoySlamForceDataEntry: 0
+      LumpedBuoySlamForceDataExit: 0
+      SupportGeometrySpecification: Explicit
+      SupportReleaseStage: ~
+      SupportCoordinateSystems:
+      - SupportCoordinateSystemName: Coordinate system1
+        SupportCoordinateSystemPos:
+        - 0
+        - 0
+        - 0
+        SupportCoordinateSystemOrientation:
+        - 0
+        - 0
+        - 0
+      SupportedLine:
+      - Pipeline
+      Supports:
+      - SupportType: Sleeper type
+        SupportCoordinateSystem: Coordinate system1
+        SupportPosition:
+        - -10
+        - 0
+        - 1
+        SupportOrientation:
+        - 0
+        - 0
+        - 0
+      - SupportType: Sleeper type
+        SupportCoordinateSystem: Coordinate system1
+        SupportPosition:
+        - 10
+        - 0
+        - 1
+        SupportOrientation:
+        - 0
+        - 0
+        - 0
+      SeabedFrictionCoefficient: 0
+      TotalContactArea: 0
+      WireFrameOrigin:
+      - 0
+      - 0
+      - 0
+      WireFrameSymmetry: None
+      WireFrameType: Edges
+      VertexX, VertexY, VertexZ: []
+      EdgeFrom, EdgeTo, EdgeDiameter: []
+    buoy_type: Lumped buoy
+    connection: Anchored
+    initial_position:
+    - 750.0
+    - 0.0
+    - 0.0
+    mass: 0.0
+    volume: 0.0
+  buoys_3d: []
+  shapes: []
+  constraints: []
+  links: []
+  winches: []
+  clump_types: []
+  wing_types: []
+  flex_joint_types: []
+  flex_joints: []
+  drag_chain_types: []
+  drag_chains: []
+  stiffener_types: []
+  support_types:
+  - name: Sleeper type
+    properties:
+      Geometry: U shaped
+      NormalStiffness: 1000
+      ShearStiffness: 100
+      Diameter: 0.2
+      USupportHorizontalLength: 20
+      USupportVerticalLength: 2
+      WireFrameDrawEnds: $000001
+  morison_element_types: []
+  turbines: []
+  attached_buoys: []
+  variable_data_sources:
+  - name: Tangential resistance profile
+    properties:
+      IndependentValue, DependentValue:
+      - - 0
+        - 0
+      - - 0.011075575
+        - 4.418445871
+      - - 0.49965
+        - 0.396297566
+      - - 1
+        - 0.396297566
+      UnloadingStiffness: ~
+    data_type: Seabedtangentialresistance
+  expansion_tables:
+  - name: Expansion table steel
+    properties:
+      ExpansionTableTemperature, ExpansionTablePressure, ExpansionTableExpansionFactor:
+      - - 0
+        - N/A
+        - 1
+      - - 100
+        - N/A
+        - 1.00106
+      - - 200
+        - N/A
+        - 1.00212
+  py_models: []
+  wake_models: []
+  multibody_groups: []
+  browser_groups: []
+  friction_coefficients:
+    data:
+      ? FrictionCoefficientSupportTypeName, SupportTypeFrictionCoefficientLineName,
+        SupportTypeLateralCoefficient, SupportTypeAxialCoefficient
+      : - - (all support types)
+          - (all lines)
+          - 0.1
+          - ~
+  groups:
+    data:
+      Structure:
+        Pipeline: Model
+        Sleepers 1: Model
+        Sleepers 2: Model
+      State:
+        Collapsed: []
+equipment:
+  ramps: []
+simulation:
+  time_step: 0.1
+  stages:
+  - 550
+  north_direction: 0

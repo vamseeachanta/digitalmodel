@@ -226,7 +226,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
             context.update_from_dict(builder.get_generated_entities())
 
             file_path = includes_dir / file_name
-            with open(file_path, 'w') as f:
+            with open(file_path, 'w', encoding='utf-8') as f:
                 yaml.dump(data, f, Dumper=_NoAliasDumper, default_flow_style=False, allow_unicode=True, sort_keys=False)
 
             print_success(f"Generated: includes/{file_name}")
@@ -246,7 +246,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
             'time_step': spec.simulation.time_step,
         }
         params_path = inputs_dir / 'parameters.yml'
-        with open(params_path, 'w') as f:
+        with open(params_path, 'w', encoding='utf-8') as f:
             yaml.dump(params, f, default_flow_style=False)
         print_success("Generated: inputs/parameters.yml")
 
@@ -264,7 +264,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
             master_lines.append(f'- includefile: includes/{file_name}')
 
         master_path = output_dir / 'master.yml'
-        with open(master_path, 'w') as f:
+        with open(master_path, 'w', encoding='utf-8') as f:
             f.write('\n'.join(master_lines))
         print_success("Generated: master.yml")
 

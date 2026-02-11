@@ -1,0 +1,56 @@
+Environment:
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-06
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  SeabedType: Profile
+  SeabedOrigin:
+  - 0
+  - 0
+  NominalDepth: ~
+  SeabedSlopeDirection: 0
+  SeabedModel: Elastic
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  MultipleCurrentDataCanBeDefined: false
+  CurrentModel: Variation scheme
+  CurrentRamped: false
+  CurrentApplyVerticalStretching: 'No'
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Power law
+  IncludeVesselWindLoads: true
+  IncludeLineWindLoads: true
+  IncludeBuoyWindLoads: true
+  IncludeBuoyWingWindLoads: true
+  WindRamping: From mean
+  WindType: Constant
+  AirDensity: 0.00128
+  AirSpeedOfSound: 343
+  VerticalWindVariationFactor: ~
+  SeabedShearStiffness: 100.0
+  SeabedNormalStiffness: 100.0
+  Density: 1.025
+  SeabedOriginDepth: 100.0
+  SeabedSlope: 0.0
+  WaveTrains:
+  - Name: Wave1
+    WaveType: Dean stream
+    WaveDirection: 180.0
+    WaveHeight: 0.0
+    WavePeriod: 8.0
+    WaveOrigin:
+    - 0
+    - 0
+    WaveTimeOrigin: 0
+    WaveStreamFunctionOrder: 5
+    WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel: ~
+  CurrentExponent: 7
+  CurrentSpeedAtSurface: 0.5
+  CurrentSpeedAtSeabed: 0.1
+  RefCurrentDirection: 90.0
+  WindSpeed: 0.0
+  WindDirection: 0.0

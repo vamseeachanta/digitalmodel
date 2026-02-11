@@ -71,6 +71,7 @@ class GenericVessel(GenericObject):
         vessel_type: Reference to VesselType name.
         connection: Connection string.
         initial_position: Initial position [x, y, z] (m).
+        length: Vessel length (m).
     """
 
     vessel_type: str | None = Field(default=None, description="VesselType reference")
@@ -78,6 +79,7 @@ class GenericVessel(GenericObject):
     initial_position: list[float] | None = Field(
         default=None, description="Initial position [x, y, z] (m)"
     )
+    length: float | None = Field(default=None, description="Vessel length (m)")
 
 
 class GenericLine(GenericObject):
@@ -105,6 +107,7 @@ class GenericBuoy6D(GenericObject):
         connection: Connection string.
         initial_position: Initial position [x, y, z] (m).
         mass: Buoy mass (te).
+        volume: Displaced volume (m3).
     """
 
     buoy_type: str | None = Field(default=None, description="Buoy type reference")
@@ -113,6 +116,7 @@ class GenericBuoy6D(GenericObject):
         default=None, description="Initial position [x, y, z] (m)"
     )
     mass: float | None = Field(default=None, description="Mass (te)")
+    volume: float | None = Field(default=None, description="Displaced volume (m3)")
 
 
 class GenericBuoy3D(GenericObject):
@@ -121,12 +125,16 @@ class GenericBuoy3D(GenericObject):
     Attributes:
         connection: Connection string.
         initial_position: Initial position [x, y, z] (m).
+        mass: Buoy mass (te).
+        volume: Displaced volume (m3).
     """
 
     connection: str | None = Field(default=None, description="Connection")
     initial_position: list[float] | None = Field(
         default=None, description="Initial position [x, y, z] (m)"
     )
+    mass: float | None = Field(default=None, description="Mass (te)")
+    volume: float | None = Field(default=None, description="Displaced volume (m3)")
 
 
 class GenericShape(GenericObject):
@@ -145,6 +153,9 @@ class GenericShape(GenericObject):
     origin: list[float] | None = Field(
         default=None, description="Shape origin [x, y, z] (m)"
     )
+    length: float | None = Field(default=None, description="Shape length (m)")
+    mass: float | None = Field(default=None, description="Shape mass (te)")
+    volume: float | None = Field(default=None, description="Shape volume (m3)")
 
 
 class GenericConstraint(GenericObject):
@@ -313,12 +324,13 @@ SECTION_REGISTRY: dict[str, tuple[type, bool]] = {
 }
 
 SINGLETON_SECTIONS: dict[str, str] = {
-    "SolidFrictionCoefficients": "friction_coefficients",
+    "FrictionCoefficients": "friction_coefficients",
     "LineContactData": "line_contact_data",
     "CodeChecks": "code_checks",
     "Shear7Data": "shear7_data",
     "VIVAData": "viva_data",
     "RayleighDampingCoefficients": "rayleigh_damping",
+    "Groups": "groups",
 }
 
 # Map spec field name -> OrcaFlex YAML section key
@@ -466,3 +478,4 @@ class GenericModel(BaseModel):
     shear7_data: GenericSingletonSection | None = Field(default=None)
     viva_data: GenericSingletonSection | None = Field(default=None)
     rayleigh_damping: GenericSingletonSection | None = Field(default=None)
+    groups: GenericSingletonSection | None = Field(default=None)

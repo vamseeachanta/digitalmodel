@@ -5,9 +5,9 @@ General:
   BuoysIncludedInStatics: Individually specified
   LineStaticsStep1Policy: All lines included
   LineStaticsStep2Policy: Solve coupled systems
-  WholeSystemStaticsEnabled: 'Yes'
+  WholeSystemStaticsEnabled: true
   DynamicsSolutionMethod: Implicit time domain
-  ImplicitUseVariableTimeStep: 'No'
+  ImplicitUseVariableTimeStep: false
   ImplicitConstantTimeStep: 0.1
   LogPrecision: Single
   TargetLogSampleInterval: 0.1
@@ -23,4 +23,3 @@ General:
   - 35
   RestartStateRecordingPeriodicCount: 0
   RestartStateRecordingTest: ~
-  NorthDirection: 0

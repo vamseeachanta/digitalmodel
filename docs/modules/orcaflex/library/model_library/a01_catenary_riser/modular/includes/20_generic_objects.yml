@@ -1,5 +1,64 @@
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: true
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: false
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+VariableData:
+  Dragcoefficient:
+  - IndependentValue, DependentValue:
+    - - 10e3
+      - 1.2
+    - - 50e3
+      - 1.2
+    - - 240e3
+      - 1.2
+    - - 255e3
+      - 1.19
+    - - 300e3
+      - 1.16
+    - - 340e3
+      - 1.05
+    - - 380e3
+      - 0.8
+    - - 425e3
+      - 0.42
+    - - 510e3
+      - 0.4
+    - - 600e3
+      - 0.42
+    - - 675e3
+      - 0.48
+    - - 850e3
+      - 0.57
+    - - 1.3e6
+      - 0.68
+    - - 1.7e6
+      - 0.7
+    - - 8.5e6
+      - 0.7
+    - - 25e6
+      - 0.7
+    Name: Generic Drag
 LineTypes:
-- CentreOfMass:
+- Name: 10" flexible variable Cd
+  Category: General
+  CentreOfMass:
   - 0
   - 0
   BulkModulus: Infinity
@@ -42,8 +101,6 @@ LineTypes:
   SeabedLateralFrictionCoefficient: 0.5
   SeabedAxialFrictionCoefficient: ~
   RayleighDampingCoefficients: (no damping)
-  Name: 10" flexible variable Cd
-  Category: General
   OD: 0.3556
   ID: 0.254
   MassPerUnitLength: 0.1842262
@@ -52,7 +109,8 @@ LineTypes:
   - ~
   EA: 711.2e3
 VesselTypes:
-- RAOResponseUnits: degrees
+- Name: Vessel Type1
+  RAOResponseUnits: degrees
   RAOWaveUnit: amplitude
   WavesReferredToBy: period (s)
   RAOPhaseConvention: lags
@@ -9678,10 +9736,11 @@ VesselTypes:
   - 35
   - 0
   - 0
-  Name: Vessel Type1
   Length: 103.0
 Vessels:
-- Draught: Draught1
+- Name: FPSO
+  Connection: Free
+  Draught: Draught1
   Orientation:
   - 0
   - 0
@@ -9703,15 +9762,15 @@ Vessels:
   CalculationMode: Filtering
   CalculateHydrostaticStiffnessAnglesBy: Orientation
   ShadedDrawingCullingMode: Anticlockwise
-  Name: FPSO
   VesselType: Vessel Type1
-  Connection: Free
   InitialPosition:
   - -35.0
   - 0.0
   - 0.0
+  Length: ~
 Lines:
-- IncludeTorsion: false
+- Name: Catenary Hose
+  IncludeTorsion: false
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -9783,71 +9842,3 @@ Lines:
   - 5
   - Solid
   - White
-  Name: Catenary Hose
-VariableDataSources:
-- IndependentValue, DependentValue:
-  - - 10e3
-    - 1.2
-  - - 50e3
-    - 1.2
-  - - 240e3
-    - 1.2
-  - - 255e3
-    - 1.19
-  - - 300e3
-    - 1.16
-  - - 340e3
-    - 1.05
-  - - 380e3
-    - 0.8
-  - - 425e3
-    - 0.42
-  - - 510e3
-    - 0.4
-  - - 600e3
-    - 0.42
-  - - 675e3
-    - 0.48
-  - - 850e3
-    - 0.57
-  - - 1.3e6
-    - 0.68
-  - - 1.7e6
-    - 0.7
-  - - 8.5e6
-    - 0.7
-  - - 25e6
-    - 0.7
-  Name: Generic Drag
-  DataType: Dragcoefficient
-General:
-  UnitsSystem: SI
-  JacobianBufferingPolicy: 1
-  JacobianPerturbationFactor: 0
-  BuoysIncludedInStatics: Individually specified
-  LineStaticsStep1Policy: All lines included
-  LineStaticsStep2Policy: Solve coupled systems
-  WholeSystemStaticsEnabled: true
-  DynamicsSolutionMethod: Implicit time domain
-  ImplicitUseVariableTimeStep: false
-  LogPrecision: Single
-  TargetLogSampleInterval: 0.1
-  LogStartTime: ~
-  StartTime: ~
-  FirstStage: ~
-  RampStartTime: ~
-  RampFinishTime: ~
-  TimeHistoryImportFrom: ~
-  TimeHistoryImportTo: ~
-  RestartStateRecordingPeriodicCount: 0
-  RestartStateRecordingTest: ~
-  DefaultViewMode: Shaded
-  DefaultShadedFillMode: Solid
-  DefaultShadedProjectionMode: Perspective
-  DefaultViewSize: 127.99114542837
-  DefaultViewCentre:
-  - -13.2984403076025
-  - 9.48463816941565
-  - -46.1809074428197
-  DefaultViewAzimuth: 270
-  DefaultViewElevation: 0
