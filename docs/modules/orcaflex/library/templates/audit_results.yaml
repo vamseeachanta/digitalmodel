@@ -1,0 +1,1167 @@
+summary:
+  total: 81
+  by_category:
+    drilling: 2
+    heavy_lift: 3
+    installation: 18
+    jumper: 4
+    mooring: 10
+    other: 4
+    pipeline: 9
+    riser: 19
+    seismic: 1
+    subsea: 1
+    training: 3
+    vessel: 5
+    wind_turbine: 2
+  avg_quality: 53.0
+  schema_valid_count: 73
+specs:
+- &id001
+  path: docs/modules/orcaflex/installation/manifold/region_a/spec.yml
+  name: region_a
+  description: Extracted from __01a_7Seas_08-10-2022.yml
+  structure: installation
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 15
+  schema_valid: false
+  line_count: 99816
+  has_comments: false
+  has_raw_properties: true
+- &id002
+  path: docs/modules/orcaflex/installation/mudmat/spec.yml
+  name: mudmat
+  description: Extracted from __02b_add_dz_mudmat.yml
+  structure: installation
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 70
+  schema_valid: true
+  line_count: 176
+  has_comments: false
+  has_raw_properties: false
+- &id019
+  path: docs/modules/orcaflex/installation/pipeline/route_a/spec.yml
+  name: route_a
+  description: Extracted from 02_draft_wd718m.yml
+  structure: installation
+  operation: generic
+  model_type: generic
+  category: pipeline
+  quality_score: 55
+  schema_valid: true
+  line_count: 22
+  has_comments: false
+  has_raw_properties: true
+- &id020
+  path: docs/modules/orcaflex/installation/pipeline/route_b/spec.yml
+  name: route_b
+  description: Extracted from Step1.yml
+  structure: installation
+  operation: generic
+  model_type: generic
+  category: pipeline
+  quality_score: 45
+  schema_valid: true
+  line_count: 11510
+  has_comments: false
+  has_raw_properties: true
+- &id028
+  path: docs/modules/orcaflex/jumper/manifold_to_plet/spec.yml
+  name: manifold_to_plet
+  description: Extracted from DZ_AHCoff.yml
+  structure: jumper
+  operation: generic
+  model_type: generic
+  category: jumper
+  quality_score: 15
+  schema_valid: false
+  line_count: 68340
+  has_comments: false
+  has_raw_properties: true
+- &id029
+  path: docs/modules/orcaflex/jumper/plet_to_plem/spec.yml
+  name: plet_to_plem
+  description: Extracted from DZ_AHCoff.yml
+  structure: jumper
+  operation: generic
+  model_type: generic
+  category: jumper
+  quality_score: 15
+  schema_valid: false
+  line_count: 68253
+  has_comments: false
+  has_raw_properties: true
+- &id030
+  path: docs/modules/orcaflex/jumper/sut_mm/resonance/spec.yml
+  name: resonance
+  description: Extracted from iv01_type-Rev2.yml
+  structure: jumper
+  operation: generic
+  model_type: generic
+  category: jumper
+  quality_score: 15
+  schema_valid: false
+  line_count: 64538
+  has_comments: false
+  has_raw_properties: true
+- &id031
+  path: docs/modules/orcaflex/jumper/sut_mm/spec.yml
+  name: sut_mm
+  description: Extracted from 10_SZ_2.25mHs_9s_165deg_Seed_10.yml
+  structure: jumper
+  operation: generic
+  model_type: generic
+  category: jumper
+  quality_score: 55
+  schema_valid: true
+  line_count: 23
+  has_comments: false
+  has_raw_properties: true
+- &id032
+  path: docs/modules/orcaflex/library/model_library/a01_catenary_riser/spec.yml
+  name: tmp8ja8gfbw
+  description: Extracted from tmp8ja8gfbw.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: riser
+  quality_score: 60
+  schema_valid: true
+  line_count: 9895
+  has_comments: false
+  has_raw_properties: false
+- &id033
+  path: docs/modules/orcaflex/library/model_library/a01_lazy_wave_riser/spec.yml
+  name: tmpm1l2ipai
+  description: Extracted from tmpm1l2ipai.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: riser
+  quality_score: 60
+  schema_valid: true
+  line_count: 10206
+  has_comments: false
+  has_raw_properties: false
+- &id034
+  path: docs/modules/orcaflex/library/model_library/a01_pliant_wave_riser/spec.yml
+  name: tmpbvr2y_6r
+  description: Extracted from tmpbvr2y_6r.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: riser
+  quality_score: 60
+  schema_valid: true
+  line_count: 10479
+  has_comments: false
+  has_raw_properties: false
+- &id035
+  path: docs/modules/orcaflex/library/model_library/a01_steep_wave_riser/spec.yml
+  name: tmph8g6c8zq
+  description: Extracted from tmph8g6c8zq.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: riser
+  quality_score: 60
+  schema_valid: true
+  line_count: 10502
+  has_comments: false
+  has_raw_properties: false
+- &id036
+  path: docs/modules/orcaflex/library/model_library/a02_lazy_s_detailed/spec.yml
+  name: a02_lazy_s_detailed
+  description: Extracted from A02 Lazy S detailed.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: riser
+  quality_score: 45
+  schema_valid: true
+  line_count: 13682
+  has_comments: false
+  has_raw_properties: true
+- &id037
+  path: docs/modules/orcaflex/library/model_library/a02_lazy_s_simple/spec.yml
+  name: a02_lazy_s_simple
+  description: Extracted from A02 Lazy S simple.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: riser
+  quality_score: 45
+  schema_valid: true
+  line_count: 12340
+  has_comments: false
+  has_raw_properties: true
+- &id038
+  path: docs/modules/orcaflex/library/model_library/a02_pliant_s/spec.yml
+  name: a02_pliant_s
+  description: Extracted from A02 Pliant S.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: riser
+  quality_score: 45
+  schema_valid: true
+  line_count: 11681
+  has_comments: false
+  has_raw_properties: true
+- &id039
+  path: docs/modules/orcaflex/library/model_library/a02_steep_s/spec.yml
+  name: a02_steep_s
+  description: Extracted from A02 Steep S.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: riser
+  quality_score: 45
+  schema_valid: true
+  line_count: 11664
+  has_comments: false
+  has_raw_properties: true
+- &id040
+  path: docs/modules/orcaflex/library/model_library/a03_jumper_to_high_tower/spec.yml
+  name: a03_jumper_to_high_tower
+  description: Extracted from A03 Jumper to high tower.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: riser
+  quality_score: 45
+  schema_valid: true
+  line_count: 13159
+  has_comments: false
+  has_raw_properties: true
+- &id041
+  path: docs/modules/orcaflex/library/model_library/a04_disconnecting_turret_system/spec.yml
+  name: a04_disconnecting_turret_system
+  description: Extracted from A04 Disconnecting turret system.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: riser
+  quality_score: 45
+  schema_valid: true
+  line_count: 12738
+  has_comments: false
+  has_raw_properties: true
+- &id042
+  path: docs/modules/orcaflex/library/model_library/a05_catenary_spar/spec.yml
+  name: a05_catenary_with_spar
+  description: Extracted from A05 Catenary with spar.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: riser
+  quality_score: 45
+  schema_valid: true
+  line_count: 2025
+  has_comments: false
+  has_raw_properties: true
+- &id043
+  path: docs/modules/orcaflex/library/model_library/a05_catenary_with_semisub/spec.yml
+  name: a05_catenary_with_semisub
+  description: Extracted from A05 Catenary with semisub.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: riser
+  quality_score: 45
+  schema_valid: true
+  line_count: 2751
+  has_comments: false
+  has_raw_properties: true
+- &id044
+  path: docs/modules/orcaflex/library/model_library/a05_lazy_wave_with_fpso/spec.yml
+  name: a05_lazy_wave_with_fpso
+  description: Extracted from A05 Lazy wave with FPSO.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: riser
+  quality_score: 45
+  schema_valid: true
+  line_count: 10327
+  has_comments: false
+  has_raw_properties: true
+- &id051
+  path: docs/modules/orcaflex/library/model_library/b01_drilling_riser/spec.yml
+  name: b01_drilling_riser
+  description: Extracted from B01 Drilling riser.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: drilling
+  quality_score: 45
+  schema_valid: true
+  line_count: 12278
+  has_comments: false
+  has_raw_properties: true
+- &id052
+  path: docs/modules/orcaflex/library/model_library/b06_running_bop/spec.yml
+  name: b06_running_bop
+  description: Extracted from B06 Running BOP.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: drilling
+  quality_score: 45
+  schema_valid: true
+  line_count: 9689
+  has_comments: false
+  has_raw_properties: true
+- &id053
+  path: docs/modules/orcaflex/library/model_library/c03_turret_moored_fpso/spec.yml
+  name: c03_turret_moored_fpso
+  description: Extracted from C03 Turret moored FPSO.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: mooring
+  quality_score: 45
+  schema_valid: true
+  line_count: 11672
+  has_comments: false
+  has_raw_properties: true
+- &id054
+  path: docs/modules/orcaflex/library/model_library/c05_single_point_mooring/spec.yml
+  name: c05_single_point_mooring
+  description: Extracted from C05 Single point mooring.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: mooring
+  quality_score: 45
+  schema_valid: true
+  line_count: 10219
+  has_comments: false
+  has_raw_properties: true
+- &id055
+  path: docs/modules/orcaflex/library/model_library/c06_calm_buoy/spec.yml
+  name: c06_calm_buoy
+  description: Extracted from C06 CALM buoy.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: mooring
+  quality_score: 45
+  schema_valid: true
+  line_count: 11240
+  has_comments: false
+  has_raw_properties: true
+- &id056
+  path: docs/modules/orcaflex/library/model_library/c06_discretised_calm_buoy/spec.yml
+  name: c06_discretised_calm_buoy
+  description: Extracted from C06 Discretised CALM buoy.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: mooring
+  quality_score: 45
+  schema_valid: true
+  line_count: 12167
+  has_comments: false
+  has_raw_properties: true
+- &id057
+  path: docs/modules/orcaflex/library/model_library/c07_metocean_buoy/spec.yml
+  name: c07_metocean_buoy_in_deep_water
+  description: Extracted from C07 Metocean buoy in deep water.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: mooring
+  quality_score: 55
+  schema_valid: true
+  line_count: 886
+  has_comments: false
+  has_raw_properties: true
+- &id058
+  path: docs/modules/orcaflex/library/model_library/c08_fish_farm/spec.yml
+  name: c08_fish_farm
+  description: Extracted from C08 Fish farm.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: mooring
+  quality_score: 45
+  schema_valid: true
+  line_count: 26673
+  has_comments: false
+  has_raw_properties: true
+- &id059
+  path: docs/modules/orcaflex/library/model_library/c09_fenders/spec.yml
+  name: c09_fenders
+  description: Extracted from C09 Fenders.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: mooring
+  quality_score: 45
+  schema_valid: true
+  line_count: 15093
+  has_comments: false
+  has_raw_properties: true
+- &id060
+  path: docs/modules/orcaflex/library/model_library/c10_multiple_statics/spec.yml
+  name: c10_multiple_statics
+  description: Extracted from C10 Multiple statics.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: mooring
+  quality_score: 45
+  schema_valid: true
+  line_count: 10678
+  has_comments: false
+  has_raw_properties: true
+- &id003
+  path: docs/modules/orcaflex/library/model_library/d02_pull_in_analysis/spec.yml
+  name: d02_pull_in_analysis
+  description: Extracted from D02 Pull in analysis.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 55
+  schema_valid: true
+  line_count: 722
+  has_comments: false
+  has_raw_properties: true
+- &id004
+  path: docs/modules/orcaflex/library/model_library/d03_lay_on_tower/spec.yml
+  name: d03_lay_on_tower
+  description: Extracted from D03 Lay on tower.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 45
+  schema_valid: true
+  line_count: 21148
+  has_comments: false
+  has_raw_properties: true
+- &id005
+  path: docs/modules/orcaflex/library/model_library/d04_j_tube_pull_in/spec.yml
+  name: d04_j_tube_pull_in
+  description: Extracted from D04 J-tube pull in.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 45
+  schema_valid: true
+  line_count: 10716
+  has_comments: false
+  has_raw_properties: true
+- &id006
+  path: docs/modules/orcaflex/library/model_library/e01_simple_geometry_stinger/spec.yml
+  name: e01_simple_geometry_stinger
+  description: Extracted from E01 Simple geometry stinger.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 45
+  schema_valid: true
+  line_count: 10007
+  has_comments: false
+  has_raw_properties: true
+- &id007
+  path: docs/modules/orcaflex/library/model_library/e02_rigid_hinged_stinger_with_piggyback_line/spec.yml
+  name: e02_rigid_hinged_stinger_with_piggyback_line
+  description: Extracted from E02 Rigid hinged stinger with piggyback line.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 45
+  schema_valid: true
+  line_count: 13185
+  has_comments: false
+  has_raw_properties: true
+- &id008
+  path: docs/modules/orcaflex/library/model_library/e03_detailed_hinged_stinger/spec.yml
+  name: e03_detailed_hinged_stinger
+  description: Extracted from E03 Detailed hinged stinger.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 45
+  schema_valid: true
+  line_count: 17288
+  has_comments: false
+  has_raw_properties: true
+- &id009
+  path: docs/modules/orcaflex/library/model_library/e04_articulated_stinger/spec.yml
+  name: e04_articulated_stinger
+  description: Extracted from E04 Articulated stinger.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 45
+  schema_valid: true
+  line_count: 18497
+  has_comments: false
+  has_raw_properties: true
+- &id010
+  path: docs/modules/orcaflex/library/model_library/e05_pipe_davit_lift/spec.yml
+  name: e05_pipe_davit_lift
+  description: Extracted from E05 Pipe davit lift.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 45
+  schema_valid: true
+  line_count: 10150
+  has_comments: false
+  has_raw_properties: true
+- &id011
+  path: docs/modules/orcaflex/library/model_library/f01_lowered_cone/spec.yml
+  name: f01_lowered_cone
+  description: Extracted from F01 Lowered cone.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 45
+  schema_valid: true
+  line_count: 11009
+  has_comments: false
+  has_raw_properties: true
+- &id012
+  path: docs/modules/orcaflex/library/model_library/f02_passive_compensation/spec.yml
+  name: f02_passive_compensation
+  description: Extracted from F02 Passive compensation.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 45
+  schema_valid: true
+  line_count: 32300
+  has_comments: false
+  has_raw_properties: true
+- &id013
+  path: docs/modules/orcaflex/library/model_library/f04_payload_transfer/spec.yml
+  name: f04_payload_transfer
+  description: Extracted from F04 Payload transfer.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 45
+  schema_valid: true
+  line_count: 10968
+  has_comments: false
+  has_raw_properties: true
+- &id014
+  path: docs/modules/orcaflex/library/model_library/f06_spool_piece_manoeuvring/spec.yml
+  name: f06_spool_piece_manoeuvring
+  description: Extracted from F06 Spool piece manoeuvring.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 45
+  schema_valid: true
+  line_count: 11114
+  has_comments: false
+  has_raw_properties: true
+- &id015
+  path: docs/modules/orcaflex/library/model_library/f07_suction_anchor_lowering/spec.yml
+  name: f07_suction_anchor_lowering
+  description: Extracted from F07 Suction anchor lowering.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 45
+  schema_valid: true
+  line_count: 13763
+  has_comments: false
+  has_raw_properties: true
+- &id016
+  path: docs/modules/orcaflex/library/model_library/g04_anchor_last_deployment/spec.yml
+  name: g04_anchor_last_deployment
+  description: Extracted from G04 Anchor-last deployment.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: installation
+  quality_score: 45
+  schema_valid: true
+  line_count: 10013
+  has_comments: false
+  has_raw_properties: true
+- &id063
+  path: docs/modules/orcaflex/library/model_library/h01_chinese_lantern/spec.yml
+  name: h01_chinese_lantern
+  description: Extracted from H01 Chinese lantern.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: heavy_lift
+  quality_score: 45
+  schema_valid: true
+  line_count: 2796
+  has_comments: false
+  has_raw_properties: true
+- &id064
+  path: docs/modules/orcaflex/library/model_library/h02_jacket_to_semisub/spec.yml
+  name: h02_jacket_to_semisub
+  description: Extracted from H02 Jacket to semisub.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: heavy_lift
+  quality_score: 45
+  schema_valid: true
+  line_count: 5804
+  has_comments: false
+  has_raw_properties: true
+- &id065
+  path: docs/modules/orcaflex/library/model_library/h03_floating_and_stowed_lines/spec.yml
+  name: h03_floating_and_stowed_lines
+  description: Extracted from H03 Floating and stowed lines.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: heavy_lift
+  quality_score: 45
+  schema_valid: true
+  line_count: 10765
+  has_comments: false
+  has_raw_properties: true
+- &id066
+  path: docs/modules/orcaflex/library/model_library/heave_compensated_winch/spec.yml
+  name: heavecompensatedwinch
+  description: Extracted from HeaveCompensatedWinch.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: other
+  quality_score: 45
+  schema_valid: true
+  line_count: 6255
+  has_comments: false
+  has_raw_properties: true
+- &id070
+  path: docs/modules/orcaflex/library/model_library/i01_streamer_array/spec.yml
+  name: i01_streamer_array
+  description: Extracted from I01 Streamer array.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: seismic
+  quality_score: 45
+  schema_valid: true
+  line_count: 11271
+  has_comments: false
+  has_raw_properties: true
+- &id071
+  path: docs/modules/orcaflex/library/model_library/j01_deployment_with_sub/spec.yml
+  name: j01_deployment_with_sub
+  description: Extracted from J01 Deployment with sub.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: subsea
+  quality_score: 45
+  schema_valid: true
+  line_count: 11092
+  has_comments: false
+  has_raw_properties: true
+- &id072
+  path: docs/modules/orcaflex/library/model_library/k02_10mw_fixed_bottom_owt/spec.yml
+  name: k02_10mw_fixed_bottom_owt
+  description: Extracted from K02 10MW fixed-bottom OWT.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: wind_turbine
+  quality_score: 45
+  schema_valid: true
+  line_count: 50276
+  has_comments: false
+  has_raw_properties: true
+- &id073
+  path: docs/modules/orcaflex/library/model_library/k03_15mw_semi_sub_fowt/spec.yml
+  name: mono
+  description: Extracted from mono.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: wind_turbine
+  quality_score: 45
+  schema_valid: true
+  line_count: 106560
+  has_comments: false
+  has_raw_properties: true
+- &id074
+  path: docs/modules/orcaflex/library/model_library/l01_default_vessel/spec.yml
+  name: l01_default_vessel
+  description: Extracted from L01 Default vessel.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: vessel
+  quality_score: 45
+  schema_valid: true
+  line_count: 22470
+  has_comments: false
+  has_raw_properties: true
+- &id075
+  path: docs/modules/orcaflex/library/model_library/l02_oc4_semi_sub/spec.yml
+  name: l02_oc4_semi_sub
+  description: Extracted from L02 OC4 Semi-sub.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: vessel
+  quality_score: 45
+  schema_valid: true
+  line_count: 37554
+  has_comments: false
+  has_raw_properties: true
+- &id076
+  path: docs/modules/orcaflex/library/model_library/l03_semi_sub_multibody_analysis/spec.yml
+  name: l03_semi_sub_multibody_analysis
+  description: Extracted from L03 Semi-sub multibody analysis.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: vessel
+  quality_score: 45
+  schema_valid: true
+  line_count: 125031
+  has_comments: false
+  has_raw_properties: true
+- &id077
+  path: docs/modules/orcaflex/library/model_library/l04_sectional_bodies/spec.yml
+  name: mono
+  description: Extracted from mono.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: vessel
+  quality_score: 45
+  schema_valid: true
+  line_count: 255438
+  has_comments: false
+  has_raw_properties: true
+- &id078
+  path: docs/modules/orcaflex/library/model_library/l05_panel_pressures/spec.yml
+  name: mono
+  description: Extracted from mono.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: vessel
+  quality_score: 45
+  schema_valid: true
+  line_count: 255438
+  has_comments: false
+  has_raw_properties: true
+- &id021
+  path: docs/modules/orcaflex/library/model_library/m01_pipeline_lateral_buckling/spec.yml
+  name: m01_pipeline_lateral_buckling
+  description: Extracted from M01 Pipeline lateral buckling.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: pipeline
+  quality_score: 55
+  schema_valid: true
+  line_count: 685
+  has_comments: false
+  has_raw_properties: true
+- &id022
+  path: docs/modules/orcaflex/library/model_library/m01_pipeline_walking/spec.yml
+  name: m01_pipeline_walking
+  description: Extracted from M01 Pipeline walking.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: pipeline
+  quality_score: 45
+  schema_valid: true
+  line_count: 1180
+  has_comments: false
+  has_raw_properties: true
+- &id067
+  path: docs/modules/orcaflex/library/model_library/z02_line_on_line_slide/spec.yml
+  name: z02_line_on_line_slide
+  description: Extracted from Z02 Line on line slide.yml
+  structure: generic
+  operation: generic
+  model_type: generic
+  category: other
+  quality_score: 45
+  schema_valid: true
+  line_count: 11595
+  has_comments: false
+  has_raw_properties: true
+- &id017
+  path: docs/modules/orcaflex/library/templates/installation_pull_in/spec.yml
+  name: installation_pull_in_template
+  description: Subsea pipe pull-in through funnel with winch-controlled dynamics
+  structure: installation
+  operation: installation
+  model_type: generic
+  category: installation
+  quality_score: 100
+  schema_valid: true
+  line_count: 645
+  has_comments: true
+  has_raw_properties: false
+- &id018
+  path: docs/modules/orcaflex/library/templates/installation_subsea/spec.yml
+  name: installation_subsea_template
+  description: Subsea mudmat lowering with 6D buoy representation
+  structure: installation
+  operation: installation
+  model_type: generic
+  category: installation
+  quality_score: 100
+  schema_valid: true
+  line_count: 196
+  has_comments: true
+  has_raw_properties: false
+- &id061
+  path: docs/modules/orcaflex/library/templates/mooring_buoy/spec.yml
+  name: mooring_buoy_template
+  description: Metocean data buoy with mooring legs in 500m deep water
+  structure: mooring
+  operation: in-place
+  model_type: generic
+  category: mooring
+  quality_score: 100
+  schema_valid: true
+  line_count: 763
+  has_comments: true
+  has_raw_properties: false
+- &id023
+  path: docs/modules/orcaflex/library/templates/pipeline_installation/spec.yml
+  name: pipeline_installation_template
+  description: Pipeline floating installation with 5 tugs (OD=0.762m, 30in NPS)
+  structure: pipeline
+  operation: installation/floating
+  model_type: pipeline
+  category: pipeline
+  quality_score: 100
+  schema_valid: true
+  line_count: 101
+  has_comments: true
+  has_raw_properties: false
+- &id045
+  path: docs/modules/orcaflex/library/templates/riser_catenary/spec.yml
+  name: riser_catenary_template
+  description: Simple catenary riser connected to FPSO
+  structure: riser
+  operation: production
+  model_type: riser
+  category: riser
+  quality_score: 100
+  schema_valid: true
+  line_count: 108
+  has_comments: true
+  has_raw_properties: false
+- &id046
+  path: docs/modules/orcaflex/library/templates/riser_lazy_wave/spec.yml
+  name: riser_lazy_wave_template
+  description: Lazy wave riser with distributed buoyancy section
+  structure: riser
+  operation: production
+  model_type: riser
+  category: riser
+  quality_score: 100
+  schema_valid: true
+  line_count: 188
+  has_comments: true
+  has_raw_properties: false
+- &id047
+  path: docs/modules/orcaflex/library/tier2_fast/a01_catenary_riser/spec.yml
+  name: a01_catenary_riser
+  description: Simple catenary riser connected to FPSO
+  structure: riser
+  operation: production
+  model_type: riser
+  category: riser
+  quality_score: 100
+  schema_valid: true
+  line_count: 106
+  has_comments: true
+  has_raw_properties: false
+- &id048
+  path: docs/modules/orcaflex/library/tier2_fast/a01_lazy_wave_riser/spec.yml
+  name: a01_lazy_wave_riser
+  description: Lazy wave riser with distributed buoyancy section
+  structure: riser
+  operation: production
+  model_type: riser
+  category: riser
+  quality_score: 100
+  schema_valid: true
+  line_count: 191
+  has_comments: true
+  has_raw_properties: false
+- &id049
+  path: docs/modules/orcaflex/library/tier2_fast/a01_pliant_wave_riser/spec.yml
+  name: a01_pliant_wave_riser
+  description: Pliant wave riser - simplified single-line model
+  structure: riser
+  operation: production
+  model_type: riser
+  category: riser
+  quality_score: 100
+  schema_valid: true
+  line_count: 182
+  has_comments: true
+  has_raw_properties: false
+- &id050
+  path: docs/modules/orcaflex/library/tier2_fast/a01_steep_wave_riser/spec.yml
+  name: a01_steep_wave_riser
+  description: Steep wave riser with bend stiffeners at both ends
+  structure: riser
+  operation: production
+  model_type: riser
+  category: riser
+  quality_score: 100
+  schema_valid: true
+  line_count: 151
+  has_comments: true
+  has_raw_properties: false
+- &id062
+  path: docs/modules/orcaflex/mooring/reference/spec.yml
+  name: reference
+  description: Extracted from S00_nIV_nLine_va.yml
+  structure: mooring
+  operation: generic
+  model_type: generic
+  category: mooring
+  quality_score: 45
+  schema_valid: true
+  line_count: 258135
+  has_comments: false
+  has_raw_properties: true
+- &id024
+  path: docs/modules/orcaflex/pipeline/installation/floating/24in_pipeline/spec.yml
+  name: 24in_pipeline_installation
+  description: Pipeline floating installation with 5 tugs (OD=0.762m, 30in NPS)
+  structure: pipeline
+  operation: installation/floating
+  model_type: pipeline
+  category: pipeline
+  quality_score: 100
+  schema_valid: true
+  line_count: 101
+  has_comments: true
+  has_raw_properties: false
+- &id025
+  path: docs/modules/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml
+  name: 30in_pipeline_installation
+  description: 30-inch pipeline floating installation with 5 tugs
+  structure: pipeline
+  operation: installation/floating
+  model_type: pipeline
+  category: pipeline
+  quality_score: 100
+  schema_valid: true
+  line_count: 98
+  has_comments: true
+  has_raw_properties: false
+- &id026
+  path: docs/modules/orcaflex/pipeline/installation/s-lay/RS8-ID/spec.yml
+  name: prpp_rs8_id_10in
+  description: 10-inch RS8-ID pipeline S-lay installation from Eclipse
+  structure: pipeline
+  operation: installation/s-lay
+  model_type: pipeline
+  category: pipeline
+  quality_score: 80
+  schema_valid: true
+  line_count: 68
+  has_comments: false
+  has_raw_properties: false
+- &id027
+  path: docs/modules/orcaflex/pipeline/installation/s-lay/SB-SA/spec.yml
+  name: prpp_sb_sa_10in
+  description: 10-inch SB-SA pipeline S-lay installation from Eclipse
+  structure: pipeline
+  operation: installation/s-lay
+  model_type: pipeline
+  category: pipeline
+  quality_score: 80
+  schema_valid: true
+  line_count: 68
+  has_comments: false
+  has_raw_properties: false
+- &id068
+  path: docs/modules/orcaflex/reference/spec.yml
+  name: reference
+  description: Extracted from feeding_mooring_line.yml
+  structure: reference
+  operation: generic
+  model_type: generic
+  category: other
+  quality_score: 15
+  schema_valid: false
+  line_count: 256866
+  has_comments: false
+  has_raw_properties: true
+- &id069
+  path: docs/modules/orcaflex/regional/spec.yml
+  name: regional
+  description: Extracted from P1_HOM.yml
+  structure: regional
+  operation: generic
+  model_type: generic
+  category: other
+  quality_score: 15
+  schema_valid: false
+  line_count: 45681
+  has_comments: false
+  has_raw_properties: true
+- &id079
+  path: docs/modules/orcaflex/training/crane_master/spec.yml
+  name: crane_master
+  description: Extracted from Orcaflex CM2-150T-4500-A.yml
+  structure: training
+  operation: generic
+  model_type: generic
+  category: training
+  quality_score: 25
+  schema_valid: false
+  line_count: 371
+  has_comments: false
+  has_raw_properties: true
+- &id080
+  path: docs/modules/orcaflex/training/hulls/spec.yml
+  name: hulls
+  description: Extracted from NeptuneBatchTestCase.yml
+  structure: training
+  operation: generic
+  model_type: generic
+  category: training
+  quality_score: 15
+  schema_valid: false
+  line_count: 148495
+  has_comments: false
+  has_raw_properties: true
+- &id081
+  path: docs/modules/orcaflex/training/node_feeding/spec.yml
+  name: node_feeding
+  description: Extracted from LineFeedSample-Enough.yml
+  structure: training
+  operation: generic
+  model_type: generic
+  category: training
+  quality_score: 55
+  schema_valid: true
+  line_count: 404
+  has_comments: false
+  has_raw_properties: true
+by_category:
+  installation:
+  - *id001
+  - *id002
+  - *id003
+  - *id004
+  - *id005
+  - *id006
+  - *id007
+  - *id008
+  - *id009
+  - *id010
+  - *id011
+  - *id012
+  - *id013
+  - *id014
+  - *id015
+  - *id016
+  - *id017
+  - *id018
+  pipeline:
+  - *id019
+  - *id020
+  - *id021
+  - *id022
+  - *id023
+  - *id024
+  - *id025
+  - *id026
+  - *id027
+  jumper:
+  - *id028
+  - *id029
+  - *id030
+  - *id031
+  riser:
+  - *id032
+  - *id033
+  - *id034
+  - *id035
+  - *id036
+  - *id037
+  - *id038
+  - *id039
+  - *id040
+  - *id041
+  - *id042
+  - *id043
+  - *id044
+  - *id045
+  - *id046
+  - *id047
+  - *id048
+  - *id049
+  - *id050
+  drilling:
+  - *id051
+  - *id052
+  mooring:
+  - *id053
+  - *id054
+  - *id055
+  - *id056
+  - *id057
+  - *id058
+  - *id059
+  - *id060
+  - *id061
+  - *id062
+  heavy_lift:
+  - *id063
+  - *id064
+  - *id065
+  other:
+  - *id066
+  - *id067
+  - *id068
+  - *id069
+  seismic:
+  - *id070
+  subsea:
+  - *id071
+  wind_turbine:
+  - *id072
+  - *id073
+  vessel:
+  - *id074
+  - *id075
+  - *id076
+  - *id077
+  - *id078
+  training:
+  - *id079
+  - *id080
+  - *id081

@@ -1,0 +1,89 @@
+version: '1.0'
+templates:
+- name: installation_pull_in
+  path: installation_pull_in/spec.yml
+  schema_type: generic
+  structure: installation
+  description: Subsea pipe pull-in through funnel with winch-controlled dynamics
+  source: library/model_library/d02_pull_in_analysis/spec.yml
+  water_depth_m: 137
+  benchmark_validated: false
+  complexity: complex
+  tags:
+  - installation
+  - subsea
+  - pull-in
+  - winch
+  - funnel
+- name: installation_subsea
+  path: installation_subsea/spec.yml
+  schema_type: generic
+  structure: installation
+  description: Subsea mudmat lowering with 6D buoy representation
+  source: installation/mudmat/spec.yml
+  water_depth_m: 100
+  benchmark_validated: false
+  complexity: minimal
+  tags:
+  - installation
+  - subsea
+  - mudmat
+  - lowering
+- name: mooring_buoy
+  path: mooring_buoy/spec.yml
+  schema_type: generic
+  structure: mooring
+  description: Metocean data buoy with mooring legs in 500m deep water
+  source: library/model_library/c07_metocean_buoy/spec.yml
+  water_depth_m: 500
+  benchmark_validated: false
+  complexity: moderate
+  tags:
+  - mooring
+  - buoy
+  - spar
+  - deep-water
+  - chain
+- name: pipeline_installation
+  path: pipeline_installation/spec.yml
+  schema_type: pipeline
+  structure: pipeline
+  description: Pipeline floating installation with 5 tugs (OD=0.762m, 30in NPS)
+  source: pipeline/installation/floating/24in_pipeline/spec.yml
+  water_depth_m: 8
+  benchmark_validated: true
+  complexity: moderate
+  tags:
+  - pipeline
+  - floating
+  - installation
+  - tugs
+- name: riser_catenary
+  path: riser_catenary/spec.yml
+  schema_type: riser
+  structure: riser
+  description: Simple catenary riser connected to FPSO
+  source: library/tier2_fast/a01_catenary_riser/spec.yml
+  water_depth_m: 100
+  benchmark_validated: true
+  complexity: minimal
+  tags:
+  - riser
+  - catenary
+  - fpso
+  - production
+- name: riser_lazy_wave
+  path: riser_lazy_wave/spec.yml
+  schema_type: riser
+  structure: riser
+  description: Lazy wave riser with distributed buoyancy section
+  source: library/tier2_fast/a01_lazy_wave_riser/spec.yml
+  water_depth_m: 100
+  benchmark_validated: true
+  complexity: moderate
+  tags:
+  - riser
+  - lazy-wave
+  - fpso
+  - production
+  - buoyancy
