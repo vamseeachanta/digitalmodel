@@ -1,0 +1,198 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_b\anl\manifold\01-SZ-00deg\wo_shielding\__04_mudmat_position.yml
+# Created: 2:24 PM on 9/7/2023
+# User: 
+# Machine: 
+---
+BaseFile: __04b_mudmat_orient.yml
+6DBuoys:
+  mudmat:
+    InitialX: -32.67369719695362
+    InitialY: 38.10089562011557
+    InitialZ: 7.093208786405858
+    InitialRotation1: -0.23248751240089383
+    InitialRotation2: 0.1394414992831688
+    InitialRotation3: 0.7317323698236441
+3DBuoys:
+  Masterlink:
+    InitialX: -32.65
+Lines:
+  _02_main_crane_wire_bot:
+    EndBX: -32.65
+    StartingShapeZ[3]: 27.2906753864766
+    StartingShapeZ[4]: 26.790287263458332
+    StartingShapeZ[5]: 26.2898993015486
+    StartingShapeZ[6]: 25.789511500747412
+    StartingShapeZ[7]: 25.289123861054765
+    StartingShapeZ[8]: 24.788736382470656
+    StartingShapeZ[9]: 24.288349064995085
+    StartingShapeZ[10]: 23.787961908628063
+    StartingShapeZ[11]: 23.28757491336957
+    StartingShapeZ[12]: 22.78718807921962
+    StartingShapeZ[13]: 22.28680140617822
+    StartingShapeZ[14]: 21.78641489424535
+    StartingShapeZ[15]: 21.28602854342103
+    StartingShapeX[16]: -32.65
+    StartingShapeZ[16]: 20.785642353705242
+    StartingShapeX[17]: -32.65
+  TopRigging:
+    StartingShapeX[2]: -32.65
+    StartingShapeX[3]: -32.65
+    StartingShapeX[4]: -32.65
+    StartingShapeX[5]: -32.65
+    StartingShapeX[6]: -32.65
+  Sling1:
+    StartingShapeX[2]: -32.85441160702685
+    StartingShapeY[2]: 38.05659242167595
+    StartingShapeX[3]: -33.05901703971776
+    StartingShapeY[3]: 37.973105755234094
+    StartingShapeX[4]: -33.26381661994084
+    StartingShapeY[4]: 37.88953986934022
+    StartingShapeZ[4]: 15.521907687342976
+    StartingShapeX[5]: -33.468810670218055
+    StartingShapeY[5]: 37.805894632393304
+    StartingShapeX[6]: -33.67399951372633
+    StartingShapeY[6]: 37.72216991252506
+    StartingShapeX[7]: -33.87938347429863
+    StartingShapeY[7]: 37.638365577599565
+    StartingShapeX[8]: -34.08496287642499
+    StartingShapeY[8]: 37.55448149521273
+    StartingShapeX[9]: -34.29073804525365
+    StartingShapeY[9]: 37.470517532691915
+    StartingShapeX[10]: -34.496709306592024
+    StartingShapeY[10]: 37.38647355709552
+    StartingShapeX[11]: -34.702876986907874
+    StartingShapeY[11]: 37.302349435212484
+    StartingShapeX[12]: -34.909241413330285
+    StartingShapeY[12]: 37.21814503356193
+    StartingShapeX[13]: -35.115802913650754
+    StartingShapeY[13]: 37.13386021839265
+    StartingShapeZ[13]: 11.555760281957077
+    StartingShapeX[14]: -35.32256181632421
+    StartingShapeY[14]: 37.04949485568276
+    StartingShapeZ[14]: 11.115614836694746
+    StartingShapeX[15]: -35.52951845047014
+    StartingShapeY[15]: 36.965048811139205
+    StartingShapeZ[15]: 10.675578041722295
+  Sling2:
+    StartingShapeX[2]: -32.856488406914366
+    StartingShapeY[2]: 38.21471530481134
+    StartingShapeX[3]: -33.063164447806585
+    StartingShapeY[3]: 38.28949850268291
+    StartingShapeX[4]: -33.270028421850725
+    StartingShapeY[4]: 38.36434970186719
+    StartingShapeX[5]: -33.477080628806924
+    StartingShapeY[5]: 38.43926901082872
+    StartingShapeX[6]: -33.684321369022285
+    StartingShapeY[6]: 38.51425653824443
+    StartingShapeX[7]: -33.8917509434319
+    StartingShapeY[7]: 38.58931239300401
+    StartingShapeX[8]: -34.09936965355973
+    StartingShapeY[8]: 38.664436684210195
+    StartingShapeZ[8]: 13.753781496224937
+    StartingShapeX[9]: -34.30717780151957
+    StartingShapeY[9]: 38.7396295211792
+    StartingShapeX[10]: -34.515175690015994
+    StartingShapeY[10]: 38.814891013440935
+    StartingShapeZ[10]: 12.871233496722244
+    StartingShapeX[11]: -34.72336362234532
+    StartingShapeY[11]: 38.89022127073949
+    StartingShapeZ[11]: 12.430111776471433
+    StartingShapeX[12]: -34.93174190239647
+    StartingShapeY[12]: 38.96562040303334
+    StartingShapeZ[12]: 11.989091946712822
+    StartingShapeX[13]: -35.140310834652
+    StartingShapeY[13]: 39.04108852049579
+    StartingShapeX[14]: -35.34907072418893
+    StartingShapeY[14]: 39.116625733515214
+    StartingShapeX[15]: -35.55802187667979
+    StartingShapeY[15]: 39.19223215269549
+  Sling3:
+    StartingShapeX[2]: -32.447651273480496
+    StartingShapeY[2]: 38.21993683798213
+    StartingShapeZ[2]: 16.402839547374306
+    StartingShapeX[3]: -32.24512016184961
+    StartingShapeY[3]: 38.29994572627735
+    StartingShapeZ[3]: 15.959907252444317
+    StartingShapeX[4]: -32.042406375724255
+    StartingShapeY[4]: 38.38002677920498
+    StartingShapeZ[4]: 15.517071810798722
+    StartingShapeX[5]: -31.839509625153262
+    StartingShapeY[5]: 38.460180111308766
+    StartingShapeZ[5]: 15.074333484322526
+    StartingShapeX[6]: -31.63642961961646
+    StartingShapeY[6]: 38.5404058373572
+    StartingShapeZ[6]: 14.631692535790432
+    StartingShapeX[7]: -31.43316606802376
+    StartingShapeY[7]: 38.62070407234398
+    StartingShapeZ[7]: 14.189149228870331
+    StartingShapeX[8]: -31.229718678714143
+    StartingShapeY[8]: 38.7010749314883
+    StartingShapeZ[8]: 13.746703828126826
+    StartingShapeX[9]: -31.02608715945476
+    StartingShapeY[9]: 38.781518530235246
+    StartingShapeZ[9]: 13.30435659902477
+    StartingShapeX[10]: -30.82227121743997
+    StartingShapeY[10]: 38.86203498425623
+    StartingShapeZ[10]: 12.862107807932803
+    StartingShapeX[11]: -30.618270559290405
+    StartingShapeY[11]: 38.942624409449266
+    StartingShapeZ[11]: 12.419957722126933
+    StartingShapeX[12]: -30.414084891052006
+    StartingShapeY[12]: 39.02328692193943
+    StartingShapeZ[12]: 11.9779066097941
+    StartingShapeX[13]: -30.209713918195103
+    StartingShapeY[13]: 39.104022638079144
+    StartingShapeZ[13]: 11.535954740035786
+    StartingShapeX[14]: -30.005157345613483
+    StartingShapeY[14]: 39.184831674448645
+    StartingShapeZ[14]: 11.09410238287161
+    StartingShapeX[15]: -29.800414877623425
+    StartingShapeY[15]: 39.265714147856286
+    StartingShapeZ[15]: 10.652349809242967
+  Sling4:
+    StartingShapeX[2]: -32.445687226989946
+    StartingShapeY[2]: 38.06180392142018
+    StartingShapeZ[2]: 16.403441812395744
+    StartingShapeX[3]: -32.24118237402659
+    StartingShapeY[3]: 37.98353432859599
+    StartingShapeZ[3]: 15.961117181198603
+    StartingShapeX[4]: -32.03648512383598
+    StartingShapeY[4]: 37.90519110009802
+    StartingShapeZ[4]: 15.518894828490307
+    StartingShapeX[5]: -31.831595158498416
+    StartingShapeY[5]: 37.82677411424974
+    StartingShapeZ[5]: 15.07677504278002
+    StartingShapeX[6]: -31.626512159447476
+    StartingShapeY[6]: 37.74828324912707
+    StartingShapeZ[6]: 14.634758113598375
+    StartingShapeX[7]: -31.421235807468836
+    StartingShapeY[7]: 37.66971838255795
+    StartingShapeZ[7]: 14.192844331501668
+    StartingShapeX[8]: -31.21576578269919
+    StartingShapeY[8]: 37.591079392121976
+    StartingShapeZ[8]: 13.751033988076058
+    StartingShapeX[9]: -31.010101764625166
+    StartingShapeY[9]: 37.51236615514991
+    StartingShapeZ[9]: 13.309327375941796
+    StartingShapeX[10]: -30.804243432082227
+    StartingShapeY[10]: 37.43357854872335
+    StartingShapeZ[10]: 12.867724788757467
+    StartingShapeX[11]: -30.598190463253587
+    StartingShapeY[11]: 37.35471644967418
+    StartingShapeZ[11]: 12.426226521224248
+    StartingShapeX[12]: -30.391942535669124
+    StartingShapeY[12]: 37.275779734584276
+    StartingShapeZ[12]: 11.984832869090193
+    StartingShapeX[13]: -30.185499326204273
+    StartingShapeY[13]: 37.196768279785076
+    StartingShapeZ[13]: 11.543544129154538
+    StartingShapeX[14]: -29.978860511078995
+    StartingShapeY[14]: 37.117681961357086
+    StartingShapeZ[14]: 11.102360599272012
+    StartingShapeX[15]: -29.772025765856636
+    StartingShapeY[15]: 37.03852065512956
+    StartingShapeZ[15]: 10.661282578357177
+...

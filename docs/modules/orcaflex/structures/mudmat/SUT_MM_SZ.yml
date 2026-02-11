@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\ss7a2365\Documents\github\rock-oil-field\s7\ballymore\sut_mm\01-SZ-Xdeg\SZ.yml
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_a\sut_mm\01-SZ-Xdeg\SZ.yml
 # Created: 10:54 AM on 9/1/2023
-# User: SS7A2365
-# Machine: USNGL23LR3
+# User: 
+# Machine: 
 ---
 General:
   # Units
@@ -1482,7 +1482,7 @@ Environment:
   WindSpeed: 0
   WindDirection: 0
 VesselTypes:
-  - Name: WyatteCandies
+  - Name: iv01_type
     Length: 88.29015544
     # Conventions
     RAOResponseUnits: degrees
@@ -21104,8 +21104,8 @@ ClumpTypes:
     Ca: [1, ~, 1]
     Pen: [5, Solid, $FF8000]
 Vessels:
-  - Name: Candies
-    VesselType: WyatteCandies
+  - Name: installation_vessel_01
+    VesselType: iv01_type
     Draught: Arrival
     Length: ~
     Connection: Free
@@ -21134,7 +21134,7 @@ Vessels:
 6DBuoys:
   - Name: Main Crane Pedestal
     BuoyType: Spar buoy
-    Connection: Candies
+    Connection: installation_vessel_01
     DampingRelativeTo: Earth
     DisturbanceVessel: (none)
     WaveCalculationMethod: Specified by environment
@@ -23481,7 +23481,7 @@ FrictionCoefficients:
     - [(all line types), (all shapes), 0.3, ~]
 Groups:
   Structure:
-    Candies: Model
+    installation_vessel_01: Model
     Moon pool: Model
     CarouselAFT: Model
     CarouselFWD: Model

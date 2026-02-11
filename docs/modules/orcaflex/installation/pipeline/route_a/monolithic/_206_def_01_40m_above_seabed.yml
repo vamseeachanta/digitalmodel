@@ -1,0 +1,22 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ld\_06_def_01.yml
+# Created: 7:54 PM on 7/8/2023
+# User: 
+# Machine: 
+---
+BaseFile: _02_uth2_at_port_01.yml
+Vessels:
+  SevenArctic:
+    InitialX: 670
+6DBuoys:
+  uth2-deep:
+    InitialX: 620
+    InitialZ: -712
+Lines:
+  900TeMainCraneWire:
+    EndBX: 680
+    EndBZ: -690
+    Length[1]: 702
+...

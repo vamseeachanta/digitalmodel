@@ -1,0 +1,12 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ld\_09_def_01.yml
+# Created: 4:31 PM on 7/13/2023
+# User: 
+# Machine: 
+---
+BaseFile: _08_def_01.yml
+Lines:
+  Deleted: Rigging2ndCrane1
+...

@@ -1,0 +1,84 @@
+﻿BaseFile: __03__structure.yml
+
+6DBuoys:
+  New: 2.5teclump-wt
+  2.5teclump-wt:
+    Locked: No
+    BuoyType: Lumped buoy
+    Connection: Free
+    DegreesOfFreedomInStatics: All
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    InitialPosition: [-84.67222806458715, -2.189200982568965, -6.603835054057267]
+    InitialAttitude: [180, 89.93825789255942e-18, -173.1677822168689]
+    Mass: 2.5
+    MomentsOfInertia: [0.11, 0.4, 0.36]
+    CentreOfMass: [0, 0, 0.36]
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.3171
+    BulkModulus: Infinity
+    Height: 0.6
+    CentreOfVolume: [0, 0, 0.36]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0.24, 0.75, 0.5]
+    DragAreaMoment: [0.007109, 0.038, 0.054]
+    DragForceCoefficient: [0.9, 1.17, 1.18]
+    DragMomentCoefficient: [1, 1, 1]
+    HydrodynamicMass: [0, 0, 0]
+    HydrodynamicInertia: [0.014, 0.052, 0.047]
+    AddedMassCoefficient: [0.088, 0.395, 0.205]
+    AddedInertiaCoefficient: [0.31, 0.528, 0.055]
+    FluidAccelerationForceCoefficient: [0, 0, 0]
+    LumpedBuoySlamArea: 0
+    LumpedBuoySlamForceDataEntry: 0
+    LumpedBuoySlamForceDataExit: 0
+    SupportGeometrySpecification: Explicit
+    SupportReleaseStage: ~
+    SupportCoordinateSystems: []
+    SupportedLine: []
+    Supports: []
+    MorisonElements: []
+    GlobalAppliedLoads: []
+    LocalAppliedLoads: []
+    SeabedFrictionCoefficient: 0.58
+    TotalContactArea: 1.5
+    Wings: []
+    Hidden: No
+    Pen: [1, Solid, Fuchsia]
+    CentreOfMassOriginColour: Red
+    CentreOfVolumeOriginColour: Aqua
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.11, 0.11, 1.13]
+      - [-0.11, 0.11, 1.13]
+      - [-0.11, -0.11, 1.13]
+      - [0.11, -0.11, 1.13]
+      - [0.11, 0.11, 0]
+      - [-0.11, 0.11, 0]
+      - [-0.11, -0.11, 0]
+      - [0.11, -0.11, 0]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]

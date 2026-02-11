@@ -1,0 +1,14 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ld\src\__09z_for_convergence.yml
+# Created: 4:56 PM on 9/25/2023
+# User: 
+# Machine: 
+---
+BaseFile: __09c_add_buoyancy1_rigging.yml
+
+6DBuoys:
+  0.3TeBuoyancy1:
+    Connection: Free
+    DegreesOfFreedomInStatics: X,Y,Z

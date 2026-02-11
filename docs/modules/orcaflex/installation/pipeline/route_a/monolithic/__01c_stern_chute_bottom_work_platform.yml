@@ -1,0 +1,142 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\src\__01c_stern_chute_bottom_work_platform.yml
+# Created: 3:41 PM on 10/19/2023
+# User: 
+# Machine: 
+---
+BaseFile: __01b_stern_chute.yml
+SupportTypes:
+  Deleted: Chute SupportType_w0.20m
+  New:
+    - Chute SupportType_w1.29m
+    - Chute SupportType_w1.37m
+    - workplatformSupportType_w1.9m
+  Chute SupportType_w1.29m:
+    Geometry: U shaped
+    NormalStiffness: 10e3
+    ShearStiffness: 5000
+    Diameter: 0.1
+    USupportHorizontalLength: 1.29
+    USupportVerticalLength: 0.5
+    Pen: [2, Solid, Fuchsia]
+    ContactPen: [2, Solid, White]
+    WireFrameDrawEnds: Black
+    DrawContact: Yes
+  Chute SupportType_w1.37m:
+    Geometry: U shaped
+    NormalStiffness: 10e3
+    ShearStiffness: 5000
+    Diameter: 0.1
+    USupportHorizontalLength: 1.37
+    USupportVerticalLength: 0.5
+    Pen: [2, Solid, Fuchsia]
+    ContactPen: [2, Solid, White]
+    WireFrameDrawEnds: Black
+    DrawContact: Yes
+  workplatformSupportType_w1.9m:
+    Geometry: U shaped
+    NormalStiffness: 10e3
+    ShearStiffness: 5000
+    Diameter: 0.1
+    USupportHorizontalLength: 1.93
+    USupportVerticalLength: 1.5
+    Pen: [2, Solid, Fuchsia]
+    ContactPen: [2, Solid, White]
+    WireFrameDrawEnds: Black
+    DrawContact: Yes
+6DBuoys:
+  ChuteSupport1:
+    SupportPathNumberOfSections: 2
+    SupportPathSectionLength[2]: 1
+    SupportPathSectionBendRadius[2]: Infinity
+    NumberOfSupports: 18
+    SupportType[17]: Chute SupportType_w1.29m
+    SupportArclength[17]: 10
+    SupportzOffset[17]: 0
+    SupportType[18]: Chute SupportType_w1.37m
+    SupportArclength[18]: 10.5
+    SupportzOffset[18]: 0
+  New: workplatform
+  workplatform:
+    Locked: No
+    BuoyType: Lumped buoy
+    Connection: SevenArctic
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    InitialPosition: [-84.2, -1.96, 4]
+    InitialAttitude: [0, 0, 5]
+    Mass: 0.001
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0
+    Height: 0.1
+    CentreOfVolume: [0, 0, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 0]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [0, 0, 0]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0, 0, 0]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [0, 0, 0]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [0, 0, 0]
+    LumpedBuoySlamArea: 0
+    LumpedBuoySlamForceDataEntry: 0
+    LumpedBuoySlamForceDataExit: 0
+    SupportGeometrySpecification: Simple
+    SupportPathOriginPos: [0, 0, -0.1]
+    SupportPathOriginOrientation: [180, 90, 0]
+    SupportReleaseStage: ~
+    SupportCoordinateSystems:
+      - SupportCoordinateSystemName: Coordinate system1
+        SupportCoordinateSystemPos: [0, 0, 0]
+        SupportCoordinateSystemOrientation: [180, 0, 0]
+    SupportedLine: []
+    SupportPathSectionLength, SupportPathSectionBendRadius:
+      - [0.1, 10e3]
+    SupportType, SupportArclength, SupportzOffset:
+      - [workplatformSupportType_w1.9m, 0, 0]
+    SupportsDrawPath: Yes
+    SupportPathPen: [1, Solid, Silver]
+    MorisonElements: []
+    GlobalAppliedLoads: []
+    LocalAppliedLoads: []
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: 0
+    Wings: []
+    Hidden: No
+    Pen: [1, Solid, Red]
+    CentreOfMassOriginColour: Red
+    CentreOfVolumeOriginColour: Aqua
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ: []
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+...
