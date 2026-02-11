@@ -33,6 +33,12 @@ class HullType(str, Enum):
     SEMI_PONTOON = "semi_pontoon"
     BARGE = "barge"
     SHIP = "ship"
+    SPAR = "spar"
+    CYLINDER = "cylinder"
+    SPHERE = "sphere"
+    ELLIPSOID = "ellipsoid"
+    FPSO = "fpso"
+    LNGC = "lngc"
     CUSTOM = "custom"
 
 

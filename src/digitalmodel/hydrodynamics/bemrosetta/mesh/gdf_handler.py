@@ -207,12 +207,18 @@ class GDFHandler(BaseMeshHandler):
             # Symmetry flags
             f.write(f"{isx}  {isy}\n")
 
+            # Filter out degenerate panels (no valid vertices)
+            valid_panels = []
+            for panel in mesh.panels:
+                vi = [idx for idx in panel if idx >= 0]
+                if len(vi) >= 3:
+                    valid_panels.append(vi)
+
             # Number of panels
-            f.write(f"{mesh.n_panels}\n")
+            f.write(f"{len(valid_panels)}\n")
 
             # Panel vertices (4 per panel)
-            for panel in mesh.panels:
-                valid_indices = [idx for idx in panel if idx >= 0]
+            for valid_indices in valid_panels:
                 for i in range(4):
                     if i < len(valid_indices):
                         v = mesh.vertices[valid_indices[i]]
