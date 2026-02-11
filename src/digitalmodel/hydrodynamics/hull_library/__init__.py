@@ -17,6 +17,7 @@ from .catalog import (
     HullCatalogEntry,
     HullCatalog,
 )
+from .panel_catalog import PanelFormat, PanelCatalogEntry, PanelCatalog
 
 __all__ = [
     # Profile schema
@@ -35,4 +36,8 @@ __all__ = [
     "MotionResponse",
     "HullCatalogEntry",
     "HullCatalog",
+    # Panel catalog
+    "PanelFormat",
+    "PanelCatalogEntry",
+    "PanelCatalog",
 ]
