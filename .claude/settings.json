@@ -132,6 +132,11 @@
             "type": "command",
             "statusMessage": "Post-task learning check",
             "command": "bash -c 'SCRIPT=\"${WORKSPACE_HUB:-/d/workspace-hub}/.claude/hooks/post-task-review.sh\"; [ -f \"$SCRIPT\" ] && bash \"$SCRIPT\" 2>/dev/null || true'"
+          },
+          {
+            "type": "command",
+            "statusMessage": "Processing session signals",
+            "command": "bash -c 'SCRIPT=\"${WORKSPACE_HUB:-/d/workspace-hub}/.claude/hooks/consume-signals.sh\"; [ -f \"$SCRIPT\" ] && bash \"$SCRIPT\" 2>/dev/null || true'"
           }
         ]
       }
