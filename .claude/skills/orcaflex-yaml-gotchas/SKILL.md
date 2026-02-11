@@ -1,8 +1,8 @@
 ---
 name: orcaflex-yaml-gotchas
 description: Production-proven OrcaFlex YAML traps and solutions covering dormant properties, boolean mismatches, section ordering, Pydantic integration, and section name aliases.
-version: 1.0.0
-updated: 2026-02-10
+version: 1.1.0
+updated: 2026-02-11
 category: offshore-engineering
 triggers:
 - OrcaFlex YAML error
@@ -122,11 +122,15 @@ Emit sections in strict dependency order:
 
 ```
 General → VariableData → ExpansionTables
-→ RayleighDampingCoefficients → FrictionCoefficients → LineContactData
+→ RayleighDampingCoefficients (named damping sets — must precede LineTypes)
 → LineTypes → VesselTypes → ClumpTypes → StiffenerTypes → SupportTypes
+→ MorisonElementTypes → PyModels → WakeModels
 → Vessels → Lines → Shapes → 6DBuoys → 3DBuoys
 → Constraints → Links → Winches → FlexJoints
-→ MultibodyGroups → BrowserGroups → Groups
+→ MultibodyGroups
+→ FrictionCoefficients (refs LineType+Shape NAMES — must follow ALL instances)
+→ LineContactData → CodeChecks → Shear7Data → VIVAData
+→ BrowserGroups → Groups
 ```
 
 In the builder, use `_SECTION_ORDER` list and `_order_sections()` to enforce this.
@@ -228,6 +232,37 @@ class _NoAliasDumper(yaml.Dumper):
 yaml.dump(data, f, Dumper=_NoAliasDumper)
 ```
 
+## Singleton Section: List vs Dict Data
+
+### Symptom
+```
+Error: RayleighDampingCoefficients=Tower damping (Invalid value)
+```
+Singleton section data silently dropped during extraction — modular output missing the section entirely.
+
+### Root Cause
+Some OrcaFlex singleton sections store data as a **LIST** of named dicts, not a flat dict. `RayleighDampingCoefficients` stores `[{Name: "Tower damping", ...}, ...]`. The extractor's `_extract_singleton()` only accepted `isinstance(data, dict)`, silently dropping list data.
+
+### Fix
+Accept both dict and list in three places:
+
+```python
+# 1. Extractor: _extract_singleton()
+data = self._raw.get(section_key)
+if not data or not isinstance(data, (dict, list)):
+    ...
+
+# 2. Schema: GenericSingletonSection
+class GenericSingletonSection(BaseModel):
+    data: dict[str, Any] | list[dict[str, Any]] = Field(default_factory=dict)
+
+# 3. Builder: emit singleton data
+if isinstance(singleton.data, list):
+    result[section_key] = list(singleton.data)
+else:
+    result[section_key] = dict(singleton.data)
+```
+
 ## VariableData Section Format
 
 ### Symptom
@@ -322,6 +357,40 @@ elif wave_type in _SPECTRAL_WAVE_TYPES:
     wave_train["WaveTz"] = waves.period
 ```
 
+## Wind-Type-Aware Property Gating
+
+### Symptom
+```
+Error: Change not allowed for property 'VerticalWindVariationFactor'
+Error: Change not allowed for property 'WindSpeed'
+```
+
+### Root Cause
+Wind properties are mode-dependent on `WindType`:
+- `VerticalWindVariationFactor` is **only valid** for spectrum wind types (API spectrum, NPD spectrum, ESDU spectrum)
+- `WindSpeed` is **dormant** when `WindType: Full field` (wind comes from external file)
+- `WindFullFieldFormat`/`WindFullFieldTurbSimFileName` only valid for `Full field`
+
+### Fix
+Gate wind properties by wind type using lookup dicts:
+
+```python
+_WIND_TYPE_PROPS: dict[str, set[str]] = {
+    "API spectrum": {"VerticalWindVariationFactor", "WindSpectrumElevation", ...},
+    "NPD spectrum": {"VerticalWindVariationFactor", ...},
+    "ESDU spectrum": {"VerticalWindVariationFactor", ...},
+    "Full field": {"WindFullFieldFormat", "WindFullFieldTurbSimFileName",
+                   "WindTimeOrigin", "WindOrigin"},
+}
+
+_WIND_SPEED_DORMANT: set[str] = {"Full field"}
+```
+
+**Critical rules:**
+1. Never put `VerticalWindVariationFactor` in `_DEFAULTS` — only emit for spectrum types
+2. Gate `WindSpeed` emission: `if wind_type not in _WIND_SPEED_DORMANT`
+3. Emit `Full field` properties only when `WindType: Full field`
+
 ## Category-Dependent Properties
 
 ### Symptom
@@ -381,3 +450,4 @@ if sim.north_direction:
 ## Version History
 
 - **1.0.0** (2026-02-10): Initial release consolidating all production-proven OrcaFlex YAML gotchas from modular generator development (10+ fixes across 5 models).
+- **1.1.0** (2026-02-11): Added wind type gating pattern (_WIND_TYPE_PROPS, _WIND_SPEED_DORMANT), singleton list vs dict gotcha, corrected section dependency ordering (RayleighDamping before LineTypes, FrictionCoefficients after instances).

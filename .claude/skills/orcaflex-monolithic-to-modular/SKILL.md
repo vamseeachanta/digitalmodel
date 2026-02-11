@@ -1,8 +1,8 @@
 ---
 name: orcaflex-monolithic-to-modular
 description: Convert monolithic OrcaFlex models (.dat/.yml) to spec-driven modular format with semantic validation for round-trip fidelity.
-version: 2.0.0
-updated: 2026-02-10
+version: 2.1.0
+updated: 2026-02-11
 category: offshore-engineering
 triggers:
 - convert monolithic to modular
@@ -191,18 +191,31 @@ modular/
 | `None` vs missing diff | Builder skips None values | Use `model_fields_set` in `_merge_object()` |
 | Boolean mismatch | SaveData() exports `True`/`False`, builder uses `"Yes"`/`"No"` | Use Python booleans in builder defaults |
 | "Change not allowed" error | Dormant properties in re-loaded YAML | Use hardcoded safe defaults, not raw pass-through |
+| Singleton data silently dropped | `_extract_singleton()` only accepted dict, not list | Accept `isinstance(data, (dict, list))` in extractor, schema, and builder |
+| "Invalid value" for named set | RayleighDampingCoefficients stored as list of named dicts | Schema: `dict | list`, builder: emit `list(data)` for lists |
 
-## Benchmark Results (2026-02-10)
+## Benchmark Results (2026-02-11)
 
-All 5 library models at **100% semantic match** (0 significant diffs):
+**51 models** (4 risers + 47 generic across 11 batches) validated via 3-way benchmark:
 
-| Model | Sections | Significant | Statics |
-|-------|----------|-------------|---------|
-| Catenary | 8/8 | 0 | CONVERGED |
-| Lazy Wave | 9/9 | 0 | CONVERGED |
-| Pliant Wave | 11/11 | 0 | CONVERGED |
-| Steep Wave | 11/11 | 0 | CONVERGED |
-| Lazy S | 12/12 | 0 | CONVERGED |
+| Path | Description | Result |
+|------|-------------|--------|
+| **A (monolithic)** | Load .dat directly | 49/51 converge |
+| **B (spec-driven)** | .dat → extract → spec → generate → load | 47/49 pass |
+| **C (library-direct)** | spec.yml → generate → load | 47/49 pass |
+
+- **39/44** passing models at **0.00%** tension AND bending difference
+- **2 remaining failures**: B01 (external PyModel plugin), K02 (missing wind.bts file)
+- Both failures are external file dependencies, not extractor/builder issues
+
+### Riser Models (all converge, 0 significant semantic diffs)
+
+| Model | Sections | Statics |
+|-------|----------|---------|
+| Catenary | 8/8 match | 0.15s |
+| Lazy Wave | 9/9 match | 0.50s |
+| Pliant Wave | 11/11 match | 0.24s |
+| Steep Wave | 11/11 match | 0.14s |
 
 ## Related Skills
 
@@ -222,5 +235,6 @@ All 5 library models at **100% semantic match** (0 significant diffs):
 
 ## Version History
 
+- **2.1.0** (2026-02-11): Added list singleton extraction fix. Updated benchmark from 5 riser models to 51-model 3-way benchmark (47/49 pass). Added singleton data issues to common issues table.
 - **2.0.0** (2026-02-10): Complete rewrite. Documents actual MonolithicExtractor pipeline, section name aliases, semantic validation, Pydantic integration, and benchmark results.
 - **1.0.0** (2026-01-21): Initial release with manual splitting approach.

@@ -1,8 +1,8 @@
 ---
 name: orcaflex-model-generator
 description: Generate OrcaFlex modular models from spec.yml using builder registry pattern with conditional generation and cross-builder context sharing.
-version: 2.0.0
-updated: 2026-02-10
+version: 2.1.0
+updated: 2026-02-11
 category: offshore-engineering
 triggers:
 - generate OrcaFlex model
@@ -231,16 +231,32 @@ def _merge_object(obj: GenericObject) -> dict[str, Any]:
     return ordered
 ```
 
+### Singleton Data (list vs dict)
+
+Some singleton sections store data as a LIST of named dicts (e.g., `RayleighDampingCoefficients`), not a flat dict. The builder handles both:
+
+```python
+if singleton.data:
+    if isinstance(singleton.data, list):
+        result[section_key] = list(singleton.data)
+    else:
+        result[section_key] = dict(singleton.data)
+```
+
 ### Section Ordering (_SECTION_ORDER)
 
 Critical: OrcaFlex validates references sequentially. Sections must appear in dependency order:
 
 ```
 General → VariableData → ExpansionTables
-→ RayleighDampingCoefficients, FrictionCoefficients, LineContactData
-→ LineTypes, VesselTypes, ClumpTypes, StiffenerTypes, SupportTypes
-→ Vessels, Lines, Shapes, 6DBuoys, 3DBuoys, Constraints, Links, Winches
-→ MultibodyGroups, BrowserGroups, Groups
+→ RayleighDampingCoefficients (named damping sets — must precede LineTypes)
+→ LineTypes → VesselTypes → ClumpTypes → StiffenerTypes → SupportTypes
+→ MorisonElementTypes → PyModels → WakeModels
+→ Vessels → Lines → Shapes → 6DBuoys → 3DBuoys
+→ Constraints → Links → Winches → FlexJoints → MultibodyGroups
+→ FrictionCoefficients (refs LineType+Shape names — must follow instances)
+→ LineContactData → CodeChecks → Shear7Data → VIVAData
+→ BrowserGroups → Groups
 ```
 
 ### Priority Keys (_PRIORITY_KEYS)
@@ -269,7 +285,7 @@ The benchmark validates three paths produce equivalent results:
 uv run python scripts/benchmark_model_library.py --library-only --three-way --skip-mesh
 ```
 
-Results (2026-02-10): All 5 library models converge on all 3 paths with 0.00% tension difference.
+Results (2026-02-11): 51 models (4 risers + 47 generic across 11 batches). Path A: 49/51 converge. Path B and C: 47/49 pass (only B01=PyModel and K02=external wind.bts remain). 39/44 passing models at 0.00% tension AND bending difference.
 
 ## Related Skills
 
@@ -291,5 +307,6 @@ Results (2026-02-10): All 5 library models converge on all 3 paths with 0.00% te
 
 ## Version History
 
+- **2.1.0** (2026-02-11): Corrected section ordering (RayleighDamping before LineTypes, FrictionCoefficients after instances). Added singleton list vs dict handling. Updated benchmark to 51 models, 47/49.
 - **2.0.0** (2026-02-10): Complete rewrite. Documents actual ModularModelGenerator, builder registry, generic builder internals, _merge_object() with model_fields_set, section ordering, 3-way benchmark.
 - **1.0.0** (2026-01-07): Initial release describing theoretical component lookup approach.

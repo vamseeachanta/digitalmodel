@@ -3,8 +3,8 @@ name: orcaflex-environment-config
 description: Configure OrcaFlex environmental conditions including wave spectra (JONSWAP,
   Dean Stream), current profiles, wind loading, and seabed properties for offshore
   analysis.
-version: 1.0.0
-updated: 2026-01-17
+version: 1.1.0
+updated: 2026-02-11
 category: offshore-engineering
 triggers:
 - environment setup
@@ -458,6 +458,63 @@ configure_wind(
 )
 ```
 
+## Wind Type Gating in Modular Generator
+
+When generating OrcaFlex environment YAML programmatically (via the modular generator), wind properties must be gated by `WindType` to avoid dormant property errors.
+
+### Dormant Wind Properties
+
+| Property | Dormant When | Valid When |
+|----------|-------------|------------|
+| `VerticalWindVariationFactor` | Constant, Full field | API/NPD/ESDU spectrum |
+| `WindSpeed` | Full field | All other wind types |
+| `WindFullFieldFormat` | All non-Full-field | Full field |
+| `WindFullFieldTurbSimFileName` | All non-Full-field | Full field |
+
+### Gate Pattern (_WIND_TYPE_PROPS)
+
+```python
+_WIND_TYPE_PROPS: dict[str, set[str]] = {
+    "API spectrum": {"VerticalWindVariationFactor", "WindSpectrumElevation"},
+    "NPD spectrum": {"VerticalWindVariationFactor"},
+    "ESDU spectrum": {"VerticalWindVariationFactor"},
+    "Full field": {
+        "WindFullFieldFormat",
+        "WindFullFieldTurbSimFileName",
+        "WindTimeOrigin",
+        "WindOrigin",
+    },
+}
+
+_WIND_SPEED_DORMANT: set[str] = {"Full field"}
+```
+
+### Usage in Environment Builder
+
+```python
+# Emit wind-type-specific properties
+wind_type = env.wind.type or self._DEFAULTS.get("WindType", "Constant")
+for wt, props in self._WIND_TYPE_PROPS.items():
+    if wind_type == wt:
+        for prop in props:
+            val = raw_overlay.pop(prop, None)
+            if val is not None:
+                environment[prop] = val
+
+# Gate WindSpeed — dormant for Full field
+if wind_type not in self._WIND_SPEED_DORMANT:
+    environment["WindSpeed"] = env.wind.speed
+```
+
+### Critical Rules
+
+1. **Never** put `VerticalWindVariationFactor` in `_DEFAULTS` — it's dormant for most wind types
+2. Gate `WindSpeed` with `_WIND_SPEED_DORMANT` check before emission
+3. For `Full field` wind: emit format/filename props, skip WindSpeed
+4. Mode-setting property (`WindType`) must be set BEFORE dependent properties
+
+See also: [orcaflex-yaml-gotchas](../orcaflex-yaml-gotchas/SKILL.md) for the full dormant property catalog.
+
 ### JONSWAP Gamma Calculation
 
 ```python
@@ -617,6 +674,8 @@ except KeyError as e:
 - [orcaflex-operability](../orcaflex-operability/SKILL.md) - Multi-sea-state analysis
 - [hydrodynamics](../hydrodynamics/SKILL.md) - Wave spectra management
 - [mooring-design](../mooring-design/SKILL.md) - Environmental loading
+- [orcaflex-yaml-gotchas](../orcaflex-yaml-gotchas/SKILL.md) - Dormant property catalog
+- [orcaflex-model-generator](../orcaflex-model-generator/SKILL.md) - Modular generator architecture
 
 ## References
 
@@ -624,3 +683,11 @@ except KeyError as e:
 - API RP 2MET: Metocean
 - OrcaFlex: Environment Data
 - Source: `src/digitalmodel/modules/fea_model/environment_components.py`
+- Modular generator environment builder: `src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py`
+
+---
+
+## Version History
+
+- **1.1.0** (2026-02-11): Added wind type gating section for modular generator (_WIND_TYPE_PROPS, _WIND_SPEED_DORMANT). Added modular generator cross-references.
+- **1.0.0** (2026-01-17): Initial release with environment configuration APIs.
