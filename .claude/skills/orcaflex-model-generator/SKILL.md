@@ -1,7 +1,7 @@
 ---
 name: orcaflex-model-generator
 description: Generate OrcaFlex modular models from spec.yml using builder registry pattern with conditional generation and cross-builder context sharing.
-version: 2.1.0
+version: 2.2.0
 updated: 2026-02-11
 category: offshore-engineering
 triggers:
@@ -12,6 +12,8 @@ triggers:
 - builder registry
 - component assembly
 - parametric model generation
+- spec.yml template
+- template library
 ---
 # OrcaFlex Modular Model Generator
 
@@ -287,6 +289,34 @@ uv run python scripts/benchmark_model_library.py --library-only --three-way --sk
 
 Results (2026-02-11): 51 models (4 risers + 47 generic across 11 batches). Path A: 49/51 converge. Path B and C: 47/49 pass (only B01=PyModel and K02=external wind.bts remain). 39/44 passing models at 0.00% tension AND bending difference.
 
+## Template Library
+
+Curated `spec.yml` templates for common structure types live in `docs/modules/orcaflex/library/templates/`. Each template is schema-validated, commented, and ready to copy-modify-generate.
+
+| Template | Schema | Structure | Water Depth | Complexity |
+|----------|--------|-----------|-------------|------------|
+| `riser_catenary/` | riser | riser | 100m | minimal |
+| `riser_lazy_wave/` | riser | riser | 100m | moderate |
+| `pipeline_installation/` | pipeline | pipeline | 8m | moderate |
+| `mooring_buoy/` | generic | mooring | 500m | moderate |
+| `installation_subsea/` | generic | installation | 100m | minimal |
+| `installation_pull_in/` | generic | installation | 137m | complex |
+
+**Catalog**: `templates/catalog.yaml` — machine-readable index with source, tags, benchmark status.
+
+**Audit**: `scripts/audit_spec_library.py` classifies all 81 specs across 13 categories with quality scores.
+
+### Quick Start
+
+```bash
+# Copy template and customize
+cp -r docs/modules/orcaflex/library/templates/riser_catenary/ my_model/
+# Edit my_model/spec.yml with project-specific values
+# Generate OrcaFlex model
+uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+    --input my_model/spec.yml --output my_model/modular/
+```
+
 ## Related Skills
 
 - [orcaflex-monolithic-to-modular](../orcaflex-monolithic-to-modular/SKILL.md) - Extraction pipeline
@@ -302,11 +332,14 @@ Results (2026-02-11): 51 models (4 risers + 47 generic across 11 batches). Path 
 - Schema: `src/digitalmodel/solvers/orcaflex/modular_generator/schema/`
 - Spec library: `docs/modules/orcaflex/library/tier2_fast/`
 - Benchmark: `scripts/benchmark_model_library.py`
+- Template catalog: `templates/catalog.yaml`
+- Audit script: `scripts/audit_spec_library.py`
 
 ---
 
 ## Version History
 
+- **2.2.0** (2026-02-11): Added template library section (6 curated templates, catalog.yaml, audit script).
 - **2.1.0** (2026-02-11): Corrected section ordering (RayleighDamping before LineTypes, FrictionCoefficients after instances). Added singleton list vs dict handling. Updated benchmark to 51 models, 47/49.
 - **2.0.0** (2026-02-10): Complete rewrite. Documents actual ModularModelGenerator, builder registry, generic builder internals, _merge_object() with model_fields_set, section ordering, 3-way benchmark.
 - **1.0.0** (2026-01-07): Initial release describing theoretical component lookup approach.
