@@ -218,6 +218,36 @@ def _read_6x6(lines: list[str], idx: int) -> tuple[np.ndarray, int]:
     return matrix, idx
 
 
+def _read_6x6_prefixed(
+    lines: list[str], idx: int, first_row_prefix_count: int = 0,
+) -> tuple[np.ndarray, int]:
+    """Read a 6x6 matrix where the first row may have prefix tokens.
+
+    Many AH1 sections prefix the first row of each 6x6 block with body
+    numbers or indices (e.g. ``1  5.5E+07 0 0 0 0 0`` for MASS, or
+    ``1 1 1  5.3E+07 ...`` for ADDEDMASS).  This function skips the
+    leading prefix tokens on the first line when the line contains more
+    than 6 values.  Subsequent rows are read as plain 6-value lines.
+
+    Auto-detection: if the first row has exactly 6 values, no prefix is
+    assumed (compatible with simplified test fixtures).  If it has more
+    than 6 values, the first *first_row_prefix_count* tokens are skipped.
+
+    If *first_row_prefix_count* is 0, behaviour is identical to
+    :func:`_read_6x6` (taking the first 6 values from each line).
+    """
+    matrix = np.zeros((6, 6))
+    for row in range(6):
+        if idx < len(lines):
+            vals = _read_floats(lines[idx])
+            if row == 0 and first_row_prefix_count > 0 and len(vals) > 6:
+                vals = vals[first_row_prefix_count:]
+            for col, v in enumerate(vals[:6]):
+                matrix[row, col] = v
+            idx += 1
+    return matrix, idx
+
+
 # ---------------------------------------------------------------------------
 # Section parsers
 # ---------------------------------------------------------------------------
@@ -227,7 +257,13 @@ def _parse_header(
     lines: list[str], idx: int, result: AH1ParseResult
 ) -> int:
     """Parse the header: body count, heading count, frequency count,
-    then heading values and frequency values."""
+    then heading values and frequency values.
+
+    Some AH1 files place the first batch of heading values on the same
+    line as the three header integers (e.g. ``1  9  3  -180.0 ...``).
+    We consume any trailing floats on the header line before reading
+    continuation lines.
+    """
     if idx >= len(lines):
         return idx
 
@@ -241,10 +277,18 @@ def _parse_header(
     result.num_bodies = int(tokens[0])
     result.num_headings = int(tokens[1])
     result.num_frequencies = int(tokens[2])
+
+    # Trailing tokens on the header line may be the first heading values
+    inline_floats = [float(t) for t in tokens[3:]]
     idx += 1
 
-    # Heading values (up to 6 per line)
-    headings, idx = _read_n_floats(lines, idx, result.num_headings)
+    # Heading values — start with any inline floats, then read remaining
+    remaining_headings = result.num_headings - len(inline_floats)
+    if remaining_headings > 0:
+        extra, idx = _read_n_floats(lines, idx, remaining_headings)
+        headings = inline_floats + extra
+    else:
+        headings = inline_floats[: result.num_headings]
     result.headings = np.array(headings)
 
     # Frequency values (up to 6 per line)
@@ -257,11 +301,22 @@ def _parse_header(
 def _parse_general(
     lines: list[str], idx: int, result: AH1ParseResult
 ) -> int:
-    """Parse GENERAL section: water_depth, density, gravity."""
+    """Parse GENERAL section: body_number, water_depth, density, gravity, ...
+
+    The GENERAL line in AH1 files is prefixed with a body number, e.g.:
+        ``1  200.000  1025.000  9.807  0  0``
+    We skip the leading body number.
+    """
     if idx >= len(lines):
         return idx
     vals = _read_floats(lines[idx])
-    if len(vals) >= 3:
+    # vals[0] is body number; actual data starts at index 1
+    if len(vals) >= 4:
+        result.water_depth = vals[1]
+        result.water_density = vals[2]
+        result.gravity = vals[3]
+    elif len(vals) >= 3:
+        # Fallback for files without body number prefix
         result.water_depth = vals[0]
         result.water_density = vals[1]
         result.gravity = vals[2]
@@ -271,12 +326,21 @@ def _parse_general(
 def _parse_draft(
     lines: list[str], idx: int, result: AH1ParseResult
 ) -> int:
-    """Parse DRAFT section: one draft value per body."""
+    """Parse DRAFT section: body_number, draft per body.
+
+    Format: ``1  110.000`` (body number prefix + draft value).
+    """
     drafts: list[float] = []
     for _ in range(result.num_bodies):
         if idx < len(lines):
             vals = _read_floats(lines[idx])
-            drafts.append(vals[0] if vals else 0.0)
+            # vals[0] = body number, vals[1] = draft
+            if len(vals) >= 2:
+                drafts.append(vals[1])
+            elif vals:
+                drafts.append(vals[0])
+            else:
+                drafts.append(0.0)
             idx += 1
     result.drafts = np.array(drafts)
     return idx
@@ -285,12 +349,19 @@ def _parse_draft(
 def _parse_cog(
     lines: list[str], idx: int, result: AH1ParseResult
 ) -> int:
-    """Parse COG section: x, y, z per body."""
+    """Parse COG section: body_number, x, y, z per body.
+
+    Format: ``1  0.0  0.0  -61.630`` (body number prefix + 3 coords).
+    """
     cog = np.zeros((result.num_bodies, 3))
     for b in range(result.num_bodies):
         if idx < len(lines):
             vals = _read_floats(lines[idx])
-            cog[b, :len(vals[:3])] = vals[:3]
+            # vals[0] = body number; vals[1:4] = x, y, z
+            if len(vals) >= 4:
+                cog[b, :3] = vals[1:4]
+            elif len(vals) >= 3:
+                cog[b, :len(vals[:3])] = vals[:3]
             idx += 1
     result.cog = cog
     return idx
@@ -299,10 +370,14 @@ def _parse_cog(
 def _parse_mass(
     lines: list[str], idx: int, result: AH1ParseResult
 ) -> int:
-    """Parse MASS section: 6x6 mass matrix per body."""
+    """Parse MASS section: 6x6 mass matrix per body.
+
+    First row of each block is prefixed with body number, e.g.:
+    ``1  5.5E+07  0  0  0  0  0``
+    """
     mass = np.zeros((result.num_bodies, 6, 6))
     for b in range(result.num_bodies):
-        matrix, idx = _read_6x6(lines, idx)
+        matrix, idx = _read_6x6_prefixed(lines, idx, first_row_prefix_count=1)
         mass[b] = matrix
     result.mass = mass
     return idx
@@ -311,10 +386,13 @@ def _parse_mass(
 def _parse_hydrostatic_stiffness(
     lines: list[str], idx: int, result: AH1ParseResult
 ) -> int:
-    """Parse HYDSTIFFNESS section: 6x6 stiffness matrix per body."""
+    """Parse HYDSTIFFNESS section: 6x6 stiffness matrix per body.
+
+    First row of each block is prefixed with body number.
+    """
     stiffness = np.zeros((result.num_bodies, 6, 6))
     for b in range(result.num_bodies):
-        matrix, idx = _read_6x6(lines, idx)
+        matrix, idx = _read_6x6_prefixed(lines, idx, first_row_prefix_count=1)
         stiffness[b] = matrix
     result.hydrostatic_stiffness = stiffness
     return idx
@@ -326,7 +404,10 @@ def _parse_added_mass(
     """Parse ADDEDMASS section.
 
     Layout: for each body-pair (body_i, body_j), for each frequency,
-    read a 6x6 matrix. Total matrices = num_bodies^2 * num_frequencies.
+    read a 6x6 matrix. First row of each block has 3 prefix tokens
+    (body_i, body_j, freq_index), e.g.:
+    ``1  1  1  5.3237E+07 -8.1136E+00 ...``
+    Total matrices = num_bodies^2 * num_frequencies.
     """
     nb = result.num_bodies
     nf = result.num_frequencies
@@ -335,7 +416,9 @@ def _parse_added_mass(
     for bi in range(nb):
         for bj in range(nb):
             for fi in range(nf):
-                matrix, idx = _read_6x6(lines, idx)
+                matrix, idx = _read_6x6_prefixed(
+                    lines, idx, first_row_prefix_count=3
+                )
                 am[bi, bj, fi] = matrix
 
     result.added_mass = am
@@ -345,7 +428,11 @@ def _parse_added_mass(
 def _parse_damping(
     lines: list[str], idx: int, result: AH1ParseResult
 ) -> int:
-    """Parse DAMPING section (same layout as ADDEDMASS)."""
+    """Parse DAMPING section (same layout as ADDEDMASS).
+
+    First row of each 6x6 block has 3 prefix tokens (body_i, body_j,
+    freq_index).
+    """
     nb = result.num_bodies
     nf = result.num_frequencies
     damp = np.zeros((nb, nb, nf, 6, 6))
@@ -353,7 +440,9 @@ def _parse_damping(
     for bi in range(nb):
         for bj in range(nb):
             for fi in range(nf):
-                matrix, idx = _read_6x6(lines, idx)
+                matrix, idx = _read_6x6_prefixed(
+                    lines, idx, first_row_prefix_count=3
+                )
                 damp[bi, bj, fi] = matrix
 
     result.damping = damp
@@ -366,7 +455,10 @@ def _parse_force_rao(
     """Parse FORCERAO section.
 
     Layout: for each body, for each heading, for each frequency,
-    two lines: magnitude (6 values) then phase in degrees (6 values).
+    two lines:
+      - magnitude line: ``body heading freq  m1 m2 m3 m4 m5 m6``
+        (3 prefix tokens + 6 values)
+      - phase line: ``p1 p2 p3 p4 p5 p6`` (6 values, no prefix)
     """
     nb = result.num_bodies
     nh = result.num_headings
@@ -379,7 +471,9 @@ def _parse_force_rao(
             for fi in range(nf):
                 if idx < len(lines):
                     vals = _read_floats(lines[idx])
-                    mag[bi, hi, fi, :len(vals[:6])] = vals[:6]
+                    # Skip 3 prefix tokens (body, heading, freq index)
+                    data = vals[3:] if len(vals) > 6 else vals
+                    mag[bi, hi, fi, :len(data[:6])] = data[:6]
                     idx += 1
                 if idx < len(lines):
                     vals = _read_floats(lines[idx])

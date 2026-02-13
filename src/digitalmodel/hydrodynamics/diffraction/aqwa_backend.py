@@ -665,11 +665,64 @@ class AQWABackend:
     # -----------------------------------------------------------------
 
     def build_deck7(self, spec: DiffractionSpec) -> list[str]:
-        """Build Deck 7: wave force spectrum (empty for diffraction)."""
+        """Build Deck 7: wave force spectrum with optional FIDP/FISK cards.
+
+        Emits FIDP (Frequency Independent DamPing) cards when a body has
+        ``external_damping`` defined, and FISK (Frequency Independent
+        StifFness/sKiffness) cards when ``external_stiffness`` is defined.
+        All-zero matrices are skipped.
+        """
         cards: list[str] = []
         cards.extend(_deck_banner(7))
         cards.append(f"{_WS:>10s}WFS1")
+
+        bodies = spec.get_bodies()
+        for body in bodies:
+            vessel = body.vessel
+            if (
+                vessel.external_damping is not None
+                and self._matrix_has_nonzero(vessel.external_damping)
+            ):
+                cards.extend(self._build_matrix_cards(
+                    vessel.external_damping, keyword="FIDP",
+                ))
+            if (
+                vessel.external_stiffness is not None
+                and self._matrix_has_nonzero(vessel.external_stiffness)
+            ):
+                cards.extend(self._build_matrix_cards(
+                    vessel.external_stiffness, keyword="FISK",
+                ))
+
         cards.append(" END")
+        return cards
+
+    @staticmethod
+    def _matrix_has_nonzero(matrix: list[list[float]]) -> bool:
+        """Return True if the 6x6 matrix contains any non-zero values."""
+        return any(val != 0.0 for row in matrix for val in row)
+
+    @staticmethod
+    def _build_matrix_cards(
+        matrix: list[list[float]], keyword: str = "FIDP",
+    ) -> list[str]:
+        """Build AQWA 6x6 matrix cards (FIDP or FISK format).
+
+        Each row of the 6x6 matrix becomes one card line with the format::
+
+            <6 spaces><keyword><5 spaces><row_idx (5-wide)><6 x 10-char values>
+
+        Values use scientific notation with 3 decimal places.
+        """
+        cards: list[str] = []
+        for row_idx, row in enumerate(matrix, start=1):
+            # Format each value as 10-char right-aligned scientific notation
+            val_fields = "".join(f"{f'{v:.3e}':>10s}" for v in row)
+            # Build the card line matching legacy column layout
+            cards.append(
+                f"{' ':>1s}{' ':>3s}{' ':>2s}{keyword:>4s}"
+                f"{' ':>5s}{row_idx:>5d}{val_fields}"
+            )
         return cards
 
     # -----------------------------------------------------------------
