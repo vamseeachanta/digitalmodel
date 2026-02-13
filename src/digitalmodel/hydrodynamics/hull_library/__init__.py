@@ -28,6 +28,15 @@ from .mesh_scaler import (
     validate_scaled_mesh,
     export_scaled_gdf,
 )
+from .mesh_refiner import (
+    MeshQualityMetrics,
+    MeshFamilyMember,
+    refine_mesh,
+    compute_quality_metrics,
+    generate_mesh_family,
+    export_mesh_family,
+    convergence_summary,
+)
 
 __all__ = [
     # Profile schema
@@ -61,4 +70,12 @@ __all__ = [
     "scale_mesh_to_target",
     "validate_scaled_mesh",
     "export_scaled_gdf",
+    # Mesh refiner
+    "MeshQualityMetrics",
+    "MeshFamilyMember",
+    "refine_mesh",
+    "compute_quality_metrics",
+    "generate_mesh_family",
+    "export_mesh_family",
+    "convergence_summary",
 ]
