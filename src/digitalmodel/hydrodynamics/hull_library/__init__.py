@@ -19,6 +19,15 @@ from .catalog import (
 )
 from .panel_catalog import PanelFormat, RaoReference, PanelCatalogEntry, PanelCatalog
 from .rao_registry import RaoRegistry
+from .mesh_scaler import (
+    ScaleDimensions,
+    ScaleResult,
+    scale_mesh_uniform,
+    scale_mesh_parametric,
+    scale_mesh_to_target,
+    validate_scaled_mesh,
+    export_scaled_gdf,
+)
 
 __all__ = [
     # Profile schema
@@ -44,4 +53,12 @@ __all__ = [
     "PanelCatalog",
     # RAO registry
     "RaoRegistry",
+    # Mesh scaler
+    "ScaleDimensions",
+    "ScaleResult",
+    "scale_mesh_uniform",
+    "scale_mesh_parametric",
+    "scale_mesh_to_target",
+    "validate_scaled_mesh",
+    "export_scaled_gdf",
 ]
