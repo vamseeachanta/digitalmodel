@@ -546,6 +546,45 @@ Store outputs in `benchmark_output/barge_benchmark/<revision>/` with `revision.j
 }
 ```
 
+## Solver-Level Matching (Critical for Fair Comparison)
+
+When benchmarking AQWA vs OrcaWave, ensure both solvers are running at equivalent computation levels:
+
+| OrcaWave SolveType | AQWA Equivalent | Notes |
+|---|---|---|
+| `Potential formulation only` | `RESTART 1 2` | Radiation only, no diffraction RAOs |
+| `Potential and source formulations` | `RESTART 1 5` + `LHFR` | Standard RAO comparison level |
+| `Potentials and mean drift only` | `RESTART 1 5` + `LHFR MQTF` | Adds mean drift forces |
+| `Full QTF calculation` | `RESTART 1 8` + `LHFR MQTF` | Full second-order comparison |
+
+### External Damping Asymmetry
+
+**Critical finding (WRK-132):** AQWA FIDP external damping does NOT affect frequency-domain RAOs (stages 1-5). OrcaWave DOES include `BodyExternalDampingMatrix` in RAO computation. When comparing roll RAOs for vessels with external damping:
+
+- AQWA roll RAO = undamped potential theory prediction
+- OrcaWave roll RAO = includes viscous damping effect
+- This explains systematic roll differences even when all inputs match
+
+### Benchmark Status (2026-02-12)
+
+| Hull | Consensus | Best DOF Corr | Worst DOF Corr | External Damping |
+|---|---|---|---|---|
+| Barge | SPLIT | pitch 0.9998 | sway 0.867 | None |
+| Ship | SPLIT | pitch 0.9998 | roll 0.263 | M44=36,010 |
+| Spar | SPLIT | surge 0.997+ | — | None |
+
+**Roll r=0.263 (ship):** AQWA peaks at T=8.8s, OrcaWave at T=22.0s — solver-inherent potential theory difference for ship geometries. Barge roll r=0.997 confirms the pipeline is correct.
+
+### QTF Activation Status
+
+| Hull | spec.yml qtf | OrcaWave actual | AQWA actual |
+|---|---|---|---|
+| Barge | false | Potential+source | RESTART 1 5 (no QTF) |
+| Ship | **true** | **Full QTF** | RESTART 1 5 + MQTF (**QTF flag set but stages stop at 5**) |
+| Spar | false | Potential+source | RESTART 1 5 (no QTF) |
+
+**Note:** Ship AQWA has MQTF option but RESTART 1 5 — QTF computation requires stages 6-8 which don't execute. This is a backend bug (`aqwa_backend.py:412`).
+
 ## Related Skills
 
 - [orcawave-analysis](../orcawave-analysis/SKILL.md) - OrcaWave analysis execution

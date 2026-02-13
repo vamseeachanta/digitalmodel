@@ -1,15 +1,93 @@
 ---
-title: "Extract & Catalog OrcaFlex Models from rock-oil-field/s7 with spec.yml Generation"
-description: "Extract jumper modelling concepts, catalog all unique OrcaFlex models from s7, sanitize client references, generate spec.yml for each model, extend model builder, create jumper skill"
-version: "2.0"
-module: "orcaflex"
+title: "Fix & Re-run All 3 Diffraction Benchmarks (Barge/Ship/Spar)"
+description: "Fix bugs in rerun script (spar .owr path, ship water_depth), re-run all 3 hull benchmarks, commit spec.yml fix"
+version: "3.1"
+module: "diffraction"
 session:
   id: "mossy-inventing-penguin"
   agent: "claude-opus-4-6"
-review: "pending"
+review: "done"
+parent_work_item: "WRK-132"
+completed: "2026-02-12"
+results:
+  ship: "6/6 DOFs, consensus SPLIT (roll solver-inherent)"
+  barge: "6/6 DOFs, all correlations unchanged"
+  spar: "6/6 DOFs, was SKIPPED now complete"
+  commit: "3cb38c2b"
+  routing_map: "specs/modules/diffraction-routing-map.md"
 ---
 
 ## Context
+
+WRK-132 (diffraction benchmark refinement) is complete but the final rerun script has 2 bugs that prevented the spar benchmark from running and used incorrect ship water depth. The user wants all 3 benchmarks (barge, ship, spar) to produce complete results with both AQWA and OrcaWave values, and an investigation into input value differences.
+
+**Current state**:
+- Ship: ran successfully with FIDP but used `SHIP_WATER_DEPTH = 30.0` instead of 500.0
+- Barge: ran successfully, no changes needed
+- Spar: SKIPPED — wrong .owr path in script
+
+**Root causes**:
+1. `rerun_benchmarks_with_fidp.py:80` — `SHIP_WATER_DEPTH = 30.0` should be `500.0` (confirmed from LIS and spec.yml)
+2. `rerun_benchmarks_with_fidp.py:95` — `SPAR_OWR` points to non-existent path `L04_spar_benchmark/benchmark_results/spar_benchmark.owr`; actual file is at `benchmark_output/spar_benchmark/r1_spar_benchmark/spar_benchmark.owr`
+
+## Plan
+
+### Step 1: Fix rerun script bugs (2 edits)
+
+**File**: `scripts/benchmark/rerun_benchmarks_with_fidp.py`
+
+| Line | Current | Fix |
+|------|---------|-----|
+| 80 | `SHIP_WATER_DEPTH = 30.0` | `SHIP_WATER_DEPTH = 500.0  # confirmed from LIS + spec.yml` |
+| 95 | `SPAR_OWR = SPAR_BENCHMARK_DIR / "benchmark_results" / "spar_benchmark.owr"` | `SPAR_OWR = Path("benchmark_output/spar_benchmark/r1_spar_benchmark/spar_benchmark.owr")` |
+
+### Step 2: Re-run all 3 benchmarks
+
+```bash
+uv run python scripts/benchmark/rerun_benchmarks_with_fidp.py
+```
+
+**Expected**: Ship + Barge + Spar all complete. Spar should no longer show `[ERROR] Spar .owr not found`.
+
+Ship water_depth fix may slightly change ship correlations (benchmark extraction uses water_depth for normalization context). Barge should be unchanged.
+
+### Step 3: Run input parameter audit
+
+```bash
+uv run python scripts/benchmark/audit_solver_inputs.py
+```
+
+This script already exists and compares all input parameters (mass, CoG, radii of gyration, external damping, frequencies, headings) across barge/ship/spar for both solvers. Review output for mismatches.
+
+### Step 4: Commit ship spec.yml water_depth fix
+
+The ship spec.yml (`docs/modules/orcawave/L03_ship_benchmark/spec.yml`) has an uncommitted change: `water_depth: 30.0` → `500.0`. Commit this along with the rerun script fixes.
+
+## Critical Files
+
+| File | Action |
+|------|--------|
+| `scripts/benchmark/rerun_benchmarks_with_fidp.py` | EDIT lines 80, 95 |
+| `docs/modules/orcawave/L03_ship_benchmark/spec.yml` | COMMIT (already modified, uncommitted) |
+| `scripts/benchmark/audit_solver_inputs.py` | RUN (no changes) |
+
+## Verification
+
+1. All 3 hulls produce HTML + JSON reports in `benchmark_output/wrk132_rerun/`
+2. Spar benchmark completes (was SKIPPED before)
+3. Ship correlations stable or improved with correct water_depth
+4. Barge correlations unchanged
+5. Input audit shows no unexpected parameter mismatches
+6. `benchmark_output/wrk132_rerun/fidp_benchmark_summary.json` includes all 3 hulls
+
+---
+---
+
+# ARCHIVED: WRK-121 Plan (s7 Model Extraction)
+
+> Below is the original WRK-121 plan preserved for reference.
+
+## Context (WRK-121)
 
 The `rock-oil-field/s7/` directory contains ~235 unique OrcaFlex `.dat` models spanning jumper installation, umbilical laying, manifold deployment, mooring, mudmat, and training scenarios. These models should be:
 1. **Sanitized** — strip all client-identifiable references

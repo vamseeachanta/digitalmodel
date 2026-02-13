@@ -294,6 +294,82 @@ All diffraction analyses should be driven by a `spec.yml` conforming to `Diffrac
 
 **Critical unit rule:** Spec uses pure SI (kg, m, s). Backends convert. But `external_damping`/`external_stiffness` matrices pass through without conversion -- see `orcawave-analysis` skill for details.
 
+## Solver Options Cross-Reference (AQWA vs OrcaWave)
+
+### OrcaWave SolveType Options (6 levels, ascending complexity)
+
+| # | OrcaWave SolveType | What it computes | QTF? | Cost |
+|---|---|---|---|---|
+| 1 | `Potential formulation only` | First-order potential theory | No | Fastest |
+| 2 | `Potentials only` | Legacy alias for #1 | No | Fastest |
+| 3 | `Potential and source formulations` | First-order + source formulation | No | Medium |
+| 4 | `Potentials and mean drift only` | First-order + mean drift forces | Partial | Medium |
+| 5 | `Diagonal QTF only` | First-order + diagonal QTF elements | Partial | Slow |
+| 6 | `Full QTF calculation` | Complete bi-frequency QTF | Full | Slowest |
+
+### AQWA RESTART Stages
+
+| RESTART | What it computes | Key OPTIONS |
+|---|---|---|
+| `1 2` | Geometry + radiation only (added mass, damping — no RAOs) | — |
+| `1 5` | Full diffraction with RAOs (standard) | `LHFR` (irregular freq removal) |
+| `1 8` | Full QTF (second-order forces) | `LHFR MQTF` |
+
+**AQWA OPTIONS keywords:**
+- `LHFR` — Remove irregular frequency effects (lid method)
+- `MQTF` — Enable QTF computation (requires RESTART to include stages 6-8)
+- `GOON` — Continue past non-fatal mesh errors
+- `AHD1` — Generate .AH1 ASCII hydrodynamic database
+- `REST END` — Marks end of OPTIONS block; RESTART must follow immediately
+
+### Cross-Solver Equivalence Map
+
+| OrcaWave SolveType | AQWA RESTART | AQWA OPTIONS | spec.yml Mapping |
+|---|---|---|---|
+| Potential formulation only | `1 2` | — | `analysis_type: radiation` |
+| Potential and source formulations | `1 5` | `LHFR` | `analysis_type: diffraction` |
+| Potentials and mean drift only | `1 5` | `LHFR MQTF` | `analysis_type: frequency_domain` |
+| Full QTF calculation | `1 8` | `LHFR MQTF` | `analysis_type: full_qtf` |
+
+### Current Benchmark Solver Configuration
+
+| Setting | Barge (L02) | Ship (L03) | Spar (L04) |
+|---|---|---|---|
+| `analysis_type` | diffraction | **full_qtf** | diffraction |
+| `qtf_calculation` | false | **true** | false |
+| OrcaWave actual | Potential+source | **Full QTF** | Potential+source |
+| AQWA RESTART | 1 5 | 1 5 | 1 5 |
+| AQWA OPTIONS | LHFR | LHFR **MQTF** | LHFR |
+| External damping | none | **M44=36,010** | none |
+| Freq count | 19 | 20 | 20 |
+| Headings | 5 (0-180, 45° step) | **9** (0-180, 22.5° step) | 5 (0-180, 45° step) |
+
+### Known Backend Bugs (as of 2026-02-12)
+
+**Bug 1 — OrcaWave SolveType not mapped from qtf_calculation:**
+`orcawave_backend.py:333` hardcodes `SolveType = "Potential and source formulations"` regardless of `qtf_calculation` flag. When `qtf_calculation: true`, should emit `"Full QTF calculation"`.
+
+**Bug 2 — AQWA RESTART always 1-5:**
+`aqwa_backend.py:412` hardcodes `RESTART 1 5` even when `qtf_calculation: true`. Full QTF requires `RESTART 1 8`.
+
+**Bug 3 — SolverOptions schema too coarse:**
+`input_schemas.py` SolverOptions uses `qtf_calculation: bool` but cannot represent OrcaWave's 6 SolveType levels (e.g. mean drift only, diagonal QTF only, potential-only mode).
+
+### FIDP External Damping — Impact on RAOs (WRK-132 Finding)
+
+AQWA FIDP (Frequency Independent DamPing) cards are correctly generated and stored (confirmed in LIS output). However, **FIDP has ZERO effect on AQWA stage 1-5 RAOs** — external damping only affects time-domain response (stages 6+). This is by design: AQWA frequency-domain RAOs are computed from potential theory WITHOUT viscous damping.
+
+OrcaWave DOES include external damping in its RAO calculation (via `BodyExternalDampingMatrix*`). This creates a **fundamental asymmetry** between solvers when comparing roll RAOs with external damping present.
+
+### Recommended Methodology for Future Benchmarks
+
+1. **Match solver levels**: Ensure equivalent computation levels between solvers (use the cross-reference table above)
+2. **Separate first-order from second-order**: Compare RAOs at the same analysis level before adding QTF
+3. **Document external damping**: Note that AQWA freq-domain RAOs exclude external damping; OrcaWave includes it
+4. **Fix backend bugs before generating new spec.yml**: Apply Bug 1-3 fixes to ensure spec.yml → solver input fidelity
+5. **Run sensitivity studies**: Test with different SolveType levels to quantify impact on results
+6. **Use common heading sets**: Both solvers should use the same headings to avoid harmonization interpolation artifacts
+
 ## Best Practices
 
 1. **Always validate coefficients** before using in OrcaFlex

@@ -380,6 +380,61 @@ comparator.generate_peak_report_html(
 - `run_comparison.py` - Full comparison with all data points
 - `run_comparison_peaks.py` - Peak-focused validation (recommended)
 
+## OrcaWave SolveType Options
+
+OrcaWave supports 6 computation levels via the `SolveType` property:
+
+| # | SolveType Value | Computes | QTF? | Relative Cost |
+|---|---|---|---|---|
+| 1 | `Potential formulation only` | First-order potential theory only | No | 1x |
+| 2 | `Potentials only` | Legacy alias for #1 | No | 1x |
+| 3 | `Potential and source formulations` | First-order + source formulation (more accurate near-field) | No | 2x |
+| 4 | `Potentials and mean drift only` | First-order + mean drift forces (zero-frequency QTF) | Partial | 3x |
+| 5 | `Diagonal QTF only` | First-order + diagonal QTF elements (same-frequency) | Partial | 5x |
+| 6 | `Full QTF calculation` | Complete bi-frequency QTF matrix | Full | 10x+ |
+
+### Which SolveType to Use
+
+| Application | Recommended SolveType | Reason |
+|---|---|---|
+| Quick coefficient extraction | Potential formulation only | Fastest, sufficient for A(w) and B(w) |
+| Standard RAO analysis | Potential and source formulations | Best balance of accuracy and speed |
+| Mooring design (initial) | Potentials and mean drift only | Need mean drift for static offset |
+| Mooring design (detailed) | Full QTF calculation | Need difference-frequency for slow drift |
+| Springing analysis (TLP) | Full QTF calculation | Need sum-frequency forces |
+| Benchmark validation | Potential and source formulations | Match AQWA RESTART 1 5 level |
+
+### Backend Bug: SolveType Not Mapped from spec.yml
+
+`orcawave_backend.py:333` hardcodes `SolveType = "Potential and source formulations"` regardless of the `qtf_calculation` flag in spec.yml. When `qtf_calculation: true`, the backend should emit `"Full QTF calculation"` instead. The `QuadraticLoad*` properties ARE correctly gated by the flag, but without the correct SolveType, OrcaWave won't compute QTF.
+
+**Workaround:** Edit the generated OrcaWave .yml manually to set `SolveType: Full QTF calculation` before running.
+
+### Key OrcaWave YAML Properties
+
+| Property | Type | Controls |
+|---|---|---|
+| `SolveType` | string | Computation level (see table above) |
+| `LoadRAOCalculationMethod` | Both/Haskind/Direct | First-order force computation method |
+| `QuadraticLoadPressureIntegration` | Yes/No | QTF via pressure integration |
+| `QuadraticLoadControlSurface` | Yes/No | QTF via control surface method |
+| `QuadraticLoadMomentumConservation` | Yes/No | QTF via momentum conservation |
+| `PreferredQuadraticLoadCalculationMethod` | string | Which QTF method to prefer |
+| `LinearSolverMethod` | Direct LU/Iterative | Matrix solver algorithm |
+| `BodyAddInteriorSurfacePanels` | Yes/No | Irregular frequency removal |
+| `BodyExternalDampingMatrix*` | 6x6 matrix | Viscous damping (INCLUDED in RAOs) |
+| `BodyExternalStiffnessMatrix*` | 6x6 matrix | External stiffness (mooring springs) |
+| `BodyIncreaseRollDampingToTarget` | Yes/No | Automatic roll damping augmentation |
+| `QTFMinCrossingAngle` | float | QTF heading crossing angle range |
+| `QTFMaxCrossingAngle` | float | QTF heading crossing angle range |
+
+### External Damping — Impact on RAOs
+
+Unlike AQWA (where FIDP only affects time-domain stages 6+), OrcaWave **includes** `BodyExternalDampingMatrix` in its frequency-domain RAO computation. This means:
+- OrcaWave roll RAO with M44=36,010 will show reduced peak amplitude
+- AQWA roll RAO with the same FIDP value will be unchanged (undamped potential theory)
+- This is a fundamental solver asymmetry when comparing roll RAOs with external damping
+
 ## Best Practices
 
 1. **Mesh Quality**: Ensure panel mesh convergence before production runs

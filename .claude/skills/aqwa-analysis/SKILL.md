@@ -685,6 +685,52 @@ aqwa_results = converter.convert_to_unified_schema(water_depth=30.0)
 - **Sway**: 0.8-1.0 m/m (beam seas)
 - **Yaw**: Small (<0.1 deg/m for symmetric vessels)
 
+## AQWA Solver Stages & Backend Mapping
+
+### RESTART Stage Reference
+
+| RESTART | Stages Run | Purpose | Typical Use |
+|---|---|---|---|
+| `1 2` | Geometry + radiation | Added mass & damping matrices only | Quick coefficient extraction |
+| `1 5` | Full diffraction | First-order RAOs + added mass + damping | Standard frequency-domain analysis |
+| `1 8` | Full + QTF | Everything in 1-5 plus second-order QTF forces | Mooring design, slow drift |
+
+### OPTIONS Keyword Reference
+
+| Keyword | Purpose | When to Use |
+|---|---|---|
+| `GOON` | Continue past non-fatal mesh errors | Always (recommended) |
+| `LHFR` | Remove irregular frequency effects (lid method) | When `remove_irregular_frequencies: true` |
+| `MQTF` | Enable QTF computation | When `qtf_calculation: true` and RESTART includes stages 6-8 |
+| `AHD1` | Generate .AH1 ASCII hydrodynamic database | When `output_ah1: true` |
+| `REST END` | End OPTIONS block (RESTART must follow immediately) | Always (required) |
+
+### OPTIONS Card Ordering in .dat File
+
+```
+OPTIONS GOON              ← Always first (error tolerance)
+OPTIONS LHFR MQTF REST END  ← Feature options + terminator
+OPTIONS AHD1              ← Optional output format (BEFORE REST END line)
+RESTART  1  5             ← Must immediately follow REST END
+```
+
+### FIDP External Damping Cards (Deck 7)
+
+FIDP (Frequency Independent DamPing) cards in Deck 7 WFS1:
+- Format: `{6sp}FIDP{5sp}{row_idx 5-wide}{6 × 10-char scientific notation values}`
+- Generated when `vessel.external_damping` has non-zero entries in spec.yml
+- **Critical:** FIDP has **ZERO effect** on frequency-domain RAOs (stages 1-5)
+- FIDP only affects time-domain response analysis (stages 6+, AQWA-DRIFT/NAUT)
+- OrcaWave DOES include external damping in frequency-domain RAOs — this creates an asymmetry
+
+### FISK External Stiffness Cards (Deck 7)
+
+FISK (Frequency Independent Stiffness) cards — same format as FIDP but for `vessel.external_stiffness`.
+
+### Backend Bug: RESTART Always 1-5
+
+`aqwa_backend.py:412` hardcodes `RESTART 1 5` regardless of `qtf_calculation`. When `qtf_calculation: true`, should use `RESTART 1 8` to actually compute QTF. The `OPTIONS MQTF` flag is correctly generated but QTF stages never execute with RESTART 1 5.
+
 ## Related Skills
 
 - [diffraction-analysis](../diffraction-analysis/SKILL.md) - **Master skill** for all diffraction workflows
