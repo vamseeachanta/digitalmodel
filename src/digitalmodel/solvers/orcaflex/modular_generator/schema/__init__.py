@@ -88,6 +88,14 @@ from .riser import (
     RiserSection,
     RiserVessel,
 )
+from .mooring import (
+    ChainGrade,
+    MooringEndpoint,
+    MooringLine,
+    MooringSegment,
+    MooringSegmentType,
+    MooringSystem,
+)
 from .root import ProjectInputSpec
 from .simulation import Simulation
 
@@ -132,6 +140,13 @@ __all__ = [
     "RiserVessel",
     "RiserLine",
     "Riser",
+    # Mooring
+    "MooringSegmentType",
+    "ChainGrade",
+    "MooringSegment",
+    "MooringEndpoint",
+    "MooringLine",
+    "MooringSystem",
     # Equipment
     "TugProperties",
     "Tugs",
