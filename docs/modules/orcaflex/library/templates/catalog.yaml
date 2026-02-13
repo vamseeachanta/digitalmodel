@@ -87,3 +87,34 @@ templates:
   - fpso
   - production
   - buoyancy
+- name: riser_pliant_wave
+  path: riser_pliant_wave/spec.yml
+  schema_type: riser
+  structure: riser
+  description: Pliant wave riser with subsea buoy clamp and tether link
+  source: library/tier2_fast/a01_pliant_wave_riser/spec.yml
+  water_depth_m: 100
+  benchmark_validated: true
+  complexity: moderate
+  tags:
+  - riser
+  - pliant-wave
+  - fpso
+  - production
+  - buoyancy
+  - tether
+- name: riser_steep_wave
+  path: riser_steep_wave/spec.yml
+  schema_type: riser
+  structure: riser
+  description: Steep wave riser with buoyant section and fine-mesh bend stiffener zones
+  source: library/tier2_fast/a01_steep_wave_riser/spec.yml
+  water_depth_m: 100
+  benchmark_validated: true
+  complexity: moderate
+  tags:
+  - riser
+  - steep-wave
+  - fpso
+  - production
+  - buoyancy
