@@ -1,0 +1,126 @@
+name: fst_ship_330m
+hull_type: fpso
+length_bp: 330.0
+beam: 60.0
+draft: 22.0
+depth: 30.0
+source: "generic ship-type floating storage terminal (converted VLCC class)"
+stations:
+  # Station 0 -- AP (x=0): stern frame, narrow skeg section
+  - x_position: 0.0
+    waterline_offsets:
+      - [0.0, 0.0]
+      - [3.5, 5.0]
+      - [7.0, 10.0]
+      - [11.0, 14.0]
+      - [15.0, 17.0]
+      - [18.5, 20.0]
+      - [22.0, 22.0]
+  # Station 1 -- x=33: aft quarter, filling out from stern
+  - x_position: 33.0
+    waterline_offsets:
+      - [0.0, 3.0]
+      - [3.5, 8.0]
+      - [7.0, 14.0]
+      - [11.0, 18.0]
+      - [15.0, 21.0]
+      - [18.5, 23.0]
+      - [22.0, 24.0]
+  # Station 2 -- x=66: aft body, widening
+  - x_position: 66.0
+    waterline_offsets:
+      - [0.0, 8.0]
+      - [3.5, 14.0]
+      - [7.0, 19.0]
+      - [11.0, 23.0]
+      - [15.0, 26.0]
+      - [18.5, 28.0]
+      - [22.0, 28.5]
+  # Station 3 -- x=99: approaching parallel body
+  - x_position: 99.0
+    waterline_offsets:
+      - [0.0, 12.0]
+      - [3.5, 18.0]
+      - [7.0, 23.0]
+      - [11.0, 26.0]
+      - [15.0, 28.5]
+      - [18.5, 29.5]
+      - [22.0, 30.0]
+  # Station 4 -- x=132: start of parallel midbody
+  - x_position: 132.0
+    waterline_offsets:
+      - [0.0, 14.0]
+      - [3.5, 20.0]
+      - [7.0, 25.0]
+      - [11.0, 28.0]
+      - [15.0, 29.5]
+      - [18.5, 30.0]
+      - [22.0, 30.0]
+  # Station 5 -- x=165: midship (maximum section)
+  - x_position: 165.0
+    waterline_offsets:
+      - [0.0, 15.0]
+      - [3.5, 21.0]
+      - [7.0, 26.0]
+      - [11.0, 28.5]
+      - [15.0, 30.0]
+      - [18.5, 30.0]
+      - [22.0, 30.0]
+  # Station 6 -- x=198: end of parallel midbody
+  - x_position: 198.0
+    waterline_offsets:
+      - [0.0, 14.0]
+      - [3.5, 20.0]
+      - [7.0, 25.0]
+      - [11.0, 28.0]
+      - [15.0, 29.5]
+      - [18.5, 30.0]
+      - [22.0, 30.0]
+  # Station 7 -- x=231: forward shoulder, beginning to fine
+  - x_position: 231.0
+    waterline_offsets:
+      - [0.0, 10.0]
+      - [3.5, 16.0]
+      - [7.0, 21.0]
+      - [11.0, 24.5]
+      - [15.0, 26.5]
+      - [18.5, 27.5]
+      - [22.0, 27.5]
+  # Station 8 -- x=264: forward body, fining toward bow
+  - x_position: 264.0
+    waterline_offsets:
+      - [0.0, 5.0]
+      - [3.5, 10.0]
+      - [7.0, 15.0]
+      - [11.0, 18.0]
+      - [15.0, 20.0]
+      - [18.5, 21.0]
+      - [22.0, 21.0]
+  # Station 9 -- x=297: forward quarter, narrow V-sections
+  - x_position: 297.0
+    waterline_offsets:
+      - [0.0, 2.0]
+      - [3.5, 5.0]
+      - [7.0, 9.0]
+      - [11.0, 12.0]
+      - [15.0, 14.0]
+      - [18.5, 15.0]
+      - [22.0, 15.0]
+  # Station 10 -- FP (x=330): bow, fine entrance
+  - x_position: 330.0
+    waterline_offsets:
+      - [0.0, 0.0]
+      - [3.5, 1.0]
+      - [7.0, 2.5]
+      - [11.0, 4.0]
+      - [15.0, 5.5]
+      - [18.5, 7.0]
+      - [22.0, 8.0]
+block_coefficient: 0.82
+displacement: 356400
+keel_profile:
+  - [0.0, 0.0]
+  - [33.0, 0.0]
+  - [165.0, 0.0]
+  - [297.0, 0.0]
+  - [330.0, 0.0]

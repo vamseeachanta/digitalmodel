@@ -1,5 +1,5 @@
 version: '1.0'
-updated: '2026-02-10'
+updated: '2026-02-13'
 entries:
 - hull_id: canonical_barge_100x20x10
   hull_type: barge
@@ -72,6 +72,81 @@ entries:
   tags:
   - gdf
   - canonical
+- hull_id: canonical_fst_barge_250m
+  hull_type: fpso
+  name: fst_barge_250m
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/fpso/fst_barge_250m.gdf
+  panel_count: 2000
+  vertex_count: 2259
+  symmetry: y
+  length_m: 250.0
+  beam_m: 46.0
+  draft_m: 14.0
+  displacement_t: 148120
+  description: "Barge-type floating storage terminal (~300k bbl capacity)"
+  tags:
+  - gdf
+  - canonical
+  - fst
+- hull_id: canonical_fst_ship_330m
+  hull_type: fpso
+  name: fst_ship_330m
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/fpso/fst_ship_330m.gdf
+  panel_count: 2160
+  vertex_count: 2408
+  symmetry: y
+  length_m: 330.0
+  beam_m: 60.0
+  draft_m: 22.0
+  displacement_t: 356400
+  description: "Ship-type floating storage terminal (converted VLCC class)"
+  tags:
+  - gdf
+  - canonical
+  - fst
+  - vlcc
+- hull_id: canonical_lngc_qflex_315m
+  hull_type: lngc
+  name: lngc_qflex_315m
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/lngc/lngc_qflex_315m.gdf
+  panel_count: 2205
+  vertex_count: 2526
+  symmetry: y
+  length_m: 315.0
+  beam_m: 50.0
+  draft_m: 12.0
+  displacement_t: 148176
+  description: "Q-Flex class LNG carrier (~210k m3 capacity)"
+  tags:
+  - gdf
+  - canonical
+  - lngc
+  - qflex
+- hull_id: canonical_lngc_qmax_345m
+  hull_type: lngc
+  name: lngc_qmax_345m
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/lngc/lngc_qmax_345m.gdf
+  panel_count: 2415
+  vertex_count: 2766
+  symmetry: y
+  length_m: 345.0
+  beam_m: 55.0
+  draft_m: 12.0
+  displacement_t: 182160
+  description: "Q-Max class LNG carrier (~266k m3 capacity)"
+  tags:
+  - gdf
+  - canonical
+  - lngc
+  - qmax
 - hull_id: canonical_cylinder_r10_d50
   hull_type: cylinder
   name: cylinder_r10_d50
