@@ -165,7 +165,7 @@ specs:
   category: vessel
   quality_score: 90
   schema_valid: true
-  line_count: 1522
+  line_count: 7638
   has_comments: true
   has_raw_properties: false
 by_category:
