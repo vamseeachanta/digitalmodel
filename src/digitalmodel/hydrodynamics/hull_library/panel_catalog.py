@@ -31,6 +31,31 @@ class PanelFormat(str, Enum):
     YAML_PROFILE = "yaml_profile"
 
 
+class RaoReference(BaseModel):
+    """Reference to an RAO dataset linked to a hull panel."""
+
+    solver: str = Field(..., description="Solver name, e.g. orcawave, aqwa")
+    draft_m: float = Field(..., description="Analysis draft in metres")
+    loading_condition: Optional[str] = Field(
+        None, description="Loading condition, e.g. ballast, full_load"
+    )
+    headings_deg: Optional[list[float]] = Field(
+        None, description="Wave headings analysed (degrees)"
+    )
+    n_frequencies: Optional[int] = Field(
+        None, description="Number of frequency bins"
+    )
+    date: Optional[str] = Field(None, description="ISO 8601 date string")
+    file_path: str = Field(default="", description="Relative path to RAO data")
+    benchmark_revision: Optional[str] = Field(
+        None, description="Benchmark revision, e.g. r4, r1"
+    )
+
+    def to_dict(self) -> dict:
+        """Serialize to dict, excluding None-valued optional fields."""
+        return self.model_dump(exclude_none=True)
+
+
 class PanelCatalogEntry(BaseModel):
     """A single hull panel entry in the catalog."""
 
@@ -51,6 +76,9 @@ class PanelCatalogEntry(BaseModel):
     description: Optional[str] = Field(None, description="Free-text description")
     loading_condition: Optional[str] = Field(None, description="Loading condition label")
     tags: list[str] = Field(default_factory=list, description="Searchable tags")
+    raos: Optional[list[RaoReference]] = Field(
+        None, description="Linked RAO datasets for this hull"
+    )
 
 
 class PanelCatalog(BaseModel):
@@ -114,6 +142,9 @@ class PanelCatalog(BaseModel):
                 description=e.get("description"),
                 loading_condition=e.get("loading_condition"),
                 tags=e.get("tags", []),
+                raos=[RaoReference(**r) for r in e["raos"]]
+                if e.get("raos")
+                else None,
             )
             for e in data.get("entries", [])
         ]
@@ -131,7 +162,7 @@ class PanelCatalog(BaseModel):
             "hull_id", "hull_type", "name", "source", "panel_format",
             "file_path", "panel_count", "vertex_count", "symmetry",
             "length_m", "beam_m", "draft_m", "displacement_t",
-            "description", "loading_condition", "tags",
+            "description", "loading_condition", "tags", "rao_count",
         ]
         with open(path, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -139,6 +170,9 @@ class PanelCatalog(BaseModel):
             for entry in self.entries:
                 row = {}
                 for field in fieldnames:
+                    if field == "rao_count":
+                        row[field] = len(entry.raos) if entry.raos else 0
+                        continue
                     val = getattr(entry, field)
                     if val is None:
                         row[field] = ""
@@ -172,7 +206,9 @@ def _entry_to_yaml_dict(entry: PanelCatalogEntry) -> dict:
             d[field] = val
     if entry.tags:
         d["tags"] = entry.tags
+    if entry.raos:
+        d["raos"] = [r.to_dict() for r in entry.raos]
     return d
 
 
-__all__ = ["PanelFormat", "PanelCatalogEntry", "PanelCatalog"]
+__all__ = ["PanelFormat", "RaoReference", "PanelCatalogEntry", "PanelCatalog"]

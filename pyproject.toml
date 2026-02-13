@@ -320,7 +320,7 @@ backup = false
 show_times = true
 
 # Performance Benchmarking Configuration
-[tool.pytest.benchmark]
+[tool.pytest-benchmark]
 skip = false
 disable_gc = true
 min_time = 0.000005

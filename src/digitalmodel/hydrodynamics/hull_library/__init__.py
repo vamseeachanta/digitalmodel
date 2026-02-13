@@ -17,7 +17,8 @@ from .catalog import (
     HullCatalogEntry,
     HullCatalog,
 )
-from .panel_catalog import PanelFormat, PanelCatalogEntry, PanelCatalog
+from .panel_catalog import PanelFormat, RaoReference, PanelCatalogEntry, PanelCatalog
+from .rao_registry import RaoRegistry
 
 __all__ = [
     # Profile schema
@@ -38,6 +39,9 @@ __all__ = [
     "HullCatalog",
     # Panel catalog
     "PanelFormat",
+    "RaoReference",
     "PanelCatalogEntry",
     "PanelCatalog",
+    # RAO registry
+    "RaoRegistry",
 ]
