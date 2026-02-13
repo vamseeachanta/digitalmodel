@@ -284,7 +284,15 @@ class MooringRouter(BaseRouter):
             "StaticsStep1": "Catenary",
         }
 
-        if ml.fairlead.vessel:
+        if ml.pretension is not None:
+            # When pretensioned, Line End B connects to the winch
+            # (winch sits on the vessel, line connects to winch)
+            winch_name = f"Winch_{ml.name}"
+            properties["EndBConnection"] = winch_name
+            properties["EndBX"] = 0
+            properties["EndBY"] = 0
+            properties["EndBZ"] = 0
+        elif ml.fairlead.vessel:
             properties["EndBConnection"] = ml.fairlead.vessel
 
         if ml.lay_azimuth is not None:
@@ -298,16 +306,22 @@ class MooringRouter(BaseRouter):
     def _build_winch(self, ml: MooringLine) -> dict[str, Any]:
         """Build a pretension winch for a mooring line.
 
+        OrcaFlex winch topology for mooring pretension:
+        - Winch sits on the vessel (Connection = vessel name)
+        - Line End B connects to the winch (set in _build_line)
+        - Winch controls tension via "Specified tension" mode
+
         Args:
             ml: MooringLine with pretension specified.
 
         Returns:
             Dict with 'name' and 'properties' for GenericWinch.
         """
+        vessel = ml.fairlead.vessel or "Fixed"
         return {
             "name": f"Winch_{ml.name}",
             "properties": {
-                "Connection": ml.name,
+                "Connection": vessel,
                 "ConnectionX": ml.fairlead.position[0],
                 "ConnectionY": ml.fairlead.position[1],
                 "ConnectionZ": ml.fairlead.position[2],

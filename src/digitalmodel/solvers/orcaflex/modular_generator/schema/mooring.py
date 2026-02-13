@@ -60,7 +60,9 @@ class MooringEndpoint(BaseModel):
 
     Attributes:
         type: Endpoint type (anchor, fairlead, fixed).
-        position: Global position [x, y, z] (m).
+        position: Position [x, y, z] (m). For anchors/fixed endpoints this is
+            the global position. For fairlead endpoints connected to a vessel,
+            this is the local offset relative to the vessel origin.
         vessel: Vessel name for fairlead connections.
     """
 

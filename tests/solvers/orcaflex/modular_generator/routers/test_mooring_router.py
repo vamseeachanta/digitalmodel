@@ -178,7 +178,7 @@ class TestMooringRouter:
         assert line["properties"]["EndBConnection"] == "FPSO"
 
     def test_pretension_creates_winch(self, router):
-        """Line with pretension -> winch with specified tension."""
+        """Line with pretension -> winch on vessel, line End B -> winch."""
         system = MooringSystem(lines=[_simple_mooring_line(pretension=1500)])
         result = router.route(system)
 
@@ -188,6 +188,14 @@ class TestMooringRouter:
         assert winch["name"] == "Winch_ML1"
         assert winch["properties"]["Tension"] == 1500
         assert winch["properties"]["WinchControl"] == "Specified tension"
+        # Winch sits on the vessel
+        assert winch["properties"]["Connection"] == "FPSO"
+        # Line End B routes through the winch
+        line = result["lines"][0]
+        assert line["properties"]["EndBConnection"] == "Winch_ML1"
+        assert line["properties"]["EndBX"] == 0
+        assert line["properties"]["EndBY"] == 0
+        assert line["properties"]["EndBZ"] == 0
 
     def test_no_pretension_no_winch(self, router):
         """Line without pretension -> no winches key or empty."""
