@@ -1,14 +1,28 @@
 summary:
-  total: 8
+  total: 9
   by_category:
     installation: 2
-    mooring: 1
+    mooring: 2
     pipeline: 1
     riser: 4
   avg_quality: 100.0
-  schema_valid_count: 8
+  schema_valid_count: 9
 specs:
 - &id001
+  path: docs/modules/orcaflex/library/templates/calm_buoy_moored/spec.yml
+  name: calm_buoy_moored_template
+  description: Discretised CALM buoy with 6-leg chain mooring, supply vessel, hose
+    and hawser
+  structure: mooring
+  operation: in-place
+  model_type: generic
+  category: mooring
+  quality_score: 100
+  schema_valid: true
+  line_count: 887
+  has_comments: true
+  has_raw_properties: false
+- &id003
   path: docs/modules/orcaflex/library/templates/installation_pull_in/spec.yml
   name: installation_pull_in_template
   description: Subsea pipe pull-in through funnel with winch-controlled dynamics
@@ -21,7 +35,7 @@ specs:
   line_count: 645
   has_comments: true
   has_raw_properties: false
-- &id002
+- &id004
   path: docs/modules/orcaflex/library/templates/installation_subsea/spec.yml
   name: installation_subsea_template
   description: Subsea mudmat lowering with 6D buoy representation
@@ -34,7 +48,7 @@ specs:
   line_count: 196
   has_comments: true
   has_raw_properties: false
-- &id003
+- &id002
   path: docs/modules/orcaflex/library/templates/mooring_buoy/spec.yml
   name: mooring_buoy_template
   description: Metocean data buoy with mooring legs in 500m deep water
@@ -47,7 +61,7 @@ specs:
   line_count: 763
   has_comments: true
   has_raw_properties: false
-- &id004
+- &id005
   path: docs/modules/orcaflex/library/templates/pipeline_installation/spec.yml
   name: pipeline_installation_template
   description: Pipeline floating installation with 5 tugs (OD=0.762m, 30in NPS)
@@ -60,7 +74,7 @@ specs:
   line_count: 101
   has_comments: true
   has_raw_properties: false
-- &id005
+- &id006
   path: docs/modules/orcaflex/library/templates/riser_catenary/spec.yml
   name: riser_catenary_template
   description: Simple catenary riser connected to FPSO
@@ -73,7 +87,7 @@ specs:
   line_count: 108
   has_comments: true
   has_raw_properties: false
-- &id006
+- &id007
   path: docs/modules/orcaflex/library/templates/riser_lazy_wave/spec.yml
   name: riser_lazy_wave_template
   description: Lazy wave riser with distributed buoyancy section
@@ -86,7 +100,7 @@ specs:
   line_count: 188
   has_comments: true
   has_raw_properties: false
-- &id007
+- &id008
   path: docs/modules/orcaflex/library/templates/riser_pliant_wave/spec.yml
   name: riser_pliant_wave_template
   description: Pliant wave riser with subsea buoy clamp and tether link
@@ -99,7 +113,7 @@ specs:
   line_count: 183
   has_comments: true
   has_raw_properties: false
-- &id008
+- &id009
   path: docs/modules/orcaflex/library/templates/riser_steep_wave/spec.yml
   name: riser_steep_wave_template
   description: Steep wave riser with buoyant section and fine-mesh bend stiffener
@@ -114,15 +128,16 @@ specs:
   has_comments: true
   has_raw_properties: false
 by_category:
-  installation:
+  mooring:
   - *id001
   - *id002
-  mooring:
+  installation:
   - *id003
-  pipeline:
   - *id004
-  riser:
+  pipeline:
   - *id005
+  riser:
   - *id006
   - *id007
   - *id008
+  - *id009

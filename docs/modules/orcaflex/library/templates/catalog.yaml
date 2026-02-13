@@ -29,6 +29,23 @@ templates:
   - subsea
   - mudmat
   - lowering
+- name: calm_buoy_moored
+  path: calm_buoy_moored/spec.yml
+  schema_type: generic
+  structure: mooring
+  description: Discretised CALM buoy with 6-leg chain mooring, supply vessel, hose and hawser
+  source: examples/raw/C06/C06 Discretised CALM buoy.dat
+  water_depth_m: 100
+  benchmark_validated: false
+  complexity: complex
+  tags:
+  - mooring
+  - calm-buoy
+  - chain
+  - hose
+  - hawser
+  - vessel
+  - swivel
 - name: mooring_buoy
   path: mooring_buoy/spec.yml
   schema_type: generic
