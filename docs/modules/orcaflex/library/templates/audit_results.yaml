@@ -1,12 +1,14 @@
 summary:
-  total: 9
+  total: 12
   by_category:
     installation: 2
+    jumper: 1
     mooring: 2
     pipeline: 1
-    riser: 4
-  avg_quality: 100.0
-  schema_valid_count: 9
+    riser: 5
+    vessel: 1
+  avg_quality: 98.3
+  schema_valid_count: 12
 specs:
 - &id001
   path: docs/modules/orcaflex/library/templates/calm_buoy_moored/spec.yml
@@ -23,6 +25,19 @@ specs:
   has_comments: true
   has_raw_properties: false
 - &id003
+  path: docs/modules/orcaflex/library/templates/drilling_riser/spec.yml
+  name: drilling_riser_template
+  description: Drilling riser with tensioner system on semisub in 1020m water depth
+  structure: riser
+  operation: drilling
+  model_type: generic
+  category: riser
+  quality_score: 90
+  schema_valid: true
+  line_count: 1149
+  has_comments: true
+  has_raw_properties: false
+- &id008
   path: docs/modules/orcaflex/library/templates/installation_pull_in/spec.yml
   name: installation_pull_in_template
   description: Subsea pipe pull-in through funnel with winch-controlled dynamics
@@ -35,7 +50,7 @@ specs:
   line_count: 645
   has_comments: true
   has_raw_properties: false
-- &id004
+- &id009
   path: docs/modules/orcaflex/library/templates/installation_subsea/spec.yml
   name: installation_subsea_template
   description: Subsea mudmat lowering with 6D buoy representation
@@ -46,6 +61,19 @@ specs:
   quality_score: 100
   schema_valid: true
   line_count: 196
+  has_comments: true
+  has_raw_properties: false
+- &id010
+  path: docs/modules/orcaflex/library/templates/jumper_rigid_subsea/spec.yml
+  name: jumper_rigid_subsea_template
+  description: 10.75-inch rigid subsea jumper with buoyancy and strakes, PLET-to-PLEM
+  structure: installation
+  operation: in-place
+  model_type: generic
+  category: jumper
+  quality_score: 100
+  schema_valid: true
+  line_count: 492
   has_comments: true
   has_raw_properties: false
 - &id002
@@ -61,7 +89,7 @@ specs:
   line_count: 763
   has_comments: true
   has_raw_properties: false
-- &id005
+- &id011
   path: docs/modules/orcaflex/library/templates/pipeline_installation/spec.yml
   name: pipeline_installation_template
   description: Pipeline floating installation with 5 tugs (OD=0.762m, 30in NPS)
@@ -74,7 +102,7 @@ specs:
   line_count: 101
   has_comments: true
   has_raw_properties: false
-- &id006
+- &id004
   path: docs/modules/orcaflex/library/templates/riser_catenary/spec.yml
   name: riser_catenary_template
   description: Simple catenary riser connected to FPSO
@@ -87,7 +115,7 @@ specs:
   line_count: 108
   has_comments: true
   has_raw_properties: false
-- &id007
+- &id005
   path: docs/modules/orcaflex/library/templates/riser_lazy_wave/spec.yml
   name: riser_lazy_wave_template
   description: Lazy wave riser with distributed buoyancy section
@@ -100,7 +128,7 @@ specs:
   line_count: 188
   has_comments: true
   has_raw_properties: false
-- &id008
+- &id006
   path: docs/modules/orcaflex/library/templates/riser_pliant_wave/spec.yml
   name: riser_pliant_wave_template
   description: Pliant wave riser with subsea buoy clamp and tether link
@@ -113,7 +141,7 @@ specs:
   line_count: 183
   has_comments: true
   has_raw_properties: false
-- &id009
+- &id007
   path: docs/modules/orcaflex/library/templates/riser_steep_wave/spec.yml
   name: riser_steep_wave_template
   description: Steep wave riser with buoyant section and fine-mesh bend stiffener
@@ -127,17 +155,35 @@ specs:
   line_count: 142
   has_comments: true
   has_raw_properties: false
+- &id012
+  path: docs/modules/orcaflex/library/templates/wind_turbine_fixed/spec.yml
+  name: wind_turbine_fixed_template
+  description: 10MW fixed-bottom OWT on monopile in 30m water
+  structure: vessel
+  operation: in-place
+  model_type: generic
+  category: vessel
+  quality_score: 90
+  schema_valid: true
+  line_count: 1522
+  has_comments: true
+  has_raw_properties: false
 by_category:
   mooring:
   - *id001
   - *id002
-  installation:
+  riser:
   - *id003
   - *id004
-  pipeline:
   - *id005
-  riser:
   - *id006
   - *id007
+  installation:
   - *id008
   - *id009
+  jumper:
+  - *id010
+  pipeline:
+  - *id011
+  vessel:
+  - *id012

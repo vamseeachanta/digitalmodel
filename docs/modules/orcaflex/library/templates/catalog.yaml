@@ -1,5 +1,21 @@
 version: '1.0'
 templates:
+- name: jumper_rigid_subsea
+  path: jumper_rigid_subsea/spec.yml
+  schema_type: generic
+  structure: installation
+  description: Rigid M-shaped subsea jumper with buoyancy and strake sections
+  source: jumper/plet_to_plem/monolithic/SZ.yml
+  water_depth_m: 1996
+  benchmark_validated: false
+  complexity: complex
+  tags:
+  - jumper
+  - subsea
+  - rigid-pipe
+  - m-shape
+  - plet
+  - deep-water
 - name: installation_pull_in
   path: installation_pull_in/spec.yml
   schema_type: generic
@@ -29,6 +45,22 @@ templates:
   - subsea
   - mudmat
   - lowering
+- name: drilling_riser
+  path: drilling_riser/spec.yml
+  schema_type: generic
+  structure: riser
+  description: Drilling riser with tensioner system on semisub in 1020m water depth
+  source: examples/raw/B01/B01 Drilling riser.dat
+  water_depth_m: 1020
+  benchmark_validated: false
+  complexity: complex
+  tags:
+  - riser
+  - drilling
+  - semisub
+  - tensioner
+  - bop
+  - deep-water
 - name: calm_buoy_moored
   path: calm_buoy_moored/spec.yml
   schema_type: generic
@@ -135,3 +167,18 @@ templates:
   - fpso
   - production
   - buoyancy
+- name: wind_turbine_fixed
+  path: wind_turbine_fixed/spec.yml
+  schema_type: generic
+  structure: vessel
+  description: IEA 10MW fixed-bottom offshore wind turbine on monopile with steady wind
+  source: examples/raw/K02/K02 10MW fixed-bottom OWT.dat
+  water_depth_m: 30
+  benchmark_validated: false
+  complexity: complex
+  tags:
+  - wind-turbine
+  - fixed-bottom
+  - monopile
+  - 10mw
+  - steady-wind

@@ -1,0 +1,1522 @@
+# OrcaFlex Modular Model Generator - Template Specification
+# Fixed-Bottom Offshore Wind Turbine (10MW)
+#
+# Model Type: Generic (wind turbine / monopile foundation)
+# Source: OrcaFlex Examples - K02 10MW fixed-bottom OWT
+# Template Version: 1.0
+#
+# IEA 10MW Reference Wind Turbine on monopile foundation in 30m water.
+# Tower modeled as homogeneous pipe with variable OD/ID taper.
+# Monopile: 9m OD, 40m above mudline + 45m embedded.
+# Soil represented by distributed spring constraints (Winkler model)
+# at 5m intervals along embedded length.
+#
+# NOTE: The original K02 model uses turbulent wind from a TurbSim .bts
+# file and an external Bladed controller DLL. This template replaces
+# those with steady wind and specified-torque generator to avoid
+# external file dependencies. See comments below for how to restore
+# turbulent wind and controller.
+#
+# Usage:
+#   Copy this directory, modify values, then generate:
+#   uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+#       --input spec.yml --output modular/
+
+metadata:
+  name: "wind_turbine_fixed_template"
+  description: "10MW fixed-bottom OWT on monopile in 30m water"
+  structure: vessel                        # wind turbine modeled as vessel/line composite
+  operation: in-place                      # operational in-place analysis
+  project: "OrcaFlex Templates"
+  version: "1.0"
+
+environment:
+  water:
+    depth: 30                              # Water depth (m)
+    density: 1.025                         # Seawater density (te/m3)
+  seabed:
+    slope: 0                               # Flat seabed
+    stiffness:
+      normal: 0                            # Normal stiffness (kN/m/m2) - soil via constraints
+      shear: 100                           # Shear stiffness (kN/m/m2)
+  waves:
+    type: JONSWAP                          # Irregular sea state
+    height: 5                              # Significant wave height Hs (m)
+    period: 6.51155                        # Zero-crossing period Tz (s)
+    direction: 180                         # Wave direction (deg)
+  current:
+    speed: 0                               # No current in base case
+    direction: 180                         # Current direction (deg)
+    profile:
+    - - 0
+      - 1
+    - - 100
+      - 1
+  wind:
+    # STEADY WIND - replaces original TurbSim .bts turbulent field.
+    # Original K02 used: WindType: "Full field", WindFullFieldFormat: TurbSim,
+    #   WindFullFieldTurbSimFileName: wind.bts, WindDirection: 180
+    # To restore turbulent wind, set wind speed to 0 here and add to
+    # environment raw_properties:
+    #   WindType: "Full field"
+    #   WindFullFieldFormat: TurbSim
+    #   WindFullFieldTurbSimFileName: wind.bts
+    speed: 11.4                            # Rated wind speed for 10MW turbine (m/s)
+    direction: 180                         # Wind direction (deg), aligned with waves
+
+simulation:
+  stages:                                  # Two-stage simulation
+  - 100                                    # Build-up stage (s)
+  - 100                                    # Production stage (s)
+  time_step: 0.05                          # Implicit constant time step (s)
+
+generic:
+  line_types:
+  - name: Tower line type                  # Tapered tower section
+    category: Homogeneous pipe
+    outer_diameter: Tower OD               # Variable data reference - tapered 5.5-8.3m
+    inner_diameter: Tower ID               # Variable data reference - tapered 5.44-8.16m
+    properties:
+      MaterialDensity: 8.5                 # Steel density (te/m3)
+      E: 210e6                             # Young's modulus (kN/m2)
+      PoissonRatio: 0.3
+      Cdn: 1                               # Normal drag coefficient
+      Cdz: 0.008                           # Axial drag coefficient
+      Cl: 0                                # Lift coefficient
+      Can: 1                               # Normal added mass coefficient
+      Caz: 0                               # Axial added mass coefficient
+      Cs: 0                                # Slam coefficient
+      Ce: 0                                # Exit coefficient
+      SeabedLateralFrictionCoefficient: 0.5
+      RayleighDampingCoefficients: (no damping)
+      CoatingThickness: 0
+      LiningThickness: 0
+      AdditionalEI: 0
+      ExpansionTable: None
+
+  - name: Monopile (above mudline) line type  # Monopile above seabed
+    category: Homogeneous pipe
+    outer_diameter: 9                      # Constant OD (m)
+    inner_diameter: Monopile ID            # Variable data reference - 8.69-8.80m
+    properties:
+      MaterialDensity: 8.5                 # Steel density (te/m3)
+      E: 210e6                             # Young's modulus (kN/m2)
+      PoissonRatio: 0.3
+      Cdn: 1
+      Cdz: 0.008
+      Cl: 0
+      Can: 1
+      Caz: 0
+      Cs: 0
+      Ce: 0
+      SeabedLateralFrictionCoefficient: 0.5
+      RayleighDampingCoefficients: (no damping)
+      CoatingThickness: 0
+      LiningThickness: 0
+      AdditionalEI: 0
+      ExpansionTable: None
+
+  - name: Monopile (below mudline) line type  # Embedded monopile section
+    category: Homogeneous pipe
+    outer_diameter: 9                      # Constant OD (m)
+    inner_diameter: 8.8                    # Constant ID (m)
+    properties:
+      MaterialDensity: 8.5                 # Steel density (te/m3)
+      E: 210e6                             # Young's modulus (kN/m2)
+      PoissonRatio: 0.3
+      Cdn: 1
+      Cdz: 0.008
+      Cl: 0
+      Can: 1
+      Caz: 0
+      Cs: 0
+      Ce: 0
+      SeabedLateralFrictionCoefficient: 0.5
+      RayleighDampingCoefficients: (no damping)
+      CoatingThickness: 0
+      LiningThickness: 0
+      AdditionalEI: 0
+      ExpansionTable: None
+
+  lines:
+  - name: Tower                            # Tower from nacelle to monopile top
+    properties:
+      IncludeTorsion: true
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      PyModel: (none)
+      PreBendSpecifiedBy: Bend angle
+      DragFormulation: Standard
+      StaticsVIV: None
+      DynamicsVIV: None
+      WaveCalculationMethod: Specified by environment
+      # End connections
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage,
+        ConnectionzRelativeTo
+      : - - Nacelle                        # End A -> Nacelle 6D buoy
+          - 0
+          - 0
+          - 0
+          - 0
+          - 180
+          - 0
+          - null
+        - - Monopile                       # End B -> Monopile line End A
+          - 0
+          - 0
+          - 0
+          - 180
+          - 0
+          - -180
+          - null
+          - End A
+      ? ConnectionxBendingStiffness, ConnectionyBendingStiffness,
+        ConnectionTwistingStiffness, ConnectionDamping
+      : - - Infinity
+          - null
+          - Infinity
+        - - Infinity
+          - null
+          - Infinity
+      ? ConnectionInitialArclength, ConnectionPayoutRate,
+        ConnectionShortestViableSegmentFactor, ConnectionApplyRamp,
+        ConnectionUseSmoothGrowth
+      : - - null
+          - 0
+          - 0.001
+        - - null
+          - 0
+          - 0.001
+      # Section: single tower section
+      LineType, Length, TargetSegmentLength:
+      - - Tower line type
+        - 105.63                           # Tower height (m)
+        - 5                                # Segment length (m)
+      # Contents
+      ContentsMethod: Uniform
+      IncludeAxialContentsInertia: true
+      ContentsDensity: 0
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      # Statics
+      IncludedInStatics: true
+      StaticsStep1: Quick
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: None
+
+  - name: Monopile                         # Monopile: above + below mudline
+    properties:
+      IncludeTorsion: true
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      PyModel: (none)
+      PreBendSpecifiedBy: Bend angle
+      DragFormulation: Standard
+      StaticsVIV: None
+      DynamicsVIV: None
+      WaveCalculationMethod: Specified by environment
+      # End connections
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage,
+        ConnectionzRelativeTo
+      : - - Free                           # End A at 10m above MSL (top of monopile)
+          - 0
+          - 0
+          - 10                             # Elevation above MSL (m)
+          - 180
+          - 180
+          - 0
+          - null
+        - - "Soil-h=45m: Rz"              # End B -> deepest soil constraint
+          - 0
+          - 0
+          - 0
+          - 0
+          - 180
+          - 0
+          - null
+      ? ConnectionxBendingStiffness, ConnectionyBendingStiffness,
+        ConnectionTwistingStiffness, ConnectionDamping
+      : - []
+        - - Infinity
+          - null
+          - Infinity
+      ? ConnectionInitialArclength, ConnectionPayoutRate,
+        ConnectionShortestViableSegmentFactor, ConnectionApplyRamp,
+        ConnectionUseSmoothGrowth
+      : - - null
+          - 0
+          - 0.001
+        - - null
+          - 0
+          - 0.001
+      # Mid-line connections to soil constraints at 5m intervals
+      ? MidLineConnectionArclength, MidLineConnectionRelativeTo,
+        MidLineConnection, MidLineConnectionX, MidLineConnectionY,
+        MidLineConnectionZ, MidLineConnectionAzimuth,
+        MidLineConnectionDeclination, MidLineConnectionGamma,
+        MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo
+      : - [45, End B, "Soil-h=0m: Rz",  0, 0, 0, 0, 180, 0, null]   # Mudline
+        - [40, End B, "Soil-h=5m: Rz",  0, 0, 0, 0, 180, 0, null]   # 5m below
+        - [35, End B, "Soil-h=10m: Rz", 0, 0, 0, 0, 180, 0, null]   # 10m below
+        - [30, End B, "Soil-h=15m: Rz", 0, 0, 0, 0, 180, 0, null]   # 15m below
+        - [25, End B, "Soil-h=20m: Rz", 0, 0, 0, 0, 180, 0, null]   # 20m below
+        - [20, End B, "Soil-h=25m: Rz", 0, 0, 0, 0, 180, 0, null]   # 25m below
+        - [15, End B, "Soil-h=30m: Rz", 0, 0, 0, 0, 180, 0, null]   # 30m below
+        - [10, End B, "Soil-h=35m: Rz", 0, 0, 0, 0, 180, 0, null]   # 35m below
+        - [5,  End B, "Soil-h=40m: Rz", 0, 0, 0, 0, 180, 0, null]   # 40m below
+      # Sections: above mudline + embedded
+      LineType, Length, TargetSegmentLength:
+      - - Monopile (above mudline) line type
+        - 40                               # Above mudline (m)
+        - 5                                # Segment length (m)
+      - - Monopile (below mudline) line type
+        - 45                               # Embedded length (m)
+        - 5                                # Segment length (m)
+      # Contents
+      ContentsMethod: Uniform
+      IncludeAxialContentsInertia: true
+      ContentsDensity: 0
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      # Statics
+      IncludedInStatics: true
+      StaticsStep1: Quick
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: None
+      FullStaticsTolerance: 2e-6
+
+  buoys_6d:
+  - name: Nacelle                          # RNA mass represented as lumped 6D buoy
+    buoy_type: Lumped buoy
+    connection: Free
+    initial_position: [0, 0, 115.63]       # Tower top elevation (m)
+    mass: 639.08                           # Nacelle + RNA mass (te)
+    properties:
+      DegreesOfFreedomInStatics: All
+      DampingRelativeTo: Earth
+      DisturbanceVessel: (none)
+      WaveCalculationMethod: Specified by environment
+      InitialAttitude: [0, 0, 180]
+      MomentsOfInertia: [8754.383, 8767.076, 8195.307]   # Ixx, Iyy, Izz (te.m2)
+      CentreOfMass: [-4.133, 0, 2.953]    # COM offset from connection (m)
+      LumpedBuoyAddedMassMethod: Diagonal values
+      Volume: 100                          # Displaced volume (m3)
+      BulkModulus: Infinity
+      Height: 10                           # Buoy height (m)
+      CentreOfVolume: [-4.133, 0, 2.953]
+      UnitDampingForce: [0, 0, 0]
+      UnitDampingMoment: [0, 0, 0]
+      DragArea: [77.557, 47.964, 55.04]   # Projected drag areas (m2)
+      DragAreaMoment: [0, 0, 0]
+      DragForceCoefficient: [1, 1, 1]
+      DragMomentCoefficient: [0, 0, 0]
+      AddedMassCoefficient: [0, 0, 0]
+      AddedInertiaCoefficient: [0, 0, 0]
+      LumpedBuoySlamArea: 0
+      LumpedBuoySlamForceDataEntry: 0
+      LumpedBuoySlamForceDataExit: 0
+      SeabedFrictionCoefficient: 0
+
+  constraints:
+  # ---------------------------------------------------------------------------
+  # Soil spring constraints (Winkler distributed spring model)
+  #
+  # Each soil depth has 4 chained constraints decomposing 6 DOF:
+  #   Rz  -> torsional spring (rotational about pile axis)
+  #   Ry-Rx -> lateral rotational springs (bending resistance)
+  #   z   -> vertical spring (skin friction / end bearing)
+  #   y-x -> lateral springs (p-y soil reaction)
+  #
+  # The constraints chain: Rz -> Ry-Rx -> z -> y-x -> Anchored
+  # Stiffness values increase with depth (depth-dependent soil reaction).
+  # 10 depths at 5m intervals: h=0m (mudline) through h=45m (pile tip).
+  # ---------------------------------------------------------------------------
+
+  # --- Mudline (h=0m) ---
+  - name: "Soil-h=0m: Rz"
+    in_frame_connection: "Soil-h=0m: Ry-Rx"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 1.187522023e6   # Torsional spring (kN.m/rad)
+      TranslationalDamping: 0
+      RotationalDamping: 0
+      AllowRotationalWinding: true
+
+  - name: "Soil-h=0m: Ry-Rx"
+    in_frame_connection: "Soil-h=0m: z"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 989.601686e3    # Lateral rotational (kN.m/rad)
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=0m: z"
+    in_frame_connection: "Soil-h=0m: y-x"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 4.2e6        # Vertical spring (kN/m)
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=0m: y-x"
+    in_frame_connection: Anchored
+    constraint_type: Calculated DOFs
+    properties:
+      InFrameInitialPosition: [0, 0, 0]
+      InFrameInitialAttitude: [0, 0, 180]
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 3.183157895e6  # Lateral p-y spring (kN/m)
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  # --- 5m below mudline (h=5m) ---
+  - name: "Soil-h=5m: Rz"
+    in_frame_connection: "Soil-h=5m: Ry-Rx"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 1.187522023e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+      AllowRotationalWinding: true
+
+  - name: "Soil-h=5m: Ry-Rx"
+    in_frame_connection: "Soil-h=5m: z"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 2.215676093e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=5m: z"
+    in_frame_connection: "Soil-h=5m: y-x"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 5.88e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=5m: y-x"
+    in_frame_connection: Anchored
+    constraint_type: Calculated DOFs
+    properties:
+      InFrameInitialPosition: [0, 0, -5]
+      InFrameInitialAttitude: [0, 0, 180]
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 6.295578947e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  # --- 10m below mudline (h=10m) ---
+  - name: "Soil-h=10m: Rz"
+    in_frame_connection: "Soil-h=10m: Ry-Rx"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 1.187522023e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+      AllowRotationalWinding: true
+
+  - name: "Soil-h=10m: Ry-Rx"
+    in_frame_connection: "Soil-h=10m: z"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 6.048108849e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=10m: z"
+    in_frame_connection: "Soil-h=10m: y-x"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 7.56e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=10m: y-x"
+    in_frame_connection: Anchored
+    constraint_type: Calculated DOFs
+    properties:
+      InFrameInitialPosition: [0, 0, -10]
+      InFrameInitialAttitude: [0, 0, 180]
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 9.408e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  # --- 15m below mudline (h=15m) ---
+  - name: "Soil-h=15m: Rz"
+    in_frame_connection: "Soil-h=15m: Ry-Rx"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 1.187522023e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+      AllowRotationalWinding: true
+
+  - name: "Soil-h=15m: Ry-Rx"
+    in_frame_connection: "Soil-h=15m: z"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 15.093258305e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=15m: z"
+    in_frame_connection: "Soil-h=15m: y-x"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 9.24e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=15m: y-x"
+    in_frame_connection: Anchored
+    constraint_type: Calculated DOFs
+    properties:
+      InFrameInitialPosition: [0, 0, -15]
+      InFrameInitialAttitude: [0, 0, 180]
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 12.520421053e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  # --- 20m below mudline (h=20m) ---
+  - name: "Soil-h=20m: Rz"
+    in_frame_connection: "Soil-h=20m: Ry-Rx"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 1.187522023e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+      AllowRotationalWinding: true
+
+  - name: "Soil-h=20m: Ry-Rx"
+    in_frame_connection: "Soil-h=20m: z"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 31.95748281e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=20m: z"
+    in_frame_connection: "Soil-h=20m: y-x"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 10.92e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=20m: y-x"
+    in_frame_connection: Anchored
+    constraint_type: Calculated DOFs
+    properties:
+      InFrameInitialPosition: [0, 0, -20]
+      InFrameInitialAttitude: [0, 0, 180]
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 15.632842105e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  # --- 25m below mudline (h=25m) ---
+  - name: "Soil-h=25m: Rz"
+    in_frame_connection: "Soil-h=25m: Ry-Rx"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 1.187522023e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+      AllowRotationalWinding: true
+
+  - name: "Soil-h=25m: Ry-Rx"
+    in_frame_connection: "Soil-h=25m: z"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 59.247140714e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=25m: z"
+    in_frame_connection: "Soil-h=25m: y-x"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 12.6e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=25m: y-x"
+    in_frame_connection: Anchored
+    constraint_type: Calculated DOFs
+    properties:
+      InFrameInitialPosition: [0, 0, -25]
+      InFrameInitialAttitude: [0, 0, 180]
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 18.745263158e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  # --- 30m below mudline (h=30m) ---
+  - name: "Soil-h=30m: Rz"
+    in_frame_connection: "Soil-h=30m: Ry-Rx"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 1.187522023e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+      AllowRotationalWinding: true
+
+  - name: "Soil-h=30m: Ry-Rx"
+    in_frame_connection: "Soil-h=30m: z"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 99.568590365e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=30m: z"
+    in_frame_connection: "Soil-h=30m: y-x"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 14.28e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=30m: y-x"
+    in_frame_connection: Anchored
+    constraint_type: Calculated DOFs
+    properties:
+      InFrameInitialPosition: [0, 0, -30]
+      InFrameInitialAttitude: [0, 0, 180]
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 21.857684211e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  # --- 35m below mudline (h=35m) ---
+  - name: "Soil-h=35m: Rz"
+    in_frame_connection: "Soil-h=35m: Ry-Rx"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 1.187522023e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+      AllowRotationalWinding: true
+
+  - name: "Soil-h=35m: Ry-Rx"
+    in_frame_connection: "Soil-h=35m: z"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 155.528190115e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=35m: z"
+    in_frame_connection: "Soil-h=35m: y-x"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 15.96e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=35m: y-x"
+    in_frame_connection: Anchored
+    constraint_type: Calculated DOFs
+    properties:
+      InFrameInitialPosition: [0, 0, -35]
+      InFrameInitialAttitude: [0, 0, 180]
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 24.970105263e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  # --- 40m below mudline (h=40m) ---
+  - name: "Soil-h=40m: Rz"
+    in_frame_connection: "Soil-h=40m: Ry-Rx"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 1.187522023e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+      AllowRotationalWinding: true
+
+  - name: "Soil-h=40m: Ry-Rx"
+    in_frame_connection: "Soil-h=40m: z"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 229.732298312e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=40m: z"
+    in_frame_connection: "Soil-h=40m: y-x"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 17.64e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=40m: y-x"
+    in_frame_connection: Anchored
+    constraint_type: Calculated DOFs
+    properties:
+      InFrameInitialPosition: [0, 0, -40]
+      InFrameInitialAttitude: [0, 0, 180]
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 28.082526316e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  # --- Pile tip (h=45m) ---
+  - name: "Soil-h=45m: Rz"
+    in_frame_connection: "Soil-h=45m: Ry-Rx"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 1.187522023e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+      AllowRotationalWinding: true
+
+  - name: "Soil-h=45m: Ry-Rx"
+    in_frame_connection: "Soil-h=45m: z"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 324.787273306e6
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=45m: z"
+    in_frame_connection: "Soil-h=45m: y-x"
+    constraint_type: Calculated DOFs
+    properties:
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [false]
+      - [false]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 19.32e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  - name: "Soil-h=45m: y-x"
+    in_frame_connection: Anchored
+    constraint_type: Calculated DOFs
+    properties:
+      InFrameInitialPosition: [0, 0, -45]
+      InFrameInitialAttitude: [0, 0, 180]
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:
+      - [true, 0]
+      - [true, 0]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 31.194947368e6
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  turbines:
+  - name: 10MW RWT                         # IEA 10MW Reference Wind Turbine
+    connection: Nacelle
+    properties:
+      ImposedMotionConsistentWithSolver: false
+      InitialPosition: [-9.984, 0, 2.789]
+      InitialAttitude: [0, 96, 180]        # Shaft tilt ~6 deg from horizontal
+      # Generator — steady-state (no controller DLL needed)
+      # Original K02 used: GeneratorTorqueController: Controller
+      #   with external BladedControllerWrapper.py + libdiscon.dll
+      # To restore controller: add Controller external function to
+      #   variable_data_sources and set GeneratorTorqueController/PitchController
+      GeneratorMode: Specified torque
+      InitialRotorAngle: 0
+      GeneratorGearRatio: 1
+      GeneratorInertia: 3801.7             # Generator inertia (te.m2)
+      InitialRotorAngVel: 0
+      # Hub data
+      HubRadius: 2.3                       # Hub radius (m)
+      HubMass: 81.707                      # Hub mass (te)
+      HubAxialMomentOfInertia: 476.512     # Hub Ixx (te.m2)
+      HubTransverseMomentOfInertia: 484.375  # Hub Iyy (te.m2)
+      HubCOM: -0.037                       # Hub COM offset from hub centre (m)
+      MainShaftStiffness: Infinity
+      RotationSense: Clockwise
+      # Blades
+      BladeCount: 3
+      PreConeAngle: 4                      # Pre-cone angle (deg)
+      PitchControlMode: Common
+      InitialPitch: [0, 0, 0]             # Initial blade pitch angles (deg)
+      BladeDOFType: Free
+      RayleighDampingCoefficients: (no damping)
+      DOFsSolvedIn: Inertial frame
+      # Blade sections (30 sections with aerofoil wing types AF01-AF30)
+      # NOTE: Wing types AF01-AF30 must be provided separately as they
+      # contain large aerofoil polar tables. See the K02 monolithic YAML
+      # for the full aerofoil data.
+      BladeSections:
+      - BladeSectionLength: 1.6681
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF01
+      - BladeSectionLength: 3.33653
+        BladeSectionNumberOfSegments: 2
+        BladeSectionWingType: AF02
+      - BladeSectionLength: 3.33652
+        BladeSectionNumberOfSegments: 2
+        BladeSectionWingType: AF03
+      - BladeSectionLength: 3.33654
+        BladeSectionNumberOfSegments: 2
+        BladeSectionWingType: AF04
+      - BladeSectionLength: 3.33677
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF05
+      - BladeSectionLength: 3.33646
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF06
+      - BladeSectionLength: 3.33621
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF07
+      - BladeSectionLength: 3.33642
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF08
+      - BladeSectionLength: 3.33661
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF09
+      - BladeSectionLength: 3.33673
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF10
+      - BladeSectionLength: 3.33665
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF11
+      - BladeSectionLength: 3.33645
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF12
+      - BladeSectionLength: 3.33689
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF13
+      - BladeSectionLength: 3.33706
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF14
+      - BladeSectionLength: 3.337
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF15
+      - BladeSectionLength: 3.33717
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF16
+      - BladeSectionLength: 3.33769
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF17
+      - BladeSectionLength: 3.33872
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF18
+      - BladeSectionLength: 3.33947
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF19
+      - BladeSectionLength: 3.34089
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF20
+      - BladeSectionLength: 3.34327
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF21
+      - BladeSectionLength: 3.34578
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF22
+      - BladeSectionLength: 3.34963
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF23
+      - BladeSectionLength: 3.35617
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF24
+      - BladeSectionLength: 3.3647
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF25
+      - BladeSectionLength: 3.37729
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF26
+      - BladeSectionLength: 3.39762
+        BladeSectionNumberOfSegments: 2
+        BladeSectionWingType: AF27
+      - BladeSectionLength: 3.43031
+        BladeSectionNumberOfSegments: 2
+        BladeSectionWingType: AF28
+      - BladeSectionLength: 3.48851
+        BladeSectionNumberOfSegments: 2
+        BladeSectionWingType: AF29
+      - BladeSectionLength: 1.76309
+        BladeSectionNumberOfSegments: 1
+        BladeSectionWingType: AF30
+      # Blade structural profile (spanwise properties)
+      ? BladeProfileArclength, BladeProfileAerodynamicTwist,
+        BladeProfileChord, BladeProfileThickness,
+        BladeProfileAerodynamicCentreX, BladeProfileAerodynamicCentreY,
+        BladeProfileMassPerUnitLength, BladeProfileRadiusOfGyrationZ,
+        BladeProfileRadiusOfGyrationRatio, BladeProfileCOMOffsetX,
+        BladeProfileCOMOffsetY, BladeProfileInertiaTwist,
+        BladeProfileEIx, BladeProfileEIy, BladeProfileEA,
+        BladeProfileGJ, BladeProfilePreBendCurvatureX,
+        BladeProfilePreBendCurvatureY, BladeProfileNeutralAxisOffsetX,
+        BladeProfileNeutralAxisOffsetY, BladeProfileShearCentreOffsetX,
+        BladeProfileShearCentreOffsetY, BladeProfileStructuralTwist
+      : - [0, 12.00003, 4.6, 99.99278, 0, 50, 2.37193, 49.05004, 0.99997,
+           0.00546, 50.26304, null, 119.634e6, 117.729e6, 46.482e6,
+           36.45e6, 0, -0.00469669825, 0, 50, null, null, null]
+        - [3.3362, 11.99964, 4.60286, 99.60093, 0, 48.802, 1.28667,
+           47.60266, 1.20285, 0.06291, 51.34502, null, 68.833312253e6,
+           41.581542449e6, 22.507118326e6, 18.441720828e6, 0,
+           474.6305e-6, 0, 49.922, null, null, null]
+        - [6.67306, 11.99671, 4.72227, 95.42958, 0, 44, 1.21, 43.37731,
+           1.19295, 0.44789, 49.83365, null, 48.180004281e6,
+           36.551241645e6, 20.24675314e6, 14.035853843e6, 0,
+           -566.10589e-6, 0, 46.725, null, null, null]
+        - [10.00923, 12.02241, 5.00807, 81.8304, 0, 37.308, 1.09024,
+           39.07525, 0.78578, 0.79727, 47.24386, null, 32.811748548e6,
+           27.121549014e6, 17.314712559e6, 8.15358351e6, 0,
+           -75.32429e-6, 0, 42.889, null, null, null]
+        - [13.34614, 11.56869, 5.41151, 61.1039, 0, 30.669, 0.97073,
+           34.49305, 0.68266, 0.97805, 45.0656, null, 31.244057787e6,
+           16.709727754e6, 15.694582134e6, 4.320315529e6, 0,
+           -38.10139e-6, 0, 39.123, null, null, null]
+        - [16.68278, 10.03883, 5.80078, 42.28666, 0, 26.027, 0.85337,
+           30.68193, 0.55331, 0.87284, 43.78855, null, 31.773390459e6,
+           12.088246579e6, 14.248868249e6, 2.929998001e6, 0,
+           10.21748e-6, 0, 36.06, null, null, null]
+        - [20.01906, 8.07661, 6.01571, 34.52291, 0, 25, 0.75895,
+           28.93391, 0.48493, 0.6969, 42.82296, null, 29.226268871e6,
+           8.859498203e6, 12.457771387e6, 1.956916722e6, 0,
+           -78.14476e-6, 0, 34.024, null, null, null]
+        - [23.3552, 6.58359, 5.98223, 33.09736, 0, 25, 0.6711,
+           28.16284, 0.48618, 0.48915, 41.90117, null, 24.920591535e6,
+           6.978324444e6, 10.764994776e6, 1.310362119e6, 0,
+           -7.18431e-6, 0, 33.067, null, null, null]
+        - [26.69191, 5.66121, 5.82716, 32.79494, 0, 25, 0.6102,
+           27.65017, 0.49346, 0.42206, 41.13953, null, 20.900871221e6,
+           5.989160815e6, 9.803321495e6, 976.325734e3, 0,
+           -78.97862e-6, 0, 33.026, null, null, null]
+        - [30.02841, 5.01026, 5.60871, 32.3723, 0, 25, 0.55758,
+           27.08541, 0.50243, 0.40055, 40.5994, null, 17.407167835e6,
+           5.182557076e6, 9.045929916e6, 756.040572e3, 0,
+           -172.92808e-6, 0, 33.614, null, null, null]
+        - [33.36537, 4.44706, 5.34564, 32.00773, 0, 25, 0.51825,
+           26.59921, 0.50992, 0.42565, 40.51867, null, 14.511571522e6,
+           4.438212108e6, 8.511558781e6, 635.980411e3, 0,
+           -396.45201e-6, 0, 34.594, null, null, null]
+        - [36.7017, 3.93053, 5.05303, 31.70124, 0, 25, 0.4881,
+           26.17445, 0.51511, 0.41361, 40.46125, null, 11.88076585e6,
+           3.738625969e6, 8.13135955e6, 545.990326e3, 0,
+           -534.31496e-6, 0, 35.881, null, null, null]
+        - [40.03827, 3.44041, 4.74583, 31.37712, 0, 25, 0.45888,
+           25.71215, 0.51988, 0.37621, 40.47763, null, 9.750553615e6,
+           3.063706706e6, 7.790967339e6, 455.48999e3, 0,
+           -664.97511e-6, 0, 37.428, null, null, null]
+        - [43.37549, 2.9377, 4.43449, 30.94561, 0, 25, 0.43156,
+           25.22487, 0.52211, 0.33955, 40.55826, null, 7.729456763e6,
+           2.415046684e6, 7.404337173e6, 370.947052e3, 0,
+           -819.77299e-6, 0, 39.205, null, null, null]
+        - [46.71239, 2.39068, 4.12552, 30.34417, 0, 25, 0.4129,
+           24.26244, 0.5326, 0.30181, 40.60932, null, 6.068053883e6,
+           1.843163165e6, 7.038154568e6, 292.600011e3, 0,
+           -0.001145761, 0, 41.022, null, null, null]
+        - [50.04949, 1.80001, 3.82238, 29.44164, 0, 25, 0.38637,
+           23.79981, 0.52455, 0.30612, 40.49752, null, 4.681273343e6,
+           1.379956635e6, 6.631480284e6, 226.924174e3, 0,
+           -0.00151035595, 0, 42.828, null, null, null]
+        - [53.38673, 1.18189, 3.52978, 28.08805, 0, 25, 0.35893,
+           23.19299, 0.50252, 0.35715, 40.52331, null, 3.599625825e6,
+           1.003552808e6, 6.23329785e6, 174.666797e3, 0,
+           -0.00174216187, 0, 44.638, null, null, null]
+        - [56.72487, 0.55075, 3.25228, 26.95845, 0, 25, 0.33286,
+           22.67992, 0.47765, 0.43773, 40.45885, null, 2.758517403e6,
+           722.42244e3, 5.843244762e6, 131.934064e3, 0,
+           -0.00200213906, 0, 46.294, null, null, null]
+        - [60.06417, -0.07689, 2.99171, 25.71665, 0, 25, 0.30791,
+           22.21297, 0.44895, 0.5417, 40.30563, null, 2.079370436e6,
+           509.861285e3, 5.425085262e6, 97.927929e3, 0,
+           -0.00258462469, 0, 47.813, null, null, null]
+        - [63.40381, -0.68699, 2.74843, 24.64382, 0, 25, 0.28258,
+           21.85678, 0.42514, 0.66509, 40.13342, null, 1.571572627e6,
+           362.059707e3, 4.99931138e6, 72.305961e3, 0,
+           -0.00270516221, 0, 49.199, null, null, null]
+        - [66.74596, -1.2628, 2.52387, 24.03378, 0, 25, 0.25911,
+           21.63803, 0.41549, 0.78282, 39.93289, null, 1.183352684e6,
+           258.687042e3, 4.583332796e6, 53.371073e3, 0,
+           -0.00329819296, 0, 50.366, null, null, null]
+        - [70.09034, -1.79236, 2.31745, 23.63647, 0, 25, 0.23386,
+           21.60238, 0.40499, 0.88563, 39.69452, null, 877.039328e3,
+           183.403564e3, 4.119839286e6, 39.711527e3, 0,
+           -0.00395911072, 0, 51.357, null, null, null]
+        - [73.43753, -2.26249, 2.12805, 23.22284, 0, 25, 0.20866,
+           21.64636, 0.39169, 0.96366, 39.45408, null, 651.623388e3,
+           130.02187e3, 3.650844967e6, 29.936172e3, 0,
+           -0.00495721221, 0, 52.175, null, null, null]
+        - [76.78961, -2.64784, 1.95787, 22.77552, 0, 25, 0.18411,
+           21.75115, 0.37716, 1.0007, 39.21053, null, 479.45383e3,
+           93.554235e3, 3.166224994e6, 22.896724e3, 0,
+           -0.00610685263, 0, 52.537, null, null, null]
+        - [80.14987, -2.94293, 1.80259, 22.32884, 0, 25, 0.15935,
+           21.9296, 0.36282, 1.0161, 39.02964, null, 345.865734e3,
+           66.735739e3, 2.703672078e6, 17.432577e3, 0,
+           -0.00574756571, 0, 52.646, null, null, null]
+        - [83.519, -3.12934, 1.66004, 21.92547, 0, 25, 0.13404,
+           22.20656, 0.35033, 1.05966, 38.92357, null, 245.334671e3,
+           45.92611e3, 2.248031441e6, 13.00553e3, 0,
+           -0.00957349434, 0, 52.275, null, null, null]
+        - [86.90445, -3.13574, 1.52199, 21.58242, 0, 25, 0.10684,
+           22.71983, 0.33759, 1.15031, 39.18497, null, 163.826473e3,
+           29.216034e3, 1.761849114e6, 9154.989, 0,
+           -0.01077977367, 0, 51.381, null, null, null]
+        - [90.31424, -2.86333, 1.34271, 21.3195, 0, 25, 0.07449,
+           23.86718, 0.32072, 1.29433, 39.84689, null, 97.145952e3,
+           15.45142e3, 1.260514602e6, 5524.931, 0,
+           -0.01258028797, 0, 49.839, null, null, null]
+        - [93.76507, -2.04604, 1.05059, 21.15534, 0, 25, 0.04163,
+           26.14582, 0.28159, 1.4432, 41.92737, null, 41.756586e3,
+           4966.463, 729.388567e3, 2120.504, 0,
+           -0.02749073313, 0, 47.629, null, null, null]
+        - [97.29125, -0.03724, 0.0962, 21.09839, 0, 25, 0.00238,
+           29.15985, 0.15567, 1.43451, 50.22973, null, 21.094, 0.778,
+           27.7488e3, 0.032, 0, 0, 0, 44.6, null, null, null]
+      # BEM aerodynamics
+      IncludedInduction: Axial and tangential
+      BEMLowerBoundTSR: 1
+      BEMUpperBoundTSR: 2
+      BEMTolerance: 25e-6
+      BEMTipLossEnabled: true
+      BEMHubLossEnabled: true
+      BEMSkewedWakeEnabled: true
+      BEMDynamicInflowEnabled: true
+      TowerInfluence: Bak
+      TowerShadow: None
+      UAModel: None
+      # Tower shadow definition
+      ? TowerConnection, TowerConnectionX, TowerConnectionY,
+        TowerConnectionZ, TowerConnectionzRelativeTo
+      : - [Tower, 0, 0, 0, End A]
+        - [Tower, 0, 0, 105.63, End A]
+      TowerProfileArclength, TowerProfileOD, TowerProfileCd, TowerProfileTi:
+      - [0, 5.5, 1]
+      - [11.08, 5.79, 1]
+      - [21.59, 6.07, 1]
+      - [32.09, 6.35, 1]
+      - [42.6, 6.63, 1]
+      - [53.1, 6.91, 1]
+      - [63.61, 7.19, 1]
+      - [74.11, 7.46, 1]
+      - [84.62, 7.74, 1]
+      - [95.12, 8.02, 1]
+      - [105.63, 8.3, 1]
+
+  # Wing types AF01-AF30 omitted for brevity — they contain large aerofoil
+  # polar tables (Angle, Lift, Drag, Moment) with 200+ data points each.
+  # For a working model, copy wing_types from the K02 monolithic YAML:
+  #   docs/modules/orcaflex/examples/raw/K02/K02 10MW fixed-bottom OWT.yml
+  # Each wing type has UAEnabled: No (unsteady aerodynamics disabled).
+
+  variable_data_sources:
+  - name: Tower OD                         # Tower outer diameter taper (m)
+    data_type: Linetypediameter
+    properties:
+      IndependentValue, DependentValue:
+      - [0, 5.5]
+      - [11.08, 5.79]
+      - [21.59, 6.07]
+      - [32.09, 6.35]
+      - [42.6, 6.63]
+      - [53.1, 6.91]
+      - [63.61, 7.19]
+      - [74.11, 7.46]
+      - [84.62, 7.74]
+      - [95.12, 8.02]
+      - [105.63, 8.3]
+
+  - name: Tower ID                         # Tower inner diameter taper (m)
+    data_type: Linetypediameter
+    properties:
+      IndependentValue, DependentValue:
+      - [0, 5.44]
+      - [11.08, 5.73]
+      - [21.59, 6]
+      - [32.09, 6.26]
+      - [42.6, 6.53]
+      - [53.1, 6.8]
+      - [63.61, 7.07]
+      - [74.11, 7.34]
+      - [84.62, 7.61]
+      - [95.12, 7.88]
+      - [105.63, 8.16]
+
+  - name: Monopile ID                      # Monopile inner diameter variation (m)
+    data_type: Linetypediameter
+    properties:
+      IndependentValue, DependentValue:
+      - [0, 8.7]
+      - [2, 8.7]
+      - [4, 8.7]
+      - [6, 8.7]
+      - [8, 8.69]
+      - [10, 8.69]
+      - [12, 8.69]
+      - [14, 8.69]
+      - [16, 8.69]
+      - [18, 8.69]
+      - [20, 8.69]
+      - [24, 8.8]
+      - [28, 8.8]
+      - [32, 8.8]
+      - [36, 8.8]
+      - [40, 8.8]
+
+  groups:
+    data:
+      Structure:
+        Turbine group: Model
+        10MW RWT: Turbine group
+        Nacelle group: Model
+        Nacelle: Nacelle group
+        Tower group: Model
+        Tower: Tower group
+        Monopile group: Model
+        Monopile: Monopile group
+        Monopile soil constraints: Monopile group
+      State:
+        Collapsed:
+        - Wing types
+
+  general_properties:
+    UnitsSystem: SI
+    JacobianBufferingPolicy: 1
+    JacobianPerturbationFactor: 0
+    BuoysIncludedInStatics: Individually specified
+    LineStaticsStep1Policy: None
+    LineStaticsStep2Policy: None
+    WholeSystemStaticsEnabled: true
+    DynamicsSolutionMethod: Implicit time domain
+    ImplicitUseVariableTimeStep: false
+    LogPrecision: Double
+    TargetLogSampleInterval: 0.1
+    WaveKinematicsCutoffDepth: 30          # Equal to water depth (m)
+    WaveCalculationMethod: Instantaneous position (exact)
+    IncludeVesselWindLoads: true
+    IncludeLineWindLoads: true
+    IncludeBuoyWindLoads: true
+    IncludeBuoyWingWindLoads: true
+    AirDensity: 0.001225                   # Air density (te/m3)
+    KinematicStretchingMethod: Vertical stretching

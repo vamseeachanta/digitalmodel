@@ -1,0 +1,1149 @@
+# OrcaFlex Modular Model Generator - Template Specification
+# Drilling Riser with Tensioner System in Deep Water
+#
+# Model Type: Generic (riser/drilling configuration)
+# Source: OrcaFlex Examples - B01 Drilling riser
+# Template Version: 1.0
+#
+# Semisub-based drilling riser system in 1020m water depth.
+# Marine riser (24" homogeneous pipe) with slip joint connects
+# tensioner ring to flex joint/BOP at seabed. Drill string runs
+# through riser with choke and kill lines attached. Four tensioner
+# links (spring/damper) provide heave compensation. Subsea casing
+# extends 1000m below BOP with P-y soil model.
+#
+# Usage:
+#   Copy this directory, modify values, then generate:
+#   uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+#       --input spec.yml --output modular/
+
+metadata:
+  name: "drilling_riser_template"
+  description: "Drilling riser with tensioner system on semisub in 1020m water depth"
+  structure: riser                             # riser | pipeline | mooring | installation | vessel
+  operation: drilling                          # in-place | installation | production | drilling
+  project: "OrcaFlex Templates"
+  version: "1.0"
+
+environment:
+  water:
+    depth: 1020                                # Water depth (m)
+    density: 1.025                             # Seawater density (te/m3)
+  seabed:
+    slope: 0                                   # Flat seabed
+    stiffness:
+      normal: 100                              # Normal stiffness (kN/m/m2)
+      shear: 100                               # Shear stiffness (kN/m/m2)
+  waves:
+    type: Dean stream                          # Dean stream function
+    height: 1.5                                # Wave height (m)
+    period: 8                                  # Wave period (s)
+    direction: 180                             # Wave direction (deg)
+  current:
+    speed: 0                                   # Reference current speed (m/s)
+    direction: 180                             # Current direction (deg)
+    profile:                                   # Interpolated profile [depth, factor]
+    - - 0
+      - 1
+    - - 100
+      - 1
+  wind:
+    speed: 0                                   # Wind speed (m/s)
+    direction: 0                               # Wind direction (deg)
+
+simulation:
+  stages:                                      # Multi-stage simulation
+  - 8                                          # Build-up (1 wave period)
+  - 42                                         # Main simulation
+  time_step: 0.1                               # Implicit time step (s)
+
+generic:
+  vessel_types:
+  - name: 8 column semisub                     # Semisub vessel type
+    length: 90                                 # Vessel length (m)
+    properties:
+      RAOResponseUnits: degrees
+      RAOWaveUnit: amplitude
+      WavesReferredToBy: frequency (Hz)
+      RAOPhaseConvention: lags
+      RAOPhaseUnitsConvention: degrees
+      RAOPhaseRelativeToConvention: crest
+      SurgePositive: forward
+      SwayPositive: port
+      HeavePositive: up
+      RollPositiveStarboard: down
+      PitchPositiveBow: down
+      YawPositiveBow: port
+      Symmetry: xz and yz planes
+      Draughts:
+      - Name: 24.38
+        Mass: 10e3                             # Vessel mass (te)
+        MomentOfInertiaTensorX, MomentOfInertiaTensorY, MomentOfInertiaTensorZ:
+        - - 499.99999999999994e3
+          - 0
+          - 0
+        - - 0
+          - 6.999999999999999e6
+          - 0
+        - - 0
+          - 0
+          - 6.999999999999999e6
+        CentreOfMass:
+        - 0
+        - 0
+        - 0
+        DisplacementRAOs:
+          RAOOrigin: [0, 0, 0]
+          PhaseOrigin: [null, null, 0]
+          RAOs:
+          - RAODirection: 180
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+            - [0.25, 0.06, 220, 0, 0, 0.01, 44, 0, 0, 0.02, 35, 0, 0]
+            - [0.24, 0.08, 220, 0, 0, 0.01, 44, 0, 0, 0.03, 35, 0, 0]
+            - [0.22, 0.13, 220, 0, 0, 0.02, 44, 0, 0, 0.04, 35, 0, 0]
+            - [0.2, 0.18, 220, 0, 0, 0.02, 44, 0, 0, 0.08, 35, 0, 0]
+            - [0.18, 0.22, 220, 0, 0, 0.03, 44, 0, 0, 0.1, 35, 0, 0]
+            - [0.16, 0.22, 53, 0, 0, 0.05, 258, 0, 0, 0.15, 36, 0, 0]
+            - [0.14, 0.2, 69, 0, 0, 0.09, 347, 0, 0, 0.3, 59, 0, 0]
+            - [0.12, 0.22, 250, 0, 0, 0.22, 343, 0, 0, 0.55, 82, 0, 0]
+            - [0.11, 0.25, 271, 0, 0, 0.33, 348, 0, 0, 0.59, 89, 0, 0]
+            - [0.1, 0.3, 271, 0, 0, 0.4, 355, 0, 0, 0.54, 90, 0, 0]
+            - [0.09, 0.4, 271, 0, 0, 0.44, 0, 0, 0, 0.49, 90, 0, 0]
+            - [0.08, 0.5, 271, 0, 0, 0.48, 2, 0, 0, 0.45, 90, 0, 0]
+            - [0.07, 0.65, 270, 0, 0, 0.48, 5, 0, 0, 0.42, 92, 0, 0]
+            - [0.065, 0.7, 270, 0, 0, 0.39, 7, 0, 0, 0.4, 92, 0, 0]
+            - [0.06, 0.72, 270, 0, 0, 0.5, 13, 0, 0, 0.4, 96, 0, 0]
+            - [0.05, 0.95, 270, 0, 0, 1.38, 331, 0, 0, 0.45, 77, 0, 0]
+            - [0.04, 0, 270, 0, 0, 1.12, 353, 0, 0, 0.35, 80, 0, 0]
+      AMDMethod: Constant
+      ReferenceOrigin: [0, 0, 0]
+      ReferenceOriginDatumPosition: [0, 0, 0]
+      HydrostaticStiffnessMethod: Displacement
+      HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
+      - - 17e3
+        - 0
+        - 26e3
+      - - 0
+        - 270e3
+        - 0
+      - - 26e3
+        - 0
+        - 13e6
+
+  vessels:
+  - name: Semisub                              # Drilling vessel
+    vessel_type: 8 column semisub
+    connection: Free
+    initial_position: [0, 0, 0]
+    properties:
+      Draught: 24.38                           # Operating draught (m)
+      Orientation: [0, 0, 0]
+      IncludedInStatics: None
+      PrimaryMotion: Prescribed
+      SuperimposedMotion: RAOs + harmonics
+      PrescribedMotionMode, PrescribedMotionSpeedValue, PrescribedMotionDirectionRelativeTo, PrescribedMotionDirectionValue, PrescribedMotionRateOfTurn:
+      - - Speed change
+        - 0.5
+        - Vessel heading
+        - 0
+        - 0
+      - - Constant speed
+        - 0.5
+        - Vessel heading
+        - 0
+        - 0
+
+  line_types:
+  - name: 24" RISER                            # Marine riser pipe
+    category: Homogeneous pipe
+    outer_diameter: 0.65                       # OD (m)
+    inner_diameter: 0.6                        # ID (m)
+    properties:
+      MaterialDensity: 7.85                    # Steel density (te/m3)
+      E: 212e6                                 # Young's modulus (kN/m2)
+      PoissonRatio: 0.3
+      Cdn: 1.2                                 # Normal drag coefficient
+      Cdz: 0.008                               # Axial drag coefficient
+      Cl: 0
+      Can: 1                                   # Normal added mass coefficient
+      Caz: 0
+      Cs: 0
+      Ce: 0
+      SeabedLateralFrictionCoefficient: 0.5
+      ClashStiffness: 0
+      CoatingThickness: 0
+      LiningThickness: 0
+      AdditionalEI: 0
+
+  - name: Slip Joint                           # Telescopic slip joint
+    category: General
+    outer_diameter: 0.65                       # OD (m)
+    inner_diameter: 0.6                        # ID (m)
+    mass_per_length: 0.385                     # Mass per length (te/m)
+    bending_stiffness:
+    - 508.9441458046986e3                      # EI (kN.m2)
+    - null
+    axial_stiffness: 1                         # EA (kN) - near-zero axial stiffness
+    properties:
+      CentreOfMass: [0, 0]
+      BulkModulus: Infinity
+      CompressionIsLimited: false
+      PoissonRatio: 0.3
+      GJ: 391.49549677284504e3                 # Torsional stiffness (kN.m2)
+      TensionTorqueCoupling: 0
+      Ca: [1, null, 0]
+      Cs: 0
+      Ce: 0
+      Cd: [1.2, null, 0.008]
+      Cl: 0
+      SeabedLateralFrictionCoefficient: 0.5
+
+  - name: Drill Pipe                           # Drill pipe string
+    category: Homogeneous pipe
+    outer_diameter: 0.1397                     # OD (m) - 5.5 inch
+    inner_diameter: 0.12039599999999999        # ID (m)
+    properties:
+      MaterialDensity: 7.85                    # Steel density (te/m3)
+      E: 212e6                                 # Young's modulus (kN/m2)
+      PoissonRatio: 0.3
+      Cdn: 1.2
+      Cdz: 0.008
+      Cl: 0
+      Can: 1
+      Caz: 0
+      Cs: 0
+      Ce: 0
+      SeabedLateralFrictionCoefficient: 0.5
+      ClashStiffness: 0
+      CoatingThickness: 0
+      LiningThickness: 0
+      AdditionalEI: 0
+
+  - name: Choke and Kill                       # Choke/kill line
+    category: Homogeneous pipe
+    outer_diameter: 0.1651                     # OD (m) - 6.5 inch
+    inner_diameter: 0.1143                     # ID (m) - 4.5 inch
+    properties:
+      MaterialDensity: 7.85                    # Steel density (te/m3)
+      E: 212e6                                 # Young's modulus (kN/m2)
+      PoissonRatio: 0.3
+      Cdn: 1.2
+      Cdz: 0.008
+      Cl: 0
+      Can: 1
+      Caz: 0
+      Cs: 0
+      Ce: 0
+      SeabedLateralFrictionCoefficient: 0.5
+      ClashStiffness: 0
+      CoatingThickness: 0
+      LiningThickness: 0
+      AdditionalEI: 0
+
+  - name: Moonpool Edge                        # Moonpool boundary line type
+    category: General
+    outer_diameter: 100e-6                     # Negligible OD (m)
+    inner_diameter: 0
+    mass_per_length: 100e-6                    # Negligible mass (te/m)
+    bending_stiffness:
+    - 0
+    - null
+    axial_stiffness: 1                         # EA (kN)
+    properties:
+      CentreOfMass: [0, 0]
+      BulkModulus: Infinity
+      CompressionIsLimited: false
+      PoissonRatio: 0
+      GJ: 0
+      TensionTorqueCoupling: 0
+      OuterContactDiameter: 0.2               # Contact diameter for clash (m)
+      Ca: [0, null, 0]
+      Cs: 0
+      Ce: 0
+      Cd: [0, null, 0]
+      Cl: 0
+      SeabedLateralFrictionCoefficient: 0
+
+  lines:
+  - name: Riser                                # Main marine riser
+    line_type_refs: [24" RISER]
+    properties:
+      IncludeTorsion: true
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      DragFormulation: Standard
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Tensioner Ring
+          - 0
+          - 0
+          - 0
+          - 0
+          - 180
+          - 180
+          - null
+        - - Flex Joint
+          - 0
+          - 0
+          - 0
+          - 0
+          - 180
+          - 180
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+      - - Infinity
+        - null
+        - Infinity
+      - - Infinity
+        - null
+        - Infinity
+      LineType, Length, TargetSegmentLength:
+      - - 24" RISER
+        - 1020                                 # Full water depth riser length (m)
+        - 5                                    # Segment length (m)
+      ContentsMethod: Uniform
+      ContentsDensity: 2.2                     # Drilling mud density (te/m3)
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: None
+
+  - name: Riser Slip Joint                     # Telescopic joint between vessel and tensioner
+    line_type_refs: [Slip Joint]
+    properties:
+      IncludeTorsion: true
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      DragFormulation: Standard
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Semisub
+          - 0
+          - 0
+          - 25                                 # Moonpool exit elevation (m)
+          - 0
+          - 180
+          - 0
+          - null
+        - - Tensioner Ring
+          - 0
+          - 0
+          - 0
+          - 0
+          - 180
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+      - - 30                                   # End A bending stiffness (kN.m/deg)
+        - null
+        - 100
+        - 0
+      - - Infinity
+        - null
+        - Infinity
+      Sections:
+      - LineType: Slip Joint
+        Length: 10                             # Slip joint stroke (m)
+        NumberOfSegments: 1
+      ContentsMethod: Uniform
+      ContentsDensity: 2.2                     # Drilling mud density (te/m3)
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: None
+
+  - name: Drill String                         # Drill string through riser
+    line_type_refs: [Drill Pipe]
+    properties:
+      IncludeTorsion: true
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      DragFormulation: Standard
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Free
+          - 0
+          - 0
+          - 34                                 # Rotary table elevation (m)
+          - 0
+          - 180
+          - 0
+          - null
+        - - Drill String Connection
+          - 0
+          - 0
+          - 0
+          - 0
+          - 180
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+      - []
+      - - Infinity
+        - null
+        - Infinity
+      MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo:
+      - - 10
+        - End A
+        - Rotary Table
+        - 0
+        - 0
+        - -1
+        - 0
+        - 180
+        - 0
+        - null
+      LineType, Length, TargetSegmentLength:
+      - - Drill Pipe
+        - 1035                                 # Total drill string length (m)
+        - 5
+      ContentsMethod: Uniform
+      ContentsDensity: 2.2                     # Drilling mud density (te/m3)
+      ContentsPressureRefZ: 35
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: As laid
+      LayAzimuth: 180
+      AsLaidTension: 0
+
+  - name: Choke                                # Choke line parallel to riser
+    line_type_refs: [Choke and Kill]
+    properties:
+      IncludeTorsion: true
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      DragFormulation: Standard
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Tensioner Ring
+          - 0.7997588543679546                 # Offset from riser centreline (m)
+          - 0
+          - 0.015648025252023245
+          - 0
+          - 180
+          - 0
+          - null
+        - - Flex Joint
+          - 0.7997588543679546
+          - 0
+          - 0
+          - 0
+          - 180
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+      - - Infinity
+        - null
+        - Infinity
+      - - Infinity
+        - null
+        - Infinity
+      LineType, Length, TargetSegmentLength:
+      - - Choke and Kill
+        - 20                                   # Upper section fine mesh (m)
+        - 2.5
+      - - Choke and Kill
+        - 1000                                 # Main section coarse mesh (m)
+        - 50
+      ContentsMethod: Uniform
+      ContentsDensity: 2.2                     # Drilling mud density (te/m3)
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: None
+
+  - name: Kill                                 # Kill line parallel to riser
+    line_type_refs: [Choke and Kill]
+    properties:
+      IncludeTorsion: true
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      DragFormulation: Standard
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Tensioner Ring
+          - -0.8                               # Offset from riser centreline (m)
+          - 0
+          - 0.015648025252023245
+          - 0
+          - 180
+          - 0
+          - null
+        - - Flex Joint
+          - -0.8
+          - 0
+          - 0
+          - 0
+          - 180
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+      - - Infinity
+        - null
+        - Infinity
+      - - Infinity
+        - null
+        - Infinity
+      LineType, Length, TargetSegmentLength:
+      - - Choke and Kill
+        - 20                                   # Upper section fine mesh (m)
+        - 2.5
+      - - Choke and Kill
+        - 1000                                 # Main section coarse mesh (m)
+        - 50
+      ContentsMethod: Uniform
+      ContentsDensity: 2.2                     # Drilling mud density (te/m3)
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: None
+
+  - name: Flex Joint Rigid Piece               # Short rigid piece at BOP flex joint
+    line_type_refs: [24" RISER]
+    properties:
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      DragFormulation: Standard
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Flex Joint
+          - 0
+          - 0
+          - 0
+          - 0
+          - 180
+          - 0
+          - null
+        - - Fixed
+          - 0
+          - 0
+          - -1000.25                           # Just below seabed (m)
+          - 0
+          - 180
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - - Infinity
+        - null
+      - - 120                                  # Flex joint bending stiffness (kN.m/deg)
+        - null
+      Sections:
+      - LineType: 24" RISER
+        Length: 0.25                           # Rigid piece length (m)
+        NumberOfSegments: 1
+      ContentsMethod: Uniform
+      ContentsDensity: 0
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: As laid
+      LayAzimuth: 180
+      AsLaidTension: 0
+
+  - name: Drill String Below BOP               # Drill string below seabed
+    line_type_refs: [Drill Pipe]
+    properties:
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      DragFormulation: Standard
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Drill String Connection
+          - 0
+          - 0
+          - 0
+          - 0
+          - 180
+          - 0
+          - null
+        - - DHA
+          - 0
+          - 0
+          - 0
+          - 0
+          - 180
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - - Infinity
+        - null
+      - - Infinity
+        - null
+      LineType, Length, TargetSegmentLength:
+      - - Drill Pipe
+        - 465                                  # Below-BOP drill string length (m)
+        - 5
+      ContentsMethod: Uniform
+      ContentsDensity: 2.2                     # Drilling mud density (te/m3)
+      ContentsPressureRefZ: 35
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Quick
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: None
+
+  - name: Casing                               # Subsea casing with P-y soil model
+    line_type_refs: [24" RISER]
+    properties:
+      IncludeTorsion: true
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      PyModel: P-y Model1
+      DragFormulation: Standard
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Fixed
+          - 0
+          - 0
+          - -1000                              # At seabed (m)
+          - 0
+          - 180
+          - 0
+          - null
+        - - Fixed
+          - 0
+          - 0
+          - -2000                              # Casing toe depth (m)
+          - 0
+          - 180
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+      - - Infinity
+        - null
+        - Infinity
+      - - Infinity
+        - null
+        - Infinity
+      LineType, Length, TargetSegmentLength:
+      - - 24" RISER
+        - 1000                                 # Casing length (m)
+        - 10
+      ContentsMethod: Uniform
+      ContentsDensity: 2.2                     # Drilling mud density (te/m3)
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: Full statics
+
+  - name: MP FWD                               # Moonpool edge - forward
+    line_type_refs: [Moonpool Edge]
+    properties:
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      DragFormulation: Standard
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Semisub
+          - 5                                  # Moonpool half-width (m)
+          - 5
+          - 15.62                              # Deck elevation (m)
+          - 270
+          - 90
+          - 0
+          - null
+        - - Semisub
+          - 5
+          - -5
+          - 15.62
+          - 270
+          - 90
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - - 0
+        - null
+      - - 0
+        - null
+      Sections:
+      - LineType: Moonpool Edge
+        Length: 1
+        NumberOfSegments: 1
+      ContentsMethod: Uniform
+      ContentsDensity: 0
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: None
+
+  - name: MP PORT                              # Moonpool edge - port
+    line_type_refs: [Moonpool Edge]
+    properties:
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      DragFormulation: Standard
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Semisub
+          - 5
+          - 5
+          - 15.62
+          - 180
+          - 90
+          - 0
+          - null
+        - - Semisub
+          - -5
+          - 5
+          - 15.62
+          - 180
+          - 90
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - - 0
+        - null
+      - - 0
+        - null
+      Sections:
+      - LineType: Moonpool Edge
+        Length: 1
+        NumberOfSegments: 1
+      ContentsMethod: Uniform
+      ContentsDensity: 0
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: None
+
+  - name: MP AFT                               # Moonpool edge - aft
+    line_type_refs: [Moonpool Edge]
+    properties:
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      DragFormulation: Standard
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Semisub
+          - -5
+          - 5
+          - 15.62
+          - 270
+          - 90
+          - 0
+          - null
+        - - Semisub
+          - -5
+          - -5
+          - 15.62
+          - 270
+          - 90
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - - 0
+        - null
+      - - 0
+        - null
+      Sections:
+      - LineType: Moonpool Edge
+        Length: 1
+        NumberOfSegments: 1
+      ContentsMethod: Uniform
+      ContentsDensity: 0
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: None
+
+  - name: MP STBD                              # Moonpool edge - starboard
+    line_type_refs: [Moonpool Edge]
+    properties:
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      DragFormulation: Standard
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+        ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Semisub
+          - -5
+          - -5
+          - 15.62
+          - 0
+          - 90
+          - 0
+          - null
+        - - Semisub
+          - 5
+          - -5
+          - 15.62
+          - 0
+          - 90
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - - 0
+        - null
+      - - 0
+        - null
+      Sections:
+      - LineType: Moonpool Edge
+        Length: 1
+        NumberOfSegments: 1
+      ContentsMethod: Uniform
+      ContentsDensity: 0
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: None
+
+  buoys_6d:
+  - name: Tensioner Ring                       # Tensioner attachment point
+    buoy_type: Lumped buoy
+    connection: Free
+    initial_position: [0, 0, 20]               # Below vessel keel (m)
+    mass: 0.001                                # Negligible mass (te)
+    properties:
+      DegreesOfFreedomInStatics: All
+      DampingRelativeTo: Earth
+      InitialAttitude: [0, 0, 0]
+      MomentsOfInertia: [0, 0, 0]
+      CentreOfMass: [0, 0, 0]
+      LumpedBuoyAddedMassMethod: Diagonal values
+      Volume: 0
+      Height: 6                                # Buoy height (m)
+      CentreOfVolume: [0, 0, 0]
+      UnitDampingForce: [0, 0, 0]
+      UnitDampingMoment: [0, 0, 0]
+      DragArea: [0, 0, 0]
+      DragAreaMoment: [0, 0, 0]
+      DragForceCoefficient: [0, 0, 0]
+      DragMomentCoefficient: [0, 0, 0]
+      HydrodynamicMass: [0, 0, 0]
+      HydrodynamicInertia: [0, 0, 0]
+      AddedMassCoefficient: [0, 0, 0]
+      AddedInertiaCoefficient: [0, 0, 0]
+      FluidAccelerationForceCoefficient: [0, 0, 0]
+      SeabedFrictionCoefficient: 0
+      TotalContactArea: 0
+
+  - name: Flex Joint                           # Lower flex joint at BOP
+    buoy_type: Lumped buoy
+    connection: Free
+    initial_position: [0, 0, -1000]            # At seabed (m)
+    mass: 0.001                                # Negligible mass (te)
+    properties:
+      DegreesOfFreedomInStatics: All
+      DampingRelativeTo: Earth
+      InitialAttitude: [0, 0, 0]
+      MomentsOfInertia: [0, 0, 0]
+      CentreOfMass: [0, 0, 0]
+      LumpedBuoyAddedMassMethod: Diagonal values
+      Volume: 0
+      Height: 6
+      CentreOfVolume: [0, 0, 0]
+      UnitDampingForce: [0, 0, 0]
+      UnitDampingMoment: [0, 0, 0]
+      DragArea: [0, 0, 0]
+      DragAreaMoment: [0, 0, 0]
+      DragForceCoefficient: [0, 0, 0]
+      DragMomentCoefficient: [0, 0, 0]
+      HydrodynamicMass: [0, 0, 0]
+      HydrodynamicInertia: [0, 0, 0]
+      AddedMassCoefficient: [0, 0, 0]
+      AddedInertiaCoefficient: [0, 0, 0]
+      FluidAccelerationForceCoefficient: [0, 0, 0]
+      SeabedFrictionCoefficient: 0
+      TotalContactArea: 0
+
+  - name: Drill String Connection              # Connection between drill string sections
+    buoy_type: Lumped buoy
+    connection: Free
+    initial_position: [0, 0, -1000]            # At seabed (m)
+    mass: 0.001                                # Negligible mass (te)
+    properties:
+      DegreesOfFreedomInStatics: All
+      DampingRelativeTo: Earth
+      InitialAttitude: [0, 0, 0]
+      MomentsOfInertia: [0, 0, 0]
+      CentreOfMass: [0, 0, 0]
+      LumpedBuoyAddedMassMethod: Diagonal values
+      Volume: 0
+      Height: 6
+      CentreOfVolume: [0, 0, 0]
+      UnitDampingForce: [0, 0, 0]
+      UnitDampingMoment: [0, 0, 0]
+      DragArea: [0, 0, 0]
+      DragAreaMoment: [0, 0, 0]
+      DragForceCoefficient: [0, 0, 0]
+      DragMomentCoefficient: [0, 0, 0]
+      HydrodynamicMass: [0, 0, 0]
+      HydrodynamicInertia: [0, 0, 0]
+      AddedMassCoefficient: [0, 0, 0]
+      AddedInertiaCoefficient: [0, 0, 0]
+      FluidAccelerationForceCoefficient: [0, 0, 0]
+      SeabedFrictionCoefficient: 0
+      TotalContactArea: 0
+
+  buoys_3d:
+  - name: DHA                                  # Down-hole assembly weight
+    connection: Free
+    initial_position: [0, 0, -1500]            # Below casing (m)
+    mass: 10                                   # DHA mass (te)
+    volume: 1                                  # Displaced volume (m3)
+    properties:
+      IncludedInStatics: true
+      BulkModulus: Infinity
+      Height: 5
+      SeabedFrictionCoefficient: 0
+      ContactArea: 0
+      DragArea: [0, 0, 0]
+      Cd: [0, 0, 0]
+      Ca: [0, 0, 0]
+
+  links:
+  - name: Tens_AFT                             # Aft tensioner
+    link_type: Spring/damper
+    properties:
+      Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - - Semisub
+        - -2.799999999999997                   # Aft offset (m)
+        - 0
+        - 25
+      - - Tensioner Ring
+        - 0
+        - 0
+        - 0
+      LinearSpring: false
+      SpringLength, SpringTension:             # Non-linear tensioner curve (m, kN)
+      - - 0
+        - 2300
+      - - 4
+        - 2800
+      - - 8
+        - 3000
+      - - 12
+        - 3200
+      - - 16
+        - 3600
+      LinearDamper: true
+      DampingConstant: 5                       # Damping (kN.s/m)
+
+  - name: Tens_FWD                             # Forward tensioner
+    link_type: Spring/damper
+    properties:
+      Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - - Semisub
+        - 2.8000000000000007                   # Forward offset (m)
+        - 0
+        - 25
+      - - Tensioner Ring
+        - 0
+        - 0
+        - 0
+      LinearSpring: false
+      SpringLength, SpringTension:             # Non-linear tensioner curve (m, kN)
+      - - 0
+        - 2300
+      - - 4
+        - 2800
+      - - 8
+        - 3000
+      - - 12
+        - 3200
+      - - 16
+        - 3600
+      LinearDamper: true
+      DampingConstant: 5
+
+  - name: Tens_STBD                            # Starboard tensioner
+    link_type: Spring/damper
+    properties:
+      Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - - Semisub
+        - 0
+        - -2.8                                 # Starboard offset (m)
+        - 25
+      - - Tensioner Ring
+        - 0
+        - 0
+        - 0
+      LinearSpring: false
+      SpringLength, SpringTension:             # Non-linear tensioner curve (m, kN)
+      - - 0
+        - 2300
+      - - 4
+        - 2800
+      - - 8
+        - 3000
+      - - 12
+        - 3200
+      - - 16
+        - 3600
+      LinearDamper: true
+      DampingConstant: 5
+
+  - name: Tens_PORT                            # Port tensioner
+    link_type: Spring/damper
+    properties:
+      Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - - Semisub
+        - 0
+        - 2.8                                  # Port offset (m)
+        - 25
+      - - Tensioner Ring
+        - 0
+        - 0
+        - 0
+      LinearSpring: false
+      SpringLength, SpringTension:             # Non-linear tensioner curve (m, kN)
+      - - 0
+        - 2300
+      - - 4
+        - 2800
+      - - 8
+        - 3000
+      - - 12
+        - 3200
+      - - 16
+        - 3600
+      LinearDamper: true
+      DampingConstant: 5
+
+  winches:
+  - name: drill string support                 # Drill string top support winch
+    properties:
+      WinchType: Simple
+      Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - - Semisub
+        - 0
+        - 0
+        - 45
+      - - Drill String
+        - 0
+        - 0
+        - 0
+        - End A
+      Stiffness: 10e6                          # Winch stiffness (kN/m)
+      Damping: 0.01                            # Winch damping (kN.s/m)
+      WinchControlType: By stage
+      StageMode, StageValue:
+      - - Specified length
+        - 10                                   # Initial wire length (m)
+      - - Specified tension change
+        - 0
+      - - Specified tension change
+        - 0
+
+  constraints:
+  - name: Rotary Table                         # Drill string guide constraint
+    in_frame_connection: Semisub
+    constraint_type: Calculated DOFs
+    properties:
+      InFrameInitialPosition: [0, 0, 25]       # At moonpool exit (m)
+      InFrameInitialAttitude: [0, 0, 0]
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:                # Only heave DOF is free
+      - - false
+      - - false
+      - - true
+        - 0
+      - - false
+      - - false
+      - - false
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+
+  shapes:
+  - name: BOP stack                            # Subsea BOP drawing
+    shape_type: Drawing
+    shape: Cylinder
+    connection: Fixed
+    origin: [0, 0, -1000]                      # At seabed (m)
+    length: 20                                 # BOP height (m)
+    properties:
+      Azimuth: 0
+      Declination: 180
+      OuterDiameter: 10                        # BOP outer diameter (m)
+      InnerDiameter: 0.65                      # Riser bore diameter (m)
+      NumberOfLines: 8
+
+  py_models:
+  - name: P-y Model1                           # Soil-structure interaction model
+    properties:
+      PyCurves:
+      - DepthBelowSeabedFrom: 0
+        ModelType: API RP 2A soft clay
+        EffectiveUnitSoilDensity: 1.5          # Effective soil density (te/m3)
+        UndrainedShearStrength: 2              # Undrained shear strength (kN/m2)
+        J: 0.5                                 # API parameter
+        Epsilonc: 2                            # Strain at 50% strength (%)
+
+  groups:
+    data:
+      Structure:
+        Semisub Group: Model
+        Semisub: Semisub Group
+        Moonpool Edges: Semisub Group
+        MP FWD: Moonpool Edges
+        MP PORT: Moonpool Edges
+        MP AFT: Moonpool Edges
+        MP STBD: Moonpool Edges
+        Rotary Table: Semisub Group
+        Riser Group: Model
+        Riser Slip Joint: Riser Group
+        Tensioner: Riser Group
+        Tens_AFT: Tensioner
+        Tens_FWD: Tensioner
+        Tens_STBD: Tensioner
+        Tens_PORT: Tensioner
+        Tensioner Ring: Tensioner
+        Riser: Riser Group
+        BOP stack: Riser Group
+        Casing: Riser Group
+        Flex Joint: Riser Group
+        Flex Joint Rigid Piece: Riser Group
+        Drill String Group: Model
+        drill string support: Drill String Group
+        Drill String: Drill String Group
+        Drill String Connection: Drill String Group
+        Drill String Below BOP: Drill String Group
+        DHA: Drill String Group
+        Choke & Kill Lines: Model
+        Choke: Choke & Kill Lines
+        Kill: Choke & Kill Lines
+
+  general_properties:
+    UnitsSystem: SI
+    BuoysIncludedInStatics: Individually specified
+    LineStaticsStep1Policy: All lines included
+    LineStaticsStep2Policy: Solve coupled systems
+    WholeSystemStaticsEnabled: true
+    DynamicsSolutionMethod: Implicit time domain
+    ImplicitUseVariableTimeStep: false
+    LogPrecision: Single
+    TargetLogSampleInterval: 0.1

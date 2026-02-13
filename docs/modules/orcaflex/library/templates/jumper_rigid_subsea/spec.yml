@@ -1,0 +1,492 @@
+# OrcaFlex Modular Model Generator - Template Specification
+# Rigid Subsea Jumper (PLET-to-PLEM configuration)
+#
+# Model Type: Generic (installation/subsea jumper)
+# Source: Monolithic SZ.yml from plet_to_plem jumper model
+# Template Version: 1.0
+#
+# Rigid subsea jumper connecting two subsea structures (e.g., PLET to PLEM)
+# in deep water. The jumper is a 10.75" rigid pipe with insulation coating,
+# buoyancy modules, and VIV strakes. M-shaped profile with pre-bent elbows.
+# Connectors (OCS 200-V collet) at each end interface to subsea hubs.
+#
+# Usage:
+#   Copy this directory, modify values, then generate:
+#   uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+#       --input spec.yml --output modular/
+
+metadata:
+  name: "jumper_rigid_subsea_template"
+  description: "10.75-inch rigid subsea jumper with buoyancy and strakes, PLET-to-PLEM"
+  structure: installation                  # riser | pipeline | mooring | installation | vessel
+  operation: in-place                      # in-place | installation | production
+  project: "OrcaFlex Templates"
+  version: "1.0"
+
+environment:
+  water:
+    depth: 1996                            # Water depth (m) - deep water
+    density: 1.025                         # Seawater density (te/m3)
+  seabed:
+    slope: 0                               # Flat seabed
+    stiffness:
+      normal: 100                          # Normal stiffness (kN/m/m2)
+      shear: 100                           # Shear stiffness (kN/m/m2)
+  waves:
+    type: JONSWAP                          # JONSWAP spectrum
+    height: 1.5                            # Significant wave height Hs (m)
+    period: 8                              # Zero-crossing period Tz (s)
+    direction: 180                         # Wave direction (deg)
+    gamma: 1.5                             # JONSWAP peak enhancement factor
+  current:
+    speed: 0                               # Reference current speed (m/s) - no current base case
+    direction: 180                         # Current direction (deg)
+    profile:                               # Interpolated profile [depth, factor]
+    - - 0
+      - 1
+    - - 100
+      - 1
+
+simulation:
+  stages:                                  # Multi-stage simulation
+  - 10                                     # Build-up (s)
+  - 300                                    # Main simulation (s)
+  time_step: 0.1                           # Implicit constant time step (s)
+
+generic:
+  line_types:
+  - name: 10.75"Jumper_wCoat              # Bare coated rigid jumper pipe
+    category: Homogeneous pipe
+    outer_diameter: 0.27305                # OD including coating (m)
+    inner_diameter: 0.18212                # Steel ID (m)
+    properties:
+      MaterialDensity: 7.85               # Steel density (te/m3)
+      E: 212e6                            # Young's modulus (kN/m2)
+      PoissonRatio: 0.293                 # Poisson's ratio
+      Cdn: 2.4                            # Normal drag coefficient
+      Cdz: 0.008                          # Axial drag coefficient
+      Cl: 0                               # Lift coefficient
+      Can: 1                              # Normal added mass coefficient
+      Caz: 0                              # Axial added mass coefficient
+      Cs: 3                               # Slam coefficient entry
+      Ce: 3                               # Slam coefficient exit
+      SeabedLateralFrictionCoefficient: 0.5
+      ClashStiffness: 0
+      CoatingThickness: 0.0762            # Insulation thickness (m)
+      CoatingMaterialDensity: 0.97873     # Insulation density (te/m3)
+      LiningThickness: 0                  # No internal lining
+      AdditionalEI: 0                     # No additional bending stiffness
+      RayleighDampingCoefficients: (no damping)
+      APIRP2RDTcorr: 0                   # API RP 2RD corrosion allowance
+      APIRP2RDSMYS: 360e3                # API RP 2RD SMYS (kN/m2)
+
+  - name: 10.75"Jumper_wCoat_wBuoy        # Jumper pipe with distributed buoyancy
+    category: Homogeneous pipe
+    outer_diameter: 0.27305                # Base OD (m), buoyancy via coating
+    inner_diameter: 0.18212                # Steel ID (m)
+    properties:
+      MaterialDensity: 7.85               # Steel density (te/m3)
+      E: 212e6                            # Young's modulus (kN/m2)
+      PoissonRatio: 0.293                 # Poisson's ratio
+      Cdn: 3.6                            # Increased drag due to buoyancy modules
+      Cdz: 0.008                          # Axial drag coefficient
+      Cl: 0                               # Lift coefficient
+      Can: 1                              # Normal added mass coefficient
+      Caz: 0                              # Axial added mass coefficient
+      Cs: 3                               # Slam coefficient entry
+      Ce: 3                               # Slam coefficient exit
+      SeabedLateralFrictionCoefficient: 0.5
+      ClashStiffness: 0
+      CoatingThickness: Insulation+Buoyancy  # Multi-layer coating reference
+      LiningThickness: 0                  # No internal lining
+      AdditionalEI: 0                     # No additional bending stiffness
+      RayleighDampingCoefficients: (no damping)
+
+  - name: 10.75"Jumper_wCoat_wStrake       # Jumper pipe with VIV strakes
+    category: Homogeneous pipe
+    outer_diameter: 0.27305                # Base OD (m), strake via coating
+    inner_diameter: 0.18212                # Steel ID (m)
+    properties:
+      MaterialDensity: 7.85               # Steel density (te/m3)
+      E: 212e6                            # Young's modulus (kN/m2)
+      PoissonRatio: 0.293                 # Poisson's ratio
+      Cdn: 3.6                            # Increased drag due to strakes
+      Cdz: 0.008                          # Axial drag coefficient
+      Cl: 0                               # Lift coefficient
+      Can: 1                              # Normal added mass coefficient
+      Caz: 0                              # Axial added mass coefficient
+      Cs: 3                               # Slam coefficient entry
+      Ce: 3                               # Slam coefficient exit
+      SeabedLateralFrictionCoefficient: 0.5
+      ClashStiffness: 0
+      CoatingThickness: Insulation+Strakes  # Multi-layer coating reference
+      LiningThickness: 0                  # No internal lining
+      AdditionalEI: 0                     # No additional bending stiffness
+      RayleighDampingCoefficients: (no damping)
+
+  - name: OCS 200-V                        # Collet connector (end fitting)
+    category: General
+    outer_diameter: 1.8                    # Connector OD (m)
+    inner_diameter: 1.5                    # Connector ID (m)
+    mass_per_length: 2.514045409           # Mass per length (te/m)
+    bending_stiffness:
+    - 100e3                                # EI (kN.m2)
+    - null
+    axial_stiffness: 1e6                   # EA (kN)
+    properties:
+      CentreOfMass:
+      - 0
+      - 0
+      BulkModulus: Infinity
+      CompressionIsLimited: false
+      PoissonRatio: 0.293
+      GJ: 80                              # Torsional stiffness (kN.m2)
+      TensionTorqueCoupling: 0
+      Ca:
+      - 1
+      - null
+      - 0
+      Cs: 3
+      Ce: 3
+      Cd:
+      - 1.2
+      - null
+      - 0.008
+      Cl: 0
+      SeabedLateralFrictionCoefficient: 0.5
+      RayleighDampingCoefficients: (no damping)
+
+  lines:
+  - name: JumperLine                       # Main rigid jumper span (M-shape profile)
+    properties:
+      IncludeTorsion: true
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      PreBendSpecifiedBy: Curvature
+      DragFormulation: Standard
+      WaveCalculationMethod: Specified by environment
+      # End connections - both free (subsea, no vessel)
+      Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - - Free
+        - 43.758
+        - -23.725
+        - 3.928
+        - 0
+        - 0
+        - 0
+        - null
+      - - Free
+        - 6.705
+        - -23.792
+        - 4.087
+        - 0
+        - 0
+        - 0
+        - null
+      # Sections: M-shaped profile with pre-bent elbows
+      # [LineType, Length(m), TargetSegmentLength(m), PreBendCurvaturex, PreBendCurvaturey]
+      LineType, Length, TargetSegmentLength, PreBendCurvaturex, PreBendCurvaturey:
+      - - 10.75"Jumper_wCoat
+        - 8.7884
+        - 1
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat
+        - 1.9949
+        - 0.2
+        - 0
+        - -0.787401575                     # 90-deg bend (1/1.27m radius)
+      - - 10.75"Jumper_wCoat
+        - 2.4384
+        - 0.5
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat
+        - 1.9949
+        - 0.2
+        - 0
+        - -0.787401575                     # 90-deg bend
+      - - 10.75"Jumper_wCoat
+        - 0.9131
+        - 0.5
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat_wBuoy
+        - 6.096
+        - 1
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat
+        - 0.9131
+        - 0.5
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat
+        - 1.9949
+        - 0.2
+        - 0
+        - 0.787401575                      # Reverse bend
+      - - 10.75"Jumper_wCoat
+        - 1.8642
+        - 0.5
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat_wStrake
+        - 9.754
+        - 1
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat
+        - 1.168
+        - 0.2
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat_wStrake
+        - 9.754
+        - 1
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat
+        - 1.8642
+        - 0.5
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat
+        - 1.9949
+        - 0.2
+        - 0
+        - 0.787401575                      # Reverse bend
+      - - 10.75"Jumper_wCoat
+        - 1.0719
+        - 0.5
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat_wBuoy
+        - 6.096
+        - 1
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat
+        - 1.0719
+        - 0.5
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat
+        - 1.9949
+        - 0.2
+        - 0
+        - -0.787401575                     # 90-deg bend
+      - - 10.75"Jumper_wCoat
+        - 2.4384
+        - 0.5
+        - 0
+        - 0
+      - - 10.75"Jumper_wCoat
+        - 1.9949
+        - 0.2
+        - 0
+        - -0.787401575                     # 90-deg bend
+      - - 10.75"Jumper_wCoat
+        - 8.7884
+        - 1
+        - 0
+        - 0
+      # Clamp attachments along jumper
+      AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+      - - 10inchJumperClamp
+        - 0
+        - 0
+        - 11.088
+        - End A
+      - - 10inchJumperClamp
+        - 0
+        - 0
+        - 25.439
+        - End A
+      - - 10inchJumperClamp
+        - 0
+        - 0
+        - 37.338
+        - End A
+      - - 10inchJumperClamp
+        - 0
+        - 0
+        - 49.233
+        - End A
+      - - 10inchJumperClamp
+        - 0
+        - 0
+        - 63.901
+        - End A
+      # Seabed and contents
+      ContentsMethod: Uniform
+      IncludeAxialContentsInertia: true
+      ContentsDensity: 1                   # Flooded contents density (te/m3)
+      ContentsPressure: 0                  # Internal pressure (kN/m2)
+      ContentsFlowRate: 0                  # Flow rate (m/s)
+      # Statics
+      IncludedInStatics: true
+      StaticsStep1: User specified
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: None
+
+  - name: Connector1                       # Hub connector at End A (PLET side)
+    properties:
+      IncludeTorsion: false
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      PreBendSpecifiedBy: Bend angle
+      DragFormulation: Standard
+      WaveCalculationMethod: Specified by environment
+      Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - - Free
+        - 43.782
+        - -23.725
+        - 2.628
+        - 0
+        - 0
+        - 0
+        - null
+      - - JumperLine
+        - 0
+        - 0
+        - 0
+        - 0
+        - 0
+        - 180
+        - null
+        - End A
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - - null
+      - - Infinity
+        - null
+      LineType, Length, TargetSegmentLength:
+      - - OCS 200-V
+        - 1.3                              # Connector length (m)
+        - 0.4
+      ContentsMethod: Free flooding
+      IncludeAxialContentsInertia: true
+      IncludedInStatics: true
+      StaticsStep1: User specified
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: As laid
+      LayAzimuth: 180                      # Lay direction (deg)
+      AsLaidTension: 0
+
+  - name: Connector2                       # Hub connector at End B (PLEM side)
+    properties:
+      IncludeTorsion: false
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      PreBendSpecifiedBy: Bend angle
+      DragFormulation: Standard
+      WaveCalculationMethod: Specified by environment
+      Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - - JumperLine
+        - 0
+        - 0
+        - 0
+        - 0
+        - 0
+        - 0
+        - null
+        - End B
+      - - Free
+        - 6.689
+        - -23.792
+        - 2.787
+        - 0
+        - 0
+        - 0
+        - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - - Infinity
+        - null
+      - - null
+      LineType, Length, TargetSegmentLength:
+      - - OCS 200-V
+        - 1.3                              # Connector length (m)
+        - 0.4
+      ContentsMethod: Free flooding
+      IncludeAxialContentsInertia: true
+      IncludedInStatics: true
+      StaticsStep1: User specified
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: As laid
+      LayAzimuth: 180                      # Lay direction (deg)
+      AsLaidTension: 0
+
+  clump_types:
+  - name: 10inchJumperClamp                # Guide clamp for jumper support
+    mass: 0.26                             # Clamp mass (te)
+    volume: 0.03297561                     # Displaced volume (m3)
+    properties:
+      Height: 0.4345                       # Clamp height (m)
+      Offset: 0
+      AlignWith: Global axes
+      DragArea:
+      - 0.6
+      - null
+      - 0.6
+      Cd:
+      - 1.1
+      - null
+      - 1.1
+      Ca:
+      - 1
+      - null
+      - 1
+
+  variable_data_sources:
+  - name: Insulation+Buoyancy              # Multi-layer coating: insulation + buoyancy
+    data_type: Coatingorlining
+    properties:
+      LayerThickness, LayerMaterialDensity:
+      - - 0.0762                           # Insulation thickness (m)
+        - 0.979                            # Insulation density (te/m3)
+      - - 0.343                            # Buoyancy module thickness (m)
+        - 0.6943                           # Buoyancy module density (te/m3)
+
+  - name: Insulation+Strakes               # Multi-layer coating: insulation + VIV strakes
+    data_type: Coatingorlining
+    properties:
+      LayerThickness, LayerMaterialDensity:
+      - - 0.0762                           # Insulation thickness (m)
+        - 0.979                            # Insulation density (te/m3)
+      - - 0.005                            # Strake thickness (m)
+        - 1.128                            # Strake material density (te/m3)
+
+  friction_coefficients:
+    data:
+      FrictionCoefficientLineTypeName, LineTypeFrictionCoefficientShapeName, LineTypeLateralCoefficient, LineTypeAxialCoefficient:
+      - - (all line types)
+        - (all shapes)
+        - 0.3                              # Lateral friction coefficient
+        - null
+
+  groups:
+    data:
+      Structure:
+        JumperLine: Model
+        Connector1: Model
+        Connector2: Model
+
+  general_properties:
+    UnitsSystem: SI
+    JacobianBufferingPolicy: 1
+    JacobianPerturbationFactor: 0
+    BuoysIncludedInStatics: Individually specified
+    LineStaticsStep1Policy: All lines included
+    LineStaticsStep2Policy: Solve coupled systems
+    WholeSystemStaticsEnabled: true
+    StaticsMaxIterations: 50000
+    StaticsMinDamping: 10
+    DynamicsSolutionMethod: Implicit time domain
+    ImplicitUseVariableTimeStep: true
+    ImplicitVariableMaxTimeStep: 0.05      # Max variable time step (s)
+    ImplicitVariableMaxNumOfIterations: 50
+    LogPrecision: Single
+    TargetLogSampleInterval: 0.1           # Log sample interval (s)
