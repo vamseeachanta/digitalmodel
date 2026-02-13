@@ -395,8 +395,8 @@ class API579_components():
         return self.cfg
 
     def b31g(self):
-        from results.API579.customInputs import ExcelRead
-        from results.API579.plotCustom import plotCustom
+        from pyintegrity.custom.API579.customInputs import ExcelRead
+        from pyintegrity.custom.API579.plotCustom import plotCustom
 
         for fileIndex in range(0, len(self.cfg['B31G'])):
             customdata = {
