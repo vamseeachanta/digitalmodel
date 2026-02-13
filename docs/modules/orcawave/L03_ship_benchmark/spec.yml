@@ -34,7 +34,7 @@ vessel:
     - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 environment:
-  water_depth: 30.0
+  water_depth: 500.0  # Both AQWA and OrcaWave models use 500m (confirmed from LIS)
   water_density: 1025.0
 
 frequencies:
@@ -80,5 +80,5 @@ outputs:
 
 metadata:
   project: OrcaWave Benchmark Library
-  description: Ship diffraction benchmark — 103m vessel, 30m water depth, with QTF and roll damping
+  description: Ship diffraction benchmark — ~220m vessel, 500m water depth, with QTF and roll damping
   tags: [benchmark, ship, validation, L03, qtf]

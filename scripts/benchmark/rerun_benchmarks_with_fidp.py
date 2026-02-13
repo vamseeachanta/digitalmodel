@@ -77,7 +77,7 @@ SHIP_OWR = Path(
     "/orcawave_001_ship_raos_rev2_matched_500m.owr"
 )
 SHIP_VESSEL_NAME = "Ship_001_RAOs"
-SHIP_WATER_DEPTH = 30.0  # from spec.yml
+SHIP_WATER_DEPTH = 500.0  # confirmed from LIS + spec.yml
 
 # Barge
 BARGE_BENCHMARK_DIR = Path("docs/modules/orcawave/L02_barge_benchmark")
@@ -92,7 +92,7 @@ SPAR_BENCHMARK_DIR = Path("docs/modules/orcawave/L04_spar_benchmark")
 SPAR_ORCAWAVE_YML = (
     SPAR_BENCHMARK_DIR / "source_data" / "orcawave" / "spar_benchmark.yml"
 )
-SPAR_OWR = SPAR_BENCHMARK_DIR / "benchmark_results" / "spar_benchmark.owr"
+SPAR_OWR = Path("benchmark_output/spar_benchmark/r1_spar_benchmark/spar_benchmark.owr")
 SPAR_LIS = Path("docs/modules/aqwa/examples/spar-example/SIMPLE.LIS")
 SPAR_VESSEL_NAME = "Spar_Benchmark"
 SPAR_WATER_DEPTH = 200.0
