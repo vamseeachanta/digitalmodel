@@ -237,13 +237,11 @@ disallow_untyped_defs = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
-addopts = """
-    --timeout=300
-    --randomly-seed=42
-    --tb=short
-    --strict-markers
-    --strict-config
-"""
+addopts = [
+    "--tb=short",
+    "--strict-markers",
+    "--strict-config",
+]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
