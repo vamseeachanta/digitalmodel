@@ -292,7 +292,14 @@ def _build_body_dict(
             "BodyInertiaTensorRz"
         )
         body[inertia_key] = _build_inertia_tensor(body_spec)
-        body["BodyInertiaTensorOriginType"] = "Centre of mass"
+        _TENSOR_ORIGIN_MAP = {
+            "body_origin": "Body origin",
+            "centre_of_mass": "Centre of mass",
+        }
+        origin = getattr(inertia, "inertia_tensor_origin", "body_origin")
+        body["BodyInertiaTensorOriginType"] = _TENSOR_ORIGIN_MAP.get(
+            origin, "Body origin"
+        )
 
     # External stiffness matrix
     stiffness_key = (
@@ -350,15 +357,31 @@ def _build_general_section(spec: DiffractionSpec) -> dict[str, Any]:
     solver = spec.solver_options
     method = _LOAD_RAO_METHOD_MAP.get(solver.load_rao_method.value, "Both")
 
+    _SOLVE_TYPE_MAP = {
+        "potential_only": "Potential formulation only",
+        "potential_and_source": "Potential and source formulations",
+        "mean_drift": "Potential and source + mean drift (momentum conservation)",
+        "diagonal_qtf": "Potential and source + diagonal QTF",
+        "full_qtf": "Potential and source + full QTF",
+    }
+
     section: dict[str, Any] = {}
-    section["SolveType"] = "Potential and source formulations"
+    solve_type_key = getattr(solver, "solve_type", "potential_and_source")
+    section["SolveType"] = _SOLVE_TYPE_MAP.get(
+        solve_type_key, "Potential and source formulations"
+    )
+    # "Potential formulation only" makes quadratic load and
+    # OutputPanelVelocities dormant — only emit when source formulations active
+    has_source = solve_type_key != "potential_only"
+
     section["LoadRAOCalculationMethod"] = method
     section["PreferredLoadRAOCalculationMethod"] = (
         "Haskind" if method in ("Both", "Haskind") else "Direct"
     )
-    section["QuadraticLoadPressureIntegration"] = _bool_to_yn(
-        solver.qtf_calculation
-    )
+    if has_source:
+        section["QuadraticLoadPressureIntegration"] = _bool_to_yn(
+            solver.qtf_calculation
+        )
     section["QuadraticLoadControlSurface"] = _bool_to_yn(
         solver.qtf_calculation
     )
@@ -372,7 +395,8 @@ def _build_general_section(spec: DiffractionSpec) -> dict[str, Any]:
     section["DivideNonPlanarPanels"] = "Yes"
     section["LinearSolverMethod"] = "Direct LU"
     section["OutputPanelPressures"] = "No"
-    section["OutputPanelVelocities"] = "No"
+    if has_source:
+        section["OutputPanelVelocities"] = "No"
     section["OutputBodyWireFrames"] = "Yes"
     section["OutputIntermediateResults"] = "No"
     section["ValidatePanelArrangement"] = "No"
@@ -437,13 +461,15 @@ def _build_solver_section(spec: DiffractionSpec) -> dict[str, Any]:
 
 def _build_outputs_section(spec: DiffractionSpec) -> dict[str, Any]:
     """Build the outputs section."""
-    return {
-        "OutputPanelPressures": "No",
-        "OutputPanelVelocities": "No",
-        "OutputBodyWireFrames": "Yes",
-        "OutputIntermediateResults": "No",
-        "DetectAndSkipFieldPointsInsideBodies": "Yes",
-    }
+    solve_type = getattr(spec.solver_options, "solve_type", "potential_and_source")
+    has_source = solve_type != "potential_only"
+
+    section: dict[str, Any] = {}
+    # OutputPanelVelocities is dormant for "Potential formulation only"
+    if has_source:
+        section["OutputPanelVelocities"] = "No"
+    section["DetectAndSkipFieldPointsInsideBodies"] = "Yes"
+    return section
 
 
 # ---------------------------------------------------------------------------

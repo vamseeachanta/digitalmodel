@@ -199,6 +199,13 @@ class VesselInertia(BaseModel):
             "Only used in free_floating mode. Defaults to 0.0."
         ),
     )
+    inertia_tensor_origin: str = Field(
+        "body_origin",
+        description=(
+            "Origin for inertia tensor specification: "
+            "'body_origin' or 'centre_of_mass'"
+        ),
+    )
 
     @field_validator("centre_of_gravity")
     @classmethod
@@ -418,6 +425,14 @@ class WaveHeadingSpec(BaseModel):
 class SolverOptions(BaseModel):
     """Solver-specific options."""
 
+    solve_type: str = Field(
+        default="potential_and_source",
+        description=(
+            "OrcaWave solve type. Options: "
+            "'potential_only', 'potential_and_source', 'mean_drift', "
+            "'diagonal_qtf', 'full_qtf'"
+        ),
+    )
     remove_irregular_frequencies: bool = Field(
         default=True,
         description="Remove irregular frequency effects",

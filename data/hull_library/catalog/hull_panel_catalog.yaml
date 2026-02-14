@@ -278,6 +278,93 @@ entries:
   tags:
   - gdf
   - canonical
+- hull_id: val_cylinder_r1_t05
+  hull_type: cylinder
+  name: val_cylinder_r1_t05
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/val_cylinder_r1_t05.gdf
+  panel_count: 256
+  vertex_count: 289
+  symmetry: xy
+  length_m: 2.0
+  beam_m: 2.0
+  draft_m: 0.5
+  description: "WAMIT validation cylinder R=1m, T=0.5m (cases 2.1-2.3)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+- hull_id: val_cylinder_r1_t2
+  hull_type: cylinder
+  name: val_cylinder_r1_t2
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/val_cylinder_r1_t2.gdf
+  panel_count: 112
+  vertex_count: 127
+  symmetry: xy
+  length_m: 2.0
+  beam_m: 2.0
+  draft_m: 2.0
+  description: "WAMIT validation cylinder R=1m, T=2m (case 2.6 body 1)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+- hull_id: val_spheroid
+  hull_type: ellipsoid
+  name: val_spheroid
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/val_spheroid.gdf
+  panel_count: 64
+  vertex_count: 73
+  symmetry: xy
+  length_m: 4.0
+  beam_m: 1.0
+  draft_m: 0.25
+  description: "WAMIT validation spheroid ULEN=2m (case 2.6 body 2)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+- hull_id: val_issc_tlp_coarse
+  hull_type: tlp
+  name: val_issc_tlp_coarse
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/semi_subs/val_issc_tlp_coarse.gdf
+  panel_count: 128
+  vertex_count: 145
+  symmetry: xy
+  length_m: 86.25
+  beam_m: 86.25
+  draft_m: 35.0
+  description: "WAMIT validation ISSC TLP coarse mesh ULEN=43.125m (case 2.5)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+  - tlp
+- hull_id: val_issc_tlp_fine
+  hull_type: tlp
+  name: val_issc_tlp_fine
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/semi_subs/val_issc_tlp_fine.gdf
+  panel_count: 1012
+  vertex_count: 1045
+  symmetry: xy
+  length_m: 86.25
+  beam_m: 86.25
+  draft_m: 35.0
+  description: "WAMIT validation ISSC TLP fine mesh ULEN=43.125m (case 2.5)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+  - tlp
 - hull_id: hull_collection_example_aframax_ga
   hull_type: tanker
   name: Example Aframax GA

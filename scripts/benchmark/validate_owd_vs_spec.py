@@ -41,6 +41,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 CASES = {
+    # Phase 1: Library-matched cases
     "2.7": {
         "owd": L00_DIR / "2.7" / "OrcaWave v11.0 files" / "Pyramid.owd",
         "spec": L00_DIR / "2.7" / "spec.yml",
@@ -69,6 +70,49 @@ CASES = {
         "water_depth": float("inf"),
         "description": "Multi-body Cylinder + Ellipsoid",
         "body_index": 1,  # Compare Ellipsoid (body 1); Cylinder (body 0) is fixed
+    },
+    # Phase 2: New hull library cases
+    "2.1": {
+        "owd": L00_DIR / "2.1" / "OrcaWave v11.0 files" / "test01.owd",
+        "spec": L00_DIR / "2.1" / "spec.yml",
+        "vessel_name": "Test01_cylinder",
+        "water_depth": float("inf"),
+        "description": "Cylinder R=1 T=0.5 (no IRR)",
+    },
+    "2.2": {
+        "owd": L00_DIR / "2.2" / "OrcaWave v11.0 files" / "test02 with base mesh.owd",
+        "spec": L00_DIR / "2.2" / "spec.yml",
+        "vessel_name": "Test01_cylinder",
+        "water_depth": float("inf"),
+        "description": "Cylinder R=1 T=0.5 (base mesh, extended freq)",
+    },
+    "2.3": {
+        "owd": L00_DIR / "2.3" / "OrcaWave v11.0 files" / "test01a.owd",
+        "spec": L00_DIR / "2.3" / "spec.yml",
+        "vessel_name": "Test01_cylinder",
+        "water_depth": float("inf"),
+        "description": "Cylinder R=1 T=0.5 (trimmed z=0.27 rx=15deg)",
+    },
+    "2.5c": {
+        "owd": L00_DIR / "2.5" / "OrcaWave v11.0 files" / "test06.owd",
+        "spec": L00_DIR / "2.5" / "spec_coarse.yml",
+        "vessel_name": "Body1",
+        "water_depth": 450.0,
+        "description": "ISSC TLP coarse (128 panels)",
+    },
+    "2.5f": {
+        "owd": L00_DIR / "2.5" / "OrcaWave v11.0 files" / "test07.owd",
+        "spec": L00_DIR / "2.5" / "spec_fine.yml",
+        "vessel_name": "Body1",
+        "water_depth": 450.0,
+        "description": "ISSC TLP fine (1012 panels)",
+    },
+    "2.6": {
+        "owd": L00_DIR / "2.6" / "OrcaWave v11.0 files" / "test05a.owd",
+        "spec": L00_DIR / "2.6" / "spec.yml",
+        "vessel_name": "test05_cylinder",
+        "water_depth": 3.0,
+        "description": "Multi-body Cylinder+Spheroid shallow water",
     },
 }
 
