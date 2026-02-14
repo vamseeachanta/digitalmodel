@@ -114,6 +114,21 @@ CASES = {
         "water_depth": 3.0,
         "description": "Multi-body Cylinder+Spheroid shallow water",
     },
+    # Phase 3: Advanced cases
+    "2.9": {
+        "owd": L00_DIR / "2.9" / "OrcaWave v11.0 files" / "Moonpool Body.owd",
+        "spec": L00_DIR / "2.9" / "spec.yml",
+        "vessel_name": "cylinder with moonpool",
+        "water_depth": float("inf"),
+        "description": "Moonpool cylinder with damping lid",
+    },
+    "3.1": {
+        "owd": L00_DIR / "3.1" / "OrcaWave v11.0 files" / "Bottom mounted cylinder.owd",
+        "spec": L00_DIR / "3.1" / "spec.yml",
+        "vessel_name": "test101 bottom mounted cylinder",
+        "water_depth": 1.0,
+        "description": "Bottom-mounted cylinder, all DOFs fixed, Full QTF",
+    },
 }
 
 

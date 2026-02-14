@@ -509,6 +509,53 @@ class MetadataSpec(BaseModel):
     )
 
 
+class DampingLidSpec(BaseModel):
+    """Resonance damping lid specification (for moonpool bodies)."""
+
+    mesh_file: str = Field(
+        ...,
+        description="Path to damping lid mesh file (relative to spec.yml)",
+    )
+    mesh_format: str = Field(
+        default="gdf",
+        description="Mesh file format (gdf, dat, etc.)",
+    )
+    length_units: str = Field(
+        default="m",
+        description="Length units of the lid mesh file",
+    )
+    damping_factor: float = Field(
+        ...,
+        gt=0,
+        description="Damping factor epsilon for the lid",
+    )
+
+
+class FreeSurfaceZoneSpec(BaseModel):
+    """Free surface zone specification for QTF calculations."""
+
+    type: str = Field(
+        default="mesh",
+        description="'mesh' for explicit mesh file, 'auto' for automatic",
+    )
+    mesh_file: Optional[str] = Field(
+        None,
+        description="Path to free surface zone mesh file (.fdf)",
+    )
+    mesh_format: str = Field(
+        default="fdf",
+        description="Mesh format (typically 'fdf' for Wamit)",
+    )
+    length_units: str = Field(
+        default="m",
+        description="Length units of the zone mesh",
+    )
+    inner_radius: Optional[float] = Field(
+        None,
+        description="Inner radius of panelled zone",
+    )
+
+
 class ControlSurfaceSpec(BaseModel):
     """Control surface for irregular frequency removal."""
 
@@ -623,6 +670,14 @@ class DiffractionSpec(BaseModel):
     solver_options: SolverOptions = Field(default_factory=SolverOptions)
     outputs: OutputSpec = Field(default_factory=OutputSpec)
     metadata: MetadataSpec = Field(default_factory=MetadataSpec)
+    damping_lid: Optional[DampingLidSpec] = Field(
+        None,
+        description="Resonance damping lid for moonpool bodies",
+    )
+    free_surface_zone: Optional[FreeSurfaceZoneSpec] = Field(
+        None,
+        description="Free surface zone for QTF calculations",
+    )
 
     @model_validator(mode="after")
     def check_vessel_or_bodies(self) -> DiffractionSpec:

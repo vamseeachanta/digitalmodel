@@ -365,6 +365,61 @@ entries:
   - wamit_validation
   - L00
   - tlp
+- hull_id: val_moonpool_body
+  hull_type: cylinder
+  name: val_moonpool_body
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/val_moonpool_body.gdf
+  panel_count: 368
+  vertex_count: 369
+  symmetry: xz+yz
+  length_m: 1.0
+  beam_m: 1.0
+  draft_m: 0.1875
+  description: "WAMIT validation moonpool cylinder body R_outer=0.5m R_inner=0.25m (case 2.9)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+  - moonpool
+- hull_id: val_moonpool_lid
+  hull_type: lid
+  name: val_moonpool_lid
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/val_moonpool_lid.gdf
+  panel_count: 32
+  vertex_count: 33
+  symmetry: xz+yz
+  length_m: 0.5
+  beam_m: 0.5
+  draft_m: 0.0
+  description: "WAMIT validation moonpool damping lid (case 2.9)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+  - moonpool
+  - lid
+- hull_id: val_bmc
+  hull_type: cylinder
+  name: val_bmc
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/val_bmc.gdf
+  panel_count: 100
+  vertex_count: 101
+  symmetry: xz+yz
+  length_m: 2.0
+  beam_m: 2.0
+  draft_m: 1.0
+  description: "WAMIT validation bottom-mounted cylinder R=1m h=1m (case 3.1)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+  - bottom_mounted
 - hull_id: hull_collection_example_aframax_ga
   hull_type: tanker
   name: Example Aframax GA
