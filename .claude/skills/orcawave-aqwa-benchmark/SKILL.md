@@ -469,6 +469,44 @@ jobs:
 6. **Version Control**: Track software versions for reproducibility
 7. **Regular Validation**: Re-run benchmarks after software updates
 
+## Report Annotation Best Practices (Critical for Credibility)
+
+### Annotations Must Reference Visible Data Only
+
+Plot annotations and commentary text must ONLY describe data the reader can actually see in the plot. Annotations referencing hidden headings, off-screen data points, or filtered-out traces are misleading and **reduce report credibility**.
+
+**Gate rule**: Before adding an annotation, verify the data point (frequency, heading) is within the visible plot range. If the heading was filtered out (insignificant response), skip the annotation entirely.
+
+```python
+# CORRECT: Only annotate visible data
+if phase_diff_heading_idx not in visible_heading_indices:
+    return  # diff is at a hidden heading — skip annotation
+
+# WRONG: Annotating data the reader cannot verify
+fig.add_annotation(x=freq, y=phase_at_hidden_heading, ...)  # misleading
+```
+
+### Phase at Negligible Amplitude
+
+Phase angle is physically undefined when signal magnitude is near zero. Large phase differences (e.g., 360°) at negligible amplitude are inconsequential and must be qualified:
+
+- **Threshold**: Amplitude < 5% of peak magnitude → phase is negligible
+- **Annotation style**: Semi-transparent (opacity 0.4) yellow bubble with arrow pointing to the exact data point; text includes coordinates and amplitude value
+- **Text pattern**: `"Δφ = 360° at (31.4s, 180°) / Amplitude: 8.91e-09 deg/m / Ignore — magnitude is insignificant"`
+
+### Commentary Text for Hidden Data
+
+When max phase diff occurs at a heading omitted from the plot, the text commentary (below the plot) should state this explicitly rather than implying the reader can verify it:
+
+```
+"Max phase difference of 360.0° occurs at a heading omitted from the plot
+(negligible response). Displayed headings show good phase agreement."
+```
+
+### Annotation Transparency
+
+Use low opacity (0.4) for annotation backgrounds so the plot data remains visible behind the text. This allows readers to still review the underlying traces.
+
 ## Phase Convention Normalization (Critical)
 
 ### Convention Differences

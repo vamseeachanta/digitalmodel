@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Benchmark Report - Test01_cylinder</title>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                 Roboto, Arial, sans-serif;
+    margin: 0; padding: 0; color: #333; background: #f8f9fa;
+    font-size: 14px; line-height: 1.5;
+  }
+  .container { max-width: 1400px; margin: 0 auto; padding: 1.5em 2em; }
+
+  /* Header */
+  .report-header {
+    background: #2c3e50; color: #fff; padding: 1.2em 2em;
+    margin-bottom: 1.5em; border-radius: 6px;
+  }
+  .report-header h1 { margin: 0 0 0.3em; font-size: 1.6em; }
+  .report-header .meta { font-size: 0.9em; opacity: 0.85; }
+  .report-header .consensus-overall {
+    display: inline-block; padding: 4px 12px; border-radius: 4px;
+    font-weight: 700; margin-left: 1em; font-size: 0.85em;
+  }
+
+  /* Section cards */
+  .section { background: #fff; border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    margin-bottom: 1.5em; padding: 1.2em 1.5em;
+  }
+  .section h2 { margin: 0 0 0.8em; font-size: 1.2em; color: #2c3e50;
+    border-bottom: 2px solid #3498db; padding-bottom: 0.3em; }
+
+  /* Tables */
+  table { border-collapse: collapse; margin: 0.5em 0; font-size: 0.85em;
+    width: 100%; }
+  th, td { border: 1px solid #ddd; padding: 0.45em 0.7em;
+    text-align: left; }
+  th { background: #34495e; color: #fff; font-weight: 600;
+    font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.3px; }
+  tbody tr:nth-child(even) { background: #f8f9fa; }
+  tbody tr:nth-child(odd) { background: #fff; }
+  tbody tr:hover { background: #ebf5fb; }
+  td { vertical-align: top; }
+
+  /* Input comparison table */
+  .input-table .param-label { font-weight: 600; }
+  .section-row td {
+    background: #2c3e50 !important; color: #fff;
+    font-weight: 700; font-size: 0.8em; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 0.5em 0.7em;
+  }
+
+  /* Input file viewer */
+  .file-viewer { margin-bottom: 1.5em; }
+  .file-viewer-header {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #34495e; color: #fff; padding: 0.5em 1em;
+    border-radius: 4px 4px 0 0; font-size: 0.85em;
+  }
+  .file-viewer-header .file-path {
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.9em; word-break: break-all;
+  }
+  .file-viewer-header .solver-label {
+    font-weight: 700; margin-right: 0.8em; white-space: nowrap;
+  }
+  .file-viewer-header button {
+    background: #3498db; color: #fff; border: none; padding: 4px 12px;
+    border-radius: 3px; cursor: pointer; font-size: 0.85em;
+    white-space: nowrap;
+  }
+  .file-viewer-header button:hover { background: #2980b9; }
+  .file-content {
+    max-height: 400px; overflow-y: auto; overflow-x: auto;
+    border: 1px solid #ddd; border-top: none;
+    border-radius: 0 0 4px 4px; background: #fafafa; margin: 0;
+  }
+  .file-content pre {
+    margin: 0; padding: 0.8em 1em; font-size: 12px; line-height: 1.5;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    counter-reset: line;
+  }
+  .file-content pre .line {
+    display: block;
+  }
+  .file-content pre .line::before {
+    counter-increment: line;
+    content: counter(line);
+    display: inline-block; width: 3.5em; text-align: right;
+    margin-right: 1em; color: #999; font-size: 0.85em;
+    border-right: 1px solid #ddd; padding-right: 0.5em;
+    -webkit-user-select: none; user-select: none;
+  }
+
+  /* DOF sections: 2-column grid */
+  .dof-section { border-top: 2px solid #ecf0f1; padding-top: 1em;
+    margin-top: 1em; }
+  .dof-section:first-child { border-top: none; margin-top: 0; }
+  .dof-title { font-size: 1.1em; color: #2c3e50; margin: 0 0 0.6em; }
+  .dof-grid {
+    display: grid; grid-template-columns: 45% 55%;
+    gap: 1em; align-items: start;
+  }
+  .dof-text { font-size: 0.85em; }
+  .dof-plot { min-height: 340px; }
+
+  /* Consensus badges */
+  .consensus-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 3px;
+    color: #fff; font-size: 0.8em; font-weight: 700;
+    margin-bottom: 0.5em;
+  }
+
+  /* Numeric font */
+  .mono { font-family: 'SF Mono', 'Cascadia Code', 'Consolas',
+    'Fira Code', monospace; }
+
+  /* Stats table */
+  .stats-table { width: 100%; margin-bottom: 0.6em; }
+  .stats-table td:last-child { text-align: right;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace; }
+
+  /* Solver comparison tables */
+  .solver-table { width: 100%; margin-bottom: 0.5em; }
+  .solver-table th { font-size: 0.75em; text-align: center;
+    padding: 0.3em 0.4em; }
+  .solver-table td { text-align: right;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.8em; padding: 0.25em 0.4em; }
+  .solver-table td:first-child { text-align: left; font-family: inherit;
+    font-weight: 600; }
+
+  .dof-text h4 { margin: 0.7em 0 0.3em; font-size: 0.9em;
+    color: #2c3e50; border-bottom: 1px solid #ddd;
+    padding-bottom: 0.15em; }
+  .observations p { margin: 0.3em 0; line-height: 1.4; }
+  .skipped-note {
+    font-size: 0.8em; color: #888; font-style: italic;
+    margin-top: 0.5em; padding: 0.3em 0.5em;
+    background: #fef9e7; border-left: 3px solid #f0c674;
+    border-radius: 2px;
+  }
+
+  /* Links section */
+  .plot-links { column-count: 2; font-size: 0.85em; }
+  .plot-links li { margin-bottom: 0.3em; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .dof-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Section 1: Header -->
+  <div class="report-header">
+    <h1>Benchmark Report</h1>
+    <div class="meta">
+      <strong>Vessel:</strong> Test01_cylinder &nbsp;|&nbsp;
+      <strong>Date:</strong> 2026-02-14 09:28:19 &nbsp;|&nbsp;
+      <strong>Solvers:</strong> OrcaWave (.owd), OrcaWave (spec.yml)
+      <span class="consensus-overall"
+            style="background:#27ae60;">
+        FULL
+      </span>
+    </div>
+  </div>
+
+  <!-- Section 2: Input Comparison -->
+  <div class="section">
+    <h2>Input Comparison</h2>
+<table class="input-table" style="max-width:800px;">
+<thead><tr><th>Parameter</th>
+<th>OrcaWave (.owd)</th>
+<th>OrcaWave (spec.yml)</th>
+</tr></thead><tbody>
+<tr class='section-row'><td colspan='3'>Mass Properties</td></tr>
+<tr>
+<td class='param-label'>Centre of gravity (m)</td>
+<td>(0, 0, 0)</td>
+<td>(0, 0, 0)</td>
+</tr>
+<tr class='section-row'><td colspan='3'>Environment</td></tr>
+<tr>
+<td class='param-label'>Water depth (m)</td>
+<td>inf</td>
+<td>inf</td>
+</tr>
+<tr>
+<td class='param-label'>Water density (kg/m3)</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class='section-row'><td colspan='3'>Mesh</td></tr>
+<tr>
+<td class='param-label'>Mesh file</td>
+<td>test01.gdf</td>
+<td>val_cylinder_r1_t05.gdf</td>
+</tr>
+<tr>
+<td class='param-label'>Mesh format</td>
+<td>Wamit gdf</td>
+<td>Wamit gdf</td>
+</tr>
+<tr>
+<td class='param-label'>Symmetry</td>
+<td>xz and yz planes</td>
+<td>xz and yz planes</td>
+</tr>
+<tr class='section-row'><td colspan='3'>Damping</td></tr>
+<tr>
+<td class='param-label'>Radiation damping</td>
+<td>Computed (BEM)</td>
+<td>Computed (BEM)</td>
+</tr>
+<tr>
+<td class='param-label'>Viscous damping</td>
+<td>None applied</td>
+<td>None applied</td>
+</tr>
+<tr>
+<td class='param-label'>Damping lid</td>
+<td>False</td>
+<td>False</td>
+</tr>
+<tr class='section-row'><td colspan='3'>Analysis Settings</td></tr>
+<tr>
+<td class='param-label'>Frequency range (rad/s)</td>
+<td>0.100 – 5.000 (50)</td>
+<td>0.100 – 5.000 (50)</td>
+</tr>
+<tr>
+<td class='param-label'>Heading range (deg)</td>
+<td>0 – 27 (2)</td>
+<td>0 – 27 (2)</td>
+</tr>
+<tr>
+<td class='param-label'>Calculation method</td>
+<td>Potential and source formulations</td>
+<td>Potential and source formulations</td>
+</tr>
+<tr class='section-row'><td colspan='3'>Conventions</td></tr>
+<tr>
+<td class='param-label'>Phase convention (raw)</td>
+<td>Orcina (phase lag)</td>
+<td>Orcina (phase lag)</td>
+</tr>
+<tr>
+<td class='param-label'>Phase convention (normalized)</td>
+<td>orcina_lag</td>
+<td>orcina_lag</td>
+</tr>
+<tr>
+<td class='param-label'>Unit system</td>
+<td>orcaflex</td>
+<td>orcaflex</td>
+</tr>
+<tr class='section-row'><td colspan='3'>OrcaWave Solver Settings</td></tr>
+<tr>
+<td class='param-label'>Units system</td>
+<td>SI</td>
+<td>SI</td>
+</tr>
+<tr>
+<td class='param-label'>Solve type</td>
+<td>Potential and source formulations</td>
+<td>Potential and source formulations</td>
+</tr>
+<tr>
+<td class='param-label'>Load RAO method</td>
+<td>Both</td>
+<td>Both</td>
+</tr>
+<tr>
+<td class='param-label'>Linear solver</td>
+<td>Direct LU</td>
+<td>Direct LU</td>
+</tr>
+<tr>
+<td class='param-label'>Divide non-planar panels</td>
+<td>False</td>
+<td>True</td>
+</tr>
+<tr>
+<td class='param-label'>Length tolerance</td>
+<td>100e-9</td>
+<td>100e-9</td>
+</tr>
+<tr>
+<td class='param-label'>Waves referred to by</td>
+<td>frequency (rad/s)</td>
+<td>period (s)</td>
+</tr>
+<tr class='section-row'><td colspan='3'>OrcaWave Body Details</td></tr>
+<tr>
+<td class='param-label'>Body count</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td class='param-label'>Body name</td>
+<td>Test01 cylinder</td>
+<td>Test01_cylinder</td>
+</tr>
+<tr>
+<td class='param-label'>Inertia specification</td>
+<td>Radii of gyration (for a free-floating body)</td>
+<td>Radii of gyration (for a free-floating body)</td>
+</tr>
+<tr>
+<td class='param-label'>Interior surface panels</td>
+<td>False</td>
+<td>False</td>
+</tr>
+<tr>
+<td class='param-label'>Connection parent</td>
+<td>Free</td>
+<td>Free</td>
+</tr>
+<tr>
+<td class='param-label'>Fixed DOFs</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<td class='param-label'>Roll damping target</td>
+<td>False</td>
+<td>False</td>
+</tr>
+<tr>
+<td class='param-label'>External damping</td>
+<td>None applied</td>
+<td>None applied</td>
+</tr>
+<tr>
+<td class='param-label'>External stiffness</td>
+<td>None applied</td>
+<td>None applied</td>
+</tr>
+<tr class='section-row'><td colspan='3'>OrcaWave Advanced</td></tr>
+<tr>
+<td class='param-label'>Damping lid</td>
+<td>False</td>
+<td>False</td>
+</tr>
+</tbody></table>
+  </div>
+
+  <!-- Section 2.1: Input Files -->
+  <div class="section"><h2>Input Files</h2>
+<h3>Semantic Equivalence</h3>
+<p>Key-by-key comparison of the OrcaWave SaveData() YAML exports from both solver paths. Keys are classified as:</p><ul style='font-size:13px;margin:0.3em 0 0.8em;'><li><strong>Cosmetic</strong> — GUI display, naming, output flags, dormant settings (no solver effect)</li><li><strong>Convention</strong> — equivalent data in different representation (e.g. Hz vs rad/s)</li><li><strong>Significant</strong> — real solver parameter difference that may affect results</li></ul>
+<table class='stats-table' style='max-width:500px;margin-bottom:1em;'>
+<tr><th>Metric</th><th>Count</th></tr>
+<tr><td>Matching keys</td><td style='color:#27ae60;font-weight:bold'>52</td></tr>
+<tr><td>Cosmetic differences</td><td style='color:#6b7280'>13</td></tr>
+<tr><td>Convention differences</td><td style='color:#2563eb'>2</td></tr>
+<tr><td>Significant differences</td><td style='color:#e74c3c;font-weight:bold'>1</td></tr>
+<tr><td>Total keys compared</td><td>68</td></tr>
+</table>
+<div style='display:inline-block;padding:4px 16px;border-radius:4px;color:white;font-weight:bold;background:#f39c12;margin-bottom:1em;'>1 SIGNIFICANT DIFF(S)</div>
+<h4>Significant Differences</h4><table style='max-width:800px;font-size:12px;margin-top:0.5em;'><tr><th style='text-align:left'>Key</th><th style='text-align:left'>OrcaWave (.owd)</th><th style='text-align:left'>OrcaWave (spec.yml)</th></tr><tr><td><code>DivideNonPlanarPanels</code></td><td>False</td><td>True</td></tr></table>
+<details style='margin-top:0.5em;font-size:12px;'><summary>Convention Differences (2)</summary><table style='max-width:800px;font-size:12px;margin-top:0.5em;'><tr><th style='text-align:left'>Key</th><th style='text-align:left'>OrcaWave (.owd)</th><th style='text-align:left'>OrcaWave (spec.yml)</th></tr><tr><td><code>PeriodOrFrequency</code></td><td>[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1</td><td>[1.2566, 1.2823, 1.309, 1.3368, 1.3659, 1.3963, 1.428, 1.4612, 1.496, 1.5325, 1.</td></tr><tr><td><code>WavesReferredToBy</code></td><td>frequency (rad/s)</td><td>period (s)</td></tr></table></details>
+<details style='margin-top:0.5em;font-size:12px;'><summary>Cosmetic Differences (13)</summary><table style='max-width:800px;font-size:12px;margin-top:0.5em;'><tr><th style='text-align:left'>Key</th><th style='text-align:left'>OrcaWave (.owd)</th><th style='text-align:left'>OrcaWave (spec.yml)</th></tr><tr><td><code>FieldPointX, FieldPointY, FieldPointZ</code></td><td>[[1.5, 0, 0], [1.5, 0, -0.5], [1.79, -2.1, 0]]</td><td>MISSING</td></tr><tr><td><code>FreeSurfaceMeshPen</code></td><td>[1, &#x27;Solid&#x27;, &#x27;Aqua&#x27;]</td><td>MISSING</td></tr><tr><td><code>InteriorSurfacePanelsPen</code></td><td>[1, &#x27;Solid&#x27;, &#x27;Red&#x27;]</td><td>MISSING</td></tr><tr><td><code>OutputPanelPressures</code></td><td>True</td><td>False</td></tr><tr><td><code>OutputPanelVelocities</code></td><td>True</td><td>False</td></tr><tr><td><code>PreferredQuadraticLoadCalculationMethod</code></td><td>Pressure integration</td><td>MISSING</td></tr><tr><td><code>QTFMaxCrossingAngle</code></td><td>180</td><td>MISSING</td></tr><tr><td><code>QTFMinCrossingAngle</code></td><td>0</td><td>MISSING</td></tr><tr><td><code>QuadraticLoadPressureIntegration</code></td><td>True</td><td>False</td></tr><tr><td><code>Bodies[0].BodyMeshFileName</code></td><td>test01.gdf</td><td>val_cylinder_r1_t05.gdf</td></tr><tr><td><code>Bodies[0].BodyName</code></td><td>Test01 cylinder</td><td>Test01_cylinder</td></tr><tr><td><code>Bodies[0].BodyOrcaFlexImportLength</code></td><td>2</td><td>MISSING</td></tr><tr><td><code>Bodies[0].BodyOrcaFlexImportSymmetry</code></td><td>Circular</td><td>Use global mesh symmetry</td></tr></table></details>
+<h3 style="margin-top:1.5em;margin-bottom:0.2em;">OrcaWave (.owd)</h3>
+<p style="margin:0.3em 0 0.5em;font-size:12px;color:#64748b;max-width:700px;">OrcaWave input configuration exported from the original .owd project via SaveData(). This is the ground truth — the exact parameters used by the manually-configured OrcaWave project.</p>
+<div class="file-viewer">
+  <div class="file-viewer-header">
+    <div>
+      <span class="solver-label">OrcaWave (.owd)</span>
+      <span class="file-path">D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.1\benchmark\test01_input.yml</span>
+    </div>
+    <button onclick="openFileWindow_0()">Open in New Window</button>
+  </div>
+  <div class="file-content">
+    <pre><span class="line">﻿%YAML 1.1</span>
+<span class="line"># Type: Diffraction</span>
+<span class="line"># Program: OrcaFlex 11.6b</span>
+<span class="line"># File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.1\benchmark\test01_input.yml</span>
+<span class="line"># Created: 9:28 AM on 2/14/2026</span>
+<span class="line"># User: ansystech</span>
+<span class="line"># Machine: ACMA-ANSYS05</span>
+<span class="line">---</span>
+<span class="line"># Model</span>
+<span class="line">UnitsSystem: SI</span>
+<span class="line"># Calculation &amp; output</span>
+<span class="line">SolveType: Potential and source formulations</span>
+<span class="line">HasResonanceDampingLid: No</span>
+<span class="line">OutputPanelPressures: Yes</span>
+<span class="line">OutputPanelVelocities: Yes</span>
+<span class="line">OutputBodyWireFrames: Yes</span>
+<span class="line">OutputIntermediateResults: No</span>
+<span class="line">ComputationStrategy: Optimised for run time</span>
+<span class="line">LoadRAOCalculationMethod: Both</span>
+<span class="line">PreferredLoadRAOCalculationMethod: Haskind</span>
+<span class="line">QuadraticLoadPressureIntegration: Yes</span>
+<span class="line">QuadraticLoadControlSurface: No</span>
+<span class="line">QuadraticLoadMomentumConservation: No</span>
+<span class="line">PreferredQuadraticLoadCalculationMethod: Pressure integration</span>
+<span class="line">LengthTolerance: 100e-9</span>
+<span class="line">WaterlineZTolerance: 1e-6</span>
+<span class="line">WaterlineGapTolerance: 1e-6</span>
+<span class="line">DivideNonPlanarPanels: No</span>
+<span class="line">LinearSolverMethod: Direct LU</span>
+<span class="line">ValidatePanelArrangement: No</span>
+<span class="line">BodyVolumeWarningLevel: 1e-12</span>
+<span class="line">PanelAspectRatioWarningLevel: 25</span>
+<span class="line">PanelsPerWavelengthWarningLevel: 5</span>
+<span class="line"># Environment</span>
+<span class="line">WaterDepth: Infinity</span>
+<span class="line">WaterDensity: 1</span>
+<span class="line">WavesReferredToBy: frequency (rad/s)</span>
+<span class="line">HasWaveSpectrumForDragLinearisation: No</span>
+<span class="line">MorisonFluidVelocity: Undisturbed incident wave</span>
+<span class="line">PeriodOrFrequency:</span>
+<span class="line">  - 0.1</span>
+<span class="line">  - 0.2</span>
+<span class="line">  - 0.3</span>
+<span class="line">  - 0.4</span>
+<span class="line">  - 0.5</span>
+<span class="line">  - 0.6</span>
+<span class="line">  - 0.7</span>
+<span class="line">  - 0.8</span>
+<span class="line">  - 0.9</span>
+<span class="line">  - 1</span>
+<span class="line">  - 1.1</span>
+<span class="line">  - 1.2</span>
+<span class="line">  - 1.3</span>
+<span class="line">  - 1.4</span>
+<span class="line">  - 1.5</span>
+<span class="line">  - 1.6</span>
+<span class="line">  - 1.7</span>
+<span class="line">  - 1.8</span>
+<span class="line">  - 1.9</span>
+<span class="line">  - 2</span>
+<span class="line">  - 2.1</span>
+<span class="line">  - 2.2</span>
+<span class="line">  - 2.3</span>
+<span class="line">  - 2.4</span>
+<span class="line">  - 2.5</span>
+<span class="line">  - 2.6</span>
+<span class="line">  - 2.7</span>
+<span class="line">  - 2.8</span>
+<span class="line">  - 2.9</span>
+<span class="line">  - 3</span>
+<span class="line">  - 3.1</span>
+<span class="line">  - 3.2</span>
+<span class="line">  - 3.3</span>
+<span class="line">  - 3.4</span>
+<span class="line">  - 3.5</span>
+<span class="line">  - 3.6</span>
+<span class="line">  - 3.7</span>
+<span class="line">  - 3.8</span>
+<span class="line">  - 3.9</span>
+<span class="line">  - 4</span>
+<span class="line">  - 4.1</span>
+<span class="line">  - 4.2</span>
+<span class="line">  - 4.3</span>
+<span class="line">  - 4.4</span>
+<span class="line">  - 4.5</span>
+<span class="line">  - 4.6</span>
+<span class="line">  - 4.7</span>
+<span class="line">  - 4.8</span>
+<span class="line">  - 4.9</span>
+<span class="line">  - 5</span>
+<span class="line">WaveHeading:</span>
+<span class="line">  - 0</span>
+<span class="line">  - 27</span>
+<span class="line">QTFMinCrossingAngle: 0</span>
+<span class="line">QTFMaxCrossingAngle: 180</span>
+<span class="line"># Constraints</span>
+<span class="line">EnableMultibodyConstraints: No</span>
+<span class="line"># Bodies</span>
+<span class="line">Bodies:</span>
+<span class="line">  - BodyName: Test01 cylinder</span>
+<span class="line">    BodyMeshPosition: [0, 0, 0]</span>
+<span class="line">    BodyMeshAttitude: [0, 0, 0]</span>
+<span class="line">    BodyIncludedInAnalysis: Yes</span>
+<span class="line">    BodyMeshFileName: test01.gdf</span>
+<span class="line">    BodyMeshFormat: Wamit gdf</span>
+<span class="line">    BodyMeshLengthUnits: m</span>
+<span class="line">    BodyMeshSymmetry: xz and yz planes</span>
+<span class="line">    BodyMeshDipolePanels: </span>
+<span class="line">    BodyOriginType: Free surface</span>
+<span class="line">    BodyAddInteriorSurfacePanels: No</span>
+<span class="line">    BodyOrcaFlexImportSymmetry: Circular</span>
+<span class="line">    BodyOrcaFlexImportLength: 2</span>
+<span class="line">    BodyHydrostaticIntegralMethod: Standard</span>
+<span class="line">    BodyHydrostaticStiffnessMethod: Displacement</span>
+<span class="line">    BodyInertiaSpecifiedBy: Radii of gyration (for a free-floating body)</span>
+<span class="line">    BodyCentreOfMassZRelativeToFreeSurface: 0</span>
+<span class="line">    BodyRadiiOfGyrationRx, BodyRadiiOfGyrationRy, BodyRadiiOfGyrationRz:</span>
+<span class="line">      - [1, 0, 0]</span>
+<span class="line">      - [0, 1, 0]</span>
+<span class="line">      - [0, 0, 1]</span>
+<span class="line">    BodyRadiiOfGyrationOriginType: Body origin</span>
+<span class="line">    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">    BodyExternalStiffnessMatrixOriginType: Body origin</span>
+<span class="line">    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">    BodyExternalDampingMatrixOriginType: Body origin</span>
+<span class="line">    BodyConnectionParent: Free</span>
+<span class="line">    BodyIncreaseRollDampingToTarget: No</span>
+<span class="line">    BodyFixedDOFx: No</span>
+<span class="line">    BodyFixedDOFy: No</span>
+<span class="line">    BodyFixedDOFz: No</span>
+<span class="line">    BodyFixedDOFRx: No</span>
+<span class="line">    BodyFixedDOFRy: No</span>
+<span class="line">    BodyFixedDOFRz: No</span>
+<span class="line"># Field points</span>
+<span class="line">FieldPointX, FieldPointY, FieldPointZ:</span>
+<span class="line">  - [1.5, 0, 0]</span>
+<span class="line">  - [1.5, 0, -0.5]</span>
+<span class="line">  - [1.79, -2.1, 0]</span>
+<span class="line">DetectAndSkipFieldPointsInsideBodies: Yes</span>
+<span class="line"># Drawing</span>
+<span class="line">InteriorSurfacePanelsPen: [1, Solid, Red]</span>
+<span class="line">FreeSurfaceMeshPen: [1, Solid, Aqua]</span>
+<span class="line">...</span></pre>
+  </div>
+  
+  <textarea id="file_content_0" style="display:none;">﻿%YAML 1.1
+# Type: Diffraction
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.1\benchmark\test01_input.yml
+# Created: 9:28 AM on 2/14/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+# Model
+UnitsSystem: SI
+# Calculation &amp; output
+SolveType: Potential and source formulations
+HasResonanceDampingLid: No
+OutputPanelPressures: Yes
+OutputPanelVelocities: Yes
+OutputBodyWireFrames: Yes
+OutputIntermediateResults: No
+ComputationStrategy: Optimised for run time
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadPressureIntegration: Yes
+QuadraticLoadControlSurface: No
+QuadraticLoadMomentumConservation: No
+PreferredQuadraticLoadCalculationMethod: Pressure integration
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1e-6
+WaterlineGapTolerance: 1e-6
+DivideNonPlanarPanels: No
+LinearSolverMethod: Direct LU
+ValidatePanelArrangement: No
+BodyVolumeWarningLevel: 1e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+# Environment
+WaterDepth: Infinity
+WaterDensity: 1
+WavesReferredToBy: frequency (rad/s)
+HasWaveSpectrumForDragLinearisation: No
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+  - 0.1
+  - 0.2
+  - 0.3
+  - 0.4
+  - 0.5
+  - 0.6
+  - 0.7
+  - 0.8
+  - 0.9
+  - 1
+  - 1.1
+  - 1.2
+  - 1.3
+  - 1.4
+  - 1.5
+  - 1.6
+  - 1.7
+  - 1.8
+  - 1.9
+  - 2
+  - 2.1
+  - 2.2
+  - 2.3
+  - 2.4
+  - 2.5
+  - 2.6
+  - 2.7
+  - 2.8
+  - 2.9
+  - 3
+  - 3.1
+  - 3.2
+  - 3.3
+  - 3.4
+  - 3.5
+  - 3.6
+  - 3.7
+  - 3.8
+  - 3.9
+  - 4
+  - 4.1
+  - 4.2
+  - 4.3
+  - 4.4
+  - 4.5
+  - 4.6
+  - 4.7
+  - 4.8
+  - 4.9
+  - 5
+WaveHeading:
+  - 0
+  - 27
+QTFMinCrossingAngle: 0
+QTFMaxCrossingAngle: 180
+# Constraints
+EnableMultibodyConstraints: No
+# Bodies
+Bodies:
+  - BodyName: Test01 cylinder
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: test01.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: xz and yz planes
+    BodyMeshDipolePanels: 
+    BodyOriginType: Free surface
+    BodyAddInteriorSurfacePanels: No
+    BodyOrcaFlexImportSymmetry: Circular
+    BodyOrcaFlexImportLength: 2
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Radii of gyration (for a free-floating body)
+    BodyCentreOfMassZRelativeToFreeSurface: 0
+    BodyRadiiOfGyrationRx, BodyRadiiOfGyrationRy, BodyRadiiOfGyrationRz:
+      - [1, 0, 0]
+      - [0, 1, 0]
+      - [0, 0, 1]
+    BodyRadiiOfGyrationOriginType: Body origin
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+# Field points
+FieldPointX, FieldPointY, FieldPointZ:
+  - [1.5, 0, 0]
+  - [1.5, 0, -0.5]
+  - [1.79, -2.1, 0]
+DetectAndSkipFieldPointsInsideBodies: Yes
+# Drawing
+InteriorSurfacePanelsPen: [1, Solid, Red]
+FreeSurfaceMeshPen: [1, Solid, Aqua]
+...</textarea>
+  <script>
+    function openFileWindow_0() {
+      var ta = document.getElementById('file_content_0');
+      var w = window.open('', '_blank');
+      w.document.write(
+        '<html><head><title>OrcaWave (.owd) - D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.1\benchmark\test01_input.yml</title>' +
+        '<style>body{font-family:"SF Mono","Cascadia Code","Consolas",' +
+        'monospace;white-space:pre;margin:1em;font-size:13px;' +
+        'line-height:1.5;tab-size:4;}</style></head><body>' +
+        ta.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') +
+        '</body></html>'
+      );
+      w.document.close();
+    }
+  </script>
+</div>
+<h3 style="margin-top:1.5em;margin-bottom:0.2em;">OrcaWave (spec.yml)</h3>
+<p style="margin:0.3em 0 0.5em;font-size:12px;color:#64748b;max-width:700px;">OrcaWave input configuration exported from the spec.yml pipeline via SaveData(). This is the auto-generated project — built by OrcaWaveRunner from the declarative spec.</p>
+<div class="file-viewer">
+  <div class="file-viewer-header">
+    <div>
+      <span class="solver-label">OrcaWave (spec.yml)</span>
+      <span class="file-path">D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.1\benchmark\spec_orcawave\spec_input.yml</span>
+    </div>
+    <button onclick="openFileWindow_1()">Open in New Window</button>
+  </div>
+  <div class="file-content">
+    <pre><span class="line">﻿%YAML 1.1</span>
+<span class="line"># Type: Diffraction</span>
+<span class="line"># Program: OrcaFlex 11.6b</span>
+<span class="line"># File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.1\benchmark\spec_orcawave\spec_input.yml</span>
+<span class="line"># Created: 9:28 AM on 2/14/2026</span>
+<span class="line"># User: ansystech</span>
+<span class="line"># Machine: ACMA-ANSYS05</span>
+<span class="line">---</span>
+<span class="line"># Model</span>
+<span class="line">UnitsSystem: SI</span>
+<span class="line"># Calculation &amp; output</span>
+<span class="line">SolveType: Potential and source formulations</span>
+<span class="line">HasResonanceDampingLid: No</span>
+<span class="line">OutputPanelPressures: No</span>
+<span class="line">OutputPanelVelocities: No</span>
+<span class="line">OutputBodyWireFrames: Yes</span>
+<span class="line">OutputIntermediateResults: No</span>
+<span class="line">ComputationStrategy: Optimised for run time</span>
+<span class="line">LoadRAOCalculationMethod: Both</span>
+<span class="line">PreferredLoadRAOCalculationMethod: Haskind</span>
+<span class="line">QuadraticLoadPressureIntegration: No</span>
+<span class="line">QuadraticLoadControlSurface: No</span>
+<span class="line">QuadraticLoadMomentumConservation: No</span>
+<span class="line">LengthTolerance: 100e-9</span>
+<span class="line">WaterlineZTolerance: 1e-6</span>
+<span class="line">WaterlineGapTolerance: 1e-6</span>
+<span class="line">DivideNonPlanarPanels: Yes</span>
+<span class="line">LinearSolverMethod: Direct LU</span>
+<span class="line">ValidatePanelArrangement: No</span>
+<span class="line">BodyVolumeWarningLevel: 1e-12</span>
+<span class="line">PanelAspectRatioWarningLevel: 25</span>
+<span class="line">PanelsPerWavelengthWarningLevel: 5</span>
+<span class="line"># Environment</span>
+<span class="line">WaterDepth: Infinity</span>
+<span class="line">WaterDensity: 1</span>
+<span class="line">WavesReferredToBy: period (s)</span>
+<span class="line">HasWaveSpectrumForDragLinearisation: No</span>
+<span class="line">MorisonFluidVelocity: Undisturbed incident wave</span>
+<span class="line">PeriodOrFrequency:</span>
+<span class="line">  - 1.2566</span>
+<span class="line">  - 1.2823</span>
+<span class="line">  - 1.309</span>
+<span class="line">  - 1.3368</span>
+<span class="line">  - 1.3659</span>
+<span class="line">  - 1.3963</span>
+<span class="line">  - 1.428</span>
+<span class="line">  - 1.4612</span>
+<span class="line">  - 1.496</span>
+<span class="line">  - 1.5325</span>
+<span class="line">  - 1.5708</span>
+<span class="line">  - 1.6111</span>
+<span class="line">  - 1.6535</span>
+<span class="line">  - 1.6982</span>
+<span class="line">  - 1.7453</span>
+<span class="line">  - 1.7952</span>
+<span class="line">  - 1.848</span>
+<span class="line">  - 1.904</span>
+<span class="line">  - 1.9635</span>
+<span class="line">  - 2.0268</span>
+<span class="line">  - 2.0944</span>
+<span class="line">  - 2.1666</span>
+<span class="line">  - 2.244</span>
+<span class="line">  - 2.3271</span>
+<span class="line">  - 2.4166</span>
+<span class="line">  - 2.5133</span>
+<span class="line">  - 2.618</span>
+<span class="line">  - 2.7318</span>
+<span class="line">  - 2.856</span>
+<span class="line">  - 2.992</span>
+<span class="line">  - 3.1416</span>
+<span class="line">  - 3.3069</span>
+<span class="line">  - 3.4907</span>
+<span class="line">  - 3.696</span>
+<span class="line">  - 3.927</span>
+<span class="line">  - 4.1888</span>
+<span class="line">  - 4.488</span>
+<span class="line">  - 4.8332</span>
+<span class="line">  - 5.236</span>
+<span class="line">  - 5.712</span>
+<span class="line">  - 6.2832</span>
+<span class="line">  - 6.9813</span>
+<span class="line">  - 7.854</span>
+<span class="line">  - 8.976</span>
+<span class="line">  - 10.472</span>
+<span class="line">  - 12.5664</span>
+<span class="line">  - 15.708</span>
+<span class="line">  - 20.944</span>
+<span class="line">  - 31.4159</span>
+<span class="line">  - 62.8319</span>
+<span class="line">WaveHeading:</span>
+<span class="line">  - 0</span>
+<span class="line">  - 27</span>
+<span class="line"># Constraints</span>
+<span class="line">EnableMultibodyConstraints: No</span>
+<span class="line"># Bodies</span>
+<span class="line">Bodies:</span>
+<span class="line">  - BodyName: Test01_cylinder</span>
+<span class="line">    BodyMeshPosition: [0, 0, 0]</span>
+<span class="line">    BodyMeshAttitude: [0, 0, 0]</span>
+<span class="line">    BodyIncludedInAnalysis: Yes</span>
+<span class="line">    BodyMeshFileName: val_cylinder_r1_t05.gdf</span>
+<span class="line">    BodyMeshFormat: Wamit gdf</span>
+<span class="line">    BodyMeshLengthUnits: m</span>
+<span class="line">    BodyMeshSymmetry: xz and yz planes</span>
+<span class="line">    BodyMeshDipolePanels: </span>
+<span class="line">    BodyOriginType: Free surface</span>
+<span class="line">    BodyAddInteriorSurfacePanels: No</span>
+<span class="line">    BodyOrcaFlexImportSymmetry: Use global mesh symmetry</span>
+<span class="line">    BodyOrcaFlexImportLength: ~</span>
+<span class="line">    BodyHydrostaticIntegralMethod: Standard</span>
+<span class="line">    BodyHydrostaticStiffnessMethod: Displacement</span>
+<span class="line">    BodyInertiaSpecifiedBy: Radii of gyration (for a free-floating body)</span>
+<span class="line">    BodyCentreOfMassZRelativeToFreeSurface: 0</span>
+<span class="line">    BodyRadiiOfGyrationRx, BodyRadiiOfGyrationRy, BodyRadiiOfGyrationRz:</span>
+<span class="line">      - [1, 0, 0]</span>
+<span class="line">      - [0, 1, 0]</span>
+<span class="line">      - [0, 0, 1]</span>
+<span class="line">    BodyRadiiOfGyrationOriginType: Body origin</span>
+<span class="line">    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">    BodyExternalStiffnessMatrixOriginType: Body origin</span>
+<span class="line">    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">    BodyExternalDampingMatrixOriginType: Body origin</span>
+<span class="line">    BodyConnectionParent: Free</span>
+<span class="line">    BodyIncreaseRollDampingToTarget: No</span>
+<span class="line">    BodyFixedDOFx: No</span>
+<span class="line">    BodyFixedDOFy: No</span>
+<span class="line">    BodyFixedDOFz: No</span>
+<span class="line">    BodyFixedDOFRx: No</span>
+<span class="line">    BodyFixedDOFRy: No</span>
+<span class="line">    BodyFixedDOFRz: No</span>
+<span class="line"># Field points</span>
+<span class="line">DetectAndSkipFieldPointsInsideBodies: Yes</span>
+<span class="line">...</span></pre>
+  </div>
+  
+  <textarea id="file_content_1" style="display:none;">﻿%YAML 1.1
+# Type: Diffraction
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.1\benchmark\spec_orcawave\spec_input.yml
+# Created: 9:28 AM on 2/14/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+# Model
+UnitsSystem: SI
+# Calculation &amp; output
+SolveType: Potential and source formulations
+HasResonanceDampingLid: No
+OutputPanelPressures: No
+OutputPanelVelocities: No
+OutputBodyWireFrames: Yes
+OutputIntermediateResults: No
+ComputationStrategy: Optimised for run time
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadPressureIntegration: No
+QuadraticLoadControlSurface: No
+QuadraticLoadMomentumConservation: No
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1e-6
+WaterlineGapTolerance: 1e-6
+DivideNonPlanarPanels: Yes
+LinearSolverMethod: Direct LU
+ValidatePanelArrangement: No
+BodyVolumeWarningLevel: 1e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+# Environment
+WaterDepth: Infinity
+WaterDensity: 1
+WavesReferredToBy: period (s)
+HasWaveSpectrumForDragLinearisation: No
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+  - 1.2566
+  - 1.2823
+  - 1.309
+  - 1.3368
+  - 1.3659
+  - 1.3963
+  - 1.428
+  - 1.4612
+  - 1.496
+  - 1.5325
+  - 1.5708
+  - 1.6111
+  - 1.6535
+  - 1.6982
+  - 1.7453
+  - 1.7952
+  - 1.848
+  - 1.904
+  - 1.9635
+  - 2.0268
+  - 2.0944
+  - 2.1666
+  - 2.244
+  - 2.3271
+  - 2.4166
+  - 2.5133
+  - 2.618
+  - 2.7318
+  - 2.856
+  - 2.992
+  - 3.1416
+  - 3.3069
+  - 3.4907
+  - 3.696
+  - 3.927
+  - 4.1888
+  - 4.488
+  - 4.8332
+  - 5.236
+  - 5.712
+  - 6.2832
+  - 6.9813
+  - 7.854
+  - 8.976
+  - 10.472
+  - 12.5664
+  - 15.708
+  - 20.944
+  - 31.4159
+  - 62.8319
+WaveHeading:
+  - 0
+  - 27
+# Constraints
+EnableMultibodyConstraints: No
+# Bodies
+Bodies:
+  - BodyName: Test01_cylinder
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: val_cylinder_r1_t05.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: xz and yz planes
+    BodyMeshDipolePanels: 
+    BodyOriginType: Free surface
+    BodyAddInteriorSurfacePanels: No
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Radii of gyration (for a free-floating body)
+    BodyCentreOfMassZRelativeToFreeSurface: 0
+    BodyRadiiOfGyrationRx, BodyRadiiOfGyrationRy, BodyRadiiOfGyrationRz:
+      - [1, 0, 0]
+      - [0, 1, 0]
+      - [0, 0, 1]
+    BodyRadiiOfGyrationOriginType: Body origin
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+# Field points
+DetectAndSkipFieldPointsInsideBodies: Yes
+...</textarea>
+  <script>
+    function openFileWindow_1() {
+      var ta = document.getElementById('file_content_1');
+      var w = window.open('', '_blank');
+      w.document.write(
+        '<html><head><title>OrcaWave (spec.yml) - D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.1\benchmark\spec_orcawave\spec_input.yml</title>' +
+        '<style>body{font-family:"SF Mono","Cascadia Code","Consolas",' +
+        'monospace;white-space:pre;margin:1em;font-size:13px;' +
+        'line-height:1.5;tab-size:4;}</style></head><body>' +
+        ta.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') +
+        '</body></html>'
+      );
+      w.document.close();
+    }
+  </script>
+</div></div>
+
+  <!-- Section 2.5: Mesh Schematic -->
+  
+
+  <!-- Section 3: Consensus Summary -->
+  <div class="section">
+    <h2>Consensus Summary</h2>
+    <table style="width:100%;max-width:700px;">
+      <tr>
+        <th>DOF</th><th>Consensus</th>
+        <th>Mean Correlation</th><th>Outlier</th>
+      </tr>
+      <tr><td><a href='#dof-surge'>SURGE</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-sway'>SWAY</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-heave'>HEAVE</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-roll'>ROLL</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-pitch'>PITCH</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-yaw'>YAW</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+
+    </table>
+  </div>
+
+  <!-- Section 4: Per-DOF Analysis -->
+  <div class="section">
+    <h2>Per-DOF Analysis</h2>
+    
+<div class="dof-section" id="dof-surge">
+  <h3 class="dof-title">Surge</h3>
+  <div class="dof-grid">
+    <div class="dof-text">
+      <div class="consensus-badge" style="background:#27ae60;">
+        FULL
+      </div>
+      <table class="stats-table">
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Magnitude correlation</td><td>1.0000</td></tr>
+        <tr><td>Phase correlation</td><td>1.0000</td></tr>
+        <tr><td>Magnitude RMS error</td><td>0.0000</td></tr>
+        <tr><td>Max amplitude diff</td>
+            <td>0.0000 m/m</td></tr>
+        <tr><td>Max phase diff</td><td>0.0 deg</td></tr>
+      </table>
+      <h4>Amplitude Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='3'>OrcaWave (.owd)</th>
+<th colspan='3'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>0.9997</td><td>62.83</td><td>0.9997</td>
+<td>0.9997</td><td>62.83</td><td>0.9997</td>
+</tr>
+<tr><td>27&deg;</td>
+<td>0.8907</td><td>62.83</td><td>0.8907</td>
+<td>0.8907</td><td>62.83</td><td>0.8907</td>
+</tr>
+</table>
+      <h4>Phase Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='2'>OrcaWave (.owd)</th>
+<th colspan='2'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>@Peak</th><th>LP</th>
+<th>@Peak</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>-90.0</td><td>-90.0</td>
+<td>-90.0</td><td>-90.0</td>
+</tr>
+<tr><td>27&deg;</td>
+<td>-90.0</td><td>-90.0</td>
+<td>-90.0</td><td>-90.0</td>
+</tr>
+</table>
+      <div class="observations"><p>Solvers show <strong>full agreement</strong> on Surge response.</p>
+<p>Amplitude curves are virtually identical (r=1.0000).</p>
+<p>Phase agreement within 0.0&deg;.</p></div>
+      
+    </div>
+    <div class="dof-plot"><div>                            <div id="plot_surge" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("plot_surge")) {                    Plotly.newPlot(                        "plot_surge",                        [{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":true,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[0.999679090887117,0.9987138417132998,0.9970965905219354,0.994814217856474,0.9918475136993206,0.9881700228078341,0.983745931762113,0.9785260179451092,0.9724392584426931,0.9653734738007483,0.9571235492389892,0.9472193478633695,0.9341026057124975,0.9059070557110567,0.9656824439946319,0.9243216175393886,0.9063197952172573,0.8901540323949055,0.8737868021276511,0.8566702518815721,0.8385936011339746,0.8194656800747967,0.7992542097666641,0.7779649250582781,0.7556333223828451,0.7323207836863999,0.7081120747327336,0.6831129860892592,0.657447598762775,0.6312550002183356,0.6046854699836057,0.5778962722271872,0.5510472618165005,0.5242965402391975,0.49779639405353265,0.47168971739574034,0.4461070695339221,0.42116445780131917,0.3969618745608959,0.3735825629185728,0.35109294016013637,0.329543082109609,0.3089676526079573,0.2893871606009858,0.2708094333209566,0.2532312055179226,0.2366397411296079,0.2210144219300444,0.20632825330345161,0.19254925434232276],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":true,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[0.9996790913667939,0.998713839534853,0.9970966041817058,0.9948142423705103,0.9918475524821403,0.9881700795458258,0.9837460105357559,0.9785261234363595,0.9724391147728569,0.9653736517800404,0.9571237796732862,0.9472196580867218,0.9341017575785964,0.9059090126749132,0.9656863876876695,0.9243224040217269,0.9063204498211535,0.8901574824041825,0.8737830011309473,0.8566710738208668,0.8385945141816669,0.8194666918962353,0.7992507676825102,0.7779661495674369,0.7556391999490789,0.7323182937438025,0.7081104550711407,0.6831146461858459,0.6574421715002866,0.6312568527333007,0.6046715942533046,0.5778982810870562,0.5510493319194582,0.5242986591022625,0.49779854873058227,0.4716741110127128,0.44613009852179264,0.4211815130343974,0.3969773427153585,0.3735847090536526,0.35110223860313305,0.32954515120868166,0.3089641748305972,0.2893891237066026,0.27083075525586736,0.25322553943336074,0.2366125998376467,0.221016122530044,0.20633765002762797,0.1925295875043292],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_27","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H27","showlegend":true,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[0.8907205920751233,0.8898605487638582,0.8884195674014203,0.8863859584667257,0.8837426057091693,0.8804659373354724,0.8765240433554727,0.871873066096946,0.8664497236808328,0.8601540634824978,0.8528033268954249,0.8439786188806809,0.8322915160830991,0.807169097120465,0.8604293581284196,0.8235765919712014,0.8075368509091886,0.7931330508526243,0.7785497420009695,0.7632987841725689,0.747192370546713,0.7301492682277498,0.7121407164715354,0.6931718250650148,0.6732742215607868,0.6525025976719705,0.6309324802455994,0.6086581293657202,0.5857901020170938,0.562452326036732,0.5387787014626316,0.5149093516938049,0.490986708459391,0.46715164121651,0.4435398382832741,0.4202786192697325,0.3974843133393725,0.37526028378831633,0.35369562447123293,0.33286450554685604,0.3128261052592779,0.2936250415034785,0.27529219999534,0.2578458543428335,0.24129297865743518,0.22563066356642503,0.2108475611290855,0.19692530033341224,0.1838398287550992,0.17156265115298464],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_27","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H27","showlegend":true,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[0.890720592502519,0.8898605468228502,0.8884195795723675,0.8863859803088908,0.8837426402649146,0.8804659878893961,0.8765241135433027,0.8718731600903356,0.8664495956700706,0.8601542220632106,0.8528035322138846,0.8439788952917109,0.8322907603902612,0.807170840788025,0.8604328719846449,0.8235772927320952,0.8075374341655303,0.7931361248333788,0.7785463552881305,0.7632995165258364,0.7471931840781563,0.7301501697672458,0.7121376495521233,0.6931729161106522,0.6732794585106033,0.65250037911689,0.630931037116567,0.6086596085225952,0.5857852662908515,0.562453976639638,0.5387663380965149,0.5149111416010387,0.49098855293461635,0.4671535291373087,0.44354175811456586,0.4202647138807674,0.39750483231760353,0.3752754801120929,0.35370940669760415,0.3328664177671852,0.3128343902325091,0.2936268850842134,0.2752891012730993,0.2578476034826936,0.24131197663990134,0.22562561504830556,0.21082337806183946,0.19692681557904787,0.18384820129736054,0.17154512787246434],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":false,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[-90.0000000000081,-89.99999999847485,-89.99999996177381,-89.9999996299976,-89.99999789039725,-89.99999147239551,-89.99997317010647,-89.99993127358462,-89.99985609661859,-89.99977217262497,-89.99985916336338,-90.0009231302452,-90.0068021903566,-90.05183830327073,-89.82711247380108,-89.89490357791799,-89.88157864110045,-89.84838870074724,-89.7978592790445,-89.72736754365654,-89.63252909277772,-89.50781425820806,-89.34671962026634,-89.14184700417017,-88.88497349664256,-88.56713780878053,-88.1787507834059,-87.70973062026006,-87.14965944702081,-86.48795533856473,-85.71405228313844,-84.8175798023998,-83.78853393643365,-82.61743206998702,-81.29544549450024,-79.81450547558237,-78.16738066781045,-76.34772571964368,-74.35010261500618,-72.16997770054985,-69.80369796119027,-67.2484508893784,-64.5022120351977,-61.563684284878825,-58.43223263758108,-55.10781769129553,-51.59093074095346,-47.88253317125534,-43.98400261152046,-39.897088791424146],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":false,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[-89.99999999998265,-89.99999999847678,-89.99999996177586,-89.99999963000555,-89.99999789043515,-89.99999147254648,-89.9999731705623,-89.99993127466905,-89.9998560946473,-89.99977217388401,-89.99985915469502,-90.00092306656977,-90.00680283712263,-90.05183385155676,-89.82710249478865,-89.89490350860213,-89.8815796175037,-89.84839760990756,-89.79784563957816,-89.72737137071066,-89.63253443414543,-89.50782155024729,-89.34668948796013,-89.1418598806666,-88.88504706127767,-88.56710100195568,-88.1787226967334,-87.70976419550105,-87.14953206791468,-86.4880055714711,-85.71361921008038,-84.81765172317598,-83.78861870863955,-82.61753106580906,-81.29556009225372,-79.81356242934609,-78.16895868491359,-76.34904900272798,-74.35145953012159,-72.17019027842474,-69.80473655950458,-67.24871120165733,-64.50171977467284,-61.56399655112206,-58.43603987988604,-55.10668300306327,-51.584841311732205,-47.882960117822456,-43.98663987897207,-39.89092382052048],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_27","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H27","showlegend":false,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[-89.99999999998072,-89.99999999847799,-89.99999996177746,-89.99999962999931,-89.99999789039671,-89.99999147239504,-89.99997317010602,-89.99993127358486,-89.99985609661853,-89.99977217262477,-89.99985916336338,-90.00092313024521,-90.00680219035624,-90.05183830326519,-89.82711247382281,-89.89490357793387,-89.8815786411207,-89.84838870077542,-89.79785927908378,-89.72736754370966,-89.63252909284569,-89.50781425828731,-89.34671962034442,-89.14184700421849,-88.88497349660521,-88.5671378085576,-88.17875078283036,-87.7097306190654,-87.14965944479836,-86.4879553347083,-85.71405227677536,-84.81757979230757,-83.78853392094344,-82.61743204687751,-81.29544546088924,-79.81450542782957,-78.16738060145349,-76.34772562940103,-74.35010249489785,-72.16997754420602,-69.80369776243981,-67.24845064322164,-64.50221173925723,-61.56368394135463,-58.4322322555744,-55.10781728908844,-51.59093034747086,-47.882532825670644,-43.984002360089164,-39.897088681379955],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_27","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H27","showlegend":false,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[-89.99999999998099,-89.99999999847441,-89.99999996177428,-89.9999996300062,-89.99999789043495,-89.99999147254609,-89.99997317056231,-89.99993127466895,-89.99985609464717,-89.99977217388377,-89.99985915469502,-90.00092306656958,-90.00680283712235,-90.05183385155124,-89.82710249481023,-89.8949035086181,-89.88157961752391,-89.84839760993562,-89.79784563961746,-89.7273713707638,-89.63253443421331,-89.5078215503265,-89.34668948803818,-89.14185988071495,-88.88504706124031,-88.56710100173272,-88.17872269615783,-87.70976419430646,-87.14953206569196,-86.48800556761482,-85.7136192037157,-84.81765171308413,-83.78861869314983,-82.61753104270025,-81.29556005864372,-79.8135623815835,-78.16895861857589,-76.3490489125039,-74.3514594100347,-72.17019012208462,-69.8047363607732,-67.24871095550539,-64.50171947872384,-61.563996207602386,-58.436039497915964,-55.10668260085368,-51.58484091829479,-47.88295977222985,-43.98663962746267,-39.890923710717274],"type":"scatter","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x2","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.575,1.0],"title":{"text":"m\u002fm"}},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.0,0.425],"title":{"text":"deg"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Amplitude (m\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Phase (deg)","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":50,"r":140,"t":30,"b":30},"height":400},                        {"responsive": true}                    )                };                            </script>        </div></div>
+  </div>
+</div>
+
+<div class="dof-section" id="dof-sway">
+  <h3 class="dof-title">Sway</h3>
+  <div class="dof-grid">
+    <div class="dof-text">
+      <div class="consensus-badge" style="background:#27ae60;">
+        FULL
+      </div>
+      <table class="stats-table">
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Magnitude correlation</td><td>1.0000</td></tr>
+        <tr><td>Phase correlation</td><td>0.0557</td></tr>
+        <tr><td>Magnitude RMS error</td><td>0.0000</td></tr>
+        <tr><td>Max amplitude diff</td>
+            <td>0.0000 m/m</td></tr>
+        <tr><td>Max phase diff</td><td>360.0 deg</td></tr>
+      </table>
+      <h4>Amplitude Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='3'>OrcaWave (.owd)</th>
+<th colspan='3'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+</tr>
+<tr><td>27&deg;</td>
+<td>0.4538</td><td>62.83</td><td>0.4538</td>
+<td>0.4538</td><td>62.83</td><td>0.4538</td>
+</tr>
+</table>
+      <h4>Phase Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='2'>OrcaWave (.owd)</th>
+<th colspan='2'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>@Peak</th><th>LP</th>
+<th>@Peak</th><th>LP</th>
+</tr>
+<tr><td>27&deg;</td>
+<td>-90.0</td><td>-90.0</td>
+<td>-90.0</td><td>-90.0</td>
+</tr>
+</table>
+      <div class="observations"><p>Solvers show <strong>full agreement</strong> on Sway response.</p>
+<p>Amplitude curves are virtually identical (r=1.0000).</p>
+<p>Max phase difference of 360.0&deg; occurs at a heading omitted from the plot (negligible response). Displayed headings show good phase agreement.</p></div>
+      <p class="skipped-note">Headings with negligible response omitted: 0&deg;</p>
+    </div>
+    <div class="dof-plot"><div>                            <div id="plot_sway" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("plot_sway")) {                    Plotly.newPlot(                        "plot_sway",                        [{"legendgroup":"OrcaWave (.owd)_27","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H27","showlegend":true,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[0.4538448100473437,0.45340659608111095,0.4526723793839854,0.45163620384475994,0.45028934829351114,0.4486198022939072,0.4466113068805792,0.4442415154295289,0.4414781841668708,0.4382703845882159,0.4345249962879533,0.4300285808152299,0.4240736974572933,0.41127312001336197,0.43841052380534945,0.41963322574256356,0.4114605763174171,0.404121475312352,0.3966909090121758,0.3889201582642809,0.3807135308998058,0.37202963675366313,0.36285382151740525,0.35318868876435194,0.34305035353696656,0.33246668265066137,0.3214761589497132,0.3101268103382955,0.29847496840583915,0.28658377753142106,0.27452146318493953,0.26235942179813504,0.25017022595705235,0.23802565223201147,0.2259948372729955,0.21414265366229573,0.20252837407226007,0.19120466473845682,0.18021692125600267,0.16960293522101538,0.15939285947249462,0.14960942798725135,0.14026837785497415,0.13137901998395626,0.12294490790971556,0.11496455928655759,0.10743219210288929,0.10033844590288743,0.09367106538420639,0.0874155314846617],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_27","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H27","showlegend":true,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[0.45384481026511386,0.4534065950921165,0.4526723855853924,0.45163621497389983,0.45028936590054325,0.4486198280524181,0.4466113426430676,0.444241563321558,0.44147811894212197,0.4382704653891398,0.43452510090296886,0.430028721653779,0.4240733124118334,0.41127400846463447,0.43841231418088067,0.4196335827975034,0.41146087350125365,0.4041230415835641,0.3966891833959075,0.38892053141689353,0.38071394541476716,0.3720300961109696,0.36285225884394384,0.35318924467986146,0.34305302189614195,0.33246555224039687,0.32147542363874804,0.3101275640063674,0.2984725044802412,0.286584618555616,0.27451516373516865,0.26236033380144186,0.25017116576414644,0.23802661417573806,0.22599581547593792,0.2141355685123848,0.20253882901446116,0.1912124076526594,0.1802239436515957,0.16960390954601504,0.15939708087756102,0.14961036733863656,0.1402667989769929,0.13137991121530335,0.12295458786595247,0.11496198693796528,0.10741987021443597,0.10033921795908657,0.09367533140729627,0.08740660292824852],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_27","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H27","showlegend":false,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[-90.00000000000173,-89.99999999848563,-89.9999999617766,-89.99999962999537,-89.99999789039953,-89.99999147239716,-89.99997317010833,-89.99993127359288,-89.99985609665457,-89.99977217277744,-89.99985916403432,-90.0009231334198,-90.00680220967519,-90.05183860647584,-89.82711373540826,-89.89490378633407,-89.88157877394339,-89.8483888195346,-89.79785940178382,-89.72736768015243,-89.63252925079053,-89.5078144452314,-89.34671984421236,-89.1418472736762,-88.88497382120552,-88.5671381987839,-88.17875125006138,-87.70973117546697,-87.14966010314058,-86.48795610810527,-85.71405317834041,-84.81758083471432,-83.78853511587882,-82.61743340436594,-81.29544698845933,-79.81450712948447,-78.16738247639732,-76.34772767046967,-74.35010468664883,-72.16997986065434,-69.80370016450244,-67.24845307608159,-64.5022141301068,-61.56368619833518,-58.43223426913401,-55.107818937231855,-51.59093150610717,-47.88253338405698,-43.98400223916381,-39.897087850408454],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_27","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H27","showlegend":false,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[-89.99999999991861,-89.99999999849518,-89.9999999617736,-89.99999963000599,-89.99999789043248,-89.99999147254732,-89.999973170564,-89.99993127467594,-89.99985609468314,-89.99977217403722,-89.9998591553666,-90.0009230697439,-90.00680285644273,-90.05183415472113,-89.82710375658051,-89.8949037170248,-89.88157975034804,-89.84839772869532,-89.79784576231972,-89.7273715072059,-89.63253459215663,-89.50782173726883,-89.34668971191302,-89.14186015016986,-88.88504738582506,-88.56710139196636,-88.17872316339438,-87.7097647507017,-87.14953272405683,-86.48800634100328,-85.71362010535073,-84.81765275547988,-83.78861988807301,-82.61753240017539,-81.29556158619967,-79.8135640833438,-78.16896049336398,-76.3490509534616,-74.3514616016949,-72.17019243852285,-69.8047387628101,-67.24871338836556,-64.50172186955865,-61.563998464602086,-58.436041511832975,-55.106684248855004,-51.5848420760063,-47.88296033068874,-43.98663950700214,-39.89092287870401],"type":"scatter","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x2","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.575,1.0],"title":{"text":"m\u002fm"}},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.0,0.425],"title":{"text":"deg"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Amplitude (m\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Phase (deg)","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":50,"r":140,"t":30,"b":30},"height":400},                        {"responsive": true}                    )                };                            </script>        </div></div>
+  </div>
+</div>
+
+<div class="dof-section" id="dof-heave">
+  <h3 class="dof-title">Heave</h3>
+  <div class="dof-grid">
+    <div class="dof-text">
+      <div class="consensus-badge" style="background:#27ae60;">
+        FULL
+      </div>
+      <table class="stats-table">
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Magnitude correlation</td><td>1.0000</td></tr>
+        <tr><td>Phase correlation</td><td>1.0000</td></tr>
+        <tr><td>Magnitude RMS error</td><td>0.0000</td></tr>
+        <tr><td>Max amplitude diff</td>
+            <td>0.0001 m/m</td></tr>
+        <tr><td>Max phase diff</td><td>0.0 deg</td></tr>
+      </table>
+      <h4>Amplitude Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='3'>OrcaWave (.owd)</th>
+<th colspan='3'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>2.16</td><td>2.03</td><td>1</td>
+<td>2.16</td><td>2.03</td><td>1</td>
+</tr>
+<tr><td>27&deg;</td>
+<td>2.16</td><td>2.03</td><td>1</td>
+<td>2.16</td><td>2.03</td><td>1</td>
+</tr>
+</table>
+      <h4>Phase Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='2'>OrcaWave (.owd)</th>
+<th colspan='2'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>@Peak</th><th>LP</th>
+<th>@Peak</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>-48.9</td><td>0.0</td>
+<td>-48.9</td><td>0.0</td>
+</tr>
+<tr><td>27&deg;</td>
+<td>-48.9</td><td>0.0</td>
+<td>-48.9</td><td>0.0</td>
+</tr>
+</table>
+      <div class="observations"><p>Solvers show <strong>full agreement</strong> on Heave response.</p>
+<p>Amplitude curves are virtually identical (r=1.0000).</p>
+<p>Phase agreement within 0.0&deg;.</p></div>
+      
+    </div>
+    <div class="dof-plot"><div>                            <div id="plot_heave" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("plot_heave")) {                    Plotly.newPlot(                        "plot_heave",                        [{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":true,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[1.0000002140760895,1.000003438845274,1.0000175253070673,1.000055910491218,1.0001381725884024,1.0002908656820637,1.0005486985043346,1.0009561483262615,1.0015696328435084,1.0024604011081513,1.0037183518199533,1.005457048484434,1.0078202846233988,1.010990672909829,1.0152009138474831,1.0207486816779103,1.0280165112256836,1.037498782706328,1.0498390506666895,1.0658828241802125,1.0867539265734512,1.1139674435501465,1.1495999542003361,1.1965488447492276,1.2589239783043966,1.3426045177242931,1.4558503514091374,1.6090815892973096,1.8094835254162291,2.034309479167704,2.1604864508005255,1.9893761316702683,1.5797134125991357,1.176761717305098,0.8742265489471508,0.6609288034506877,0.5098914866781902,0.40056920359299686,0.3195135588300986,0.258088301102052,0.21065758776683796,0.1734483683127665,0.1438662776742161,0.1200821893955931,0.10077723267408037,0.08498165784945057,0.0719706096742637,0.06119559654895904,0.05223987447360561,0.04479358449127192],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":true,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[1.0000002140754487,1.0000034388569226,1.0000175251421566,1.0000559099626165,1.0001381712739998,1.000290862893831,1.000548693195614,1.0009561389737334,1.0015696490434154,1.0024603763771511,1.0037183138244097,1.0054569916863367,1.0078204277081242,1.0109905535251793,1.015200744671696,1.0207484446272348,1.028016182003318,1.0374964741216042,1.0498422459940782,1.0658819710297187,1.086752760294715,1.1139658477734597,1.1496067082186614,1.1965458225360646,1.2589054801253217,1.3426146619537485,1.4558589960334516,1.6090700269345002,1.8095298893762541,2.0342948504774556,2.160487510875501,1.9894010225509637,1.5797471937579046,1.1767899504376558,0.8742472782905135,0.6608213795960584,0.5100075748318423,0.40063401113660707,0.31955911466667675,0.258093321553792,0.21067523687883555,0.1734516131033135,0.1438617006884131,0.12008438696634777,0.10079777224399587,0.08497691498556746,0.07195070167931107,0.06119669715282069,0.052245262810167115,0.04478360402407923],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_27","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H27","showlegend":true,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[1.0000002140760937,1.000003438845359,1.0000175253074977,1.00005591049258,1.0001381725917255,1.0002908656889433,1.0005486985170586,1.0009561483479263,1.0015696328781387,1.0024604011608,1.003718351896828,1.0054570485929908,1.0078202847724658,1.0109906731097311,1.0152009141102067,1.0207486820173068,1.028016511657787,1.0374987832498195,1.0498390513436102,1.0658828250170616,1.086753927602891,1.113967444813635,1.1495999557522538,1.1965488466634133,1.258923980684636,1.3426045207214126,1.455850355248733,1.6090815943217542,1.8094835321286051,2.0343094881709707,2.1604864622610136,1.9893761443740776,1.5797134247847882,1.1767617282897367,0.8742265588172312,0.6609288124453414,0.5098914949875809,0.4005692113320361,0.3195135660519416,0.2580883078171021,0.21065759396074552,0.17344837396204826,0.14386628275847474,0.12008219390546954,0.10077723661479428,0.08498166124070607,0.0719706125478738,0.061195598945611884,0.0522398764398797,0.04479358607764959],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_27","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H27","showlegend":true,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[1.0000002140754538,1.0000034388570087,1.0000175251425882,1.0000559099639814,1.0001381712773214,1.0002908629007095,1.0005486932083403,1.0009561389954005,1.0015696490780455,1.002460376429801,1.0037183139012837,1.0054569917948926,1.0078204278571914,1.0109905537250807,1.0152007449344174,1.0207484449666278,1.028016182435418,1.037496474665068,1.04984224667103,1.065881971866562,1.0867527613241428,1.1139658490369349,1.1496067097706322,1.196545824450229,1.2589054825054238,1.3426146649509425,1.4558589998731144,1.6090700319588493,1.8095298960890491,2.034294859480545,2.1604875223370876,1.9894010352547575,1.5797472059436406,1.1767899614223907,0.8742472881606772,0.6608213885902476,0.5100075831417932,0.4006340188760167,0.31955912188884883,0.2580933282688901,0.21067524307296767,0.1734516187526498,0.14386170577257296,0.1200843914762832,0.10079777618537222,0.08497691837664538,0.07195070455208107,0.06119669954952455,0.0522452647767092,0.0447836056099356],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":false,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[6.7307686842686275e-12,4.170875539085675e-10,3.6767687217886734e-9,2.6096803676771344e-9,-1.4126313082552398e-7,-1.2592689223373447e-6,-6.6907825251727214e-6,-0.00002700023136457964,-0.00009052965994026419,-0.0002645651054132475,-0.0006944245310323104,-0.001671157159759373,-0.0037430316290118734,-0.007892002293445645,-0.01580460996777021,-0.03027859974953864,-0.055824272790819765,-0.09954748205594773,-0.17244699230815158,-0.2913370117891375,-0.48174320529765075,-0.7823700627119464,-1.2522042208651267,-1.9822175035106109,-3.115411674262748,-4.88250598055723,-7.667446460211034,-12.127550957408817,-19.389395675606064,-31.17966227783145,-48.88536514652234,-69.97649673291725,-87.83631615931287,-99.43282550152053,-105.98884357322855,-109.27523720069554,-110.47721612770738,-110.29278097935416,-109.13365541877836,-107.25147120272582,-104.80668748802596,-101.90595192998065,-98.62291110757073,-95.0102314114497,-91.10681374484805,-86.94230225416963,-82.54004987441853,-77.91925784663167,-73.09690360641706,-68.09054728460866],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":false,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[6.730708198766095e-12,4.1708970023266736e-10,3.6767307036918156e-9,2.6098964288444455e-9,-1.4125872709616854e-7,-1.259236034938233e-6,-6.6906169549601485e-6,-0.000026999578633507374,-0.00009053191296607671,-0.0002645588281309415,-0.0006944081207396843,-0.0016711177624412457,-0.0037431834263566338,-0.00789181655963958,-0.01580423787077084,-0.030277885993713307,-0.05582295388915462,-0.09953548487732453,-0.17246805455392292,-0.29133002096507943,-0.48173153413586595,-0.7823508620772622,-1.2523006310634561,-1.982166881123572,-3.115050869642962,-4.882735795144034,-7.667675476444022,-12.127182827574341,-19.39131913570627,-31.17863221300085,-48.89594031461317,-69.97496170899461,-87.83517975706893,-99.43213004177916,-105.9884612153022,-109.27650091834288,-110.47683137053353,-110.29328296317374,-109.13466467935862,-107.25167556477015,-104.80782185148269,-101.90625659923067,-98.62231266265172,-95.01061865445507,-91.11157671645336,-86.94088027931394,-82.53244077908207,-77.91978812543012,-73.10015149202786,-68.08303921820152],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_27","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H27","showlegend":false,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[6.7307680978653285e-12,4.1708767357047545e-10,3.6767693561939405e-9,2.6096818479624757e-9,-1.412631223562527e-7,-1.2592688849439527e-6,-6.6907823801282226e-6,-0.000027000230880662407,-0.00009052965849710201,-0.0002645651014993254,-0.0006944245213187604,-0.0016711571373931387,-0.0037430315808163156,-0.007892002195403973,-0.01580460977824941,-0.030278599399331824,-0.05582427216926284,-0.09954748099219976,-0.17244699054667267,-0.29133700895879844,-0.4817432008742664,-0.7823700559743799,-1.252204210846218,-1.982217488946057,-3.1154116535418845,-4.8825059516839655,-7.667446420786184,-12.127550904649862,-19.389395606428856,-31.179662189024594,-48.88536503505344,-69.97649659641796,-87.83631599678492,-99.43282531429,-105.98884336612849,-109.27523698337531,-110.47721591585048,-110.29278079546056,-109.13365529211087,-107.25147116810018,-104.80668758339277,-101.90595219313363,-98.62291157262467,-95.01023210578033,-91.10681468693696,-86.94230345239164,-82.54005132646925,-77.91925953914273,-73.09690551435193,-68.09054937017179],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_27","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H27","showlegend":false,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[6.730737546010651e-12,4.1708971552822966e-10,3.676730949473705e-9,2.6098986355246787e-9,-1.412587173475276e-7,-1.25923599643941e-6,-6.690616809479885e-6,-0.000026999578152318833,-0.0000905319115211391,-0.00026455882421737775,-0.0006944081110244649,-0.0016711177400757548,-0.0037431833781557304,-0.007891816461604481,-0.015804237681255818,-0.03027788564350579,-0.0558229532676298,-0.09953548381369136,-0.1724680527922246,-0.2913300181348181,-0.48173152971257166,-0.7823508553398097,-1.2523006210438932,-1.9821668665593262,-3.11505084892392,-4.882735766269802,-7.667675437018373,-12.1271827748163,-19.391319066525295,-31.178632124195442,-48.89594020313186,-69.97496157249734,-87.83517959454305,-99.4321298545504,-105.9884610082034,-109.27650070102068,-110.47683115866245,-110.29328277925129,-109.13466455264314,-107.25167553013422,-104.80782194678656,-101.9062568623655,-98.6223131277432,-95.01061934876095,-91.11157765824302,-86.94088147762118,-82.53244223155252,-77.91978981791537,-73.10015339983146,-68.08304130399185],"type":"scatter","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x2","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.575,1.0],"title":{"text":"m\u002fm"}},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.0,0.425],"title":{"text":"deg"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Amplitude (m\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Phase (deg)","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":50,"r":140,"t":30,"b":30},"height":400},                        {"responsive": true}                    )                };                            </script>        </div></div>
+  </div>
+</div>
+
+<div class="dof-section" id="dof-roll">
+  <h3 class="dof-title">Roll</h3>
+  <div class="dof-grid">
+    <div class="dof-text">
+      <div class="consensus-badge" style="background:#27ae60;">
+        FULL
+      </div>
+      <table class="stats-table">
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Magnitude correlation</td><td>1.0000</td></tr>
+        <tr><td>Phase correlation</td><td>0.3633</td></tr>
+        <tr><td>Magnitude RMS error</td><td>0.0007</td></tr>
+        <tr><td>Max amplitude diff</td>
+            <td>0.0064 deg/m</td></tr>
+        <tr><td>Max phase diff</td><td>360.0 deg</td></tr>
+      </table>
+      <h4>Amplitude Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='3'>OrcaWave (.owd)</th>
+<th colspan='3'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+</tr>
+<tr><td>27&deg;</td>
+<td>77.07</td><td>4.19</td><td>0.02654</td>
+<td>77.07</td><td>4.19</td><td>0.02654</td>
+</tr>
+</table>
+      <h4>Phase Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='2'>OrcaWave (.owd)</th>
+<th colspan='2'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>@Peak</th><th>LP</th>
+<th>@Peak</th><th>LP</th>
+</tr>
+<tr><td>27&deg;</td>
+<td>90.2</td><td>-90.0</td>
+<td>90.2</td><td>-90.0</td>
+</tr>
+</table>
+      <div class="observations"><p>Solvers show <strong>full agreement</strong> on Roll response.</p>
+<p>Amplitude curves are virtually identical (r=1.0000).</p>
+<p>Max phase difference of 360.0&deg; occurs at a heading omitted from the plot (negligible response). Displayed headings show good phase agreement.</p></div>
+      <p class="skipped-note">Headings with negligible response omitted: 0&deg;</p>
+    </div>
+    <div class="dof-plot"><div>                            <div id="plot_roll" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("plot_roll")) {                    Plotly.newPlot(                        "plot_roll",                        [{"legendgroup":"OrcaWave (.owd)_27","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H27","showlegend":true,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[0.02654348323265054,0.10729476502099743,0.24578583318660494,0.44851650422005646,0.7260659625473235,1.0951328559079323,1.5823044712125365,2.23135035342158,3.1184224971146497,4.387197383922292,6.342836634931475,9.763804580336274,17.391531605519482,50.6075048270575,77.06528713105462,23.650136891254235,14.419165079176906,10.51199036851199,8.304972555638866,6.853876233205022,5.804358557352808,4.994024948634601,4.338334528265257,3.789233328719225,3.3176159596924757,2.904997553242564,2.5392005757743887,2.2119606153366065,1.917519219687832,1.65175627274931,1.4116333721053176,1.1948255833927441,0.9994729961998996,0.8240121469401614,0.6670628837583275,0.5273547771261358,0.40368204792694273,0.29487912606538474,0.19981191260279416,0.11738759782832543,0.0466671482146394,0.015599874142858251,0.0656485075603852,0.10812258717538753,0.14310778461984172,0.17140950938140254,0.19381234384874485,0.2110467156878528,0.22378307109383136,0.23263115452326674],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_27","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H27","showlegend":true,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[0.02654344344531436,0.10729494883912358,0.24578464594555854,0.44851427845189207,0.7260622226192418,1.095126926805536,1.5822953238560882,2.2313362958456997,3.1184454171735934,4.387161393451062,6.342772684905971,9.763672293617464,17.392179405606203,50.604575915955685,77.07170325548434,23.650723155291157,14.419382297781759,10.512591109128529,8.304575616311578,6.853932971264472,5.804403312373578,4.994062132753793,4.338235625751354,3.789261759435126,3.3177291323052986,2.904956967002841,2.539177857108157,2.211980915597919,1.9174607679840114,1.651773986829657,1.41151484837817,1.1948409833743,0.9994872850606141,0.8240253439886432,0.6670750069844636,0.5272754401469307,0.4037877632003776,0.2949497060100974,0.1998694691361252,0.11739474850599703,0.04669457822767618,0.015594874591035543,0.06565655408090675,0.1081186157334547,0.1430706154508049,0.17141787646804418,0.1938455423475434,0.21104504560579793,0.22377600605004846,0.2326416095778782],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_27","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H27","showlegend":false,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[-90.00000000031639,-90.00000002539957,-90.00000026903403,-90.00000136190579,-90.00000452328516,-90.00001137084526,-90.00002361092065,-90.0000442973198,-90.00008650582099,-90.00020778892781,-90.0006326260275,-90.00222083666333,-90.00884303071129,-90.05444857874402,90.16537466157065,90.09593113673456,90.10554070154953,90.13345324200576,90.17681402473934,90.23777784801153,90.3201672961117,90.42887039015852,90.56968539024554,90.74926644122957,90.97508651003707,91.25538754444653,91.59909980057037,92.01571383872039,92.51508822947027,93.10717631961938,93.8016554881121,94.60743624725328,95.53200326600384,96.58046990191269,97.7540521920552,99.04721861225613,100.441486286812,101.88949272421584,103.26448538118534,104.13713177180436,101.78972607295341,-44.167733071113304,-59.74097591853549,-59.004056204315994,-56.72759447791608,-53.85934263920794,-50.62700305098277,-47.11365492545794,-43.35765696809923,-39.379945754352164],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_27","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H27","showlegend":false,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[-90.0000000003524,-90.00000002536565,-90.0000002690317,-90.00000136189274,-90.00000452322497,-90.00001137071331,-90.00002361066824,-90.00004429680465,-90.0000865072454,-90.00020778403545,-90.00063260650693,-90.00222075518852,-90.0088437209148,-90.05444414517409,90.16538458746622,90.0959313171181,90.10553990240625,90.13344564957374,90.17682578267988,90.23777453015809,90.32016264800613,90.42886402536338,90.56971176431661,90.74925513889045,90.97502174278225,91.25542005753033,91.59912470050403,92.01568396005271,92.515202007848,93.10713130164551,93.80204452775783,94.60737158825891,95.53192718439892,96.58038155018247,97.75395110736379,99.04803222162062,100.44018104984315,101.88849078389201,103.26367434962103,104.1371101526967,101.79328215985338,-44.15989579949951,-59.74116620706443,-59.00424184358741,-56.7307002758771,-53.85832412291598,-50.62130334553586,-47.114063397901404,-43.36021263404594,-39.37392327710027],"type":"scatter","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x2","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.575,1.0],"title":{"text":"deg\u002fm"}},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.0,0.425],"title":{"text":"deg"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Amplitude (deg\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Phase (deg)","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":50,"r":140,"t":30,"b":30},"height":400},                        {"responsive": true}                    )                };                            </script>        </div></div>
+  </div>
+</div>
+
+<div class="dof-section" id="dof-pitch">
+  <h3 class="dof-title">Pitch</h3>
+  <div class="dof-grid">
+    <div class="dof-text">
+      <div class="consensus-badge" style="background:#27ae60;">
+        FULL
+      </div>
+      <table class="stats-table">
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Magnitude correlation</td><td>1.0000</td></tr>
+        <tr><td>Phase correlation</td><td>1.0000</td></tr>
+        <tr><td>Magnitude RMS error</td><td>0.0021</td></tr>
+        <tr><td>Max amplitude diff</td>
+            <td>0.0141 deg/m</td></tr>
+        <tr><td>Max phase diff</td><td>0.0 deg</td></tr>
+      </table>
+      <h4>Amplitude Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='3'>OrcaWave (.owd)</th>
+<th colspan='3'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>169.8</td><td>4.19</td><td>0.05847</td>
+<td>169.8</td><td>4.19</td><td>0.05847</td>
+</tr>
+<tr><td>27&deg;</td>
+<td>151.3</td><td>4.19</td><td>0.05209</td>
+<td>151.3</td><td>4.19</td><td>0.05209</td>
+</tr>
+</table>
+      <h4>Phase Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='2'>OrcaWave (.owd)</th>
+<th colspan='2'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>@Peak</th><th>LP</th>
+<th>@Peak</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>-89.8</td><td>90.0</td>
+<td>-89.8</td><td>90.0</td>
+</tr>
+<tr><td>27&deg;</td>
+<td>-89.8</td><td>90.0</td>
+<td>-89.8</td><td>90.0</td>
+</tr>
+</table>
+      <div class="observations"><p>Solvers show <strong>full agreement</strong> on Pitch response.</p>
+<p>Amplitude curves are virtually identical (r=1.0000).</p>
+<p>Phase agreement within 0.0&deg;.</p></div>
+      
+    </div>
+    <div class="dof-plot"><div>                            <div id="plot_pitch" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("plot_pitch")) {                    Plotly.newPlot(                        "plot_pitch",                        [{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":true,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[0.05846704528205064,0.23633702457357128,0.5413898050612471,0.987942453919391,1.5992976112103061,2.412237180555039,3.485324640763206,4.914970595955395,6.868914010834671,9.6636290225661,13.97129047543301,21.506608607911062,38.30807731092857,111.47205144605874,169.75223904112215,52.09403804463949,31.760993671130183,23.15467877259192,18.29329432626811,15.096974660057985,12.785210045026764,11.000294690089532,9.556010852191186,8.34651033747366,7.307682883155372,6.3988119901068385,5.5930742861119045,4.872265807073153,4.223702449886185,3.63830886354991,3.109392380471952,2.631831884394322,2.201530564329804,1.815044590942438,1.4693339146936881,1.1616001709803236,0.8891874005161726,0.6495282123827522,0.4401245370128161,0.25856925163483907,0.1027939466862719,0.03436104618341302,0.14460270594095853,0.23815998584392623,0.31522157228572095,0.3775615329324635,0.42690805950472965,0.46487005790113795,0.4929243139485323,0.5124139069480603],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":true,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[0.05846695764291276,0.23633742946777678,0.5413871899382403,0.9879375512440837,1.599289373311789,2.4122241205870787,3.4853044919844454,4.914939631495255,6.868964496575768,9.663549746802417,13.971149613560446,21.506317221909867,38.30950420841042,111.46560003029192,169.76637199313404,52.09532940855282,31.761472137695236,23.15600202052186,18.2924199906726,15.097099636564026,12.785308626560727,11.000376595244822,9.555793000459285,8.346572961565387,7.30793216747052,6.398722591160356,5.593024243911834,4.872310522272903,4.223573698857089,3.6383478821904784,3.1091313093610022,2.6318658057899738,2.201562038269879,1.8150736599578643,1.4693606184107146,1.161425416155146,0.889420258567582,0.6496836781748347,0.44025131626051706,0.2585850023676869,0.10285436654371136,0.0343500337378816,0.14462042994052166,0.2381512379838056,0.31513970008369413,0.37757996304076796,0.426981185545539,0.46486637922624785,0.4929087518403266,0.512436936201204],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_27","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H27","showlegend":true,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[0.05209451879632397,0.21057783080232964,0.48238184843876414,0.8802631719655555,1.4249846057100621,2.149319065773033,3.1054469938577594,4.379270867245821,6.120247197865985,8.610356506704582,12.448510965490588,19.162528583996647,34.13274681600952,99.32232511411429,151.2503525029241,46.416127777531926,28.299252582083778,20.630969857568342,16.29944459901648,13.45150292289689,11.391705568430487,9.80133434196241,8.514468019471744,7.436795169627531,6.511193129999572,5.7013832342013115,4.983465682571501,4.341220624321822,3.7633464408263544,3.2417569351329365,2.770488896757537,2.3449793777140684,1.9615780927010364,1.617216567333207,1.3091860976626812,1.0349933225974166,0.7922717651111191,0.5787338631661301,0.3921538204879438,0.23038687494895732,0.09159005986048119,0.030615929238119614,0.12884197265006334,0.21220212107258657,0.2808644986819177,0.33640981150616317,0.380377889668844,0.41420227881525634,0.4391988047352063,0.4565641598392302],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_27","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H27","showlegend":true,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[0.05209444070928044,0.21057819156570776,0.4823795183471027,0.8802588036498725,1.4249772656887347,2.1493074292563707,3.1054290411644225,4.379243277709818,6.120292180990684,8.610285871481933,12.448385456643123,19.16226895716847,34.134018190975354,99.3165768605751,151.2629450553741,46.41727839120405,28.29967889891492,20.632148880107106,16.29866556029649,13.451614277779177,11.391793405220445,9.801407319990155,8.514273912157298,7.436850968101852,6.51141524395087,5.701303579156687,4.983421094644712,4.341260465856584,3.7632317228192216,3.241791700996329,2.770256280693736,2.345009601899006,1.9616061361871053,1.617242468015735,1.3092098908489107,1.0348376149070142,0.7924792431557118,0.5788723842023663,0.39226678162590606,0.23040090895485152,0.09164389434874982,0.03060611707509454,0.12885776484965547,0.21219432667200291,0.28079155001429984,0.33642623285327117,0.3804430454499367,0.4141990010918351,0.4391849387948226,0.45658467905477773],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":false,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[89.99999999953464,89.9999999746068,89.99999973094306,89.99999863809423,89.99999547672881,89.9999886291786,89.99997638913725,89.99995570282827,89.99991349449579,89.99979221176092,89.99936737558936,89.9977791680754,89.99115699088401,89.94555172334995,-89.83462408471557,-89.90406864678502,-89.89445915186666,-89.86654661867396,-89.8231858229854,-89.76222197391947,-89.67983248830727,-89.57112934417852,-89.43031427966406,-89.25073314754422,-89.02491297804686,-88.74461182007796,-88.40089941367044,-87.98428519389923,-87.48491058440186,-86.89282223061048,-86.19834274248325,-85.39256159088185,-84.4679940801264,-83.41952680841153,-82.2459436619642,-80.95277602407312,-79.55850648978995,-78.11049692030731,-76.73549814737378,-75.86283613279625,-78.21016064305364,135.83252602195054,120.25899724354525,120.99591862750908,123.27238236934295,126.14063514083733,129.3729750322307,132.88632318922575,136.64232116132283,140.62003255193],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":false,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[89.99999999953975,89.9999999746145,89.99999973095669,89.99999863811033,89.9999954767826,89.99998862930975,89.99997638939445,89.99995570334248,89.99991349307383,89.99979221665383,89.99936739510974,89.99777924954968,89.9911563006847,89.94555615687834,-89.83461415863712,-89.90406846639677,-89.89445995101019,-89.8665542111072,-89.82317406503965,-89.76222529177446,-89.67983713641446,-89.57113570897643,-89.4302879055811,-89.25074444988792,-89.02497774532937,-88.74457930697987,-88.40087451372582,-87.98431507258128,-87.48479680597228,-86.89286724860563,-86.1979537026541,-85.39262624991005,-84.46807016177483,-83.41961516020028,-82.24604474673716,-80.95196241381795,-79.55981172889084,-78.11149886352223,-76.73630918471578,-75.86285775442744,-78.20660465274625,135.8403635324786,120.2588069544405,120.9957329879672,123.26927656972904,126.14165365731122,129.37867473787549,132.88591471678384,136.6397654953284,140.6260550296245],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_27","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H27","showlegend":false,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[89.99999999955763,89.99999997461542,89.99999973094967,89.99999863809421,89.99999547672866,89.99998862917776,89.99997638913955,89.99995570282857,89.99991349449706,89.99979221176142,89.9993673755895,89.99777916807511,89.9911569908836,89.9455517233498,-89.8346240847153,-89.90406864678404,-89.89445915186242,-89.8665466186619,-89.82318582295689,-89.76222197385748,-89.6798324881799,-89.57112934393123,-89.43031427920297,-89.25073314671398,-89.02491297659671,-88.74461181761053,-88.40089940956814,-87.98428518721657,-87.48491057371096,-86.8928222137749,-86.19834271632783,-85.3925615507011,-84.46799401893246,-83.41952671573443,-82.24594352184138,-80.95277581143031,-79.5585061633141,-78.11049640662101,-76.7354972995507,-75.86283459130236,-78.21015721599929,135.83249807194764,120.25899239914891,120.99591570508598,123.27238011416496,126.14063321418628,129.37297329627197,132.88632157708187,136.6423196404348,140.62003111197325],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_27","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H27","showlegend":false,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[89.99999999963006,89.99999997462524,89.99999973095899,89.99999863811203,89.99999547678277,89.99998862930995,89.99997638939595,89.99995570334183,89.99991349307355,89.99979221665336,89.99936739510966,89.99777924954972,89.99115630068431,89.94555615687848,-89.83461415863685,-89.90406846639559,-89.89445995100547,-89.86655421109508,-89.82317406501124,-89.76222529171208,-89.67983713628729,-89.57113570872907,-89.43028790511984,-89.25074444905776,-89.02497774387933,-88.74457930451217,-88.40087450962325,-87.98431506589891,-87.48479679528045,-86.89286723177041,-86.19795367649262,-85.39262620973085,-84.46807010058279,-83.41961506752624,-82.24604460661912,-80.9519622011212,-79.55981140254542,-78.11149835000414,-76.73630833718897,-75.86285621303148,-78.20660122698162,135.84033557031537,120.25880211067778,120.99573006544158,123.26927431402812,126.1416517307406,129.37867300216902,132.8859131046285,136.63976397438572,140.62605358978868],"type":"scatter","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x2","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.575,1.0],"title":{"text":"deg\u002fm"}},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.0,0.425],"title":{"text":"deg"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Amplitude (deg\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Phase (deg)","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":50,"r":140,"t":30,"b":30},"height":400},                        {"responsive": true}                    )                };                            </script>        </div></div>
+  </div>
+</div>
+
+<div class="dof-section" id="dof-yaw">
+  <h3 class="dof-title">Yaw</h3>
+  <div class="dof-grid">
+    <div class="dof-text">
+      <div class="consensus-badge" style="background:#27ae60;">
+        FULL
+      </div>
+      <table class="stats-table">
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Magnitude correlation</td><td>1.0000</td></tr>
+        <tr><td>Phase correlation</td><td>0.5567</td></tr>
+        <tr><td>Magnitude RMS error</td><td>0.0000</td></tr>
+        <tr><td>Max amplitude diff</td>
+            <td>0.0000 deg/m</td></tr>
+        <tr><td>Max phase diff</td><td>360.0 deg</td></tr>
+      </table>
+      <h4>Amplitude Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='3'>OrcaWave (.owd)</th>
+<th colspan='3'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+</tr>
+<tr><td>27&deg;</td>
+<td>2.088e-06</td><td>1.65</td><td>2.229e-09</td>
+<td>2.088e-06</td><td>1.65</td><td>2.229e-09</td>
+</tr>
+</table>
+      <h4>Phase Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='2'>OrcaWave (.owd)</th>
+<th colspan='2'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>@Peak</th><th>LP</th>
+<th>@Peak</th><th>LP</th>
+</tr>
+<tr><td>27&deg;</td>
+<td>170.0</td><td>180.0</td>
+<td>170.0</td><td>180.0</td>
+</tr>
+</table>
+      <div class="observations"><p>Solvers show <strong>full agreement</strong> on Yaw response.</p>
+<p>Amplitude curves are virtually identical (r=1.0000).</p>
+<p>Phase difference of 360.0&deg; occurs where amplitude is insignificant (8.91e-09 deg/m). Phase angle is physically undefined at near-zero magnitude and <strong>can be ignored</strong>.</p></div>
+      <p class="skipped-note">Headings with negligible response omitted: 0&deg;</p>
+    </div>
+    <div class="dof-plot"><div>                            <div id="plot_yaw" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("plot_yaw")) {                    Plotly.newPlot(                        "plot_yaw",                        [{"legendgroup":"OrcaWave (.owd)_27","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H27","showlegend":true,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[2.2286732947288024e-9,8.90965352893849e-9,2.002777638599396e-8,3.5557618579337155e-8,5.546327959693894e-8,7.969808846993019e-8,1.0820424888232646e-7,1.4091244133598088e-7,1.7774140742774417e-7,2.1859754858590504e-7,2.6337457935160586e-7,3.1195328254081236e-7,3.642014189062631e-7,4.199738451156064e-7,4.791128883280246e-7,5.41449010230317e-7,6.068017646721429e-7,6.749810075021078e-7,7.457882515249001e-7,8.190179706805468e-7,8.944585430602903e-7,9.718923801840377e-7,1.0510946186536826e-6,1.1318295496651771e-6,1.2138437347587206e-6,1.296854512910566e-6,1.3805323713950498e-6,1.4644754904637077e-6,1.548174799349034e-6,1.6309683163497503e-6,1.711984748975261e-6,1.790078826811867e-6,1.863765257023154e-6,1.9311649817571163e-6,1.989986192964683e-6,2.0375709859951145e-6,2.0710411669724254e-6,2.087565269113319e-6,2.0847361189022744e-6,2.0609968287146885e-6,2.0160035729390416e-6,1.9508001276084985e-6,1.8677264379883862e-6,1.770077878822564e-6,1.6616226349315247e-6,1.54612139746093e-6,1.4269653697520538e-6,1.3069855244240304e-6,1.1884280226148798e-6,1.0730594735864227e-6],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_27","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H27","showlegend":true,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[2.228669969364169e-9,8.909668567668475e-9,2.0027682878983987e-8,3.555745278803941e-8,5.546302144724837e-8,7.969771832870254e-8,1.0820374766859818e-7,1.4091179063338058e-7,1.777422594544675e-7,2.1859654691200167e-7,2.633733781319085e-7,3.1195186723464695e-7,3.64204248272442e-7,4.1997196323724725e-7,4.791107568473362e-7,5.414466203438282e-7,6.067991092161969e-7,6.749661304199107e-7,7.458046600917856e-7,8.190144924608433e-7,8.944547876523932e-7,9.71888349113718e-7,1.0511078882568674e-6,1.1318249802584612e-6,1.2138224829724408e-6,1.2968632471970059e-6,1.380537889180275e-6,1.4644699959052872e-6,1.548192233818823e-6,1.6309625588438162e-6,1.7120261961903042e-6,1.7900731270770326e-6,1.8637597864858385e-6,1.9311599309996555e-6,1.9899818002103526e-6,2.03759573044592e-6,2.071017979017095e-6,2.087560275883368e-6,2.0847446375591986e-6,2.0610000484472817e-6,2.0160269525819906e-6,1.9508074565394033e-6,1.8677106828165232e-6,1.7700885479312059e-6,1.6617554217687015e-6,1.546082305999895e-6,1.4267631359522544e-6,1.306998948644147e-6,1.1885054482962189e-6,1.072892444855646e-6],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_27","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H27","showlegend":false,"x":[62.83185307179587,31.415926535897935,20.943951023931955,15.707963267948967,12.566370614359172,10.471975511965978,8.975979010256552,7.853981633974484,6.981317007977318,6.283185307179586,5.711986642890532,5.235987755982989,4.83321946706122,4.487989505128276,4.1887902047863905,3.926990816987242,3.6959913571644627,3.490658503988659,3.3069396353576765,3.141592653589793,2.9919930034188504,2.855993321445266,2.7318196987737333,2.6179938779914944,2.5132741228718345,2.41660973353061,2.3271056693257726,2.243994752564138,2.1666156231653746,2.0943951023931953,2.026833970057931,1.963495408493621,1.9039955476301778,1.8479956785822313,1.7951958020513101,1.7453292519943295,1.6981581911296177,1.6534698176788383,1.6110731556870734,1.5707963267948966,1.5324842212633139,1.4959965017094252,1.4612058853906016,1.427996660722633,1.3962634015954636,1.3659098493868667,1.3368479376977842,1.3089969389957472,1.2822827157509358,1.2566370614359172],"y":[179.9999999998724,179.99999999999437,179.99999999969552,179.99999999475327,179.99999995138177,179.99999970079963,179.99999861250532,179.99999477080206,179.99998318403567,179.99995229930482,179.99987778217744,179.99971216374482,179.99936857664213,179.99869642585227,179.9974465050057,179.99522281675888,179.9914182337413,179.98513119564197,179.97506093286614,179.95937929878585,179.93557825476373,179.90029348546472,179.84910667596648,179.7763318879168,179.67479558220606,179.53562566723872,179.34807321020472,179.0994019958348,178.77489680625362,178.35806153686977,177.83110211167156,177.1758126758738,176.37499729790997,175.4145456444425,174.28621252897398,172.99099627296874,171.5427520194552,169.97134574657815,168.3243736783122,166.666450011796,165.0755014627193,163.6364032624234,162.43331698960304,161.54271407493775,161.02893060282122,160.94331023419105,161.32704457414644,162.21718926588096,163.6551710472117,165.6971882170607],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_27","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H27","showlegend":false,"x":[62.831900000000005,31.415900000000004,20.943999999999996,15.707999999999998,12.566399999999998,10.471999999999998,8.976,7.853999999999999,6.9813,6.283199999999999,5.712,5.235999999999999,4.8332,4.488,4.1888,3.9269999999999996,3.696,3.4907,3.3069,3.1415999999999995,2.992,2.856,2.7318000000000002,2.6179999999999994,2.5133,2.4166,2.3271,2.244,2.1666,2.0944,2.0268,1.9634999999999998,1.904,1.848,1.7951999999999997,1.7453000000000003,1.6982,1.6535,1.6111,1.5707999999999998,1.5325,1.496,1.4612,1.428,1.3963,1.3659000000000001,1.3368,1.3089999999999997,1.2822999999999998,1.2566],"y":[179.99999999998886,-179.99999999999505,179.99999999970234,179.99999999475904,179.99999995137983,179.99999970080233,179.9999986125388,179.9999947709215,179.99998318362952,179.9999523004079,179.99987778499502,179.99971217036045,179.9993685517218,179.99869645561495,179.9974465630796,179.99522292494404,179.99141842718518,179.9851328908036,179.9750580815544,179.95938019945746,179.93557967400494,179.9002956667865,179.84909657260934,179.77633670457473,179.6748261405261,179.53560876415114,179.34805901379255,179.09942058933697,178.77481989311104,178.3580944284703,177.83079652441808,177.17586695416355,176.37506510251626,175.41462862242605,174.28631179772088,172.99016643128687,171.5441331602433,169.97246845680624,168.32545530469775,166.6666032493487,165.0761470826334,163.63653434786053,162.43313363833462,161.54278731446126,161.0292933134443,160.9433576214797,161.32810831947873,162.21705948079818,163.65402932588458,165.70068210536954],"type":"scatter","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x2","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.575,1.0],"title":{"text":"deg\u002fm"}},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.0,0.425],"title":{"text":"deg"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Amplitude (deg\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Phase (deg)","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"},{"align":"left","arrowcolor":"#f39c12","arrowhead":2,"arrowsize":1,"arrowwidth":2,"ax":40,"ay":-60,"bgcolor":"rgba(241, 196, 15, 0.4)","bordercolor":"#f39c12","borderpad":6,"borderwidth":1,"font":{"color":"#2c3e50","size":11},"showarrow":true,"text":"\u003cb\u003eΔφ = 360°\u003c\u002fb\u003e at (31.4s, 180°)\u003cbr\u003eAmplitude here: 8.91e-09 deg\u002fm\u003cbr\u003e\u003ci\u003eIgnore — magnitude is insignificant\u003c\u002fi\u003e","x":31.415926535897935,"xref":"x2","y":179.99999999999437,"yref":"y2"}],"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":50,"r":140,"t":30,"b":30},"height":400},                        {"responsive": true}                    )                };                            </script>        </div></div>
+  </div>
+</div>
+  </div>
+
+  <!-- Section 5: Additional Plots -->
+  <div class="section">
+    <h2>Full Overlay Plots</h2>
+    <ul class="plot-links">
+      <li><a href="benchmark_amplitude.html">benchmark_amplitude.html</a></li>
+<li><a href="benchmark_phase.html">benchmark_phase.html</a></li>
+<li><a href="benchmark_combined.html">benchmark_combined.html</a></li>
+<li><a href="benchmark_heatmap.html">benchmark_heatmap.html</a></li>
+
+    </ul>
+  </div>
+
+  <!-- Section 6: Notes -->
+  <div class="section">
+    <h2>Notes</h2>
+    <ul></ul>
+  </div>
+
+</div>
+</body>
+</html>
