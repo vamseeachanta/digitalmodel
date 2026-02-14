@@ -246,10 +246,10 @@ def _build_body_dict(
     body["BodyMeshSymmetry"] = mesh_sym
 
     # Interior surface panels (for irregular frequency removal)
-    body["BodyAddInteriorSurfacePanels"] = _bool_to_yn(
-        spec.solver_options.remove_irregular_frequencies
-    )
-    body["BodyInteriorSurfacePanelMethod"] = "Triangulation method"
+    add_interior = spec.solver_options.remove_irregular_frequencies
+    body["BodyAddInteriorSurfacePanels"] = _bool_to_yn(add_interior)
+    if add_interior:
+        body["BodyInteriorSurfacePanelMethod"] = "Triangulation method"
 
     # OrcaFlex import settings
     body["BodyOrcaFlexImportSymmetry"] = (
@@ -261,17 +261,45 @@ def _build_body_dict(
     body["BodyHydrostaticStiffnessMethod"] = "Displacement"
 
     # Inertia
-    body["BodyInertiaSpecifiedBy"] = "Matrix (for a general body)"
-    body["BodyCentreOfMass"] = list(inertia.centre_of_gravity)
-    body["BodyMass"] = inertia.mass / 1000.0  # kg -> tonnes
+    if inertia.mode == "free_floating":
+        # Free-floating body: mass auto-computed from displaced volume
+        body["BodyInertiaSpecifiedBy"] = (
+            "Radii of gyration (for a free-floating body)"
+        )
+        cog_z = inertia.cog_z if inertia.cog_z is not None else 0.0
+        body["BodyCentreOfMassZRelativeToFreeSurface"] = cog_z
+        r = inertia.radii_of_gyration
+        radii_key = (
+            "BodyRadiiOfGyrationRx, "
+            "BodyRadiiOfGyrationRy, "
+            "BodyRadiiOfGyrationRz"
+        )
+        body[radii_key] = [
+            [r[0], 0, 0],
+            [0, r[1], 0],
+            [0, 0, r[2]],
+        ]
+        body["BodyRadiiOfGyrationOriginType"] = "Body origin"
+    else:
+        # Explicit mode: mass and inertia tensor specified directly
+        body["BodyInertiaSpecifiedBy"] = "Matrix (for a general body)"
+        body["BodyCentreOfMass"] = list(inertia.centre_of_gravity)
+        body["BodyMass"] = inertia.mass / 1000.0  # kg -> tonnes
 
-    inertia_key = (
-        "BodyInertiaTensorRx, "
-        "BodyInertiaTensorRy, "
-        "BodyInertiaTensorRz"
-    )
-    body[inertia_key] = _build_inertia_tensor(body_spec)
-    body["BodyInertiaTensorOriginType"] = "Centre of mass"
+        inertia_key = (
+            "BodyInertiaTensorRx, "
+            "BodyInertiaTensorRy, "
+            "BodyInertiaTensorRz"
+        )
+        body[inertia_key] = _build_inertia_tensor(body_spec)
+        _TENSOR_ORIGIN_MAP = {
+            "body_origin": "Body origin",
+            "centre_of_mass": "Centre of mass",
+        }
+        origin = getattr(inertia, "inertia_tensor_origin", "body_origin")
+        body["BodyInertiaTensorOriginType"] = _TENSOR_ORIGIN_MAP.get(
+            origin, "Body origin"
+        )
 
     # External stiffness matrix
     stiffness_key = (
@@ -329,29 +357,60 @@ def _build_general_section(spec: DiffractionSpec) -> dict[str, Any]:
     solver = spec.solver_options
     method = _LOAD_RAO_METHOD_MAP.get(solver.load_rao_method.value, "Both")
 
+    _SOLVE_TYPE_MAP = {
+        "potential_only": "Potential formulation only",
+        "potential_and_source": "Potential and source formulations",
+        "mean_drift": "Potential and source + mean drift (momentum conservation)",
+        "diagonal_qtf": "Potential and source + diagonal QTF",
+        "full_qtf": "Full QTF calculation",
+    }
+
     section: dict[str, Any] = {}
-    section["SolveType"] = "Potential and source formulations"
+    solve_type_key = getattr(solver, "solve_type", "potential_and_source")
+    section["SolveType"] = _SOLVE_TYPE_MAP.get(
+        solve_type_key, "Potential and source formulations"
+    )
+    # "Potential formulation only" makes quadratic load and
+    # OutputPanelVelocities dormant — only emit when source formulations active
+    has_source = solve_type_key != "potential_only"
+
     section["LoadRAOCalculationMethod"] = method
     section["PreferredLoadRAOCalculationMethod"] = (
         "Haskind" if method in ("Both", "Haskind") else "Direct"
     )
-    section["QuadraticLoadPressureIntegration"] = _bool_to_yn(
-        solver.qtf_calculation
-    )
-    section["QuadraticLoadControlSurface"] = _bool_to_yn(
-        solver.qtf_calculation
-    )
+    # QTF-specific settings — derive from solve_type
+    is_qtf = solve_type_key in ("diagonal_qtf", "full_qtf")
+    if has_source:
+        # For full_qtf: pressure integration preferred, control surface off
+        # For non-QTF with qtf_calculation flag: both enabled
+        if is_qtf:
+            section["QuadraticLoadPressureIntegration"] = "Yes"
+        else:
+            section["QuadraticLoadPressureIntegration"] = _bool_to_yn(
+                solver.qtf_calculation
+            )
+    if is_qtf:
+        section["QuadraticLoadControlSurface"] = "No"
+    else:
+        section["QuadraticLoadControlSurface"] = _bool_to_yn(
+            solver.qtf_calculation
+        )
     section["QuadraticLoadMomentumConservation"] = "No"
-    if solver.qtf_calculation:
-        section["PreferredQuadraticLoadCalculationMethod"] = "Control surface"
-    section["HasResonanceDampingLid"] = "No"
+    if solver.qtf_calculation or is_qtf:
+        section["PreferredQuadraticLoadCalculationMethod"] = (
+            "Pressure integration" if is_qtf else "Control surface"
+        )
+    # Damping lid
+    has_damping_lid = getattr(spec, "damping_lid", None) is not None
+    section["HasResonanceDampingLid"] = _bool_to_yn(has_damping_lid)
     section["LengthTolerance"] = 100e-9
     section["WaterlineZTolerance"] = 1e-6
     section["WaterlineGapTolerance"] = 1e-6
     section["DivideNonPlanarPanels"] = "Yes"
     section["LinearSolverMethod"] = "Direct LU"
     section["OutputPanelPressures"] = "No"
-    section["OutputPanelVelocities"] = "No"
+    if has_source:
+        section["OutputPanelVelocities"] = "No"
     section["OutputBodyWireFrames"] = "Yes"
     section["OutputIntermediateResults"] = "No"
     section["ValidatePanelArrangement"] = "No"
@@ -399,9 +458,16 @@ def _build_headings_section(spec: DiffractionSpec) -> dict[str, Any]:
     section: dict[str, Any] = {
         "WaveHeading": _headings_from_spec(spec),
     }
-    if spec.solver_options and spec.solver_options.qtf_calculation:
+    solve_type = getattr(spec.solver_options, "solve_type", "potential_and_source")
+    is_qtf = solve_type in ("diagonal_qtf", "full_qtf")
+    if spec.solver_options.qtf_calculation or is_qtf:
         section["QTFMinCrossingAngle"] = 0
         section["QTFMaxCrossingAngle"] = 180
+        section["QTFMinPeriodOrFrequency"] = 0
+        section["QTFMaxPeriodOrFrequency"] = "Infinity"
+        if solve_type == "full_qtf":
+            section["QTFFrequencyTypes"] = "Sum frequencies"
+            section["IncludeMeanDriftFullQTFs"] = "No"
     return section
 
 
@@ -416,13 +482,56 @@ def _build_solver_section(spec: DiffractionSpec) -> dict[str, Any]:
 
 def _build_outputs_section(spec: DiffractionSpec) -> dict[str, Any]:
     """Build the outputs section."""
+    solve_type = getattr(spec.solver_options, "solve_type", "potential_and_source")
+    has_source = solve_type != "potential_only"
+
+    section: dict[str, Any] = {}
+    # OutputPanelVelocities is dormant for "Potential formulation only"
+    if has_source:
+        section["OutputPanelVelocities"] = "No"
+    section["DetectAndSkipFieldPointsInsideBodies"] = "Yes"
+    return section
+
+
+def _build_damping_lid_section(spec: DiffractionSpec) -> dict[str, Any]:
+    """Build the damping lid section (for moonpool bodies)."""
+    lid = spec.damping_lid
+    if lid is None:
+        return {}
+
+    mesh_fmt = _MESH_FORMAT_MAP.get(lid.mesh_format, "Wamit gdf")
     return {
-        "OutputPanelPressures": "No",
-        "OutputPanelVelocities": "No",
-        "OutputBodyWireFrames": "Yes",
-        "OutputIntermediateResults": "No",
-        "DetectAndSkipFieldPointsInsideBodies": "Yes",
+        "DampingLidMeshFileName": Path(lid.mesh_file).name,
+        "DampingLidMeshFormat": mesh_fmt,
+        "DampingLidMeshLengthUnits": lid.length_units,
+        "DampingFactorEpsilon": lid.damping_factor,
     }
+
+
+def _build_qtf_section(spec: DiffractionSpec) -> dict[str, Any]:
+    """Build QTF-specific properties for Full QTF / diagonal QTF solve types."""
+    solve_type = getattr(spec.solver_options, "solve_type", "potential_and_source")
+    if solve_type not in ("diagonal_qtf", "full_qtf"):
+        return {}
+
+    section: dict[str, Any] = {}
+    section["QTFCalculationMethod"] = "Both"
+    section["PreferredQTFCalculationMethod"] = "Direct method"
+
+    # Free surface zone
+    fsz = getattr(spec, "free_surface_zone", None)
+    if fsz is not None and fsz.mesh_file:
+        section["FreeSurfacePanelledZoneType"] = "Defined by mesh file"
+        section["FreeSurfacePanelledZoneMeshFileName"] = Path(fsz.mesh_file).name
+        mesh_fmt = "Wamit fdf" if fsz.mesh_format == "fdf" else _MESH_FORMAT_MAP.get(
+            fsz.mesh_format, fsz.mesh_format
+        )
+        section["FreeSurfacePanelledZoneMeshFormat"] = mesh_fmt
+        section["FreeSurfacePanelledZoneMeshLengthUnits"] = fsz.length_units
+        if fsz.inner_radius is not None:
+            section["FreeSurfacePanelledZoneInnerRadius"] = fsz.inner_radius
+
+    return section
 
 
 # ---------------------------------------------------------------------------
@@ -514,6 +623,12 @@ class OrcaWaveBackend:
         # Outputs / field points
         data.update(_build_outputs_section(spec))
 
+        # Damping lid (for moonpool bodies)
+        data.update(_build_damping_lid_section(spec))
+
+        # QTF section (free surface zone, QTF method)
+        data.update(_build_qtf_section(spec))
+
         # Determine filename
         name = self._analysis_name(spec)
         output_path = output_dir / f"{name}.yml"
@@ -572,6 +687,8 @@ class OrcaWaveBackend:
         merged.update(_build_headings_section(spec))
         merged.update(_build_bodies_section(spec))
         merged.update(_build_outputs_section(spec))
+        merged.update(_build_damping_lid_section(spec))
+        merged.update(_build_qtf_section(spec))
 
         master_path = output_dir / "master.yml"
         return _write_yml(merged, master_path)

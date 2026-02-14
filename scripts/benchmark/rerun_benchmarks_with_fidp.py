@@ -46,6 +46,7 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_runner import (
     BenchmarkConfig,
     BenchmarkRunner,
 )
+from scripts.benchmark.solver_metadata import build_solver_metadata
 from digitalmodel.hydrodynamics.diffraction.aqwa_runner import (
     AQWARunConfig,
     AQWARunResult,
@@ -467,7 +468,14 @@ def _run_ship_benchmark(
     solver_results = _harmonize_frequencies(solver_results)
 
     print("\n[6/6] Running benchmark comparison...")
-    solver_metadata = _build_ship_metadata(lis_file)
+    with open(SHIP_SPEC, encoding="utf-8") as f:
+        ship_spec = yaml.safe_load(f)
+    solver_metadata = build_solver_metadata(
+        ship_spec,
+        aqwa_input_file=str(lis_file),
+        panel_count="8,615 (6,754 diffracting + 2,631 lid)",
+        spec_dir=SHIP_BENCHMARK_DIR,
+    )
     config = BenchmarkConfig(
         output_dir=SHIP_OUTPUT,
         tolerance=0.05,
@@ -515,55 +523,6 @@ def _verify_fidp_in_dat(dat_path: Path) -> None:
         print(f"  [WARN] Expected 6 FIDP cards, found {fidp_count}")
 
 
-def _build_ship_metadata(lis_file: Path) -> dict:
-    """Build solver metadata dict for the ship benchmark."""
-    common = {
-        "body_dimensions": "~220m LOA x 32m beam x 8m draft",
-        "centre_of_gravity": "(2.53, 0.0, -1.974)",
-        "radii_of_gyration": "from inertia tensor",
-        "water_density": "1025.0",
-        "gravity": "9.80665",
-        "mesh_file": "aqwa_001_ship_raos_rev2.dat",
-        "remove_irregular_frequencies": "Yes (lid method)",
-        "qtf_calculation": "Yes",
-        "precision": "double",
-    }
-    aqwa_meta = {
-        **common,
-        "mass": "9,017,950 kg (SI)",
-        "mesh_format": "AQWA native",
-        "calculation_method": "AQWA Diffraction/Radiation",
-        "raw_phase_convention": "ISO 6954 (phase lead)",
-        "panel_count": "8,615 (6,754 diffracting + 2,631 lid)",
-        "mesh_symmetry": "None",
-        "radiation_damping": "Computed (BEM)",
-        "viscous_damping": "FIDP M44=36,010 kN-m-s/rad (roll damping)",
-        "damping_lid": "None",
-        "input_file": str(lis_file),
-        "fidp_applied": "Yes",
-    }
-    orcawave_meta = {
-        **common,
-        "mass": "9,017.95 te (OrcaFlex units)",
-        "mesh_format": "AQWA dat import",
-        "calculation_method": "Full QTF calculation",
-        "raw_phase_convention": "Orcina (phase lag)",
-        "panel_count": "8,615",
-        "mesh_symmetry": "None",
-        "radiation_damping": "Computed (BEM)",
-        "viscous_damping": "Roll damping: 36,010 kN-m-s/rad",
-        "damping_lid": "None",
-    }
-    mesh_file = Path(
-        "docs/modules/orcawave/L01_aqwa_benchmark/aqwa_001_ship_raos_rev2.dat"
-    )
-    if mesh_file.exists():
-        for meta in (aqwa_meta, orcawave_meta):
-            meta["mesh_path"] = str(mesh_file)
-
-    return {"AQWA": aqwa_meta, "OrcaWave": orcawave_meta}
-
-
 def _run_barge_benchmark() -> Optional[HullResult]:
     """Re-run barge benchmark from existing solver output (no damping change)."""
     print(f"\n{'='*60}")
@@ -589,7 +548,12 @@ def _run_barge_benchmark() -> Optional[HullResult]:
         return None
     with open(BARGE_SPEC_FILE, encoding="utf-8") as f:
         spec = yaml.safe_load(f)
-    solver_metadata = _build_barge_metadata(spec)
+    solver_metadata = build_solver_metadata(
+        spec,
+        aqwa_input_file=str(BARGE_LIS),
+        panel_count="912",
+        spec_dir=BARGE_SPEC_FILE.parent,
+    )
 
     # Extract OrcaWave
     print("\n[1/4] Extracting OrcaWave results...")
@@ -641,71 +605,6 @@ def _run_barge_benchmark() -> Optional[HullResult]:
 
     _print_hull_summary("barge", hull)
     return hull
-
-
-def _build_barge_metadata(spec: dict) -> dict:
-    """Build solver metadata for the barge benchmark (from spec YAML)."""
-    vessel = spec.get("vessel", {})
-    geom = vessel.get("geometry", {})
-    dims = geom.get("dimensions", {})
-    inertia = vessel.get("inertia", {})
-    env = spec.get("environment", {})
-
-    length = dims.get("length", "")
-    beam = dims.get("beam", "")
-    draft = dims.get("draft", "")
-    mass_kg = inertia.get("mass", 0)
-    cog = inertia.get("centre_of_gravity", [])
-    rog = inertia.get("radii_of_gyration", [])
-
-    common = {
-        "body_dimensions": f"{length} x {beam} x {draft}",
-        "mass": f"{mass_kg:,.0f} kg",
-        "centre_of_gravity": f"({', '.join(str(v) for v in cog)})",
-        "radii_of_gyration": f"({', '.join(str(v) for v in rog)})",
-        "water_density": f"{env.get('water_density', '')}",
-        "gravity": f"{env.get('gravity', '')}",
-        "mesh_file": geom.get("mesh_file", ""),
-        "remove_irregular_frequencies": str(
-            spec.get("solver_options", {}).get("remove_irregular_frequencies", "")
-        ),
-        "qtf_calculation": str(
-            spec.get("solver_options", {}).get("qtf_calculation", "")
-        ),
-        "precision": str(spec.get("solver_options", {}).get("precision", "")),
-    }
-    aqwa_meta = {
-        **common,
-        "mass": f"{mass_kg:,.0f} kg (SI)",
-        "mesh_format": "GDF (WAMIT)",
-        "calculation_method": "AQWA Diffraction/Radiation",
-        "raw_phase_convention": "ISO 6954 (phase lead)",
-        "panel_count": "912",
-        "mesh_symmetry": geom.get("symmetry", "none"),
-        "radiation_damping": "Computed (BEM)",
-        "viscous_damping": "None applied",
-        "damping_lid": "None",
-        "input_file": str(BARGE_LIS),
-    }
-    mass_te = mass_kg / 1000.0
-    orcawave_meta = {
-        **common,
-        "mass": f"{mass_te:,.1f} te (OrcaFlex units)",
-        "mesh_format": "WAMIT GDF",
-        "calculation_method": "Potential + source formulations",
-        "raw_phase_convention": "Orcina (phase lag)",
-        "panel_count": "912",
-        "mesh_symmetry": "None",
-        "radiation_damping": "Computed (BEM)",
-        "viscous_damping": "None applied",
-        "damping_lid": "None",
-    }
-    mesh_file = BARGE_SPEC_FILE.parent / geom.get("mesh_file", "")
-    if mesh_file.exists():
-        for meta in (aqwa_meta, orcawave_meta):
-            meta["mesh_path"] = str(mesh_file)
-
-    return {"AQWA": aqwa_meta, "OrcaWave": orcawave_meta}
 
 
 def _run_spar_benchmark() -> Optional[HullResult]:
@@ -760,7 +659,15 @@ def _run_spar_benchmark() -> Optional[HullResult]:
 
     # Benchmark
     print("\n[4/4] Running benchmark comparison...")
-    solver_metadata = _build_spar_metadata()
+    spar_spec_path = SPAR_BENCHMARK_DIR / "spec.yml"
+    with open(spar_spec_path, encoding="utf-8") as f:
+        spar_spec = yaml.safe_load(f)
+    solver_metadata = build_solver_metadata(
+        spar_spec,
+        aqwa_input_file=str(SPAR_LIS),
+        panel_count="~8,283",
+        spec_dir=SPAR_BENCHMARK_DIR,
+    )
     SPAR_OUTPUT.mkdir(parents=True, exist_ok=True)
     config = BenchmarkConfig(
         output_dir=SPAR_OUTPUT,
@@ -781,50 +688,6 @@ def _run_spar_benchmark() -> Optional[HullResult]:
 
     _print_hull_summary("spar", hull)
     return hull
-
-
-def _build_spar_metadata() -> dict:
-    """Build solver metadata for the spar benchmark."""
-    aqwa_dat = Path("docs/modules/aqwa/examples/spar-example/simple.dat")
-    common = {
-        "body_dimensions": "Cylinder D=25m, draft=110m, freeboard=15m",
-        "centre_of_gravity": "(0.0, 0.0, -61.63)",
-        "radii_of_gyration": "(75.3, 75.3, 62.7)",
-        "water_density": "1025.0",
-        "gravity": "9.80665",
-        "mesh_file": "simple.dat (AQWA dat format)",
-        "remove_irregular_frequencies": "Yes (lid method)",
-        "qtf_calculation": "No",
-        "precision": "double",
-    }
-    aqwa_meta = {
-        **common,
-        "mass": "55,000,000 kg (SI)",
-        "mesh_format": "AQWA native",
-        "calculation_method": "AQWA Diffraction/Radiation",
-        "raw_phase_convention": "ISO 6954 (phase lead)",
-        "panel_count": "~8,283",
-        "mesh_symmetry": "None",
-        "frequency_count": "3",
-        "heading_count": "9 (0 to 180 in 22.5 steps)",
-        "input_file": str(SPAR_LIS),
-    }
-    orcawave_meta = {
-        **common,
-        "mass": "55,000 te (OrcaFlex units)",
-        "mesh_format": "AQWA dat import",
-        "calculation_method": "Potential formulation only",
-        "raw_phase_convention": "Orcina (phase lag)",
-        "panel_count": "~8,283 (same mesh)",
-        "mesh_symmetry": "None",
-        "frequency_count": "20",
-        "heading_count": "5 (0, 45, 90, 135, 180)",
-    }
-    if aqwa_dat.exists():
-        for meta in (aqwa_meta, orcawave_meta):
-            meta["mesh_path"] = str(aqwa_dat)
-
-    return {"AQWA": aqwa_meta, "OrcaWave": orcawave_meta}
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,887 @@
+# OrcaFlex Modular Model Generator - Template Specification
+# CALM Buoy Moored - Discretised CALM Buoy with Supply Vessel
+#
+# Model Type: Generic (mooring/buoy configuration)
+# Source: OrcaFlex Examples - C06 Discretised CALM buoy
+# Template Version: 1.0
+#
+# Catenary Anchor Leg Mooring (CALM) buoy with 6-leg chain mooring in 100m
+# water depth. Discretised buoy body using 8 6DBuoys (swivel top, main body,
+# 6 radial attachment discs). Supply vessel connected via load hose and hawser.
+# Yaw-only swivel constraint between CALM Top and Main body.
+#
+# Usage:
+#   Copy this directory, modify values, then generate:
+#   uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+#       --input spec.yml --output modular/
+
+metadata:
+  name: "calm_buoy_moored_template"
+  description: "Discretised CALM buoy with 6-leg chain mooring, supply vessel, hose and hawser"
+  structure: mooring
+  operation: in-place
+  project: "OrcaFlex Templates"
+  version: "1.0"
+
+environment:
+  water:
+    depth: 100                                # Water depth (m)
+    density: 1.025                            # Seawater density (te/m3)
+    kinematic_viscosity: 1.35e-6              # Kinematic viscosity (m2/s)
+    temperature: 10                           # Sea temperature (deg C)
+  seabed:
+    slope: 0                                  # Flat seabed
+    stiffness:
+      normal: 100                             # Normal stiffness (kN/m/m2)
+      shear: 100                              # Shear stiffness (kN/m/m2)
+  waves:
+    type: JONSWAP                             # JONSWAP spectrum
+    height: 2                                   # Significant wave height Hs (m)
+    period: 6                                   # Zero-crossing period Tz (s)
+    gamma: 3.3                                # Peak enhancement factor
+    direction: 180                            # Wave direction (deg)
+    components: 100                           # Number of spectral components
+    parameters: "Partially specified"         # JONSWAP parameter specification
+  current:
+    speed: 1                                  # Reference current speed (m/s)
+    direction: 120                            # Current direction (deg)
+    method: "Interpolated"                    # Vertical variation method
+    profile:                                  # [depth, factor] - rotation via raw_profile below
+    - [0, 0.4]
+    - [45, 0.4]
+    - [100, 0.2]
+    # OrcaFlex current rotation (deg) per level: [0, 20, 40]
+    # Full OrcaFlex profile [depth, factor, rotation]: [0,0.4,0], [45,0.4,20], [100,0.2,40]
+  wind:
+    type: "NPD spectrum"                      # Wind spectrum type
+    speed: 12                                 # Wind speed (m/s)
+    direction: 165                            # Wind direction (deg)
+    air_density: 0.00128                      # Air density (te/m3)
+    components: 1000                          # Number of wind components
+    seed: 12345                               # Random seed
+
+simulation:
+  stages:
+  - 10                                        # Build-up stage (s)
+  - 100                                       # Main simulation (s)
+  time_step: 0.1                              # Implicit constant time step (s)
+
+generic:
+  vessel_types:
+  - name: Vessel Type1                        # Supply vessel type
+    length: 103                               # Vessel length (m)
+    properties:
+      RAOResponseUnits: degrees
+      RAOWaveUnit: amplitude
+      WavesReferredToBy: "period (s)"
+      RAOPhaseConvention: lags
+      RAOPhaseUnitsConvention: degrees
+      RAOPhaseRelativeToConvention: crest
+      SurgePositive: forward
+      SwayPositive: port
+      HeavePositive: up
+      RollPositiveStarboard: down
+      PitchPositiveBow: down
+      YawPositiveBow: port
+      Symmetry: "xz plane"
+      CurrentCoeffSymmetry: "xz plane"
+      WindCoeffSymmetry: "xz plane"
+      Draughts:
+      - Name: Draught1
+        Mass: 9017.95                         # Vessel mass (te)
+        MomentOfInertiaTensorX, MomentOfInertiaTensorY, MomentOfInertiaTensorZ:
+        - [254.9374465e3, 0, 0]
+        - [0, 5.979802645e6, 0]
+        - [0, 0, 5.979802645e6]
+        CentreOfMass: [2.53, 0, -1.974]      # CoM [x, y, z] (m)
+        DisplacementRAOs:
+          RAOOrigin: [2.53, 0, -1.974]
+          PhaseOrigin: [null, null, null]
+          RAOs:
+          - RAODirection: 0                   # Head seas
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+            - [0, 0, 360, 0, 0, 0, 360, 0, 0, 0, 0, 0, 0]
+            - [5, 0.0222591804918, 83.8673078609, 0, 0, 0.0588643423983, 116.22796006, 0, 0, 0.234706838789, -263.25011938369994, 0, 0]
+            - [6, 0.0378383573608, -53.8691305675, 0, 0, 0.112751493711, 206.680830976, 0, 0, 1.04699098895, -180.28381851700001, 0, 0]
+            - [7, 0.0278777445991, -66.6557676678, 0, 0, 0.305859587164, 219.761159714, 0, 0, 0.661643056202, -111.609948026, 0, 0]
+            - [8, 0.151863758455, 105.846641962, 0, 0, 0.0349078898582, 36.361085396, 0, 0, 1.5998725264, -90.2002931504, 0, 0]
+            - [9, 0.349074258662, 100.112196896, 0, 0, 0.327674426304, 13.9897528763, 0, 0, 1.84465053476, -91.1732439979, 0, 0]
+            - [10, 0.505473014633, 97.2257712184, 0, 0, 0.538106553675, 9.79445771308, 0, 0, 1.76216522998, -91.7041230218, 0, 0]
+            - [12, 0.705981559581, 94.6838400676, 0, 0, 0.772601902695, 5.44212348444, 0, 0, 1.41178421317, -91.2799226172, 0, 0]
+            - [15, 0.849607014056, 92.9566394734, 0, 0, 0.905867658733, 2.90404456559, 0, 0, 0.975096162649, -90.653881989, 0, 0]
+            - [20, 0.936228848028, 91.6432794952, 0, 0, 0.969865213401, 1.50257188022, 0, 0, 0.568832923521, -90.2821600841, 0, 0]
+            - [Infinity, 1, 90, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+          - RAODirection: 90                  # Beam seas
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+            - [0, 0, 360, 0, 0, 0, 0, 0, 360, 0, 0, 0, 0]
+            - [5, 0.0203985811548, 343.1636345266, 0.386687695431, 71.7419365371, 0.284481094577, 95.2800522893, 0.778561865938, 245.416504531, 0.283884535449, 78.2944429542, 0.0196320765125, 117.121407158]
+            - [6, 0.0550172416683, 275.7299270501, 0.518484018635, 80.8976101997, 0.933076883417, 84.1600200297, 1.65684299284, 248.082361014, 0.968901706826, 17.4190958247, 0.0221954012963, 95.0380440939]
+            - [7, 0.034704381601, 172.485745335, 0.611868523464, 85.2912217932, 1.74935660218, 35.4832690451, 3.30005362816, 243.065234202, 0.717965987729, -96.2460685984, 0.0296187468039, 83.9018589252]
+            - [8, 0.0111307037609, 126.433948684, 0.660575826628, 89.8738093928, 1.37427792246, 8.82004205842, 7.01022782166, 220.02703640600004, 0.226215054428, -143.545268962, 0.0485661480349, 54.6721869219]
+            - [9, 0.0039445635629, 112.87760443, 0.790113853919, 94.8946404053, 1.18512887156, 3.03650890734, 9.17646550879, 154.076678169, 0.0939192126623, -161.488705586, 0.0506834479452, -15.4425789463]
+            - [10, 0.00182155947065, 125.417784291, 0.854428031896, 91.4741731036, 1.10433586606, 1.2709110953, 5.0785654352, 118.84568848, 0.0464200202336, -169.855888168, 0.0231359001114, -53.0169140228]
+            - [12, 0.00118959614057, 145.521175582, 0.896279492569, 90.264027416, 1.04175075838, 0.288696661308, 2.35113095601, 103.421033498, 0.0160152559071, -174.916592544, 0.00796286880955, -69.9597036772]
+            - [15, 824.822186456e-6, 134.292861477, 0.932840274478, 90.075508793, 1.01428454225, 0.0439511251332, 1.22889881808, 97.8649384361, 0.00521183276731, -174.857362318, 0.00309137087293, -75.1993343016]
+            - [20, 482.592630182e-6, 105.828950293, 0.962286843011, 90.0259583347, 1.00372931453, 0.00673331838903, 0.620249283103, 94.8966734587, 0.0014287871433, -172.801596554, 0.00109169500616, -76.5801486864]
+            - [Infinity, 61.23233995736766e-18, 90, 1, 90, 1, 0, 0, 0, 0, 0, 0, 0]
+          - RAODirection: 180                 # Following seas
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+            - [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            - [5, 0.0396840004876, -89.1888727371, 0, 0, 0.0480182160844, -228.17805306599996, 0, 0, 0.0811254532238, -82.507241438, 0, 0]
+            - [6, 0.0691426595232, 51.4359745959, 0, 0, 0.205386617208, -88.0117968283, 0, 0, 0.608965271808, 4.35881302464, 0, 0]
+            - [7, 0.0605517758347, 85.6343701684, 0, 0, 0.352317274752, -104.914521358, 0, 0, 0.799469632255, 92.5993358719, 0, 0]
+            - [8, 0.113022974518, 260.1686509048, 0, 0, 0.250965574637, -58.0090468699, 0, 0, 1.53287240413, 98.6438451817, 0, 0]
+            - [9, 0.322469200257, 263.7036070792, 0, 0, 0.396281306503, -21.6173392142, 0, 0, 1.78247085771, 95.7901470628, 0, 0]
+            - [10, 0.49233108548, 264.3057574108, 0, 0, 0.561320212088, -10.5953415629, 0, 0, 1.73209974678, 93.4997620974, 0, 0]
+            - [12, 0.703300383824, 265.5250553967, 0, 0, 0.775145474658, -4.84463488274, 0, 0, 1.40612385101, 91.5213616478, 0, 0]
+            - [15, 0.84900193778, 267.0509199353, 0, 0, 0.905977145668, -2.7478305795, 0, 0, 0.974095007577, 90.6671882972, 0, 0]
+            - [20, 0.935302917, 268.3567470432, 0, 0, 0.96999358368, -1.48897980084, 0, 0, 0.568494710014, 90.2808762365, 0, 0]
+            - [Infinity, 1, 270, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+        LoadRAOs:
+          RAOOrigin: [2.53, 0, -1.974]
+          PhaseOrigin: [null, null, null]
+          RAOs:
+          - RAODirection: 0
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+            - [0, 0, -360, 0, 0, 0, -360, 0, 0, 0, -360, 0, 0]
+            - [5, 400.1, -434.9800000000001, 0, 0, 708.1, -400.36, 0, 0, 23.24e3, -417.53, 0, 0]
+            - [6, 759.7, -275.65999999999997, 0, 0, 905.4, -252.59999999999997, 0, 0, 43.57e3, -285.74, 0, 0]
+            - [7, 520.5, -242.59000000000003, 0, 0, 1248, -197.82, 0, 0, 44.05e3, -167.5, 0, 0]
+            - [8, 528.9, -124.48000000000002, 0, 0, 739.9, -101.65, 0, 0, 103.6e3, -124.3, 0, 0]
+            - [9, 1082, -101.38, 0, 0, 2324, -40.01, 0, 0, 140.3e3, -108.11, 0, 0]
+            - [10, 1391, -94.28999999999996, 0, 0, 4141, -27.44, 0, 0, 159.2e3, -98.11, 0, 0]
+            - [12, 1525, -89.50999999999999, 0, 0, 6809, -16.73, 0, 0, 165.7e3, -88.02, 0, 0]
+            - [15, 1286, -88.72000000000003, 0, 0, 9212, -8.66, 0, 0, 140.6e3, -81.95, 0, 0]
+            - [20, 840.9, -89.51999999999998, 0, 0, 11.36e3, -3.23, 0, 0, 95.19e3, -74.93, 0, 0]
+            - [Infinity, 0, 0, 0, 0, 14.4444599512e3, 0, 0, 0, 28.744475303e3, 0, 0, 0]
+          - RAODirection: 90
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+            - [0, 0, 360, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            - [5, 157.8, 212.78, 7718, -78.62, 3531, -70.73, 5625, 102.1, 22.52e3, -62.13, 6876, 12.44]
+            - [6, 164.2, 211.04, 8870, -66.75, 5009, -52.6, 7368, 111.9, 23.69e3, -46.98, 4820, 6.83]
+            - [7, 121.1, 204.44, 9275, -65.06000000000006, 6228, -40.25, 8377, 112.67, 23.52e3, -35.06, 3745, -4.180000000000035]
+            - [8, 106.8, 209.42, 9070, -68.37, 7326, -33.26, 8722, 110.48, 24.75e3, -28, 2237, -25.210000000000008]
+            - [9, 101.4, 205.07, 8219, -74.33000000000004, 8014, -28.81, 8400, 105.24, 25.09e3, -24.98, 988.6, -41.099999999999994]
+            - [10, 89.1, 197.56, 7040, -79.66999999999996, 8436, -24.51, 7543, 100.18, 24.64e3, -22.24, 277.6, -40.14999999999995]
+            - [12, 61.72, 186.57, 4965, -85.75999999999999, 9181, -16.44, 5664, 94.22, 23.95e3, -15.76, 257.4, 89.45]
+            - [15, 36.28, 180.15, 3127, -88.75, 10.32e3, -8.71, 3755, 91.24, 24.41e3, -8.53, 331.4, 90.96]
+            - [20, 18.76, 178.71, 1736, -89.75999999999999, 11.76e3, -3.34, 2170, 90.24, 25.79e3, -3.31, 244.8, 90.23]
+            - [Infinity, 0, 0, 0, 0, 14.4444599512e3, 0, 0, 0, 28.744475303e3, 0, 0, 0]
+          - RAODirection: 180
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase:
+            - [0, 0, 0, 0, 0, 0, -360, 0, 0, 0, 0, 0, 0]
+            - [5, 596.2, -264.58, 0, 0, 608.4, -402, 0, 0, 11.22e3, -242.14, 0, 0]
+            - [6, 998.8, -126.86000000000001, 0, 0, 666.7, -236.74000000000007, 0, 0, 34.1e3, -108.62, 0, 0]
+            - [7, 640.4, -64.75, 0, 0, 1093, -195.59999999999997, 0, 0, 31.8e3, 33.5, 0, 0]
+            - [8, 755.1, 28.75, 0, 0, 611.6, -89.92, 0, 0, 95.94e3, 61.48, 0, 0]
+            - [9, 1209, 58.29, 0, 0, 2282, -35.7, 0, 0, 134.8e3, 70.75, 0, 0]
+            - [10, 1449, 71.05, 0, 0, 4085, -25.48, 0, 0, 153.6e3, 76.3, 0, 0]
+            - [12, 1535, 82.48, 0, 0, 6764, -16.14, 0, 0, 158.6e3, 80.94, 0, 0]
+            - [15, 1289, 87.56, 0, 0, 9198, -8.69, 0, 0, 134.8e3, 80.44, 0, 0]
+            - [20, 841.8, 89.49, 0, 0, 11.36e3, -3.45, 0, 0, 92.44e3, 74.44, 0, 0]
+            - [Infinity, 0, 0, 0, 0, 14.4444599512e3, 0, 0, 0, 28.744475303e3, 0, 0, 0]
+        WaveDriftQTFMethod: "Newman's approximation"
+        WaveDrift:
+          RAOOrigin: [2.53, 0, -1.974]
+          RAOs:
+          - RAODirection: 0
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSwayAmp, RAOHeaveAmp, RAORollAmp, RAOPitchAmp, RAOYawAmp:
+            - [0, 0, 0, 0, 0, 0, 0]
+            - [5, 24.25, 0, 31.11, 0, 3129, 0]
+            - [6, 53.74, 0, 100.3, 0, 7173, 0]
+            - [7, 27.94, 0, 41.35, 0, 5188, 0]
+            - [8, 15.9, 0, 111.5, 0, 5560, 0]
+            - [9, 2.557, 0, 129, 0, 3911, 0]
+            - [10, -0.2712, 0, 130.7, 0, 2416, 0]
+            - [12, -0.187, 0, 123.8, 0, 924.2, 0]
+            - [14, -0.0484, 0, 108.9, 0, 427, 0]
+            - [18, -735.6e-6, 0, 77.95, 0, 173.2, 0]
+            - [22, 0.002607, 0, 55.91, 0, 108.2, 0]
+            - [Infinity, 0, 0, 0, 0, 0, 0]
+          - RAODirection: 90
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSwayAmp, RAOHeaveAmp, RAORollAmp, RAOPitchAmp, RAOYawAmp:
+            - [0, 0, 0, 0, 0, 0, 0]
+            - [5, -7.023, 414.9, 99.97, -2867, 3071, -2144]
+            - [6, -38.14, 452.9, 166.4, -3946, 6788, -735.7]
+            - [7, -13.15, 250, 470.4, -2940, 1842, 1496]
+            - [8, -1.342, 87.87, 593.8, -1605, 1867, 233.2]
+            - [9, -0.03935, 45.84, 466.1, -920, 1582, 62.21]
+            - [10, 0.1855, 8.913, 270.8, -185.9, 675.5, 9.473]
+            - [12, 0.1887, 1.037, 177.6, -25.65, 379.2, 0.7398]
+            - [14, 0.1497, 0.2453, 133.9, -7.498, 277.3, 0.09609]
+            - [18, 0.09532, 0.03071, 84.27, -1.436, 171.4, -0.01993]
+            - [22, 0.06532, 0.006379, 57.75, -0.4451, 116.7, -0.01811]
+            - [Infinity, 0, 0, 0, 0, 0, 0]
+          - RAODirection: 180
+            RAOPeriodOrFrequency, RAOSurgeAmp, RAOSwayAmp, RAOHeaveAmp, RAORollAmp, RAOPitchAmp, RAOYawAmp:
+            - [0, 0, 0, 0, 0, 0, 0]
+            - [5, -24.97, 0, -39.45, 0, 636.3, 0]
+            - [6, -44.06, 0, -54.38, 0, 635.5, 0]
+            - [7, -40.57, 0, -26.9, 0, 1285, 0]
+            - [8, -20.18, 0, 57.28, 0, 3544, 0]
+            - [9, -5.259, 0, 110.2, 0, 3304, 0]
+            - [10, -1.232, 0, 126.4, 0, 2309, 0]
+            - [12, -0.2043, 0, 123.6, 0, 939.9, 0]
+            - [14, -0.05313, 0, 108.9, 0, 432.9, 0]
+            - [18, -953e-6, 0, 77.94, 0, 173.6, 0]
+            - [22, 0.002597, 0, 55.91, 0, 108.2, 0]
+            - [Infinity, 0, 0, 0, 0, 0, 0]
+      # Stiffness, added mass and damping
+      AMDMethod: Frequency dependent
+      ReferenceOrigin: [2.53, 0, -1.974]
+      ReferenceOriginDatumPosition: [-1.974, 0, 0]
+      HydrostaticStiffnessMethod: Displacement
+      HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
+      - [14.4444599512e3, 0, 28.744475303e3]
+      - [0, 162.279838639e3, 0]
+      - [28.744475303e3, 0, 10.1141462156e6]
+      AMDCutoffTolerance: 2
+      FrequencyDependentAddedMassAndDamping:
+      - AMDPeriodOrFrequency: 5
+        AddedMassMatrixX, AddedMassMatrixY, AddedMassMatrixZ, AddedMassMatrixRx, AddedMassMatrixRy, AddedMassMatrixRz:
+        - [205.1, 0, 128.45, 0, 10.65e3, 0]
+        - [0, 1932, 0, -729.1, 0, -6856]
+        - [128.45, 0, 8006, 0, -1651, 0]
+        - [0, -729.1, 0, 50.69e3, 0, 38.53e3]
+        - [10.65e3, 0, -1651, 0, 3.928e6, 0]
+        - [0, -6856, 0, 38.53e3, 0, 2.245e6]
+        DampingX, DampingY, DampingZ, DampingRx, DampingRy, DampingRz:
+        - [392.6, 0, 109.1, 0, 20.89e3, 0]
+        - [0, 7671, 0, -5433, 0, 4357.5]
+        - [109.1, 0, 1952, 0, 19.365e3, 0]
+        - [0, -5433, 0, 6088, 0, 56.84e3]
+        - [20.89e3, 0, 19.365e3, 0, 1.722e6, 0]
+        - [0, 4357.5, 0, 56.84e3, 0, 4.963e6]
+      - AMDPeriodOrFrequency: 7
+        AddedMassMatrixX, AddedMassMatrixY, AddedMassMatrixZ, AddedMassMatrixRx, AddedMassMatrixRy, AddedMassMatrixRz:
+        - [380.4, 0, 163.9, 0, 16.425e3, 0]
+        - [0, 6708, 0, -4119, 0, -2836.5]
+        - [163.9, 0, 7575, 0, 4354.5, 0]
+        - [0, -4119, 0, 53.72e3, 0, 68.41e3]
+        - [16.425e3, 0, 4354.5, 0, 4.425e6, 0]
+        - [0, -2836.5, 0, 68.41e3, 0, 5.945e6]
+        DampingX, DampingY, DampingZ, DampingRx, DampingRy, DampingRz:
+        - [278.4, 0, 65.47, 0, 23.39e3, 0]
+        - [0, 7892, 0, -6771, 0, 4363.5]
+        - [65.47, 0, 3773, 0, 16.85e3, 0]
+        - [0, -6771, 0, 6453, 0, 36.38e3]
+        - [23.39e3, 0, 16.85e3, 0, 2.705e6, 0]
+        - [0, 4363.5, 0, 36.38e3, 0, 4.331e6]
+      - AMDPeriodOrFrequency: 9
+        AddedMassMatrixX, AddedMassMatrixY, AddedMassMatrixZ, AddedMassMatrixRx, AddedMassMatrixRy, AddedMassMatrixRz:
+        - [495.9, 0, 207.3, 0, 34.055e3, 0]
+        - [0, 11.78e3, 0, -9235, 0, -546.2]
+        - [207.3, 0, 8758, 0, 8543.5, 0]
+        - [0, -9235, 0, 58.35e3, 0, 78.54e3]
+        - [34.055e3, 0, 8543.5, 0, 6.591e6, 0]
+        - [0, -546.2, 0, 78.54e3, 0, 7.365e6]
+        DampingX, DampingY, DampingZ, DampingRx, DampingRy, DampingRz:
+        - [237.7, 0, 66.09, 0, 23.905e3, 0]
+        - [0, 4377, 0, -4515.5, 0, 1027.2]
+        - [66.09, 0, 5118, 0, 15.435e3, 0]
+        - [0, -4515.5, 0, 4742, 0, 7762.5]
+        - [23.905e3, 0, 15.435e3, 0, 2.51e6, 0]
+        - [0, 1027.2, 0, 7762.5, 0, 907.5e3]
+      - AMDPeriodOrFrequency: 12
+        AddedMassMatrixX, AddedMassMatrixY, AddedMassMatrixZ, AddedMassMatrixRx, AddedMassMatrixRy, AddedMassMatrixRz:
+        - [636.8, 0, 237.05, 0, 50.52e3, 0]
+        - [0, 11.56e3, 0, -9877.5, 0, -2238.5]
+        - [237.05, 0, 12.86e3, 0, 18.2e3, 0]
+        - [0, -9877.5, 0, 59.54e3, 0, 65.915e3]
+        - [50.52e3, 0, 18.2e3, 0, 8.208e6, 0]
+        - [0, -2238.5, 0, 65.915e3, 0, 5.958e6]
+        DampingX, DampingY, DampingZ, DampingRx, DampingRy, DampingRz:
+        - [102.5, 0, 12.585, 0, 10.5e3, 0]
+        - [0, 830.8, 0, -973.2, 0, -40.6115]
+        - [12.585, 0, 4847, 0, 12.16e3, 0]
+        - [0, -973.2, 0, 1143, 0, 544.3]
+        - [10.5e3, 0, 12.16e3, 0, 1.105e6, 0]
+        - [0, -40.6115, 0, 544.3, 0, 52.04e3]
+      - AMDPeriodOrFrequency: 16
+        AddedMassMatrixX, AddedMassMatrixY, AddedMassMatrixZ, AddedMassMatrixRx, AddedMassMatrixRy, AddedMassMatrixRz:
+        - [612.8, 0, 207.5, 0, 49.2e3, 0]
+        - [0, 10.01e3, 0, -8465, 0, -2862.5]
+        - [207.5, 0, 16.75e3, 0, 25.725e3, 0]
+        - [0, -8465, 0, 58.14e3, 0, 60.74e3]
+        - [49.2e3, 0, 25.725e3, 0, 8.108e6, 0]
+        - [0, -2862.5, 0, 60.74e3, 0, 5.386e6]
+        DampingX, DampingY, DampingZ, DampingRx, DampingRy, DampingRz:
+        - [23.35, 0, -2.6469, 0, 2450.5, 0]
+        - [0, 115.1, 0, -144.25, 0, -17.49]
+        - [-2.6469, 0, 3335, 0, 7473.5, 0]
+        - [0, -144.25, 0, 180.7, 0, 44.635]
+        - [2450.5, 0, 7473.5, 0, 275.4e3, 0]
+        - [0, -17.49, 0, 44.635, 0, 2464]
+      - AMDPeriodOrFrequency: 22
+        AddedMassMatrixX, AddedMassMatrixY, AddedMassMatrixZ, AddedMassMatrixRx, AddedMassMatrixRy, AddedMassMatrixRz:
+        - [556.6, 0, 187.65, 0, 43.95e3, 0]
+        - [0, 9167, 0, -7628.5, 0, -3061]
+        - [187.65, 0, 19.42e3, 0, 30.06e3, 0]
+        - [0, -7628.5, 0, 57.24e3, 0, 58.435e3]
+        - [43.95e3, 0, 30.06e3, 0, 7.591e6, 0]
+        - [0, -3061, 0, 58.435e3, 0, 5.146e6]
+        DampingX, DampingY, DampingZ, DampingRx, DampingRy, DampingRz:
+        - [3.125, 0, -2.166, 0, 332.5, 0]
+        - [0, 12.34, 0, -16.07, 0, -2.443]
+        - [-2.166, 0, 1755, 0, 3685, 0]
+        - [0, -16.07, 0, 20.91, 0, 3.872]
+        - [332.5, 0, 3685, 0, 44.12e3, 0]
+        - [0, -2.443, 0, 3.872, 0, 78.41]
+      # Other damping
+      OtherDampingOrigin: [2.53, 0, -1.974]
+      OtherDampingFrameOfReference: "Primary low frequency heading"
+      OtherDampingCalculatedFrom: "Wave frequency motion"
+      OtherLinearDamping: [0, 0, 0, 36.01e3, 0, 0]
+      OtherQuadraticDamping: [0, 0, 0, 0, 0, 0]
+      # Current load
+      CurrentAreasAndAreaMoment: [686, 686, 0, 0, 0, 70.656e3]
+      CurrentDragOrigin: [2.53, 0, -1.974]
+      CurrentCoeffDirection, CurrentCoeffSurge, CurrentCoeffSway, CurrentCoeffHeave, CurrentCoeffRoll, CurrentCoeffPitch, CurrentCoeffYaw:
+      - [0, 0.04, 0, 0, 0, 0, 0]
+      - [30, 0.025, 0.25, 0, 0, 0, -0.06]
+      - [60, -0.01, 0.5, 0, 0, 0, -0.06]
+      - [90, 0, 0.6, 0, 0, 0, 0]
+      - [120, 0.01, 0.5, 0, 0, 0, 0.06]
+      - [150, -0.025, 0.25, 0, 0, 0, 0.06]
+      - [180, -0.04, 0, 0, 0, 0, 0]
+      CurrentYawRateDrag: [0, 0, 23e6]
+      # Wind load
+      WindAreasAndAreaMoment: [191, 927, 0, 0, 0, 95.5e3]
+      WindDragOrigin: [0, 0, 4.5]
+      WindCoeffDirection, WindCoeffSurge, WindCoeffSway, WindCoeffHeave, WindCoeffRoll, WindCoeffPitch, WindCoeffYaw:
+      - [0, 0.8, 0, 0, 0, 0, 0]
+      - [30, 0.6, 0.4, 0, 0, 0, -0.08]
+      - [60, 0.3, 0.7, 0, 0, 0, -0.06]
+      - [90, 0, 0.9, 0, 0, 0, 0]
+      - [120, -0.3, 0.7, 0, 0, 0, 0.06]
+      - [150, -0.6, 0.4, 0, 0, 0, 0.08]
+      - [180, -0.8, 0, 0, 0, 0, 0]
+
+  line_types:
+  - name: "2.5\" Chain"                       # Mooring chain
+    category: General
+    outer_diameter: 0.120015
+    inner_diameter: 0
+    mass_per_length: 0.088306275
+    bending_stiffness: [0, null]
+    axial_stiffness: 407.25725e3
+    properties:
+      CompressionIsLimited: true
+      PoissonRatio: 0.5
+      OuterContactDiameter: 0.2286
+      Ca: [1, null, 0.07]
+      Cd: [1, null, 0.4]
+      NormalDragLiftDiameter: 0.14351
+      AxialDragLiftDiameter: 0.012127606663602426
+      SeabedLateralFrictionCoefficient: 0.5
+      RayleighDampingCoefficients: "(no damping)"
+
+  - name: Hose                                # Product loading hose
+    category: General
+    outer_diameter: 0.64
+    inner_diameter: 0.5
+    mass_per_length: 0.1821
+    bending_stiffness: [75, null]
+    axial_stiffness: 17e3
+    properties:
+      CompressionIsLimited: false
+      MinRadius: [1.9499999284744263, null]
+      PoissonRatio: 0.5
+      Ca: [1, null, 0]
+      Cd: ["Generic Drag", null, 0.008]
+      SeabedLateralFrictionCoefficient: 0.5
+      RayleighDampingCoefficients: "(no damping)"
+
+  - name: HawserLine                          # Tow/mooring hawser
+    category: General
+    outer_diameter: 0.0765
+    inner_diameter: 0
+    mass_per_length: 0.005245559999999999
+    bending_stiffness: [0, null]
+    axial_stiffness: 955.8
+    properties:
+      CompressionIsLimited: true
+      PoissonRatio: 0.5
+      Ca: [1, null, 0.009999999999999998]
+      Cd: ["Generic Drag", null, 0.008]
+      SeabedLateralFrictionCoefficient: 0.5
+      RayleighDampingCoefficients: "(no damping)"
+
+  vessels:
+  - name: Vessel                              # Supply vessel
+    vessel_type: Vessel Type1
+    connection: Free
+    initial_position: [-89.849, 127.010, 0]
+    properties:
+      Draught: Draught1
+      InitialHeading: -54.422                  # Yaw rotation (deg)
+      IncludedInStatics: None
+      PrimaryMotion: "Calculated (6 DOF)"
+      SuperimposedMotion: None
+      IncludeAppliedLoads: false
+      IncludeWaveLoad1stOrder: true
+      IncludeWaveDriftLoad2ndOrder: true
+      IncludeWaveDriftDamping: true
+      IncludeSumFrequencyLoad: false
+      IncludeAddedMassAndDamping: true
+      IncludeManoeuvringLoad: false
+      IncludeOtherDamping: false
+      IncludeCurrentLoad: true
+      IncludeWindLoad: true
+      PrimaryMotionIsTreatedAs: "Both low and wave frequency"
+      PrimaryMotionDividingPeriod: 80
+      CalculationMode: Filtering
+      CalculateHydrostaticStiffnessAnglesBy: Orientation
+
+  buoys_6d:
+  - name: CALM Top                            # Swivel top (connects to constraint)
+    buoy_type: Spar buoy
+    connection: Rotation
+    initial_position: [0, 0, 0.045]
+    mass: 0
+    properties:
+      DampingRelativeTo: Earth
+      MomentsOfInertia: [0, 0, 0]
+      CentreOfMass: [0, 0, 0]
+      StackBaseCentre: [0, 0, 0]
+      BulkModulus: Infinity
+      NormalDragAreaCalculatedFromGeometry: true
+      StackedBuoyAddedMassAndDampingMethod: "Values for each cylinder"
+      Cylinders:
+      - CylinderOuterDiameter: 2.6
+        CylinderInnerDiameter: 0
+        CylinderLength: 1.5
+        CylinderAxialDragArea: 0
+        DragForceCoefficient: [0.7, 1.13]
+        AddedMassForceCoefficient: [0, 0]
+      - CylinderOuterDiameter: 0.5
+        CylinderInnerDiameter: 0
+        CylinderLength: 7.5
+        CylinderAxialDragArea: 0
+        DragForceCoefficient: [0.7, 1.13]
+        AddedMassForceCoefficient: [0, 0]
+      - CylinderOuterDiameter: 11
+        CylinderInnerDiameter: 0
+        CylinderLength: 1
+        CylinderAxialDragArea: 0
+        DragForceCoefficient: [0.7, 1.13]
+        AddedMassForceCoefficient: [0.5, 0.92]
+      SeabedFrictionCoefficient: 0
+
+  - name: Main                                # Central buoy body (250 te)
+    buoy_type: Spar buoy
+    connection: Free
+    initial_position: [-6.867, 5.581, -0.795]
+    mass: 250
+    properties:
+      DampingRelativeTo: Earth
+      MomentsOfInertia: [2411.5, 2411.5, 3781.25]
+      CentreOfMass: [0, 0, 0]
+      StackBaseCentre: [0, 0, -2.25]
+      BulkModulus: Infinity
+      NormalDragAreaCalculatedFromGeometry: false
+      StackedBuoyAddedMassAndDampingMethod: "Values for each cylinder"
+      Cylinders:
+      - CylinderOuterDiameter: 4.16            # Lower hull cylinder 1
+        CylinderInnerDiameter: 0
+        CylinderLength: 1
+        DragArea: [0, 0]
+        DragForceCoefficient: [0.7, 1.13]
+        AddedMassForceCoefficient: [0.5, 0.92]
+      - CylinderOuterDiameter: 4.16            # Lower hull cylinder 2
+        CylinderInnerDiameter: 0
+        CylinderLength: 1
+        DragArea: [0, 0]
+        DragForceCoefficient: [0.7, 1.13]
+        AddedMassForceCoefficient: [0.5, 0.92]
+      - CylinderOuterDiameter: 4.16            # Lower hull cylinder 3
+        CylinderInnerDiameter: 0
+        CylinderLength: 1
+        DragArea: [0, 0]
+        DragForceCoefficient: [0.7, 1.13]
+        AddedMassForceCoefficient: [0.5, 0.92]
+      - CylinderOuterDiameter: 5.4             # Skirt ring (damping)
+        CylinderInnerDiameter: 0
+        CylinderLength: 0.2
+        DragArea: [0, 9.37]
+        DragForceCoefficient: [0.7, 1.13]
+        AddedMassForceCoefficient: [0.5, 0.92]
+        UnitDampingForce: [200, 200]
+        UnitDampingMoment: [3000, 4000]
+      - CylinderOuterDiameter: 4.16            # Upper hull
+        CylinderInnerDiameter: 0
+        CylinderLength: 0.8
+        DragArea: [0, 13.58]
+        DragForceCoefficient: [0.7, 1.13]
+        AddedMassForceCoefficient: [0.5, 0.92]
+      SeabedFrictionCoefficient: 0
+
+  - name: Radial1                             # Mooring attachment disc at 0 deg
+    buoy_type: Spar buoy
+    connection: Main
+    initial_position: [3.889, 0, 0]
+    mass: 0
+    properties:
+      DampingRelativeTo: Earth
+      MomentsOfInertia: [0, 0, 0]
+      CentreOfMass: [0, 0, 0]
+      StackBaseCentre: [0, 0, -2.25]
+      BulkModulus: Infinity
+      NormalDragAreaCalculatedFromGeometry: false
+      StackedBuoyAddedMassAndDampingMethod: "Values for each cylinder"
+      Cylinders:
+      - CylinderOuterDiameter: 4.16
+        CylinderInnerDiameter: 0
+        CylinderLength: 1
+        DragArea: [1.83, 0]
+        DragForceCoefficient: [0.7, 1.13]
+        AddedMassForceCoefficient: [0.5, 0.92]
+      - CylinderOuterDiameter: 4.16
+        CylinderInnerDiameter: 0
+        CylinderLength: 1
+        DragArea: [1.83, 0]
+        DragForceCoefficient: [0.7, 1.13]
+        AddedMassForceCoefficient: [0.5, 0.92]
+      - CylinderOuterDiameter: 4.16
+        CylinderInnerDiameter: 0
+        CylinderLength: 1
+        DragArea: [1.83, 0]
+        DragForceCoefficient: [0.7, 1.13]
+        AddedMassForceCoefficient: [0.5, 0.92]
+      - CylinderOuterDiameter: 5.4
+        CylinderInnerDiameter: 0
+        CylinderLength: 0.2
+        DragArea: [0.48, 9.37]
+        DragForceCoefficient: [0.7, 1.13]
+        AddedMassForceCoefficient: [0.5, 0.92]
+      - CylinderOuterDiameter: 4.16
+        CylinderInnerDiameter: 0
+        CylinderLength: 0.8
+        DragArea: [1.47, 13.58]
+        DragForceCoefficient: [0.7, 1.13]
+        AddedMassForceCoefficient: [0.5, 0.92]
+      SeabedFrictionCoefficient: 0
+
+  - name: Radial2                             # Mooring attachment disc at 60 deg
+    buoy_type: Spar buoy
+    connection: Main
+    initial_position: [1.945, 3.37, 0]
+    mass: 0
+    properties:
+      DampingRelativeTo: Earth
+      MomentsOfInertia: [0, 0, 0]
+      CentreOfMass: [0, 0, 0]
+      StackBaseCentre: [0, 0, -2.25]
+      BulkModulus: Infinity
+      NormalDragAreaCalculatedFromGeometry: false
+      StackedBuoyAddedMassAndDampingMethod: "Values for each cylinder"
+      Cylinders:
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 5.4, CylinderInnerDiameter: 0, CylinderLength: 0.2, DragArea: [0.48, 9.37], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 0.8, DragArea: [1.47, 13.58], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      SeabedFrictionCoefficient: 0
+
+  - name: Radial3                             # Mooring attachment disc at 120 deg
+    buoy_type: Spar buoy
+    connection: Main
+    initial_position: [-1.945, 3.37, 0]
+    mass: 0
+    properties:
+      DampingRelativeTo: Earth
+      MomentsOfInertia: [0, 0, 0]
+      CentreOfMass: [0, 0, 0]
+      StackBaseCentre: [0, 0, -2.25]
+      BulkModulus: Infinity
+      NormalDragAreaCalculatedFromGeometry: false
+      StackedBuoyAddedMassAndDampingMethod: "Values for each cylinder"
+      Cylinders:
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 5.4, CylinderInnerDiameter: 0, CylinderLength: 0.2, DragArea: [0.48, 9.37], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 0.8, DragArea: [1.47, 13.58], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      SeabedFrictionCoefficient: 0
+
+  - name: Radial4                             # Mooring attachment disc at 180 deg
+    buoy_type: Spar buoy
+    connection: Main
+    initial_position: [-3.889, 0, 0]
+    mass: 0
+    properties:
+      DampingRelativeTo: Earth
+      MomentsOfInertia: [0, 0, 0]
+      CentreOfMass: [0, 0, 0]
+      StackBaseCentre: [0, 0, -2.25]
+      BulkModulus: Infinity
+      NormalDragAreaCalculatedFromGeometry: false
+      StackedBuoyAddedMassAndDampingMethod: "Values for each cylinder"
+      Cylinders:
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 5.4, CylinderInnerDiameter: 0, CylinderLength: 0.2, DragArea: [0.48, 9.37], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 0.8, DragArea: [1.47, 13.58], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      SeabedFrictionCoefficient: 0
+
+  - name: Radial5                             # Mooring attachment disc at 240 deg
+    buoy_type: Spar buoy
+    connection: Main
+    initial_position: [-1.945, -3.37, 0]
+    mass: 0
+    properties:
+      DampingRelativeTo: Earth
+      MomentsOfInertia: [0, 0, 0]
+      CentreOfMass: [0, 0, 0]
+      StackBaseCentre: [0, 0, -2.25]
+      BulkModulus: Infinity
+      NormalDragAreaCalculatedFromGeometry: false
+      StackedBuoyAddedMassAndDampingMethod: "Values for each cylinder"
+      Cylinders:
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 5.4, CylinderInnerDiameter: 0, CylinderLength: 0.2, DragArea: [0.48, 9.37], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 0.8, DragArea: [1.47, 13.58], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      SeabedFrictionCoefficient: 0
+
+  - name: Radial6                             # Mooring attachment disc at 300 deg
+    buoy_type: Spar buoy
+    connection: Main
+    initial_position: [1.945, -3.37, 0]
+    mass: 0
+    properties:
+      DampingRelativeTo: Earth
+      MomentsOfInertia: [0, 0, 0]
+      CentreOfMass: [0, 0, 0]
+      StackBaseCentre: [0, 0, -2.25]
+      BulkModulus: Infinity
+      NormalDragAreaCalculatedFromGeometry: false
+      StackedBuoyAddedMassAndDampingMethod: "Values for each cylinder"
+      Cylinders:
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 1, DragArea: [1.83, 0], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 5.4, CylinderInnerDiameter: 0, CylinderLength: 0.2, DragArea: [0.48, 9.37], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      - {CylinderOuterDiameter: 4.16, CylinderInnerDiameter: 0, CylinderLength: 0.8, DragArea: [1.47, 13.58], DragForceCoefficient: [0.7, 1.13], AddedMassForceCoefficient: [0.5, 0.92]}
+      SeabedFrictionCoefficient: 0
+
+  lines:
+  - name: Mooring1                            # Mooring leg 1 at 0 deg (345m chain)
+    properties:
+      IncludeTorsion: false
+      TopEnd: End A
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - [Main, 6, 0, -1.5, 0, 180, 0, null]
+        - [Anchored, 299.133, 5.581, 0.1143, 0, 90, 0, null]
+      LineType, Length, TargetSegmentLength:
+      - ["2.5\" Chain", 150, 10]
+      - ["2.5\" Chain", 195, 15]
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: None
+      StaticsSeabedFrictionPolicy: "As laid"
+      LayAzimuth: 180
+
+  - name: Mooring2                            # Mooring leg 2 at 60 deg
+    properties:
+      IncludeTorsion: false
+      TopEnd: End A
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - [Main, 3.0, 5.196, -1.5, 60, 180, 0, null]
+        - [Anchored, 146.133, 270.588, 0.1143, 60, 90, 0, null]
+      LineType, Length, TargetSegmentLength:
+      - ["2.5\" Chain", 150, 10]
+      - ["2.5\" Chain", 195, 15]
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: None
+      StaticsSeabedFrictionPolicy: "As laid"
+      LayAzimuth: 240
+
+  - name: Mooring3                            # Mooring leg 3 at 120 deg
+    properties:
+      IncludeTorsion: false
+      TopEnd: End A
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - [Main, -3.0, 5.196, -1.5, 120, 180, 0, null]
+        - [Anchored, -159.867, 270.588, 0.1143, 120, 90, 0, null]
+      LineType, Length, TargetSegmentLength:
+      - ["2.5\" Chain", 150, 10]
+      - ["2.5\" Chain", 195, 15]
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: None
+      StaticsSeabedFrictionPolicy: "As laid"
+      LayAzimuth: 300
+
+  - name: Mooring4                            # Mooring leg 4 at 240 deg
+    properties:
+      IncludeTorsion: false
+      TopEnd: End A
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - [Main, -3.0, -5.196, -1.5, 240, 180, 0, null]
+        - [Anchored, -159.867, -259.427, 0.1143, 240, 90, 0, null]
+      LineType, Length, TargetSegmentLength:
+      - ["2.5\" Chain", 150, 10]
+      - ["2.5\" Chain", 195, 15]
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: None
+      StaticsSeabedFrictionPolicy: "As laid"
+      LayAzimuth: 60
+
+  - name: Mooring5                            # Mooring leg 5 at 300 deg
+    properties:
+      IncludeTorsion: false
+      TopEnd: End A
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - [Main, 3.0, -5.196, -1.5, 300, 180, 0, null]
+        - [Anchored, 146.133, -259.427, 0.1143, 300, 90, 0, null]
+      LineType, Length, TargetSegmentLength:
+      - ["2.5\" Chain", 150, 10]
+      - ["2.5\" Chain", 195, 15]
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: None
+      StaticsSeabedFrictionPolicy: "As laid"
+      LayAzimuth: 120
+
+  - name: Mooring6                            # Mooring leg 6 at 180 deg
+    properties:
+      IncludeTorsion: false
+      TopEnd: End A
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - [Main, -6.0, 0, -1.5, 180, 180, 0, null]
+        - [Anchored, -312.867, 5.581, 0.1143, 180, 90, 0, null]
+      LineType, Length, TargetSegmentLength:
+      - ["2.5\" Chain", 150, 10]
+      - ["2.5\" Chain", 195, 15]
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: None
+      StaticsSeabedFrictionPolicy: "As laid"
+      LayAzimuth: 0
+
+  - name: Loadhose                            # Product loading hose (120m)
+    properties:
+      IncludeTorsion: false
+      TopEnd: End A
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - [Vessel, 45, 5, 7, 30, 165, 0, null]
+        - [CALM Top, -3.201, 4.321, 0.5, 315, 30, 0, null]
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [Infinity, null]
+      - [Infinity, null]
+      LineType, Length, TargetSegmentLength:
+      - [Hose, 40, 0.5]
+      - [Hose, 60, 2]
+      - [Hose, 20, 0.5]
+      ContentsMethod: Uniform
+      ContentsDensity: 1                      # Filled with product (te/m3)
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: None
+      StaticsSeabedFrictionPolicy: None
+
+  - name: Hawser                              # Towing/mooring hawser (90m)
+    properties:
+      IncludeTorsion: false
+      TopEnd: End A
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - [CALM Top, -4.508, 3.121, 1.193, 125, 90, 0, null]
+        - [Vessel, 50, 0, 7, 180, 90, 0, null]
+      LineType, Length, TargetSegmentLength:
+      - [HawserLine, 90, 5]
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: "Full statics"
+      StaticsSeabedFrictionPolicy: None
+
+  constraints:
+  - name: Rotation                            # Yaw-only swivel between Top and Main
+    properties:
+      InFrameConnection: Main
+      InFrameInitialPosition: [0, 0, 1.75]
+      InFrameInitialAttitude: [0, 0, 0]
+      ConstraintType: "Calculated DOFs"
+      SolutionMethod: Direct
+      CalculatedModelType: Cartesian
+      DOFFree, DOFInitialValue:               # Only yaw (DOF 6) is free
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [false]
+      - [true, 0]
+      StiffnessAndDampingMethod: Coefficients
+      TranslationalStiffness: 0
+      RotationalStiffness: 0
+      TranslationalDamping: 0
+      RotationalDamping: 0
+      Hidden: true
+
+  variable_data_sources:
+  - name: Generic Drag                        # Reynolds-dependent drag curve
+    data_type: Dragcoefficient
+    properties:
+      IndependentValue, DependentValue:
+      - [10e3, 1.2]
+      - [50e3, 1.2]
+      - [240e3, 1.2]
+      - [255e3, 1.19]
+      - [300e3, 1.16]
+      - [340e3, 1.05]
+      - [380e3, 0.8]
+      - [425e3, 0.42]
+      - [510e3, 0.4]
+      - [600e3, 0.42]
+      - [675e3, 0.48]
+      - [850e3, 0.57]
+      - [1.3e6, 0.68]
+      - [1.7e6, 0.7]
+      - [8.5e6, 0.7]
+      - [25e6, 0.7]
+
+  groups:
+    data:
+      Structure:
+        Vessel: Model
+        Loadhose: Model
+        Hawser: Model
+        CALM Buoy: Model
+        CALM Top: CALM Buoy
+        Rotation: CALM Buoy
+        CALM Base: CALM Buoy
+        Main: CALM Base
+        Radial1: CALM Base
+        Radial2: CALM Base
+        Radial3: CALM Base
+        Radial4: CALM Base
+        Radial5: CALM Base
+        Radial6: CALM Base
+        Moorings: Model
+        Mooring1: Moorings
+        Mooring2: Moorings
+        Mooring3: Moorings
+        Mooring4: Moorings
+        Mooring5: Moorings
+        Mooring6: Moorings
+      State:
+        Collapsed:
+        - Variable data
+
+  general_properties:
+    UnitsSystem: SI
+    JacobianBufferingPolicy: 1
+    BuoysIncludedInStatics: All
+    LineStaticsStep1Policy: "All lines included"
+    LineStaticsStep2Policy: "Solve coupled systems"
+    WholeSystemStaticsEnabled: true
+    StaticsMinDamping: 1.5
+    StaticsMaxDamping: 15
+    DynamicsSolutionMethod: "Implicit time domain"
+    ImplicitUseVariableTimeStep: false
+    LogPrecision: Single
+    TargetLogSampleInterval: 0.1
