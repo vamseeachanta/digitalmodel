@@ -19,6 +19,7 @@ Status: Benchmark orchestration
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -27,6 +28,7 @@ from typing import Any, Dict, List, Optional
 
 import click
 import numpy as np
+import yaml
 from pydantic import BaseModel
 
 from digitalmodel.hydrodynamics.diffraction.benchmark_plotter import (
@@ -93,6 +95,7 @@ class BenchmarkRunResult:
     report: Optional[BenchmarkReport] = None
     plot_paths: list[Path] = field(default_factory=list)
     report_json_path: Optional[Path] = None
+    hydro_data_yaml_path: Optional[Path] = None
     report_html_path: Optional[Path] = None
     error_message: Optional[str] = None
     success: bool = False
@@ -152,6 +155,11 @@ class BenchmarkRunner:
 
             # 3. Generate JSON report file
             result.report_json_path = self._generate_json_report(report)
+
+            # 3b. Generate hydro data YAML
+            result.hydro_data_yaml_path = self._generate_hydro_data_yaml(
+                solver_results, report,
+            )
 
             # 4. Generate HTML report file
             result.report_html_path = self._generate_html_report(
@@ -232,6 +240,161 @@ class BenchmarkRunner:
             json.dump(data, fh, indent=2, default=_json_default)
 
         return json_path
+
+    def _generate_hydro_data_yaml(
+        self,
+        solver_results: Dict[str, DiffractionResults],
+        report: BenchmarkReport,
+    ) -> Path:
+        """Serialize raw hydrodynamic data to a human/agent-readable YAML.
+
+        Exports per-solver RAO arrays (magnitude + phase), added mass and
+        radiation damping 6x6 matrices at every frequency, plus the
+        comparison correlation metrics.  This is the canonical structured
+        data file for each benchmark case.
+        """
+        output_dir = Path(self.config.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        yaml_path = output_dir / "hydro_data.yml"
+
+        dof_names = ["surge", "sway", "heave", "roll", "pitch", "yaw"]
+
+        # -- helpers ---------------------------------------------------------
+        def _safe_float(v: float) -> object:
+            """Convert numpy/inf to YAML-safe value."""
+            if isinstance(v, (np.floating, np.integer)):
+                v = float(v)
+            if math.isinf(v):
+                return -1.0  # convention: -1 = infinite
+            if math.isnan(v):
+                return None
+            return round(v, 8)
+
+        def _round_list(arr: np.ndarray, decimals: int = 6) -> list:
+            """Convert ndarray to rounded nested list."""
+            if arr.ndim == 1:
+                return [round(float(x), decimals) for x in arr]
+            return [_round_list(row, decimals) for row in arr]
+
+        # -- build grid section ----------------------------------------------
+        first_result = next(iter(solver_results.values()))
+        freq_data = first_result.raos.surge.frequencies
+        head_data = first_result.raos.surge.headings
+
+        grid: Dict[str, Any] = {
+            "frequencies_rad_s": _round_list(freq_data.values, 6),
+            "periods_s": _round_list(freq_data.periods, 6),
+            "headings_deg": _round_list(head_data.values, 2),
+        }
+
+        # -- build per-solver section ----------------------------------------
+        solvers_data: Dict[str, Any] = {}
+        for solver_name, dr in solver_results.items():
+            raos_dict: Dict[str, Any] = {}
+            for dof_name in dof_names:
+                comp = getattr(dr.raos, dof_name)
+                raos_dict[dof_name] = {
+                    "unit": comp.unit,
+                    "magnitude": _round_list(comp.magnitude, 6),
+                    "phase_deg": _round_list(comp.phase, 4),
+                }
+
+            # Added mass: list of 6x6 matrices indexed by frequency
+            am_matrices = []
+            for hm in dr.added_mass.matrices:
+                am_matrices.append(_round_list(hm.matrix, 6))
+
+            # Damping: same structure
+            damp_matrices = []
+            for hm in dr.damping.matrices:
+                damp_matrices.append(_round_list(hm.matrix, 6))
+
+            solvers_data[solver_name] = {
+                "vessel_name": dr.vessel_name,
+                "analysis_tool": dr.analysis_tool,
+                "water_depth": _safe_float(dr.water_depth),
+                "phase_convention": dr.phase_convention,
+                "unit_system": dr.unit_system,
+                "raos": raos_dict,
+                "added_mass": am_matrices,
+                "damping": damp_matrices,
+            }
+
+        # -- build comparison section ----------------------------------------
+        comparison: Dict[str, Any] = {
+            "overall_consensus": report.overall_consensus,
+        }
+
+        for pair_key, pr in report.pairwise_results.items():
+            rao_corrs: Dict[str, Any] = {}
+            for dof_name, comp in pr.rao_comparisons.items():
+                rao_corrs[dof_name] = {
+                    "magnitude_r": round(
+                        float(comp.magnitude_stats.correlation), 8,
+                    ),
+                    "phase_r": round(
+                        float(comp.phase_stats.correlation), 8,
+                    ),
+                    "magnitude_rms": round(
+                        float(comp.magnitude_stats.rms_error), 8,
+                    ),
+                    "max_magnitude_diff": round(
+                        float(comp.max_magnitude_diff), 8,
+                    ),
+                    "max_phase_diff_deg": round(
+                        float(comp.max_phase_diff), 4,
+                    ),
+                }
+
+            am_corrs = {
+                f"{k[0]},{k[1]}": round(float(v), 8)
+                for k, v in pr.added_mass_correlations.items()
+            }
+            damp_corrs = {
+                f"{k[0]},{k[1]}": round(float(v), 8)
+                for k, v in pr.damping_correlations.items()
+            }
+
+            comparison[pair_key] = {
+                "overall_agreement": pr.overall_agreement,
+                "rao_correlations": rao_corrs,
+                "added_mass_correlations": am_corrs,
+                "damping_correlations": damp_corrs,
+            }
+
+        consensus_by_dof: Dict[str, Any] = {}
+        for dof_key, cm in report.consensus_by_dof.items():
+            consensus_by_dof[dof_key] = {
+                "level": cm.consensus_level,
+                "mean_correlation": round(
+                    float(cm.mean_pairwise_correlation), 8,
+                ),
+            }
+        comparison["consensus_by_dof"] = consensus_by_dof
+
+        # -- assemble top-level document -------------------------------------
+        doc: Dict[str, Any] = {
+            "metadata": {
+                "vessel_name": report.vessel_name,
+                "generated": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                "solver_names": report.solver_names,
+            },
+            "grid": grid,
+            "solvers": solvers_data,
+            "comparison": comparison,
+        }
+
+        with open(yaml_path, "w", encoding="utf-8") as fh:
+            yaml.dump(
+                doc,
+                fh,
+                default_flow_style=False,
+                sort_keys=False,
+                allow_unicode=True,
+                width=120,
+            )
+
+        return yaml_path
 
     @staticmethod
     def _report_to_dict(report: BenchmarkReport) -> Dict[str, Any]:
@@ -558,6 +721,11 @@ class BenchmarkRunner:
             };">
         {report.overall_consensus}
       </span>
+    </div>
+    <div class="meta" style="margin-top:0.4em;">
+      <strong>Data:</strong>
+      <a href="hydro_data.yml" style="color:#85c1e9;">hydro_data.yml</a> &nbsp;|&nbsp;
+      <a href="benchmark_report.json" style="color:#85c1e9;">benchmark_report.json</a>
     </div>
   </div>
 
