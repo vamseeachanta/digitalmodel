@@ -1,0 +1,202 @@
+{
+  "vessel_name": "cylinder with moonpool",
+  "solver_names": [
+    "OrcaWave (.owd)",
+    "OrcaWave (spec.yml)"
+  ],
+  "comparison_date": "2026-02-14 11:22:44",
+  "overall_consensus": "MAJORITY",
+  "pairwise_results": {
+    "OrcaWave (.owd)-vs-OrcaWave (spec.yml)": {
+      "solver_a": "OrcaWave (.owd)",
+      "solver_b": "OrcaWave (spec.yml)",
+      "overall_agreement": "EXCELLENT",
+      "rao_comparisons": {
+        "surge": {
+          "magnitude_correlation": 0.999999979245386,
+          "magnitude_rms_error": 0.001036476564561273,
+          "phase_correlation": 0.7384406119675311,
+          "max_magnitude_diff": 0.001862157534894271,
+          "max_phase_diff": 315.75701054672754
+        },
+        "sway": {
+          "magnitude_correlation": 0.999999992462512,
+          "magnitude_rms_error": 0.0005710271188377539,
+          "phase_correlation": 0.358746969505041,
+          "max_magnitude_diff": 0.0018621295107710267,
+          "max_phase_diff": 335.04494786196426
+        },
+        "heave": {
+          "magnitude_correlation": 0.9998708181193411,
+          "magnitude_rms_error": 0.038540449786095304,
+          "phase_correlation": 0.9999612776039244,
+          "max_magnitude_diff": 0.07468900934408662,
+          "max_phase_diff": 2.415475921413133
+        },
+        "roll": {
+          "magnitude_correlation": 0.999999993528865,
+          "magnitude_rms_error": 0.03354673188150801,
+          "phase_correlation": 0.22489222361102762,
+          "max_magnitude_diff": 0.07342668861274504,
+          "max_phase_diff": 356.33084676086384
+        },
+        "pitch": {
+          "magnitude_correlation": 0.9999999807542244,
+          "magnitude_rms_error": 0.060890442795157165,
+          "phase_correlation": 0.7404787704818602,
+          "max_magnitude_diff": 0.07342723498643622,
+          "max_phase_diff": 345.49251529007745
+        },
+        "yaw": {
+          "magnitude_correlation": 1.0,
+          "magnitude_rms_error": 4.636338667425611e-10,
+          "phase_correlation": 0.6198774639358762,
+          "max_magnitude_diff": 1.2323527240704188e-09,
+          "max_phase_diff": 355.02017790094516
+        }
+      },
+      "added_mass_correlations": {
+        "1,1": 0.9999999988049152,
+        "1,2": 1.0,
+        "1,3": 1.0,
+        "1,4": 1.0,
+        "1,5": 0.9999999988962673,
+        "1,6": 1.0,
+        "2,1": 1.0,
+        "2,2": 0.9999999988049145,
+        "2,3": 1.0,
+        "2,4": 0.9999999988962675,
+        "2,5": 1.0,
+        "2,6": 1.0,
+        "3,1": 1.0,
+        "3,2": 1.0,
+        "3,3": 0.9999996687844172,
+        "3,4": 1.0,
+        "3,5": 1.0,
+        "3,6": 1.0,
+        "4,1": 1.0,
+        "4,2": 0.9999999988950604,
+        "4,3": 1.0,
+        "4,4": 0.9999999979398286,
+        "4,5": 1.0,
+        "4,6": 1.0,
+        "5,1": 0.9999999988950606,
+        "5,2": 1.0,
+        "5,3": 1.0,
+        "5,4": 1.0,
+        "5,5": 0.9999999979398293,
+        "5,6": 1.0,
+        "6,1": 1.0,
+        "6,2": 1.0,
+        "6,3": 1.0,
+        "6,4": 1.0,
+        "6,5": 1.0,
+        "6,6": 1.0
+      },
+      "damping_correlations": {
+        "1,1": 0.9999999923975718,
+        "1,2": 1.0,
+        "1,3": 1.0,
+        "1,4": 1.0,
+        "1,5": 0.9999999925719087,
+        "1,6": 1.0,
+        "2,1": 1.0,
+        "2,2": 0.9999999923975714,
+        "2,3": 1.0,
+        "2,4": 0.9999999925719091,
+        "2,5": 1.0,
+        "2,6": 1.0,
+        "3,1": 1.0,
+        "3,2": 1.0,
+        "3,3": 0.9999996551143366,
+        "3,4": 1.0,
+        "3,5": 1.0,
+        "3,6": 1.0,
+        "4,1": 1.0,
+        "4,2": 0.9999999925724057,
+        "4,3": 1.0,
+        "4,4": 0.9999999927798541,
+        "4,5": 1.0,
+        "4,6": 1.0,
+        "5,1": 0.9999999925724058,
+        "5,2": 1.0,
+        "5,3": 1.0,
+        "5,4": 1.0,
+        "5,5": 0.9999999927798544,
+        "5,6": 1.0,
+        "6,1": 1.0,
+        "6,2": 1.0,
+        "6,3": 1.0,
+        "6,4": 1.0,
+        "6,5": 1.0,
+        "6,6": 1.0
+      }
+    }
+  },
+  "consensus_by_dof": {
+    "SURGE": {
+      "consensus_level": "FULL",
+      "mean_pairwise_correlation": 0.999999979245386,
+      "outlier_solver": null,
+      "agreement_pairs": [
+        [
+          "OrcaWave (.owd)",
+          "OrcaWave (spec.yml)"
+        ]
+      ]
+    },
+    "SWAY": {
+      "consensus_level": "FULL",
+      "mean_pairwise_correlation": 0.999999992462512,
+      "outlier_solver": null,
+      "agreement_pairs": [
+        [
+          "OrcaWave (.owd)",
+          "OrcaWave (spec.yml)"
+        ]
+      ]
+    },
+    "HEAVE": {
+      "consensus_level": "FULL",
+      "mean_pairwise_correlation": 0.9998708181193411,
+      "outlier_solver": null,
+      "agreement_pairs": [
+        [
+          "OrcaWave (.owd)",
+          "OrcaWave (spec.yml)"
+        ]
+      ]
+    },
+    "ROLL": {
+      "consensus_level": "FULL",
+      "mean_pairwise_correlation": 0.999999993528865,
+      "outlier_solver": null,
+      "agreement_pairs": [
+        [
+          "OrcaWave (.owd)",
+          "OrcaWave (spec.yml)"
+        ]
+      ]
+    },
+    "PITCH": {
+      "consensus_level": "NO_CONSENSUS",
+      "mean_pairwise_correlation": 0.9999999807542244,
+      "outlier_solver": null,
+      "agreement_pairs": []
+    },
+    "YAW": {
+      "consensus_level": "FULL",
+      "mean_pairwise_correlation": 1.0,
+      "outlier_solver": null,
+      "agreement_pairs": [
+        [
+          "OrcaWave (.owd)",
+          "OrcaWave (spec.yml)"
+        ]
+      ]
+    }
+  },
+  "notes": [
+    "PITCH: consensus=NO_CONSENSUS"
+  ]
+}

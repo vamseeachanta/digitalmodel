@@ -1,297 +1,418 @@
 ---
-title: "WRK-128: Property Routing from Engineering Specs to OrcaFlex Objects"
-description: "Phase 1 (Object Inventory) + Phase 2 (Routing Documentation + Mooring Router Prototype)"
-version: "1.0"
-module: orcaflex/property_routing
+title: "WRK-126 Phase 0: Expand Template Library — One Per Structure Category"
+description: "Create curated spec.yml templates for CALM buoy, jumper, wind turbine, drilling riser + complete riser set, with statics benchmarking and 3-agent cross-review at every phase"
+version: "2.0"
+module: orcaflex/templates
 session:
-  id: "20260212_wrk128"
+  id: "20260213_wrk126_templates"
   agent: "claude-opus-4-6"
 review: pending
 ---
 
-# WRK-128: Property Routing — Phases 1 & 2
+# WRK-126 Phase 0: Expand Template Library
 
 ## Context
 
-The modular generator has 22 builders that convert spec.yml → OrcaFlex YAML, but the property routing logic is **implicit** — scattered across builders with no central inventory or documented mapping. Engineers cannot easily answer "what properties does a mooring line need?" or "how does coating thickness become OD?". Additionally, mooring models currently only work as generic pass-through (no domain-specific schema or transformation).
+WRK-127 established 6 curated templates (all 100/100 quality). WRK-126 needs end-to-end benchmarking across structure types, but most non-riser categories have only massive raw spec.yml files (12k-50k lines) that are unsuitable as templates. Before benchmarking, we need clean, validated templates for each structure category.
 
-This plan delivers:
-1. A machine-readable **object type inventory** cataloging all OrcaFlex properties with metadata
-2. **Routing documentation** for 3 key paths (pipeline, mooring, vessel)
-3. A **working mooring router** with Pydantic schema and unit tests
+**Current templates** (6 in `docs/modules/orcaflex/library/templates/`):
 
-## Scope Boundaries
+| Template | Lines | Quality | Benchmarked |
+|----------|-------|---------|-------------|
+| riser_catenary | 108 | 100/100 | Yes |
+| riser_lazy_wave | 188 | 100/100 | Yes |
+| pipeline_installation | 101 | 95/100 | Yes |
+| mooring_buoy | 763 | 85/100 | No |
+| installation_subsea | 196 | 90/100 | No |
+| installation_pull_in | 645 | 80/100 | No |
 
-**In scope**: Inventory YAML, routing docs, MooringSpec schema, MooringRouter with unit tests
-**Out of scope**: Solver integration tests, CLI integration, VesselRouter implementation, changes to existing builders
-
----
-
-## Phase 1: Object Type Inventory
-
-### Deliverable
-`docs/modules/orcaflex/property_routing/object_inventory.yaml`
-
-### Approach
-Auto-generate from existing code registries, then validate against actual spec.yml usage.
-
-### Step 1.1: Inventory Generation Script
-
-**File**: `scripts/extract_property_inventory.py` (~250 lines)
-
-Sources to parse (all in `src/digitalmodel/solvers/orcaflex/modular_generator/`):
-- `schema/generic.py` → `SECTION_REGISTRY` (26 object types), `FIELD_TO_SECTION` (26 mappings), `TYPED_FIELD_MAP` (22 mappings), `SINGLETON_SECTIONS` (7 singletons)
-- `builders/generic_builder.py` → `_PRIORITY_KEYS` (13), `_SKIP_GENERAL_KEYS` (15), `_SKIP_OBJECT_KEYS` (2), `_SECTION_ORDER` (33 sections)
-- `builders/environment_builder.py` → `_SAFE_RAW_OVERLAY_KEYS`, `_WIND_TYPE_PROPS`, `_WIND_SPEED_DORMANT`, current mode gates, wave type gates
-- `schema/riser.py` → `RiserLineType` fields (17 typed fields) — domain routing example
-
-Script logic:
-1. Import the registries directly (not regex parsing)
-2. For each section in `SECTION_REGISTRY`: extract schema class fields + types
-3. Cross-reference with skip/priority lists to classify properties
-4. Walk all 63 spec.yml files → collect actual property usage per object type
-5. Output structured YAML
-
-Output schema:
-```yaml
-object_types:
-  LineTypes:
-    section_type: list
-    schema_class: GenericLineType
-    builders: [LineTypeBuilder, RiserLineTypeBuilder, GenericModelBuilder]
-    typed_fields:
-      name: {orcaflex_key: Name, type: str, required: true}
-      outer_diameter: {orcaflex_key: OD, type: "float|str", required: false}
-      # ...
-    priority_keys: [Name, Category]
-    skip_keys: [ApplySeabedContactLoadsAtCentreline]
-    usage:
-      spec_count: 58
-      common_properties: [OD, EA, EI, MassPerUnitLength, Cd, Ca]
-dormancy_rules:
-  WaveGamma: {dormant_when: "WaveJONSWAPParameters == Automatic"}
-  WindSpeed: {dormant_when: "WindType == Full field"}
-  CurrentExponent: {dormant_when: "VerticalCurrentVariationMethod != Power law"}
-```
-
-### Step 1.2: Tests (TDD)
-
-**File**: `tests/scripts/test_extract_property_inventory.py` (~100 lines, 8 tests)
-
-```
-test_inventory_covers_all_section_registry_types
-test_priority_keys_marked_as_mode_setting
-test_skip_general_keys_marked_as_dormant
-test_typed_field_map_entries_have_schema_reference
-test_dormancy_rules_include_wind_wave_current
-test_usage_stats_from_spec_files
-test_output_yaml_is_valid_and_loadable
-test_singleton_sections_included
-```
-
-### Step 1.3: Manual Curation
-
-Review auto-generated YAML:
-- Add human-readable descriptions for top-20 properties
-- Group into functional categories (geometry, structural, hydrodynamic, connection, mode-setting)
-- Verify dormancy rules against known gotchas from `memory/orcaflex-gotchas.md`
+**Gaps** — no templates for:
+- CALM buoy (C06 raw spec is 12,167 lines)
+- Jumper (S7 spec is 23 lines — too minimal)
+- Wind turbine (K02 raw spec is 50,276 lines)
+- Drilling riser (B01 raw spec is 12,278 lines)
+- Riser steep wave / pliant wave (tier2_fast specs are 95/100, just need curation)
 
 ---
 
-## Phase 2A: Routing Documentation
+## Standard Phase Workflow (applies to ALL phases)
 
-### Deliverable
-`docs/modules/orcaflex/property_routing/routing_map.md`
+Every phase follows this mandatory sequence:
 
-### Content (3 sections)
+```
+1. CREATE    → Write/curate spec.yml template
+2. AUDIT     → Run quality audit (target 90+/100)
+3. BENCHMARK → Run statics convergence via benchmark_model_library.py
+4. COMMIT    → git commit with descriptive message
+5. REVIEW    → Cross-review: Claude + Codex + Gemini (3 agents minimum)
+6. FIX       → Address any P1/P2 issues from review
+7. PROCEED   → Only after review passes, move to next phase
+```
 
-**Route A — Pipeline** (existing, document only):
-- Source: `schema/pipeline.py` → `Pipeline.dimensions`, `Pipeline.coatings`, `Pipeline.material`
-- Transform: `LineTypeBuilder` calculates OD from coating stack, EA/EI from material properties
-- Output: `LineTypes`, `Lines`, `Environment` OrcaFlex sections
-- Ref: `builders/linetype_builder.py`, `builders/lines_builder.py`
+### Benchmark Commands (reused every phase)
+```bash
+# Quality audit
+uv run python scripts/audit_spec_library.py --path docs/modules/orcaflex/library/templates/<template_name>/
 
-**Route B — Mooring Line** (new, prototype in Phase 2B):
-- Source: `schema/mooring.py` (new) → chain/wire segment composition, anchor/fairlead positions, pretension
-- Transform: `MooringRouter` looks up chain/wire material database → OrcaFlex properties
-- Output: `generic` field → `GenericModelBuilder` → `LineTypes`, `Lines`, `Winches`
+# Statics benchmark (generates modular model, loads in OrcFxAPI, runs CalculateStatics)
+uv run python scripts/benchmark_model_library.py --models <template_name> --verbose
 
-**Route C — Vessel Hydrodynamics** (future, document path only):
-- Source: `hull_panel_catalog.yaml` hull_id + `DiffractionResults` from solver
-- Transform: `VesselRouter` (future) links hull dims + RAO files → VesselType
-- Output: `generic` field → `GenericModelBuilder` → `VesselTypes`, `Vessels`
-- Existing: `hydrodynamics/diffraction/orcaflex_exporter.py` already exports VesselType YAML
+# Cross-review (mandatory after each commit)
+scripts/review/cross-review.sh <commit-sha> all
+```
 
-**Architecture diagram** showing 3 routes converging on ProjectInputSpec.generic → GenericModelBuilder → OrcaFlex YAML.
+### Benchmark Pass Criteria
+- Quality score: 90+/100 (95+ for riser templates)
+- Statics: model loads without error, CalculateStatics() converges
+- For templates with monolithic reference: compare effective tension within 5% tolerance
+- Cross-review: no P1 issues; P2 issues addressed before proceeding
 
 ---
 
-## Phase 2B: Mooring Router Prototype
+## Gate 0: Plan Cross-Review (Before Phase 1)
 
-### Design Decision
+**Trigger**: This plan document committed.
 
-Routers sit **upstream** of builders. They transform engineering specs into `ProjectInputSpec.generic`-compatible dicts, which flow through the existing `GenericModelBuilder`. This avoids duplicating builder logic.
-
-```
-MooringSpec → MooringRouter.route() → dict (generic-compatible)
-                                        ↓
-                           ProjectInputSpec(generic=GenericModel(**dict))
-                                        ↓
-                           GenericModelBuilder.build() → OrcaFlex YAML
+```bash
+scripts/review/cross-review.sh <plan-commit-sha> all
 ```
 
-### Files to Create
+| Reviewer | Method | Pass Criteria |
+|----------|--------|---------------|
+| Claude | Inline review by orchestrating agent | No P1 issues in plan |
+| Codex | `codex review --commit <sha>` | No structural concerns |
+| Gemini | `gemini --prompt` review | No scope/feasibility issues |
 
-#### 1. Schema: `src/digitalmodel/solvers/orcaflex/modular_generator/schema/mooring.py` (~120 lines)
+**Proceed to Phase 1 only after Gate 0 passes.**
 
-Following the `riser.py` pattern with domain-specific Pydantic models:
+---
 
-```python
-class MooringSegmentType(str, Enum):
-    CHAIN = "chain"
-    WIRE_ROPE = "wire_rope"
-    POLYESTER = "polyester"
+## Phase 1: Complete Riser Set (~30 min)
 
-class ChainGrade(str, Enum):
-    R3 = "R3"
-    R3S = "R3S"
-    R4 = "R4"
-    R4S = "R4S"
-    R5 = "R5"
+### Goal
+Curate steep wave and pliant wave riser templates from existing tier2_fast specs.
 
-class MooringSegment(BaseModel):
-    type: MooringSegmentType
-    diameter: float  # m
-    length: float    # m
-    grade: ChainGrade | None = None        # for chain
-    breaking_load: float | None = None     # kN (for wire/polyester)
-    axial_stiffness: float | None = None   # kN (override if known)
-    segment_length: float = 5.0            # FE mesh size (m)
+### Source → Template
 
-class MooringEndpoint(BaseModel):
-    type: Literal["anchor", "fairlead", "fixed"]
-    position: list[float]  # [x, y, z] m
-    vessel: str | None = None  # vessel name for fairlead
+| Source | Lines | Quality | Action |
+|--------|-------|---------|--------|
+| `tier2_fast/a01_steep_wave_riser/spec.yml` | 151 | 95/100 | Copy, add template header, verify comments |
+| `tier2_fast/a01_pliant_wave_riser/spec.yml` | 182 | 95/100 | Copy, add template header, verify comments |
 
-class MooringLine(BaseModel):
-    name: str
-    segments: list[MooringSegment]  # ordered from anchor to fairlead
-    anchor: MooringEndpoint
-    fairlead: MooringEndpoint
-    pretension: float | None = None  # kN
-    lay_azimuth: float | None = None # deg
+### Steps
+1. Copy spec.yml to `templates/riser_steep_wave/spec.yml` and `templates/riser_pliant_wave/spec.yml`
+2. Add template header comment block (matching existing templates)
+3. Ensure metadata has `structure: riser`, `operation: production`
+4. Verify schema validation passes (`ProjectInputSpec`)
+5. Update `templates/catalog.yaml` with new entries
 
-class MooringSystem(BaseModel):
-    lines: list[MooringLine]
+### Benchmark
+```bash
+# Quality audit — target 95+/100
+uv run python scripts/audit_spec_library.py --path docs/modules/orcaflex/library/templates/riser_steep_wave/
+uv run python scripts/audit_spec_library.py --path docs/modules/orcaflex/library/templates/riser_pliant_wave/
+
+# Statics convergence (already proven: steep=0.14s, pliant=0.24s)
+uv run python scripts/benchmark_model_library.py --models riser_steep_wave --verbose
+uv run python scripts/benchmark_model_library.py --models riser_pliant_wave --verbose
 ```
 
-#### 2. Router: `src/digitalmodel/solvers/orcaflex/modular_generator/routers/__init__.py` (empty)
+**Pass criteria**: Quality 95+/100, statics converge for both models.
 
-#### 3. Router: `src/digitalmodel/solvers/orcaflex/modular_generator/routers/base_router.py` (~30 lines)
-
-```python
-class BaseRouter(ABC):
-    @abstractmethod
-    def route(self, spec: Any) -> dict[str, Any]:
-        """Transform domain spec into generic-model-compatible dict."""
+### Commit & Cross-Review
+```bash
+git commit -m "feat(orcaflex): add riser steep wave and pliant wave templates"
+scripts/review/cross-review.sh <sha> all
 ```
 
-#### 4. Router: `src/digitalmodel/solvers/orcaflex/modular_generator/routers/mooring_router.py` (~200 lines)
+**Gate 1**: No P1 issues. Quality 95+/100. Statics converge. Catalog updated.
 
-```python
-class MooringRouter(BaseRouter):
-    def route(self, mooring: MooringSystem) -> dict[str, Any]:
-        """Convert MooringSystem → GenericModel-compatible dict."""
-        line_types = []
-        lines = []
-        winches = []
+---
 
-        for ml in mooring.lines:
-            # Deduplicate line types by (type, diameter, grade)
-            for seg in ml.segments:
-                lt = self._segment_to_linetype(seg)
-                if lt["name"] not in seen:
-                    line_types.append(lt)
+## Phase 2: CALM Buoy Template (~2-3 hrs)
 
-            # Build multi-section line
-            line = self._build_line(ml)
-            lines.append(line)
+### Goal
+Hand-craft a clean CALM buoy template from the C06 discretised model. First seed-sensitive template (JONSWAP spectrum).
 
-            # Pretension winch if specified
-            if ml.pretension:
-                winches.append(self._build_winch(ml))
+### Source Analysis
+- Monolithic: `C06/C06 Discretised CALM buoy.dat` (302 KB)
+- Raw spec: 12,167 lines — far too large
+- Key components: CALM buoy (6D buoy), 6 mooring chains, 2 hoses, hawser, vessel
 
-        return {
-            "line_types": line_types,
-            "lines": lines,
-            "winches": winches,
-        }
+### Template Design (~200-300 lines target)
+- Environment: JONSWAP wave, power-law current, constant wind
+- Generic section: vessel_types, vessels, line_types, lines, buoys_6d
+- Trim to essential properties only (skip cosmetic/dormant per OrcaFlex gotchas)
 
-    def _segment_to_linetype(self, seg: MooringSegment) -> dict
-    def _chain_properties(self, diameter: float, grade: ChainGrade) -> dict
-    def _wire_properties(self, diameter: float, breaking_load: float) -> dict
-    def _build_line(self, ml: MooringLine) -> dict
-    def _build_winch(self, ml: MooringLine) -> dict
+### Steps
+1. Load monolithic C06 model with OrcFxAPI
+2. Identify essential objects (buoy, mooring lines, vessel, hoses)
+3. Extract only critical properties (skip cosmetic/dormant)
+4. Write clean spec.yml with proper metadata and inline comments
+5. Validate schema (`ProjectInputSpec`)
+
+### Benchmark
+```bash
+# Quality audit — target 90+/100
+uv run python scripts/audit_spec_library.py --path docs/modules/orcaflex/library/templates/calm_buoy_moored/
+
+# Statics benchmark (generate modular → load → CalculateStatics)
+uv run python scripts/benchmark_model_library.py --models calm_buoy_moored --verbose
+
+# Compare against monolithic reference (effective tension within 5%)
 ```
 
-Material lookup: Hardcoded `CHAIN_DATABASE` dict with 5 entries (R3/R3S/R4/R4S/R5 at common diameters). Follows DNV-OS-E302 / API 2SK simplified values. No external YAML file for now.
+**Pass criteria**: Quality 90+/100. Statics converge. Tension within 5% of monolithic.
 
-#### 5. Tests: `tests/solvers/orcaflex/modular_generator/routers/__init__.py` (empty)
-
-#### 6. Tests: `tests/solvers/orcaflex/modular_generator/routers/test_mooring_router.py` (~180 lines, 10 tests)
-
-```
-test_single_chain_segment_produces_one_linetype
-test_chain_wire_chain_produces_three_sections
-test_linetype_deduplication_across_lines
-test_chain_grade_r3_properties_from_database
-test_wire_rope_properties_from_diameter_and_mbl
-test_anchor_connection_maps_to_end_a_fixed
-test_fairlead_connection_maps_to_vessel_reference
-test_pretension_creates_winch
-test_no_pretension_no_winch
-test_output_dict_compatible_with_generic_model_schema
+### Commit & Cross-Review
+```bash
+git commit -m "feat(orcaflex): add CALM buoy moored template from C06"
+scripts/review/cross-review.sh <sha> all
 ```
 
-All tests are unit tests — no OrcFxAPI, no solver, dict assertions only.
+**Gate 2**: No P1 issues. Quality 90+/100. Statics converge. Tension benchmark passes.
+
+---
+
+## Phase 3: Jumper Template (~2-3 hrs)
+
+### Goal
+Create a subsea jumper template from S7 SUT_MM models.
+
+### Source Analysis
+- S7 monolithic: `docs/modules/orcaflex/jumper/sut_mm/monolithic/` (49 models)
+- Raw spec: 23 lines — too minimal
+- Need to load one representative monolithic model, extract jumper-specific properties
+
+### Template Design (~150-250 lines target)
+Key components: rigid/flexible jumper line, end connections (PLET/manifold), buoyancy modules, steel pipe line types, seabed interaction.
+
+### Steps
+1. Load first SUT_MM monolithic model with OrcFxAPI
+2. Inventory all objects (1-3 lines, 2 shapes/constraints, 1-2 line types)
+3. Extract essential properties, skip dormant/cosmetic
+4. Write clean spec.yml with jumper-specific metadata
+5. Validate schema (`ProjectInputSpec`)
+
+### Benchmark
+```bash
+# Quality audit — target 90+/100
+uv run python scripts/audit_spec_library.py --path docs/modules/orcaflex/library/templates/jumper_rigid_subsea/
+
+# Statics benchmark
+uv run python scripts/benchmark_model_library.py --models jumper_rigid_subsea --verbose
+
+# Compare against monolithic reference (effective tension within 5%)
+```
+
+**Pass criteria**: Quality 90+/100. Statics converge. Tension within 5% of monolithic.
+
+### Commit & Cross-Review
+```bash
+git commit -m "feat(orcaflex): add rigid subsea jumper template from S7"
+scripts/review/cross-review.sh <sha> all
+```
+
+**Gate 3**: No P1 issues. Quality 90+/100. Statics converge.
+
+---
+
+## Phase 4: Drilling Riser Template (~2-3 hrs)
+
+### Goal
+Create a drilling riser template from B01 model.
+
+### Source Analysis
+- Monolithic: `docs/modules/orcaflex/examples/raw/B01/B01 Drilling riser.dat`
+- Raw spec: 12,278 lines — too large
+
+### Template Design (~200-300 lines target)
+Key components: riser string (drill pipe, heavy weight, BHA), drillship with heave compensation, tensioner system, BOP/wellhead at seabed.
+
+### Steps
+1. Load monolithic B01 model with OrcFxAPI
+2. Identify essential objects (riser string, vessel, tensioner, BOP)
+3. Extract critical properties, skip dormant/cosmetic
+4. Write clean spec.yml with drilling-specific metadata
+5. Validate schema (`ProjectInputSpec`)
+
+### Benchmark
+```bash
+# Quality audit — target 90+/100
+uv run python scripts/audit_spec_library.py --path docs/modules/orcaflex/library/templates/drilling_riser/
+
+# Statics benchmark
+uv run python scripts/benchmark_model_library.py --models drilling_riser --verbose
+
+# Compare against monolithic reference (effective tension within 5%)
+```
+
+**Pass criteria**: Quality 90+/100. Statics converge. Tension within 5% of monolithic.
+
+### Commit & Cross-Review
+```bash
+git commit -m "feat(orcaflex): add drilling riser template from B01"
+scripts/review/cross-review.sh <sha> all
+```
+
+**Gate 4**: No P1 issues. Quality 90+/100. Statics converge.
+
+---
+
+## Phase 5: Wind Turbine Template (~2-3 hrs)
+
+### Goal
+Create a fixed-bottom wind turbine template from K02 model.
+
+### Source Analysis
+- K02: `docs/modules/orcaflex/examples/raw/K02/` — 10MW fixed-bottom OWT (50,276 lines raw spec)
+- K02 has external .bts wind file dependency
+
+### Template Design (~200-400 lines target)
+Key components: turbine object, support structure (monopile), wind loading, blade/RNA properties. Use steady wind to avoid external file dependencies, with comments showing how to switch to turbulent field.
+
+### Steps
+1. Load monolithic K02 model with OrcFxAPI
+2. Identify essential objects (turbine, monopile, foundation)
+3. Replace turbulent wind with steady wind (avoid .bts dependency)
+4. Extract critical properties, skip dormant/cosmetic
+5. Write clean spec.yml with wind-turbine metadata
+6. Validate schema (`ProjectInputSpec`)
+
+### Risk
+K02 depends on external .bts wind files. Template uses steady wind to avoid external dependencies. Comments document how to switch to turbulent field.
+
+### Benchmark
+```bash
+# Quality audit — target 90+/100
+uv run python scripts/audit_spec_library.py --path docs/modules/orcaflex/library/templates/wind_turbine_fixed/
+
+# Statics benchmark
+uv run python scripts/benchmark_model_library.py --models wind_turbine_fixed --verbose
+```
+
+**Pass criteria**: Quality 90+/100. Statics converge (with steady wind, no external deps).
+
+### Commit & Cross-Review
+```bash
+git commit -m "feat(orcaflex): add fixed-bottom wind turbine template from K02"
+scripts/review/cross-review.sh <sha> all
+```
+
+**Gate 5**: No P1 issues. Quality 90+/100. Statics converge.
 
 ---
 
 ## Execution Order
 
-| Step | What | Files | Tests First |
-|------|------|-------|-------------|
-| 1 | Mooring schema | `schema/mooring.py` | Schema validation tests |
-| 2 | Router base class | `routers/base_router.py` | N/A (abstract) |
-| 3 | Mooring router | `routers/mooring_router.py` | 10 router tests |
-| 4 | Inventory script | `scripts/extract_property_inventory.py` | 8 inventory tests |
-| 5 | Inventory YAML | `docs/.../object_inventory.yaml` | Generated output |
-| 6 | Routing docs | `docs/.../routing_map.md` | N/A (documentation) |
+```
+Gate 0: Plan Cross-Review (Claude + Codex + Gemini)
+    │
+    v
+Phase 1: Riser steep + pliant ──── Create → Audit → Benchmark → Commit → Cross-Review
+    │
+    v  Gate 1 pass?
+Phase 2: CALM buoy ──── Create → Audit → Benchmark → Commit → Cross-Review
+    │
+    v  Gate 2 pass?
+Phase 3: Jumper ──── Create → Audit → Benchmark → Commit → Cross-Review
+    │
+    v  Gate 3 pass?
+Phase 4: Drilling riser ──── Create → Audit → Benchmark → Commit → Cross-Review
+    │
+    v  Gate 4 pass?
+Phase 5: Wind turbine ──── Create → Audit → Benchmark → Commit → Cross-Review
+    │
+    v  Gate 5 pass?
+Template library: 12 templates across 6+ categories
+Then → WRK-126 (end-to-end dynamics benchmarking)
+```
 
-## Verification
+---
 
-1. `uv run python -m pytest tests/solvers/orcaflex/modular_generator/routers/ -v` — all 10 pass
-2. `uv run python -m pytest tests/scripts/test_extract_property_inventory.py -v` — all 8 pass
-3. `uv run python scripts/extract_property_inventory.py` — generates valid YAML
-4. Existing tests unaffected: `uv run python -m pytest tests/solvers/orcaflex/modular_generator/ -v` — no regressions
+## Scope Summary
 
-## Critical Files Reference
+| Phase | Template | Target Lines | Quality Target | Benchmark |
+|-------|----------|-------------|----------------|-----------|
+| 1: Riser steep + pliant | 2 templates | 151 + 182 | 95+/100 | Statics converge |
+| 2: CALM buoy | 1 template | ~200-300 | 90+/100 | Statics + monolithic comparison |
+| 3: Jumper | 1 template | ~150-250 | 90+/100 | Statics + monolithic comparison |
+| 4: Drilling riser | 1 template | ~200-300 | 90+/100 | Statics + monolithic comparison |
+| 5: Wind turbine | 1 template | ~200-400 | 90+/100 | Statics (steady wind) |
+| **Total** | **6 new templates** | **~1100-1400** | | **5 benchmark gates** |
 
-**Read (existing)**:
-- `src/digitalmodel/solvers/orcaflex/modular_generator/schema/generic.py` — SECTION_REGISTRY, FIELD_TO_SECTION, TYPED_FIELD_MAP
-- `src/digitalmodel/solvers/orcaflex/modular_generator/schema/riser.py` — domain schema pattern to follow
-- `src/digitalmodel/solvers/orcaflex/modular_generator/builders/generic_builder.py` — _PRIORITY_KEYS, _SKIP_*, _SECTION_ORDER
-- `src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py` — dormancy rules
-- `src/digitalmodel/solvers/orcaflex/modular_generator/builders/riser_linetype_builder.py` — domain builder pattern
+Post-expansion: **12 templates** across 6+ categories (riser x4, pipeline x1, mooring x2, installation x2, jumper x1, drilling x1, wind x1).
 
-**Create (new)**:
-- `src/digitalmodel/solvers/orcaflex/modular_generator/schema/mooring.py`
-- `src/digitalmodel/solvers/orcaflex/modular_generator/routers/__init__.py`
-- `src/digitalmodel/solvers/orcaflex/modular_generator/routers/base_router.py`
-- `src/digitalmodel/solvers/orcaflex/modular_generator/routers/mooring_router.py`
-- `tests/solvers/orcaflex/modular_generator/routers/__init__.py`
-- `tests/solvers/orcaflex/modular_generator/routers/test_mooring_router.py`
-- `scripts/extract_property_inventory.py`
-- `tests/scripts/test_extract_property_inventory.py`
-- `docs/modules/orcaflex/property_routing/object_inventory.yaml`
-- `docs/modules/orcaflex/property_routing/routing_map.md`
+---
+
+## Cross-Review Summary (6 Mandatory Gates)
+
+| Gate | Trigger | Reviewers | Pass Criteria |
+|------|---------|-----------|---------------|
+| **Gate 0** | Plan committed | Claude + Codex + Gemini | No P1 issues in plan |
+| **Gate 1** | Phase 1 committed | Claude + Codex + Gemini | Quality 95+, statics converge, catalog updated |
+| **Gate 2** | Phase 2 committed | Claude + Codex + Gemini | Quality 90+, statics converge, tension <5% diff |
+| **Gate 3** | Phase 3 committed | Claude + Codex + Gemini | Quality 90+, statics converge |
+| **Gate 4** | Phase 4 committed | Claude + Codex + Gemini | Quality 90+, statics converge |
+| **Gate 5** | Phase 5 committed | Claude + Codex + Gemini | Quality 90+, statics converge |
+
+```bash
+# Run at each gate:
+scripts/review/cross-review.sh <commit-sha> all
+```
+
+---
+
+## Critical Files
+
+### Create
+- `docs/modules/orcaflex/library/templates/riser_steep_wave/spec.yml`
+- `docs/modules/orcaflex/library/templates/riser_pliant_wave/spec.yml`
+- `docs/modules/orcaflex/library/templates/calm_buoy_moored/spec.yml`
+- `docs/modules/orcaflex/library/templates/jumper_rigid_subsea/spec.yml`
+- `docs/modules/orcaflex/library/templates/drilling_riser/spec.yml`
+- `docs/modules/orcaflex/library/templates/wind_turbine_fixed/spec.yml`
+
+### Modify
+- `docs/modules/orcaflex/library/templates/catalog.yaml` — add 6 new entries
+
+### Reuse (existing scripts, no new code)
+- `scripts/audit_spec_library.py` — quality scoring
+- `scripts/benchmark_model_library.py` — statics validation + monolithic comparison
+- `scripts/review/cross-review.sh` — 3-agent cross-review
+- Existing template structure in `templates/riser_catenary/spec.yml` as formatting reference
+
+### Source Models (read-only)
+- `docs/modules/orcaflex/library/tier2_fast/a01_steep_wave_riser/spec.yml` (Phase 1)
+- `docs/modules/orcaflex/library/tier2_fast/a01_pliant_wave_riser/spec.yml` (Phase 1)
+- `docs/modules/orcaflex/examples/raw/C06/C06 Discretised CALM buoy.dat` (Phase 2)
+- `docs/modules/orcaflex/jumper/sut_mm/monolithic/` (Phase 3)
+- `docs/modules/orcaflex/examples/raw/B01/B01 Drilling riser.dat` (Phase 4)
+- `docs/modules/orcaflex/examples/raw/K02/` (Phase 5)
+
+---
+
+## Quality Criteria (from WRK-127)
+
+| Criterion | Points | Required |
+|-----------|--------|----------|
+| Schema valid (ProjectInputSpec) | 30 | Yes |
+| Has comments (header + inline) | 20 | Yes |
+| Meaningful name | 15 | Yes |
+| Meaningful description | 10 | Yes |
+| No raw_properties | 15 | Yes |
+| < 1000 lines | 10 | Yes |
+| **Target minimum** | **90/100** | |
+
+---
+
+## Risks
+
+| Risk | Mitigation |
+|------|-----------|
+| CALM buoy extraction loses critical properties | Compare statics tension against monolithic reference |
+| S7 jumper has external BaseFile refs | Resolve or inline before template creation |
+| K02 wind turbine needs .bts file | Use steady wind in template, document turbulent option |
+| B01 drilling riser has complex BOP | Simplify to essential components, note omissions |
+| Templates too large (>1000 lines) | Aggressive trimming of cosmetic/dormant properties |
+| Cross-review CLI produces no output | Note as NO_OUTPUT, proceed with remaining verdicts (min 2/3) |

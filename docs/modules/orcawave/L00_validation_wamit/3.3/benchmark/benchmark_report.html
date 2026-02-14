@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Benchmark Report - Ellipsoid</title>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                 Roboto, Arial, sans-serif;
+    margin: 0; padding: 0; color: #333; background: #f8f9fa;
+    font-size: 14px; line-height: 1.5;
+  }
+  .container { max-width: 1400px; margin: 0 auto; padding: 1.5em 2em; }
+
+  /* Header */
+  .report-header {
+    background: #2c3e50; color: #fff; padding: 1.2em 2em;
+    margin-bottom: 1.5em; border-radius: 6px;
+  }
+  .report-header h1 { margin: 0 0 0.3em; font-size: 1.6em; }
+  .report-header .meta { font-size: 0.9em; opacity: 0.85; }
+  .report-header .consensus-overall {
+    display: inline-block; padding: 4px 12px; border-radius: 4px;
+    font-weight: 700; margin-left: 1em; font-size: 0.85em;
+  }
+
+  /* Section cards */
+  .section { background: #fff; border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    margin-bottom: 1.5em; padding: 1.2em 1.5em;
+  }
+  .section h2 { margin: 0 0 0.8em; font-size: 1.2em; color: #2c3e50;
+    border-bottom: 2px solid #3498db; padding-bottom: 0.3em; }
+
+  /* Tables */
+  table { border-collapse: collapse; margin: 0.5em 0; font-size: 0.85em;
+    width: 100%; }
+  th, td { border: 1px solid #ddd; padding: 0.45em 0.7em;
+    text-align: left; }
+  th { background: #34495e; color: #fff; font-weight: 600;
+    font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.3px; }
+  tbody tr:nth-child(even) { background: #f8f9fa; }
+  tbody tr:nth-child(odd) { background: #fff; }
+  tbody tr:hover { background: #ebf5fb; }
+  td { vertical-align: top; }
+
+  /* Input comparison table */
+  .input-table .param-label { font-weight: 600; }
+  .section-row td {
+    background: #2c3e50 !important; color: #fff;
+    font-weight: 700; font-size: 0.8em; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 0.5em 0.7em;
+  }
+
+  /* Input file viewer */
+  .file-viewer { margin-bottom: 1.5em; }
+  .file-viewer-header {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #34495e; color: #fff; padding: 0.5em 1em;
+    border-radius: 4px 4px 0 0; font-size: 0.85em;
+  }
+  .file-viewer-header .file-path {
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.9em; word-break: break-all;
+  }
+  .file-viewer-header .solver-label {
+    font-weight: 700; margin-right: 0.8em; white-space: nowrap;
+  }
+  .file-viewer-header button {
+    background: #3498db; color: #fff; border: none; padding: 4px 12px;
+    border-radius: 3px; cursor: pointer; font-size: 0.85em;
+    white-space: nowrap;
+  }
+  .file-viewer-header button:hover { background: #2980b9; }
+  .file-content {
+    max-height: 400px; overflow-y: auto; overflow-x: auto;
+    border: 1px solid #ddd; border-top: none;
+    border-radius: 0 0 4px 4px; background: #fafafa; margin: 0;
+  }
+  .file-content pre {
+    margin: 0; padding: 0.8em 1em; font-size: 12px; line-height: 1.5;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    counter-reset: line;
+  }
+  .file-content pre .line {
+    display: block;
+  }
+  .file-content pre .line::before {
+    counter-increment: line;
+    content: counter(line);
+    display: inline-block; width: 3.5em; text-align: right;
+    margin-right: 1em; color: #999; font-size: 0.85em;
+    border-right: 1px solid #ddd; padding-right: 0.5em;
+    -webkit-user-select: none; user-select: none;
+  }
+
+  /* DOF sections: 2-column grid */
+  .dof-section { border-top: 2px solid #ecf0f1; padding-top: 1em;
+    margin-top: 1em; }
+  .dof-section:first-child { border-top: none; margin-top: 0; }
+  .dof-title { font-size: 1.1em; color: #2c3e50; margin: 0 0 0.6em; }
+  .dof-grid {
+    display: grid; grid-template-columns: 45% 55%;
+    gap: 1em; align-items: start;
+  }
+  .dof-text { font-size: 0.85em; }
+  .dof-plot { min-height: 340px; }
+
+  /* Consensus badges */
+  .consensus-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 3px;
+    color: #fff; font-size: 0.8em; font-weight: 700;
+    margin-bottom: 0.5em;
+  }
+
+  /* Numeric font */
+  .mono { font-family: 'SF Mono', 'Cascadia Code', 'Consolas',
+    'Fira Code', monospace; }
+
+  /* Stats table */
+  .stats-table { width: 100%; margin-bottom: 0.6em; }
+  .stats-table td:last-child { text-align: right;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace; }
+
+  /* Solver comparison tables */
+  .solver-table { width: 100%; margin-bottom: 0.5em; }
+  .solver-table th { font-size: 0.75em; text-align: center;
+    padding: 0.3em 0.4em; }
+  .solver-table td { text-align: right;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.8em; padding: 0.25em 0.4em; }
+  .solver-table td:first-child { text-align: left; font-family: inherit;
+    font-weight: 600; }
+
+  .dof-text h4 { margin: 0.7em 0 0.3em; font-size: 0.9em;
+    color: #2c3e50; border-bottom: 1px solid #ddd;
+    padding-bottom: 0.15em; }
+  .observations p { margin: 0.3em 0; line-height: 1.4; }
+  .skipped-note {
+    font-size: 0.8em; color: #888; font-style: italic;
+    margin-top: 0.5em; padding: 0.3em 0.5em;
+    background: #fef9e7; border-left: 3px solid #f0c674;
+    border-radius: 2px;
+  }
+
+  /* Links section */
+  .plot-links { column-count: 2; font-size: 0.85em; }
+  .plot-links li { margin-bottom: 0.3em; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .dof-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Section 1: Header -->
+  <div class="report-header">
+    <h1>Benchmark Report</h1>
+    <div class="meta">
+      <strong>Vessel:</strong> Ellipsoid &nbsp;|&nbsp;
+      <strong>Date:</strong> 2026-02-14 11:19:28 &nbsp;|&nbsp;
+      <strong>Solvers:</strong> OrcaWave (.owd), OrcaWave (spec.yml)
+      <span class="consensus-overall"
+            style="background:#27ae60;">
+        FULL
+      </span>
+    </div>
+  </div>
+
+  <!-- Section 2: Input Comparison -->
+  <div class="section">
+    <h2>Input Comparison</h2>
+<table class="input-table" style="max-width:800px;">
+<thead><tr><th>Parameter</th>
+<th>OrcaWave (.owd)</th>
+<th>OrcaWave (spec.yml)</th>
+</tr></thead><tbody>
+<tr class='section-row'><td colspan='3'>Mass Properties</td></tr>
+<tr>
+<td class='param-label'>Mass</td>
+<td>0.3 te</td>
+<td>0.3 te</td>
+</tr>
+<tr>
+<td class='param-label'>Centre of gravity (m)</td>
+<td>(0, 0, 0)</td>
+<td>(0, 0, 0)</td>
+</tr>
+<tr class='section-row'><td colspan='3'>Environment</td></tr>
+<tr>
+<td class='param-label'>Water depth (m)</td>
+<td>inf</td>
+<td>inf</td>
+</tr>
+<tr>
+<td class='param-label'>Water density (kg/m3)</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class='section-row'><td colspan='3'>Mesh</td></tr>
+<tr>
+<td class='param-label'>Mesh file</td>
+<td>Ellipsoid.gdf</td>
+<td>Ellipsoid.gdf</td>
+</tr>
+<tr>
+<td class='param-label'>Mesh format</td>
+<td>Wamit gdf</td>
+<td>Wamit gdf</td>
+</tr>
+<tr>
+<td class='param-label'>Symmetry</td>
+<td>xz and yz planes</td>
+<td>xz and yz planes</td>
+</tr>
+<tr class='section-row'><td colspan='3'>Damping</td></tr>
+<tr>
+<td class='param-label'>Radiation damping</td>
+<td>Computed (BEM)</td>
+<td>Computed (BEM)</td>
+</tr>
+<tr>
+<td class='param-label'>Viscous damping</td>
+<td>None applied</td>
+<td>None applied</td>
+</tr>
+<tr>
+<td class='param-label'>Damping lid</td>
+<td>No</td>
+<td>False</td>
+</tr>
+<tr class='section-row'><td colspan='3'>Analysis Settings</td></tr>
+<tr>
+<td class='param-label'>Frequency range (rad/s)</td>
+<td>1.000 – 3.500 (2)</td>
+<td>1.000 – 3.500 (2)</td>
+</tr>
+<tr>
+<td class='param-label'>Heading range (deg)</td>
+<td>0 – 90 (5)</td>
+<td>0 – 90 (5)</td>
+</tr>
+<tr>
+<td class='param-label'>Calculation method</td>
+<td>Full QTF calculation</td>
+<td>Potential and source formulations</td>
+</tr>
+<tr class='section-row'><td colspan='3'>Conventions</td></tr>
+<tr>
+<td class='param-label'>Phase convention (raw)</td>
+<td>Orcina (phase lag)</td>
+<td>Orcina (phase lag)</td>
+</tr>
+<tr>
+<td class='param-label'>Phase convention (normalized)</td>
+<td>orcina_lag</td>
+<td>orcina_lag</td>
+</tr>
+<tr>
+<td class='param-label'>Unit system</td>
+<td>orcaflex</td>
+<td>orcaflex</td>
+</tr>
+<tr class='section-row'><td colspan='3'>OrcaWave Solver Settings</td></tr>
+<tr>
+<td class='param-label'>Units system</td>
+<td>SI</td>
+<td>SI</td>
+</tr>
+<tr>
+<td class='param-label'>Solve type</td>
+<td>Full QTF calculation</td>
+<td>Potential and source formulations</td>
+</tr>
+<tr>
+<td class='param-label'>Load RAO method</td>
+<td>Both</td>
+<td>Both</td>
+</tr>
+<tr>
+<td class='param-label'>Linear solver</td>
+<td>Direct LU</td>
+<td>Direct LU</td>
+</tr>
+<tr>
+<td class='param-label'>Divide non-planar panels</td>
+<td>False</td>
+<td>True</td>
+</tr>
+<tr>
+<td class='param-label'>Length tolerance</td>
+<td>100e-9</td>
+<td>100e-9</td>
+</tr>
+<tr>
+<td class='param-label'>Waves referred to by</td>
+<td>frequency (rad/s)</td>
+<td>period (s)</td>
+</tr>
+<tr class='section-row'><td colspan='3'>OrcaWave Body Details</td></tr>
+<tr>
+<td class='param-label'>Body count</td>
+<td>2</td>
+<td>2</td>
+</tr>
+<tr>
+<td class='param-label'>Body name</td>
+<td>Ellipsoid</td>
+<td>Ellipsoid</td>
+</tr>
+<tr>
+<td class='param-label'>Inertia specification</td>
+<td>Matrix (for a general body)</td>
+<td>Matrix (for a general body)</td>
+</tr>
+<tr>
+<td class='param-label'>Interior surface panels</td>
+<td>False</td>
+<td>False</td>
+</tr>
+<tr>
+<td class='param-label'>Connection parent</td>
+<td>Free</td>
+<td>Free</td>
+</tr>
+<tr>
+<td class='param-label'>Fixed DOFs</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<td class='param-label'>Roll damping target</td>
+<td>False</td>
+<td>False</td>
+</tr>
+<tr>
+<td class='param-label'>External damping</td>
+<td>None applied</td>
+<td>None applied</td>
+</tr>
+<tr>
+<td class='param-label'>External stiffness</td>
+<td>None applied</td>
+<td>None applied</td>
+</tr>
+<tr class='section-row'><td colspan='3'>OrcaWave Advanced</td></tr>
+<tr>
+<td class='param-label'>Damping lid</td>
+<td>No</td>
+<td>False</td>
+</tr>
+<tr>
+<td class='param-label'>QTF calc method</td>
+<td>Both</td>
+<td>-</td>
+</tr>
+<tr>
+<td class='param-label'>QTF crossing angles</td>
+<td>0 – 180</td>
+<td>-</td>
+</tr>
+<tr>
+<td class='param-label'>QTF frequency types</td>
+<td>Difference frequencies</td>
+<td>-</td>
+</tr>
+<tr>
+<td class='param-label'>Free surface zone type</td>
+<td>Defined by mesh file</td>
+<td>-</td>
+</tr>
+<tr>
+<td class='param-label'>Free surface zone mesh</td>
+<td>PanelledZoneHalf.fdf</td>
+<td>-</td>
+</tr>
+<tr>
+<td class='param-label'>Free surface inner radius</td>
+<td>5</td>
+<td>-</td>
+</tr>
+</tbody></table>
+  </div>
+
+  <!-- Section 2.1: Input Files -->
+  <div class="section"><h2>Input Files</h2>
+<h3>Semantic Equivalence</h3>
+<p>Key-by-key comparison of the OrcaWave SaveData() YAML exports from both solver paths. Keys are classified as:</p><ul style='font-size:13px;margin:0.3em 0 0.8em;'><li><strong>Cosmetic</strong> — GUI display, naming, output flags, dormant settings (no solver effect)</li><li><strong>Convention</strong> — equivalent data in different representation (e.g. Hz vs rad/s)</li><li><strong>Significant</strong> — real solver parameter difference that may affect results</li></ul>
+<table class='stats-table' style='max-width:500px;margin-bottom:1em;'>
+<tr><th>Metric</th><th>Count</th></tr>
+<tr><td>Matching keys</td><td style='color:#27ae60;font-weight:bold'>57</td></tr>
+<tr><td>Cosmetic differences</td><td style='color:#6b7280'>2</td></tr>
+<tr><td>Convention differences</td><td style='color:#2563eb'>2</td></tr>
+<tr><td>Significant differences</td><td style='color:#e74c3c;font-weight:bold'>20</td></tr>
+<tr><td>Total keys compared</td><td>81</td></tr>
+</table>
+<div style='display:inline-block;padding:4px 16px;border-radius:4px;color:white;font-weight:bold;background:#e74c3c;margin-bottom:1em;'>20 SIGNIFICANT DIFF(S)</div>
+<h4>Significant Differences</h4><table style='max-width:800px;font-size:12px;margin-top:0.5em;'><tr><th style='text-align:left'>Key</th><th style='text-align:left'>OrcaWave (.owd)</th><th style='text-align:left'>OrcaWave (spec.yml)</th></tr><tr><td><code>DivideNonPlanarPanels</code></td><td>False</td><td>True</td></tr><tr><td><code>FreeSurfaceAsymptoticZoneExpansionOrder</code></td><td>10</td><td>MISSING</td></tr><tr><td><code>FreeSurfaceOuterCircleNumberOfSegments</code></td><td>64</td><td>MISSING</td></tr><tr><td><code>FreeSurfacePanelledZoneInnerRadius</code></td><td>5</td><td>MISSING</td></tr><tr><td><code>FreeSurfacePanelledZoneMeshFileName</code></td><td>PanelledZoneHalf.fdf</td><td>MISSING</td></tr><tr><td><code>FreeSurfacePanelledZoneMeshFormat</code></td><td>Wamit fdf</td><td>MISSING</td></tr><tr><td><code>FreeSurfacePanelledZoneMeshLengthUnits</code></td><td>m</td><td>MISSING</td></tr><tr><td><code>FreeSurfacePanelledZoneType</code></td><td>Defined by mesh file</td><td>MISSING</td></tr><tr><td><code>FreeSurfaceQuadratureZoneNumberOfAnnuli</code></td><td>0</td><td>MISSING</td></tr><tr><td><code>HasResonanceDampingLid</code></td><td>MISSING</td><td>False</td></tr><tr><td><code>PreferredQTFCalculationMethod</code></td><td>Direct method</td><td>MISSING</td></tr><tr><td><code>PreferredQuadraticLoadCalculationMethod</code></td><td>Pressure integration</td><td>MISSING</td></tr><tr><td><code>QTFCalculationMethod</code></td><td>Both</td><td>MISSING</td></tr><tr><td><code>QTFFrequencyTypes</code></td><td>Difference frequencies</td><td>MISSING</td></tr><tr><td><code>QTFMaxCrossingAngle</code></td><td>180</td><td>MISSING</td></tr><tr><td><code>QTFMaxPeriodOrFrequency</code></td><td>Infinity</td><td>MISSING</td></tr><tr><td><code>QTFMinCrossingAngle</code></td><td>0</td><td>MISSING</td></tr><tr><td><code>QTFMinPeriodOrFrequency</code></td><td>0</td><td>MISSING</td></tr><tr><td><code>QuadraticLoadPressureIntegration</code></td><td>True</td><td>False</td></tr><tr><td><code>SolveType</code></td><td>Full QTF calculation</td><td>Potential and source formulations</td></tr></table>
+<details style='margin-top:0.5em;font-size:12px;'><summary>Convention Differences (2)</summary><table style='max-width:800px;font-size:12px;margin-top:0.5em;'><tr><th style='text-align:left'>Key</th><th style='text-align:left'>OrcaWave (.owd)</th><th style='text-align:left'>OrcaWave (spec.yml)</th></tr><tr><td><code>PeriodOrFrequency</code></td><td>[1, 3.5]</td><td>[1.7952, 6.2832]</td></tr><tr><td><code>WavesReferredToBy</code></td><td>frequency (rad/s)</td><td>period (s)</td></tr></table></details>
+<details style='margin-top:0.5em;font-size:12px;'><summary>Cosmetic Differences (2)</summary><table style='max-width:800px;font-size:12px;margin-top:0.5em;'><tr><th style='text-align:left'>Key</th><th style='text-align:left'>OrcaWave (.owd)</th><th style='text-align:left'>OrcaWave (spec.yml)</th></tr><tr><td><code>FreeSurfaceMeshPen</code></td><td>[1, &#x27;Solid&#x27;, &#x27;Aqua&#x27;]</td><td>MISSING</td></tr><tr><td><code>InteriorSurfacePanelsPen</code></td><td>[1, &#x27;Solid&#x27;, &#x27;Red&#x27;]</td><td>MISSING</td></tr></table></details>
+<h3 style="margin-top:1.5em;margin-bottom:0.2em;">OrcaWave (.owd)</h3>
+<p style="margin:0.3em 0 0.5em;font-size:12px;color:#64748b;max-width:700px;">OrcaWave input configuration exported from the original .owd project via SaveData(). This is the ground truth — the exact parameters used by the manually-configured OrcaWave project.</p>
+<div class="file-viewer">
+  <div class="file-viewer-header">
+    <div>
+      <span class="solver-label">OrcaWave (.owd)</span>
+      <span class="file-path">D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\test_input.yml</span>
+    </div>
+    <button onclick="openFileWindow_0()">Open in New Window</button>
+  </div>
+  <div class="file-content">
+    <pre><span class="line">﻿%YAML 1.1</span>
+<span class="line"># Type: Diffraction</span>
+<span class="line"># Program: OrcaFlex 11.6b</span>
+<span class="line"># File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\test_input.yml</span>
+<span class="line"># Created: 11:19 AM on 2/14/2026</span>
+<span class="line"># User: ansystech</span>
+<span class="line"># Machine: ACMA-ANSYS05</span>
+<span class="line">---</span>
+<span class="line"># Model</span>
+<span class="line">UnitsSystem: SI</span>
+<span class="line"># Calculation &amp; output</span>
+<span class="line">SolveType: Full QTF calculation</span>
+<span class="line">OutputPanelPressures: No</span>
+<span class="line">OutputPanelVelocities: No</span>
+<span class="line">OutputBodyWireFrames: Yes</span>
+<span class="line">OutputIntermediateResults: No</span>
+<span class="line">ComputationStrategy: Optimised for run time</span>
+<span class="line">LoadRAOCalculationMethod: Both</span>
+<span class="line">PreferredLoadRAOCalculationMethod: Haskind</span>
+<span class="line">QuadraticLoadPressureIntegration: Yes</span>
+<span class="line">QuadraticLoadControlSurface: No</span>
+<span class="line">QuadraticLoadMomentumConservation: No</span>
+<span class="line">PreferredQuadraticLoadCalculationMethod: Pressure integration</span>
+<span class="line">LengthTolerance: 100e-9</span>
+<span class="line">WaterlineZTolerance: 1e-6</span>
+<span class="line">WaterlineGapTolerance: 1e-6</span>
+<span class="line">DivideNonPlanarPanels: No</span>
+<span class="line">LinearSolverMethod: Direct LU</span>
+<span class="line">ValidatePanelArrangement: No</span>
+<span class="line">BodyVolumeWarningLevel: 1e-12</span>
+<span class="line">PanelAspectRatioWarningLevel: 25</span>
+<span class="line">PanelsPerWavelengthWarningLevel: 5</span>
+<span class="line"># Environment</span>
+<span class="line">WaterDepth: Infinity</span>
+<span class="line">WaterDensity: 1</span>
+<span class="line">WavesReferredToBy: frequency (rad/s)</span>
+<span class="line">HasWaveSpectrumForDragLinearisation: No</span>
+<span class="line">MorisonFluidVelocity: Undisturbed incident wave</span>
+<span class="line">PeriodOrFrequency:</span>
+<span class="line">  - 1</span>
+<span class="line">  - 3.5</span>
+<span class="line">WaveHeading:</span>
+<span class="line">  - 0</span>
+<span class="line">  - 30</span>
+<span class="line">  - 45</span>
+<span class="line">  - 60</span>
+<span class="line">  - 90</span>
+<span class="line">QTFMinCrossingAngle: 0</span>
+<span class="line">QTFMaxCrossingAngle: 180</span>
+<span class="line">QTFMinPeriodOrFrequency: 0</span>
+<span class="line">QTFMaxPeriodOrFrequency: Infinity</span>
+<span class="line">QTFFrequencyTypes: Difference frequencies</span>
+<span class="line"># Constraints</span>
+<span class="line">EnableMultibodyConstraints: No</span>
+<span class="line"># Bodies</span>
+<span class="line">Bodies:</span>
+<span class="line">  - BodyName: Cylinder</span>
+<span class="line">    BodyMeshPosition: [0, 1.25, 0]</span>
+<span class="line">    BodyMeshAttitude: [0, 0, 0]</span>
+<span class="line">    BodyIncludedInAnalysis: Yes</span>
+<span class="line">    BodyMeshFileName: Cylinder.gdf</span>
+<span class="line">    BodyMeshFormat: Wamit gdf</span>
+<span class="line">    BodyMeshLengthUnits: m</span>
+<span class="line">    BodyMeshSymmetry: xz and yz planes</span>
+<span class="line">    BodyMeshDipolePanels: </span>
+<span class="line">    BodyOriginType: Free surface</span>
+<span class="line">    BodyAddInteriorSurfacePanels: No</span>
+<span class="line">    BodyOrcaFlexImportSymmetry: Use global mesh symmetry</span>
+<span class="line">    BodyOrcaFlexImportLength: ~</span>
+<span class="line">    BodyHydrostaticIntegralMethod: Standard</span>
+<span class="line">    BodyHydrostaticStiffnessMethod: Displacement</span>
+<span class="line">    BodyInertiaSpecifiedBy: Radii of gyration (for a free-floating body)</span>
+<span class="line">    BodyCentreOfMassZRelativeToFreeSurface: 0</span>
+<span class="line">    BodyRadiiOfGyrationRx, BodyRadiiOfGyrationRy, BodyRadiiOfGyrationRz:</span>
+<span class="line">      - [1, 0, 0]</span>
+<span class="line">      - [0, 1, 0]</span>
+<span class="line">      - [0, 0, 1]</span>
+<span class="line">    BodyRadiiOfGyrationOriginType: Body origin</span>
+<span class="line">    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">    BodyExternalStiffnessMatrixOriginType: Body origin</span>
+<span class="line">    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">    BodyExternalDampingMatrixOriginType: Body origin</span>
+<span class="line">    BodyConnectionParent: Free</span>
+<span class="line">    BodyFixedDOFx: Yes</span>
+<span class="line">    BodyFixedDOFy: Yes</span>
+<span class="line">    BodyFixedDOFz: Yes</span>
+<span class="line">    BodyFixedDOFRx: Yes</span>
+<span class="line">    BodyFixedDOFRy: Yes</span>
+<span class="line">    BodyFixedDOFRz: Yes</span>
+<span class="line">  - BodyName: Ellipsoid</span>
+<span class="line">    BodyMeshPosition: [0, -0.5, 0]</span>
+<span class="line">    BodyMeshAttitude: [0, 0, 0]</span>
+<span class="line">    BodyIncludedInAnalysis: Yes</span>
+<span class="line">    BodyMeshFileName: Ellipsoid.gdf</span>
+<span class="line">    BodyMeshFormat: Wamit gdf</span>
+<span class="line">    BodyMeshLengthUnits: m</span>
+<span class="line">    BodyMeshSymmetry: xz and yz planes</span>
+<span class="line">    BodyMeshDipolePanels: </span>
+<span class="line">    BodyOriginType: Free surface</span>
+<span class="line">    BodyAddInteriorSurfacePanels: No</span>
+<span class="line">    BodyOrcaFlexImportSymmetry: Use global mesh symmetry</span>
+<span class="line">    BodyOrcaFlexImportLength: ~</span>
+<span class="line">    BodyHydrostaticIntegralMethod: Standard</span>
+<span class="line">    BodyHydrostaticStiffnessMethod: Displacement</span>
+<span class="line">    BodyInertiaSpecifiedBy: Matrix (for a general body)</span>
+<span class="line">    BodyCentreOfMass: [0, 0, 0]</span>
+<span class="line">    BodyMass: 0.257621</span>
+<span class="line">    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:</span>
+<span class="line">      - [0.257621, 0, 0]</span>
+<span class="line">      - [0, 0.257621, 0]</span>
+<span class="line">      - [0, 0, 0.257621]</span>
+<span class="line">    BodyInertiaTensorOriginType: Body origin</span>
+<span class="line">    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">    BodyExternalStiffnessMatrixOriginType: Body origin</span>
+<span class="line">    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">    BodyExternalDampingMatrixOriginType: Body origin</span>
+<span class="line">    BodyConnectionParent: Free</span>
+<span class="line">    BodyIncreaseRollDampingToTarget: No</span>
+<span class="line">    BodyFixedDOFx: No</span>
+<span class="line">    BodyFixedDOFy: No</span>
+<span class="line">    BodyFixedDOFz: No</span>
+<span class="line">    BodyFixedDOFRx: No</span>
+<span class="line">    BodyFixedDOFRy: No</span>
+<span class="line">    BodyFixedDOFRz: No</span>
+<span class="line"># Field points</span>
+<span class="line">DetectAndSkipFieldPointsInsideBodies: Yes</span>
+<span class="line"># QTFs</span>
+<span class="line">QTFCalculationMethod: Both</span>
+<span class="line">PreferredQTFCalculationMethod: Direct method</span>
+<span class="line">FreeSurfacePanelledZoneType: Defined by mesh file</span>
+<span class="line">FreeSurfacePanelledZoneMeshFileName: PanelledZoneHalf.fdf</span>
+<span class="line">FreeSurfacePanelledZoneMeshFormat: Wamit fdf</span>
+<span class="line">FreeSurfacePanelledZoneMeshLengthUnits: m</span>
+<span class="line">FreeSurfacePanelledZoneInnerRadius: 5</span>
+<span class="line">FreeSurfaceQuadratureZoneNumberOfAnnuli: 0</span>
+<span class="line">FreeSurfaceOuterCircleNumberOfSegments: 64</span>
+<span class="line">FreeSurfaceAsymptoticZoneExpansionOrder: 10</span>
+<span class="line"># Drawing</span>
+<span class="line">InteriorSurfacePanelsPen: [1, Solid, Red]</span>
+<span class="line">FreeSurfaceMeshPen: [1, Solid, Aqua]</span>
+<span class="line">...</span></pre>
+  </div>
+  
+  <textarea id="file_content_0" style="display:none;">﻿%YAML 1.1
+# Type: Diffraction
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\test_input.yml
+# Created: 11:19 AM on 2/14/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+# Model
+UnitsSystem: SI
+# Calculation &amp; output
+SolveType: Full QTF calculation
+OutputPanelPressures: No
+OutputPanelVelocities: No
+OutputBodyWireFrames: Yes
+OutputIntermediateResults: No
+ComputationStrategy: Optimised for run time
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadPressureIntegration: Yes
+QuadraticLoadControlSurface: No
+QuadraticLoadMomentumConservation: No
+PreferredQuadraticLoadCalculationMethod: Pressure integration
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1e-6
+WaterlineGapTolerance: 1e-6
+DivideNonPlanarPanels: No
+LinearSolverMethod: Direct LU
+ValidatePanelArrangement: No
+BodyVolumeWarningLevel: 1e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+# Environment
+WaterDepth: Infinity
+WaterDensity: 1
+WavesReferredToBy: frequency (rad/s)
+HasWaveSpectrumForDragLinearisation: No
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+  - 1
+  - 3.5
+WaveHeading:
+  - 0
+  - 30
+  - 45
+  - 60
+  - 90
+QTFMinCrossingAngle: 0
+QTFMaxCrossingAngle: 180
+QTFMinPeriodOrFrequency: 0
+QTFMaxPeriodOrFrequency: Infinity
+QTFFrequencyTypes: Difference frequencies
+# Constraints
+EnableMultibodyConstraints: No
+# Bodies
+Bodies:
+  - BodyName: Cylinder
+    BodyMeshPosition: [0, 1.25, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: Cylinder.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: xz and yz planes
+    BodyMeshDipolePanels: 
+    BodyOriginType: Free surface
+    BodyAddInteriorSurfacePanels: No
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Radii of gyration (for a free-floating body)
+    BodyCentreOfMassZRelativeToFreeSurface: 0
+    BodyRadiiOfGyrationRx, BodyRadiiOfGyrationRy, BodyRadiiOfGyrationRz:
+      - [1, 0, 0]
+      - [0, 1, 0]
+      - [0, 0, 1]
+    BodyRadiiOfGyrationOriginType: Body origin
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyFixedDOFx: Yes
+    BodyFixedDOFy: Yes
+    BodyFixedDOFz: Yes
+    BodyFixedDOFRx: Yes
+    BodyFixedDOFRy: Yes
+    BodyFixedDOFRz: Yes
+  - BodyName: Ellipsoid
+    BodyMeshPosition: [0, -0.5, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: Ellipsoid.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: xz and yz planes
+    BodyMeshDipolePanels: 
+    BodyOriginType: Free surface
+    BodyAddInteriorSurfacePanels: No
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, 0]
+    BodyMass: 0.257621
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [0.257621, 0, 0]
+      - [0, 0.257621, 0]
+      - [0, 0, 0.257621]
+    BodyInertiaTensorOriginType: Body origin
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+# Field points
+DetectAndSkipFieldPointsInsideBodies: Yes
+# QTFs
+QTFCalculationMethod: Both
+PreferredQTFCalculationMethod: Direct method
+FreeSurfacePanelledZoneType: Defined by mesh file
+FreeSurfacePanelledZoneMeshFileName: PanelledZoneHalf.fdf
+FreeSurfacePanelledZoneMeshFormat: Wamit fdf
+FreeSurfacePanelledZoneMeshLengthUnits: m
+FreeSurfacePanelledZoneInnerRadius: 5
+FreeSurfaceQuadratureZoneNumberOfAnnuli: 0
+FreeSurfaceOuterCircleNumberOfSegments: 64
+FreeSurfaceAsymptoticZoneExpansionOrder: 10
+# Drawing
+InteriorSurfacePanelsPen: [1, Solid, Red]
+FreeSurfaceMeshPen: [1, Solid, Aqua]
+...</textarea>
+  <script>
+    function openFileWindow_0() {
+      var ta = document.getElementById('file_content_0');
+      var w = window.open('', '_blank');
+      w.document.write(
+        '<html><head><title>OrcaWave (.owd) - D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\test_input.yml</title>' +
+        '<style>body{font-family:"SF Mono","Cascadia Code","Consolas",' +
+        'monospace;white-space:pre;margin:1em;font-size:13px;' +
+        'line-height:1.5;tab-size:4;}</style></head><body>' +
+        ta.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') +
+        '</body></html>'
+      );
+      w.document.close();
+    }
+  </script>
+</div>
+<h3 style="margin-top:1.5em;margin-bottom:0.2em;">OrcaWave (spec.yml)</h3>
+<p style="margin:0.3em 0 0.5em;font-size:12px;color:#64748b;max-width:700px;">OrcaWave input configuration exported from the spec.yml pipeline via SaveData(). This is the auto-generated project — built by OrcaWaveRunner from the declarative spec.</p>
+<div class="file-viewer">
+  <div class="file-viewer-header">
+    <div>
+      <span class="solver-label">OrcaWave (spec.yml)</span>
+      <span class="file-path">D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\spec_orcawave\spec_input.yml</span>
+    </div>
+    <button onclick="openFileWindow_1()">Open in New Window</button>
+  </div>
+  <div class="file-content">
+    <pre><span class="line">﻿%YAML 1.1</span>
+<span class="line"># Type: Diffraction</span>
+<span class="line"># Program: OrcaFlex 11.6b</span>
+<span class="line"># File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\spec_orcawave\spec_input.yml</span>
+<span class="line"># Created: 11:19 AM on 2/14/2026</span>
+<span class="line"># User: ansystech</span>
+<span class="line"># Machine: ACMA-ANSYS05</span>
+<span class="line">---</span>
+<span class="line"># Model</span>
+<span class="line">UnitsSystem: SI</span>
+<span class="line"># Calculation &amp; output</span>
+<span class="line">SolveType: Potential and source formulations</span>
+<span class="line">HasResonanceDampingLid: No</span>
+<span class="line">OutputPanelPressures: No</span>
+<span class="line">OutputPanelVelocities: No</span>
+<span class="line">OutputBodyWireFrames: Yes</span>
+<span class="line">OutputIntermediateResults: No</span>
+<span class="line">ComputationStrategy: Optimised for run time</span>
+<span class="line">LoadRAOCalculationMethod: Both</span>
+<span class="line">PreferredLoadRAOCalculationMethod: Haskind</span>
+<span class="line">QuadraticLoadPressureIntegration: No</span>
+<span class="line">QuadraticLoadControlSurface: No</span>
+<span class="line">QuadraticLoadMomentumConservation: No</span>
+<span class="line">LengthTolerance: 100e-9</span>
+<span class="line">WaterlineZTolerance: 1e-6</span>
+<span class="line">WaterlineGapTolerance: 1e-6</span>
+<span class="line">DivideNonPlanarPanels: Yes</span>
+<span class="line">LinearSolverMethod: Direct LU</span>
+<span class="line">ValidatePanelArrangement: No</span>
+<span class="line">BodyVolumeWarningLevel: 1e-12</span>
+<span class="line">PanelAspectRatioWarningLevel: 25</span>
+<span class="line">PanelsPerWavelengthWarningLevel: 5</span>
+<span class="line"># Environment</span>
+<span class="line">WaterDepth: Infinity</span>
+<span class="line">WaterDensity: 1</span>
+<span class="line">WavesReferredToBy: period (s)</span>
+<span class="line">HasWaveSpectrumForDragLinearisation: No</span>
+<span class="line">MorisonFluidVelocity: Undisturbed incident wave</span>
+<span class="line">PeriodOrFrequency:</span>
+<span class="line">  - 1.7952</span>
+<span class="line">  - 6.2832</span>
+<span class="line">WaveHeading:</span>
+<span class="line">  - 0</span>
+<span class="line">  - 30</span>
+<span class="line">  - 45</span>
+<span class="line">  - 60</span>
+<span class="line">  - 90</span>
+<span class="line"># Constraints</span>
+<span class="line">EnableMultibodyConstraints: No</span>
+<span class="line"># Bodies</span>
+<span class="line">Bodies:</span>
+<span class="line">  - BodyName: Cylinder</span>
+<span class="line">    BodyMeshPosition: [0, 1.25, 0]</span>
+<span class="line">    BodyMeshAttitude: [0, 0, 0]</span>
+<span class="line">    BodyIncludedInAnalysis: Yes</span>
+<span class="line">    BodyMeshFileName: Cylinder.gdf</span>
+<span class="line">    BodyMeshFormat: Wamit gdf</span>
+<span class="line">    BodyMeshLengthUnits: m</span>
+<span class="line">    BodyMeshSymmetry: xz and yz planes</span>
+<span class="line">    BodyMeshDipolePanels: </span>
+<span class="line">    BodyOriginType: Free surface</span>
+<span class="line">    BodyAddInteriorSurfacePanels: No</span>
+<span class="line">    BodyOrcaFlexImportSymmetry: Use global mesh symmetry</span>
+<span class="line">    BodyOrcaFlexImportLength: ~</span>
+<span class="line">    BodyHydrostaticIntegralMethod: Standard</span>
+<span class="line">    BodyHydrostaticStiffnessMethod: Displacement</span>
+<span class="line">    BodyInertiaSpecifiedBy: Radii of gyration (for a free-floating body)</span>
+<span class="line">    BodyCentreOfMassZRelativeToFreeSurface: 0</span>
+<span class="line">    BodyRadiiOfGyrationRx, BodyRadiiOfGyrationRy, BodyRadiiOfGyrationRz:</span>
+<span class="line">      - [1, 0, 0]</span>
+<span class="line">      - [0, 1, 0]</span>
+<span class="line">      - [0, 0, 1]</span>
+<span class="line">    BodyRadiiOfGyrationOriginType: Body origin</span>
+<span class="line">    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">    BodyExternalStiffnessMatrixOriginType: Body origin</span>
+<span class="line">    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">    BodyExternalDampingMatrixOriginType: Body origin</span>
+<span class="line">    BodyConnectionParent: Free</span>
+<span class="line">    BodyFixedDOFx: Yes</span>
+<span class="line">    BodyFixedDOFy: Yes</span>
+<span class="line">    BodyFixedDOFz: Yes</span>
+<span class="line">    BodyFixedDOFRx: Yes</span>
+<span class="line">    BodyFixedDOFRy: Yes</span>
+<span class="line">    BodyFixedDOFRz: Yes</span>
+<span class="line">  - BodyName: Ellipsoid</span>
+<span class="line">    BodyMeshPosition: [0, -0.5, 0]</span>
+<span class="line">    BodyMeshAttitude: [0, 0, 0]</span>
+<span class="line">    BodyIncludedInAnalysis: Yes</span>
+<span class="line">    BodyMeshFileName: Ellipsoid.gdf</span>
+<span class="line">    BodyMeshFormat: Wamit gdf</span>
+<span class="line">    BodyMeshLengthUnits: m</span>
+<span class="line">    BodyMeshSymmetry: xz and yz planes</span>
+<span class="line">    BodyMeshDipolePanels: </span>
+<span class="line">    BodyOriginType: Free surface</span>
+<span class="line">    BodyAddInteriorSurfacePanels: No</span>
+<span class="line">    BodyOrcaFlexImportSymmetry: Use global mesh symmetry</span>
+<span class="line">    BodyOrcaFlexImportLength: ~</span>
+<span class="line">    BodyHydrostaticIntegralMethod: Standard</span>
+<span class="line">    BodyHydrostaticStiffnessMethod: Displacement</span>
+<span class="line">    BodyInertiaSpecifiedBy: Matrix (for a general body)</span>
+<span class="line">    BodyCentreOfMass: [0, 0, 0]</span>
+<span class="line">    BodyMass: 0.257621</span>
+<span class="line">    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:</span>
+<span class="line">      - [0.257621, 0, 0]</span>
+<span class="line">      - [0, 0.257621, 0]</span>
+<span class="line">      - [0, 0, 0.257621]</span>
+<span class="line">    BodyInertiaTensorOriginType: Body origin</span>
+<span class="line">    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">    BodyExternalStiffnessMatrixOriginType: Body origin</span>
+<span class="line">    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">      - [0, 0, 0, 0, 0, 0]</span>
+<span class="line">    BodyExternalDampingMatrixOriginType: Body origin</span>
+<span class="line">    BodyConnectionParent: Free</span>
+<span class="line">    BodyIncreaseRollDampingToTarget: No</span>
+<span class="line">    BodyFixedDOFx: No</span>
+<span class="line">    BodyFixedDOFy: No</span>
+<span class="line">    BodyFixedDOFz: No</span>
+<span class="line">    BodyFixedDOFRx: No</span>
+<span class="line">    BodyFixedDOFRy: No</span>
+<span class="line">    BodyFixedDOFRz: No</span>
+<span class="line"># Field points</span>
+<span class="line">DetectAndSkipFieldPointsInsideBodies: Yes</span>
+<span class="line">...</span></pre>
+  </div>
+  
+  <textarea id="file_content_1" style="display:none;">﻿%YAML 1.1
+# Type: Diffraction
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\spec_orcawave\spec_input.yml
+# Created: 11:19 AM on 2/14/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+# Model
+UnitsSystem: SI
+# Calculation &amp; output
+SolveType: Potential and source formulations
+HasResonanceDampingLid: No
+OutputPanelPressures: No
+OutputPanelVelocities: No
+OutputBodyWireFrames: Yes
+OutputIntermediateResults: No
+ComputationStrategy: Optimised for run time
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadPressureIntegration: No
+QuadraticLoadControlSurface: No
+QuadraticLoadMomentumConservation: No
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1e-6
+WaterlineGapTolerance: 1e-6
+DivideNonPlanarPanels: Yes
+LinearSolverMethod: Direct LU
+ValidatePanelArrangement: No
+BodyVolumeWarningLevel: 1e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+# Environment
+WaterDepth: Infinity
+WaterDensity: 1
+WavesReferredToBy: period (s)
+HasWaveSpectrumForDragLinearisation: No
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+  - 1.7952
+  - 6.2832
+WaveHeading:
+  - 0
+  - 30
+  - 45
+  - 60
+  - 90
+# Constraints
+EnableMultibodyConstraints: No
+# Bodies
+Bodies:
+  - BodyName: Cylinder
+    BodyMeshPosition: [0, 1.25, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: Cylinder.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: xz and yz planes
+    BodyMeshDipolePanels: 
+    BodyOriginType: Free surface
+    BodyAddInteriorSurfacePanels: No
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Radii of gyration (for a free-floating body)
+    BodyCentreOfMassZRelativeToFreeSurface: 0
+    BodyRadiiOfGyrationRx, BodyRadiiOfGyrationRy, BodyRadiiOfGyrationRz:
+      - [1, 0, 0]
+      - [0, 1, 0]
+      - [0, 0, 1]
+    BodyRadiiOfGyrationOriginType: Body origin
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyFixedDOFx: Yes
+    BodyFixedDOFy: Yes
+    BodyFixedDOFz: Yes
+    BodyFixedDOFRx: Yes
+    BodyFixedDOFRy: Yes
+    BodyFixedDOFRz: Yes
+  - BodyName: Ellipsoid
+    BodyMeshPosition: [0, -0.5, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: Ellipsoid.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: xz and yz planes
+    BodyMeshDipolePanels: 
+    BodyOriginType: Free surface
+    BodyAddInteriorSurfacePanels: No
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, 0]
+    BodyMass: 0.257621
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [0.257621, 0, 0]
+      - [0, 0.257621, 0]
+      - [0, 0, 0.257621]
+    BodyInertiaTensorOriginType: Body origin
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+# Field points
+DetectAndSkipFieldPointsInsideBodies: Yes
+...</textarea>
+  <script>
+    function openFileWindow_1() {
+      var ta = document.getElementById('file_content_1');
+      var w = window.open('', '_blank');
+      w.document.write(
+        '<html><head><title>OrcaWave (spec.yml) - D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\spec_orcawave\spec_input.yml</title>' +
+        '<style>body{font-family:"SF Mono","Cascadia Code","Consolas",' +
+        'monospace;white-space:pre;margin:1em;font-size:13px;' +
+        'line-height:1.5;tab-size:4;}</style></head><body>' +
+        ta.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') +
+        '</body></html>'
+      );
+      w.document.close();
+    }
+  </script>
+</div></div>
+
+  <!-- Section 2.5: Mesh Schematic -->
+  
+
+  <!-- Section 3: Consensus Summary -->
+  <div class="section">
+    <h2>Consensus Summary</h2>
+    <table style="width:100%;max-width:700px;">
+      <tr>
+        <th>DOF</th><th>Consensus</th>
+        <th>Mean Correlation</th><th>Outlier</th>
+      </tr>
+      <tr><td><a href='#dof-surge'>SURGE</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-sway'>SWAY</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-heave'>HEAVE</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-roll'>ROLL</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-pitch'>PITCH</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-yaw'>YAW</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+
+    </table>
+  </div>
+
+  <!-- Section 3.5: Hydrodynamic Coefficients -->
+  <div class="section"><h2>Hydrodynamic Coefficients</h2><p>Pairwise correlation of frequency-dependent added-mass and radiation-damping matrices (6&times;6 DOF). Values near 1.000 indicate identical coefficients.</p>
+<h3 style="font-size:0.95em;color:#555;">OrcaWave (.owd)-vs-OrcaWave (spec.yml)</h3>
+<h4 style="margin:0.8em 0 0.3em;">Added Mass Correlation</h4>
+<table class="solver-table" style="width:auto;max-width:600px;">
+<tr><th></th>
+<th>Su</th>
+<th>Sw</th>
+<th>He</th>
+<th>Ro</th>
+<th>Pi</th>
+<th>Ya</th>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Surge</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Sway</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Heave</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Roll</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Pitch</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Yaw</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+</table>
+<h4 style="margin:0.8em 0 0.3em;">Radiation Damping Correlation</h4>
+<table class="solver-table" style="width:auto;max-width:600px;">
+<tr><th></th>
+<th>Su</th>
+<th>Sw</th>
+<th>He</th>
+<th>Ro</th>
+<th>Pi</th>
+<th>Ya</th>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Surge</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Sway</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Heave</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Roll</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Pitch</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Yaw</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+</table></div>
+
+  <!-- Section 4: Per-DOF Analysis -->
+  <div class="section">
+    <h2>Per-DOF Analysis</h2>
+    
+<div class="dof-section" id="dof-surge">
+  <h3 class="dof-title">Surge</h3>
+  <div class="dof-grid">
+    <div class="dof-text">
+      <div class="consensus-badge" style="background:#27ae60;">
+        FULL
+      </div>
+      <table class="stats-table">
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Magnitude correlation</td><td>1.0000</td></tr>
+        <tr><td>Phase correlation</td><td>-0.7024</td></tr>
+        <tr><td>Magnitude RMS error</td><td>0.0000</td></tr>
+        <tr><td>Max amplitude diff</td>
+            <td>0.0000 m/m</td></tr>
+        <tr><td>Max phase diff</td><td>163.1 deg</td></tr>
+      </table>
+      <h4>Amplitude Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='3'>OrcaWave (.owd)</th>
+<th colspan='3'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>1.13</td><td>6.28</td><td>1.13</td>
+<td>1.13</td><td>6.28</td><td>1.13</td>
+</tr>
+<tr><td>30&deg;</td>
+<td>0.9789</td><td>6.28</td><td>0.9789</td>
+<td>0.9789</td><td>6.28</td><td>0.9789</td>
+</tr>
+<tr><td>45&deg;</td>
+<td>0.7998</td><td>6.28</td><td>0.7998</td>
+<td>0.7998</td><td>6.28</td><td>0.7998</td>
+</tr>
+<tr><td>60&deg;</td>
+<td>0.5659</td><td>6.28</td><td>0.5659</td>
+<td>0.5659</td><td>6.28</td><td>0.5659</td>
+</tr>
+</table>
+      <h4>Phase Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='2'>OrcaWave (.owd)</th>
+<th colspan='2'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>@Peak</th><th>LP</th>
+<th>@Peak</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>-90.1</td><td>-90.1</td>
+<td>-90.1</td><td>-90.1</td>
+</tr>
+<tr><td>30&deg;</td>
+<td>-89.1</td><td>-89.1</td>
+<td>-89.1</td><td>-89.1</td>
+</tr>
+<tr><td>45&deg;</td>
+<td>-88.7</td><td>-88.7</td>
+<td>-88.7</td><td>-88.7</td>
+</tr>
+<tr><td>60&deg;</td>
+<td>-88.4</td><td>-88.4</td>
+<td>-88.4</td><td>-88.4</td>
+</tr>
+</table>
+      <div class="observations"><p>Solvers show <strong>full agreement</strong> on Surge response.</p>
+<p>Amplitude curves are virtually identical (r=1.0000).</p>
+<p>Max phase difference of 163.1&deg; occurs at a heading omitted from the plot (negligible response). Displayed headings show good phase agreement.</p></div>
+      <p class="skipped-note">Headings with negligible response omitted: 90&deg;</p>
+    </div>
+    <div class="dof-plot"><div>                            <div id="plot_surge" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("plot_surge")) {                    Plotly.newPlot(                        "plot_surge",                        [{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[1.1298182152835223,0.3881403396722252],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[1.1298182001286319,0.38814366496962827],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_30","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H30","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.9789147265867087,0.45432952343042377],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_30","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H30","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.9789147110373767,0.4543314298330305],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_45","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H45","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.7997511286125625,0.4504438533332646],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_45","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H45","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.7997511122950471,0.45044555368841593],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_60","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H60","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.5658533019647389,0.37409730966600646],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_60","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H60","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.5658532876675146,0.37409853580983854],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-90.13801158044838,-98.66707531756148],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-90.13800975888627,-98.66722590144096],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_30","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H30","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-89.13383047827001,-75.22001653774235],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_30","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H30","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-89.13383295498532,-75.220013998969],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_45","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H45","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-88.71670545931131,-68.95674157733073],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_45","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H45","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-88.7167097364553,-68.95672283316337],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_60","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H60","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-88.39592219239248,-63.94676736432228],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_60","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H60","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-88.39592786264043,-63.946788725935285],"type":"scatter","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x2","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.575,1.0],"title":{"text":"m\u002fm"}},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.0,0.425],"title":{"text":"deg"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Amplitude (m\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Phase (deg)","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":50,"r":140,"t":30,"b":30},"height":400},                        {"responsive": true}                    )                };                            </script>        </div></div>
+  </div>
+</div>
+
+<div class="dof-section" id="dof-sway">
+  <h3 class="dof-title">Sway</h3>
+  <div class="dof-grid">
+    <div class="dof-text">
+      <div class="consensus-badge" style="background:#27ae60;">
+        FULL
+      </div>
+      <table class="stats-table">
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Magnitude correlation</td><td>1.0000</td></tr>
+        <tr><td>Phase correlation</td><td>1.0000</td></tr>
+        <tr><td>Magnitude RMS error</td><td>0.0000</td></tr>
+        <tr><td>Max amplitude diff</td>
+            <td>0.0000 m/m</td></tr>
+        <tr><td>Max phase diff</td><td>0.0 deg</td></tr>
+      </table>
+      <h4>Amplitude Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='3'>OrcaWave (.owd)</th>
+<th colspan='3'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>0.2789</td><td>1.80</td><td>0.03496</td>
+<td>0.2789</td><td>1.80</td><td>0.03496</td>
+</tr>
+<tr><td>30&deg;</td>
+<td>0.3908</td><td>6.28</td><td>0.3908</td>
+<td>0.3908</td><td>6.28</td><td>0.3908</td>
+</tr>
+<tr><td>45&deg;</td>
+<td>0.5528</td><td>6.28</td><td>0.5528</td>
+<td>0.5529</td><td>6.28</td><td>0.5529</td>
+</tr>
+<tr><td>60&deg;</td>
+<td>0.7431</td><td>1.80</td><td>0.6781</td>
+<td>0.7431</td><td>1.80</td><td>0.6781</td>
+</tr>
+<tr><td>90&deg;</td>
+<td>1.009</td><td>1.80</td><td>0.7845</td>
+<td>1.009</td><td>1.80</td><td>0.7845</td>
+</tr>
+</table>
+      <h4>Phase Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='2'>OrcaWave (.owd)</th>
+<th colspan='2'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>@Peak</th><th>LP</th>
+<th>@Peak</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>105.6</td><td>179.0</td>
+<td>105.6</td><td>179.0</td>
+</tr>
+<tr><td>30&deg;</td>
+<td>-92.7</td><td>-92.7</td>
+<td>-92.7</td><td>-92.7</td>
+</tr>
+<tr><td>45&deg;</td>
+<td>-90.2</td><td>-90.2</td>
+<td>-90.2</td><td>-90.2</td>
+</tr>
+<tr><td>60&deg;</td>
+<td>-32.0</td><td>-88.7</td>
+<td>-32.0</td><td>-88.7</td>
+</tr>
+<tr><td>90&deg;</td>
+<td>-35.6</td><td>-87.7</td>
+<td>-35.6</td><td>-87.7</td>
+</tr>
+</table>
+      <div class="observations"><p>Solvers show <strong>full agreement</strong> on Sway response.</p>
+<p>Amplitude curves are virtually identical (r=1.0000).</p>
+<p>Phase agreement within 0.0&deg;.</p></div>
+      
+    </div>
+    <div class="dof-plot"><div>                            <div id="plot_sway" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("plot_sway")) {                    Plotly.newPlot(                        "plot_sway",                        [{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.034963560889209135,0.27891290862628126],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.03496347566988503,0.27891214086656313],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_30","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H30","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.39076750061488297,0.27008648030688154],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_30","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H30","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.3907675492991737,0.27008498972675565],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_45","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H45","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.5528499453958355,0.4939372376912299],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_45","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H45","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.5528500068301944,0.49393644402338444],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_60","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H60","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.6781405305193301,0.7430952381863384],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_60","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H60","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.6781405940342929,0.7430948114592104],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_90","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H90","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.784465171163269,1.0092575076119699],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_90","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H90","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.7844652302946615,1.0092570420895026],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[178.98944539335145,105.61752802189771],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[178.98945755431126,105.61798511617565],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_30","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H30","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-92.73924466185173,3.209680689340361],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_30","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H30","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-92.73924166222923,3.209769842414104],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_45","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H45","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-90.1910875668574,-23.11307426171563],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_45","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H45","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-90.19109333947839,-23.113033654776615],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_60","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H60","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-88.72453074456182,-32.01088433059573],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_60","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H60","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-88.7245419624433,-32.010860376048626],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_90","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H90","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-87.6548810265738,-35.64487625275926],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_90","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H90","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-87.6548963800436,-35.6448875909248],"type":"scatter","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x2","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.575,1.0],"title":{"text":"m\u002fm"}},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.0,0.425],"title":{"text":"deg"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Amplitude (m\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Phase (deg)","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":50,"r":140,"t":30,"b":30},"height":400},                        {"responsive": true}                    )                };                            </script>        </div></div>
+  </div>
+</div>
+
+<div class="dof-section" id="dof-heave">
+  <h3 class="dof-title">Heave</h3>
+  <div class="dof-grid">
+    <div class="dof-text">
+      <div class="consensus-badge" style="background:#27ae60;">
+        FULL
+      </div>
+      <table class="stats-table">
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Magnitude correlation</td><td>1.0000</td></tr>
+        <tr><td>Phase correlation</td><td>1.0000</td></tr>
+        <tr><td>Magnitude RMS error</td><td>0.0000</td></tr>
+        <tr><td>Max amplitude diff</td>
+            <td>0.0000 m/m</td></tr>
+        <tr><td>Max phase diff</td><td>0.0 deg</td></tr>
+      </table>
+      <h4>Amplitude Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='3'>OrcaWave (.owd)</th>
+<th colspan='3'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>0.9773</td><td>6.28</td><td>0.9773</td>
+<td>0.9773</td><td>6.28</td><td>0.9773</td>
+</tr>
+<tr><td>30&deg;</td>
+<td>0.9817</td><td>6.28</td><td>0.9817</td>
+<td>0.9817</td><td>6.28</td><td>0.9817</td>
+</tr>
+<tr><td>45&deg;</td>
+<td>0.9852</td><td>6.28</td><td>0.9852</td>
+<td>0.9852</td><td>6.28</td><td>0.9852</td>
+</tr>
+<tr><td>60&deg;</td>
+<td>0.9885</td><td>6.28</td><td>0.9885</td>
+<td>0.9885</td><td>6.28</td><td>0.9885</td>
+</tr>
+<tr><td>90&deg;</td>
+<td>1.004</td><td>1.80</td><td>0.9917</td>
+<td>1.004</td><td>1.80</td><td>0.9917</td>
+</tr>
+</table>
+      <h4>Phase Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='2'>OrcaWave (.owd)</th>
+<th colspan='2'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>@Peak</th><th>LP</th>
+<th>@Peak</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>0.7</td><td>0.7</td>
+<td>0.7</td><td>0.7</td>
+</tr>
+<tr><td>30&deg;</td>
+<td>3.3</td><td>3.3</td>
+<td>3.3</td><td>3.3</td>
+</tr>
+<tr><td>45&deg;</td>
+<td>4.3</td><td>4.3</td>
+<td>4.3</td><td>4.3</td>
+</tr>
+<tr><td>60&deg;</td>
+<td>5.1</td><td>5.1</td>
+<td>5.1</td><td>5.1</td>
+</tr>
+<tr><td>90&deg;</td>
+<td>11.5</td><td>5.8</td>
+<td>11.5</td><td>5.8</td>
+</tr>
+</table>
+      <div class="observations"><p>Solvers show <strong>full agreement</strong> on Heave response.</p>
+<p>Amplitude curves are virtually identical (r=1.0000).</p>
+<p>Phase agreement within 0.0&deg;.</p></div>
+      
+    </div>
+    <div class="dof-plot"><div>                            <div id="plot_heave" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("plot_heave")) {                    Plotly.newPlot(                        "plot_heave",                        [{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.9773223910545268,0.7330976723261933],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.9773225060656493,0.7331001197204056],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_30","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H30","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.9817291052267902,0.8143943360001463],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_30","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H30","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.9817291705772544,0.8144004511107463],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_45","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H45","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.9851976091300514,0.8523268775293488],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_45","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H45","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.9851976378276949,0.8523335231130851],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_60","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H60","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.988505780708321,0.9097987707901424],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_60","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H60","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.9885057750222266,0.9098046817449125],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_90","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H90","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.9917279758529522,1.0035026002069267],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_90","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H90","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.9917279370204658,1.003506512669139],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[0.7189417080043199,12.180260812224725],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[0.7189357844306192,12.180377022052175],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_30","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H30","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[3.2661694989114944,-2.3313122083786832],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_30","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H30","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[3.2661507380572052,-2.33109832961474],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_45","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H45","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[4.308020832107446,-1.2999856518686623],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_45","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H45","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[4.3079969716967925,-1.2998931211170608],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_60","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H60","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[5.099859064223187,4.072651643987947],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_60","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H60","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[5.099831411292098,4.072580189913342],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_90","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H90","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[5.761419723687698,11.541722942855488],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_90","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H90","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[5.761388966750902,11.541507850916773],"type":"scatter","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x2","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.575,1.0],"title":{"text":"m\u002fm"}},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.0,0.425],"title":{"text":"deg"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Amplitude (m\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Phase (deg)","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":50,"r":140,"t":30,"b":30},"height":400},                        {"responsive": true}                    )                };                            </script>        </div></div>
+  </div>
+</div>
+
+<div class="dof-section" id="dof-roll">
+  <h3 class="dof-title">Roll</h3>
+  <div class="dof-grid">
+    <div class="dof-text">
+      <div class="consensus-badge" style="background:#27ae60;">
+        FULL
+      </div>
+      <table class="stats-table">
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Magnitude correlation</td><td>1.0000</td></tr>
+        <tr><td>Phase correlation</td><td>1.0000</td></tr>
+        <tr><td>Magnitude RMS error</td><td>0.0000</td></tr>
+        <tr><td>Max amplitude diff</td>
+            <td>0.0000 deg/m</td></tr>
+        <tr><td>Max phase diff</td><td>0.0 deg</td></tr>
+      </table>
+      <h4>Amplitude Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='3'>OrcaWave (.owd)</th>
+<th colspan='3'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>0.005458</td><td>1.80</td><td>0.0006901</td>
+<td>0.005458</td><td>1.80</td><td>0.0006901</td>
+</tr>
+<tr><td>30&deg;</td>
+<td>0.007791</td><td>6.28</td><td>0.007791</td>
+<td>0.007791</td><td>6.28</td><td>0.007791</td>
+</tr>
+<tr><td>45&deg;</td>
+<td>0.01102</td><td>6.28</td><td>0.01102</td>
+<td>0.01102</td><td>6.28</td><td>0.01102</td>
+</tr>
+<tr><td>60&deg;</td>
+<td>0.01438</td><td>1.80</td><td>0.01352</td>
+<td>0.01438</td><td>1.80</td><td>0.01352</td>
+</tr>
+<tr><td>90&deg;</td>
+<td>0.01964</td><td>1.80</td><td>0.01564</td>
+<td>0.01964</td><td>1.80</td><td>0.01564</td>
+</tr>
+</table>
+      <h4>Phase Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='2'>OrcaWave (.owd)</th>
+<th colspan='2'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>@Peak</th><th>LP</th>
+<th>@Peak</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>105.9</td><td>179.0</td>
+<td>105.9</td><td>179.0</td>
+</tr>
+<tr><td>30&deg;</td>
+<td>-92.7</td><td>-92.7</td>
+<td>-92.7</td><td>-92.7</td>
+</tr>
+<tr><td>45&deg;</td>
+<td>-90.2</td><td>-90.2</td>
+<td>-90.2</td><td>-90.2</td>
+</tr>
+<tr><td>60&deg;</td>
+<td>-32.5</td><td>-88.8</td>
+<td>-32.5</td><td>-88.8</td>
+</tr>
+<tr><td>90&deg;</td>
+<td>-36.3</td><td>-87.7</td>
+<td>-36.3</td><td>-87.7</td>
+</tr>
+</table>
+      <div class="observations"><p>Solvers show <strong>full agreement</strong> on Roll response.</p>
+<p>Amplitude curves are virtually identical (r=1.0000).</p>
+<p>Phase agreement within 0.0&deg;.</p></div>
+      
+    </div>
+    <div class="dof-plot"><div>                            <div id="plot_roll" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("plot_roll")) {                    Plotly.newPlot(                        "plot_roll",                        [{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.0006901298172037138,0.005458266800179676],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.0006901281202441509,0.005458252135414582],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_30","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H30","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.007790519903905957,0.005177295996470538],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_30","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H30","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.0077905208587239145,0.00517726765207087],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_45","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H45","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.011022601707574868,0.009479370746094317],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_45","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H45","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.011022602906350069,0.009479356795441714],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_60","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H60","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.013521183377476913,0.014378528623826138],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_60","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H60","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.013521184608009794,0.014378521955434959],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_90","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H90","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[0.01564170719769156,0.019635513135044233],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_90","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H90","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[0.015641708330990173,0.01963550603920503],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[178.98890787906774,105.88708749644702],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[178.98892002051622,105.88754432541909],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_30","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H30","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-92.74469104266433,4.695905533203549],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_30","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H30","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-92.74468780364747,4.695988879060809],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_45","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H45","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-90.23456160710235,-23.1048744585454],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_45","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H45","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-90.2345670225741,-23.104835464596107],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_60","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H60","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-88.79233817307794,-32.49318000347796],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_60","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H60","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-88.79234894728533,-32.49315385892415],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_90","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H90","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-87.74151148500926,-36.29231787373531],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_90","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H90","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-87.74152632378643,-36.29232609164982],"type":"scatter","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x2","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.575,1.0],"title":{"text":"deg\u002fm"}},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.0,0.425],"title":{"text":"deg"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Amplitude (deg\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Phase (deg)","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":50,"r":140,"t":30,"b":30},"height":400},                        {"responsive": true}                    )                };                            </script>        </div></div>
+  </div>
+</div>
+
+<div class="dof-section" id="dof-pitch">
+  <h3 class="dof-title">Pitch</h3>
+  <div class="dof-grid">
+    <div class="dof-text">
+      <div class="consensus-badge" style="background:#27ae60;">
+        FULL
+      </div>
+      <table class="stats-table">
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Magnitude correlation</td><td>1.0000</td></tr>
+        <tr><td>Phase correlation</td><td>0.9890</td></tr>
+        <tr><td>Magnitude RMS error</td><td>0.0001</td></tr>
+        <tr><td>Max amplitude diff</td>
+            <td>0.0001 deg/m</td></tr>
+        <tr><td>Max phase diff</td><td>17.4 deg</td></tr>
+      </table>
+      <h4>Amplitude Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='3'>OrcaWave (.owd)</th>
+<th colspan='3'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>38.93</td><td>1.80</td><td>6.71</td>
+<td>38.93</td><td>1.80</td><td>6.71</td>
+</tr>
+<tr><td>30&deg;</td>
+<td>43.17</td><td>1.80</td><td>5.813</td>
+<td>43.17</td><td>1.80</td><td>5.813</td>
+</tr>
+<tr><td>45&deg;</td>
+<td>41.42</td><td>1.80</td><td>4.748</td>
+<td>41.42</td><td>1.80</td><td>4.748</td>
+</tr>
+<tr><td>60&deg;</td>
+<td>33.42</td><td>1.80</td><td>3.359</td>
+<td>33.42</td><td>1.80</td><td>3.359</td>
+</tr>
+</table>
+      <h4>Phase Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='2'>OrcaWave (.owd)</th>
+<th colspan='2'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>@Peak</th><th>LP</th>
+<th>@Peak</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>81.2</td><td>89.9</td>
+<td>81.2</td><td>89.9</td>
+</tr>
+<tr><td>30&deg;</td>
+<td>104.3</td><td>90.8</td>
+<td>104.3</td><td>90.8</td>
+</tr>
+<tr><td>45&deg;</td>
+<td>110.5</td><td>91.2</td>
+<td>110.5</td><td>91.2</td>
+</tr>
+<tr><td>60&deg;</td>
+<td>115.3</td><td>91.6</td>
+<td>115.3</td><td>91.6</td>
+</tr>
+</table>
+      <div class="observations"><p>Solvers show <strong>full agreement</strong> on Pitch response.</p>
+<p>Amplitude curves are virtually identical (r=1.0000).</p>
+<p>Phase agreement within 17.4&deg;.</p></div>
+      <p class="skipped-note">Headings with negligible response omitted: 90&deg;</p>
+    </div>
+    <div class="dof-plot"><div>                            <div id="plot_pitch" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("plot_pitch")) {                    Plotly.newPlot(                        "plot_pitch",                        [{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[6.709828108499972,38.92617000498263],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[6.709796158546726,38.92622072131759],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_30","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H30","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[5.81264068169477,43.17262447199423],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_30","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H30","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[5.812612998615514,43.17251537045895],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_45","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H45","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[4.747981009858698,41.41641821099704],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_45","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H45","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[4.74795838335208,41.4163072986165],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_60","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H60","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[3.3587943072487936,33.41968263345273],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_60","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H60","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[3.3587782899037477,33.419587143371515],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[89.86200632230657,81.18038501227983],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[89.86200814346627,81.18024158197767],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_30","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H30","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[90.84005582728122,104.30271618145717],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_30","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H30","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[90.84005347662287,104.30271036010474],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_45","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H45","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[91.24624429130418,110.50157403787165],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_45","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H45","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[91.2462401944017,110.50159251260733],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_60","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H60","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[91.55856416849977,115.34266902844314],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_60","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H60","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[91.55855872118318,115.34265669203347],"type":"scatter","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x2","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.575,1.0],"title":{"text":"deg\u002fm"}},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.0,0.425],"title":{"text":"deg"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Amplitude (deg\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Phase (deg)","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":50,"r":140,"t":30,"b":30},"height":400},                        {"responsive": true}                    )                };                            </script>        </div></div>
+  </div>
+</div>
+
+<div class="dof-section" id="dof-yaw">
+  <h3 class="dof-title">Yaw</h3>
+  <div class="dof-grid">
+    <div class="dof-text">
+      <div class="consensus-badge" style="background:#27ae60;">
+        FULL
+      </div>
+      <table class="stats-table">
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Magnitude correlation</td><td>1.0000</td></tr>
+        <tr><td>Phase correlation</td><td>0.8897</td></tr>
+        <tr><td>Magnitude RMS error</td><td>0.0000</td></tr>
+        <tr><td>Max amplitude diff</td>
+            <td>0.0001 deg/m</td></tr>
+        <tr><td>Max phase diff</td><td>165.2 deg</td></tr>
+      </table>
+      <h4>Amplitude Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='3'>OrcaWave (.owd)</th>
+<th colspan='3'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+<th>Peak</th><th>T(s)</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>7.459</td><td>6.28</td><td>7.459</td>
+<td>7.459</td><td>6.28</td><td>7.459</td>
+</tr>
+<tr><td>30&deg;</td>
+<td>19.08</td><td>1.80</td><td>6.954</td>
+<td>19.08</td><td>1.80</td><td>6.954</td>
+</tr>
+<tr><td>45&deg;</td>
+<td>23.79</td><td>1.80</td><td>6.054</td>
+<td>23.79</td><td>1.80</td><td>6.054</td>
+</tr>
+<tr><td>60&deg;</td>
+<td>23.02</td><td>1.80</td><td>4.532</td>
+<td>23.02</td><td>1.80</td><td>4.532</td>
+</tr>
+</table>
+      <h4>Phase Comparison</h4>
+      <table class="solver-table">
+<tr><th rowspan='2'>Hdg</th>
+<th colspan='2'>OrcaWave (.owd)</th>
+<th colspan='2'>OrcaWave (spec.yml)</th>
+</tr><tr>
+<th>@Peak</th><th>LP</th>
+<th>@Peak</th><th>LP</th>
+</tr>
+<tr><td>0&deg;</td>
+<td>-90.1</td><td>-90.1</td>
+<td>-90.1</td><td>-90.1</td>
+</tr>
+<tr><td>30&deg;</td>
+<td>-160.5</td><td>-110.5</td>
+<td>-160.5</td><td>-110.5</td>
+</tr>
+<tr><td>45&deg;</td>
+<td>-152.3</td><td>-117.7</td>
+<td>-152.3</td><td>-117.7</td>
+</tr>
+<tr><td>60&deg;</td>
+<td>-146.7</td><td>-122.5</td>
+<td>-146.7</td><td>-122.5</td>
+</tr>
+</table>
+      <div class="observations"><p>Solvers show <strong>full agreement</strong> on Yaw response.</p>
+<p>Amplitude curves are virtually identical (r=1.0000).</p>
+<p>Max phase difference of 165.2&deg; occurs at a heading omitted from the plot (negligible response). Displayed headings show good phase agreement.</p></div>
+      <p class="skipped-note">Headings with negligible response omitted: 90&deg;</p>
+    </div>
+    <div class="dof-plot"><div>                            <div id="plot_yaw" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("plot_yaw")) {                    Plotly.newPlot(                        "plot_yaw",                        [{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[7.458609822062901,5.772273776023177],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[7.458608280748566,5.772337761932122],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_30","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H30","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[6.9543096812420115,19.084048979007218],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_30","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H30","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[6.954303955084521,19.08407751201472],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_45","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H45","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[6.054151022828045,23.79473371628299],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_45","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H45","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[6.054143224802546,23.794683804715547],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_60","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H60","showlegend":true,"x":[6.283185307179586,1.7951958020513101],"y":[4.531552525896513,23.01744929718404],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_60","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H60","showlegend":true,"x":[6.283199999999999,1.7951999999999997],"y":[4.531545030712113,23.017353434663708],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H0","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-90.14254561975048,-160.0951672310256],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H0","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-90.14254369692989,-160.09480898380983],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_30","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H30","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-110.53738600107322,-160.51884606072295],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_30","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H30","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-110.53730266225398,-160.51907644887976],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_45","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H45","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-117.68376967777027,-152.31605771656515],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_45","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H45","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-117.68366735673573,-152.31630484631015],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_60","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H60","showlegend":false,"x":[6.283185307179586,1.7951958020513101],"y":[-122.49807469758201,-146.70413005601242],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_60","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H60","showlegend":false,"x":[6.283199999999999,1.7951999999999997],"y":[-122.49796397856039,-146.70434924153676],"type":"scatter","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x2","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.575,1.0],"title":{"text":"deg\u002fm"}},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.0,0.425],"title":{"text":"deg"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Amplitude (deg\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Phase (deg)","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":50,"r":140,"t":30,"b":30},"height":400},                        {"responsive": true}                    )                };                            </script>        </div></div>
+  </div>
+</div>
+  </div>
+
+  <!-- Section 4.5: Raw RAO Data -->
+  <div class="section"><h2>Raw RAO Data</h2><p>Full frequency-by-heading magnitude and phase values for each DOF. Expand each section to inspect.</p>
+<details><summary><strong>Surge</strong> (2 freq &times; 5 hdg)</summary>
+<div style="overflow-x:auto;"><table class="solver-table">
+<tr><th>T (s)</th>
+<th>0&deg; .owd<br>Mag (m/m)</th><th>0&deg; .owd<br>Phase (&deg;)</th>
+<th>0&deg; spec.yml<br>Mag (m/m)</th><th>0&deg; spec.yml<br>Phase (&deg;)</th>
+<th>30&deg; .owd<br>Mag (m/m)</th><th>30&deg; .owd<br>Phase (&deg;)</th>
+<th>30&deg; spec.yml<br>Mag (m/m)</th><th>30&deg; spec.yml<br>Phase (&deg;)</th>
+<th>45&deg; .owd<br>Mag (m/m)</th><th>45&deg; .owd<br>Phase (&deg;)</th>
+<th>45&deg; spec.yml<br>Mag (m/m)</th><th>45&deg; spec.yml<br>Phase (&deg;)</th>
+<th>60&deg; .owd<br>Mag (m/m)</th><th>60&deg; .owd<br>Phase (&deg;)</th>
+<th>60&deg; spec.yml<br>Mag (m/m)</th><th>60&deg; spec.yml<br>Phase (&deg;)</th>
+<th>90&deg; .owd<br>Mag (m/m)</th><th>90&deg; .owd<br>Phase (&deg;)</th>
+<th>90&deg; spec.yml<br>Mag (m/m)</th><th>90&deg; spec.yml<br>Phase (&deg;)</th>
+</tr>
+<tr><td>6.2832</td>
+<td>1.12982</td><td>-90.1</td>
+<td>1.12982</td><td>-90.1</td>
+<td>0.978915</td><td>-89.1</td>
+<td>0.978915</td><td>-89.1</td>
+<td>0.799751</td><td>-88.7</td>
+<td>0.799751</td><td>-88.7</td>
+<td>0.565853</td><td>-88.4</td>
+<td>0.565853</td><td>-88.4</td>
+<td>7.99965e-15</td><td>-1.4</td>
+<td>2.13218e-15</td><td>-164.4</td>
+</tr>
+<tr><td>1.7952</td>
+<td>0.38814</td><td>-98.7</td>
+<td>0.388144</td><td>-98.7</td>
+<td>0.45433</td><td>-75.2</td>
+<td>0.454331</td><td>-75.2</td>
+<td>0.450444</td><td>-69.0</td>
+<td>0.450446</td><td>-69.0</td>
+<td>0.374097</td><td>-63.9</td>
+<td>0.374099</td><td>-63.9</td>
+<td>5.68969e-16</td><td>-59.0</td>
+<td>8.41629e-16</td><td>-132.3</td>
+</tr>
+</table></div>
+</details>
+<details><summary><strong>Sway</strong> (2 freq &times; 5 hdg)</summary>
+<div style="overflow-x:auto;"><table class="solver-table">
+<tr><th>T (s)</th>
+<th>0&deg; .owd<br>Mag (m/m)</th><th>0&deg; .owd<br>Phase (&deg;)</th>
+<th>0&deg; spec.yml<br>Mag (m/m)</th><th>0&deg; spec.yml<br>Phase (&deg;)</th>
+<th>30&deg; .owd<br>Mag (m/m)</th><th>30&deg; .owd<br>Phase (&deg;)</th>
+<th>30&deg; spec.yml<br>Mag (m/m)</th><th>30&deg; spec.yml<br>Phase (&deg;)</th>
+<th>45&deg; .owd<br>Mag (m/m)</th><th>45&deg; .owd<br>Phase (&deg;)</th>
+<th>45&deg; spec.yml<br>Mag (m/m)</th><th>45&deg; spec.yml<br>Phase (&deg;)</th>
+<th>60&deg; .owd<br>Mag (m/m)</th><th>60&deg; .owd<br>Phase (&deg;)</th>
+<th>60&deg; spec.yml<br>Mag (m/m)</th><th>60&deg; spec.yml<br>Phase (&deg;)</th>
+<th>90&deg; .owd<br>Mag (m/m)</th><th>90&deg; .owd<br>Phase (&deg;)</th>
+<th>90&deg; spec.yml<br>Mag (m/m)</th><th>90&deg; spec.yml<br>Phase (&deg;)</th>
+</tr>
+<tr><td>6.2832</td>
+<td>0.0349636</td><td>179.0</td>
+<td>0.0349635</td><td>179.0</td>
+<td>0.390768</td><td>-92.7</td>
+<td>0.390768</td><td>-92.7</td>
+<td>0.55285</td><td>-90.2</td>
+<td>0.55285</td><td>-90.2</td>
+<td>0.678141</td><td>-88.7</td>
+<td>0.678141</td><td>-88.7</td>
+<td>0.784465</td><td>-87.7</td>
+<td>0.784465</td><td>-87.7</td>
+</tr>
+<tr><td>1.7952</td>
+<td>0.278913</td><td>105.6</td>
+<td>0.278912</td><td>105.6</td>
+<td>0.270086</td><td>3.2</td>
+<td>0.270085</td><td>3.2</td>
+<td>0.493937</td><td>-23.1</td>
+<td>0.493936</td><td>-23.1</td>
+<td>0.743095</td><td>-32.0</td>
+<td>0.743095</td><td>-32.0</td>
+<td>1.00926</td><td>-35.6</td>
+<td>1.00926</td><td>-35.6</td>
+</tr>
+</table></div>
+</details>
+<details><summary><strong>Heave</strong> (2 freq &times; 5 hdg)</summary>
+<div style="overflow-x:auto;"><table class="solver-table">
+<tr><th>T (s)</th>
+<th>0&deg; .owd<br>Mag (m/m)</th><th>0&deg; .owd<br>Phase (&deg;)</th>
+<th>0&deg; spec.yml<br>Mag (m/m)</th><th>0&deg; spec.yml<br>Phase (&deg;)</th>
+<th>30&deg; .owd<br>Mag (m/m)</th><th>30&deg; .owd<br>Phase (&deg;)</th>
+<th>30&deg; spec.yml<br>Mag (m/m)</th><th>30&deg; spec.yml<br>Phase (&deg;)</th>
+<th>45&deg; .owd<br>Mag (m/m)</th><th>45&deg; .owd<br>Phase (&deg;)</th>
+<th>45&deg; spec.yml<br>Mag (m/m)</th><th>45&deg; spec.yml<br>Phase (&deg;)</th>
+<th>60&deg; .owd<br>Mag (m/m)</th><th>60&deg; .owd<br>Phase (&deg;)</th>
+<th>60&deg; spec.yml<br>Mag (m/m)</th><th>60&deg; spec.yml<br>Phase (&deg;)</th>
+<th>90&deg; .owd<br>Mag (m/m)</th><th>90&deg; .owd<br>Phase (&deg;)</th>
+<th>90&deg; spec.yml<br>Mag (m/m)</th><th>90&deg; spec.yml<br>Phase (&deg;)</th>
+</tr>
+<tr><td>6.2832</td>
+<td>0.977322</td><td>0.7</td>
+<td>0.977323</td><td>0.7</td>
+<td>0.981729</td><td>3.3</td>
+<td>0.981729</td><td>3.3</td>
+<td>0.985198</td><td>4.3</td>
+<td>0.985198</td><td>4.3</td>
+<td>0.988506</td><td>5.1</td>
+<td>0.988506</td><td>5.1</td>
+<td>0.991728</td><td>5.8</td>
+<td>0.991728</td><td>5.8</td>
+</tr>
+<tr><td>1.7952</td>
+<td>0.733098</td><td>12.2</td>
+<td>0.7331</td><td>12.2</td>
+<td>0.814394</td><td>-2.3</td>
+<td>0.8144</td><td>-2.3</td>
+<td>0.852327</td><td>-1.3</td>
+<td>0.852334</td><td>-1.3</td>
+<td>0.909799</td><td>4.1</td>
+<td>0.909805</td><td>4.1</td>
+<td>1.0035</td><td>11.5</td>
+<td>1.00351</td><td>11.5</td>
+</tr>
+</table></div>
+</details>
+<details><summary><strong>Roll</strong> (2 freq &times; 5 hdg)</summary>
+<div style="overflow-x:auto;"><table class="solver-table">
+<tr><th>T (s)</th>
+<th>0&deg; .owd<br>Mag (deg/m)</th><th>0&deg; .owd<br>Phase (&deg;)</th>
+<th>0&deg; spec.yml<br>Mag (deg/m)</th><th>0&deg; spec.yml<br>Phase (&deg;)</th>
+<th>30&deg; .owd<br>Mag (deg/m)</th><th>30&deg; .owd<br>Phase (&deg;)</th>
+<th>30&deg; spec.yml<br>Mag (deg/m)</th><th>30&deg; spec.yml<br>Phase (&deg;)</th>
+<th>45&deg; .owd<br>Mag (deg/m)</th><th>45&deg; .owd<br>Phase (&deg;)</th>
+<th>45&deg; spec.yml<br>Mag (deg/m)</th><th>45&deg; spec.yml<br>Phase (&deg;)</th>
+<th>60&deg; .owd<br>Mag (deg/m)</th><th>60&deg; .owd<br>Phase (&deg;)</th>
+<th>60&deg; spec.yml<br>Mag (deg/m)</th><th>60&deg; spec.yml<br>Phase (&deg;)</th>
+<th>90&deg; .owd<br>Mag (deg/m)</th><th>90&deg; .owd<br>Phase (&deg;)</th>
+<th>90&deg; spec.yml<br>Mag (deg/m)</th><th>90&deg; spec.yml<br>Phase (&deg;)</th>
+</tr>
+<tr><td>6.2832</td>
+<td>0.00069013</td><td>179.0</td>
+<td>0.000690128</td><td>179.0</td>
+<td>0.00779052</td><td>-92.7</td>
+<td>0.00779052</td><td>-92.7</td>
+<td>0.0110226</td><td>-90.2</td>
+<td>0.0110226</td><td>-90.2</td>
+<td>0.0135212</td><td>-88.8</td>
+<td>0.0135212</td><td>-88.8</td>
+<td>0.0156417</td><td>-87.7</td>
+<td>0.0156417</td><td>-87.7</td>
+</tr>
+<tr><td>1.7952</td>
+<td>0.00545827</td><td>105.9</td>
+<td>0.00545825</td><td>105.9</td>
+<td>0.0051773</td><td>4.7</td>
+<td>0.00517727</td><td>4.7</td>
+<td>0.00947937</td><td>-23.1</td>
+<td>0.00947936</td><td>-23.1</td>
+<td>0.0143785</td><td>-32.5</td>
+<td>0.0143785</td><td>-32.5</td>
+<td>0.0196355</td><td>-36.3</td>
+<td>0.0196355</td><td>-36.3</td>
+</tr>
+</table></div>
+</details>
+<details><summary><strong>Pitch</strong> (2 freq &times; 5 hdg)</summary>
+<div style="overflow-x:auto;"><table class="solver-table">
+<tr><th>T (s)</th>
+<th>0&deg; .owd<br>Mag (deg/m)</th><th>0&deg; .owd<br>Phase (&deg;)</th>
+<th>0&deg; spec.yml<br>Mag (deg/m)</th><th>0&deg; spec.yml<br>Phase (&deg;)</th>
+<th>30&deg; .owd<br>Mag (deg/m)</th><th>30&deg; .owd<br>Phase (&deg;)</th>
+<th>30&deg; spec.yml<br>Mag (deg/m)</th><th>30&deg; spec.yml<br>Phase (&deg;)</th>
+<th>45&deg; .owd<br>Mag (deg/m)</th><th>45&deg; .owd<br>Phase (&deg;)</th>
+<th>45&deg; spec.yml<br>Mag (deg/m)</th><th>45&deg; spec.yml<br>Phase (&deg;)</th>
+<th>60&deg; .owd<br>Mag (deg/m)</th><th>60&deg; .owd<br>Phase (&deg;)</th>
+<th>60&deg; spec.yml<br>Mag (deg/m)</th><th>60&deg; spec.yml<br>Phase (&deg;)</th>
+<th>90&deg; .owd<br>Mag (deg/m)</th><th>90&deg; .owd<br>Phase (&deg;)</th>
+<th>90&deg; spec.yml<br>Mag (deg/m)</th><th>90&deg; spec.yml<br>Phase (&deg;)</th>
+</tr>
+<tr><td>6.2832</td>
+<td>6.70983</td><td>89.9</td>
+<td>6.7098</td><td>89.9</td>
+<td>5.81264</td><td>90.8</td>
+<td>5.81261</td><td>90.8</td>
+<td>4.74798</td><td>91.2</td>
+<td>4.74796</td><td>91.2</td>
+<td>3.35879</td><td>91.6</td>
+<td>3.35878</td><td>91.6</td>
+<td>2.50201e-14</td><td>-3.9</td>
+<td>1.51328e-14</td><td>-8.5</td>
+</tr>
+<tr><td>1.7952</td>
+<td>38.9262</td><td>81.2</td>
+<td>38.9262</td><td>81.2</td>
+<td>43.1726</td><td>104.3</td>
+<td>43.1725</td><td>104.3</td>
+<td>41.4164</td><td>110.5</td>
+<td>41.4163</td><td>110.5</td>
+<td>33.4197</td><td>115.3</td>
+<td>33.4196</td><td>115.3</td>
+<td>3.10414e-14</td><td>79.3</td>
+<td>5.57559e-14</td><td>61.9</td>
+</tr>
+</table></div>
+</details>
+<details><summary><strong>Yaw</strong> (2 freq &times; 5 hdg)</summary>
+<div style="overflow-x:auto;"><table class="solver-table">
+<tr><th>T (s)</th>
+<th>0&deg; .owd<br>Mag (deg/m)</th><th>0&deg; .owd<br>Phase (&deg;)</th>
+<th>0&deg; spec.yml<br>Mag (deg/m)</th><th>0&deg; spec.yml<br>Phase (&deg;)</th>
+<th>30&deg; .owd<br>Mag (deg/m)</th><th>30&deg; .owd<br>Phase (&deg;)</th>
+<th>30&deg; spec.yml<br>Mag (deg/m)</th><th>30&deg; spec.yml<br>Phase (&deg;)</th>
+<th>45&deg; .owd<br>Mag (deg/m)</th><th>45&deg; .owd<br>Phase (&deg;)</th>
+<th>45&deg; spec.yml<br>Mag (deg/m)</th><th>45&deg; spec.yml<br>Phase (&deg;)</th>
+<th>60&deg; .owd<br>Mag (deg/m)</th><th>60&deg; .owd<br>Phase (&deg;)</th>
+<th>60&deg; spec.yml<br>Mag (deg/m)</th><th>60&deg; spec.yml<br>Phase (&deg;)</th>
+<th>90&deg; .owd<br>Mag (deg/m)</th><th>90&deg; .owd<br>Phase (&deg;)</th>
+<th>90&deg; spec.yml<br>Mag (deg/m)</th><th>90&deg; spec.yml<br>Phase (&deg;)</th>
+</tr>
+<tr><td>6.2832</td>
+<td>7.45861</td><td>-90.1</td>
+<td>7.45861</td><td>-90.1</td>
+<td>6.95431</td><td>-110.5</td>
+<td>6.9543</td><td>-110.5</td>
+<td>6.05415</td><td>-117.7</td>
+<td>6.05414</td><td>-117.7</td>
+<td>4.53155</td><td>-122.5</td>
+<td>4.53155</td><td>-122.5</td>
+<td>4.06536e-14</td><td>-49.8</td>
+<td>3.73569e-14</td><td>-8.6</td>
+</tr>
+<tr><td>1.7952</td>
+<td>5.77227</td><td>-160.1</td>
+<td>5.77234</td><td>-160.1</td>
+<td>19.084</td><td>-160.5</td>
+<td>19.0841</td><td>-160.5</td>
+<td>23.7947</td><td>-152.3</td>
+<td>23.7947</td><td>-152.3</td>
+<td>23.0174</td><td>-146.7</td>
+<td>23.0174</td><td>-146.7</td>
+<td>4.15128e-14</td><td>-55.1</td>
+<td>3.32153e-14</td><td>110.1</td>
+</tr>
+</table></div>
+</details></div>
+
+  <!-- Section 5: Additional Plots -->
+  <div class="section">
+    <h2>Full Overlay Plots</h2>
+    <ul class="plot-links">
+      <li><a href="benchmark_amplitude.html">benchmark_amplitude.html</a></li>
+<li><a href="benchmark_phase.html">benchmark_phase.html</a></li>
+<li><a href="benchmark_combined.html">benchmark_combined.html</a></li>
+<li><a href="benchmark_heatmap.html">benchmark_heatmap.html</a></li>
+
+    </ul>
+  </div>
+
+  <!-- Section 6: Notes -->
+  <div class="section">
+    <h2>Notes</h2>
+    <ul></ul>
+  </div>
+
+</div>
+</body>
+</html>

@@ -44,6 +44,26 @@ _SOLVER_STYLES = {
     3: {"dash": "dashdot", "color_base": "#d62728"},
 }
 
+# Threshold: amplitude below 5% of peak is considered negligible for
+# phase interpretation. Phase is physically meaningless when the signal
+# is near zero (e.g. yaw on a symmetric body, or off-axis DOFs).
+_NEGLIGIBLE_AMPLITUDE_RATIO = 0.05
+
+
+def _is_phase_at_negligible_amplitude(
+    mag_at_phase_diff: float,
+    peak_mag: float,
+) -> bool:
+    """Return True if the amplitude where max phase diff occurs is negligible.
+
+    Phase values are undefined / meaningless when the underlying signal
+    amplitude is near zero. This helper lets the commentary and plot
+    annotations communicate this clearly.
+    """
+    if peak_mag <= 0:
+        return True  # entirely zero signal — phase is meaningless
+    return mag_at_phase_diff / peak_mag < _NEGLIGIBLE_AMPLITUDE_RATIO
+
 
 class BenchmarkPlotter:
     """Generate interactive Plotly HTML overlay plots from multiple solvers.
@@ -763,6 +783,38 @@ class BenchmarkPlotter:
             ("Phase convention (raw)", "_raw_phase"),
             ("Phase convention (normalized)", "_norm_phase"),
             ("Unit system", "_unit_system"),
+            # -- OrcaWave Solver Settings --
+            ("_section", "OrcaWave Solver Settings"),
+            ("Units system", "ow_units_system"),
+            ("Solve type", "ow_solve_type"),
+            ("Load RAO method", "ow_load_rao_method"),
+            ("Linear solver", "ow_linear_solver"),
+            ("Divide non-planar panels", "ow_divide_nonplanar"),
+            ("Length tolerance", "ow_length_tolerance"),
+            ("Waves referred to by", "ow_waves_referred_to_by"),
+            # -- OrcaWave Body Details --
+            ("_section", "OrcaWave Body Details"),
+            ("Body count", "ow_body_count"),
+            ("Body name", "ow_body_name"),
+            ("Inertia specification", "ow_inertia_spec"),
+            ("Interior surface panels", "ow_interior_panels"),
+            ("Connection parent", "ow_connection_parent"),
+            ("Fixed DOFs", "ow_fixed_dofs"),
+            ("Roll damping target", "ow_roll_damping_target"),
+            ("External damping", "ow_external_damping"),
+            ("External stiffness", "ow_external_stiffness"),
+            # -- OrcaWave Advanced --
+            ("_section", "OrcaWave Advanced"),
+            ("Damping lid", "ow_damping_lid"),
+            ("Damping lid mesh", "ow_damping_lid_mesh"),
+            ("Damping factor (epsilon)", "ow_damping_epsilon"),
+            ("QTF calc method", "ow_qtf_method"),
+            ("QTF crossing angles", "ow_qtf_crossing_angles"),
+            ("QTF frequency types", "ow_qtf_freq_types"),
+            ("Include mean drift QTFs", "ow_qtf_mean_drift"),
+            ("Free surface zone type", "ow_fsz_type"),
+            ("Free surface zone mesh", "ow_fsz_mesh"),
+            ("Free surface inner radius", "ow_fsz_inner_radius"),
         ]
 
         # --- Build per-solver values for each parameter ---
@@ -827,8 +879,28 @@ class BenchmarkPlotter:
         parts.append("</tr></thead><tbody>")
 
         n_cols = 1 + len(self._solver_names)
+
+        # Pre-scan: identify sections where ALL rows are "-" (skip them)
+        sections_with_data: set[str] = set()
+        current_section = ""
         for entry in section_order:
             if entry.startswith("__section__"):
+                current_section = entry
+                continue
+            param_data = merged.get(entry)
+            if param_data:
+                has_real_value = any(
+                    param_data.get(s, "-") != "-"
+                    for s in self._solver_names
+                )
+                if has_real_value:
+                    sections_with_data.add(current_section)
+
+        for entry in section_order:
+            if entry.startswith("__section__"):
+                # Skip section header if all its rows are "-"
+                if entry not in sections_with_data:
+                    continue
                 sec_name = entry.replace("__section__", "")
                 parts.append(
                     f"<tr class='section-row'>"
@@ -839,6 +911,14 @@ class BenchmarkPlotter:
 
             param_data = merged.get(entry)
             if not param_data:
+                continue
+
+            # Skip rows where all solvers show "-"
+            all_dash = all(
+                param_data.get(s, "-") == "-"
+                for s in self._solver_names
+            )
+            if all_dash:
                 continue
 
             parts.append("<tr>")
@@ -853,6 +933,144 @@ class BenchmarkPlotter:
 
         parts.append("</tbody></table>")
         return "\n".join(parts)
+
+    def build_semantic_equivalence_html(self) -> str:
+        """Render semantic equivalence comparison between solver inputs.
+
+        Reads ``_semantic_equivalence`` from solver_metadata (set by the
+        validation script) and renders a summary table plus diff details.
+
+        Returns:
+            HTML string with the semantic equivalence section, or empty
+            string if no semantic data is available.
+        """
+        # Look for semantic data in any solver's metadata
+        sem_data: Optional[Dict[str, Any]] = None
+        for solver in self._solver_names:
+            meta = self._solver_metadata.get(solver, {})
+            if "_semantic_equivalence" in meta:
+                sem_data = meta["_semantic_equivalence"]
+                break
+
+        if sem_data is None:
+            return ""
+
+        match_count = sem_data.get("match_count", 0)
+        cosmetic_count = sem_data.get("cosmetic_count", 0)
+        convention_count = sem_data.get("convention_count", 0)
+        sig_count = sem_data.get("significant_count", 0)
+        total = match_count + cosmetic_count + convention_count + sig_count
+        diffs = sem_data.get("diffs", [])
+
+        # Verdict badge
+        if sig_count == 0:
+            badge_color = "#27ae60"
+            badge_text = "EQUIVALENT"
+        elif sig_count <= 5:
+            badge_color = "#f39c12"
+            badge_text = f"{sig_count} SIGNIFICANT DIFF(S)"
+        else:
+            badge_color = "#e74c3c"
+            badge_text = f"{sig_count} SIGNIFICANT DIFF(S)"
+
+        parts: List[str] = [
+            "<h3>Semantic Equivalence</h3>",
+            "<p>Key-by-key comparison of the OrcaWave SaveData() YAML "
+            "exports from both solver paths. Keys are classified as:</p>"
+            "<ul style='font-size:13px;margin:0.3em 0 0.8em;'>"
+            "<li><strong>Cosmetic</strong> — GUI display, naming, "
+            "output flags, dormant settings (no solver effect)</li>"
+            "<li><strong>Convention</strong> — equivalent data in "
+            "different representation (e.g. Hz vs rad/s)</li>"
+            "<li><strong>Significant</strong> — real solver parameter "
+            "difference that may affect results</li></ul>",
+            "<table class='stats-table' style='max-width:500px;"
+            "margin-bottom:1em;'>",
+            "<tr><th>Metric</th><th>Count</th></tr>",
+            f"<tr><td>Matching keys</td>"
+            f"<td style='color:#27ae60;font-weight:bold'>"
+            f"{match_count}</td></tr>",
+            f"<tr><td>Cosmetic differences</td>"
+            f"<td style='color:#6b7280'>{cosmetic_count}</td></tr>",
+            f"<tr><td>Convention differences</td>"
+            f"<td style='color:#2563eb'>{convention_count}</td></tr>",
+            f"<tr><td>Significant differences</td>"
+            f"<td style='color:{'#e74c3c' if sig_count > 0 else '#27ae60'}"
+            f";font-weight:bold'>{sig_count}</td></tr>",
+            f"<tr><td>Total keys compared</td><td>{total}</td></tr>",
+            "</table>",
+            f"<div style='display:inline-block;padding:4px 16px;"
+            f"border-radius:4px;color:white;font-weight:bold;"
+            f"background:{badge_color};margin-bottom:1em;'>"
+            f"{badge_text}</div>",
+        ]
+
+        # Diff details table
+        if diffs:
+            sig_diffs = [d for d in diffs if d["level"] == "significant"]
+            conv_diffs = [d for d in diffs if d["level"] == "convention"]
+            cos_diffs = [d for d in diffs if d["level"] == "cosmetic"]
+
+            def _render_diff_table(
+                items: List[Dict[str, Any]], title: str,
+                collapsed: bool = False,
+            ) -> None:
+                if not items:
+                    return
+                header = (
+                    "<table style='max-width:800px;font-size:12px;"
+                    "margin-top:0.5em;'>"
+                    "<tr><th style='text-align:left'>Key</th>"
+                    "<th style='text-align:left'>OrcaWave (.owd)</th>"
+                    "<th style='text-align:left'>OrcaWave (spec.yml)</th>"
+                    "</tr>"
+                )
+                rows = ""
+                for d in items:
+                    rows += (
+                        f"<tr>"
+                        f"<td><code>{html_mod.escape(d['key'])}</code></td>"
+                        f"<td>{html_mod.escape(d['owd'])}</td>"
+                        f"<td>{html_mod.escape(d['spec'])}</td>"
+                        f"</tr>"
+                    )
+                if collapsed:
+                    parts.append(
+                        f"<details style='margin-top:0.5em;font-size:12px;'>"
+                        f"<summary>{title} ({len(items)})</summary>"
+                        f"{header}{rows}</table></details>"
+                    )
+                else:
+                    parts.append(f"<h4>{title}</h4>{header}{rows}</table>")
+
+            _render_diff_table(sig_diffs, "Significant Differences")
+            _render_diff_table(
+                conv_diffs, "Convention Differences", collapsed=True,
+            )
+            _render_diff_table(
+                cos_diffs, "Cosmetic Differences", collapsed=True,
+            )
+
+        return "\n".join(parts)
+
+    # Descriptive labels for solver input files
+    _FILE_DESCRIPTIONS: Dict[str, str] = {
+        "OrcaWave (.owd)": (
+            "OrcaWave input configuration exported from the original .owd "
+            "project via SaveData(). This is the ground truth — the exact "
+            "parameters used by the manually-configured OrcaWave project."
+        ),
+        "OrcaWave (spec.yml)": (
+            "OrcaWave input configuration exported from the spec.yml "
+            "pipeline via SaveData(). This is the auto-generated project — "
+            "built by OrcaWaveRunner from the declarative spec."
+        ),
+        "AQWA": (
+            "AQWA solver input listing (.LIS) showing the full solver "
+            "configuration including element data, boundary conditions, "
+            "and analysis parameters."
+        ),
+    }
 
     def build_input_files_html(self) -> str:
         """Render scrollable input file previews for each solver.
@@ -912,7 +1130,12 @@ class BenchmarkPlotter:
         if not file_entries:
             return ""
 
+        # Build semantic equivalence section first
+        semantic_html = self.build_semantic_equivalence_html()
+
         parts: List[str] = ["<h2>Input Files</h2>"]
+        if semantic_html:
+            parts.append(semantic_html)
 
         for idx, (solver, path_str, content, truncated, n_lines) in enumerate(
             file_entries
@@ -940,7 +1163,19 @@ class BenchmarkPlotter:
                     f"</div>"
                 )
 
+            # Descriptive subsection header
+            description = self._FILE_DESCRIPTIONS.get(solver, "")
+            desc_html = ""
+            if description:
+                desc_html = (
+                    f'<p style="margin:0.3em 0 0.5em;font-size:12px;'
+                    f'color:#64748b;max-width:700px;">'
+                    f'{html_mod.escape(description)}</p>'
+                )
+
             parts.append(f"""\
+<h3 style="margin-top:1.5em;margin-bottom:0.2em;">{safe_solver}</h3>
+{desc_html}
 <div class="file-viewer">
   <div class="file-viewer-header">
     <div>
@@ -1219,6 +1454,174 @@ class BenchmarkPlotter:
             paths[dof_name] = path
         return paths
 
+    # ------------------------------------------------------------------
+    # Hydrodynamic coefficients section
+    # ------------------------------------------------------------------
+
+    def build_hydro_coefficients_html(
+        self,
+        report: BenchmarkReport,
+    ) -> str:
+        """Build 6x6 added-mass and damping correlation matrices.
+
+        Renders the pairwise added_mass_correlations and
+        damping_correlations as colour-coded 6x6 tables so the
+        reviewer can see at a glance which DOF couplings agree.
+        """
+        if not report.pairwise_results:
+            return ""
+
+        dof_labels = ["Surge", "Sway", "Heave", "Roll", "Pitch", "Yaw"]
+        parts: List[str] = [
+            "<h2>Hydrodynamic Coefficients</h2>"
+            "<p>Pairwise correlation of frequency-dependent added-mass "
+            "and radiation-damping matrices (6&times;6 DOF). Values "
+            "near 1.000 indicate identical coefficients.</p>",
+        ]
+
+        for pair_key, pair_result in report.pairwise_results.items():
+            parts.append(
+                f'<h3 style="font-size:0.95em;color:#555;">'
+                f"{html_mod.escape(pair_key)}</h3>"
+            )
+            for matrix_name, corr_dict in [
+                ("Added Mass", pair_result.added_mass_correlations),
+                ("Radiation Damping", pair_result.damping_correlations),
+            ]:
+                parts.append(
+                    f'<h4 style="margin:0.8em 0 0.3em;">{matrix_name} '
+                    f"Correlation</h4>"
+                )
+                parts.append(self._render_6x6_matrix(
+                    corr_dict, dof_labels,
+                ))
+
+        return "\n".join(parts)
+
+    @staticmethod
+    def _render_6x6_matrix(
+        corr_dict: dict,
+        labels: List[str],
+    ) -> str:
+        """Render a 6x6 correlation matrix as an HTML table."""
+        rows: List[str] = ['<table class="solver-table" '
+                           'style="width:auto;max-width:600px;">']
+        # Header
+        rows.append("<tr><th></th>")
+        for label in labels:
+            rows.append(f"<th>{label[:2]}</th>")
+        rows.append("</tr>")
+
+        for i, row_label in enumerate(labels, start=1):
+            rows.append(f"<tr><td style='font-weight:600;text-align:left;'>"
+                        f"{row_label}</td>")
+            for j in range(1, 7):
+                val = corr_dict.get((i, j), corr_dict.get(f"{i},{j}", None))
+                if val is None:
+                    rows.append("<td>-</td>")
+                    continue
+                # Colour: green for >0.999, yellow for >0.99, red below
+                if val >= 0.999:
+                    bg = "#d5f5e3"
+                elif val >= 0.99:
+                    bg = "#fef9e7"
+                else:
+                    bg = "#fadbd8"
+                rows.append(
+                    f'<td style="background:{bg};text-align:center;">'
+                    f"{val:.6f}</td>"
+                )
+            rows.append("</tr>")
+        rows.append("</table>")
+        return "\n".join(rows)
+
+    # ------------------------------------------------------------------
+    # Raw RAO data tables (collapsible)
+    # ------------------------------------------------------------------
+
+    def build_raw_rao_data_html(
+        self,
+        headings: Optional[List[float]] = None,
+    ) -> str:
+        """Build collapsible tables of raw RAO magnitude+phase per DOF.
+
+        Provides full transparency: every frequency point, every heading,
+        every solver value side-by-side. Wrapped in <details> so it
+        doesn't overwhelm the report when collapsed.
+        """
+        parts: List[str] = [
+            "<h2>Raw RAO Data</h2>"
+            "<p>Full frequency-by-heading magnitude and phase values "
+            "for each DOF. Expand each section to inspect.</p>",
+        ]
+
+        for dof in DOF_ORDER:
+            dof_name = dof.name.lower()
+            dof_cap = dof.name.capitalize()
+            unit = _AMPLITUDE_UNITS[dof]
+
+            first_comp: RAOComponent = getattr(
+                self._solver_results[self._solver_names[0]].raos, dof_name,
+            )
+            h_indices = self._get_heading_indices(first_comp, headings)
+            periods = first_comp.frequencies.periods
+
+            parts.append(
+                f"<details><summary><strong>{dof_cap}</strong> "
+                f"({len(periods)} freq &times; {len(h_indices)} hdg)"
+                f"</summary>"
+            )
+
+            # Build table header
+            tbl: List[str] = ['<div style="overflow-x:auto;">'
+                              '<table class="solver-table">']
+            tbl.append("<tr><th>T (s)</th>")
+            for hi in h_indices:
+                hdg_val = first_comp.headings.values[hi]
+                for solver in self._solver_names:
+                    short = solver.split("(")[-1].rstrip(")") if "(" in solver else solver
+                    tbl.append(
+                        f"<th>{hdg_val:.0f}&deg; {short}<br>"
+                        f"Mag ({unit})</th>"
+                        f"<th>{hdg_val:.0f}&deg; {short}<br>"
+                        f"Phase (&deg;)</th>"
+                    )
+            tbl.append("</tr>")
+
+            # Data rows (limit to first 100 freq to avoid huge HTML)
+            n_freq = min(len(periods), 100)
+            for fi in range(n_freq):
+                tbl.append(f"<tr><td>{periods[fi]:.4f}</td>")
+                for hi in h_indices:
+                    for solver in self._solver_names:
+                        comp: RAOComponent = getattr(
+                            self._solver_results[solver].raos, dof_name,
+                        )
+                        mag_val = float(comp.magnitude[fi, hi])
+                        phase_val = float(comp.phase[fi, hi])
+                        tbl.append(
+                            f"<td>{mag_val:.6g}</td>"
+                            f"<td>{phase_val:.1f}</td>"
+                        )
+                tbl.append("</tr>")
+
+            if len(periods) > 100:
+                tbl.append(
+                    f'<tr><td colspan="99" style="text-align:center;'
+                    f'font-style:italic;">... truncated at 100 of '
+                    f'{len(periods)} frequencies</td></tr>'
+                )
+
+            tbl.append("</table></div>")
+            parts.append("\n".join(tbl))
+            parts.append("</details>")
+
+        return "\n".join(parts)
+
+    # ------------------------------------------------------------------
+    # Per-DOF report sections
+    # ------------------------------------------------------------------
+
     def build_dof_report_sections(
         self,
         report: BenchmarkReport,
@@ -1267,6 +1670,32 @@ class BenchmarkPlotter:
                 for hi in all_indices if hi not in sig_indices
             ]
 
+            # --- Consensus info ---
+            cm = report.consensus_by_dof.get(dof_upper)
+            consensus_level = cm.consensus_level if cm else "UNKNOWN"
+            mean_corr = cm.mean_pairwise_correlation if cm else 0.0
+            consensus_color = {
+                "FULL": "#27ae60",
+                "MAJORITY": "#f39c12",
+                "NO_CONSENSUS": "#e74c3c",
+            }.get(consensus_level, "#999")
+
+            # --- Pairwise RAO stats ---
+            rao_comp = pair_data.get(dof_name)
+            mag_corr = rao_comp.magnitude_stats.correlation if rao_comp else 0
+            mag_rms = rao_comp.magnitude_stats.rms_error if rao_comp else 0
+            phase_corr = rao_comp.phase_stats.correlation if rao_comp else 0
+            max_mag_diff = rao_comp.max_magnitude_diff if rao_comp else 0
+            max_phase_diff = rao_comp.max_phase_diff if rao_comp else 0
+            mag_at_max_pd = (
+                rao_comp.magnitude_at_max_phase_diff if rao_comp else 0
+            )
+            peak_mag = rao_comp.peak_magnitude if rao_comp else 0
+            max_pd_freq = rao_comp.max_phase_diff_x if rao_comp else 0
+            max_pd_hi = (
+                rao_comp.max_phase_diff_heading_idx if rao_comp else 0
+            )
+
             # --- Build per-DOF plot (significant headings only) ---
             fig = make_subplots(
                 rows=2,
@@ -1291,6 +1720,18 @@ class BenchmarkPlotter:
                 title_text=_AMPLITUDE_UNITS[dof], row=1, col=1,
             )
             fig.update_yaxes(title_text="deg", row=2, col=1)
+
+            # --- Add intelligent annotations to the phase subplot ---
+            # Only annotate if the max phase diff heading is actually
+            # displayed in the plot. Annotations about invisible data
+            # are misleading and reduce report credibility.
+            self._add_phase_annotations(
+                fig, dof, max_phase_diff, mag_at_max_pd,
+                peak_mag, max_pd_freq, _AMPLITUDE_UNITS[dof],
+                phase_diff_heading_idx=max_pd_hi,
+                visible_heading_indices=sig_indices,
+            )
+
             fig.update_layout(
                 template="plotly_white",
                 legend=dict(
@@ -1310,24 +1751,6 @@ class BenchmarkPlotter:
                 include_plotlyjs=False,
                 div_id=f"plot_{dof_name}",
             )
-
-            # --- Consensus info ---
-            cm = report.consensus_by_dof.get(dof_upper)
-            consensus_level = cm.consensus_level if cm else "UNKNOWN"
-            mean_corr = cm.mean_pairwise_correlation if cm else 0.0
-            consensus_color = {
-                "FULL": "#27ae60",
-                "MAJORITY": "#f39c12",
-                "NO_CONSENSUS": "#e74c3c",
-            }.get(consensus_level, "#999")
-
-            # --- Pairwise RAO stats ---
-            rao_comp = pair_data.get(dof_name)
-            mag_corr = rao_comp.magnitude_stats.correlation if rao_comp else 0
-            mag_rms = rao_comp.magnitude_stats.rms_error if rao_comp else 0
-            phase_corr = rao_comp.phase_stats.correlation if rao_comp else 0
-            max_mag_diff = rao_comp.max_magnitude_diff if rao_comp else 0
-            max_phase_diff = rao_comp.max_phase_diff if rao_comp else 0
 
             # --- Amplitude/phase tables (significant headings only) ---
             amp_rows = self._compute_dof_amplitude_rows(
@@ -1352,9 +1775,13 @@ class BenchmarkPlotter:
                 )
 
             # --- Observation text ---
+            pd_heading_visible = max_pd_hi in sig_indices
             obs = self._generate_dof_observations(
                 dof_cap, consensus_level, mag_corr, phase_corr,
                 max_mag_diff, max_phase_diff, _AMPLITUDE_UNITS[dof],
+                magnitude_at_max_phase_diff=mag_at_max_pd,
+                peak_magnitude=peak_mag,
+                phase_diff_at_visible_heading=pd_heading_visible,
             )
 
             # --- Assemble DOF section ---
@@ -1511,6 +1938,97 @@ class BenchmarkPlotter:
                 })
         return rows
 
+    def _add_phase_annotations(
+        self,
+        fig: go.Figure,
+        dof: DOF,
+        max_phase_diff: float,
+        mag_at_max_pd: float,
+        peak_mag: float,
+        max_pd_freq: float,
+        unit: str,
+        phase_diff_heading_idx: int = 0,
+        visible_heading_indices: Optional[List[int]] = None,
+    ) -> None:
+        """Add annotations to the phase subplot based on plotted data only.
+
+        Annotations must correspond to data visible in the plot.
+        If the max phase diff occurs at a heading that was filtered out
+        (negligible response at that heading), no annotation is shown —
+        it would reference invisible data and mislead the reader.
+        """
+        if max_phase_diff < 20:
+            return  # small phase diff — no annotation needed
+
+        # Gate: only annotate data the reader can actually see.
+        if visible_heading_indices is not None:
+            if phase_diff_heading_idx not in visible_heading_indices:
+                return  # diff is at a hidden heading — skip
+
+        # Compute the (x, y) coordinates on the phase plot
+        if self.x_axis == "period" and max_pd_freq > 0:
+            x_val = 2 * np.pi / max_pd_freq
+        else:
+            x_val = max_pd_freq
+
+        dof_name = dof.name.lower()
+        first_comp: RAOComponent = getattr(
+            self._solver_results[self._solver_names[0]].raos, dof_name,
+        )
+        freq_idx = int(np.argmin(
+            np.abs(first_comp.frequencies.values - max_pd_freq),
+        ))
+        y_val = float(
+            first_comp.phase[freq_idx, phase_diff_heading_idx],
+        )
+        x_label = f"{x_val:.1f}s" if self.x_axis == "period" else (
+            f"{x_val:.2f} rad/s"
+        )
+
+        negligible = _is_phase_at_negligible_amplitude(
+            mag_at_max_pd, peak_mag,
+        )
+
+        if negligible:
+            text = (
+                f"<b>\u0394\u03c6 = {max_phase_diff:.0f}\u00b0</b> "
+                f"at ({x_label}, {y_val:.0f}\u00b0)<br>"
+                f"Amplitude here: {mag_at_max_pd:.2e} {unit}<br>"
+                f"<i>Ignore \u2014 magnitude is insignificant</i>"
+            )
+            bg_color = "rgba(241, 196, 15, 0.4)"
+            border_color = "#f39c12"
+        else:
+            text = (
+                f"<b>\u0394\u03c6 = {max_phase_diff:.0f}\u00b0</b> "
+                f"at ({x_label}, {y_val:.0f}\u00b0)<br>"
+                f"Amplitude: {mag_at_max_pd:.4g} {unit}<br>"
+                f"<i>Review phase convention</i>"
+            )
+            bg_color = "rgba(231, 76, 60, 0.4)"
+            border_color = "#e74c3c"
+
+        fig.add_annotation(
+            x=x_val,
+            y=y_val,
+            text=text,
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=2,
+            arrowcolor=border_color,
+            ax=40,
+            ay=-60,
+            bgcolor=bg_color,
+            bordercolor=border_color,
+            borderwidth=1,
+            borderpad=6,
+            font=dict(size=11, color="#2c3e50"),
+            align="left",
+            row=2,
+            col=1,
+        )
+
     @staticmethod
     def _generate_dof_observations(
         dof_name: str,
@@ -1520,8 +2038,17 @@ class BenchmarkPlotter:
         max_mag_diff: float,
         max_phase_diff: float,
         unit: str,
+        magnitude_at_max_phase_diff: float = 0.0,
+        peak_magnitude: float = 0.0,
+        phase_diff_at_visible_heading: bool = True,
     ) -> str:
-        """Generate human-readable observation text for a DOF."""
+        """Generate human-readable observation text for a DOF.
+
+        Commentary must only describe data visible in the plot.
+        When the max phase diff occurs at a hidden heading (filtered
+        due to negligible response), the text acknowledges this rather
+        than alarming the reader about invisible discrepancies.
+        """
         lines: List[str] = []
 
         if consensus == "FULL":
@@ -1562,11 +2089,36 @@ class BenchmarkPlotter:
                 "investigation.</p>"
             )
 
-        if max_phase_diff > 90:
+        # Phase commentary — only describe what the reader can see.
+        if not phase_diff_at_visible_heading and max_phase_diff > 20:
+            # Diff is at a heading filtered from the plot (negligible
+            # response at that heading). Don't alarm the reader about
+            # data they can't see — note it factually instead.
             lines.append(
-                f"<p>Phase difference reaches {max_phase_diff:.1f}&deg; "
-                "— check phase convention or resonance behavior.</p>"
+                f"<p>Max phase difference of {max_phase_diff:.1f}&deg; "
+                "occurs at a heading omitted from the plot (negligible "
+                "response). Displayed headings show good phase "
+                "agreement.</p>"
             )
+        elif max_phase_diff > 90:
+            phase_at_negligible = _is_phase_at_negligible_amplitude(
+                magnitude_at_max_phase_diff, peak_magnitude,
+            )
+            if phase_at_negligible:
+                lines.append(
+                    f"<p>Phase difference of {max_phase_diff:.1f}&deg; "
+                    "occurs where amplitude is insignificant "
+                    f"({magnitude_at_max_phase_diff:.2e} {unit}). "
+                    "Phase angle is physically undefined at near-zero "
+                    "magnitude and <strong>can be ignored</strong>.</p>"
+                )
+            else:
+                lines.append(
+                    f"<p>Phase difference reaches {max_phase_diff:.1f}&deg; "
+                    f"at significant amplitude "
+                    f"({magnitude_at_max_phase_diff:.4g} {unit}) "
+                    "— check phase convention or resonance behavior.</p>"
+                )
         elif max_phase_diff > 20:
             lines.append(
                 f"<p>Phase difference up to {max_phase_diff:.1f}&deg; "

@@ -53,6 +53,11 @@ class PairwiseRAOComparison:
     phase_stats: DeviationStatistics
     max_magnitude_diff: float
     max_phase_diff: float
+    # Context for intelligent commentary on phase diffs
+    magnitude_at_max_phase_diff: float = 0.0
+    peak_magnitude: float = 0.0
+    max_phase_diff_x: float = 0.0  # frequency (rad/s) where max phase diff occurs
+    max_phase_diff_heading_idx: int = 0  # heading index where max phase diff occurs
 
 
 @dataclass
@@ -220,6 +225,18 @@ class MultiSolverComparator:
                 mag_diff = np.abs(rao_b.magnitude - rao_a.magnitude)
                 phase_diff = np.abs(rao_b.phase - rao_a.phase)
 
+                # Find where max phase diff occurs and what the
+                # amplitude is there (average of both solvers).
+                max_pd_idx = np.unravel_index(
+                    np.argmax(phase_diff), phase_diff.shape,
+                )
+                avg_mag = 0.5 * (rao_a.magnitude + rao_b.magnitude)
+                mag_at_max_pd = float(avg_mag[max_pd_idx])
+                peak_mag = float(np.max(avg_mag))
+                freq_at_max_pd = float(
+                    rao_a.frequencies.values[max_pd_idx[0]],
+                )
+
                 pair_comparisons[dof_name] = PairwiseRAOComparison(
                     dof=dof,
                     solver_a=solver_a,
@@ -228,6 +245,10 @@ class MultiSolverComparator:
                     phase_stats=phase_stats,
                     max_magnitude_diff=float(np.max(mag_diff)),
                     max_phase_diff=float(np.max(phase_diff)),
+                    magnitude_at_max_phase_diff=mag_at_max_pd,
+                    peak_magnitude=peak_mag,
+                    max_phase_diff_x=freq_at_max_pd,
+                    max_phase_diff_heading_idx=int(max_pd_idx[1]),
                 )
 
             result[key] = pair_comparisons

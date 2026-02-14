@@ -25,6 +25,8 @@ import math
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 
 # ---------------------------------------------------------------------------
 # Internal helpers (copied from audit_solver_inputs.py since scripts aren't
@@ -80,6 +82,11 @@ def _extract_from_spec(spec: dict[str, Any]) -> dict[str, Any]:
     Returns a flat dict with typed values (not formatted strings).
     """
     vessel = spec.get("vessel", {})
+    # DiffractionSpec uses "bodies" instead of "vessel"
+    if not vessel and "bodies" in spec:
+        bodies = spec["bodies"]
+        if isinstance(bodies, list) and len(bodies) > 0:
+            vessel = bodies[0].get("vessel", {})
     inertia = vessel.get("inertia", {})
     geometry = vessel.get("geometry", {})
     dims = geometry.get("dimensions", {})
@@ -299,6 +306,263 @@ def _build_wamit_meta(
     }
     if input_file is not None:
         meta["input_file"] = input_file
+    return meta
+
+
+# ---------------------------------------------------------------------------
+# OrcaWave YAML metadata extraction
+# ---------------------------------------------------------------------------
+
+
+def _read_orcawave_yml(yml_path: Path) -> dict[str, Any]:
+    """Read an OrcaWave SaveData() YAML with encoding fallback.
+
+    OrcaWave SaveData() produces multi-document YAML (``---`` separators)
+    with a ``%YAML 1.1`` header. This function merges all documents into
+    a single dict (Bodies list is concatenated across documents).
+    """
+    for encoding in ("utf-8", "latin-1"):
+        try:
+            with open(yml_path, encoding=encoding) as f:
+                content = f.read()
+            docs = list(yaml.safe_load_all(content))
+            if not docs:
+                return {}
+            # Merge all documents — later docs extend Bodies list
+            merged: dict[str, Any] = {}
+            for doc in docs:
+                if not isinstance(doc, dict):
+                    continue
+                bodies = doc.pop("Bodies", None)
+                merged.update(doc)
+                if bodies and isinstance(bodies, list):
+                    merged.setdefault("Bodies", []).extend(bodies)
+            return merged
+        except (UnicodeDecodeError, OSError):
+            continue
+    return {}
+
+
+def _fmt_freq_heading_range(
+    values: list | None, label: str,
+) -> str:
+    """Format a list of numeric values as 'min – max (count)'."""
+    if not values or not isinstance(values, list):
+        return "-"
+    nums = [float(v) for v in values if isinstance(v, (int, float))]
+    if not nums:
+        return "-"
+    return f"{min(nums):.4g} – {max(nums):.4g} ({len(nums)})"
+
+
+def build_orcawave_metadata_from_yml(
+    yml_path: Path | str,
+    body_index: int = 0,
+) -> dict[str, str]:
+    """Extract comprehensive OrcaWave parameters from a SaveData() YAML.
+
+    Parameters
+    ----------
+    yml_path:
+        Path to the OrcaWave project YAML exported by ``SaveData()``.
+    body_index:
+        Which body to extract details from (0-based).
+
+    Returns
+    -------
+    Flat dict with display-ready string values keyed to match
+    ``benchmark_plotter._PARAM_ROWS``.
+    """
+    yml_path = Path(yml_path)
+    if not yml_path.exists():
+        return {}
+
+    data = _read_orcawave_yml(yml_path)
+    if not data:
+        return {}
+
+    meta: dict[str, str] = {}
+    meta["input_file"] = str(yml_path)
+
+    # -- General settings --
+    meta["ow_units_system"] = str(data.get("UnitsSystem", "-"))
+    meta["ow_solve_type"] = str(data.get("SolveType", "-"))
+    meta["ow_load_rao_method"] = str(
+        data.get("LoadRAOCalculationMethod", "-")
+    )
+    meta["ow_linear_solver"] = str(data.get("LinearSolverMethod", "-"))
+    meta["ow_divide_nonplanar"] = str(
+        data.get("DivideNonPlanarPanels", "-")
+    )
+    meta["ow_length_tolerance"] = str(data.get("LengthTolerance", "-"))
+    meta["ow_waves_referred_to_by"] = str(
+        data.get("WavesReferredToBy", "-")
+    )
+
+    # -- Environment --
+    wd = data.get("WaterDepth")
+    if wd is not None:
+        meta["water_depth"] = str(wd)
+    dens = data.get("WaterDensity")
+    if dens is not None:
+        meta["water_density"] = str(dens)
+
+    # -- Frequencies / Headings --
+    periods = data.get("PeriodOrFrequency")
+    meta["ow_freq_range"] = _fmt_freq_heading_range(periods, "freq")
+    meta["ow_freq_count"] = str(len(periods)) if isinstance(periods, list) else "-"
+
+    headings = data.get("WaveHeading")
+    meta["ow_heading_range"] = _fmt_freq_heading_range(headings, "heading")
+    meta["ow_heading_count"] = str(len(headings)) if isinstance(headings, list) else "-"
+
+    # -- Body details --
+    bodies = data.get("Bodies", [])
+    if not isinstance(bodies, list):
+        bodies = []
+    meta["ow_body_count"] = str(len(bodies))
+
+    if body_index < len(bodies):
+        body = bodies[body_index]
+        meta["ow_body_name"] = str(body.get("BodyName", "-"))
+        meta["mesh_file"] = str(body.get("BodyMeshFileName", "-"))
+        meta["mesh_format"] = str(body.get("BodyMeshFormat", "-"))
+        meta["mesh_symmetry"] = str(body.get("BodyMeshSymmetry", "-"))
+        meta["ow_inertia_spec"] = str(
+            body.get("BodyInertiaSpecifiedBy", "-")
+        )
+        meta["ow_cog_z"] = str(
+            body.get("BodyCentreOfMassZRelativeToFreeSurface", "-")
+        )
+
+        # Radii of gyration
+        radii = body.get("BodyRadiiOfGyration")
+        if isinstance(radii, list) and len(radii) >= 3:
+            # OrcaWave stores as flat 3x3; diagonal is [0][0], [1][1], [2][2]
+            if isinstance(radii[0], list):
+                diag = [radii[i][i] for i in range(min(3, len(radii)))]
+            else:
+                diag = radii[:3]
+            meta["radii_of_gyration"] = (
+                f"({diag[0]:.2f}, {diag[1]:.2f}, {diag[2]:.2f})"
+            )
+
+        # Interior surface panels
+        add_interior = body.get("BodyAddInteriorSurfacePanels", "-")
+        method = body.get("BodyInteriorSurfacePanelMethod", "")
+        meta["ow_interior_panels"] = str(add_interior)
+        if method and str(add_interior).lower() == "yes":
+            meta["ow_interior_panels"] += f" ({method})"
+
+        # Connection parent
+        meta["ow_connection_parent"] = str(
+            body.get("BodyConnectionParent", "None")
+        )
+
+        # Fixed DOFs
+        fixed_dofs = body.get("BodyFixedDOFs")
+        if isinstance(fixed_dofs, list):
+            active = [d for d in fixed_dofs if d]
+            meta["ow_fixed_dofs"] = ", ".join(active) if active else "None"
+        elif fixed_dofs:
+            meta["ow_fixed_dofs"] = str(fixed_dofs)
+        else:
+            meta["ow_fixed_dofs"] = "None"
+
+        # Roll damping target
+        meta["ow_roll_damping_target"] = str(
+            body.get("BodyIncreaseRollDampingToTarget", "-")
+        )
+
+        # External damping matrix
+        ext_damp = body.get("BodyExternalDampingMatrix")
+        if ext_damp is not None and isinstance(ext_damp, list):
+            meta["ow_external_damping"] = _matrix_nonzero_summary(ext_damp)
+        else:
+            meta["ow_external_damping"] = "None applied"
+
+        # External stiffness matrix
+        ext_stiff = body.get("BodyExternalStiffnessMatrix")
+        if ext_stiff is not None and isinstance(ext_stiff, list):
+            meta["ow_external_stiffness"] = _matrix_nonzero_summary(
+                ext_stiff
+            )
+        else:
+            meta["ow_external_stiffness"] = "None applied"
+
+        # Mass from body
+        mass = body.get("BodyMass")
+        if mass is not None:
+            meta["mass"] = f"{float(mass):,.1f} te"
+
+        # Centre of gravity
+        cog_x = body.get("BodyCentreOfMassX", 0)
+        cog_y = body.get("BodyCentreOfMassY", 0)
+        cog_z = body.get("BodyCentreOfMassZRelativeToFreeSurface", 0)
+        meta["centre_of_gravity"] = f"({cog_x}, {cog_y}, {cog_z})"
+
+    # -- Damping lid (conditional) --
+    has_lid = data.get("HasResonanceDampingLid", "No")
+    meta["ow_damping_lid"] = str(has_lid)
+    # YAML 1.1 parses Yes/No as True/False booleans
+    lid_active = str(has_lid).lower() in ("yes", "true")
+    if lid_active:
+        meta["ow_damping_lid_mesh"] = str(
+            data.get("DampingLidMeshFileName", "-")
+        )
+        meta["ow_damping_epsilon"] = str(
+            data.get("DampingFactorEpsilon", "-")
+        )
+    else:
+        meta["ow_damping_lid_mesh"] = "-"
+        meta["ow_damping_epsilon"] = "-"
+
+    # -- QTF (conditional) --
+    solve_type = str(data.get("SolveType", "")).lower()
+    if "qtf" in solve_type:
+        meta["ow_qtf_method"] = str(
+            data.get("QTFCalculationMethod", "-")
+        )
+        meta["ow_qtf_freq_types"] = str(
+            data.get("QTFFrequencyTypes", "-")
+        )
+        min_ca = data.get("QTFMinCrossingAngle")
+        max_ca = data.get("QTFMaxCrossingAngle")
+        if min_ca is not None and max_ca is not None:
+            meta["ow_qtf_crossing_angles"] = f"{min_ca} – {max_ca}"
+        else:
+            meta["ow_qtf_crossing_angles"] = "-"
+        meta["ow_qtf_mean_drift"] = str(
+            data.get("IncludeMeanDriftFullQTFs", "-")
+        )
+    else:
+        meta["ow_qtf_method"] = "-"
+        meta["ow_qtf_freq_types"] = "-"
+        meta["ow_qtf_crossing_angles"] = "-"
+        meta["ow_qtf_mean_drift"] = "-"
+
+    # -- Free surface zone (conditional) --
+    fsz_type = data.get("FreeSurfacePanelledZoneType")
+    if fsz_type and str(fsz_type).lower() != "none":
+        meta["ow_fsz_type"] = str(fsz_type)
+        meta["ow_fsz_mesh"] = str(
+            data.get("FreeSurfacePanelledZoneMeshFileName", "-")
+        )
+        meta["ow_fsz_inner_radius"] = str(
+            data.get("FreeSurfacePanelledZoneInnerRadius", "-")
+        )
+    else:
+        meta["ow_fsz_type"] = "-"
+        meta["ow_fsz_mesh"] = "-"
+        meta["ow_fsz_inner_radius"] = "-"
+
+    # Backward compat keys
+    meta["calculation_method"] = meta.get("ow_solve_type", "-")
+    meta["raw_phase_convention"] = "Orcina (phase lag)"
+    meta["radiation_damping"] = "Computed (BEM)"
+    meta["viscous_damping"] = meta.get("ow_external_damping", "None applied")
+    meta["damping_lid"] = meta.get("ow_damping_lid", "No")
+
     return meta
 
 
