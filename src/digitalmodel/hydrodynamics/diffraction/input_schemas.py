@@ -158,8 +158,24 @@ class VesselGeometry(BaseModel):
 
 
 class VesselInertia(BaseModel):
-    """Vessel mass and inertia properties."""
+    """Vessel mass and inertia properties.
 
+    Supports two modes:
+    - ``explicit`` (default): Mass and inertia specified directly.
+    - ``free_floating``: Mass auto-computed from displaced volume by solver.
+      Only ``radii_of_gyration`` and ``cog_z`` are used; ``mass`` and
+      ``centre_of_gravity`` are kept for schema compatibility but ignored
+      by the OrcaWave backend.
+    """
+
+    mode: str = Field(
+        "explicit",
+        description=(
+            "Inertia specification mode: 'explicit' (mass and inertia "
+            "given directly) or 'free_floating' (mass auto-computed "
+            "from displaced volume by the solver)"
+        ),
+    )
     mass: float = Field(..., gt=0, description="Vessel mass in kg")
     centre_of_gravity: list[float] = Field(
         ...,
@@ -174,6 +190,13 @@ class VesselInertia(BaseModel):
         description=(
             "Full inertia tensor components: "
             "Ixx, Iyy, Izz, Ixy, Ixz, Iyz (kg.m^2)"
+        ),
+    )
+    cog_z: Optional[float] = Field(
+        None,
+        description=(
+            "Centre of gravity z-position relative to free surface (m). "
+            "Only used in free_floating mode. Defaults to 0.0."
         ),
     )
 
@@ -199,7 +222,12 @@ class VesselInertia(BaseModel):
 
     @model_validator(mode="after")
     def check_inertia_specified(self) -> VesselInertia:
-        if self.radii_of_gyration is None and self.inertia_tensor is None:
+        if self.mode == "free_floating":
+            if self.radii_of_gyration is None:
+                raise ValueError(
+                    "radii_of_gyration is required in free_floating mode"
+                )
+        elif self.radii_of_gyration is None and self.inertia_tensor is None:
             raise ValueError(
                 "Either radii_of_gyration or inertia_tensor must be specified"
             )

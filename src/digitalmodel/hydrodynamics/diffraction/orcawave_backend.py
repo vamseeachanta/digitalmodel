@@ -246,10 +246,10 @@ def _build_body_dict(
     body["BodyMeshSymmetry"] = mesh_sym
 
     # Interior surface panels (for irregular frequency removal)
-    body["BodyAddInteriorSurfacePanels"] = _bool_to_yn(
-        spec.solver_options.remove_irregular_frequencies
-    )
-    body["BodyInteriorSurfacePanelMethod"] = "Triangulation method"
+    add_interior = spec.solver_options.remove_irregular_frequencies
+    body["BodyAddInteriorSurfacePanels"] = _bool_to_yn(add_interior)
+    if add_interior:
+        body["BodyInteriorSurfacePanelMethod"] = "Triangulation method"
 
     # OrcaFlex import settings
     body["BodyOrcaFlexImportSymmetry"] = (
@@ -261,17 +261,38 @@ def _build_body_dict(
     body["BodyHydrostaticStiffnessMethod"] = "Displacement"
 
     # Inertia
-    body["BodyInertiaSpecifiedBy"] = "Matrix (for a general body)"
-    body["BodyCentreOfMass"] = list(inertia.centre_of_gravity)
-    body["BodyMass"] = inertia.mass / 1000.0  # kg -> tonnes
+    if inertia.mode == "free_floating":
+        # Free-floating body: mass auto-computed from displaced volume
+        body["BodyInertiaSpecifiedBy"] = (
+            "Radii of gyration (for a free-floating body)"
+        )
+        cog_z = inertia.cog_z if inertia.cog_z is not None else 0.0
+        body["BodyCentreOfMassZRelativeToFreeSurface"] = cog_z
+        r = inertia.radii_of_gyration
+        radii_key = (
+            "BodyRadiiOfGyrationRx, "
+            "BodyRadiiOfGyrationRy, "
+            "BodyRadiiOfGyrationRz"
+        )
+        body[radii_key] = [
+            [r[0], 0, 0],
+            [0, r[1], 0],
+            [0, 0, r[2]],
+        ]
+        body["BodyRadiiOfGyrationOriginType"] = "Body origin"
+    else:
+        # Explicit mode: mass and inertia tensor specified directly
+        body["BodyInertiaSpecifiedBy"] = "Matrix (for a general body)"
+        body["BodyCentreOfMass"] = list(inertia.centre_of_gravity)
+        body["BodyMass"] = inertia.mass / 1000.0  # kg -> tonnes
 
-    inertia_key = (
-        "BodyInertiaTensorRx, "
-        "BodyInertiaTensorRy, "
-        "BodyInertiaTensorRz"
-    )
-    body[inertia_key] = _build_inertia_tensor(body_spec)
-    body["BodyInertiaTensorOriginType"] = "Centre of mass"
+        inertia_key = (
+            "BodyInertiaTensorRx, "
+            "BodyInertiaTensorRy, "
+            "BodyInertiaTensorRz"
+        )
+        body[inertia_key] = _build_inertia_tensor(body_spec)
+        body["BodyInertiaTensorOriginType"] = "Centre of mass"
 
     # External stiffness matrix
     stiffness_key = (
