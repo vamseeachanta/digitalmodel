@@ -6,8 +6,14 @@ module: "diffraction"
 session:
   id: "mossy-inventing-penguin"
   agent: "claude-opus-4-6"
-review: "pending"
+review: "complete"
 work_item: "WRK-134"
+completion:
+  phase_0: "complete — .owd feasibility probe, no WAMIT ref data in .owd"
+  phase_1: "complete — 4 library-matched cases (2.7, 2.8, 3.2, 3.3), all pass"
+  phase_2: "complete — 6 new hull library cases (2.1-2.3, 2.5c/f, 2.6), all 10 pass"
+  phase_3: "complete — moonpool damping lid (2.9) + Full QTF (3.1), 2.4 blocked (mesh missing)"
+  phase_4: "complete — master HTML summary, --summary-only flag, all 12 cases in table"
 ---
 
 ## Context
