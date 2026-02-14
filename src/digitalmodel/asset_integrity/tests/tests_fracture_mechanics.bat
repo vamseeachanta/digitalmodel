@@ -1,0 +1,8 @@
+python src\asset_integrity\tests\test_pyintegrity_bs7910.py
+REM python src\asset_integrity\tests\test_pyintegrity_bs7910_ecs_2500ft_buoy_jt.py
+REM python src\asset_integrity\tests\test_pyintegrity_bs7910_ecs_2500ft_buoy_jt.py
+REM python src\asset_integrity\tests\test_pyintegrity_bs7910_ecs_2500ft_buoy_jt.py
+REM python src\asset_integrity\tests\test_pyintegrity_bs7910_ecs_2500ft_buoy_jt.py
+REM python src\asset_integrity\tests\test_pyintegrity_bs7910_ecs_2500ft_buoy_jt.py
+REM python src\asset_integrity\tests\test_pyintegrity_bs7910_ecs_2500ft_buoy_jt.py
+REM python src\asset_integrity\tests\test_pyintegrity_bs7910_ecs_2500ft_buoy_jt.py

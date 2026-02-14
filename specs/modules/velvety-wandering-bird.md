@@ -157,7 +157,7 @@ def __getattr__(name):
 
 | Batch | Modules | Rationale |
 |-------|---------|-----------|
-| 1 | transformation, vertical_riser, rigging, ct_hydraulics, pipe_cross_section, fea_model, pyintegrity, finance, project_management, digitalmarketing, services, skills, visualization | Leaf modules, no cross-deps |
+| 1 | transformation, vertical_riser, rigging, ct_hydraulics, pipe_cross_section, fea_model, asset_integrity, finance, project_management, digitalmarketing, services, skills, visualization | Leaf modules, no cross-deps |
 | 2 | rao_analysis, time_series, pipe_capacity, pipeline, hydrodynamics, structural, structural_analysis, viv_analysis | Core analysis |
 | 3 | signal_analysis, fatigue_analysis, mooring_analysis, catenary, catenary_riser, mooring | Signal + fatigue + mooring chain |
 | 4 | orcaflex, aqwa, diffraction, bemrosetta, gis, orcawave | Large/complex modules |

@@ -73,7 +73,7 @@ DesignFactors:
 
 ReadingSets:
   -
-    io: tests\data\K2 West_Rev2.xlsx
+    io: tests\data\sample_8in_corrosion_rev2.xlsx
     sheet_name: C-scans - p1.1
     index_col: 0
     skiprows: 71
@@ -159,18 +159,18 @@ LML:
 
 PlotSettings:
   Data:
-    PltSupTitle: Marco Polo, K2 West, 8 inch FFS
+    PltSupTitle: Sample Platform, Sample Flowline, 8 inch FFS
     PltTitle: Measured WT
     PltXLabel: Circumference (inch)
     PltYLabel: Length (inch)
   LML:
-    PltSupTitle: Marco Polo, K2 West, 8 inch FFS
+    PltSupTitle: Sample Platform, Sample Flowline, 8 inch FFS
     PltTitle: Local Metal Loss, Levels 1 & 2
     PltXLabel: Future Corrosion Allowance (inch)
     PltYLabel: Maximum Allowable Working Pressure (psi)
     ylim: [5000, 12000]
   GML:
-    PltSupTitle: Marco Polo, K2 West, 8 inch FFS
+    PltSupTitle: Sample Platform, Sample Flowline, 8 inch FFS
     PltTitle: General Metal Loss, Level 2
     PltXLabel: Future Corrosion Allowance (inch)
     PltYLabel: Maximum Allowable Working Pressure (psi)

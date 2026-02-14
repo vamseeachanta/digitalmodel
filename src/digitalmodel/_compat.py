@@ -23,7 +23,7 @@ _MOVED_MODULES: set[str] = {
     "ct_hydraulics",
     "pipe_cross_section",
     "fea_model",
-    "pyintegrity",
+    "asset_integrity",
     "finance",
     "project_management",
     "digitalmarketing",
@@ -128,7 +128,8 @@ _FLAT_TO_GROUP: dict[str, str] = {
     "data_manager": "data_systems",
     "data_procurement": "data_systems",
     "data_scraping": "data_systems",
-    "pyintegrity": "data_systems",
+    # NOTE: asset_integrity (formerly pyintegrity) is now a top-level module,
+    # no longer under data_systems/
     # workflows/
     "automation": "workflows",
     "workflow_automation": "workflows",

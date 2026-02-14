@@ -134,7 +134,7 @@ PlotSettings:
     PltXLabel: Circumference (inch)
     PltYLabel: Length (inch)
   LML:
-    PltSupTitle: Marco Polo, GC 518, 6 inch FFS
+    PltSupTitle: Sample Platform, Block 518, 6 inch FFS
     PltTitle: Local Metal Loss, Levels 1 & 2
     PltXLabel: Future Corrosion Allowance (inch)
     PltYLabel: Maximum Allowable Working Pressure (psi)

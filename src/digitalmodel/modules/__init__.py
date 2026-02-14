@@ -29,7 +29,7 @@ _MOVED_MODULES = {
     "gmsh_meshing", "hydrodynamics", "marine_analysis", "marine_engineering",
     "mcp_server", "mooring_analysis", "orcaflex", "orcaflex_browser",
     "orcaflex_post_process", "orcawave", "pipe_capacity", "pipe_cross_section",
-    "pipeline", "project_management", "pyintegrity", "rao_analysis",
+    "pipeline", "project_management", "asset_integrity", "rao_analysis",
     "reporting", "rigging",
     "services", "signal_analysis", "skills", "structural_analysis",
     "time_series", "transformation", "vertical_riser", "visualization",

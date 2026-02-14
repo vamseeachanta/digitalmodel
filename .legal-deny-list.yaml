@@ -74,6 +74,26 @@ client_references:
     case_sensitive: false
     severity: block
     description: "User/machine identifier"
+  - pattern: "Marco Polo"
+    case_sensitive: false
+    severity: block
+    description: "Offshore TLP platform name"
+  - pattern: "Caesar Tonga"
+    case_sensitive: false
+    severity: block
+    description: "Subsea tieback project name"
+  - pattern: "Lucius"
+    case_sensitive: false
+    severity: block
+    description: "Offshore spar platform name"
+  - pattern: "GC.?518"
+    case_sensitive: false
+    severity: block
+    description: "Gulf of Mexico lease block identifier"
+  - pattern: "K2 West"
+    case_sensitive: false
+    severity: block
+    description: "Pipeline/flowline name"
 
 # Files/paths excluded from scanning (glob patterns)
 exclusions:

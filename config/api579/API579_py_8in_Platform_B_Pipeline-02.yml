@@ -93,7 +93,7 @@ DesignFactors:
 
 ReadingSets:
   -
-    io: tests\data\Lucius PR-02_rev1.xlsx
+    io: tests\data\sample_8in_spar_corrosion_rev1.xlsx
     sheet_name: C-scans - p1.1
     index_col: 0
     skiprows: 71
@@ -179,18 +179,18 @@ LML:
 
 PlotSettings:
   Data:
-    PltSupTitle: Lucius, PR-02
+    PltSupTitle: Platform B, Pipeline-02
     PltTitle: Measured WT
     PltXLabel: Circumference (inch)
     PltYLabel: Length (inch)
   LML:
-    PltSupTitle: Lucius, PR-02
+    PltSupTitle: Platform B, Pipeline-02
     PltTitle: Local Metal Loss, Levels 1 & 2
     PltXLabel: Future Corrosion Allowance (inch)
     PltYLabel: Maximum Allowable Working Pressure (psi)
     ylim: [5000, 12000]
   GML:
-    PltSupTitle: Lucius, PR-02
+    PltSupTitle: Platform B, Pipeline-02
     PltTitle: General Metal Loss, Level 2
     PltXLabel: Future Corrosion Allowance (inch)
     PltYLabel: Maximum Allowable Working Pressure (psi)

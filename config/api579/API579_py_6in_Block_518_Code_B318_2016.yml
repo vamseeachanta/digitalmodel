@@ -85,7 +85,7 @@ DesignFactors:
 
 ReadingSets:
   -
-    io: tests\data\518_north_for_analysis.xlsx
+    io: tests\data\sample_6in_corrosion_data.xlsx
     sheet_name: C-scans - scan 1
     index_col: 0
     skiprows: 71
@@ -116,18 +116,18 @@ ReadingSets:
 
 PlotSettings:
   Data:
-    PltSupTitle: Marco Polo, GC 518, 6 inch FFS
+    PltSupTitle: Sample Platform, Block 518, 6 inch FFS
     PltTitle: Measured WT
     PltXLabel: Circumference (inch)
     PltYLabel: Length (inch)
   LML:
-    PltSupTitle: Marco Polo, GC 518, 6 inch FFS
+    PltSupTitle: Sample Platform, Block 518, 6 inch FFS
     PltTitle: Local Metal Loss, Levels 1 & 2
     PltXLabel: Future Corrosion Allowance (inch)
     PltYLabel: Maximum Allowable Working Pressure (psi)
     ylim: [5000, 12000]
   GML:
-    PltSupTitle: Marco Polo, GC 518, 6 inch FFS
+    PltSupTitle: Sample Platform, Block 518, 6 inch FFS
     PltTitle: General Metal Loss, Level 2
     PltXLabel: Future Corrosion Allowance (inch)
     PltYLabel: Maximum Allowable Working Pressure (psi)

@@ -86,7 +86,7 @@ modules/diffraction/  modules/digitalmarketing/  modules/fatigue_analysis/
 modules/gmsh_meshing/  modules/hydrodynamics/  modules/marine_analysis/
 modules/marine_engineering/  modules/mcp-server/  modules/mooring/
 modules/mooring_analysis/  modules/orcaflex/  modules/orcaflex_post_process/
-modules/pipe_capacity/  modules/pipeline/  modules/pyintegrity/
+modules/pipe_capacity/  modules/pipeline/  modules/asset_integrity/
 modules/rao_analysis/  modules/reporting/  modules/rigging/
 modules/signal_analysis/  modules/skills/  modules/structural_analysis/
 modules/time_series/  modules/transformation/  modules/vertical_riser/

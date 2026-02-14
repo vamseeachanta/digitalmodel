@@ -1,7 +1,14 @@
-"""Fitness for service assessment for metallic structures
+"""Compatibility shim -- pyintegrity has been renamed to asset_integrity.
 
-See https://github.com/vamseeachanta/pyintegrity/ for more information.
+This module redirects imports to the new location.
+Import from digitalmodel.asset_integrity instead.
 """
+import warnings
 
-# Version of package
-__version__ = "0.0.1"
+warnings.warn(
+    "digitalmodel.data_systems.pyintegrity has been renamed to "
+    "digitalmodel.asset_integrity. Update your imports.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+from digitalmodel.asset_integrity import *  # noqa: F401,F403,E402

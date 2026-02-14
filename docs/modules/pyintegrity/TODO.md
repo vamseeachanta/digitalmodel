@@ -3,7 +3,7 @@
 To maintain todo list for the library
 
 **#TODO**
-- The detailed documentation of pyintegrity library. 
+- The detailed documentation of asset_integrity library (formerly pyintegrity).
     - Need technical steps
     - Practical uses
 - For API579:

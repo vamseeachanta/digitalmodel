@@ -28,7 +28,7 @@
 | **catenary** | 🔶 Partial | Module exists, minimal exports | ❌ | ❌ | ❌ | ✅ | Needs development |
 | **rigging** | 🔶 Partial | Basic Rigging class | ❌ | ❌ | ❌ | ❌ | Minimal implementation |
 | **ct_hydraulics** | 🔶 Partial | Module exists | ❌ | ❌ | ❌ | ❌ | Needs investigation |
-| **pyintegrity** | 🔶 Partial | Module exists | ❌ | ❌ | ❌ | ❌ | Needs investigation |
+| **asset_integrity** | 🔶 Partial | Module exists (formerly pyintegrity) | ❌ | ❌ | ❌ | ❌ | Needs investigation |
 | **api_analysis** | 🔶 Partial | API STD 2RD | ❌ | ❌ | ❌ | ❌ | Needs investigation |
 
 ### 📚 Documentation-Only Modules

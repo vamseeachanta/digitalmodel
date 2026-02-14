@@ -39,7 +39,7 @@ Consolidate multiple implementations of rainflow counting and FFT/spectral analy
 
 2. **Supporting Implementations**:
    - `src/digitalmodel/time_series.py`
-   - `src/digitalmodel/modules/pyintegrity/common/math_solvers.py`
+   - `src/digitalmodel/asset_integrity/common/math_solvers.py`
    - `src/digitalmodel/modules/catenary/catenaryMethods.py`
 
 ## Requirements
