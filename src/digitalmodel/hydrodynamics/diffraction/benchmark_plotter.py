@@ -1454,6 +1454,174 @@ class BenchmarkPlotter:
             paths[dof_name] = path
         return paths
 
+    # ------------------------------------------------------------------
+    # Hydrodynamic coefficients section
+    # ------------------------------------------------------------------
+
+    def build_hydro_coefficients_html(
+        self,
+        report: BenchmarkReport,
+    ) -> str:
+        """Build 6x6 added-mass and damping correlation matrices.
+
+        Renders the pairwise added_mass_correlations and
+        damping_correlations as colour-coded 6x6 tables so the
+        reviewer can see at a glance which DOF couplings agree.
+        """
+        if not report.pairwise_results:
+            return ""
+
+        dof_labels = ["Surge", "Sway", "Heave", "Roll", "Pitch", "Yaw"]
+        parts: List[str] = [
+            "<h2>Hydrodynamic Coefficients</h2>"
+            "<p>Pairwise correlation of frequency-dependent added-mass "
+            "and radiation-damping matrices (6&times;6 DOF). Values "
+            "near 1.000 indicate identical coefficients.</p>",
+        ]
+
+        for pair_key, pair_result in report.pairwise_results.items():
+            parts.append(
+                f'<h3 style="font-size:0.95em;color:#555;">'
+                f"{html_mod.escape(pair_key)}</h3>"
+            )
+            for matrix_name, corr_dict in [
+                ("Added Mass", pair_result.added_mass_correlations),
+                ("Radiation Damping", pair_result.damping_correlations),
+            ]:
+                parts.append(
+                    f'<h4 style="margin:0.8em 0 0.3em;">{matrix_name} '
+                    f"Correlation</h4>"
+                )
+                parts.append(self._render_6x6_matrix(
+                    corr_dict, dof_labels,
+                ))
+
+        return "\n".join(parts)
+
+    @staticmethod
+    def _render_6x6_matrix(
+        corr_dict: dict,
+        labels: List[str],
+    ) -> str:
+        """Render a 6x6 correlation matrix as an HTML table."""
+        rows: List[str] = ['<table class="solver-table" '
+                           'style="width:auto;max-width:600px;">']
+        # Header
+        rows.append("<tr><th></th>")
+        for label in labels:
+            rows.append(f"<th>{label[:2]}</th>")
+        rows.append("</tr>")
+
+        for i, row_label in enumerate(labels, start=1):
+            rows.append(f"<tr><td style='font-weight:600;text-align:left;'>"
+                        f"{row_label}</td>")
+            for j in range(1, 7):
+                val = corr_dict.get((i, j), corr_dict.get(f"{i},{j}", None))
+                if val is None:
+                    rows.append("<td>-</td>")
+                    continue
+                # Colour: green for >0.999, yellow for >0.99, red below
+                if val >= 0.999:
+                    bg = "#d5f5e3"
+                elif val >= 0.99:
+                    bg = "#fef9e7"
+                else:
+                    bg = "#fadbd8"
+                rows.append(
+                    f'<td style="background:{bg};text-align:center;">'
+                    f"{val:.6f}</td>"
+                )
+            rows.append("</tr>")
+        rows.append("</table>")
+        return "\n".join(rows)
+
+    # ------------------------------------------------------------------
+    # Raw RAO data tables (collapsible)
+    # ------------------------------------------------------------------
+
+    def build_raw_rao_data_html(
+        self,
+        headings: Optional[List[float]] = None,
+    ) -> str:
+        """Build collapsible tables of raw RAO magnitude+phase per DOF.
+
+        Provides full transparency: every frequency point, every heading,
+        every solver value side-by-side. Wrapped in <details> so it
+        doesn't overwhelm the report when collapsed.
+        """
+        parts: List[str] = [
+            "<h2>Raw RAO Data</h2>"
+            "<p>Full frequency-by-heading magnitude and phase values "
+            "for each DOF. Expand each section to inspect.</p>",
+        ]
+
+        for dof in DOF_ORDER:
+            dof_name = dof.name.lower()
+            dof_cap = dof.name.capitalize()
+            unit = _AMPLITUDE_UNITS[dof]
+
+            first_comp: RAOComponent = getattr(
+                self._solver_results[self._solver_names[0]].raos, dof_name,
+            )
+            h_indices = self._get_heading_indices(first_comp, headings)
+            periods = first_comp.frequencies.periods
+
+            parts.append(
+                f"<details><summary><strong>{dof_cap}</strong> "
+                f"({len(periods)} freq &times; {len(h_indices)} hdg)"
+                f"</summary>"
+            )
+
+            # Build table header
+            tbl: List[str] = ['<div style="overflow-x:auto;">'
+                              '<table class="solver-table">']
+            tbl.append("<tr><th>T (s)</th>")
+            for hi in h_indices:
+                hdg_val = first_comp.headings.values[hi]
+                for solver in self._solver_names:
+                    short = solver.split("(")[-1].rstrip(")") if "(" in solver else solver
+                    tbl.append(
+                        f"<th>{hdg_val:.0f}&deg; {short}<br>"
+                        f"Mag ({unit})</th>"
+                        f"<th>{hdg_val:.0f}&deg; {short}<br>"
+                        f"Phase (&deg;)</th>"
+                    )
+            tbl.append("</tr>")
+
+            # Data rows (limit to first 100 freq to avoid huge HTML)
+            n_freq = min(len(periods), 100)
+            for fi in range(n_freq):
+                tbl.append(f"<tr><td>{periods[fi]:.4f}</td>")
+                for hi in h_indices:
+                    for solver in self._solver_names:
+                        comp: RAOComponent = getattr(
+                            self._solver_results[solver].raos, dof_name,
+                        )
+                        mag_val = float(comp.magnitude[fi, hi])
+                        phase_val = float(comp.phase[fi, hi])
+                        tbl.append(
+                            f"<td>{mag_val:.6g}</td>"
+                            f"<td>{phase_val:.1f}</td>"
+                        )
+                tbl.append("</tr>")
+
+            if len(periods) > 100:
+                tbl.append(
+                    f'<tr><td colspan="99" style="text-align:center;'
+                    f'font-style:italic;">... truncated at 100 of '
+                    f'{len(periods)} frequencies</td></tr>'
+                )
+
+            tbl.append("</table></div>")
+            parts.append("\n".join(tbl))
+            parts.append("</details>")
+
+        return "\n".join(parts)
+
+    # ------------------------------------------------------------------
+    # Per-DOF report sections
+    # ------------------------------------------------------------------
+
     def build_dof_report_sections(
         self,
         report: BenchmarkReport,

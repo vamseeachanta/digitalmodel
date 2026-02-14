@@ -358,7 +358,9 @@ class BenchmarkRunner:
         input_comparison_html = ""
         input_files_html = ""
         mesh_schematic_html = ""
+        hydro_coefficients_html = ""
         dof_sections_html = ""
+        raw_rao_data_html = ""
         if solver_results:
             plotter = BenchmarkPlotter(
                 solver_results,
@@ -369,8 +371,14 @@ class BenchmarkRunner:
             input_comparison_html = plotter.build_input_comparison_html()
             input_files_html = plotter.build_input_files_html()
             mesh_schematic_html = plotter.build_mesh_schematic_html()
+            hydro_coefficients_html = plotter.build_hydro_coefficients_html(
+                report,
+            )
             dof_sections_html = plotter.build_dof_report_sections(
                 report,
+                headings=self.config.headings,
+            )
+            raw_rao_data_html = plotter.build_raw_rao_data_html(
                 headings=self.config.headings,
             )
 
@@ -576,11 +584,17 @@ class BenchmarkRunner:
     </table>
   </div>
 
+  <!-- Section 3.5: Hydrodynamic Coefficients -->
+  {f'<div class="section">{hydro_coefficients_html}</div>' if hydro_coefficients_html else ''}
+
   <!-- Section 4: Per-DOF Analysis -->
   <div class="section">
     <h2>Per-DOF Analysis</h2>
     {dof_sections_html}
   </div>
+
+  <!-- Section 4.5: Raw RAO Data -->
+  {f'<div class="section">{raw_rao_data_html}</div>' if raw_rao_data_html else ''}
 
   <!-- Section 5: Additional Plots -->
   <div class="section">
