@@ -22,6 +22,7 @@ from digitalmodel.hydrodynamics.diffraction.report_generator import (
     compute_peak_responses,
     compute_radii_of_gyration,
     compute_stability,
+    generate_diffraction_report,
     generate_executive_warnings,
 )
 
@@ -372,3 +373,125 @@ class TestGenerateExecutiveWarnings:
         )
         warnings = generate_executive_warnings(data)
         assert any("roll damping" in w.lower() for w in warnings)
+
+
+# ---------------------------------------------------------------------------
+# Tests: generate_diffraction_report with benchmark sections
+# ---------------------------------------------------------------------------
+
+
+class TestBenchmarkSectionsRendering:
+    """Verify that benchmark_html_sections are injected into the unified report."""
+
+    def test_report_without_benchmark_sections(self, tmp_path):
+        """Standalone report (no benchmark) still renders correctly."""
+        data = DiffractionReportData(
+            vessel_name="standalone_test",
+            frequencies_rad_s=[0.5, 1.0, 1.5],
+            periods_s=[12.57, 6.28, 4.19],
+        )
+        out = tmp_path / "standalone.html"
+        result = generate_diffraction_report(data, out)
+        html = result.read_text(encoding="utf-8")
+
+        assert "standalone_test" in html
+        assert "Diffraction Analysis Report" in html
+        # No benchmark CSS classes present
+        assert ".dof-grid" not in html
+
+    def test_report_with_benchmark_sections(self, tmp_path):
+        """Report with benchmark sections has both physics chain and benchmark content."""
+        data = DiffractionReportData(
+            vessel_name="benchmark_test",
+            solver_names=["OrcaWave", "AQWA"],
+            frequencies_rad_s=[0.5, 1.0, 1.5],
+            periods_s=[12.57, 6.28, 4.19],
+            benchmark_html_sections={
+                "input_comparison": '<h2>Input Comparison</h2><p>BENCH_INPUT</p>',
+                "input_files": '<h2>Input Files</h2><p>BENCH_FILES</p>',
+                "mesh_schematic": '<h2>Mesh</h2><p>BENCH_MESH</p>',
+                "consensus_summary": '<h2>Consensus</h2><p>BENCH_CONSENSUS</p>',
+                "hydro_coefficients": '<h2>Coefficients</h2><p>BENCH_COEFFS</p>',
+                "dof_sections": '<h2>Per-DOF</h2><p>BENCH_DOF</p>',
+                "raw_rao_data": '<h2>Raw Data</h2><p>BENCH_RAW</p>',
+                "overlay_plots": '<h2>Overlay</h2><p>BENCH_OVERLAY</p>',
+            },
+            notes=["Note 1", "Note 2"],
+        )
+        out = tmp_path / "benchmark.html"
+        result = generate_diffraction_report(data, out)
+        html = result.read_text(encoding="utf-8")
+
+        # Physics chain sections present
+        assert "benchmark_test" in html
+        assert "Diffraction Analysis Report" in html
+
+        # All benchmark sections injected
+        assert "BENCH_INPUT" in html
+        assert "BENCH_FILES" in html
+        assert "BENCH_MESH" in html
+        assert "BENCH_CONSENSUS" in html
+        assert "BENCH_COEFFS" in html
+        assert "BENCH_DOF" in html
+        assert "BENCH_RAW" in html
+        assert "BENCH_OVERLAY" in html
+
+        # Notes rendered
+        assert "Note 1" in html
+        assert "Note 2" in html
+
+        # Benchmark CSS present
+        assert ".dof-grid" in html
+        assert ".consensus-badge" in html
+
+    def test_empty_benchmark_sections_omitted(self, tmp_path):
+        """Empty-string benchmark sections don't render empty divs."""
+        data = DiffractionReportData(
+            vessel_name="sparse_test",
+            benchmark_html_sections={
+                "input_comparison": '<p>ONLY_THIS</p>',
+                "input_files": "",
+                "mesh_schematic": "",
+                "consensus_summary": "",
+                "hydro_coefficients": "",
+                "dof_sections": "",
+                "raw_rao_data": "",
+                "overlay_plots": "",
+            },
+        )
+        out = tmp_path / "sparse.html"
+        result = generate_diffraction_report(data, out)
+        html = result.read_text(encoding="utf-8")
+
+        assert "ONLY_THIS" in html
+        # Count section divs — empty strings should not create sections
+        # Only the non-empty input_comparison should appear as benchmark section
+        assert html.count("ONLY_THIS") == 1
+
+    def test_section_ordering(self, tmp_path):
+        """Benchmark sections appear in correct physics-chain order."""
+        data = DiffractionReportData(
+            vessel_name="order_test",
+            frequencies_rad_s=[0.5, 1.0],
+            periods_s=[12.57, 6.28],
+            benchmark_html_sections={
+                "input_comparison": "<!-- INPUT_CMP -->",
+                "consensus_summary": "<!-- CONSENSUS -->",
+                "dof_sections": "<!-- DOF_SEC -->",
+                "raw_rao_data": "<!-- RAW_DATA -->",
+            },
+        )
+        out = tmp_path / "order.html"
+        result = generate_diffraction_report(data, out)
+        html = result.read_text(encoding="utf-8")
+
+        # Verify ordering: input_comparison before consensus,
+        # consensus before dof_sections, dof_sections before raw_rao_data
+        pos_input = html.index("<!-- INPUT_CMP -->")
+        pos_consensus = html.index("<!-- CONSENSUS -->")
+        pos_dof = html.index("<!-- DOF_SEC -->")
+        pos_raw = html.index("<!-- RAW_DATA -->")
+
+        assert pos_input < pos_consensus
+        assert pos_consensus < pos_dof
+        assert pos_dof < pos_raw

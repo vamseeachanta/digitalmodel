@@ -471,53 +471,48 @@ class BenchmarkRunner:
     ) -> Path:
         """Generate a single-page HTML benchmark report.
 
-        Layout flows top-to-bottom in sections:
-        1. Header (vessel, date, overall consensus)
-        2. Input comparison table (solver names as column headers)
-        3. Consensus summary table
-        4. Per-DOF sections (text/conclusions left, plot right)
-        5. Additional plot links and notes
+        Delegates to ``generate_diffraction_report`` from
+        ``report_generator``, interleaving multi-solver benchmark sections
+        at their natural positions in the physics causal chain.
         """
+        from digitalmodel.hydrodynamics.diffraction.report_generator import (
+            build_report_data_from_solver_results,
+            generate_diffraction_report,
+        )
+
         output_dir = Path(self.config.output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
         html_path = output_dir / "benchmark_report.html"
 
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # --- 1. Build DiffractionReportData ---------------------------------
+        # Look for an .owr path in solver_metadata
+        owr_path: Optional[Path] = None
+        if solver_metadata:
+            for meta in solver_metadata.values():
+                for key in ("results_file", "owr_path"):
+                    candidate = meta.get(key)
+                    if candidate and str(candidate).endswith(".owr"):
+                        owr_path = Path(candidate)
+                        break
+                if owr_path:
+                    break
 
-        # Consensus summary table
-        consensus_rows = ""
-        for dof_key, cm in report.consensus_by_dof.items():
-            color = {
-                "FULL": "#27ae60",
-                "MAJORITY": "#f39c12",
-                "NO_CONSENSUS": "#e74c3c",
-            }.get(cm.consensus_level, "#999")
-            consensus_rows += (
-                f"<tr>"
-                f"<td><a href='#dof-{dof_key.lower()}'>{dof_key}</a></td>"
-                f"<td style='color:{color};font-weight:600;'>"
-                f"{cm.consensus_level}</td>"
-                f"<td>{cm.mean_pairwise_correlation:.4f}</td>"
-                f"<td>{cm.outlier_solver or '-'}</td>"
-                f"</tr>\n"
+        if solver_results:
+            report_data = build_report_data_from_solver_results(
+                solver_results,
+                owr_path=owr_path,
+                vessel_name=report.vessel_name,
+            )
+        else:
+            from digitalmodel.hydrodynamics.diffraction.report_generator import (
+                DiffractionReportData,
+            )
+            report_data = DiffractionReportData(
+                vessel_name=report.vessel_name,
+                solver_names=report.solver_names,
             )
 
-        # Additional plot links
-        plot_links = ""
-        for p in plot_paths:
-            try:
-                rel = p.relative_to(output_dir)
-            except ValueError:
-                rel = p
-            plot_links += (
-                f'<li><a href="{rel}">{p.name}</a></li>\n'
-            )
-
-        notes_items = "\n".join(
-            f"<li>{note}</li>" for note in report.notes
-        )
-
-        # Build input comparison, input files, mesh schematic, per-DOF
+        # --- 2. Build benchmark sections via BenchmarkPlotter ---------------
         input_comparison_html = ""
         input_files_html = ""
         mesh_schematic_html = ""
@@ -545,246 +540,66 @@ class BenchmarkRunner:
                 headings=self.config.headings,
             )
 
-        html = f"""\
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>Benchmark Report - {report.vessel_name}</title>
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-<style>
-  * {{ box-sizing: border-box; }}
-  body {{
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
-                 Roboto, Arial, sans-serif;
-    margin: 0; padding: 0; color: #333; background: #f8f9fa;
-    font-size: 14px; line-height: 1.5;
-  }}
-  .container {{ max-width: 1400px; margin: 0 auto; padding: 1.5em 2em; }}
+        # --- 3. Build consensus summary table -------------------------------
+        consensus_rows = ""
+        for dof_key, cm in report.consensus_by_dof.items():
+            color = {
+                "FULL": "#27ae60",
+                "MAJORITY": "#f39c12",
+                "NO_CONSENSUS": "#e74c3c",
+            }.get(cm.consensus_level, "#999")
+            consensus_rows += (
+                f"<tr>"
+                f"<td><a href='#dof-{dof_key.lower()}'>{dof_key}</a></td>"
+                f"<td style='color:{color};font-weight:600;'>"
+                f"{cm.consensus_level}</td>"
+                f"<td>{cm.mean_pairwise_correlation:.4f}</td>"
+                f"<td>{cm.outlier_solver or '-'}</td>"
+                f"</tr>\n"
+            )
+        consensus_html = (
+            '<h2>Consensus Summary</h2>'
+            '<table style="width:100%;max-width:700px;">'
+            "<tr><th>DOF</th><th>Consensus</th>"
+            "<th>Mean Correlation</th><th>Outlier</th></tr>"
+            f"{consensus_rows}</table>"
+        )
 
-  /* Header */
-  .report-header {{
-    background: #2c3e50; color: #fff; padding: 1.2em 2em;
-    margin-bottom: 1.5em; border-radius: 6px;
-  }}
-  .report-header h1 {{ margin: 0 0 0.3em; font-size: 1.6em; }}
-  .report-header .meta {{ font-size: 0.9em; opacity: 0.85; }}
-  .report-header .consensus-overall {{
-    display: inline-block; padding: 4px 12px; border-radius: 4px;
-    font-weight: 700; margin-left: 1em; font-size: 0.85em;
-  }}
+        # --- 4. Build overlay plot links ------------------------------------
+        plot_links = ""
+        for p in plot_paths:
+            try:
+                rel = p.relative_to(output_dir)
+            except ValueError:
+                rel = p
+            plot_links += f'<li><a href="{rel}">{p.name}</a></li>\n'
+        overlay_html = ""
+        if plot_links:
+            overlay_html = (
+                '<h2>Full Overlay Plots</h2>'
+                f'<ul class="plot-links">{plot_links}</ul>'
+            )
 
-  /* Section cards */
-  .section {{ background: #fff; border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    margin-bottom: 1.5em; padding: 1.2em 1.5em;
-  }}
-  .section h2 {{ margin: 0 0 0.8em; font-size: 1.2em; color: #2c3e50;
-    border-bottom: 2px solid #3498db; padding-bottom: 0.3em; }}
+        # --- 5. Pack into report_data.benchmark_html_sections ---------------
+        report_data.benchmark_html_sections = {
+            "input_comparison": input_comparison_html,
+            "input_files": input_files_html,
+            "mesh_schematic": mesh_schematic_html,
+            "consensus_summary": consensus_html,
+            "hydro_coefficients": hydro_coefficients_html,
+            "dof_sections": (
+                f'<h2>Per-DOF Analysis</h2>{dof_sections_html}'
+            ),
+            "raw_rao_data": raw_rao_data_html,
+            "overlay_plots": overlay_html,
+        }
 
-  /* Tables */
-  table {{ border-collapse: collapse; margin: 0.5em 0; font-size: 0.85em;
-    width: 100%; }}
-  th, td {{ border: 1px solid #ddd; padding: 0.45em 0.7em;
-    text-align: left; }}
-  th {{ background: #34495e; color: #fff; font-weight: 600;
-    font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.3px; }}
-  tbody tr:nth-child(even) {{ background: #f8f9fa; }}
-  tbody tr:nth-child(odd) {{ background: #fff; }}
-  tbody tr:hover {{ background: #ebf5fb; }}
-  td {{ vertical-align: top; }}
+        # --- 6. Set metadata from BenchmarkReport ---------------------------
+        report_data.solver_names = report.solver_names
+        report_data.notes = list(report.notes)
 
-  /* Input comparison table */
-  .input-table .param-label {{ font-weight: 600; }}
-  .section-row td {{
-    background: #2c3e50 !important; color: #fff;
-    font-weight: 700; font-size: 0.8em; text-transform: uppercase;
-    letter-spacing: 0.5px; padding: 0.5em 0.7em;
-  }}
-
-  /* Input file viewer */
-  .file-viewer {{ margin-bottom: 1.5em; }}
-  .file-viewer-header {{
-    display: flex; justify-content: space-between; align-items: center;
-    background: #34495e; color: #fff; padding: 0.5em 1em;
-    border-radius: 4px 4px 0 0; font-size: 0.85em;
-  }}
-  .file-viewer-header .file-path {{
-    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-    font-size: 0.9em; word-break: break-all;
-  }}
-  .file-viewer-header .solver-label {{
-    font-weight: 700; margin-right: 0.8em; white-space: nowrap;
-  }}
-  .file-viewer-header button {{
-    background: #3498db; color: #fff; border: none; padding: 4px 12px;
-    border-radius: 3px; cursor: pointer; font-size: 0.85em;
-    white-space: nowrap;
-  }}
-  .file-viewer-header button:hover {{ background: #2980b9; }}
-  .file-content {{
-    max-height: 400px; overflow-y: auto; overflow-x: auto;
-    border: 1px solid #ddd; border-top: none;
-    border-radius: 0 0 4px 4px; background: #fafafa; margin: 0;
-  }}
-  .file-content pre {{
-    margin: 0; padding: 0.8em 1em; font-size: 12px; line-height: 1.5;
-    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-    counter-reset: line;
-  }}
-  .file-content pre .line {{
-    display: block;
-  }}
-  .file-content pre .line::before {{
-    counter-increment: line;
-    content: counter(line);
-    display: inline-block; width: 3.5em; text-align: right;
-    margin-right: 1em; color: #999; font-size: 0.85em;
-    border-right: 1px solid #ddd; padding-right: 0.5em;
-    -webkit-user-select: none; user-select: none;
-  }}
-
-  /* DOF sections: 2-column grid */
-  .dof-section {{ border-top: 2px solid #ecf0f1; padding-top: 1em;
-    margin-top: 1em; }}
-  .dof-section:first-child {{ border-top: none; margin-top: 0; }}
-  .dof-title {{ font-size: 1.1em; color: #2c3e50; margin: 0 0 0.6em; }}
-  .dof-grid {{
-    display: grid; grid-template-columns: 45% 55%;
-    gap: 1em; align-items: start;
-  }}
-  .dof-text {{ font-size: 0.85em; }}
-  .dof-plot {{ min-height: 340px; }}
-
-  /* Consensus badges */
-  .consensus-badge {{
-    display: inline-block; padding: 3px 10px; border-radius: 3px;
-    color: #fff; font-size: 0.8em; font-weight: 700;
-    margin-bottom: 0.5em;
-  }}
-
-  /* Numeric font */
-  .mono {{ font-family: 'SF Mono', 'Cascadia Code', 'Consolas',
-    'Fira Code', monospace; }}
-
-  /* Stats table */
-  .stats-table {{ width: 100%; margin-bottom: 0.6em; }}
-  .stats-table td:last-child {{ text-align: right;
-    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace; }}
-
-  /* Solver comparison tables */
-  .solver-table {{ width: 100%; margin-bottom: 0.5em; }}
-  .solver-table th {{ font-size: 0.75em; text-align: center;
-    padding: 0.3em 0.4em; }}
-  .solver-table td {{ text-align: right;
-    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-    font-size: 0.8em; padding: 0.25em 0.4em; }}
-  .solver-table td:first-child {{ text-align: left; font-family: inherit;
-    font-weight: 600; }}
-
-  .dof-text h4 {{ margin: 0.7em 0 0.3em; font-size: 0.9em;
-    color: #2c3e50; border-bottom: 1px solid #ddd;
-    padding-bottom: 0.15em; }}
-  .observations p {{ margin: 0.3em 0; line-height: 1.4; }}
-  .skipped-note {{
-    font-size: 0.8em; color: #888; font-style: italic;
-    margin-top: 0.5em; padding: 0.3em 0.5em;
-    background: #fef9e7; border-left: 3px solid #f0c674;
-    border-radius: 2px;
-  }}
-
-  /* Links section */
-  .plot-links {{ column-count: 2; font-size: 0.85em; }}
-  .plot-links li {{ margin-bottom: 0.3em; }}
-
-  /* Responsive */
-  @media (max-width: 900px) {{
-    .dof-grid {{ grid-template-columns: 1fr; }}
-  }}
-</style>
-</head>
-<body>
-<div class="container">
-
-  <!-- Section 1: Header -->
-  <div class="report-header">
-    <h1>Benchmark Report</h1>
-    <div class="meta">
-      <strong>Vessel:</strong> {report.vessel_name} &nbsp;|&nbsp;
-      <strong>Date:</strong> {now} &nbsp;|&nbsp;
-      <strong>Solvers:</strong> {', '.join(report.solver_names)}
-      <span class="consensus-overall"
-            style="background:{
-                '#27ae60' if report.overall_consensus == 'FULL'
-                else '#f39c12' if report.overall_consensus == 'SPLIT'
-                else '#e74c3c'
-            };">
-        {report.overall_consensus}
-      </span>
-    </div>
-    <div class="meta" style="margin-top:0.4em;">
-      <strong>Data:</strong>
-      <a href="hydro_data.yml" style="color:#85c1e9;">hydro_data.yml</a> &nbsp;|&nbsp;
-      <a href="benchmark_report.json" style="color:#85c1e9;">benchmark_report.json</a>
-    </div>
-  </div>
-
-  <!-- Section 2: Input Comparison -->
-  <div class="section">
-    {input_comparison_html}
-  </div>
-
-  <!-- Section 2.1: Input Files -->
-  {f'<div class="section">{input_files_html}</div>' if input_files_html else ''}
-
-  <!-- Section 2.5: Mesh Schematic -->
-  {f'<div class="section">{mesh_schematic_html}</div>' if mesh_schematic_html else ''}
-
-  <!-- Section 3: Consensus Summary -->
-  <div class="section">
-    <h2>Consensus Summary</h2>
-    <table style="width:100%;max-width:700px;">
-      <tr>
-        <th>DOF</th><th>Consensus</th>
-        <th>Mean Correlation</th><th>Outlier</th>
-      </tr>
-      {consensus_rows}
-    </table>
-  </div>
-
-  <!-- Section 3.5: Hydrodynamic Coefficients -->
-  {f'<div class="section">{hydro_coefficients_html}</div>' if hydro_coefficients_html else ''}
-
-  <!-- Section 4: Per-DOF Analysis -->
-  <div class="section">
-    <h2>Per-DOF Analysis</h2>
-    {dof_sections_html}
-  </div>
-
-  <!-- Section 4.5: Raw RAO Data -->
-  {f'<div class="section">{raw_rao_data_html}</div>' if raw_rao_data_html else ''}
-
-  <!-- Section 5: Additional Plots -->
-  <div class="section">
-    <h2>Full Overlay Plots</h2>
-    <ul class="plot-links">
-      {plot_links}
-    </ul>
-  </div>
-
-  <!-- Section 6: Notes -->
-  <div class="section">
-    <h2>Notes</h2>
-    <ul>{notes_items}</ul>
-  </div>
-
-</div>
-</body>
-</html>"""
-
-        with open(html_path, "w", encoding="utf-8") as fh:
-            fh.write(html)
-
+        # --- 7. Generate via unified template --------------------------------
+        generate_diffraction_report(report_data, html_path)
         return html_path
 
 
