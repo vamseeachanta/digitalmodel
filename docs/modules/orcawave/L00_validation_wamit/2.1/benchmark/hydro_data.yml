@@ -1,6 +1,6 @@
 metadata:
   vessel_name: Test01_cylinder
-  generated: '2026-02-14T16:18:42'
+  generated: '2026-02-15T16:49:17'
   solver_names:
   - OrcaWave (.owd)
   - OrcaWave (spec.yml)
@@ -113,7 +113,7 @@ grid:
 solvers:
   OrcaWave (.owd):
     vessel_name: Test01_cylinder
-    analysis_tool: OrcaWave (.owd)
+    analysis_tool: OrcaWave
     water_depth: -1.0
     phase_convention: orcina_lag
     unit_system: orcaflex
@@ -4946,7 +4946,7 @@ solvers:
         - 0.0
   OrcaWave (spec.yml):
     vessel_name: Test01_cylinder
-    analysis_tool: OrcaWave (spec.yml)
+    analysis_tool: OrcaWave
     water_depth: -1.0
     phase_convention: orcina_lag
     unit_system: orcaflex
