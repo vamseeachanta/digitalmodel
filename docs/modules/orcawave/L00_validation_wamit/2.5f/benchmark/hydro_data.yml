@@ -1,6 +1,6 @@
 metadata:
   vessel_name: Body1
-  generated: '2026-02-14T16:21:05'
+  generated: '2026-02-15T22:19:45'
   solver_names:
   - OrcaWave (.owd)
   - OrcaWave (spec.yml)
@@ -8765,19 +8765,19 @@ comparison:
         max_phase_diff_deg: 0.0
       heave:
         magnitude_r: 1.0
-        phase_r: 0.479966
+        phase_r: 1.0
         magnitude_rms: 0.0
         max_magnitude_diff: 0.0
         max_phase_diff_deg: 354.6426
       roll:
         magnitude_r: 1.0
-        phase_r: 0.42066399
+        phase_r: 1.0
         magnitude_rms: 0.0
         max_magnitude_diff: 0.0
         max_phase_diff_deg: 273.5763
       pitch:
         magnitude_r: 1.0
-        phase_r: 0.45723776
+        phase_r: 1.0
         magnitude_rms: 0.0
         max_magnitude_diff: 0.0
         max_phase_diff_deg: 268.6131

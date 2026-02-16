@@ -216,11 +216,32 @@ class MultiSolverComparator:
                     rao_b.magnitude,
                     rao_a.frequencies.values,
                 )
-                phase_stats = self._calculate_deviation_stats(
-                    rao_a.phase,
-                    rao_b.phase,
-                    rao_a.frequencies.values,
-                )
+
+                # Compute peak magnitude first to decide if phase
+                # correlation is physically meaningful.
+                avg_mag = 0.5 * (rao_a.magnitude + rao_b.magnitude)
+                peak_mag = float(np.max(avg_mag))
+
+                if peak_mag < 1e-10:
+                    # Near-zero magnitude: phase is undefined
+                    # (atan2(0,0) noise).  Override with perfect
+                    # agreement instead of computing noise correlation.
+                    zeros = np.zeros_like(rao_a.phase)
+                    phase_stats = DeviationStatistics(
+                        mean_error=0.0,
+                        max_error=0.0,
+                        rms_error=0.0,
+                        mean_abs_error=0.0,
+                        correlation=1.0,
+                        frequencies=rao_a.frequencies.values,
+                        errors=zeros,
+                    )
+                else:
+                    phase_stats = self._calculate_deviation_stats(
+                        rao_a.phase,
+                        rao_b.phase,
+                        rao_a.frequencies.values,
+                    )
 
                 mag_diff = np.abs(rao_b.magnitude - rao_a.magnitude)
                 phase_diff = np.abs(rao_b.phase - rao_a.phase)
@@ -230,9 +251,7 @@ class MultiSolverComparator:
                 max_pd_idx = np.unravel_index(
                     np.argmax(phase_diff), phase_diff.shape,
                 )
-                avg_mag = 0.5 * (rao_a.magnitude + rao_b.magnitude)
                 mag_at_max_pd = float(avg_mag[max_pd_idx])
-                peak_mag = float(np.max(avg_mag))
                 freq_at_max_pd = float(
                     rao_a.frequencies.values[max_pd_idx[0]],
                 )

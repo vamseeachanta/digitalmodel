@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Benchmark Report - Body1</title>
+<title>Diffraction Report - Body1</title>
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <style>
   * { box-sizing: border-box; }
@@ -13,48 +13,51 @@
     font-size: 14px; line-height: 1.5;
   }
   .container { max-width: 1400px; margin: 0 auto; padding: 1.5em 2em; }
-
-  /* Header */
   .report-header {
     background: #2c3e50; color: #fff; padding: 1.2em 2em;
     margin-bottom: 1.5em; border-radius: 6px;
   }
   .report-header h1 { margin: 0 0 0.3em; font-size: 1.6em; }
   .report-header .meta { font-size: 0.9em; opacity: 0.85; }
+  .section {
+    background: #fff; border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    margin-bottom: 1.5em; padding: 1.2em 1.5em;
+  }
+  .section h2 {
+    margin: 0 0 0.8em; font-size: 1.2em; color: #2c3e50;
+    border-bottom: 2px solid #3498db; padding-bottom: 0.3em;
+  }
+  table {
+    border-collapse: collapse; margin: 0.5em 0; font-size: 0.85em;
+    width: 100%;
+  }
+  th, td {
+    border: 1px solid #ddd; padding: 0.45em 0.7em; text-align: left;
+  }
+  th {
+    background: #34495e; color: #fff; font-weight: 600;
+    font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  tbody tr:nth-child(even) { background: #f8f9fa; }
+  tbody tr:hover { background: #ebf5fb; }
+  td { vertical-align: top; font-family: 'Cascadia Code', 'Fira Code', monospace; }
+  .matrix-table td { text-align: right; padding: 0.3em 0.5em; font-size: 0.8em; }
+  .matrix-table th { text-align: center; padding: 0.3em 0.5em; font-size: 0.8em; }
+  .highlight { background: #ffeaa7 !important; font-weight: 600; }
+  .plot-container { margin: 1em 0; }
+
+  /* Benchmark-specific styles */
   .report-header .consensus-overall {
     display: inline-block; padding: 4px 12px; border-radius: 4px;
     font-weight: 700; margin-left: 1em; font-size: 0.85em;
   }
-
-  /* Section cards */
-  .section { background: #fff; border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    margin-bottom: 1.5em; padding: 1.2em 1.5em;
-  }
-  .section h2 { margin: 0 0 0.8em; font-size: 1.2em; color: #2c3e50;
-    border-bottom: 2px solid #3498db; padding-bottom: 0.3em; }
-
-  /* Tables */
-  table { border-collapse: collapse; margin: 0.5em 0; font-size: 0.85em;
-    width: 100%; }
-  th, td { border: 1px solid #ddd; padding: 0.45em 0.7em;
-    text-align: left; }
-  th { background: #34495e; color: #fff; font-weight: 600;
-    font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.3px; }
-  tbody tr:nth-child(even) { background: #f8f9fa; }
-  tbody tr:nth-child(odd) { background: #fff; }
-  tbody tr:hover { background: #ebf5fb; }
-  td { vertical-align: top; }
-
-  /* Input comparison table */
   .input-table .param-label { font-weight: 600; }
   .section-row td {
     background: #2c3e50 !important; color: #fff;
     font-weight: 700; font-size: 0.8em; text-transform: uppercase;
     letter-spacing: 0.5px; padding: 0.5em 0.7em;
   }
-
-  /* Input file viewer */
   .file-viewer { margin-bottom: 1.5em; }
   .file-viewer-header {
     display: flex; justify-content: space-between; align-items: center;
@@ -70,8 +73,7 @@
   }
   .file-viewer-header button {
     background: #3498db; color: #fff; border: none; padding: 4px 12px;
-    border-radius: 3px; cursor: pointer; font-size: 0.85em;
-    white-space: nowrap;
+    border-radius: 3px; cursor: pointer; font-size: 0.85em; white-space: nowrap;
   }
   .file-viewer-header button:hover { background: #2980b9; }
   .file-content {
@@ -84,103 +86,80 @@
     font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
     counter-reset: line;
   }
-  .file-content pre .line {
-    display: block;
-  }
+  .file-content pre .line { display: block; }
   .file-content pre .line::before {
-    counter-increment: line;
-    content: counter(line);
+    counter-increment: line; content: counter(line);
     display: inline-block; width: 3.5em; text-align: right;
     margin-right: 1em; color: #999; font-size: 0.85em;
     border-right: 1px solid #ddd; padding-right: 0.5em;
     -webkit-user-select: none; user-select: none;
   }
-
-  /* DOF sections: 2-column grid */
-  .dof-section { border-top: 2px solid #ecf0f1; padding-top: 1em;
-    margin-top: 1em; }
+  .dof-section { border-top: 2px solid #ecf0f1; padding-top: 1em; margin-top: 1em; }
   .dof-section:first-child { border-top: none; margin-top: 0; }
   .dof-title { font-size: 1.1em; color: #2c3e50; margin: 0 0 0.6em; }
-  .dof-grid {
-    display: grid; grid-template-columns: 45% 55%;
-    gap: 1em; align-items: start;
-  }
+  .dof-grid { display: grid; grid-template-columns: 45% 55%; gap: 1em; align-items: start; }
   .dof-text { font-size: 0.85em; }
   .dof-plot { min-height: 340px; }
-
-  /* Consensus badges */
   .consensus-badge {
     display: inline-block; padding: 3px 10px; border-radius: 3px;
-    color: #fff; font-size: 0.8em; font-weight: 700;
-    margin-bottom: 0.5em;
+    color: #fff; font-size: 0.8em; font-weight: 700; margin-bottom: 0.5em;
   }
-
-  /* Numeric font */
-  .mono { font-family: 'SF Mono', 'Cascadia Code', 'Consolas',
-    'Fira Code', monospace; }
-
-  /* Stats table */
+  .mono { font-family: 'SF Mono', 'Cascadia Code', 'Consolas', 'Fira Code', monospace; }
   .stats-table { width: 100%; margin-bottom: 0.6em; }
-  .stats-table td:last-child { text-align: right;
-    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace; }
-
-  /* Solver comparison tables */
+  .stats-table td:last-child {
+    text-align: right; font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  }
   .solver-table { width: 100%; margin-bottom: 0.5em; }
-  .solver-table th { font-size: 0.75em; text-align: center;
-    padding: 0.3em 0.4em; }
-  .solver-table td { text-align: right;
-    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-    font-size: 0.8em; padding: 0.25em 0.4em; }
-  .solver-table td:first-child { text-align: left; font-family: inherit;
-    font-weight: 600; }
-
-  .dof-text h4 { margin: 0.7em 0 0.3em; font-size: 0.9em;
-    color: #2c3e50; border-bottom: 1px solid #ddd;
-    padding-bottom: 0.15em; }
+  .solver-table th { font-size: 0.75em; text-align: center; padding: 0.3em 0.4em; }
+  .solver-table td {
+    text-align: right; font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.8em; padding: 0.25em 0.4em;
+  }
+  .solver-table td:first-child { text-align: left; font-family: inherit; font-weight: 600; }
+  .dof-text h4 {
+    margin: 0.7em 0 0.3em; font-size: 0.9em; color: #2c3e50;
+    border-bottom: 1px solid #ddd; padding-bottom: 0.15em;
+  }
   .observations p { margin: 0.3em 0; line-height: 1.4; }
   .skipped-note {
-    font-size: 0.8em; color: #888; font-style: italic;
-    margin-top: 0.5em; padding: 0.3em 0.5em;
-    background: #fef9e7; border-left: 3px solid #f0c674;
-    border-radius: 2px;
+    font-size: 0.8em; color: #888; font-style: italic; margin-top: 0.5em;
+    padding: 0.3em 0.5em; background: #fef9e7;
+    border-left: 3px solid #f0c674; border-radius: 2px;
   }
-
-  /* Links section */
   .plot-links { column-count: 2; font-size: 0.85em; }
   .plot-links li { margin-bottom: 0.3em; }
-
-  /* Responsive */
-  @media (max-width: 900px) {
-    .dof-grid { grid-template-columns: 1fr; }
-  }
+  @media (max-width: 900px) { .dof-grid { grid-template-columns: 1fr; } }
 </style>
-<style>.matrix-table td { text-align: right; padding: 0.3em 0.5em; font-size: 0.8em; font-family: 'Cascadia Code', 'Fira Code', monospace; }.matrix-table th { text-align: center; padding: 0.3em 0.5em; font-size: 0.8em; }.highlight { background: #ffeaa7 !important; font-weight: 600; }.plot-container { margin: 1em 0; }</style>
 </head>
 <body>
 <div class="container">
-
-  <!-- Section 1: Header -->
-  <div class="report-header">
-    <h1>Benchmark Report</h1>
-    <div class="meta">
-      <strong>Vessel:</strong> Body1 &nbsp;|&nbsp;
-      <strong>Date:</strong> 2026-02-14 16:19:28 &nbsp;|&nbsp;
-      <strong>Solvers:</strong> OrcaWave (.owd), OrcaWave (spec.yml)
-      <span class="consensus-overall"
-            style="background:#27ae60;">
-        FULL
-      </span>
-    </div>
-    <div class="meta" style="margin-top:0.4em;">
-      <strong>Data:</strong>
-      <a href="hydro_data.yml" style="color:#85c1e9;">hydro_data.yml</a> &nbsp;|&nbsp;
-      <a href="benchmark_report.json" style="color:#85c1e9;">benchmark_report.json</a>
-    </div>
+<div class="section" id="toc">
+  <h2>Table of Contents</h2>
+  <ul style="list-style:none;padding:0;column-count:2;font-size:0.9em;">
+    <li><a href="#header">0. Header & Identification</a></li><li><a href="#executive-summary">1. Executive Summary</a></li><li><a href="#hull-mesh">2. Hull Description & Mesh Quality</a></li><li><a href="#input-config">3. Input Configuration</a></li><li><a href="#hydrostatics">4. Hydrostatic Properties & Stability</a></li><li><a href="#natural-periods">5. Natural Period Estimates</a></li><li><a href="#hydro-coefficients">6. Hydrodynamic Coefficients</a></li><li><a href="#load-raos">7. Wave Excitation Forces (Load RAOs)</a></li><li><a href="#displacement-raos">8. Displacement RAOs (Motion Response)</a></li><li><a href="#roll-damping">9. Roll Damping Assessment</a></li><li><a href="#raw-data">10. Raw Data & Overlay Plots</a></li><li><a href="#appendices">11. Appendices</a></li>
+  </ul>
+</div>
+<div class="report-header">
+  <h1>Diffraction Analysis Report &mdash; Body1</h1>
+  <div class="meta">
+    Generated: 2026-02-15 21:54:53 |
+    Frequencies: 51 |
+    Headings: 0 (&deg;) |
+    Solver(s): OrcaWave (.owd), OrcaWave (spec.yml) |
+    Source: N/A
   </div>
-
-  <!-- Section 2: Input Comparison -->
-  <div class="section">
-    <h2>Input Comparison</h2>
+</div>
+<div class="section" id="executive-summary">
+  <h2>Executive Summary</h2>
+  
+  
+  
+</div>
+<div class="section" id="hull-mesh">
+<h2>Hull Description & Mesh Quality</h2>
+<h3>Hull Metadata</h3>
+<table style="max-width:600px;"><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody><tr><td>Vessel Name</td><td>Body1</td></tr><tr><td>Solver(s)</td><td>OrcaWave (.owd), OrcaWave (spec.yml)</td></tr></tbody></table>
+</div><div class="section"><h2>Input Comparison</h2>
 <table class="input-table" style="max-width:800px;">
 <thead><tr><th>Parameter</th>
 <th>OrcaWave (.owd)</th>
@@ -355,11 +334,7 @@
 <td>False</td>
 <td>False</td>
 </tr>
-</tbody></table>
-  </div>
-
-  <!-- Section 2.1: Input Files -->
-  <div class="section"><h2>Input Files</h2>
+</tbody></table></div><div class="section"><h2>Input Files</h2>
 <h3>Semantic Equivalence</h3>
 <p>Key-by-key comparison of the OrcaWave SaveData() YAML exports from both solver paths. Keys are classified as:</p><ul style='font-size:13px;margin:0.3em 0 0.8em;'><li><strong>Cosmetic</strong> — GUI display, naming, output flags, dormant settings (no solver effect)</li><li><strong>Convention</strong> — equivalent data in different representation (e.g. Hz vs rad/s)</li><li><strong>Significant</strong> — real solver parameter difference that may affect results</li></ul>
 <table class='stats-table' style='max-width:500px;margin-bottom:1em;'>
@@ -388,7 +363,7 @@
 <span class="line"># Type: Diffraction</span>
 <span class="line"># Program: OrcaFlex 11.6b</span>
 <span class="line"># File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.5c\benchmark\test06_input.yml</span>
-<span class="line"># Created: 4:19 PM on 2/14/2026</span>
+<span class="line"># Created: 9:54 PM on 2/15/2026</span>
 <span class="line"># User: ansystech</span>
 <span class="line"># Machine: ACMA-ANSYS05</span>
 <span class="line">---</span>
@@ -536,7 +511,7 @@
 # Type: Diffraction
 # Program: OrcaFlex 11.6b
 # File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.5c\benchmark\test06_input.yml
-# Created: 4:19 PM on 2/14/2026
+# Created: 9:54 PM on 2/15/2026
 # User: ansystech
 # Machine: ACMA-ANSYS05
 ---
@@ -709,7 +684,7 @@ FreeSurfaceMeshPen: [1, Solid, Aqua]
 <span class="line"># Type: Diffraction</span>
 <span class="line"># Program: OrcaFlex 11.6b</span>
 <span class="line"># File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.5c\benchmark\spec_orcawave\spec_input.yml</span>
-<span class="line"># Created: 4:19 PM on 2/14/2026</span>
+<span class="line"># Created: 9:54 PM on 2/15/2026</span>
 <span class="line"># User: ansystech</span>
 <span class="line"># Machine: ACMA-ANSYS05</span>
 <span class="line">---</span>
@@ -854,7 +829,7 @@ FreeSurfaceMeshPen: [1, Solid, Aqua]
 # Type: Diffraction
 # Program: OrcaFlex 11.6b
 # File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.5c\benchmark\spec_orcawave\spec_input.yml
-# Created: 4:19 PM on 2/14/2026
+# Created: 9:54 PM on 2/15/2026
 # User: ansystech
 # Machine: ACMA-ANSYS05
 ---
@@ -1008,31 +983,24 @@ DetectAndSkipFieldPointsInsideBodies: Yes
       w.document.close();
     }
   </script>
-</div></div>
-
-  <!-- Section 2.5: Mesh Schematic -->
+</div></div><div class="section">
+  <h3>Added Mass A(omega) -- Diagonal Terms</h3>
+  <p style="font-size:0.85em;color:#666;">
+    Added mass represents entrained water inertia. Generally increases at low frequencies.
+    Dashed red lines mark natural periods from Section 6.
+  </p>
+  <div class="plot-container"><div>                            <div id="added-mass-diag" class="plotly-graph-div" style="height:800px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("added-mass-diag")) {                    Plotly.newPlot(                        "added-mass-diag",                        [{"line":{"color":"#1f77b4","width":2},"mode":"lines","name":"A_11","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[51415.860082764164,51360.69806419022,51302.99434492729,51242.7605017551,51180.020360016584,51114.81134061839,51047.18590346829,50977.21309189526,50904.98018277053,50830.59444727349,50754.18502751994,50675.90493462522,50595.93317420904,50514.477005892004,50431.77434399551,50348.096299140256,50263.74990735862,50179.080978114514,50094.47717484617,50010.371240303626,49927.24446641659,49845.63035294863,49766.11853207684,49689.35893566239,49616.06623086423,49547.02455555771,49483.09257826582,49425.20884032414,49374.3974703099,49331.77416389157,49298.55250867392,49276.05051188489,49265.69725219563,49269.039574153256,49287.74847197633,49323.62495383348,49378.60473437827,49454.76126714844,49554.3059384579,49679.58440011185,49833.06709965427,50017.33200467818,50235.03662037447,50488.87586035773,50781.521516698325,51115.53828617223,51493.27101176455,51916.697136792245,52387.23858758397,52905.52892219125,53471.13282814288],"type":"scatter","xaxis":"x","yaxis":"y"},{"line":{"color":"#1f77b4","width":2},"mode":"lines","name":"A_22","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[51415.871444887816,51360.70937663004,51303.005605653445,51242.771708732194,51180.03151121041,51114.82243400343,51047.19693703644,50977.224063664646,50904.99109079576,50830.605289656196,50754.19580242081,50675.91564027647,50595.94380892833,50514.487568096745,50431.78483221899,50348.106712048204,50263.76024376727,50179.09123700961,50094.48735540353,50010.381341910565,49927.25448869498,49845.64029577907,49766.128395624466,49689.36872040413,49616.07593761769,49547.03418551156,49483.10213301199,49425.21832189236,49374.406881203366,49331.78350712544,49298.56178781596,49276.05973109814,49265.70641628369,49269.04868860801,49287.75754302828,49323.63398850371,49378.6137405329,49454.77025355433,49554.31491483778,49679.593377199366,49833.07608924432,50017.341019671265,50235.04567480948,50488.88496942747,50781.53069674,51115.547554621946,51493.280387062696,51916.70663822279,52387.24823502954,52905.53873577727,53471.14282774848],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"line":{"color":"#1f77b4","width":2},"mode":"lines","name":"A_33","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[30628.019843773458,30641.2114867809,30653.480780951053,30664.712542061134,30674.785263718546,30683.57122784039,30690.936709354995,30696.74229213498,30700.843314948816,30703.090467942293,30703.33056173947,30701.40749257021,30697.163427745094,30690.44023612172,30681.081187729204,30668.93294521767,30653.84787951659,30635.68664933758,30614.321242352948,30589.63822411095,30561.5423756573,30529.96061512139,30494.846173365957,30456.182961335315,30413.99004130317,30368.32609180892,30319.29372831764,30267.04351847835,30211.777505092814,30153.752031993412,30093.279656554172,30030.729928758592,29966.528798963078,29901.156589400183,29835.1441837971,29769.067512246515,29703.54026042877,29639.20486992521,29576.722000714937,29516.758699649792,29459.97567354661,29407.014058682933,29358.48209834178,29314.94244731498,29276.900361079723,29244.79345443952,29218.983334944212,29199.749486254153,29187.2855347624,29181.69805933786,29183.00781517457],"type":"scatter","xaxis":"x3","yaxis":"y3"},{"line":{"color":"#1f77b4","width":2},"mode":"lines","name":"A_44","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[62492678.232845515,62491594.75169941,62489303.13453006,62485721.13698087,62480763.11355359,62474340.01607473,62466359.407943726,62456725.49572627,62445339.17972433,62432098.12523639,62416896.856318526,62399626.87398146,62380176.80091869,62358432.55508444,62334277.55473043,62307592.955662966,62278257.937065005,62246150.0052091,62211145.38105972,62173119.40500009,62131947.03175352,62087503.38034042,62039664.38407596,61988307.53732846,61933312.768577434,61874563.47264003,61811947.73605992,61745359.79001856,61674701.780049935,61599885.883915484,61520836.91366214,61437495.49417228,61349821.94183033,61257801.07311933,61161448.09190203,61060815.84166648,60956003.64128385,60847168.1786455,60734536.67868765,60618422.77421584,60499245.37003306,60377550.98281853,60254039.55805629,60129593.687951095,60005310.854351625,59882537.77554054,59762904.513492726,59648355.819584325,59541175.0767509,59443995.05967983,59359787.525307514],"type":"scatter","xaxis":"x4","yaxis":"y4"},{"line":{"color":"#1f77b4","width":2},"mode":"lines","name":"A_55","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[62492656.10614504,62491572.63807725,62489281.035684824,62485699.05469629,62480741.04969997,62474317.972610585,62466337.386917,62456703.49927536,62445317.21007883,62432076.18471729,62416874.94733899,62399604.99904535,62380154.96262101,62358410.75610933,62334255.79784969,62307571.2437339,62278236.273027256,62246128.39208116,62211123.8219351,62173097.90304165,62131925.59018813,62087482.00245153,62039643.07319621,61988286.29683039,61933291.60186317,61874542.38312973,61811926.727177635,61745338.86517755,61674680.94263444,61599865.13726036,61520816.2610296,61437474.93872459,61349801.486597985,61257780.720964015,61161427.84547367,61060795.7033516,60955983.613145724,60847148.262352794,60734516.87543057,60618403.084606774,60499225.793990135,60377531.51942906,60254020.20541761,60129574.44298818,60005291.71260911,59882518.73094984,59762885.55811906,59648336.94335793,59541156.26719509,59443976.30165416,59359768.80079138],"type":"scatter","xaxis":"x5","yaxis":"y5"},{"line":{"color":"#1f77b4","width":2},"mode":"lines","name":"A_66","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[118792120.07307622,118892527.9326713,118996087.34675834,119102945.31427425,119213258.04028739,119327191.64498004,119444922.93490002,119566640.24230641,119692544.33896749,119822849.43134297,119957784.2446958,120097593.20432754,120242537.72282258,120392897.60289554,120548972.5661836,120711083.91953222,120879576.36827697,121054819.99869643,121237212.41469027,121427181.1048342,121625185.94404043,121831721.9958053,122047322.48931317,122272562.02010262,122508060.13762982,122754485.0132668,123012557.55627789,123283055.72606944,123566819.11209422,123864753.88559407,124177837.89780422,124507126.03680474,124853755.78667077,125218952.81846657,125604036.48150948,126010425.41843145,126439642.36467125,126893318.53237723,127373196.92280142,127881133.88340303,128419098.61797936,128989169.38746005,129593525.60786662,130234434.22073388,130914228.19358158,131635275.21355848,132399932.84683426,133210486.62180215,134069065.27000602,134977527.473917,135937310.7179496],"type":"scatter","xaxis":"x6","yaxis":"y6"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,0.45],"title":{"text":"Period (s)"}},"yaxis":{"anchor":"x","domain":[0.72,1.0],"title":{"text":"Added Mass"}},"xaxis2":{"anchor":"y2","domain":[0.55,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.72,1.0],"title":{"text":"Added Mass"}},"xaxis3":{"anchor":"y3","domain":[0.0,0.45],"title":{"text":"Period (s)"}},"yaxis3":{"anchor":"x3","domain":[0.36,0.6399999999999999],"title":{"text":"Added Mass"}},"xaxis4":{"anchor":"y4","domain":[0.55,1.0],"title":{"text":"Period (s)"}},"yaxis4":{"anchor":"x4","domain":[0.36,0.6399999999999999],"title":{"text":"Added Mass"}},"xaxis5":{"anchor":"y5","domain":[0.0,0.45],"title":{"text":"Period (s)"}},"yaxis5":{"anchor":"x5","domain":[0.0,0.27999999999999997],"title":{"text":"Added Mass"}},"xaxis6":{"anchor":"y6","domain":[0.55,1.0],"title":{"text":"Period (s)"}},"yaxis6":{"anchor":"x6","domain":[0.0,0.27999999999999997],"title":{"text":"Added Mass"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"A_11 (Surge)","x":0.225,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"A_22 (Sway)","x":0.775,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"A_33 (Heave)","x":0.225,"xanchor":"center","xref":"paper","y":0.6399999999999999,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"A_44 (Roll)","x":0.775,"xanchor":"center","xref":"paper","y":0.6399999999999999,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"A_55 (Pitch)","x":0.225,"xanchor":"center","xref":"paper","y":0.27999999999999997,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"A_66 (Yaw)","x":0.775,"xanchor":"center","xref":"paper","y":0.27999999999999997,"yanchor":"bottom","yref":"paper"}],"margin":{"l":60,"r":40,"t":60,"b":40},"height":800},                        {"responsive": true}                    )                };                            </script>        </div></div>
   
-
-  <!-- Section 3: Consensus Summary -->
-  <div class="section">
-    <h2>Consensus Summary</h2>
-    <table style="width:100%;max-width:700px;">
-      <tr>
-        <th>DOF</th><th>Consensus</th>
-        <th>Mean Correlation</th><th>Outlier</th>
-      </tr>
-      <tr><td><a href='#dof-surge'>SURGE</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
-<tr><td><a href='#dof-sway'>SWAY</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
-<tr><td><a href='#dof-heave'>HEAVE</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
-<tr><td><a href='#dof-roll'>ROLL</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
-<tr><td><a href='#dof-pitch'>PITCH</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
-<tr><td><a href='#dof-yaw'>YAW</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>0.9997</td><td>-</td></tr>
-
-    </table>
-  </div>
-
-  <!-- Section 3.5: Hydrodynamic Coefficients -->
-  <div class="section"><h2>Hydrodynamic Coefficients</h2><p>Pairwise correlation of frequency-dependent added-mass and radiation-damping matrices (6&times;6 DOF). Values near 1.000 indicate identical coefficients.</p>
+</div>
+<div class="section">
+  <h3>Radiation Damping B(omega) -- Diagonal Terms</h3>
+  <p style="font-size:0.85em;color:#666;">
+    Radiation damping represents energy lost to radiated waves. Peaks near natural frequency.
+    Zero at omega=0 and omega->infinity.
+  </p>
+  <div class="plot-container"><div>                            <div id="damping-diag" class="plotly-graph-div" style="height:800px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("damping-diag")) {                    Plotly.newPlot(                        "damping-diag",                        [{"line":{"color":"#ff7f0e","width":2},"mode":"lines","name":"B_11","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[1613.168872896249,1643.4521661142837,1673.3243731020768,1702.6848743264202,1731.4255596609166,1759.4305478310275,1786.5759218407875,1812.7294850437806,1837.75054314355,1861.4897181103856,1883.7888007956226,1904.4806499315437,1923.3891462476145,1940.3292116420544,1955.1069047613332,1967.5196041807305,1977.3563028464778,1984.398011812806,1988.4183209585524,1989.1841113182554,1986.4564722291855,1979.9918350123287,1969.543383214429,1954.862767564282,1935.702187891657,1911.8169252365904,1882.9683810197882,1848.9277401571628,1809.480380834448,1764.4311636577695,1713.610791078916,1656.8834573871586,1594.1560243201948,1525.3890727259545,1450.6101642662734,1369.9297884778848,1283.5604819698485,1191.8397181530659,1095.2572405064438,994.4875507959715,890.4283087152763,784.245375350072,677.4251566223145,571.8346196760617,469.78897052950447,374.1263825619274,288.28801530021207,216.4003540099376,163.35495067690965,134.87839068973378,137.582673543594],"type":"scatter","xaxis":"x","yaxis":"y"},{"line":{"color":"#ff7f0e","width":2},"mode":"lines","name":"B_22","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[1613.1699509511104,1643.4532644694589,1673.3254915016569,1702.686012451242,1731.4267171241129,1759.4317241734702,1786.5771165264168,1812.7306974548017,1837.7517725755813,1861.4909637675228,1883.7900617854561,1904.4819252602003,1923.390434814766,1940.3305122360232,1955.108216054271,1967.5209247239482,1977.3576310659485,1984.399346004935,1988.4196592862381,1989.1854518073462,1986.4578127653872,1979.9931733386895,1969.544716929455,1954.8640941208819,1935.7035045969678,1911.8182292529423,1882.9696693669302,1848.929009716048,1809.4816283528091,1764.432385757842,1713.611984267723,1656.8846180698563,1594.1571488170225,1525.3901572936084,1450.611205124521,1369.9307818424745,1283.5614240931059,1191.8406053736026,1095.2580693098998,994.4883178890223,890.4290111153126,784.2460104935943,677.4257224952635,571.83511496963,469.7893948249766,374.1267365482294,288.28830102683673,216.40057517702124,163.3551129616307,134.8785021051189,137.5827448203187],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"line":{"color":"#ff7f0e","width":2},"mode":"lines","name":"B_33","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[108.39175888138924,119.84532721392897,132.0476368584453,145.01496470703896,158.76087181168768,173.29568444584123,188.6259211232098,204.75366375841352,221.67587202184478,239.38364110068608,257.8614045802438,277.0860860612147,297.02620548086844,317.64094896310894,338.8792144240821,360.67864915888657,382.9647003311524,405.6497026743006,428.6320389739134,451.7954050380785,475.0082262313361,498.1232739030435,520.9775353163676,543.3923964757905,565.1741979430374,586.1152260816704,605.995195934166,624.583279055113,641.6407148140578,656.9240289241459,670.1888619237355,681.1943800375225,689.7082153904836,695.5118427088101,698.4062646887869,698.2178447124411,694.8040950854864,688.0592021335175,677.9190592830316,664.3655741536288,647.4300398493816,627.1953777749238,603.7971138830288,577.4230114186707,548.3113392206881,516.7478449558788,483.0615594634604,447.61963417478415,410.8214780644121,373.0924921095573,334.8777401660704],"type":"scatter","xaxis":"x3","yaxis":"y3"},{"line":{"color":"#ff7f0e","width":2},"mode":"lines","name":"B_44","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[552724.3092261322,574308.8274770243,596631.503679398,619704.0574114068,643536.8297795684,668138.5755438957,693516.2369216224,719674.6977690904,746616.5167175623,774341.6376905501,802847.076049051,832126.5783925653,862170.2537764505,892964.1737828973,924489.9384916853,956724.2042476832,989638.1727056231,1023197.0281060879,1057359.3302729512,1092076.341968486,1127291.2973899946,1162938.5907044092,1198942.8855500745,1235218.124605263,1271666.4305332785,1308176.8841478007,1344624.1619410457,1380867.0097814295,1416746.5467396067,1452084.3633601805,1486680.4069738598,1520310.6429123722,1552724.4618481046,1583641.867027679,1612750.4295022823,1639702.0813071963,1664109.8160671443,1685544.4362286068,1703531.5695294347,1717549.2678997472,1727026.6211904644,1731344.0403366992,1729836.0394719103,1721797.6079577836,1706495.5661046866,1683186.6613552389,1651144.2932289203,1609696.1441953713,1558274.853156152,1496483.5971387606,1424177.6395911963],"type":"scatter","xaxis":"x4","yaxis":"y4"},{"line":{"color":"#ff7f0e","width":2},"mode":"lines","name":"B_55","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[552723.5669268877,574308.0601617064,596630.7107017145,619703.2381300826,643535.9835609479,668137.7017647995,693515.3349724641,719673.7670572829,746615.5566712142,774340.6477624857,802846.0557211495,832125.5271804605,862169.1712345995,892963.0595100431,924488.7921367204,956723.0255159665,989636.9613657446,1023195.7839971404,1057358.0533123224,1092075.0321602172,1127289.9548337199,1162937.2156049905,1198941.4782278985,1235216.685507313,1271664.9602450482,1308175.3834061117,1344622.6316478492,1380865.4510187048,1416744.9607854427,1452082.7517061578,1486678.7713438128,1520308.985282643,1552722.7844694057,1583640.1724485077,1612748.7205939766,1639700.3612904851,1664108.0885398495,1685542.7051942425,1703529.8394258008,1717547.5436264435,1727024.90813369,1731342.3443890647,1729834.3670438894,1721795.9659765384,1706493.9619946508,1683185.1029929414,1651142.7888630715,1609694.7023213415,1558273.4823321505,1496482.3057299517,1424176.435427997],"type":"scatter","xaxis":"x5","yaxis":"y5"},{"line":{"color":"#ff7f0e","width":2},"mode":"lines","name":"B_66","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[3346.4955459692187,3760.384299559788,4228.072445283222,4756.885995736114,5355.192830433346,6032.55697783376,6799.91661747533,7669.789577661139,8656.510724683849,9776.506364865281,11048.611629215426,12494.43780368984,14138.797731129787,16010.198773720558,18141.41442254516,20570.147514791654,23339.800217620086,26500.368523654786,30109.48202265701,34233.613312095615,38949.48553403433,44345.71155721766,50524.70400946455,57604.902248781895,65723.37048742715,75038.83046689274,85735.20363340882,98025.75052971876,112157.91068344325,128418.96475180316,147142.66150915122,168716.97802312457,193593.21075824762,222296.6297819901,255438.9689839173,293733.0742421325,338010.08270641294,389239.57545049326,448553.21637478494,517272.4745800134,596941.1251093785,689363.326020095,796648.1904229285,921261.8905626927,1066088.4571287464,1234500.555849332,1430441.606273312,1658520.6564551503,1924121.3593312271,2233526.211306689,2594056.7170157484],"type":"scatter","xaxis":"x6","yaxis":"y6"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,0.45],"title":{"text":"Period (s)"}},"yaxis":{"anchor":"x","domain":[0.72,1.0],"title":{"text":"Damping"}},"xaxis2":{"anchor":"y2","domain":[0.55,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.72,1.0],"title":{"text":"Damping"}},"xaxis3":{"anchor":"y3","domain":[0.0,0.45],"title":{"text":"Period (s)"}},"yaxis3":{"anchor":"x3","domain":[0.36,0.6399999999999999],"title":{"text":"Damping"}},"xaxis4":{"anchor":"y4","domain":[0.55,1.0],"title":{"text":"Period (s)"}},"yaxis4":{"anchor":"x4","domain":[0.36,0.6399999999999999],"title":{"text":"Damping"}},"xaxis5":{"anchor":"y5","domain":[0.0,0.45],"title":{"text":"Period (s)"}},"yaxis5":{"anchor":"x5","domain":[0.0,0.27999999999999997],"title":{"text":"Damping"}},"xaxis6":{"anchor":"y6","domain":[0.55,1.0],"title":{"text":"Period (s)"}},"yaxis6":{"anchor":"x6","domain":[0.0,0.27999999999999997],"title":{"text":"Damping"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"B_11 (Surge)","x":0.225,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"B_22 (Sway)","x":0.775,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"B_33 (Heave)","x":0.225,"xanchor":"center","xref":"paper","y":0.6399999999999999,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"B_44 (Roll)","x":0.775,"xanchor":"center","xref":"paper","y":0.6399999999999999,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"B_55 (Pitch)","x":0.225,"xanchor":"center","xref":"paper","y":0.27999999999999997,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"B_66 (Yaw)","x":0.775,"xanchor":"center","xref":"paper","y":0.27999999999999997,"yanchor":"bottom","yref":"paper"}],"margin":{"l":60,"r":40,"t":60,"b":40},"height":800},                        {"responsive": true}                    )                };                            </script>        </div></div>
+</div>
+<div class="section"><h2>Hydrodynamic Coefficients</h2><p>Pairwise correlation of frequency-dependent added-mass and radiation-damping matrices (6&times;6 DOF). Values near 1.000 indicate identical coefficients.</p>
 <h3 style="font-size:0.95em;color:#555;">OrcaWave (.owd)-vs-OrcaWave (spec.yml)</h3>
 <h4 style="margin:0.8em 0 0.3em;">Added Mass Correlation</h4>
 <table class="solver-table" style="width:auto;max-width:600px;">
@@ -1151,12 +1119,13 @@ DetectAndSkipFieldPointsInsideBodies: Yes
 <td style="background:#d5f5e3;text-align:center;">1.000000</td>
 <td style="background:#d5f5e3;text-align:center;">1.000000</td>
 </tr>
-</table></div>
-
-  <!-- Section 4: Per-DOF Analysis -->
-  <div class="section">
-    <h2>Per-DOF Analysis</h2>
-    
+</table></div><div class="section"><h2>Consensus Summary</h2><table style="width:100%;max-width:700px;"><tr><th>DOF</th><th>Consensus</th><th>Mean Correlation</th><th>Outlier</th></tr><tr><td><a href='#dof-surge'>SURGE</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-sway'>SWAY</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-heave'>HEAVE</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-roll'>ROLL</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-pitch'>PITCH</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>1.0000</td><td>-</td></tr>
+<tr><td><a href='#dof-yaw'>YAW</a></td><td style='color:#27ae60;font-weight:600;'>FULL</td><td>0.9997</td><td>-</td></tr>
+</table></div><div class="section"><h2>Per-DOF Analysis</h2>
 <div class="dof-section" id="dof-surge">
   <h3 class="dof-title">Surge</h3>
   <div class="dof-grid">
@@ -1473,11 +1442,7 @@ DetectAndSkipFieldPointsInsideBodies: Yes
     </div>
     <div class="dof-plot"><div>                            <div id="plot_yaw" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("plot_yaw")) {                    Plotly.newPlot(                        "plot_yaw",                        [{"legendgroup":"OrcaWave (.owd)_35","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H35","showlegend":true,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[0.012662295595123994,0.013105683315666177,0.013566454012968236,0.014045339283831131,0.014543101872178294,0.015060536842203799,0.015598472769542576,0.016157772946578747,0.01673933659724304,0.017344100095811325,0.01797303818320875,0.018627165173267166,0.01930753614010944,0.020015248076457506,0.020751441011074397,0.02151729907182472,0.022314051478652636,0.023142973449274115,0.02400538699591913,0.024902661592740443,0.025836214683980605,0.026807512007470297,0.027818067696168625,0.02886944412532906,0.029963251450928555,0.031101146810940082,0.032284833115791445,0.033516057381943146,0.03479660853186432,0.036128314591673,0.037513039197944464,0.03895267732409845,0.040449150112535456,0.042004398709249526,0.0436203769516469,0.04529904279868559,0.04704234829623242,0.04885222793393396,0.0507305851720441,0.052679276943349486,0.054700095843205065,0.05679474975117815,0.05896483857496423,0.061211827719370754,0.06353701800420992,0.06594151136030135,0.06842617201319103,0.07099158238013527,0.07363799311707435,0.07636526641066167,0.07917281162126981],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_35","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H35","showlegend":true,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[0.000028379115642438036,0.000029386582031942044,0.000030434419445866488,0.000031524393294240333,0.00003265835016769678,0.00003383822155925577,0.00003506602773949465,0.00003634388178895244,0.00003767399379136936,0.0000390586751911291,0.00004050034331785385,0.000042001526080789486,0.000043564866835059554,0.000045193129421335606,0.00004688920337976334,0.00004865610933837419,0.00005049700457418419,0.00005241518874841219,0.000054414109802646994,0.000056497370031872166,0.00005866873229196199,0.00006093212637960097,0.00006329165552893415,0.00006575160302788333,0.00006831643895229548,0.00007099082694378155,0.00007377963105893135,0.00007668792260566687,0.00007972098691229653,0.00008288433001917174,0.00008618368512756861,0.00008962501875643912,0.00009321453644961566,0.0000969586878491158,0.00010086417084393107,0.00010493793474287055,0.00010918718165793642,0.00011361936597351808,0.00011824219108386691,0.00012306360251216472,0.0001280917763974025,0.00013333510174585647,0.00013880215474562253,0.0001445016625019631,0.0001504424531196174,0.00015663338776816498,0.00016308326949525642,0.00016980072167090075,0.00017679402686347586,0.00018407091485284275,0.0001916382840379474],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_35","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines","name":"OrcaWave (.owd) H35","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[179.99990262609612,179.99989121174147,179.99987832770557,179.99986377109795,179.99984730924413,179.99982867505304,179.99980756163995,179.99978361605056,179.9997564319616,179.99972554115308,179.99969040355327,179.99965039560834,179.9996047966689,179.9995527730631,179.9994933594175,179.99942543676133,179.99934770682054,179.99925866181871,179.99915654896856,179.99903932869168,179.99890462541973,179.99874966961409,179.9985712293902,179.99836552982455,179.9981281576694,179.9978539487607,179.99753685489557,179.997169786363,179.9967444255708,179.9962510063725,179.99567805268197,179.9950120687524,179.99423717211323,179.99333465843284,179.99228248568778,179.9910546625381,179.9896205233814,179.98794386909876,179.98598194901135,179.98368425514354,179.9809910952363,179.9778319051091,179.97412325465567,179.96976649485404,179.96464498454662,179.95862082879523,179.9515310490716,179.94318309860805,179.93334962507873,179.921762375803,179.90810513350786],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_35","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines","name":"OrcaWave (spec.yml) H35","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[179.99777123803244,179.99751330066724,179.99722389917443,179.99689900674142,179.9965340579404,179.99612387370425,179.99566257547633,179.99514348689138,179.9945590211489,179.9939005519009,179.99315826518142,179.9923209895086,179.99137600083216,179.99030879851136,179.98910284786882,179.9877392842218,179.98619657245084,179.98445011525348,179.98247180215176,179.98022949006585,179.9776864048415,179.9748004514037,179.97152341831477,179.96780006024278,179.9635670392299,179.9587517027249,179.95327067274462,179.94702821664958,179.93991436535887,179.93180273941093,179.92254803739067,179.91198313400818,179.89991572721743,179.88612446467968,179.87035446954116,179.8523121731171,179.83165935061342,179.80800623935602,179.78090360422962,179.74983359730578,179.7141992397306,179.6733123353481,179.62637960508957,179.57248681539642,179.5105806576922,179.43944812940816,179.35769316884702,179.26371031582994,179.1556552172496,179.0314118763869,178.8885566952652],"type":"scatter","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x2","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.575,1.0],"title":{"text":"deg\u002fm"}},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.0,0.425],"title":{"text":"deg"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Amplitude (deg\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Phase (deg)","x":0.5,"xanchor":"center","xref":"paper","y":0.425,"yanchor":"bottom","yref":"paper"}],"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":50,"r":140,"t":30,"b":30},"height":400},                        {"responsive": true}                    )                };                            </script>        </div></div>
   </div>
-</div>
-  </div>
-
-  <!-- Section 4.5: Raw RAO Data -->
-  <div class="section"><h2>Raw RAO Data</h2><p>Full frequency-by-heading magnitude and phase values for each DOF. Expand each section to inspect.</p>
+</div></div><div class="section"><h2>Raw RAO Data</h2><p>Full frequency-by-heading magnitude and phase values for each DOF. Expand each section to inspect.</p>
 <details><summary><strong>Surge</strong> (51 freq &times; 1 hdg)</summary>
 <div style="overflow-x:auto;"><table class="solver-table">
 <tr><th>T (s)</th>
@@ -2749,105 +2714,57 @@ DetectAndSkipFieldPointsInsideBodies: Yes
 <td>0.000191638</td><td>178.9</td>
 </tr>
 </table></div>
-</details></div>
-
-  <!-- Section 5: Additional Plots -->
-  <div class="section">
-    <h2>Full Overlay Plots</h2>
-    <ul class="plot-links">
-      <li><a href="benchmark_amplitude.html">benchmark_amplitude.html</a></li>
+</details></div><div class="section"><h2>Full Overlay Plots</h2><ul class="plot-links"><li><a href="benchmark_amplitude.html">benchmark_amplitude.html</a></li>
 <li><a href="benchmark_phase.html">benchmark_phase.html</a></li>
 <li><a href="benchmark_combined.html">benchmark_combined.html</a></li>
 <li><a href="benchmark_heatmap.html">benchmark_heatmap.html</a></li>
+</ul></div><div class="section">
+  <h3>Phase Interpretation Guide</h3>
+  <ul style="font-size:0.85em;color:#555;">
+    <li><strong>Phase = 0 deg</strong>: Response in-phase with wave (crest at origin = peak response)</li>
+    <li><strong>Phase = -90 deg</strong>: Lagging (response peaks after wave crest passes)</li>
+    <li><strong>Phase = +90 deg</strong>: Leading (response peaks before wave crest arrives)</li>
+    <li><strong>~180 deg jump near resonance</strong>: Transition from quasi-static to resonant regime</li>
+    <li><strong>Phase at near-zero amplitude</strong>: Physically meaningless -- ignore phase when amplitude is insignificant</li>
+  </ul>
+</div>
+<div class="section" id="appendices">
+  <h2>Appendices</h2>
 
-    </ul>
-  </div>
-
-  <!-- Section 6: Notes -->
-  <div class="section">
-    <h2>Notes</h2>
-    <ul></ul>
-  </div>
-
-<div class="section" style="background:#2c3e50;color:#fff;text-align:center;padding:0.8em;"><h2 style="border:none;color:#fff;margin:0;">Extended Diffraction Results</h2></div>
-<div class="section">
-  <h2>Hydrostatics</h2>
-  <table>
-    <thead><tr><th>Property</th><th>Value</th></tr></thead>
+  <h3>A. Notation & Conventions</h3>
+  <table style="max-width:600px;font-size:0.85em;">
+    <thead><tr><th>Symbol</th><th>Description</th></tr></thead>
     <tbody>
-      <tr><td>Displaced Volume</td><td>50897.264523 m³</td></tr>
-      <tr><td>Mass</td><td>53066.400000</td></tr>
-      <tr><td>Centre of Buoyancy (x, y, z)</td><td>0.0000, 0.0000, -23.0199</td></tr>
-      <tr><td>Centre of Mass (x, y, z)</td><td>0.0000, 0.0000, 3.0000</td></tr>
-      <tr><td>Waterplane Area (Awp)</td><td>805.832144 m²</td></tr>
-      <tr><td>Waterplane I_xx</td><td>1511607.089823</td></tr>
-      <tr><td>Waterplane I_yy</td><td>1511607.089823</td></tr>
-      <tr><td>Waterplane I_xy</td><td>0.000000</td></tr>
-      <tr><td>Centre of Floatation (x, y)</td><td>0.0000, 0.0000</td></tr>
-      <tr><td>C(3,3) / (ρgV) = GM_T proxy</td><td>2261457.7016 / (ρg × 50897.2645)</td></tr>
+      <tr><td>DOF 1-6</td><td>Surge, Sway, Heave, Roll, Pitch, Yaw</td></tr>
+      <tr><td>Coordinate System</td><td>x-forward, z-up, right-hand rule</td></tr>
+      <tr><td>A_ii(omega)</td><td>Frequency-dependent added mass (diagonal)</td></tr>
+      <tr><td>B_ii(omega)</td><td>Frequency-dependent radiation damping (diagonal)</td></tr>
+      <tr><td>C_ii</td><td>Hydrostatic restoring stiffness (diagonal)</td></tr>
+      <tr><td>GM_T</td><td>Transverse metacentric height (metres)</td></tr>
+      <tr><td>T_n</td><td>Natural period (seconds)</td></tr>
+      <tr><td>zeta</td><td>Critical damping ratio (%)</td></tr>
+      <tr><td>RAO</td><td>Response Amplitude Operator</td></tr>
     </tbody>
   </table>
 
-  <h3 style="margin-top:1em;">Restoring Matrix C (Hydrostatic Stiffness)</h3>
-  <table class="matrix-table">
-    <thead><tr><th></th><th>Surge</th><th>Sway</th><th>Heave</th><th>Roll</th><th>Pitch</th><th>Yaw</th></tr></thead>
-    <tbody>
-      <tr><th>Surge</th><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td></tr>
-<tr><th>Sway</th><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td></tr>
-<tr><th>Heave</th><td class=''>0.0000</td><td class=''>0.0000</td><td class='highlight'>8218.2677</td><td class=''>0.0000</td><td class=''>-0.0000</td><td class=''>0.0000</td></tr>
-<tr><th>Roll</th><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class='highlight'>2261457.7016</td><td class=''>-0.0000</td><td class=''>0.0000</td></tr>
-<tr><th>Pitch</th><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>-0.0000</td><td class=''>-0.0000</td><td class='highlight'>2261457.4192</td><td class=''>0.0000</td></tr>
-<tr><th>Yaw</th><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td></tr>
+  <h3 style="margin-top:1em;">B. Key Formulas</h3>
+  <ul style="font-size:0.85em;color:#555;">
+    <li>T_n = 2pi * sqrt((M_ii + A_ii(omega_n)) / C_ii)</li>
+    <li>zeta(omega) = B_ii(omega) / (2 * sqrt((M_ii + A_ii(omega)) * C_ii))</li>
+    <li>GM_T = C_44 / (rho * g * V), where rho=1025 kg/m3, g=9.81 m/s2</li>
+    <li>BM_T = I_xx / V; GM_T = KB + BM_T - KG (cross-check)</li>
+  </ul>
 
-    </tbody>
-  </table>
-</div>
-
-<div class="section">
-  <h2>Mesh Quality</h2>
-  <table>
-    <thead><tr><th>Property</th><th>Value</th></tr></thead>
-    <tbody>
-      <tr><td>Panel Count</td><td>512</td></tr>
-      <tr><td>Mean Panel Area</td><td>34.472530 m²</td></tr>
-      <tr><td>Min Panel Area</td><td>5.685605 m²</td></tr>
-      <tr><td>Max Panel Area</td><td>79.931086 m²</td></tr>
-      <tr><td>Area Ratio (max/min)</td><td>14.06</td></tr>
-    </tbody>
-  </table>
-</div>
-
-<div class="section">
-  <h2>Load RAOs (Wave Excitation Forces)</h2>
-  <div class="plot-container"><div>                            <div id="load-raos-plot" class="plotly-graph-div" style="height:900px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("load-raos-plot")) {                    Plotly.newPlot(                        "load-raos-plot",                        [{"legendgroup":"h0","line":{"color":"#e74c3c"},"mode":"lines","name":"35°","showlegend":true,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[7596.262194,7594.014103,7589.240167,7581.825086,7571.650123,7558.593073,7542.528232,7523.326366,7500.854684,7474.976801,7445.552707,7412.438721,7375.487448,7334.547717,7289.464514,7240.078895,7186.2279,7127.74441,7064.457028,6996.189891,6922.762488,6843.989416,6759.680136,6669.638677,6573.663297,6471.546161,6363.072957,6248.022522,6126.166503,5997.269016,5861.086418,5717.367209,5565.852101,5406.274436,5238.360958,5061.833219,4876.409717,4681.809062,4477.754484,4263.980068,4040.239136,3806.315335,3562.037098,3307.296088,3042.07027,2766.45264,2480.685772,2185.203015,1880.676428,1568.071453,1248.70918],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"h0","line":{"color":"#e74c3c"},"mode":"lines","name":"35°","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[5443.585708,5446.082236,5446.934222,5446.062098,5443.38348,5438.813075,5432.26259,5423.640615,5412.852515,5399.800294,5384.382454,5366.493834,5346.02543,5322.864194,5296.892813,5267.98945,5236.027474,5200.875132,5162.395217,5120.444666,5074.874145,5025.527576,4972.241639,4914.845226,4853.158861,4786.994108,4716.152958,4640.427217,4559.597946,4473.434944,4381.696367,4284.128525,4180.465921,4070.431699,3953.738565,3830.090429,3699.18494,3560.717202,3414.385029,3259.896147,3096.977808,2925.38948,2744.939275,2555.50499,2357.060746,2149.710729,1933.731841,1709.628992,1478.210704,1240.70468,998.972407],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"h0","line":{"color":"#e74c3c"},"mode":"lines","name":"35°","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[1820.329613,1886.995647,1953.096478,2018.542226,2083.236535,2147.076211,2209.950866,2271.742552,2332.325417,2391.56537,2449.319777,2505.437189,2559.757118,2612.109881,2662.316511,2710.188774,2755.529299,2798.131843,2837.781723,2874.256434,2907.326477,2936.756432,2962.306288,2983.733065,3000.79273,3013.242446,3020.843116,3023.36226,3020.577172,3012.278337,2998.273058,2978.389205,2952.479023,2920.422873,2882.132781,2837.555674,2786.676139,2729.518571,2666.148567,2596.673429,2521.241682,2440.041525,2353.298179,2261.270136,2164.244354,2062.530507,1956.454407,1846.35078,1732.55562,1615.398341,1495.193999],"type":"scatter","xaxis":"x3","yaxis":"y3"},{"legendgroup":"h0","line":{"color":"#e74c3c"},"mode":"lines","name":"35°","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[111428.107044,112711.090351,113999.301613,115291.955484,116588.209173,117887.159088,119187.837191,120489.206998,121790.159177,123089.506671,124385.979276,125678.217575,126964.766125,128244.065786,129514.445036,130774.11006,132021.133741,133253.442587,134468.802514,135664.80189,136838.832782,137988.069005,139109.441518,140199.609987,141254.930433,142271.418605,143244.708289,144170.003889,145042.0275,145854.958807,146602.368302,147277.143415,147871.406229,148376.424992,148782.517735,149078.95089,149253.833966,149294.013379,149184.970712,148910.732088,148453.795755,147795.094149,146914.003366,145788.422906,144394.950577,142709.187299,140706.204735,138361.221086,135650.527224,132552.704392,129050.167382],"type":"scatter","xaxis":"x4","yaxis":"y4"},{"legendgroup":"h0","line":{"color":"#e74c3c"},"mode":"lines","name":"35°","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[145925.421292,147339.783765,148747.562854,150147.210492,151537.094102,152915.493617,154280.598384,155630.503935,156963.208591,158276.60986,159568.500576,160836.564727,162078.372894,163291.377222,164472.905809,165620.1563,166730.189086,167799.918616,168826.104656,169805.340975,170734.043346,171608.434746,172424.529022,173178.111296,173864.715461,174479.598265,175017.709457,175473.656773,175841.66686,176115.539613,176288.596712,176353.624295,176302.807139,176127.657787,175818.937296,175366.571157,174759.560163,173985.888739,173032.435174,171884.889084,170527.681538,168943.94127,167115.489182,165022.888496,162645.572056,159962.078664,156950.421754,153588.633047,149855.513945,145731.628066,141200.561935],"type":"scatter","xaxis":"x5","yaxis":"y5"},{"legendgroup":"h0","line":{"color":"#e74c3c"},"mode":"lines","name":"35°","showlegend":false,"x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[8544.080643,8966.828638,9412.77278,9883.301342,10379.891847,10904.117142,11457.651894,12042.279557,12659.899822,13312.536607,14002.346612,14731.628481,15502.832623,16318.571737,17181.632077,18094.985538,19061.802601,20085.466201,21169.586597,22318.017304,23534.872157,24824.543613,26191.722351,27641.41826,29178.982958,30810.133858,32540.979979,34378.049556,36328.319553,38399.247274,40598.804073,42935.511354,45418.478968,48057.446011,50862.824144,53845.743582,57018.101408,60392.612425,63982.862224,67803.361995,71869.6047,76198.121535,80806.537686,85713.625378,90939.351677,96504.917933,102432.785571,108746.682239,115471.578935,122633.62705,130260.038395],"type":"scatter","xaxis":"x6","yaxis":"y6"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"xaxis":{"anchor":"y","domain":[0.0,0.46],"title":{"text":"Period (s)"}},"yaxis":{"anchor":"x","domain":[0.72,1.0],"title":{"text":"Amplitude"}},"xaxis2":{"anchor":"y2","domain":[0.54,1.0],"title":{"text":"Period (s)"}},"yaxis2":{"anchor":"x2","domain":[0.72,1.0],"title":{"text":"Amplitude"}},"xaxis3":{"anchor":"y3","domain":[0.0,0.46],"title":{"text":"Period (s)"}},"yaxis3":{"anchor":"x3","domain":[0.36,0.6399999999999999],"title":{"text":"Amplitude"}},"xaxis4":{"anchor":"y4","domain":[0.54,1.0],"title":{"text":"Period (s)"}},"yaxis4":{"anchor":"x4","domain":[0.36,0.6399999999999999],"title":{"text":"Amplitude"}},"xaxis5":{"anchor":"y5","domain":[0.0,0.46],"title":{"text":"Period (s)"}},"yaxis5":{"anchor":"x5","domain":[0.0,0.27999999999999997],"title":{"text":"Amplitude"}},"xaxis6":{"anchor":"y6","domain":[0.54,1.0],"title":{"text":"Period (s)"}},"yaxis6":{"anchor":"x6","domain":[0.0,0.27999999999999997],"title":{"text":"Amplitude"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Surge (N\u002fm)","x":0.23,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Sway (N\u002fm)","x":0.77,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Heave (N\u002fm)","x":0.23,"xanchor":"center","xref":"paper","y":0.6399999999999999,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Roll (N.m\u002fm)","x":0.77,"xanchor":"center","xref":"paper","y":0.6399999999999999,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Pitch (N.m\u002fm)","x":0.23,"xanchor":"center","xref":"paper","y":0.27999999999999997,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Yaw (N.m\u002fm)","x":0.77,"xanchor":"center","xref":"paper","y":0.27999999999999997,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Load RAOs (Wave Excitation Forces) — Diffraction Method"},"font":{"size":11},"margin":{"l":60,"r":140,"t":80,"b":50},"legend":{"font":{"size":10},"orientation":"v","x":1.02,"y":1,"tracegroupgap":2},"height":900},                        {"responsive": true}                    )                };                            </script>        </div></div>
-</div>
-
-<div class="section">
-  <h2>Roll Critical Damping Analysis</h2>
-  <p>Critical damping ratio: ζ(ω) = B₄₄(ω) / (2√((A₄₄(ω) + I₄₄) × C₄₄))</p>
-  <div class="plot-container"><div>                            <div id="roll-damping-plot" class="plotly-graph-div" style="height:450px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("roll-damping-plot")) {                    Plotly.newPlot(                        "roll-damping-plot",                        [{"line":{"color":"#e74c3c","width":2},"marker":{"size":4},"mode":"lines+markers","name":"Roll Damping (% Critical)","x":[15.0,14.9,14.8,14.699999999999998,14.6,14.5,14.4,14.300000000000002,14.2,14.099999999999998,14.0,13.9,13.8,13.7,13.6,13.500000000000002,13.4,13.3,13.2,13.1,12.999999999999998,12.9,12.8,12.700000000000001,12.600000000000001,12.499999999999998,12.399999999999999,12.3,12.2,12.1,12.0,11.900000000000002,11.8,11.7,11.6,11.5,11.4,11.3,11.2,11.1,11.0,10.9,10.8,10.7,10.599999999999998,10.500000000000002,10.4,10.3,10.2,10.1,10.0],"y":[2.0325211917267123,2.106150455744425,2.1820035597309997,2.2600941421493657,2.340429574916155,2.42301020190071,2.5078285170572854,2.594868278356092,2.684103553342491,2.775497691750753,2.869002220104964,2.964555652645485,3.062082212193878,3.1614904536966746,3.262671782140347,3.365498852843403,3.46982385540709,3.5754766391389246,3.6822627100375827,3.789961030911957,3.8983216533900538,4.007063117148349,4.115869628697494,4.224387958720021,4.332224041425452,4.438939247382417,4.544046284448466,4.647004679063507,4.747215844139189,4.844017653902349,4.936678546249881,5.024391172841301,5.106265567834737,5.181322031952572,5.248483796445508,5.30656982509757,5.354288132418346,5.3902302536729385,5.412867810862163,5.420552437755084,5.411520755710988,5.383906813129596,5.33576500041251,5.265107248715635,5.169959225659459,5.048441271448337,4.898879965285523,4.719957049246339,4.510901387023597,4.271727916324868,4.003523930476002],"type":"scatter"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"font":{"size":12},"margin":{"l":60,"r":60,"t":60,"b":50},"title":{"text":"Roll Radiation Damping as % of Critical Damping"},"xaxis":{"title":{"text":"Period (s)"}},"yaxis":{"title":{"text":"% Critical Damping"}},"height":450},                        {"responsive": true}                    )                };                            </script>        </div></div>
-  <table>
-    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
-    <tbody>
-      <tr><td>C_44 (Hydrostatic Restoring)</td><td>2261457.701598</td></tr>
-      <tr><td>I_44 (Roll Inertia)</td><td>80201552.000000</td></tr>
-      
-    </tbody>
-  </table>
-</div>
-
-<div class="section">
-  <h2>Infinite Frequency Added Mass</h2>
-  <table class="matrix-table">
-    <thead><tr><th></th><th>Surge</th><th>Sway</th><th>Heave</th><th>Roll</th><th>Pitch</th><th>Yaw</th></tr></thead>
-    <tbody><tr><th>Surge</th><td class='highlight'>42373.426246</td><td class=''>0.000000</td><td class=''>0.000000</td><td class=''>0.000000</td><td class='highlight'>-935859.324176</td><td class=''>0.000000</td></tr>
-<tr><th>Sway</th><td class=''>0.000000</td><td class='highlight'>42373.435511</td><td class=''>-0.000000</td><td class='highlight'>935859.652487</td><td class=''>-0.000000</td><td class=''>0.000000</td></tr>
-<tr><th>Heave</th><td class=''>0.000000</td><td class=''>0.000000</td><td class='highlight'>29733.428482</td><td class=''>-0.000000</td><td class=''>-0.000000</td><td class=''>0.000000</td></tr>
-<tr><th>Roll</th><td class=''>0.000000</td><td class='highlight'>942683.971918</td><td class=''>-0.000000</td><td class='highlight'>59825922.219091</td><td class=''>0.000000</td><td class=''>-0.000000</td></tr>
-<tr><th>Pitch</th><td class='highlight'>-942683.691750</td><td class=''>-0.000000</td><td class=''>0.000000</td><td class=''>-0.000000</td><td class='highlight'>59825902.753780</td><td class=''>0.000000</td></tr>
-<tr><th>Yaw</th><td class=''>-0.000000</td><td class=''>-0.000000</td><td class=''>-0.000000</td><td class=''>-0.000000</td><td class=''>-0.000000</td><td class='highlight'>92708369.563124</td></tr>
-</tbody>
-  </table>
+  <h3 style="margin-top:1em;">C. References</h3>
+  <ol style="font-size:0.85em;color:#555;">
+    <li>Newman, J.N. (1977). <em>Marine Hydrodynamics</em>. MIT Press.</li>
+    <li>Faltinsen, O.M. (1990). <em>Sea Loads on Ships and Offshore Structures</em>. Cambridge.</li>
+    <li>Journee, J.M.J. & Massie, W.W. (2001). <em>Offshore Hydromechanics</em>. TU Delft.</li>
+    <li>Lee, C.H. (1995). <em>WAMIT Theory Manual</em>. MIT.</li>
+    <li>Chakrabarti, S.K. (2005). <em>Handbook of Offshore Engineering</em>. Elsevier.</li>
+    <li>DNV-RP-C205 (2021). <em>Environmental Conditions and Environmental Loads</em>.</li>
+    <li>DNV-OS-C301. <em>Stability and Watertight Integrity</em>.</li>
+  </ol>
 </div>
 
 </div>

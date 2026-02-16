@@ -348,7 +348,8 @@ class TestGenerateExecutiveWarnings:
             ),
         )
         warnings = generate_executive_warnings(data)
-        assert any("area ratio" in w for w in warnings)
+        assert any("NOTE" in w and "area ratio" in w.lower() for w in warnings)
+        assert any("adjacent panels" in w for w in warnings)
 
     def test_low_panel_count_warning(self):
         data = DiffractionReportData(
