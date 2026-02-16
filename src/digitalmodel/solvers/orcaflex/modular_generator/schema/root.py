@@ -11,6 +11,7 @@ from .pipeline import Pipeline
 from .equipment import Equipment
 from .simulation import Simulation
 from .riser import Riser
+from .mooring import MooringSystem
 
 
 class ProjectInputSpec(BaseModel):
@@ -19,7 +20,7 @@ class ProjectInputSpec(BaseModel):
 
     This is the main entry point for validating YAML input files.
     It contains all components needed to generate a complete OrcaFlex model.
-    Supports pipeline installation, riser production, and generic models.
+    Supports pipeline installation, riser production, mooring, and generic models.
 
     Example (Pipeline):
         ```python
@@ -53,6 +54,7 @@ class ProjectInputSpec(BaseModel):
         environment: Environmental conditions (water, metocean).
         pipeline: Pipeline definition (optional, for pipeline models).
         riser: Riser definition (optional, for riser models).
+        mooring: Mooring system definition (optional, for mooring models).
         generic: Generic OrcaFlex model (optional, for arbitrary models).
         equipment: Installation equipment (tugs, rollers, buoyancy modules).
         simulation: Simulation control parameters.
@@ -62,6 +64,7 @@ class ProjectInputSpec(BaseModel):
     environment: Environment = Field(..., description="Environmental conditions")
     pipeline: Pipeline | None = Field(default=None, description="Pipeline definition")
     riser: Riser | None = Field(default=None, description="Riser definition")
+    mooring: MooringSystem | None = Field(default=None, description="Mooring system definition")
     generic: GenericModel | None = Field(
         default=None, description="Generic OrcaFlex model definition"
     )
@@ -78,7 +81,7 @@ class ProjectInputSpec(BaseModel):
         Cross-validate model components for physical consistency.
 
         Checks:
-        - Exactly one of pipeline, riser, or generic must be defined
+        - Exactly one of pipeline, riser, mooring, or generic must be defined
         - Water depth consistency with seabed features
         - Tug positions relative to pipeline length
         - Buoyancy module spacing vs segment length
@@ -87,12 +90,13 @@ class ProjectInputSpec(BaseModel):
         model_types_defined = sum([
             self.pipeline is not None,
             self.riser is not None,
+            self.mooring is not None,
             self.generic is not None,
         ])
 
         if model_types_defined == 0:
             raise ValueError(
-                "Either 'pipeline', 'riser', or 'generic' must be defined in spec"
+                "Either 'pipeline', 'riser', 'mooring', or 'generic' must be defined in spec"
             )
         if model_types_defined > 1:
             defined = []
@@ -100,6 +104,8 @@ class ProjectInputSpec(BaseModel):
                 defined.append("pipeline")
             if self.riser is not None:
                 defined.append("riser")
+            if self.mooring is not None:
+                defined.append("mooring")
             if self.generic is not None:
                 defined.append("generic")
             raise ValueError(
@@ -182,6 +188,10 @@ class ProjectInputSpec(BaseModel):
     def is_pipeline(self) -> bool:
         """Check if this is a pipeline model."""
         return self.pipeline is not None
+
+    def is_mooring(self) -> bool:
+        """Check if this is a mooring model."""
+        return self.mooring is not None
 
     def is_generic(self) -> bool:
         """Check if this is a generic model."""

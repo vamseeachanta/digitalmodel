@@ -28,6 +28,11 @@ from .builders import (  # noqa: F401
     GroupsBuilder,
 )
 
+from .routers.mooring_router import MooringRouter
+from .routers.vessel_router import VesselRouter
+from .schema.generic import GenericModel
+
+
 class _NoAliasDumper(yaml.Dumper):
     """YAML Dumper that never emits anchors/aliases.
 
@@ -76,6 +81,53 @@ class ModularModelGenerator:
         instance.spec = spec
         return instance
 
+    def _run_routers(self) -> None:
+        """Run domain routers to convert engineering specs to generic model.
+
+        Routers transform domain-specific specs (mooring, vessel, etc.)
+        into GenericModel-compatible dicts, then merge them into
+        spec.generic for processing by GenericModelBuilder.
+        """
+        router_outputs: list[dict[str, Any]] = []
+
+        # Route mooring system
+        if hasattr(self.spec, 'mooring') and self.spec.mooring is not None:
+            mooring_result = MooringRouter().route(self.spec.mooring)
+            router_outputs.append(mooring_result)
+
+        # Route vessel from equipment (if standalone vessel model)
+        # VesselRouter is available for from_hull_catalog() calls
+        # but automatic routing requires explicit vessel spec
+
+        if not router_outputs:
+            return
+
+        # Merge router outputs into spec.generic
+        merged: dict[str, Any] = {}
+        for output in router_outputs:
+            for key, value in output.items():
+                if key in merged and isinstance(merged[key], list):
+                    merged[key].extend(value)
+                else:
+                    merged[key] = value
+
+        if self.spec.generic is None:
+            # Create new generic model from router output
+            self.spec = self.spec.model_copy(
+                update={"generic": GenericModel(**merged)}
+            )
+        else:
+            # Merge into existing generic model
+            existing = self.spec.generic.model_dump()
+            for key, value in merged.items():
+                if key in existing and isinstance(existing[key], list):
+                    existing[key].extend(value)
+                elif key not in existing or not existing[key]:
+                    existing[key] = value
+            self.spec = self.spec.model_copy(
+                update={"generic": GenericModel(**existing)}
+            )
+
     def _load_and_validate_spec(self) -> ProjectInputSpec:
         with open(self.spec_file) as f:
             data = yaml.safe_load(f)
@@ -88,6 +140,8 @@ class ModularModelGenerator:
 
         includes_dir.mkdir(parents=True, exist_ok=True)
         inputs_dir.mkdir(parents=True, exist_ok=True)
+
+        self._run_routers()
 
         # Typed context for cross-builder entity sharing
         context = BuilderContext()
@@ -179,6 +233,8 @@ class ModularModelGenerator:
 
         includes_dir.mkdir(parents=True, exist_ok=True)
         inputs_dir.mkdir(parents=True, exist_ok=True)
+
+        self._run_routers()
 
         # Index sections by builder_file for fast lookup
         section_map: dict[str, Any] = {}
