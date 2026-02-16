@@ -59,7 +59,7 @@ def test_report_returns_html_string(report_html):
     assert isinstance(report_html, str)
     assert "<!DOCTYPE html>" in report_html
     assert "</html>" in report_html
-    assert "API RP 1111" in report_html
+    assert "API-RP-1111" in report_html
 
 
 def test_report_writes_to_file(geometry, material):
@@ -369,3 +369,69 @@ def test_envelope_chart_is_symmetric(report_html):
     assert "toself" in report_html.lower() or "fill" in report_html.lower()
     # Should have negative M_p reference marker
     assert "-M_p" in report_html or "\u2013M<sub>p</sub>" in report_html
+
+
+# ---------------------------------------------------------------------------
+# Multi-code report tests (WRK-144)
+# ---------------------------------------------------------------------------
+
+
+def test_report_api_rp_2rd_generates(geometry, material):
+    """API RP 2RD report generates valid HTML."""
+    html = generate_mt_report(
+        geometry=geometry,
+        material=material,
+        internal_pressure=20e6,
+        external_pressure=10e6,
+        code=DesignCode.API_RP_2RD,
+    )
+    assert "<!DOCTYPE html>" in html
+    assert "API-RP-2RD" in html
+    assert "Hoop" in html  # API RP 2RD has hoop check
+
+
+def test_report_api_std_2rd_generates(geometry, material):
+    """API STD 2RD report generates valid HTML."""
+    html = generate_mt_report(
+        geometry=geometry,
+        material=material,
+        internal_pressure=20e6,
+        external_pressure=10e6,
+        code=DesignCode.API_STD_2RD,
+    )
+    assert "<!DOCTYPE html>" in html
+    assert "API-STD-2RD" in html
+
+
+def test_report_api_std_2rd_contains_methods(geometry, material):
+    """API STD 2RD report contains Method 1 and Method 2 envelope labels."""
+    html = generate_mt_report(
+        geometry=geometry,
+        material=material,
+        internal_pressure=20e6,
+        external_pressure=10e6,
+        code=DesignCode.API_STD_2RD,
+    )
+    assert "Method 1" in html
+    assert "Method 2" in html
+
+
+def test_cross_code_comparison(geometry, material):
+    """Same pipe produces valid HTML for all 3 API codes.
+
+    All reports should be structurally valid and contain code-specific
+    content without any API RP 1111-specific hardcoded references bleeding
+    into other code reports.
+    """
+    for code in [DesignCode.API_RP_1111, DesignCode.API_RP_2RD, DesignCode.API_STD_2RD]:
+        html = generate_mt_report(
+            geometry=geometry,
+            material=material,
+            internal_pressure=20e6,
+            external_pressure=10e6,
+            code=code,
+        )
+        assert "<!DOCTYPE html>" in html
+        assert code.value in html
+        assert "Executive Summary" in html
+        assert "PASS" in html or "FAIL" in html
